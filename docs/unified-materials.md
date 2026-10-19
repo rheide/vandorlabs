@@ -9,7 +9,7 @@ The sixteen retired built-in finishes are omitted from both the picker and
 runtime JAR/atlas. Their saved identifiers remain valid and render with Dark
 Wall Panel; reorganized selectable finishes keep their artwork. The Example filesystem
 category is hidden when its only entry is the default sample panel.
-The bundled block-material list currently has **114 selectable designs** across Materials, Panels, Tech, Hull, Industrial, Trapdoors, Windows and Storage. See the [current block gallery](gallery/building.md#programmable-block-finishes) for every design. Screen, light and door menus add their specialized artwork; filesystem catalogs vary by installation.
+The bundled block-material list currently has **132 selectable designs** across Materials, Panels, Tech, Hull, Industrial, Trapdoors, Windows, Storage and Corp. See the [current block gallery](gallery/building.md#programmable-block-finishes) for every design. Screen, light and door menus add their specialized artwork; filesystem catalogs vary by installation.
 
 Storage offers fourteen matching top/side/front sets; [Programmable
 Storage](programmable-storage.md) uses all three faces and other shapes use
@@ -84,3 +84,16 @@ to the standard artwork without changing their material or design IDs.
 ## Company artwork
 
 The top-level **Corp** category contains logos, backgrounds and murals for Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor. Murals retain their wide aspect ratio in picker previews. **Corp/Lights** contains six paired company light designs and appears only in programmable light dialogs. Select an On design for automatic matching Off artwork as the light switches, or use the OFF tab to choose a separate finish. General block, screen, tank and armor material menus omit these light-only pairs. Existing material IDs remain unchanged.
+
+
+Programmable Blocks with the same block facing, visible-face material and layout
+join their coplanar faces automatically. **Stretch** maps one complete image over
+each rectangular group, including groups crossing a chunk border. **Fit (aspect)**
+preserves the image proportions and crops the outer edges to fill that rectangle.
+**Tile** repeats independently on each block. Different materials, facings or
+layouts start a new group; irregular areas split into filled rectangles. Joined
+scans are limited to 256 cells and rectangles of at most 16 blocks per side.
+Other block shapes retain their individual layout rules described above.
+
+Duplifier status messages report how many blocks received settings, including a
+single-block application.

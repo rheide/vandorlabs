@@ -53,3 +53,14 @@ Material tools also gain Stretch, Tile and Fit layouts, independent ON/OFF light
 [Cockpit controls](docs/cockpits.md) · [Material settings](docs/unified-materials.md) · [Full changelog](CHANGELOG.md)
 
 Company logos, backgrounds and murals now have their own **Corp** material category. Six company light designs add matching On/Off artwork in **Corp/Lights**, available specifically for programmable lights.
+
+See every small and large Extender and Swing Arm in motion with Plates, Skis and Wheels in the [animated landing gear guide](docs/modular-landing-gear.md#animated-combinations).
+
+
+Turntable direction can now reverse on a redstone-channel pulse, and scanned
+surfaces remain protected until Restore. Programmable Block Stretch/Fit artwork
+joins across matching faces, including chunk borders. Device renderers reuse
+stationary gear transforms and constructor orientations, and the standard JAR
+shares duplicate artwork and losslessly compresses PNGs.
+
+[Device rendering and package-size measurements](docs/performance/2.2-devices.md).

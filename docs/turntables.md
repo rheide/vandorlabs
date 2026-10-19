@@ -3,7 +3,7 @@
 Place **Turntable Surface** blocks as a filled square, from 1×1 to 16×16. The face
 you click when placing each block becomes its active face. Every connected
 surface must face the same way. Place a **Turntable Controller** against an edge,
-with its front pointing at a surface block, then open the controller by right
+by clicking a Surface block at its edge; the controller automatically points back toward it. Open the controller by right
 clicking it or using the Configurizer.
 
 Use the **Height** slider to set the number of blocks to capture away from the active face
@@ -26,6 +26,12 @@ list. Zero uses local redstone; configured channels require all listed channels
 to be powered. Set speed from 0.1 to 30 RPM and choose clockwise or
 counterclockwise as viewed from outside the active face.
 
+**Direction** accepts a separate channel list. Zero disables direction pulses.
+When all listed channels become powered, the direction reverses once. Holding
+power does not keep reversing it; release the channels before the next pulse.
+The direction button updates to show the result. Right-click an option button
+to cycle backward.
+
 The square shares one surface image. Its circular plate rotates with the captured
 contents, surrounded by a fixed square housing. Joined surfaces use the supplied
 512px artwork, while standalone and inventory surfaces use a smaller version.
@@ -45,7 +51,13 @@ overwrite blocks and keeps the captured contents if blocked. The entire assembly
 and return volume must be loaded. Sideways platforms can restore ordinary blocks
 at cardinal headings; blocks whose orientation cannot be represented and sideways
 tile entities require a supported heading before restoring. Remove the controller
-after restoring its contents. Damaging a surface stops rotation and returns the remaining tiles to their individual surface models. The recovery layout is retained until captured contents can be restored. A blocked rotation reports the obstruction coordinates in the controller dialog.
+after restoring its contents. Scanned Surface blocks are protected from mining,
+pistons and explosions until Restore finishes. Protection covers those Surface
+blocks, without reserving terrain behind or beneath them. You can attach levers
+and other blocks to the controller while contents are captured. If an external
+world editor bypasses protection, rotation stops, remaining surfaces keep their
+claims, and Restore retains its recovery layout. A blocked rotation reports the
+obstruction coordinates in the controller dialog.
 
 The controller reports holes, non-square surfaces, conflicting owners, unloaded
 boundaries and incomplete native multiblocks. Capture and restoration respect

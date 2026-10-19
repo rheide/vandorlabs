@@ -269,3 +269,6 @@ clients sequential so they do not compete for CPU/GPU time.
 The existing redstone interfaces, screen behavior, input layouts and finite
 housing meshes already provide useful shared code. A wholesale inheritance or
 NBT rewrite would add migration risk without addressing the measured bottlenecks.
+
+
+[Version 2.2 landing gear, constructor and packaged-texture measurements](2.2-devices.md).

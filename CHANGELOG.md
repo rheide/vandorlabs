@@ -1,9 +1,17 @@
 # Changelog
 
-## Unreleased
+## 2.2
+
+- Add pulse-controlled turntable direction channels, automatic controller orientation, precise Surface protection, controller-side block placement and correct cardinal restoration of corner thrusters.
+- Join Programmable Block Stretch/Fit textures across matching rectangular surfaces; preserve image proportions by cropping Fit artwork. Report applied block counts in Duplifier messages.
+- Support right-click reverse option cycling in landing gear, turntable, tank and battery dialogs.
+- Correct Large Mount/Wheel and retracted Large Swing Arm/Wheel face overlap.
+- Cache stationary landing gear transforms and constructor facing geometry; remove empty Constructor Core tick callbacks while keeping moving gear and Taxi wheels continuous.
+- Store identical PNG artwork once behind compatible resource paths and losslessly recompress remaining images without changing decoded pixels or resolution.
 
 - Add 18 company logos, backgrounds and murals in the new Corp texture category. Six paired company light designs appear under Corp/Lights only in programmable light dialogs, with automatic on/off artwork.
 - Add instant Block/Hexagon battery shape selection, six-axis placement and segmented green charge bars on the top and bottom. Preserve RF, shape and existing saved orientations.
+- Document all 12 modular landing gear size/arm/foot combinations with complete live-rendered deployment and retraction animations.
 
 - Add Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor armor designs to the programmable armor dialogs: 24 slot-specific choices with native wearable atlases and padded icons. Existing saved designs keep their IDs.
 - Filter redundant hatch detail variants from armor material menus while retaining saved selections and custom samples.
@@ -18,7 +26,6 @@
 - Restore the legacy Extra Large wheel proportions, enforce matching wheel/arm sizes, and align large-part placement to the clicked footprint. Include the enlarged tyre in collision, selection and Taxi wheel animation.
 - Prevent retracted Extender sockets and skis from sharing visible faces with the fixed sleeve collar. Enlarge and center the Large Wheel inventory icon while retaining slot padding.
 
-## 2.2
 
 - Capture the complete square build above a turntable, including overhangs above its fixed housing corners, so scan boundaries do not leave pieces that immediately obstruct rotation.
 - Keep remaining turntable surfaces visible after a member is removed, use exact terrain collision tests, and report obstruction coordinates.

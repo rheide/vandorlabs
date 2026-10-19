@@ -51,8 +51,13 @@ python testclient/encode_animations.py <capture-directory> --report docs/canopy-
 
 This records nine scenes using the actual renderer and sixteen-tick canopy clocks. The six narrow-shell scenes cover single Flat, double Angled and triple Long Angled profiles in both opening modes. The remaining scenes show a large top hinge, a 5 × 5 left hinge and an inverted double Canopy. Camera crops include the complete moving geometry. See [the canopy guide](canopies.md) and [2.0 highlights](gallery/version-2.0.md).
 
+## Landing gear animations
+
+The twelve scenes cover standard and Large Extenders and Swing Arms with Plates, Skis and matching Wheels. Each 4.2-second clip uses the real 24-tick gear clock, holds the deployed endpoint and returns to the stowed endpoint. The encoder checks visible motion in both directions, intermediate poses, an unobstructed crop and the returned geometry. See the [combination gallery](modular-landing-gear.md#animated-combinations). Fixed mounts are illustrated separately because they stay deployed.
+
 ## Motion index
 
+- [Modular landing gear](modular-landing-gear.md#animated-combinations): both sizes, Extender/Swing Arm motion and Plate/Ski/Wheel feet.
 - [Canopies](canopies.md): single/double/triple sliding and rear-hinged shells, large-window hinges and ceiling mounting.
 - [Programmable Door](gallery/doors.md): four motions.
 - [Programmable Trapdoor](gallery/programmable-trapdoor.md): three in-block motions, two next-block motions and opposing mounts.
@@ -126,3 +131,15 @@ The complete capture set:
 | canopy-large-top | [Open clip](images/gallery/canopies/large-top.gif) |
 | canopy-large-left | [Open clip](images/gallery/canopies/large-left.gif) |
 | canopy-ceiling | [Open clip](images/gallery/canopies/ceiling.gif) |
+| gear-small-extender-plate | [Open clip](images/gallery/landing-gear/gear-small-extender-plate.gif) |
+| gear-small-extender-ski | [Open clip](images/gallery/landing-gear/gear-small-extender-ski.gif) |
+| gear-small-extender-wheel | [Open clip](images/gallery/landing-gear/gear-small-extender-wheel.gif) |
+| gear-small-swing-plate | [Open clip](images/gallery/landing-gear/gear-small-swing-plate.gif) |
+| gear-small-swing-ski | [Open clip](images/gallery/landing-gear/gear-small-swing-ski.gif) |
+| gear-small-swing-wheel | [Open clip](images/gallery/landing-gear/gear-small-swing-wheel.gif) |
+| gear-large-extender-plate | [Open clip](images/gallery/landing-gear/gear-large-extender-plate.gif) |
+| gear-large-extender-ski | [Open clip](images/gallery/landing-gear/gear-large-extender-ski.gif) |
+| gear-large-extender-wheel | [Open clip](images/gallery/landing-gear/gear-large-extender-wheel.gif) |
+| gear-large-swing-plate | [Open clip](images/gallery/landing-gear/gear-large-swing-plate.gif) |
+| gear-large-swing-ski | [Open clip](images/gallery/landing-gear/gear-large-swing-ski.gif) |
+| gear-large-swing-wheel | [Open clip](images/gallery/landing-gear/gear-large-swing-wheel.gif) |

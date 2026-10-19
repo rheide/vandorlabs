@@ -90,9 +90,33 @@ A manual deployment override on modular gear lasts until its configured redstone
 
 Extender-mounted wheels retain clearance beneath the fixed casing when fully retracted. The wheel bracket, socket and rod use the same adjusted pose for rendering and collision.
 
-Large Extenders and Large Swing Arms each reserve a 2?2 horizontal footprint.
+Large Extenders and Large Swing Arms each reserve a 2x2 horizontal footprint.
 The Large Wheel has the legacy Extra Large tyre diameter (1.75 blocks), reaches
 one block below its source cells, and requires a matching large Mount, Extender or Swing Arm. Standard
 wheels require standard arms. Click any quadrant of a large part to align a new
-large arm or wheel with its anchor and orientation. At least one mounting-cap cell must touch a solid underside; a full 2?2 hull
+large arm or wheel with its anchor and orientation. At least one mounting-cap cell must touch a solid underside; a full 2x2 hull
 patch is optional. Connected straight Large Extenders may face different ways.
+
+Right-click an option button to cycle to its previous value. Settings apply immediately.
+
+## Animated combinations
+
+These in-game clips show complete deployment and retraction. The foot stays level as a Swing Arm folds; an Extender lifts its foot vertically. Each large mechanism uses its actual 2x2 footprint. Wheels use the matching arm size; large Plates and Skis are connected groups of four standard feet.
+
+| Foot | Small Extender | Small Swing Arm |
+| --- | --- | --- |
+| Plate | ![Small Extender with plate](images/gallery/landing-gear/gear-small-extender-plate.gif) | ![Small Swing Arm with plate](images/gallery/landing-gear/gear-small-swing-plate.gif) |
+| Ski | ![Small Extender with ski](images/gallery/landing-gear/gear-small-extender-ski.gif) | ![Small Swing Arm with ski](images/gallery/landing-gear/gear-small-swing-ski.gif) |
+| Wheel | ![Small Extender with wheel](images/gallery/landing-gear/gear-small-extender-wheel.gif) | ![Small Swing Arm with wheel](images/gallery/landing-gear/gear-small-swing-wheel.gif) |
+
+| Foot | Large Extender | Large Swing Arm |
+| --- | --- | --- |
+| Plate | ![Large Extender with plate](images/gallery/landing-gear/gear-large-extender-plate.gif) | ![Large Swing Arm with plate](images/gallery/landing-gear/gear-large-swing-plate.gif) |
+| Ski | ![Large Extender with ski](images/gallery/landing-gear/gear-large-extender-ski.gif) | ![Large Swing Arm with ski](images/gallery/landing-gear/gear-large-swing-ski.gif) |
+| Wheel | ![Large Extender with wheel](images/gallery/landing-gear/gear-large-extender-wheel.gif) | ![Large Swing Arm with wheel](images/gallery/landing-gear/gear-large-swing-wheel.gif) |
+
+Fixed Mounts hold the same three foot types permanently deployed. They use the same standard/large compatibility rules and do not animate.
+
+![Standard fixed mounts with Plate, Ski and Wheel](images/gallery/landing-gear/fixed-standard.png)
+
+![Large fixed mounts with Plate, Ski and Wheel](images/gallery/landing-gear/fixed-large.png)

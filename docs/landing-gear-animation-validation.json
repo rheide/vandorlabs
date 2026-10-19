@@ -1,0 +1,122 @@
+[
+  {
+    "id": "gear-large-extender-plate",
+    "output": "landing-gear/gear-large-extender-plate.gif",
+    "frames": 50,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 85821,
+    "median_gap_ms": 49.98,
+    "max_gap_ms": 56.78
+  },
+  {
+    "id": "gear-large-extender-ski",
+    "output": "landing-gear/gear-large-extender-ski.gif",
+    "frames": 51,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 86203,
+    "median_gap_ms": 49.98,
+    "max_gap_ms": 56.93
+  },
+  {
+    "id": "gear-large-extender-wheel",
+    "output": "landing-gear/gear-large-extender-wheel.gif",
+    "frames": 50,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 83959,
+    "median_gap_ms": 50.09,
+    "max_gap_ms": 56.4
+  },
+  {
+    "id": "gear-large-swing-plate",
+    "output": "landing-gear/gear-large-swing-plate.gif",
+    "frames": 51,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 104400,
+    "median_gap_ms": 49.95,
+    "max_gap_ms": 57.87
+  },
+  {
+    "id": "gear-large-swing-ski",
+    "output": "landing-gear/gear-large-swing-ski.gif",
+    "frames": 51,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 105352,
+    "median_gap_ms": 49.96,
+    "max_gap_ms": 57.56
+  },
+  {
+    "id": "gear-large-swing-wheel",
+    "output": "landing-gear/gear-large-swing-wheel.gif",
+    "frames": 55,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 106883,
+    "median_gap_ms": 50.07,
+    "max_gap_ms": 57.63
+  },
+  {
+    "id": "gear-small-extender-plate",
+    "output": "landing-gear/gear-small-extender-plate.gif",
+    "frames": 51,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 89754,
+    "median_gap_ms": 50.12,
+    "max_gap_ms": 57.94
+  },
+  {
+    "id": "gear-small-extender-ski",
+    "output": "landing-gear/gear-small-extender-ski.gif",
+    "frames": 50,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 81721,
+    "median_gap_ms": 50.08,
+    "max_gap_ms": 57.64
+  },
+  {
+    "id": "gear-small-extender-wheel",
+    "output": "landing-gear/gear-small-extender-wheel.gif",
+    "frames": 49,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 78508,
+    "median_gap_ms": 49.89,
+    "max_gap_ms": 52.24
+  },
+  {
+    "id": "gear-small-swing-plate",
+    "output": "landing-gear/gear-small-swing-plate.gif",
+    "frames": 51,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 122150,
+    "median_gap_ms": 50.01,
+    "max_gap_ms": 52.11
+  },
+  {
+    "id": "gear-small-swing-ski",
+    "output": "landing-gear/gear-small-swing-ski.gif",
+    "frames": 51,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 114310,
+    "median_gap_ms": 50.2,
+    "max_gap_ms": 58.38
+  },
+  {
+    "id": "gear-small-swing-wheel",
+    "output": "landing-gear/gear-small-swing-wheel.gif",
+    "frames": 51,
+    "captured": 84,
+    "duration_ms": 4200,
+    "bytes": 113574,
+    "median_gap_ms": 50.04,
+    "max_gap_ms": 70.22
+  }
+]
