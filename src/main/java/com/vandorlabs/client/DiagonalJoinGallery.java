@@ -10,6 +10,20 @@ import java.util.*;
 
 /** Three slope sizes per screenshot; names record the complete neighbor arrangement. */
 final class DiagonalJoinGallery {
+    static void glassWallCaps(World world,int x,int y){
+        world.setWorldTime(6000);world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
+        BlockProgrammableWall wall=(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
+        BlockProgrammableWall glass=(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS;
+        for(int mode=0;mode<3;mode++)for(int path=0;path<2;path++){
+            BlockPos root=new BlockPos(x-6+mode*5,y+1+path*3,-18);
+            IBlockState state=wall.getDefaultState(),window=glass.getDefaultState();
+            BlockPos next=mode==2?root.south():root.up();window=mode==2?window.withProperty(BlockProgrammableWall.FACING,EnumFacing.SOUTH):window.withProperty(BlockProgrammableWall.INVERTED,true);
+            world.setBlockState(root,state,3);world.setBlockState(next,window,3);
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(root),pane=(TileEntityAnimatedScreenSelector)world.getTileEntity(next);
+            tile.setDiagonalGeometry(mode,0);pane.setDiagonalGeometry(mode,0);pane.setGlassAppearance(0,true);if(path==1)tile.setMainTextureLayout(1);
+            if(DiagonalPanelGeometry.coveredEnd(world,root,state,true))throw new IllegalStateException("Glass hides the opaque diagonal wall cap");
+        }
+    }
     static void mixed(World world,int x,int y,boolean glass){
         world.setWorldTime(6000);world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
         for(int mode=0;mode<2;mode++)for(int material=0;material<2;material++){

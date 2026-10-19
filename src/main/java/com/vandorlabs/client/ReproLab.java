@@ -304,6 +304,7 @@ public class ReproLab {
                 galleryFeet + 4.0D, -24.0D, 0.0F, 24.0F));
         SHOTS.add(new Shot("gallery_lighting_controls", GALLERY_X,
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
+        SHOTS.add(new Shot("gallery_join_glass_wall_caps",GALLERY_X-3,galleryFeet+7,-29,-15,30));
         for(String material:new String[]{"wall","glass"})SHOTS.add(new Shot("gallery_join_mixed_"+material,GALLERY_X-3,galleryFeet+5,-29,-15,22));
         for(int row=0;row<5;row++)SHOTS.add(new Shot("gallery_glass_finishes_"+row,GALLERY_X,galleryFeet+3,-29,0,12));
         for(String material:new String[]{"wall","glass"})for(int front=0;front<3;front++)for(int back=0;back<3;back++)for(int tails=0;tails<4;tails++)for(String order:new String[]{"forward","reverse"})
@@ -757,14 +758,19 @@ public class ReproLab {
                 if(--holdTicks>0)break;
                 if(!(mc.currentScreen instanceof GuiProgrammableWall))throw new IllegalStateException("diagonal glass dialog failed to open");
                 GuiProgrammableWall diagonalGlassGui=(GuiProgrammableWall)mc.currentScreen;
-                diagonalGlassGui.choose(12);
+                diagonalGlassGui.choose(HousingTextureList.CANOPY_GLASS_BASE+12);
                 diagonalGlassGui.actionPerformed(new net.minecraft.client.gui.GuiButton(105,0,0,"Size"));
                 diagonalGlassGui.actionPerformed(new net.minecraft.client.gui.GuiButton(112,0,0,"Join"));
                 state=4101;holdTicks=30;break;
             case 4101:
                 if(--holdTicks>0)break;
-                TileEntityAnimatedScreenSelector checkedGlass=(TileEntityAnimatedScreenSelector)mc.getIntegratedServer().getWorld(0).getTileEntity(new BlockPos(GALLERY_X,GALLERY_Y+1,-18));
-                if(checkedGlass.getGlassShade()!=12 || !checkedGlass.isDiagonalFullWidth() || checkedGlass.getDiagonalJoin()!=1)throw new IllegalStateException("diagonal glass GUI changes did not reach the server");
+                boolean glassSettingsApplied;
+                try{glassSettingsApplied=mc.getIntegratedServer().callFromMainThread(()->{
+                    TileEntityAnimatedScreenSelector checkedGlass=(TileEntityAnimatedScreenSelector)mc.getIntegratedServer().getWorld(0).getTileEntity(new BlockPos(GALLERY_X,GALLERY_Y+1,-18));
+                    return checkedGlass.getGlassShade()==12&&checkedGlass.getGlassMaterial()==-1&&checkedGlass.isDiagonalFullWidth()&&checkedGlass.getDiagonalJoin()==1;
+                }).get();
+                }catch(Exception failure){throw new IllegalStateException("Reading diagonal glass GUI settings",failure);}
+                if(!glassSettingsApplied)throw new IllegalStateException("diagonal glass GUI changes did not reach the server");
                 saveNamed(mc,"programmable_diagonal_glass_gui");
                 System.out.println("[vandorlabs][reprolab] diagonal-joins-live PASS");state=999;mc.shutdown();break;
             case 4006:
@@ -2364,6 +2370,8 @@ public class ReproLab {
             BlockPos.getAllInBox(new BlockPos(GALLERY_X-14,GALLERY_Y,-23),
                     new BlockPos(GALLERY_X+14,GALLERY_Y+16,-13)).forEach(world::setBlockToAir);
             ConnectionAcceptance.build(world,shot,GALLERY_X,GALLERY_Y);
+        } else if(shot.equals("gallery_join_glass_wall_caps")) {
+            DiagonalJoinGallery.glassWallCaps(world,GALLERY_X,GALLERY_Y);
         } else if(shot.startsWith("gallery_join_mixed_")) {
             DiagonalJoinGallery.mixed(world,GALLERY_X,GALLERY_Y,shot.endsWith("glass"));
         } else if(shot.startsWith("gallery_glass_finishes_")) {

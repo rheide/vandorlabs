@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Keep diagonal wall end caps visible through adjoining glass, preventing views into the wall interior while preserving glass-frame joins.
+
 - Add persistent turntable status/errors and an RPM slider; infer the axis from the surface and prevent angle refreshes from sending commands. Redstone rescans new cargo at cardinal headings, Taxi craft stay live, and large surfaces remain visible when their rendering corner is off-screen. Complete stopped ramps can be captured and restored with their ownership links intact.
 
 - Give Large landing gear arms a one-block mounting footprint while preserving heavy mechanisms and exclusive Large Wheel compatibility. Existing four-cell arm mounts migrate automatically.

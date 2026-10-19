@@ -36,6 +36,9 @@ public final class DiagonalPanelGeometry {
                     || mode==1 && PanelJoins.cornerDiagonal(state,world,pos) && PanelJoins.cornerDiagonal(other,world,next);
             if(!compatible || BlockProgrammableWall.geometry(world,next)!=mode
                     || BlockProgrammableWall.fill(world,pos)!=BlockProgrammableWall.fill(world,next))continue;
+            // A transparent continuation cannot seal the hollow end of an opaque wall.
+            // Keep the glass-side seam hidden where the opaque cap covers it.
+            if(state.getMaterial().isOpaque()&&!other.getMaterial().isOpaque())continue;
             if(endsMeet(pos,state,next,other,mode,upper))return true;
         }
         return false;

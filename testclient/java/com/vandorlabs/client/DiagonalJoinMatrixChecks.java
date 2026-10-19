@@ -53,12 +53,34 @@ final class DiagonalJoinMatrixChecks {
         }
         VerticalMaterialJoinChecks.run();
         mixed(blocks);
+        transparentEnds(blocks);
         flatFrames();
         actualPlanes();
         fullWidthMixedCorners();
         crossedArmSections();
         DiagonalPortholeJoinChecks.run();
         System.out.println("PASS: "+cases+" diagonal wall/glass join topologies, orientations, slopes, placement rotations and remove/replace cycles; all glass finish IDs persist");
+    }
+    private static void transparentEnds(BlockProgrammableWall[] blocks){
+        int cases=0;BlockPos root=new BlockPos(8,88,8);
+        for(int mode=0;mode<3;mode++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean upper:new boolean[]{false,true})for(boolean framed:new boolean[]{false,true}){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
+            IBlockState wall=blocks[0].getDefaultState().withProperty(BlockProgrammableWall.FACING,facing).withProperty(BlockProgrammableWall.INVERTED,inverted);
+            put(world,root,wall,mode);List<String> exposed=shape(world,Collections.singletonList(root));
+            BlockPos joined=null;IBlockState glass=null;
+            search:for(BlockPos next:DiagonalPanelGeometry.rowCandidates(root,wall,mode,upper))for(EnumFacing direction:new EnumFacing[]{facing,facing.getOpposite()})for(boolean flip:new boolean[]{false,true}){
+                IBlockState candidate=blocks[1].getDefaultState().withProperty(BlockProgrammableWall.FACING,direction).withProperty(BlockProgrammableWall.INVERTED,flip);
+                if(DiagonalPanelGeometry.rowsMeet(root,wall,next,candidate,mode)){joined=next;glass=candidate;break search;}
+            }
+            require(joined!=null,"mixed end fixture must meet geometrically");put(world,joined,glass,mode);((TileEntityAnimatedScreenSelector)world.getTileEntity(joined)).setGlassAppearance(0,framed);
+            require(!DiagonalPanelGeometry.coveredEnd(world,root,wall,upper),"glass removed opaque wall cap");
+            EnumFacing row=mode==2?glass.getValue(BlockProgrammableWall.FACING).getOpposite():EnumFacing.UP;boolean glassUpper=PanelPlane.axis(root.subtract(joined),row)>0;
+            require(DiagonalPanelGeometry.coveredEnd(world,joined,glass,glassUpper),"opaque wall no longer covers glass-side seam");
+            require(exposed.equals(shape(world,Collections.singletonList(root))),"tile mesh exposes wall interior through glass");
+            DiagonalWallState shape=new DiagonalWallState(wall,world,root);require(!(upper?shape.hideUpper:shape.hideLower),"baked wall hides its cap against glass");
+            require(!DiagonalWallModel.bake(shape,SPRITE,SPRITE).isEmpty(),"baked mixed wall mesh missing");cases++;
+        }
+        System.out.println("PASS: "+cases+" transparent/opaque diagonal end joins retain wall caps, both frame settings and rendering paths");
     }
     private static void mixed(BlockProgrammableWall[] diagonals){
         BlockProgrammableWall flatWall=new BlockProgrammableWall("mixed_join_wall",BlockProgrammableWall.Shape.PLAIN);
