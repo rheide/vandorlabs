@@ -45,8 +45,16 @@ final class OffsetTrapdoorRuntimeChecks {
                 if(!world.getCollisionBoxes(null,query).contains(box))throw new IllegalStateException("actual offset collision event missed scenario "+scenario);
             }
             if(scenario==0 || scenario==4)capture(mc,scenario==0?"offset_trapdoor_closed_selection":"offset_trapdoor_open_selection");
-            if(!(mc.playerController instanceof OffsetTrapdoorController))throw new IllegalStateException("offset picking is not installed in the input phase");
-            net.minecraft.client.settings.KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+            if(mc.playerController instanceof OffsetTrapdoorController){
+                net.minecraft.client.settings.KeyBinding.onTick(mc.gameSettings.keyBindUseItem.getKeyCode());
+            }else{
+                // Foreign controllers use our Forge mouse event hook. A bare
+                // synthetic key tick skips that hook, unlike a real mouse click.
+                if(mc.playerController.getClass()==net.minecraft.client.multiplayer.PlayerControllerMP.class)throw new IllegalStateException("offset picking is not installed in the vanilla input phase");
+                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.MouseEvent());
+                java.lang.reflect.Method click=net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(Minecraft.class,"rightClickMouse","func_147121_ag");
+                try{click.invoke(mc);}catch(ReflectiveOperationException failure){throw new IllegalStateException("foreign-controller mouse click",failure);}
+            }
             stage=2;wait=15;return false;
         }
         if(stage==2) {
