@@ -39,7 +39,7 @@ final class RoleArmorRuntimeChecks {
             if(stage==9) {ArmorSamplingRuntimeChecks.tick(mc);return;}
             if(stage==0) {
                 choices=choices(ITEMS[piece]);design=0;
-                require(choices.size()==(piece<2?16:8),"eight full roles plus slot-specific alternates");
+                require(choices.size()==(piece<2?22:14),"eight roles, six companies, and slot-specific role alternates");
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     EntityPlayerMP player=owner(mc);player.setGameType(GameType.CREATIVE);
                     player.inventory.currentItem=0;
@@ -110,7 +110,8 @@ final class RoleArmorRuntimeChecks {
                 ItemStack equipped=mc.player.getItemStackFromSlot(ITEMS[piece].armorType);
                 require(equipped.getItem()==ITEMS[piece] && ItemProgrammableArmor.texture(equipped)==choices.get(choices.size()-1).choice,"role equipment sync");
                 if(++piece<ITEMS.length) {stage=0;ticks=0;return;}
-                require(icons==48,"every native inventory variant checked");
+                require(icons==72,"every native inventory variant checked");
+                pending=mc.getIntegratedServer().addScheduledTask(()->DuplifierArmorRuntimeChecks.checkMatrix(owner(mc)));
                 stage=7;ticks=0;return;
             }
             if(stage==7) {
@@ -129,7 +130,7 @@ final class RoleArmorRuntimeChecks {
                 for(ItemProgrammableArmor item:ITEMS)require(ItemProgrammableArmor.texture(mc.player.getItemStackFromSlot(item.armorType))==previewEntry(item).choice,"complete role preview synchronized");
                 shot(mc,output,"armor_stand_set_"+choices(ITEMS[0]).get(preview).name.replace("_helmet",""));
                 if(++preview<choices(ITEMS[0]).size()) {stage=7;ticks=0;return;}
-                System.out.println("[vandorlabs][reprolab] role-armor PASS choices=48 icons=48 sets=16 (Civilian Staff defaults, slot-filtered menus, wrong-slot packets rejected, native atlas mapping, NBT persistence, equip, padded icons and armor stand captures)");
+                System.out.println("[vandorlabs][reprolab] role-armor PASS choices=72 icons=72 sets=22 (eight roles, six companies, Civilian Staff defaults, slot-filtered menus, wrong-slot packets rejected, native atlas mapping, NBT persistence, equip, padded icons and armor stand captures)");
                 stage=9;
                 if(Boolean.getBoolean("vandorlabs.armorChecksOnly"))mc.shutdown();
             }
@@ -155,7 +156,7 @@ final class RoleArmorRuntimeChecks {
         require(lightCount>=30,"all fifteen light artwork pairs offered on armor: "+lightCount);
         for(int i=0;i<ScreenHousingTextures.BUILTIN_COUNT;i++)if("Lights".equals(ScreenHousingTextures.category(i)) && ScreenHousingTextures.visible(i))
             require(entries.containsKey(ScreenHousingTextures.choiceAt(i)),"every bundled light choice offered");
-        require(nativeCount==(piece<2?16:8) && entries.size()>nativeCount,"slot-specific native designs plus existing block materials");
+        require(nativeCount==(piece<2?22:14) && entries.size()>nativeCount,"slot-specific native designs plus existing block materials");
         Map<Integer,HousingTextureList.Option> blocks=options(new HousingTextureList(0,0,250,0));
         for(HousingTextureList.Option option:blocks.values())require(!"Armor".equals(option.category) && ArmorTextures.entry(option.choice)==null,"Armor category absent from block picker");
         for(ArmorTextures.Entry entry:ArmorTextures.ALL) {

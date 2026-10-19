@@ -51,7 +51,10 @@ public final class ItemProgrammableArmor extends ItemArmor {
     /** The ordinary armor menu adds lights to the block-material categories. */
     public static boolean listedMaterial(int choice) {
         if(!validTexture(choice) || com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return false;
-        String category=ScreenHousingTextures.category(ScreenHousingTextures.localIndex(choice));
+        int index=ScreenHousingTextures.localIndex(choice);
+        com.google.gson.JsonObject entry=ScreenHousingTextures.entry(index);
+        if(entry!=null&&entry.has("detail")&&entry.get("detail").getAsInt()>0)return false;
+        String category=ScreenHousingTextures.category(index);
         return !category.equals("Screens") && !category.equals("Doors") && !category.equals("Double Doors");
     }
 

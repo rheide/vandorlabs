@@ -6,6 +6,14 @@ Hold a piece and shift-right-click while aiming into the air to configure it in 
 
 See the [programmable armor guide](../programmable-armor.md) for crafting and material options.
 
+## Company designs
+
+Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor each offer matching helmets,
+chestplates, leggings and boots in the Armor category. These designs can be mixed
+with the role sets below.
+
+![Six company armor sets with matching inventory icons](../images/gallery/armor/company-sets.png)
+
 ## Civilian Staff
 
 ![Full Civilian Staff armor set on an armor stand](../images/gallery/armor/civilian-staff.png)

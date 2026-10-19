@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor armor designs to the programmable armor dialogs: 24 slot-specific choices with native wearable atlases and padded icons. Existing saved designs keep their IDs.
+- Filter redundant hatch detail variants from armor material menus while retaining saved selections and custom samples.
+- Pause turntable captures at their current angle when redstone turns off. Add a paused Angle slider and explicit Restore with a visible nearest-quarter-turn preview. Carry Taxi craft about their physical center and cover both drive-on/rotate/drive-off and park/scan/rotate/reassemble journeys in live integration checks.
+- Compact the tank dialog, use square side windows, and add persistent Tile/Fit casing texture control without changing contents or connections.
+- Match tank shell shading and hexagon dimensions to hexagonal propulsion blocks. Give Rocket Thrusters, Ion Drives, Plasma Vents and Impulse Engines straight rear rims for clean tank-to-engine joins.
+- Give all seven Data Cards and seven Data Chips opaque, closed extruded edges and crisp 128px cutout artwork; verify inventory padding and held models.
+
 - Prevent a cockpit destruction crash when the renderer queries a removed or replaced cockpit tile's bounds.
 - Update both cockpit consoles with continuous shells, tilted screen banks and center touch keyboards. Use tighter collision shapes around the angled footwell walls and preserve existing per-surface settings.
 - Add standard and Large fixed Landing Gear Mounts for Plates, Skis and matching-size Wheels. Permit partial mounting-cap support and mixed-facing straight Large Extender columns sharing plates.
