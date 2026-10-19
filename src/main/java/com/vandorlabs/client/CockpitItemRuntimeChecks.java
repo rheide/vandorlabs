@@ -11,6 +11,7 @@ import java.io.File;
 
 final class CockpitItemRuntimeChecks {
     static void run(Minecraft mc,File output)throws Exception{
+        removalChecks(mc);
         GuiScreen previous=mc.currentScreen;Icons icons=new Icons();try{
             mc.displayGuiScreen(icons);mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();icons.drawScreen(0,0,0);
             BufferedImage shot=ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());int scale=new ScaledResolution(mc).getScaleFactor(),size=16*scale;
@@ -18,6 +19,28 @@ final class CockpitItemRuntimeChecks {
             javax.imageio.ImageIO.write(shot,"png",new File(output,"shot_utility22_cockpit_items.png"));
         }finally{GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);mc.displayGuiScreen(previous);}
         System.out.println("[vandorlabs][reprolab] cockpit-item-padding PASS four complete rotated OBJ variants");
+    }
+    /** Exercise OptiFine's pre-render bounds query and the queued TESR after removal. */
+    private static void removalChecks(Minecraft mc){
+        net.minecraft.util.math.BlockPos pos=mc.player.getPosition().up(20);
+        net.minecraft.block.state.IBlockState before=mc.world.getBlockState(pos);
+        if(!mc.world.isAirBlock(pos))throw new IllegalStateException("Cockpit client removal fixture occupied");
+        try{
+            for(String id:CockpitData.IDS)for(EnumFacing facing:EnumFacing.HORIZONTALS){
+                net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromName("vandorlabs:"+id);
+                mc.world.setBlockState(pos,block.getDefaultState().withProperty(com.vandorlabs.blocks.BlockVandorDirectional.FACING,facing),3);
+                com.vandorlabs.tiles.TileEntityCockpit tile=(com.vandorlabs.tiles.TileEntityCockpit)mc.world.getTileEntity(pos);
+                if(tile.facing()!=facing || !tile.hasLiveBlock())throw new IllegalStateException("Live cockpit facing");
+                tile.getRenderBoundingBox();mc.world.setBlockToAir(pos);
+                for(boolean invalid:new boolean[]{true,false}){
+                    if(!invalid)tile.validate();
+                    tile.facing();tile.getRenderBoundingBox();
+                    if(tile.hasLiveBlock())throw new IllegalStateException("Removed cockpit still renders");
+                    new TECockpit().render(tile,0,0,0,0,-1,1);
+                }
+            }
+        }finally{mc.world.setBlockState(pos,before,3);}
+        System.out.println("[vandorlabs][reprolab] cockpit-removal-render PASS four models four facings invalidated and queued bounds/TESR");
     }
     private static final class Icons extends GuiScreen{
         int x(int i){return width/2+(i-2)*34;}int y(){return height/2-8;}public boolean doesGuiPauseGame(){return false;}

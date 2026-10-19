@@ -26,6 +26,11 @@ final class CockpitRuntimeChecks {
                 clear(world);Block block=Block.getBlockFromName("vandorlabs:"+id);world.setBlockState(ROOT,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing));CockpitAssembly.install(world,ROOT,player);
                 TileEntityCockpit tile=(TileEntityCockpit)world.getTileEntity(ROOT);tile.setTaxiMode(false);
                 for(BlockPos p:tile.data().cells(ROOT,facing)){require(CockpitAssembly.root(world,p)==tile,"anchor resolution "+id+facing);for(AxisAlignedBB b:CockpitAssembly.boxes(world,p))require(b.minX>=-1e-8 && b.maxX<=1+1e-8 && b.minY>=-1e-8 && b.maxY<=1+1e-8 && b.minZ>=-1e-8 && b.maxZ<=1+1e-8,"clipped collision");}
+                if(id.equals("cockpit_a") || id.equals("cockpit_b")){
+                    require(tile.display("touch_center_keyboard")!=null && tile.control("touch_center_keyboard/2")!=null,"new center keyboard");
+                    AxisAlignedBB footwell=new AxisAlignedBB(.60,.25,-.20,.61,.35,-.19);
+                    for(AxisAlignedBB b:tile.data().boxes)require(!b.intersects(footwell),"angled console must clear footwell");
+                }
                 int channel=62000;
                 for(TileEntityCockpit.Control c:tile.controls){c.setRedstoneChannels(ChannelList.of(channel++));c.kind=1;for(int step=0;step<4;step++){c.activate(step/3D);require(RedstoneChannels.level(world,c.getRedstoneChannel())==step*5,"independent detents "+c.id);}c.kind=2;c.activate(.5);require(c.level==15,"pulse starts");tile.expire(c.until);require(c.level==0 && RedstoneChannels.level(world,c.getRedstoneChannel())==0,"pulse releases");}
                 for(CockpitData.Surface surface:tile.data().surfaces){TileEntityCockpit.Display display=tile.display(surface.id);display.texture=surfaces%ScreenHousingTextures.IDS.length;display.speed=3;surfaces++;
@@ -33,6 +38,12 @@ final class CockpitRuntimeChecks {
                 }
                 TileEntityCockpit copy=(TileEntityCockpit)TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(copy.design().equals(id) && copy.displays.size()==tile.displays.size() && copy.controls.size()==tile.controls.size(),"saved surface identities");
                 for(int i=0;i<copy.displays.size();i++)require(copy.displays.get(i).texture==tile.displays.get(i).texture && copy.displays.get(i).speed==3,"independent screen persistence");
+                // Older kits used a different surface order and lacked the center keyboard.
+                NBTTagCompound legacy=tile.writeToNBT(new NBTTagCompound());
+                net.minecraft.nbt.NBTTagList oldScreens=new net.minecraft.nbt.NBTTagList();
+                for(int i=tile.displays.size()-1;i>=0;i--)if(!tile.displays.get(i).id.equals("touch_center_keyboard"))oldScreens.appendTag(tile.displays.get(i).write());
+                legacy.setTag("CockpitDisplays",oldScreens);copy.readFromNBT(legacy);
+                for(TileEntityCockpit.Display d:tile.displays)if(!d.id.equals("touch_center_keyboard"))require(copy.display(d.id).texture==d.texture,"legacy display identity "+d.id);
                 ItemStack picked=block.getPickBlock(world.getBlockState(ROOT),null,world,ROOT,player);require(picked.getSubCompound("BlockEntityTag").getString("CockpitDesign").equals(id),"configured item");
                 com.vandorlabs.container.ContainerCockpit dialog=new com.vandorlabs.container.ContainerCockpit(tile,null);
                 require(dialog.canInteractWith(player),"fresh reachable dialog");
@@ -46,10 +57,16 @@ final class CockpitRuntimeChecks {
                 BlockPos ghost=null;for(BlockPos p:tile.data().cells(ROOT,facing))if(!p.equals(ROOT)){ghost=p;break;}
                 world.destroyBlock(ghost==null?ROOT:ghost,false);require(world.isAirBlock(ROOT),"part removes anchor");for(BlockPos p:tile.data().cells(ROOT,facing))require(world.isAirBlock(p),"reservation cleanup");
                 require(!dialog.canInteractWith(player),"stale dialog rejected after removal");
+                require(!tile.hasLiveBlock(),"removed tile must not render");tile.facing();tile.getRenderBoundingBox();
+                copy.setWorld(world);copy.setPos(ROOT);copy.validate();
+                for(net.minecraft.block.state.IBlockState replacement:new net.minecraft.block.state.IBlockState[]{Blocks.AIR.getDefaultState(),Blocks.STONE.getDefaultState(),block.getDefaultState()}){
+                    world.setBlockState(ROOT,replacement);require(!copy.hasLiveBlock(),"detached replacement tile must not render");copy.facing();copy.getRenderBoundingBox();
+                }
+                world.setBlockToAir(ROOT);
             }
             roundTrip(world,player);
         }finally{clear(world);player.setPositionAndUpdate(before.x,before.y,before.z);}
-        System.out.println("[vandorlabs][reprolab] cockpit-runtime PASS four models four facings reservations clipped-collision independent-surfaces touch detents pulses save configured-items vehicle-round-trip");
+        System.out.println("[vandorlabs][reprolab] cockpit-runtime PASS four models four facings reservations clipped-collision independent-surfaces touch detents pulses save configured-items stale-render-bounds vehicle-round-trip");
     }
     private static void roundTrip(WorldServer world,EntityPlayerMP player)throws Exception{
         EntityGroundVehicle craft=null;BlockPos base=ROOT.add(-1,-2,-2);

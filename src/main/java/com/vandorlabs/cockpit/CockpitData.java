@@ -34,7 +34,16 @@ public final class CockpitData {
         seat=assembly.get("seat_position_blocks").isJsonNull()?null:vector(assembly.getAsJsonArray("seat_position_blocks"));
         riderY=assembly.has("rider_entity_origin_blocks")?vector(assembly.getAsJsonArray("rider_entity_origin_blocks")).y:seat==null?0:seat.y-.4890625;
         for(JsonElement e:assembly.getAsJsonArray("reserved_cells")){Vec3d v=vector(e.getAsJsonArray());cells.add(new BlockPos(v));}
-        for(JsonElement e:assembly.getAsJsonArray("collision_boxes")){JsonObject b=e.getAsJsonObject();boxes.add(new AxisAlignedBB(vector(b.getAsJsonArray("min")),vector(b.getAsJsonArray("max"))));}
+        Set<String> convex=new HashSet<>();
+        if(assembly.has("collision_convex_solids"))for(JsonElement e:assembly.getAsJsonArray("collision_convex_solids")){
+            JsonObject solid=e.getAsJsonObject();convex.add(solid.get("part").getAsString()+"/"+solid.get("mesh").getAsString());
+            boxes.addAll(CockpitCollision.slices(solid));
+        }
+        for(JsonElement e:assembly.getAsJsonArray("collision_boxes")){
+            JsonObject b=e.getAsJsonObject();
+            if(!convex.contains(b.get("part").getAsString()+"/"+b.get("box").getAsString()))
+                boxes.add(new AxisAlignedBB(vector(b.getAsJsonArray("min")),vector(b.getAsJsonArray("max"))));
+        }
         for(JsonElement e:json(id,"surfaces").getAsJsonArray("surfaces"))surfaces.add(new Surface(e.getAsJsonObject()));
         for(JsonElement e:json(id,"rig").getAsJsonArray("parts")){JsonObject part=e.getAsJsonObject();String name=part.get("id").getAsString();controls.add(name);pivots.put(name,vector(part.getAsJsonArray("pivot")));}
         if(cells.isEmpty() || boxes.isEmpty())throw new IllegalArgumentException("Empty cockpit "+id);

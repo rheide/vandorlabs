@@ -18,7 +18,18 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     public TileEntityCockpit(String design){this();this.design=design;prepare();}
     public String design(){return design;}
     public CockpitData data(){return CockpitData.get(design);}
-    public EnumFacing facing(){return world==null?EnumFacing.NORTH:world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockVandorDirectional.FACING);}
+    private EnumFacing lastFacing=EnumFacing.NORTH;
+    /** Removal and replacement can precede the renderer's final queued bounds query. */
+    public boolean hasLiveBlock(){
+        if(world==null || isInvalid() || !world.isBlockLoaded(pos) || world.getTileEntity(pos)!=this)return false;
+        net.minecraft.block.Block block=world.getBlockState(pos).getBlock();
+        return block instanceof com.vandorlabs.blocks.BlockCockpit && design.equals(((com.vandorlabs.blocks.BlockCockpit)block).design)
+            || block instanceof com.vandorlabs.blocks.BlockCockpitPeripheral && design.equals(((com.vandorlabs.blocks.BlockCockpitPeripheral)block).design);
+    }
+    public EnumFacing facing(){
+        if(hasLiveBlock())lastFacing=world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockVandorDirectional.FACING);
+        return lastFacing;
+    }
     public double seatHeight(){return data().riderY+.725;}
     private void prepare(){
         if(!displays.isEmpty())return;
@@ -64,7 +75,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         NBTTagList outputs=tag.getTagList("CockpitControls",10);for(int i=0;i<Math.min(64,outputs.tagCount());i++){NBTTagCompound saved=outputs.getCompoundTagAt(i);Control c=control(saved.getString("Id"));if(c!=null)c.read(saved);}
         initializeControls();if(ordinary() && world.getTileEntity(pos)==this)for(Control c:controls)RedstoneChannels.register(c);
     }
-    @Override public AxisAlignedBB getRenderBoundingBox(){return CockpitData.rotate(data().bounds,facing()).offset(pos).grow(.05);}
+    @Override public AxisAlignedBB getRenderBoundingBox(){return hasLiveBlock()?CockpitData.rotate(data().bounds,facing()).offset(pos).grow(.05):new AxisAlignedBB(pos);}
     public final class Control implements RedstoneChannelMember {
         public final String id;
         public String label="";

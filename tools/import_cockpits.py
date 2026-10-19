@@ -14,11 +14,8 @@ def import_assets():
             target=ROOT/destination/relative
             target.parent.mkdir(parents=True,exist_ok=True)
             target.write_bytes(archive.read(name))
-        for name in ('CockpitModels','CockpitMotion','CockpitRenderer'):
-            source=next(p for p in archive.namelist() if p.endswith('/'+name+'.java'))
-            target=ROOT/'src/main/java/com/vandorlabs/client/cockpits'/(name+'.java')
-            target.parent.mkdir(parents=True,exist_ok=True)
-            target.write_bytes(archive.read(source))
-    print('Imported four cockpit/peripheral assemblies with authored collision, rig and surface metadata')
+    # The kit's example renderers can omit previously integrated designs.
+    # Keep runtime Java and existing assemblies; import supplied assets only.
+    print('Imported supplied cockpit runtime assets; preserved integrated renderers and other designs')
 
 if __name__=='__main__':import_assets()

@@ -10,11 +10,11 @@
     "high": "vandorlabs:block/cockpits/cockpit_b/high.obj"
   },
   "render_bounds_blocks": [
-    0.014375,
+    0.015625,
     0.0,
-    -0.98543409,
-    1.985625,
-    1.325,
+    -0.96875,
+    1.984375,
+    1.39172797,
     0.91875
   ],
   "parts": [

@@ -16,7 +16,7 @@ import java.nio.FloatBuffer;
 /** Authored OBJ rig plus individually configured animated and interactive surface planes. */
 public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit> {
     @Override public void render(TileEntityCockpit tile,double x,double y,double z,float partial,int stage,float alpha){
-        if(tile.getWorld()==null || !tile.getWorld().getBlockState(tile.getPos()).getProperties().containsKey(com.vandorlabs.blocks.BlockVandorDirectional.FACING))return;
+        if(!tile.hasLiveBlock())return;
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);EnumFacing facing=tile.facing();
         CockpitRenderer.renderAnimated(tile.design(),x,y,z,facing,light,id->{TileEntityCockpit.Control c=tile.control(id);return c==null?0:c.level/5D;});
         float oldU=OpenGlHelper.lastBrightnessX,oldV=OpenGlHelper.lastBrightnessY;

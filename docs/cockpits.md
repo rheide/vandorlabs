@@ -5,10 +5,14 @@ screens and touch panels, and physical throttle controls. The chair with side
 controls provides a smaller seated arrangement. Yoke and Screen is a standalone
 peripheral and does not add a passenger seat to a vehicle.
 
+Both cockpit consoles have continuous shells, tilted screen banks and a center
+keyboard touch panel. Existing display and output settings follow their surface
+identities when the console geometry is updated; new panels start with defaults.
+
 Place the complete assembly with its item. Placement checks every rotated cell
 before creating the root and its reservations. Breaking any reserved part removes
-the assembly. Collision follows the supplied component boxes, leaving the cockpit
-interior open. Configured item drops preserve displays, channels and controls.
+the assembly. Collision follows the component boxes and narrow slices of angled console
+solids, leaving the cockpit interior open. Configured item drops preserve displays, channels and controls.
 
 Use the Configurizer or sneak-right-click any part to open the combined dialog.
 Use the arrows to select the Pilot page, individual surface pages and individual
