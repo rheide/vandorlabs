@@ -51,8 +51,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             return;
         }
 
-        GearMotion.Pose pose = GearMotion.pose(tile.mode(), tile.direction(), assembly.columnHeight(),
-                tile.renderProgress(partialTicks));
+        GearMotion.Pose pose = tile.pose(tile.renderProgress(partialTicks));
         Affine fixed = Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING)));
         Affine moving = Affine.fromPose(pose, false);
         Affine feet = Affine.fromPose(pose, true);
@@ -72,8 +71,8 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                 GearModels.draw("swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()).compose(hingeYaw))),x,y,z,light,buffer);
                 GearModels.draw("swivel",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight(),0).compose(hingeYaw))),x,y,z,light,buffer);
             }else{
-                GearModels.draw("rod",offset.compose(armPose.compose(Affine.scaleY(pose.rodTopY()-pose.rodBottomY(),pose.rodBottomY()))),x,y,z,light,buffer);
-                GearModels.draw("socket",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight(),0))),x,y,z,light,buffer);
+                GearModels.draw("rod",offset.compose(armPose.compose(Affine.scaleY(pose.rodTopY()-pose.rodBottomY()-tile.footMountOffset(),pose.rodBottomY()+tile.footMountOffset()))),x,y,z,light,buffer);
+                GearModels.draw("socket",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0))),x,y,z,light,buffer);
             }
         }
 
@@ -82,7 +81,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
         String prefix = assembly.kind() == GearTopology.FootKind.PLATE ? "plate_" : "ski_";
         for (GearTopology.Cell foot : assembly.feet()) {
             if(assembly.kind()==GearTopology.FootKind.WHEEL){
-                net.minecraft.util.math.BlockPos source=tile.getPos().add(foot.x,foot.y,foot.z);IBlockState ws=tile.getWorld().getBlockState(source);GearBlock wheel=(GearBlock)ws.getBlock();if(!wheel.componentRoot(source,ws).equals(source))continue;
+                net.minecraft.util.math.BlockPos source=tile.getPos().add(foot.x,foot.y,foot.z);IBlockState ws=tile.getWorld().getBlockState(source);if(!(ws.getBlock() instanceof GearBlock)||((GearBlock)ws.getBlock()).kind()!=GearBlock.Kind.WHEEL)continue;GearBlock wheel=(GearBlock)ws.getBlock();if(!wheel.componentRoot(source,ws).equals(source))continue;
                 Affine transform=orientation;com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
                 Affine at=feet.compose(Affine.translation(foot.x,foot.y,foot.z));
                 if(craft!=null)transform=transform.compose(Affine.yaw(wheel.width()*.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft)));

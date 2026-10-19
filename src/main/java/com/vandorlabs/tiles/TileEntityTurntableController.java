@@ -50,7 +50,16 @@ public final class TileEntityTurntableController extends TileEntity implements I
     }
     public void restore(EntityPlayerMP player)throws Exception{EntityTurntable entity=display();if(entity==null)throw new IllegalArgumentException("Captured contents are not loaded; load the entire turntable first");TurntableTransfer.restore((WorldServer)world,entity,player);}
     public void restored(double heading){angle=previous=TurntableGeometry.wrap(heading);changed();}
-    public void surfaceChanged(){enabled=false;status("Surface changed; rotation stopped. Restore contents before rebuilding");}
+    public void surfaceChanged(){
+        enabled=false;
+        // Keep the capture layout for recovery, but return every remaining face
+        // to its ordinary block model if the shared renderer loses a member.
+        if(layout!=null&&world!=null)for(BlockPos cell:layout.cells)if(world.isBlockLoaded(cell)){
+            TileEntity raw=world.getTileEntity(cell);
+            if(raw instanceof TileEntityTurntableSurface&&pos.equals(((TileEntityTurntableSurface)raw).owner)&&key.equals(((TileEntityTurntableSurface)raw).ownerKey))((TileEntityTurntableSurface)raw).release();
+        }
+        status("Surface changed; rotation stopped. Restore contents before rebuilding");changed();
+    }
     public void release(){if(layout!=null&&world!=null)for(BlockPos cell:layout.cells)if(world.isBlockLoaded(cell)){TileEntity tile=world.getTileEntity(cell);if(tile instanceof TileEntityTurntableSurface && pos.equals(((TileEntityTurntableSurface)tile).owner)&&key.equals(((TileEntityTurntableSurface)tile).ownerKey))((TileEntityTurntableSurface)tile).release();}layout=null;changed();}
     public void settings(NBTTagCompound tag){
         int h=tag.getInteger("Height"),sm=tag.getInteger("ScanMode"),rm=tag.getInteger("RotationMode"),a=tag.getInteger("Axis");double speed=tag.getDouble("RPM");
@@ -67,7 +76,7 @@ public final class TileEntityTurntableController extends TileEntity implements I
         trigger=next;boolean rotation=matches(Math.max(1,rotationMode),rotationChannels);
         if(rotation&&!rotationTrigger&&captureId==null&&layout!=null&&actor!=null&&enabled)try{scan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){status(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         rotationTrigger=rotation;
-        if(ticks%20==0&&layout!=null&&layout.loaded(world))for(BlockPos cell:layout.cells){TileEntity tile=world.getTileEntity(cell);if(!(tile instanceof TileEntityTurntableSurface)){surfaceChanged();break;}TileEntityTurntableSurface surface=(TileEntityTurntableSurface)tile;if(surface.owner==null)surface.bind(this);else if(!pos.equals(surface.owner)||!key.equals(surface.ownerKey)){surfaceChanged();break;}}
+        if(ticks%20==0&&enabled&&layout!=null&&layout.loaded(world))for(BlockPos cell:layout.cells){TileEntity tile=world.getTileEntity(cell);if(!(tile instanceof TileEntityTurntableSurface)){surfaceChanged();break;}TileEntityTurntableSurface surface=(TileEntityTurntableSurface)tile;if(surface.owner==null)surface.bind(this);else if(!pos.equals(surface.owner)||!key.equals(surface.ownerKey)){surfaceChanged();break;}}
         EntityTurntable entity=display();if(entity!=null)angle=entity.angle();else if(captureId==null&&running())angle=TurntableGeometry.wrap(angle+(clockwise?1:-1)*TurntableGeometry.degreesPerTick(rpm));
         if(ticks%10==0&&layout!=null)changed();
     }

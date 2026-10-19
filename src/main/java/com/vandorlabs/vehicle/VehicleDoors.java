@@ -63,8 +63,14 @@ public final class VehicleDoors {
             if(cell==null || cell.state.getBlock()!=block)return false;
         }
         boolean open=!block.getActualState(state,craft.view,hit).getValue(BlockDoor.OPEN);
-        java.nio.ByteBuffer patch=java.nio.ByteBuffer.allocate(group.size()*9);
-        for(BlockPos position:group){patch.putLong(position.toLong());patch.put((byte)(open?1:0));}
+        if(!open&&craft.view.getTileEntity(hit) instanceof TileEntityProgrammableTrapdoor&&com.vandorlabs.tiles.LandingGearCovers.needsOpen((TileEntityProgrammableTrapdoor)craft.view.getTileEntity(hit)))return false;
+        Map<BlockPos,Boolean> desired=new LinkedHashMap<>();for(BlockPos position:group)desired.put(position,open);return set(craft,desired);
+    }
+    /** Publish a checked group update through the same snapshot/network path as a manual click. */
+    public static boolean set(EntityGroundVehicle craft,Map<BlockPos,Boolean> desired){
+        if(craft.world.isRemote||desired.isEmpty()||desired.size()>64)return false;
+        craft.signals.persist();java.nio.ByteBuffer patch=java.nio.ByteBuffer.allocate(desired.size()*9);
+        for(Map.Entry<BlockPos,Boolean> entry:desired.entrySet()){patch.putLong(entry.getKey().toLong());patch.put((byte)(entry.getValue()?1:0));}
         if(!apply(craft,patch.array()))return false;
         VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.DOORS);packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.data=patch.array();
         com.vandorlabs.network.PacketHandler.INSTANCE.sendToAllTracking(packet,craft);

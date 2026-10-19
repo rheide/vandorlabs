@@ -82,7 +82,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public final VehicleAutopilot autopilot=new VehicleAutopilot(this);
     public double groundClearance(){if(world.getTotalWorldTime()-clearanceAt>=5){clearance=VehicleFlight.clearance(this);clearanceAt=world.getTotalWorldTime();}return clearance;}
     public boolean setHover(boolean value){
-        if(!value && structure!=null && structure.hasNonWheeledGear)return false;
+        if(!value && structure!=null && !VehicleSkiTraction.allowed(this))return false;
         if(value==hover)return true;
         if(value && (!VehicleFlight.canHover(structure)))return false;
         if(value)try{VehicleFlight.requireThruster(structure);}catch(IllegalArgumentException unavailable){return false;}
@@ -95,7 +95,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public void flightInput(EntityPlayerMP player,byte direction,boolean toggle){flightInput(player,direction,toggle,false);}
     public void flightInput(EntityPlayerMP player,byte direction,boolean toggle,boolean sprint){
         if(getControllingPassenger()!=player || direction< -1 || direction>1 || autopilot.enabled())return;
-        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.hasNonWheeledGear?"Ski and landing strut craft cannot use Taxi; select Park on the Vehicle Controller near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
+        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.hasNonWheeledGear?"Taxi requires wheels, or only skis above ice; otherwise select Park near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         vertical=direction;flightSprint=sprint;verticalAt=world.getTotalWorldTime();
     }
     public void autopilotControls(byte f,byte s,boolean b){forward=f;strafe=s;brake=b;}
@@ -368,7 +368,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         // Hover can yaw in place; the route controller owns its own turns.
         // Taxi steering falls off with speed and reverses when backing up.
         float change=hover?(autopilot.enabled()?0:steering*1.7F):(float)(steering*driveSpeed*11*(1-.45*Math.abs(driveSpeed)/.28));
-        rotationYaw=collision.turn(world,this,posX,posY,posZ,rotationYaw,change);
+        float turned=collision.turn(world,this,posX,posY,posZ,rotationYaw,change);
+        if(hover||!structure.hasSkisOnly||turned==rotationYaw||VehicleSkiTraction.onIce(this,posX,posY,posZ,turned))rotationYaw=turned;
         EnumFacing front=structure.facing;double angle=Math.toRadians(rotationYaw),c=Math.cos(angle),s=Math.sin(angle);
         motionX=(front.getFrontOffsetX()*c-front.getFrontOffsetZ()*s)*driveSpeed;
         motionZ=(front.getFrontOffsetX()*s+front.getFrontOffsetZ()*c)*driveSpeed;
@@ -392,6 +393,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
                 if(sx*sx+sz*sz>x*x+z*z && down> -up-.04) {x=sx;z=sz;y=up+down;}
             }
         }
+        if(!hover&&structure.hasSkisOnly&&(x!=0||z!=0)&&!VehicleSkiTraction.onIce(this,posX+x,posY+y,posZ+z,rotationYaw)){x=z=0;driveSpeed=0;}
         if(x!=motionX || z!=motionZ)driveSpeed=0;
         if(x!=motionX)motionX=0;if(z!=motionZ)motionZ=0;if(y!=motionY)motionY=0;
         setPosition(posX+x,posY+y,posZ+z);view.origin=new BlockPos(posX,posY,posZ);

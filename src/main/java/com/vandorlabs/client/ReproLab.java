@@ -911,6 +911,7 @@ public class ReproLab {
                 if(s.name.equals("utility22_cockpit_0"))try{CockpitDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("cockpit dialogs",failure);}
                 if(s.name.equals("turntable_floor"))try{TurntableDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("turntable dialog",failure);}
                 if(s.name.equals("modular_gear_0_deployed"))try{ModularGearDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("modular gear dialog",failure);}
+                if(s.name.equals("modular_gear_3_deployed"))try{ModularWheelVisualChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("modular wheel animation",failure);}
                 if(s.name.equals("gallery_distant_geometry") && SHOTS.size()==1) {
                     state=999;mc.shutdown();return;
                 }

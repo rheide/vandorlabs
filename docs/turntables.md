@@ -40,7 +40,7 @@ overwrite blocks and keeps the captured contents if blocked. The entire assembly
 and return volume must be loaded. Sideways platforms can restore ordinary blocks
 at cardinal headings; blocks whose orientation cannot be represented and sideways
 tile entities require a supported heading before restoring. Remove the controller
-after restoring its contents. Damaging a surface stops rotation.
+after restoring its contents. Damaging a surface stops rotation and returns the remaining tiles to their individual surface models. The recovery layout is retained until captured contents can be restored. A blocked rotation reports the obstruction coordinates in the controller dialog.
 
 The controller reports holes, non-square surfaces, conflicting owners, unloaded
 boundaries and incomplete native multiblocks. Capture and restoration respect

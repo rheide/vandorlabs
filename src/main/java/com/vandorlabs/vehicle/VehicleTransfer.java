@@ -189,7 +189,8 @@ public final class VehicleTransfer {
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin,net.minecraft.entity.player.EntityPlayer actor)throws Exception {
         if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
         VehicleFlight.requireThruster(structure);
-        if(structure.hasNonWheeledGear && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Ski and strut craft require three lift blocks for Hover; Taxi is unavailable.");
+        boolean forceHover=structure.hasNonWheeledGear&&!VehicleSkiTraction.canStart(world,structure,origin);
+        if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice; other landing gear needs three lift blocks for Hover.");
         VehicleRotation.validate(structure,new VehicleWorld(world,structure));
         if(structure.gearCount<3)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
@@ -197,7 +198,7 @@ public final class VehicleTransfer {
         if(work!=null){if(work.assembled==null){VehicleCollision prepared=geometry(world,structure);work.assembled=new EntityGroundVehicle(world);work.assembled.install(structure,prepared);}entity=work.assembled;}
         else{entity=new EntityGroundVehicle(world);entity.install(structure);}
         entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
-        if(structure.hasNonWheeledGear && !entity.setHover(true))throw new IllegalArgumentException("Unable to enter Hover for non-wheeled landing gear.");
+        if(forceHover && !entity.setHover(true))throw new IllegalArgumentException("Unable to enter Hover for non-wheeled landing gear.");
         Map<net.minecraft.entity.Entity,BlockPos> seated=new LinkedHashMap<>();
         List<com.vandorlabs.entity.EntityChairSeat> oldSeats=new ArrayList<>();
         for(com.vandorlabs.entity.EntityChairSeat chair:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,structure.bounds.offset(origin).grow(1))){

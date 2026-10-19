@@ -10,7 +10,7 @@ def main():
   for name in z.namelist():
    if '/resources/assets/mctrek/' in name:
     rel=name.split('/resources/assets/mctrek/',1)[1]
-    if rel.startswith(('models/','textures/')) and name.endswith(('.obj','.mtl','.png')):
+    if (rel.startswith('textures/') and name.endswith('.png') or rel.startswith('models/') and '/parts/' not in rel and Path(rel).name in ('complete.obj','materials.mtl')):
      target=TEX/rel[len('textures/'):] if rel.startswith('textures/') else ASSETS/rel
      target.parent.mkdir(parents=True,exist_ok=True);data=z.read(name)
      if name.endswith(('.obj','.mtl')):data=data.replace(b'mctrek:',b'vandorlabs:')

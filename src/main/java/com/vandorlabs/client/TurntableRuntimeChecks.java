@@ -61,6 +61,17 @@ final class TurntableRuntimeChecks {
                 EntityArmorStand only=new EntityArmorStand(world,far.getX()+.5,far.getY()+.5,far.getZ()+.5);only.setNoGravity(true);require(world.spawnEntity(only),"entity-only far edge fixture");UUID onlyId=only.getUniqueID();tile.height=16;tile.scan(player);require(tile.display().snapshot.blocks.cells.isEmpty()&&tile.display().snapshot.entities.size()==1,"entity-only sixteen-block capture");tile.restore(player);
                 count=0;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(!entity.isDead&&entity.getUniqueID().equals(onlyId)){count++;entity.setDead();}require(count==1,"entity-only far edge restored once");
             }
+            for(BlockPos removed:new BlockPos[]{found.root,found.cell(1,1,0)}){
+                tile.height=2;tile.scan(player);EntityTurntable retained=tile.display();
+                world.setBlockToAir(removed);require(!tile.enabled&&tile.layout!=null&&tile.display()==retained,"damaged platform keeps its recovery snapshot");
+                for(int tick=0;tick<40;tick++)tile.update();
+                for(BlockPos cell:found.cells)if(!cell.equals(removed)){
+                    TileEntityTurntableSurface remaining=(TileEntityTurntableSurface)world.getTileEntity(cell);
+                    require(remaining.owner==null&&remaining.controller()==null&&!surface.getActualState(world.getBlockState(cell),world,cell).getValue(BlockTurntableSurface.FORMED),"root/member removal restores opaque standalone surface models "+normal);
+                }
+                retained.setAngle(0);tile.restore(player);require(tile.layout==null&&tile.captureId==null,"damaged platform still restores captured contents");
+                world.setBlockState(removed,surface.getDefaultState().withProperty(BlockTurntableSurface.FACING,normal));
+            }
             TileEntityTurntableSurface stale=(TileEntityTurntableSurface)world.getTileEntity(found.root);tile.release();stale.bind(tile);require(stale.controller()==null,"a retired layout cannot retain a live surface claim");stale.release();clear(world,seed);
         }
         BlockPos fullSeed=new BlockPos(490,205,170),fullOwner=fullSeed.west();
@@ -73,9 +84,12 @@ final class TurntableRuntimeChecks {
         for(int tick=0;tick<100;tick++)moving.onUpdate();require(Math.abs(moving.angle()-90)<.001,"full five-by-five captured layer rotates through ninety degrees");
         full.rotationMode=1;moving.onUpdate();require(!moving.isDead&&full.captureId!=null,"restore must wait until the entity loop finishes");TurntableEvents.finishTransfers(world);require(moving.isDead&&full.captureId==null,"stopping automatically restores displayed right-angle pose");
         require(full.layout!=null,"normal surface layout retained for next activation");
-        full.update();world.setBlockState(fullOwner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());full.update();
+        full.update();BlockPos power=fullOwner.west();BlockIndustrialLever lever=(BlockIndustrialLever)Block.getBlockFromName("vandorlabs:small_power_lever");
+        world.setBlockState(power.down(),Blocks.STONE.getDefaultState());world.setBlockState(power,lever.getDefaultState().withProperty(BlockIndustrialLever.FLOOR,true));DeferredTileLoad.flush(world);
+        lever.onBlockActivated(world,power,world.getBlockState(power),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);full.update();
         moving=full.display();require(moving!=null&&moving.snapshot.blocks.cells.size()==13,"new redstone activation recaptures the prior circular platform");
-        moving.onUpdate();world.setBlockToAir(fullOwner.down());moving.onUpdate();TurntableEvents.finishTransfers(world);require(moving.isDead&&full.captureId==null,"redstone removal automatically restores the next cycle");
+        for(int tick=0;tick<200;tick++){full.update();moving.onUpdate();TurntableEvents.finishTransfers(world);require(!moving.isDead&&full.running(),"continuous redstone activation never stops after its initial tick");}
+        moving.onUpdate();lever.onBlockActivated(world,power,world.getBlockState(power),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);moving.onUpdate();TurntableEvents.finishTransfers(world);require(moving.isDead&&full.captureId==null,"lever removal automatically restores the next cycle");world.setBlockToAir(power);world.setBlockToAir(power.down());
         // Reproduce a saved pre-fix floor capture of terrain behind the active face.
         TurntableSurfaceLayout legacy=TurntableSurfaceLayout.scan(world,fullSeed).reversed();for(BlockPos cell:legacy.cells)for(int depth=1;depth<=4;depth++)world.setBlockState(cell.down(depth),Blocks.CONCRETE.getDefaultState());
         full.layout=legacy;full.reverse=true;for(BlockPos cell:legacy.cells)((TileEntityTurntableSurface)world.getTileEntity(cell)).bind(full);
@@ -85,6 +99,8 @@ final class TurntableRuntimeChecks {
         world.setBlockToAir(fullOwner);for(int x=0;x<5;x++)for(int z=0;z<5;z++){world.setBlockToAir(fullSeed.add(x,1,z));world.setBlockToAir(fullSeed.add(x,0,z));}
         require(VehicleStructure.readDisplay(VehicleStructure.display(Collections.emptyList()).write()).cells.isEmpty(),"empty display round trip");
         AxisAlignedBB base=new AxisAlignedBB(0,0,0,1,.5,1);Vec3d pivot=new Vec3d(.5,0,.5);
+        require(!TurntableCollision.intersects(base,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(1.08,.1,1.08,1.15,.4,1.15)),"exact terrain collision excludes a rotated box's empty corner");
+        require(TurntableCollision.intersects(base,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(.45,.1,.45,.55,.4,.55)),"exact terrain collision retains actual obstructions");
         require(TurntableCollision.boxes(base,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(1.08,.1,1.08,1.15,.4,1.15)).isEmpty(),"rotated stair lower step has no phantom corner wall");
         List<AxisAlignedBB> narrow=TurntableCollision.boxes(base,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(-1,-1,-1,2,2,2));
         require(narrow.size()>16,"rotated stair footprint uses narrow strips");for(AxisAlignedBB strip:narrow)require(strip.minY==0&&strip.maxY==.5,"lower stair step height preserved");

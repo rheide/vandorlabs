@@ -46,6 +46,8 @@ def check_jar(path):
         prefix='assets/vandorlabs/'
         files={name[len(prefix):]:jar.read(name).decode() if name.endswith(('.json','.mtl','.txt')) else '' for name in jar.namelist() if name.startswith(prefix) and not name.endswith('/')}
         assert not unused(files),'unused artwork remains in JAR'
+        constructor_models=[name for name in files if name.startswith('models/block/universal_constructor/') and name.endswith(('.obj','.mtl'))]
+        assert len(constructor_models)==6 and all(name.count('/')==4 and name.endswith(('/complete.obj','/materials.mtl')) for name in constructor_models),'unused constructor model exports remain in JAR'
         for tier in ('low','medium'):
             for strength in ('_mild','_strong'):assert f'textures/blocks/programmable_glass/{tier}/clear{strength}.png' not in files
         for name,text in files.items():

@@ -107,6 +107,7 @@ public final class ItemConfigurizer extends Item {
         else if (tile instanceof TileEntityProgrammableChair) gui = GuiHandler.GUI_PROGRAMMABLE_CHAIR;
         else if (state.getBlock() instanceof BlockRampController) gui = GuiHandler.GUI_RAMP_CONTROLLER;
         else if (tile instanceof com.vandorlabs.tiles.TileEntityAutopilot) gui = GuiHandler.GUI_AUTOPILOT;
+        else if (tile instanceof com.vandorlabs.tiles.TileEntityHexTank) gui=GuiHandler.GUI_STORAGE_STATUS;
         else if (tile instanceof TileEntityAnimatedScreenSelector)
             gui = GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR;
         else if (tile instanceof RedstoneChannelMember) gui = GuiHandler.GUI_REDSTONE_CHANNEL;

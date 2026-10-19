@@ -111,6 +111,11 @@ public class BlockTelescopicLandingGear extends BlockLandingGear {
     public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing face,float x,float y,float z){
         if(hand!=EnumHand.MAIN_HAND)return false;
         TileEntityLandingGear tile=root(world,pos);if(tile==null)return false;pos=tile.getPos();
+        if(!world.isRemote&&!(this instanceof BlockNonWheeledLandingGear)&&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos)){
+            com.vandorlabs.gear.GearTileEntity migrated=com.vandorlabs.gear.LegacyGearMigration.convert(tile);
+            if(migrated!=null){BlockPos at=migrated.getPos();return ((com.vandorlabs.gear.GearBlock)world.getBlockState(at).getBlock()).onBlockActivated(world,at,world.getBlockState(at),player,hand,face,x,y,z);}
+            player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Legacy conversion needs clear space, full mounting support and compatible neighboring wheels."),true);
+        }
         if(player.isSneaking()){
             if(!com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return false;
             if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LANDING_GEAR,world,pos.getX(),pos.getY(),pos.getZ());
@@ -160,6 +165,7 @@ public class BlockTelescopicLandingGear extends BlockLandingGear {
         }else releaseBelow(world,pos,0);
         super.breakBlock(world,pos,s);
     }
+    @Override public void getSubBlocks(net.minecraft.creativetab.CreativeTabs tab,NonNullList<ItemStack> items){}
     public int damageDropped(IBlockState s){return 0;}
     private ItemStack configured(TileEntityLandingGear tile){
         ItemStack stack=new ItemStack(this);

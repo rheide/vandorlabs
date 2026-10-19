@@ -1,5 +1,7 @@
 # Landing gear alignment and covers
 
+New builds use [modular Extenders, Swing Arms and separate feet](modular-landing-gear.md). Their covers use the same next-block movements described below. The integrated wheel gear is retained as a readable migration source; its old size settings below describe existing installations.
+
 ## Extra Large 2×2
 
 The Landing Gear size selector includes **Extra Large (2×2)** alongside the original centered Extra Large option. It uses the same wheel model, shifted half a block along positive world X and Z. The root block occupies the lower-coordinate corner of its two-by-two footprint. Changing the gear's facing rotates the wheel around that shifted center.

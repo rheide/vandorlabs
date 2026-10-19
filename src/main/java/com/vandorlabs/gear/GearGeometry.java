@@ -30,17 +30,17 @@ public final class GearGeometry {
     private static void add(List<AxisAlignedBB> out,AxisAlignedBB local,GearMotion.Pose pose,boolean foot,BlockPos root){out.add(box(foot?pose.transformFootBounds(bounds(local)):pose.transformRigidBounds(bounds(local))).offset(root));}
     private static AxisAlignedBB yaw(AxisAlignedBB b,int turns){return com.vandorlabs.blocks.PanelPlacement.rotateFromNorth(b,new EnumFacing[]{EnumFacing.NORTH,EnumFacing.EAST,EnumFacing.SOUTH,EnumFacing.WEST}[turns&3]);}
     public static List<AxisAlignedBB> boxes(GearTileEntity tile,double progress){
-        if(tile.assembly()==null)return Collections.emptyList();GearTopology.Assembly group=tile.assembly();GearMotion.Pose pose=GearMotion.pose(tile.mode(),tile.direction(),group.columnHeight(),progress);List<AxisAlignedBB> out=new ArrayList<>();BlockPos root=tile.getPos();
+        if(tile.assembly()==null)return Collections.emptyList();GearTopology.Assembly group=tile.assembly();GearMotion.Pose pose=tile.pose(progress);List<AxisAlignedBB> out=new ArrayList<>();BlockPos root=tile.getPos();
         for(BlockPos column:tile.columns()){
             BlockPos at=root.add(column);int width=tile.armWidth();double shift=(width-1)*.5;
             out.add(new AxisAlignedBB(.5-width*.5,14/16D,.5-width*.5,.5+width*.5,1,.5+width*.5).offset(tile.armShiftX(),0,tile.armShiftZ()).offset(at));out.add(new AxisAlignedBB(.5-5/16D*width,6/16D,.5-5/16D*width,.5+5/16D*width,14/16D,.5+5/16D*width).offset(tile.armShiftX(),0,tile.armShiftZ()).offset(at));
             if(tile.isSwingArmController())for(AxisAlignedBB arm:armParts())addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()),pose,false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(),tile.armShiftZ());
-            else addArm(out,new AxisAlignedBB(5/16D,pose.rodBottomY(),5/16D,11/16D,pose.rodTopY(),11/16D),pose,false,at,width,width,tile.armShiftX(),tile.armShiftZ());
-            addArm(out,new AxisAlignedBB(.25,-group.columnHeight()+3/16D,.3125,.75,-group.columnHeight()+7/16D,.6875),pose,true,at,width,width,tile.armShiftX(),tile.armShiftZ());
+            else addArm(out,new AxisAlignedBB(5/16D,pose.rodBottomY()+tile.footMountOffset(),5/16D,11/16D,pose.rodTopY(),11/16D),pose,false,at,width,width,tile.armShiftX(),tile.armShiftZ());
+            addArm(out,new AxisAlignedBB(.25,-group.columnHeight()+3/16D+tile.footMountOffset(),.3125,.75,-group.columnHeight()+7/16D+tile.footMountOffset(),.6875),pose,true,at,width,width,tile.armShiftX(),tile.armShiftZ());
         }
         int turns=tile.footFacing()==EnumFacing.EAST?1:tile.footFacing()==EnumFacing.SOUTH?2:tile.footFacing()==EnumFacing.WEST?3:0;
         for(GearTopology.Cell foot:group.feet()){
-            if(group.kind()==GearTopology.FootKind.WHEEL){BlockPos source=root.add(foot.x,foot.y,foot.z);net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(source);GearBlock block=(GearBlock)state.getBlock();AxisAlignedBB wheel=block.componentRoot(source,state).equals(source)?yaw(MODELS.computeIfAbsent(block.wheelModel(),GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns):new AxisAlignedBB(0,0,0,0,0,0);add(out,wheel.offset(foot.x,foot.y,foot.z),pose,true,root);}
+            if(group.kind()==GearTopology.FootKind.WHEEL){BlockPos source=root.add(foot.x,foot.y,foot.z);net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(source);GearBlock block=state.getBlock() instanceof GearBlock?(GearBlock)state.getBlock():null;AxisAlignedBB wheel=block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(source,state).equals(source)?yaw(MODELS.computeIfAbsent(block.wheelModel(),GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns):new AxisAlignedBB(0,0,0,0,0,0);add(out,wheel.offset(foot.x,foot.y,foot.z),pose,true,root);}
             else if(group.kind()==GearTopology.FootKind.PLATE)add(out,new AxisAlignedBB(0,0,0,1,3/16D,1).offset(foot.x,foot.y,foot.z),pose,true,root);
             else{add(out,yaw(new AxisAlignedBB(.25,0,0,.75,5/16D,1),turns).offset(foot.x,foot.y,foot.z),pose,true,root);add(out,yaw(new AxisAlignedBB(0,3/16D,.375,1,5/16D,.625),turns).offset(foot.x,foot.y,foot.z),pose,true,root);}
         }
@@ -56,8 +56,33 @@ public final class GearGeometry {
             AxisAlignedBB swept=swept(root,i,old.get(i),after.get(i),before,next);
             if(old.get(i).equals(after.get(i))||after.get(i).getAverageEdgeLength()==0)continue;
             if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false)||!world.getCollisionBoxes(null,swept).isEmpty())return false;
-            for(Entity entity:world.getEntitiesWithinAABBExcludingEntity(null,swept))if(!entity.isDead&&entity.canBeCollidedWith()&&entity.getEntityBoundingBox().intersects(swept))return false;
         }return true;}finally{EXCLUDED.remove();}
+    }
+    /** Move each contacted entity once; terrain does not cancel the mechanism's stroke. */
+    public static void pushEntities(World world,List<AxisAlignedBB> before,List<AxisAlignedBB> after,Entity vehicle){
+        if(world.isRemote)return;Map<Entity,net.minecraft.util.math.Vec3d> moves=new IdentityHashMap<>();
+        for(int i=0;i<after.size();i++){
+            AxisAlignedBB old=before.get(i),next=after.get(i);if(old.equals(next)||next.getAverageEdgeLength()==0)continue;
+            for(Entity entity:world.getEntitiesWithinAABBExcludingEntity(vehicle,old.union(next).grow(.001,.13,.001))){
+                if(entity.isDead||entity.noClip||vehicle!=null&&entity.getLowestRidingEntity()==vehicle)continue;
+                AxisAlignedBB body=entity.getEntityBoundingBox();boolean standing=Math.abs(body.minY-old.maxY)<.12&&body.maxX>old.minX&&body.minX<old.maxX&&body.maxZ>old.minZ&&body.minZ<old.maxZ;
+                if(!standing&&!body.intersects(old.union(next)))continue;
+                double dx=(next.minX+next.maxX-old.minX-old.maxX)/2,dy=standing?next.maxY-old.maxY:(next.minY+next.maxY-old.minY-old.maxY)/2,dz=(next.minZ+next.maxZ-old.minZ-old.maxZ)/2;
+                AxisAlignedBB shifted=body.offset(dx,dy,dz);
+                if(!standing&&shifted.intersects(next)){
+                    if(Math.abs(dy)>=Math.abs(dx)&&Math.abs(dy)>=Math.abs(dz))dy+=dy>=0?next.maxY-shifted.minY+.001:next.minY-shifted.maxY-.001;
+                    else if(Math.abs(dx)>=Math.abs(dz))dx+=dx>=0?next.maxX-shifted.minX+.001:next.minX-shifted.maxX-.001;
+                    else dz+=dz>=0?next.maxZ-shifted.minZ+.001:next.minZ-shifted.maxZ-.001;
+                }
+                net.minecraft.util.math.Vec3d move=new net.minecraft.util.math.Vec3d(dx,dy,dz),previous=moves.get(entity);if(previous==null||move.lengthSquared()>previous.lengthSquared())moves.put(entity,move);
+            }
+        }
+        for(Map.Entry<Entity,net.minecraft.util.math.Vec3d> entry:moves.entrySet()){
+            Entity entity=entry.getKey();net.minecraft.util.math.Vec3d move=entry.getValue();
+            if(entity instanceof net.minecraft.entity.player.EntityPlayerMP)((net.minecraft.entity.player.EntityPlayerMP)entity).connection.setPlayerLocation(entity.posX+move.x,entity.posY+move.y,entity.posZ+move.z,entity.rotationYaw,entity.rotationPitch);
+            else entity.setPositionAndUpdate(entity.posX+move.x,entity.posY+move.y,entity.posZ+move.z);
+            entity.fallDistance=0;entity.velocityChanged=true;
+        }
     }
     public static AxisAlignedBB swept(GearTileEntity root,int index,AxisAlignedBB old,AxisAlignedBB next,double before,double after){
         int pieces=root.isSwingArmController()?armParts().size()+3:4,feetStart=root.columns().size()*pieces;

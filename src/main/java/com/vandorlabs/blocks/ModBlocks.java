@@ -286,7 +286,7 @@ public class ModBlocks {
             case "BlockDiagonalPorthole": return new BlockProgrammableWall(id, BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE);
             case "BlockDiagonalHalfConsole": return new BlockDiagonalHalfConsole(id);
             case "BlockConnectedSeat": return new BlockConnectedSeat(id);
-            case "BlockLandingGear": return new BlockTelescopicLandingGear(id);
+            case "BlockLandingGear": return new BlockTelescopicLandingGear(id).setCreativeTab(null);
             case "BlockLargeProgrammableDoor": return new BlockLargeProgrammableDoor(id,(BlockDetailedDoor)byId.get(e.get("paired_model").getAsString()));
             case "BlockConfigurableSpaceDoor":
                 return new BlockConfigurableSpaceDoor(id,e.get("sliding").getAsBoolean(),

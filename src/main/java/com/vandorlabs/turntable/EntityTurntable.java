@@ -62,7 +62,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     private List<AxisAlignedBB> boxes(double at){List<AxisAlignedBB> result=new ArrayList<>(localBoxes.size());for(AxisAlignedBB box:localBoxes)result.add(transformed(box,at));return result;}
     public List<AxisAlignedBB> collisionBoxes(){if(snapshot==null)return Collections.emptyList();if(boxesAt!=angle){worldBoxes=boxes(angle);boxesAt=angle;}return worldBoxes;}
     public List<AxisAlignedBB> collisionBoxes(AxisAlignedBB query){List<AxisAlignedBB> out=new ArrayList<>();if(snapshot==null)return out;Vec3d pivot=new Vec3d(posX,posY,posZ);for(AxisAlignedBB box:localBoxes)if(transformed(box,angle).intersects(query))out.addAll(TurntableCollision.boxes(box.offset(snapshot.origin),pivot,snapshot.layout.basis,angle,query));return out;}
-    private boolean sweepIntersects(int index,AxisAlignedBB obstacle,double delta){int samples=Math.max(1,(int)Math.ceil(Math.abs(delta)));double extra=(snapshot.layout.size+snapshot.height)*(1-Math.cos(Math.toRadians(Math.abs(delta)/samples/2)));AxisAlignedBB query=obstacle.grow(extra).shrink(.0001);for(int n=0;n<=samples;n++)if(!TurntableCollision.boxes(localBoxes.get(index).offset(snapshot.origin),new Vec3d(posX,posY,posZ),snapshot.layout.basis,angle+delta*n/samples,query).isEmpty())return true;return false;}
+    private boolean sweepIntersects(int index,AxisAlignedBB obstacle,double delta){int samples=Math.max(1,(int)Math.ceil(Math.abs(delta)));double extra=(snapshot.layout.size+snapshot.height)*(1-Math.cos(Math.toRadians(Math.abs(delta)/samples/2)));AxisAlignedBB query=obstacle.grow(extra).shrink(.0001);for(int n=0;n<=samples;n++)if(TurntableCollision.intersects(localBoxes.get(index).offset(snapshot.origin),new Vec3d(posX,posY,posZ),snapshot.layout.basis,angle+delta*n/samples,query))return true;return false;}
     private void updateBounds(){
         if(snapshot==null){setEntityBoundingBox(new AxisAlignedBB(posX-32,posY-32,posZ-32,posX+32,posY+32,posZ+32));return;}
         AxisAlignedBB bounds=transformed(localExtent,angle);
@@ -87,15 +87,15 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         if(rate!=0){
             double next=TurntableGeometry.wrap(angle+rate);List<AxisAlignedBB> before=collisionBoxes(),after=boxes(next);
             AxisAlignedBB swept=getEntityBoundingBox().union(transformed(localExtent,next));
-            if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false))rate=0;
+            if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false)){rate=0;owner.status("Rotation waiting for surrounding chunks to load");}
             else {
-                List<AxisAlignedBB> obstacles=world.getCollisionBoxes(this,swept);boolean blocked=false;
+                List<AxisAlignedBB> obstacles=world.getCollisionBoxes(this,swept);boolean blocked=false;BlockPos obstruction=null;
                 double radius=snapshot.layout.size+snapshot.height,extra=radius*(1-Math.cos(Math.toRadians(Math.abs(rate)/2)));
                 for(int i=0;i<after.size() && !blocked;i++){
                     AxisAlignedBB sweep=after.get(i).union(before.get(i)).grow(snapshot.layout.normal.getFrontOffsetX()==0?extra:0,snapshot.layout.normal.getFrontOffsetY()==0?extra:0,snapshot.layout.normal.getFrontOffsetZ()==0?extra:0).shrink(.0001);
-                    for(AxisAlignedBB obstacle:obstacles)if(obstacle.intersects(sweep)&&sweepIntersects(i,obstacle,rate)){blocked=true;break;}
+                    for(AxisAlignedBB obstacle:obstacles)if(obstacle.intersects(sweep)&&sweepIntersects(i,obstacle,rate)){blocked=true;obstruction=new BlockPos(obstacle.minX,obstacle.minY,obstacle.minZ);break;}
                 }
-                if(blocked){rate=0;owner.status("Rotation blocked; clear the moving contents");}else carry(rate);
+                if(blocked){rate=0;owner.status("Rotation blocked at "+obstruction.getX()+", "+obstruction.getY()+", "+obstruction.getZ()+"; clear the moving contents");}else carry(rate);
             }
             if(rate!=0){angle=next;worldBoxes=after;boxesAt=angle;owner.status("Rotating");}
         }else if(!wasRunning)owner.status(owner.legacyCapture()?"Old back-face capture: use Restore to return the preserved contents before scanning again":"Captured; stopped");

@@ -18,9 +18,6 @@ public final class BlockHexTank extends BlockAnimatedScreenSelector {
         TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof TileEntityHexTank))return false;
         if(player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)return false;
         if(net.minecraftforge.fluids.FluidUtil.interactWithFluidHandler(player,hand,(TileEntityHexTank)raw))return true;
-        if(player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER&&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos)){
-            if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,world,pos.getX(),pos.getY(),pos.getZ());return true;
-        }
         if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_STORAGE_STATUS,world,pos.getX(),pos.getY(),pos.getZ());return true;
     }
 }

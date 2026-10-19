@@ -9,7 +9,7 @@ public final class VehicleTaxiMode {
     private VehicleTaxiMode(){}
     public static boolean enabled(VehicleStructure structure){return enabled(structure,structure==null?null:structure.seat);}
     public static boolean enabled(VehicleStructure structure,net.minecraft.util.math.BlockPos selected){
-        if(structure==null || structure.hasNonWheeledGear)return false;VehicleStructure.Cell cell=structure.at(selected==null?structure.seat:selected);if(cell==null)return false;
+        if(structure==null || structure.hasNonWheeledGear&&!structure.hasSkisOnly)return false;VehicleStructure.Cell cell=structure.at(selected==null?structure.seat:selected);if(cell==null)return false;
         NBTTagCompound data=cell.tileData();return data==null||!data.hasKey("TaxiMode",1)||data.getBoolean("TaxiMode");
     }
     public static VehicleStructure withSetting(VehicleStructure structure,boolean enabled) {

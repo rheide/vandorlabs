@@ -12,7 +12,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * Optional Forge 1.12.2 renderer adapter; supply your own controller TileEntity.
  * Requires the accompanying UniversalConstructorModelCache.
  * This default draws complete.obj once, in its resting pose, from the controller.
- * Override drawMachine to draw static.obj + glass.obj + moving parts instead.
  */
 @SideOnly(Side.CLIENT)
 public abstract class UniversalConstructorFastTESR<T extends TileEntity> extends FastTESR<T> {

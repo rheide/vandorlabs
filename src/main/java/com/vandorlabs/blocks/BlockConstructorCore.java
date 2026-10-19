@@ -20,6 +20,9 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
     @Override public int getMetaFromState(IBlockState state){return super.getMetaFromState(state)|(state.getValue(FORMED)?4:0);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityConstructor();}
+    @Override public boolean isOpaqueCube(IBlockState state){return !state.getValue(FORMED);}
+    @Override public boolean isFullCube(IBlockState state){return !state.getValue(FORMED);}
+    @Override public int getLightOpacity(IBlockState state){return state.getValue(FORMED)?0:super.getLightOpacity(state);}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         if(!world.isRemote){TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(pos);
             if(state.getValue(FORMED) && player.isSneaking())tile.dismantle();else if(!state.getValue(FORMED) && !tile.assemble())player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(width+" x 3 x "+height+" frame: "+tile.assemblyProblem()),true);

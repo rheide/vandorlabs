@@ -39,6 +39,11 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     private GearMotion.Mode mode = GearMotion.Mode.EXTEND;
     private GearMotion.Direction direction = GearMotion.Direction.NORTH;
     private boolean deployedTarget = true;
+    private boolean signalKnown,lastSignal,legacyAnyChannels;
+    public boolean usesLegacyInput(){return legacyAnyChannels;}
+    public double footMountOffset(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.WHEEL&&mode==GearMotion.Mode.EXTEND?9/16D:0;}
+    public GearMotion.Pose pose(double progress){return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,footMountOffset()>0?-25/64D:GearMotion.RETRACTED_FOOT_Y);}
+
     private double progress = 1.0;
     private double previousProgress = 1.0;
     // A cached group may be temporarily suspended while required chunks are
@@ -64,11 +69,23 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     public int getRedstoneChannel(){return channels.first();}
     public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return channels;}
     public void setRedstoneChannel(int channel){setRedstoneChannels(com.vandorlabs.redstone.ChannelList.of(channel));}
-    public void setRedstoneChannels(com.vandorlabs.redstone.ChannelList value){channels=value;sync();}
+    public void setRedstoneChannels(com.vandorlabs.redstone.ChannelList value){if(!channels.equals(value))signalKnown=false;channels=value;sync();}
     public boolean hasLocalRedstoneSignal(){return false;}
     public void setChannelSignal(boolean powered){}
-    public void target(boolean value){deployedTarget=value;sync();}
-    public void input(){if(triggerMode!=0){net.minecraft.world.World bus=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;boolean powered=channels.isEmpty()?world.isBlockPowered(pos):com.vandorlabs.redstone.RedstoneChannels.allPowered(bus,channels);deployedTarget=triggerMode==1?powered:!powered;}}
+    public void target(boolean value){if(deployedTarget==value)return;deployedTarget=value;sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}
+    private boolean localPower(){
+        java.util.List<BlockPos> roots=columns.isEmpty()?java.util.Collections.singletonList(BlockPos.ORIGIN):columns;
+        for(BlockPos column:roots){BlockPos at=pos.add(column);if(!GearAssembly.loaded(world,at))continue;net.minecraft.block.state.IBlockState state=world.getBlockState(at);
+            if(state.getBlock() instanceof GearBlock){for(BlockPos cell:((GearBlock)state.getBlock()).componentCells(world,at))if(GearAssembly.loaded(world,cell)&&com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,cell))return true;}
+            else if(com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,at))return true;
+        }return false;
+    }
+    public void input(){if(triggerMode!=0&&world!=null){
+        net.minecraft.world.World bus=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;
+        boolean powered;if(legacyAnyChannels){powered=localPower();for(int i=0;i<channels.size();i++)powered|=com.vandorlabs.redstone.RedstoneChannels.level(bus,channels.get(i))>0;}else powered=channels.isEmpty()?localPower():com.vandorlabs.redstone.RedstoneChannels.allPowered(bus,channels);
+        if(!signalKnown||powered!=lastSignal){signalKnown=true;lastSignal=powered;target(triggerMode==1?powered:!powered);}
+    }}
+
     private String lastError = "The gear has not been assembled yet.";
 
     public boolean isController() { return assembly != null; }
@@ -190,7 +207,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
             double next=GearMotion.advance(progress,deployedTarget,1,ANIMATION_TICKS);
             boolean blocked=next!=before&&!GearGeometry.canMove(this,before,next);
             if(blocked!=motionBlocked){motionBlocked=blocked;sync();}
-            if(!blocked&&next!=before){progress=next;boxesAt=Double.NaN;markDirty();if(progress==0||progress==1||world.getTotalWorldTime()%3==0)sync();}
+            if(!blocked&&next!=before){GearGeometry.pushEntities(world,GearGeometry.boxes(this,before),GearGeometry.boxes(this,next),null);progress=next;boxesAt=Double.NaN;markDirty();if(progress==0||progress==1){sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(world.getTotalWorldTime()%3==0)sync();}
         }
     }
 
@@ -368,13 +385,13 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         }
     }
 
-    public NBTTagCompound settings(){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",triggerMode);tag.setInteger("Direction",direction.ordinal());tag.setBoolean("Deployed",deployedTarget);tag.setString("Channels",channels.toString());return tag;}
+    public NBTTagCompound settings(){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",triggerMode);tag.setInteger("Direction",direction.ordinal());tag.setBoolean("Deployed",deployedTarget);tag.setString("Channels",channels.toString());tag.setBoolean("LegacyAnyChannels",legacyAnyChannels);return tag;}
     public void configure(NBTTagCompound tag){
         int trigger=tag.getInteger("Trigger"),dir=tag.getInteger("Direction");
         com.vandorlabs.redstone.ChannelList values=com.vandorlabs.redstone.ChannelList.parse(tag.getString("Channels"));
         if(trigger<0||trigger>2||dir<0||dir>3||values==null)throw new IllegalArgumentException("Invalid gear settings");
         if(dir!=direction.ordinal()&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");
-        configured=true;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=tag.getBoolean("Deployed");input();sync();
+        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}configured=true;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=tag.getBoolean("Deployed");input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
     }
 
     public void sync() {
@@ -394,7 +411,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         tag.setBoolean("GearConfigured",configured);tag.setBoolean("GearBlocked",motionBlocked);
         tag.setString("GearMode", mode.name());
         tag.setString("GearDirection", direction.name());
-        tag.setBoolean("GearTargetDeployed", deployedTarget);
+        tag.setBoolean("GearTargetDeployed", deployedTarget);tag.setBoolean("GearSignalKnown",signalKnown);tag.setBoolean("GearLastSignal",lastSignal);tag.setBoolean("GearLegacyAnyChannels",legacyAnyChannels);
         tag.setDouble("GearProgress", progress);
         tag.setBoolean("GearOperational", operational);
         tag.setBoolean("GearController", assembly != null);
@@ -421,7 +438,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         if(columns.isEmpty())columns.add(BlockPos.ORIGIN);
         mode = parseEnum(GearMotion.Mode.class, tag.getString("GearMode"), GearMotion.Mode.EXTEND);
         direction = parseEnum(GearMotion.Direction.class, tag.getString("GearDirection"), GearMotion.Direction.NORTH);
-        deployedTarget = !tag.hasKey("GearTargetDeployed") || tag.getBoolean("GearTargetDeployed");
+        deployedTarget = !tag.hasKey("GearTargetDeployed") || tag.getBoolean("GearTargetDeployed");signalKnown=tag.getBoolean("GearSignalKnown");lastSignal=tag.getBoolean("GearLastSignal");legacyAnyChannels=tag.getBoolean("GearLegacyAnyChannels");
         double savedProgress = tag.hasKey("GearProgress") ? tag.getDouble("GearProgress") : 1.0;
         progress = previousProgress = Double.isFinite(savedProgress) ? Math.max(0, Math.min(1, savedProgress)) : 1.0;
         operational = !tag.hasKey("GearOperational") || tag.getBoolean("GearOperational");

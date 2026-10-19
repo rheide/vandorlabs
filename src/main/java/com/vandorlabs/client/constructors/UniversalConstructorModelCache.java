@@ -49,8 +49,6 @@ public final class UniversalConstructorModelCache {
         OBJLoader.INSTANCE.addDomain(DOMAIN);
         for (String id : new String[] {"assembly_press", "synthesis_tower", "enclosed_gantry"}) {
             register(id, "complete.obj");
-            register(id, "static.obj");
-            register(id, "glass.obj");
         }
         MinecraftForge.EVENT_BUS.register(EVENTS);
     }

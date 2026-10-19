@@ -28,4 +28,5 @@ and saved controls survive conversion, movement and parking. A cockpit supplies
 vehicle controls when the craft has no separate Vehicle Controller; a separate
 Vehicle Controller takes precedence. The Pilot page includes boarding behavior,
 trigger channels, independent Block/Taxi/Hover channels and mode buttons. Vehicles
-with skis or landing struts retain their Hover-only mode restrictions.
+with plates or landing struts retain their Hover-only mode restrictions. Ski-only
+vehicles can Taxi while all runners remain above ice, packed ice or frosted ice.

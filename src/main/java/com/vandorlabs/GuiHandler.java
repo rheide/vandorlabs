@@ -62,6 +62,7 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_ANIMATED_SCREEN_SELECTOR&&world.getTileEntity(new BlockPos(x,y,z)) instanceof com.vandorlabs.tiles.TileEntityHexTank)ID=GUI_STORAGE_STATUS;
         if(ID==GUI_STORAGE_STATUS){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityBattery||tile instanceof com.vandorlabs.tiles.TileEntityHexTank?new com.vandorlabs.container.ContainerStorageStatus(tile):null;}
         if(ID==GUI_TURNTABLE)return com.vandorlabs.container.ContainerTurntable.resolve(player,world,x,y,z);
         if(ID==GUI_MODULAR_GEAR)return com.vandorlabs.container.ContainerModularGear.resolve(player,world,x,y,z);
@@ -148,6 +149,7 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_ANIMATED_SCREEN_SELECTOR&&world.getTileEntity(new BlockPos(x,y,z)) instanceof com.vandorlabs.tiles.TileEntityHexTank)ID=GUI_STORAGE_STATUS;
         if(ID==GUI_STORAGE_STATUS){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityBattery||tile instanceof com.vandorlabs.tiles.TileEntityHexTank?new com.vandorlabs.client.GuiStorageStatus(new com.vandorlabs.container.ContainerStorageStatus(tile)):null;}
         if(ID==GUI_TURNTABLE){com.vandorlabs.container.ContainerTurntable container=com.vandorlabs.container.ContainerTurntable.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.client.GuiTurntable(container);}
         if(ID==GUI_MODULAR_GEAR){com.vandorlabs.container.ContainerModularGear container=com.vandorlabs.container.ContainerModularGear.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.client.GuiModularGear(container);}

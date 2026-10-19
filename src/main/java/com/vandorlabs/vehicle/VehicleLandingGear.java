@@ -35,7 +35,9 @@ public final class VehicleLandingGear {
         }
     }
     public static void tick(EntityGroundVehicle craft){
+        VehicleGearCovers.tick(craft);
         ModularGearVehicles.tick(craft);
+        VehicleGearCovers.tick(craft);
         if(craft.view==null||craft.ownershipBlocked||craft.transferInProgress)return;
         Map<BlockPos,Float> desired=new LinkedHashMap<>();
         if(craft.world.isRemote){Map<BlockPos,Float> pending=corrections.get(craft);if(pending!=null)desired.putAll(pending);}

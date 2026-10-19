@@ -26,7 +26,7 @@ public class TileEntityLandingGear extends TileEntity implements ITickable, Reds
     private int extensionPixels=16, mode=1, channel, configurationRevision, size;
     public int getSize(){return size;}
     public int getConfigurationRevision(){return configurationRevision;}
-    private boolean channelSignal, lastSignal, detached, restoringSignal;
+    private boolean channelSignal, lastSignal, detached, restoringSignal,loadedLegacyData;
     private int ownerDistance,ownerX,ownerZ;
     private boolean hasOwner;
     public BlockPos owner(){return hasOwner?pos.add(ownerX,ownerDistance,ownerZ):null;}
@@ -99,9 +99,11 @@ public class TileEntityLandingGear extends TileEntity implements ITickable, Reds
     public void setChannelSignal(boolean value){if(channelSignal!=value){channelSignal=value;evaluateSignal(false);}}
     public void onLoad(){
         super.onLoad();detached=false;restoringSignal=true;
+        boolean migrate=loadedLegacyData&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world);
         // Loading is not placement: retain a manual override until the input changes.
         DeferredTileLoad.schedule(this,()->{
             if(!isRoot())return;
+            if(migrate&&com.vandorlabs.gear.LegacyGearMigration.convert(this)!=null)return;
             // Clipboard copies may omit the invisible reserved cells. Recreate only
             // air cells in the validated footprint, after the complete paste loads.
             if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld) && !com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)){
@@ -125,7 +127,7 @@ public class TileEntityLandingGear extends TileEntity implements ITickable, Reds
     }
     public void readFromNBT(NBTTagCompound tag){
         ChannelList previousChannels=channels;
-        super.readFromNBT(tag);float value=tag.getFloat("Progress");progress=Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;previous=progress;
+        super.readFromNBT(tag);loadedLegacyData=true;float value=tag.getFloat("Progress");progress=Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;previous=progress;
         extensionPixels=tag.hasKey("ExtensionPixels")?Math.round(Math.max(0,Math.min(64,tag.getInteger("ExtensionPixels")))/8F)*8:16;
         size=Math.max(0,Math.min(BlockTelescopicLandingGear.SIZES.length-1,tag.getInteger("GearSize")));
         mode=tag.hasKey("RedstoneMode")?Math.max(0,Math.min(2,tag.getInteger("RedstoneMode"))):1;

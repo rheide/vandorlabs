@@ -153,7 +153,7 @@ public final class VehicleScan {
                     com.vandorlabs.gear.GearTileEntity gear=tile instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)tile).loadedController():null;
                     require(gear!=null&&gear.isOperational()&&gear.fullyDeployed(),"Complete and deploy the modular landing gear before assembly.");
                     for(BlockPos column:gear.columns()){BlockPos at=gear.getPos().add(column);if(gears.add(at))support((BlockLandingGear)world.getBlockState(at).getBlock(),at);}
-                    for(BlockPos member:gear.members()){require(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.GearBlock,"Incomplete modular gear.");enqueue(member);}continue;
+                    for(BlockPos member:gear.members()){require(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.GearBlock,"Incomplete modular gear.");enqueue(member);for(EnumFacing side:EnumFacing.HORIZONTALS){BlockPos at=member.offset(side);if(!world.isBlockLoaded(at))continue;TileEntity cover=world.getTileEntity(at);if(cover instanceof TileEntityProgrammableTrapdoor&&((TileEntityProgrammableTrapdoor)cover).isCover()&&at.offset(world.getBlockState(at).getValue(BlockProgrammableTrapdoor.FACING)).equals(member))enqueue(at);}}continue;
                 }
                 if(block instanceof BlockWheel){
                     BlockWheel wheel=(BlockWheel)block;BlockPos root=wheel.root(p,state);
@@ -198,7 +198,7 @@ public final class VehicleScan {
                 if(block instanceof BlockLandingGear) { if(gears.add(p))support((BlockLandingGear)block,p); continue; }
                 if(tile instanceof TileEntityProgrammableTrapdoor && ((TileEntityProgrammableTrapdoor)tile).isCover()) {
                     BlockPos gear=p.offset(state.getValue(BlockProgrammableTrapdoor.FACING));
-                    require(world.isBlockLoaded(gear) && world.getBlockState(gear).getBlock() instanceof BlockTelescopicLandingGear,"A landing gear cover has no gear owner.");
+                    require(world.isBlockLoaded(gear) && (world.getBlockState(gear).getBlock() instanceof BlockTelescopicLandingGear||world.getBlockState(gear).getBlock() instanceof com.vandorlabs.gear.GearBlock),"A landing gear cover has no gear owner.");
                     enqueue(gear);continue;
                 }
                 if(!(block instanceof BlockControlledRamp))for(EnumFacing face:EnumFacing.values())if(touches(world,p,state,face))enqueue(p.offset(face));

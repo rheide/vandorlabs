@@ -2,8 +2,8 @@
 
 **Landing Gear Extender** and **Landing Gear Swing Arm** are mounting struts.
 **Landing Gear Plate**, **Landing Gear Ski** and **Landing Gear Wheel** form their connected feet. These
-parts supplement the existing telescopic gear, skis and struts; saved older
-blocks keep their identities.
+parts replace the integrated wheel gear for new construction. Saved integrated
+wheel gear can migrate to these parts; older skis and struts remain readable.
 
 Build a vertical column of one to eight Extenders beneath a block with a solid
 underside. Place a Plate, Ski or Wheel directly below the column, then connect more
@@ -29,15 +29,16 @@ changed while fully deployed. Manual mode exposes a deployed/stowed target.
 
 Source part blocks remain at their construction positions during animation.
 Collision follows the moving feet and linkages, including beyond those cells.
-Movement pauses at an obstruction or unloaded boundary and resumes when the path
-clears. Keep people and objects clear of the mechanism during a stroke. Missing
+Movement pauses at a block obstruction or unloaded boundary and resumes when the path
+clears. Contacted entities move with the mechanism instead of stopping it; they can
+be pushed into surrounding blocks. Missing
 controllers fall back to visible, collidable construction parts. Breaking the
 assembly releases its surviving parts without deleting them.
 
 Modular gear supports Hover conversion. Complete and fully deploy each group
 before scanning a craft. Each mounting strut counts as a physical support; the
-group still shares one control input. Skis and plates disable Taxi, as with the
-existing non-wheeled gear. Use the configured channels to operate captured gear,
+group still shares one control input. Plates require Hover; ski-only craft can
+Taxi over ice. Use the configured channels to operate captured gear,
 and deploy it before landing and parking. Member links, foot orientation and
 fold direction rotate together when the craft is parked at a cardinal heading.
 
@@ -71,3 +72,16 @@ allow Taxi mode when all supports use wheels. Tires roll with vehicle travel.
 Craft a Large Extender or Large Swing Arm from four matching standard arms.
 Craft a Wheel from three Programmable Matter Ingots, one Slimeball and one Iron
 Ingot. Four Wheels craft one Large Wheel. These recipes are shapeless.
+
+
+Ski-only vehicles can use Taxi mode on ice, packed ice and frosted ice. Every runner must remain above ice; mixed plate/wheel/ski supports do not qualify for this exception. Taxi movement stops before a runner leaves the ice. Lift blocks are not required for ski Taxi mode; Hover still needs its usual lift and thruster hardware.
+
+The modular wheels roll with actual Taxi travel, reverse their roll when backing up and steer with the vehicle controls. Hover pauses wheel roll and steering.
+
+Adjacent Programmable Trapdoors configured to move into the next block can cover modular gear shafts. Aim the trapdoor toward any arm, wheel or other foot member. Covers open for deployment, remain open throughout retraction, and resume their own redstone setting only once fully stowed. Covers follow the gear into a vehicle and retain the same protection against closing through deployed feet.
+
+Legacy integrated Landing Gear is removed from crafting and creative/search catalogs. Its saved block ID remains readable for migration. Saved wheel gear converts on chunk load, or when right-clicked, into an Extender column and separate Wheel. Small, Medium and Large gear use the standard parts; Extra Large variants use 2x2 parts. Travel rounds up to whole-block column sections. Facing, deployment and redstone/channel settings are retained. Migrated controllers retain the legacy input rule: local power or any listed channel; their dialog labels this rule. Conversion checks the entire footprint and full mounting support first; blocked or incomplete mounts remain intact until there is room to convert. Existing inventory stacks and dropped items split into the corresponding arm sections and wheels; excess parts drop if the inventory is full. Captured legacy vehicles retain their saved representation during transfers and can convert after a later chunk reload or interaction.
+
+A manual deployment override on modular gear lasts until its configured redstone input changes, including across saves and migration.
+
+Extender-mounted wheels retain clearance beneath the fixed casing when fully retracted. The wheel bracket, socket and rod use the same adjusted pose for rendering and collision.

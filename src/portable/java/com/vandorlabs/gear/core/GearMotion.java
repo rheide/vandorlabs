@@ -107,14 +107,14 @@ public final class GearMotion {
         private final double levelOffsetY;
         private final double levelOffsetZ;
 
-        private Pose(Mode mode, Direction direction, int height, double progress) {
+        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY) {
             this.mode = mode;
             this.direction = direction;
             this.columnHeight = height;
             this.deployProgress = progress;
             this.easedDeployProgress = smoothstep(progress);
             double stowed = 1.0 - easedDeployProgress;
-            this.offsetY = mode == Mode.EXTEND ? (height + RETRACTED_FOOT_Y) * stowed : 0.0;
+            this.offsetY = mode == Mode.EXTEND ? (height + stowedFootY) * stowed : 0.0;
             this.angleDegrees = mode != Mode.EXTEND ? 90.0 * stowed : 0.0;
             // Exact endpoints avoid tiny residual sideways translations in
             // fully deployed/stowed states and make joined faces coincide.
@@ -243,13 +243,18 @@ public final class GearMotion {
      */
     public static Pose pose(Mode mode, Direction direction, int columnHeight,
                             double deployProgress) {
+        return pose(mode,direction,columnHeight,deployProgress,RETRACTED_FOOT_Y);
+    }
+    public static Pose pose(Mode mode, Direction direction, int columnHeight,
+                            double deployProgress,double stowedFootY) {
+        requireFinite(stowedFootY,"stowedFootY");
         if (mode == null || direction == null) {
             throw new IllegalArgumentException("Animation mode and direction are required.");
         }
         if (columnHeight < 1 || columnHeight > GearTopology.MAX_COLUMN_HEIGHT) {
             throw new IllegalArgumentException("Column height must be between 1 and 8.");
         }
-        return new Pose(mode, direction, columnHeight, clampUnit(deployProgress));
+        return new Pose(mode, direction, columnHeight, clampUnit(deployProgress),stowedFootY);
     }
 
     /** Ease a raw position; finite overshoot is clamped to the end states. */

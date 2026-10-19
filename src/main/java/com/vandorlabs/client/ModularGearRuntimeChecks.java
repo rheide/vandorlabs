@@ -38,6 +38,7 @@ final class ModularGearRuntimeChecks {
             BlockPos blocked=clearanceRoot.down().offset(fold);world.setBlockState(blocked,Blocks.STONE.getDefaultState());arm.target(false);for(int tick=0;tick<32;tick++)arm.update();require(arm.progress()>0,"a real block in the swing path still stops movement");world.setBlockToAir(blocked);
         }}finally{clear(world,clearanceRoot);}
         ModularWheelRuntimeChecks.run(world,player);
+        ModularGearFollowupRuntimeChecks.run(world,player);
         recipes(world);
         BlockPos skiRoot=new BlockPos(475,215,200);ItemStack oldHeld=player.getHeldItemMainhand();float oldYaw=player.rotationYaw;
         try{for(EnumFacing facing:EnumFacing.HORIZONTALS){

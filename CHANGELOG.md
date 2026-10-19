@@ -2,6 +2,15 @@
 
 ## 2.2
 
+- Keep remaining turntable surfaces visible after a member is removed, use exact terrain collision tests, and report obstruction coordinates.
+- Prevent a wheel-removal render crash; keep retracted extender wheels clear of their casing and carry contacted entities through landing-gear motion.
+- Unify tank settings and contents into one dialog. Align horizontal hexagonal tanks with their axial ports, keep flat top/bottom faces and broad diagonal windows, and render level fluid with accurate partial volume.
+- Keep neighboring terrain visible through formed constructor model cutouts, and omit unused split constructor exports from the runtime package.
+
+- Migrate saved integrated wheel gear and existing stacks to modular Extenders and Wheels when the complete footprint is clear; retire legacy crafting and creative entries.
+- Allow ski-only Taxi craft over ice, stop movement at its edge, and preserve manual gear overrides until the next redstone edge.
+- Preserve adjacent trapdoor-cover behavior for modular gear in the world and on captured vehicles. Modular wheels roll, reverse and steer in Taxi mode; Hover pauses wheel animation.
+
 - Prevent recursive chunk loads while rebuilding saved landing-gear membership.
 - Add seven Data Cards and seven matching Data Chips using the supplied item artwork: unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor.
 - Update the three constructor meshes and company artwork, and replace Programmable Matter block/ingot textures with the supplied designs at standard resolution.
@@ -12,8 +21,6 @@
 
 - Apply modular landing gear settings immediately. Orient the swing-arm elbow toward its fold direction to clear the level plate, and close the unmounted swivel underside. New skis inherit the clicked ski's rotation without disconnecting their extender.
 
-- Keep fuel tank hexagonal caps upright in every connection direction and place small glass windows on the side seam between the upper and lower halves, exposing a modeled interior and fluid volume at its actual height.
-
 - Apply turntable settings immediately, use a height slider and capture only from the textured face. Carry players and loose items on bare floor surfaces and prevent captured displays from blocking nearby block selection.
 - Restore modular landing gear selection and placement; retire the older standalone skis and straight/angled struts from crafting and the creative catalog, retaining saved blocks.
 - Add live RF/fluid fullness dialogs, axial tank placement/connections, recessed fluid windows and centered fuel/battery port artwork. Restyle Matter Blocks with iron, redstone and gold.
@@ -21,15 +28,14 @@
 
 - Add modular landing plates and skis, extendable columns and level-foot swing arms. Connected feet and matching struts share controls, collision, animation and saved ownership, with Hover capture and cardinal restoration support.
 
-- Add Turntable Controller and directional Surface blocks for square floor, wall and ceiling displays, with configurable capture height, direction, speed and independent redstone/channel inputs. Preserve captured block inventories and entities, and share illuminated surface artwork across the full square.
+- Add Turntable Controller and directional Surface blocks for floor, wall and ceiling displays on square platforms, with configurable capture height, direction, speed and independent redstone/channel inputs. Preserve captured block inventories and entities, and share illuminated surface artwork across the platform.
 
 - Rename Programmable Ramp to Ramp Controller while preserving existing blocks, items and recipes.
 
 - Add the sunlight-powered Programmable Matter Infuser with redstone fuel, iron input, hopper automation, and a creative-only Infuser Core. Remove direct ingot crafting.
-- Add connecting Ski Landing Gear and straight/angled Landing Struts, with Small and 2x2 sizes, shared extension controls, and Hover-only vehicle conversion.
 - Add Programmable Matter Blocks with reversible nine-ingot packing.
 - Add Assembly Press, Synthesis Tower, and Enclosed Gantry models assembled from creative-only cores and matter-block frames. Dismantling restores the frame.
-- Add vertically connected Hexagonal Fuel Tanks with fluid-level windows and configurable casings, plus directional Forge Energy Battery Blocks.
+- Add connected Fuel Tanks with fluid-level windows and configurable casings, plus directional RF Battery Blocks using Forge energy capabilities.
 - Allow independent ON and OFF artwork on Programmable Lights.
 - Expand filesystem texture subfolders as nested picker categories.
 - Add water-filled variants of Programmable Slabs and Stairs using water and empty buckets.
@@ -39,7 +45,7 @@
 - Join diagonal wall/glass artwork across connected vertical rows and folds using a stable texture origin.
 - Detect constructor frames from any bottom Core corner along either horizontal axis, regardless of the placed Core facing. Report a mismatched cell when assembly fails.
 
-See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), and [material settings](docs/unified-materials.md).
+See the [2.2 release highlights](version-2.2.md), [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), and [material settings](docs/unified-materials.md).
 
 ## 2.1
 

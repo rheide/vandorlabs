@@ -34,7 +34,7 @@ public final class VehicleService {
         require(validCaptured(player,craft)&&!craft.transferInProgress,"Craft unavailable during transfer.");
         VehicleStructure.Cell controller=craft.structure.controller();require(controller!=null,"Install a Vehicle Controller before changing mode.");
         permission(player,new BlockPos(craft.toWorld(new Vec3d(controller.pos).addVector(.5,.5,.5))));
-        require(mode!=1 || !craft.structure.hasNonWheeledGear,"Ski and landing strut craft cannot use Taxi mode.");
+        require(mode!=1 || VehicleSkiTraction.allowed(craft),"Taxi requires wheels, or only skis over ice.");
         if(mode!=0){require(craft.setHover(mode==2),mode==2?"Hover requires three lift blocks and a Vehicle Thruster.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
         require(!craft.hover || craft.structure.hasNonWheeledGear,"Select Taxi mode before parking as blocks.");
         require(craft.stopped(),"Stop before parking.");
@@ -143,7 +143,7 @@ public final class VehicleService {
         VehicleStructure structure=job.scan.result;WorldServer world=(WorldServer)job.world;BlockPos origin=job.scan.origin;
         if(job.screen){require(job.player.getDistanceSqToCenter(job.scan.startPosition())<=64,"Move closer to the screen.");permission(job.player,job.scan.startPosition());}
         require(structure.controller()!=null,"Install a Vehicle Controller before assembling a craft.");
-        require(job.requestedMode!=1 || !structure.hasNonWheeledGear,"Ski and landing strut craft cannot use Taxi mode.");
+        require(job.requestedMode!=1 || VehicleSkiTraction.canStart(world,structure,origin),"Taxi requires wheels, or only skis over ice.");
         require(!job.taxi || VehicleTaxiMode.enabled(structure,job.scan.startPosition().subtract(origin)),"Taxi Mode is disabled on the Pilot Seat.");
         require(job.requestedMode!=2 || VehicleFlight.canHover(structure),"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         require(structure.matches(world,origin),"Blocks or settings changed during signal scan.");
@@ -238,7 +238,7 @@ public final class VehicleService {
             Preview preview=controllerPreview(player,packet.token,packet.entity,packet.origin);
             editableController(player,preview);
             require(preview.structure!=null,"Complete the craft before changing mode.");
-            require(packet.sequence!=1 || !preview.structure.hasNonWheeledGear,"Ski and landing strut craft cannot use Taxi mode.");
+            require(packet.sequence!=1 || (preview.entity==null?VehicleSkiTraction.canStart(preview.world,preview.structure,preview.origin):VehicleSkiTraction.allowed(preview.entity)),"Taxi requires wheels, or only skis over ice.");
             require(preview.entity!=null||packet.sequence!=0,"Craft is already parked as blocks.");
             if(preview.entity==null || packet.sequence==0){confirm(player,packet.token,packet.sequence);return;}
             require(validCaptured(player,preview.entity),"Craft unavailable; inspect it again.");
@@ -276,7 +276,7 @@ public final class VehicleService {
                 VehicleCollision geometry=VehicleTransfer.geometry(player.world,preview.structure);
                 require(clearOfPeople(player.world,geometry,preview.origin,assemblyAllowed(player.world,preview.structure,preview.origin,player)),"Another occupant obstructs assembly.");
                 authorizeAssembly(player,preview.structure,preview.origin);
-                require(requestedMode!=1 || !preview.structure.hasNonWheeledGear,"Ski and landing strut craft cannot use Taxi mode.");
+                require(requestedMode!=1 || (preview.entity==null?VehicleSkiTraction.canStart(preview.world,preview.structure,preview.origin):VehicleSkiTraction.allowed(preview.entity)),"Taxi requires wheels, or only skis over ice.");
                 if(requestedMode==2){require(VehicleFlight.canHover(preview.structure),"Hover requires three lift blocks.");VehicleFlight.requireThruster(preview.structure);}
                 EntityGroundVehicle assembled=VehicleTransfer.assemble(preview.world,preview.structure,preview.origin,player);
                 if(requestedMode==2)require(assembled.setHover(true),"Unable to select Hover.");

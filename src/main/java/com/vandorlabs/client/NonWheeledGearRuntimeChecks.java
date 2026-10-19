@@ -49,7 +49,7 @@ final class NonWheeledGearRuntimeChecks {
             world.setBlockState(seat.east(),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState());world.setBlockState(seat.west(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState());
             for(int x=0;x<3;x++)world.setBlockState(base.add(x,2,0),Block.getBlockFromName("vandorlabs:antigravity_plate").getDefaultState());
             VehicleScan scan=new VehicleScan(world,seat);for(int i=0;i<200 && !scan.step(128);i++);
-            require(scan.error==null && scan.result!=null,"vehicle discovery "+scan.error);require(scan.result.gearCount==3 && scan.result.hasNonWheeledGear,"support detection");require(!VehicleTaxiMode.enabled(scan.result),"Taxi disabled");
+            require(scan.error==null && scan.result!=null,"vehicle discovery "+scan.error);require(scan.result.gearCount==3 && scan.result.hasNonWheeledGear,"support detection");require(!VehicleSkiTraction.canStart(world,scan.result,scan.origin),"non-wheeled Taxi rejected on ordinary ground");
             player.setPositionAndUpdate(seat.getX()+.5,seat.getY()+1,seat.getZ()+.5);
             craft=VehicleTransfer.assemble(world,scan.result,scan.origin,player);require(craft.hover && !craft.setHover(false),"direct Hover assembly and Taxi rejection");
             VehicleTransfer.park(world,craft,scan.origin,player);craft=null;
