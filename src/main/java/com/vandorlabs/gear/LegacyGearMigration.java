@@ -48,13 +48,13 @@ public final class LegacyGearMigration {
         }
         GearBlock arm=large?GearRegistry.LARGE_GEAR_EXTENDER:GearRegistry.GEAR_EXTENDER,wheel=large?GearRegistry.LARGE_LANDING_WHEEL:GearRegistry.LANDING_WHEEL;
         Map<BlockPos,IBlockState> desired=new LinkedHashMap<>();int width=large?4:1;
-        for(int depth=0;depth<=height;depth++)for(int part=0;part<width;part++){
+        for(int depth=0;depth<=height;depth++)for(int part=0;part<(depth==height?width:1);part++){
             BlockPos at=root.down(depth).add(large?LargeGearBlock.offset(facing,part&1,part>>1):BlockPos.ORIGIN);
             IBlockState state=(depth==height?wheel:arm).getDefaultState().withProperty(GearBlock.FACING,facing);
             if(large)state=state.withProperty(LargeGearBlock.PART,part);desired.put(at,state);
         }
         for(BlockPos at:desired.keySet())if(!world.isBlockLoaded(at,false)||!world.isAirBlock(at)&&!owned.contains(at))return null;
-        for(int part=0;part<width;part++){
+        for(int part=0;part<1;part++){
             BlockPos mount=root.add(large?LargeGearBlock.offset(facing,part&1,part>>1):BlockPos.ORIGIN).up();
             if(!world.isBlockLoaded(mount,false)||!world.getBlockState(mount).isSideSolid(world,mount,EnumFacing.DOWN))return null;
         }
@@ -65,7 +65,7 @@ public final class LegacyGearMigration {
             BlockPos neighbor=at.offset(side);if(desired.containsKey(neighbor)||!world.isBlockLoaded(neighbor,false))continue;
             TileEntity tile=world.getTileEntity(neighbor);
             if(tile instanceof GearTileEntity){GearTileEntity group=((GearTileEntity)tile).loadedController();
-                if(group==null||!group.usesLegacyInput()||group.isSwingArmController()||group.armWidth()!=(large?2:1)||group.footFacing()!=facing||group.assembly().kind()!=com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL||group.assembly().columnHeight()!=height||group.target()!=deployed||Math.abs(group.progress()-(deployed?1:0))>.0001||group.triggerMode!=old.getMode()||!group.getRedstoneChannels().equals(old.getRedstoneChannels()))return null;
+                if(group==null||!group.usesLegacyInput()||group.isSwingArmController()||group.armSize()!=(large?2:1)||group.footFacing()!=facing||group.assembly().kind()!=com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL||group.assembly().columnHeight()!=height||group.target()!=deployed||Math.abs(group.progress()-(deployed?1:0))>.0001||group.triggerMode!=old.getMode()||!group.getRedstoneChannels().equals(old.getRedstoneChannels()))return null;
                 if(directionSet&&settings.getInteger("Direction")!=group.direction().ordinal())return null;settings.setInteger("Direction",group.direction().ordinal());directionSet=true;
                 for(BlockPos member:group.members()){if(!world.isBlockLoaded(member,false))return null;neighbors.add(member);}
             }

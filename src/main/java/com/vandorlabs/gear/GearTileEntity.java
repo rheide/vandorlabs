@@ -41,13 +41,13 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     private boolean deployedTarget = true;
     private boolean signalKnown,lastSignal,legacyAnyChannels;
     public boolean usesLegacyInput(){return legacyAnyChannels;}
-    public double footMountOffset(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.WHEEL?(armWidth()==2?11/16D:9/16D):0;}
+    public double footMountOffset(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.WHEEL?(armSize()==2?11/16D:9/16D):0;}
     public GearMotion.Pose pose(double progress){
         double stowed=GearMotion.RETRACTED_FOOT_Y;
         // Leave daylight beneath the collar instead of coincident runner faces.
         if(mode==GearMotion.Mode.EXTEND)stowed=footMountOffset()>0?6/16D-1/64D-(3/16D+footMountOffset()):stowed-1/64D;
         // Clear the fork bridge as well as the tyre beneath the mounting cap.
-        double hingeDrop=mode==GearMotion.Mode.ROTATE_LEVEL && armWidth()==2 && assembly.kind()==GearTopology.FootKind.WHEEL?17/128D:0;
+        double hingeDrop=mode==GearMotion.Mode.ROTATE_LEVEL && armSize()==2 && assembly.kind()==GearTopology.FootKind.WHEEL?17/128D:0;
         return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,stowed,hingeDrop,footMountOffset());
     }
 
@@ -109,6 +109,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     public double armShiftZ(BlockPos column){return columnShift(column).getZ()*.5;}
     private BlockPos columnShift(BlockPos column){IBlockState state=world.getBlockState(pos.add(column));return armWidth()==2 && state.getBlock() instanceof GearBlock?LargeGearBlock.offset(state.getValue(GearBlock.FACING),1,1):BlockPos.ORIGIN;}
     private BlockPos armShift(){return armWidth()==2?LargeGearBlock.offset(world.getBlockState(pos).getValue(GearBlock.FACING),1,1):BlockPos.ORIGIN;}
+    public int armSize(){return world!=null&&world.getBlockState(pos).getBlock() instanceof GearBlock?((GearBlock)world.getBlockState(pos).getBlock()).sizeClass():1;}
     public int armWidth(){return world!=null&&world.getBlockState(pos).getBlock() instanceof GearBlock?((GearBlock)world.getBlockState(pos).getBlock()).width():1;}
     public boolean isSwingArmController() {
         return world != null && GearAssembly.loaded(world, pos) && GearAssembly.isSwingArm(world.getBlockState(pos));
@@ -192,6 +193,9 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
             return;
         }
         if (firstServerTick) {
+            IBlockState initial=world.getBlockState(pos);
+            if(initial.getBlock() instanceof LargeGearBlock&&!((LargeGearBlock)initial.getBlock()).migrateCompact(world,pos,initial))return;
+            if(world.getTileEntity(pos)!=this)return;
             firstServerTick = false;
             rebuildMemberCache();
             requestNearbyRebuild(world, pos);
@@ -240,7 +244,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
             }else{
                 if(!GearAssembly.isFoot(state)||!((GearBlock)state.getBlock()).kind().name().equals(assembly.kind().name()))return false;
                 if(assembly.kind()!=GearTopology.FootKind.PLATE&&state.getValue(GearBlock.FACING)!=footFacing)return false;
-                if(assembly.kind()==GearTopology.FootKind.WHEEL && ((GearBlock)state.getBlock()).width()!=armWidth())return false;
+                if(assembly.kind()==GearTopology.FootKind.WHEEL && ((GearBlock)state.getBlock()).sizeClass()!=armSize())return false;
                 GearBlock block=(GearBlock)state.getBlock();if(!block.componentIntact(world,block.componentRoot(member,state)))return false;
             }
             TileEntity tile = world.getTileEntity(member);
@@ -513,7 +517,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
         if (assembly == null) {
-            if(armWidth()==2&&world!=null){AxisAlignedBB extent=new AxisAlignedBB(pos);GearBlock block=(GearBlock)world.getBlockState(pos).getBlock();for(BlockPos cell:block.componentCells(world,pos))extent=extent.union(new AxisAlignedBB(cell));return isSwingArmController()||block.kind()==GearBlock.Kind.WHEEL?extent.union(extent.offset(0,-1,0)):extent;}
+            if(armSize()==2&&world!=null){AxisAlignedBB extent=new AxisAlignedBB(pos);GearBlock block=(GearBlock)world.getBlockState(pos).getBlock();for(BlockPos cell:block.componentCells(world,pos))extent=extent.union(new AxisAlignedBB(cell));extent=extent.grow(block.kind()==GearBlock.Kind.WHEEL?.5:.125,0,block.kind()==GearBlock.Kind.WHEEL?.5:.125);return isSwingArmController()||block.kind()==GearBlock.Kind.WHEEL?extent.union(extent.offset(0,-1,0)):extent;}
             // The unformed swing arm already reaches into the foot cell.
             return isSwingArmController()
                     ? new AxisAlignedBB(pos.getX(), pos.getY() - 1, pos.getZ(),

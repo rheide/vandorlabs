@@ -33,7 +33,7 @@ final class LegacyGearMigrationRuntimeChecks {
         try{for(int size=0;size<5;size++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int pixels:new int[]{8,32})for(boolean deployed:new boolean[]{false,true}){
             clear(world,at);TileEntityLandingGear old=place(world,at,block,size,facing,pixels,deployed);
             GearTileEntity root=LegacyGearMigration.convert(old);require(root!=null,"convert size="+size+" facing="+facing+" travel="+pixels+" target="+deployed);
-            require(root.armWidth()==(size>=3?2:1)&&root.assembly().columnHeight()==Math.max(1,(pixels+15)/16),"matching size and whole-block stroke");
+            require(root.armWidth()==1&&root.armSize()==(size>=3?2:1)&&root.assembly().columnHeight()==Math.max(1,(pixels+15)/16),"matching size and whole-block stroke");
             require(root.target()==deployed&&root.progress()==(deployed?1:0)&&root.triggerMode==1&&root.usesLegacyInput()&&root.getRedstoneChannels().equals(com.vandorlabs.redstone.ChannelList.of(571,572)),"pose and automation preserved");
             root.update();require(root.target()==deployed&&root.progress()==(deployed?1:0),"unchanged signal retains migrated manual pose");
             for(BlockPos member:root.members())require(world.getBlockState(member).getBlock() instanceof GearBlock,"all new membership uses modular blocks");

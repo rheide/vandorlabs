@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Give Large landing gear arms a one-block mounting footprint while preserving heavy mechanisms and exclusive Large Wheel compatibility. Existing four-cell arm mounts migrate automatically.
+
 - Swing-arm wheels attach at their top fork connector. The connector turns with the arm during retraction while the tyre stays level; both sizes share matching posed collision and selection.
 
 - Battery casing textures are configurable, and RF port lettering stays upright on every face. Corp light textures appear directly in Lights without an On suffix.
@@ -52,7 +54,7 @@
 - Add an instant Hexagon/Block tank shape setting, preserving fluid, capacity and axial connections in both hollow shapes.
 - Rotate only the circular surface disc while its square housing corners remain fixed. Preserve walking input while carrying players, use tighter rotated collision footprints, restore blocks automatically at the nearest quarter turn on stopping, and use redstone ON/OFF activation.
 
-- Add 2x2 Large Extenders and Swing Arms, stackable swing-arm columns, and separate standard/wide Wheel feet for either arm. Reserve full footprints, carry wheel gear through vehicle conversion, and animate tires in Taxi mode. Select visible retracted feet to operate their gear and permit adjacent blocks outside the swing path.
+- Add compact Large Extenders and Swing Arms, stackable swing-arm columns, and separate standard/wide Wheel feet for either arm. Reserve oversized wheel footprints, carry wheel gear through vehicle conversion, and animate tires in Taxi mode. Select visible retracted feet to operate their gear and permit adjacent blocks outside the swing path.
 
 - Apply modular landing gear settings immediately. Orient the swing-arm elbow toward its fold direction to clear the level plate, and close the unmounted swivel underside. New skis inherit the clicked ski's rotation without disconnecting their extender.
 

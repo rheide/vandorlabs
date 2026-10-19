@@ -40,7 +40,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
         cachePose=cache&&(tile.isFixedMount()||progress==0||progress==1)&&(!(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)||((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft==null);
 
         IBlockState state = tile.getWorld().getBlockState(tile.getPos());
-        if (!(state.getBlock() instanceof GearBlock) || !state.getValue(GearBlock.ASSEMBLED)&&((GearBlock)state.getBlock()).width()==1) return;
+        if (!(state.getBlock() instanceof GearBlock) || !state.getValue(GearBlock.ASSEMBLED)&&((GearBlock)state.getBlock()).sizeClass()==1) return;
         GearBlock part=(GearBlock)state.getBlock();if(!part.componentRoot(tile.getPos(),state).equals(tile.getPos()))return;
         // Another mod's FastTESR can leave a buffer translation behind.
         // Coordinates below already include the camera-relative tile offset.
@@ -55,9 +55,15 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             String model = kind == GearBlock.Kind.MOUNT ? "fixed_mount" : kind == GearBlock.Kind.EXTENDER ? "extender"
                     : kind == GearBlock.Kind.SWING_ARM ? "swing_arm"
                     : kind == GearBlock.Kind.PLATE ? "plate_0" : kind==GearBlock.Kind.WHEEL?part.wheelModel():"ski_0";
-            if(part.width()==2&&kind==GearBlock.Kind.SWING_ARM){Affine yaw=Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING))),fixedSize=Affine.scaleXZ(2),barSize=Affine.translation(1,0,1).compose(Affine.scaleXZ(2,1).compose(Affine.translation(-.5,0,-.5)));draw("mount",yaw.compose(fixedSize),x,y,z,light,buffer);draw("sleeve",yaw.compose(fixedSize),x,y,z,light,buffer);draw("swing_linkage",yaw.compose(barSize),x,y,z,light,buffer);draw("swivel",yaw.compose(fixedSize.compose(Affine.translation(0,-1,0))),x,y,z,light,buffer);return;}
-            draw(model, kind==GearBlock.Kind.WHEEL?Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING))):Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING))).compose(Affine.scaleXZ(part.width())),
-                    x, y, z, light, buffer);
+            Affine yaw=Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING)));
+            if(part.sizeClass()==2&&kind!=GearBlock.Kind.WHEEL){
+                Affine centered=Affine.translation(-.5,0,-.5).compose(Affine.scaleXZ(2));
+                draw(kind==GearBlock.Kind.MOUNT?"fixed_mount_compact":"mount",yaw,x,y,z,light,buffer);
+                if(kind!=GearBlock.Kind.MOUNT){draw("sleeve",yaw.compose(centered),x,y,z,light,buffer);
+                    if(kind==GearBlock.Kind.SWING_ARM){Affine bar=Affine.translation(.5,0,.5).compose(Affine.scaleXZ(2,1).compose(Affine.translation(-.5,0,-.5)));draw("swing_linkage",yaw.compose(bar),x,y,z,light,buffer);draw("swivel",yaw.compose(centered.compose(Affine.translation(0,-1,0))),x,y,z,light,buffer);}
+                    else draw("rod",yaw.compose(centered.compose(Affine.scaleY(.5,0))),x,y,z,light,buffer);
+                }
+            }else draw(model,yaw,x,y,z,light,buffer);
             return;
         }
 
@@ -67,7 +73,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
         Affine feet = Affine.fromPose(pose, true);
 
         for(net.minecraft.util.math.BlockPos column:tile.columns()){
-            int width=tile.armWidth();double shift=(width-1)*.5;
+            int width=tile.armSize();double shift=(width-1)*.5;
             IBlockState columnState=tile.getWorld().getBlockState(tile.getPos().add(column));
             if(!(columnState.getBlock() instanceof GearBlock))continue;
             Affine columnFixed=Affine.quarterTurn(quarterTurns(columnState.getValue(GearBlock.FACING)));
@@ -77,8 +83,8 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             barSize=Affine.translation(.5,0,.5).compose(barSize.compose(Affine.translation(-.5,0,-.5)));
             Affine armPose=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(moving.compose(barSize));
             Affine footPose=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(feet.compose(size));
-            draw(tile.isFixedMount()?"fixed_mount":"mount",offset.compose(columnFixed.compose(Affine.scaleXZ(width))),x,y,z,light,buffer);
-            if(!tile.isFixedMount())draw("sleeve",offset.compose(columnFixed.compose(Affine.scaleXZ(width))),x,y,z,light,buffer);
+            draw(tile.isFixedMount()?(width==2?"fixed_mount_compact":"fixed_mount"):"mount",offset.compose(columnFixed),x,y,z,light,buffer);
+            if(!tile.isFixedMount())draw("sleeve",offset.compose(columnFixed.compose(size)),x,y,z,light,buffer);
             if(tile.isSwingArmController()){
                 Affine hingeYaw=Affine.quarterTurn(tile.direction().ordinal());
                 draw("swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw))),x,y,z,light,buffer);
@@ -102,13 +108,13 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                 net.minecraft.util.math.BlockPos source=tile.getPos().add(foot.x,foot.y,foot.z);IBlockState ws=tile.getWorld().getBlockState(source);if(!(ws.getBlock() instanceof GearBlock)||((GearBlock)ws.getBlock()).kind()!=GearBlock.Kind.WHEEL)continue;GearBlock wheel=(GearBlock)ws.getBlock();if(!wheel.componentRoot(source,ws).equals(source))continue;
                 Affine transform=orientation;com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
                 Affine at=feet.compose(Affine.translation(foot.x,foot.y,foot.z));
-                if(craft!=null)transform=transform.compose(Affine.yaw(wheel.width()*.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft)));
+                if(craft!=null)transform=transform.compose(Affine.yaw(.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft)));
                 draw(wheel.wheelModel()+"_bracket",at.compose(transform),x,y,z,light,buffer);
-                double center=wheel.width()*.5,connectorY=wheel.width()==2?13/16D:9.375/13D;
+                double center=.5,connectorY=wheel.width()==2?13/16D:9.375/13D;
                 GearMotion.Vec pivot=orientationPoint(orientation,center,connectorY,center);
                 Affine connector=connectorPose(pose,foot.x+pivot.x,foot.y+pivot.y,foot.z+pivot.z);
                 draw(wheel.wheelModel()+"_connector",connector.compose(Affine.translation(foot.x,foot.y,foot.z).compose(transform)),x,y,z,light,buffer);
-                if(craft!=null){double distance=com.vandorlabs.client.VehicleWheelMotion.sample(craft,partialTicks);double angle=com.vandorlabs.client.VehicleWheelMotion.roll(distance,wheel.width()==2?14/16D:4.5/13,com.vandorlabs.client.VehicleWheelMotion.alignment(craft.structure.facing,tile.footFacing()));transform=transform.compose(Affine.roll(wheel.width()*.5,wheel.width()==2?-2/16D:4.5/13,angle));}
+                if(craft!=null){double distance=com.vandorlabs.client.VehicleWheelMotion.sample(craft,partialTicks);double angle=com.vandorlabs.client.VehicleWheelMotion.roll(distance,wheel.width()==2?14/16D:4.5/13,com.vandorlabs.client.VehicleWheelMotion.alignment(craft.structure.facing,tile.footFacing()));transform=transform.compose(Affine.roll(.5,wheel.width()==2?-2/16D:4.5/13,angle));}
                 draw(wheel.wheelModel()+"_tyre",at.compose(transform),x,y,z,light,buffer);continue;
             }
             // Connectivity is measured in world directions. Convert that

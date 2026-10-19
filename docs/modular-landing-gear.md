@@ -61,11 +61,11 @@ no foot is mounted.
 Extend a ski row by clicking an existing ski: the new ski inherits its facing,
 including when the clicked ski belongs to an assembled extender group.
 
-Large Extenders and Large Swing Arms reserve a 2x2 horizontal footprint per
-section. Their complete mounting cap needs a solid underside. Place one Large
-part per layer; its other three cells are reserved automatically. Mining any
-cell removes that one part. Placement fails without changing other blocks if
-any cell in the footprint is occupied. Large parts rotate with captured craft.
+Large Mounts, Extenders and Swing Arms occupy one block per section, with a
+compact mounting cap and a heavier mechanism than standard arms. Attach each
+column below a solid underside. Existing four-cell arm sections automatically
+release their old companion cells when loaded; independent neighboring arms
+remain in place. Large parts rotate with captured craft.
 
 Separate Wheel feet reuse the tires, hubs and brackets from the telescopic
 Landing Gear. The standard wheel fits one-block arms; the wide Large Wheel
@@ -84,24 +84,23 @@ The modular wheels roll with actual Taxi travel, reverse their roll when backing
 
 Adjacent Programmable Trapdoors configured to move into the next block can cover modular gear shafts. Aim the trapdoor toward any arm, wheel or other foot member. Covers open for deployment, remain open throughout retraction, and resume their own redstone setting only once fully stowed. Covers follow the gear into a vehicle and retain the same protection against closing through deployed feet.
 
-Legacy integrated Landing Gear is removed from crafting and creative/search catalogs. Its saved block ID remains readable for migration. Saved wheel gear converts on chunk load, or when right-clicked, into an Extender column and separate Wheel. Small, Medium and Large gear use the standard parts; Extra Large variants use 2x2 parts. Travel rounds up to whole-block column sections. Facing, deployment and redstone/channel settings are retained. Migrated controllers retain the legacy input rule: local power or any listed channel; their dialog labels this rule. Conversion checks the entire footprint and full mounting support first; blocked or incomplete mounts remain intact until there is room to convert. Existing inventory stacks and dropped items split into the corresponding arm sections and wheels; excess parts drop if the inventory is full. Captured legacy vehicles retain their saved representation during transfers and can convert after a later chunk reload or interaction.
+Legacy integrated Landing Gear is removed from crafting and creative/search catalogs. Its saved block ID remains readable for migration. Saved wheel gear converts on chunk load, or when right-clicked, into an Extender column and separate Wheel. Small, Medium and Large gear use the standard parts; Extra Large variants use compact Large arms and oversized Wheels. Travel rounds up to whole-block column sections. Facing, deployment and redstone/channel settings are retained. Migrated controllers retain the legacy input rule: local power or any listed channel; their dialog labels this rule. Conversion checks the entire footprint and the mounting support first; blocked or incomplete mounts remain intact until there is room to convert. Existing inventory stacks and dropped items split into the corresponding arm sections and wheels; excess parts drop if the inventory is full. Captured legacy vehicles retain their saved representation during transfers and can convert after a later chunk reload or interaction.
 
 A manual deployment override on modular gear lasts until its configured redstone input changes, including across saves and migration.
 
 Extender-mounted wheels retain clearance beneath the fixed casing when fully retracted. The wheel bracket, socket and rod use the same adjusted pose for rendering and collision.
 
-Large Extenders and Large Swing Arms each reserve a 2x2 horizontal footprint.
+Large Extenders and Large Swing Arms each occupy one source block.
 The Large Wheel has the legacy Extra Large tyre diameter (1.75 blocks), reaches
 one block below its source cells, and requires a matching large Mount, Extender or Swing Arm. Standard
 wheels require standard arms. Click any quadrant of a large part to align a new
-large arm or wheel with its anchor and orientation. At least one mounting-cap cell must touch a solid underside; a full 2x2 hull
-patch is optional. Connected straight Large Extenders may face different ways.
+large arm or wheel with its anchor and orientation. The arm mounting cap must touch a solid underside. Connected straight Large Extenders may face different ways.
 
 Right-click an option button to cycle to its previous value. Settings apply immediately.
 
 ## Animated combinations
 
-These in-game clips show complete deployment and retraction. The foot stays level as a Swing Arm folds; an Extender lifts its foot vertically. Each large mechanism uses its actual 2x2 footprint. Wheels use the matching arm size; large Plates and Skis are connected groups of four standard feet.
+These in-game clips show complete deployment and retraction. The foot stays level as a Swing Arm folds; an Extender lifts its foot vertically. Large arms have a one-block mounting footprint; Large Wheels retain four source cells. Wheels use the matching arm size; Plates and Skis can form shared connected feet under either arm size.
 
 | Foot | Small Extender | Small Swing Arm |
 | --- | --- | --- |

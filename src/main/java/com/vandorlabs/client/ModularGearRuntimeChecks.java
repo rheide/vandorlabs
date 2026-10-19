@@ -40,6 +40,7 @@ final class ModularGearRuntimeChecks {
         ModularWheelRuntimeChecks.run(world,player);
         ModularGearFollowupRuntimeChecks.run(world,player);
         largePlates(world,player);
+        compactMigration(world);
         FixedGearRuntimeChecks.run(world,player);
         recipes(world);
         BlockPos skiRoot=new BlockPos(475,215,200);ItemStack oldHeld=player.getHeldItemMainhand();float oldYaw=player.rotationYaw;
@@ -104,6 +105,20 @@ final class ModularGearRuntimeChecks {
     static void pose(WorldServer world,boolean stowed){for(int i=0;i<7;i++){TileEntity raw=world.getTileEntity(new BlockPos(390+i*10,32,120));if(raw instanceof GearTileEntity){GearTileEntity root=((GearTileEntity)raw).loadedController();if(root!=null){root.target(!stowed);root.captureProgress(stowed?0:1);root.sync();}}}}
     private static void clear(WorldServer world,BlockPos base){for(BlockPos p:BlockPos.getAllInBox(base.add(-5,-6,-5),base.add(7,4,6)))if(!world.isAirBlock(p))world.setBlockToAir(p);}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("modular gear: "+message);}
+    private static void compactMigration(WorldServer world){
+        BlockPos root=new BlockPos(510,210,180);
+        try{for(GearBlock arm:new GearBlock[]{GearRegistry.LARGE_GEAR_EXTENDER,GearRegistry.LARGE_GEAR_SWING_ARM,GearRegistry.LARGE_GEAR_MOUNT})for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            clear(world,root);for(int n=0;n<4;n++)world.setBlockState(root.add(LargeGearBlock.offset(facing,n&1,n>>1)),arm.getDefaultState().withProperty(GearBlock.FACING,facing).withProperty(LargeGearBlock.PART,n));
+            BlockPos independent=root.add(LargeGearBlock.offset(facing,1,1));world.setBlockState(independent,arm.getDefaultState().withProperty(GearBlock.FACING,facing));
+            world.setBlockState(root.up(),Blocks.IRON_BLOCK.getDefaultState());world.setBlockState(root.down(),GearRegistry.LANDING_PLATE.getDefaultState());
+            GearTileEntity retained=(GearTileEntity)world.getTileEntity(root);require(retained.rebuild(),"legacy compact migration fixture forms");retained.target(false);retained.captureProgress(arm.kind()==GearBlock.Kind.MOUNT?1:0);
+            for(int n=1;n<3;n++){BlockPos cell=root.add(LargeGearBlock.offset(facing,n&1,n>>1));GearTileEntity helper=(GearTileEntity)world.getTileEntity(cell);NBTTagCompound saved=helper.writeToNBT(new NBTTagCompound());saved.setLong("GearOwnerOffset",root.subtract(cell).toLong());helper.readFromNBT(saved);}
+            retained.update();require(retained.progress()==(arm.kind()==GearBlock.Kind.MOUNT?1:0),"compact migration preserves the saved mechanism pose");
+            require(world.getBlockState(root).getBlock()==arm&&world.getBlockState(independent).getBlock()==arm,"compact migration preserves roots and adjacent independent arms");
+            require(world.isAirBlock(root.add(LargeGearBlock.offset(facing,1,0)))&&world.isAirBlock(root.add(LargeGearBlock.offset(facing,0,1))),"compact migration removes legacy companion cells");
+            require(arm.componentCells(world,root).size()==1&&arm.componentIntact(world,root),"single-cell Large arm is complete");
+        }}finally{clear(world,root);}
+    }
     private static void largePlates(WorldServer world,EntityPlayerMP player){
         BlockPos root=new BlockPos(510,210,180);ItemStack held=player.getHeldItemMainhand();float yaw=player.rotationYaw;
         try{for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int height:new int[]{1,3}){

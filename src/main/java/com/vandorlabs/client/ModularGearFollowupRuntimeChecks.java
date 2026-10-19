@@ -46,9 +46,9 @@ final class ModularGearFollowupRuntimeChecks {
     private static void covers(WorldServer world,EntityPlayerMP player){
         BlockPos at=new BlockPos(540,180,200);
         try{for(boolean large:new boolean[]{false,true})for(boolean swing:new boolean[]{false,true})for(boolean sliding:new boolean[]{false,true}){
-            clear(world,at);GearTileEntity gear=build(world,player,at,large,swing,false);BlockPos mount=at.down().west();
+            clear(world,at);GearTileEntity gear=build(world,player,at,large,swing,false);BlockPos mount=large?at.down().east(2):at.down().west();
             BlockProgrammableTrapdoor block=(BlockProgrammableTrapdoor)Block.getBlockFromName("vandorlabs:programmable_trapdoor");
-            world.setBlockState(mount,block.getDefaultState().withProperty(BlockProgrammableTrapdoor.FACING,EnumFacing.EAST));
+            world.setBlockState(mount,block.getDefaultState().withProperty(BlockProgrammableTrapdoor.FACING,large?EnumFacing.WEST:EnumFacing.EAST));
             TileEntityProgrammableTrapdoor cover=(TileEntityProgrammableTrapdoor)world.getTileEntity(mount);cover.configure(0,0,sliding,1,0);cover.setCover(true);
             require(world.getBlockState(mount).getValue(BlockProgrammableTrapdoor.OPEN),"deployed modular wheel opens its cover");
             gear.target(false);

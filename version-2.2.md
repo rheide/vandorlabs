@@ -4,7 +4,7 @@ Build working landing gear, showcase your creations on rotating platforms, and g
 
 ## Landing gear you can build your way
 
-Choose fixed **Mounts**, or combine **Extenders or Swing Arms** with separate **Plates, Skis or Wheels**. Stack arm sections for longer travel, connect matching feet into a shared assembly, and choose standard or **2×2 Large** parts to suit your ship. Swing arms fold while keeping their feet level; collision and selection follow the moving mechanism. Contacted entities move with the gear during a stroke.
+Choose fixed **Mounts**, or combine **Extenders or Swing Arms** with separate **Plates, Skis or Wheels**. Stack arm sections for longer travel, connect matching feet into a shared assembly, and choose standard or **Large** parts with compact one-block arm mounts and oversized wheels to suit your ship. Swing arms fold while keeping their feet level; collision and selection follow the moving mechanism. Contacted entities move with the gear during a stroke.
 
 Settings apply immediately. Operate visible feet by hand or use redstone and channels, including aboard captured vehicles. Adjacent trapdoor covers open for deployment and stay clear until the gear finishes retracting.
 

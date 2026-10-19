@@ -51,6 +51,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
 
     public Kind kind() { return kind; }
     public int width(){return 1;}
+    public int sizeClass(){return width();}
     public BlockPos componentRoot(BlockPos pos,IBlockState state){return pos;}
     public java.util.List<BlockPos> componentCells(World world,BlockPos pos){return java.util.Collections.singletonList(pos);}
     public boolean componentIntact(World world,BlockPos pos){return true;}
@@ -82,7 +83,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
 
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer){
         IBlockState clicked=world.getBlockState(pos.offset(side.getOpposite()));
-        EnumFacing facing=((kind==Kind.SKI||kind==Kind.WHEEL)&&clicked.getBlock()==this || width()==2 && clicked.getBlock() instanceof GearBlock && ((GearBlock)clicked.getBlock()).width()==2)?clicked.getValue(FACING):placer.getHorizontalFacing().getOpposite();
+        EnumFacing facing=((kind==Kind.SKI||kind==Kind.WHEEL)&&clicked.getBlock()==this || sizeClass()==2 && clicked.getBlock() instanceof GearBlock && ((GearBlock)clicked.getBlock()).sizeClass()==2)?clicked.getValue(FACING):placer.getHorizontalFacing().getOpposite();
         return getDefaultState().withProperty(FACING,facing);
     }
 
@@ -277,7 +278,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     @Override public IBlockState withRotation(IBlockState state,net.minecraft.util.Rotation rotation){return state.withProperty(FACING,rotation.rotate(state.getValue(FACING)));}
     @Override public IBlockState withMirror(IBlockState state,net.minecraft.util.Mirror mirror){return state.withProperty(FACING,mirror.mirror(state.getValue(FACING)));}
 
-    @Override public double vehicleBottomY(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;return root!=null&&root.assembly()!=null?root.getPos().getY()-root.assembly().columnHeight()-(root.armWidth()==2 && root.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL?1:0):pos.getY()-(kind==Kind.WHEEL && width()==2?1:0);}
+    @Override public double vehicleBottomY(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;return root!=null&&root.assembly()!=null?root.getPos().getY()-root.assembly().columnHeight()-(root.armSize()==2 && root.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL?1:0):pos.getY()-(kind==Kind.WHEEL && width()==2?1:0);}
 
     @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult hit,World world,BlockPos pos,EntityPlayer player){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());return stack;}
     @Override public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());drops.add(stack);}

@@ -98,7 +98,7 @@ public final class GearAssembly {
         IBlockState footState=world.getBlockState(first);
         if(!isFoot(footState))return fail("Place a landing plate, ski or wheel beneath the strut.");
         GearBlock footBlock=(GearBlock)footState.getBlock(),armBlock=(GearBlock)topState.getBlock();
-        if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.width()!=armBlock.width())return fail("Wheel and mounting arm sizes must match.");
+        if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.sizeClass()!=armBlock.sizeClass())return fail("Wheel and mounting arm sizes must match.");
         EnumFacing facing=footState.getValue(GearBlock.FACING);
         Set<BlockPos> feet=new HashSet<>(),columns=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(first);feet.add(first);
         while(!queue.isEmpty()){
@@ -112,7 +112,7 @@ public final class GearAssembly {
                 for(int n=0;n<height;n++){
                     BlockPos cell=column.down(n);IBlockState state=world.getBlockState(cell);
                     if(state.getBlock()!=topState.getBlock()||!(world.getTileEntity(cell) instanceof GearTileEntity))return fail("Incomplete or mixed strut column.");
-                    if(!((GearBlock)state.getBlock()).componentIntact(world,cell))return fail("Incomplete 2x2 arm footprint.");
+                    if(!((GearBlock)state.getBlock()).componentIntact(world,cell))return fail("Incomplete arm footprint.");
                     if(swing&&state.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected swing arms in the same direction.");
                 }
                 if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.width()==2){

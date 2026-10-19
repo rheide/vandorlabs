@@ -18,7 +18,7 @@ public final class ItemLargeGear extends ItemBlock {
     }
     @Override public boolean placeBlockAt(ItemStack stack,EntityPlayer player,World world,BlockPos pos,EnumFacing side,float x,float y,float z,IBlockState state){
         EnumFacing facing=state.getValue(GearBlock.FACING);
-        for(int n=0;n<4;n++){
+        for(int n=0;n<((LargeGearBlock)block).width()*((LargeGearBlock)block).width();n++){
             BlockPos at=pos.add(LargeGearBlock.offset(facing,n&1,n>>1));
             if(!GearAssembly.loaded(world,at)||!world.getBlockState(at).getBlock().isReplaceable(world,at)||!player.canPlayerEdit(at,side,stack)||!world.isBlockModifiable(player,at))return false;
         }
