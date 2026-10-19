@@ -30,7 +30,12 @@ final class UtilityStorageRuntimeChecks {
                 net.minecraft.block.state.IBlockState placed=battery.getStateForPlacement(world,pos,face,.5F,.5F,.5F,0,null);
                 require(placed.getValue(com.vandorlabs.blocks.BlockBattery.FACING)==face&&battery.getStateFromMeta(battery.getMetaFromState(placed))==placed,"battery clicked-face/meta "+face);
                 world.setBlockState(pos,placed);TileEntityBattery cell=(TileEntityBattery)world.getTileEntity(pos);
-                require(cell.isBlockShape(),"old/default battery stays block shaped");
+                require(cell.isBlockShape()&&!cell.hasCustomHousingTexture(),"old/default battery stays block shaped with legacy casing");
+                cell.setHousingTexture(ScreenHousingTextures.DEFAULT_TRAPDOOR);
+                TileEntityBattery savedCasing=new TileEntityBattery();savedCasing.readFromNBT(cell.writeToNBT(new NBTTagCompound()));
+                require(savedCasing.hasCustomHousingTexture()&&savedCasing.getHousingTexture()==cell.getHousingTexture(),"battery casing persists on "+face);
+                net.minecraft.item.ItemStack casingPick=battery.getPickBlock(placed,null,world,pos,null);
+                require(casingPick.getSubCompound("BlockEntityTag").getInteger("HousingTexture")==cell.getHousingTexture(),"picked battery preserves casing on "+face);
                 cell.getCapability(CapabilityEnergy.ENERGY,face).receiveEnergy(700,false);
                 for(boolean block:new boolean[]{false,true}){
                     cell.setBlockShape(block);TileEntityBattery saved=new TileEntityBattery();saved.readFromNBT(cell.writeToNBT(new NBTTagCompound()));

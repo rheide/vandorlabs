@@ -19,6 +19,7 @@ final class StorageStatusVisualChecks {
                 int dialogWidth=(Integer)net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.inventory.GuiContainer.class,gui,"xSize","field_146999_f");
                 int dialogHeight=(Integer)net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.inventory.GuiContainer.class,gui,"ySize","field_147000_g");
                 if(index==1&&(dialogWidth>354||dialogHeight>238))throw new IllegalStateException("Tank dialog is not compact");
+                if(net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiStorageStatus.class,gui,"textures")==null)throw new IllegalStateException("Storage casing picker missing");
                 java.util.List<?> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
                 java.util.List<java.awt.Rectangle> occupied=new java.util.ArrayList<>();boolean layout=false,shape=false;
                 for(Object raw:buttons){GuiButton b=(GuiButton)raw;java.awt.Rectangle r=new java.awt.Rectangle(b.x,b.y,b.width,b.height);if(r.x<0||r.y<0||r.x+r.width>size[0]||r.y+r.height>size[1])throw new IllegalStateException("Storage button outside screen");for(java.awt.Rectangle prior:occupied)if(prior.intersects(r))throw new IllegalStateException("Storage buttons overlap");occupied.add(r);layout|=b.id==2&&b.displayString.startsWith("Texture: ");}
@@ -42,6 +43,13 @@ final class StorageStatusVisualChecks {
             }
             double[] fit=TEHexTank.casingUV(outline,0,1,0,false,1),tile=TEHexTank.casingUV(outline,0,1,0,true,1);
             if(fit[0]!=16||Math.abs(tile[0]-Math.hypot(outline[1][0]-outline[0][0],outline[1][1]-outline[0][1])*16)>1e-9)throw new IllegalStateException("Tank Tile/Fit UV scale");
+        }
+        for(net.minecraft.util.EnumFacing cap:net.minecraft.util.EnumFacing.values()){
+            double[] center={.5,.5,.5},right=center.clone(),up=center.clone();
+            if(cap==net.minecraft.util.EnumFacing.NORTH)right[0]+=-.25;else if(cap==net.minecraft.util.EnumFacing.SOUTH||cap.getAxis()==net.minecraft.util.EnumFacing.Axis.Y)right[0]+=.25;else right[2]+=cap==net.minecraft.util.EnumFacing.EAST?-.25:.25;
+            if(cap==net.minecraft.util.EnumFacing.UP)up[2]-=.25;else if(cap==net.minecraft.util.EnumFacing.DOWN)up[2]+=.25;else up[1]+=.25;
+            double[] c=TEBattery.portUV(center,cap),r=TEBattery.portUV(right,cap),u=TEBattery.portUV(up,cap);
+            if(c[0]!=8||c[1]!=8||r[0]!=12||r[1]!=8||u[0]!=8||u[1]!=4)throw new IllegalStateException("Battery port lettering rotated or mirrored on "+cap);
         }
         System.out.println("[vandorlabs][reprolab] storage-meters PASS partial RF and pooled fluid, three resolutions, registered windows and ports");
     }

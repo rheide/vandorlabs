@@ -138,8 +138,9 @@ final class CustomMaterialRuntimeChecks {
         int general=0,lights=0;
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.IDS[i].startsWith("corp_")){
             boolean only=ScreenHousingTextures.lightOnly(i);
+            if(only&&!ScreenHousingTextures.isLightOff(i))require(!ScreenHousingTextures.label(i).endsWith(" On"),"Corp lights omit On suffix");
             require(HousingTextureList.generalTexture(i)!=only&&com.vandorlabs.items.ItemProgrammableArmor.listedMaterial(i)!=only,"Corp light artwork leaked into general/armor picker");
-            require(ScreenHousingTextures.category(i).equals(only?"Corp/Lights":"Corp"),"Corp category hierarchy");
+            require(ScreenHousingTextures.category(i).equals(only?"Lights":"Corp"),"Corp materials and main Lights category");
             require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(i))!=mc.getTextureMapBlocks().getMissingSprite(),"Corp artwork missing from atlas");
             if(only){lights++;if(!ScreenHousingTextures.isLightOff(i)){
                 TileEntityProgrammableLight tile=new TileEntityProgrammableLight();tile.setFaceTexture(i);tile.configure(0,15,false,17,0,com.vandorlabs.persistence.SpaceDoorData.TRIGGER_REDSTONE_ON);

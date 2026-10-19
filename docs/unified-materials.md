@@ -83,7 +83,7 @@ to the standard artwork without changing their material or design IDs.
 
 ## Company artwork
 
-The top-level **Corp** category contains logos, backgrounds and murals for Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor. Murals retain their wide aspect ratio in picker previews. **Corp/Lights** contains six paired company light designs and appears only in programmable light dialogs. Select an On design for automatic matching Off artwork as the light switches, or use the OFF tab to choose a separate finish. General block, screen, tank and armor material menus omit these light-only pairs. Existing material IDs remain unchanged.
+The top-level **Corp** category contains logos, backgrounds and murals for Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor. Murals retain their wide aspect ratio in picker previews. The main **Lights** category also contains six paired company light designs, available only in programmable light dialogs. Active designs use the company name without an On suffix. Select a company design for automatic matching Off artwork as the light switches, or use the OFF tab to choose a separate finish. General block, screen, tank and armor material menus omit these light-only pairs. Existing material IDs remain unchanged.
 
 
 Programmable Blocks with the same block facing, visible-face material and layout

@@ -11,6 +11,10 @@ import net.minecraftforge.energy.*;
 public final class TileEntityBattery extends TileEntity implements ITickable {
     public static final int CAPACITY=100000, RATE=1000;
     private int energy;
+    private int housingTexture=-1;
+    public boolean hasCustomHousingTexture(){return housingTexture>=0;}
+    public int getHousingTexture(){return Math.max(0,housingTexture);}
+    public void setHousingTexture(int choice){int next=ScreenHousingTextures.clamp(choice);if(housingTexture!=next){housingTexture=next;markDirty();sync();}}
     private boolean blockShape=true,energyDirty;
     private int syncTicks;
     public boolean isBlockShape(){return blockShape;}
@@ -42,8 +46,8 @@ public final class TileEntityBattery extends TileEntity implements ITickable {
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public net.minecraft.network.play.server.SPacketUpdateTileEntity getUpdatePacket(){return new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(net.minecraft.network.NetworkManager manager,net.minecraft.network.play.server.SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("Energy",energy);tag.setBoolean("BlockShape",blockShape);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);energy=Math.max(0,Math.min(CAPACITY,tag.getInteger("Energy")));blockShape=!tag.hasKey("BlockShape")||tag.getBoolean("BlockShape");}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("Energy",energy);if(housingTexture>=0)tag.setInteger("HousingTexture",housingTexture);tag.setBoolean("BlockShape",blockShape);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);housingTexture=tag.hasKey("HousingTexture")?ScreenHousingTextures.clamp(tag.getInteger("HousingTexture")):-1;energy=Math.max(0,Math.min(CAPACITY,tag.getInteger("Energy")));blockShape=!tag.hasKey("BlockShape")||tag.getBoolean("BlockShape");}
     @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityEnergy.ENERGY?(side==null || side==inputSide() || side==inputSide().getOpposite()):super.hasCapability(cap,side);}
     @Override public <T>T getCapability(Capability<T> cap,EnumFacing side){if(cap==CapabilityEnergy.ENERGY)return hasCapability(cap,side)?CapabilityEnergy.ENERGY.cast(side==null?internal:side==inputSide()?input:output):null;return super.getCapability(cap,side);}
 }

@@ -17,7 +17,7 @@ def main():
             filename=company+('_logo' if company=='ashiro' else '') if kind=='logo' else company+'_'+kind
             entries.append((source/(filename+'.png'),dict(id=f'corp_{company}_{kind}',label=company.title()+' '+{'logo':'Logo','bg':'Background','mural':'Mural'}[kind],category='Corp',source=f'corp/{company}_{kind}',**({'rectangular':True} if kind=='mural' else {}))))
         for state in ('on','off'):
-            entry=dict(id=f'corp_{company}_light_{state}',label=company.title()+' '+state.title(),category='Corp/Lights',source=f'corp/lights/{company}_{state}',lightOnly=True)
+            entry=dict(id=f'corp_{company}_light_{state}',label=company.title()+(' Off' if state=='off' else ''),category='Lights',source=f'corp/lights/{company}_{state}',lightOnly=True)
             if state=='on':entry['unlit']=f'corp/lights/{company}_off'
             else:entry['off']=True
             entries.append((source/'lights'/(company+'_'+state+'.png'),entry))

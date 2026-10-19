@@ -2383,8 +2383,8 @@
   },
   {
     "id": "corp_pinnacle_light_on",
-    "label": "Pinnacle On",
-    "category": "Corp/Lights",
+    "label": "Pinnacle",
+    "category": "Lights",
     "source": "corp/lights/pinnacle_on",
     "lightOnly": true,
     "unlit": "corp/lights/pinnacle_off"
@@ -2392,7 +2392,7 @@
   {
     "id": "corp_pinnacle_light_off",
     "label": "Pinnacle Off",
-    "category": "Corp/Lights",
+    "category": "Lights",
     "source": "corp/lights/pinnacle_off",
     "lightOnly": true,
     "off": true
@@ -2418,8 +2418,8 @@
   },
   {
     "id": "corp_ashiro_light_on",
-    "label": "Ashiro On",
-    "category": "Corp/Lights",
+    "label": "Ashiro",
+    "category": "Lights",
     "source": "corp/lights/ashiro_on",
     "lightOnly": true,
     "unlit": "corp/lights/ashiro_off"
@@ -2427,7 +2427,7 @@
   {
     "id": "corp_ashiro_light_off",
     "label": "Ashiro Off",
-    "category": "Corp/Lights",
+    "category": "Lights",
     "source": "corp/lights/ashiro_off",
     "lightOnly": true,
     "off": true
@@ -2453,8 +2453,8 @@
   },
   {
     "id": "corp_paladyne_light_on",
-    "label": "Paladyne On",
-    "category": "Corp/Lights",
+    "label": "Paladyne",
+    "category": "Lights",
     "source": "corp/lights/paladyne_on",
     "lightOnly": true,
     "unlit": "corp/lights/paladyne_off"
@@ -2462,7 +2462,7 @@
   {
     "id": "corp_paladyne_light_off",
     "label": "Paladyne Off",
-    "category": "Corp/Lights",
+    "category": "Lights",
     "source": "corp/lights/paladyne_off",
     "lightOnly": true,
     "off": true
@@ -2488,8 +2488,8 @@
   },
   {
     "id": "corp_vektor_light_on",
-    "label": "Vektor On",
-    "category": "Corp/Lights",
+    "label": "Vektor",
+    "category": "Lights",
     "source": "corp/lights/vektor_on",
     "lightOnly": true,
     "unlit": "corp/lights/vektor_off"
@@ -2497,7 +2497,7 @@
   {
     "id": "corp_vektor_light_off",
     "label": "Vektor Off",
-    "category": "Corp/Lights",
+    "category": "Lights",
     "source": "corp/lights/vektor_off",
     "lightOnly": true,
     "off": true
@@ -2523,8 +2523,8 @@
   },
   {
     "id": "corp_seyr_light_on",
-    "label": "Seyr On",
-    "category": "Corp/Lights",
+    "label": "Seyr",
+    "category": "Lights",
     "source": "corp/lights/seyr_on",
     "lightOnly": true,
     "unlit": "corp/lights/seyr_off"
@@ -2532,7 +2532,7 @@
   {
     "id": "corp_seyr_light_off",
     "label": "Seyr Off",
-    "category": "Corp/Lights",
+    "category": "Lights",
     "source": "corp/lights/seyr_off",
     "lightOnly": true,
     "off": true
@@ -2558,8 +2558,8 @@
   },
   {
     "id": "corp_vandor_light_on",
-    "label": "Vandor On",
-    "category": "Corp/Lights",
+    "label": "Vandor",
+    "category": "Lights",
     "source": "corp/lights/vandor_on",
     "lightOnly": true,
     "unlit": "corp/lights/vandor_off"
@@ -2567,7 +2567,7 @@
   {
     "id": "corp_vandor_light_off",
     "label": "Vandor Off",
-    "category": "Corp/Lights",
+    "category": "Lights",
     "source": "corp/lights/vandor_off",
     "lightOnly": true,
     "off": true

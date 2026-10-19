@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Battery casing textures are configurable, and RF port lettering stays upright on every face. Corp light textures appear directly in Lights without an On suffix.
+
 - Recover ramp reservations and captured turntable contents when commands remove their controller, including early tile invalidation. Preserve blocked turntable returns in durable recovery records while removing orphan displays.
 - Route Configurizer clicks on generated ramps, turntable surfaces/captured blocks and Taxi/Hover entities to the owning configuration, with component-based reach and normal edit permissions.
 

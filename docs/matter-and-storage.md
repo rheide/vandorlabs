@@ -21,3 +21,5 @@ preserve stored fluid and axial connections.
 Hexagonal tanks share the cross-section and directional shell shading of
 hexagonal propulsion blocks. Thrusters have straight rear rims so a tank can
 meet the back of an engine without a beveled gap.
+
+Battery casings can use any general block material from the casing picker. Changes apply immediately and persist when the battery is saved, picked or broken. The green input and orange output ports retain their markings in both Block and Hexagon shapes.

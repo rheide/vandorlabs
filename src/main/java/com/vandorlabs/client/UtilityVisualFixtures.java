@@ -19,7 +19,7 @@ final class UtilityVisualFixtures {
         for(int shape=0;shape<2;shape++)for(int i=0;i<6;i++){
             BlockPos at=new BlockPos(190+i*3,29,112+shape*4);world.setBlockState(at.down(),Blocks.STONE.getDefaultState(),2);
             world.setBlockState(at,Block.getBlockFromName("vandorlabs:battery_block").getDefaultState().withProperty(BlockBattery.FACING,EnumFacing.values()[i]),2);
-            TileEntityBattery cell=(TileEntityBattery)world.getTileEntity(at);cell.setBlockShape(shape==1);
+            TileEntityBattery cell=(TileEntityBattery)world.getTileEntity(at);cell.setBlockShape(shape==1);if(i==5)cell.setHousingTexture(ScreenHousingTextures.DEFAULT_TRAPDOOR);
             for(int n=0;n<new int[]{0,10,25,50,75,100}[i];n++)cell.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,null).receiveEnergy(1000,false);
         }
         String[] propulsion={"rocket_thruster","ion_drive","plasma_vent","impulse_engine"};

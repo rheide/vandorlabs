@@ -23,9 +23,10 @@ public final class MessageTankShape implements IMessage {
                 if(!(player.openContainer instanceof ContainerStorageStatus)||player.openContainer.windowId!=message.window)return;
                 ContainerStorageStatus container=(ContainerStorageStatus)player.openContainer;
                 if(container.canInteractWith(player)&&container.tile instanceof com.vandorlabs.tiles.TileEntityBattery
-                        &&message.casing==-1&&message.layout==-1
+                        &&message.layout==-1
                         &&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,player.world,container.tile.getPos())){
-                    ((com.vandorlabs.tiles.TileEntityBattery)container.tile).setBlockShape(message.block);return;
+                    if(message.casing!=-1&&!com.vandorlabs.tiles.ScreenHousingTextures.validChoice(message.casing))return;
+                    com.vandorlabs.tiles.TileEntityBattery battery=(com.vandorlabs.tiles.TileEntityBattery)container.tile;battery.setBlockShape(message.block);if(message.casing!=-1)battery.setHousingTexture(message.casing);return;
                 }
                 if(container.canInteractWith(player)&&container.tile instanceof TileEntityHexTank
                         &&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,player.world,container.tile.getPos())){

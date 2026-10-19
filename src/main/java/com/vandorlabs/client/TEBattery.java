@@ -18,6 +18,11 @@ public final class TEBattery extends TileEntitySpecialRenderer<TileEntityBattery
         double[][] uv={{0,0},{0,16},{16,16},{16,0}};
         for(int i=0;i<4;i++){double[] p=AxialShellGeometry.orient(points[i],facing);b.pos(p[0],p[1],p[2]).tex(sprite.getInterpolatedU(uv[i][0]),sprite.getInterpolatedV(uv[i][1])).color(r,g,blue,1).normal(normal[0],normal[1],normal[2]).endVertex();}
     }
+    static double[] portUV(double[] p,EnumFacing cap){
+        double u=cap==EnumFacing.NORTH?1-p[0]:cap==EnumFacing.EAST?1-p[2]:cap==EnumFacing.WEST?p[2]:p[0];
+        double v=cap==EnumFacing.UP?p[2]:cap==EnumFacing.DOWN?1-p[2]:1-p[1];
+        return new double[]{u*16,v*16};
+    }
     /** Indicator rectangles are in world space: always on the physical top and bottom. */
     private static void indicator(BufferBuilder b,TextureAtlasSprite white,double top,float charge){
         float[] normal={0,top>.5?1:-1,0};
@@ -38,7 +43,7 @@ public final class TEBattery extends TileEntitySpecialRenderer<TileEntityBattery
         try(TurntableRenderState state=new TurntableRenderState()){
             GlStateManager.translate(x,y,z);GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.color(1,1,1,1);bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
-            TextureAtlasSprite casing=sprite("matter/casing"),cells=sprite("imported/power/battery_cell_bank");
+            TextureAtlasSprite casing=tile.hasCustomHousingTexture()?Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(tile.getHousingTexture())):sprite("matter/casing"),cells=tile.hasCustomHousingTexture()?casing:sprite("imported/power/battery_cell_bank");
             Tessellator t=Tessellator.getInstance();BufferBuilder b=t.getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
             for(int i=0;i<outline.length;i++){
                 double[] a=outline[i],c=outline[(i+1)%outline.length];float[] normal=AxialShellGeometry.normal(outline,i,face);
@@ -50,7 +55,7 @@ public final class TEBattery extends TileEntitySpecialRenderer<TileEntityBattery
                 TextureAtlasSprite port=sprite(input?"matter/energy_in":"matter/energy_out");
                 // Explicit profile UVs keep each port centered over the complete cap.
                 float shade=net.minecraftforge.client.model.pipeline.LightUtil.diffuseLight(normal[0],normal[1],normal[2]);
-                for(int i=0;i<outline.length;i++)for(double[] p:new double[][]{{.5,end,.5},{outline[i][0],end,outline[i][1]},{outline[(i+1)%outline.length][0],end,outline[(i+1)%outline.length][1]},{.5,end,.5}}){double[] q=AxialShellGeometry.orient(p,face);b.pos(q[0],q[1],q[2]).tex(port.getInterpolatedU(p[0]*16),port.getInterpolatedV(p[2]*16)).color(shade,shade,shade,1).normal(normal[0],normal[1],normal[2]).endVertex();}
+                for(int i=0;i<outline.length;i++)for(double[] p:new double[][]{{.5,end,.5},{outline[i][0],end,outline[i][1]},{outline[(i+1)%outline.length][0],end,outline[(i+1)%outline.length][1]},{.5,end,.5}}){double[] q=AxialShellGeometry.orient(p,face);double[] uv=portUV(q,EnumFacing.getFacingFromVector(normal[0],normal[1],normal[2]));b.pos(q[0],q[1],q[2]).tex(port.getInterpolatedU(uv[0]),port.getInterpolatedV(uv[1])).color(shade,shade,shade,1).normal(normal[0],normal[1],normal[2]).endVertex();}
             }
             t.draw();
             // Draw solid colors without introducing another atlas texture.
