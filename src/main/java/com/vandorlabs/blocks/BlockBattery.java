@@ -8,8 +8,19 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-public final class BlockBattery extends BlockVandorDirectional {
-    public BlockBattery(){super("battery_block");}
+public final class BlockBattery extends BlockVandor {
+    public static final net.minecraft.block.properties.PropertyEnum<EnumFacing> FACING=BlockAnimatedScreenSelector.FACING;
+    public BlockBattery(){super("battery_block");setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH));}
+    @Override protected net.minecraft.block.state.BlockStateContainer createBlockState(){return new net.minecraft.block.state.BlockStateContainer(this,FACING);}
+    // Retain the four horizontal metadata values used by batteries in existing worlds.
+    @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,meta==4?EnumFacing.UP:meta==5?EnumFacing.DOWN:EnumFacing.getHorizontal(meta));}
+    @Override public int getMetaFromState(IBlockState state){EnumFacing face=state.getValue(FACING);return face==EnumFacing.UP?4:face==EnumFacing.DOWN?5:face.getHorizontalIndex();}
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,net.minecraft.entity.EntityLivingBase player){return getDefaultState().withProperty(FACING,face);}
+    @Override public IBlockState withRotation(IBlockState state,Rotation rotation){return state.withProperty(FACING,rotation.rotate(state.getValue(FACING)));}
+    @Override public IBlockState withMirror(IBlockState state,Mirror mirror){return state.withProperty(FACING,mirror.mirror(state.getValue(FACING)));}
+    @Override public boolean isOpaqueCube(IBlockState state){return false;}
+    @Override public boolean isFullCube(IBlockState state){return false;}
+    @Override public EnumBlockRenderType getRenderType(IBlockState state){return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityBattery();}
     private net.minecraft.item.ItemStack drop(TileEntity tile){

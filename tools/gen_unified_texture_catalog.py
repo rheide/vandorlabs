@@ -60,5 +60,7 @@ entries.append(dict(id='light_amber_hex_off',label='Amber Hex Off',category='Lig
 for detail,tier in enumerate(['low','medium']):
     entries.append(dict(id='door_slim_glass_'+tier,label='Slim Glass '+['Small','Large'][detail],category='Doors',source='glass_doors/'+tier+'/slim_glass',rectangular=True,crop=True,design=29,detail=detail))
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
+corp=root/'texture-packs/additional/corp-catalog.json'
+if corp.exists():entries.extend(json.loads(corp.read_text()))
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

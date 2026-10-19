@@ -445,6 +445,8 @@ public class ReproLab {
             for (String pose : new String[]{"off", "on"})
                 SHOTS.add(new Shot("gallery_ramp_mode_" + mode + "_" + pose,
                         GALLERY_X + 6.0D, galleryFeet + 3.0D, -23.5D, 52, 18));
+        SHOTS.add(new Shot("utility22_battery_hex",197.5,32,105,0,23));
+        SHOTS.add(new Shot("utility22_battery_block",197.5,32,109,0,23));
         SHOTS.add(new Shot("utility22_blocks",143,24,114,0,20));
         SHOTS.add(new Shot("utility22_blocks_tanks",155,24,115,0,25));
         SHOTS.add(new Shot("utility22_blocks_tanks_block",155,24,115,0,25));
@@ -1368,7 +1370,7 @@ public class ReproLab {
                 break;
             case 19:
                 if (--holdTicks > 0) break;
-                CustomMaterialRuntimeChecks.checkLightPicker((GuiProgrammableLight)mc.currentScreen);
+                CustomMaterialRuntimeChecks.checkLightPicker((GuiProgrammableLight)mc.currentScreen,outDir);
                 saveNamed(mc,"programmable_light_gui");
                 mc.displayGuiScreen(null);
                 if(mc.gameSettings.guiScale!=lightPickerPreviousScale)throw new IllegalStateException("light dialog did not restore GUI scale");

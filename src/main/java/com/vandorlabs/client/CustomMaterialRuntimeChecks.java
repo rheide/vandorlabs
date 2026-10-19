@@ -20,6 +20,7 @@ final class CustomMaterialRuntimeChecks {
         }
         require(imported==41 && categories.equals(new java.util.HashSet<>(java.util.Arrays.asList("Tech","Hull","Trapdoors","Windows"))),"imported category/texture coverage");
         checkMenu(mc);
+        checkCorp(mc);
         int hatchNames=0;
         for(int i=ScreenHousingTextures.LEGACY_COUNT;i<ScreenHousingTextures.BUILTIN_COUNT;i++)
             if("Trapdoors".equals(ScreenHousingTextures.category(i))) {
@@ -90,7 +91,7 @@ final class CustomMaterialRuntimeChecks {
         }catch(java.io.IOException e){throw new RuntimeException(e);}finally{player.inventory.setInventorySlotContents(0,original);mc.displayGuiScreen(previous);}
         System.out.println("[vandorlabs][reprolab] custom-materials-runtime PASS");
     }
-    static void checkLightPicker(GuiProgrammableLight gui) {
+    static void checkLightPicker(GuiProgrammableLight gui,java.io.File output) {
         try {
             java.lang.reflect.Field options=HousingTextureList.class.getDeclaredField("options"),count=HousingTextureList.class.getDeclaredField("count");
             options.setAccessible(true);count.setAccessible(true);
@@ -110,10 +111,43 @@ final class CustomMaterialRuntimeChecks {
                 require(entries.containsKey(64) && entries.containsKey(amber),"hex light choices missing");
                 for(String artwork:new String[]{"bussard_classic","bussard_modern","deflector_amber","deflector_blue","nacelle_a","nacelle_d","nacelle_defiant","nacelle_intrepid"})
                     require(entries.containsKey(ScreenHousingTextures.screenIndex("lights/"+artwork+"_on")),"new light missing from picker: "+artwork);
-                require(on==6 && off==17,"light picker paired artwork coverage");
+                require(on==6 && off==23,"light picker paired artwork coverage");
+                for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.lightOnly(i))require(entries.containsKey(i)!=ScreenHousingTextures.isLightOff(i),"Corp light ON picker filter");
             }
+            java.lang.reflect.Field offTab=GuiProgrammableLight.class.getDeclaredField("editingOff");offTab.setAccessible(true);offTab.setBoolean(gui,true);gui.initGui();
+            java.lang.reflect.Field face=GuiProgrammableLight.class.getDeclaredField("faceList");face.setAccessible(true);
+            java.util.Map<?,?> offEntries=(java.util.Map<?,?>)options.get(face.get(gui));
+            for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.lightOnly(i))require(offEntries.containsKey(i),"Corp light OFF picker pair missing");
+            offTab.setBoolean(gui,false);gui.initGui();
+            java.lang.reflect.Field selection=GuiProgrammableLight.class.getDeclaredField("selected"),offSelection=GuiProgrammableLight.class.getDeclaredField("offSelected"),tab=GuiProgrammableLight.class.getDeclaredField("textureTab");selection.setAccessible(true);offSelection.setAccessible(true);tab.setAccessible(true);
+            int saved=selection.getInt(gui),savedOff=offSelection.getInt(gui),savedTab=tab.getInt(gui);
+            for(int view=0;view<3;view++){
+                String id=view==0?"corp_ashiro_logo":view==1?"corp_ashiro_light_on":"corp_ashiro_light_off";int choice=-1;
+                for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(id.equals(ScreenHousingTextures.IDS[i]))choice=i;
+                require(choice>=0,"Corp preview choice");offTab.setBoolean(gui,view==2);tab.setInt(gui,view==2?1:0);selection.setInt(gui,choice);offSelection.setInt(gui,choice);gui.initGui();
+                Minecraft mc=Minecraft.getMinecraft();mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();gui.drawScreen(-1,-1,0);
+                try{javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new java.io.File(output,"shot_corp_picker_"+view+".png"));}catch(java.io.IOException e){throw new RuntimeException(e);}
+            }
+            selection.setInt(gui,saved);offSelection.setInt(gui,savedOff);tab.setInt(gui,savedTab);offTab.setBoolean(gui,false);gui.initGui();
             System.out.println("[vandorlabs][reprolab] light-picker-runtime PASS rows="+expected);
         } catch(ReflectiveOperationException e){throw new RuntimeException(e);}
+    }
+    private static void checkCorp(Minecraft mc){
+        int general=0,lights=0;
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.IDS[i].startsWith("corp_")){
+            boolean only=ScreenHousingTextures.lightOnly(i);
+            require(HousingTextureList.generalTexture(i)!=only&&com.vandorlabs.items.ItemProgrammableArmor.listedMaterial(i)!=only,"Corp light artwork leaked into general/armor picker");
+            require(ScreenHousingTextures.category(i).equals(only?"Corp/Lights":"Corp"),"Corp category hierarchy");
+            require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(i))!=mc.getTextureMapBlocks().getMissingSprite(),"Corp artwork missing from atlas");
+            if(only){lights++;if(!ScreenHousingTextures.isLightOff(i)){
+                TileEntityProgrammableLight tile=new TileEntityProgrammableLight();tile.setFaceTexture(i);tile.configure(0,15,false,17,0,com.vandorlabs.persistence.SpaceDoorData.TRIGGER_REDSTONE_ON);
+                tile.setChannelSignal(true);String on=tile.activeFaceTexture();tile.setChannelSignal(false);String off=tile.activeFaceTexture();
+                require(!on.equals(off)&&off.endsWith("_off"),"Corp automatic OFF pair/redstone");
+                TileEntityProgrammableLight copy=new TileEntityProgrammableLight();copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));require(copy.activeFaceTexture().equals(off),"Corp light pair save/load");
+            }}else general++;
+        }
+        require(general==18&&lights==12,"Corp artwork coverage");
+        System.out.println("[vandorlabs][reprolab] corp-textures PASS 18 general, six light pairs, atlas, picker isolation, redstone and persistence");
     }
     private static void checkMenu(Minecraft mc) {
         HousingTextureList list=new HousingTextureList(0,0,180,23);

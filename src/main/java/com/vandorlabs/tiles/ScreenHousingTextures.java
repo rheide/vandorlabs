@@ -187,7 +187,8 @@ public final class ScreenHousingTextures {
         return 0;
     }
     /** Static Off artwork remains available as a material, but not in light menus. */
-    public static boolean isLightOff(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && "Lights".equals(category(choice)) && (e.has("off") && e.get("off").getAsBoolean() || e.has("id") && e.get("id").getAsString().endsWith("_off"));}
+    public static boolean lightOnly(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null&&e.has("lightOnly")&&e.get("lightOnly").getAsBoolean();}
+    public static boolean isLightOff(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && ("Lights".equals(category(choice))||lightOnly(choice)) && (e.has("off") && e.get("off").getAsBoolean() || e.has("id") && e.get("id").getAsString().endsWith("_off"));}
     public static int lightIndex(int style){return LEGACY_COUNT+Math.max(0,Math.min(5,style));}
     public static String texture(int choice,boolean lit){
         String unlit=lit?null:UNLIT_TEXTURES[textureIndex(choice)];

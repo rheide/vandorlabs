@@ -49,6 +49,11 @@ final class UtilityItemRuntimeChecks {
         float oldU=OpenGlHelper.lastBrightnessX,oldV=OpenGlHelper.lastBrightnessY;
         try{
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,80,160);GlStateManager.color(1,1,1,1);renderer.render(tank,0,0,0,0,-1,1);
+            com.vandorlabs.tiles.TileEntityBattery battery=(com.vandorlabs.tiles.TileEntityBattery)mc.world.getTileEntity(new net.minecraft.util.math.BlockPos(144,21,120));
+            if(battery==null)throw new IllegalStateException("Battery render fixture has not arrived");
+            TEBattery batteryRenderer=new TEBattery();batteryRenderer.setRendererDispatcher(net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance);
+            boolean shape=battery.isBlockShape();
+            try{for(boolean block:new boolean[]{false,true}){battery.setBlockShape(block);batteryRenderer.render(battery,0,0,0,0,-1,1);}}finally{battery.setBlockShape(shape);}
             if(OpenGlHelper.lastBrightnessX!=80 || OpenGlHelper.lastBrightnessY!=160)throw new IllegalStateException("Tank leaked lightmap state");
         java.nio.FloatBuffer color=org.lwjgl.BufferUtils.createFloatBuffer(16);org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_CURRENT_COLOR,color);
             for(int i=0;i<4;i++)if(Math.abs(color.get(i)-1)>.001)throw new IllegalStateException("Tank leaked vertex color");

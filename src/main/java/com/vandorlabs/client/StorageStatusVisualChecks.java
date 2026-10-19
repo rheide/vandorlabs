@@ -20,8 +20,10 @@ final class StorageStatusVisualChecks {
                 int dialogHeight=(Integer)net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.inventory.GuiContainer.class,gui,"ySize","field_147000_g");
                 if(index==1&&(dialogWidth>354||dialogHeight>238))throw new IllegalStateException("Tank dialog is not compact");
                 java.util.List<?> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
-                java.util.List<java.awt.Rectangle> occupied=new java.util.ArrayList<>();boolean layout=false;
+                java.util.List<java.awt.Rectangle> occupied=new java.util.ArrayList<>();boolean layout=false,shape=false;
                 for(Object raw:buttons){GuiButton b=(GuiButton)raw;java.awt.Rectangle r=new java.awt.Rectangle(b.x,b.y,b.width,b.height);if(r.x<0||r.y<0||r.x+r.width>size[0]||r.y+r.height>size[1])throw new IllegalStateException("Storage button outside screen");for(java.awt.Rectangle prior:occupied)if(prior.intersects(r))throw new IllegalStateException("Storage buttons overlap");occupied.add(r);layout|=b.id==2&&b.displayString.startsWith("Texture: ");}
+                for(Object raw:buttons){GuiButton b=(GuiButton)raw;shape|=b.id==1&&b.displayString.startsWith("Shape: ");}
+                if(!shape)throw new IllegalStateException("Storage shape control missing");
                 if(index==1&&!layout)throw new IllegalStateException("Tank Tile/Fit control missing");
                 javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_storage_meter_"+index+"_"+size[0]+".png"));
             }

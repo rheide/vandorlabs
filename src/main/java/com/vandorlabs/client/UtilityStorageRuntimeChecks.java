@@ -24,7 +24,25 @@ final class UtilityStorageRuntimeChecks {
             require(!first.hasCapability(CapabilityEnergy.ENERGY,EnumFacing.UP),"side insulation");first.update();
             require(in.getEnergyStored()==0 && second.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==1000,"neighbor energy transfer conserves charge");
             TileEntityBattery restored=new TileEntityBattery();restored.readFromNBT(second.writeToNBT(new NBTTagCompound()));require(restored.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==1000,"energy persists");
-            world.setBlockToAir(pos);world.setBlockToAir(pos.south());world.setBlockState(pos,tank.getDefaultState().withProperty(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,EnumFacing.UP));world.setBlockState(pos.up(),tank.getDefaultState().withProperty(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,EnumFacing.UP));
+            world.setBlockToAir(pos);world.setBlockToAir(pos.south());
+            for(int meta=0;meta<4;meta++)require(battery.getStateFromMeta(meta).getValue(com.vandorlabs.blocks.BlockBattery.FACING)==EnumFacing.getHorizontal(meta),"old battery orientation metadata");
+            for(EnumFacing face:EnumFacing.values()){
+                net.minecraft.block.state.IBlockState placed=battery.getStateForPlacement(world,pos,face,.5F,.5F,.5F,0,null);
+                require(placed.getValue(com.vandorlabs.blocks.BlockBattery.FACING)==face&&battery.getStateFromMeta(battery.getMetaFromState(placed))==placed,"battery clicked-face/meta "+face);
+                world.setBlockState(pos,placed);TileEntityBattery cell=(TileEntityBattery)world.getTileEntity(pos);
+                require(cell.isBlockShape(),"old/default battery stays block shaped");
+                cell.getCapability(CapabilityEnergy.ENERGY,face).receiveEnergy(700,false);
+                for(boolean block:new boolean[]{false,true}){
+                    cell.setBlockShape(block);TileEntityBattery saved=new TileEntityBattery();saved.readFromNBT(cell.writeToNBT(new NBTTagCompound()));
+                    require(saved.isBlockShape()==block&&saved.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==700,"battery shape/charge persistence "+face);
+                    require(Math.abs(saved.chargeFraction()-.007)<1e-8,"live charge fraction");
+                    for(EnumFacing side:EnumFacing.values())require(cell.hasCapability(CapabilityEnergy.ENERGY,side)==(side.getAxis()==face.getAxis()),"battery axial ports "+face);
+                    net.minecraft.item.ItemStack picked=battery.getPickBlock(placed,null,world,pos,null);
+                    require(picked.getSubCompound("BlockEntityTag").getBoolean("BlockShape")==block&&picked.getSubCompound("BlockEntityTag").getInteger("Energy")==700,"battery pick retains shape and charge");
+                }
+                world.setBlockToAir(pos);
+            }
+            world.setBlockState(pos,tank.getDefaultState().withProperty(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,EnumFacing.UP));world.setBlockState(pos.up(),tank.getDefaultState().withProperty(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,EnumFacing.UP));
             TileEntityHexTank bottom=(TileEntityHexTank)world.getTileEntity(pos),top=(TileEntityHexTank)world.getTileEntity(pos.up());
             require(top.fill(new FluidStack(FluidRegistry.WATER,24000),false)==24000 && bottom.tank.getFluidAmount()==0,"simulated stack fill");
             require(top.fill(new FluidStack(FluidRegistry.WATER,24000),true)==24000 && bottom.tank.getFluidAmount()==16000 && top.tank.getFluidAmount()==8000,"pooled stack fill bottom first");

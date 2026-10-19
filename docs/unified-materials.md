@@ -14,7 +14,7 @@ The bundled block-material list currently has **114 selectable designs** across 
 Storage offers fourteen matching top/side/front sets; [Programmable
 Storage](programmable-storage.md) uses all three faces and other shapes use
 the front artwork. Blue Hex and Amber Hex are paired light finishes, with
-separate lit and unlit artwork. Newly placed normal and diagonal trapdoors use **Armored Hatch** from Trapdoors. Existing saved selections retain their artwork. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries have separate On and Off choices. The On choices retain their automatic unlit artwork when used on lights. Programmable light dialogs hide the separate Off choices in both lists; select the On material and let the light switch its artwork automatically. Their taller dialog shows up to seven textures plus the pinned category heading, temporarily reducing Minecraft's GUI scale when necessary to fit, and restoring that setting on close. Door entries provide Small and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
+separate lit and unlit artwork. Newly placed normal and diagonal trapdoors use **Armored Hatch** from Trapdoors. Existing saved selections retain their artwork. The Screens entries are static first frames; screen animations remain available in their original menus. Light entries have separate On and Off choices. The On choices retain their automatic unlit artwork when used on lights. Programmable light dialogs hide separate Off choices in the ON tab; select an On material for automatic switching, or choose explicit artwork in the OFF tab. Their taller dialog shows up to seven textures plus the pinned category heading, temporarily reducing Minecraft's GUI scale when necessary to fit, and restoring that setting on close. Door entries provide Small and Large detail tiers as full door artwork, rather than separate upper/lower choices. Existing saved housing indices are preserved.
 
 Hull groups exterior plating and protective cladding; Panels groups interior sheets and access covers. Industrial holds fourteen pipe, grille, rib, bulkhead and machinery finishes. Microchip and the Matter color variants are in Tech. The [complete category moves](texture-category-proposal.md) preserve saved selections.
 
@@ -80,3 +80,7 @@ Model UV atlases and animation sheets retain their authored layouts and frame
 counts. Texture pickers expose one resolution; old saved size choices resolve
 to the standard artwork without changing their material or design IDs.
 
+
+## Company artwork
+
+The top-level **Corp** category contains logos, backgrounds and murals for Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor. Murals retain their wide aspect ratio in picker previews. **Corp/Lights** contains six paired company light designs and appears only in programmable light dialogs. Select an On design for automatic matching Off artwork as the light switches, or use the OFF tab to choose a separate finish. General block, screen, tank and armor material menus omit these light-only pairs. Existing material IDs remain unchanged.

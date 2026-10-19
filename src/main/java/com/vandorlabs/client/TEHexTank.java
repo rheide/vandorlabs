@@ -13,13 +13,12 @@ import net.minecraftforge.fluids.FluidStack;
 @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid="vandorlabs",value=net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank> {
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void stitch(net.minecraftforge.client.event.TextureStitchEvent.Pre event){for(String name:new String[]{"port","tank_empty"})event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/matter/"+name));}
-    private static final double HEX_HEIGHT=Math.sqrt(3)/4;
-    private static final double[][] OUTLINE={{.25,.5-HEX_HEIGHT},{.75,.5-HEX_HEIGHT},{1,.5},{.75,.5+HEX_HEIGHT},{.25,.5+HEX_HEIGHT},{0,.5}};
-    private static final double[][] BLOCK={{0,0},{1,0},{1,1},{0,1}};
+    private static final double[][] OUTLINE=AxialShellGeometry.HEX;
+    private static final double[][] BLOCK=AxialShellGeometry.BLOCK;
     private static final double INNER=.90, LIQUID=.895, FLOOR=.04, CEILING=.96;
     private static TextureAtlasSprite sprite(String name){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(name);}
     /** Horizontal hexagons retain flat top/bottom faces, like hexagonal thrusters. */
-    static double[] orient(double[] p,EnumFacing f){return f.getAxis()==EnumFacing.Axis.X?new double[]{p[1],p[2],p[0]}:f.getAxis()==EnumFacing.Axis.Z?new double[]{p[0],p[2],p[1]}:p;}
+    static double[] orient(double[] p,EnumFacing f){return AxialShellGeometry.orient(p,f);}
     static double fluidLevel(int amount){return FLOOR+(CEILING-FLOOR)*Math.max(0,Math.min(1,amount/(double)TileEntityHexTank.CAPACITY));}
     private static double[] point(double[][] outline,int edge,double u,double y,double scale){double[] a=outline[edge],c=outline[(edge+1)%outline.length];return new double[]{.5+(a[0]+(c[0]-a[0])*u-.5)*scale,y,.5+(a[1]+(c[1]-a[1])*u-.5)*scale};}
     private static void quad(BufferBuilder b,TextureAtlasSprite s,int color,double[][] vertices,EnumFacing facing,boolean cap){
@@ -38,9 +37,7 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
         double[] a=outline[edge],b=outline[(edge+1)%outline.length];return new double[]{u*(tiled?Math.hypot(b[0]-a[0],b[1]-a[1])*scale:1)*16,(1-y)*16};
     }
     static float[] casingNormal(double[][] outline,int edge,EnumFacing facing){
-        double[] a=outline[edge],b=outline[(edge+1)%outline.length];double length=Math.hypot(b[0]-a[0],b[1]-a[1]);
-        double[] n=orient(new double[]{(b[1]-a[1])/length,0,(a[0]-b[0])/length},facing);
-        return new float[]{(float)n[0],(float)n[1],(float)n[2]};
+        return AxialShellGeometry.normal(outline,edge,facing);
     }
     private static void casingSide(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double left,double right,double bottom,double top,double scale,EnumFacing facing,boolean tiled){
         double[][] vertices={point(outline,edge,left,top,scale),point(outline,edge,left,bottom,scale),point(outline,edge,right,bottom,scale),point(outline,edge,right,top,scale)};

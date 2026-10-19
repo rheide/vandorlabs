@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add 18 company logos, backgrounds and murals in the new Corp texture category. Six paired company light designs appear under Corp/Lights only in programmable light dialogs, with automatic on/off artwork.
+- Add instant Block/Hexagon battery shape selection, six-axis placement and segmented green charge bars on the top and bottom. Preserve RF, shape and existing saved orientations.
+
 - Add Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor armor designs to the programmable armor dialogs: 24 slot-specific choices with native wearable atlases and padded icons. Existing saved designs keep their IDs.
 - Filter redundant hatch detail variants from armor material menus while retaining saved selections and custom samples.
 - Pause turntable captures at their current angle when redstone turns off. Add a paused Angle slider and explicit Restore with a visible nearest-quarter-turn preview. Carry Taxi craft about their physical center and cover both drive-on/rotate/drive-off and park/scan/rotate/reassemble journeys in live integration checks.

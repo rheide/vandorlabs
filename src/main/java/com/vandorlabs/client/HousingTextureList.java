@@ -60,6 +60,7 @@ final class HousingTextureList {
     }
     void thumbnail(int choice,String texture){Option option=options.get(choice);if(option!=null)option.texture=texture;}
     static boolean generalTexture(int choice) {
+        if(ScreenHousingTextures.lightOnly(choice))return false;
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
         if(entry!=null && entry.has("detail") && entry.get("detail").getAsInt()>0)return false;
         String category=ScreenHousingTextures.category(choice);

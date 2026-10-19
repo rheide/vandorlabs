@@ -15,6 +15,14 @@
     "facing=west": {
       "model": "vandorlabs:battery_block",
       "y": 270
+    },
+    "facing=up": {
+      "model": "vandorlabs:battery_block",
+      "x": 270
+    },
+    "facing=down": {
+      "model": "vandorlabs:battery_block",
+      "x": 90
     }
   }
 }
