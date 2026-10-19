@@ -77,7 +77,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     private byte vertical;
     private boolean flightSprint;
-    private int exhaustCursor;
+    private int exhaustCursor,liftExhaustCursor;
     public static final double CRUISE_SPEED=.28,HOVER_SPRINT_SPEED=.56;
     public void predictFlight(boolean sprint){if(!world.isRemote)return;flightSprint=sprint;verticalAt=world.getTotalWorldTime();}
     private long verticalAt=-100,clearanceAt=-100;
@@ -324,18 +324,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             if(view!=null){view.origin=new BlockPos(posX,posY,posZ);
                 double speed=view.recordMotion(posX-prevPosX,posY-prevPosY,posZ-prevPosZ,rotationYaw);
                 propulsion=(float)approach(propulsion,speed>.002?15:0,1.5);view.propulsionLevel=Math.round(propulsion);view.hover=hover;
-                if(hover&&dataManager.get(HOVER_EXHAUST)&&speed>.002&&ticksExisted%8==0&&!structure.exhaustCells.isEmpty()){
-                    int emitted=0;
-                    for(int checked=0;checked<structure.exhaustCells.size()&&emitted<2;checked++){
-                        VehicleStructure.Cell cell=structure.exhaustCells.get(Math.floorMod(exhaustCursor++,structure.exhaustCells.size()));
-                        if(!VehicleFlight.opposes(cell.state,view.propulsionMotion)||!view.getBlockState(cell.pos).getValue(com.vandorlabs.blocks.BlockPropulsionLight.POWERED))continue;
-                        emitted++;
-                        EnumFacing face=cell.state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING);
-                        Vec3d center=toWorld(new Vec3d(cell.pos).addVector(.5,.5,.5));
-                        int style=com.vandorlabs.tiles.TileEntityRedstoneLight.particleStyle(cell.state.getBlock().getRegistryName().getResourcePath());
-                        com.vandorlabs.VandorLabs.proxy.spawnRotatedThrusterParticle(world,center.x,center.y,center.z,face,
-                                com.vandorlabs.tiles.TileEntityRedstoneLight.particleColor(style),style,
-                                com.vandorlabs.tiles.TileEntityRedstoneLight.particleSpeed(style),.65F,rotationYaw);
+                if(hover){
+                    if(ticksExisted%12==0)emitFlightParticles(true,Vec3d.ZERO);
+                    if(dataManager.get(HOVER_EXHAUST)&&ticksExisted%8==0){
+                        Vec3d direction=speed>.002?view.propulsionMotion:new Vec3d(structure.facing.getDirectionVec()).scale(driveSpeed<0?-1:1);
+                        emitFlightParticles(false,direction);
                     }
                 }}
             return;
@@ -361,6 +354,23 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         advance(automated || getControllingPassenger() instanceof EntityPlayer && world.getTotalWorldTime()-lastInput<=10);
         if(ticksExisted%2==0)VehicleNetwork.state(this);
     }
+    /** Independent round-robin budgets keep both exhaust groups continuous on large craft. */
+    private void emitFlightParticles(boolean lift,Vec3d direction){
+        java.util.List<VehicleStructure.Cell> cells=lift?structure.liftCells:structure.exhaustCells;
+        int emitted=0;
+        for(int checked=0;checked<cells.size()&&emitted<2;checked++){
+            int cursor=lift?liftExhaustCursor++:exhaustCursor++;
+            VehicleStructure.Cell cell=cells.get(Math.floorMod(cursor,cells.size()));
+            if(!lift&&(VehicleFlight.lift(cell.state.getBlock())||!VehicleFlight.opposes(cell.state,direction)))continue;
+            emitted++;
+            EnumFacing face=cell.state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING);
+            Vec3d center=toWorld(new Vec3d(cell.pos).addVector(.5,.5,.5));
+            int style=com.vandorlabs.tiles.TileEntityRedstoneLight.particleStyle(cell.state.getBlock().getRegistryName().getResourcePath());
+            com.vandorlabs.VandorLabs.proxy.spawnRotatedThrusterParticle(world,center.x,center.y,center.z,face,
+                    com.vandorlabs.tiles.TileEntityRedstoneLight.particleColor(style),style,
+                    com.vandorlabs.tiles.TileEntityRedstoneLight.particleSpeed(style),.65F,rotationYaw);
+        }
+    }
     private void advance(boolean active) {
         long started=VehicleDiagnostics.ENABLED?System.nanoTime():0;float before=rotationYaw;
         collision.begin(world,this);
@@ -368,7 +378,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     private void advanceController(boolean active) {
         boolean boost=hover&&active&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10;
-        if(!world.isRemote)dataManager.set(HOVER_EXHAUST,boost&&(forward!=0||vertical!=0));
+        if(!world.isRemote)dataManager.set(HOVER_EXHAUST,boost);
         driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(boost?HOVER_SPRINT_SPEED:CRUISE_SPEED):0,brake||!active?.045:forward==0?.008:boost?.028:.018);
         steering=(float)approach(steering,active?strafe:0,.18);
         // Hover can yaw in place; the route controller owns its own turns.

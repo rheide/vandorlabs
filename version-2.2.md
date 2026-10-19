@@ -8,7 +8,7 @@ Choose fixed **Mounts**, or combine **Extenders or Swing Arms** with separate **
 
 Settings apply immediately. Operate visible feet by hand or use redstone and channels, including aboard captured vehicles. Adjacent trapdoor covers open for deployment and stay clear until the gear finishes retracting.
 
-Wheeled craft can Taxi with tyres that roll, reverse and steer. **Ski-only craft can Taxi on ice, packed ice and frosted ice**, stopping before their runners leave the ice. Hover retains its normal hardware requirements. Hold Sprint for twice the normal hover cruise speed, with a light trail of engine-specific exhaust. Thruster lighting follows the engines pushing against your travel direction, including when reversing.
+Wheeled craft can Taxi with tyres that roll, reverse and steer. **Ski-only craft can Taxi on ice, packed ice and frosted ice**, stopping before their runners leave the ice. Hover retains its normal hardware requirements. Hold Sprint for twice the normal hover cruise speed, with continuous, light engine-specific exhaust. Lift blocks keep their own gentle particle effects while holding position, including with no pilot aboard. Thruster lighting follows the engines pushing against your travel direction, including when reversing.
 
 Existing integrated wheel gear can migrate into matching modular arms and wheels, retaining its facing, deployment and controls. Conversion waits when the new footprint or mounting support is blocked; old saved IDs remain readable.
 
