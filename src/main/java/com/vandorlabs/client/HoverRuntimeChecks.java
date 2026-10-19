@@ -27,6 +27,8 @@ final class HoverRuntimeChecks {
     }
     static void check(WorldServer world,EntityPlayerMP player)throws Exception{
         for(BlockPos pos:BlockPos.getAllInBox(BASE.add(-2,-1,-2),BASE.add(7,12,5))){world.getChunkFromBlockCoords(pos);world.setBlockState(pos,pos.getY()==100?Blocks.STONE.getDefaultState():Blocks.AIR.getDefaultState(),2);}
+        DirectionalPropulsionRuntimeChecks.run(world);
+        for(int x=-32;x<=32;x+=16)for(int z=-32;z<=32;z+=16)world.getChunkFromBlockCoords(BASE.add(x,0,z));
         require(!VehicleFlight.canHover(fixture(2,true)) && VehicleFlight.canHover(fixture(3,true)),"three mixed lift blocks required");
         boolean denied=false;try{VehicleFlight.requireThruster(fixture(3,false));}catch(IllegalArgumentException expected){denied=true;}require(denied,"lift blocks cannot substitute propulsion");VehicleFlight.requireThruster(fixture(3,true));
         EntityGroundVehicle insufficient=new EntityGroundVehicle(world);insufficient.install(fixture(2,true));insufficient.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());require(!insufficient.setHover(true),"two lifts reject Hover");insufficient.setDead();
@@ -50,8 +52,8 @@ final class HoverRuntimeChecks {
             craft.autopilotControls((byte)0,(byte)0,false);for(int i=0;i<10;i++)advance.invoke(craft,false);
             require(player.startRiding(craft),"pilot boards fixture");
             craft.autopilotControls((byte)1,(byte)0,false);craft.flightInput(player,(byte)0,false,true);
-            for(int i=0;i<24;i++)advance.invoke(craft,true);require(Math.abs(craft.driveSpeed-.35)<1e-8,"Sprint increases Hover cruising speed by 25 percent");
-            craft.flightInput(player,(byte)0,false,false);for(int i=0;i<12;i++)advance.invoke(craft,true);require(Math.abs(craft.driveSpeed-.28)<1e-8,"releasing Sprint restores normal Hover speed");
+            for(int i=0;i<24;i++)advance.invoke(craft,true);require(Math.abs(craft.driveSpeed-EntityGroundVehicle.HOVER_SPRINT_SPEED)<1e-8,"Sprint doubles Hover cruising speed");
+            craft.flightInput(player,(byte)0,false,false);for(int i=0;i<20;i++)advance.invoke(craft,true);require(Math.abs(craft.driveSpeed-.28)<1e-8,"releasing Sprint restores normal Hover speed");
             craft.stopForParking();craft.setPosition(BASE.getX(),altitude,BASE.getZ());
             require(craft.structure.exhaustCells.size()==2,"movement exhaust includes impulse and vertical thrusters only");
             for(VehicleStructure.Cell cell:craft.structure.exhaustCells){String name=cell.state.getBlock().getRegistryName().getResourcePath();require(!name.startsWith("antigravity_plate")&&!name.startsWith("repulsor_array"),"passive lift blocks do not emit forward-movement particles");}

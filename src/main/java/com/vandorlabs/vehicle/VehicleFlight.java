@@ -16,6 +16,11 @@ public final class VehicleFlight {
         String name=block.getRegistryName().getResourcePath();
         return !name.startsWith("antigravity_plate")&&!name.startsWith("repulsor_array");
     }
+    /** Facing is the exhaust direction, expressed in the craft local frame. */
+    public static boolean opposes(net.minecraft.block.state.IBlockState state,Vec3d movement){
+        net.minecraft.util.EnumFacing face=state.getValue(BlockPropulsionLight.FACING);
+        return movement.x*face.getFrontOffsetX()+movement.y*face.getFrontOffsetY()+movement.z*face.getFrontOffsetZ()<-.002;
+    }
     public static void requireThruster(VehicleStructure structure){
         if(structure.hasThruster)return;
         throw new IllegalArgumentException("Taxi and Hover require at least one Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine.");

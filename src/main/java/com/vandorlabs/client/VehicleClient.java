@@ -149,7 +149,7 @@ public final class VehicleClient {
         flight.strafe=(byte)(driver&&mc.currentScreen==null&&mc.gameSettings.keyBindSprint.isKeyDown()?1:0);
         flight.flag=driver&&toggle;flight.forward=driver?(byte)((jump?1:0)-(mc.currentScreen==null && mc.gameSettings.keyBindSneak.isKeyDown()?1:0)):0;
         PacketHandler.INSTANCE.sendToServer(flight);
-        if(driver){entity.predict(p.sequence,p.forward,p.strafe,p.flag);PacketHandler.INSTANCE.sendToServer(p);}
+        if(driver){entity.predictFlight(flight.strafe==1);entity.predict(p.sequence,p.forward,p.strafe,p.flag);PacketHandler.INSTANCE.sendToServer(p);}
         else{jumpDown=false;lastJump=-100;}
     }
     private static UUID cameraCraft;

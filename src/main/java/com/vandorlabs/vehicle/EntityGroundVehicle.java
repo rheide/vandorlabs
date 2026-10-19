@@ -77,6 +77,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     private byte vertical;
     private boolean flightSprint;
+    private int exhaustCursor;
+    public static final double CRUISE_SPEED=.28,HOVER_SPRINT_SPEED=.56;
+    public void predictFlight(boolean sprint){if(!world.isRemote)return;flightSprint=sprint;verticalAt=world.getTotalWorldTime();}
     private long verticalAt=-100,clearanceAt=-100;
     private double clearance=Double.POSITIVE_INFINITY;
     public final VehicleAutopilot autopilot=new VehicleAutopilot(this);
@@ -103,8 +106,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private double correctionX,correctionY,correctionZ;
     private final java.util.ArrayDeque<Control> pendingInputs=new java.util.ArrayDeque<>();
     private static final class Control {
-        int sequence;byte f,s;boolean brake;
-        Control(int n,byte f,byte s,boolean b){sequence=n;this.f=f;this.s=s;brake=b;}
+        int sequence;byte f,s;boolean brake,sprint;
+        Control(int n,byte f,byte s,boolean b,boolean sprint){sequence=n;this.f=f;this.s=s;brake=b;this.sprint=sprint;}
     }
     public Vec3d toWorld(Vec3d local) {
         double px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2,c=Math.cos(Math.toRadians(rotationYaw)),s=Math.sin(Math.toRadians(rotationYaw));
@@ -119,7 +122,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public void predict(int sequence,byte f,byte s,boolean b) {
         if(transferInProgress)return;
-        nextPrediction=new Control(sequence,f,s,b);
+        nextPrediction=new Control(sequence,f,s,b,flightSprint);
         forward=f;strafe=s;brake=b;
     }
     public void authoritative(VehicleNetwork.Packet p) {
@@ -133,7 +136,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         pendingInputs.removeIf(c->c.sequence<=p.sequence);
         rotationYaw=p.yaw;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
         setPosition(p.x,p.y,p.z);
-        if(!pendingInputs.isEmpty())collision.withTerrainCache(world,this,()->{for(Control input:pendingInputs){forward=input.f;strafe=input.s;brake=input.brake;advance(true);}});
+        if(!pendingInputs.isEmpty())collision.withTerrainCache(world,this,()->{for(Control input:pendingInputs){forward=input.f;strafe=input.s;brake=input.brake;predictFlight(input.sprint);advance(true);}});
         double error=(oldX-posX)*(oldX-posX)+(oldY-posY)*(oldY-posY)+(oldZ-posZ)*(oldZ-posZ);
         correctionX=error<16?oldX-posX:0;correctionY=error<16?oldY-posY:0;correctionZ=error<16?oldZ-posZ:0;
         diagnostics.correction(MathHelper.wrapDegrees(oldYaw-rotationYaw),pendingInputs.size());
@@ -312,19 +315,21 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             if(localDriver && structure!=null) {
                 if(nextPrediction!=null) {
                     if(pendingInputs.size()>=VehicleControls.LIMIT)pendingInputs.removeFirst();
-                    pendingInputs.addLast(nextPrediction);forward=nextPrediction.f;strafe=nextPrediction.s;brake=nextPrediction.brake;nextPrediction=null;
+                    pendingInputs.addLast(nextPrediction);forward=nextPrediction.f;strafe=nextPrediction.s;brake=nextPrediction.brake;predictFlight(nextPrediction.sprint);nextPrediction=null;
                 }
                 advance(true);
             }
             else if(interpolation>0){rotationYaw+=MathHelper.wrapDegrees(targetYaw-rotationYaw)/interpolation;setPosition(posX+(targetX-posX)/interpolation,posY+(targetY-posY)/interpolation,posZ+(targetZ-posZ)/interpolation);interpolation--;}
             currentVisual=new VehiclePose(posX+correctionX,posY+correctionY,posZ+correctionZ,rotationYaw+correctionYaw);
             if(view!=null){view.origin=new BlockPos(posX,posY,posZ);
-                double speed=Math.hypot(posX-prevPosX,posZ-prevPosZ);
+                double speed=view.recordMotion(posX-prevPosX,posY-prevPosY,posZ-prevPosZ,rotationYaw);
                 propulsion=(float)approach(propulsion,speed>.002?15:0,1.5);view.propulsionLevel=Math.round(propulsion);view.hover=hover;
-                if(hover&&dataManager.get(HOVER_EXHAUST)&&driveSpeed>.01&&ticksExisted%6==0&&!structure.exhaustCells.isEmpty()){
-                    int count=Math.min(4,structure.exhaustCells.size()),start=(ticksExisted/6*4)%structure.exhaustCells.size();
-                    for(int n=0;n<count;n++){
-                        VehicleStructure.Cell cell=structure.exhaustCells.get((start+n)%structure.exhaustCells.size());
+                if(hover&&dataManager.get(HOVER_EXHAUST)&&speed>.002&&ticksExisted%8==0&&!structure.exhaustCells.isEmpty()){
+                    int emitted=0;
+                    for(int checked=0;checked<structure.exhaustCells.size()&&emitted<2;checked++){
+                        VehicleStructure.Cell cell=structure.exhaustCells.get(Math.floorMod(exhaustCursor++,structure.exhaustCells.size()));
+                        if(!VehicleFlight.opposes(cell.state,view.propulsionMotion)||!view.getBlockState(cell.pos).getValue(com.vandorlabs.blocks.BlockPropulsionLight.POWERED))continue;
+                        emitted++;
                         EnumFacing face=cell.state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING);
                         Vec3d center=toWorld(new Vec3d(cell.pos).addVector(.5,.5,.5));
                         int style=com.vandorlabs.tiles.TileEntityRedstoneLight.particleStyle(cell.state.getBlock().getRegistryName().getResourcePath());
@@ -362,8 +367,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         try { advanceController(active); } finally { collision.end();if(VehicleDiagnostics.ENABLED)diagnostics.step(System.nanoTime()-started,collision.terrainQueries,MathHelper.wrapDegrees(rotationYaw-before)); }
     }
     private void advanceController(boolean active) {
-        if(!world.isRemote)dataManager.set(HOVER_EXHAUST,hover&&active&&forward>0&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10);
-        driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(hover&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10?.35:.28):0,brake||!active?.045:forward==0?.008:.018);
+        boolean boost=hover&&active&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10;
+        if(!world.isRemote)dataManager.set(HOVER_EXHAUST,boost&&(forward!=0||vertical!=0));
+        driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(boost?HOVER_SPRINT_SPEED:CRUISE_SPEED):0,brake||!active?.045:forward==0?.008:boost?.028:.018);
         steering=(float)approach(steering,active?strafe:0,.18);
         // Hover can yaw in place; the route controller owns its own turns.
         // Taxi steering falls off with speed and reverses when backing up.

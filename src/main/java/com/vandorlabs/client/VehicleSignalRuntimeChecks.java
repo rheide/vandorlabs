@@ -44,7 +44,7 @@ final class VehicleSignalRuntimeChecks {
         }
         EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,1));craft.setPosition(400,170,80);craft.rotationYaw=90;
         try{
-            craft.view.propulsionLevel=3;craft.signals.tick();screen=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(screenPos);
+            craft.view.propulsionLevel=3;craft.view.propulsionMotion=new Vec3d(propulsion.getDefaultState().getValue(BlockPropulsionLight.FACING).getDirectionVec()).scale(-.2);craft.signals.tick();screen=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(screenPos);
             for(int index=0;index<2;index++){
                 Vec3d from=null,to=null;IBlockState state=craft.view.getBlockState(screenPos);
                 for(int y=0;y<=32 && from==null;y++)for(int x=0;x<=32 && from==null;x++){

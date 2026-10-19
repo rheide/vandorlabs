@@ -208,7 +208,7 @@ public final class VehicleRuntimeChecks {
         TileEntityRampController localRamp=(TileEntityRampController)local.getTileEntity(rampPos.subtract(ORIGIN));
         require(localRamp!=null && !localRamp.attached() && !localRamp.isOpen(),"retracted ramp controller travels without external reservations");
         for(net.minecraft.tileentity.TileEntity raw:local.tiles.values())require(!(raw instanceof TileEntityControlledRamp),"retracted fixture has no generated ramp sections");
-        local.propulsionLevel=12;
+        local.propulsionLevel=12;local.propulsionMotion=new Vec3d(0,0,.2);
         for(int i=0;i<4;i++) {
             BlockPos at=new BlockPos(i,2,2);IBlockState state=local.getBlockState(at);state=state.getBlock().getActualState(state,local,at);
             require(state.getValue(BlockPropulsionLight.POWERED) && !state.getValue(BlockPropulsionLight.PARTICLES),"driving overrides redstone without particle stream");
@@ -417,7 +417,8 @@ public final class VehicleRuntimeChecks {
                 net.minecraft.tileentity.TileEntityChest farChest=new net.minecraft.tileentity.TileEntityChest();farChest.setPos(new BlockPos(63,20,1));
                 cells.add(new VehicleStructure.Cell(farChest.getPos(),Blocks.CHEST.getDefaultState(),farChest.writeToNBT(new NBTTagCompound())));
                 distantRender=new EntityGroundVehicle(mc.world);distantRender.install(new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,1));distantRender.setPosition(160,120,8);
-                mc.world.addEntityToWorld(-40000,distantRender);mc.gameSettings.thirdPersonView=0;
+                distantRender.forceSpawn=true;mc.world.addEntityToWorld(-40000,distantRender);
+                require(distantRender.isAddedToWorld(),"distant render fixture spawned despite unloaded origin chunk");mc.gameSettings.thirdPersonView=0;
             }
             if(ticks>=380 && ticks<=425) {
                 // Origin section is behind/below the camera; only the far gold hull is visible.
@@ -427,7 +428,9 @@ public final class VehicleRuntimeChecks {
             }
             if(ticks==410)RenderGroundVehicle.reload();
             if(ticks==425) {
-                require(RenderGroundVehicle.fallbackDraws()>0,"visible hull rendered with origin section behind camera");
+                ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_distant_hull.png"));
+                java.util.Set<?> rendered=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(RenderGroundVehicle.class,null,"drawn");
+                require(rendered.contains(distantRender),"visible hull rendered with origin section behind camera");
                 require(RenderGroundVehicle.tileDraws()>0,"visible far chest renderer survives culling with Pilot Seat and origin out of view");
                 ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_distant_hull.png"));
                 System.out.println("[vandorlabs][reprolab] vehicle-distant-render PASS hidden-origin-section visible-hull");
