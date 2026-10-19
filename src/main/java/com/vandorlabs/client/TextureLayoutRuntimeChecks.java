@@ -20,6 +20,15 @@ final class TextureLayoutRuntimeChecks {
     static void run(World world,EntityPlayerMP player){
         BlockPos pos=new BlockPos(166,225,166);int count=0;
         try{
+            Block cube=ModBlocks.PROGRAMMABLE_BLOCK;
+            net.minecraft.item.ItemBlock placementItem=(net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(cube);
+            for(int mode:new int[]{-1,0,1,2,3,4}){
+                world.setBlockToAir(pos);ItemStack stack=new ItemStack(cube);
+                if(mode>=0){NBTTagCompound saved=new NBTTagCompound();if(mode<3)saved.setInteger("MainTextureLayout",mode);else if(mode==3)saved.setBoolean("SlabTileSides",false);else saved.setInteger("HousingTexture",8);stack.setTagInfo("BlockEntityTag",saved);}
+                require(placementItem.placeBlockAt(stack,player,world,pos,net.minecraft.util.EnumFacing.UP,.5f,.5f,.5f,cube.getDefaultState()),"default/configured cube placement");
+                int expected=mode<0||mode==4?1:mode==3?0:mode;
+                require(((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).getMainTextureLayout()==expected,"Tile default preserves explicit and legacy item modes");
+            }
             for(String id:new String[]{"programmable_block","programmable_slab","programmable_stairs","programmable_wall","programmable_diagonal_wall","programmable_viewscreen","programmable_light","programmable_glass","programmable_diagonal_glass","programmable_door","programmable_trapdoor"}){
                 Block block=Block.getBlockFromName("vandorlabs:"+id);require(block!=null,"registered "+id);
                 for(int mode=0;mode<3;mode++){

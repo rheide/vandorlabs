@@ -2,8 +2,10 @@
 
 ## 2.2
 
+- Default new Programmable Blocks to Tile; preserve saved and configured modes. Fit contains the complete image inside joined faces: a square image occupies a centered 2x2 area on a 2x3 panel.
+
 - Add pulse-controlled turntable direction channels, automatic controller orientation, precise Surface protection, controller-side block placement and correct cardinal restoration of corner thrusters.
-- Join Programmable Block Stretch/Fit textures across matching rectangular surfaces; preserve image proportions by cropping Fit artwork. Report applied block counts in Duplifier messages.
+- Join Programmable Block Stretch/Fit textures across matching rectangular surfaces; contain the complete Fit image with its original proportions and opaque margins. Report applied block counts in Duplifier messages.
 - Support right-click reverse option cycling in landing gear, turntable, tank and battery dialogs.
 - Correct Large Mount/Wheel and retracted Large Swing Arm/Wheel face overlap.
 - Cache stationary landing gear transforms and constructor facing geometry; remove empty Constructor Core tick callbacks while keeping moving gear and Taxi wheels continuous.

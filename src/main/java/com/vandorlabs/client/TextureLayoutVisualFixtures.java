@@ -14,7 +14,7 @@ final class TextureLayoutVisualFixtures {
         for(int x=257;x<276;x++)for(int z=118;z<132;z++)world.setBlockState(new BlockPos(x,20,z),Blocks.STONE.getDefaultState(),2);
         for(int mode=0;mode<3;mode++)for(int row=0;row<3;row++)for(int col=0;col<2;col++){
             BlockPos p=new BlockPos(550+mode*8+col,32+row,120);world.setBlockState(p,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
-            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);tile.setHousingTexture(ScreenHousingTextures.screenIndex("corp/ashiro_mural"));tile.setMainTextureLayout(mode);
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);tile.setHousingTexture(ScreenHousingTextures.screenIndex("corp/ashiro_logo"));tile.setMainTextureLayout(mode);
         }
         Block[] blocks={ModBlocks.PROGRAMMABLE_BLOCK,ModBlocks.PROGRAMMABLE_SLAB,ModBlocks.PROGRAMMABLE_STAIRS,ModBlocks.PROGRAMMABLE_WALL};
         for(int mode=0;mode<3;mode++)for(int shape=0;shape<blocks.length;shape++){
