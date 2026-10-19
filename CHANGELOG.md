@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Swing-arm wheels attach at their top fork connector. The connector turns with the arm during retraction while the tyre stays level; both sizes share matching posed collision and selection.
+
 - Battery casing textures are configurable, and RF port lettering stays upright on every face. Corp light textures appear directly in Lights without an On suffix.
 
 - Recover ramp reservations and captured turntable contents when commands remove their controller, including early tile invalidation. Preserve blocked turntable returns in durable recovery records while removing orphan displays.

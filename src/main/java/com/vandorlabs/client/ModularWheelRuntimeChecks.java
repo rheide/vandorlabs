@@ -29,6 +29,7 @@ final class ModularWheelRuntimeChecks {
         try{for(boolean large:new boolean[]{false,true})for(boolean swing:new boolean[]{false,true})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int height:new int[]{1,3}){
             clear(world,at);GearTileEntity root=build(world,player,at,large,swing,facing,height);
             require(root.columns().size()==1&&root.members().size()==(large?4:1)*(height+1),"one physical support owns complete footprint");require(root.assembly().kind()==GearTopology.FootKind.WHEEL,"wheel topology");
+            require(!swing||root.footMountOffset()>0,"swing arm reaches wheel top connector");
             root.target(false);for(int n=0;n<32;n++)root.update();require(root.progress()==0,"full stow "+large+" "+swing+" "+facing+" h="+height+" progress="+root.progress()+" "+obstruction(root));
             if(!swing){List<AxisAlignedBB> stowed=root.collisionBoxes();for(int i=stowed.size()-root.assembly().feet().size();i<stowed.size();i++)if(stowed.get(i).getAverageEdgeLength()>0)require(stowed.get(i).maxY<=at.getY()+6/16D-.001,"retracted wheel clears fixed sleeve for both sizes");}
             if(large&&swing){com.vandorlabs.gear.core.GearMotion.Vec bridge=root.pose(0).transformFootVertex(1,-height+14/16D,1);require(bridge.y<14/16D-.001,"folded large wheel fork bridge clears mounting-cap faces");}

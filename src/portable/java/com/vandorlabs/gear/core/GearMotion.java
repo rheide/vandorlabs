@@ -109,7 +109,7 @@ public final class GearMotion {
         private final double levelOffsetY;
         private final double levelOffsetZ;
 
-        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop) {
+        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop,double socketOffset) {
             // A diagonal hinge offset lowers the folded foot by twice the drop
             // while preserving its final horizontal reach and deployed pose.
             this.hingeDrop=hingeDrop;
@@ -129,7 +129,7 @@ public final class GearMotion {
             this.sine = angleDegrees == 90.0 ? 1.0 : Math.sin(Math.toRadians(angleDegrees));
             this.cosine = angleDegrees == 90.0 ? 0.0 : Math.cos(Math.toRadians(angleDegrees));
             if (mode == Mode.ROTATE_LEVEL) {
-                double deployedAnkleY = -height + FOOT_SOCKET_Y;
+                double deployedAnkleY = -height + FOOT_SOCKET_Y + socketOffset;
                 Vec swungAnkle = rotate(PIVOT_X, deployedAnkleY, PIVOT_Z);
                 this.levelOffsetX = swungAnkle.x - PIVOT_X;
                 this.levelOffsetY = swungAnkle.y - deployedAnkleY;
@@ -172,6 +172,18 @@ public final class GearMotion {
                 return new Vec(x + levelOffsetX, y + levelOffsetY, z + levelOffsetZ);
             }
             return rotate(x, y, z);
+        }
+
+        /** A wheel's top connector follows the arm angle while its tyre stays level. */
+        public Vec transformConnectorVertex(double x,double y,double z,double cx,double cy,double cz){
+            Vec at=transformFootVertex(cx,cy,cz),center=rotate(cx,cy,cz),point=rotate(x,y,z);
+            if(mode==Mode.EXTEND||mode==Mode.STATIC)return transformFootVertex(x,y,z);
+            return new Vec(at.x+point.x-center.x,at.y+point.y-center.y,at.z+point.z-center.z);
+        }
+        public Bounds transformConnectorBounds(Bounds b,double cx,double cy,double cz){
+            double lx=Double.POSITIVE_INFINITY,ly=lx,lz=lx,hx=Double.NEGATIVE_INFINITY,hy=hx,hz=hx;
+            for(int n=0;n<8;n++){Vec v=transformConnectorVertex((n&1)==0?b.minX:b.maxX,(n&2)==0?b.minY:b.maxY,(n&4)==0?b.minZ:b.maxZ,cx,cy,cz);lx=Math.min(lx,v.x);ly=Math.min(ly,v.y);lz=Math.min(lz,v.z);hx=Math.max(hx,v.x);hy=Math.max(hy,v.y);hz=Math.max(hz,v.z);}
+            return new Bounds(lx,ly,lz,hx,hy,hz);
         }
 
         /**
@@ -260,6 +272,11 @@ public final class GearMotion {
     }
     public static Pose pose(Mode mode, Direction direction, int columnHeight,
                             double deployProgress,double stowedFootY,double hingeDrop) {
+        return pose(mode,direction,columnHeight,deployProgress,stowedFootY,hingeDrop,0);
+    }
+    public static Pose pose(Mode mode,Direction direction,int columnHeight,double deployProgress,double stowedFootY,double hingeDrop,double socketOffset){
+        requireFinite(socketOffset,"socketOffset");
+        if(socketOffset<0||socketOffset>1)throw new IllegalArgumentException("Socket offset must fit within one block");
         requireFinite(hingeDrop,"hingeDrop");
         if(hingeDrop<0 || hingeDrop>3/16D)throw new IllegalArgumentException("Hinge drop must be between zero and three sixteenths of a block.");
         requireFinite(stowedFootY,"stowedFootY");
@@ -269,7 +286,7 @@ public final class GearMotion {
         if (columnHeight < 1 || columnHeight > GearTopology.MAX_COLUMN_HEIGHT) {
             throw new IllegalArgumentException("Column height must be between 1 and 8.");
         }
-        return new Pose(mode, direction, columnHeight, clampUnit(deployProgress),stowedFootY,hingeDrop);
+        return new Pose(mode, direction, columnHeight, clampUnit(deployProgress),stowedFootY,hingeDrop,socketOffset);
     }
 
     /** Ease a raw position; finite overshoot is clamped to the end states. */

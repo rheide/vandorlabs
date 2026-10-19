@@ -39,9 +39,23 @@ public final class GearCoreTests {
             Pose large=GearMotion.pose(Mode.ROTATE_LEVEL,direction,1,sample/24D,GearMotion.RETRACTED_FOOT_Y,17/128D);
             Vec bottom=large.transformFootVertex(.5,-2,.5);check(bottom.y>=-2-1e-9,"Large wheel never dips into the ground during folding");
         }
+        wheelConnector();
         numericSafety();
         System.out.println("PASS: " + checks + " core assertions; topology, masks, limits, "
                 + "attachments, four fold directions, level-foot swivel, bounds, reversal, and numeric safety.");
+    }
+
+    private static void wheelConnector(){
+        for(Direction direction:Direction.values())for(int height:new int[]{1,3,8})for(double offset:new double[]{9/16D,11/16D})for(double progress:new double[]{0,.2,.5,.8,1}){
+            Pose p=GearMotion.pose(Mode.ROTATE_LEVEL,direction,height,progress,GearMotion.RETRACTED_FOOT_Y,0,offset);
+            double ankle=-height+GearMotion.FOOT_SOCKET_Y+offset;
+            Vec arm=p.transformRigidVertex(.5,ankle,.5),socket=p.transformFootVertex(.5,ankle,.5);
+            check(Math.abs(arm.x-socket.x)+Math.abs(arm.y-socket.y)+Math.abs(arm.z-socket.z)<1e-9,"Wheel top socket follows arm endpoint through stroke");
+            double cy=-height+(offset==9/16D?9.375/13D:13/16D);
+            Vec at=p.transformFootVertex(.5,cy,.5),connector=p.transformConnectorVertex(.5,cy,.5,.5,cy,.5),up=p.transformConnectorVertex(.5,cy+1,.5,.5,cy,.5);
+            check(Math.abs(at.x-connector.x)+Math.abs(at.y-connector.y)+Math.abs(at.z-connector.z)<1e-9,"Connector rotates about its own center without detaching from fork");
+            check(Math.abs(up.y-connector.y-Math.cos(Math.toRadians(p.angleDegrees())))<1e-9,"Connector follows full arm rotation while tyre stays level");
+        }
     }
 
     private static void topologySizesAndLimits() {

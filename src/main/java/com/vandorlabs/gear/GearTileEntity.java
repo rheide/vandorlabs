@@ -41,14 +41,14 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     private boolean deployedTarget = true;
     private boolean signalKnown,lastSignal,legacyAnyChannels;
     public boolean usesLegacyInput(){return legacyAnyChannels;}
-    public double footMountOffset(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.WHEEL&&(mode==GearMotion.Mode.EXTEND||mode==GearMotion.Mode.STATIC)?(armWidth()==2?11/16D:9/16D):0;}
+    public double footMountOffset(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.WHEEL?(armWidth()==2?11/16D:9/16D):0;}
     public GearMotion.Pose pose(double progress){
         double stowed=GearMotion.RETRACTED_FOOT_Y;
         // Leave daylight beneath the collar instead of coincident runner faces.
         if(mode==GearMotion.Mode.EXTEND)stowed=footMountOffset()>0?6/16D-1/64D-(3/16D+footMountOffset()):stowed-1/64D;
         // Clear the fork bridge as well as the tyre beneath the mounting cap.
         double hingeDrop=mode==GearMotion.Mode.ROTATE_LEVEL && armWidth()==2 && assembly.kind()==GearTopology.FootKind.WHEEL?17/128D:0;
-        return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,stowed,hingeDrop);
+        return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,stowed,hingeDrop,footMountOffset());
     }
 
     private double progress = 1.0;

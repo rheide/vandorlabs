@@ -81,8 +81,8 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             if(!tile.isFixedMount())draw("sleeve",offset.compose(columnFixed.compose(Affine.scaleXZ(width))),x,y,z,light,buffer);
             if(tile.isSwingArmController()){
                 Affine hingeYaw=Affine.quarterTurn(tile.direction().ordinal());
-                draw("swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()).compose(hingeYaw))),x,y,z,light,buffer);
-                draw("swivel",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight(),0).compose(hingeYaw))),x,y,z,light,buffer);
+                draw("swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw))),x,y,z,light,buffer);
+                draw("swivel",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0).compose(hingeYaw))),x,y,z,light,buffer);
             }else{
                 // The Large fixed wheel socket starts exactly at the solid body's
                 // underside. Its fully buried rod would duplicate that visible face.
@@ -104,6 +104,10 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                 Affine at=feet.compose(Affine.translation(foot.x,foot.y,foot.z));
                 if(craft!=null)transform=transform.compose(Affine.yaw(wheel.width()*.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft)));
                 draw(wheel.wheelModel()+"_bracket",at.compose(transform),x,y,z,light,buffer);
+                double center=wheel.width()*.5,connectorY=wheel.width()==2?13/16D:9.375/13D;
+                GearMotion.Vec pivot=orientationPoint(orientation,center,connectorY,center);
+                Affine connector=connectorPose(pose,foot.x+pivot.x,foot.y+pivot.y,foot.z+pivot.z);
+                draw(wheel.wheelModel()+"_connector",connector.compose(Affine.translation(foot.x,foot.y,foot.z).compose(transform)),x,y,z,light,buffer);
                 if(craft!=null){double distance=com.vandorlabs.client.VehicleWheelMotion.sample(craft,partialTicks);double angle=com.vandorlabs.client.VehicleWheelMotion.roll(distance,wheel.width()==2?14/16D:4.5/13,com.vandorlabs.client.VehicleWheelMotion.alignment(craft.structure.facing,tile.footFacing()));transform=transform.compose(Affine.roll(wheel.width()*.5,wheel.width()==2?-2/16D:4.5/13,angle));}
                 draw(wheel.wheelModel()+"_tyre",at.compose(transform),x,y,z,light,buffer);continue;
             }
@@ -113,6 +117,12 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             Affine atFoot = feet.compose(Affine.translation(foot.x, foot.y, foot.z).compose(orientation));
             draw(prefix + localMask, atFoot, x, y, z, light, buffer);
         }
+    }
+
+    private static GearMotion.Vec orientationPoint(Affine t,double x,double y,double z){return new GearMotion.Vec(t.xx*x+t.xy*y+t.xz*z+t.tx,t.yx*x+t.yy*y+t.yz*z+t.ty,t.zx*x+t.zy*y+t.zz*z+t.tz);}
+    private static Affine connectorPose(GearMotion.Pose p,double cx,double cy,double cz){
+        GearMotion.Vec o=p.transformConnectorVertex(0,0,0,cx,cy,cz),x=p.transformConnectorVertex(1,0,0,cx,cy,cz),y=p.transformConnectorVertex(0,1,0,cx,cy,cz),z=p.transformConnectorVertex(0,0,1,cx,cy,cz);
+        return new Affine(x.x-o.x,y.x-o.x,z.x-o.x,x.y-o.y,y.y-o.y,z.y-o.y,x.z-o.z,y.z-o.z,z.z-o.z,o.x,o.y,o.z);
     }
 
     private void draw(String name,Affine transform,double x,double y,double z,int light,BufferBuilder buffer){
@@ -160,7 +170,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
         static Affine scaleXZ(double scale){return scaleXZ(scale,scale);}
         static Affine scaleXZ(double sx,double sz){return new Affine(sx,0,0,0,1,0,0,0,sz,0,0,0);}
         static Affine aroundCenter(double width,Affine transform){double shift=(width-1)*.5;return translation(shift,0,shift).compose(transform.compose(translation(-shift,0,-shift)));}
-        static Affine stretchArm(int height){double factor=(height+.25)/1.25;return scaleY(factor,GearMotion.PIVOT_Y*(1-factor));}
+        static Affine stretchArm(double height){double factor=(height+.25)/1.25;return scaleY(factor,GearMotion.PIVOT_Y*(1-factor));}
         static Affine yaw(double center,double angle){double c=Math.cos(Math.toRadians(angle)),s=Math.sin(Math.toRadians(angle));return new Affine(c,0,-s,0,1,0,s,0,c,center-c*center+s*center,0,center-s*center-c*center);}
         static Affine roll(double center,double y,double angle){double c=Math.cos(Math.toRadians(angle)),s=Math.sin(Math.toRadians(angle));return new Affine(1,0,0,0,c,-s,0,s,c,0,y-c*y+s*center,center-s*y-c*center);}
         static Affine scaleY(double scale, double offset) {
