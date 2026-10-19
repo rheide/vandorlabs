@@ -49,7 +49,7 @@ final class WheelItemRuntimeChecks {
         }finally{GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);mc.displayGuiScreen(previousGui);}
         System.out.println("[vandorlabs][reprolab] wheel-item-sizes PASS small-medium-large projected-size actual-pixel-size every-edge-padding reduced-first-third-person held-screenshots");
     }
-    private static BufferedImage held(Minecraft mc,ItemStack stack){
+    static BufferedImage held(Minecraft mc,ItemStack stack){
         Framebuffer target=new Framebuffer(640,360,true);GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();org.lwjgl.util.glu.Project.gluPerspective(70,640F/360,.05F,100);
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();GlStateManager.loadIdentity();

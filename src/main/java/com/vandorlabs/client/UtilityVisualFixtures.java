@@ -16,6 +16,14 @@ final class UtilityVisualFixtures {
         for(int i=0;i<ids.length;i++){BlockPos p=new BlockPos(140+i*2,21,120);world.setBlockState(p,Block.getBlockFromName("vandorlabs:"+ids[i]).getDefaultState(),2);if(i==3){world.setBlockState(p,world.getBlockState(p).withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.UP),2);world.setBlockState(p.up(),world.getBlockState(p),2);((TileEntityHexTank)world.getTileEntity(p)).fill(new FluidStack(FluidRegistry.WATER,23000),true);}}
         TileEntityBattery battery=(TileEntityBattery)world.getTileEntity(new BlockPos(144,21,120));for(int i=0;i<72;i++)battery.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,null).receiveEnergy(1000,false);
         for(int i=0;i<6;i++){BlockPos at=new BlockPos(150+i*2,23,120);world.setBlockState(at.down(),Blocks.STONE.getDefaultState(),2);world.setBlockState(at.down(2),Blocks.STONE.getDefaultState(),2);world.setBlockState(at,Block.getBlockFromName("vandorlabs:hexagonal_fuel_tank").getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.values()[i]),2);int amount=new int[]{0,4000,8000,12000,16000,8000}[i];if(amount>0)((TileEntityHexTank)world.getTileEntity(at)).fill(new FluidStack(i==4?FluidRegistry.LAVA:FluidRegistry.WATER,amount),true);}
+        String[] propulsion={"rocket_thruster","ion_drive","plasma_vent","impulse_engine"};
+        for(int orientation=0;orientation<3;orientation++)for(int i=0;i<4;i++){
+            EnumFacing facing=new EnumFacing[]{EnumFacing.NORTH,EnumFacing.EAST,EnumFacing.UP}[orientation];BlockPos nozzle=new BlockPos(174+i*4,23,125+orientation*5),tank=nozzle.offset(facing.getOpposite());
+            world.setBlockState(nozzle,Block.getBlockFromName("vandorlabs:"+propulsion[i]+"_hexagonal").getDefaultState().withProperty(BlockPropulsionLight.FACING,facing),2);
+            ((TileEntityRedstoneLight)world.getTileEntity(nozzle)).setSideTexture(3);
+            world.setBlockState(tank,Block.getBlockFromName("vandorlabs:hexagonal_fuel_tank").getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,facing),2);
+            ((TileEntityHexTank)world.getTileEntity(tank)).setHousingTexture(3);
+        }
         for(int i=0;i<4;i++){
             BlockPos p=new BlockPos(140+i*2,21,123);net.minecraft.block.state.IBlockState state=i<2?ModBlocks.PROGRAMMABLE_SLAB.getDefaultState().withProperty(BlockProgrammableSlab.HALF,i==1?net.minecraft.block.BlockSlab.EnumBlockHalf.TOP:net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM):ModBlocks.PROGRAMMABLE_STAIRS.getDefaultState().withProperty(net.minecraft.block.BlockStairs.HALF,i==3?net.minecraft.block.BlockStairs.EnumHalf.TOP:net.minecraft.block.BlockStairs.EnumHalf.BOTTOM).withProperty(net.minecraft.block.BlockStairs.FACING,EnumFacing.SOUTH);
             world.setBlockState(p,state,2);((TileEntityAnimatedScreenSelector)world.getTileEntity(p)).setWaterlogged(true);

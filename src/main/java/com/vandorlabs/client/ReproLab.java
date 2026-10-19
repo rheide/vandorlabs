@@ -452,6 +452,9 @@ public class ReproLab {
         SHOTS.add(new Shot("utility22_blocks_tank_quarter",152.5,21.93,119.65,0,15));
         SHOTS.add(new Shot("utility22_blocks_tank_half",154.5,21.93,119.65,0,5));
         SHOTS.add(new Shot("utility22_blocks_tank_full",158.5,21.93,119.65,0,5));
+        SHOTS.add(new Shot("utility22_tank_thruster_z",172,24.5,121,-35,15));
+        SHOTS.add(new Shot("utility22_tank_thruster_x",171,24.5,127,-45,15));
+        SHOTS.add(new Shot("utility22_tank_thruster_y",172,25,132,-35,15));
         for(String kind:new String[]{"card","chip"})for(int i=0;i<7;i++)SHOTS.add(new Shot("utility22_data_"+kind+"_"+i,143,24,114,0,15));
         SHOTS.add(new Shot("turntable_floor",344,35,115,0,30));
         SHOTS.add(new Shot("turntable_wall",350,31,113,0,0));
@@ -467,6 +470,8 @@ public class ReproLab {
             SHOTS.add(new Shot("utility22_gear_large_"+pose,194,33,117,0,24));
         }
         SHOTS.add(new Shot("utility22_gear_joined",214,33,112,40,20));
+        SHOTS.add(new Shot("fixed_gear_standard",475,34,132,180,15));
+        SHOTS.add(new Shot("fixed_gear_large",475,34,138,180,15));
         for(int i=0;i<4;i++)SHOTS.add(new Shot("utility22_cockpit_"+i,220+i*6,32,125,-145,30));
         SHOTS.add(new Shot("gallery_distant_geometry",GALLERY_X+.5D,
                 GALLERY_Y+3D,-98D,0,2));
@@ -2126,6 +2131,7 @@ public class ReproLab {
                 ControllerRuntimeChecks.buildFixture(world, serverPlayer);
                 try{TurntableRuntimeChecks.fixture((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("turntable fixtures",failure);}
                 ModularGearRuntimeChecks.fixture((net.minecraft.world.WorldServer)world);
+                FixedGearRuntimeChecks.fixture((net.minecraft.world.WorldServer)world,serverPlayer);
             }).get();
         } catch (Exception exception) {
             throw new IllegalStateException("Controller server-thread contracts failed",exception);
@@ -2136,7 +2142,7 @@ public class ReproLab {
             StorageRuntimeChecks.server(world,serverPlayer);
         });
         ScreenRuntimeChecks.checkClientPlacement(mc);
-        try{UtilityItemRuntimeChecks.run(mc,outDir);GearItemRuntimeChecks.run(mc,outDir);CockpitItemRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("utility item rendering",failure);}
+        try{UtilityItemRuntimeChecks.run(mc,outDir);GearItemRuntimeChecks.run(mc,outDir);CockpitItemRuntimeChecks.run(mc,outDir);DataTokenRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("utility item rendering",failure);}
         CustomMaterialRuntimeChecks.run(mc.player);
         ItemRuntimeChecks.run(serverPlayer);
         onServer(mc,()->{

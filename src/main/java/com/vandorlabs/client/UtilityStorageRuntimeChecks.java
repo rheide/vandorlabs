@@ -47,6 +47,7 @@ final class UtilityStorageRuntimeChecks {
                 for(boolean block:new boolean[]{true,false}){
                     one.setBlockShape(block);require(one.isBlockShape()==block&&one.getTankProperties()[0].getContents().amount==20000,"shape change retains connected fluid "+face);
                     TileEntityHexTank saved=new TileEntityHexTank();saved.readFromNBT(one.writeToNBT(new NBTTagCompound()));require(saved.isBlockShape()==block&&saved.tank.getFluidAmount()==one.tank.getFluidAmount(),"shape and fluid survive NBT "+face);
+                    for(int layout:new int[]{1,2}){one.setMainTextureLayout(layout);saved.readFromNBT(one.writeToNBT(new NBTTagCompound()));require(saved.getMainTextureLayout()==layout&&saved.isBlockShape()==block&&one.getTankProperties()[0].getContents().amount==20000,"tank layout persists without changing storage or shape");}
                     require(one.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,face),"shape retains axial port "+face);
                 }
                 com.vandorlabs.container.ContainerStorageStatus meter=new com.vandorlabs.container.ContainerStorageStatus(one);require(meter.values[0]==20000&&meter.values[1]==32000,"live combined fluid meter");

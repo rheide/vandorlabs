@@ -9,12 +9,13 @@ import net.minecraftforge.fml.common.network.simpleimpl.*;
 public final class MessageTankShape implements IMessage {
     private int window;
     private boolean block;
-    private int casing=-1;
+    private int casing=-1,layout=-1;
     public MessageTankShape(){}
     public MessageTankShape(int window,boolean block){this.window=window;this.block=block;}
     public MessageTankShape withCasing(int casing){this.casing=casing;return this;}
-    @Override public void fromBytes(ByteBuf buffer){window=buffer.readInt();block=buffer.readBoolean();casing=buffer.readInt();}
-    @Override public void toBytes(ByteBuf buffer){buffer.writeInt(window);buffer.writeBoolean(block);buffer.writeInt(casing);}
+    public MessageTankShape withLayout(int layout){this.layout=layout;return this;}
+    @Override public void fromBytes(ByteBuf buffer){window=buffer.readInt();block=buffer.readBoolean();casing=buffer.readInt();layout=buffer.readInt();}
+    @Override public void toBytes(ByteBuf buffer){buffer.writeInt(window);buffer.writeBoolean(block);buffer.writeInt(casing);buffer.writeInt(layout);}
     public static final class Handler implements IMessageHandler<MessageTankShape,IMessage>{
         @Override public IMessage onMessage(MessageTankShape message,MessageContext context){
             net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;
@@ -25,7 +26,8 @@ public final class MessageTankShape implements IMessage {
                         &&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,player.world,container.tile.getPos())){
                     TileEntityHexTank tank=(TileEntityHexTank)container.tile;
                     if(message.casing!=-1&&!com.vandorlabs.tiles.ScreenHousingTextures.validChoice(message.casing))return;
-                    tank.setBlockShape(message.block);if(message.casing!=-1)tank.setHousingTexture(message.casing);
+                    if(message.layout!=-1&&message.layout!=1&&message.layout!=2)return;
+                    tank.setBlockShape(message.block);if(message.layout!=-1)tank.setMainTextureLayout(message.layout);if(message.casing!=-1)tank.setHousingTexture(message.casing);
                 }
             });
             return null;
