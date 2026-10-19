@@ -2,6 +2,9 @@
 
 ## 2.2
 
+- Recover ramp reservations and captured turntable contents when commands remove their controller, including early tile invalidation. Preserve blocked turntable returns in durable recovery records while removing orphan displays.
+- Route Configurizer clicks on generated ramps, turntable surfaces/captured blocks and Taxi/Hover entities to the owning configuration, with component-based reach and normal edit permissions.
+
 - Default new Programmable Blocks to Tile; preserve saved and configured modes. Fit contains the complete image inside joined faces: a square image occupies a centered 2x2 area on a 2x3 panel.
 
 - Add pulse-controlled turntable direction channels, automatic controller orientation, precise Surface protection, controller-side block placement and correct cardinal restoration of corner thrusters.

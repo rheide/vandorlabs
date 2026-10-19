@@ -32,6 +32,7 @@ public final class ItemConfigurizer extends Item {
     }
 
     @Override public net.minecraft.util.ActionResult<net.minecraft.item.ItemStack> onItemRightClick(World world,EntityPlayer player,EnumHand hand) {
+        if(hand==EnumHand.MAIN_HAND&&MovingDeviceConfiguration.openTurntable(player,MovingDeviceConfiguration.pointedTurntable(player)))return new net.minecraft.util.ActionResult<>(net.minecraft.util.EnumActionResult.SUCCESS,player.getHeldItem(hand));
         com.vandorlabs.vehicle.EntityGroundVehicle craft=player.getRidingEntity() instanceof com.vandorlabs.vehicle.EntityGroundVehicle?(com.vandorlabs.vehicle.EntityGroundVehicle)player.getRidingEntity():com.vandorlabs.vehicle.VehicleLookup.pointed(player);
         if(hand==EnumHand.MAIN_HAND && craft!=null) {
             if(!world.isRemote)configureCraft((net.minecraft.entity.player.EntityPlayerMP)player,craft);
@@ -46,6 +47,19 @@ public final class ItemConfigurizer extends Item {
             BlockPos seat=target.hit.cell.state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER)?target.hit.cell.pos.down():target.hit.cell.pos;com.vandorlabs.vehicle.VehicleService.previewSeat(player,craft,seat);
         }else if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.CONTROLLER)com.vandorlabs.vehicle.VehicleService.previewController(player,craft,target.hit.cell.pos);
         else com.vandorlabs.vehicle.VehicleService.previewParking(player,craft);
+    }
+    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGH)
+    public static void onMovingEntity(PlayerInteractEvent.EntityInteract event){configureMovingEntity(event);}
+    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGH)
+    public static void onMovingEntitySpecific(PlayerInteractEvent.EntityInteractSpecific event){configureMovingEntity(event);}
+    private static void configureMovingEntity(PlayerInteractEvent event){
+        if(event.getHand()!=EnumHand.MAIN_HAND||event.getItemStack().getItem()!=ModItems.CONFIGURIZER)return;
+        net.minecraft.entity.Entity target=event instanceof PlayerInteractEvent.EntityInteract?((PlayerInteractEvent.EntityInteract)event).getTarget():((PlayerInteractEvent.EntityInteractSpecific)event).getTarget();
+        if(target instanceof com.vandorlabs.vehicle.EntityGroundVehicle){
+            com.vandorlabs.vehicle.EntityGroundVehicle craft=(com.vandorlabs.vehicle.EntityGroundVehicle)target;
+            if(event.getEntityPlayer().getRidingEntity()!=craft&&com.vandorlabs.vehicle.VehicleLookup.pointed(event.getEntityPlayer())!=craft)return;
+            event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!event.getWorld().isRemote)configureCraft((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),craft);
+        }else if(target instanceof com.vandorlabs.turntable.EntityTurntable&&MovingDeviceConfiguration.openTurntable(event.getEntityPlayer(),MovingDeviceConfiguration.pointedTurntable(event.getEntityPlayer()))){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);}
     }
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGH)
     public static void onArmorStand(PlayerInteractEvent.EntityInteractSpecific event) {
@@ -76,6 +90,7 @@ public final class ItemConfigurizer extends Item {
         if (event.getHand() != EnumHand.MAIN_HAND
                 || event.getItemStack().getItem() != ModItems.CONFIGURIZER) return;
         World world = event.getWorld();
+        if(MovingDeviceConfiguration.openTurntable(event.getEntityPlayer(),MovingDeviceConfiguration.pointedTurntable(event.getEntityPlayer()))){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);return;}
         com.vandorlabs.vehicle.EntityGroundVehicle craft=event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.vehicle.EntityGroundVehicle?(com.vandorlabs.vehicle.EntityGroundVehicle)event.getEntityPlayer().getRidingEntity():com.vandorlabs.vehicle.VehicleLookup.pointed(event.getEntityPlayer());
         if(craft!=null){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)configureCraft((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),craft);return;}
         BlockPos pos = ProgrammableTarget.settingsPos(world, event.getPos());

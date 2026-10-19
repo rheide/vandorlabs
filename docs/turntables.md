@@ -91,3 +91,12 @@ For an older opposite-face capture, stop rotation and use Restore before scannin
 again. This returns preserved contents to their original positions, including
 terrain captured beneath a floor. Clear any newly placed blocks from those
 positions first; Restore never overwrites them.
+
+
+Using the Configurizer on a captured block or a claimed Surface opens its
+Turntable Controller, including from the far side of a large platform.
+Removing a controller with a command returns captured contents at their current
+cardinal heading and releases the surviving surfaces. If return space is blocked,
+the orphan display is removed and its contents remain in the recovery record;
+they return automatically when the required chunks and clear positions are available.
+Replacement terrain is preserved.

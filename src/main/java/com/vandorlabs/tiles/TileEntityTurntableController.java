@@ -27,6 +27,7 @@ public final class TileEntityTurntableController extends TileEntity implements I
     private int ticks;
     private double angle,previous;
     public EntityTurntable display(){if(world==null||captureId==null)return null;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(entity instanceof EntityTurntable && captureId.equals(entity.getUniqueID())&&!entity.isDead)return (EntityTurntable)entity;return null;}
+    @Override public void invalidate(){if(world!=null&&!world.isRemote&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)){EntityTurntable entity=display();if(entity!=null)com.vandorlabs.turntable.TurntableEvents.restoreAfterTick(entity);}super.invalidate();}
     private boolean signal(ChannelList channels){return channels.isEmpty()?world.isBlockPowered(pos):RedstoneChannels.allPowered(world,channels);}
     private boolean matches(int mode,ChannelList channels){return mode!=0 && (mode==1)==signal(channels);}
     public boolean legacyCapture(){return layout!=null&&world!=null&&world.isBlockLoaded(layout.root)&&world.getBlockState(layout.root).getBlock() instanceof BlockTurntableSurface&&world.getBlockState(layout.root).getValue(BlockTurntableSurface.FACING)!=layout.normal;}

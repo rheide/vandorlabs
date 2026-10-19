@@ -258,3 +258,10 @@ block still prevents closure or ramp movement; neither mechanism replaces it.
 Full glass platforms support vanilla Glass, all Stained Glass colors, and every Vandor cockpit glass variant. Source transparency and exact material/color survive deployment, copying, rotation and recovery. Glass panes, thin Programmable Glass panels and canopies keep their own geometry and are excluded from platform capture.
 
 Vanilla stairs and Programmable Stairs are supported in ramp, filled ramp, lift, extend, both escalator directions and Moat modes. Captured stairs retain their facing, top/bottom half and inner/outer corner shape, with collision following the moving steps. Programmable finishes and source tile settings survive copying, vehicle rotation and recovery. Platform selection still requires matching source block states and, when enabled, matching finishes.
+
+
+Use the Configurizer on any generated ramp or extension cell to open its owning
+Ramp Controller. Reach is checked against the nearby platform component, so the
+controller can be farther away on a large assembly. Normal edit permissions still
+apply. Command removal of a controller wakes its surviving reservations and
+restores their original blocks and tile data; replacement terrain is preserved.

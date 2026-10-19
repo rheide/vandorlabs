@@ -17,7 +17,13 @@ public final class TurntableEvents {
     public static void restoreAfterTick(EntityTurntable entity){if(!entity.world.isRemote)RETURNS.computeIfAbsent(entity.world,w->Collections.newSetFromMap(new IdentityHashMap<>())).add(entity);}
     public static void finishTransfers(WorldServer world){
         Set<EntityTurntable> pending=RETURNS.remove(world);if(pending==null)return;
-        for(EntityTurntable entity:pending)if(!entity.isDead)try{TurntableTransfer.restore(world,entity,null);}catch(Exception blocked){com.vandorlabs.tiles.TileEntityTurntableController owner=entity.owner();if(owner!=null)owner.status(blocked.getMessage()==null?"Return space blocked; contents retained":blocked.getMessage());}
+        for(EntityTurntable entity:pending)if(!entity.isDead)try{
+            // A chunk unload is not controller removal. Defer until ownership can be checked.
+            if(!world.isBlockLoaded(entity.controller)||entity.owner()!=null)continue;
+            TurntableTransfer.restore(world,entity,null);
+        }catch(Exception blocked){
+            try{TurntableTransfer.deferOrphan(world,entity);}catch(Exception checkpoint){com.vandorlabs.VandorLabs.logger.error("Cannot checkpoint orphaned turntable contents",checkpoint);}
+        }
     }
     @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){RETURNS.remove(event.getWorld());}
     public static List<AxisAlignedBB> foreignObstacles(World world,EntityTurntable display,Entity rider,AxisAlignedBB box){EXCLUDED.set(display);try{return world.getCollisionBoxes(rider,box);}finally{EXCLUDED.remove();}}

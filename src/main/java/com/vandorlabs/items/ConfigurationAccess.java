@@ -10,7 +10,7 @@ public final class ConfigurationAccess {
     /** Public block dialogs still require the normal reach and edit permissions. */
     public static boolean canEditDialog(EntityPlayer player,net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos){
         return player!=null&&!player.isDead&&!player.isSpectator()&&player.world==world
-                && world.isBlockLoaded(pos)&&player.getDistanceSq(pos)<=64
+                && world.isBlockLoaded(pos)&&(player.getDistanceSq(pos)<=64||MovingDeviceConfiguration.nearOwnedPart(player,world.getTileEntity(pos)))
                 && player.canPlayerEdit(pos,net.minecraft.util.EnumFacing.UP,player.getHeldItemMainhand())
                 && world.isBlockModifiable(player,pos);
     }

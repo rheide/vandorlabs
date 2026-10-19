@@ -2136,6 +2136,7 @@ public class ReproLab {
                 CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
                 RedstoneChannelRuntimeChecks.run(serverPlayer.world, serverPlayer);
                 ControllerRuntimeChecks.run(world, serverPlayer);
+                try{MovingDeviceRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("moving device removal and configuration",failure);}
                 ControllerRuntimeChecks.buildFixture(world, serverPlayer);
                 try{TurntableRuntimeChecks.fixture((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("turntable fixtures",failure);}
                 ModularGearRuntimeChecks.fixture((net.minecraft.world.WorldServer)world);

@@ -197,9 +197,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 && sources.containsAll(part.origins);
     }
     public boolean usable(EntityPlayer player) {
-        return world.getTileEntity(pos)==this && player.getDistanceSq(pos)<=64
-                && player.canPlayerEdit(pos,EnumFacing.UP,player.getHeldItemMainhand())
-                && world.isBlockModifiable(player,pos);
+        return world.getTileEntity(pos)==this && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos);
     }
     private boolean fail(String reason) { clearCanopyCommand();error=true; status=reason; sync(); return false; }
     private boolean hold(String reason) {
@@ -699,7 +697,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             schedule();
         }
     }
-    @Override public void invalidate() { lifecycleDetached=true;RampCanopyCoordination.clearRampWait(this);RampCanopyCoordination.changed(world,pos); RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
+    @Override public void invalidate() { lifecycleDetached=true;com.vandorlabs.ramp.ControllerRecovery.controllerChanged(world,pos);RampCanopyCoordination.clearRampWait(this);RampCanopyCoordination.changed(world,pos); RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
     @Override public void onChunkUnload() {
         lifecycleDetached=true;RampCanopyCoordination.clearRampWait(this);
         if(world!=null && !world.isRemote && beltRunning){beltRunning=false;beltTick=world.getTotalWorldTime();syncParts();}

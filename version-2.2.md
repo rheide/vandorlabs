@@ -64,3 +64,7 @@ stationary gear transforms and constructor orientations, and the standard JAR
 shares duplicate artwork and losslessly compresses PNGs.
 
 [Device rendering and package-size measurements](docs/performance/2.2-devices.md).
+
+The Configurizer can open controllers through generated ramp cells and captured
+turntable blocks, and handles Taxi/Hover entity clicks. Command-driven controller
+removal recovers remaining generated parts and preserves blocked turntable returns.

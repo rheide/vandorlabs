@@ -20,6 +20,15 @@ public final class TurntableTransfer {
     private static Path directory(WorldServer world){return world.getSaveHandler().getWorldDirectory().toPath().resolve("data").resolve("vandorlabs-turntables-"+world.provider.getDimension());}
     private static Path file(WorldServer world,UUID id){return directory(world).resolve(id+".nbt");}
     public static boolean pending(EntityTurntable entity){return !entity.world.isRemote&&Files.exists(file((WorldServer)entity.world,entity.getUniqueID()));}
+    /** Remove orphan rendering immediately while retaining blocked contents durably. */
+    public static void deferOrphan(WorldServer world,EntityTurntable entity)throws Exception{
+        if(!pending(entity)){
+            NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setBoolean("Captured",false);tag.setBoolean("Orphan",true);tag.setTag("Display",entity.writeToNBT(new NBTTagCompound()));
+            if(entity.snapshot!=null){try{tag.setTag("Return",entity.snapshot.rotated(entity.angle(),entity.view).write());}catch(IllegalArgumentException unsupported){tag.setTag("Return",entity.snapshot.write());}}
+            save(file(world,entity.getUniqueID()),tag);
+        }
+        world.removeEntityDangerously(entity);
+    }
     private static void save(Path path,NBTTagCompound tag)throws IOException{
         Files.createDirectories(path.getParent());Path temp=path.resolveSibling(path.getFileName()+".tmp");
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();CompressedStreamTools.writeCompressed(tag,bytes);
@@ -77,12 +86,13 @@ public final class TurntableTransfer {
         if(tag.getInteger("Schema")!=1)throw new IOException("Unknown turntable recovery schema");
         EntityTurntable saved=new EntityTurntable(world);saved.readFromNBT(tag.getCompoundTag("Display"));TurntableSnapshot snapshot=saved.snapshot;
         if(snapshot==null||!loaded(world,snapshot))throw new IOException("Recovery volume unavailable");
-        boolean captured=tag.getBoolean("Captured");TurntableSnapshot returned=captured&&tag.hasKey("Return",10)?TurntableSnapshot.read(tag.getCompoundTag("Return")):snapshot;
+        boolean captured=tag.getBoolean("Captured");TurntableSnapshot returned=(captured||tag.getBoolean("Orphan"))&&tag.hasKey("Return",10)?TurntableSnapshot.read(tag.getCompoundTag("Return")):snapshot;
+        if(!loaded(world,returned))throw new IOException("Recovery return volume unavailable");
         for(VehicleStructure.Cell cell:returned.blocks.cells){BlockPos pos=returned.origin.add(cell.pos);if(!world.isBlockLoaded(pos)||!world.isAirBlock(pos)&&world.getBlockState(pos)!=cell.state)throw new IOException("Recovery blocked by changed blocks at "+pos);}
         Map<UUID,Entity> live=entities(world);Entity current=live.get(saved.getUniqueID());
         if(current!=null&&!(current instanceof EntityTurntable))throw new IOException("Recovery entity UUID conflict");
         if(captured){VehicleTransfer.blocks(world,returned.blocks,returned.origin,false);removeEntities(world,snapshot);if(current==null&&!world.spawnEntity(saved))throw new IOException("Recovery spawn denied");}
-        else{List<Entity> prepared=prepare(world,snapshot);VehicleTransfer.blocks(world,snapshot.blocks,snapshot.origin,true);if(current!=null)world.removeEntityDangerously(current);spawn(world,snapshot,prepared);}
+        else{List<Entity> prepared=prepare(world,returned);VehicleTransfer.blocks(world,returned.blocks,returned.origin,true);if(current!=null)world.removeEntityDangerously(current);spawn(world,returned,prepared);}
         TileEntityTurntableController owner=saved.owner();if(owner!=null){owner.captureId=captured?saved.getUniqueID():null;if(captured){owner.layout=snapshot.layout;for(BlockPos cell:snapshot.layout.cells){net.minecraft.tileentity.TileEntity part=world.getTileEntity(cell);if(part instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)part).bind(owner);}}else owner.release();owner.changed();}
     }
     public static void recover(WorldServer world){
