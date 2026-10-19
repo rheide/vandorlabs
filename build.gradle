@@ -428,6 +428,8 @@ processResources {
     inputs.dir('texture-packs/default/assets/vandorlabs/textures')
     inputs.dir('texture-packs/original/assets/vandorlabs/textures')
     inputs.files('tools/compact_runtime_assets.py', 'tools/prune_retired_textures.py', 'tools/prune_unused_runtime_assets.py')
+    inputs.file('tools/deduplicate_runtime_textures.py')
+    inputs.file('tools/optimize_runtime_pngs.py')
     inputs.file('src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java')
     inputs.property('pythonExecutable', pythonExecutable)
     doFirst {
@@ -476,6 +478,13 @@ processResources {
         exec {
             commandLine pythonExecutable, 'tools/prune_unused_runtime_assets.py', '--stage', target.parentFile
         }
+        exec {
+            environment 'PYTHONPATH', project.file('build/tooling/python-packages').absolutePath
+            commandLine pythonExecutable, 'tools/optimize_runtime_pngs.py', '--stage', target.parentFile
+        }
+        exec {
+            commandLine pythonExecutable, 'tools/deduplicate_runtime_textures.py', '--stage', target.parentFile
+        }
         logger.lifecycle("Installed ${supplied.size()} default runtime textures")
     }
 }
@@ -501,6 +510,13 @@ task testPackagedAssetCompaction(type: Exec) {
     commandLine pythonExecutable, 'tools/test_compact_assets.py', jar.archivePath
 }
 check.dependsOn testPackagedAssetCompaction
+
+task testSharedRuntimeTextures(type: Exec) {
+    dependsOn jar
+    workingDir projectDir
+    commandLine pythonExecutable, 'tools/deduplicate_runtime_textures.py', '--check-jar', jar.archivePath
+}
+check.dependsOn testSharedRuntimeTextures
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 

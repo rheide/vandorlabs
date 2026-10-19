@@ -14,7 +14,11 @@ class MachineryTests(unittest.TestCase):
  def test_assets_are_absent(self):
   for directory in ('src/main/resources/assets/vandorlabs','generated-resources/assets/vandorlabs','texture-packs/additional/assets/vandorlabs'):
    for path in (ROOT/directory).rglob('*'):
-    if path.is_file():self.assertFalse(any(part.startswith(PREFIXES) for part in path.parts),str(path.relative_to(ROOT)))
+    if path.is_file():
+     relative=path.relative_to(ROOT/directory).as_posix()
+     # Vektor company art is independent of the retired Vektor machinery kit.
+     company_art=(relative.startswith(('models/item/armor/','textures/items/armor/','textures/models/armor/companies/','textures/blocks/corp/')) and path.stem.startswith('vektor_'))
+     if not company_art:self.assertFalse(any(part.startswith(PREFIXES) for part in path.parts),str(path.relative_to(ROOT)))
   for name in ('ship_system_meshes','vh_system_meshes','rivet_system_meshes','external_sensor_meshes','rivet_reference_meshes'):
    self.assertFalse((ROOT/'src/main/resources/assets/vandorlabs/data'/(name+'.json')).exists())
  def test_generated_catalog_excludes_retired_blocks(self):

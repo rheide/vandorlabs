@@ -10,6 +10,9 @@ ROOT=Path(__file__).resolve().parents[1]
 jar=Path(sys.argv[1]);prefix='assets/vandorlabs/'
 with ZipFile(jar) as archive:
     names=set(archive.namelist())
+    shared=json.loads(archive.read(prefix+'data/texture_aliases.json'))
+    def texture_exists(name):return name in names or name[len(prefix):] in shared
+    def texture_read(name):return archive.read(prefix+shared.get(name[len(prefix):],name[len(prefix):]))
     models={name:json.loads(archive.read(name)) for name in names if name.startswith(prefix+'models/') and name.endswith('.json')}
     entries=json.loads(archive.read(prefix+'data/unified_textures.json'))
     aliases=texture_aliases(entries)
@@ -34,7 +37,7 @@ with ZipFile(jar) as archive:
         if parent.startswith('vandorlabs:'):assert prefix+'models/'+parent.split(':',1)[1]+'.json' in names,(name,parent)
         for texture in model.get('textures',{}).values():
             if texture.startswith('vandorlabs:') and ':blocks/unified/' not in texture:
-                assert prefix+'textures/'+texture.split(':',1)[1]+'.png' in names,(name,texture)
+                assert texture_exists(prefix+'textures/'+texture.split(':',1)[1]+'.png'),(name,texture)
     def references(value,name):
         if isinstance(value,dict):
             model=value.get('model')
@@ -56,7 +59,7 @@ with ZipFile(jar) as archive:
             elif '/textures/models/armor/roles/' in name or '/textures/models/armor/companies/' in name:assert image.size==(64,32),name
             if '/imported/trapdoors/' in name:assert image.size==(128,128),name
         assert not any(path in name for path in ['/textures/blocks/space_doors/high/','/textures/blocks/cargo_doors/high/','/models/block/detailed_doors/high/','/models/item/detailed_doors/high/'])
-    pane=lambda tier:Image.open(io.BytesIO(archive.read(prefix+'textures/blocks/space_doors/'+tier+'/glass_tile.png'))).convert('RGBA')
+    pane=lambda tier:Image.open(io.BytesIO(texture_read(prefix+'textures/blocks/space_doors/'+tier+'/glass_tile.png'))).convert('RGBA')
     small,large=pane('low'),pane('medium');assert small.size==(128,128) and large.size==(128,128)
     assert small.tobytes()==large.tobytes(),'Legacy pane aliases must use the standard pixels'
     assert sum(e.get('hidden',False) and 'alias' in e for e in entries)==29

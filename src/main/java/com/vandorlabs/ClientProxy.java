@@ -26,6 +26,7 @@ public class ClientProxy extends CommonProxy {
     @Override public double materialAspect(int choice){return com.vandorlabs.client.UnifiedTextureSprites.aspect(net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice)));}
     @Override public boolean customDoor(int choice){return com.vandorlabs.client.CustomBlockTextures.isDoor(choice);}
     @Override public void preInit(FMLPreInitializationEvent event) {
+        com.vandorlabs.client.SharedTextureResources.install();
         com.vandorlabs.client.cockpits.CockpitModels.install();
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.CockpitItemModels());
         com.vandorlabs.client.constructors.UniversalConstructorModelCache.preInit();

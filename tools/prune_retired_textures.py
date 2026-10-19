@@ -71,10 +71,14 @@ def check_jar(file):
     prefix = 'assets/vandorlabs/'
     with ZipFile(file) as archive:
         names = set(archive.namelist())
+        aliases=json.loads(archive.read(prefix+'data/texture_aliases.json'))
+        def present(path):
+            target=aliases.get('textures/blocks/'+path+'.png','textures/blocks/'+path+'.png')
+            return prefix+target in names
         for path in paths:
             assert prefix + 'textures/blocks/' + path + '.png' not in names, path
             assert prefix + 'textures/blocks/' + path + '.png.mcmeta' not in names, path
-        assert prefix + 'textures/blocks/dark_wall_panel.png' in names
+        assert present('dark_wall_panel')
         for name in names:
             if name.startswith(prefix + 'models/') and name.endswith('.json'):
                 before = archive.read(name).decode()
@@ -86,13 +90,13 @@ def check_jar(file):
                     assert 'filename=assets/vandorlabs/textures/blocks/' + path + '.png' not in text, f'retired map texture: {path}'
         # Required non-picker surfaces and every visible catalog source remain.
         for path in ('programmable_glass/metal_side', 'porthole_on', 'porthole_off'):
-            assert prefix + 'textures/blocks/' + path + '.png' in names, path
+            assert present(path), path
         entries = json.loads(archive.read(prefix + 'data/unified_textures.json'))
         for entry in entries:
             if not entry.get('hidden'):
                 for key in ('source', 'side', 'top', 'unlit'):
                     if key in entry:
-                        assert prefix + 'textures/blocks/' + entry[key] + '.png' in names, entry[key]
+                        assert present(entry[key]), entry[key]
     print(f'PASS: {len(paths)} retired texture paths absent; compatibility models and required assets intact')
 
 
