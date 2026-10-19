@@ -178,6 +178,7 @@ public final class VehicleInteractionRuntimeChecks {
         if(phase==13){if(HoverClientRuntimeChecks.tick(mc,output)){VehicleStatusClientRuntimeChecks.begin(mc);phase=14;}return false;}
         if(phase==14){if(VehicleStatusClientRuntimeChecks.tick(mc,output)){finished=true;return true;}return false;}
         if(ticks<25)return false;
+        if(phase==0){boolean ready=false;for(EntityGroundVehicle craft:VehicleLookup.loaded(mc.world))if(craft.getUniqueID().equals(id)&&craft.structure!=null)ready=true;if(!ready)return false;}
         ticks=0;
         if(phase==10){screenClick(mc,0);phase++;return false;}
         if(phase==11 || phase==12){
