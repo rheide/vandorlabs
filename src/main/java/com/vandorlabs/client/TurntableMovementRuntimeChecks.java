@@ -17,6 +17,7 @@ final class TurntableMovementRuntimeChecks {
     private static boolean done;
     private static double x,z,clientDistance,serverDistance;
     private static long stoppedAt;
+    private static double stoppedAngle;
     static boolean done(){return done;}
     static boolean step(Minecraft mc)throws Exception{
         if(done)return true;
@@ -46,7 +47,7 @@ final class TurntableMovementRuntimeChecks {
                 EntityPlayerMP p=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
                 TileEntityTurntableController tile=(TileEntityTurntableController)mc.getIntegratedServer().getWorld(0).getTileEntity(OWNER);
                 if(tile.display()==null||tile.display().angle()<1)throw new IllegalStateException("Movement fixture did not rotate");
-                stoppedAt=p.world.getTotalWorldTime();tile.rotationMode=1;tile.changed();
+                stoppedAt=p.world.getTotalWorldTime();stoppedAngle=tile.display().angle();tile.rotationMode=1;tile.changed();
                 return Math.hypot(p.posX-x,p.posZ-z);
             }).get();
             return false;
@@ -55,7 +56,8 @@ final class TurntableMovementRuntimeChecks {
         mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);
             TileEntityTurntableController tile=(TileEntityTurntableController)world.getTileEntity(OWNER);
-            if(tile.captureId!=null||world.getTotalWorldTime()<=stoppedAt+2)throw new IllegalStateException("End-of-tick auto restore did not complete and continue ticking");
+            if(tile.captureId==null||tile.display()==null||Math.abs(tile.display().angle()-stoppedAngle)>.001||world.getTotalWorldTime()<=stoppedAt+2)throw new IllegalStateException("Paused turntable lost its captured pose");
+            try{tile.restore(mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName()));}catch(Exception failure){throw new IllegalStateException("Explicit turntable restore",failure);}
             tile.release();world.setBlockToAir(OWNER);
             for(int u=0;u<5;u++)for(int v=0;v<5;v++)world.setBlockToAir(ROOT.add(u,0,v));
         }).get();

@@ -17,7 +17,7 @@ boundary before scanning.
 require the corresponding surface orientation. Capture always extends away from
 the textured face. For a ceiling, place downward-facing Surface blocks; for a
 wall, face them toward the display. Restore before changing height or axis.
-Settings apply immediately. Scan captures blocks initially; later activation can recapture the previously scanned platform after an automatic restore.
+Settings apply immediately. Scan captures blocks initially; a later redstone activation can recapture the previously scanned platform after an explicit Restore.
 
 **Scan** can also trigger when its input changes to ON or OFF. Disabled keeps
 scanning manual. **Rotate** uses ON or OFF redstone activation, like a Ramp
@@ -32,9 +32,14 @@ contents, surrounded by a fixed square housing. Joined surfaces use the supplied
 The controller front shows the chosen direction; illuminated artwork indicates
 the enabled input state. Obstructions can stop movement while the input stays on.
 
-Stopping rotation automatically restores the captured blocks and entities at the
-nearest 90-degree heading, matching vehicle parking. **Restore** also does this
-immediately. Block directions, supported tile data and entity headings follow
+Turning the rotation input off pauses the display at its current angle. Captured
+blocks and entities stay captured until **Restore** is pressed. While paused,
+use the **Angle** slider to select any heading from 0 to 360 degrees. Manual angle
+changes check the swept path for obstructions and carry supported entities.
+
+**Restore** returns ordinary blocks at the nearest 90-degree heading, matching
+vehicle parking; arbitrary angles cannot be represented by normal block states.
+The dialog previews the heading before restoration. Block directions, supported tile data and entity headings follow
 the displayed pose. Clear the return positions first: restoration refuses to
 overwrite blocks and keeps the captured contents if blocked. The entire assembly
 and return volume must be loaded. Sideways platforms can restore ordinary blocks
@@ -64,6 +69,11 @@ Players and loose items standing on a scanned floor turntable move with its
 circular surface, including empty parts of the disc. Players can walk and jump
 while being carried. The square surface corners stay stationary. Builds above those corners are included in the scan so connected overhangs move together; keep the surrounding rotation path clear. Flying players remain free.
 Captured displays do not intercept block selection around the platform.
+Taxi vehicles can drive onto a scanned floor turntable, rotate with it, and drive
+off at the new heading. Alternatively, park the vehicle as blocks, Restore any
+prior empty capture, Scan the parked craft, rotate it, and Restore it before
+reassembling in Taxi mode. Keep every part of the parked craft within the scan
+volume and dismount players before scanning.
 
 For an older opposite-face capture, stop rotation and use Restore before scanning
 again. This returns preserved contents to their original positions, including

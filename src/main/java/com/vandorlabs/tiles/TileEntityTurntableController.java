@@ -49,6 +49,7 @@ public final class TileEntityTurntableController extends TileEntity implements I
         try{TurntableTransfer.capture((WorldServer)world,this,snapshot,player);status("Captured; use Restore to return contents");}catch(Exception failure){if(captureId==null)release();throw failure;}changed();
     }
     public void restore(EntityPlayerMP player)throws Exception{EntityTurntable entity=display();if(entity==null)throw new IllegalArgumentException("Captured contents are not loaded; load the entire turntable first");TurntableTransfer.restore((WorldServer)world,entity,player);}
+    public void turnTo(double heading){EntityTurntable entity=display();if(entity==null)throw new IllegalArgumentException("Scan the turntable before setting its angle");entity.turnTo(heading);angle=previous=entity.angle();status("Paused; angle applied");changed();}
     public void restored(double heading){angle=previous=TurntableGeometry.wrap(heading);changed();}
     public void surfaceChanged(){
         enabled=false;
@@ -70,14 +71,14 @@ public final class TileEntityTurntableController extends TileEntity implements I
         height=h;scanMode=sm;rotationMode=rm;axis=a;rpm=speed;scanChannels=scan;rotationChannels=rotate;clockwise=tag.getBoolean("Clockwise");reverse=false;changed();
     }
     @Override public void update(){
-        previous=angle;if(world.isRemote){if(display()==null&&running())angle=TurntableGeometry.wrap(angle+(clockwise?1:-1)*TurntableGeometry.degreesPerTick(rpm));return;}
+        previous=angle;if(world.isRemote){return;}
         ticks++;boolean next=matches(scanMode,scanChannels);
         if(next&&!trigger&&captureId==null&&actor!=null)try{scan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){status(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         trigger=next;boolean rotation=matches(Math.max(1,rotationMode),rotationChannels);
         if(rotation&&!rotationTrigger&&captureId==null&&layout!=null&&actor!=null&&enabled)try{scan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){status(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         rotationTrigger=rotation;
         if(ticks%20==0&&enabled&&layout!=null&&layout.loaded(world))for(BlockPos cell:layout.cells){TileEntity tile=world.getTileEntity(cell);if(!(tile instanceof TileEntityTurntableSurface)){surfaceChanged();break;}TileEntityTurntableSurface surface=(TileEntityTurntableSurface)tile;if(surface.owner==null)surface.bind(this);else if(!pos.equals(surface.owner)||!key.equals(surface.ownerKey)){surfaceChanged();break;}}
-        EntityTurntable entity=display();if(entity!=null)angle=entity.angle();else if(captureId==null&&running())angle=TurntableGeometry.wrap(angle+(clockwise?1:-1)*TurntableGeometry.degreesPerTick(rpm));
+        EntityTurntable entity=display();if(entity!=null)angle=entity.angle();
         if(ticks%10==0&&layout!=null)changed();
     }
     public void changed(){markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}}

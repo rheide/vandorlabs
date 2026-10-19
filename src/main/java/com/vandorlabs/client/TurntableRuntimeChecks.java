@@ -82,14 +82,17 @@ final class TurntableRuntimeChecks {
         require(moving.snapshot.blocks.cells.size()==25,"full square build captured above the fixed surface corners");
 
         for(int tick=0;tick<100;tick++)moving.onUpdate();require(Math.abs(moving.angle()-90)<.001,"full five-by-five captured layer rotates through ninety degrees");
-        full.rotationMode=1;moving.onUpdate();require(!moving.isDead&&full.captureId!=null,"restore must wait until the entity loop finishes");TurntableEvents.finishTransfers(world);require(moving.isDead&&full.captureId==null,"stopping automatically restores displayed right-angle pose");
+        full.rotationMode=1;double stopped=moving.angle();for(int tick=0;tick<40;tick++){moving.onUpdate();TurntableEvents.finishTransfers(world);}
+        require(!moving.isDead&&full.captureId!=null&&moving.angle()==stopped,"redstone OFF retains paused display and heading");
+        full.turnTo(37);require(Math.abs(moving.angle()-37)<.001,"paused angle selection");
+        full.turnTo(90);full.restore(player);require(moving.isDead&&full.captureId==null,"explicit Restore converts current selected heading");
         require(full.layout!=null,"normal surface layout retained for next activation");
         full.update();BlockPos power=fullOwner.west();BlockIndustrialLever lever=(BlockIndustrialLever)Block.getBlockFromName("vandorlabs:small_power_lever");
         world.setBlockState(power.down(),Blocks.STONE.getDefaultState());world.setBlockState(power,lever.getDefaultState().withProperty(BlockIndustrialLever.FLOOR,true));DeferredTileLoad.flush(world);
         lever.onBlockActivated(world,power,world.getBlockState(power),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);full.update();
         moving=full.display();require(moving!=null&&moving.snapshot.blocks.cells.size()==25,"new redstone activation recaptures the whole prior build");
         for(int tick=0;tick<200;tick++){full.update();moving.onUpdate();TurntableEvents.finishTransfers(world);require(!moving.isDead&&full.running(),"continuous redstone activation never stops after its initial tick");}
-        moving.onUpdate();lever.onBlockActivated(world,power,world.getBlockState(power),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);moving.onUpdate();TurntableEvents.finishTransfers(world);require(moving.isDead&&full.captureId==null,"lever removal automatically restores the next cycle");world.setBlockToAir(power);world.setBlockToAir(power.down());
+        moving.onUpdate();lever.onBlockActivated(world,power,world.getBlockState(power),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);moving.onUpdate();TurntableEvents.finishTransfers(world);require(!moving.isDead&&full.captureId!=null,"lever OFF pauses captured contents");full.restore(player);world.setBlockToAir(power);world.setBlockToAir(power.down());
         // Reproduce a saved pre-fix floor capture of terrain behind the active face.
         TurntableSurfaceLayout legacy=TurntableSurfaceLayout.scan(world,fullSeed).reversed();for(BlockPos cell:legacy.cells)for(int depth=1;depth<=4;depth++)world.setBlockState(cell.down(depth),Blocks.CONCRETE.getDefaultState());
         full.layout=legacy;full.reverse=true;for(BlockPos cell:legacy.cells)((TileEntityTurntableSurface)world.getTileEntity(cell)).bind(full);
@@ -105,6 +108,7 @@ final class TurntableRuntimeChecks {
         List<AxisAlignedBB> narrow=TurntableCollision.boxes(base,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(-1,-1,-1,2,2,2));
         require(narrow.size()>16,"rotated stair footprint uses narrow strips");for(AxisAlignedBB strip:narrow)require(strip.minY==0&&strip.maxY==.5,"lower stair step height preserved");
         AxisAlignedBB upper=new AxisAlignedBB(0,.5,.5,1,1,1);for(AxisAlignedBB strip:TurntableCollision.boxes(upper,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(-1,-1,-1,2,2,2)))require(strip.minY==.5&&strip.maxY==1,"upper stair step height preserved");
+        TurntableVehicleRuntimeChecks.run(world,player);
         System.out.println("[vandorlabs][reprolab] turntable PASS six normals square holes rotation stop persistence inventory/entity round trip blocked restore and vehicle isolation");
     }
     private static void clear(WorldServer world,BlockPos seed){for(BlockPos p:BlockPos.getAllInBox(seed.add(-5,-5,-5),seed.add(5,5,5)))if(!world.isAirBlock(p))world.setBlockToAir(p);}

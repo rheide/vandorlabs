@@ -24,8 +24,6 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     public UUID controllerKey,actor;
     private NBTTagCompound unavailable;
     private double angle,previous;
-    private boolean wasRunning;
-    private int lastRestore=-100;
     private float observedAngle;
     private List<AxisAlignedBB> localBoxes=Collections.emptyList(),worldBoxes=Collections.emptyList();
     private double boxesAt=Double.NaN;
@@ -81,25 +79,45 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         if(owner==null){dataManager.set(RATE,0F);if(world.isBlockLoaded(controller) && ticksExisted%20==0)TurntableEvents.restoreAfterTick(this);return;}
         if(!getUniqueID().equals(owner.captureId)){dataManager.set(RATE,0F);return;}
         boolean running=owner.running();
-        if(!running&&wasRunning&&!owner.legacyCapture()&&(lastRestore<0||ticksExisted-lastRestore>=20)){lastRestore=ticksExisted;dataManager.set(RATE,0F);TurntableEvents.restoreAfterTick(this);return;}
-        if(running)wasRunning=true;
         double rate=running?(owner.clockwise?1:-1)*TurntableGeometry.degreesPerTick(owner.rpm):0;
-        if(rate!=0){
-            double next=TurntableGeometry.wrap(angle+rate);List<AxisAlignedBB> before=collisionBoxes(),after=boxes(next);
-            AxisAlignedBB swept=getEntityBoundingBox().union(transformed(localExtent,next));
-            if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false)){rate=0;owner.status("Rotation waiting for surrounding chunks to load");}
-            else {
-                List<AxisAlignedBB> obstacles=world.getCollisionBoxes(this,swept);boolean blocked=false;BlockPos obstruction=null;
-                double radius=snapshot.layout.size+snapshot.height,extra=radius*(1-Math.cos(Math.toRadians(Math.abs(rate)/2)));
-                for(int i=0;i<after.size() && !blocked;i++){
-                    AxisAlignedBB sweep=after.get(i).union(before.get(i)).grow(snapshot.layout.normal.getFrontOffsetX()==0?extra:0,snapshot.layout.normal.getFrontOffsetY()==0?extra:0,snapshot.layout.normal.getFrontOffsetZ()==0?extra:0).shrink(.0001);
-                    for(AxisAlignedBB obstacle:obstacles)if(obstacle.intersects(sweep)&&sweepIntersects(i,obstacle,rate)){blocked=true;obstruction=new BlockPos(obstacle.minX,obstacle.minY,obstacle.minZ);break;}
-                }
-                if(blocked){rate=0;owner.status("Rotation blocked at "+obstruction.getX()+", "+obstruction.getY()+", "+obstruction.getZ()+"; clear the moving contents");}else carry(rate);
-            }
-            if(rate!=0){angle=next;worldBoxes=after;boxesAt=angle;owner.status("Rotating");}
-        }else if(!wasRunning)owner.status(owner.legacyCapture()?"Old back-face capture: use Restore to return the preserved contents before scanning again":"Captured; stopped");
+        if(rate!=0){if(moveAngle(rate))owner.status("Rotating");else rate=0;}
+        else if(owner.enabled&&!owner.message.startsWith("Rotation blocked")&&!owner.message.startsWith("Rotation waiting"))owner.status(owner.legacyCapture()?"Old back-face capture: use Restore to return the preserved contents before scanning again":"Paused; use Angle or Restore");
         dataManager.set(ANGLE,(float)angle);dataManager.set(RATE,(float)rate);updateBounds();
+    }
+    /** Manual angle changes use the same swept collision and rider transport as redstone motion. */
+    public void turnTo(double target){
+        if(!Double.isFinite(target)||target<0||target>360)throw new IllegalArgumentException("Angle must be between 0 and 360 degrees");
+        TileEntityTurntableController owner=owner();
+        if(owner==null||snapshot==null||TurntableTransfer.pending(this))throw new IllegalArgumentException("Load the complete captured turntable first");
+        if(owner.running())throw new IllegalArgumentException("Pause rotation with redstone before setting an angle");
+        if(!owner.enabled)throw new IllegalArgumentException("Restore the captured contents before changing a damaged platform angle");
+        if(owner.legacyCapture())throw new IllegalArgumentException("Restore the old back-face capture before setting an angle");
+        double delta=((target-angle+540)%360)-180;
+        if(Math.abs(delta)>1e-7 && !moveAngle(delta))throw new IllegalArgumentException(owner.message);
+        previous=angle;dataManager.set(ANGLE,(float)angle);dataManager.set(RATE,0F);updateBounds();
+    }
+    private boolean moveAngle(double delta){
+        TileEntityTurntableController owner=owner();if(owner==null||snapshot==null)return false;
+        double next=TurntableGeometry.wrap(angle+delta);List<AxisAlignedBB> before=collisionBoxes(),after=boxes(next);
+        AxisAlignedBB swept=getEntityBoundingBox().union(transformed(localExtent,next));
+        // Include intermediate poses for large slider jumps, not just the endpoints.
+        int samples=Math.max(1,(int)Math.ceil(Math.abs(delta)/5));
+        for(int n=1;n<samples;n++)swept=swept.union(transformed(localExtent,angle+delta*n/samples));
+        if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false)){
+            owner.status("Rotation waiting for surrounding chunks to load");return false;
+        }
+        List<AxisAlignedBB> obstacles=world.getCollisionBoxes(this,swept);
+        for(int i=0;i<after.size();i++){
+            AxisAlignedBB sweep=before.get(i).union(after.get(i));
+            for(int n=1;n<samples;n++)sweep=sweep.union(transformed(localBoxes.get(i),angle+delta*n/samples));
+            double extra=(snapshot.layout.size+snapshot.height)*(1-Math.cos(Math.toRadians(Math.abs(delta)/samples/2)));
+            sweep=sweep.grow(snapshot.layout.normal.getFrontOffsetX()==0?extra:0,snapshot.layout.normal.getFrontOffsetY()==0?extra:0,snapshot.layout.normal.getFrontOffsetZ()==0?extra:0).shrink(.0001);
+            for(AxisAlignedBB obstacle:obstacles)if(obstacle.intersects(sweep)&&sweepIntersects(i,obstacle,delta)){
+                BlockPos at=new BlockPos(obstacle.minX,obstacle.minY,obstacle.minZ);
+                owner.status("Rotation blocked at "+at.getX()+", "+at.getY()+", "+at.getZ()+"; clear the moving contents");return false;
+            }
+        }
+        carry(delta);angle=next;worldBoxes=after;boxesAt=angle;updateBounds();return true;
     }
     private void carry(double delta){
         for(Entity rider:world.getEntitiesWithinAABBExcludingEntity(this,getEntityBoundingBox().grow(1))){
@@ -108,7 +126,16 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
             for(AxisAlignedBB box:collisionBoxes(body.grow(.001,.13,.001)))if(Math.abs(body.minY-box.maxY)<.12&&body.maxX>box.minX+.001&&body.minX<box.maxX-.001&&body.maxZ>box.minZ+.001&&body.minZ<box.maxZ-.001){supported=true;break;}
             if(!supported&&snapshot.layout.normal==EnumFacing.UP&&Math.abs(body.minY-snapshot.layout.pivot.y)<.12){supported=snapshot.layout.onDisc(rider.posX,rider.posY,rider.posZ);}
             if(!supported)continue;
-            double[] p=TurntableGeometry.rotate(rider.posX-posX,rider.posY-posY,rider.posZ-posZ,snapshot.layout.basis,delta);double dx=posX+p[0]-rider.posX,dy=posY+p[1]-rider.posY,dz=posZ+p[2]-rider.posZ;
+            double referenceX=rider.posX,referenceY=rider.posY,referenceZ=rider.posZ;
+            if(rider instanceof EntityGroundVehicle){
+                if(snapshot.layout.normal.getAxis()!=EnumFacing.Axis.Y)continue;
+                EntityGroundVehicle craft=(EntityGroundVehicle)rider;
+                // Vehicle positions are lower-corner origins; yaw is about the
+                // craft center. Carry that pivot to keep the whole craft rigid.
+                referenceX+=craft.structure.bounds.maxX/2;referenceZ+=craft.structure.bounds.maxZ/2;
+            }
+            double[] p=TurntableGeometry.rotate(referenceX-posX,referenceY-posY,referenceZ-posZ,snapshot.layout.basis,delta);
+            double dx=posX+p[0]-referenceX,dy=posY+p[1]-referenceY,dz=posZ+p[2]-referenceZ;
             List<AxisAlignedBB> obstacles=TurntableEvents.foreignObstacles(world,this,rider,body.union(body.offset(dx,dy,dz)).grow(.001));
             for(AxisAlignedBB box:obstacles)dy=box.calculateYOffset(body,dy);AxisAlignedBB moved=body.offset(0,dy,0);for(AxisAlignedBB box:obstacles)dx=box.calculateXOffset(moved,dx);moved=moved.offset(dx,0,0);for(AxisAlignedBB box:obstacles)dz=box.calculateZOffset(moved,dz);
             float yaw=(float)(delta*snapshot.layout.normal.getFrontOffsetY());
@@ -117,10 +144,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
             rider.fallDistance=0;rider.onGround=true;
         }
     }
-    @Override public boolean processInitialInteract(EntityPlayer player,EnumHand hand){
-        if(hand!=EnumHand.MAIN_HAND)return false;
-        if(!world.isRemote && player instanceof EntityPlayerMP)try{TurntableTransfer.restore((WorldServer)world,this,(EntityPlayerMP)player);}catch(Exception blocked){player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(blocked.getMessage()),true);}return true;
-    }
+    @Override public boolean processInitialInteract(EntityPlayer player,EnumHand hand){return false;}
     // Precise physical collision is supplied by TurntableEvents. The broad
     // entity bounds must never intercept block picking or breaking nearby.
     @Override public boolean canBeCollidedWith(){return false;}
@@ -129,11 +153,11 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     @Override public boolean attackEntityFrom(DamageSource source,float amount){return false;}
     @Override public void setPortal(BlockPos pos){}
     @Override protected void writeEntityToNBT(NBTTagCompound tag){
-        tag.setLong("Controller",controller.toLong());if(controllerKey!=null)tag.setUniqueId("ControllerKey",controllerKey);if(actor!=null)tag.setUniqueId("Actor",actor);tag.setDouble("Angle",angle);tag.setBoolean("WasRunning",wasRunning);
+        tag.setLong("Controller",controller.toLong());if(controllerKey!=null)tag.setUniqueId("ControllerKey",controllerKey);if(actor!=null)tag.setUniqueId("Actor",actor);tag.setDouble("Angle",angle);
         if(snapshot!=null)tag.setTag("Snapshot",snapshot.write());else if(unavailable!=null)tag.setTag("Snapshot",unavailable.copy());
     }
     @Override protected void readEntityFromNBT(NBTTagCompound tag){
-        wasRunning=tag.getBoolean("WasRunning");controller=BlockPos.fromLong(tag.getLong("Controller"));controllerKey=tag.hasUniqueId("ControllerKey")?tag.getUniqueId("ControllerKey"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;
+        controller=BlockPos.fromLong(tag.getLong("Controller"));controllerKey=tag.hasUniqueId("ControllerKey")?tag.getUniqueId("ControllerKey"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;
         angle=previous=Double.isFinite(tag.getDouble("Angle"))?TurntableGeometry.wrap(tag.getDouble("Angle")):0;
         if(tag.hasKey("Snapshot",10)){unavailable=tag.getCompoundTag("Snapshot").copy();try{install(TurntableSnapshot.read(unavailable));}catch(RuntimeException missing){com.vandorlabs.VandorLabs.logger.warn("Turntable snapshot retained pending unavailable components",missing);}}
         dataManager.set(ANGLE,(float)angle);
