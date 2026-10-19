@@ -21,12 +21,14 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
     @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event){for(boolean active:new boolean[]{false,true})for(boolean high:new boolean[]{false,true})event.getMap().registerSprite(new ResourceLocation(texture(active,high)));}
     @SubscribeEvent public static void stitched(TextureStitchEvent.Post event){RenderTurntable.clear();}
     @SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)Minecraft.getMinecraft().addScheduledTask(RenderTurntable::clear);}
+    // The shared face spans chunks; it must not disappear when its root chunk is culled.
+    @Override public boolean isGlobalRenderer(TileEntityTurntableSurface tile){TileEntityTurntableController c=tile.controller();return c!=null&&c.layout!=null&&tile.getPos().equals(c.layout.root);}
     @Override public void render(TileEntityTurntableSurface tile,double x,double y,double z,float partial,int destroy,float alpha){
         TileEntityTurntableController controller=tile.controller();if(controller==null||controller.layout==null||!tile.getPos().equals(controller.layout.root))return;
         TurntableSurfaceLayout layout=controller.layout;TurntableGeometry.Face face=layout.basis;boolean active=controller.running();
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(texture(active,layout.size>1));
         GlStateManager.pushMatrix();
-        try(TurntableRenderState state=new TurntableRenderState()){bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.disableCull();GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);GlStateManager.translate(x-tile.getPos().getX()+layout.pivot.x,y-tile.getPos().getY()+layout.pivot.y,z-tile.getPos().getZ()+layout.pivot.z);
+        try(TurntableRenderState state=new TurntableRenderState()){bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.disableCull();GlStateManager.disableLighting();GlStateManager.enableDepth();GlStateManager.depthMask(true);GlStateManager.disableBlend();GlStateManager.color(1,1,1,1);GlStateManager.translate(x-tile.getPos().getX()+layout.pivot.x,y-tile.getPos().getY()+layout.pivot.y,z-tile.getPos().getZ()+layout.pivot.z);
             int light=tile.getWorld().getCombinedLight(tile.getPos().offset(layout.normal),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();double r=layout.size*.5;
             buffer.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);vertex(buffer,face,sprite,-r,-r,0,0,.002);vertex(buffer,face,sprite,r,-r,1,0,.002);vertex(buffer,face,sprite,r,r,1,1,.002);vertex(buffer,face,sprite,-r,r,0,1,.002);Tessellator.getInstance().draw();

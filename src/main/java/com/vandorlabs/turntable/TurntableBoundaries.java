@@ -16,7 +16,16 @@ final class TurntableBoundaries {
     TurntableBoundaries(World world,BlockPos min,BlockPos max){this.world=world;this.min=min;this.max=max;}
     private void includes(BlockPos p){if(p.getX()<min.getX()||p.getY()<min.getY()||p.getZ()<min.getZ()||p.getX()>max.getX()||p.getY()>max.getY()||p.getZ()>max.getZ())throw new IllegalArgumentException("Scan volume cuts a multiblock at "+p+"; include its complete assembly");if(!world.isBlockLoaded(p))throw new IllegalArgumentException("Load all assembly cells first");}
     void check(BlockPos p,IBlockState state,TileEntity tile){
-        Block block=state.getBlock();if(state.getBlockHardness(world,p)<0)throw new IllegalArgumentException("Unbreakable blocks cannot be captured");
+        Block block=state.getBlock();
+        boolean rampPart=block instanceof BlockControlledRamp&&tile instanceof TileEntityControlledRamp;
+        if(state.getBlockHardness(world,p)<0&&!rampPart)throw new IllegalArgumentException("Cannot capture unbreakable "+block.getRegistryName()+" at "+p.getX()+", "+p.getY()+", "+p.getZ());
+        if(rampPart){
+            TileEntityControlledRamp part=(TileEntityControlledRamp)tile;includes(part.controller);TileEntity raw=world.getTileEntity(part.controller);
+            if(!(raw instanceof TileEntityRampController)||!((TileEntityRampController)raw).owns(part))throw new IllegalArgumentException("Incomplete ramp at "+p+"; restore it with its Ramp Controller before scanning");
+            TileEntityRampController ramp=(TileEntityRampController)raw;
+            if(ramp.isMoving())throw new IllegalArgumentException("Stop the ramp before scanning");
+            for(BlockPos cell:ramp.vehicleCells())includes(cell);for(BlockPos cell:ramp.vehicleSources())includes(cell);
+        }
         if(tile instanceof net.minecraft.tileentity.TileEntityPiston)throw new IllegalArgumentException("Wait for pistons to stop before scanning");
         if(block instanceof BlockChest)for(EnumFacing side:EnumFacing.HORIZONTALS)if(world.getBlockState(p.offset(side)).getBlock()==block)includes(p.offset(side));
         if(block instanceof BlockBed)includes(p.offset(state.getValue(BlockBed.PART)==BlockBed.EnumPartType.FOOT?state.getValue(BlockBed.FACING):state.getValue(BlockBed.FACING).getOpposite()));

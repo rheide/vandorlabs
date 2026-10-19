@@ -76,6 +76,24 @@ final class TurntableRuntimeChecks {
             }
             TileEntityTurntableSurface stale=(TileEntityTurntableSurface)world.getTileEntity(found.root);tile.release();stale.bind(tile);require(stale.controller()==null,"a retired layout cannot retain a live surface claim");stale.release();clear(world,seed);
         }
+        // Redstone retries surface discovery even before a successful manual scan.
+        BlockPos bad=new BlockPos(520,205,170),badOwner=bad.west();
+        try{
+            for(int x=0;x<2;x++)for(int z=0;z<3;z++)world.setBlockState(bad.add(x,0,z),surface.getDefaultState());
+            world.setBlockState(badOwner,controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST));
+            TileEntityTurntableController invalid=(TileEntityTurntableController)world.getTileEntity(badOwner);invalid.actor=player.getUniqueID();
+            world.setBlockState(badOwner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());invalid.update();
+            require(invalid.captureId==null&&invalid.lastError.contains("filled square"),"invalid automatic scan reports the actual shape error");
+            for(int tick=0;tick<20;tick++)invalid.update();TileEntityTurntableController saved=new TileEntityTurntableController();saved.readFromNBT(invalid.writeToNBT(new NBTTagCompound()));
+            require(saved.lastError.equals(invalid.lastError),"scan error remains visible and synchronized");
+            world.setBlockToAir(badOwner.down());invalid.update();for(int z=0;z<3;z++)world.setBlockState(bad.add(2,0,z),surface.getDefaultState());
+            world.setBlockState(bad.up(),Blocks.BRICK_BLOCK.getDefaultState());world.setBlockState(badOwner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());invalid.update();
+            require(invalid.display()!=null&&invalid.lastError.isEmpty()&&invalid.display().snapshot.blocks.cells.size()==1,"next rising edge rescans the repaired surface");
+            world.setBlockToAir(badOwner.down());invalid.update();invalid.turnTo(90);
+            world.setBlockState(bad.add(1,1,1),Blocks.GOLD_BLOCK.getDefaultState());world.setBlockState(badOwner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());invalid.update();
+            require(invalid.display()!=null&&invalid.display().snapshot.blocks.cells.size()==2&&Math.abs(invalid.display().angle()-90)<.001,"rising edge captures newly parked blocks without resetting the existing heading");
+            invalid.restore(player);require(world.getBlockState(bad.add(1,1,1)).getBlock()==Blocks.GOLD_BLOCK,"rescanned blocks restore at their displayed heading");invalid.release();
+        }finally{world.setBlockToAir(badOwner.down());world.setBlockToAir(badOwner);for(BlockPos p:BlockPos.getAllInBox(bad,bad.add(2,2,2)))world.setBlockToAir(p);}
         BlockPos fullSeed=new BlockPos(490,205,170),fullOwner=fullSeed.west();
         for(int x=-16;x<=16;x+=16)for(int z=-16;z<=16;z+=16)world.getChunkFromBlockCoords(fullSeed.add(x,0,z));
         for(int x=0;x<5;x++)for(int z=0;z<5;z++){BlockPos at=fullSeed.add(x,0,z);world.setBlockState(at,surface.getDefaultState());world.setBlockState(at.up(),Blocks.BRICK_BLOCK.getDefaultState());}
@@ -118,9 +136,9 @@ final class TurntableRuntimeChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("turntable: "+message);}
     static void fixture(WorldServer world,EntityPlayerMP player)throws Exception{
         BlockTurntableSurface surface=(BlockTurntableSurface)Block.getBlockFromName("vandorlabs:turntable_surface");Block controller=Block.getBlockFromName("vandorlabs:turntable_controller");
-        for(int i=0;i<3;i++){
-            EnumFacing normal=new EnumFacing[]{EnumFacing.UP,EnumFacing.NORTH,EnumFacing.DOWN}[i];TurntableGeometry.Face basis=TurntableGeometry.Face.valueOf(normal.name());BlockPos seed=new BlockPos(342+i*9,31,120);
-            for(int u=0;u<3;u++)for(int v=0;v<3;v++){double[] p=basis.point(u,v,0);world.setBlockState(seed.add(p[0],p[1],p[2]),surface.getDefaultState().withProperty(BlockTurntableSurface.FACING,normal));}
+        for(int i=0;i<4;i++){
+            int size=i==3?16:3;EnumFacing normal=new EnumFacing[]{EnumFacing.UP,EnumFacing.NORTH,EnumFacing.DOWN,EnumFacing.UP}[i];TurntableGeometry.Face basis=TurntableGeometry.Face.valueOf(normal.name());BlockPos seed=new BlockPos(i==3?780:342+i*9,31,120);
+            for(int u=0;u<size;u++)for(int v=0;v<size;v++){double[] p=basis.point(u,v,0);world.setBlockState(seed.add(p[0],p[1],p[2]),surface.getDefaultState().withProperty(BlockTurntableSurface.FACING,normal));}
             EnumFacing front=EnumFacing.getFacingFromVector(basis.ux,basis.uy,basis.uz);BlockPos owner=seed.offset(front.getOpposite());world.setBlockState(owner,controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,front));TileEntityTurntableController tile=(TileEntityTurntableController)world.getTileEntity(owner);tile.height=2;tile.rotationMode=2;tile.rpm=2;TurntableSurfaceLayout area=TurntableSurfaceLayout.scan(world,seed);
             world.setBlockState(area.cell(1,1,1),Blocks.GOLD_BLOCK.getDefaultState());world.setBlockState(area.cell(0,1,1),Blocks.BRICK_BLOCK.getDefaultState());world.setBlockState(area.cell(1,1,2),Blocks.SEA_LANTERN.getDefaultState());tile.scan(player);
         }

@@ -40,12 +40,12 @@ final class TurntableVehicleRuntimeChecks {
             }else{
                 double x=centerX(craft),z=centerZ(craft);float yaw=craft.rotationYaw;EntityTurntable display=table.display();
                 world.setBlockState(OWNER.down(),Blocks.REDSTONE_BLOCK.getDefaultState());
-                for(int tick=0;tick<100;tick++){table.update();display.onUpdate();}
+                for(int tick=0;tick<100;tick++){table.update();display=table.display();require(display!=null&&!craft.isDead&&display.snapshot.entities.isEmpty(),"redstone rescan leaves Taxi craft live");display.onUpdate();}
                 require(Math.abs(display.angle()-90)<.001,"redstone rotates exactly ninety degrees");
                 double[] expected=TurntableGeometry.rotate(x-display.posX,0,z-display.posZ,TurntableGeometry.Face.UP,90);
                 require(Math.abs(centerX(craft)-display.posX-expected[0])<.02 && Math.abs(centerZ(craft)-display.posZ-expected[2])<.02,"Taxi craft rotates about its physical center");
                 require(Math.abs(MathHelper.wrapDegrees(craft.rotationYaw-yaw-90))<.01,"Taxi heading follows platform");
-                world.setBlockToAir(OWNER.down());for(int tick=0;tick<30;tick++){table.update();display.onUpdate();TurntableEvents.finishTransfers(world);}
+                world.setBlockToAir(OWNER.down());for(int tick=0;tick<30;tick++){table.update();display=table.display();require(display!=null&&!craft.isDead&&display.snapshot.entities.isEmpty(),"redstone rescan leaves Taxi craft live");display.onUpdate();TurntableEvents.finishTransfers(world);}
                 require(!display.isDead && Math.abs(display.angle()-90)<.001,"redstone OFF preserves the rotated Taxi platform");
             }
             double start=centerZ(craft);drive(advance,craft,2,ROOT.getZ()+12);

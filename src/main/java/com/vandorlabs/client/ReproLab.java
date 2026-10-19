@@ -466,6 +466,8 @@ public class ReproLab {
         SHOTS.add(new Shot("turntable_floor",344,35,115,0,30));
         SHOTS.add(new Shot("turntable_wall",350,31,113,0,0));
         SHOTS.add(new Shot("turntable_ceiling",362,26,113,0,-30));
+        SHOTS.add(new Shot("turntable_large_oblique",788,38,112,0,30));
+        SHOTS.add(new Shot("turntable_large_root_outside_view",793,37,130,0,75));
         for(String pose:new String[]{"deployed","stowed"})for(int i=0;i<7;i++)SHOTS.add(new Shot("modular_gear_"+i+"_"+pose,391+i*10,32,113,0,12));
         SHOTS.add(new Shot("modular_gear_7_underside",460.5,30.5,117,0,-20));
         SHOTS.add(new Shot("utility22_waterlogged",143,24,116,0,24));
@@ -886,7 +888,7 @@ public class ReproLab {
                 if(renderedFrames-cameraChangedAtFrame<2)break;
                 Shot s = SHOTS.get(shotIndex);
                 if(s.name.startsWith("joined_texture_")&&!(mc.world.getTileEntity(new BlockPos(550,32,120)) instanceof TileEntityAnimatedScreenSelector)){if(++pendingGalleryTicks>600)throw new IllegalStateException("Joined texture fixture did not arrive");break;}
-                if(s.name.startsWith("turntable_")&&!TurntableDialogRuntimeChecks.ready(mc)){if(++pendingGalleryTicks>600)throw new IllegalStateException("Turntable chunks/snapshot did not arrive");break;}
+                if(s.name.startsWith("turntable_")&&!TurntableDialogRuntimeChecks.ready(mc,s.name.startsWith("turntable_large_")?new BlockPos(779,31,120):new BlockPos(341,31,120))){if(++pendingGalleryTicks>600)throw new IllegalStateException("Turntable chunks/snapshot did not arrive");break;}
                 if(s.name.equals("turntable_floor")&&!TurntableMovementRuntimeChecks.done()){
                     try{if(TurntableMovementRuntimeChecks.step(mc)){beginShot(mc,s,false);holdTicks=100;}}catch(Exception failure){throw new IllegalStateException("Turntable normal movement",failure);}break;
                 }

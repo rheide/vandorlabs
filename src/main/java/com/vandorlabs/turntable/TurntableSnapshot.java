@@ -47,13 +47,15 @@ public final class TurntableSnapshot {
             boundaries.check(pos,world.getBlockState(pos),tile);
             if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableController || tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)
                 throw new IllegalArgumentException("Keep other turntable assemblies outside the scan volume");
-            NBTTagCompound data=tile==null?null:VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),new BlockPos(-min.getX(),-min.getY(),-min.getZ()));
+            NBTTagCompound saved=tile==null?null:tile.writeToNBT(new NBTTagCompound());
+            if(tile instanceof com.vandorlabs.tiles.TileEntityRampController||tile instanceof com.vandorlabs.tiles.TileEntityControlledRamp)saved=VehicleEscalators.paused(saved);
+            NBTTagCompound data=saved==null?null:VehicleTileData.translated(saved,new BlockPos(-min.getX(),-min.getY(),-min.getZ()));
             cells.add(new VehicleStructure.Cell(pos.subtract(min),world.getBlockState(pos),data));
         }
         AxisAlignedBB volume=new AxisAlignedBB(min,max.add(1,1,1));
         List<Entity> selected=new ArrayList<>();Set<UUID> ids=new HashSet<>();
         for(Entity entity:world.getEntitiesWithinAABBExcludingEntity(null,volume)){
-            if(entity.isDead || entity instanceof EntityPlayer || entity.posX<volume.minX||entity.posX>=volume.maxX||entity.posY<volume.minY||entity.posY>=volume.maxY||entity.posZ<volume.minZ||entity.posZ>=volume.maxZ)continue;
+            if(entity.isDead || entity instanceof EntityPlayer || entity instanceof EntityGroundVehicle || entity.posX<volume.minX||entity.posX>=volume.maxX||entity.posY<volume.minY||entity.posY>=volume.maxY||entity.posZ<volume.minZ||entity.posZ>=volume.maxZ)continue;
             if(entity instanceof EntityTurntable)throw new IllegalArgumentException("Restore the other captured turntable before scanning");
             selected.add(entity);ids.add(entity.getUniqueID());
         }

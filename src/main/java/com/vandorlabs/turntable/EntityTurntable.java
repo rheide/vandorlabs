@@ -25,6 +25,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     private NBTTagCompound unavailable;
     private double angle,previous;
     private float observedAngle;
+    private int carriedVehicles;
     private List<AxisAlignedBB> localBoxes=Collections.emptyList(),worldBoxes=Collections.emptyList();
     private double boxesAt=Double.NaN;
     private AxisAlignedBB localExtent=new AxisAlignedBB(0,0,0,1,1,1);
@@ -71,7 +72,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     @Override public void onUpdate(){
         super.onUpdate();motionX=motionY=motionZ=0;previous=angle;
         if(world.isRemote){
-            float authoritative=dataManager.get(ANGLE);if(authoritative!=observedAngle){observedAngle=authoritative;angle=authoritative;}
+            float authoritative=dataManager.get(ANGLE);if(authoritative!=observedAngle||dataManager.get(RATE)==0){observedAngle=authoritative;angle=authoritative;}
             else angle=TurntableGeometry.wrap(angle+dataManager.get(RATE));
             if(snapshot==null && ticksExisted>=nextRequest){nextRequest=ticksExisted+20;com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTurntableSnapshot.request(getEntityId(),received));}
             updateBounds();return;
@@ -82,7 +83,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         if(!getUniqueID().equals(owner.captureId)){dataManager.set(RATE,0F);return;}
         boolean running=owner.running();
         double rate=running?(owner.clockwise?1:-1)*TurntableGeometry.degreesPerTick(owner.rpm):0;
-        if(rate!=0){if(moveAngle(rate))owner.status("Rotating");else rate=0;}
+        if(rate!=0){if(moveAngle(rate))owner.status("Rotating; "+snapshot.blocks.cells.size()+" blocks, "+snapshot.entities.size()+" stored entities, "+carriedVehicles+" vehicles carried");else rate=0;}
         else if(owner.enabled&&!owner.message.startsWith("Rotation blocked")&&!owner.message.startsWith("Rotation waiting"))owner.status(owner.legacyCapture()?"Old back-face capture: use Restore to return the preserved contents before scanning again":"Paused; use Angle or Restore");
         dataManager.set(ANGLE,(float)angle);dataManager.set(RATE,(float)rate);updateBounds();
     }
@@ -122,16 +123,18 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         carry(delta);angle=next;worldBoxes=after;boxesAt=angle;updateBounds();return true;
     }
     private void carry(double delta){
+        carriedVehicles=0;
         for(Entity rider:world.getEntitiesWithinAABBExcludingEntity(this,getEntityBoundingBox().grow(1))){
             if(rider instanceof EntityTurntable||rider.isDead||rider.isRiding()||rider instanceof EntityPlayer&&((EntityPlayer)rider).capabilities.isFlying)continue;
             AxisAlignedBB body=rider.getEntityBoundingBox();boolean supported=false;
             for(AxisAlignedBB box:collisionBoxes(body.grow(.001,.13,.001)))if(Math.abs(body.minY-box.maxY)<.12&&body.maxX>box.minX+.001&&body.minX<box.maxX-.001&&body.maxZ>box.minZ+.001&&body.minZ<box.maxZ-.001){supported=true;break;}
-            if(!supported&&snapshot.layout.normal==EnumFacing.UP&&Math.abs(body.minY-snapshot.layout.pivot.y)<.12){supported=snapshot.layout.onDisc(rider.posX,rider.posY,rider.posZ);}
+            if(!supported&&snapshot.layout.normal==EnumFacing.UP&&Math.abs(body.minY-snapshot.layout.pivot.y)<.12){supported=snapshot.layout.onDisc((body.minX+body.maxX)/2,body.minY,(body.minZ+body.maxZ)/2);}
             if(!supported)continue;
             double referenceX=rider.posX,referenceY=rider.posY,referenceZ=rider.posZ;
             if(rider instanceof EntityGroundVehicle){
                 if(snapshot.layout.normal.getAxis()!=EnumFacing.Axis.Y)continue;
                 EntityGroundVehicle craft=(EntityGroundVehicle)rider;
+                carriedVehicles++;
                 // Vehicle positions are lower-corner origins; yaw is about the
                 // craft center. Carry that pivot to keep the whole craft rigid.
                 referenceX+=craft.structure.bounds.maxX/2;referenceZ+=craft.structure.bounds.maxZ/2;
@@ -142,7 +145,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
             for(AxisAlignedBB box:obstacles)dy=box.calculateYOffset(body,dy);AxisAlignedBB moved=body.offset(0,dy,0);for(AxisAlignedBB box:obstacles)dx=box.calculateXOffset(moved,dx);moved=moved.offset(dx,0,0);for(AxisAlignedBB box:obstacles)dz=box.calculateZOffset(moved,dz);
             float yaw=(float)(delta*snapshot.layout.normal.getFrontOffsetY());
             if(rider instanceof EntityPlayerMP){rider.setPosition(rider.posX+dx,rider.posY+dy,rider.posZ+dz);rider.rotationYaw+=yaw;com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(new com.vandorlabs.network.MessageTurntableCarry(world.provider.getDimension(),getEntityId(),dx,dy,dz,yaw),(EntityPlayerMP)rider);}
-            else{rider.setPositionAndUpdate(rider.posX+dx,rider.posY+dy,rider.posZ+dz);rider.rotationYaw+=yaw;}
+            else{rider.rotationYaw+=yaw;rider.setPositionAndUpdate(rider.posX+dx,rider.posY+dy,rider.posZ+dz);}
             rider.fallDistance=0;rider.onGround=true;
         }
     }

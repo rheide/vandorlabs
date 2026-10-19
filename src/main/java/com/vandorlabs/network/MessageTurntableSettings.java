@@ -16,7 +16,7 @@ public final class MessageTurntableSettings implements IMessage {
         public IMessage onMessage(MessageTurntableSettings message,MessageContext context){net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;player.getServerWorld().addScheduledTask(()->{
             if(message.settings==null||player.openContainer.windowId!=message.window||!(player.openContainer instanceof ContainerTurntable))return;
             ContainerTurntable container=(ContainerTurntable)player.openContainer;
-            try{container.update(player,message.operation,message.settings);}catch(Exception failure){container.tile.status(failure.getMessage()==null?"Operation failed; contents retained":failure.getMessage());}
+            try{container.update(player,message.operation,message.settings);}catch(Exception failure){container.tile.failure(failure.getMessage());}
         });return null;}
     }
 }

@@ -38,14 +38,16 @@ final class ExistingTurntableRuntimeChecks {
                 if(world.getTotalWorldTime()-started<360)return false;
                 EntityTurntable display=controller.display();angle=display==null?0:display.angle();
                 System.out.println("[vandorlabs][reprolab] existing-turntable status="+controller.message+" angle="+angle+" powered="+controller.running());
-                if(display==null||!controller.running()||angle<10||!controller.message.equals("Rotating"))throw new IllegalStateException("Existing turntable stopped: "+controller.message+" angle="+angle);
+                if(display==null||!controller.running()||angle<10||!controller.message.startsWith("Rotating"))throw new IllegalStateException("Existing turntable stopped: "+controller.message+" angle="+angle);
                 BlockIndustrialLever lever=(BlockIndustrialLever)world.getBlockState(input).getBlock();lever.onBlockActivated(world,input,world.getBlockState(input),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);started=world.getTotalWorldTime();return true;
             }
             if(world.getTotalWorldTime()-started<40)return false;
-            if(controller.captureId!=null)throw new IllegalStateException("Existing turntable return retained: "+controller.message);
+            EntityTurntable paused=controller.display();
+            if(paused==null||controller.running()||Math.abs(((paused.angle()-angle+540)%360)-180)>.6)throw new IllegalStateException("Existing turntable did not retain its paused heading: "+controller.message);
+            controller.restore(player);if(controller.captureId!=null)throw new IllegalStateException("Existing turntable return retained: "+controller.message);
             return true;
         }).get();
-        if(ready){stage++;if(stage==3){javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(directory,"shot_existing_turntable.png"));System.out.println("[vandorlabs][reprolab] existing-turntable PASS sustained Power Lever rotation angle="+angle+" and automatic return");return true;}}
+        if(ready){stage++;if(stage==3){javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(directory,"shot_existing_turntable.png"));System.out.println("[vandorlabs][reprolab] existing-turntable PASS sustained Power Lever rotation angle="+angle+" and explicit Restore");return true;}}
         return false;
     }
 }
