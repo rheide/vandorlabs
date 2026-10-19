@@ -3,6 +3,7 @@ package com.vandorlabs.client;
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.tiles.*;
 import com.vandorlabs.vehicle.*;
+import com.vandorlabs.turntable.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
@@ -13,6 +14,8 @@ import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagLong;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
@@ -38,7 +41,7 @@ final class CanopyGlassOrderRuntimeChecks {
         for(int x=0;x<width;x++)for(int y=0;y<width;y++){
             BlockPos pos=ROOT.add(x,y,2);IBlockState state;NBTTagCompound data=null;
             if(background.equals("vanilla"))state=Blocks.IRON_BLOCK.getDefaultState();
-            else{state=background.equals("wall")?ModBlocks.PROGRAMMABLE_WALL.getDefaultState().withProperty(BlockProgrammableWall.FACING,EnumFacing.NORTH):ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.NORTH);TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(pos);tile.setHousingTexture(CustomBlockMaterials.choice(new ItemStack(Blocks.IRON_BLOCK)));data=tile.writeToNBT(new NBTTagCompound());}
+            else{state=(background.equals("wall")||background.equals("porthole"))?(background.equals("porthole")?ModBlocks.PROGRAMMABLE_PORTHOLE_WALL:ModBlocks.PROGRAMMABLE_WALL).getDefaultState().withProperty(BlockProgrammableWall.FACING,EnumFacing.NORTH):ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.NORTH);TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(pos);tile.setGlassShade(14);tile.setHousingTexture(CustomBlockMaterials.choice(new ItemStack(Blocks.IRON_BLOCK)));data=tile.writeToNBT(new NBTTagCompound());}
             cells.add(new VehicleStructure.Cell(pos,state,data));
         }
         return new VehicleWorld(mc.world,new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,1));
@@ -60,7 +63,22 @@ final class CanopyGlassOrderRuntimeChecks {
         try{fbo.bindFramebuffer(true);GL11.glEnable(GL11.GL_DEPTH_TEST);GL11.glEnable(GL11.GL_CULL_FACE);GL11.glDepthMask(true);GlStateManager.enableDepth();GlStateManager.enableTexture2D();GlStateManager.enableCull();GlStateManager.disableLighting();GL11.glDisable(GL11.GL_LIGHTING);GlStateManager.depthMask(true);GlStateManager.clearColor(.08F,.12F,.18F,1);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);GlStateManager.loadIdentity();GlStateManager.rotate(8,1,0,0);GlStateManager.rotate(right?162:198,0,1,0);GlStateManager.translate(-ROOT.getX()-width/2D,-ROOT.getY()-width/2D,-ROOT.getZ()-.5);
             d.world=world;d.entityX=ROOT.getX()+width/2D+(right?8:-8);d.entityY=ROOT.getY()+width/2D+2;d.entityZ=ROOT.getZ()-12;
             clean("projection setup "+checkpoint);TileEntityCanopy canopy=(TileEntityCanopy)world.getTileEntity(ROOT);TECanopy renderer=(TECanopy)(Object)d.getRenderer(canopy);require(renderer!=null,"registered canopy renderer");
-            if(mode==5){
+            if(mode==6||mode==7){
+                NBTTagCompound data=new NBTTagCompound(),surface=new NBTTagCompound();NBTTagList members=new NBTTagList();members.appendTag(new NBTTagLong(BlockPos.ORIGIN.toLong()));surface.setInteger("Normal",EnumFacing.UP.getIndex());surface.setTag("Cells",members);
+                data.setInteger("Schema",1);data.setInteger("Height",16);data.setTag("Surface",surface);data.setTag("Blocks",VehicleStructure.display(world.structure.cells).write());data.setLong("Origin",BlockPos.ORIGIN.toLong());
+                EntityTurntable table=new EntityTurntable(mc.world);table.install(TurntableSnapshot.read(data));
+                RenderTurntable turntableRenderer=new RenderTurntable(mc.getRenderManager());
+                // Cancel the pivot translation to match the parked fixture projection.
+                double cx=d.entityX,cy=d.entityY,cz=d.entityZ;
+                if(mode==7){
+                    table.setAngle(90);double[] camera=TurntableGeometry.rotate(cx-table.posX,cy-table.posY,cz-table.posZ,TurntableGeometry.Face.UP,90);cx=camera[0]+table.posX;cy=camera[1]+table.posY;cz=camera[2]+table.posZ;
+                    GlStateManager.translate(table.posX,table.posY,table.posZ);GlStateManager.rotate(90,0,1,0);GlStateManager.translate(-table.posX,-table.posY,-table.posZ);
+                }
+                GlStateManager.translate(cx,cy,cz);
+                try{turntableRenderer.doRender(table,table.posX-cx,table.posY-cy,table.posZ-cz,0,1);}
+                finally{table.setDead();RenderTurntable.clear();}
+            }
+            else if(mode==5){
                 EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);craft.install(world.structure);craft.setPosition(0,0,0);
                 RenderGroundVehicle vehicleRenderer=new RenderGroundVehicle(mc.getRenderManager());
                 // doRender accepts camera-relative entity coordinates. Compensate
@@ -80,17 +98,18 @@ final class CanopyGlassOrderRuntimeChecks {
     }
     private static int differences(BufferedImage a,BufferedImage b,int threshold){int changed=0;for(int y=0;y<SIZE;y++)for(int x=0;x<SIZE;x++){int p=a.getRGB(x,y),q=b.getRGB(x,y);int diff=Math.max(Math.abs((p>>16&255)-(q>>16&255)),Math.max(Math.abs((p>>8&255)-(q>>8&255)),Math.abs((p&255)-(q&255))));if(diff>threshold)changed++;}return changed;}
     static void run(Minecraft mc,File output)throws Exception{
-        int cases=0;for(int width:new int[]{3,5})for(int material:new int[]{-1,0,1})for(String bg:new String[]{"wall","screen","vanilla"})for(boolean right:new boolean[]{false,true}){
+        int cases=0;for(int width:new int[]{3,5})for(int material:new int[]{-1,0,1})for(String bg:new String[]{"wall","screen","vanilla","porthole"})for(boolean right:new boolean[]{false,true}){
             VehicleWorld fixture=fixture(mc,width,material,bg);BufferedImage base=draw(mc,fixture,width,right,0),reference=draw(mc,fixture,width,right,1);String name="w"+width+"_"+(material<0?"native":material==0?"35":"65")+"_"+bg+"_"+(right?"right":"left");
             int visible=differences(base,reference,8);require(visible>100,"glass visibly changes opaque background "+name+" pixels="+visible);
             int broken=differences(reference,draw(mc,fixture,width,right,4),8);require(broken>100,"negative control catches original single-pass overwritten tint "+name+" pixels="+broken);
-            if(width==3&&material<0&&!bg.equals("vanilla")){
+            if(width==3&&material<0&&(bg.equals("wall")||bg.equals("screen"))){
                 BufferedImage vehicle=draw(mc,fixture,width,right,5);javax.imageio.ImageIO.write(vehicle,"png",new File(output,"shot_canopy_glass_vehicle_"+name+".png"));int changed=differences(reference,vehicle,2);require(changed<=16,"actual vehicle renderer retains same glazing/background "+name+" mismatch="+changed);
             }
+            for(int capturedMode:new int[]{6,7}){BufferedImage turntable=draw(mc,fixture,width,right,capturedMode);javax.imageio.ImageIO.write(turntable,"png",new File(output,"shot_canopy_glass_turntable_"+capturedMode+"_"+name+".png"));int turntableMismatch=differences(reference,turntable,2);require(turntableMismatch<=16,"captured turntable retains glazing/background "+name+" mode="+capturedMode+" mismatch="+turntableMismatch);}
             BufferedImage montage=new BufferedImage(SIZE*4,SIZE,BufferedImage.TYPE_INT_RGB);Graphics2D g=montage.createGraphics();g.drawImage(base,0,0,null);g.drawImage(reference,SIZE,0,null);
-            for(int mode=2;mode<4;mode++){BufferedImage actual=draw(mc,fixture,width,right,mode);g.drawImage(actual,SIZE*mode,0,null);int changed=differences(reference,actual,2);if(changed>16){g.dispose();javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_canopy_glass_order_"+name+".png"));require(false,"parked Forge passes preserve tint "+name+" order="+mode+" mismatch="+changed+" visible="+visible);}}
+            for(int mode=2;mode<4&&!bg.equals("porthole");mode++){BufferedImage actual=draw(mc,fixture,width,right,mode);g.drawImage(actual,SIZE*mode,0,null);int changed=differences(reference,actual,2);if(changed>16){g.dispose();javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_canopy_glass_order_"+name+".png"));require(false,"parked Forge passes preserve tint "+name+" order="+mode+" mismatch="+changed+" visible="+visible);}}
             g.dispose();javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_canopy_glass_order_"+name+".png"));cases++;
-        }System.out.println("[vandorlabs][reprolab] canopy-glass-order PASS cases="+cases+" native-35-65 front3-large5 wall-screen-vanilla left-right opposite-tile-orders real-Forge-passes visible-tint pixel-reference");
+        }System.out.println("[vandorlabs][reprolab] canopy-glass-order PASS cases="+cases+" native-35-65 front3-large5 wall-screen-vanilla-porthole left-right opposite-opaque-tile-orders real-Forge-passes captured-turntable angles=0,90 visible-tint pixel-reference");
     }
     private CanopyGlassOrderRuntimeChecks(){}
 }

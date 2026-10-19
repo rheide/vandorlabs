@@ -646,6 +646,11 @@ public class ReproLab {
             try {PilotInspectionChecks.tick(mc);}catch(Exception failure){throw new IllegalStateException("Pilot Seat inspection live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.canopyGlassOrderChecksOnly")) {
+            try {CanopyGlassOrderRuntimeChecks.run(mc,outDir);mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("captured glass live checks",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.glassAppearanceChecksOnly")) {
             try {if(GlassVisualChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("glass live checks",failure);}
