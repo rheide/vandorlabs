@@ -1,5 +1,7 @@
 # Vandor Labs
 
+https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
+
 Current development version: **2.2**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.0**. See the [2.1 feature highlights](docs/gallery/version-2.1.md), [2.0 feature guide](docs/gallery/version-2.0.md), and [changelog](CHANGELOG.md).
 
 **2.1 development:** [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
