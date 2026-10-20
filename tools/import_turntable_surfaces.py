@@ -8,10 +8,10 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / 'texture-packs/additional/assets/vandorlabs/textures/blocks/turntable'
 DESIGNS = [
-    ('Vanilla Stone-Iron Rotary Disk-1.png', 'stone_iron', 'Stone and Iron'),
-    ('Pixelated sci-fi rotary deck-2.png', 'rotary_deck', 'Rotary Deck'),
-    ('Embossed basalt octagonal turntable top-3.png', 'basalt', 'Embossed Basalt'),
-    ('Graphite and ivory sci-fi turntable-4.png', 'graphite_ivory', 'Graphite and Ivory'),
+    ('Vanilla Stone-Iron Rotary Disk-1.png', 'stone_iron', 'Iron'),
+    ('Pixelated sci-fi rotary deck-2.png', 'rotary_deck', 'Rotary'),
+    ('Embossed basalt octagonal turntable top-3.png', 'basalt', 'Basalt'),
+    ('Graphite and ivory sci-fi turntable-4.png', 'graphite_ivory', 'Ivory'),
 ]
 
 def main():

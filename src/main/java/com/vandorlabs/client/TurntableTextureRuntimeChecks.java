@@ -31,6 +31,9 @@ final class TurntableTextureRuntimeChecks {
             require("Turntable".equals(ScreenHousingTextures.category(choice))&&ScreenHousingTextures.visible(choice)&&HousingTextureList.generalTexture(choice),"Shared Turntable material: "+id);
             for(boolean high:new boolean[]{false,true})require(mc.getTextureMapBlocks().getAtlasSprite(TurntableTextures.texture(id,high)).getIconWidth()==(high?512:64),"Surface atlas resolution: "+id);
         }
+        String generic=TurntableTextures.fromChoice(TurntableTextures.IDS.length+ScreenHousingTextures.INDUSTRIAL_BLOCK);
+        settings.setString("SurfaceOn",generic);saved.settings(settings);TileEntityTurntableController genericCopy=new TileEntityTurntableController();genericCopy.readFromNBT(saved.getUpdateTag());require(genericCopy.surfaceOn.equals(generic)&&TurntableTextures.texture(generic,true).equals(ScreenHousingTextures.fullTexture(ScreenHousingTextures.INDUSTRIAL_BLOCK)),"General material survives turntable settings and resolves its atlas sprite");
+        for(String label:TurntableTextures.LABELS)require(!label.contains(" "),"One-word turntable labels");
         GuiScreen old=mc.currentScreen;
         Method values=GuiTurntable.class.getDeclaredMethod("values");values.setAccessible(true);
         Field channels=GuiTurntable.class.getDeclaredField("fields");channels.setAccessible(true);
@@ -49,6 +52,7 @@ final class TurntableTextureRuntimeChecks {
                     require(after.getString(state==1?"SurfaceOff":"SurfaceOn").equals(before.getString(state==1?"SurfaceOff":"SurfaceOn")),"Other surface state unchanged");
                     require(after.getString("RestoreChannels").equals("65011,65012"),"Channel draft retained across selector navigation");
                 }
+                gui.chooseTexture(TurntableTextures.IDS.length+ScreenHousingTextures.INDUSTRIAL_BLOCK);require(((NBTTagCompound)values.invoke(gui)).getString(state==1?"SurfaceOn":"SurfaceOff").equals(generic),"General material selection packet");
                 mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();gui.drawScreen(-1,-1,0);
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_turntable_texture_"+state+"_"+size[0]+".png"));
             }

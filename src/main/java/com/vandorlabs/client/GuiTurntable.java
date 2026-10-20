@@ -30,7 +30,8 @@ public final class GuiTurntable extends GuiContainer {
             textureButtons(x,y+22);
             java.util.List<HousingTextureList.Option> options=new java.util.ArrayList<>();
             for(int i=0;i<TurntableTextures.IDS.length;i++)options.add(new HousingTextureList.Option(i,TurntableTextures.LABELS[i],"Turntable",TurntableTextures.texture(TurntableTextures.IDS[i],true)));
-            textures=new HousingTextureList(x,y+50,xSize-31,TurntableTextures.index(textureState==1?surfaceOn:surfaceOff),(ySize-84)/12,options);
+            for(int i=0;i<com.vandorlabs.tiles.ScreenHousingTextures.IDS.length;i++){int choice=com.vandorlabs.tiles.ScreenHousingTextures.choiceAt(i);if(com.vandorlabs.tiles.ScreenHousingTextures.visible(choice)&&HousingTextureList.generalTexture(choice)&&!"Turntable".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice)))options.add(new HousingTextureList.Option(TurntableTextures.IDS.length+i,TurntableTextures.label(TurntableTextures.fromChoice(TurntableTextures.IDS.length+i)),com.vandorlabs.tiles.ScreenHousingTextures.category(choice),com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(choice)));}
+            textures=new HousingTextureList(x,y+50,xSize-31,TurntableTextures.choice(textureState==1?surfaceOn:surfaceOff),(ySize-84)/12,options);
             buttonList.add(new GuiButton(16,x,y+ySize-28,xSize-24,20,"Back to controls"));
             return;
         }
@@ -49,7 +50,7 @@ public final class GuiTurntable extends GuiContainer {
     }
     private String channelText(int i,String fallback){return fields[i]==null?fallback:fields[i].getText();}
     private void textureButtons(int x,int y){int w=(xSize-28)/2;for(int i=0;i<2;i++){String label=(i==0?"On: ":"Off: ")+TurntableTextures.label(i==0?surfaceOn:surfaceOff);GuiButton button=new GuiButton(14+i,x+i*(w+4),y,w,20,fontRenderer.trimStringToWidth(label,w-10));button.enabled=textureState!=i+1;buttonList.add(button);}}
-    void chooseTexture(int choice){if(choice<0||choice>=TurntableTextures.IDS.length)return;if(textureState==1)surfaceOn=TurntableTextures.IDS[choice];else surfaceOff=TurntableTextures.IDS[choice];apply();initGui();}
+    void chooseTexture(int choice){if(choice<0||choice>=TurntableTextures.IDS.length+com.vandorlabs.tiles.ScreenHousingTextures.IDS.length)return;if(textureState==1)surfaceOn=TurntableTextures.fromChoice(choice);else surfaceOff=TurntableTextures.fromChoice(choice);apply();initGui();}
     private void field(int id,int x,int y,int w,String text){GuiTextField field=new GuiTextField(id,fontRenderer,x,y,w,18);field.setMaxStringLength(ChannelList.MAX_TEXT_LENGTH);field.setText(text);fields[id]=field;}
     private void labels(){for(GuiButton b:buttonList)switch(b.id){case 2:b.displayString="Scan: "+new String[]{"Disabled","ON","OFF"}[scanMode];break;case 3:b.displayString="Rotate: "+new String[]{"","ON","OFF"}[rotationMode];break;case 4:b.displayString=clockwise?"Clockwise":"Counterclockwise";break;default:break;}}
     private NBTTagCompound values(){

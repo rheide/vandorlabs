@@ -1,13 +1,11 @@
 # Changelog
 
-## 2.4 (development)
+## 2.3
 
 - Queue turntable capture, restore and redstone rescans behind background journal writes. Revalidate contents before conversion and preserve inventory edits made during preparation.
 - Share a transfer coordinator between turntables and vehicles. Budget turntable lighting and neighbor updates across ticks.
 - Verify affected chunk saves by reading transaction markers back from region storage. Retry missing writes without waiting for the world's entire save queue; retain recovery records on failure.
 - Keep temporary entity pauses out of chunk saves and refuse recovery that would overwrite changed block or entity contents.
-
-## 2.3
 
 - Add four turntable surface designs with independent On/Off selectors, and expose all six surface images in the shared Turntable texture category.
 - Restore both cockpit consoles, the chair with side rests and the yoke/screen block to creative menus for testing.
