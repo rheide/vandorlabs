@@ -1,7 +1,7 @@
 """Import the supplied card/chip item PNGs at the standard 128-pixel resolution.
 
 Usage: python tools/import_data_tokens.py path/to/cards-chips
-The supplied artwork keeps its authored perspective with opaque cutouts and closed edges.
+The supplied artwork keeps its authored perspective over a solid, closed slab.
 """
 import argparse
 import json
@@ -10,6 +10,23 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 DESIGNS = ('unbranded', 'pinnacle', 'ashiro', 'paladyne', 'vektor', 'seyr', 'vandor')
+
+
+def token_elements(image):
+    """One solid slab plus two artwork faces; transparent artwork never opens the body."""
+    left, top, right, bottom = image.getchannel('A').getbbox()
+    width, height = image.size
+    x0, x1 = 16 * left / width, 16 * right / width
+    y0, y1 = 16 * (1 - bottom / height), 16 * (1 - top / height)
+    uv = [16 * left / width, 16 * top / height, 16 * right / width, 16 * bottom / height]
+    return [
+        {'from': [x0, y0, 7], 'to': [x1, y1, 9],
+         'faces': {face: {'texture': '#edge', 'uv': [0, 0, 16, 16]}
+                   for face in ('up', 'down', 'east', 'west', 'north', 'south')}},
+        {'from': [x0, y0, 6.99], 'to': [x1, y1, 9.01], 'faces': {
+            'north': {'texture': '#art', 'uv': [uv[2], uv[1], uv[0], uv[3]]},
+            'south': {'texture': '#art', 'uv': uv}}}
+    ]
 
 
 def main():
@@ -37,23 +54,7 @@ def main():
         image.paste(art, ((128-art.width)//2, (128-art.height)//2))
         identifier = 'data_'+kind+'_'+name
         image.save(textures/(identifier+'.png'), optimize=True)
-        # Greedy rectangles close the silhouette with real opaque side faces.
-        # Generated-item edge UVs can sample transparent antialias pixels.
-        mask=[[image.getpixel((x,y))[3]>0 for x in range(128)] for y in range(128)]
-        elements=[]
-        for y in range(128):
-            for x in range(128):
-                if not mask[y][x]:continue
-                end=x+1
-                while end<128 and mask[y][end]:end+=1
-                bottom=y+1
-                while bottom<128 and all(mask[bottom][a] for a in range(x,end)):bottom+=1
-                for b in range(y,bottom):
-                    for a in range(x,end):mask[b][a]=False
-                uv=[x/8,y/8,end/8,bottom/8]
-                faces={side:{'texture':'#edge','uv':[0,0,16,16]} for side in ('up','down','east','west')}
-                faces.update({'north':{'texture':'#art','uv':[end/8,y/8,x/8,bottom/8]},'south':{'texture':'#art','uv':uv}})
-                elements.append({'from':[x/8,16-bottom/8,7],'to':[end/8,16-y/8,9],'faces':faces})
+        elements = token_elements(image)
         display={'gui':{'rotation':[0,0,0],'translation':[0,0,0],'scale':[1,1,1]},
                  'firstperson_righthand':{'rotation':[0,-90,25],'translation':[1.13,3.2,1.13],'scale':[.68,.68,.68]},
                  'firstperson_lefthand':{'rotation':[0,90,-25],'translation':[1.13,3.2,1.13],'scale':[.68,.68,.68]},

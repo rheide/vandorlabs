@@ -46,13 +46,13 @@ Programmable armor gains complete **Pinnacle, Ashiro, Paladyne, Vektor, Seyr and
 
 ![Six company armor designs with their matching inventory icons](docs/images/gallery/armor/company-sets.png)
 
-Seven **Data Cards** and seven matching **Data Chips** add handheld props in unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor designs. Their opaque, extruded item models retain crisp artwork and solid edges in hand. They are creative-catalog items, with no placement or data-storage behavior.
+Seven **Data Cards** and seven matching **Data Chips** add handheld props in unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor designs. Their simple solid slab models retain crisp front/back artwork and continuous opaque sides in hand. They are creative-catalog items, with no placement or data-storage behavior.
 
 Material tools also gain Stretch, Tile and Fit layouts, independent ON/OFF light artwork, nested texture folders, and water-filled programmable Slabs and Stairs.
 
 [Cockpit controls](docs/cockpits.md) · [Material settings](docs/unified-materials.md) · [Full changelog](CHANGELOG.md)
 
-Company logos, backgrounds and murals now have their own **Corp** material category. Six company light designs add matching On/Off artwork in **Corp/Lights**, available specifically for programmable lights.
+Company logos, backgrounds and murals now have their own **Corp** material category. Six company light designs add matching On/Off artwork in **Lights**, available specifically for programmable lights.
 
 See every small and large Extender and Swing Arm in motion with Plates, Skis and Wheels in the [animated landing gear guide](docs/modular-landing-gear.md#animated-combinations).
 

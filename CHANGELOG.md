@@ -2,7 +2,9 @@
 
 ## 2.2
 
-- Add pulse-controlled Restore channels to turntables, and limit speed to 0.5?10 RPM in 0.5 RPM steps. Existing speeds migrate to the supported range.
+- Simplify data cards and chips to solid slabs with continuous side faces and separate front/back artwork, removing internal seams and see-through sides.
+
+- Add pulse-controlled Restore channels to turntables, and limit speed to 0.5 to 10 RPM in 0.5 RPM steps. Existing speeds migrate to the supported range.
 
 - Automatically restore captured turntable contents when redstone rotation stops at a quarter turn; other headings remain captured.
 
