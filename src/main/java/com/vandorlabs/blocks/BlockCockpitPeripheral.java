@@ -15,7 +15,8 @@ import java.util.List;
 /** Screen/yoke peripheral exposes the same surface controls without adding a seat. */
 public final class BlockCockpitPeripheral extends BlockVandorDirectional {
     public final String design;
-    public BlockCockpitPeripheral(String design){super(design);this.design=design;setLightOpacity(0);}
+    public BlockCockpitPeripheral(String design){super(design);this.design=design;setCreativeTab(null);setLightOpacity(0);}
+    @Override public void getSubBlocks(net.minecraft.creativetab.CreativeTabs tab,NonNullList<ItemStack> items){}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityCockpit(design);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public boolean isOpaqueCube(IBlockState state){return false;}

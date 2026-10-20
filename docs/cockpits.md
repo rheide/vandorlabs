@@ -1,5 +1,7 @@
 # Cockpits and peripheral controls
 
+Cockpit A, Cockpit B, the chair with side controls, and Yoke and Screen are work in progress and temporarily hidden from creative selection. Existing assemblies and their configuration remain supported.
+
 Cockpit A and Cockpit B combine a Pilot Seat, vehicle mode controls, independent
 screens and touch panels, and physical throttle controls. The chair with side
 controls provides a smaller seated arrangement. Yoke and Screen is a standalone

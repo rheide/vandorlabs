@@ -18,6 +18,12 @@ import net.minecraft.world.WorldServer;
 /** Actual placement/restore and channel edges, including held signals across saves. */
 final class TurntableFollowupRuntimeChecks {
     static void run(WorldServer world,EntityPlayerMP player)throws Exception{
+        for(double tolerance:new double[]{0,2.5,5}){
+            TileEntityTurntableController draft=new TileEntityTurntableController();draft.autoSnapTolerance=tolerance;
+            NBTTagCompound data=draft.writeToNBT(new NBTTagCompound());TileEntityTurntableController loaded=new TileEntityTurntableController();loaded.readFromNBT(data);
+            require(loaded.autoSnapTolerance==tolerance,"Auto-snap save/load");data.setDouble("AutoSnapTolerance",Double.NaN);loaded.readFromNBT(data);require(loaded.autoSnapTolerance==0,"Invalid saved tolerance sanitized");
+        }
+        for(String id:com.vandorlabs.cockpit.CockpitData.IDS){Block hidden=Block.getBlockFromName("vandorlabs:"+id);net.minecraft.util.NonNullList<ItemStack> menu=net.minecraft.util.NonNullList.create();hidden.getSubBlocks(net.minecraft.creativetab.CreativeTabs.SEARCH,menu);require(menu.isEmpty()&&hidden.getCreativeTabToDisplayOn()==null&&net.minecraft.item.Item.getItemFromBlock(hidden)!=net.minecraft.init.Items.AIR,"WIP cockpit hidden with registered item preserved");}
         BlockPos seed=new BlockPos(520,205,170),owner=seed.west();
         BlockTurntableSurface surface=(BlockTurntableSurface)Block.getBlockFromName("vandorlabs:turntable_surface");
         BlockTurntableController controller=(BlockTurntableController)Block.getBlockFromName("vandorlabs:turntable_controller");
