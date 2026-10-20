@@ -45,10 +45,14 @@ contents, surrounded by a fixed square housing. Joined surfaces use the supplied
 The controller front shows the chosen direction; illuminated artwork indicates
 the enabled input state. Obstructions can stop movement while the input stays on.
 
-Turning the rotation input off pauses the display at its current angle. Captured
-blocks and entities stay captured until **Restore** is pressed. While paused,
-use the **Angle** slider to select any heading from 0 to 360 degrees. Manual angle
+When the rotation input becomes inactive at 0, 90, 180 or 270 degrees, the
+captured contents automatically return to ordinary, editable blocks at that
+heading. Stops at other angles keep the exact displayed pose captured. While
+paused, use the **Angle** slider to select any heading from 0 to 360 degrees,
+or press **Restore** to return blocks at the nearest quarter turn. Manual angle
 changes check the swept path for obstructions and carry supported entities.
+If an automatic return is blocked, the controller reports the reason and keeps
+the captured contents; clear the obstruction and use Restore to retry.
 
 **Restore** returns ordinary blocks at the nearest 90-degree heading, matching
 vehicle parking; arbitrary angles cannot be represented by normal block states.
@@ -92,8 +96,8 @@ while being carried. The square surface corners stay stationary. Builds above th
 Captured displays do not intercept block selection around the platform.
 Taxi vehicles can drive onto a scanned floor turntable, rotate with it, and drive
 off at the new heading. Alternatively, park the vehicle as blocks, activate
-rotation to rescan at a cardinal heading, rotate it, and Restore it before
-reassembling in Taxi mode. Keep every part of the parked craft within the scan
+rotation to rescan at a cardinal heading, rotate it, and stop at a quarter turn to release it before
+reassembling in Taxi mode. Use Restore for a stop at another angle. Keep every part of the parked craft within the scan
 volume and dismount players before scanning.
 
 For an older opposite-face capture, stop rotation and use Restore before scanning

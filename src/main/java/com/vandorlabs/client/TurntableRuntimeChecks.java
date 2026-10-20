@@ -89,7 +89,7 @@ final class TurntableRuntimeChecks {
             world.setBlockToAir(badOwner.down());invalid.update();for(int z=0;z<3;z++)world.setBlockState(bad.add(2,0,z),surface.getDefaultState());
             world.setBlockState(bad.up(),Blocks.BRICK_BLOCK.getDefaultState());world.setBlockState(badOwner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());invalid.update();
             require(invalid.display()!=null&&invalid.lastError.isEmpty()&&invalid.display().snapshot.blocks.cells.size()==1,"next rising edge rescans the repaired surface");
-            world.setBlockToAir(badOwner.down());invalid.update();invalid.turnTo(90);
+            invalid.display().setAngle(37);world.setBlockToAir(badOwner.down());invalid.update();invalid.turnTo(90);
             world.setBlockState(bad.add(1,1,1),Blocks.GOLD_BLOCK.getDefaultState());world.setBlockState(badOwner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());invalid.update();
             require(invalid.display()!=null&&invalid.display().snapshot.blocks.cells.size()==2&&Math.abs(invalid.display().angle()-90)<.001,"rising edge captures newly parked blocks without resetting the existing heading");
             invalid.restore(player);require(world.getBlockState(bad.add(1,1,1)).getBlock()==Blocks.GOLD_BLOCK,"rescanned blocks restore at their displayed heading");invalid.release();
@@ -102,7 +102,7 @@ final class TurntableRuntimeChecks {
         require(moving.snapshot.blocks.cells.size()==25,"full square build captured above the fixed surface corners");
 
         for(int tick=0;tick<100;tick++)moving.onUpdate();require(Math.abs(moving.angle()-90)<.001,"full five-by-five captured layer rotates through ninety degrees");
-        full.rotationMode=1;double stopped=moving.angle();for(int tick=0;tick<40;tick++){moving.onUpdate();TurntableEvents.finishTransfers(world);}
+        moving.setAngle(37);full.rotationMode=1;double stopped=moving.angle();for(int tick=0;tick<40;tick++){moving.onUpdate();TurntableEvents.finishTransfers(world);}
         require(!moving.isDead&&full.captureId!=null&&moving.angle()==stopped,"redstone OFF retains paused display and heading");
         full.turnTo(37);require(Math.abs(moving.angle()-37)<.001,"paused angle selection");
         full.turnTo(90);full.restore(player);require(moving.isDead&&full.captureId==null,"explicit Restore converts current selected heading");
@@ -128,9 +128,39 @@ final class TurntableRuntimeChecks {
         List<AxisAlignedBB> narrow=TurntableCollision.boxes(base,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(-1,-1,-1,2,2,2));
         require(narrow.size()>16,"rotated stair footprint uses narrow strips");for(AxisAlignedBB strip:narrow)require(strip.minY==0&&strip.maxY==.5,"lower stair step height preserved");
         AxisAlignedBB upper=new AxisAlignedBB(0,.5,.5,1,1,1);for(AxisAlignedBB strip:TurntableCollision.boxes(upper,pivot,TurntableGeometry.Face.UP,45,new AxisAlignedBB(-1,-1,-1,2,2,2)))require(strip.minY==.5&&strip.maxY==1,"upper stair step height preserved");
+        cardinalStops(world,player);
         TurntableVehicleRuntimeChecks.run(world,player);
         TurntableFollowupRuntimeChecks.run(world,player);
         System.out.println("[vandorlabs][reprolab] turntable PASS six normals square holes rotation stop persistence inventory/entity round trip blocked restore and vehicle isolation");
+    }
+    private static void cardinalStops(WorldServer world,EntityPlayerMP player)throws Exception{
+        BlockPos seed=new BlockPos(650,205,175),owner=seed.west();
+        Block surface=Block.getBlockFromName("vandorlabs:turntable_surface"),controller=Block.getBlockFromName("vandorlabs:turntable_controller");
+        for(int test=0;test<6;test++){
+            clear(world,seed);for(int x=0;x<3;x++)for(int z=0;z<3;z++)world.setBlockState(seed.add(x,0,z),surface.getDefaultState());
+            world.setBlockState(owner,controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST));
+            TileEntityTurntableController tile=(TileEntityTurntableController)world.getTileEntity(owner);tile.height=1;tile.rotationMode=test%2==0?1:2;
+            world.setBlockState(seed.add(0,1,1),Blocks.BRICK_BLOCK.getDefaultState());tile.scan(player);
+            if(tile.rotationMode==1)world.setBlockState(owner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());
+            tile.update();EntityTurntable moving=tile.display();double heading=test<4?test*90:test==4?37:90;moving.setAngle(heading);
+            TurntableSnapshot expected=moving.snapshot.rotated(heading,moving.view);BlockPos returned=expected.origin.add(expected.blocks.cells.get(0).pos);
+            if(test==5)world.setBlockState(returned,Blocks.STONE.getDefaultState());
+            if(tile.rotationMode==1)world.setBlockToAir(owner.down());else world.setBlockState(owner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());
+            tile.update();
+            if(test<4){
+                require(tile.captureId==null&&tile.display()==null&&moving.isDead,"quarter-turn stop automatically restores heading "+heading);
+                require(world.getBlockState(returned).getBlock()==Blocks.BRICK_BLOCK,"automatic restore uses displayed quarter-turn position "+heading);
+                for(BlockPos at:tile.layout.cells)require(!BlockTurntableSurface.locked(world,at),"automatic stop unlocks surfaces");
+                require(Blocks.BRICK_BLOCK.removedByPlayer(world.getBlockState(returned),world,returned,player,false),"returned blocks can be modified normally");
+            }else{
+                require(tile.captureId!=null&&tile.display()==moving&&!moving.isDead,"off-grid or blocked stop retains capture");
+                if(test==4)require(Math.abs(moving.angle()-37)<.001,"off-grid stop retains exact heading");
+                else{require(tile.lastError.startsWith("Automatic restore failed:"),"blocked auto-restore reports error");world.setBlockToAir(returned);}
+                tile.restore(player);
+            }
+            clear(world,seed);
+        }
+        System.out.println("[vandorlabs][reprolab] turntable-cardinal-stop PASS 0/90/180/270 automatic editable blocks both redstone gates off-grid hold blocked-return preservation");
     }
     private static void clear(WorldServer world,BlockPos seed){for(BlockPos p:BlockPos.getAllInBox(seed.add(-5,-5,-5),seed.add(5,5,5)))if(!world.isAirBlock(p))world.setBlockToAir(p);}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("turntable: "+message);}

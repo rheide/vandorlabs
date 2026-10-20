@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Automatically restore captured turntable contents when redstone rotation stops at a quarter turn; other headings remain captured.
+
 - Preserve diagonal wall top and bottom caps against flat programmable glass walls while retaining aligned panel joins.
 
 - Use the standard first-person held-item pose for every data card and chip, keeping them beside the screen edge in either hand.

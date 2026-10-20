@@ -18,7 +18,7 @@ Existing integrated wheel gear can migrate into matching modular arms and wheels
 
 **Turntables** turn block-built displays on floor, wall or ceiling platforms. Build a square surface, add a controller, choose the capture height and Scan. Redstone controls rotation, with configurable direction and speed.
 
-Only the circular surface disc rotates; its square housing corners stay still. Scan captures the build across the full square footprint, so overhangs move together. Players and loose items travel with floor platforms, and players can walk and jump freely. Stopping holds the current angle. Adjust it with the Angle slider while paused; Restore explicitly returns blocks at the nearest quarter turn, preserving supported block directions, inventories and entity headings. Obstructed return positions retain their captured contents until cleared.
+Only the circular surface disc rotates; its square housing corners stay still. Scan captures the build across the full square footprint, so overhangs move together. Players and loose items travel with floor platforms, and players can walk and jump freely. Stopping at 0, 90, 180 or 270 degrees automatically returns editable blocks at that heading. Other stops hold the captured pose; adjust it with the Angle slider or use Restore to return blocks at the nearest quarter turn. Supported block directions, inventories and entity headings are preserved. Obstructed return positions retain their captured contents until cleared.
 
 [Build a turntable](docs/turntables.md)
 

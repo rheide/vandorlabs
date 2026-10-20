@@ -86,6 +86,15 @@ public final class TileEntityTurntableController extends TileEntity implements I
         if(next&&!trigger&&captureId==null&&actor!=null)try{scan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         trigger=next;boolean rotation=matches(Math.max(1,rotationMode),rotationChannels);
         if(rotation&&!rotationTrigger&&actor!=null&&enabled)try{rescanForRotation(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
+        if(!rotation&&rotationTrigger&&actor!=null&&enabled){
+            EntityTurntable stopped=display();
+            if(stopped!=null){
+                double heading=stopped.angle(),snapped=TurntableGeometry.wrap(Math.round(heading/90)*90);
+                if(Math.abs(((heading-snapped+540)%360)-180)<=.001)try{
+                    clearError();restore(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));
+                }catch(Exception failure){failure("Automatic restore failed: "+(failure.getMessage()==null?"contents retained":failure.getMessage()));}
+            }
+        }
         rotationTrigger=rotation;
         if(ticks%20==0&&enabled&&layout!=null&&layout.loaded(world))for(BlockPos cell:layout.cells){TileEntity tile=world.getTileEntity(cell);if(!(tile instanceof TileEntityTurntableSurface)){surfaceChanged();break;}TileEntityTurntableSurface surface=(TileEntityTurntableSurface)tile;if(surface.owner==null)surface.bind(this);else if(!pos.equals(surface.owner)||!key.equals(surface.ownerKey)){surfaceChanged();break;}}
         EntityTurntable entity=display();if(entity!=null)angle=entity.angle();
