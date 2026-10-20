@@ -1,7 +1,7 @@
 """Import the supplied card/chip item PNGs at the standard 128-pixel resolution.
 
 Usage: python tools/import_data_tokens.py path/to/cards-chips
-The supplied artwork keeps its authored perspective over a solid, closed slab.
+The supplied artwork keeps its authored perspective with transparent cutouts and continuous outline side walls.
 """
 import argparse
 import json
@@ -13,20 +13,11 @@ DESIGNS = ('unbranded', 'pinnacle', 'ashiro', 'paladyne', 'vektor', 'seyr', 'van
 
 
 def token_elements(image):
-    """One solid slab plus two artwork faces; transparent artwork never opens the body."""
-    left, top, right, bottom = image.getchannel('A').getbbox()
-    width, height = image.size
-    x0, x1 = 16 * left / width, 16 * right / width
-    y0, y1 = 16 * (1 - bottom / height), 16 * (1 - top / height)
-    uv = [16 * left / width, 16 * top / height, 16 * right / width, 16 * bottom / height]
-    return [
-        {'from': [x0, y0, 7], 'to': [x1, y1, 9],
-         'faces': {face: {'texture': '#edge', 'uv': [0, 0, 16, 16]}
-                   for face in ('up', 'down', 'east', 'west', 'north', 'south')}},
-        {'from': [x0, y0, 6.99], 'to': [x1, y1, 9.01], 'faces': {
-            'north': {'texture': '#art', 'uv': [uv[2], uv[1], uv[0], uv[3]]},
-            'south': {'texture': '#art', 'uv': uv}}}
-    ]
+    """Keep the authored alpha; DataTokenModels builds opaque outline walls at bake time."""
+    return [{'from': [0, 0, 7], 'to': [16, 16, 9], 'faces': {
+        'north': {'texture': '#art', 'uv': [16, 0, 0, 16]},
+        'south': {'texture': '#art', 'uv': [0, 0, 16, 16]}}}]
+
 
 
 def main():

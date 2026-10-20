@@ -16,17 +16,23 @@ final class DataTokenRuntimeChecks {
         try{for(int kind=0;kind<2;kind++)for(int i=0;i<7;i++){
             String type=kind==0?"card":"chip";ItemStack stack=new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:data_"+type)),1,i);
             IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);Set<EnumFacing> faces=EnumSet.noneOf(EnumFacing.class);
-            if(model.getQuads(null,null,0).size()!=8)throw new IllegalStateException("Token must have one closed slab and two artwork faces: "+type+designs[i]);
-            int solidFaces=0;
+            if(model.getQuads(null,null,0).size()<6||model.getQuads(null,null,0).size()>64)throw new IllegalStateException("Token outline mesh missing or overly complex: "+type+designs[i]);
+            int solidFaces=0;Map<String,Integer> rim=new HashMap<>();
             for(BakedQuad quad:model.getQuads(null,null,0)){
                 if(quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge")){
                     solidFaces++;
+                    int[] vertices=quad.getVertexData();int stride=vertices.length/4;
+                    for(int v=0;v<4;v++){int at=v*stride;float z=Float.intBitsToFloat(vertices[at+2]);if(Math.abs(z-7/16F)<1e-6){String key=vertices[at]+":"+vertices[at+1];rim.put(key,rim.getOrDefault(key,0)+1);}}
+
                     for(int pixel:quad.getSprite().getFrameTextureData(0)[0])if((pixel>>>24)!=255)throw new IllegalStateException("Non-opaque token body "+type+designs[i]);
                 }
                 faces.add(quad.getFace());
                 if(quad.getFace()!=EnumFacing.NORTH&&quad.getFace()!=EnumFacing.SOUTH&&!quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge"))throw new IllegalStateException("Transparent token edge material "+type+designs[i]);
             }
-            if(faces.size()!=6||solidFaces!=6)throw new IllegalStateException("Open token silhouette "+type+designs[i]);
+            if(faces.size()!=6||solidFaces!=model.getQuads(null,null,0).size()-2)throw new IllegalStateException("Open token silhouette "+type+designs[i]);
+            for(int count:rim.values())if(count!=2)throw new IllegalStateException("Disconnected token side wall "+type+designs[i]);
+            boolean transparent=false;for(int pixel:model.getParticleTexture().getFrameTextureData(0)[0])if((pixel>>>24)==0){transparent=true;break;}
+            if(!transparent)throw new IllegalStateException("Original transparent token artwork lost");
             for(boolean left:new boolean[]{false,true}){
                 BufferedImage held=WheelItemRuntimeChecks.held(mc,stack,left);int ink=0;long totalX=0,totalY=0;
                 for(int x=0;x<held.getWidth();x++)for(int y=0;y<held.getHeight();y++)if((held.getRGB(x,y)&0xffffff)!=0x203040){ink++;totalX+=x;totalY+=y;}
@@ -40,6 +46,6 @@ final class DataTokenRuntimeChecks {
             }
         }}finally{canvas.dispose();}
         javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_data_tokens_held.png"));
-        System.out.println("[vandorlabs][reprolab] data-token-models PASS fourteen solid six-face slabs two artwork faces opaque body materials and both first-person hand corners");
+        System.out.println("[vandorlabs][reprolab] data-token-models PASS fourteen transparent silhouettes two original artwork faces continuous opaque outline walls and both first-person hand corners");
     }
 }
