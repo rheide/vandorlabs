@@ -1,6 +1,9 @@
 package com.vandorlabs.client;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.shader.Framebuffer;
+import org.lwjgl.opengl.GL11;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.item.*;
 import net.minecraft.util.*;
@@ -13,26 +16,29 @@ final class DataTokenRuntimeChecks {
     static void run(Minecraft mc,File output)throws Exception{
         String[] designs={"unbranded","pinnacle","ashiro","paladyne","vektor","seyr","vandor"};
         BufferedImage montage=new BufferedImage(640*7,360*4,BufferedImage.TYPE_INT_RGB);java.awt.Graphics2D canvas=montage.createGraphics();
+        BufferedImage closeups=new BufferedImage(256*14,256*4,BufferedImage.TYPE_INT_RGB);java.awt.Graphics2D views=closeups.createGraphics();
         try{for(int kind=0;kind<2;kind++)for(int i=0;i<7;i++){
             String type=kind==0?"card":"chip";ItemStack stack=new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:data_"+type)),1,i);
             IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);Set<EnumFacing> faces=EnumSet.noneOf(EnumFacing.class);
-            if(model.getQuads(null,null,0).size()<6||model.getQuads(null,null,0).size()>64)throw new IllegalStateException("Token outline mesh missing or overly complex: "+type+designs[i]);
-            int solidFaces=0;Map<String,Integer> rim=new HashMap<>();
+            if(model.getQuads(null,null,0).size()<6||model.getQuads(null,null,0).size()>1024)throw new IllegalStateException("Token outline mesh missing or overly complex: "+type+designs[i]);
+            if(model.isGui3d())throw new IllegalStateException("Token must retain the thin generated-item profile");
+            int solidFaces=0;double minZ=1,maxZ=0;
             for(BakedQuad quad:model.getQuads(null,null,0)){
                 if(quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge")){
                     solidFaces++;
-                    int[] vertices=quad.getVertexData();int stride=vertices.length/4;
-                    for(int v=0;v<4;v++){int at=v*stride;float z=Float.intBitsToFloat(vertices[at+2]);if(Math.abs(z-7/16F)<1e-6){String key=vertices[at]+":"+vertices[at+1];rim.put(key,rim.getOrDefault(key,0)+1);}}
-
                     for(int pixel:quad.getSprite().getFrameTextureData(0)[0])if((pixel>>>24)!=255)throw new IllegalStateException("Non-opaque token body "+type+designs[i]);
                 }
+                int[] vertexData=quad.getVertexData();int stride=vertexData.length/4;for(int v=0;v<4;v++){float z=Float.intBitsToFloat(vertexData[v*stride+2]);minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);}
                 faces.add(quad.getFace());
                 if(quad.getFace()!=EnumFacing.NORTH&&quad.getFace()!=EnumFacing.SOUTH&&!quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge"))throw new IllegalStateException("Transparent token edge material "+type+designs[i]);
             }
             if(faces.size()!=6||solidFaces!=model.getQuads(null,null,0).size()-2)throw new IllegalStateException("Open token silhouette "+type+designs[i]);
-            for(int count:rim.values())if(count!=2)throw new IllegalStateException("Disconnected token side wall "+type+designs[i]);
+            if(maxZ-minZ>1/16D+1e-6)throw new IllegalStateException("Token gained block-like thickness");
             boolean transparent=false;for(int pixel:model.getParticleTexture().getFrameTextureData(0)[0])if((pixel>>>24)==0){transparent=true;break;}
             if(!transparent)throw new IllegalStateException("Original transparent token artwork lost");
+            BufferedImage front=appearance(mc,stack,model,0),side=appearance(mc,stack,model,90);
+            checkCutout(front,model.getParticleTexture());checkSide(side,model.getParticleTexture());
+            for(int view=0;view<4;view++){BufferedImage shot=view==0?front:view==3?side:appearance(mc,stack,model,view==1?45:180);views.drawImage(shot,(kind*7+i)*256,view*256,null);}
             for(boolean left:new boolean[]{false,true}){
                 BufferedImage held=WheelItemRuntimeChecks.held(mc,stack,left);int ink=0;long totalX=0,totalY=0;
                 for(int x=0;x<held.getWidth();x++)for(int y=0;y<held.getHeight();y++)if((held.getRGB(x,y)&0xffffff)!=0x203040){ink++;totalX+=x;totalY+=y;}
@@ -44,8 +50,37 @@ final class DataTokenRuntimeChecks {
                 canvas.drawImage(held,i*640,(kind+(left?2:0))*360,null);
                 javax.imageio.ImageIO.write(held,"png",new File(output,"shot_data_"+type+"_"+designs[i]+(left?"_left":"")+"_held.png"));
             }
-        }}finally{canvas.dispose();}
+        }}finally{canvas.dispose();views.dispose();}
         javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_data_tokens_held.png"));
-        System.out.println("[vandorlabs][reprolab] data-token-models PASS fourteen transparent silhouettes two original artwork faces continuous opaque outline walls and both first-person hand corners");
+        javax.imageio.ImageIO.write(closeups,"png",new File(output,"shot_data_tokens_closeups.png"));
+        System.out.println("[vandorlabs][reprolab] data-token-models PASS fourteen original alpha silhouettes front-pixel comparisons edge-on solid coverage thin generated profile opaque side material and both first-person hand corners");
     }
+    private static void checkCutout(BufferedImage front,net.minecraft.client.renderer.texture.TextureAtlasSprite art){
+        int w=art.getIconWidth(),h=art.getIconHeight(),pixels[]=art.getFrameTextureData(0)[0];int wrong=0,mirrored=0,checked=0;
+        for(int y=2;y<h-2;y++)for(int x=2;x<w-2;x++){
+            boolean opaque=(pixels[y*w+x]>>>24)>=128,stable=true;
+            for(int dy=-2;dy<=2;dy++)for(int dx=-2;dx<=2;dx++)if(((pixels[(y+dy)*w+x+dx]>>>24)>=128)!=opaque)stable=false;
+            if(!stable)continue;checked++;
+            if(((front.getRGB((2*x+1),2*y+1)&0xffffff)!=0x203040)!=opaque)wrong++;
+            if(((front.getRGB(255-(2*x+1),2*y+1)&0xffffff)!=0x203040)!=opaque)mirrored++;
+        }
+        if(checked<1000||Math.min(wrong,mirrored)>4)throw new IllegalStateException("Rendered token alpha differs from original silhouette: "+art.getIconName()+" extra/missing pixels="+Math.min(wrong,mirrored));
+    }
+    private static void checkSide(BufferedImage side,net.minecraft.client.renderer.texture.TextureAtlasSprite art){
+        int w=art.getIconWidth(),h=art.getIconHeight(),pixels[]=art.getFrameTextureData(0)[0],checked=0;
+        for(int y=2;y<h-2;y++){
+            boolean row=false,above=false,below=false;for(int x=0;x<w;x++){row|=(pixels[y*w+x]>>>24)>=128;above|=(pixels[(y-1)*w+x]>>>24)>=128;below|=(pixels[(y+1)*w+x]>>>24)>=128;}
+            if(row&&above&&below){checked++;if((side.getRGB(128,2*y+1)&0xffffff)==0x203040)throw new IllegalStateException("See-through line in rendered token side: "+art.getIconName()+" row "+y);}
+        }
+        if(checked<40)throw new IllegalStateException("Insufficient side silhouette coverage");
+    }
+    private static BufferedImage appearance(Minecraft mc,ItemStack stack,IBakedModel model,float yaw){
+        Framebuffer target=new Framebuffer(256,256,true);GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-.5,.5,-.5,.5,-10,10);
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();GlStateManager.loadIdentity();
+        try{
+            target.bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clearColor(32/255F,48/255F,64/255F,1);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);GlStateManager.enableDepth();GlStateManager.disableBlend();GlStateManager.enableAlpha();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableLighting();GlStateManager.enableTexture2D();GlStateManager.enableCull();GlStateManager.color(1,1,1,1);mc.getTextureManager().bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.rotate(yaw,0,1,0);mc.getRenderItem().renderItem(stack,model);GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(256,256,target);
+        }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);GL11.glPopAttrib();GlStateManager.enableDepth();GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);target.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
+    }
+
 }

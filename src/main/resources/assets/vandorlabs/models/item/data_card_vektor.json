@@ -1,45 +1,11 @@
 {
-  "parent": "block/block",
+  "parent": "item/generated",
   "ambientocclusion": false,
   "textures": {
-    "art": "vandorlabs:items/data_card_vektor",
     "edge": "vandorlabs:items/data_card_edge",
-    "particle": "vandorlabs:items/data_card_vektor"
+    "particle": "vandorlabs:items/data_card_vektor",
+    "layer0": "vandorlabs:items/data_card_vektor"
   },
-  "elements": [
-    {
-      "from": [
-        0,
-        0,
-        7
-      ],
-      "to": [
-        16,
-        16,
-        9
-      ],
-      "faces": {
-        "north": {
-          "texture": "#art",
-          "uv": [
-            16,
-            0,
-            0,
-            16
-          ]
-        },
-        "south": {
-          "texture": "#art",
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ]
-        }
-      }
-    }
-  ],
   "display": {
     "gui": {
       "rotation": [
