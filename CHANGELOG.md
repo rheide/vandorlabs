@@ -2,7 +2,10 @@
 
 ## 2.2
 
-- Simplify data cards and chips to solid slabs with continuous side faces and separate front/back artwork, removing internal seams and see-through sides.
+- Add a saved 0-5 degree Auto-snap slider to turntables, with 0.1-degree steps and a default of zero. Redstone-off stops within tolerance restore at the nearest quarter turn. Compact the status panel and synchronize active surface artwork from the server, including channel-driven rotation.
+- The two cockpit consoles, chair with side rests and yoke/screen were added as work in progress and are temporarily hidden from creative menus. Their registered blocks, models, saved-world support and implementation remain available for future refinement.
+
+- Preserve transparent card/chip artwork and replace fragmented pixel side strips with continuous opaque outline walls. No rectangular backing is added.
 
 - Add pulse-controlled Restore channels to turntables, and limit speed to 0.5 to 10 RPM in 0.5 RPM steps. Existing speeds migrate to the supported range.
 

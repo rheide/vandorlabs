@@ -1,6 +1,8 @@
 # Vandor Labs 2.2
 
-Build working landing gear, showcase your creations on rotating platforms, and give your ships a new generation of cockpits and industrial detail.
+Build working landing gear, showcase your creations on rotating platforms, and give your ships new controls and industrial detail.
+
+The two cockpit consoles, chair with side rests and yoke/screen remain work in progress and are temporarily hidden from creative menus while their models are refined. Existing placed blocks remain supported.
 
 ## Landing gear you can build your way
 
@@ -46,7 +48,7 @@ Programmable armor gains complete **Pinnacle, Ashiro, Paladyne, Vektor, Seyr and
 
 ![Six company armor designs with their matching inventory icons](docs/images/gallery/armor/company-sets.png)
 
-Seven **Data Cards** and seven matching **Data Chips** add handheld props in unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor designs. Their simple solid slab models retain crisp front/back artwork and continuous opaque sides in hand. They are creative-catalog items, with no placement or data-storage behavior.
+Seven **Data Cards** and seven matching **Data Chips** add handheld props in unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor designs. Their models retain the original transparent front/back artwork, with continuous opaque side walls following the outer silhouette. They are creative-catalog items, with no placement or data-storage behavior.
 
 Material tools also gain Stretch, Tile and Fit layouts, independent ON/OFF light artwork, nested texture folders, and water-filled programmable Slabs and Stairs.
 
