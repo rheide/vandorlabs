@@ -29,7 +29,7 @@ final class MovingDeviceRuntimeChecks {
                 world.setBlockState(owner,net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_controller").getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST));
                 TileEntityTurntableController table=(TileEntityTurntableController)world.getTileEntity(owner);table.height=1;
                 BlockPos cargo=root.add(11,1,11);world.setBlockState(cargo,Blocks.CHEST.getDefaultState());((TileEntityChest)world.getTileEntity(cargo)).setInventorySlotContents(0,new ItemStack(Items.DIAMOND,3));
-                table.scan(player);EntityTurntable display=table.display();display.setAngle(90);
+                TurntableTransactionsChecks.scan(table,player);EntityTurntable display=table.display();display.setAngle(90);
                 TurntableSnapshot returned=display.snapshot.rotated(90,display.view);BlockPos destination=returned.origin.add(returned.blocks.cells.get(0).pos);
                 double[] rotated=TurntableGeometry.rotate(cargo.getX()+.5-display.posX,cargo.getY()+.5-display.posY,cargo.getZ()+.5-display.posZ,display.snapshot.layout.basis,90);
                 Vec3d aim=new Vec3d(rotated[0]+display.posX,rotated[1]+display.posY,rotated[2]+display.posZ);player.setPositionAndRotation(aim.x,aim.y-player.getEyeHeight(),aim.z+4,180,0);

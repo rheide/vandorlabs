@@ -39,10 +39,10 @@ public final class TileEntityTurntableController extends TileEntity implements I
     public void status(String text){if(!text.equals(message)){message=text;changed();}}
     public void failure(String text){lastError=text==null?"Operation failed; contents retained":text;changed();}
     public void clearError(){if(!lastError.isEmpty()){lastError="";changed();}}
-    public void scan(EntityPlayerMP player)throws Exception {
+    public TurntableSnapshot prepareCapture(EntityPlayerMP player)throws Exception {
         clearError();
         if(captureId!=null)throw new IllegalArgumentException("Restore the captured contents before scanning again");
-        if(!(world instanceof WorldServer))return;
+        if(!(world instanceof WorldServer))throw new IllegalArgumentException("Capture requires a server world");
         TurntableSurfaceLayout found=TurntableSurfaceLayout.scan(world,pos.offset(world.getBlockState(pos).getValue(BlockVandorDirectional.FACING)));
         axis=0; // Surface normals determine the axis.
         if(reverse)throw new IllegalArgumentException("Restore the old opposite-face capture first; new scans use the textured Surface face");
@@ -53,8 +53,42 @@ public final class TileEntityTurntableController extends TileEntity implements I
         TurntableSnapshot snapshot=TurntableSnapshot.capture((WorldServer)world,found,height,player);
         actor=player.getUniqueID();release();layout=found;enabled=true;angle=previous=0;
         for(BlockPos cell:layout.cells)((TileEntityTurntableSurface)world.getTileEntity(cell)).bind(this);
+        return snapshot;
+    }
+    public void scan(EntityPlayerMP player)throws Exception {
+        TurntableSnapshot snapshot=prepareCapture(player);
         try{TurntableTransfer.capture((WorldServer)world,this,snapshot,player);status("Captured; use Restore to return contents");}catch(Exception failure){if(captureId==null)release();throw failure;}changed();
     }
+    private int queuedIntent;
+    private EntityPlayerMP queuedActor;
+    private String queuedFailurePrefix="";
+    public void requestScan(EntityPlayerMP player)throws Exception {requestScan(player,0);}
+    private void requestScan(EntityPlayerMP player,double heading)throws Exception {
+        if(TurntableTransactions.busy(this))throw new IllegalArgumentException("A turntable transfer is already in progress");
+        clearError();TurntableTransactions.submit(this,null,player,true,()->{
+            EntityTurntable fresh=display();
+            if(fresh!=null&&heading!=0){if(!fresh.snapshot.blocks.cells.isEmpty()||!fresh.snapshot.entities.isEmpty())fresh.install(fresh.snapshot.rotated(360-heading,fresh.view));fresh.setAngle(heading);angle=previous=heading;changed();}
+            status("Captured; use Restore to return contents");finishRequest();
+        },this::transferFailed);
+    }
+    public void requestRestore(EntityPlayerMP player)throws Exception {
+        requestRestore(player,"");
+    }
+    private void requestRestore(EntityPlayerMP player,String failurePrefix)throws Exception {
+        if(TurntableTransactions.busy(this)){queuedIntent=1;queuedActor=player;queuedFailurePrefix=failurePrefix;return;}
+        EntityTurntable entity=display();if(entity==null)throw new IllegalArgumentException("Captured contents are not loaded; load the entire turntable first");
+        clearError();TurntableTransactions.submit(this,entity,player,false,this::finishRequest,error->transferFailed(new java.io.IOException(failurePrefix+(error.getMessage()==null?"contents retained":error.getMessage()),error)));
+    }
+    private void requestRescan(EntityPlayerMP player)throws Exception {
+        if(TurntableTransactions.busy(this)){queuedIntent=2;queuedActor=player;return;}
+        EntityTurntable old=display();double heading=old==null?0:old.angle();
+        if(old==null){if(captureId!=null)throw new IllegalArgumentException("Cannot rescan: captured contents are not loaded");requestScan(player,heading);return;}
+        double snapped=TurntableGeometry.wrap(Math.round(heading/90)*90);
+        if(Math.abs(((heading-snapped+540)%360)-180)>.001){failure("Rescan needs a 90-degree heading; continuing with the existing capture");return;}
+        TurntableTransactions.submit(this,old,player,false,()->{try{requestScan(player,heading);}catch(Exception error){transferFailed(error);}},this::transferFailed);
+    }
+    private void finishRequest(){int intent=queuedIntent;EntityPlayerMP player=queuedActor;String prefix=queuedFailurePrefix;queuedIntent=0;queuedActor=null;queuedFailurePrefix="";try{if(intent==1&&captureId!=null)requestRestore(player,prefix);else if(intent==2)requestRescan(player);}catch(Exception error){transferFailed(error);}}
+    private void transferFailed(Exception error){queuedIntent=0;queuedActor=null;queuedFailurePrefix="";if(captureId==null)release();failure(error.getMessage());}
     public void restore(EntityPlayerMP player)throws Exception{EntityTurntable entity=display();if(entity==null)throw new IllegalArgumentException("Captured contents are not loaded; load the entire turntable first");TurntableTransfer.restore((WorldServer)world,entity,player);}
     public void turnTo(double heading){EntityTurntable entity=display();if(entity==null)throw new IllegalArgumentException("Scan the turntable before setting its angle");entity.turnTo(heading);angle=previous=entity.angle();status("Paused; use Angle or Restore");changed();}
     public void restored(double heading){angle=previous=TurntableGeometry.wrap(heading);changed();}
@@ -78,7 +112,7 @@ public final class TileEntityTurntableController extends TileEntity implements I
         TurntableGeometry.checkSnapTolerance(tolerance);
         TurntableGeometry.degreesPerTick(speed);
         if(h<1||h>16||sm<0||sm>2||rm<1||rm>2||a<0||a>3||scan==null||rotate==null||direction==null||restore==null)throw new IllegalArgumentException("Invalid turntable settings");
-        if(captureId!=null&&h!=height)throw new IllegalArgumentException("Restore before changing the scan height");
+        if((captureId!=null||TurntableTransactions.busy(this))&&h!=height)throw new IllegalArgumentException("Finish the transfer and restore before changing the scan height");
         if(!directionChannels.equals(direction)){directionKnown=false;directionChannels=direction;}
         if(!restoreChannels.equals(restore)){restoreKnown=false;restoreChannels=restore;}
         if(tag.hasKey("SurfaceOn"))surfaceOn=TurntableTextures.normalize(tag.getString("SurfaceOn"),true);
@@ -94,41 +128,26 @@ public final class TileEntityTurntableController extends TileEntity implements I
         boolean restorePulse=restoreKnown&&restorePower&&!restoreHigh;
         if(!restoreKnown||restoreHigh!=restorePower)markDirty();
         restoreHigh=restorePower;restoreKnown=true;
-        ticks++;boolean next=matches(scanMode,scanChannels);
-        if(next&&!trigger&&captureId==null&&actor!=null)try{scan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
+        ticks++;boolean next=matches(scanMode,scanChannels),scanStarted=false;
+        if(next&&!trigger&&captureId==null&&actor!=null)try{requestScan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));scanStarted=true;}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         trigger=next;boolean rotation=matches(Math.max(1,rotationMode),rotationChannels);
-        if(rotation&&!rotationTrigger&&actor!=null&&enabled)try{rescanForRotation(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
+        if(rotation&&!rotationTrigger&&!scanStarted&&actor!=null&&enabled)try{requestRescan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         if(!rotation&&rotationTrigger&&actor!=null&&enabled){
             EntityTurntable stopped=display();
+            if(stopped==null&&TurntableTransactions.busy(this)){queuedIntent=1;queuedFailurePrefix="Automatic restore failed: ";queuedActor=net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable"));}
             if(stopped!=null){
                 if(TurntableGeometry.canAutoSnap(stopped.angle(),autoSnapTolerance))try{
-                    clearError();restore(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));
+                    clearError();requestRestore(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")),"Automatic restore failed: ");
                 }catch(Exception failure){failure("Automatic restore failed: "+(failure.getMessage()==null?"contents retained":failure.getMessage()));}
             }
         }
-        if(restorePulse&&actor!=null&&captureId!=null)try{
-            clearError();restore(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));
+        if(restorePulse&&actor!=null&&(captureId!=null||TurntableTransactions.busy(this)))try{
+            clearError();requestRestore(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")),"Restore pulse failed: ");
         }catch(Exception failure){failure("Restore pulse failed: "+(failure.getMessage()==null?"contents retained":failure.getMessage()));}
         rotationTrigger=rotation;
         if(ticks%20==0&&enabled&&layout!=null&&layout.loaded(world))for(BlockPos cell:layout.cells){TileEntity tile=world.getTileEntity(cell);if(!(tile instanceof TileEntityTurntableSurface)){surfaceChanged();break;}TileEntityTurntableSurface surface=(TileEntityTurntableSurface)tile;if(surface.owner==null)surface.bind(this);else if(!pos.equals(surface.owner)||!key.equals(surface.ownerKey)){surfaceChanged();break;}}
         EntityTurntable entity=display();if(entity!=null)angle=entity.angle();
         boolean active=running();if(active!=clientRunning){clientRunning=active;changed();}else if(ticks%10==0&&layout!=null)changed();
-    }
-    /** Re-capture newly parked blocks on a redstone rising edge without losing the heading. */
-    private void rescanForRotation(EntityPlayerMP player)throws Exception{
-        clearError();EntityTurntable old=display();double heading=old==null?0:old.angle();
-        if(old!=null){
-            double snapped=TurntableGeometry.wrap(Math.round(heading/90)*90);
-            if(Math.abs(((heading-snapped+540)%360)-180)>.001){
-                failure("Rescan needs a 90-degree heading; continuing with the existing capture");return;
-            }
-            restore(player);
-        }else if(captureId!=null)throw new IllegalArgumentException("Cannot rescan: captured contents are not loaded");
-        scan(player);EntityTurntable fresh=display();
-        if(fresh!=null&&heading!=0){
-            if(!fresh.snapshot.blocks.cells.isEmpty()||!fresh.snapshot.entities.isEmpty())fresh.install(fresh.snapshot.rotated(360-heading,fresh.view));
-            fresh.setAngle(heading);angle=previous=heading;changed();
-        }
     }
     public void changed(){markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}}
     @Override public boolean shouldRefresh(World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}

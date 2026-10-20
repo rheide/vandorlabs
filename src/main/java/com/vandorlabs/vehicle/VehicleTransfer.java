@@ -22,6 +22,14 @@ public final class VehicleTransfer {
     private static final Map<WorldServer,ArrayDeque<Work>> WORK=new WeakHashMap<>();
     private static final Map<TileEntity,Integer> PAUSED_TILES=new IdentityHashMap<>();
     private static final ThreadLocal<Work> ACTIVE=new ThreadLocal<>();
+    private static final ThreadLocal<UpdateBatch> EXTERNAL_UPDATES=new ThreadLocal<>();
+    /** Other durable transfers share the same bounded lighting and notification implementation. */
+    public static final class UpdateBatch {
+        private final ArrayDeque<BlockUpdates> updates=new ArrayDeque<>();
+        public AutoCloseable collect(){UpdateBatch previous=EXTERNAL_UPDATES.get();EXTERNAL_UPDATES.set(this);return ()->{if(previous==null)EXTERNAL_UPDATES.remove();else EXTERNAL_UPDATES.set(previous);};}
+        public void clear(){updates.clear();}
+        public boolean step(){long deadline=System.nanoTime()+2_000_000L;while(!updates.isEmpty()){if(updates.peek().step(deadline))updates.remove();if(System.nanoTime()>=deadline)break;}return updates.isEmpty();}
+    }
     /** A preflight pass yields before any mutation. The commit pass revalidates live state. */
     private static final class Deferred extends RuntimeException {private Deferred(){super(null,null,false,false);}}
     private static final Deferred DEFERRED=new Deferred();
@@ -32,7 +40,7 @@ public final class VehicleTransfer {
         VehicleStructure beforeStructure;VehicleCollision beforeCollision;
         NBTTagCompound undo;VehicleOwnership.Update ownership;Path journal;
         Future<?> io;boolean journalReady,committed,retiring,aborting,rolledBack,rollbackNotice,mutated;
-        ArrayDeque<Chunk> saves;
+        TransferCheckpoint checkpoint;boolean checkpointReady;
         final ArrayDeque<BlockUpdates> updates=new ArrayDeque<>();
         final Set<TileEntity> pausedTiles=Collections.newSetFromMap(new IdentityHashMap<TileEntity,Boolean>());
         Work(WorldServer world,Action action,java.util.function.Consumer<Exception> failed){this.world=world;this.action=action;this.failed=failed;}
@@ -76,7 +84,8 @@ public final class VehicleTransfer {
     private static void retire(WorldServer world)throws IOException{Work work=ACTIVE.get();if(work==null)Files.deleteIfExists(journal(world));else work.committed=true;}
     private static void hold(Work work,EntityGroundVehicle entity){if(work!=null){if(work.held==null){work.beforeStructure=entity.structure;work.beforeCollision=entity.collision;}work.held=entity;entity.setTransferInProgress(true);}}
     private static void release(Work work){
-        if(work.held!=null)work.held.setTransferInProgress(false);if(work.preparation!=null)work.preparation.cancel();
+        TransferCoordinator.release(work.world,work);
+        if(work.checkpoint!=null)work.checkpoint.close();if(work.held!=null)work.held.setTransferInProgress(false);if(work.preparation!=null)work.preparation.cancel();
         for(TileEntity tile:work.pausedTiles){int remaining=PAUSED_TILES.getOrDefault(tile,1)-1;
             if(remaining>0){PAUSED_TILES.put(tile,remaining);continue;}PAUSED_TILES.remove(tile);
             if(!tile.isInvalid()&&work.world.isBlockLoaded(tile.getPos())&&work.world.getTileEntity(tile.getPos())==tile&&!work.world.tickableTileEntities.contains(tile))work.world.tickableTileEntities.add(tile);
@@ -86,6 +95,7 @@ public final class VehicleTransfer {
     /** At most one affected chunk is serialized per tick; disk waits never run on this thread. */
     static void tick(WorldServer world){
         ArrayDeque<Work> queue=WORK.get(world);if(queue==null||queue.isEmpty())return;Work work=queue.peek();
+        if(!TransferCoordinator.acquire(world,work))return;
         try{
             if(work.preparation!=null&&work.geometry==null){work.geometry=work.preparation.poll();if(work.geometry==null)return;}
             if(work.io!=null){if(!work.io.isDone())return;work.io.get();work.io=null;if(work.retiring||work.aborting){release(work);queue.remove();return;}work.journalReady=true;}
@@ -97,17 +107,16 @@ public final class VehicleTransfer {
                     while(!work.updates.isEmpty()&&System.nanoTime()<deadline);
                     return;
                 }
-                if(work.saves==null){
+                if(work.checkpoint==null){
                     Set<Chunk> chunks=new LinkedHashSet<>();VehicleStructure affected=VehicleStructure.read(work.undo.getCompoundTag(work.undo.hasKey("ParkedCraft",10)?"ParkedCraft":work.undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft"));
                     BlockPos origin=BlockPos.fromLong(work.undo.getLong(work.undo.hasKey("AssemblyOriginalOrigin",4)?"AssemblyOriginalOrigin":"Origin"));
                     for(VehicleStructure.Cell cell:affected.cells)chunks.add(world.getChunkFromBlockCoords(origin.add(cell.pos)));
                     if(work.held!=null)chunks.add(world.getChunkFromBlockCoords(work.held.getPosition()));
-                    work.saves=new ArrayDeque<>(chunks);
+                    work.checkpoint=new TransferCheckpoint(world,chunks);
                 }
-                if(!work.saves.isEmpty()){Chunk chunk=work.saves.remove();world.getChunkProvider().chunkLoader.saveChunk(world,chunk);return;}
-                // Only the vanilla I/O thread drains its queue. Calling loader.flush here
-                // would race a chunk already being written by that thread.
-                try{work.io=IO.submit(()->{if(work.rolledBack)work.ownership.restore();net.minecraft.world.storage.ThreadedFileIOBase.getThreadedIOInstance().waitForFinish();Files.deleteIfExists(work.journal);return null;});work.retiring=true;}catch(RejectedExecutionException busy){}return;
+                if(!work.checkpointReady){if(!work.checkpoint.step())return;work.checkpointReady=true;}
+                try{work.io=IO.submit(()->{if(work.rolledBack)work.ownership.restore();Files.deleteIfExists(work.journal);return null;});work.retiring=true;}catch(RejectedExecutionException busy){}
+                return;
             }
             ACTIVE.set(work);try{work.action.run();if(work.undo==null){release(work);queue.remove();}else work.committed=true;}finally{ACTIVE.remove();}
         }catch(Deferred waiting){
@@ -381,6 +390,7 @@ public final class VehicleTransfer {
         if(place)com.vandorlabs.tiles.DeferredTileLoad.flushInstalled(world,previous.keySet());
         Work work=ACTIVE.get();BlockUpdates updates=new BlockUpdates(world,chunks,previous);
         if(work!=null){for(Chunk chunk:chunks)chunk.markDirty();work.updates.add(updates);}
+        else if(EXTERNAL_UPDATES.get()!=null){for(Chunk chunk:chunks)chunk.markDirty();EXTERNAL_UPDATES.get().updates.add(updates);}
         else while(!updates.step()){}
         timing(place?"restore-blocks-light-neighbors":"remove-blocks-light-neighbors",began);
         }

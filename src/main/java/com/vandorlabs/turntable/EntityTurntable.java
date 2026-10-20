@@ -55,6 +55,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     }
     public double angle(float partial){double delta=((angle-previous+540)%360)-180;return TurntableGeometry.wrap(previous+delta*partial);}
     public double angle(){return angle;}
+    public void pauseForTransfer(){dataManager.set(ANGLE,(float)angle);dataManager.set(RATE,0F);}
     public void setAngle(double value){angle=previous=TurntableGeometry.wrap(value);dataManager.set(ANGLE,(float)angle);boxesAt=Double.NaN;updateBounds();}
     private AxisAlignedBB transformed(AxisAlignedBB box,double angle){
         double dx=snapshot.origin.getX()-posX,dy=snapshot.origin.getY()-posY,dz=snapshot.origin.getZ()-posZ;
@@ -82,7 +83,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
             if(snapshot==null && decoded==null && ticksExisted>=nextRequest){nextRequest=ticksExisted+20;com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTurntableSnapshot.request(getEntityId(),received));}
             updateBounds();return;
         }
-        if(snapshot==null||TurntableTransfer.pending(this)){dataManager.set(RATE,0F);TileEntityTurntableController controller=owner();if(controller!=null)controller.status(snapshot==null?"Captured component unavailable; saved contents retained":"Transfer waiting for recovery; contents retained");return;}
+        if(snapshot==null||TurntableTransfer.pending(this)){dataManager.set(RATE,0F);TileEntityTurntableController controller=owner();if(controller!=null&&!TurntableTransactions.queued((WorldServer)world,getUniqueID()))controller.status(snapshot==null?"Captured component unavailable; saved contents retained":"Transfer waiting for recovery; contents retained");return;}
         TileEntityTurntableController owner=owner();
         if(owner==null){dataManager.set(RATE,0F);if(world.isBlockLoaded(controller) && ticksExisted%20==0)TurntableEvents.restoreAfterTick(this);return;}
         if(!getUniqueID().equals(owner.captureId)){dataManager.set(RATE,0F);return;}

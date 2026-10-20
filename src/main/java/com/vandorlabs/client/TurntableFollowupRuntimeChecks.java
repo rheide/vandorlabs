@@ -37,7 +37,7 @@ final class TurntableFollowupRuntimeChecks {
             TileEntityTurntableController tile=(TileEntityTurntableController)world.getTileEntity(owner);tile.height=1;
             String[] suffix={"","_bottom_right","_top_right","_top_left"};
             for(int i=0;i<8;i++)world.setBlockState(seed.add(i%3,1,i/3),Block.getBlockFromName("vandorlabs:rocket_thruster_wedge"+suffix[i%4]).getDefaultState().withProperty(BlockPropulsionLight.FACING,i<4?EnumFacing.UP:EnumFacing.DOWN));
-            tile.scan(player);tile.display().setAngle(90);
+            TurntableTransactionsChecks.scan(tile,player);tile.display().setAngle(90);
             player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(Blocks.LEVER));
             require(!controller.onBlockActivated(world,owner,world.getBlockState(owner),player,EnumHand.MAIN_HAND,EnumFacing.WEST,.5F,.5F,.5F),"controller permits attached items after capture");
             require(player.interactionManager.processRightClickBlock(player,world,player.getHeldItemMainhand(),EnumHand.MAIN_HAND,owner,EnumFacing.WEST,.5F,.5F,.5F)==EnumActionResult.SUCCESS&&world.getBlockState(owner.west()).getBlock()==Blocks.LEVER,"real lever placement against captured controller");
@@ -47,27 +47,27 @@ final class TurntableFollowupRuntimeChecks {
                 for(int n=0;n<4;n++)cycle=cycle.withRotation(Rotation.CLOCKWISE_90);
                 require(cycle==before&&after.getBlock()!=before.getBlock(),"vertical wedge corner rotates and round trips");
             }
-            tile.restore(player);for(com.vandorlabs.vehicle.VehicleStructure.Cell cell:expected.blocks.cells)require(world.getBlockState(expected.origin.add(cell.pos))==cell.state,"quarter-turn restores wedge corners");
+            TurntableTransactionsChecks.restore(tile,player);for(com.vandorlabs.vehicle.VehicleStructure.Cell cell:expected.blocks.cells)require(world.getBlockState(expected.origin.add(cell.pos))==cell.state,"quarter-turn restores wedge corners");
             for(BlockPos p:tile.layout.cells)require(!BlockTurntableSurface.locked(world,p),"Restore releases every surface lock");
             RedstoneChannels.register(first);RedstoneChannels.register(second);
-            NBTTagCompound settings=tile.writeToNBT(new NBTTagCompound());settings.setString("DirectionChannels","65011,65012");tile.settings(settings);tile.update();boolean original=tile.clockwise;
-            first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.clockwise==original,"direction waits for all channels");
-            second.on=true;RedstoneChannels.inputChanged(second);tile.update();require(tile.clockwise!=original,"rising direction pulse reverses once");
-            for(int n=0;n<40;n++)tile.update();require(tile.clockwise!=original,"held pulse does not retrigger");
-            TileEntityTurntableController saved=new TileEntityTurntableController();saved.readFromNBT(tile.writeToNBT(new NBTTagCompound()));saved.setWorld(world);saved.setPos(owner);saved.update();require(saved.clockwise==tile.clockwise,"held direction pulse survives save/load");
-            first.on=false;RedstoneChannels.inputChanged(first);tile.update();require(tile.clockwise!=original,"falling edge does not reverse");
-            first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.clockwise==original,"next pulse reverses again");
-            tile.directionChannels=ChannelList.EMPTY;tile.update();first.on=false;RedstoneChannels.inputChanged(first);first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.clockwise==original,"zero disables direction pulses");
+            NBTTagCompound settings=tile.writeToNBT(new NBTTagCompound());settings.setString("DirectionChannels","65011,65012");tile.settings(settings);tile.update();TurntableTransactions.drainForChecks(world);boolean original=tile.clockwise;
+            first.on=true;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);require(tile.clockwise==original,"direction waits for all channels");
+            second.on=true;RedstoneChannels.inputChanged(second);tile.update();TurntableTransactions.drainForChecks(world);require(tile.clockwise!=original,"rising direction pulse reverses once");
+            for(int n=0;n<40;n++)tile.update();TurntableTransactions.drainForChecks(world);require(tile.clockwise!=original,"held pulse does not retrigger");
+            TileEntityTurntableController saved=new TileEntityTurntableController();saved.readFromNBT(tile.writeToNBT(new NBTTagCompound()));saved.setWorld(world);saved.setPos(owner);saved.update();TurntableTransactions.drainForChecks(world);require(saved.clockwise==tile.clockwise,"held direction pulse survives save/load");
+            first.on=false;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);require(tile.clockwise!=original,"falling edge does not reverse");
+            first.on=true;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);require(tile.clockwise==original,"next pulse reverses again");
+            tile.directionChannels=ChannelList.EMPTY;tile.update();TurntableTransactions.drainForChecks(world);first.on=false;RedstoneChannels.inputChanged(first);first.on=true;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);require(tile.clockwise==original,"zero disables direction pulses");
             first.on=false;second.on=false;RedstoneChannels.inputChanged(first);RedstoneChannels.inputChanged(second);
-            settings=tile.writeToNBT(new NBTTagCompound());settings.setString("RestoreChannels","65011,65012");tile.settings(settings);tile.scan(player);tile.update();
-            first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.captureId!=null,"Restore waits for all assigned channels");
-            second.on=true;RedstoneChannels.inputChanged(second);tile.update();require(tile.captureId==null&&tile.display()==null,"Restore channel rising pulse returns blocks");
-            tile.scan(player);for(int n=0;n<10;n++)tile.update();require(tile.captureId!=null,"held Restore pulse does not consume a subsequent capture");
-            saved=new TileEntityTurntableController();saved.readFromNBT(tile.writeToNBT(new NBTTagCompound()));saved.setWorld(world);saved.setPos(owner);saved.update();
+            settings=tile.writeToNBT(new NBTTagCompound());settings.setString("RestoreChannels","65011,65012");tile.settings(settings);TurntableTransactionsChecks.scan(tile,player);tile.update();TurntableTransactions.drainForChecks(world);
+            first.on=true;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);require(tile.captureId!=null,"Restore waits for all assigned channels");
+            second.on=true;RedstoneChannels.inputChanged(second);tile.update();TurntableTransactions.drainForChecks(world);require(tile.captureId==null&&tile.display()==null,"Restore channel rising pulse returns blocks");
+            TurntableTransactionsChecks.scan(tile,player);for(int n=0;n<10;n++)tile.update();TurntableTransactions.drainForChecks(world);require(tile.captureId!=null,"held Restore pulse does not consume a subsequent capture");
+            saved=new TileEntityTurntableController();saved.readFromNBT(tile.writeToNBT(new NBTTagCompound()));saved.setWorld(world);saved.setPos(owner);saved.update();TurntableTransactions.drainForChecks(world);
             require(saved.restoreChannels.equals(tile.restoreChannels)&&tile.captureId!=null,"held Restore pulse and channels survive save/load without replay");
-            first.on=false;RedstoneChannels.inputChanged(first);tile.update();first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.captureId==null,"next Restore pulse returns a subsequent capture");
-            settings=tile.writeToNBT(new NBTTagCompound());settings.setString("RestoreChannels","0");tile.settings(settings);tile.scan(player);tile.update();
-            first.on=false;RedstoneChannels.inputChanged(first);tile.update();first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.captureId!=null,"zero disables Restore pulses");tile.restore(player);
+            first.on=false;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);first.on=true;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);require(tile.captureId==null,"next Restore pulse returns a subsequent capture");
+            settings=tile.writeToNBT(new NBTTagCompound());settings.setString("RestoreChannels","0");tile.settings(settings);TurntableTransactionsChecks.scan(tile,player);tile.update();TurntableTransactions.drainForChecks(world);
+            first.on=false;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);first.on=true;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);require(tile.captureId!=null,"zero disables Restore pulses");TurntableTransactionsChecks.restore(tile,player);
             for(double[] migration:new double[][]{{.1,.5},{.6,.5},{1.25,1.5},{10.2,10},{30,10},{Double.NaN,1}}){NBTTagCompound legacy=tile.writeToNBT(new NBTTagCompound());legacy.setDouble("RPM",migration[0]);TileEntityTurntableController migrated=new TileEntityTurntableController();migrated.readFromNBT(legacy);require(migrated.rpm==migration[1],"legacy RPM migrates to half-step range");}
 
         }finally{player.setHeldItem(EnumHand.MAIN_HAND,held);RedstoneChannels.unregister(first);RedstoneChannels.unregister(second);for(BlockPos at:BlockPos.getAllInBox(seed.add(-3,-2,-3),seed.add(5,3,5)))if(!world.isAirBlock(at))world.setBlockToAir(at);}

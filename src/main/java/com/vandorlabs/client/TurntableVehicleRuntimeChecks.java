@@ -25,17 +25,17 @@ final class TurntableVehicleRuntimeChecks {
             for(int x=0;x<9;x++)for(int z=0;z<9;z++)world.setBlockState(ROOT.add(x,0,z),Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState());
             world.setBlockState(OWNER,Block.getBlockFromName("vandorlabs:turntable_controller").getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST));
             table=(TileEntityTurntableController)world.getTileEntity(OWNER);table.height=6;table.rpm=3;
-            player.setPositionAndUpdate(ROOT.getX()-12,ROOT.getY()+8,ROOT.getZ()-10);table.scan(player);
+            player.setPositionAndUpdate(ROOT.getX()-12,ROOT.getY()+8,ROOT.getZ()-10);TurntableTransactionsChecks.scan(table,player);
             BlockPos seat=build(world,player,ROOT.add(-7,2,3));VehicleScan scan=scan(world,seat);
             craft=VehicleTransfer.assemble(world,scan.result,scan.origin,player);require(!craft.hover,"starts in Taxi mode");checkLight(craft.view);
             drive(advance,craft,0,ROOT.getX()+3);require(centerX(craft)>=ROOT.getX()+4 && centerX(craft)<ROOT.getX()+6,"vehicle drove onto the disc");
             if(blockMode){
                 int count=craft.structure.cells.size();VehicleTransfer.park(world,craft,new BlockPos(craft.posX,craft.posY,craft.posZ),player);craft=null;
-                table.restore(player);table.scan(player);EntityTurntable display=table.display();require(display.snapshot.blocks.cells.size()==count,"parked vehicle captured completely");checkLight(display.view);
+                TurntableTransactionsChecks.restore(table,player);TurntableTransactionsChecks.scan(table,player);EntityTurntable display=table.display();require(display.snapshot.blocks.cells.size()==count,"parked vehicle captured completely");checkLight(display.view);
                 world.setBlockState(OWNER.down(),Blocks.REDSTONE_BLOCK.getDefaultState());
-                for(int tick=0;tick<100;tick++){table.update();display=table.display();require(display!=null,"parked vehicle remains captured while powered");display.onUpdate();}
+                for(int tick=0;tick<100;tick++){table.update();TurntableTransactions.drainForChecks(world);display=table.display();require(display!=null,"parked vehicle remains captured while powered");display.onUpdate();}
                 require(Math.abs(display.angle()-90)<.001,"parked vehicle rotates ninety degrees");TurntableSnapshot returned=display.snapshot.rotated(display.angle(),display.view);
-                world.setBlockToAir(OWNER.down());table.update();require(table.captureId==null&&table.display()==null,"parked vehicle automatically returns to editable blocks at ninety degrees");
+                world.setBlockToAir(OWNER.down());table.update();TurntableTransactions.drainForChecks(world);require(table.captureId==null&&table.display()==null,"parked vehicle automatically returns to editable blocks at ninety degrees");
                 seat=null;for(VehicleStructure.Cell cell:returned.blocks.cells)if(cell.state.getBlock() instanceof BlockPilotSeat && !cell.state.getValue(BlockPilotSeat.UPPER)){seat=returned.origin.add(cell.pos);break;}
                 require(seat!=null && world.getBlockState(seat).getValue(BlockPilotSeat.FACING)==EnumFacing.SOUTH,"restored vehicle seat rotates East to South");
                 scan=scan(world,seat);craft=VehicleTransfer.assemble(world,scan.result,scan.origin,player);
@@ -43,22 +43,22 @@ final class TurntableVehicleRuntimeChecks {
             }else{
                 double x=centerX(craft),z=centerZ(craft);float yaw=craft.rotationYaw;EntityTurntable display=table.display();
                 world.setBlockState(OWNER.down(),Blocks.REDSTONE_BLOCK.getDefaultState());
-                for(int tick=0;tick<100;tick++){table.update();display=table.display();require(display!=null&&!craft.isDead&&display.snapshot.entities.isEmpty(),"redstone rescan leaves Taxi craft live");display.onUpdate();}
+                for(int tick=0;tick<100;tick++){table.update();TurntableTransactions.drainForChecks(world);display=table.display();require(display!=null&&!craft.isDead&&display.snapshot.entities.isEmpty(),"redstone rescan leaves Taxi craft live");display.onUpdate();}
                 require(Math.abs(display.angle()-90)<.001,"redstone rotates exactly ninety degrees");
                 double[] expected=TurntableGeometry.rotate(x-display.posX,0,z-display.posZ,TurntableGeometry.Face.UP,90);
                 require(Math.abs(centerX(craft)-display.posX-expected[0])<.02 && Math.abs(centerZ(craft)-display.posZ-expected[2])<.02,"Taxi craft rotates about its physical center");
                 require(Math.abs(MathHelper.wrapDegrees(craft.rotationYaw-yaw-90))<.01,"Taxi heading follows platform");
-                world.setBlockToAir(OWNER.down());for(int tick=0;tick<30;tick++){table.update();require(table.display()==null&&table.captureId==null&&!craft.isDead,"quarter-turn stop releases platform without capturing Taxi craft");TurntableEvents.finishTransfers(world);}
+                world.setBlockToAir(OWNER.down());for(int tick=0;tick<30;tick++){table.update();TurntableTransactions.drainForChecks(world);require(table.display()==null&&table.captureId==null&&!craft.isDead,"quarter-turn stop releases platform without capturing Taxi craft");TurntableEvents.finishTransfers(world);}
                 require(Math.abs(table.angle(1)-90)<.001,"automatic release preserves the rotated Taxi platform heading");
             }
             double start=centerZ(craft);drive(advance,craft,2,ROOT.getZ()+12);
             require(centerZ(craft)-start>6 && centerZ(craft)>ROOT.getZ()+11,"vehicle drives off along rotated South heading");
             require(Math.abs(craft.posY-(ROOT.getY()+1))<.15,"Taxi wheels keep floor height across the platform boundary");
             VehicleTransfer.park(world,craft,new BlockPos(craft.posX,craft.posY,craft.posZ),player);craft=null;
-            if(table.display()!=null)table.restore(player);table.release();table=null;
+            if(table.display()!=null)TurntableTransactionsChecks.restore(table,player);table.release();table=null;
         }}finally{
             if(craft!=null&&!craft.isDead)try{VehicleTransfer.park(world,craft,new BlockPos(craft.posX,craft.posY,craft.posZ),player);}catch(Exception cleanup){craft.setDead();}
-            if(table!=null&&table.display()!=null)try{table.restore(player);}catch(Exception retained){/* disposable fixture retains its recovery record */}
+            if(table!=null&&table.display()!=null)try{TurntableTransactionsChecks.restore(table,player);}catch(Exception retained){/* disposable fixture retains its recovery record */}
             clear(world);player.setPositionAndUpdate(before.x,before.y,before.z);
         }
         System.out.println("[vandorlabs][reprolab] turntable-vehicles PASS Taxi enter rotate90 auto-release drive-off; park scan rotate90 auto-restore reassemble Taxi drive-off; Pinnacle logo and light textures retained");

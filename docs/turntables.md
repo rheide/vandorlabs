@@ -122,3 +122,15 @@ cardinal heading and releases the surviving surfaces. If return space is blocked
 the orphan display is removed and its contents remain in the recovery record;
 they return automatically when the required chunks and clear positions are available.
 Replacement terrain is preserved.
+
+Capture and Restore requests prepare their recovery journal on a background
+worker. During preparation, captured contents pause and the server checks them
+again before conversion. An inventory edit aborts the capture without replacing
+the edit. Restore pulses received during preparation are queued until capture
+finishes. Lighting and neighbor notifications are processed across ticks.
+
+Turntables and vehicles share a per-world transfer coordinator. Each transfer
+checkpoints only its affected chunks, verifies their transaction markers in
+region storage, then retires its recovery journal. Slow storage delays completion
+without a server-thread disk wait. Conflicting recovery contents retain their
+journal rather than overwriting newer blocks, inventories or entities.
