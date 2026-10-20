@@ -21,7 +21,7 @@ public final class TurntableGeometry {
 
     public static double wrap(double degrees){return ((degrees%360)+360)%360;}
     public static double degreesPerTick(double rpm){
-        if(!Double.isFinite(rpm) || rpm<.1 || rpm>30)throw new IllegalArgumentException("Speed must be between 0.1 and 30 RPM");
+        if(!Double.isFinite(rpm) || rpm<.5 || rpm>10 || Math.abs(rpm*2-Math.rint(rpm*2))>1e-7)throw new IllegalArgumentException("Speed must be between 0.5 and 10 RPM in 0.5 RPM steps");
         return rpm*.3;
     }
     /** Positive degrees are clockwise when looking at the active face from outside. */

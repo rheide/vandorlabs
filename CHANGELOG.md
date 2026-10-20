@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Add pulse-controlled Restore channels to turntables, and limit speed to 0.5?10 RPM in 0.5 RPM steps. Existing speeds migrate to the supported range.
+
 - Automatically restore captured turntable contents when redstone rotation stops at a quarter turn; other headings remain captured.
 
 - Preserve diagonal wall top and bottom caps against flat programmable glass walls while retaining aligned panel joins.

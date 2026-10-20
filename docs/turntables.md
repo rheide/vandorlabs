@@ -30,7 +30,7 @@ and ride the disc; they are not frozen by a scan.
 automatically. **Rotate** uses ON or OFF redstone activation, like a Ramp
 Controller. New controllers default to ON. Each input has its own comma-separated channel
 list. Zero uses local redstone; configured channels require all listed channels
-to be powered. Use the speed slider from 0.1 to 30 RPM in 0.1 RPM steps (default 1 RPM) and choose clockwise or
+to be powered. Use the speed slider from 0.5 to 10 RPM in 0.5 RPM steps (default 1 RPM) and choose clockwise or
 counterclockwise as viewed from outside the active face.
 
 **Direction** accepts a separate channel list. Zero disables direction pulses.
@@ -38,6 +38,12 @@ When all listed channels become powered, the direction reverses once. Holding
 power does not keep reversing it; release the channels before the next pulse.
 The direction button updates to show the result. Right-click an option button
 to cycle backward.
+
+**Restore pulse** accepts its own channel list. Zero disables this input. When
+all assigned channels become powered, the contents restore once at the nearest
+quarter turn, using the same permissions and obstruction checks as the Restore
+button. Release the signal before sending another pulse. Holding a signal,
+including across save/load, does not keep restoring subsequent captures.
 
 The square shares one surface image. Its circular plate rotates with the captured
 contents, surrounded by a fixed square housing. Joined surfaces use the supplied

@@ -52,12 +52,24 @@ final class TurntableFollowupRuntimeChecks {
             first.on=false;RedstoneChannels.inputChanged(first);tile.update();require(tile.clockwise!=original,"falling edge does not reverse");
             first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.clockwise==original,"next pulse reverses again");
             tile.directionChannels=ChannelList.EMPTY;tile.update();first.on=false;RedstoneChannels.inputChanged(first);first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.clockwise==original,"zero disables direction pulses");
+            first.on=false;second.on=false;RedstoneChannels.inputChanged(first);RedstoneChannels.inputChanged(second);
+            settings=tile.writeToNBT(new NBTTagCompound());settings.setString("RestoreChannels","65011,65012");tile.settings(settings);tile.scan(player);tile.update();
+            first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.captureId!=null,"Restore waits for all assigned channels");
+            second.on=true;RedstoneChannels.inputChanged(second);tile.update();require(tile.captureId==null&&tile.display()==null,"Restore channel rising pulse returns blocks");
+            tile.scan(player);for(int n=0;n<10;n++)tile.update();require(tile.captureId!=null,"held Restore pulse does not consume a subsequent capture");
+            saved=new TileEntityTurntableController();saved.readFromNBT(tile.writeToNBT(new NBTTagCompound()));saved.setWorld(world);saved.setPos(owner);saved.update();
+            require(saved.restoreChannels.equals(tile.restoreChannels)&&tile.captureId!=null,"held Restore pulse and channels survive save/load without replay");
+            first.on=false;RedstoneChannels.inputChanged(first);tile.update();first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.captureId==null,"next Restore pulse returns a subsequent capture");
+            settings=tile.writeToNBT(new NBTTagCompound());settings.setString("RestoreChannels","0");tile.settings(settings);tile.scan(player);tile.update();
+            first.on=false;RedstoneChannels.inputChanged(first);tile.update();first.on=true;RedstoneChannels.inputChanged(first);tile.update();require(tile.captureId!=null,"zero disables Restore pulses");tile.restore(player);
+            for(double[] migration:new double[][]{{.1,.5},{.6,.5},{1.25,1.5},{10.2,10},{30,10},{Double.NaN,1}}){NBTTagCompound legacy=tile.writeToNBT(new NBTTagCompound());legacy.setDouble("RPM",migration[0]);TileEntityTurntableController migrated=new TileEntityTurntableController();migrated.readFromNBT(legacy);require(migrated.rpm==migration[1],"legacy RPM migrates to half-step range");}
+
         }finally{player.setHeldItem(EnumHand.MAIN_HAND,held);RedstoneChannels.unregister(first);RedstoneChannels.unregister(second);for(BlockPos at:BlockPos.getAllInBox(seed.add(-3,-2,-3),seed.add(5,3,5)))if(!world.isAirBlock(at))world.setBlockToAir(at);}
         for(String family:new String[]{"rocket_thruster","ion_drive","plasma_vent","impulse_engine"})for(String suffix:new String[]{"","_bottom_right","_top_right","_top_left"})for(EnumFacing face:EnumFacing.values()){
             IBlockState state=Block.getBlockFromName("vandorlabs:"+family+"_wedge"+suffix).getDefaultState().withProperty(BlockPropulsionLight.FACING,face),cycle=state;
             for(int n=0;n<4;n++)cycle=cycle.withRotation(Rotation.CLOCKWISE_90);require(cycle==state,"all wedge families round trip "+family+face);
         }
-        System.out.println("[vandorlabs][reprolab] turntable-followups PASS controller orientation lever attachment exact surface locks wedge restore and direction pulse channels");
+        System.out.println("[vandorlabs][reprolab] turntable-followups PASS controller orientation lever attachment exact surface locks wedge restore direction and Restore pulses held-save/load half-step RPM migration");
     }
     private static final class Source extends TileEntity implements RedstoneChannelMember{
         final int channel;boolean on;Source(WorldServer world,BlockPos pos,int channel){this.channel=channel;setWorld(world);setPos(pos);}

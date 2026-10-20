@@ -57,7 +57,8 @@ Company logos, backgrounds and murals now have their own **Corp** material categ
 See every small and large Extender and Swing Arm in motion with Plates, Skis and Wheels in the [animated landing gear guide](docs/modular-landing-gear.md#animated-combinations).
 
 
-Turntable direction can now reverse on a redstone-channel pulse, and scanned
+Turntable direction and Restore have independent redstone pulse channels.
+Speed is adjustable from 0.5 to 10 RPM in 0.5 RPM steps, and scanned
 surfaces remain protected until Restore. Programmable Block Stretch/Fit artwork
 joins across matching faces, including chunk borders. Device renderers reuse
 stationary gear transforms and constructor orientations, and the standard JAR
