@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.3
+
+- Add four turntable surface designs with independent On/Off selectors, and expose all six surface images in the shared Turntable texture category.
+- Restore both cockpit consoles, the chair with side rests and the yoke/screen block to creative menus for testing.
+- Build captured turntable meshes within a shared frame budget, parse incoming structure NBT on a bounded worker, and stream turntable snapshots in bounded windows.
+- Process vehicle block-update batches within a tick time budget while retaining durable transfer checkpoints.
+- Batch modular landing gear rendering, omit bound member draws, and preserve hull meshes during pose updates. Reuse rigid hull collision geometry and bounded assembly pose caches where supported; index world gear by chunk for collision queries.
+- Synchronize gear motion with compact, revision-checked pose packets and preserve correction interpolation.
+
 ## 2.2
 
 - Add a saved 0-5 degree Auto-snap slider to turntables, with 0.1-degree steps and a default of zero. Redstone-off stops within tolerance restore at the nearest quarter turn. Compact the status panel and synchronize active surface artwork from the server, including channel-driven rotation.

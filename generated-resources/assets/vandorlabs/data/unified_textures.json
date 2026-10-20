@@ -2571,5 +2571,41 @@
     "source": "corp/lights/vandor_off",
     "lightOnly": true,
     "off": true
+  },
+  {
+    "id": "turntable_original_off",
+    "label": "Original Off",
+    "category": "Turntable",
+    "source": "turntable/turntable_block_top"
+  },
+  {
+    "id": "turntable_original_on",
+    "label": "Original On",
+    "category": "Turntable",
+    "source": "turntable/turntable_block_top_on"
+  },
+  {
+    "id": "turntable_stone_iron",
+    "label": "Stone and Iron",
+    "category": "Turntable",
+    "source": "turntable/turntable_block_top_stone_iron"
+  },
+  {
+    "id": "turntable_rotary_deck",
+    "label": "Rotary Deck",
+    "category": "Turntable",
+    "source": "turntable/turntable_block_top_rotary_deck"
+  },
+  {
+    "id": "turntable_basalt",
+    "label": "Embossed Basalt",
+    "category": "Turntable",
+    "source": "turntable/turntable_block_top_basalt"
+  },
+  {
+    "id": "turntable_graphite_ivory",
+    "label": "Graphite and Ivory",
+    "category": "Turntable",
+    "source": "turntable/turntable_block_top_graphite_ivory"
   }
 ]

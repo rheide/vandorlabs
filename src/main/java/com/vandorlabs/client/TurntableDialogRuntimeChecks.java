@@ -24,6 +24,7 @@ final class TurntableDialogRuntimeChecks {
         finally{mc.displayGuiScreen(old);}
         if(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/turntable/turntable_block_top_on").getIconWidth()!=512)throw new IllegalStateException("High-resolution surface master was reduced");
         if(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/turntable/turntable_block_top_on_low").getIconWidth()!=64)throw new IllegalStateException("Low-resolution surface missing");
+        TurntableTextureRuntimeChecks.run(mc,output,tile);
         System.out.println("[vandorlabs][reprolab] turntable-dialog PASS three resolutions nonoverlapping controls four channel lists Restore packet half-step RPM autosnap range/settings snapshot synchronization server-synchronized active glow high/low artwork");
     }
     private static void add(List<Rectangle> occupied,Rectangle next,int[] size){if(next.x<0||next.y<0||next.x+next.width>size[0]||next.y+next.height>size[1])throw new IllegalStateException("Turntable control outside screen: "+next);for(Rectangle other:occupied)if(next.intersects(other))throw new IllegalStateException("Turntable overlapping controls: "+next+" and "+other);occupied.add(next);}

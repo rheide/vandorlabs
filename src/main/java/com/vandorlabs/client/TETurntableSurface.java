@@ -17,8 +17,7 @@ import org.lwjgl.opengl.GL11;
 /** One square image per assembly; the circular plate rotates inside its fixed square housing. */
 @Mod.EventBusSubscriber(modid="vandorlabs",value=Side.CLIENT)
 public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEntityTurntableSurface> {
-    private static String texture(boolean active,boolean high){return "vandorlabs:blocks/turntable/turntable_block_top"+(active?"_on":"")+(high?"":"_low");}
-    @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event){for(boolean active:new boolean[]{false,true})for(boolean high:new boolean[]{false,true})event.getMap().registerSprite(new ResourceLocation(texture(active,high)));}
+    @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event){for(String id:TurntableTextures.IDS)for(boolean high:new boolean[]{false,true})event.getMap().registerSprite(new ResourceLocation(TurntableTextures.texture(id,high)));}
     @SubscribeEvent public static void stitched(TextureStitchEvent.Post event){RenderTurntable.clear();}
     @SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)Minecraft.getMinecraft().addScheduledTask(RenderTurntable::clear);}
     // The shared face spans chunks; it must not disappear when its root chunk is culled.
@@ -26,7 +25,7 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
     @Override public void render(TileEntityTurntableSurface tile,double x,double y,double z,float partial,int destroy,float alpha){
         TileEntityTurntableController controller=tile.controller();if(controller==null||controller.layout==null||!tile.getPos().equals(controller.layout.root))return;
         TurntableSurfaceLayout layout=controller.layout;TurntableGeometry.Face face=layout.basis;boolean active=controller.running();
-        TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(texture(active,layout.size>1));
+        TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(TurntableTextures.texture(active?controller.surfaceOn:controller.surfaceOff,layout.size>1));
         GlStateManager.pushMatrix();
         try(TurntableRenderState state=new TurntableRenderState()){bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.disableCull();GlStateManager.disableLighting();GlStateManager.enableDepth();GlStateManager.depthMask(true);GlStateManager.disableBlend();GlStateManager.color(1,1,1,1);GlStateManager.translate(x-tile.getPos().getX()+layout.pivot.x,y-tile.getPos().getY()+layout.pivot.y,z-tile.getPos().getZ()+layout.pivot.z);
             int light=tile.getWorld().getCombinedLight(tile.getPos().offset(layout.normal),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);

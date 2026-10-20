@@ -62,5 +62,7 @@ for detail,tier in enumerate(['low','medium']):
 out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 corp=root/'texture-packs/additional/corp-catalog.json'
 if corp.exists():entries.extend(json.loads(corp.read_text()))
+turntables=root/'texture-packs/additional/turntable-catalog.json'
+if turntables.exists():entries.extend(json.loads(turntables.read_text()))
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')
