@@ -54,6 +54,7 @@ final class DiagonalJoinMatrixChecks {
         VerticalMaterialJoinChecks.run();
         mixed(blocks);
         transparentEnds(blocks);
+        flatGlassCaps(blocks[0]);
         flatFrames();
         actualPlanes();
         fullWidthMixedCorners();
@@ -81,6 +82,42 @@ final class DiagonalJoinMatrixChecks {
             require(!DiagonalWallModel.bake(shape,SPRITE,SPRITE).isEmpty(),"baked mixed wall mesh missing");cases++;
         }
         System.out.println("PASS: "+cases+" transparent/opaque diagonal end joins retain wall caps, both frame settings and rendering paths");
+    }
+    private static void flatGlassCaps(BlockProgrammableWall wallBlock){
+        BlockProgrammableGlass glassBlock=new BlockProgrammableGlass("cap_test_glass");
+        BlockProgrammableWall solidBlock=new BlockProgrammableWall("cap_test_wall",BlockProgrammableWall.Shape.PLAIN);
+        BlockPos root=new BlockPos(8,88,8);int cases=0;
+        for(int mode=0;mode<2;mode++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean upper:new boolean[]{false,true})for(int depth=0;depth<3;depth++)for(boolean framed:new boolean[]{false,true}){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);
+            IBlockState wall=wallBlock.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing).withProperty(BlockProgrammableWall.INVERTED,inverted);
+            put(world,root,wall,mode);BlockPos next=upper?root.up():root.down();
+            IBlockState glass=glassBlock.getDefaultState().withProperty(BlockGlassWall.ROTATED,facing.getAxis()==EnumFacing.Axis.X).withProperty(BlockGlassWall.DEPTH,depth);
+            world.setBlockState(next,glass,2);((TileEntityProgrammableGlass)world.getTileEntity(next)).setAppearance(1,framed);
+            double end=BlockProgrammableWall.flatEnd(wall,world,root,upper);if(Double.isNaN(end))continue;
+            List<String> collision=collision(world,root);
+            require(PanelJoins.connectsFlat(world,next,glass,root),"flat glass must still join the aligned slope");
+            DiagonalWallState baked=new DiagonalWallState(wall,world,root);
+            require(!(upper?baked.hideUpper:baked.hideLower),"flat glass hides baked wall cap");
+            require(hasCap(DiagonalWallModel.bake(baked,SPRITE,SPRITE),upper),"baked wall lacks textured cap under flat glass");
+            DiagonalWallQuadCapture capture=new DiagonalWallQuadCapture(facing,false);
+            TEAnimatedScreenSelector.drawConfiguredDiagonalWall(capture,(TileEntityAnimatedScreenSelector)world.getTileEntity(root),wall,SPRITE,SPRITE);
+            require(hasCap(capture.finish(),upper),"tile-rendered wall lacks textured cap under flat glass");
+            EnumFacing canonical=facing.getAxis()==EnumFacing.Axis.X?EnumFacing.EAST:EnumFacing.NORTH;
+            world.setBlockState(next,solidBlock.getDefaultState().withProperty(BlockProgrammableWall.FACING,canonical).withProperty(BlockProgrammableWall.DEPTH,depth),2);
+            require(BlockProgrammableWall.flatEnd(wall,world,root,upper)==end&&collision.equals(collision(world,root)),"material swap changed aligned geometry");
+            baked=new DiagonalWallState(wall,world,root);require(upper?baked.hideUpper:baked.hideLower,"opaque flat continuation must still hide its shared end");
+            cases++;
+        }
+        require(cases>=64,"flat-glass cap coverage");
+        System.out.println("PASS: "+cases+" flat-glass wall caps retain nonzero textured faces in baked and tile meshes, matching solid joins and collision");
+    }
+    private static boolean hasCap(List<net.minecraft.client.renderer.block.model.BakedQuad> quads,boolean upper){
+        for(net.minecraft.client.renderer.block.model.BakedQuad quad:quads){
+            int[] data=quad.getVertexData();int stride=data.length/4;Vec3d[] points=new Vec3d[4];boolean plane=true;
+            for(int v=0;v<4;v++){points[v]=new Vec3d(Float.intBitsToFloat(data[v*stride]),Float.intBitsToFloat(data[v*stride+1]),Float.intBitsToFloat(data[v*stride+2]));plane&=Math.abs(points[v].y-(upper?1:0))<1e-7;}
+            if(plane&&points[1].subtract(points[0]).crossProduct(points[2].subtract(points[0])).lengthSquared()>1e-8)return true;
+        }
+        return false;
     }
     private static void mixed(BlockProgrammableWall[] diagonals){
         BlockProgrammableWall flatWall=new BlockProgrammableWall("mixed_join_wall",BlockProgrammableWall.Shape.PLAIN);

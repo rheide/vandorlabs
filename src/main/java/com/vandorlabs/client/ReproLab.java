@@ -305,6 +305,7 @@ public class ReproLab {
         SHOTS.add(new Shot("gallery_lighting_controls", GALLERY_X,
                 galleryFeet + 1.5D, -28.0D, 0.0F, 4.0F));
         SHOTS.add(new Shot("gallery_join_glass_wall_caps",GALLERY_X-3,galleryFeet+7,-29,-15,30));
+        SHOTS.add(new Shot("gallery_join_flat_glass_wall_caps",GALLERY_X-3,galleryFeet+9,-29,-15,35));
         for(String material:new String[]{"wall","glass"})SHOTS.add(new Shot("gallery_join_mixed_"+material,GALLERY_X-3,galleryFeet+5,-29,-15,22));
         for(int row=0;row<5;row++)SHOTS.add(new Shot("gallery_glass_finishes_"+row,GALLERY_X,galleryFeet+3,-29,0,12));
         for(String material:new String[]{"wall","glass"})for(int front=0;front<3;front++)for(int back=0;back<3;back++)for(int tails=0;tails<4;tails++)for(String order:new String[]{"forward","reverse"})
@@ -2376,6 +2377,8 @@ public class ReproLab {
             BlockPos.getAllInBox(new BlockPos(GALLERY_X-14,GALLERY_Y,-23),
                     new BlockPos(GALLERY_X+14,GALLERY_Y+16,-13)).forEach(world::setBlockToAir);
             ConnectionAcceptance.build(world,shot,GALLERY_X,GALLERY_Y);
+        } else if(shot.equals("gallery_join_flat_glass_wall_caps")) {
+            DiagonalJoinGallery.flatGlassWallCaps(world,GALLERY_X,GALLERY_Y);
         } else if(shot.equals("gallery_join_glass_wall_caps")) {
             DiagonalJoinGallery.glassWallCaps(world,GALLERY_X,GALLERY_Y);
         } else if(shot.startsWith("gallery_join_mixed_")) {

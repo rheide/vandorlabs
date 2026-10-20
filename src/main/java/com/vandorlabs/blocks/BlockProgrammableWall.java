@@ -67,13 +67,22 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     }
 
     public static double flatEnd(IBlockState state, IBlockAccess world, BlockPos pos, boolean upper) {
+        return flatEnd(state,world,pos,upper,false);
+    }
+
+    /** Joining glass aligns the slope but cannot hide an opaque wall's end cap. */
+    public static boolean coveredFlatEnd(IBlockState state,IBlockAccess world,BlockPos pos,boolean upper) {
+        return !Double.isNaN(flatEnd(state,world,pos,upper,true));
+    }
+
+    private static double flatEnd(IBlockState state,IBlockAccess world,BlockPos pos,boolean upper,boolean covering) {
         if (halfHeight(world,pos)) return Double.NaN;
         if (DiagonalPanelGeometry.coveredEnd(world,pos,state,upper))
             return Double.NaN;
         EnumFacing facing=state.getValue(FACING);
         double expected=com.vandorlabs.render.DiagonalWallGeometry.near(geometry(world,pos),
                 state.getValue(INVERTED),upper?1:0);
-        double best=Double.NaN, distance=.1250001;
+        double best=Double.NaN, distance=.1250001;boolean hidden=false;
         for (int offset=-1;offset<=1;offset++) {
             BlockPos next=pos.offset(upper?EnumFacing.UP:EnumFacing.DOWN).offset(facing.getOpposite(),offset);
             if (world instanceof World && !((World)world).isBlockLoaded(next)) continue;
@@ -84,9 +93,9 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             double near=PanelJoins.near(other)/16D;
             if (otherFacing!=facing) near=.75-near;
             near+=offset;
-            if (Math.abs(near-expected)<distance) {best=near;distance=Math.abs(near-expected);}
+            if (Math.abs(near-expected)<distance) {best=near;distance=Math.abs(near-expected);hidden=!state.getMaterial().isOpaque()||other.getMaterial().isOpaque();}
         }
-        return best;
+        return covering&&!hidden?Double.NaN:best;
     }
 
     private static boolean sameDiagonalWidth(IBlockAccess world, BlockPos a,

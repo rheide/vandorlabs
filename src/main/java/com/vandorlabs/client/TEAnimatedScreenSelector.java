@@ -994,8 +994,8 @@ public class TEAnimatedScreenSelector
                 halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED) ? 8 : 0) : Double.NaN,
                 BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),false)*16,
                 BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),true)*16,
-                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,false) || !Double.isNaN(BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),false)),
-                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,true) || !Double.isNaN(BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),true)),
+                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,false) || BlockProgrammableWall.coveredFlatEnd(state,te.getWorld(),te.getPos(),false),
+                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,true) || BlockProgrammableWall.coveredFlatEnd(state,te.getWorld(),te.getPos(),true),
                 com.vandorlabs.blocks.DiagonalNeighbourBounds.local(te.getWorld(),te.getPos(),state,BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),16));
     }
 

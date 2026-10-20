@@ -24,6 +24,22 @@ final class DiagonalJoinGallery {
             if(DiagonalPanelGeometry.coveredEnd(world,root,state,true))throw new IllegalStateException("Glass hides the opaque diagonal wall cap");
         }
     }
+    static void flatGlassWallCaps(World world,int x,int y){
+        world.setWorldTime(6000);world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
+        BlockProgrammableWall wall=(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_WALL;
+        BlockProgrammableGlass glass=(BlockProgrammableGlass)net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass");
+        for(int column=0;column<3;column++)for(int path=0;path<2;path++){
+            int mode=column==1?1:0;BlockPos root=new BlockPos(x-6+column*5,y+1+path*4,-18);
+            IBlockState state=wall.getDefaultState().withProperty(BlockProgrammableWall.INVERTED,column==2);
+            world.setBlockState(root,state,3);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(root);tile.setDiagonalGeometry(mode,0);if(path==1)tile.setMainTextureLayout(1);
+            for(EnumFacing side:new EnumFacing[]{EnumFacing.UP,EnumFacing.DOWN}){
+                int depth=PanelJoins.placementDepth(world,root,state,side);BlockPos next=root.offset(side);
+                world.setBlockState(next,glass.getDefaultState().withProperty(BlockGlassWall.DEPTH,depth),3);
+                ((TileEntityProgrammableGlass)world.getTileEntity(next)).setAppearance(0,column!=2);
+                if(BlockProgrammableWall.coveredFlatEnd(state,world,root,side==EnumFacing.UP))throw new IllegalStateException("Flat glass hides opaque diagonal wall cap");
+            }
+        }
+    }
     static void mixed(World world,int x,int y,boolean glass){
         world.setWorldTime(6000);world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");
         for(int mode=0;mode<2;mode++)for(int material=0;material<2;material++){

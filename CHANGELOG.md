@@ -2,6 +2,8 @@
 
 ## 2.2
 
+- Preserve diagonal wall top and bottom caps against flat programmable glass walls while retaining aligned panel joins.
+
 - Use the standard first-person held-item pose for every data card and chip, keeping them beside the screen edge in either hand.
 
 - Preserve tinted wall windows and canopy glazing on captured turntable structures, with separate opaque and glass rendering passes.
