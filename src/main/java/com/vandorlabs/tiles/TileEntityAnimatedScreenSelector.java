@@ -52,7 +52,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
 
     @Override public boolean shouldRenderInPass(int pass) {
-        if(waterlogged && world!=null && com.vandorlabs.blocks.WaterloggedParts.supports(world.getBlockState(pos)))return pass==1;
+        if(fluids.any() && pass==1)return true;
         if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1;
         net.minecraft.block.Block block = getBlockType();
         if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==1;
@@ -196,9 +196,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int housingTexture;
     private int sideTexture=-1;
     private FaceTextures faceTextures = FaceTextures.DEFAULT;
-    private boolean waterlogged;
-    public boolean isWaterlogged(){return waterlogged;}
-    public void setWaterlogged(boolean value){if(waterlogged==value)return;waterlogged=value;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
+    public final com.vandorlabs.blocks.ContainedFluids fluids=new com.vandorlabs.blocks.ContainedFluids(this);
+    public boolean isWaterlogged(){return fluids.any();}
+    public void setWaterlogged(boolean value){fluids.set(0,value?new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER,1000):null);if(!value)fluids.set(1,null);}
     private boolean slabTileSides;
     private int mainTextureLayout=-1,surfaceTextureLayout=-1,glassTextureLayout=-1;
     public int getMainTextureLayout(){return mainTextureLayout<0?(slabTileSides?1:0):mainTextureLayout;}
@@ -536,7 +536,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("FaceTexturesEnabled", faceTextures.enabled);
         compound.setIntArray("FaceTextures", faceTextures.choices());
         compound.setInteger("SideTexture",sideTexture);
-        compound.setBoolean("Waterlogged",waterlogged);
+        fluids.write(compound);
         compound.setBoolean("SlabTileSides", slabTileSides);
         compound.setInteger("MainTextureLayout",getMainTextureLayout());compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());compound.setInteger("GlassTextureLayout",getGlassTextureLayout());
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
@@ -555,7 +555,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
         int previousSide=sideTexture;
-        waterlogged=compound.getBoolean("Waterlogged");
+        fluids.read(compound);
         boolean previousSlabSides = slabTileSides;
         int oldMainLayout=getMainTextureLayout(),oldSurfaceLayout=getSurfaceTextureLayout(),oldGlassLayout=getGlassTextureLayout();
         mainTextureLayout=layoutValue(compound,"MainTextureLayout");surfaceTextureLayout=layoutValue(compound,"SurfaceTextureLayout");glassTextureLayout=layoutValue(compound,"GlassTextureLayout");

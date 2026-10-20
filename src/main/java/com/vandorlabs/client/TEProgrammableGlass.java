@@ -49,6 +49,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if (tile.getWorld() == null) return;
         if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
+        if(tile.fluids.any()&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1)WaterloggedRenderer.render(tile,x,y,z);
         int size = tile.getSize();
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());

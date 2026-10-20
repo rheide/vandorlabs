@@ -373,7 +373,7 @@ public class TEAnimatedScreenSelector
             return;
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
-        if(te.isWaterlogged() && com.vandorlabs.blocks.WaterloggedParts.supports(state)){WaterloggedRenderer.render(te,x,y,z);return;}
+        if(te.isWaterlogged() && com.vandorlabs.blocks.WaterloggedParts.supports(state)&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1)WaterloggedRenderer.render(te,x,y,z);
         if (!(state.getBlock() instanceof BlockAnimatedScreenSelector)) {
             return;
         }

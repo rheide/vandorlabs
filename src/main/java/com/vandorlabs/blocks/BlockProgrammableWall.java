@@ -230,7 +230,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }
     @Override public boolean isFullCube(IBlockState state) { return false; }
     @Override public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return 0;
+        return WaterloggedParts.light(world,pos);
     }
 
     @Override public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,
@@ -554,4 +554,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     private static AxisAlignedBB rotate(AxisAlignedBB box, EnumFacing facing) {
         return PanelPlacement.rotateFromNorth(box, facing);
     }
+    @Override public Boolean isAABBInsideMaterial(World world,BlockPos pos,net.minecraft.util.math.AxisAlignedBB box,net.minecraft.block.material.Material material){return WaterloggedParts.intersects(world,pos,box,material);}
+    @Override public Boolean isAABBInsideLiquid(World world,BlockPos pos,net.minecraft.util.math.AxisAlignedBB box){return WaterloggedParts.liquid(world,pos,box);}
+    @Override public Boolean isEntityInsideMaterial(IBlockAccess world,BlockPos pos,IBlockState state,net.minecraft.entity.Entity entity,double height,net.minecraft.block.material.Material material,boolean head){return WaterloggedParts.entity(world,pos,entity,height,material,head);}
 }

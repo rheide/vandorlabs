@@ -1,12 +1,11 @@
 package com.vandorlabs.blocks;
 
-import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import com.vandorlabs.tiles.*;
 import java.util.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
@@ -15,48 +14,90 @@ import net.minecraft.world.*;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fluids.*;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
-/** Source water occupies only the empty half-cells of programmable slabs/stairs. */
+/** Contained bucket fluids occupy the collision-free space on either side of a panel. */
 @Mod.EventBusSubscriber(modid="vandorlabs")
 public final class WaterloggedParts {
     private WaterloggedParts(){}
-    public static boolean supports(IBlockState state){return state.getBlock() instanceof BlockProgrammableSlab || state.getBlock() instanceof BlockProgrammableStairs;}
-    public static boolean wet(IBlockAccess world,BlockPos pos){TileEntity tile=world.getTileEntity(pos);return tile instanceof TileEntityAnimatedScreenSelector && ((TileEntityAnimatedScreenSelector)tile).isWaterlogged() && supports(world.getBlockState(pos));}
-    public static List<AxisAlignedBB> gaps(IBlockAccess access,BlockPos pos){
-        if(!(access instanceof World))return Collections.emptyList();World world=(World)access;
-        IBlockState state=world.getBlockState(pos).getActualState(world,pos);List<AxisAlignedBB> solid=new ArrayList<>(),water=new ArrayList<>();
-        state.addCollisionBoxToList(world,pos,new AxisAlignedBB(pos),solid,null,false);
-        for(int x=0;x<2;x++)for(int y=0;y<2;y++)for(int z=0;z<2;z++){
-            AxisAlignedBB cell=new AxisAlignedBB(x*.5,y*.5,z*.5,(x+1)*.5,(y+1)*.5,(z+1)*.5).offset(pos);boolean occupied=false;
-            for(AxisAlignedBB box:solid)if(box.intersects(cell.shrink(.00001))){occupied=true;break;}
-            if(!occupied)water.add(cell);
-        }return water;
+    public static boolean supports(IBlockState state){return state.getBlock() instanceof BlockProgrammableSlab||state.getBlock() instanceof BlockProgrammableStairs||panel(state);}
+    public static boolean panel(IBlockState state){return state.getBlock() instanceof BlockProgrammableWall||state.getBlock() instanceof BlockProgrammableGlass;}
+    public static ContainedFluids data(TileEntity tile){return tile instanceof TileEntityAnimatedScreenSelector?((TileEntityAnimatedScreenSelector)tile).fluids:tile instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)tile).fluids:null;}
+    public static boolean wet(IBlockAccess world,BlockPos pos){ContainedFluids data=data(world.getTileEntity(pos));return data!=null&&data.any()&&supports(world.getBlockState(pos));}
+    public static final class Cell {public final AxisAlignedBB box;public final int side;Cell(AxisAlignedBB box,int side){this.box=box;this.side=side;}}
+    public static final class Face {public final Vec3d[] vertices;public final int side,axis;Face(Vec3d[] vertices,int side,int axis){this.vertices=vertices;this.side=side;this.axis=axis;}}
+    public static final class Volume {
+        final List<AxisAlignedBB> solid;
+        public final List<Cell> cells=new ArrayList<>();
+        public final List<Face> faces=new ArrayList<>();
+        Volume(List<AxisAlignedBB> solid){this.solid=solid;}
+        public boolean hasSide(int side){for(Cell c:cells)if(c.side==side)return true;return false;}
     }
-    public static Boolean intersects(World world,BlockPos pos,AxisAlignedBB box,Material material){
-        if(material!=Material.WATER || !wet(world,pos))return null;
-        for(AxisAlignedBB gap:gaps(world,pos))if(gap.intersects(box))return true;return false;
-    }
-    public static Boolean entity(IBlockAccess world,BlockPos pos,Entity entity,double height,Material material,boolean head){
-        if(material!=Material.WATER || !wet(world,pos))return null;
-        for(AxisAlignedBB gap:gaps(world,pos))if(head?gap.contains(new Vec3d(entity.posX,height,entity.posZ)):gap.intersects(entity.getEntityBoundingBox()))return true;return false;
-    }
-    @SubscribeEvent public static void placed(net.minecraftforge.event.world.BlockEvent.PlaceEvent event){
-        if(event.getWorld().isRemote || !supports(event.getPlacedBlock()) || event.getBlockSnapshot().getReplacedBlock().getMaterial()!=Material.WATER)return;
-        TileEntity tile=event.getWorld().getTileEntity(event.getPos());if(tile instanceof TileEntityAnimatedScreenSelector)((TileEntityAnimatedScreenSelector)tile).setWaterlogged(true);
-    }
-    @SubscribeEvent public static void bucket(PlayerInteractEvent.RightClickBlock event){
-        World world=event.getWorld();BlockPos pos=event.getPos();if(!supports(world.getBlockState(pos)))return;
-        EntityPlayer player=event.getEntityPlayer();ItemStack held=player.getHeldItem(event.getHand());boolean fill=held.getItem()==Items.WATER_BUCKET,drain=held.getItem()==Items.BUCKET;
-        if(!fill && !drain || fill==wet(world,pos))return;
-        if(player.isSpectator() || !world.isBlockModifiable(player,pos) || !player.canPlayerEdit(pos,event.getFace(),held))return;
-        event.setCanceled(true);event.setCancellationResult(EnumActionResult.SUCCESS);
-        if(world.isRemote)return;
-        TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof TileEntityAnimatedScreenSelector))return;
-        ((TileEntityAnimatedScreenSelector)raw).setWaterlogged(fill);
-        if(!player.capabilities.isCreativeMode){
-            held.shrink(1);ItemStack result=new ItemStack(fill?Items.BUCKET:Items.WATER_BUCKET);
-            if(held.isEmpty())player.setHeldItem(event.getHand(),result);else if(!player.inventory.addItemStackToInventory(result))player.dropItem(result,false);
+    /** Stable local sides follow the wall when a vehicle or turntable rotates it. */
+    public static int side(IBlockAccess world,BlockPos pos,Vec3d local){
+        IBlockState state=world.getBlockState(pos);if(!panel(state))return 0;
+        EnumFacing facing=PanelJoins.flatFacing(state,world,pos);double z=facing==EnumFacing.EAST?1-local.x:facing==EnumFacing.SOUTH?1-local.z:facing==EnumFacing.WEST?local.x:local.z;
+        double coordinate=z,mid=PanelJoins.flatNear(state,world,pos)/16D+.125;
+        if(state.getBlock() instanceof BlockProgrammableWall&&((BlockProgrammableWall)state.getBlock()).isDiagonalShape()){
+            int mode=BlockProgrammableWall.geometry(world,pos);boolean inverted=state.getValue(BlockProgrammableWall.INVERTED);
+            if(mode==2){coordinate=local.y;mid=com.vandorlabs.render.DiagonalWallGeometry.band(mode,inverted)+com.vandorlabs.render.DiagonalWallGeometry.near(mode,inverted,z)+.125;}
+            else mid=com.vandorlabs.render.DiagonalWallGeometry.near(mode,inverted,local.y,BlockProgrammableWall.flatEnd(state,world,pos,false),BlockProgrammableWall.flatEnd(state,world,pos,true))+.125;
         }
-        world.playSound(null,pos,fill?net.minecraft.init.SoundEvents.ITEM_BUCKET_EMPTY:net.minecraft.init.SoundEvents.ITEM_BUCKET_FILL,SoundCategory.BLOCKS,1,1);
+        return coordinate<mid?0:1;
+    }
+    public static Volume volume(World world,BlockPos pos){
+        ContainedFluids data=data(world.getTileEntity(pos));long tick=world.getTotalWorldTime();
+        if(data!=null&&data.geometry!=null&&data.geometryTick==tick)return data.geometry;
+        IBlockState state=world.getBlockState(pos).getActualState(world,pos);int mapping=panel(state)?PanelJoins.flatFacing(state,world,pos).getIndex():0;List<AxisAlignedBB> solid=new ArrayList<>();state.addCollisionBoxToList(world,pos,new AxisAlignedBB(pos),solid,null,false);
+        List<AxisAlignedBB> local=new ArrayList<>();for(AxisAlignedBB box:solid)if(box.intersects(new AxisAlignedBB(pos)))local.add(box.offset(-pos.getX(),-pos.getY(),-pos.getZ()).intersect(new AxisAlignedBB(0,0,0,1,1,1)));
+        // Include the side mapping in the cache even when two poses share collision bounds.
+        if(data!=null&&data.geometry!=null&&data.geometry.solid.equals(local)&&data.geometryState==state&&data.geometryMapping==mapping){data.geometryTick=tick;return data.geometry;}
+        Volume result=new Volume(local);double[][] cuts=new double[3][];
+        for(int axis=0;axis<3;axis++){TreeSet<Double> points=new TreeSet<>();points.add(0D);points.add(1D);for(AxisAlignedBB b:local){points.add(axis==0?b.minX:axis==1?b.minY:b.minZ);points.add(axis==0?b.maxX:axis==1?b.maxY:b.maxZ);}cuts[axis]=points.stream().mapToDouble(Double::doubleValue).toArray();}
+        int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;int[][][] owners=new int[nx][ny][nz];
+        for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++){
+            AxisAlignedBB box=new AxisAlignedBB(cuts[0][x],cuts[1][y],cuts[2][z],cuts[0][x+1],cuts[1][y+1],cuts[2][z+1]);Vec3d center=box.getCenter();int side=side(world,pos,center);for(AxisAlignedBB b:local)if(b.contains(center)){side=-1;break;}owners[x][y][z]=side;if(side>=0)result.cells.add(new Cell(box,side));
+        }
+        for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++)if(owners[x][y][z]>=0){
+            int side=owners[x][y][z];double a=cuts[0][x],b=cuts[0][x+1],c=cuts[1][y],d=cuts[1][y+1],e=cuts[2][z],f=cuts[2][z+1];
+            for(EnumFacing face:EnumFacing.values()){int xx=x+face.getFrontOffsetX(),yy=y+face.getFrontOffsetY(),zz=z+face.getFrontOffsetZ();if(xx>=0&&xx<nx&&yy>=0&&yy<ny&&zz>=0&&zz<nz&&owners[xx][yy][zz]==side)continue;
+                Vec3d[] vertices;switch(face){case DOWN:vertices=new Vec3d[]{new Vec3d(a,c,e),new Vec3d(b,c,e),new Vec3d(b,c,f),new Vec3d(a,c,f)};break;case UP:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(a,d,f),new Vec3d(b,d,f),new Vec3d(b,d,e)};break;case WEST:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(a,c,e),new Vec3d(a,c,f),new Vec3d(a,d,f)};break;case EAST:vertices=new Vec3d[]{new Vec3d(b,d,e),new Vec3d(b,d,f),new Vec3d(b,c,f),new Vec3d(b,c,e)};break;case NORTH:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(b,d,e),new Vec3d(b,c,e),new Vec3d(a,c,e)};break;default:vertices=new Vec3d[]{new Vec3d(a,d,f),new Vec3d(a,c,f),new Vec3d(b,c,f),new Vec3d(b,d,f)};}
+                result.faces.add(new Face(vertices,side,face.getAxis()==EnumFacing.Axis.X?0:face.getAxis()==EnumFacing.Axis.Y?1:2));
+            }
+        }
+        if(data!=null){data.geometry=result;data.geometryTick=tick;data.geometryState=state;data.geometryMapping=mapping;}return result;
+    }
+    public static List<AxisAlignedBB> gaps(IBlockAccess access,BlockPos pos){if(!(access instanceof World))return Collections.emptyList();List<AxisAlignedBB> boxes=new ArrayList<>();for(Cell cell:volume((World)access,pos).cells)boxes.add(cell.box.offset(pos));return boxes;}
+    private static Material material(FluidStack fluid){return fluid.getFluid().getBlock()==null?Material.WATER:fluid.getFluid().getBlock().getDefaultState().getMaterial();}
+    public static Boolean liquid(World world,BlockPos pos,AxisAlignedBB box){return intersects(world,pos,box,null);}
+    public static Boolean intersects(World world,BlockPos pos,AxisAlignedBB box,Material material){
+        if(!wet(world,pos))return null;ContainedFluids data=data(world.getTileEntity(pos));FluidStack[] fluids={data.get(0),data.get(1)};
+        if(material!=null&&!matches(fluids[0],material)&&!matches(fluids[1],material))return null;
+        for(Cell cell:volume(world,pos).cells)if(fluids[cell.side]!=null&&(material==null||material(fluids[cell.side])==material)&&cell.box.offset(pos).intersects(box))return true;return false;
+    }
+    private static boolean matches(FluidStack fluid,Material material){return fluid!=null&&material(fluid)==material;}
+    public static Boolean entity(IBlockAccess world,BlockPos pos,Entity entity,double height,Material material,boolean head){if(!(world instanceof World)||!wet(world,pos))return null;if(!head)return intersects((World)world,pos,entity.getEntityBoundingBox(),material);ContainedFluids data=data(world.getTileEntity(pos));if(!matches(data.get(0),material)&&!matches(data.get(1),material))return null;for(Cell cell:volume((World)world,pos).cells){FluidStack fluid=data.get(cell.side);if(fluid!=null&&material(fluid)==material&&cell.box.offset(pos).contains(new Vec3d(entity.posX,height,entity.posZ)))return true;}return false;}
+    public static int light(IBlockAccess world,BlockPos pos){ContainedFluids data=data(world.getTileEntity(pos));int light=0;if(data!=null)for(int i=0;i<2;i++){FluidStack fluid=data.get(i);if(fluid!=null)light=Math.max(light,fluid.getFluid().getLuminosity(fluid));}return light;}
+    @SubscribeEvent public static void placed(net.minecraftforge.event.world.BlockEvent.PlaceEvent event){
+        if(event.getWorld().isRemote||!supports(event.getPlacedBlock()))return;Fluid fluid=FluidRegistry.lookupFluidForBlock(event.getBlockSnapshot().getReplacedBlock().getBlock());if(fluid==null||fluid.isGaseous())return;
+        ContainedFluids data=data(event.getWorld().getTileEntity(event.getPos()));if(data!=null){Volume volume=volume(event.getWorld(),event.getPos());for(int side=0;side<2;side++)if(volume.hasSide(side)){data.set(side,new FluidStack(fluid,1000));break;}}
+    }
+    @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST)
+    public static void bucket(PlayerInteractEvent.RightClickBlock event){
+        World world=event.getWorld();BlockPos pos=event.getPos();if(!supports(world.getBlockState(pos)))return;
+        EntityPlayer player=event.getEntityPlayer();ItemStack held=player.getHeldItem(event.getHand()),single=held.copy();single.setCount(1);IFluidHandlerItem container=FluidUtil.getFluidHandler(single);if(container==null)return;
+        if(player.isSpectator()||!world.isBlockModifiable(player,pos)||!player.canPlayerEdit(pos,event.getFace(),held))return;
+        ContainedFluids data=data(world.getTileEntity(pos));if(data==null)return;
+        Vec3d hit=event.getHitVec()==null?player.getPositionEyes(1):event.getHitVec();int side=side(world,pos,hit.subtract(new Vec3d(pos)).add(new Vec3d(event.getFace().getDirectionVec()).scale(.001)));
+        FluidStack incoming=container.drain(1000,false),stored=data.get(side);boolean fill=incoming!=null;
+        event.setCanceled(true);event.setCancellationResult(EnumActionResult.FAIL);
+        if(fill){if(incoming.amount!=1000||incoming.getFluid().isGaseous(incoming)||data.occupied(side)||!volume(world,pos).hasSide(side))return;}
+        else if(stored==null||container.fill(stored,false)!=1000)return;
+        event.setCancellationResult(EnumActionResult.SUCCESS);if(world.isRemote)return;
+        if(fill)container.drain(1000,true);else container.fill(stored,true);
+        data.set(side,fill?incoming:null);
+        if(!player.capabilities.isCreativeMode){ItemStack result=container.getContainer();held.shrink(1);if(held.isEmpty())player.setHeldItem(event.getHand(),result);else if(!player.inventory.addItemStackToInventory(result))player.dropItem(result,false);}
+        FluidStack sound=fill?incoming:stored;world.playSound(null,pos,fill?sound.getFluid().getEmptySound(sound):sound.getFluid().getFillSound(sound),SoundCategory.BLOCKS,1,1);
     }
 }

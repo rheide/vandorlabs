@@ -23,3 +23,10 @@ hexagonal propulsion blocks. Thrusters have straight rear rims so a tank can
 meet the back of an engine without a beveled gap.
 
 Battery casings can use any general block material from the casing picker. Changes apply immediately and persist when the battery is saved, picked or broken. The green input and orange output ports retain their markings in both Block and Hexagon shapes.
+
+
+## Liquid-filled walls and partial blocks
+
+Programmable Walls, Porthole Walls, Glass Walls and their diagonal variants can hold a bucket of liquid on each side independently. Use a filled bucket on a side to fill that side; use an empty bucket on the same side to recover its contents. The two sides can contain different liquids. A full side rejects another filled bucket without placing liquid beside the wall.
+
+Registered Forge liquids with a compatible bucket or fluid container are supported; gases are excluded. The visible liquid fills the free space around the configured wall geometry and uses the fluid's texture, colour and luminosity. Contents stay contained and do not spread into neighbouring blocks. Saving, copying and vehicle capture preserve both sides. Slabs and stairs use the same contained-fluid storage; older waterlogged saves migrate automatically.

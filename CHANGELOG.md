@@ -2,6 +2,9 @@
 
 ## 2.3
 
+- Let turntable surfaces use general materials as well as the six Turntable images; shorten native surface names to single words.
+- Add independent liquid storage on both sides of programmable wall, porthole and glass panels, including diagonal variants. Support compatible Forge liquid buckets and preserve legacy waterlogged slabs/stairs.
+
 - Queue turntable capture, restore and redstone rescans behind background journal writes. Revalidate contents before conversion and preserve inventory edits made during preparation.
 - Share a transfer coordinator between turntables and vehicles. Budget turntable lighting and neighbor updates across ticks.
 - Verify affected chunk saves by reading transaction markers back from region storage. Retry missing writes without waiting for the world's entire save queue; retain recovery records on failure.
