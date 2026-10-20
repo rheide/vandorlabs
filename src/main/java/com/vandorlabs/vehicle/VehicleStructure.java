@@ -13,6 +13,7 @@ import java.util.*;
 public final class VehicleStructure {
     public static final int MAX_BLOCKS=32768, MAX_AXIS=64, MAX_NBT_BYTES=4*1024*1024;
     public static final int SCHEMA=1;
+    private static final Set<String> GEAR_POSE_KEYS=new HashSet<>(Arrays.asList("GearProgress","GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal","GearRevision"));
     public static final class Cell {
         public final BlockPos pos;
         public final IBlockState state;
@@ -23,6 +24,14 @@ public final class VehicleStructure {
         public NBTTagCompound tileData(){return tile==null?null:tile.copy();}
         public boolean hasTileData(){return tile!=null;}
         public boolean sameTileData(Cell other){return Objects.equals(tile,other.tile);}
+        /** Pose and input edges do not change the assembled gear's baked block model. */
+        public boolean sameGearConfiguration(Cell other){
+            if(Objects.equals(tile,other.tile))return true;
+            if(tile==null||other.tile==null)return false;
+            for(String key:tile.getKeySet())if(!GEAR_POSE_KEYS.contains(key)&&!Objects.equals(tile.getTag(key),other.tile.getTag(key)))return false;
+            for(String key:other.tile.getKeySet())if(!GEAR_POSE_KEYS.contains(key)&&!tile.hasKey(key))return false;
+            return true;
+        }
         public int tileInteger(String key){return tile==null?0:tile.getInteger(key);}
     }
     public final List<Cell> cells;

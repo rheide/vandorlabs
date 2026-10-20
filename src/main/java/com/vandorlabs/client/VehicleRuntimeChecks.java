@@ -440,6 +440,7 @@ public final class VehicleRuntimeChecks {
                 }
             }
             if(ticks>425 && VehicleInteractionRuntimeChecks.tick(mc,output) && VehicleTaxiRuntimeChecks.tick(mc,output)) {
+                VehicleStatusClientRuntimeChecks.nativeState(mc);
                 System.out.println("[vandorlabs][reprolab] vehicle-render-profile "+RenderGroundVehicle.profile());
                 System.out.println("[vandorlabs][reprolab] vehicle-live PASS rendering generic-blocks network-driving propulsion safe-dismount doors ramps channel-conversion seated-conversion configured-assembly-limit snapshot-hard-ceiling retained-larger-snapshots actual-clicks");mc.shutdown();
             }

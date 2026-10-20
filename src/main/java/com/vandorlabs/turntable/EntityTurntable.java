@@ -31,6 +31,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     private AxisAlignedBB localExtent=new AxisAlignedBB(0,0,0,1,1,1);
     private byte[] wire;
     private byte[] incoming;
+    private java.util.concurrent.Future<NBTTagCompound> decoded;
     private int received,nextRequest;
     private final Map<UUID,Integer> requestTicks=new HashMap<>();
     public boolean allowSnapshotRequest(EntityPlayerMP player){Integer tick=requestTicks.put(player.getUniqueID(),ticksExisted);if(requestTicks.size()>256)requestTicks.entrySet().removeIf(e->ticksExisted-e.getValue()>200);return tick==null||tick<ticksExisted;}
@@ -72,9 +73,13 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     @Override public void onUpdate(){
         super.onUpdate();motionX=motionY=motionZ=0;previous=angle;
         if(world.isRemote){
+            if(decoded!=null&&decoded.isDone()){
+                try{install(TurntableSnapshot.read(decoded.get()));}catch(Exception invalid){com.vandorlabs.VandorLabs.logger.warn("Invalid turntable snapshot",invalid);}
+                finally{decoded=null;nextRequest=ticksExisted+20;}
+            }
             float authoritative=dataManager.get(ANGLE);if(authoritative!=observedAngle||dataManager.get(RATE)==0){observedAngle=authoritative;angle=authoritative;}
             else angle=TurntableGeometry.wrap(angle+dataManager.get(RATE));
-            if(snapshot==null && ticksExisted>=nextRequest){nextRequest=ticksExisted+20;com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTurntableSnapshot.request(getEntityId(),received));}
+            if(snapshot==null && decoded==null && ticksExisted>=nextRequest){nextRequest=ticksExisted+20;com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTurntableSnapshot.request(getEntityId(),received));}
             updateBounds();return;
         }
         if(snapshot==null||TurntableTransfer.pending(this)){dataManager.set(RATE,0F);TileEntityTurntableController controller=owner();if(controller!=null)controller.status(snapshot==null?"Captured component unavailable; saved contents retained":"Transfer waiting for recovery; contents retained");return;}
@@ -172,7 +177,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         if(total<1 || total>TurntableSnapshot.MAX_BYTES || offset!=received || part.length<1 || offset+part.length>total)return;
         if(incoming==null){if(offset!=0)return;incoming=new byte[total];}
         if(incoming.length!=total)return;System.arraycopy(part,0,incoming,offset,part.length);received+=part.length;nextRequest=ticksExisted;
-        if(received==total){try{TurntableSnapshot complete=TurntableSnapshot.decode(incoming);install(complete);}finally{incoming=null;received=0;nextRequest=ticksExisted+20;}}
+        if(received==total){try{decoded=com.vandorlabs.network.SnapshotReader.read(incoming,TurntableSnapshot.MAX_BYTES);}finally{incoming=null;received=0;nextRequest=ticksExisted+20;}}
     }
     @Override public void writeSpawnData(ByteBuf buffer){buffer.writeLong(controller.toLong());buffer.writeLong(controllerKey==null?0:controllerKey.getMostSignificantBits());buffer.writeLong(controllerKey==null?0:controllerKey.getLeastSignificantBits());buffer.writeDouble(angle);}
     @Override public void readSpawnData(ByteBuf buffer){controller=BlockPos.fromLong(buffer.readLong());controllerKey=new UUID(buffer.readLong(),buffer.readLong());angle=previous=buffer.readDouble();updateBounds();}

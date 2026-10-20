@@ -23,7 +23,7 @@ final class TurntableFollowupRuntimeChecks {
             NBTTagCompound data=draft.writeToNBT(new NBTTagCompound());TileEntityTurntableController loaded=new TileEntityTurntableController();loaded.readFromNBT(data);
             require(loaded.autoSnapTolerance==tolerance,"Auto-snap save/load");data.setDouble("AutoSnapTolerance",Double.NaN);loaded.readFromNBT(data);require(loaded.autoSnapTolerance==0,"Invalid saved tolerance sanitized");
         }
-        for(String id:com.vandorlabs.cockpit.CockpitData.IDS){Block hidden=Block.getBlockFromName("vandorlabs:"+id);net.minecraft.util.NonNullList<ItemStack> menu=net.minecraft.util.NonNullList.create();hidden.getSubBlocks(net.minecraft.creativetab.CreativeTabs.SEARCH,menu);require(menu.isEmpty()&&hidden.getCreativeTabToDisplayOn()==null&&net.minecraft.item.Item.getItemFromBlock(hidden)!=net.minecraft.init.Items.AIR,"WIP cockpit hidden with registered item preserved");}
+        for(String id:com.vandorlabs.cockpit.CockpitData.IDS){Block cockpit=Block.getBlockFromName("vandorlabs:"+id);net.minecraft.util.NonNullList<ItemStack> menu=net.minecraft.util.NonNullList.create();cockpit.getSubBlocks(net.minecraft.creativetab.CreativeTabs.SEARCH,menu);require(menu.stream().anyMatch(stack->stack.getItem()==net.minecraft.item.Item.getItemFromBlock(cockpit))&&cockpit.getCreativeTabToDisplayOn()==com.vandorlabs.VandorLabs.VANDOR_LABS_TAB,"testing cockpit available in creative search");}
         BlockPos seed=new BlockPos(520,205,170),owner=seed.west();
         BlockTurntableSurface surface=(BlockTurntableSurface)Block.getBlockFromName("vandorlabs:turntable_surface");
         BlockTurntableController controller=(BlockTurntableController)Block.getBlockFromName("vandorlabs:turntable_controller");

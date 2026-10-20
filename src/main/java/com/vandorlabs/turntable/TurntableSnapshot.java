@@ -21,6 +21,7 @@ public final class TurntableSnapshot {
     public final VehicleStructure blocks;
     public final List<FrozenEntity> entities;
     public final int height;
+    private byte[] encoded;
     public static final class FrozenEntity {
         public final UUID id,parent;
         private final NBTTagCompound data;
@@ -117,12 +118,13 @@ public final class TurntableSnapshot {
         if(blocks.cells.size()>4096)throw new IllegalArgumentException("Oversize turntable snapshot");
         return new TurntableSnapshot(TurntableSurfaceLayout.read(tag.getCompoundTag("Surface")),BlockPos.fromLong(tag.getLong("Origin")),blocks,entities,height);
     }
-    public byte[] encode()throws IOException{
+    public synchronized byte[] encode()throws IOException{
+        if(encoded!=null)return encoded;
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();DataOutputStream output=new DataOutputStream(new FilterOutputStream(bytes){
             private int size;
             @Override public void write(int value)throws IOException{if(++size>MAX_BYTES)throw new IOException("Turntable contents exceed 8 MiB");out.write(value);}
             @Override public void write(byte[] data,int offset,int length)throws IOException{size+=length;if(size>MAX_BYTES)throw new IOException("Turntable contents exceed 8 MiB");out.write(data,offset,length);}
-        });CompressedStreamTools.write(write(),output);output.flush();return bytes.toByteArray();
+        });CompressedStreamTools.write(write(),output);output.flush();encoded=bytes.toByteArray();return encoded;
     }
     public static TurntableSnapshot decode(byte[] bytes)throws IOException{
         if(bytes.length>MAX_BYTES)throw new IOException("Oversize turntable snapshot");

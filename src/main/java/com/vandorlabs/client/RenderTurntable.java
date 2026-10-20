@@ -18,13 +18,27 @@ import java.util.*;
 /** Atlas-baked inert contents with native tile/entity renderers, all under the same face rotation. */
 public final class RenderTurntable extends Render<EntityTurntable> {
     private static final Map<EntityTurntable,Mesh> CACHE=new HashMap<>();
-    private static final class Mesh {TurntableSnapshot snapshot;int list;final List<Entity> entities=new ArrayList<>();final List<TileEntity> tiles=new ArrayList<>();final Map<TileEntity,net.minecraft.util.math.Vec3d> centers=new IdentityHashMap<>();void delete(){if(list!=0)GL11.glDeleteLists(list,BlockRenderLayer.values().length);}}
+    private static long buildNanos;
+    private static int buildCells;
+    public static void beginFrame(){buildNanos=2_000_000L;buildCells=512;}
+    private static final class Mesh {
+        TurntableSnapshot snapshot;int layer,cell,storedEntity,batchCells;
+        BufferBuilder builder;
+        final Map<BlockRenderLayer,List<Integer>> lists=new EnumMap<>(BlockRenderLayer.class);
+        final List<Entity> entities=new ArrayList<>();final List<TileEntity> tiles=new ArrayList<>();
+        final Map<TileEntity,net.minecraft.util.math.Vec3d> centers=new IdentityHashMap<>();
+        void delete(){for(List<Integer> layer:lists.values())for(int list:layer)GL11.glDeleteLists(list,1);lists.clear();builder=null;}
+        void draw(BlockRenderLayer layer){List<Integer> ready=lists.get(layer);if(ready!=null)for(int list:ready)GL11.glCallList(list);}
+    }
     public RenderTurntable(RenderManager manager){super(manager);shadowSize=0;}
     public static void clear(){for(Mesh mesh:CACHE.values())mesh.delete();CACHE.clear();}
     @Override protected ResourceLocation getEntityTexture(EntityTurntable entity){return TextureMap.LOCATION_BLOCKS_TEXTURE;}
     private Mesh mesh(EntityTurntable entity){
         Iterator<Map.Entry<EntityTurntable,Mesh>> entries=CACHE.entrySet().iterator();while(entries.hasNext()){Map.Entry<EntityTurntable,Mesh> entry=entries.next();if(entry.getKey().isDead||entry.getKey().world!=entity.world){entry.getValue().delete();entries.remove();}}
-        Mesh mesh=CACHE.computeIfAbsent(entity,k->new Mesh());if(mesh.snapshot==entity.snapshot)return mesh;mesh.delete();mesh.entities.clear();mesh.tiles.clear();mesh.centers.clear();mesh.snapshot=entity.snapshot;
+        Mesh mesh=CACHE.computeIfAbsent(entity,k->new Mesh());
+        if(mesh.snapshot==entity.snapshot){build(entity,mesh);return mesh;}
+        mesh.delete();mesh.entities.clear();mesh.tiles.clear();mesh.centers.clear();mesh.snapshot=entity.snapshot;
+        mesh.layer=mesh.cell=mesh.storedEntity=mesh.batchCells=0;
         for(TileEntity tile:entity.view.tiles.values()){
             mesh.tiles.add(tile);net.minecraft.util.math.AxisAlignedBB bounds=new net.minecraft.util.math.AxisAlignedBB(tile.getPos());
             if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy){
@@ -33,15 +47,36 @@ public final class RenderTurntable extends Render<EntityTurntable> {
             }
             mesh.centers.put(tile,bounds.getCenter());
         }
-        mesh.list=GL11.glGenLists(BlockRenderLayer.values().length);
-        try{for(BlockRenderLayer layer:BlockRenderLayer.values()){
-            GL11.glNewList(mesh.list+layer.ordinal(),GL11.GL_COMPILE);
-            net.minecraftforge.client.ForgeHooksClient.setRenderLayer(layer);BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
-            for(VehicleStructure.Cell cell:entity.snapshot.blocks.cells)if(cell.state.getBlock().canRenderInLayer(cell.state,layer))Minecraft.getMinecraft().getBlockRendererDispatcher().renderBlock(entity.view.getBlockState(cell.pos),cell.pos,entity.view,buffer);
-            Tessellator.getInstance().draw();GL11.glEndList();
-        }}finally{net.minecraftforge.client.ForgeHooksClient.setRenderLayer(null);}
-        for(TurntableSnapshot.FrozenEntity frozen:entity.snapshot.entities){Entity copy=EntityList.createEntityFromNBT(frozen.data(),entity.view);if(copy!=null){copy.setPosition(copy.posX-entity.snapshot.origin.getX(),copy.posY-entity.snapshot.origin.getY(),copy.posZ-entity.snapshot.origin.getZ());copy.prevPosX=copy.lastTickPosX=copy.posX;copy.prevPosY=copy.lastTickPosY=copy.posY;copy.prevPosZ=copy.lastTickPosZ=copy.posZ;mesh.entities.add(copy);}}
+        build(entity,mesh);
         return mesh;
+    }
+    /** Private buffers survive frames; no global Tessellator or GL list stays open across frames. */
+    private void build(EntityTurntable entity,Mesh mesh){
+        if(buildCells<=0||buildNanos<=0)return;
+        long began=System.nanoTime(),deadline=began+buildNanos;
+        try{
+            while(mesh.layer<BlockRenderLayer.values().length&&buildCells>0&&System.nanoTime()<deadline){
+                BlockRenderLayer layer=BlockRenderLayer.values()[mesh.layer];net.minecraftforge.client.ForgeHooksClient.setRenderLayer(layer);
+                if(mesh.builder==null){mesh.builder=new BufferBuilder(65536);mesh.builder.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);}
+                while(mesh.cell<entity.snapshot.blocks.cells.size()&&mesh.batchCells<64&&buildCells>0&&System.nanoTime()<deadline){
+                    VehicleStructure.Cell cell=entity.snapshot.blocks.cells.get(mesh.cell++);mesh.batchCells++;buildCells--;
+                    if(cell.state.getBlock().canRenderInLayer(cell.state,layer))Minecraft.getMinecraft().getBlockRendererDispatcher().renderBlock(entity.view.getBlockState(cell.pos),cell.pos,entity.view,mesh.builder);
+                }
+                if(mesh.cell==entity.snapshot.blocks.cells.size()||mesh.batchCells==64){
+                    mesh.builder.finishDrawing();
+                    if(mesh.builder.getVertexCount()>0){int list=GL11.glGenLists(1);GL11.glNewList(list,GL11.GL_COMPILE);
+                        try{new WorldVertexBufferUploader().draw(mesh.builder);}finally{GL11.glEndList();}
+                        mesh.lists.computeIfAbsent(layer,k->new ArrayList<>()).add(list);
+                    }
+                    mesh.builder=null;mesh.batchCells=0;
+                    if(mesh.cell==entity.snapshot.blocks.cells.size()){mesh.cell=0;mesh.layer++;}
+                }
+            }
+            while(mesh.storedEntity<entity.snapshot.entities.size()&&buildCells>0&&System.nanoTime()<deadline){
+                TurntableSnapshot.FrozenEntity frozen=entity.snapshot.entities.get(mesh.storedEntity++);buildCells--;
+                Entity copy=EntityList.createEntityFromNBT(frozen.data(),entity.view);if(copy!=null){copy.setPosition(copy.posX-entity.snapshot.origin.getX(),copy.posY-entity.snapshot.origin.getY(),copy.posZ-entity.snapshot.origin.getZ());copy.prevPosX=copy.lastTickPosX=copy.posX;copy.prevPosY=copy.lastTickPosY=copy.posY;copy.prevPosZ=copy.lastTickPosZ=copy.posZ;mesh.entities.add(copy);}
+            }
+        }finally{net.minecraftforge.client.ForgeHooksClient.setRenderLayer(null);buildNanos-=System.nanoTime()-began;}
     }
     @Override public void doRender(EntityTurntable entity,double x,double y,double z,float yaw,float partial){
         if(entity.snapshot==null||entity.view==null)return;Minecraft mc=Minecraft.getMinecraft();
@@ -50,7 +85,7 @@ public final class RenderTurntable extends Render<EntityTurntable> {
             GlStateManager.translate(entity.snapshot.origin.getX()-entity.posX,entity.snapshot.origin.getY()-entity.posY,entity.snapshot.origin.getZ()-entity.posZ);
             bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.disableCull();RenderHelper.disableStandardItemLighting();
             Mesh mesh=mesh(entity);
-            for(BlockRenderLayer layer:BlockRenderLayer.values())if(layer!=BlockRenderLayer.TRANSLUCENT){GlStateManager.disableBlend();GlStateManager.depthMask(true);GL11.glCallList(mesh.list+layer.ordinal());}
+            for(BlockRenderLayer layer:BlockRenderLayer.values())if(layer!=BlockRenderLayer.TRANSLUCENT){GlStateManager.disableBlend();GlStateManager.depthMask(true);mesh.draw(layer);}
             TileEntityRendererDispatcher dispatcher=TileEntityRendererDispatcher.instance;
             net.minecraft.world.World oldWorld=dispatcher.world;
             double oldX=dispatcher.entityX,oldY=dispatcher.entityY,oldZ=dispatcher.entityZ;
@@ -65,7 +100,7 @@ public final class RenderTurntable extends Render<EntityTurntable> {
             tiles.sort((a,b)->{int distance=Double.compare(mesh.centers.get(b).squareDistanceTo(dispatcher.entityX,dispatcher.entityY,dispatcher.entityZ),mesh.centers.get(a).squareDistanceTo(dispatcher.entityX,dispatcher.entityY,dispatcher.entityZ));return distance!=0?distance:a.getPos().compareTo(b.getPos());});
             try{for(int pass=0;pass<2;pass++){
                 net.minecraftforge.client.ForgeHooksClient.setRenderPass(pass);
-                if(pass==1){bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.depthMask(false);GL11.glCallList(mesh.list+BlockRenderLayer.TRANSLUCENT.ordinal());GlStateManager.depthMask(true);}
+                if(pass==1){bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.depthMask(false);mesh.draw(BlockRenderLayer.TRANSLUCENT);GlStateManager.depthMask(true);}
                 for(TileEntity tile:tiles){
                     if(!tile.shouldRenderInPass(pass))continue;
                     TileEntitySpecialRenderer<TileEntity> renderer=dispatcher.getRenderer(tile);if(renderer==null)continue;BlockPos p=tile.getPos();GlStateManager.pushMatrix();

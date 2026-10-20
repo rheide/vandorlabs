@@ -13,7 +13,16 @@ import org.lwjgl.BufferUtils;
 /** Text and buttons share an affine 128-pixel display plane with hit testing. */
 final class RedstoneScreenRenderer {
     /** Display lists can change driver bindings without updating Minecraft's texture cache. */
-    private static void bindWhite(){GlStateManager.enableLighting();GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.bindTexture(0);Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.white());}
+    private static void bindWhite(){GlStateManager.enableLighting();GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);
+        GlStateManager.enableCull();GlStateManager.disableCull();
+        // UI vertices are already in the display's local matrix. A different tile
+        // may have left an offset on the singleton buffer instead of Forge's batch buffer.
+        Tessellator.getInstance().getBuffer().setTranslation(0,0,0);
+        // Native/batched tile renderers can leave the driver on the lightmap unit
+        // while Minecraft's cache still reports the atlas unit. Force both transitions.
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+        GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();
+        GlStateManager.bindTexture(0);Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.white());}
     private static final java.util.Map<ScreenSurface.Quad,FloatBuffer> MATRICES=new java.util.IdentityHashMap<>();
     private static FloatBuffer matrix(ScreenSurface.Quad q,int height){
         FloatBuffer b=BufferUtils.createFloatBuffer(16);

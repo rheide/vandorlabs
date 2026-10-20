@@ -93,7 +93,7 @@ final class ModularGearRuntimeChecks {
             VehicleScan scan=new VehicleScan(world,seat);for(int tick=0;tick<200&&!scan.step(128);tick++);require(scan.error==null&&scan.result!=null,"vehicle scan "+scan.error);require(scan.result.gearCount==3&&scan.result.hasNonWheeledGear,"count shared control as three physical mounting supports");
             player.setPositionAndUpdate(base.getX()-2,base.getY()+2,base.getZ()-2);craft=VehicleTransfer.assemble(world,scan.result,scan.origin,player);require(craft.hover,"modular gear enters Hover");craft.rotationYaw=90;
             GearTileEntity captured=null;for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&((GearTileEntity)raw).isController())captured=(GearTileEntity)raw;
-            require(captured!=null&&craft.collisionCache.bypass().isEmpty(),"native gear participates in cached vehicle geometry");captured.target(false);
+            require(captured!=null&&craft.collisionCache.bypass().isEmpty(),"native gear participates in cached vehicle geometry");GearPerformanceRuntimeChecks.run(craft);captured.target(false);
             for(int tick=0;tick<300&&captured.progress()>0;tick++){ModularGearVehicles.tick(craft);Thread.sleep(3);}require(captured.progress()==0,"captured group retracts");captured.target(true);
             for(int tick=0;tick<300&&!captured.fullyDeployed();tick++){ModularGearVehicles.tick(craft);Thread.sleep(3);}require(captured.fullyDeployed(),"captured group deploys");
             VehicleTransfer.park(world,craft,scan.origin,player);craft=null;

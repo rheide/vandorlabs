@@ -22,6 +22,22 @@ final class VehicleStatusClientRuntimeChecks {
     private static WorldServer world(Minecraft mc){return mc.getIntegratedServer().getWorld(0);}
     private static EntityGroundVehicle server(Minecraft mc){return (EntityGroundVehicle)world(mc).getEntityFromUuid(id);}
     private static EntityGroundVehicle client(Minecraft mc){for(EntityGroundVehicle craft:VehicleLookup.loaded(mc.world))if(craft.getUniqueID().equals(id))return craft;return null;}
+    static void nativeState(Minecraft mc)throws Exception{
+        try(TurntableRenderState ignored=new TurntableRenderState()){
+            // Reproduce a native renderer changing the driver without updating Minecraft's cache.
+            net.minecraft.client.renderer.GlStateManager.setActiveTexture(net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);
+            net.minecraft.client.renderer.GlStateManager.disableCull();org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_CULL_FACE);
+            org.lwjgl.opengl.GL13.glActiveTexture(net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit);
+            net.minecraft.client.renderer.BufferBuilder local=net.minecraft.client.renderer.Tessellator.getInstance().getBuffer();local.setTranslation(37,41,43);
+            java.lang.reflect.Method white=RedstoneScreenRenderer.class.getDeclaredMethod("bindWhite");white.setAccessible(true);white.invoke(null);
+            require(org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE)==net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit,"screen restores the physical atlas texture unit");
+            require(!org.lwjgl.opengl.GL11.glIsEnabled(org.lwjgl.opengl.GL11.GL_CULL_FACE),"screen clears a stale driver culling state");
+            require(org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_TEXTURE_BINDING_2D)==mc.getTextureManager().getTexture(RenderIdentifierCache.white()).getGlTextureId(),"screen binds white after stale native texture state");
+            local.begin(org.lwjgl.opengl.GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.POSITION);local.pos(0,0,0).endVertex();local.finishDrawing();
+            require(local.getByteBuffer().getFloat(0)==0&&local.getByteBuffer().getFloat(4)==0&&local.getByteBuffer().getFloat(8)==0,"screen clears another tile's singleton buffer translation");local.reset();
+        }
+        System.out.println("[vandorlabs][reprolab] screen-native-state PASS stale-active-unit binding culling local-buffer-offset");
+    }
     static void begin(Minecraft mc)throws Exception{
         mc.gameSettings.thirdPersonView=0;mc.gameSettings.hideGUI=false;
         // The elevated fixture camera approaches the cloud layer; keep pixel checks unobscured.

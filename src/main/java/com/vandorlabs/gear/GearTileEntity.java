@@ -53,10 +53,29 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
 
     private double progress = 1.0;
     private double previousProgress = 1.0;
+    private int motionRevision;
+    private long lastMotionTick=Long.MIN_VALUE;
+    public int motionRevision(){return motionRevision;}
+    public boolean motionBlocked(){return motionBlocked;}
+    public boolean captureBlocked(boolean value){boolean changed=motionBlocked!=value;motionBlocked=value;return changed;}
+    public boolean acceptMotion(int revision,long tick,boolean target,boolean blocked){
+        if(revision!=motionRevision||tick<=lastMotionTick||!isOperational())return false;
+        lastMotionTick=tick;deployedTarget=isFixedMount()||target;motionBlocked=blocked;return true;
+    }
+    public void correctProgress(double value){previousProgress=progress;progress=isFixedMount()?1:Math.max(0,Math.min(1,value));boxesAt=Double.NaN;}
     // A cached group may be temporarily suspended while required chunks are
     // absent. Its saved membership, target and exact progress are preserved.
     private boolean operational = true,motionBlocked,configured;
     private double boxesAt=Double.NaN;
+    private final java.util.LinkedHashMap<Double,java.util.List<AxisAlignedBB>> poses=new java.util.LinkedHashMap<>(32,.75F,true);
+    private int poseBoxes;
+    java.util.List<AxisAlignedBB> boxesAt(double value){
+        java.util.List<AxisAlignedBB> found=poses.get(value);if(found!=null)return found;
+        found=GearGeometry.computeBoxes(this,value);if(found.size()<=8192){poses.put(value,found);poseBoxes+=found.size();
+            while(poses.size()>32||poseBoxes>8192){java.util.Iterator<java.util.List<AxisAlignedBB>> i=poses.values().iterator();poseBoxes-=i.next().size();i.remove();}}
+        return found;
+    }
+    private void clearPoses(){poses.clear();poseBoxes=0;boxesAt=Double.NaN;}
     private java.util.List<AxisAlignedBB> cachedBoxes=java.util.Collections.emptyList();
     public java.util.List<AxisAlignedBB> collisionBoxes(){if(!isOperational())return java.util.Collections.emptyList();if(boxesAt!=progress){cachedBoxes=GearGeometry.boxes(this,progress);boxesAt=progress;}return cachedBoxes;}
     public void captureProgress(double next){previousProgress=progress;progress=isFixedMount()?1:Math.max(0,Math.min(1,next));boxesAt=Double.NaN;}
@@ -143,7 +162,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
         return root == null || !root.operational || root.fullyDeployed();
     }
 
-    @Override public void setWorld(World world){super.setWorld(world);rebuildMemberCache();boxesAt=Double.NaN;}
+    @Override public void setWorld(World world){super.setWorld(world);rebuildMemberCache();clearPoses();}
 
     @Override
     public void onLoad() { firstServerTick = true;rebuildMemberCache();GearGeometry.register(this); }
@@ -151,6 +170,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     @Override public void onChunkUnload(){GearGeometry.remove(this);super.onChunkUnload();}
 
     public void scheduleRebuild() {
+        clearPoses();
         if (world != null && !world.isRemote && rebuildDelay < 0) rebuildDelay = 2;
     }
 
@@ -222,8 +242,8 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
             double before = progress;
             double next=GearMotion.advance(progress,deployedTarget,1,ANIMATION_TICKS);
             boolean blocked=next!=before&&!GearGeometry.canMove(this,before,next);
-            if(blocked!=motionBlocked){motionBlocked=blocked;sync();}
-            if(!blocked&&next!=before){GearGeometry.pushEntities(world,GearGeometry.boxes(this,before),GearGeometry.boxes(this,next),null);progress=next;boxesAt=Double.NaN;markDirty();if(progress==0||progress==1){sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(world.getTotalWorldTime()%3==0)sync();}
+            if(blocked!=motionBlocked){motionBlocked=blocked;markDirty();com.vandorlabs.network.MessageGearMotion.send(this);}
+            if(!blocked&&next!=before){GearGeometry.pushEntities(world,GearGeometry.boxes(this,before),GearGeometry.boxes(this,next),null);progress=next;boxesAt=Double.NaN;markDirty();if(progress==0||progress==1){com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(world.getTotalWorldTime()%3==0)com.vandorlabs.network.MessageGearMotion.send(this);}
         }
     }
 
@@ -414,8 +434,10 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     }
 
     public void sync() {
+        clearPoses();
         markDirty();
         if (world != null && !world.isRemote && GearAssembly.loaded(world, pos)) {
+            motionRevision++;
             IBlockState state = world.getBlockState(pos);
             world.notifyBlockUpdate(pos, state, state, 2);
         }
@@ -424,6 +446,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
+        tag.setInteger("GearRevision",motionRevision);
         if (owner != null) tag.setLong("GearOwnerOffset", owner.subtract(pos).toLong());
         tag.setInteger("GearTrigger",triggerMode);tag.setString("GearChannels",channels.toString());
         NBTTagList columnList=new NBTTagList();for(BlockPos column:columns)columnList.appendTag(new NBTTagIntArray(new int[]{column.getX(),column.getY(),column.getZ()}));tag.setTag("GearColumns",columnList);
@@ -450,6 +473,8 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     @Override
     public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
+        clearPoses();
+        motionRevision=tag.getInteger("GearRevision");lastMotionTick=Long.MIN_VALUE;
         configured=tag.getBoolean("GearConfigured");motionBlocked=tag.getBoolean("GearBlocked");boxesAt=Double.NaN;
         owner=tag.hasKey("GearOwnerOffset",4)?pos.add(BlockPos.fromLong(tag.getLong("GearOwnerOffset"))):null;
         triggerMode=Math.max(0,Math.min(2,tag.getInteger("GearTrigger")));com.vandorlabs.redstone.ChannelList read=com.vandorlabs.redstone.ChannelList.parse(tag.getString("GearChannels"));channels=read==null?com.vandorlabs.redstone.ChannelList.EMPTY:read;
@@ -499,7 +524,9 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
 
     @Override
     public void onDataPacket(NetworkManager manager, SPacketUpdateTileEntity packet) {
+        double previous=progress;
         readFromNBT(packet.getNbtCompound());
+        previousProgress=previous;
         if (world != null) world.markBlockRangeForRenderUpdate(pos, pos);
     }
 
@@ -509,7 +536,7 @@ public final class GearTileEntity extends TileEntity implements ITickable,com.va
     }
 
     @Override
-    public boolean hasFastRenderer() { return false; }
+    public boolean hasFastRenderer() { return true; }
 
     @Override
     public double getMaxRenderDistanceSquared() { return 256.0 * 256.0; }

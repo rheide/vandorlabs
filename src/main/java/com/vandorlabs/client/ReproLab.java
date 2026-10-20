@@ -723,7 +723,7 @@ public class ReproLab {
         }
         if(Boolean.getBoolean("vandorlabs.vehicleStatusChecksOnly")) {
             mc.displayGuiScreen(null);mc.setIngameFocus();
-            try {if(!vehicleStatusStarted){VehicleStatusClientRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(VehicleStatusClientRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            try {if(!vehicleStatusStarted){VehicleStatusClientRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(VehicleStatusClientRuntimeChecks.tick(mc,outDir)){VehicleStatusClientRuntimeChecks.nativeState(mc);mc.shutdown();}}
             catch(Exception failure){throw new IllegalStateException("vehicle status live checks",failure);}
             return;
         }

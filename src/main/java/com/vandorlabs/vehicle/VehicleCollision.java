@@ -42,7 +42,8 @@ public final class VehicleCollision {
     }
     public VehicleCollision(VehicleWorld view) {this(capture(view),false);}
     private VehicleCollision(VehicleWorld view,boolean reference) {this(capture(view),reference);}
-    static Raw capture(VehicleWorld view){
+    static Raw capture(VehicleWorld view){return capture(view,false);}
+    static Raw capture(VehicleWorld view,boolean omitModularGear){
         long profileStart=PROFILE?System.nanoTime():0;
         long diagnostic=view.craft==null?0:VehicleAnimationDiagnostics.start(view.craft);
         String diagnosticSide=diagnostic==0?null:view.parent.isRemote?"client/":"server/";
@@ -50,6 +51,11 @@ public final class VehicleCollision {
         Set<BlockPos> canopyOwners=new HashSet<>();boolean complete=true;
         AxisAlignedBB query=view.structure.bounds.grow(16);
         for(VehicleStructure.Cell c:view.structure.cells) {
+            if(omitModularGear&&c.state.getBlock() instanceof com.vandorlabs.gear.GearBlock){
+                net.minecraft.tileentity.TileEntity member=view.getTileEntity(c.pos);
+                com.vandorlabs.gear.GearTileEntity root=member instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)member).loadedController():null;
+                if(root!=null&&root.isOperational())continue;
+            }
             List<AxisAlignedBB> component=new ArrayList<>();
             try {
                 if(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy) {
@@ -77,6 +83,15 @@ public final class VehicleCollision {
         return new Raw(all,view.structure.bounds.maxX/2,view.structure.bounds.maxZ/2,PROFILE?System.nanoTime()-profileStart:0,diagnostic==0?null:diagnosticSide,complete);
     }
     static VehicleCollision prepare(Raw raw){return new VehicleCollision(raw,false);}
+    /** Reuse the rigid hull's merged boxes and spatial clusters for independently posed gear. */
+    static VehicleCollision components(Geometry hull,List<List<AxisAlignedBB>> components){return new VehicleCollision(hull,components);}
+    private VehicleCollision(Geometry hull,List<List<AxisAlignedBB>> components){
+        List<AxisAlignedBB> all=new ArrayList<>(hull.boxes);clusters.addAll(hull.clusters);AxisAlignedBB bound=hull.bounds;
+        for(List<AxisAlignedBB> component:components){Cluster cluster=new Cluster();for(AxisAlignedBB box:component)if(box.getAverageEdgeLength()>0){all.add(box);cluster.add(box);bound=bound.union(box);}if(cluster.bounds!=null)clusters.add(cluster);}
+        if(all.size()>8192)throw new IllegalArgumentException("Craft collision geometry exceeds 8192 boxes.");
+        boxes=Collections.unmodifiableList(all);bounds=bound;pivotX=hull.pivotX;pivotZ=hull.pivotZ;
+        rawBoxes=uniqueBoxes=firstPassBoxes=secondPassBoxes=all.size();collectionNanos=mergeNanos=indexNanos=deduplicationNanos=axis0Nanos=axis1Nanos=axis2Nanos=0;cached=true;cacheable=hull.cacheable;
+    }
     /** Copied face coordinates and ordinary boxes, captured on the world thread. */
     static final class DeferredRaw {
         final List<DeferredPart> parts;final double pivotX,pivotZ;

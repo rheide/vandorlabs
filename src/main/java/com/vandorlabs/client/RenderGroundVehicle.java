@@ -78,6 +78,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             if(!x.pos.equals(y.pos) || x.state!=y.state)return false;
             // Canopy geometry is emitted by its live renderer, never the baked hull mesh.
             if(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy || x.state.getBlock() instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear)continue;
+            if(x.state.getBlock() instanceof com.vandorlabs.gear.GearBlock){if(!x.sameGearConfiguration(y))return false;continue;}
             if(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat
                     && x.tileInteger("PilotHeight")!=y.tileInteger("PilotHeight"))return false;
             if(!(x.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat) && !x.sameTileData(y))return false;

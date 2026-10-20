@@ -19,6 +19,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
     private boolean cachePose;
     public static long cachedVertexBytes(){return GearModels.cachedVertexBytes();}
     @Override public void render(GearTileEntity tile,double x,double y,double z,float partial,int stage,float alpha){
+        if(!visible(tile))return;
         try(com.vandorlabs.client.TurntableRenderState state=new com.vandorlabs.client.TurntableRenderState()){
             bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
             net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableCull();
@@ -26,8 +27,17 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();
         }
     }
-    public void renderTileEntityFast(GearTileEntity tile, double x, double y, double z, float partialTicks,
+    /** Bound members are drawn by their operational controller, including compact parts. */
+    public static boolean visible(GearTileEntity tile){
+        if(tile.getWorld()==null)return false;
+        GearTileEntity controller=tile.loadedController();
+        if(controller!=null&&controller.isOperational()&&controller!=tile)return false;
+        IBlockState state=tile.getWorld().getBlockState(tile.getPos());
+        return state.getBlock() instanceof GearBlock&&((GearBlock)state.getBlock()).componentRoot(tile.getPos(),state).equals(tile.getPos());
+    }
+    @Override public void renderTileEntityFast(GearTileEntity tile, double x, double y, double z, float partialTicks,
                                      int destroyStage, float partial, BufferBuilder buffer) {
+        if(!visible(tile))return;
         emit(tile,x,y,z,partialTicks,destroyStage,partial,buffer,true);
     }
     /** Uncached vertex path retained for native equivalence/performance checks. */

@@ -16,8 +16,7 @@ import java.util.List;
 /** Seated cockpit is a genuine Pilot Seat with authored multiblock collision. */
 public final class BlockCockpit extends BlockPilotSeat {
     public final String design;
-    public BlockCockpit(String design){super(design);this.design=design;setCreativeTab(null);}
-    @Override public void getSubBlocks(net.minecraft.creativetab.CreativeTabs tab,NonNullList<ItemStack> items){}
+    public BlockCockpit(String design){super(design);this.design=design;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityCockpit(design);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return state;}

@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.vehicle.*;
 import com.vandorlabs.network.PacketHandler;
+import com.vandorlabs.network.SnapshotReader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.*;
@@ -16,6 +17,9 @@ import java.util.*;
 public final class VehicleClient {
     private static final Map<UUID,Incoming> incoming=new HashMap<>();
     private static final Map<UUID,Incoming> completed=new HashMap<>();
+    private static final Map<UUID,ArrayDeque<VehicleNetwork.Packet>> deferred=new HashMap<>();
+    private static UUID latestPreview;
+    static boolean snapshotPending(UUID id){Incoming receiving=incoming.get(id),reading=completed.get(id);return receiving!=null&&receiving.header.type==VehicleNetwork.SNAPSHOT||reading!=null&&reading.header.type==VehicleNetwork.SNAPSHOT;}
     private static Preview preview;
     private static int sequence,ticks,lastJump=-100;
     private static boolean jumpDown;
@@ -59,10 +63,18 @@ public final class VehicleClient {
     private static Object lastWorld;
     private static final class Incoming {
         final VehicleNetwork.Packet header;final byte[] bytes;final long created=System.currentTimeMillis();int next;VehicleStructure structure;net.minecraft.nbt.NBTTagCompound controlData;
+        java.util.concurrent.Future<net.minecraft.nbt.NBTTagCompound> parsed;
         Incoming(VehicleNetwork.Packet p){header=p;bytes=new byte[p.total];}
     }
     public static void receive(VehicleNetwork.Packet p) {
         Minecraft mc=Minecraft.getMinecraft();mc.addScheduledTask(()->{
+            if(p.type==VehicleNetwork.INSPECTION)latestPreview=null;
+            if(mc.world!=null&&(p.type==VehicleNetwork.TILE||p.type==VehicleNetwork.CANOPIES||p.type==VehicleNetwork.DOORS||p.type==VehicleNetwork.STATE)){
+                Entity raw=mc.world.getEntityByID(p.entity);
+                if(raw instanceof EntityGroundVehicle&&raw.getUniqueID().equals(p.token)&&(((EntityGroundVehicle)raw).structure==null||snapshotPending(p.token))){
+                    if(deferred.size()<16||deferred.containsKey(p.token)){ArrayDeque<VehicleNetwork.Packet> queue=deferred.computeIfAbsent(p.token,k->new ArrayDeque<>());if(p.type==VehicleNetwork.STATE)queue.removeIf(old->old.type==VehicleNetwork.STATE);if(queue.size()==128)queue.removeFirst();queue.addLast(p);}return;
+                }
+            }
             if(mc.world==null)return;
             if(p.type==VehicleNetwork.INSPECTION){if(p.forward==1){Incoming received=new Incoming(p);if(p.data.length>0)try{net.minecraft.nbt.NBTTagCompound inspected=net.minecraft.nbt.CompressedStreamTools.readCompressed(new java.io.ByteArrayInputStream(p.data));received.controlData=inspected.getCompoundTag("Seat");received.header.token=inspected.getUniqueId("PreviewToken");}catch(java.io.IOException invalid){return;}preview=new Preview(received);mc.displayGuiScreen(preview);return;}if(mc.currentScreen instanceof GuiRedstoneChannel)((GuiRedstoneChannel)mc.currentScreen).inspection(p.origin,p.text);return;}
             if(p.type==VehicleNetwork.ERROR){
@@ -105,16 +117,14 @@ public final class VehicleClient {
             if(p.type!=VehicleNetwork.PREVIEW && p.type!=VehicleNetwork.SNAPSHOT)return;
             if(p.total<=0 || p.total>VehicleStructure.MAX_NBT_BYTES || p.offset<0 || p.data.length==0 || p.offset>p.total-p.data.length)return;
             incoming.values().removeIf(i->System.currentTimeMillis()-i.created>10000);
-            if(p.offset==0) {if(incoming.size()>=4)return;incoming.put(p.token,new Incoming(p));}
+            if(p.offset==0) {if(incoming.size()>=4)return;if(p.type==VehicleNetwork.PREVIEW)latestPreview=p.token;incoming.put(p.token,new Incoming(p));}
             Incoming i=incoming.get(p.token);
             if(i==null || i.next!=p.offset || i.bytes.length!=p.total || i.header.type!=p.type || i.header.entity!=p.entity){incoming.remove(p.token);return;}
             System.arraycopy(p.data,0,i.bytes,p.offset,p.data.length);i.next+=p.data.length;
             if(i.next==i.bytes.length) {
                 incoming.remove(p.token);
                 try {
-                    i.structure=VehicleStructure.decode(i.bytes);
-                    if(p.type==VehicleNetwork.PREVIEW){preview=new Preview(i);mc.displayGuiScreen(preview);}
-                    else {if(completed.size()<16)completed.put(p.token,i);apply(mc);}
+                    if(completed.size()<4){i.parsed=SnapshotReader.read(i.bytes,VehicleStructure.MAX_NBT_BYTES);Incoming old=completed.put(p.token,i);if(old!=null&&old.parsed!=null)old.parsed.cancel(false);}
                 }catch(Exception e){com.vandorlabs.VandorLabs.logger.error("Rejected vehicle snapshot",e);}
             }
         });
@@ -122,17 +132,32 @@ public final class VehicleClient {
     private static void apply(Minecraft mc) {
         Iterator<Incoming> iterator=completed.values().iterator();
         while(iterator.hasNext()) {
-            Incoming i=iterator.next();Entity e=mc.world.getEntityByID(i.header.entity);
-            if(e instanceof EntityGroundVehicle && e.getUniqueID().equals(i.header.token)){((EntityGroundVehicle)e).install(i.structure);iterator.remove();}
+            Incoming i=iterator.next();
+            if(i.header.type==VehicleNetwork.PREVIEW&&!i.header.token.equals(latestPreview)){if(i.parsed!=null)i.parsed.cancel(false);iterator.remove();continue;}
+            if(System.currentTimeMillis()-i.created>10000){if(i.parsed!=null)i.parsed.cancel(false);iterator.remove();continue;}
+            if(i.structure==null){if(i.parsed==null)i.parsed=SnapshotReader.read(i.bytes,VehicleStructure.MAX_NBT_BYTES);if(i.parsed==null||!i.parsed.isDone())continue;try{i.structure=VehicleStructure.read(i.parsed.get());i.parsed=null;}catch(Exception invalid){com.vandorlabs.VandorLabs.logger.error("Rejected vehicle snapshot",invalid);iterator.remove();continue;}}
+            if(i.header.type==VehicleNetwork.PREVIEW){preview=new Preview(i);mc.displayGuiScreen(preview);iterator.remove();continue;}
+            Entity e=mc.world.getEntityByID(i.header.entity);
+            if(e instanceof EntityGroundVehicle && e.getUniqueID().equals(i.header.token)){
+                ((EntityGroundVehicle)e).install(i.structure);iterator.remove();
+                ArrayDeque<VehicleNetwork.Packet> queued=deferred.remove(i.header.token);if(queued!=null)for(VehicleNetwork.Packet packet:queued)receive(packet);
+                GearMotionClient.installed((EntityGroundVehicle)e);
+            }
             else if(System.currentTimeMillis()-i.created>10000)iterator.remove();
         }
     }
     @SubscribeEvent public void tick(TickEvent.ClientTickEvent event) {
         if(event.phase!=TickEvent.Phase.START)return;Minecraft mc=Minecraft.getMinecraft();
         RenderGroundVehicle.cleanup(mc.world);
-        if(mc.world!=lastWorld){incoming.clear();completed.clear();preview=null;lastWorld=mc.world;sequence=0;}
+        if(mc.world!=lastWorld){incoming.clear();for(Incoming pending:completed.values())if(pending.parsed!=null)pending.parsed.cancel(false);completed.clear();deferred.clear();GearMotionClient.clear();latestPreview=null;preview=null;lastWorld=mc.world;sequence=0;}
         PlacedSeatCamera.tick(mc);
         if(mc.world==null || mc.player==null)return;apply(mc);
+        Iterator<Map.Entry<UUID,ArrayDeque<VehicleNetwork.Packet>>> delayed=deferred.entrySet().iterator();
+        while(delayed.hasNext()){Map.Entry<UUID,ArrayDeque<VehicleNetwork.Packet>> entry=delayed.next();Entity raw=mc.world.getEntityByID(entry.getValue().peek().entity);
+            if(!(raw instanceof EntityGroundVehicle)||!raw.getUniqueID().equals(entry.getKey())){delayed.remove();continue;}
+            if(((EntityGroundVehicle)raw).structure!=null&&!snapshotPending(entry.getKey())){delayed.remove();for(VehicleNetwork.Packet packet:entry.getValue())receive(packet);}
+        }
+        GearMotionClient.cleanup(mc.world);
         for(Entity raw:mc.world.loadedEntityList)if(raw instanceof EntityGroundVehicle)((EntityGroundVehicle)raw).setLocalDriver(mc.player.getRidingEntity()==raw && raw.getControllingPassenger()==mc.player && !((EntityGroundVehicle)raw).hover && !((EntityGroundVehicle)raw).autopilot.enabled());
         if(!(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle entity=(EntityGroundVehicle)mc.player.getRidingEntity();
@@ -210,7 +235,7 @@ public final class VehicleClient {
         }
         GlStateManager.translate(0,0,(mc.gameSettings.thirdPersonView==2?1:-1)*Math.max(0,distance-vanilla));
     }
-    @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START)RenderGroundVehicle.beginFrame();}
+    @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START){RenderGroundVehicle.beginFrame();RenderTurntable.beginFrame();}}
     @SubscribeEvent public void outline(RenderWorldLastEvent event) {
         RenderGroundVehicle.renderMissing(event.getPartialTicks());
         Minecraft mc=Minecraft.getMinecraft();if(preview==null || mc.currentScreen!=preview || preview.data.header.sequence==-1 || preview.data.header.forward!=1 || preview.data.structure==null)return;

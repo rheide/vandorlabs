@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fml.common.network.simpleimpl.*;
 import java.util.Arrays;
 
-/** One requested bounded slice at a time; no unsolicited multi-megabyte spawn packets. */
+/** A bounded four-slice window amortizes round trips without multi-megabyte spawn packets. */
 public final class MessageTurntableSnapshot implements IMessage {
     public int entity,total,offset;public byte[] data=new byte[0];
     public MessageTurntableSnapshot(){}
@@ -16,7 +16,9 @@ public final class MessageTurntableSnapshot implements IMessage {
         public IMessage onMessage(MessageTurntableSnapshot packet,MessageContext context){net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;player.getServerWorld().addScheduledTask(()->{
             if(packet.total!=0||packet.data.length!=0||packet.offset<0)return;net.minecraft.entity.Entity raw=player.world.getEntityByID(packet.entity);if(!(raw instanceof EntityTurntable)||raw.getDistanceSq(player)>128*128)return;
             EntityTurntable entity=(EntityTurntable)raw;if(!entity.allowSnapshotRequest(player))return;
-            try{byte[] bytes=entity.wire();if(bytes==null||packet.offset>=bytes.length)return;MessageTurntableSnapshot response=request(packet.entity,packet.offset);response.total=bytes.length;response.data=Arrays.copyOfRange(bytes,packet.offset,Math.min(bytes.length,packet.offset+60000));PacketHandler.INSTANCE.sendTo(response,player);}catch(java.io.IOException failure){com.vandorlabs.VandorLabs.logger.warn("Cannot synchronize captured turntable",failure);}
+            try{byte[] bytes=entity.wire();if(bytes==null||packet.offset>=bytes.length)return;
+                for(int offset=packet.offset,end=Math.min(bytes.length,packet.offset+4*60000);offset<end;offset+=60000){MessageTurntableSnapshot response=request(packet.entity,offset);response.total=bytes.length;response.data=Arrays.copyOfRange(bytes,offset,Math.min(bytes.length,offset+60000));PacketHandler.INSTANCE.sendTo(response,player);}
+            }catch(java.io.IOException failure){com.vandorlabs.VandorLabs.logger.warn("Cannot synchronize captured turntable",failure);}
         });return null;}
     }
     public static final class Client implements IMessageHandler<MessageTurntableSnapshot,IMessage>{public IMessage onMessage(MessageTurntableSnapshot packet,MessageContext context){com.vandorlabs.VandorLabs.proxy.turntablePacket(packet);return null;}}

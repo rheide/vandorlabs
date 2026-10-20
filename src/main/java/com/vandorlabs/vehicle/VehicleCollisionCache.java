@@ -39,6 +39,11 @@ public final class VehicleCollisionCache {
     private Future<VehicleCollision.Geometry> pending;
     private Pose pendingPose;
     private long pendingGeneration;
+    private VehicleCollision.Geometry modularHull;
+    private Pose modularHullPose;
+    private long modularHullBuilds;
+    private boolean modularOversize;
+    public long modularHullBuilds(){return modularHullBuilds;}
     private static final class Pose {
         final int[] values;final int hash;
         Pose(List<Integer> values){this.values=new int[values.size()];for(int i=0;i<values.size();i++)this.values[i]=values.get(i);hash=Arrays.hashCode(this.values);}
@@ -56,7 +61,7 @@ public final class VehicleCollisionCache {
     public long misses(){return misses;}
     public long generation(){return generation;}
     public boolean warming(){return pending!=null||warmSnapshot!=null&&nextPose<=16;}
-    public void clear(){generation++;asyncUnavailable=false;waitingSince=0;failure="";entries.clear();weight=0;configuration=null;parent=null;warmSnapshot=null;warmOwner=null;warmView=null;nextPose=17;if(pending!=null)pending.cancel(false);pending=null;pendingPose=null;}
+    public void clear(){generation++;modularHull=null;modularHullPose=null;modularOversize=false;asyncUnavailable=false;waitingSince=0;failure="";entries.clear();weight=0;configuration=null;parent=null;warmSnapshot=null;warmOwner=null;warmView=null;nextPose=17;if(pending!=null)pending.cancel(false);pending=null;pendingPose=null;}
     private static boolean knownSource(Block source){String name=source.getClass().getName();return name.startsWith("net.minecraft.block.")||name.startsWith("com.vandorlabs.blocks.")&&SAFE_OWN.contains(source.getClass().getSimpleName());}
     private static boolean supported(VehicleWorld view,VehicleStructure.Cell cell,TileEntity tile){
         Block block=cell.state.getBlock();if(block.getRegistryName()==null)return false;
@@ -94,7 +99,7 @@ public final class VehicleCollisionCache {
                     if(canopy.draws()&&canopy.opening()){poses.add(Float.floatToIntBits(canopy.progress));owner=canopy.getPos();movingOwners++;}
                 }
                 if(tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).isRoot()){normalized.removeTag("Progress");normalized.removeTag("LastSignal");poses.add(Float.floatToIntBits(((TileEntityLandingGear)tile).progress));entry.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),cell.state.withProperty(com.vandorlabs.blocks.BlockTelescopicLandingGear.EXTENDED,true)));}
-                if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).isController()){normalized.removeTag("GearProgress");normalized.removeTag("GearBlocked");normalized.removeTag("GearTargetDeployed");poses.add(Float.floatToIntBits((float)((com.vandorlabs.gear.GearTileEntity)tile).progress()));}
+                if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).isController()){for(String key:new String[]{"GearProgress","GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal","GearRevision"})normalized.removeTag(key);poses.add(Float.floatToIntBits((float)((com.vandorlabs.gear.GearTileEntity)tile).progress()));}
                 entry.setTag("Tile",normalized);
             }
             blocks.appendTag(entry);
@@ -116,7 +121,9 @@ public final class VehicleCollisionCache {
     public void restart(VehicleWorld view){clear();Description description=describe(view);if(description!=null)accept(description,view);}
     public VehicleCollision collision(VehicleWorld view){
         long signatureStart=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);if(signatureStart!=0)sample(view,"cache-signature",System.nanoTime()-signatureStart);if(description==null){if(uncached){Description current=describe(view,false);poll();VehicleCollision.Geometry prepared=current==null?null:entries.remove(current.pose);if(prepared!=null&&configuration.equals(current.configuration)){weight-=prepared.boxes.size();hits++;return new VehicleCollision(prepared);}}clear();misses++;return new VehicleCollision(view);}
-        accept(description,view);poll();VehicleCollision.Geometry found=entries.get(description.pose);
+        accept(description,view);poll();
+        VehicleCollision modular=modularCollision(view,null);if(modular!=null){hits++;return modular;}
+        VehicleCollision.Geometry found=entries.get(description.pose);
         if(found!=null){hits++;sample(view,"cache-hit-count",1);return new VehicleCollision(found);}
         misses++;sample(view,"cache-miss-count",1);VehicleCollision result=new VehicleCollision(view);put(description.pose,result.geometry());return result;
     }
@@ -148,6 +155,7 @@ public final class VehicleCollisionCache {
     private boolean readyPose(VehicleWorld view,Map<BlockPos,Float> desired){
         long described=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-describe",described);if(description==null){description=describe(view,false);uncached=true;if(description==null)return false;}else uncached=false;
         long checked=VehicleAnimationDiagnostics.start(view.craft);accept(description,view);poll();VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-accept-poll",checked);
+        if(!uncached&&modularReady(view,desired))return true;
         checked=VehicleAnimationDiagnostics.start(view.craft);Pose pose=pose(view,desired);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-pose-vector",checked);
         if(entries.containsKey(pose)){waitingSince=0;return true;}
         if(asyncUnavailable){waits++;return false;}
@@ -157,6 +165,28 @@ public final class VehicleCollisionCache {
         if(pending==null){long queued=VehicleAnimationDiagnostics.start(view.craft);queue(view,description,pose);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-queue",queued);}
         if(asyncUnavailable){waits++;return false;}
         waits++;sample(view,"cache-animation-wait-count",1);return false;
+    }
+    /** Moving modular assemblies reuse a rigid hull instead of a Cartesian cache of whole-craft poses. */
+    private boolean modularReady(VehicleWorld view,Map<BlockPos,Float> desired){
+        if(desired.isEmpty())return false;
+        for(BlockPos pos:desired.keySet())if(!(view.getTileEntity(pos) instanceof com.vandorlabs.gear.GearTileEntity))return false;
+        return modularCollision(view,desired)!=null;
+    }
+    private VehicleCollision modularCollision(VehicleWorld view,Map<BlockPos,Float> desired){
+        // Canopies retain their asynchronous face preparation. Unsupported adapters retain fresh collection.
+        if(uncached||modularOversize)return null;
+        List<com.vandorlabs.gear.GearTileEntity> gears=new ArrayList<>();List<Integer> rigidPoses=new ArrayList<>();
+        for(TileEntity tile:view.tiles.values()){
+            if(tile instanceof TileEntityCanopy&&((TileEntityCanopy)tile).draws()&&((TileEntityCanopy)tile).opening())return null;
+            if(tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).isRoot())rigidPoses.add(Float.floatToIntBits(((TileEntityLandingGear)tile).progress));
+            if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).isOperational())gears.add((com.vandorlabs.gear.GearTileEntity)tile);
+        }
+        if(gears.isEmpty())return null;
+        Pose rigid=new Pose(rigidPoses);
+        if(modularHull==null||!rigid.equals(modularHullPose)){modularHull=VehicleCollision.prepare(VehicleCollision.capture(view,true)).geometry();modularHullPose=rigid;modularHullBuilds++;}
+        List<List<net.minecraft.util.math.AxisAlignedBB>> components=new ArrayList<>();int count=modularHull.boxes.size();
+        for(com.vandorlabs.gear.GearTileEntity gear:gears){double progress=desired==null?gear.progress():desired.getOrDefault(gear.getPos(),(float)gear.progress());List<net.minecraft.util.math.AxisAlignedBB> boxes=com.vandorlabs.gear.GearGeometry.boxes(gear,progress);count+=boxes.size();if(count>8192){modularOversize=true;return null;}components.add(boxes);}
+        return VehicleCollision.components(modularHull,components);
     }
     private void queue(VehicleWorld view,Description description,Pose pose){
         if(pending!=null||WORKER.getQueue().remainingCapacity()==0)return;

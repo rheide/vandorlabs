@@ -91,7 +91,12 @@ public final class VehicleTransfer {
             if(work.io!=null){if(!work.io.isDone())return;work.io.get();work.io=null;if(work.retiring||work.aborting){release(work);queue.remove();return;}work.journalReady=true;}
             if(work.aborting){try{work.io=IO.submit(()->{work.ownership.restore();Files.deleteIfExists(work.journal);return null;});}catch(RejectedExecutionException busy){}return;}
             if(work.committed){
-                if(!work.updates.isEmpty()){if(work.updates.peek().step())work.updates.remove();return;}
+                if(!work.updates.isEmpty()){
+                    long deadline=System.nanoTime()+2_000_000L;
+                    do{if(work.updates.peek().step(deadline))work.updates.remove();}
+                    while(!work.updates.isEmpty()&&System.nanoTime()<deadline);
+                    return;
+                }
                 if(work.saves==null){
                     Set<Chunk> chunks=new LinkedHashSet<>();VehicleStructure affected=VehicleStructure.read(work.undo.getCompoundTag(work.undo.hasKey("ParkedCraft",10)?"ParkedCraft":work.undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft"));
                     BlockPos origin=BlockPos.fromLong(work.undo.getLong(work.undo.hasKey("AssemblyOriginalOrigin",4)?"AssemblyOriginalOrigin":"Origin"));
@@ -125,8 +130,9 @@ public final class VehicleTransfer {
         final WorldServer world;final ArrayDeque<Chunk> chunks;final List<Map.Entry<BlockPos,IBlockState>> cells;
         int index;boolean neighbors;
         BlockUpdates(WorldServer world,Set<Chunk> chunks,Map<BlockPos,IBlockState> cells){this.world=world;this.chunks=new ArrayDeque<>(chunks);this.cells=new ArrayList<>(cells.entrySet());}
-        boolean step(){
-            long deadline=System.nanoTime()+2_000_000L;int remaining=64;
+        boolean step(){return step(System.nanoTime()+2_000_000L);}
+        boolean step(long deadline){
+            int remaining=64;
             try(Transaction transaction=new Transaction(world)){
                 if(!chunks.isEmpty()){Chunk chunk=chunks.remove();chunk.generateSkylightMap();chunk.markDirty();return false;}
                 while(index<cells.size()&&remaining-->0){Map.Entry<BlockPos,IBlockState> cell=cells.get(index++);BlockPos pos=cell.getKey();
