@@ -20,6 +20,15 @@ public final class TurntableGeometry {
     }
 
     public static double wrap(double degrees){return ((degrees%360)+360)%360;}
+    public static void checkSnapTolerance(double tolerance){
+        if(!Double.isFinite(tolerance)||tolerance<0||tolerance>5)throw new IllegalArgumentException("Auto-snap must be between 0 and 5 degrees");
+    }
+    public static boolean canAutoSnap(double angle,double tolerance){
+        checkSnapTolerance(tolerance);
+        if(!Double.isFinite(angle))return false;
+        double heading=wrap(angle);
+        return Math.abs(heading-Math.round(heading/90)*90)<=Math.max(.001,tolerance)+1e-7;
+    }
     public static double degreesPerTick(double rpm){
         if(!Double.isFinite(rpm) || rpm<.5 || rpm>10 || Math.abs(rpm*2-Math.rint(rpm*2))>1e-7)throw new IllegalArgumentException("Speed must be between 0.5 and 10 RPM in 0.5 RPM steps");
         return rpm*.3;

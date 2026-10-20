@@ -26,6 +26,13 @@ public final class TurntableGeometryTest {
         near(TurntableGeometry.degreesPerTick(1)*1200,360);near(TurntableGeometry.wrap(-10),350);
         for(double invalid:new double[]{0,-1,.1,.6,10.5,30,Double.NaN,Double.POSITIVE_INFINITY}){try{TurntableGeometry.degreesPerTick(invalid);throw new AssertionError();}catch(IllegalArgumentException expected){checks++;}}
         for(int step=1;step<=20;step++)near(TurntableGeometry.degreesPerTick(step/2D),step*.15);
+        for(int step=0;step<=50;step++)for(int quarter=-4;quarter<=8;quarter++)for(int sign:new int[]{-1,1}){
+            double tolerance=step/10D,angle=quarter*90+sign*tolerance;
+            if(!TurntableGeometry.canAutoSnap(angle,tolerance)||TurntableGeometry.canAutoSnap(angle+sign*.01,tolerance))throw new AssertionError("Auto-snap boundary "+angle+" / "+tolerance);
+            checks+=2;
+        }
+        for(double invalid:new double[]{-1,5.1,Double.NaN,Double.POSITIVE_INFINITY}){try{TurntableGeometry.canAutoSnap(90,invalid);throw new AssertionError();}catch(IllegalArgumentException expected){checks++;}}
+        if(TurntableGeometry.canAutoSnap(Double.NaN,5))throw new AssertionError("Nonfinite heading");
         System.out.println("Turntable geometry: "+checks+" checks passed");
     }
 }

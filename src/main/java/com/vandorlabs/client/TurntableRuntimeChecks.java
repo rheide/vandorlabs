@@ -136,31 +136,32 @@ final class TurntableRuntimeChecks {
     private static void cardinalStops(WorldServer world,EntityPlayerMP player)throws Exception{
         BlockPos seed=new BlockPos(650,205,175),owner=seed.west();
         Block surface=Block.getBlockFromName("vandorlabs:turntable_surface"),controller=Block.getBlockFromName("vandorlabs:turntable_controller");
-        for(int test=0;test<6;test++){
+        double[] headings={0,90,180,270,37,90,85,185,265,5,355,84.9,85,85};
+        for(int test=0;test<headings.length;test++){
             clear(world,seed);for(int x=0;x<3;x++)for(int z=0;z<3;z++)world.setBlockState(seed.add(x,0,z),surface.getDefaultState());
             world.setBlockState(owner,controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST));
-            TileEntityTurntableController tile=(TileEntityTurntableController)world.getTileEntity(owner);tile.height=1;tile.rotationMode=test%2==0?1:2;
+            TileEntityTurntableController tile=(TileEntityTurntableController)world.getTileEntity(owner);tile.height=1;tile.autoSnapTolerance=test<6?0:test==12?4.9:5;tile.rotationMode=test%2==0?1:2;
             world.setBlockState(seed.add(0,1,1),Blocks.BRICK_BLOCK.getDefaultState());tile.scan(player);
             if(tile.rotationMode==1)world.setBlockState(owner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());
-            tile.update();EntityTurntable moving=tile.display();double heading=test<4?test*90:test==4?37:90;moving.setAngle(heading);
-            TurntableSnapshot expected=moving.snapshot.rotated(heading,moving.view);BlockPos returned=expected.origin.add(expected.blocks.cells.get(0).pos);
-            if(test==5)world.setBlockState(returned,Blocks.STONE.getDefaultState());
+            tile.update();EntityTurntable moving=tile.display();double heading=headings[test];moving.setAngle(heading);
+            TurntableSnapshot expected=moving.snapshot.rotated(Math.round(heading/90)*90,moving.view);BlockPos returned=expected.origin.add(expected.blocks.cells.get(0).pos);
+            if(test==5||test==13)world.setBlockState(returned,Blocks.STONE.getDefaultState());
             if(tile.rotationMode==1)world.setBlockToAir(owner.down());else world.setBlockState(owner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());
             tile.update();
-            if(test<4){
+            if(test<4||test>=6&&test<=10){
                 require(tile.captureId==null&&tile.display()==null&&moving.isDead,"quarter-turn stop automatically restores heading "+heading);
                 require(world.getBlockState(returned).getBlock()==Blocks.BRICK_BLOCK,"automatic restore uses displayed quarter-turn position "+heading);
                 for(BlockPos at:tile.layout.cells)require(!BlockTurntableSurface.locked(world,at),"automatic stop unlocks surfaces");
                 require(Blocks.BRICK_BLOCK.removedByPlayer(world.getBlockState(returned),world,returned,player,false),"returned blocks can be modified normally");
             }else{
                 require(tile.captureId!=null&&tile.display()==moving&&!moving.isDead,"off-grid or blocked stop retains capture");
-                if(test==4)require(Math.abs(moving.angle()-37)<.001,"off-grid stop retains exact heading");
-                else{require(tile.lastError.startsWith("Automatic restore failed:"),"blocked auto-restore reports error");world.setBlockToAir(returned);}
+                if(test!=5&&test!=13)require(Math.abs(moving.angle()-heading)<.001,"off-grid stop retains exact heading");
+                else{require(Math.abs(moving.angle()-heading)<.001,"blocked automatic snap retains displayed angle");require(tile.lastError.startsWith("Automatic restore failed:"),"blocked auto-restore reports error");world.setBlockToAir(returned);}
                 tile.restore(player);
             }
             clear(world,seed);
         }
-        System.out.println("[vandorlabs][reprolab] turntable-cardinal-stop PASS 0/90/180/270 automatic editable blocks both redstone gates off-grid hold blocked-return preservation");
+        System.out.println("[vandorlabs][reprolab] turntable-cardinal-stop PASS 0/90/180/270 automatic editable blocks both redstone gates fuzzy boundaries 85/185/265/5/355 outside hold blocked-return preservation");
     }
     private static void clear(WorldServer world,BlockPos seed){for(BlockPos p:BlockPos.getAllInBox(seed.add(-5,-5,-5),seed.add(5,5,5)))if(!world.isAirBlock(p))world.setBlockToAir(p);}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("turntable: "+message);}

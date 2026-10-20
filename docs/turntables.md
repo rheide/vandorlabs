@@ -53,7 +53,10 @@ the enabled input state. Obstructions can stop movement while the input stays on
 
 When the rotation input becomes inactive at 0, 90, 180 or 270 degrees, the
 captured contents automatically return to ordinary, editable blocks at that
-heading. Stops at other angles keep the exact displayed pose captured. While
+heading. **Auto-snap** widens this tolerance from 0 to 5 degrees in 0.1-degree
+steps (default 0). At 5 degrees, a stop at 85 degrees snaps to editable blocks
+at 90 degrees; 355 degrees snaps to 0. The nearest quarter turn is used on
+either side of each heading. Stops outside the tolerance keep the exact displayed pose captured. While
 paused, use the **Angle** slider to select any heading from 0 to 360 degrees,
 or press **Restore** to return blocks at the nearest quarter turn. Manual angle
 changes check the swept path for obstructions and carry supported entities.
