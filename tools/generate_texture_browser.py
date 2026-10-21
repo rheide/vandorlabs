@@ -72,7 +72,9 @@ def generate():
         filename='collages/'+re.sub(r'[^a-z0-9]+','-',category.lower()).strip('-')+'.png';files[filename]=png(collage);collages[category]=filename
     payload=json.dumps(dict(entries=entries,collages=collages),ensure_ascii=False,separators=(',',':')).replace('</','<\/')
     template=(ROOT/'tools/texture_browser.html').read_text(encoding='utf-8');files['index.html']=template.replace('/*CATALOG*/{}',payload).encode('utf-8')
-    overview=['# Texture overview','', '[Open the interactive texture browser](texture-browser/index.html). Search by name or category, expand nested categories, and click a thumbnail for a larger preview. The browser also works locally without a server.','', 'These collages cover the built-in texture picker, including both light states and the native glass finishes. Hidden compatibility aliases and duplicate resolution tiers are omitted. Custom textures from local installations are not included.','']
+    hosting=ROOT/'tools/texture_browser_hosting.json'
+    browser_url=json.loads(hosting.read_text(encoding='utf-8'))['url'] if hosting.exists() else 'texture-browser/index.html'
+    overview=['# Texture overview','', f'[Open the interactive texture browser]({browser_url}). Search by name or category, expand nested categories, and click a thumbnail for a larger preview. The [local browser](texture-browser/index.html) also works without a server.','', 'These collages cover the built-in texture picker, including both light states and the native glass finishes. Hidden compatibility aliases and duplicate resolution tiers are omitted. Custom textures from local installations are not included.','']
     collage_html=['<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vandor Labs texture collages</title><style>'+template.split('<style>')[1].split('</style>')[0]+'</style><header><h1>Vandor Labs / Texture collages</h1><a href="index.html">Interactive texture browser</a></header><main>']
     for category in categories:
         if '/' not in category:
