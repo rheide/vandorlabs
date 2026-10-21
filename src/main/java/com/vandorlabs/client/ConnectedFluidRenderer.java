@@ -38,12 +38,15 @@ public final class ConnectedFluidRenderer extends BlockFluidRenderer {
     @Override public boolean renderFluid(IBlockAccess access,IBlockState state,BlockPos pos,BufferBuilder destination){
         Material material=state.getMaterial();if(material!=Material.WATER&&material!=Material.LAVA)return delegate.renderFluid(access,state,pos,destination);
         FluidStack fluid=null;Map<BlockPos,WaterloggedSurfaceMesh.Contact> contacts=null;
-        for(EnumFacing face:EnumFacing.values()){
-            BlockPos next=pos.offset(face);if(!WaterloggedParts.supports(access.getBlockState(next)))continue;
+        // Vanilla averages four cells at every surface corner. Include diagonal cells,
+        // otherwise the two water blocks sharing that corner compute different heights.
+        for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++)for(int dy=-1;dy<=1;dy++){
+            if(dy!=0&&(dx!=0||dz!=0)||dx==0&&dy==0&&dz==0)continue;
+            BlockPos next=pos.add(dx,dy,dz);if(!WaterloggedParts.supports(access.getBlockState(next)))continue;
             TileEntity tile=access.getTileEntity(next);if(tile==null)continue;
             if(fluid==null)fluid=new FluidStack(material==Material.WATER?FluidRegistry.WATER:FluidRegistry.LAVA,1000);
             WaterloggedSurfaceMesh.Contact contact=WaterloggedSurfaceMesh.contact(tile,fluid);
-            if(contact!=null&&contact.touches(face.getOpposite())){if(contacts==null)contacts=new HashMap<>();contacts.put(next,contact);}
+            if(contact!=null){if(contacts==null)contacts=new HashMap<>();contacts.put(next,contact);}
         }
         if(contacts==null)return delegate.renderFluid(access,state,pos,destination);
         final Map<BlockPos,WaterloggedSurfaceMesh.Contact> joined=contacts;

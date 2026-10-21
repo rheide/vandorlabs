@@ -23,6 +23,7 @@ final class WaterloggedSurfaceChecks {
     }}
     static void run(Minecraft mc,File output)throws Exception{OpeningFluidVisualChecks.run(mc,output);
         ContainedFluidUpdateChecks.run(mc.world);
+        DoorFluidSurfaceChecks.run(mc,output);
         require(WaterloggedRenderer.sprite(new FluidStack(FluidRegistry.WATER,1000))==mc.getTextureMapBlocks().getAtlasSprite(FluidRegistry.WATER.getStill().toString()),"contained water must use still artwork on every face");
         NativeFluidContactChecks.run(mc,output);
         SubmergedGlassChecks.run(mc,output);

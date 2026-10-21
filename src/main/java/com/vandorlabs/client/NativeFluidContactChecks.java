@@ -65,7 +65,7 @@ final class NativeFluidContactChecks {
         require(wetSamples>1000&&drySamples>1000,"native contact coverage");
         System.out.println("[vandorlabs][reprolab] native-fluid-contacts PASS cases="+cases+" wetSamples="+wetSamples+" drySamples="+drySamples+" source/flow water/lava shapes facings inversions six boundaries both renderers");
     }
-    private static List<double[][]> render(Minecraft mc,World world,BlockPos pos,IBlockState state){
+    static List<double[][]> render(Minecraft mc,World world,BlockPos pos,IBlockState state){
         BufferBuilder buffer=new BufferBuilder(4096);buffer.begin(7,DefaultVertexFormats.BLOCK);mc.getBlockRendererDispatcher().renderBlock(state,pos,world,buffer);buffer.finishDrawing();
         ByteBuffer bytes=buffer.getByteBuffer();int stride=DefaultVertexFormats.BLOCK.getNextOffset();List<double[][]> quads=new ArrayList<>();
         for(int v=0;v<buffer.getVertexCount();v+=4){double[][] quad=new double[4][3];for(int k=0;k<4;k++){int at=(v+k)*stride;quad[k]=new double[]{bytes.getFloat(at)-pos.getX(),bytes.getFloat(at+4)-pos.getY(),bytes.getFloat(at+8)-pos.getZ()};}quads.add(quad);}return quads;
