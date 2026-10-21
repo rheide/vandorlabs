@@ -17,9 +17,9 @@ for kind in ('transmitter','receiver'):
     for i,face in enumerate(('up','port','type','left','right','down')):
         x,y=i%3*size,i//3*size
         sheet.crop((x,y,x+size,y+size)).resize((128,128),Image.Resampling.NEAREST).save(folder/(face+'.png'))
-    # North is the physical port. Receiver arrows run toward it; transmitter
-    # arrows run away from the input port, toward the wireless transmitter face.
-    arrows=('up','down','left','right') if kind=='receiver' else ('down','up','right','left')
+    # North is the physical port. Both authored arrow sets point toward it.
+    # Keep port/type faces fixed when correcting side arrow direction.
+    arrows=('up','down','left','right')
     textures=dict(zip(('up','down','west','east'),['vandorlabs:blocks/'+name+'/'+a for a in arrows]))
     textures.update(north='vandorlabs:blocks/'+name+'/port',south='vandorlabs:blocks/'+name+'/type')
     write(ASSETS/'models/block'/(name+'.json'),dict(parent='block/cube',textures=dict(textures,particle=textures['north'])))

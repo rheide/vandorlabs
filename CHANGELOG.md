@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Flip the Redstone Transmitter side arrows while preserving its port and type faces and the Receiver artwork.
+
 - Make the plain credential selector accept Any Card or Any Chip and keep its unbranded background fixed. Slow company logo cycling to three seconds. Batch reader overlays and reuse mounted-item transforms to reduce render calls and per-frame allocations.
 
 - Add animated insert-to-toggle-and-return behavior to Data Card and Data Chip Mounts, with saved output, inventory-safe returns and reload-safe scan progress.

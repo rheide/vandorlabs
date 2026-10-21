@@ -39,7 +39,7 @@ final class WirelessRedstoneVisualChecks {
                     if(leaf.equals("port")){WirelessRedstoneRuntimeChecks.require(quad.getFace()==port,"port artwork faces physical port");continue;}
                     if(leaf.equals("type")){WirelessRedstoneRuntimeChecks.require(quad.getFace()==port.getOpposite(),"wireless type opposite port");continue;}
                     Vec3d u=basis(quad,4),v=basis(quad,5),arrow=leaf.equals("up")?v.scale(-1):leaf.equals("down")?v:leaf.equals("left")?u.scale(-1):u;
-                    Vec3d expected=new Vec3d((tx?port.getOpposite():port).getDirectionVec());WirelessRedstoneRuntimeChecks.require(arrow.normalize().dotProduct(expected)>.999,"arrow flow "+name+" port "+port+" face "+quad.getFace());
+                    Vec3d expected=new Vec3d(port.getDirectionVec());WirelessRedstoneRuntimeChecks.require(arrow.normalize().dotProduct(expected)>.999,"arrow flow "+name+" port "+port+" face "+quad.getFace());
                 }
             }
         }

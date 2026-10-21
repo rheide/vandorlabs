@@ -1,10 +1,10 @@
 {
   "parent": "block/cube",
   "textures": {
-    "up": "vandorlabs:blocks/redstone_transmitter/down",
-    "down": "vandorlabs:blocks/redstone_transmitter/up",
-    "west": "vandorlabs:blocks/redstone_transmitter/right",
-    "east": "vandorlabs:blocks/redstone_transmitter/left",
+    "up": "vandorlabs:blocks/redstone_transmitter/up",
+    "down": "vandorlabs:blocks/redstone_transmitter/down",
+    "west": "vandorlabs:blocks/redstone_transmitter/left",
+    "east": "vandorlabs:blocks/redstone_transmitter/right",
     "north": "vandorlabs:blocks/redstone_transmitter/port",
     "south": "vandorlabs:blocks/redstone_transmitter/type",
     "particle": "vandorlabs:blocks/redstone_transmitter/port"

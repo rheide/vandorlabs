@@ -1,4 +1,4 @@
-"""Check face roles, opposite signal flow, item padding settings and glass transparency."""
+"""Check face roles, arrow direction, item padding settings and glass transparency."""
 import json
 from pathlib import Path
 from PIL import Image
@@ -11,7 +11,7 @@ for kind in ('transmitter','receiver'):
         assert image.size==(128,128),(name,face)
     model=json.loads((ROOT/'src/main/resources/assets/vandorlabs/models/block'/(name+'.json')).read_text())
     assert model['textures']['north'].endswith('/port') and model['textures']['south'].endswith('/type')
-    expected=('up','down','left','right') if kind=='receiver' else ('down','up','right','left')
+    expected=('up','down','left','right')
     assert tuple(model['textures'][face].split('/')[-1] for face in ('up','down','west','east'))==expected
     states=json.loads((ROOT/'src/main/resources/assets/vandorlabs/blockstates'/(name+'.json')).read_text())
     assert len(states['variants'])==6
@@ -23,4 +23,4 @@ for index in range(1,5):
     assert image.size==(128,128) and image.mode=='RGBA'
     alpha=image.getchannel('A').histogram()
     assert alpha[0]>128*128*.65 and sum(alpha[1:])>128*128*.05
-print('PASS: two 128px six-face endpoint sets, inverse arrow flow and four transparent security glass choices')
+print('PASS: two 128px six-face endpoint sets, port-facing arrows and four transparent security glass choices')
