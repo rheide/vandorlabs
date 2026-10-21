@@ -2607,5 +2607,47 @@
     "label": "Ivory",
     "category": "Turntable",
     "source": "turntable/turntable_block_top_graphite_ivory"
+  },
+  {
+    "id": "security_glass_1",
+    "label": "Security 1",
+    "category": "Glass",
+    "source": "security_glass/security_1"
+  },
+  {
+    "id": "security_glass_2",
+    "label": "Security 2",
+    "category": "Glass",
+    "source": "security_glass/security_2"
+  },
+  {
+    "id": "security_glass_3",
+    "label": "Security 3",
+    "category": "Glass",
+    "source": "security_glass/security_3"
+  },
+  {
+    "id": "security_glass_4",
+    "label": "Security 4",
+    "category": "Glass",
+    "source": "security_glass/security_4"
+  },
+  {
+    "id": "ancient_relief_1",
+    "label": "Ancient Relief 1",
+    "category": "Tech",
+    "source": "tech/ancient_relief_1"
+  },
+  {
+    "id": "ancient_relief_2",
+    "label": "Ancient Relief 2",
+    "category": "Tech",
+    "source": "tech/ancient_relief_2"
+  },
+  {
+    "id": "ancient_relief_3",
+    "label": "Ancient Relief 3",
+    "category": "Tech",
+    "source": "tech/ancient_relief_3"
   }
 ]
