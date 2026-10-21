@@ -373,7 +373,8 @@ public class TEAnimatedScreenSelector
             return;
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
-        if(te.isWaterlogged() && com.vandorlabs.blocks.WaterloggedParts.supports(state)&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1)WaterloggedRenderer.render(te,x,y,z);
+        boolean fluidPass=te.isWaterlogged()&&com.vandorlabs.blocks.WaterloggedParts.supports(state)&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1;
+        if(fluidPass&&!(state.getBlock() instanceof BlockProgrammableWall))WaterloggedRenderer.render(te,x,y,z);
         if (!(state.getBlock() instanceof BlockAnimatedScreenSelector)) {
             return;
         }
@@ -382,6 +383,7 @@ public class TEAnimatedScreenSelector
             return; // These housings are cached in the chunk mesh.
         if (state.getBlock() instanceof BlockProgrammableWall) {
             renderProgrammableWall(te, state, x, y, z);
+            if(fluidPass)WaterloggedRenderer.render(te,x,y,z);
             return;
         }
         if (state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableLight) {
@@ -859,14 +861,18 @@ public class TEAnimatedScreenSelector
             GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
             GlStateManager.disableCull();
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();
-            if(te.isGlassFramed()) {
+            int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
+            float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(te.getGlassMaterial(),te.getGlassTint());
+            boolean opaque=te.getGlassMaterial()>=0&&opacity==1;
+            // Opaque rails belong before the world's translucent water, just like ordinary solids.
+            if(te.isGlassFramed()&&pass!=1) {
                 GlStateManager.disableBlend();GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
                 StaticSurfaceMesh frame=DiagonalWallMeshCache.frame(te,state,glass);
                 if(frame!=null){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());frame.draw(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);Tessellator.getInstance().draw();}
                 GlStateManager.enableBlend();GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
             }
-            float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(te.getGlassMaterial(),te.getGlassTint());
-            GlStateManager.depthMask(te.getGlassMaterial()>=0 && opacity==1);
+            if(pass==0&&!opaque||pass==1&&opaque){GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableLighting();endLocalTransform();return;}
+            GlStateManager.depthMask(opaque);
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             StaticSurfaceMesh pane=DiagonalWallMeshCache.get(te,state,glass,glass);
             if(te.getGlassMaterial()>=0)pane=GlassSurfaceMapping.map(pane,glass,GlassSurfaceGroups.layout(te),false,0,0,te.getGlassTextureLayout());
@@ -994,8 +1000,8 @@ public class TEAnimatedScreenSelector
                 halfHeight ? (state.getValue(BlockProgrammableWall.INVERTED) ? 8 : 0) : Double.NaN,
                 BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),false)*16,
                 BlockProgrammableWall.flatEnd(state,te.getWorld(),te.getPos(),true)*16,
-                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,false) || BlockProgrammableWall.coveredFlatEnd(state,te.getWorld(),te.getPos(),false),
-                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,true) || BlockProgrammableWall.coveredFlatEnd(state,te.getWorld(),te.getPos(),true),
+                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,false) || !(wallBlock instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)&&BlockProgrammableWall.coveredFlatEnd(state,te.getWorld(),te.getPos(),false),
+                com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(te.getWorld(),te.getPos(),state,true) || !(wallBlock instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)&&BlockProgrammableWall.coveredFlatEnd(state,te.getWorld(),te.getPos(),true),
                 com.vandorlabs.blocks.DiagonalNeighbourBounds.local(te.getWorld(),te.getPos(),state,BlockProgrammableWall.geometry(te.getWorld(),te.getPos()),16));
     }
 
@@ -1034,7 +1040,7 @@ public class TEAnimatedScreenSelector
         float fx=(float)(nx/length), fy=(float)(ny/length), fz=(float)(nz/length);
         // Shader integrations may derive normals from winding. Submit the
         // same orientation as the explicit normal, including the roof faces.
-        for (double[] p : com.vandorlabs.render.DiagonalMeshClip.quads(clip,
+        for (double[] p : com.vandorlabs.render.DiagonalMeshClip.quadsKeepingContactCaps(clip,
                 sign < 0 ? new double[][]{a,d,c,b} : new double[][]{a,b,c,d}))
             buf.pos(p[0],p[1],p[2]).color(255,255,255,255)
                     .tex(sprite.getInterpolatedU(Math.max(0,Math.min(16,p[3]))),sprite.getInterpolatedV(Math.max(0,Math.min(16,p[4]))))

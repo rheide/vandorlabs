@@ -25,7 +25,7 @@ final class GlassVisualChecks {
         }
         if(ticks==140) {
             RuntimeResourceChecks.animations(mc);
-            GlassAppearanceRuntimeChecks.checkRenderMeshes(mc.world);save(mc,output,"glass-strengths-and-frames");
+            GlassAppearanceRuntimeChecks.checkRenderMeshes(mc.world,output);save(mc,output,"glass-strengths-and-frames");
             mc.gameSettings.hideGUI=false;
             openDialog(mc,new BlockPos(42,5,40),com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_GLASS);
         }

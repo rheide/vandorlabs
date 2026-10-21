@@ -221,7 +221,8 @@ final class GlassAppearanceRuntimeChecks {
             TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(at);tile.setGlassShade(12);tile.setGlassAppearance(1,true);
         }
     }
-    static void checkRenderMeshes(World world) throws Exception {
+    static void checkRenderMeshes(World world,java.io.File output) throws Exception {
+        DiagonalContactChecks.run(world,output);
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(GlassTextures.texture(12,1,1));
         for(int x=44;x<=46;x++) {
@@ -242,9 +243,10 @@ final class GlassAppearanceRuntimeChecks {
         rails.draw(buffer,0,0);buffer.finishDrawing();java.nio.ByteBuffer vertices=buffer.getByteBuffer();int stride=format.getNextOffset();
         java.lang.reflect.Field payload=StaticSurfaceMesh.class.getDeclaredField("vertices");payload.setAccessible(true);
         float[] data=(float[])payload.get(rails);int faceRails=0,solidCaps=0;
-        net.minecraft.client.renderer.texture.TextureAtlasSprite metal=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/space_doors/medium/double_frame_metal");
+        net.minecraft.client.renderer.texture.TextureAtlasSprite metal=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
+        require(metal!=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite(),"established glass interior texture missing from atlas");
         for(int v=0;v<buffer.getVertexCount();v+=4) {
-            if(Math.abs(data[v*8+6])<1E-5 || Math.abs(data[v*8+6])>.99999){solidCaps++;for(int corner=0;corner<4;corner++){float u=data[(v+corner)*8+3],t=data[(v+corner)*8+4];require(u>=metal.getInterpolatedU(.159) && u<=metal.getInterpolatedU(.281) && t>=metal.getInterpolatedV(3.999) && t<=metal.getInterpolatedV(4.121),"rim cap does not sample solid frame artwork");}continue;}
+            if(Math.abs(data[v*8+6])<1E-5 || Math.abs(data[v*8+6])>.99999){solidCaps++;float lowU=Float.POSITIVE_INFINITY,highU=Float.NEGATIVE_INFINITY,lowV=lowU,highV=highU;for(int corner=0;corner<4;corner++){float u=data[(v+corner)*8+3],t=data[(v+corner)*8+4];require(u>=metal.getMinU()-1e-6 && u<=metal.getMaxU()+1e-6 && t>=metal.getMinV()-1e-6 && t<=metal.getMaxV()+1e-6,"rim interior must sample the established metal_side sprite");lowU=Math.min(lowU,u);highU=Math.max(highU,u);lowV=Math.min(lowV,t);highV=Math.max(highV,t);}require((highU-lowU)/(metal.getMaxU()-metal.getMinU())>.1||(highV-lowV)/(metal.getMaxV()-metal.getMinV())>.1,"rim interior collapsed established UV scale to one texel");continue;}
             faceRails++;double width=0;
             for(int axis=0;axis<3;axis++){double difference=vertices.getFloat(v*stride+axis*4)-vertices.getFloat((v+3)*stride+axis*4);width+=difference*difference;}
             require(Math.abs(width-1)<1E-4,"diagonal frame rail differs from regular one-pixel width");

@@ -48,12 +48,23 @@ public final class DiagonalMeshClip {
 
     /** GL_QUADS representation; triangles use a repeated final vertex. */
     public static List<double[]> quads(double[] bounds,double[]... vertices) {
+        return quads(bounds,false,vertices);
+    }
+
+    /** Neighbour clipping must retain the thickness face exactly on our cell boundary. */
+    public static List<double[]> quadsKeepingContactCaps(double[] bounds,double[]... vertices) {
+        return quads(bounds,true,vertices);
+    }
+
+    private static List<double[]> quads(double[] bounds,boolean keepCaps,double[]... vertices) {
+        if(keepCaps&&bounds!=null&&bounds.length>6)bounds=renderBounds(bounds);
         if(vertices.length==4 && unclipped(bounds,vertices))return Arrays.asList(vertices);
         List<List<double[]>> pieces=new ArrayList<>();
         pieces.add(polygon(bounds,vertices));
         if(bounds!=null)for(int box=6;box<bounds.length;box+=6) {
             List<List<double[]>> next=new ArrayList<>();
             for(List<double[]> piece:pieces) {
+                if(keepCaps&&contactCap(bounds,box,piece)){next.add(piece);continue;}
                 List<double[]> remainder=piece;
                 for(int axis=0;axis<3;axis++)for(int side=0;side<2;side++) {
                     double edge=bounds[box+axis+side*3];
@@ -73,6 +84,29 @@ public final class DiagonalMeshClip {
             }
         }
         return out;
+    }
+
+    private static boolean contactCap(double[] bounds,int box,List<double[]> piece){
+        if(piece.size()<3)return false;
+        for(int axis=0;axis<3;axis++){
+            int other=(axis+1)%3;double unit=bounds[box+other+3]-bounds[box+other];
+            if(unit<=0)continue;
+            double lo=bounds[box+axis],hi=bounds[box+axis+3],edge;
+            if(Math.abs(lo+unit)<1e-8&&Math.abs(hi)<1e-8)edge=0;
+            else if(Math.abs(lo-unit)<1e-8&&Math.abs(hi-2*unit)<1e-8)edge=unit;
+            else continue;
+            boolean on=true;for(double[] vertex:piece)on&=Math.abs(vertex[axis]-edge)<1e-8;
+            if(on)return true;
+        }return false;
+    }
+    private static double[] renderBounds(double[] source){
+        double[] bounds=source.clone();
+        for(int box=6;box<bounds.length;box+=6)for(int axis=0;axis<3;axis++){
+            int other=(axis+1)%3;double unit=bounds[box+other+3]-bounds[box+other];
+            if(unit<=0)continue;
+            if(Math.abs(bounds[box+axis]+unit)<1e-8&&Math.abs(bounds[box+axis+3]-unit/4096)<1e-8)bounds[box+axis+3]=0;
+            else if(Math.abs(bounds[box+axis]-unit*(1-1D/4096))<1e-8&&Math.abs(bounds[box+axis+3]-2*unit)<1e-8)bounds[box+axis]=unit;
+        }return bounds;
     }
 
     private static boolean unclipped(double[] bounds,double[][] vertices) {

@@ -80,7 +80,8 @@ public final class DiagonalWallMeshCache {
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass && tile.isGlassFramed()) {
             TextureAtlasSprite rail=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks()
                     .getAtlasSprite("vandorlabs:blocks/space_doors/medium/double_frame_metal");
-            frame=mesh.outlineFrame(rail,hideLeft,hideRight,hideFront,hideBack,
+            TextureAtlasSprite interior=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
+            frame=mesh.outlineFrame(rail,wall,interior,hideLeft,hideRight,hideFront,hideBack,
                     com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(world,tile.getPos(),state,false),
                     com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(world,tile.getPos(),state,true),
                     tile.isDiagonalHalfHeight()?2:1);

@@ -139,7 +139,12 @@ final class ProgrammableDialogRuntimeChecks {
             HousingTextureList.Option item=(HousingTextureList.Option)entry;
             if(!nativeOptions.getBoolean(list))require(com.vandorlabs.tiles.ScreenHousingTextures.visible(item.choice),"hidden texture in picker");
             if(item.category.equals("Glass")) {
-                require(com.vandorlabs.tiles.GlassTextures.valid(item.choice>=HousingTextureList.CANOPY_GLASS_BASE && item.choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length?item.choice-HousingTextureList.CANOPY_GLASS_BASE:item.choice),"invalid glass finish in picker");glass++;
+                int shade=item.choice-HousingTextureList.CANOPY_GLASS_BASE;
+                boolean palette=com.vandorlabs.tiles.GlassTextures.valid(shade);
+                if(!palette&&nativeOptions.getBoolean(list)&&com.vandorlabs.tiles.GlassTextures.valid(item.choice))
+                    for(int detail=0;detail<3;detail++)palette|=item.texture.equals(com.vandorlabs.tiles.GlassTextures.texture(item.choice,detail));
+                if(palette)glass++;
+                else require(com.vandorlabs.tiles.ScreenHousingTextures.validChoice(nativeOptions.getBoolean(list)?item.choice:com.vandorlabs.tiles.ScreenHousingTextures.choiceAt(item.choice)),"invalid glass material in picker");
                 net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
                 require(atlas.getAtlasSprite(item.texture)!=atlas.getMissingSprite(),"missing glass thumbnail: "+item.label);
             }

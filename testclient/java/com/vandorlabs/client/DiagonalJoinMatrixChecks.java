@@ -12,6 +12,7 @@ final class DiagonalJoinMatrixChecks {
     private static final net.minecraft.client.renderer.texture.TextureAtlasSprite SPRITE=sprite();
     private static net.minecraft.client.renderer.texture.TextureAtlasSprite sprite(){net.minecraft.client.renderer.texture.TextureAtlasSprite s=new net.minecraft.client.renderer.texture.TextureAtlasSprite("join_matrix"){};s.setIconWidth(16);s.setIconHeight(16);s.initSprite(16,16,0,0,false);return s;}
     static void run(){
+        DiagonalContactClipChecks.run();
         BlockProgrammableWall[] blocks={(BlockProgrammableWall)ModBlocks.PROGRAMMABLE_DIAGONAL_WALL,new BlockProgrammableDiagonalGlass()};
         int cases=0;
         for(BlockProgrammableWall block:blocks)for(int mode=0;mode<3;mode++)for(EnumFacing facing:EnumFacing.HORIZONTALS)

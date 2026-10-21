@@ -81,7 +81,7 @@ final class DiagonalPortholeMesh {
             }
             transformed.add(v);
         }
-        List<double[]> clipped=com.vandorlabs.render.DiagonalMeshClip.quads(mesh==null?null:mesh.bounds,
+        List<double[]> clipped=com.vandorlabs.render.DiagonalMeshClip.quadsKeepingContactCaps(mesh==null?null:mesh.bounds,
                 transformed.toArray(new double[transformed.size()][]));
         boolean flipped=reverse ^ (mesh!=null && mesh.mode==2);
         for(int i=0;i<clipped.size();i+=4)
