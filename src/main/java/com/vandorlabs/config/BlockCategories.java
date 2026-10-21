@@ -23,7 +23,7 @@ public final class BlockCategories {
         if(id.startsWith("programmable_light"))return "lighting";
         if(id.startsWith("programmable_")&&!id.equals("programmable_trigger_block"))return "programmable_solids";
         if(id.contains("lever")||id.contains("switch")||id.contains("button")||id.contains("throttle")
-                ||id.equals("wall_slider")||id.equals("programmable_trigger_block"))return "redstone_controls";
+                ||id.equals("data_card_slot")||id.equals("data_chip_slot")||id.equals("wall_slider")||id.equals("programmable_trigger_block"))return "redstone_controls";
         return "decoration";
     }
 }

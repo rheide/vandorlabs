@@ -20,6 +20,7 @@ public final class VehicleSignals {
     private boolean detached;
     private int revision=-1;
     private final Set<TileEntityCockpit> cockpits=Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<TileEntityTokenSlot> tokenSlots=Collections.newSetFromMap(new IdentityHashMap<>());
     public void cockpitChanged(TileEntityCockpit tile){
         revision=-1;dirty.add(tile.getPos());tick();
         for(TileEntityCockpit.Control control:tile.controls){Link link=links.get(control);if(link!=null){RedstoneChannels.channelChanged(link,control.getRedstoneChannels());RedstoneChannels.inputChanged(link);}}
@@ -102,8 +103,10 @@ public final class VehicleSignals {
         if(revision!=craft.view.tileRevision){
         revision=craft.view.tileRevision;
         cockpits.clear();
+        tokenSlots.clear();
         Set<RedstoneChannelMember> wanted=Collections.newSetFromMap(new IdentityHashMap<>());
         for(TileEntity tile:craft.view.tiles.values()){
+            if(tile instanceof TileEntityTokenSlot)tokenSlots.add((TileEntityTokenSlot)tile);
             if(tile instanceof TileEntityCockpit){TileEntityCockpit cockpit=(TileEntityCockpit)tile;cockpits.add(cockpit);for(TileEntityCockpit.Control control:cockpit.controls)add(wanted,control);}
             if(tile instanceof TileEntityRedstoneChannel && tile.getBlockType() instanceof BlockVandorSwitch && ((BlockVandorSwitch)tile.getBlockType()).isMomentary() && ((TileEntityRedstoneChannel)tile).isLocalOn() && !releases.containsKey(tile.getPos()))releases.put(tile.getPos(),craft.world.getTotalWorldTime()+20);
             if(tile instanceof TileEntityRampController || tile instanceof TileEntityAutopilot || tile instanceof TileEntityRedstoneChannel || tile instanceof TileEntityCanopy || tile instanceof TileEntitySlidingDoor || tile instanceof TileEntityProgrammableTrapdoor
@@ -125,6 +128,7 @@ public final class VehicleSignals {
         for(TileEntityCockpit cockpit:new ArrayList<>(cockpits)){
             cockpit.updatePower();if(cockpit.expire(craft.world.getTotalWorldTime()))for(TileEntityCockpit.Control control:cockpit.controls){Link link=links.get(control);if(link!=null)RedstoneChannels.inputChanged(link);}
         }
+        for(TileEntityTokenSlot slot:tokenSlots)if(slot.expire(craft.world.getTotalWorldTime())){Link link=links.get(slot);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(slot.getPos());}
         if(!screenPulses.isEmpty())for(RedstoneScreenContents.Row row:new ArrayList<>(screenPulses))if(row.expirePulse(craft.world.getTotalWorldTime())){Link link=links.get(row);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(row.channelTile().getPos());screenPulses.remove(row);}
         for(BlockPos pos:new ArrayList<>(releases.keySet()))if(craft.world.getTotalWorldTime()>=releases.get(pos)){
             TileEntity raw=craft.view.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel){((TileEntityRedstoneChannel)raw).setLocalOn(false);IBlockState state=craft.view.getBlockState(pos);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,false));Link link=links.get(raw);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(pos);}releases.remove(pos);
@@ -142,7 +146,7 @@ public final class VehicleSignals {
         return false;
     }
     public boolean click(BlockPos pos,net.minecraft.entity.player.EntityPlayer player){
-        if(player.isSneaking())return false;
+        if(player.isSneaking() || craft.view.getTileEntity(pos) instanceof TileEntityTokenSlot)return false;
         if(craft.view.getTileEntity(pos) instanceof TileEntityRedstoneChannel)return clickControl(pos);
         if(!(craft.view.getTileEntity(pos) instanceof TileEntityAnimatedScreenSelector))return false;
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(pos);IBlockState state=craft.view.getBlockState(pos);

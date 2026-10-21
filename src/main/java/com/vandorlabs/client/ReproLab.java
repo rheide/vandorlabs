@@ -474,6 +474,7 @@ public class ReproLab {
         for(String pose:new String[]{"deployed","stowed"})for(int i=0;i<7;i++)SHOTS.add(new Shot("modular_gear_"+i+"_"+pose,391+i*10,32,113,0,12));
         SHOTS.add(new Shot("modular_gear_7_underside",460.5,30.5,117,0,-20));
         SHOTS.add(new Shot("utility22_waterlogged",143,24,116,0,24));
+        SHOTS.add(new Shot("utility22_card_mounts",277,36,129,0,14));
         SHOTS.add(new Shot("utility24_wall_fluids",144,25,120,0,24));
         SHOTS.add(new Shot("utility24_wall_fluids_back",144,25,132,180,24));
         SHOTS.add(new Shot("utility22_layouts",264,28,113,0,35));
@@ -486,7 +487,7 @@ public class ReproLab {
         SHOTS.add(new Shot("utility22_gear_joined",214,33,112,40,20));
         SHOTS.add(new Shot("fixed_gear_standard",475,34,132,180,15));
         SHOTS.add(new Shot("fixed_gear_large",475,34,138,180,15));
-        for(int i=0;i<4;i++)SHOTS.add(new Shot("utility22_cockpit_"+i,220+i*6,32,125,-145,30));
+        for(int i=0;i<4;i++){SHOTS.add(new Shot("utility22_cockpit_"+i,220+i*6,30.4,117,-34,22));SHOTS.add(new Shot("utility22_cockpit_blank_"+i,220+i*6,30.4,125,-34,22));}
         SHOTS.add(new Shot("gallery_distant_geometry",GALLERY_X+.5D,
                 GALLERY_Y+3D,-98D,0,2));
 
@@ -881,7 +882,7 @@ public class ReproLab {
                 } else beginShot(mc,firstShot,true);
                 state = 3;
                 holdTicks = Boolean.getBoolean("vandorlabs.trapdoorChecksOnly") || Boolean.getBoolean("vandorlabs.storageChecksOnly")
-                        || SHOTS.get(shotIndex).name.startsWith("utility22_") || SHOTS.get(shotIndex).name.startsWith("turntable_") || SHOTS.get(shotIndex).name.startsWith("modular_gear_") || SHOTS.get(shotIndex).name.equals("gallery_distant_geometry")?100:CAPTURE_SETTLE_TICKS;
+                        || SHOTS.get(shotIndex).name.startsWith("utility24_") || SHOTS.get(shotIndex).name.startsWith("utility22_") || SHOTS.get(shotIndex).name.startsWith("turntable_") || SHOTS.get(shotIndex).name.startsWith("modular_gear_") || SHOTS.get(shotIndex).name.equals("gallery_distant_geometry")?100:CAPTURE_SETTLE_TICKS;
                 break;
             case 3:
                 if(pendingGallery!=null) {
@@ -939,7 +940,8 @@ public class ReproLab {
                 if(s.name.equals("gallery_distant_geometry"))checkDistantGeometry(mc);
                 save(mc, s);
                 if(s.name.equals("utility22_blocks"))try{StorageStatusVisualChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("storage meters",failure);}
-                if(s.name.equals("utility22_cockpit_0"))try{CockpitDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("cockpit dialogs",failure);}
+                if(s.name.equals("utility22_card_mounts"))try{TokenSlotVisualChecks.gui(mc,outDir);}catch(Exception failure){throw new IllegalStateException("token mount dialog",failure);}
+                if(s.name.equals("utility22_cockpit_0"))try{CockpitDialogRuntimeChecks.run(mc,outDir);TurntablePerformanceRuntimeChecks.render(mc,outDir);}catch(Exception failure){throw new IllegalStateException("cockpit dialogs",failure);}
                 if(s.name.equals("turntable_floor"))try{TurntableDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("turntable dialog",failure);}
                 if(s.name.equals("modular_gear_0_deployed"))try{ModularGearDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("modular gear dialog",failure);}
                 if(s.name.equals("modular_gear_3_deployed"))try{ModularWheelVisualChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("modular wheel animation",failure);}
@@ -950,7 +952,7 @@ public class ReproLab {
                 if (shotIndex < SHOTS.size()) {
                     Shot next = SHOTS.get(shotIndex);
                     beginShot(mc, next, false);
-                    holdTicks = next.name.startsWith("utility22_") || next.name.startsWith("turntable_") || next.name.startsWith("modular_gear_") || next.name.equals("gallery_v12_gear_four") ? 100
+                    holdTicks = next.name.startsWith("utility22_") || next.name.startsWith("utility24_") || next.name.startsWith("turntable_") || next.name.startsWith("modular_gear_") || next.name.equals("gallery_v12_gear_four") ? 100
                             : next.name.endsWith("opening_mid") ? 4
                             : Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly") ? 4
                             : next.name.startsWith("gallery_") ? 60
@@ -2144,12 +2146,15 @@ public class ReproLab {
                 try{ModularGearRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("modular gear runtime",failure);}
                 TextureLayoutRuntimeChecks.run(world,serverPlayer);
                 WaterloggedRuntimeChecks.run(world);
+                TokenSlotRuntimeChecks.run((net.minecraft.world.WorldServer)world);
+                TurntablePerformanceRuntimeChecks.server((net.minecraft.world.WorldServer)world);
                 try{CockpitRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("cockpit integration",failure);}
                 try{NonWheeledGearRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("non-wheeled landing gear",failure); }
                 UtilityVisualFixtures.build(world);
                 TextureLayoutVisualFixtures.build(world);
                 GearVisualFixtures.build(world);
                 CockpitVisualFixtures.build(world);
+                TokenSlotVisualChecks.build(world);
                 CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
                 RedstoneChannelRuntimeChecks.run(serverPlayer.world, serverPlayer);
                 ControllerRuntimeChecks.run(world, serverPlayer);
@@ -2158,6 +2163,7 @@ public class ReproLab {
                 try{TurntableRuntimeChecks.fixture((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("turntable fixtures",failure);}
                 ModularGearRuntimeChecks.fixture((net.minecraft.world.WorldServer)world);
                 FixedGearRuntimeChecks.fixture((net.minecraft.world.WorldServer)world,serverPlayer);
+                TokenSlotPulseRuntimeCheck.start((net.minecraft.world.WorldServer)world);
             }).get();
         } catch (Exception exception) {
             throw new IllegalStateException("Controller server-thread contracts failed",exception);
@@ -3083,6 +3089,7 @@ public class ReproLab {
     }
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
+        if(mc.currentScreen==null)mc.player.openContainer=mc.player.inventoryContainer;
         if(s.name.startsWith("joined_texture_"))onServer(mc,()->TextureLayoutVisualFixtures.build(mc.getIntegratedServer().getWorld(0)));
         if(s.name.startsWith("joined_texture_")||s.name.startsWith("fixed_gear_")||s.name.startsWith("gallery_gear_")){mc.world.setWorldTime(6000);mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getWorld(0).setWorldTime(6000));}
         if(s.name.startsWith("utility22_")||s.name.startsWith("turntable_"))mc.gameSettings.hideGUI=!s.name.startsWith("utility22_data_");

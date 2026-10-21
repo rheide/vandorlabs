@@ -11,7 +11,7 @@ import java.io.File;
 /** Actual inventory rendering, including depth/rotation, with padding on every side. */
 final class UtilityItemRuntimeChecks {
     private static final int BACK=0x203040;
-    private static final String[] IDS={"programmable_matter_ingot","programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","gear_mount","large_gear_mount","data_card:0","data_card:1","data_card:2","data_card:3","data_card:4","data_card:5","data_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6"};
+    private static final String[] IDS={"programmable_matter_ingot","programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","gear_mount","large_gear_mount","data_card_slot","data_chip_slot","data_card:0","data_card:1","data_card:2","data_card:3","data_card:4","data_card:5","data_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6"};
     static ItemStack stack(int i){String[] id=IDS[i].split(":");return new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id[0])),1,id.length==1?0:Integer.parseInt(id[1]));}
     static void run(Minecraft mc,File output)throws Exception{
         for(Item token:new Item[]{com.vandorlabs.items.ModItems.DATA_CARD,com.vandorlabs.items.ModItems.DATA_CHIP}){
@@ -61,7 +61,7 @@ final class UtilityItemRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] utility-render-state PASS color and lightmap restored");
     }
     private static final class Icons extends GuiScreen{
-        int x(int i){return width/2+(i%7-3)*30;}int y(int i){return height/2-48+(i/7)*32;}public boolean doesGuiPauseGame(){return false;}
+        int x(int i){return width/2+(i%7-3)*30;}int y(int i){return height/2-((IDS.length+6)/7)*26/2+(i/7)*26;}public boolean doesGuiPauseGame(){return false;}
         public void drawScreen(int mouseX,int mouseY,float partial){GlStateManager.disableLighting();drawRect(0,0,width,height,0xff101820);drawCenteredString(fontRenderer,"Matter, machinery, landing gear, cards and chips",width/2,30,0xffffff);for(int i=0;i<IDS.length;i++){drawRect(x(i)-1,y(i)-1,x(i)+17,y(i)+17,0xff708090);drawRect(x(i),y(i),x(i)+16,y(i)+16,0xff000000|BACK);}RenderHelper.enableGUIStandardItemLighting();for(int i=0;i<IDS.length;i++)itemRender.renderItemAndEffectIntoGUI(stack(i),x(i),y(i));RenderHelper.disableStandardItemLighting();}
     }
 }

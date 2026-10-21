@@ -52,5 +52,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageTurntableCarry.Handler.class,MessageTurntableCarry.class,id++,Side.CLIENT);
         INSTANCE.registerMessage(MessageTankShape.Handler.class,MessageTankShape.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageGearMotion.Handler.class,MessageGearMotion.class,id++,Side.CLIENT);
+        INSTANCE.registerMessage(MessageTokenSlot.Handler.class,MessageTokenSlot.class,id++,Side.SERVER);
     }
 }

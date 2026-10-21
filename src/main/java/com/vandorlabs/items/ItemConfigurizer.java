@@ -112,6 +112,7 @@ public final class ItemConfigurizer extends Item {
         int gui;
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear){pos=((com.vandorlabs.blocks.BlockNonWheeledLandingGear)state.getBlock()).connectedRoot(world,pos);tile=world.getTileEntity(pos);}
         if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && ((com.vandorlabs.tiles.TileEntityCanopy)tile).owner().configurable()){tile=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();pos=tile.getPos();gui=GuiHandler.GUI_LARGE_CANOPY;}
+        else if(tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot) gui=GuiHandler.GUI_TOKEN_SLOT;
         else if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableController) gui=GuiHandler.GUI_TURNTABLE;
         else if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)tile).loadedController();if(root==null)return;gui=GuiHandler.GUI_MODULAR_GEAR;}
         else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) gui = GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR;
