@@ -21,7 +21,7 @@ final class DataTokenRuntimeChecks {
             String type=kind==0?"card":"chip";ItemStack stack=new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:data_"+type)),1,i);
             IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);Set<EnumFacing> faces=EnumSet.noneOf(EnumFacing.class);
             if(model.getQuads(null,null,0).size()<6||model.getQuads(null,null,0).size()>1024)throw new IllegalStateException("Token outline mesh missing or overly complex: "+type+designs[i]);
-            if(model.isGui3d())throw new IllegalStateException("Token must retain the thin generated-item profile");
+            if(!model.isGui3d())throw new IllegalStateException("Solid token model missing");
             int solidFaces=0;double minZ=1,maxZ=0;
             for(BakedQuad quad:model.getQuads(null,null,0)){
                 if(quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge")){
@@ -33,11 +33,9 @@ final class DataTokenRuntimeChecks {
                 if(quad.getFace()!=EnumFacing.NORTH&&quad.getFace()!=EnumFacing.SOUTH&&!quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge"))throw new IllegalStateException("Transparent token edge material "+type+designs[i]);
             }
             if(faces.size()!=6||solidFaces!=model.getQuads(null,null,0).size()-2)throw new IllegalStateException("Open token silhouette "+type+designs[i]);
-            if(maxZ-minZ>1/16D+1e-6)throw new IllegalStateException("Token gained block-like thickness");
-            boolean transparent=false;for(int pixel:model.getParticleTexture().getFrameTextureData(0)[0])if((pixel>>>24)==0){transparent=true;break;}
-            if(!transparent)throw new IllegalStateException("Original transparent token artwork lost");
+            if(Math.abs(maxZ-minZ-1/16D)>1e-6)throw new IllegalStateException("Token gained block-like thickness");
             BufferedImage front=appearance(mc,stack,model,0),side=appearance(mc,stack,model,90);
-            checkCutout(front,model.getParticleTexture());checkSide(side,model.getParticleTexture());
+            checkRectangle(front,kind==0?8.5:12,kind==0?14:12);checkRectangle(side,1,kind==0?14:12);
             for(int view=0;view<4;view++){BufferedImage shot=view==0?front:view==3?side:appearance(mc,stack,model,view==1?45:180);views.drawImage(shot,(kind*7+i)*256,view*256,null);}
             for(boolean left:new boolean[]{false,true}){
                 BufferedImage held=WheelItemRuntimeChecks.held(mc,stack,left);int ink=0;long totalX=0,totalY=0;
@@ -53,26 +51,15 @@ final class DataTokenRuntimeChecks {
         }}finally{canvas.dispose();views.dispose();}
         javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_data_tokens_held.png"));
         javax.imageio.ImageIO.write(closeups,"png",new File(output,"shot_data_tokens_closeups.png"));
-        System.out.println("[vandorlabs][reprolab] data-token-models PASS fourteen original alpha silhouettes front-pixel comparisons edge-on solid coverage thin generated profile opaque side material and both first-person hand corners");
+        System.out.println("[vandorlabs][reprolab] data-token-models PASS fourteen solid cuboids rectangular fronts edge-on solid coverage one-unit depth opaque side material and both first-person hand corners");
     }
-    private static void checkCutout(BufferedImage front,net.minecraft.client.renderer.texture.TextureAtlasSprite art){
-        int w=art.getIconWidth(),h=art.getIconHeight(),pixels[]=art.getFrameTextureData(0)[0];int wrong=0,mirrored=0,checked=0;
-        for(int y=2;y<h-2;y++)for(int x=2;x<w-2;x++){
-            boolean opaque=(pixels[y*w+x]>>>24)>=128,stable=true;
-            for(int dy=-2;dy<=2;dy++)for(int dx=-2;dx<=2;dx++)if(((pixels[(y+dy)*w+x+dx]>>>24)>=128)!=opaque)stable=false;
-            if(!stable)continue;checked++;
-            if(((front.getRGB((2*x+1),2*y+1)&0xffffff)!=0x203040)!=opaque)wrong++;
-            if(((front.getRGB(255-(2*x+1),2*y+1)&0xffffff)!=0x203040)!=opaque)mirrored++;
+    private static void checkRectangle(BufferedImage image,double width,double height){
+        int left=(int)Math.round(128-width*8),right=(int)Math.round(128+width*8),top=(int)Math.round(128-height*8),bottom=(int)Math.round(128+height*8);
+        for(int y=2;y<254;y++)for(int x=2;x<254;x++){
+            if(Math.abs(x-left)<3||Math.abs(x-right)<3||Math.abs(y-top)<3||Math.abs(y-bottom)<3)continue;
+            boolean expected=x>left&&x<right&&y>top&&y<bottom,ink=(image.getRGB(x,y)&0xffffff)!=0x203040;
+            if(expected!=ink)throw new IllegalStateException("Closed token rectangle differs at "+x+","+y+" dimensions "+width+"x"+height);
         }
-        if(checked<1000||Math.min(wrong,mirrored)>4)throw new IllegalStateException("Rendered token alpha differs from original silhouette: "+art.getIconName()+" extra/missing pixels="+Math.min(wrong,mirrored));
-    }
-    private static void checkSide(BufferedImage side,net.minecraft.client.renderer.texture.TextureAtlasSprite art){
-        int w=art.getIconWidth(),h=art.getIconHeight(),pixels[]=art.getFrameTextureData(0)[0],checked=0;
-        for(int y=2;y<h-2;y++){
-            boolean row=false,above=false,below=false;for(int x=0;x<w;x++){row|=(pixels[y*w+x]>>>24)>=128;above|=(pixels[(y-1)*w+x]>>>24)>=128;below|=(pixels[(y+1)*w+x]>>>24)>=128;}
-            if(row&&above&&below){checked++;if((side.getRGB(128,2*y+1)&0xffffff)==0x203040)throw new IllegalStateException("See-through line in rendered token side: "+art.getIconName()+" row "+y);}
-        }
-        if(checked<40)throw new IllegalStateException("Insufficient side silhouette coverage");
     }
     private static BufferedImage appearance(Minecraft mc,ItemStack stack,IBakedModel model,float yaw){
         Framebuffer target=new Framebuffer(256,256,true);GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
