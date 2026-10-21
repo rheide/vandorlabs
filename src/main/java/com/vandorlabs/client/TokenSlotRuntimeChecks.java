@@ -42,6 +42,8 @@ final class TokenSlotRuntimeChecks {
                 require(resumed.getOutputLevel()==15&&resumed.returning(),"offline owner retains item and reload cannot toggle twice");
                 require(resumed.takeForDrop().getCount()==1&&resumed.takeForDrop().isEmpty(),"interrupted insertion drops once");
                 TileEntityTokenSlot emptyLatched=(TileEntityTokenSlot)net.minecraft.tileentity.TileEntity.create(world,resumed.writeToNBT(new NBTTagCompound()));require(emptyLatched.isEmpty()&&emptyLatched.getOutputLevel()==15,"empty toggle state persists");emptyLatched.configure(true,127,2);require(emptyLatched.getOutputLevel()==0,"policy change resets toggle");
+                tile.takeForDrop();tile.configure(false,1<<design,3);ItemStack pulse=accepted.copy();pulse.setCount(2);require(tile.insertToggle(player,pulse),"pulse-return borrows item");
+                TileEntityTokenSlot pulsed=(TileEntityTokenSlot)net.minecraft.tileentity.TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));pulsed.setWorld(world);pulsed.expire(world.getTotalWorldTime()+8);require(pulsed.getOutputLevel()==15,"pulse-return scan powers output");NBTTagCompound ended=pulsed.writeToNBT(new NBTTagCompound());ended.setLong("TokenPulseUntil",world.getTotalWorldTime()-1);pulsed.readFromNBT(ended);pulsed.expire(world.getTotalWorldTime());require(pulsed.getOutputLevel()==0&&pulsed.returning(),"pulse-return expires and retains offline token");
                 tile.takeForDrop();tile.configure(false,1<<design,0);checked++;
             }
             tile.configure(true,0,0);tile.setInventorySlotContents(0,new ItemStack(chip?ModItems.DATA_CHIP:ModItems.DATA_CARD,1,6));require(tile.getOutputLevel()==15,"Any accepts company tokens");tile.clear();

@@ -4,7 +4,11 @@ Version 1.6 adds [signal-level controls and live demonstrations](version-1.6.md)
 
 Programmable Light offers selectable artwork with matching unlit and lit textures; the close-ups place those states side by side. In Creative mode, shift-right-click to choose the appearance, wall finish, redstone behavior, channel, and Join setting. Normal right-click changes its manual state. A joined group can respond together to a signal received by one member.
 
-The taller texture lists show up to seven textures and a pinned category heading. Separate Off artwork is hidden in this dialog: choose the On appearance and the light uses its matching unlit texture automatically.
+Newly placed Light, Light Frame and Light Slab blocks face back toward the player using the shared player-relative placement policy. Looking upward more than 45 degrees places the light face downward; looking downward more than 45 degrees places it upward. Otherwise it faces opposite the horizontal viewing direction. The clicked surface and adjacent lights do not override that direction. Light Slab's upper/lower placement still follows the clicked face and height.
+
+The Pale, Industrial and Cyan ceiling finishes each provide plain and speaker materials under **Panels**, plus a paired ceiling light under **Lights**. Selecting a ceiling light automatically uses its matching Off artwork when unlit. All twelve textures use the standard 128-by-128 resolution.
+
+The texture lists use pinned category headings and support wheel scrolling and scrollbar dragging. The On selector hides separate Off artwork: choose the On appearance and the light uses its matching unlit texture automatically. Use the Off selector to override that matching artwork.
 
 ![Programmable Light settings](../images/gallery/lights/light-config.png)
 
@@ -27,7 +31,7 @@ Light Frames attach flush to the supporting wall, floor or ceiling. **Size: Smal
 
 Programmable Light, Light Slab and Light Frame can follow signal strength rather
 than a fixed brightness. Select **Signal + offset** and use the brightness slider
-as a signed offset; the result is clamped to 0–15. Joined lights use the strongest
+as a signed offset; the result is clamped to 0Ã¢â‚¬â€œ15. Joined lights use the strongest
 loaded signal received by the group. Manual brightness remains available.
 
 See the [Wall Slider controlling a light](version-1.6.md#slider-controlling-a-light)

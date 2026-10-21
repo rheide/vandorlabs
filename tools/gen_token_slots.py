@@ -17,27 +17,28 @@ def point(face,rotation,x,y,z):
         for _ in range(rotation):u,v=v,tuple(-a for a in u)
     return [8-NORMALS[face][i]*(8-z)+u[i]*x+v[i]*y for i in range(3)]
 
-def model(half,face,rotation,centered=False):
-    inner=half-1
-    boxes=[(-half,-half,0,half,half,.4,'dark'),(-half,-half,.4,-inner,half,1.5,'metal'),(inner,-half,.4,half,half,1.5,'metal'),(-inner,-half,.4,inner,-inner,1.5,'metal'),(-inner,inner,.4,inner,half,1.5,'metal')]
+def model(half,face,rotation,centered=False,height=None):
+    h=height if height is not None else half
+    inner=half-.6
+    boxes=[(-half,-h,0,half,h,.35,'dark'),(-half,-h,.35,-inner,h,1.5,'metal'),(inner,-h,.35,half,h,1.5,'metal'),(-inner,-h,.35,inner,-h+.65,1.5,'metal')]
     elements=[]
     for a,b,c,d,e,f,texture in boxes:
         corners=[point(face,rotation,x,y,z) for x in (a,d) for y in (b,e) for z in (c,f)]
         if centered:corners=[[x,y,z-7.25] for x,y,z in corners]
         elements.append({'from':[min(p[i] for p in corners) for i in range(3)],'to':[max(p[i] for p in corners) for i in range(3)],'faces':{side:{'texture':'#'+texture} for side in NORMALS}})
-    return {'textures':{'particle':'minecraft:blocks/iron_block','metal':'minecraft:blocks/iron_block','dark':'minecraft:blocks/concrete_black'},'elements':elements}
+    return {'textures':{'particle':'vandorlabs:blocks/programmable_glass/door_side','metal':'vandorlabs:blocks/programmable_glass/door_side','dark':'minecraft:blocks/concrete_black'},'elements':elements}
 
 def main():
-    for kind,half in [('card',4.5),('chip',3.5)]:
+    for kind,half in [('card',3.0),('chip',3.0)]:
         name='data_'+kind+'_slot';variants={}
         for face in NORMALS:
             for rotation in range(4):
                 authored=rotation if face in ('up','down') else 0
                 path='token_slots/'+name+'_'+face+'_'+str(authored)
-                write(ROOT/'models/block'/(path+'.json'),model(half,face,authored))
+                write(ROOT/'models/block'/(path+'.json'),model(half,face,authored,height=4.4 if kind=='card' else 3.0))
                 for on in ('false','true'):variants['facing='+face+',on='+on+',rotation='+str(rotation)]={'model':'vandorlabs:'+path}
         write(ROOT/'blockstates'/(name+'.json'),{'variants':variants})
-        item=model(half,'north',0,True)
+        item=model(half,'north',0,True,height=4.4 if kind=='card' else 3.0)
         item['display']={'gui':{'rotation':[20,225,0],'scale':[.9,.9,.9]},'fixed':{'scale':[.8,.8,.8]},'ground':{'scale':[.5,.5,.5]}}
         write(ROOT/'models/item'/(name+'.json'),item)
     print('Generated padded card/chip mount icons and six-face slot frames')

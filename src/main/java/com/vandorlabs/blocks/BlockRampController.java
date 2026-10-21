@@ -44,7 +44,7 @@ public class BlockRampController extends BlockVandorDirectional {
     @Override public TileEntity createTileEntity(World world, IBlockState state) { return new TileEntityRampController(); }
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ, int meta, net.minecraft.entity.EntityLivingBase placer) {
-        return getDefaultState().withProperty(FACING,placer.getHorizontalFacing());
+        return getDefaultState().withProperty(FACING,DirectionalPlacement.alongPlayer(placer));
     }
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
             EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {

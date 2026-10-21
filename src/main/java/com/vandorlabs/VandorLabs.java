@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "2.3";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t213";
+    public static final String BUILD_ID = "t214";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -45,6 +45,7 @@ public class VandorLabs {
         com.vandorlabs.tiles.DeferredTileLoad.install();
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableController.class,"vandorlabs:turntable_controller");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableSurface.class,"vandorlabs:turntable_surface");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityWirelessRedstone.class,"vandorlabs:wireless_redstone");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTokenSlot.class,"vandorlabs:token_slot");
         GameRegistry.registerTileEntity(com.vandorlabs.gear.GearTileEntity.class,"vandorlabs:modular_gear");
         EntityRegistry.registerModEntity(new ResourceLocation(MODID,"turntable_display"),com.vandorlabs.turntable.EntityTurntable.class,"turntable_display",3,instance,128,1,false);

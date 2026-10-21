@@ -109,6 +109,7 @@ final class SpaceDoorRuntimeChecks {
                         check(item.placeBlockAt(picked,player,world,target,EnumFacing.UP,.5F,.5F,.5F,state(block)),"picked placement");
                         NBTTagCompound expectedAtNearEdge=expected.copy();
                         expectedAtNearEdge.setBoolean("SpaceDoorMiddle",false);
+                        expectedAtNearEdge.setInteger("SpaceDoorPlacementDepth",1);
                         check(tile(world,target).itemSettings().equals(expectedAtNearEdge),
                                 "placement changed copied properties other than click depth");
                         check(!world.getBlockState(target).getValue(BlockVandorDoor.OPEN),"pick copied open state");

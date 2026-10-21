@@ -2649,5 +2649,89 @@
     "label": "Ancient Relief 3",
     "category": "Tech",
     "source": "tech/ancient_relief_3"
+  },
+  {
+    "id": "ceiling_pale_grey_plain",
+    "label": "Pale Ceiling",
+    "category": "Panels",
+    "source": "ceiling/pale_grey/plain"
+  },
+  {
+    "id": "ceiling_pale_grey_speaker",
+    "label": "Pale Speaker",
+    "category": "Panels",
+    "source": "ceiling/pale_grey/speaker"
+  },
+  {
+    "id": "ceiling_pale_grey_light_on",
+    "label": "Pale Ceiling",
+    "category": "Lights",
+    "source": "ceiling/pale_grey/light_on",
+    "lightOnly": true,
+    "unlit": "ceiling/pale_grey/light_off"
+  },
+  {
+    "id": "ceiling_pale_grey_light_off",
+    "label": "Pale Ceiling Off",
+    "category": "Lights",
+    "source": "ceiling/pale_grey/light_off",
+    "lightOnly": true,
+    "off": true
+  },
+  {
+    "id": "ceiling_industrial_grey_plain",
+    "label": "Industrial Ceiling",
+    "category": "Panels",
+    "source": "ceiling/industrial_grey/plain"
+  },
+  {
+    "id": "ceiling_industrial_grey_speaker",
+    "label": "Industrial Speaker",
+    "category": "Panels",
+    "source": "ceiling/industrial_grey/speaker"
+  },
+  {
+    "id": "ceiling_industrial_grey_light_on",
+    "label": "Industrial Ceiling",
+    "category": "Lights",
+    "source": "ceiling/industrial_grey/light_on",
+    "lightOnly": true,
+    "unlit": "ceiling/industrial_grey/light_off"
+  },
+  {
+    "id": "ceiling_industrial_grey_light_off",
+    "label": "Industrial Ceiling Off",
+    "category": "Lights",
+    "source": "ceiling/industrial_grey/light_off",
+    "lightOnly": true,
+    "off": true
+  },
+  {
+    "id": "ceiling_dark_cyan_metallic_plain",
+    "label": "Cyan Ceiling",
+    "category": "Panels",
+    "source": "ceiling/dark_cyan_metallic/plain"
+  },
+  {
+    "id": "ceiling_dark_cyan_metallic_speaker",
+    "label": "Cyan Speaker",
+    "category": "Panels",
+    "source": "ceiling/dark_cyan_metallic/speaker"
+  },
+  {
+    "id": "ceiling_dark_cyan_metallic_light_on",
+    "label": "Cyan Ceiling",
+    "category": "Lights",
+    "source": "ceiling/dark_cyan_metallic/light_on",
+    "lightOnly": true,
+    "unlit": "ceiling/dark_cyan_metallic/light_off"
+  },
+  {
+    "id": "ceiling_dark_cyan_metallic_light_off",
+    "label": "Cyan Ceiling Off",
+    "category": "Lights",
+    "source": "ceiling/dark_cyan_metallic/light_off",
+    "lightOnly": true,
+    "off": true
   }
 ]

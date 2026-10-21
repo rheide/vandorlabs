@@ -23,6 +23,8 @@ public class MessageSpaceDoor implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private int panelMode=-1,securityMode,securityAllowed=127;
+    public MessageSpaceDoor withSecurity(int panelMode,int securityMode,int mask){this.panelMode=panelMode;this.securityMode=securityMode;this.securityAllowed=mask;return this;}
     private int layout=0;
     public MessageSpaceDoor withTextureLayout(int mode){layout=mode;tileTexture=mode==1;return this;}
     private BlockPos pos;
@@ -50,7 +52,7 @@ public class MessageSpaceDoor implements IMessage {
         trigger=b.readInt();
         panel=b.readBoolean();faceTexture=b.readInt();tileTexture=b.readBoolean();
 
-        layout=b.readUnsignedByte();channels=ChannelData.read(b,channel);invalidChannels=channels==null;
+        panelMode=b.readUnsignedByte();securityMode=b.readUnsignedByte();securityAllowed=b.readUnsignedByte();layout=b.readUnsignedByte();channels=ChannelData.read(b,channel);invalidChannels=channels==null;
     }
     @Override public void toBytes(ByteBuf b) {
         b.writeLong(pos.toLong()); b.writeInt(design); b.writeInt(detail); b.writeBoolean(framed); b.writeInt(channel);
@@ -61,13 +63,13 @@ public class MessageSpaceDoor implements IMessage {
         b.writeInt(trigger);
         b.writeBoolean(panel);b.writeInt(faceTexture);b.writeBoolean(tileTexture);
 
-        b.writeByte(layout<0?(tileTexture?1:0):layout);ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+        b.writeByte(panelMode<0?(panel?1:0):panelMode);b.writeByte(securityMode);b.writeByte(securityAllowed);b.writeByte(layout<0?(tileTexture?1:0):layout);ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
     public static class Handler implements IMessageHandler<MessageSpaceDoor,IMessage> {
         @Override public IMessage onMessage(MessageSpaceDoor m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if (!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || !TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
+                if (m.panelMode>2||m.panelMode==2&&m.depth!=0||m.securityMode>2||m.securityAllowed>127||!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || !TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
                         || !SpaceDoorData.validTrigger(m.trigger)
                         || m.faceTexture< -1 || (m.faceTexture!=-1 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.faceTexture))
                         || m.depth<0 || m.depth>2 || m.channel<0 || m.pos==null || m.getRedstoneChannels()==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
@@ -87,12 +89,12 @@ public class MessageSpaceDoor implements IMessage {
                 tile.setFaceTexture(m.faceTexture);tile.setTextureLayout(m.layout);
                 tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                 tile.setPlacementDepth(m.depth);
-                tile.setRedstoneChannels(m.getRedstoneChannels());
+                tile.setPanelMode(m.panelMode);tile.configureSecurity(m.securityMode,m.securityAllowed);tile.setRedstoneChannels(m.getRedstoneChannels());
                 if (other!=null) {
                     other.setFaceTexture(m.faceTexture);other.setTextureLayout(m.layout);
                     other.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                     other.setPlacementDepth(m.depth);
-                    other.setRedstoneChannels(m.getRedstoneChannels());
+                    other.setPanelMode(m.panelMode);other.configureSecurity(m.securityMode,m.securityAllowed);other.setRedstoneChannels(m.getRedstoneChannels());
                 }
             });
             return null;

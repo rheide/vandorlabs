@@ -16,7 +16,7 @@ import java.util.List;
 public final class BlockCockpitPeripheral extends BlockVandorDirectional {
     public final String design;
     public BlockCockpitPeripheral(String design){super(design);this.design=design;setLightOpacity(0);}
-    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,placer.getHorizontalFacing());}
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,DirectionalPlacement.alongPlayer(placer));}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityCockpit(design);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public boolean isOpaqueCube(IBlockState state){return false;}

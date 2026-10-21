@@ -51,9 +51,8 @@ final class TokenSlotToggleRuntimeCheck {
         if(stage==0&&age>=10){require(tile.getOutputLevel()==15&&RedstoneChannels.level(world,64213)==15,"scan powers block and channel");tile.readFromNBT(tile.writeToNBT(new NBTTagCompound()));tile.onLoad();stage++;}
         if(stage==1&&age>=24){
             require(tile.isEmpty()&&count()==2&&tile.getOutputLevel()==15,"return preserves item data and latched output");
-            player.getHeldItemMainhand().shrink(1);player.inventory.setItemStack(card(1));
-            use(()->new ContainerTokenSlot(player.inventory,tile).slotClick(0,0,ClickType.PICKUP,player));
-            require(player.inventory.getItemStack().isEmpty()&&tile.returning(),"GUI carried-item insertion");stage++;
+            use(()->tile.insertToggle(player,player.getHeldItemMainhand()));
+            require(tile.returning(),"second top insertion");stage++;
         }
         if(stage==2&&age>=48){
             require(tile.isEmpty()&&count()==2&&tile.getOutputLevel()==0,"second insertion switches off and returns");
@@ -66,18 +65,23 @@ final class TokenSlotToggleRuntimeCheck {
         }
         if(stage==4&&age>=96){
             require(tile.isEmpty()&&count()==1&&tile.getOutputLevel()==15,"full-inventory retry returns exactly once");
-            use(()->new ContainerTokenSlot(player.inventory,tile).transferStackInSlot(player,36));require(tile.returning()&&count()==0,"shift-click inserts one owned token");stage++;
+            use(()->tile.insertToggle(player,player.inventory.getStackInSlot(1)));require(tile.returning()&&count()==0,"retry token inserts once");stage++;
         }
         if(stage==5&&age>=120){
-            require(tile.isEmpty()&&count()==1&&tile.getOutputLevel()==0&&RedstoneChannels.level(world,64213)==0,"shift-click toggles off and returns once");
+            require(tile.isEmpty()&&count()==1&&tile.getOutputLevel()==0&&RedstoneChannels.level(world,64213)==0,"second retry insertion toggles off and returns once");
             player.inventory.clear();for(int i=0;i<36;i++)player.inventory.setInventorySlotContents(i,new ItemStack(Blocks.COBBLESTONE,64));player.setHeldItem(EnumHand.OFF_HAND,card(2));
             use(()->block().onBlockActivated(world,pos,world.getBlockState(pos),player,EnumHand.OFF_HAND,EnumFacing.NORTH,.5F,.5F,.5F));require(tile.returning()&&count()==1,"offhand insertion borrows one item");stage++;
         }
         if(stage==6&&age>=144){
             require(tile.isEmpty()&&count()==2&&player.getHeldItemOffhand().getCount()==2&&tile.getOutputLevel()==15,"return merges into offhand when main inventory is full");
+            tile.configure(false,8,3);player.inventory.clear();player.setHeldItem(EnumHand.MAIN_HAND,card(1));use(()->tile.insertToggle(player,player.getHeldItemMainhand()));stage++;
+        }
+        if(stage==7&&age>=154){require(tile.returning()&&tile.getOutputLevel()==15,"pulse-return scan powers output");stage++;}
+        if(stage==8&&age>=168){require(tile.isEmpty()&&count()==1&&tile.getOutputLevel()==15,"pulse continues after actual item return");stage++;}
+        if(stage==9&&age>=176){require(tile.getOutputLevel()==0&&RedstoneChannels.level(world,64213)==0,"return pulse expires on actual scheduled ticks");
             world.setBlockToAir(pos);world.setBlockToAir(pos.south());player.inventory.readFromNBT(inventory);player.inventory.setItemStack(cursor);player.inventoryContainer.detectAndSendChanges();
             FMLCommonHandler.instance().bus().unregister(this);done=true;
-            System.out.println("[vandorlabs][reprolab] token-toggle-return PASS real-ticks inventory-NBT channels two-toggle reload denied-token full-inventory-retry carried-item shift-click offhand-merge");
+            System.out.println("[vandorlabs][reprolab] token-toggle-return PASS real-ticks inventory-NBT channels two-toggle reload denied-token full-inventory-retry top-insertion offhand-merge pulse-return-after-item-restoration");
         }
     }
 }

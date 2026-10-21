@@ -312,19 +312,27 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     private static void renderSpaceDoorControlPanel(com.vandorlabs.tiles.TileEntitySpaceDoor tile,
             EnumFacing facing,SpaceDoorControlPanel.Side side,double x,double y,double z,double size) {
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(x,y,z);
-        orientDetailedDoor(facing);
-        GlStateManager.translate(0,SpaceDoorControlPanel.verticalOffset(size),tile.positionOffset());
-        GlStateManager.scale(size/16,size/16,1D/16);
-        GlStateManager.disableLighting();
-        Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-        BufferBuilder buf=Tessellator.getInstance().getBuffer();
-        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        panelGeometry(buf,tile.isSliding(),tile.getPlacementDepth()==2,side);
-        Tessellator.getInstance().draw();
-        GlStateManager.enableLighting();
-        GlStateManager.popMatrix();
+        for(int panel=0;panel<(tile.panelMode()==2?2:1);panel++){
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
+            if(panel==1){GlStateManager.translate(0,0,1);GlStateManager.scale(1,1,-1);}
+            if(tile.securityMode()>0){
+                EnumFacing normal=side==SpaceDoorControlPanel.Side.LEFT?EnumFacing.EAST:EnumFacing.WEST;
+                double centerX=(side==SpaceDoorControlPanel.Side.LEFT?SpaceDoorControlPanel.x1(side):SpaceDoorControlPanel.x0(side))*size/16;
+                double centerY=(SpaceDoorControlPanel.Y0+SpaceDoorControlPanel.Y1)*size/32+SpaceDoorControlPanel.verticalOffset(size);
+                double centerZ=(SpaceDoorControlPanel.z0(tile.isSliding(),tile.getPlacementDepth()==2)+SpaceDoorControlPanel.z1(tile.isSliding(),tile.getPlacementDepth()==2))/32+tile.positionOffset();
+                GlStateManager.translate(centerX,centerY,centerZ);GlStateManager.scale(.5*size,.5*size,.5*size);
+                GlStateManager.translate(-.5+normal.getFrontOffsetX()*.5,-.5,-.5);
+                GlStateManager.disableCull();TETokenSlot.frame(false,normal);TETokenSlot.contents(tile.keyReader(panel),normal,0,Minecraft.getMinecraft().getRenderPartialTicks());GlStateManager.enableCull();
+            }else{
+                GlStateManager.translate(0,SpaceDoorControlPanel.verticalOffset(size),tile.positionOffset());
+                GlStateManager.scale(size/16,size/16,1D/16);GlStateManager.disableLighting();GlStateManager.disableCull();
+                Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                BufferBuilder buf=Tessellator.getInstance().getBuffer();buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+                panelGeometry(buf,tile.isSliding(),tile.getPlacementDepth()==2,side);Tessellator.getInstance().draw();GlStateManager.enableLighting();GlStateManager.enableCull();
+            }
+            GlStateManager.popMatrix();
+        }
     }
 
     /** Atlas geometry only; also used by the GL-free shared opaque batch. */

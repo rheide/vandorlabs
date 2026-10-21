@@ -20,6 +20,8 @@ public final class VehicleSignals {
     private boolean detached;
     private int revision=-1;
     private final Set<TileEntityCockpit> cockpits=Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<TileEntityWirelessRedstone> wirelessPorts=Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<TileEntitySpaceDoor> securityDoors=Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<TileEntityTokenSlot> tokenSlots=Collections.newSetFromMap(new IdentityHashMap<>());
     public void cockpitChanged(TileEntityCockpit tile){
         revision=-1;dirty.add(tile.getPos());tick();
@@ -51,6 +53,7 @@ public final class VehicleSignals {
             else if(tile instanceof TileEntityRampController){VehicleRamps.signal(craft,pos,level>0);}
             else if(VehicleDoors.supports(tile.getBlockType())){
                 int mode=tile instanceof TileEntitySpaceDoor?((TileEntitySpaceDoor)tile).getTrigger():tile instanceof TileEntityProgrammableTrapdoor?((TileEntityProgrammableTrapdoor)tile).getTrigger():1;
+                if(tile instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)tile).securityMode()>0){VehicleDoors.securitySet(craft,pos,((TileEntitySpaceDoor)tile).securityOpen());return;}
                 if(mode!=0){boolean open=mode==1?level>0:level==0;IBlockState actual=tile.getBlockType().getActualState(craft.view.getBlockState(pos),craft.view,pos);
                     if(actual.getValue(net.minecraft.block.BlockDoor.OPEN)!=open)VehicleDoors.toggle(craft,pos);}
             }else {source.setChannelLevel(level);
@@ -103,9 +106,11 @@ public final class VehicleSignals {
         if(revision!=craft.view.tileRevision){
         revision=craft.view.tileRevision;
         cockpits.clear();
-        tokenSlots.clear();
+        tokenSlots.clear();securityDoors.clear();wirelessPorts.clear();
         Set<RedstoneChannelMember> wanted=Collections.newSetFromMap(new IdentityHashMap<>());
         for(TileEntity tile:craft.view.tiles.values()){
+            if(tile instanceof TileEntityWirelessRedstone)wirelessPorts.add((TileEntityWirelessRedstone)tile);
+            if(tile instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)tile).isSecurityRoot())securityDoors.add((TileEntitySpaceDoor)tile);
             if(tile instanceof TileEntityTokenSlot)tokenSlots.add((TileEntityTokenSlot)tile);
             if(tile instanceof TileEntityCockpit){TileEntityCockpit cockpit=(TileEntityCockpit)tile;cockpits.add(cockpit);for(TileEntityCockpit.Control control:cockpit.controls)add(wanted,control);}
             if(tile instanceof TileEntityRedstoneChannel && tile.getBlockType() instanceof BlockVandorSwitch && ((BlockVandorSwitch)tile.getBlockType()).isMomentary() && ((TileEntityRedstoneChannel)tile).isLocalOn() && !releases.containsKey(tile.getPos()))releases.put(tile.getPos(),craft.world.getTotalWorldTime()+20);
@@ -125,8 +130,14 @@ public final class VehicleSignals {
             if(source instanceof RedstoneScreenContents.Row&&((RedstoneScreenContents.Row)source).pulseUntil()>0)screenPulses.add((RedstoneScreenContents.Row)source);
         }
         }
+        for(TileEntityWirelessRedstone port:wirelessPorts)if(port.transmitter())port.sampleInput();
         for(TileEntityCockpit cockpit:new ArrayList<>(cockpits)){
             cockpit.updatePower();if(cockpit.expire(craft.world.getTotalWorldTime()))for(TileEntityCockpit.Control control:cockpit.controls){Link link=links.get(control);if(link!=null)RedstoneChannels.inputChanged(link);}
+        }
+        for(TileEntitySpaceDoor door:new ArrayList<>(securityDoors))if(door.securityMode()>0){
+            for(int side=0;side<2;side++)if(door.keyReader(side).expire(craft.world.getTotalWorldTime()))dirty.add(door.getPos());
+            boolean open=door.securityOpen();
+            if(craft.view.getBlockState(door.getPos()).getValue(net.minecraft.block.BlockDoor.OPEN)!=open)VehicleDoors.securitySet(craft,door.getPos(),open);
         }
         for(TileEntityTokenSlot slot:tokenSlots)if(slot.expire(craft.world.getTotalWorldTime())){Link link=links.get(slot);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(slot.getPos());}
         if(!screenPulses.isEmpty())for(RedstoneScreenContents.Row row:new ArrayList<>(screenPulses))if(row.expirePulse(craft.world.getTotalWorldTime())){Link link=links.get(row);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(row.channelTile().getPos());screenPulses.remove(row);}

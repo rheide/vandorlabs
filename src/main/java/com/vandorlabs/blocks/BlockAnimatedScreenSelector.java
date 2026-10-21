@@ -110,7 +110,7 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
         if (clicked.getBlock() == this) {
             return clicked.getValue(facingProperty());
         }
-        return placer.getHorizontalFacing().getOpposite();
+        return DirectionalPlacement.towardPlayer(placer);
     }
 
     @Override

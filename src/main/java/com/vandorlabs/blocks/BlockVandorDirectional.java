@@ -30,7 +30,7 @@ public class BlockVandorDirectional extends BlockVandor {
 
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+        return getDefaultState().withProperty(FACING, DirectionalPlacement.towardPlayer(placer));
     }
 
     @Override

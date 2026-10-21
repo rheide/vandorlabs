@@ -81,6 +81,7 @@ public final class ProgrammableSettings {
     public static final String DOOR_SLIDING = "door_sliding";
     public static final String DOOR_HINGES = "door_hinges";
     public static final String DOOR_PANEL = "door_panel";
+    public static final String DOOR_SECURITY="door_security";
     public static final String DOOR_DEPTH = "door_depth";
     public static final String SWITCH_ROTATION = "switch_rotation";
     public static final String RAMP_START = "ramp_start";
@@ -262,7 +263,8 @@ public final class ProgrammableSettings {
             out.setBoolean(DOOR_MIDDLE, door.isMiddle());
             out.setBoolean(DOOR_SLIDING, door.isSliding());
             out.setBoolean(DOOR_HINGES, door.hasHinges());
-            out.setBoolean(DOOR_PANEL, door.hasPanel());
+            out.setInteger(DOOR_PANEL, door.panelMode());
+            NBTTagCompound security=new NBTTagCompound();security.setInteger("Mode",door.securityMode());security.setInteger("Allowed",door.keyReader().effectiveAllowed());out.setTag(DOOR_SECURITY,security);
             out.setInteger(DOOR_DEPTH, door.getPlacementDepth());
         } else if (tile instanceof TileEntityProgrammableChair) {
             TileEntityProgrammableChair chair = (TileEntityProgrammableChair) tile;
@@ -272,7 +274,8 @@ public final class ProgrammableSettings {
             out.setInteger(CHAIR_HEIGHT, chair.getHeight());
         } else if (tile instanceof TileEntityRedstoneChannel) {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
-            if(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;out.setTag(SIGNAL_SETTINGS,control.configuration());out.setInteger(ACTIVE,control.getStep());}
+            if(switchTile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone)out.setTag(SIGNAL_SETTINGS,switchTile.configuration());
+            else if(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl){com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;out.setTag(SIGNAL_SETTINGS,control.configuration());out.setInteger(ACTIVE,control.getStep());}
             else {
                 out.setBoolean(ACTIVE, switchTile.isLocalOn());
                 if(tile.getWorld()!=null && com.vandorlabs.blocks.MountedControlGeometry.supports(tile.getWorld().getBlockState(tile.getPos()).getBlock()))out.setTag(SIGNAL_SETTINGS,switchTile.configuration());
@@ -602,6 +605,7 @@ public final class ProgrammableSettings {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
             if(values.hasKey(DOOR_TILE_TEXTURE,1)){door.setTileTexture(values.getBoolean(DOOR_TILE_TEXTURE));applicable=true;}if(values.hasKey(DOOR_TEXTURE_LAYOUT,3)){door.setTextureLayout(values.getInteger(DOOR_TEXTURE_LAYOUT));applicable=true;}
             if(values.hasKey(DOOR_FACE_TEXTURE,3)){door.setFaceTexture(values.getInteger(DOOR_FACE_TEXTURE));applicable=true;}
+            if(values.hasKey(DOOR_SECURITY,10)){NBTTagCompound security=values.getCompoundTag(DOOR_SECURITY);door.configureSecurity(security.getInteger("Mode"),security.getInteger("Allowed"));applicable=true;}
             int trigger = number(values, TRIGGER, door.getTrigger());
             if (!SpaceDoorData.validTrigger(trigger)) trigger = door.getTrigger();
             if (values.hasKey(TRIGGER) || values.hasKey(DOOR_DESIGN)
@@ -616,9 +620,10 @@ public final class ProgrammableSettings {
                         flag(values, DOOR_MIDDLE, door.isMiddle()),
                         flag(values, DOOR_SLIDING, door.isSliding()),
                         flag(values, DOOR_HINGES, door.hasHinges()), trigger,
-                        flag(values, DOOR_PANEL, door.hasPanel()));
+                        values.hasKey(DOOR_PANEL,3)?values.getInteger(DOOR_PANEL)>0:flag(values, DOOR_PANEL, door.hasPanel()));
                 if (values.hasKey(DOOR_DEPTH, 3))
                     door.setPlacementDepth(values.getInteger(DOOR_DEPTH));
+                if(values.hasKey(DOOR_PANEL,3))door.setPanelMode(values.getInteger(DOOR_PANEL));
                 applicable = true;
             }
         } else if (tile instanceof TileEntityProgrammableChair) {
@@ -634,6 +639,7 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntityRedstoneChannel) {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
+            if(switchTile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound settings=values.getCompoundTag(SIGNAL_SETTINGS);if(settings.hasKey("WirelessAnalog")){((com.vandorlabs.tiles.TileEntityWirelessRedstone)switchTile).configure(settings.getBoolean("WirelessAnalog"),settings.getInteger("WirelessOn"),settings.getInteger("WirelessOff"));applicable=true;}}
             if(switchTile instanceof com.vandorlabs.tiles.TileEntitySignalControl){
                 com.vandorlabs.tiles.TileEntitySignalControl control=(com.vandorlabs.tiles.TileEntitySignalControl)switchTile;
                 if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);control.configureLimits(signal.getInteger("LowLimit"),signal.getInteger("HighLimit"));if(signal.hasKey("BaseHeight"))control.readMount(signal);applicable=true;}

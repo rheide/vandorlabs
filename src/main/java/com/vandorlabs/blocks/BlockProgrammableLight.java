@@ -29,8 +29,7 @@ public class BlockProgrammableLight extends BlockAnimatedScreenSelector {
 
     @Override protected EnumFacing placementFacing(World world, BlockPos pos,
             EnumFacing clickedFace, EntityLivingBase placer) {
-        IBlockState support = world.getBlockState(pos.offset(clickedFace.getOpposite()));
-        return support.getBlock() == this ? support.getValue(FACING) : clickedFace;
+        return DirectionalPlacement.towardView(placer);
     }
 
     @Override public net.minecraft.util.math.AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {

@@ -45,15 +45,16 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         return true;
     }
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing face,float x,float y,float z){
-        if(hand!=EnumHand.MAIN_HAND)return false;
         TileEntityLargeProgrammableDoor tile=root(world,pos);if(tile==null)return true;
         boolean panelHit=false;
         if(tile.hasPanel()){
             EnumFacing front=world.getBlockState(tile.getPos()).getValue(FACING);
             EnumFacing panelFace=tile.isSliding()?front.rotateY():front.rotateYCCW();
             double normal=front==EnumFacing.SOUTH?pos.getZ()+z-tile.getPos().getZ():front==EnumFacing.NORTH?1-(pos.getZ()+z-tile.getPos().getZ()):front==EnumFacing.EAST?pos.getX()+x-tile.getPos().getX():1-(pos.getX()+x-tile.getPos().getX());
-            panelHit=face==panelFace && com.vandorlabs.render.SpaceDoorControlPanel.containsScaled(normal-tile.positionOffset(),pos.getY()+y-tile.getPos().getY(),tile.isSliding(),tile.getPlacementDepth()==2,1.5);
+            panelHit=face==panelFace && BlockConfigurableSpaceDoor.panelContains(tile,normal,pos.getY()+y-tile.getPos().getY(),1.5);
         }
+        if(tile.securityMode()>0&&!player.isSneaking()&&player.getHeldItem(hand).getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER){if(panelHit)return tile.useSecurity(player,hand,tile.readerIndex(new Vec3d(pos.getX()+x,pos.getY()+y,pos.getZ()+z)));return true;}
+        if(hand!=EnumHand.MAIN_HAND)return false;
         if(player.isSneaking() || player.capabilities.isCreativeMode && panelHit){
             if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,player.capabilities.isCreativeMode?com.vandorlabs.GuiHandler.GUI_SPACE_DOOR:com.vandorlabs.GuiHandler.GUI_REDSTONE_CHANNEL,world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ());
         } else if(tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED && !world.isRemote)
@@ -63,7 +64,7 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
     @Override public void updateRedstoneState(World world,BlockPos pos,IBlockState state){
         if(world.isRemote)return;TileEntityLargeProgrammableDoor tile=root(world,pos);if(tile==null)return;
         IBlockState actual=world.getBlockState(tile.getPos());boolean powered=tile.hasLocalRedstoneSignal()||tile.isChannelSignalPowered();
-        boolean open=tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED?actual.getValue(OPEN):SpaceDoorData.openForSignal(tile.getTrigger(),powered);
+        boolean open=tile.securityMode()>0?tile.securityOpen():tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED?actual.getValue(OPEN):SpaceDoorData.openForSignal(tile.getTrigger(),powered);
         setPowered(world,tile.getPos(),actual,powered,open);
     }
     @Override protected void setPowered(World world,BlockPos pos,IBlockState state,boolean powered,boolean open){
@@ -87,6 +88,7 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
     }
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
         if(!REMOVING.get()){
+            TileEntityLargeProgrammableDoor reader=root(world,pos);if(!world.isRemote&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)&&reader!=null){for(int side=0;side<2;side++){ItemStack token=reader.keyReader(side).takeForDrop();if(!token.isEmpty())net.minecraft.inventory.InventoryHelper.spawnItemStack(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,token);}}
             TileEntity raw=world.getTileEntity(pos);BlockPos anchor=raw instanceof TileEntityLargeProgrammableDoor?((TileEntityLargeProgrammableDoor)raw).anchorPos():pos;
             EnumFacing width=state.getValue(FACING).rotateYCCW();REMOVING.set(true);
             try{for(int x=0;x<3;x++)for(int y=0;y<3;y++){

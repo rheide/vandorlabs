@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:redstone_transmitter"
+    },
+    "facing=south": {
+      "model": "vandorlabs:redstone_transmitter",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:redstone_transmitter",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "vandorlabs:redstone_transmitter",
+      "y": 90
+    },
+    "facing=up": {
+      "model": "vandorlabs:redstone_transmitter",
+      "x": 270
+    },
+    "facing=down": {
+      "model": "vandorlabs:redstone_transmitter",
+      "x": 90
+    }
+  }
+}

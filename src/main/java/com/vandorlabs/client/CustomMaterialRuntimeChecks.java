@@ -191,16 +191,17 @@ final class CustomMaterialRuntimeChecks {
         java.util.Map<String,Integer> counts=new java.util.HashMap<>();
         for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)if(ScreenHousingTextures.visible(choice))
             counts.merge(ScreenHousingTextures.category(choice),1,Integer::sum);
-        require(counts.get("Hull")==21 && counts.get("Panels")==13 && counts.get("Industrial")==14 && counts.get("Tech")==22,"approved Hull/Panels/Industrial/Tech counts");
+        require(counts.get("Hull")==21 && counts.get("Panels")==19 && counts.get("Industrial")==14 && counts.get("Tech")==25,"approved Hull/Panels/Industrial/Tech counts");
         HousingTextureList moved=new HousingTextureList(0,0,180,32);
         require(moved.selected()==32 && "Heavy Bulkhead 1".equals(HousingTextureList.name(32)) && "Industrial".equals(ScreenHousingTextures.category(32)),"moved saved choice changed identity");
         try {
             java.lang.reflect.Field expanded=HousingTextureList.class.getDeclaredField("expanded");expanded.setAccessible(true);
             require(((java.util.Set<?>)expanded.get(moved)).contains("Industrial"),"moved material did not expand its new category");
         }catch(ReflectiveOperationException e){throw new RuntimeException(e);}
-        System.out.println("[vandorlabs][reprolab] industrial-category-runtime PASS Hull=21 Panels=13 Industrial=14 Tech=22; saved material opens new category");
+        System.out.println("[vandorlabs][reprolab] industrial-category-runtime PASS Hull=21 Panels=19 Industrial=14 Tech=25; saved material opens new category");
         int amber=ScreenHousingTextures.screenIndex("lights/amber_hex_on");
-        for(int choice:new int[]{64,amber}) {
+        for(String finish:new String[]{"pale_grey","industrial_grey","dark_cyan_metallic"})for(String variant:new String[]{"plain","speaker"}){int choice=ScreenHousingTextures.screenIndex("ceiling/"+finish+"/"+variant);require("Panels".equals(ScreenHousingTextures.category(choice)),"ceiling panel category");require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice)).getIconWidth()==128,"ceiling resolution");}
+        for(int choice:new int[]{64,amber,ScreenHousingTextures.screenIndex("ceiling/pale_grey/light_on"),ScreenHousingTextures.screenIndex("ceiling/industrial_grey/light_on"),ScreenHousingTextures.screenIndex("ceiling/dark_cyan_metallic/light_on")}) {
             TileEntityProgrammableLight tile=new TileEntityProgrammableLight();tile.setFaceTexture(choice);
             for(boolean on:new boolean[]{false,true}) {
                 tile.setOn(on);

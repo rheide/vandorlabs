@@ -18,7 +18,9 @@ public final class VehicleDoors {
         return name.equals("net.malisis.doors.tileentity.DoorTileEntity") || name.equals("net.malisis.doors.tileentity.TrapDoorTileEntity");
     }
     public static boolean supports(Block b){return b instanceof BlockDoor || b instanceof BlockVandorDoor || b instanceof BlockTrapDoor;}
-    public static boolean toggle(EntityGroundVehicle craft,BlockPos hit) {
+    public static boolean toggle(EntityGroundVehicle craft,BlockPos hit) {return change(craft,hit,null);}
+    public static boolean securitySet(EntityGroundVehicle craft,BlockPos hit,boolean open){return change(craft,hit,open);}
+    private static boolean change(EntityGroundVehicle craft,BlockPos hit,Boolean forced) {
         if(craft.world.isRemote || craft.view==null || craft.structure==null || craft.isDead)return false;
         IBlockState state=craft.view.getBlockState(hit);Block block=state.getBlock();if(!supports(block))return false;
         Set<BlockPos> group=new HashSet<>();
@@ -62,7 +64,9 @@ public final class VehicleDoors {
             VehicleStructure.Cell cell=craft.structure.at(position);
             if(cell==null || cell.state.getBlock()!=block)return false;
         }
-        boolean open=!block.getActualState(state,craft.view,hit).getValue(BlockDoor.OPEN);
+        if(forced==null)for(BlockPos position:group){net.minecraft.tileentity.TileEntity tile=craft.view.getTileEntity(position);if(tile instanceof com.vandorlabs.tiles.TileEntitySpaceDoor&&((com.vandorlabs.tiles.TileEntitySpaceDoor)tile).securityMode()>0)return true;}
+        boolean open=forced==null?!block.getActualState(state,craft.view,hit).getValue(BlockDoor.OPEN):forced;
+        if(forced!=null){boolean different=false;for(BlockPos position:group)different|=craft.view.getBlockState(position).getValue(BlockDoor.OPEN)!=open;if(!different)return true;}
         if(!open&&craft.view.getTileEntity(hit) instanceof TileEntityProgrammableTrapdoor&&com.vandorlabs.tiles.LandingGearCovers.needsOpen((TileEntityProgrammableTrapdoor)craft.view.getTileEntity(hit)))return false;
         Map<BlockPos,Boolean> desired=new LinkedHashMap<>();for(BlockPos position:group)desired.put(position,open);return set(craft,desired);
     }

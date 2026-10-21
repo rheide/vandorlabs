@@ -487,7 +487,7 @@ public class ReproLab {
         SHOTS.add(new Shot("utility22_gear_joined",214,33,112,40,20));
         SHOTS.add(new Shot("fixed_gear_standard",475,34,132,180,15));
         SHOTS.add(new Shot("fixed_gear_large",475,34,138,180,15));
-        for(int i=0;i<4;i++){SHOTS.add(new Shot("utility22_cockpit_"+i,220+i*6,30.4,117,-34,22));SHOTS.add(new Shot("utility22_cockpit_blank_"+i,220+i*6,30.4,125,-34,22));}
+        for(int i=0;i<com.vandorlabs.cockpit.CockpitData.IDS.length;i++){SHOTS.add(new Shot("utility22_cockpit_"+i,220+i*6,30.4,117,-34,22));SHOTS.add(new Shot("utility22_cockpitlank_"+i,220+i*6,30.4,125,-34,22));}
         SHOTS.add(new Shot("gallery_distant_geometry",GALLERY_X+.5D,
                 GALLERY_Y+3D,-98D,0,2));
 
@@ -2151,6 +2151,8 @@ public class ReproLab {
                 TextureLayoutRuntimeChecks.run(world,serverPlayer);
                 WaterloggedRuntimeChecks.run(world);
                 TokenSlotRuntimeChecks.run((net.minecraft.world.WorldServer)world);
+                DoorSecurityRuntimeChecks.run((net.minecraft.world.WorldServer)world);
+                WirelessRedstoneRuntimeChecks.run((net.minecraft.world.WorldServer)world);
                 TurntablePerformanceRuntimeChecks.server((net.minecraft.world.WorldServer)world);
                 try{CockpitRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("cockpit integration",failure);}
                 try{NonWheeledGearRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("non-wheeled landing gear",failure); }

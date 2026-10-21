@@ -36,7 +36,7 @@ public final class OpaqueDoorBatch {
     static void clear(){PANELS.clear();}
 
     public static boolean available(TileEntitySpaceDoor tile) {
-        if (tile.getWorld()==null || !tile.getWorld().isRemote || tile.hasGlass()
+        if (tile.getWorld()==null || tile.securityMode()>0 || tile.panelMode()==2 || !tile.getWorld().isRemote || tile.hasGlass()
                 || tile.getFaceTexture()>=0 || net.minecraftforge.fml.client.FMLClientHandler.instance().hasOptifine()
                 || !compatible(Minecraft.getMinecraft().getRenderItem())
                 || !ForgeModContainer.allowEmissiveItems || DefaultVertexFormats.BLOCK.getNextOffset()!=28) return false;

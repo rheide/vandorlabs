@@ -112,26 +112,28 @@ final class ScreenRuntimeChecks {
         require(ModBlocks.PROGRAMMABLE_LIGHT != null,
                 "programmable light is not registered");
         BlockPos placement = new BlockPos(34, 250, 32);
+        float previousYaw=player.rotationYaw,previousPitch=player.rotationPitch;
         try {
-            for (EnumFacing side : EnumFacing.values()) {
-                BlockPos support = placement.offset(side.getOpposite());
-                player.world.setBlockState(support, net.minecraft.init.Blocks.STONE.getDefaultState(), 3);
-                IBlockState placed = ModBlocks.PROGRAMMABLE_LIGHT.getStateForPlacement(
-                        player.world, placement, side, .5F, .5F, .5F, 0, player);
-                require(placed.getValue(BlockAnimatedScreenSelector.FACING) == side,
-                        "programmable light did not face clicked surface: " + side);
-                player.world.setBlockState(support,
-                        ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState().withProperty(
-                                BlockAnimatedScreenSelector.FACING, EnumFacing.WEST), 3);
-                placed = ModBlocks.PROGRAMMABLE_LIGHT.getStateForPlacement(
-                        player.world, placement, side, .5F, .5F, .5F, 0, player);
-                require(placed.getValue(BlockAnimatedScreenSelector.FACING) == EnumFacing.WEST,
-                        "programmable light did not inherit adjacent direction: " + side);
-                player.world.setBlockToAir(support);
+            for(int yaw=0;yaw<360;yaw+=90)for(int pitch:new int[]{-90,-46,0,46,90}){
+                player.rotationYaw=yaw;player.rotationPitch=pitch;
+                EnumFacing expected=pitch>45?EnumFacing.UP:pitch< -45?EnumFacing.DOWN:player.getHorizontalFacing().getOpposite();
+                for(net.minecraft.block.Block light:new net.minecraft.block.Block[]{ModBlocks.PROGRAMMABLE_LIGHT,ModBlocks.PROGRAMMABLE_LIGHT_FRAME,ModBlocks.PROGRAMMABLE_LIGHT_SLAB})for(EnumFacing side:EnumFacing.values()){
+                    BlockPos support=placement.offset(side.getOpposite());
+                    for(boolean adjacentLight:new boolean[]{false,true}){
+                        player.world.setBlockState(support,adjacentLight?light.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,player.getHorizontalFacing().getOpposite()):net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+                        IBlockState placed=light.getStateForPlacement(player.world,placement,side,.5F,.5F,.5F,0,player);
+                        require(placed.getValue(BlockAnimatedScreenSelector.FACING)==expected,"light placement must face the player: "+light+" "+side+" "+yaw);
+                        if(light==ModBlocks.PROGRAMMABLE_LIGHT_FRAME){
+                            net.minecraft.util.math.Vec3d center=com.vandorlabs.blocks.ProgrammableLightShape.world(placed,player.world,placement).getCenter().subtract(.5,.5,.5);
+                            require(center.dotProduct(new net.minecraft.util.math.Vec3d(expected.getDirectionVec()))<-.4,"light frame back must sit opposite its visible face: "+expected);
+                        }
+                    }
+                    player.world.setBlockToAir(support);
+                }
             }
         } finally {
-            for (EnumFacing side : EnumFacing.values())
-                player.world.setBlockToAir(placement.offset(side.getOpposite()));
+            player.rotationYaw=previousYaw;player.rotationPitch=previousPitch;
+            for(EnumFacing side:EnumFacing.values())player.world.setBlockToAir(placement.offset(side.getOpposite()));
         }
         BlockPos pos = new BlockPos(32, 250, 32);
         player.world.setBlockState(pos, ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(), 3);
@@ -222,8 +224,8 @@ final class ScreenRuntimeChecks {
                             .5F,.5F,.5F,0,player);
                     require(ceiling.getValue(com.vandorlabs.blocks.BlockProgrammableLightSlab.HALF)
                             ==net.minecraft.block.BlockSlab.EnumBlockHalf.TOP
-                            && ceiling.getValue(BlockAnimatedScreenSelector.FACING)==EnumFacing.DOWN,
-                            "light slab underside placement chose bottom half");
+                            && ceiling.getValue(BlockAnimatedScreenSelector.FACING)==(player.rotationPitch>45?EnumFacing.UP:player.rotationPitch< -45?EnumFacing.DOWN:player.getHorizontalFacing().getOpposite()),
+                            "light slab underside placement lost top half or player facing");
                 }
             } finally {player.world.setBlockToAir(pos);}
         }

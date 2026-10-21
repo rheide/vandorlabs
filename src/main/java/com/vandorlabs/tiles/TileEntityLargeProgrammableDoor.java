@@ -48,11 +48,16 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
     public java.util.List<AxisAlignedBB> collisionGeometry(net.minecraft.util.EnumFacing face,boolean open) {
         boolean sliding=isSliding();
         int key=(isFramed()?1:0)|(sliding?2:0)|(getSlideDirection()<<2)|(open?16:0)
-                |(getPlacementDepth()<<5)|(hasHinges()?128:0)|(hasPanel()?256:0)|(face.getHorizontalIndex()<<9);
+                |(getPlacementDepth()<<5)|(hasHinges()?128:0)|(hasPanel()?256:0)|(face.getHorizontalIndex()<<9)|(panelMode()<<12)|(securityMode()<<14);
         if(collisionBoxes!=null && collisionKey==key && pos.equals(collisionPos))return collisionBoxes;
         java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
         for(com.vandorlabs.render.LargeDoorGeometry.Box b:com.vandorlabs.render.LargeDoorGeometry.boxes(isFramed(),sliding,getSlideDirection(),open,positionOffset(),face.getHorizontalIndex(),hasPanel(),getPlacementDepth()==2))
             boxes.add(new AxisAlignedBB(b.x0,b.y0,b.z0,b.x1,b.y1,b.z1).offset(pos));
+        if(hasPanel()&&!boxes.isEmpty()){
+            AxisAlignedBB pad=boxes.remove(boxes.size()-1).offset(-pos.getX(),-pos.getY(),-pos.getZ());
+            if(securityMode()>0){pad=pad.grow(0,1.05/16,0);pad=face.getAxis()==net.minecraft.util.EnumFacing.Axis.X?pad.grow(.75/16,0,0):pad.grow(0,0,.75/16);}
+            boxes.add(pad.offset(pos));if(panelMode()==2)boxes.add(com.vandorlabs.blocks.BlockConfigurableSpaceDoor.mirrorPanel(pad,face).offset(pos));
+        }
         collisionKey=key;collisionPos=pos.toImmutable();collisionBoxes=java.util.Collections.unmodifiableList(boxes);return collisionBoxes;
     }
     @Override public AxisAlignedBB getRenderBoundingBox(){return new AxisAlignedBB(pos.add(-4,-3,-4),pos.add(5,7,5));}

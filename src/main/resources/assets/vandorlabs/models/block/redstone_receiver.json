@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "up": "vandorlabs:blocks/redstone_receiver/up",
+    "down": "vandorlabs:blocks/redstone_receiver/down",
+    "west": "vandorlabs:blocks/redstone_receiver/left",
+    "east": "vandorlabs:blocks/redstone_receiver/right",
+    "north": "vandorlabs:blocks/redstone_receiver/port",
+    "south": "vandorlabs:blocks/redstone_receiver/type",
+    "particle": "vandorlabs:blocks/redstone_receiver/port"
+  }
+}
