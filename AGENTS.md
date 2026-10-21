@@ -1,5 +1,9 @@
 # Vandor Labs project guidance
 
+- Right-clicking a dialog option must select its previous value. Keep left-click and right-click cycling consistent across dialogs.
+- Follow the existing screen, texture-list and door dialogs for layout and interaction conventions. Texture lists must support both wheel scrolling and dragging their scrollbar.
+- Match the mod's established texture resolutions; do not ship oversized textures. Turntable surface artwork may use a larger resolution because it can span multiple blocks.
+
 - Keep finished build artifacts in `build/libs/`. Copy a build elsewhere only when the user explicitly requests a destination.
 - Use Java 8 for Gradle 4.9 builds. Run the live client suite for client-visible or gameplay changes.
 - Build only the standard mod JAR. Never produce original-textures JARs; the original texture directory is an archive and validation reference only.
