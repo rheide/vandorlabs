@@ -2,6 +2,9 @@
 
 ## 2.3
 
+- Support contained fluid sides on Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor. Fill open passages from stored or adjacent water and restore the original sides on closing without creating source blocks. Share door-half storage and render diagonal fluid boundaries as continuous planes.
+- Reestablish texture units, alpha testing and depth state before drawing cached turntable contents, and synchronize both texture-unit caches when restoring nested render state.
+
 - Preserve Advanced Pilot Chair height when saving pilot controls or reopening the casing page. Synchronize cockpit riders and their camera to the seat timeline instead of periodic mount position packets.
 - Match cockpit screen/input playback to Programmable Screen speeds. Open the shared redstone row editor from cockpit surface selectors, including row labels, channels, pulse/toggle/slider controls and slider limits.
 - Angle all three cockpit keyboard decks with matching 2:1 proportions, lower the extended screen bank by 2px, and tile casing artwork at one-block scale.

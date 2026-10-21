@@ -113,4 +113,9 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
         if(!world.isRemote && raw instanceof TileEntityProgrammableTrapdoor)((TileEntityProgrammableTrapdoor)raw).unpair();
         super.breakBlock(world,pos,state);world.removeTileEntity(pos);
     }
+
+    @Override public Boolean isAABBInsideMaterial(World world,BlockPos pos,net.minecraft.util.math.AxisAlignedBB box,net.minecraft.block.material.Material material){return WaterloggedParts.intersects(world,pos,box,material);}
+    @Override public Boolean isAABBInsideLiquid(World world,BlockPos pos,net.minecraft.util.math.AxisAlignedBB box){return WaterloggedParts.liquid(world,pos,box);}
+    @Override public Boolean isEntityInsideMaterial(net.minecraft.world.IBlockAccess world,BlockPos pos,IBlockState state,net.minecraft.entity.Entity entity,double height,net.minecraft.block.material.Material material,boolean head){return WaterloggedParts.entity(world,pos,entity,height,material,head);}
+    @Override public int getLightValue(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos){return Math.max(super.getLightValue(state,world,pos),WaterloggedParts.light(world,pos));}
 }

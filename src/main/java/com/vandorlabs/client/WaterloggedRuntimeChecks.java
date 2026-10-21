@@ -12,6 +12,7 @@ import net.minecraft.world.World;
 
 final class WaterloggedRuntimeChecks {
     static void run(World world){
+        OpeningFluidRuntimeChecks.run(world);
         BlockPos pos=new BlockPos(146,230,146);
         try{
             for(Block block:new Block[]{ModBlocks.PROGRAMMABLE_SLAB,ModBlocks.PROGRAMMABLE_STAIRS})for(boolean upper:new boolean[]{false,true})for(EnumFacing facing:EnumFacing.HORIZONTALS){

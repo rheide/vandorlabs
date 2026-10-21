@@ -12,7 +12,7 @@ import net.minecraftforge.fluids.*;
 /** Cached exposed volume faces use each liquid's atlas artwork, tint and luminosity. */
 final class WaterloggedRenderer {
     static void render(TileEntity tile,double x,double y,double z){
-        ContainedFluids data=WaterloggedParts.data(tile);if(data==null||!data.any())return;
+        ContainedFluids data=WaterloggedParts.data(tile);if(data==null||!WaterloggedParts.wet(tile.getWorld(),tile.getPos()))return;
         java.util.List<WaterloggedSurfaceMesh.Surface> surfaces=WaterloggedSurfaceMesh.get(tile);
         float oldU=OpenGlHelper.lastBrightnessX,oldV=OpenGlHelper.lastBrightnessY;
         boolean depthMask=org.lwjgl.opengl.GL11.glGetBoolean(org.lwjgl.opengl.GL11.GL_DEPTH_WRITEMASK);
@@ -20,7 +20,7 @@ final class WaterloggedRenderer {
         try{
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.depthMask(false);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.disableLighting();GlStateManager.enableCull();GlStateManager.color(1,1,1,1);
             for(int side=0;side<2;side++){
-                FluidStack stack=data.get(side);if(stack==null)continue;Fluid fluid=stack.getFluid();
+                FluidStack stack=WaterloggedParts.fluid(tile.getWorld(),tile.getPos(),side);if(stack==null)continue;Fluid fluid=stack.getFluid();
                 TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(fluid.getStill(stack).toString());
                 int color=fluid==FluidRegistry.WATER?0xAF000000|net.minecraft.world.biome.BiomeColorHelper.getWaterColorAtPos(tile.getWorld(),tile.getPos()):fluid.getColor(stack);
                 int light=tile.getWorld().getCombinedLight(tile.getPos(),fluid.getLuminosity(stack));for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.values()){int neighbor=tile.getWorld().getCombinedLight(tile.getPos().offset(face),fluid.getLuminosity(stack));light=(Math.max(light&65535,neighbor&65535))|(Math.max(light>>16,neighbor>>16)<<16);}

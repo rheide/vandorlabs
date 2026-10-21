@@ -17,11 +17,11 @@ import java.util.List;
 final class WaterloggedSurfaceChecks {
     private static final String[] IDS={"programmable_wall","programmable_porthole_wall","programmable_glass","programmable_diagonal_wall","programmable_diagonal_porthole","programmable_diagonal_glass"};
     private static BlockPos at(int kind){return new BlockPos(306+kind*4,32,142);}
-    static void build(World world){for(int kind=0;kind<IDS.length;kind++)for(int column=0;column<2;column++){
+    static void build(World world){OpeningFluidVisualChecks.build(world);for(int kind=0;kind<IDS.length;kind++)for(int column=0;column<2;column++){
         BlockPos pos=at(kind).east(column);Block block=Block.getBlockFromName("vandorlabs:"+IDS[kind]);require(block!=null,"fluid fixture block "+IDS[kind]);world.setBlockState(pos,block.getDefaultState(),2);
         ContainedFluids fluids=WaterloggedParts.data(world.getTileEntity(pos));fluids.set(0,new FluidStack(FluidRegistry.WATER,1000));
     }}
-    static void run(Minecraft mc,File output)throws Exception{
+    static void run(Minecraft mc,File output)throws Exception{OpeningFluidVisualChecks.run(mc,output);
         for(int kind=0;kind<IDS.length;kind++){
             TileEntity tile=mc.world.getTileEntity(at(kind));require(tile!=null,"fluid fixture synchronized");List<WaterloggedSurfaceMesh.Surface> mesh=WaterloggedSurfaceMesh.get(tile);
             require(mesh==WaterloggedSurfaceMesh.get(tile),"fluid surface cache reuse");

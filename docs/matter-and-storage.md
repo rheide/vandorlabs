@@ -32,3 +32,11 @@ Programmable Walls, Porthole Walls, Glass Walls and their diagonal variants can 
 Registered Forge liquids with a compatible bucket or fluid container are supported; gases are excluded. The visible liquid fills the free space around the configured wall geometry and uses the fluid's texture, colour and luminosity. Contents stay contained and do not spread into neighbouring blocks. Saving, copying and vehicle capture preserve both sides. Slabs and stairs use the same contained-fluid storage; older waterlogged saves migrate automatically.
 
 Visible fluid follows continuous diagonal surfaces and reaches inset porthole/glass panes. Adjacent volumes of the same liquid omit their shared faces, including partial joins; different liquids retain their separating interface. The visible surface cache refreshes after shape or fluid changes, rather than rebuilding meshes during rotation. Entity collision remains based on the solid block's collision geometry.
+
+### Doors and trapdoors
+
+Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor use the same two-sided bucket storage. A door's upper and lower halves share the stored sides. Sides refer to the closed leaf, so opening or rotating the leaf does not exchange them.
+
+Opening a leaf with water on either side fills its passage with water. This includes directly adjacent world water. Closing restores the original sides: a dry opposite side clears again, while water originally stored on both sides remains. This passage fill stays inside the opening and does not create surrounding source blocks or a second bucket of stored water. Empty buckets drain the actual stored side. A different liquid explicitly stored opposite the water is retained.
+
+The diagonal trapdoor uses continuous sloped fluid faces rather than collision slices, keeping its water surface free of horizontal bands. Stored sides survive saves and vehicle capture; the temporary opening fill is derived from the current open state.

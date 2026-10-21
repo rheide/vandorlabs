@@ -88,6 +88,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         if (!(state.getBlock() instanceof BlockVandorDoor)) {
             return;
         }
+        if(te instanceof com.vandorlabs.tiles.TileEntitySpaceDoor&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1)WaterloggedRenderer.render(te,x,y,z);
         state = state.getBlock().getActualState(state, te.getWorld(), te.getPos());
         EnumFacing facing = state.getValue(BlockVandorDoor.FACING);
         boolean upper = state.getValue(BlockVandorDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER;

@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 
 /** Appearance belongs to the placed door, not a separate registered block. */
 public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
+    public final com.vandorlabs.blocks.ContainedFluids fluids=new com.vandorlabs.blocks.ContainedFluids(this);
     public static final String[] DESIGNS={"observation","airlock","standard","security","reactor","viewport","laboratory","cargo","ventilation",
             "cargo_lift","blast_shield","glazed_hangar","quarantine_seal","reactor_barrier","modular_shutter","white_glass","dark_glass","plain_cargo","stepped_freight","observation_leaf","reinforced_leaf","warehouse_shutter","slotted_bay","cross_braced_bay","split_view_bay","offset_cargo","twin_observation","armored_biparting","service_freight","slim_glass"};
     public static final int FIRST_DOUBLE_DESIGN=21, DEFAULT_LARGE_DESIGN=23;
@@ -206,7 +207,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         tag.setInteger("DoorFaceTexture",faceTexture);tag.setBoolean("DoorTileTexture",tileTexture);tag.setInteger("DoorTextureLayout",getTextureLayout());
         tag.setInteger("SpaceDoorPlacementDepth", placementDepth);
-        writeSecurity(tag,true);return tag;
+        writeSecurity(tag,true);fluids.write(tag);return tag;
     }
     /** Copy user choices only, not tile coordinates, power or animation state. */
     public NBTTagCompound itemSettings() {
@@ -229,7 +230,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         if(tag.hasKey("SpaceDoorPlacementDepth",3))setPlacementDepth(tag.getInteger("SpaceDoorPlacementDepth"));readSecurity(tag);
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+        super.readFromNBT(tag);fluids.read(tag);
         tileTexture=tag.getBoolean("DoorTileTexture");
         textureLayout=tag.hasKey("DoorTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("DoorTextureLayout"))?tag.getInteger("DoorTextureLayout"):-1;
         faceTexture=tag.hasKey("DoorFaceTexture",3) && tag.getInteger("DoorFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("DoorFaceTexture")):-1;
@@ -262,10 +263,10 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     @Override
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public boolean hasFastRenderer() {
-        return com.vandorlabs.client.OpaqueDoorBatch.available(this);
+        return !(world!=null&&com.vandorlabs.blocks.WaterloggedParts.wet(world,pos))&&com.vandorlabs.client.OpaqueDoorBatch.available(this);
     }
     @Override public boolean shouldRenderInPass(int pass) {
-        return isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
+        return pass==1&&world!=null&&com.vandorlabs.blocks.WaterloggedParts.wet(world,pos)||isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
     }
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
         return slideDirection==0?super.getRenderBoundingBox():

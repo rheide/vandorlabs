@@ -77,6 +77,8 @@ See [turntables](../turntables.md), [modular landing gear](../modular-landing-ge
 
 Programmable walls, portholes and glass panels, including diagonal variants, store fluid independently on each side. Use a supported fluid bucket on a side to fill it; an empty bucket clears that side. Opposite sides can hold different fluids. Fluid surfaces follow the panel geometry, fill glass recesses and avoid internal seams between matching neighbors.
 
+Programmable Doors, Trapdoors and Diagonal Trapdoors also support two fluid sides. Water fills the passage while the leaf is open; closing restores the original sides and clears temporary water from a previously dry side.
+
 The material catalog adds four Security Glass designs, three Ancient Relief textures under Tech, and ceiling-tile finishes with plain and speaker panels plus paired light artwork. Directional lights place their illuminated face away from the supporting face, including floor and ceiling placements.
 
 Browse the whole catalog through the [interactive texture browser and category collages](../texture-browser.md). It uses the same categories and selectable artwork as the mod.

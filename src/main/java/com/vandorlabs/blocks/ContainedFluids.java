@@ -13,6 +13,7 @@ public final class ContainedFluids {
     WaterloggedParts.Volume geometry;
     net.minecraft.block.state.IBlockState geometryState;
     int geometryMapping;
+    net.minecraft.util.math.BlockPos geometryPos;
     long geometryTick=Long.MIN_VALUE;
     public ContainedFluids(TileEntity owner){this.owner=owner;}
     public boolean any(){return sides[0]!=null||sides[1]!=null;}

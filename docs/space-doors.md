@@ -189,3 +189,7 @@ Click the seven card icons to choose accepted designs. The plain icon's tooltip 
 Right-click anywhere on a secured door leaf with an accepted card to insert it into the reader on that side, including any cell of a large door. Click the panel with an empty hand to remove a retained card. Centered doors can use **Panel: Both**; each reader holds its own physical item, and either side can operate the shared door state. Non-centered doors offer Off or On only.
 
 The allow-list, behavior and panel arrangement are saved and copied with configured items; inserted cards are never duplicated by pick-block. A card awaiting return is retained safely while its owner is offline or has no inventory space. See [Data Card and Data Chip Mounts](data-mounts.md) for the shared reader behavior.
+
+## Water on either side
+
+Use a fluid bucket on either face to fill that side of a Programmable Door; its two halves share the contents. Water on one side, including adjacent world water, fills the passage when the door opens. Closing clears the temporary fill on the dry side and retains the original contents. Water originally present on both sides remains on both sides. This also works for Programmable Trapdoor and Programmable Diagonal Trapdoor. See [contained fluids](matter-and-storage.md#doors-and-trapdoors).

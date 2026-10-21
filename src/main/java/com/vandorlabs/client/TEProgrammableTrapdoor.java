@@ -27,6 +27,7 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         if(tile.getWorld()==null)return;
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         if(!(state.getBlock() instanceof BlockProgrammableTrapdoor))return;
+        if(net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1){WaterloggedRenderer.render(tile,x,y,z);return;}
         double now=CLOCK.sample(System.nanoTime(),Minecraft.getMinecraft().isGamePaused());
         DoorAnimation animation=ANIMATIONS.computeIfAbsent(tile,t->new DoorAnimation(9));
         double pose=animation.sample(state.getValue(BlockProgrammableTrapdoor.OPEN),now);
