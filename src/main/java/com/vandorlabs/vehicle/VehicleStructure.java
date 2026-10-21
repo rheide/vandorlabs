@@ -41,6 +41,7 @@ public final class VehicleStructure {
     public final AxisAlignedBB bounds;
     private final Map<BlockPos,Cell> byPosition;
     private final List<BlockPos> pilotSeats;
+    private final List<BlockPos> passengerSeats;
     private final Cell controller;
     public final List<Cell> liftCells,exhaustCells,gearCovers;
     public final boolean hasThruster,hasNonWheeledGear,hasSkisOnly;
@@ -55,13 +56,14 @@ public final class VehicleStructure {
         if(cells.isEmpty()&&!displayOnly||cells.size()>MAX_BLOCKS||!facing.getAxis().isHorizontal()||gearCount<1&&!displayOnly)
             throw new IllegalArgumentException("Invalid vehicle structure");
         Map<BlockPos,Cell> positions=new LinkedHashMap<>();
-        List<BlockPos> seats=new ArrayList<>();List<Cell> lifts=new ArrayList<>(),exhausts=new ArrayList<>(),covers=new ArrayList<>();boolean thruster=false,nonWheeled=false,skis=false,otherFeet=false;Cell control=null;
+        List<BlockPos> seats=new ArrayList<>(),passengers=new ArrayList<>();List<Cell> lifts=new ArrayList<>(),exhausts=new ArrayList<>(),covers=new ArrayList<>();boolean thruster=false,nonWheeled=false,skis=false,otherFeet=false;Cell control=null;
         int x=0,y=0,z=0;
         for(Cell cell:cells) {
             if(cell.pos.getX()<0||cell.pos.getY()<0||cell.pos.getZ()<0
                     ||cell.pos.getX()>=MAX_AXIS||cell.pos.getY()>=MAX_AXIS||cell.pos.getZ()>=MAX_AXIS
                     ||positions.put(cell.pos,cell)!=null)throw new IllegalArgumentException("Invalid vehicle cell");
             x=Math.max(x,cell.pos.getX()+1);y=Math.max(y,cell.pos.getY()+1);z=Math.max(z,cell.pos.getZ()+1);
+            if(VehicleSeats.supports(cell.state)&&VehicleSeats.lower(cell.state,cell.pos).equals(cell.pos))passengers.add(cell.pos);
             if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat
                     && !cell.state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER))seats.add(cell.pos);
             if(control==null&&cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)control=cell;
@@ -79,10 +81,11 @@ public final class VehicleStructure {
         if(!displayOnly && (!positions.containsKey(seat)||!(positions.get(seat).state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat)))
             throw new IllegalArgumentException("Missing pilot seat");
         this.cells=Collections.unmodifiableList(new ArrayList<>(cells));this.byPosition=Collections.unmodifiableMap(positions);
-        this.pilotSeats=Collections.unmodifiableList(seats);this.controller=control;this.gearCovers=Collections.unmodifiableList(covers);this.liftCells=Collections.unmodifiableList(lifts);this.exhaustCells=Collections.unmodifiableList(exhausts);this.hasThruster=thruster;this.hasNonWheeledGear=nonWheeled;this.hasSkisOnly=skis&&!otherFeet;
+        this.pilotSeats=Collections.unmodifiableList(seats);this.passengerSeats=Collections.unmodifiableList(passengers);this.controller=control;this.gearCovers=Collections.unmodifiableList(covers);this.liftCells=Collections.unmodifiableList(lifts);this.exhaustCells=Collections.unmodifiableList(exhausts);this.hasThruster=thruster;this.hasNonWheeledGear=nonWheeled;this.hasSkisOnly=skis&&!otherFeet;
         this.seat=seat.toImmutable();this.facing=facing;this.gearCount=gearCount;this.bounds=new AxisAlignedBB(0,0,0,x,y,z);this.displayOnly=displayOnly;
     }
     public Cell at(BlockPos pos){return byPosition.get(pos);}
+    public List<BlockPos> passengerSeats(){return passengerSeats;}
     public List<BlockPos> pilotSeats(){
         return pilotSeats;
     }

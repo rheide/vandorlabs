@@ -2,6 +2,12 @@
 
 ## 2.3
 
+- Add compact Data Card and Data Chip Mounts, with independent design allow-lists, non-consuming filter slots, output channels and continuous/pulse behavior.
+- Correct cockpit dialog sizing and contrast, keyboard proportions, armrest orientation and overlapping chair geometry. Add selectable casing textures, name Advanced Pilot Chair and use red upholstery.
+- Support Programmable Chair passengers in captured vehicles, preserving their style, height and assigned seat through movement, assembly and parking.
+- Use server-compatible bounds constructors for cockpit collision and related vehicle, gear, canopy and door interactions.
+- Cache rigid turntable wall artwork within the shared frame budget, sort only translucent Vandor tiles, and reuse the platform bounds. Add opt-in client/server CPU diagnostics.
+
 - Let turntable surfaces use general materials as well as the six Turntable images; shorten native surface names to single words.
 - Add independent liquid storage on both sides of programmable wall, porthole and glass panels, including diagonal variants. Support compatible Forge liquid buckets and preserve legacy waterlogged slabs/stairs.
 

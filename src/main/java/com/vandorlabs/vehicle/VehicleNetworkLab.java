@@ -21,6 +21,8 @@ public final class VehicleNetworkLab {
     private static final Random random=new Random(719);
     private static EntityGroundVehicle craft;
     private static int ticks,inputs,states;
+    private static final List<BlockPos> passengerSeats=new ArrayList<>();
+    private static final Set<BlockPos> testedSeats=new HashSet<>();
     private static final class Delivery {final long at;final Runnable action;Delivery(long at,Runnable action){this.at=at;this.action=action;}}
     public static int phase(){return craft==null?0:Math.min(4,ticks/240);}
     public static int elapsed(){return ticks%240;}
@@ -57,12 +59,36 @@ public final class VehicleNetworkLab {
             BlockPos door=new BlockPos(0,1,2);
             cells.add(new VehicleStructure.Cell(door,Blocks.OAK_DOOR.getDefaultState(),null));
             cells.add(new VehicleStructure.Cell(door.up(),Blocks.OAK_DOOR.getDefaultState().withProperty(net.minecraft.block.BlockDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER),null));
+            int chairIndex=0;
+            for(net.minecraft.block.Block block:net.minecraft.block.Block.REGISTRY){
+                net.minecraft.block.state.IBlockState state=block.getDefaultState();
+                if(!VehicleSeats.supports(state)||block==ModBlocks.PILOT_SEAT)continue;
+                for(int variant=0;variant<(block==ModBlocks.PROGRAMMABLE_CHAIR?15:1);variant++){
+                BlockPos at=new BlockPos(1+(chairIndex%4)*3,1,5+(chairIndex/4)*3);chairIndex++;
+                net.minecraft.tileentity.TileEntity tile=block.hasTileEntity(state)?block.createTileEntity(world,state):null;
+                if(tile instanceof com.vandorlabs.tiles.TileEntityProgrammableChair){((com.vandorlabs.tiles.TileEntityProgrammableChair)tile).setStyle(variant/3);((com.vandorlabs.tiles.TileEntityProgrammableChair)tile).setHeight(variant%3);}
+                net.minecraft.nbt.NBTTagCompound data=tile==null?null:tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+                cells.add(new VehicleStructure.Cell(at,state,data));passengerSeats.add(at);
+                if(!(block instanceof BlockCockpit))cells.add(new VehicleStructure.Cell(at.up(),state.withProperty(BlockBridgeChair.UPPER,true),null));
+                cells.add(new VehicleStructure.Cell(at.down(),Blocks.STONE.getDefaultState(),null));
+                }
+            }
+            if(passengerSeats.isEmpty())throw new IllegalStateException("No decorative passenger chairs registered");
             craft=new EntityGroundVehicle(world);craft.install(VehicleTaxiMode.withSetting(new VehicleStructure(cells,seat,EnumFacing.NORTH,1),false));craft.setPosition(-6,101,-2);
             if(!world.spawnEntity(craft))throw new IllegalStateException("dedicated craft spawn failed");
-            driver.setGameType(net.minecraft.world.GameType.CREATIVE);observer.setGameType(net.minecraft.world.GameType.SPECTATOR);
-            driver.setPositionAndUpdate(5,103,0);observer.connection.setPlayerLocation(0,108,12,180,25);craft.board(driver);
+            driver.setGameType(net.minecraft.world.GameType.CREATIVE);observer.setGameType(net.minecraft.world.GameType.CREATIVE);
+            driver.setPositionAndUpdate(5,103,0);observer.connection.setPlayerLocation(0,108,12,180,25);
+            BlockPos firstPassenger=passengerSeats.stream().filter(p->craft.structure.at(p).state.getBlock()==ModBlocks.PROGRAMMABLE_CHAIR).findFirst().orElseThrow(()->new IllegalStateException("Programmable Chair fixture missing"));
+            if(!craft.board(observer,firstPassenger)||craft.getControllingPassenger()!=null||!craft.board(driver)||craft.getControllingPassenger()!=driver)throw new IllegalStateException("Passenger-first boarding took pilot control");
         }
         ticks++;
+        BlockPos selected=passengerSeats.get(Math.min(passengerSeats.size()-1,(ticks-1)*passengerSeats.size()/900));
+        craft.assignSeat(observer,selected);craft.updatePassenger(observer);testedSeats.add(selected);
+        if(observer.getRidingEntity()!=craft||driver.getRidingEntity()!=craft||craft.getPassengers().size()!=2||craft.getControllingPassenger()!=driver)throw new IllegalStateException("Dedicated passenger seating lost a rider or pilot control");
+        net.minecraft.util.math.Vec3d expected=craft.seatPosition(new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw),observer);
+        if(expected.squareDistanceTo(observer.getPositionVector())>1e-8)throw new IllegalStateException("Passenger did not follow rotated chair position");
+        if(ticks==940){if(testedSeats.size()!=passengerSeats.size())throw new IllegalStateException("Passenger chair matrix incomplete");System.out.println("[vandorlabs] vehicle-passengers PASS two remote players passenger-first boarding models="+testedSeats.size()+" synchronized chair assignments translation rotation");}
+
         if(ticks%60==0)VehicleDoors.toggle(craft,new BlockPos(0,1,2));
         if(ticks==960)System.out.println("[vandorlabs] vehicle-controller "+craft.diagnostics.summary());
         if(ticks%240==0)System.out.println("[vandorlabs] vehicle-network phase="+phase()+" inputs="+inputs+" state="+states);

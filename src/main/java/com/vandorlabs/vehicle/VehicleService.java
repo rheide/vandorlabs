@@ -395,7 +395,7 @@ public final class VehicleService {
     static Entity[] assemblyAllowed(World world,VehicleStructure structure,BlockPos origin,Entity actor){
         java.util.List<Entity> allowed=new ArrayList<>();allowed.add(actor);
         for(com.vandorlabs.entity.EntityChairSeat chair:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,structure.bounds.offset(origin).grow(1)))
-            if(structure.pilotSeats().contains(chair.getChairPos().subtract(origin)))allowed.addAll(chair.getPassengers());
+            if(structure.passengerSeats().contains(chair.getChairPos().subtract(origin)))allowed.addAll(chair.getPassengers());
         return allowed.toArray(new Entity[0]);
     }
     static boolean clearOfPeople(World world,VehicleCollision geometry,BlockPos origin,Entity... allowed) {

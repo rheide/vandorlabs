@@ -151,7 +151,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public Vec3d seatPosition(VehiclePose pose,Entity passenger) {
         BlockPos seat=seatForPassenger(passenger);
         if(view.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityCockpit){com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)view.getTileEntity(seat);Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.data().seat,cockpit.facing());return pose.world(new Vec3d(seat.getX()+at.x,seat.getY()+cockpit.seatHeight()+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+at.z),structure.bounds.maxX/2,structure.bounds.maxZ/2);}
-        return pose.world(new Vec3d(seat.getX()+.5,seat.getY()+BlockPilotSeat.seatHeight(view,seat)+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+.5),structure.bounds.maxX/2,structure.bounds.maxZ/2);
+        return pose.world(new Vec3d(seat.getX()+.5,seat.getY()+VehicleSeats.height(view,seat)+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+.5),structure.bounds.maxX/2,structure.bounds.maxZ/2);
     }
     @Override public AxisAlignedBB getRenderBoundingBox() {
         if(structure==null)return getEntityBoundingBox();
@@ -225,10 +225,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(!(hover?serverInputs.offerLatest(sequence,forward,strafe,brake):serverInputs.offer(sequence,forward,strafe,brake)))return;
         lastInput=world.getTotalWorldTime();
     }
-    @Override public Entity getControllingPassenger(){return getPassengers().isEmpty()?null:getPassengers().get(0);}
+    @Override public Entity getControllingPassenger(){if(structure==null)return null;for(Entity passenger:getPassengers())if(structure.pilotSeats().contains(seatForPassenger(passenger)))return passenger;return null;}
     // Vanilla otherwise sends client vehicle positions, overriding the server controller.
     @Override public boolean canPassengerSteer(){return false;}
-    @Override protected boolean canFitPassenger(Entity passenger){return structure!=null && getPassengers().size()<structure.pilotSeats().size();}
+    @Override protected boolean canFitPassenger(Entity passenger){return structure!=null && getPassengers().size()<structure.passengerSeats().size();}
     @Override public boolean processInitialInteract(EntityPlayer player,EnumHand hand) {
         if(hand!=EnumHand.MAIN_HAND)return false;
         VehicleInteraction.Target target=VehicleInteraction.pointed(player);
@@ -237,9 +237,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean board(EntityPlayer player) {return structure!=null && board(player,structure.seat);}
     public boolean board(EntityPlayer player,BlockPos seat) {
         if(world.isRemote || isDead || ownershipBlocked || structure==null || player.isSpectator()
-                || player.isDead || player.world!=world || player.getRidingEntity()==this || !structure.pilotSeats().contains(seat))return false;
+                || player.isDead || player.world!=world || player.getRidingEntity()==this || !structure.passengerSeats().contains(seat))return false;
         for(Entity passenger:getPassengers())if(seatForPassenger(passenger).equals(seat))return false;
-        boolean first=getPassengers().isEmpty();assignSeat(player,seat);
+        boolean first=getControllingPassenger()==null&&structure.pilotSeats().contains(seat);assignSeat(player,seat);
         if(!player.startRiding(this)){assignSeat(player,null);return false;}
         taxiReturnPending=false;
         if(first){serverInputs.clear();forward=strafe=0;brake=false;lastInput=-100;

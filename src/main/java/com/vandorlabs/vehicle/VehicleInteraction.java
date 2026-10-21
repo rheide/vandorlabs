@@ -32,7 +32,7 @@ public final class VehicleInteraction {
         if(target==null)return null;
         // Other ordinary entities still occlude an onboard target. Craft discovery
         // above intentionally does not depend on vanilla's origin-section index.
-        for(Entity entity:player.world.getEntitiesInAABBexcluding(player,new AxisAlignedBB(start,end).grow(1),e->true)) {
+        for(Entity entity:player.world.getEntitiesInAABBexcluding(player,new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z).grow(1),e->true)) {
             if(entity instanceof EntityGroundVehicle || entity==player.getRidingEntity() || !entity.canBeCollidedWith())continue;
             AxisAlignedBB box=entity.getEntityBoundingBox().grow(entity.getCollisionBorderSize());
             RayTraceResult hit=box.calculateIntercept(start,end);
@@ -76,7 +76,7 @@ public final class VehicleInteraction {
             if(tile.use(start,end)){craft.signals.cockpitChanged(tile);return true;}if(tile.data().seat!=null && player.getRidingEntity()!=craft){craft.board(player,tile.getPos());return true;}com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;
         }
         if(player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER) {
-            if(target.hit.action==VehicleSelection.Action.BOARD){BlockPos seat=target.hit.cell.state.getValue(BlockPilotSeat.UPPER)?target.hit.cell.pos.down():target.hit.cell.pos;VehicleService.previewSeat(server,craft,seat);}
+            if(target.hit.action==VehicleSelection.Action.BOARD && target.hit.cell.state.getBlock() instanceof BlockPilotSeat){BlockPos seat=VehicleSeats.lower(target.hit.cell.state,target.hit.cell.pos);VehicleService.previewSeat(server,craft,seat);}
             else if(target.hit.action==VehicleSelection.Action.CONTROLLER)VehicleService.previewController(server,craft,target.hit.cell.pos);
             else VehicleService.previewParking(server,craft);return true;
         }
@@ -91,10 +91,10 @@ public final class VehicleInteraction {
         }
         if(target.hit.action==VehicleSelection.Action.SCREEN)return craft.signals.click(target.hit.cell.pos,player);
         BlockPos seat=target.hit.cell.pos;
-        if(target.hit.cell.state.getValue(BlockPilotSeat.UPPER))seat=seat.down();
-        if(!craft.structure.pilotSeats().contains(seat))return false;
-        if(player.isSneaking()){VehicleService.previewSeat(server,craft,seat);return true;}
-        if(!craft.board(player,seat))VehicleNetwork.error(server,"The Pilot Seat is occupied or cannot be boarded.");
+        seat=VehicleSeats.lower(target.hit.cell.state,seat);
+        if(!craft.structure.passengerSeats().contains(seat))return false;
+        if(player.isSneaking()){if(craft.structure.pilotSeats().contains(seat))VehicleService.previewSeat(server,craft,seat);return true;}
+        if(!craft.board(player,seat))VehicleNetwork.error(server,"This seat is occupied or cannot be boarded.");
         return true;
     }
 }

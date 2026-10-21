@@ -23,7 +23,7 @@ public final class VehicleSelection {
             this.distanceSq = distanceSq;
             action = cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpitPeripheral ? Action.COCKPIT
                     : cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController ? Action.CONTROLLER
-                    : cell.state.getBlock() instanceof BlockPilotSeat ? Action.BOARD
+                    : VehicleSeats.supports(cell.state) ? Action.BOARD
                     : VehicleCanopies.supports(cell.state.getBlock()) ? Action.CANOPY
                     : VehicleDoors.supports(cell.state.getBlock())
                     ? Action.DOOR : (cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVandorSwitch || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockIndustrialLever || com.vandorlabs.blocks.RedstoneScreenInteractions.supports(cell.state.getBlock())) ? Action.SCREEN : Action.SURFACE;
@@ -42,7 +42,7 @@ public final class VehicleSelection {
         for (VehicleStructure.Cell cell : structure.cells) {
             // The occupied seat surrounds the pilot's eyes; its selection box must
             // not swallow clicks aimed at the canopy, doors or controls above it.
-            if(riderSeat!=null && cell.state.getBlock() instanceof BlockPilotSeat
+            if(riderSeat!=null && VehicleSeats.supports(cell.state)
                     && !(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit)
                     && (cell.pos.equals(riderSeat) || cell.pos.equals(riderSeat.up())))continue;
             VehicleStructure.Cell selected=cell;

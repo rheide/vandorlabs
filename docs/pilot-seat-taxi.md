@@ -50,3 +50,10 @@ Ski Landing Gear, Landing Struts, and Angled Landing Struts share the wheeled ge
 Matching skis join end-to-end when their size, facing axis, and extension agree. Vertical ski columns share the lowest runner's extension controls; upper runners remain part of the fixed column. Detection follows connected ski sections without following the terrain beneath them.
 
 Ski-only vehicles can Taxi on ice, packed ice and frosted ice while every runner remains above ice. They need no lift hardware for Taxi, and stop before leaving the ice. Plates, struts and mixed ski/wheel supports retain their Hover-only restriction. Install three lift blocks and a vehicle thruster for Hover; extend the gear, stop within three blocks of solid ground, and select Park on the Vehicle Controller to return directly to blocks. For new construction, use [modular landing gear](modular-landing-gear.md); the integrated skis and struts described above are retained for existing saves.
+
+
+### Passenger chairs
+
+A captured vehicle can carry multiple players in separate Pilot Seats, seated cockpits, Advanced Pilot Chairs, and Programmable Chairs. Every Programmable Chair style and height retains its own seating position while the craft translates or rotates. The first occupied pilot-capable seat supplies driving controls; boarding a Programmable Chair as a passenger does not take control. Luxury Seat and Military Seat do not add vehicle passenger places.
+
+Occupied Programmable Chairs transfer their riders during assembly, and parking restores those riders to their saved chair positions. Each seat can hold one player. Seat assignments are synchronized to the driver and other clients.

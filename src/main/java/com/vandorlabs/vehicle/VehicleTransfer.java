@@ -218,7 +218,7 @@ public final class VehicleTransfer {
         List<com.vandorlabs.entity.EntityChairSeat> oldSeats=new ArrayList<>();
         for(com.vandorlabs.entity.EntityChairSeat chair:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,structure.bounds.offset(origin).grow(1))){
             BlockPos local=chair.getChairPos().subtract(origin);
-            if(structure.pilotSeats().contains(local) && !chair.getPassengers().isEmpty())oldSeats.add(chair);
+            if(structure.passengerSeats().contains(local) && !chair.getPassengers().isEmpty())oldSeats.add(chair);
         }
         oldSeats.sort(java.util.Comparator.comparingInt(net.minecraft.entity.Entity::getEntityId));
         for(com.vandorlabs.entity.EntityChairSeat chair:oldSeats)seated.put(chair.getPassengers().get(0),chair.getChairPos().subtract(origin));
@@ -255,7 +255,7 @@ public final class VehicleTransfer {
             BlockPos at=origin.add(entry.getValue());com.vandorlabs.entity.EntityChairSeat chair=null;
             for(com.vandorlabs.entity.EntityChairSeat original:originals)if(!original.isDead&&original.getChairPos().equals(at)){chair=original;break;}
             if(chair==null){
-                chair=new com.vandorlabs.entity.EntityChairSeat(world,at,com.vandorlabs.blocks.BlockPilotSeat.seatHeight(world,at));
+                chair=new com.vandorlabs.entity.EntityChairSeat(world,at,VehicleSeats.height(world,at));
                 chair.rotationYaw=world.getBlockState(at).getValue(com.vandorlabs.blocks.BlockPilotSeat.FACING).getHorizontalAngle();
                 if(!world.spawnEntity(chair))throw new IOException("Could not restore the original pilot chair.");
             }
@@ -296,7 +296,7 @@ public final class VehicleTransfer {
                 // Parking can rebase the hull when extending landing gear.
                 local=local.add(placed.seat.subtract(VehicleRotation.cell(entity.structure.seat,(int)entity.structure.bounds.maxX,(int)entity.structure.bounds.maxZ,parkingTurns)));
                 BlockPos at=origin.add(local);
-                com.vandorlabs.entity.EntityChairSeat seat=new com.vandorlabs.entity.EntityChairSeat(world,at,com.vandorlabs.blocks.BlockPilotSeat.seatHeight(world,at));
+                com.vandorlabs.entity.EntityChairSeat seat=new com.vandorlabs.entity.EntityChairSeat(world,at,VehicleSeats.height(world,at));
                 seat.rotationYaw=world.getBlockState(at).getValue(com.vandorlabs.blocks.BlockPilotSeat.FACING).getHorizontalAngle();
                 if(!world.spawnEntity(seat) || !rider.getKey().startRiding(seat,true))throw new IOException("Could not transfer a pilot to the parked seat.");
                 seat.updatePassenger(rider.getKey());

@@ -25,19 +25,22 @@ final class CockpitRuntimeChecks {
             player.setPositionAndUpdate(ROOT.getX()+.5,ROOT.getY()+1,ROOT.getZ()+3);
             for(String id:CockpitData.IDS)for(EnumFacing facing:EnumFacing.HORIZONTALS){
                 clear(world);Block block=Block.getBlockFromName("vandorlabs:"+id);world.setBlockState(ROOT,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing));CockpitAssembly.install(world,ROOT,player);
-                TileEntityCockpit tile=(TileEntityCockpit)world.getTileEntity(ROOT);tile.setTaxiMode(false);
+                TileEntityCockpit tile=(TileEntityCockpit)world.getTileEntity(ROOT);tile.setTaxiMode(false);tile.setSideTexture(14);
                 for(BlockPos p:tile.data().cells(ROOT,facing)){require(CockpitAssembly.root(world,p)==tile,"anchor resolution "+id+facing);for(AxisAlignedBB b:CockpitAssembly.boxes(world,p))require(b.minX>=-1e-8 && b.maxX<=1+1e-8 && b.minY>=-1e-8 && b.maxY<=1+1e-8 && b.minZ>=-1e-8 && b.maxZ<=1+1e-8,"clipped collision");}
                 if(id.equals("cockpit_a") || id.equals("cockpit_b")){
                     require(tile.display("touch_center_keyboard")!=null && tile.control("touch_center_keyboard/2")!=null,"new center keyboard");
                     AxisAlignedBB footwell=new AxisAlignedBB(.60,.25,-.20,.61,.35,-.19);
                     for(AxisAlignedBB b:tile.data().boxes)require(!b.intersects(footwell),"angled console must clear footwell");
                 }
+                for(CockpitData.Surface surface:tile.data().surfaces)if("touch".equals(surface.role))require(Math.abs(surface.u.lengthVector()/surface.v.lengthVector()-2)<1e-6,"half-height keyboard aspect "+id+surface.id);
+                if(id.equals("cockpit_a")||id.equals("cockpit_b")){require(tile.display("touch_left_aux")==null&&tile.display("touch_right_trackpad")==null,"retired armrest touch areas removed");for(Vec3d pivot:tile.data().pivots.values())require(pivot.z<.5,"throttle assemblies moved forward");}
+                for(CockpitData.Surface surface:tile.data().surfaces)if("touch".equals(surface.role)){Vec3d p=surface.point(.5,.5);require(!tile.use(CockpitData.rotate(p.add(surface.normal.scale(.4)),facing),CockpitData.rotate(p.subtract(surface.normal.scale(.3)),facing)),"blank touch area remains inactive");}
                 int channel=62000;
                 for(TileEntityCockpit.Control c:tile.controls){c.setRedstoneChannels(ChannelList.of(channel++));c.kind=1;for(int step=0;step<4;step++){c.activate(step/3D);require(RedstoneChannels.level(world,c.getRedstoneChannel())==step*5,"independent detents "+c.id);}c.kind=2;c.activate(.5);require(c.level==15,"pulse starts");tile.expire(c.until);require(c.level==0 && RedstoneChannels.level(world,c.getRedstoneChannel())==0,"pulse releases");}
                 for(CockpitData.Surface surface:tile.data().surfaces){TileEntityCockpit.Display display=tile.display(surface.id);display.texture=surfaces%ScreenHousingTextures.IDS.length;display.speed=3;surfaces++;
                     if("touch".equals(surface.role)){TileEntityCockpit.Control c=tile.control(surface.id+"/1");c.kind=0;c.level=0;Vec3d p=surface.point(.5,.5);require(tile.use(CockpitData.rotate(p.add(surface.normal.scale(.4)),facing),CockpitData.rotate(p.subtract(surface.normal.scale(.3)),facing)),"touch ray "+id+surface.id);require(c.level==15,"touch row "+id+surface.id);}
                 }
-                TileEntityCockpit copy=(TileEntityCockpit)TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(copy.design().equals(id) && copy.displays.size()==tile.displays.size() && copy.controls.size()==tile.controls.size(),"saved surface identities");
+                TileEntityCockpit copy=(TileEntityCockpit)TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(copy.design().equals(id) && copy.displays.size()==tile.displays.size() && copy.controls.size()==tile.controls.size(),"saved surface identities");require(copy.sideTexture()==14,"casing material saved independently");
                 for(int i=0;i<copy.displays.size();i++)require(copy.displays.get(i).texture==tile.displays.get(i).texture && copy.displays.get(i).speed==3,"independent screen persistence");
                 // Older kits used a different surface order and lacked the center keyboard.
                 NBTTagCompound legacy=tile.writeToNBT(new NBTTagCompound());
@@ -70,7 +73,7 @@ final class CockpitRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] cockpit-runtime PASS four models four facings reservations clipped-collision independent-surfaces touch detents pulses save configured-items stale-render-bounds vehicle-round-trip");
     }
     private static void roundTrip(WorldServer world,EntityPlayerMP player)throws Exception{
-        EntityGroundVehicle craft=null;BlockPos base=ROOT.add(-1,-2,-2);
+        EntityGroundVehicle craft=null;net.minecraft.entity.passive.EntityVillager passenger=null;BlockPos base=ROOT.add(-1,-2,-2);
         try{
             for(int x=-1;x<5;x++)for(int z=-1;z<5;z++)world.setBlockState(base.add(x,-2,z),Blocks.STONE.getDefaultState());
             for(int x=0;x<4;x++)for(int z=0;z<4;z++)world.setBlockState(base.add(x,1,z),Blocks.STONE.getDefaultState());
@@ -79,11 +82,19 @@ final class CockpitRuntimeChecks {
             world.setBlockState(ROOT,Block.getBlockFromName("vandorlabs:cockpit_a").getDefaultState());CockpitAssembly.install(world,ROOT,player);TileEntityCockpit cockpit=(TileEntityCockpit)world.getTileEntity(ROOT);cockpit.setTaxiMode(false);
             TileEntityCockpit.Control output=cockpit.controls.get(0);output.kind=1;output.setRedstoneChannels(ChannelList.of(63000));output.activate(2/3D);
             world.setBlockState(base.add(0,2,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState());for(int x=1;x<4;x++)world.setBlockState(base.add(x,2,0),Block.getBlockFromName("vandorlabs:antigravity_plate").getDefaultState());
+            BlockPos passengerChair=base.add(3,2,3);world.setBlockState(passengerChair,ModBlocks.PROGRAMMABLE_CHAIR.getDefaultState());ModBlocks.PROGRAMMABLE_CHAIR.onBlockPlacedBy(world,passengerChair,world.getBlockState(passengerChair),player,new ItemStack(ModBlocks.PROGRAMMABLE_CHAIR));
+            TileEntityProgrammableChair chairSettings=(TileEntityProgrammableChair)world.getTileEntity(passengerChair);chairSettings.setStyle(4);chairSettings.setHeight(2);
+            passenger=new net.minecraft.entity.passive.EntityVillager(world);passenger.setNoAI(true);passenger.setPosition(passengerChair.getX()+.5,passengerChair.getY()+1,passengerChair.getZ()+.5);require(world.spawnEntity(passenger),"passenger fixture spawn");
+            com.vandorlabs.entity.EntityChairSeat stationary=new com.vandorlabs.entity.EntityChairSeat(world,passengerChair,VehicleSeats.height(world,passengerChair));require(world.spawnEntity(stationary)&&passenger.startRiding(stationary),"occupied Programmable Chair fixture");
             VehicleScan scan=new VehicleScan(world,ROOT);for(int i=0;i<200 && !scan.step(128);i++);require(scan.error==null && scan.result!=null,"cockpit discovery "+scan.error);require(scan.result.controller()!=null && scan.result.controller().state.getBlock() instanceof BlockCockpit,"combined controller");
             player.setPositionAndUpdate(ROOT.getX()+.5,ROOT.getY()+1,ROOT.getZ()+2);craft=VehicleTransfer.assemble(world,scan.result,scan.origin,player);craft.signals.tick();require(craft.hover,"direct Hover assembly");
+            require(passenger.getRidingEntity()==craft&&craft.seatForPassenger(passenger).equals(passengerChair.subtract(scan.origin)),"Programmable Chair passenger transferred to vehicle");
             TileEntityCockpit captured=(TileEntityCockpit)craft.view.getTileEntity(ROOT.subtract(scan.origin));require(captured!=null && captured.controls.get(0).level==10,"captured controls");captured.controls.get(0).activate(1);craft.signals.cockpitChanged(captured);require(RedstoneChannels.level(world,63000)==15,"captured channel output");
-            VehicleTransfer.park(world,craft,scan.origin,player);craft=null;require(((TileEntityCockpit)world.getTileEntity(ROOT)).controls.get(0).level==15,"parked controls");
-        }finally{if(craft!=null && !craft.isDead)VehicleTransfer.park(world,craft,new BlockPos(craft.posX,craft.posY,craft.posZ),player);clear(world);}
+            craft.setPosition(craft.posX+1,craft.posY,craft.posZ+1);craft.rotationYaw=90;craft.updatePassenger(passenger);
+            Vec3d expectedPassenger=craft.seatPosition(new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw),passenger);require(passenger.getPositionVector().squareDistanceTo(expectedPassenger)<1e-8,"passenger follows vehicle translation and turn");
+            craft.rotationYaw=0;craft.setPosition(scan.origin.getX(),scan.origin.getY(),scan.origin.getZ());
+            VehicleTransfer.park(world,craft,scan.origin,player);craft=null;require(passenger.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat&&((com.vandorlabs.entity.EntityChairSeat)passenger.getRidingEntity()).getChairPos().equals(passengerChair),"parking restores occupied Programmable Chair");require(((TileEntityCockpit)world.getTileEntity(ROOT)).controls.get(0).level==15,"parked controls");
+        }finally{if(craft!=null && !craft.isDead)VehicleTransfer.park(world,craft,new BlockPos(craft.posX,craft.posY,craft.posZ),player);if(passenger!=null){passenger.dismountRidingEntity();world.removeEntityDangerously(passenger);}clear(world);}
     }
     private static void clear(WorldServer world){for(BlockPos p:BlockPos.getAllInBox(ROOT.add(-3,-4,-4),ROOT.add(5,4,4)))world.setBlockToAir(p);}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("cockpit: "+message);}
