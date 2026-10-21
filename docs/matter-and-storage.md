@@ -10,7 +10,7 @@ Hexagonal Fuel Tanks hold 16,000 mB per block and accept registered Forge fluids
 
 The implementations use Forge's built-in `IEnergyStorage` and `IFluidHandler` capabilities, requiring no extra mod. Forge Energy is based on the Redstone Flux API, but machines exposing only the older CoFH interfaces need a compatible bridge. See [Forge's capability documentation](https://docs.minecraftforge.net/en/1.12.x/datastorage/capabilities/).
 
-Seven Data Cards and seven matching Data Chips are available in the creative catalog: unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor. They use the supplied perspective item artwork, can be held in hand, and cannot be placed as blocks. Their metadata values are 0 through 6 in that order (`vandorlabs:data_card` and `vandorlabs:data_chip`).
+Seven Data Cards and seven matching Data Chips are available in the creative catalog: unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor. They use thin solid models with extracted front artwork and clipped corners. They can be held in hand and inserted in matching access mounts; cards also operate secured Programmable Doors. Their metadata values are 0 through 6 in that order (`vandorlabs:data_card` and `vandorlabs:data_chip`).
 
 Tank settings use a compact combined dialog for casing, Hexagon/Block shape,
 Tile/Fit texture layout, and live fluid quantity. Tile keeps the casing artwork's

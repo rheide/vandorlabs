@@ -27,7 +27,7 @@ position and opens this dialog when clicked without sneaking. Rotating doors
 use the hinge jamb; sliding doors use the opposite jamb. A paired rotating
 door has one pad on the visual-left outer jamb; a paired sliding door has one
 on the visual-right outer jamb. A door with neighbors on both sides has no pad.
-The dialog's Panel: On/Off button sits
+The dialog's Panel option offers Off, On and, for centered doors only, Both. The button sits
 below Hinges and applies immediately to both leaves. Existing doors default
 to Panel: On; the choice is saved and included in creative pick-block items.
 Creative pick-block on either half copies all selector settings, including the
@@ -168,3 +168,24 @@ extruded frame sides. Those sides now sample the frame material.
 openings. It is available for regular and large doors at both supported
 resolutions, with the existing glass reflection pane behind the supplied
 cutout artwork.
+
+## Card security
+
+Security appears below Channels in the Programmable Door dialog. **Off** preserves the ordinary panel, manual operation and trigger behavior. The other four choices replace the panel with a Data Card reader and take precedence over ordinary manual and redstone opening:
+
+| Security behavior | Door behavior |
+| --- | --- |
+| Stay Inserted | An accepted card holds the door open until removed. |
+| Stay Inserted: Pulse | Insertion opens for five seconds and keeps the card inserted. |
+| Return After Open: Toggle | The scan opens the door and returns the card after one second; another accepted scan at either panel closes it. |
+| Return After Open: Pulse | The scan opens for five seconds and returns the card after one second. |
+
+![Door with a retained security card](images/gallery/version-2.3/door-security-stay-inserted.gif)
+
+![Door scanning and returning a security card](images/gallery/version-2.3/door-security-pulse-return.gif)
+
+Click the seven card icons to choose accepted designs. The plain icon's tooltip is **Any Card**: selecting it accepts the whole card family and keeps an unbranded background. Disable it to restrict access to the selected company cards. Icons have Allowed/Blocked tooltips. A disallowed card stays in the player's hand and briefly flashes an amber X on the reader. Company-only backgrounds cycle every three seconds while a player is nearby.
+
+Right-click anywhere on a secured door leaf with an accepted card to insert it into the reader on that side, including any cell of a large door. Click the panel with an empty hand to remove a retained card. Centered doors can use **Panel: Both**; each reader holds its own physical item, and either side can operate the shared door state. Non-centered doors offer Off or On only.
+
+The allow-list, behavior and panel arrangement are saved and copied with configured items; inserted cards are never duplicated by pick-block. A card awaiting return is retained safely while its owner is offline or has no inventory space. See [Data Card and Data Chip Mounts](data-mounts.md) for the shared reader behavior.

@@ -1,6 +1,6 @@
 # Redstone Transmitter and Receiver
 
-Both blocks use the existing redstone channel bank in their current dimension. Right-click to edit one or more channels. Channel zero means no channel. The port face identifies the only wired connection; the opposite face identifies the transmitter or receiver. Arrows follow signal flow: away from the transmitter's wired input, and toward the receiver's wired output.
+Both blocks use the existing redstone channel bank in their current dimension. Right-click to edit one or more channels. Channel zero means no channel. The port face identifies the only wired connection; the opposite face identifies the transmitter or receiver. The side arrows point toward the physical port on both blocks.
 
 The transmitter reads only the block next to its input port. Analog mode sends its exact strength, from 0 to 15, on each selected channel. Digital mode sends 15 for any positive input and zero otherwise. It never emits wired redstone power.
 

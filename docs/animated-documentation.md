@@ -8,6 +8,8 @@ The recorder changes normal server-side block states or redstone inputs and capt
 
 The encoder uses a shared 256-color palette and a regular 50 ms output timeline for motion clips and 100 ms for signal demonstrations, selecting the nearest real captured pose. It does not interpolate geometry or alter motion speed. GIFs loop continuously; palette colors have less precision than the original screenshots. Viewers that render GIF animations show movement; print/PDF exports may show a still.
 
+The [2.3 feature guide](gallery/version-2.3.md) adds captures of the cockpit screen lift, sliding seat and armrests, Advanced Pilot Chair height steps, card/chip insertion and secured doors. These use the live Minecraft renderers at deterministic animation poses. Motion captures use a 50 ms timeline; the chair-height example holds each discrete setting. Door pulse examples retain the five-second opening window.
+
 ## Reproduce
 
 With the existing testclient runtime installed:

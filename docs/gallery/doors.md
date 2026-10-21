@@ -103,3 +103,11 @@ The small button pad can be shown or hidden. It sits on a jamb and opens the set
 | ![Door with panel](../images/gallery/doors/panel-on.png) | ![Door without panel](../images/gallery/doors/panel-off.png) |
 
 **Trigger: Disabled** keeps manual right-click operation. **Redstone ON** opens while powered; **Redstone OFF** opens while unpowered. Choose a physical signal or a virtual redstone channel. Creative pick-block retains selector settings for another placement; the new placement click sets its initial depth. For pairing, save details, and existing-world behavior, see the [door reference](../space-doors.md).
+
+## Access-card panels in 2.3
+
+Programmable Doors can replace the ordinary panel with an access-card reader. Choose company filters or Any Card, keep the item inserted, or scan and return it with pulse/toggle behavior. Centered doors support a reader on both sides.
+
+![Card-controlled Programmable Door](../images/gallery/version-2.3/door-security-pulse-return.gif)
+
+See [card security settings](../space-doors.md#card-security) for the four behaviors, five-second door pulses, filtering and return handling.

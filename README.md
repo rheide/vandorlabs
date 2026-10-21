@@ -2,9 +2,9 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-Current development version: **2.3**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.3**. See the [2.1 feature highlights](docs/gallery/version-2.1.md), [2.0 feature guide](docs/gallery/version-2.0.md), and [changelog](CHANGELOG.md).
+Current development version: **2.3**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.3**. See the [2.3 feature highlights and animations](docs/gallery/version-2.3.md), [2.1 feature highlights](docs/gallery/version-2.1.md), [2.0 feature guide](docs/gallery/version-2.0.md), and [changelog](CHANGELOG.md).
 
-**2.1 development:** [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
+**Vehicle systems:** [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
 
 Block availability can be configured by category in the generated `config/vandorlabs-blocks.cfg`; see [category settings](docs/block-categories.md). Disabled categories are hidden from creative menus and cannot be crafted, while existing world blocks remain intact.
 
