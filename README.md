@@ -35,7 +35,7 @@ Ramp Controller also offers redstone-controlled **Escalator Up/Down** modes: the
 
 **Version 1.3:** See the [animated highlights and new features](docs/gallery/version-1.3.md), including door, trapdoor and ramp motions, Programmable Storage, the reorganized material catalog and rendering improvements.
 
-Texture choices share a [categorized picker with thumbnails and Custom block/door artwork](docs/unified-materials.md), including door, light and static screen artwork, plus Tech, Hull, Panels, Industrial, Trapdoors, Windows and Storage. New normal and diagonal trapdoors default to Armored Hatch. Add your own categories and PNGs with [filesystem textures](docs/filesystem-textures.md); first startup creates an Example folder and sample panel. Client and server texture folders may differ.
+Texture choices share a [categorized picker with thumbnails and Custom block/door artwork](docs/unified-materials.md), including door, light and static screen artwork, plus Tech, Hull, Panels, Industrial, Trapdoors, Windows and Storage. Browse the [interactive texture catalog](docs/texture-browser/index.html) or the [category collages](docs/texture-overview.md). New normal and diagonal trapdoors default to Armored Hatch. Add your own categories and PNGs with [filesystem textures](docs/filesystem-textures.md); first startup creates an Example folder and sample panel. Client and server texture folders may differ.
 
 See the [screenshot and functionality gallery](docs/gallery/README.md) for a
 visual tour of the programmable blocks, doors, propulsion systems, controls,
