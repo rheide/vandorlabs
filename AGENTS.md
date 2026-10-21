@@ -4,7 +4,7 @@
 - Follow the existing screen, texture-list and door dialogs for layout and interaction conventions. Texture lists must support both wheel scrolling and dragging their scrollbar.
 - Match the mod's established texture resolutions; do not ship oversized textures. Turntable surface artwork may use a larger resolution because it can span multiple blocks.
 - When adding, removing or recategorizing selectable textures, regenerate the docs browser and category collages with `tools/generate_texture_browser.py`, then run it with `--check`. Keep `docs/texture-browser/` and `docs/texture-overview.md` synchronized with the in-game catalogs.
-- Refresh the existing hosted texture browser recorded in `tools/texture_browser_hosting.json` when its generated files change. Stage its assets with `tools/stage_texture_browser_site.py` and publish that same project through the Sites workflow.
+- Host the texture browser through this repository's GitHub Pages site, using `master` and `/docs` as recorded in `tools/texture_browser_hosting.json`. Commit regenerated browser assets with texture changes so Pages publishes the same catalog; no separate hosting checkout or upload is needed.
 
 - Keep finished build artifacts in `build/libs/`. Copy a build elsewhere only when the user explicitly requests a destination.
 - Use Java 8 for Gradle 4.9 builds. Run the live client suite for client-visible or gameplay changes.

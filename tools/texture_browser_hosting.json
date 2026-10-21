@@ -1,5 +1,7 @@
 {
-  "project_id": "appgprj_6ad87d7886148191beca212f30e55bcf",
-  "static": {"directory": "dist"},
-  "url": "https://vandor-labs-textures.cozyaspen7.chatgpt.site"
+  "provider": "github-pages",
+  "repository": "rheide/vandorlabs",
+  "branch": "master",
+  "directory": "/docs",
+  "url": "https://rheide.github.io/vandorlabs/texture-browser/"
 }
