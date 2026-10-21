@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Make the plain credential selector accept Any Card or Any Chip and keep its unbranded background fixed. Slow company logo cycling to three seconds. Batch reader overlays and reuse mounted-item transforms to reduce render calls and per-frame allocations.
+
 - Add animated insert-to-toggle-and-return behavior to Data Card and Data Chip Mounts, with saved output, inventory-safe returns and reload-safe scan progress.
 
 - Add compact Data Card and Data Chip Mounts, with independent design allow-lists, non-consuming filter slots, output channels and continuous/pulse behavior.

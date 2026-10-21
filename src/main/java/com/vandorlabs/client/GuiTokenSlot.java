@@ -34,5 +34,6 @@ public final class GuiTokenSlot extends GuiContainer {
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getDisplayName().getUnformattedText(),12,10,0xffffff);fontRenderer.drawString("Channels",12,69,0xffffff);fontRenderer.drawString("Accepted designs",12,90,0xffffff);}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);GlStateManager.disableLighting();GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
+    @Override protected void renderToolTip(net.minecraft.item.ItemStack stack,int x,int y){if(stack.getMetadata()==0&&stack.getItem() instanceof com.vandorlabs.items.ItemDesignToken)drawHoveringText(java.util.Collections.singletonList(com.vandorlabs.items.ItemDesignToken.filterName(stack)),x,y);else super.renderToolTip(stack,x,y);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

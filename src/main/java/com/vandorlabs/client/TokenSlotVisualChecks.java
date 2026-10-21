@@ -26,8 +26,10 @@ final class TokenSlotVisualChecks {
         int original=tile.behavior;
         try{
             ReaderLogoCycle cycle=new ReaderLogoCycle();int allowed=(1<<1)|(1<<3)|(1<<6);
-            require(cycle.advance(1,allowed,0,true)==1&&cycle.advance(1,allowed,19,true)==1&&cycle.advance(1,allowed,20,true)==3,"one-second allowed-logo cycle");
-            require(cycle.advance(1,allowed,40,false)==3&&cycle.advance(1,allowed,200,true)==3&&cycle.advance(1,allowed,220,true)==6,"logo pauses outside proximity");
+            require(cycle.advance(1,allowed,0,true)==1&&cycle.advance(1,allowed,30,true)==1&&cycle.advance(1,allowed,59,true)==1&&cycle.advance(1,allowed,60,true)==3,"three-second allowed-logo cycle");
+            require(cycle.advance(1,allowed,80,false)==3&&cycle.advance(1,allowed,200,true)==3&&cycle.advance(1,allowed,230,true)==3&&cycle.advance(1,allowed,260,true)==6,"logo pauses outside proximity");
+            require(cycle.advance(3,allowed|1,261,true)==0&&cycle.advance(3,allowed|1,290,true)==0,"Any keeps unbranded background");
+            require(com.vandorlabs.items.ItemDesignToken.filterName(new ItemStack(com.vandorlabs.items.ModItems.DATA_CARD)).equals("Any Card")&&com.vandorlabs.items.ItemDesignToken.filterName(new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP)).equals("Any Chip"),"wildcard selector labels");
             for(int[] size:new int[][]{{320,240},{460,340}})for(int mode=0;mode<4;mode++){
                 tile.behavior=mode;GuiTokenSlot gui=new GuiTokenSlot(new com.vandorlabs.container.ContainerTokenSlot(mc.player.inventory,tile));gui.inventorySlots.windowId=-78;mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
                 require(gui.inventorySlots.inventorySlots.size()==7,"mount dialog contains only seven credential toggles");

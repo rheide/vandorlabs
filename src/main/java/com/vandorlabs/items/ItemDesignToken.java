@@ -17,6 +17,11 @@ public final class ItemDesignToken extends Item {
         setHasSubtypes(true);
         setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
     }
+    /** The unbranded icon represents a wildcard only in credential selectors. */
+    public static String filterName(ItemStack stack){
+        if(stack.getMetadata()==0&&stack.getItem() instanceof ItemDesignToken)return ((ItemDesignToken)stack.getItem()).kind.equals("data_chip")?"Any Chip":"Any Card";
+        return stack.getDisplayName();
+    }
     @Override public String getUnlocalizedName(ItemStack stack){
         int design=stack.getMetadata();
         return "item.vandorlabs."+kind+"."+DESIGNS[design>=0&&design<DESIGNS.length?design:0];

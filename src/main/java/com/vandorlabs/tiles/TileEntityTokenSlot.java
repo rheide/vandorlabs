@@ -25,16 +25,16 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     TileEntityTokenSlot forDoor(TileEntitySpaceDoor owner){door=owner;return this;}
     protected boolean installed(){return world!=null&&world.getTileEntity(pos)==(door==null?this:door);}
     protected int returnPulseTicks(){return door==null?20:100;}
-    public int logoDesign(){if((effectiveAllowed()&(1<<logoDesign))!=0)return logoDesign;for(int i=0;i<7;i++)if((effectiveAllowed()&(1<<i))!=0)return i;return 0;}
+    public int logoDesign(){if((effectiveAllowed()&1)!=0)return 0;if((effectiveAllowed()&(1<<logoDesign))!=0)return logoDesign;for(int i=0;i<7;i++)if((effectiveAllowed()&(1<<i))!=0)return i;return 0;}
     public int effectiveAllowed(){return any?127:allowed;}
-    public void cycleLogo(){int mask=effectiveAllowed();for(int i=1;i<=7;i++){int candidate=(logoDesign()+i)%7;if((mask&(1<<candidate))!=0){logoDesign=candidate;changed(false);return;}}}
+    public void cycleLogo(){int mask=effectiveAllowed();if((mask&1)!=0)return;for(int i=1;i<=7;i++){int candidate=(logoDesign()+i)%7;if((mask&(1<<candidate))!=0){logoDesign=candidate;changed(false);return;}}}
     public static String behaviorName(int mode){return new String[]{"Stay Inserted","Stay Inserted: Pulse","Return After Open: Toggle","Return After Open: Pulse"}[Math.max(0,Math.min(3,mode))];}
 
     public TileEntityTokenSlot(){}
     public TileEntityTokenSlot(boolean chip){this.chip=chip;}
     public boolean chip(){return world!=null&&world.getBlockState(pos).getBlock() instanceof BlockTokenSlot?((BlockTokenSlot)world.getBlockState(pos).getBlock()).chip:chip;}
     public boolean accepts(ItemStack stack){return !stack.isEmpty()&&stack.getItem()==(chip()?ModItems.DATA_CHIP:ModItems.DATA_CARD)&&stack.getMetadata()>=0&&stack.getMetadata()<7;}
-    public boolean authorized(ItemStack stack){return accepts(stack)&&(effectiveAllowed()&(1<<stack.getMetadata()))!=0;}
+    public boolean authorized(ItemStack stack){return accepts(stack)&&((effectiveAllowed()&1)!=0||(effectiveAllowed()&(1<<stack.getMetadata()))!=0);}
     public boolean matches(){return authorized(token);}
     public boolean rejected(){return world!=null&&world.getTotalWorldTime()<rejectedUntil;}
     public void reject(){if(world!=null&&!world.isRemote){rejectedUntil=world.getTotalWorldTime()+12;changed(false);}}

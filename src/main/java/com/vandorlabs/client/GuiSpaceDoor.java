@@ -162,6 +162,6 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override public void drawScreen(int x,int y,float partial) {
         drawDefaultBackground(); super.drawScreen(x,y,partial); channelField.drawTextBox();
-        if(y>=guiTop+SECURITY_CARDS_Y-1 && y<guiTop+SECURITY_CARDS_Y+17 && x>=layout.controlsX && x<layout.controlsX+154){int card=(x-layout.controlsX)/22;if((x-layout.controlsX)%22<18)drawHoveringText(java.util.Arrays.asList(new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,card).getDisplayName(),(securityAllowed&(1<<card))!=0?"Allowed":"Blocked","Click to toggle"),x,y);}
+        if(y>=guiTop+SECURITY_CARDS_Y-1 && y<guiTop+SECURITY_CARDS_Y+17 && x>=layout.controlsX && x<layout.controlsX+154){int card=(x-layout.controlsX)/22;if((x-layout.controlsX)%22<18)drawHoveringText(java.util.Arrays.asList(com.vandorlabs.items.ItemDesignToken.filterName(new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,card)),(securityAllowed&(1<<card))!=0?"Allowed":"Blocked","Click to toggle"),x,y);}
     }
 }
