@@ -2,7 +2,11 @@
 
 ## 2.3
 
-- Automatically retain source and flowing liquids when placing supported walls, glass, portholes, diagonal variants, doors, trapdoors, slabs and stairs in fluid. Respect wet/dry boundaries on the two faces, preserve registered fluid identities and share door-half capture through Forge placement snapshots.
+- Let vanilla sponges absorb contained water from supported Vandor blocks, retaining the blocks and other liquids. Bound absorption to connected water within vanilla sponge reach.
+- Keep one-block-deep door waterlogging in the submerged block; bucket filling, draining, persistence and reversible opening fill operate per block.
+- Include diagonal waterlogged neighbors in native water corner-height calculations to prevent mismatched surfaces around shallow pools.
+
+- Automatically retain source and flowing liquids when placing supported walls, glass, portholes, diagonal variants, doors, trapdoors, slabs and stairs in fluid. Respect wet/dry boundaries on the two faces, preserve registered fluid identities and capture each door block independently through Forge placement snapshots.
 - Join contained water/lava to ordinary world liquid without duplicate boundary faces or false falling-water borders. Clip the native liquid face to the actual wet compartment while retaining exposed faces beside dry compartments.
 - Rebuild adjacent native-fluid meshes when contained-fluid packets fill or drain a side, including across chunk/section boundaries and both door halves.
 - Preserve diagonal thickness faces against solid neighbours and retain glass rim geometry at flat porthole joins. Add rendered contact matrices across shapes, orientations, inversions, fills and frame settings, plus real submerged item-placement and native liquid vertex regressions.
@@ -10,7 +14,7 @@
 
 - Move the outer cockpit keyboard decks and their supports 2.5px toward the pilot to clear the lowered side screens.
 
-- Support contained fluid sides on Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor. Fill open passages from stored or adjacent water and restore the original sides on closing without creating source blocks. Share door-half storage and render diagonal fluid boundaries as continuous planes.
+- Support contained fluid sides on Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor. Fill open passages from stored or adjacent water and restore the original sides on closing without creating source blocks. Keep upper/lower door fluid storage independent and render diagonal fluid boundaries as continuous planes.
 - Reestablish texture units, alpha testing and depth state before drawing cached turntable contents, and synchronize both texture-unit caches when restoring nested render state.
 
 - Preserve Advanced Pilot Chair height when saving pilot controls or reopening the casing page. Synchronize cockpit riders and their camera to the seat timeline instead of periodic mount position packets.

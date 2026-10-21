@@ -39,6 +39,10 @@ Visible fluid follows continuous diagonal surfaces and reaches inset porthole/gl
 
 Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor use the same two-sided bucket storage. A door's upper and lower halves share the stored sides. Sides refer to the closed leaf, so opening or rotating the leaf does not exchange them.
 
-Opening a leaf with water on either side fills its passage with water. This includes directly adjacent world water. Closing restores the original sides: a dry opposite side clears again, while water originally stored on both sides remains. This passage fill stays inside the opening and does not create surrounding source blocks or a second bucket of stored water. Empty buckets drain the actual stored side. A different liquid explicitly stored opposite the water is retained.
+Door fluid storage is per block: the lower block can be waterlogged while the upper block remains dry, or vice versa. Buckets fill or drain the clicked block and side. Placement in shallow water captures only the submerged block.
+
+A dry vanilla sponge also clears stored water from supported Vandor blocks without breaking them or removing other liquids. It follows connected water, with the same seven-block reach and a maximum of 64 visited wet blocks per absorption; the sponge becomes wet after absorbing water.
+
+Opening a leaf with water on either side fills its passage with water at that block height. This includes directly adjacent world water. Closing restores the original sides: a dry opposite side clears again, while water originally stored on both sides remains. This passage fill stays inside the opening and does not create surrounding source blocks or a second bucket of stored water. Empty buckets drain the actual stored side. A different liquid explicitly stored opposite the water is retained.
 
 The diagonal trapdoor uses continuous sloped fluid faces rather than collision slices, keeping its water surface free of horizontal bands. Stored sides survive saves and vehicle capture; the temporary opening fill is derived from the current open state.
