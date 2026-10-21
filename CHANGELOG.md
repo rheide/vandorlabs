@@ -2,6 +2,16 @@
 
 ## 2.3
 
+- Add small cockpit buttons for retracting the whole screen bank and sliding the seat and armrests backwards for exit clearance, with reversible saved motion, blocked-path checks, rear reservations and vehicle support.
+- Lower Advanced Pilot Chair by 6px by default and add +0/+2/+4/+6px height settings for its chair, side rests, controls and rider. Preserve height through configured items and vehicles.
+- Flip new Cockpit placement, use red seat upholstery, enlarge the side screens with a shallower tilt, separate the outer input decks and add an angled center deck. Default to Bridge Bare Pilot/Engineering, Navigation/Sensor Controls and Bare Personal Terminal.
+- Extend seated throttle hit areas to cover the visible grips in all detents, move both levers forward and keep their hit areas independent.
+- Render the cockpit screen bank as one rigid model and cache display corners, status matrices, chair-height meshes and reusable render-state buffers.
+- Add access-card security to Programmable Doors, including centered Both-side panels, company filters, leaf-wide insertion, retained-card and scan-and-return pulse/toggle behaviors.
+- Add directional Redstone Transmitter and Receiver blocks with channel lists, Analog/Digital modes and configurable receiver On/Off levels.
+- Add Security Glass, Ancient Relief and ceiling-tile panel/speaker/light finishes. Correct six-direction light placement and smooth the fluid surfaces and glass recesses of waterlogged wall families.
+- Add a generated texture browser with nested categories, search, previews and category collages, served through repository documentation and GitHub Pages.
+
 - Flip the Redstone Transmitter side arrows while preserving its port and type faces and the Receiver artwork.
 
 - Make the plain credential selector accept Any Card or Any Chip and keep its unbranded background fixed. Slow company logo cycling to three seconds. Batch reader overlays and reuse mounted-item transforms to reduce render calls and per-frame allocations.
@@ -23,7 +33,7 @@
 - Keep temporary entity pauses out of chunk saves and refuse recovery that would overwrite changed block or entity contents.
 
 - Add four turntable surface designs with independent On/Off selectors, and expose all six surface images in the shared Turntable texture category.
-- Restore both cockpit consoles, the chair with side rests and the yoke/screen block to creative menus for testing.
+- Expose Cockpit, Advanced Pilot Chair and Yoke and Screen in creative menus; retire the duplicate Cockpit A identifier.
 - Build captured turntable meshes within a shared frame budget, parse incoming structure NBT on a bounded worker, and stream turntable snapshots in bounded windows.
 - Process vehicle block-update batches within a tick time budget while retaining durable transfer checkpoints.
 - Batch modular landing gear rendering, omit bound member draws, and preserve hull meshes during pose updates. Reuse rigid hull collision geometry and bounded assembly pose caches where supported; index world gear by chunk for collision queries.

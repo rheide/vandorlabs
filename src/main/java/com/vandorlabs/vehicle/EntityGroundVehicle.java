@@ -150,7 +150,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public Vec3d seatPosition(VehiclePose pose,Entity passenger) {
         BlockPos seat=seatForPassenger(passenger);
-        if(view.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityCockpit){com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)view.getTileEntity(seat);Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.data().seat,cockpit.facing());return pose.world(new Vec3d(seat.getX()+at.x,seat.getY()+cockpit.seatHeight()+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+at.z),structure.bounds.maxX/2,structure.bounds.maxZ/2);}
+        if(view.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityCockpit){com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)view.getTileEntity(seat);Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.seatLocation(),cockpit.facing());return pose.world(new Vec3d(seat.getX()+at.x,seat.getY()+cockpit.seatHeight()+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+at.z),structure.bounds.maxX/2,structure.bounds.maxZ/2);}
         return pose.world(new Vec3d(seat.getX()+.5,seat.getY()+VehicleSeats.height(view,seat)+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+.5),structure.bounds.maxX/2,structure.bounds.maxZ/2);
     }
     @Override public AxisAlignedBB getRenderBoundingBox() {

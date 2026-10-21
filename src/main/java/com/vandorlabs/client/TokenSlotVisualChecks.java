@@ -14,6 +14,8 @@ import java.io.File;
 final class TokenSlotVisualChecks {
     private static final BlockPos FIRST=new BlockPos(270,32,142);
     static void build(World world){WaterloggedSurfaceChecks.build(world);
+        BlockPos doorPos=new BlockPos(298,33,142);net.minecraft.block.state.IBlockState door=Block.getBlockFromName("vandorlabs:programmable_door").getDefaultState().withProperty(net.minecraft.block.BlockDoor.FACING,EnumFacing.SOUTH);world.setBlockState(doorPos.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),2);world.setBlockState(doorPos,door,2);world.setBlockState(doorPos.up(),door.withProperty(net.minecraft.block.BlockDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER),2);com.vandorlabs.tiles.TileEntitySpaceDoor secured=(com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(doorPos);secured.setPlacementDepth(0);secured.setPanelMode(2);secured.configureSecurity(2,8);
+
         for(int kind=0;kind<2;kind++)world.setBlockState(new BlockPos(290+kind*2,34,142),Block.getBlockFromName("vandorlabs:redstone_"+(kind==0?"transmitter":"receiver")).getDefaultState(),2);
         for(int kind=0;kind<2;kind++)for(int i=0;i<8;i++){
             BlockPos pos=FIRST.add(i*2,kind*2,0);world.setBlockState(pos.south(),net.minecraft.init.Blocks.STONE.getDefaultState(),2);world.setBlockState(pos,Block.getBlockFromName("vandorlabs:data_"+(kind==0?"card":"chip")+"_slot").getDefaultState(),2);
@@ -37,7 +39,7 @@ final class TokenSlotVisualChecks {
                 javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_token_mount_dialog_"+size[0]+"_"+mode+".png"));
             }
         }finally{tile.behavior=original;mc.displayGuiScreen(previous);if(previous==null)mc.player.openContainer=mc.player.inventoryContainer;}
-        animation(mc,output);WirelessRedstoneVisualChecks.run(mc,output);WaterloggedSurfaceChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] token-mount-dialog PASS small and regular layouts all four behaviors inventory whitelist and channel field");
+        animation(mc,output);SecurityAnimationDocumentation.run(mc,output);WirelessRedstoneVisualChecks.run(mc,output);WaterloggedSurfaceChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] token-mount-dialog PASS small and regular layouts all four behaviors inventory whitelist and channel field");
     }
     private static void animation(Minecraft mc,File output)throws Exception{
         net.minecraft.client.shader.Framebuffer frame=new net.minecraft.client.shader.Framebuffer(320,240,true);

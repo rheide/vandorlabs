@@ -36,7 +36,9 @@ public final class GuiCockpit extends GuiMaterialPicker {
             for(int i=0;i<3;i++)text(i+1,x,guiTop+102+i*28,w,tile.modeChannels(i).toString());
             for(int i=0;i<3;i++)buttonList.add(new CockpitButton(20+i,x+i*w/3,guiTop+ySize-50,w/3-2,20,new String[]{"Block mode","Taxi mode","Hover mode"}[i]));
         }else if(sidePage()){
-            textures=new HousingTextureList(x,guiTop+34,w-8,tile.sideTexture(),8).visibleRows(Math.max(2,(ySize-68)/HousingTextureList.ROW_HEIGHT));
+            int top=tile.design().equals("chair_siderests")?60:34;
+            if(top==60)buttonList.add(new CockpitButton(12,x,guiTop+34,w,20,"Height: +"+(tile.getHeight()*2)+"px"));
+            textures=new HousingTextureList(x,guiTop+top,w-8,tile.sideTexture(),8).visibleRows(Math.max(2,(ySize-top-34)/HousingTextureList.ROW_HEIGHT));
             buttonList.add(new CockpitButton(34,x,guiTop+ySize-26,110,20,"Default casing"));
         }else if(d<tile.displays.size()){
             TileEntityCockpit.Display screen=tile.displays.get(d);boolean input="touch".equals(screen.role);int controlW=Math.min(154,(xSize-30)/2),cx=guiLeft+xSize-controlW-12;
@@ -62,7 +64,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         int d=displayIndex(),c=controlIndex();NBTTagCompound tag;
         if(pilotPage()){if(fields.size()!=4)return;for(GuiTextField f:fields)if(ChannelList.parse(f.getText())==null){f.setTextColor(0xff7777);return;}tag=new NBTTagCompound();tag.setBoolean("Pilot",true);tag.setString("Channels",fields.get(0).getText());tag.setBoolean("Taxi",tile.isTaxiMode());tag.setInteger("Trigger",tile.getRedstoneMode());for(int i=0;i<3;i++)tag.setString("Mode"+i,fields.get(i+1).getText());
         }else if(sidePage()){
-            tag=new NBTTagCompound();tag.setInteger("SideTexture",tile.sideTexture());
+            tag=new NBTTagCompound();tag.setInteger("SideTexture",tile.sideTexture());if(tile.design().equals("chair_siderests"))tag.setInteger("Height",tile.getHeight());
         }else if(d<tile.displays.size()){
             TileEntityCockpit.Display screen=tile.displays.get(d);try{int gate=Integer.parseInt(fields.get(0).getText());if(gate<0 || gate>65535)throw new NumberFormatException();screen.gate=gate;}catch(NumberFormatException bad){fields.get(0).setTextColor(0xff7777);return;}
             tag=screen.write();tag.setInteger("Display",d);
@@ -77,7 +79,8 @@ public final class GuiCockpit extends GuiMaterialPicker {
         if(button.id==0 || button.id==1){save();page=Math.floorMod(page+(button.id==0?-1:1)*GuiOptionCycle.direction(),pages());initGui();return;}
         int d=displayIndex(),c=controlIndex();
         if(button.id==10)tile.setTaxiMode(!tile.isTaxiMode());
-        else if(button.id==11)tile.configure(GuiOptionCycle.next(tile.getRedstoneMode(),3),0,mc.world);
+        else if(button.id==11)tile.configure(GuiOptionCycle.next(tile.getRedstoneMode(),3),tile.getHeight(),mc.world);
+        else if(button.id==12)tile.setHeight(GuiOptionCycle.next(tile.getHeight(),4));
         else if(button.id>=20 && button.id<=22){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Mode",button.id-20);packet(2,tag);return;}
         else if(button.id==30)tile.displays.get(d).animated=!tile.displays.get(d).animated;
         else if(button.id==31)tile.displays.get(d).speed=GuiOptionCycle.next(tile.displays.get(d).speed,1,16);
@@ -89,7 +92,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         save();initGui();
     }
     @Override protected void keyTyped(char ch,int key)throws IOException{boolean consumed=false;for(GuiTextField f:fields)consumed|=f.textboxKeyTyped(ch,key);if(consumed)save();else super.keyTyped(ch,key);}
-    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,30,31,32,40))return;for(GuiTextField f:fields)f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
+    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,12,30,31,32,40))return;for(GuiTextField f:fields)f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
     @Override public void updateScreen(){for(GuiTextField f:fields)f.updateCursorCounter();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);}

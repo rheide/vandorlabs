@@ -79,6 +79,25 @@ public final class CockpitModels {
         });
     }
 
+    /** Cache the four chair heights after skinning; no vertex work during repeated frames. */
+    public static IBakedModel baked(ResourceLocation id,int skin,int height){
+        if(height==3)return baked(id,skin);
+        String key="height/"+id+"/"+skin+"/"+height;
+        IBakedModel found=SKINS.get(key);if(found==null){found=new HeightModel(baked(id,skin),height);SKINS.put(key,found);}return found;
+    }
+    private static final class HeightModel implements IBakedModel {
+        final IBakedModel source;final Map<net.minecraft.util.EnumFacing,List<net.minecraft.client.renderer.block.model.BakedQuad>> sides=new java.util.EnumMap<>(net.minecraft.util.EnumFacing.class);
+        final List<net.minecraft.client.renderer.block.model.BakedQuad> general;
+        HeightModel(IBakedModel source,int height){this.source=source;general=lower(source.getQuads(null,null,0),height);for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values())sides.put(side,lower(source.getQuads(null,side,0),height));}
+        private static List<net.minecraft.client.renderer.block.model.BakedQuad> lower(List<net.minecraft.client.renderer.block.model.BakedQuad> source,int height){
+            List<net.minecraft.client.renderer.block.model.BakedQuad> result=new ArrayList<>();for(net.minecraft.client.renderer.block.model.BakedQuad q:source){int[] data=q.getVertexData().clone();int stride=data.length/4;for(int v=0;v<4;v++){int at=v*stride+1;data[at]=Float.floatToRawIntBits((float)com.vandorlabs.cockpit.CockpitData.chairY(Float.intBitsToFloat(data[at]),height));}result.add(new net.minecraft.client.renderer.block.model.BakedQuad(data,q.getTintIndex(),q.getFace(),q.getSprite(),q.shouldApplyDiffuseLighting(),q.getFormat()));}return result;
+        }
+        public List<net.minecraft.client.renderer.block.model.BakedQuad> getQuads(net.minecraft.block.state.IBlockState state,net.minecraft.util.EnumFacing side,long seed){return side==null?general:sides.get(side);}
+        public boolean isAmbientOcclusion(){return source.isAmbientOcclusion();}public boolean isGui3d(){return source.isGui3d();}public boolean isBuiltInRenderer(){return false;}
+        public net.minecraft.client.renderer.texture.TextureAtlasSprite getParticleTexture(){return source.getParticleTexture();}
+        public net.minecraft.client.renderer.block.model.ItemCameraTransforms getItemCameraTransforms(){return source.getItemCameraTransforms();}
+        public net.minecraft.client.renderer.block.model.ItemOverrideList getOverrides(){return source.getOverrides();}
+    }
     /** Reloads both metadata and models BEFORE atlas stitching, including F3+T. */
     @SubscribeEvent
     public void beforeStitch(TextureStitchEvent.Pre event) {

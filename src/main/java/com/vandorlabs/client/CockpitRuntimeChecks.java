@@ -25,7 +25,7 @@ final class CockpitRuntimeChecks {
             player.setPositionAndUpdate(ROOT.getX()+.5,ROOT.getY()+1,ROOT.getZ()+3);
             for(String id:CockpitData.IDS)for(EnumFacing facing:EnumFacing.HORIZONTALS){
                 clear(world);Block block=Block.getBlockFromName("vandorlabs:"+id);world.setBlockState(ROOT,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing));CockpitAssembly.install(world,ROOT,player);
-                TileEntityCockpit tile=(TileEntityCockpit)world.getTileEntity(ROOT);tile.setTaxiMode(false);tile.setSideTexture(14);
+                TileEntityCockpit tile=(TileEntityCockpit)world.getTileEntity(ROOT);tile.setTaxiMode(false);tile.setSideTexture(14);CockpitMechanismRuntimeChecks.run(world,player,tile);
                 for(BlockPos p:tile.data().cells(ROOT,facing)){require(CockpitAssembly.root(world,p)==tile,"anchor resolution "+id+facing);for(AxisAlignedBB b:CockpitAssembly.boxes(world,p))require(b.minX>=-1e-8 && b.maxX<=1+1e-8 && b.minY>=-1e-8 && b.maxY<=1+1e-8 && b.minZ>=-1e-8 && b.maxZ<=1+1e-8,"clipped collision");}
                 if(id.equals("cockpit")){
                     require(tile.display("touch_center_keyboard")!=null && tile.control("touch_center_keyboard/2")!=null,"new center keyboard");
@@ -89,7 +89,7 @@ final class CockpitRuntimeChecks {
             VehicleScan scan=new VehicleScan(world,ROOT);for(int i=0;i<200 && !scan.step(128);i++);require(scan.error==null && scan.result!=null,"cockpit discovery "+scan.error);require(scan.result.controller()!=null && scan.result.controller().state.getBlock() instanceof BlockCockpit,"combined controller");
             player.setPositionAndUpdate(ROOT.getX()+.5,ROOT.getY()+1,ROOT.getZ()+2);craft=VehicleTransfer.assemble(world,scan.result,scan.origin,player);craft.signals.tick();require(craft.hover,"direct Hover assembly");
             require(passenger.getRidingEntity()==craft&&craft.seatForPassenger(passenger).equals(passengerChair.subtract(scan.origin)),"Programmable Chair passenger transferred to vehicle");
-            TileEntityCockpit captured=(TileEntityCockpit)craft.view.getTileEntity(ROOT.subtract(scan.origin));require(captured!=null && captured.controls.get(0).level==10,"captured controls");captured.controls.get(0).activate(1);craft.signals.cockpitChanged(captured);require(RedstoneChannels.level(world,63000)==15,"captured channel output");
+            TileEntityCockpit captured=(TileEntityCockpit)craft.view.getTileEntity(ROOT.subtract(scan.origin));require(captured!=null && captured.controls.get(0).level==10,"captured controls");CockpitMechanismRuntimeChecks.vehicle(craft,captured,player);captured=(TileEntityCockpit)craft.view.getTileEntity(craft.structure.seat);captured.controls.get(0).activate(1);craft.signals.cockpitChanged(captured);require(RedstoneChannels.level(world,63000)==15,"captured channel output");
             craft.setPosition(craft.posX+1,craft.posY,craft.posZ+1);craft.rotationYaw=90;craft.updatePassenger(passenger);
             Vec3d expectedPassenger=craft.seatPosition(new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw),passenger);require(passenger.getPositionVector().squareDistanceTo(expectedPassenger)<1e-8,"passenger follows vehicle translation and turn");
             craft.rotationYaw=0;craft.setPosition(scan.origin.getX(),scan.origin.getY(),scan.origin.getZ());

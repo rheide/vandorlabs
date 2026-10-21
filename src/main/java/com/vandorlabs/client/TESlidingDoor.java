@@ -197,7 +197,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         GlStateManager.popMatrix();
     }
 
-    private static void renderSpaceDoor(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
+    static void renderSpaceDoor(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
             EnumFacing facing,float progress,double x,double y,double z) {
         if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor){
             GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);

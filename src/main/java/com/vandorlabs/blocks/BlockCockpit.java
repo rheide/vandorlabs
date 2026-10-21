@@ -17,6 +17,7 @@ import java.util.List;
 public final class BlockCockpit extends BlockPilotSeat {
     public final String design;
     public BlockCockpit(String design){super(design);this.design=design;}
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,design.equals("cockpit")?DirectionalPlacement.alongPlayer(placer):DirectionalPlacement.towardPlayer(placer));}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityCockpit(design);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return state;}

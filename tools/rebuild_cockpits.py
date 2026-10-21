@@ -56,8 +56,11 @@ def main():
         shutil.copyfile(PROJECT/'texture-packs/default/assets/vandorlabs/textures/blocks/programmable_glass'/(source+'.png'),geometry.ROOT/'assets/vandorlabs/textures/models/cockpits'/(material+'.png'))
     for model in models:
         for node in model.nodes:
+            if model.id=='cockpit':
+                for box in node['boxes']+node.get('meshes',[]):
+                    if box['material'] in ('cushion','cushion_edge'):box['material']='red_'+box['material']
             # Only the console shell and armrest casing use the selectable skin.
-            casing = node['name'] in ('continuous_console_wall','fascia_solid_apron','fascia_frame','base') or 'armrest' in node['name'] or 'siderest' in node['name'] or model.id == 'chair_siderests' and node['name'] == 'chair' or model.id == 'yoke_screen' and node['name'] == 'screen_center'
+            casing = node['name'] in ('continuous_console_wall','fascia_solid_apron','fascia_frame','screen_bank','seat_assembly','base') or 'armrest' in node['name'] or 'siderest' in node['name'] or model.id == 'chair_siderests' and node['name'] == 'chair' or model.id == 'yoke_screen' and node['name'] == 'screen_center'
             if node['category']=='screen':
                 for primitive in node['boxes']+node.get('meshes',[]):
                     if primitive['material']!='blank':primitive['material']='screen_back'

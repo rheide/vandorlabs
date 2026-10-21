@@ -8,11 +8,14 @@ import java.util.*;
 final class CockpitCollision {
     static List<AxisAlignedBB> slices(JsonObject solid){
         List<Vec3d> vertices=new ArrayList<>();
-        double minX=Double.POSITIVE_INFINITY,maxX=-minX,minZ=minX,maxZ=-minX;
+        double minX=Double.POSITIVE_INFINITY,maxX=-minX,minZ=minX,maxZ=-minX,minY=minX,maxY=-minX;
         for(JsonElement e:solid.getAsJsonArray("vertices_blocks")){
             JsonArray a=e.getAsJsonArray();Vec3d p=new Vec3d(a.get(0).getAsDouble(),a.get(1).getAsDouble(),a.get(2).getAsDouble());
-            vertices.add(p);minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z);
+            vertices.add(p);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z);
         }
+        // The rigid seat group contains ordinary boxes: keep each as one box.
+        // Only genuinely slanted convex solids need the narrow slice path.
+        if(vertices.size()==8){int corners=0;boolean aligned=true;for(Vec3d p:vertices){int bit=0;double[] point={p.x,p.y,p.z},lo={minX,minY,minZ},hi={maxX,maxY,maxZ};for(int axis=0;axis<3;axis++){if(Math.abs(point[axis]-hi[axis])<1e-8)bit|=1<<axis;else if(Math.abs(point[axis]-lo[axis])>=1e-8)aligned=false;}corners|=1<<bit;}if(aligned&&corners==255)return Collections.singletonList(new AxisAlignedBB(minX,minY,minZ,maxX,maxY,maxZ));}
         boolean x=maxX-minX>=maxZ-minZ;double min=x?minX:minZ,max=x?maxX:maxZ;
         int count=Math.max(1,(int)Math.ceil((max-min)*16));List<AxisAlignedBB> boxes=new ArrayList<>();
         for(int i=0;i<count;i++){

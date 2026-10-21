@@ -13,6 +13,7 @@ public final class CockpitData {
     public final String id;
     public final List<BlockPos> cells=new ArrayList<>();
     public final List<AxisAlignedBB> boxes=new ArrayList<>();
+    public final Map<AxisAlignedBB,Integer> moving=new IdentityHashMap<>();
     public final List<Surface> surfaces=new ArrayList<>();
     public final List<String> controls=new ArrayList<>();
     public final Map<String,Vec3d> pivots=new LinkedHashMap<>();
@@ -37,23 +38,42 @@ public final class CockpitData {
         Set<String> convex=new HashSet<>();
         if(assembly.has("collision_convex_solids"))for(JsonElement e:assembly.getAsJsonArray("collision_convex_solids")){
             JsonObject solid=e.getAsJsonObject();convex.add(solid.get("part").getAsString()+"/"+solid.get("mesh").getAsString());
-            boxes.addAll(CockpitCollision.slices(solid));
+            for(AxisAlignedBB b:CockpitCollision.slices(solid))addBox(b,solid.get("part").getAsString());
         }
         for(JsonElement e:assembly.getAsJsonArray("collision_boxes")){
             JsonObject b=e.getAsJsonObject();
             if(!convex.contains(b.get("part").getAsString()+"/"+b.get("box").getAsString())){
                 Vec3d min=vector(b.getAsJsonArray("min")),max=vector(b.getAsJsonArray("max"));
-                boxes.add(new AxisAlignedBB(min.x,min.y,min.z,max.x,max.y,max.z));
+                addBox(new AxisAlignedBB(min.x,min.y,min.z,max.x,max.y,max.z),b.get("part").getAsString());
             }
         }
         for(JsonElement e:json(id,"surfaces").getAsJsonArray("surfaces"))surfaces.add(new Surface(e.getAsJsonObject()));
-        for(JsonElement e:json(id,"rig").getAsJsonArray("parts")){JsonObject part=e.getAsJsonObject();String name=part.get("id").getAsString();controls.add(name);pivots.put(name,vector(part.getAsJsonArray("pivot")));}
+        for(JsonElement e:json(id,"rig").getAsJsonArray("parts")){JsonObject part=e.getAsJsonObject();String name=part.get("id").getAsString();if(!part.has("interactive")||part.get("interactive").getAsBoolean()){controls.add(name);pivots.put(name,vector(part.getAsJsonArray("pivot")));}}
         if(cells.isEmpty() || boxes.isEmpty())throw new IllegalArgumentException("Empty cockpit "+id);
     }
+    private void addBox(AxisAlignedBB box,String part){boxes.add(box);if(id.equals("cockpit")&&(part.equals("seat_assembly")||part.equals("screen_bank")||part.endsWith("_button")))moving.put(box,part.equals("screen_bank")?2:1);}
     public static synchronized CockpitData get(String id){
         if(!Arrays.asList(IDS).contains(id))throw new IllegalArgumentException("Unknown cockpit "+id);
         CockpitData found=CACHE.get(id);if(found==null){found=new CockpitData(id);CACHE.put(id,found);}return found;
     }
+    /** Lower the upper chair by up to six pixels while its support stays on the floor. */
+    public static double chairY(double y,int height){
+        double join=7.4/16D,drop=(3-Math.max(0,Math.min(3,height)))/8D;
+        return y>=join?y-drop:y*(join-drop)/join;
+    }
+    public static synchronized CockpitData get(String id,int height){
+        CockpitData source=get(id);if(!id.equals("chair_siderests")||height==3)return source;
+        int step=Math.max(0,Math.min(3,height));String key=id+"@"+step;
+        CockpitData found=CACHE.get(key);if(found==null){found=new CockpitData(source,step);CACHE.put(key,found);}return found;
+    }
+    private CockpitData(CockpitData source,int height){
+        id=source.id;cells.addAll(source.cells);controls.addAll(source.controls);
+        bounds=lower(source.bounds,height);seat=new Vec3d(source.seat.x,chairY(source.seat.y,height),source.seat.z);riderY=source.riderY-(3-height)/8D;
+        for(AxisAlignedBB b:source.boxes){AxisAlignedBB next=lower(b,height);boxes.add(next);if(source.moving.containsKey(b))moving.put(next,source.moving.get(b));}
+        for(Surface surface:source.surfaces)surfaces.add(new Surface(surface,height));
+        for(Map.Entry<String,Vec3d> part:source.pivots.entrySet()){Vec3d p=part.getValue();pivots.put(part.getKey(),new Vec3d(p.x,chairY(p.y,height),p.z));}
+    }
+    private static AxisAlignedBB lower(AxisAlignedBB b,int height){return new AxisAlignedBB(b.minX,chairY(b.minY,height),b.minZ,b.maxX,chairY(b.maxY,height),b.maxZ);}
     /** Rotate about the kit's fixed (0.5,0,0.5) anchor pivot. */
     public static Vec3d rotate(Vec3d p,EnumFacing facing){
         switch(facing){case EAST:return new Vec3d(1-p.z,p.y,p.x);case SOUTH:return new Vec3d(1-p.x,p.y,1-p.z);case WEST:return new Vec3d(p.z,p.y,1-p.x);default:return p;}
@@ -70,6 +90,7 @@ public final class CockpitData {
         public final Vec3d origin,u,v,normal;
         public final double offset;
         Surface(JsonObject e){id=e.get("id").getAsString();role=e.get("role").getAsString();origin=vector(e.getAsJsonArray("origin_blocks"));u=vector(e.getAsJsonArray("u_vector_blocks"));v=vector(e.getAsJsonArray("v_vector_blocks"));normal=vector(e.getAsJsonArray("normal"));offset=e.get("overlay_offset_blocks").getAsDouble();}
+        Surface(Surface source,int height){id=source.id;role=source.role;origin=new Vec3d(source.origin.x,chairY(source.origin.y,height),source.origin.z);u=source.u;v=source.v;normal=source.normal;offset=source.offset;}
         public Vec3d point(double x,double y){return origin.add(u.scale(x)).add(v.scale(y)).add(normal.scale(offset));}
         /** Returns normalized artwork coordinates for a front-side ray hit. */
         public double[] hit(Vec3d start,Vec3d end){

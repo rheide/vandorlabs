@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL13;
 @SideOnly(Side.CLIENT)
 public final class CockpitRenderer {
     private CockpitRenderer() {}
+    private static final FloatBuffer COLOR_SCRATCH=BufferUtils.createFloatBuffer(16);
 
     /** Each callback result is a position from 0 to 3, including fractions. */
     public static void renderAnimated(String id, double x, double y, double z,
@@ -28,16 +29,21 @@ public final class CockpitRenderer {
     }
     public static void renderAnimated(String id, double x, double y, double z,
             EnumFacing facing, int packedLight, ToDoubleFunction<String> detents,int sideTexture) {
+        renderAnimated(id,x,y,z,facing,packedLight,detents,sideTexture,3);
+    }
+    public static void renderAnimated(String id,double x,double y,double z,EnumFacing facing,int packedLight,ToDoubleFunction<String> detents,int sideTexture,int height){
+        boolean adjustable=id.equals("chair_siderests");
         if (!CockpitModels.ready()) return;
         CockpitModels.Rig rig = CockpitModels.rig(id);
         atAnchor(x, y, z, facing, packedLight, () -> {
             Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer()
-                .renderModelBrightnessColor(CockpitModels.baked(rig.staticResource,sideTexture),1,1,1,1);
+                .renderModelBrightnessColor(adjustable?CockpitModels.baked(rig.staticResource,sideTexture,height):CockpitModels.baked(rig.staticResource,sideTexture),1,1,1,1);
             for (CockpitModels.Part part : rig.parts) {
                 double value = CockpitMotion.sample(part.values, detents.applyAsDouble(part.id));
                 GlStateManager.pushMatrix();
                 try {
-                    GlStateManager.translate(part.pivot[0], part.pivot[1], part.pivot[2]);
+                    if(id.equals("cockpit")&&(part.id.startsWith("throttle_")||part.id.endsWith("_button")))GlStateManager.translate(0,0,detents.applyAsDouble("seat_assembly")/3);
+                    GlStateManager.translate(part.pivot[0],adjustable?com.vandorlabs.cockpit.CockpitData.chairY(part.pivot[1],height):part.pivot[1],part.pivot[2]);
                     if ("rotation".equals(part.type)) {
                         GlStateManager.rotate((float) value, (float) part.axis[0],
                             (float) part.axis[1], (float) part.axis[2]);
@@ -46,7 +52,7 @@ public final class CockpitRenderer {
                             part.axis[1] * value, part.axis[2] * value);
                     }
                     // Part vertices are already local to their pivot; do NOT translate -pivot.
-                    draw(part.modelResource);
+                    Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(CockpitModels.baked(part.modelResource,sideTexture),1,1,1,1);
                 } finally {
                     GlStateManager.popMatrix();
                 }
@@ -87,7 +93,7 @@ public final class CockpitRenderer {
         boolean oldLighting = GL11.glIsEnabled(GL11.GL_LIGHTING);
         boolean oldCull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
         int oldActiveTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-        FloatBuffer oldColor = BufferUtils.createFloatBuffer(16);
+        FloatBuffer oldColor = COLOR_SCRATCH;oldColor.clear();
         GL11.glGetFloat(GL11.GL_CURRENT_COLOR, oldColor);
         GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         boolean oldTexture2D = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);

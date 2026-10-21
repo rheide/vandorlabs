@@ -13,6 +13,32 @@ import java.util.*;
 public class TileEntityCockpit extends TileEntityVehicleController {
     private String design="cockpit";
     private int sideTexture=-1;
+    public final com.vandorlabs.cockpit.CockpitActuator screenLift=new com.vandorlabs.cockpit.CockpitActuator(),seatSlide=new com.vandorlabs.cockpit.CockpitActuator();
+    private long screenButtonUntil,seatButtonUntil;
+    private double lastSeatSlide=-1;
+    private boolean vehicleMotionWasMoving;
+    public boolean motionCompleted(){boolean moving=screenLift.moving(world.getTotalWorldTime())||seatSlide.moving(world.getTotalWorldTime());boolean completed=vehicleMotionWasMoving&&!moving;vehicleMotionWasMoving=moving;return completed;}
+    public String seatBlockReason="";
+    public double screens(float partial){return design.equals("cockpit")&&world!=null?screenLift.sample(world.getTotalWorldTime()+partial):0;}
+    public double seatSlide(float partial){return design.equals("cockpit")&&world!=null?seatSlide.sample(world.getTotalWorldTime()+partial):0;}
+    public Vec3d seatLocation(){return data().seat==null?null:data().seat.addVector(0,0,seatSlide(0));}
+    public double visualDetent(String id,float partial){
+        if(id.equals("screen_lift_button")||id.equals("seat_slide_button")){double remaining=(id.equals("screen_lift_button")?screenButtonUntil:seatButtonUntil)-(world.getTotalWorldTime()+partial);return remaining>0?Math.min(1,remaining/4)*3:0;}
+        if(id.equals("seat_assembly"))return seatSlide(partial)*3;
+        if(id.equals("screen_bank"))return screens(partial)*3;
+        Control c=control(id);return c==null?0:c.level/5D;
+    }
+    public AxisAlignedBB posedBox(AxisAlignedBB box){int part=data().moving.getOrDefault(box,0);return part==1?box.offset(0,0,seatSlide(0)):part==2?box.offset(0,-.75*screens(0),0):box;}
+    private boolean controlClient(){return world==null||(world instanceof VehicleWorld?((VehicleWorld)world).parent.isRemote:world.isRemote);}
+    public boolean toggleSeat(net.minecraft.entity.player.EntityPlayer actor){
+        seatBlockReason="";if(!design.equals("cockpit")||controlClient())return false;
+        if(!com.vandorlabs.cockpit.CockpitReservations.clear(this,actor,seatSlide.target()))return false;
+        NBTTagCompound before=writeToNBT(new NBTTagCompound());
+        seatSlide.toggle(world.getTotalWorldTime());seatButtonUntil=world.getTotalWorldTime()+8;
+        try{com.vandorlabs.cockpit.CockpitReservations.claim(this);if(!(world instanceof VehicleWorld)||((VehicleWorld)world).craft.view.getTileEntity(pos)==this)changed();return true;}catch(IllegalArgumentException blocked){seatBlockReason=blocked.getMessage();readFromNBT(before);changed();if(actor!=null)actor.sendStatusMessage(new net.minecraft.util.text.TextComponentString(blocked.getMessage()),true);return false;}
+    }
+    public void toggleScreens(){if(design.equals("cockpit")&&!controlClient()){screenLift.toggle(world.getTotalWorldTime());screenButtonUntil=world.getTotalWorldTime()+8;if(world instanceof VehicleWorld)com.vandorlabs.vehicle.VehicleCockpits.refreshGeometry(((VehicleWorld)world).craft);changed();}}
+
     public int sideTexture(){return sideTexture;}
     public void setSideTexture(int value){
         if(value< -1 || value>=ScreenHousingTextures.IDS.length)return;
@@ -23,7 +49,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     public TileEntityCockpit(){initializeControls();}
     public TileEntityCockpit(String design){this();this.design=design;prepare();}
     public String design(){return design;}
-    public CockpitData data(){return CockpitData.get(design);}
+    public CockpitData data(){return CockpitData.get(design,getHeight());}
     private EnumFacing lastFacing=EnumFacing.NORTH;
     /** Removal and replacement can precede the renderer's final queued bounds query. */
     public boolean hasLiveBlock(){
@@ -41,11 +67,15 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         if(!displays.isEmpty())return;
         for(CockpitData.Surface surface:data().surfaces){
             Display display=new Display(surface.id,surface.role);
-            display.texture="touch".equals(surface.role)?ScreenHousingTextures.screenIndex("console_inputs/console_controls_communications_keyboard_static"):design.equals("yoke_screen")||surface.id.equals("screen_center")?TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:ScreenHousingTextures.screenIndex("analysis_bare_gas_giant_static");
+            display.texture=defaultTexture(surface);
             displays.add(display);
             for(int row=0;row<3;row++){Control c=new Control(surface.id+"/"+row);controls.add(c);}
         }
         for(String part:data().controls){Control c=new Control(part);c.kind=1;controls.add(c);}
+    }
+    private int defaultTexture(CockpitData.Surface surface){
+        if("touch".equals(surface.role))return ScreenHousingTextures.screenIndex("console_inputs/"+(surface.id.equals("touch_left_forward")?"console_controls_navigation_controls_static":surface.id.equals("touch_right_forward")?"console_controls_sensor_controls_static":surface.id.equals("touch_center_keyboard")?"extra_bare_personal_terminal_static":"console_controls_communications_keyboard_static"));
+        return design.equals("yoke_screen")||surface.id.equals("screen_center")?TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:ScreenHousingTextures.screenIndex(surface.id.equals("screen_left")?"bridge_bare_pilot_static":"bridge_bare_engineering_static");
     }
     public Control control(String id){prepare();for(Control c:controls)if(c.id.equals(id))return c;return null;}
     public Display display(String id){prepare();for(Display d:displays)if(d.id.equals(id))return d;return null;}
@@ -56,29 +86,45 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     @Override public void onChunkUnload(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.onChunkUnload();}
     public boolean expire(long now){boolean changed=false;for(Control c:controls)if(c.until>0 && now>=c.until){c.until=0;c.level=0;if(ordinary())RedstoneChannels.inputChanged(c);changed=true;}if(changed)changed();return changed;}
     public void updatePower(){boolean dirty=false;for(Display d:displays){boolean active=d.gate==0 || (RedstoneChannels.level(world,d.gate)>0)!=d.inverted;if(active!=d.active){d.active=active;dirty=true;}}if(dirty)changed();}
-    @Override public void update(){prepare();if(world==null || world.isRemote)return;expire(world.getTotalWorldTime());updatePower();if(data().seat!=null)super.update();}
+    @Override public void update(){prepare();if(world==null || world.isRemote)return;expire(world.getTotalWorldTime());updatePower();if(design.equals("cockpit")){com.vandorlabs.cockpit.CockpitReservations.tick(this);double slide=seatSlide(0);if(slide!=lastSeatSlide){lastSeatSlide=slide;for(com.vandorlabs.entity.EntityChairSeat mount:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,new AxisAlignedBB(pos).grow(3)))if(pos.equals(mount.getChairPos()))mount.setSeatY(seatHeight());}}if(data().seat!=null)super.update();}
     public boolean use(Vec3d start,Vec3d end){return use(start,end,null);}
     public boolean use(Vec3d start,Vec3d end,net.minecraft.entity.player.EntityPlayer actor){
         prepare();start=CockpitData.unrotate(start,facing());end=CockpitData.unrotate(end,facing());
-        CockpitData.Surface nearest=null;double[] uv=null;
-        for(CockpitData.Surface surface:data().surfaces)if(display(surface.id).active && ("touch".equals(surface.role)&&display(surface.id).texture>=0||display(surface.id).texture<=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)){double[] hit=surface.hit(start,end);if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
-        String throttle=null;double distance=uv==null?Double.POSITIVE_INFINITY:start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2])));
-        for(Map.Entry<String,Vec3d> part:data().pivots.entrySet()){
-            Vec3d p=part.getValue();RayTraceResult hit=new AxisAlignedBB(p.x-.11,p.y-.05,p.z-.26,p.x+.11,p.y+.24,p.z+.26).calculateIntercept(start,end);
-            if(hit!=null && start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);throttle=part.getKey();}
+        if(design.equals("cockpit")){
+            Vec3d buttonStart=start.addVector(0,0,-seatSlide(0)),buttonEnd=end.addVector(0,0,-seatSlide(0));
+            if(new AxisAlignedBB(26.35/16,10.45/16,1.3/16,28.65/16,11.0/16,2.8/16).calculateIntercept(buttonStart,buttonEnd)!=null){toggleScreens();return true;}
+            if(new AxisAlignedBB(2.8/16,10.45/16,9.6/16,5.1/16,11.0/16,11.1/16).calculateIntercept(buttonStart,buttonEnd)!=null){toggleSeat(actor);return true;}
         }
-        if(throttle!=null){Control c=control(throttle);c.activate(((c.level/5+1)%4)/3D);return true;}
+        CockpitData.Surface nearest=null;double[] uv=null;
+        for(CockpitData.Surface surface:data().surfaces)if(display(surface.id).active && ("touch".equals(surface.role)&&display(surface.id).texture>=0||display(surface.id).texture<=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)){double offset="screen".equals(surface.role)?-.75*screens(0):0;double slide=design.equals("cockpit")&&surface.id.equals("touch_right_keyboard")?seatSlide(0):0;double[] hit=surface.hit(start.addVector(0,-offset,-slide),end.addVector(0,-offset,-slide));if(hit!=null&&"screen".equals(surface.role)&&surface.origin.y+surface.u.y*hit[0]+surface.v.y*hit[1]+offset<10.5/16)hit=null;if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
+        ControlHit lever=controlHitLocal(start,end);
+        if(lever!=null&&(uv==null||lever.distance<start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2]))))){Control c=control(lever.id);c.activate(((c.level/5+1)%4)/3D);return true;}
         if(nearest!=null){if(display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){int x=(int)(uv[0]*128),y=(int)((1-uv[1])*("touch".equals(nearest.role)?64:128)),top="touch".equals(nearest.role)?0:24;int action=y>=top&&y<top+10?0:y>=top+12&&y<top+22?1+Math.min(2,Math.max(0,(x-6)/39)):y>=top+36&&y<top+46&&x<48?4:-1;if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);return true;}Control c=control(nearest.id+"/"+Math.min(2,(int)((1-uv[1])*3)));c.activate(uv[0]);return true;}
         return false;
     }
+    private static final class ControlHit {String id;Vec3d point;double distance;ControlHit(String id,Vec3d point,double distance){this.id=id;this.point=point;this.distance=distance;}}
+    private ControlHit controlHitLocal(Vec3d start,Vec3d end){
+        ControlHit nearest=null;
+        for(Map.Entry<String,Vec3d> part:data().pivots.entrySet()){
+            Vec3d p=part.getValue().addVector(0,0,seatSlide(0)),a=start.subtract(p),b=end.subtract(p);boolean throttle=part.getKey().startsWith("throttle_");
+            double angle=throttle?Math.toRadians(22.5-control(part.getKey()).level/5D*22.5):0,c=Math.cos(angle),s=Math.sin(angle);
+            if(throttle){a=new Vec3d(a.x,a.y*c+a.z*s,a.z*c-a.y*s);b=new Vec3d(b.x,b.y*c+b.z*s,b.z*c-b.y*s);}
+            AxisAlignedBB bounds=throttle?new AxisAlignedBB(-.075,-.025,-.078,.075,.335,.078):new AxisAlignedBB(-.085,-.05,-.30,.085,.36,.30);RayTraceResult hit=bounds.calculateIntercept(a,b);
+            if(hit!=null){Vec3d v=hit.hitVec;Vec3d point=(throttle?new Vec3d(v.x,v.y*c-v.z*s,v.y*s+v.z*c):v).add(p);double distance=start.squareDistanceTo(point);if(nearest==null||distance<nearest.distance)nearest=new ControlHit(part.getKey(),point,distance);}
+        }
+        return nearest;
+    }
+    /** Actual grip targeting is shared with activation, including from a seated eye. */
+    public RayTraceResult controlRay(Vec3d start,Vec3d end){ControlHit hit=controlHitLocal(CockpitData.unrotate(start,facing()),CockpitData.unrotate(end,facing()));return hit==null?null:new RayTraceResult(CockpitData.rotate(hit.point,facing()),EnumFacing.UP,pos);}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);tag.setString("CockpitDesign",design);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
+        super.writeToNBT(tag);screenLift.write(tag,"CockpitScreenLift");seatSlide.write(tag,"CockpitSeatSlide");tag.setLong("CockpitScreenButton",screenButtonUntil);tag.setLong("CockpitSeatButton",seatButtonUntil);tag.setString("CockpitDesign",design);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
         NBTTagList screens=new NBTTagList();for(Display d:displays)screens.appendTag(d.write());tag.setTag("CockpitDisplays",screens);
         NBTTagList outputs=new NBTTagList();for(Control c:controls)outputs.appendTag(c.write());tag.setTag("CockpitControls",outputs);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
         if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);
         super.readFromNBT(tag);design=tag.hasKey("CockpitDesign",8)?tag.getString("CockpitDesign"):design;CockpitData.get(design);
+        screenLift.read(tag,"CockpitScreenLift");seatSlide.read(tag,"CockpitSeatSlide");screenButtonUntil=tag.getLong("CockpitScreenButton");seatButtonUntil=tag.getLong("CockpitSeatButton");
         sideTexture=tag.hasKey("CockpitSideTexture",3)?tag.getInteger("CockpitSideTexture"):-1;
         if(sideTexture< -1 || sideTexture>=ScreenHousingTextures.IDS.length)sideTexture=-1;
         displays.clear();controls.clear();prepare();

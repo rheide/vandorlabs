@@ -131,9 +131,11 @@ public final class VehicleSignals {
         }
         }
         for(TileEntityWirelessRedstone port:wirelessPorts)if(port.transmitter())port.sampleInput();
-        for(TileEntityCockpit cockpit:new ArrayList<>(cockpits)){
+        boolean cockpitGeometry=false;
+        for(TileEntityCockpit cockpit:new ArrayList<>(cockpits)){cockpitGeometry|=cockpit.motionCompleted();
             cockpit.updatePower();if(cockpit.expire(craft.world.getTotalWorldTime()))for(TileEntityCockpit.Control control:cockpit.controls){Link link=links.get(control);if(link!=null)RedstoneChannels.inputChanged(link);}
         }
+        if(cockpitGeometry)VehicleCockpits.refreshGeometry(craft);
         for(TileEntitySpaceDoor door:new ArrayList<>(securityDoors))if(door.securityMode()>0){
             for(int side=0;side<2;side++)if(door.keyReader(side).expire(craft.world.getTotalWorldTime()))dirty.add(door.getPos());
             boolean open=door.securityOpen();

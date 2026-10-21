@@ -942,7 +942,7 @@ public class ReproLab {
                 save(mc, s);
                 if(s.name.equals("utility22_blocks"))try{StorageStatusVisualChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("storage meters",failure);}
                 if(s.name.equals("utility22_card_mounts"))try{TokenSlotVisualChecks.gui(mc,outDir);}catch(Exception failure){throw new IllegalStateException("token mount dialog",failure);}
-                if(s.name.equals("utility22_cockpit_0"))try{CockpitDialogRuntimeChecks.run(mc,outDir);TurntablePerformanceRuntimeChecks.render(mc,outDir);}catch(Exception failure){throw new IllegalStateException("cockpit dialogs",failure);}
+                if(s.name.equals("utility22_cockpit_0"))try{CockpitDialogRuntimeChecks.run(mc,outDir);CockpitAnimationDocumentation.run(mc,outDir);TurntablePerformanceRuntimeChecks.render(mc,outDir);}catch(Exception failure){throw new IllegalStateException("cockpit dialogs",failure);}
                 if(s.name.equals("turntable_floor"))try{TurntableDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("turntable dialog",failure);}
                 if(s.name.equals("modular_gear_0_deployed"))try{ModularGearDialogRuntimeChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("modular gear dialog",failure);}
                 if(s.name.equals("modular_gear_3_deployed"))try{ModularWheelVisualChecks.run(mc,outDir);}catch(Exception failure){throw new IllegalStateException("modular wheel animation",failure);}
@@ -960,7 +960,7 @@ public class ReproLab {
                             : CAPTURE_SETTLE_TICKS;
                 } else {
                     writeManifest();
-                    if(System.getProperty("vandorlabs.reproShotPrefix","").equals("utility22_card_mounts")){
+                    if(System.getProperty("vandorlabs.reproShotPrefix","").equals("utility22_card_mounts")||System.getProperty("vandorlabs.reproShotPrefix","").equals("utility22_cockpit")){
                         state=999;mc.shutdown();return;
                     }
                     if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {

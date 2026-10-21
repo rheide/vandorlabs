@@ -191,7 +191,7 @@ def add_continuous_fascia(m, large):
     front_z = -11.5 if large else -11.75
     chain = ([(2.5, -4), (10, front_z), (22, front_z), (29.5, -4)] if large else
              [(2.25, -3.75), (9.5, front_z), (22.5, front_z), (29.75, -3.75)])
-    pitch, height, depth = (-12 if large else -10), 8, .8
+    pitch, height, depth = (-4 if large else -4), 8, .8
     pivot = vec([16, 13, front_z])
     bank_rotation = rotation([pitch, 0, 0])
     directions = [vec([b[0]-a[0], b[1]-a[1]]) for a,b in zip(chain, chain[1:])]
@@ -223,7 +223,7 @@ def add_continuous_fascia(m, large):
         angles = matrix_euler(bank_rotation @ rotation([0, yaw, 0]))
         name = 'screen_'+label
         n = m.node(name, origin, angles, category='screen')
-        margin_x, margin_y = .45, .55
+        margin_x, margin_y = .22, .30
         m.box(n, name+'_black', [-width/2+margin_x, margin_y, .015],
               [width/2-margin_x, height-margin_y, .035], 'blank')
         m.surfaces.append({'id': name, 'role': 'screen', 'node': name,
@@ -238,11 +238,15 @@ def add_continuous_fascia(m, large):
                        'black_inset_model_pixels': [margin_x, margin_y]})
         if label != 'center':
             # A flush rectangular touch inset in the solid common ledge.
-            touch_node = m.node('touch_ledge_'+label, [midpoint[0], 0, midpoint[1]], [0, yaw, 0])
+            touch_node = m.node('touch_ledge_'+label, [midpoint[0]+(-1.25 if label=='left' else 1.25), 0, midpoint[1]], [0, yaw, 0])
             m.touch(touch_node, 'touch_'+label+'_forward', -width/2+.8, width/2-.8,
                     1.0, 1.0+(width-1.6)/2, 10.5, rim=.18)
-    n = m.node('center_input')
-    m.touch(n, 'touch_center_keyboard', 12, 20, -10.2, -6.2, 10.5, rim=.18)
+    # A shallow angled half-console input deck, with a solid wedge into the ledge.
+    n = m.node('center_input', [16,11.5,-8.2], [22.5,0,0])
+    m.touch(n, 'touch_center_keyboard', -4, 4, -2, 2, 0, rim=.18)
+    deck = np.asarray([[-4.18,-.08,-2.18],[4.18,-.08,-2.18],[4.18,-.08,2.18],[-4.18,-.08,2.18]]) @ rotation([22.5,0,0]).T + vec(n['origin'])
+    support=m.node('center_input_base')
+    m.prism(support,'center_keyboard_wedge',[(p[0],p[2]) for p in deck],10.5,deck[:,1].tolist(),'housing')
     m.design_contract['screen_band'] = {
         'construction': 'Three mitered facets with exactly shared frame edges, tilted as one bank',
         'facet_order': ['screen_left', 'screen_center', 'screen_right'],
@@ -294,9 +298,9 @@ def cockpit(identifier, large):
             lever_x = [4.15] if large else [2.15, 5.25]
             for index, x in enumerate(lever_x):
                 name = 'throttle_left' if index == 0 else 'throttle_right'
-                m.box(n, name+'_slot_rim', [x-.9,10.5,1.8], [x+.9,10.65,9.0], 'frame')
-                m.box(n, name+'_slot', [x-.68,10.65,2.0], [x+.68,10.675,8.8], 'slot')
-                add_lever(m, name, x, 5.5)
+                m.box(n, name+'_slot_rim', [x-.9,10.5,.5], [x+.9,10.65,7.7], 'frame')
+                m.box(n, name+'_slot', [x-.68,10.65,.7], [x+.68,10.675,7.5], 'slot')
+                add_lever(m, name, x, 4.2)
         else:
             xmax_panel = xmax-(1.05 if large else .85)
             panel_depth = xmax_panel-xmin-.75
@@ -305,6 +309,30 @@ def cockpit(identifier, large):
             panel['origin']=[xmin+.75,10.615,3.0]
             panel['u']=[0,0,panel_depth*2];panel['v']=[panel_depth,0,0]
     add_continuous_fascia(m, large)
+    # One rigid moving bank avoids a separate model and draw for every display.
+    bank=m.node('screen_bank',animation={'type':'translation','axis':[0,1,0],'values':[0,-4,-8,-12]},category='moving_screen')
+    for node in list(m.nodes):
+        if node['name']=='fascia_frame' or node['name'] in ('screen_left','screen_center','screen_right'):
+            matrix,offset=node_transform(node,neutral=True)
+            for primitive in node['boxes']+node.get('meshes',[]):
+                vertices=corners(primitive) @ matrix.T + offset
+                faces=primitive['faces'] if 'vertices' in primitive else [indices for _,indices,_ in FACES]
+                m.mesh(bank,node['name']+'_'+primitive['name'],vertices,faces,primitive['material'])
+            node['boxes']=[];node['meshes']=[]
+    for name,x,z in [('screen_lift_button',27.5,2.05),('seat_slide_button',3.95,10.35)]:
+        support=m.node(name+'_rim')
+        m.box(support,name+'_bezel',[x-1.15,10.5,z-.75],[x+1.15,10.65,z+.75],'mechanism')
+        button=m.node(name,[x,10.7,z],animation={'type':'translation','axis':[0,-1,0],'values':[0,.15,.3,.45]},category='mechanism_button')
+        m.box(button,name+'_cap',[-.9,0,-.55],[.9,.30,.55],'amber')
+    seat_assembly=m.node('seat_assembly',animation={'type':'translation','axis':[0,0,1],'values':[0,16/3,32/3,16]},category='moving_seat')
+    for node in list(m.nodes):
+        if node['name'] in ('chair','armrest_left','armrest_right','screen_lift_button_rim','seat_slide_button_rim'):
+            matrix,offset=node_transform(node,neutral=True)
+            for primitive in node['boxes']+node.get('meshes',[]):
+                vertices=corners(primitive) @ matrix.T + offset
+                faces=primitive['faces'] if 'vertices' in primitive else [indices for _,indices,_ in FACES]
+                m.mesh(seat_assembly,node['name']+'_'+primitive['name'],vertices,faces,primitive['material'])
+            node['boxes']=[];node['meshes']=[]
     m.design_contract['console_shell'] = {
         'construction': 'Solid floor-to-deck U wall with shared section faces and one common floor plinth',
         'deck_height_model_pixels': 10.5,
@@ -581,7 +609,7 @@ def export_model(m):
             a = n['animation']
             rig['parts'].append({'id':n['name'], 'model':resource+n['name']+'.obj',
                                  'pivot':(vec(n['origin'])/16).tolist(), 'type':a['type'], 'axis':a['axis'],
-                                 'values':a['values'] if a['type']=='rotation' else (vec(a['values'])/16).tolist()})
+                                 'values':a['values'] if a['type']=='rotation' else (vec(a['values'])/16).tolist(), 'interactive':n['category']=='moving_control'})
     runtime = ROOT/'assets/vandorlabs/cockpits'/m.id
     write_json(runtime/'rig.json', rig)
     write_json(runtime/'surfaces.json', {'schema_version':1, 'model':m.id, 'units':'blocks', 'surfaces':world_surfaces(m)})

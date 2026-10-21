@@ -14,8 +14,8 @@
     0.0,
     -0.96875,
     1.984375,
-    1.39172797,
-    0.91875
+    1.34616026,
+    1.91875
   ],
   "parts": [
     {
@@ -24,7 +24,7 @@
       "pivot": [
         0.134375,
         0.66875,
-        0.34375
+        0.2625
       ],
       "type": "rotation",
       "axis": [
@@ -37,7 +37,8 @@
         0,
         -22.5,
         -45
-      ]
+      ],
+      "interactive": true
     },
     {
       "id": "throttle_right",
@@ -45,7 +46,7 @@
       "pivot": [
         0.328125,
         0.66875,
-        0.34375
+        0.2625
       ],
       "type": "rotation",
       "axis": [
@@ -58,7 +59,96 @@
         0,
         -22.5,
         -45
-      ]
+      ],
+      "interactive": true
+    },
+    {
+      "id": "screen_bank",
+      "model": "vandorlabs:block/cockpits/cockpit/screen_bank.obj",
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "values": [
+        0.0,
+        -0.25,
+        -0.5,
+        -0.75
+      ],
+      "interactive": false
+    },
+    {
+      "id": "screen_lift_button",
+      "model": "vandorlabs:block/cockpits/cockpit/screen_lift_button.obj",
+      "pivot": [
+        1.71875,
+        0.66875,
+        0.128125
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        -1,
+        0
+      ],
+      "values": [
+        0.0,
+        0.009375,
+        0.01875,
+        0.028125
+      ],
+      "interactive": false
+    },
+    {
+      "id": "seat_slide_button",
+      "model": "vandorlabs:block/cockpits/cockpit/seat_slide_button.obj",
+      "pivot": [
+        0.246875,
+        0.66875,
+        0.646875
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        -1,
+        0
+      ],
+      "values": [
+        0.0,
+        0.009375,
+        0.01875,
+        0.028125
+      ],
+      "interactive": false
+    },
+    {
+      "id": "seat_assembly",
+      "model": "vandorlabs:block/cockpits/cockpit/seat_assembly.obj",
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "values": [
+        0.0,
+        0.3333333333333333,
+        0.6666666666666666,
+        1.0
+      ],
+      "interactive": false
     }
   ]
 }

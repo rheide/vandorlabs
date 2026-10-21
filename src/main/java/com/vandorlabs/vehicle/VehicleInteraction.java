@@ -73,7 +73,7 @@ public final class VehicleInteraction {
             com.vandorlabs.tiles.TileEntityCockpit tile=com.vandorlabs.cockpit.CockpitAssembly.root(craft.view,target.hit.cell.pos);if(tile==null)return false;
             if(player.isSneaking() || player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER){com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;}
             Vec3d start=craft.toLocal(player.getPositionEyes(1)).subtract(new Vec3d(tile.getPos())),end=craft.toLocal(player.getPositionEyes(1).add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(8))).subtract(new Vec3d(tile.getPos()));
-            if(tile.use(start,end,player)){craft.signals.cockpitChanged(tile);return true;}if(tile.data().seat!=null && player.getRidingEntity()!=craft){craft.board(player,tile.getPos());return true;}com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;
+            if(tile.use(start,end,player)){if(craft.view.getTileEntity(tile.getPos())==tile)craft.signals.cockpitChanged(tile);return true;}if(tile.data().seat!=null && player.getRidingEntity()!=craft){craft.board(player,tile.getPos());return true;}com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;
         }
         if(player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER) {
             if(target.hit.action==VehicleSelection.Action.BOARD && target.hit.cell.state.getBlock() instanceof BlockPilotSeat){BlockPos seat=VehicleSeats.lower(target.hit.cell.state,target.hit.cell.pos);VehicleService.previewSeat(server,craft,seat);}

@@ -15,7 +15,7 @@ final class GuiOptionCycleRuntimeChecks {
         if(gui instanceof GuiProgrammableLight)ids=new int[]{101,102,103,104};
         else if(gui instanceof GuiWirelessRedstone)ids=new int[]{1,2};
         else if(gui instanceof GuiTokenSlot)ids=new int[]{1};
-        else if(gui instanceof GuiCockpit)ids=new int[]{0,1,10,11,30,31,32,40};
+        else if(gui instanceof GuiCockpit)ids=new int[]{0,1,10,11,12,30,31,32,40};
         else if(gui instanceof GuiSpaceDoor)ids=new int[]{10,11,12,13,15,16,17,18,19};
         else if(gui instanceof GuiProgrammableTrapdoor)ids=new int[]{1,3,6,9};
         else if(gui instanceof GuiProgrammableWall)ids=new int[]{101,103,104,113,114,115,116};

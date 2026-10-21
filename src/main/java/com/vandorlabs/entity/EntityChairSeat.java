@@ -52,7 +52,7 @@ public class EntityChairSeat extends Entity {
     private void cockpitOffset(){
         if(chairPos==null || !(world.getTileEntity(chairPos) instanceof com.vandorlabs.tiles.TileEntityCockpit))return;
         com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)world.getTileEntity(chairPos);if(cockpit.data().seat==null)return;
-        net.minecraft.util.math.Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.data().seat,cockpit.facing());setPosition(chairPos.getX()+at.x,posY,chairPos.getZ()+at.z);
+        net.minecraft.util.math.Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.seatLocation(),cockpit.facing());setPosition(chairPos.getX()+at.x,posY,chairPos.getZ()+at.z);
     }
 
     @Override
