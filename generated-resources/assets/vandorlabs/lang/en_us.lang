@@ -548,8 +548,7 @@ tile.vandorlabs.ski_landing_gear.name=Ski Landing Gear
 tile.vandorlabs.landing_strut.name=Landing Strut
 tile.vandorlabs.angled_landing_strut.name=Angled Landing Strut
 
-tile.vandorlabs.cockpit_a.name=Cockpit A
-tile.vandorlabs.cockpit_b.name=Cockpit B
+tile.vandorlabs.cockpit.name=Cockpit
 tile.vandorlabs.chair_siderests.name=Advanced Pilot Chair
 tile.vandorlabs.yoke_screen.name=Yoke and Screen
 
@@ -589,3 +588,6 @@ tile.vandorlabs.large_gear_mount.name=Large Landing Gear Mount
 
 tile.vandorlabs.data_card_slot.name=Data Card Mount
 tile.vandorlabs.data_chip_slot.name=Data Chip Mount
+
+tile.vandorlabs.redstone_transmitter.name=Redstone Transmitter
+tile.vandorlabs.redstone_receiver.name=Redstone Receiver

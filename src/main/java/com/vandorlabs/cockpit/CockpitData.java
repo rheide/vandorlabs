@@ -8,7 +8,7 @@ import java.util.*;
 
 /** Server-safe authored reservation, seating, collision and interactive planes. */
 public final class CockpitData {
-    public static final String[] IDS={"cockpit_a","cockpit_b","chair_siderests","yoke_screen"};
+    public static final String[] IDS={"cockpit","chair_siderests","yoke_screen"};
     private static final Map<String,CockpitData> CACHE=new HashMap<>();
     public final String id;
     public final List<BlockPos> cells=new ArrayList<>();

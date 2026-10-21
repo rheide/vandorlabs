@@ -35,6 +35,8 @@ MAT = {
     'amber_dark': [163, 109, 34],
     'blank': [0, 0, 0],
     'sidewall': [53, 61, 73],
+    'screen_back': [35, 41, 50],
+    'horizontal': [53, 61, 73],
     'red_cushion': [158, 38, 42],
     'red_cushion_edge': [112, 26, 31],
 }
@@ -251,7 +253,7 @@ def add_continuous_fascia(m, large):
 
 
 def cockpit(identifier, large):
-    m = Model(identifier, 'A — Fighter cockpit' if large else 'B — Interceptor cockpit',
+    m = Model(identifier, 'Cockpit',
               'Complete two-by-two cockpit: one solid U-shaped console wall, a joined three-facet blank screen bank, integrated chair, rectangular touch insets, center yoke and animated throttles.')
     plinth = m.node('assembly_floor')
     m.box(plinth, 'shared_floor_plinth', [.25, 0, -15.5], [31.75, .65, 14.7], 'housing_dark')
@@ -379,6 +381,11 @@ def export_obj(m, path, detent=0, static_only=False, moving_only=None):
         for indices in faces:
             norm = np.cross(verts[indices[1]]-verts[indices[0]], verts[indices[2]]-verts[indices[0]])
             norm /= np.linalg.norm(norm)
+            material=box['material']
+            if (node['name']=='fascia_frame' or node['name'].startswith('screen_')) and norm[2]<-.2 and material!='blank':material='screen_back'
+            if norm[1]>.7 and material in ('housing','housing_dark','frame','sidewall','screen_back'):
+                material='horizontal'
+            out.append('usemtl '+material)
             out.append('vn '+' '.join(f'{x:.8f}' for x in norm))
             vn_count += 1
             out.append('f '+' '.join(f'{v_count+i+1}/{vt_count+j+1}/{vn_count}' for j, i in enumerate(indices)))
@@ -461,7 +468,7 @@ def model_metadata(m):
         'collision_note': 'Per-part AABBs are broad-phase bounds. The angled wall AABBs overestimate the footwell; use collision_convex_solids to derive tighter cell-local collision shapes. Do not make the full multiblock one solid collision box.',
         'design_contract': copy.deepcopy(m.design_contract),
     }
-    if m.id in ('cockpit_a', 'cockpit_b'):
+    if m.id in ('cockpit',):
         # Derived from the source-verified vanilla 1.12.2 riding reference.
         # The entity origin and cushion/hip points are intentionally distinct.
         hip = vec([16, 12.04, 9.3])/16
@@ -607,7 +614,7 @@ def write_catalog(catalog):
 
 def build_all():
     texture_files()
-    models = [cockpit('cockpit_a',True),cockpit('cockpit_b',False)]
+    models = [cockpit('cockpit',False)]
     catalog = [export_model(m) for m in models]
     write_catalog(catalog)
     return models,catalog

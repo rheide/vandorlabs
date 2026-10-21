@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "id": "cockpit_b",
+  "id": "cockpit",
   "units_per_block": 16,
-  "static_model": "vandorlabs:block/cockpits/cockpit_b/static.obj",
+  "static_model": "vandorlabs:block/cockpits/cockpit/static.obj",
   "poses": {
-    "off": "vandorlabs:block/cockpits/cockpit_b/off.obj",
-    "low": "vandorlabs:block/cockpits/cockpit_b/low.obj",
-    "medium": "vandorlabs:block/cockpits/cockpit_b/medium.obj",
-    "high": "vandorlabs:block/cockpits/cockpit_b/high.obj"
+    "off": "vandorlabs:block/cockpits/cockpit/off.obj",
+    "low": "vandorlabs:block/cockpits/cockpit/low.obj",
+    "medium": "vandorlabs:block/cockpits/cockpit/medium.obj",
+    "high": "vandorlabs:block/cockpits/cockpit/high.obj"
   },
   "render_bounds_blocks": [
     0.015625,
@@ -20,7 +20,7 @@
   "parts": [
     {
       "id": "throttle_left",
-      "model": "vandorlabs:block/cockpits/cockpit_b/throttle_left.obj",
+      "model": "vandorlabs:block/cockpits/cockpit/throttle_left.obj",
       "pivot": [
         0.134375,
         0.66875,
@@ -41,7 +41,7 @@
     },
     {
       "id": "throttle_right",
-      "model": "vandorlabs:block/cockpits/cockpit_b/throttle_right.obj",
+      "model": "vandorlabs:block/cockpits/cockpit/throttle_right.obj",
       "pivot": [
         0.328125,
         0.66875,

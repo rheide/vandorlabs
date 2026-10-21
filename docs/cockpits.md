@@ -1,12 +1,12 @@
 # Cockpits and peripheral controls
 
-Cockpit A, Cockpit B, Advanced Pilot Chair, and Yoke and Screen are available in the creative menu.
+Cockpit, Advanced Pilot Chair and Yoke and Screen are available in the creative menu.
 
-Cockpit A and Cockpit B combine a Pilot Seat, vehicle mode controls, independent
+Cockpit combines a Pilot Seat, vehicle mode controls, independent
 screens and touch panels, and physical throttle controls. Advanced Pilot Chair provides a smaller seated arrangement with red upholstery. Yoke and Screen is a standalone
 peripheral and does not add a passenger seat to a vehicle.
 
-Both cockpit consoles have continuous shells, tilted screen banks and a center
+The cockpit console has a continuous shell, a tilted screen bank and a center
 keyboard touch panel. Existing display and output settings follow their surface
 identities when the console geometry is updated; new panels start with defaults.
 
@@ -20,9 +20,11 @@ Use the arrows to select the Pilot page, the sidewall and armrest casing picker,
 animation toggle and optional ON/OFF channel gate. Channel zero leaves a surface
 enabled continuously.
 
-Unconfigured touch areas are black and inactive. All touch areas use a 2:1 aspect ratio for half-height keyboard artwork. The right armrest has one rectangular touch area facing the seat; Cockpit A and B have no left-armrest touch panel, and their throttle assemblies sit farther forward.
+Touch areas default to animated keyboard artwork and use a 2:1 aspect ratio. Selecting Blank makes a surface black and inactive. The right armrest has one rectangular touch area facing the seat; the cockpit has no left-armrest touch panel, and its throttle assemblies sit forward. Keyboard artwork has no numeric output overlay.
 
-Each configured touch panel contains three independent rows. Configure their labels, output
+The center cockpit screen and the Yoke and Screen display default to Vehicle Status. The other cockpit screens default to animated screen artwork. Surface pickers include Redstone and Vehicle Status modes and support wheel scrolling and scrollbar dragging. Screen backs use Door Interior (Dark), horizontal casing surfaces use Glass Frame Interior, and the casing selector controls the remaining sidewalls.
+
+Each touch panel has three independent input rows. Redstone mode displays their labels and controls; other artwork remains unobstructed. Configure output
 channels and control type: toggle, four-position slider (0, 5, 10, 15), or a
 one-second pulse. Operate a row directly on the model. Physical throttles cycle
 through the same four levels, and their output channels can operate separately

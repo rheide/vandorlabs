@@ -109,6 +109,24 @@ d 1.0
 illum 1
 map_Kd vandorlabs:models/cockpits/sidewall
 
+newmtl screen_back
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 0
+d 1.0
+illum 1
+map_Kd vandorlabs:models/cockpits/screen_back
+
+newmtl horizontal
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 0
+d 1.0
+illum 1
+map_Kd vandorlabs:models/cockpits/horizontal
+
 newmtl red_cushion
 Ka 1.0 1.0 1.0
 Kd 1.0 1.0 1.0

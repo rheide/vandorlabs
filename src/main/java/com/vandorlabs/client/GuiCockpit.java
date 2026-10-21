@@ -10,11 +10,12 @@ import java.io.IOException;
 import java.util.*;
 
 /** One dialog with a separate page for the seat, every surface and every output. */
-public final class GuiCockpit extends GuiContainer {
+public final class GuiCockpit extends GuiMaterialPicker {
     private final ContainerCockpit cockpit;
     private final TileEntityCockpit tile;
     private final List<GuiTextField> fields=new ArrayList<>();
     private HousingTextureList textures;
+    @Override protected HousingTextureList materialPicker(){return textures;}
     private int page;
     private boolean seating(){return tile.data().seat!=null;}
     private boolean pilotPage(){return seating()&&page==0;}
@@ -40,7 +41,8 @@ public final class GuiCockpit extends GuiContainer {
         }else if(d<tile.displays.size()){
             TileEntityCockpit.Display screen=tile.displays.get(d);boolean input="touch".equals(screen.role);int controlW=Math.min(154,(xSize-30)/2),cx=guiLeft+xSize-controlW-12;
             textures=new HousingTextureList(x,guiTop+34,cx-x-10,screen.texture,Math.max(3,(ySize-72)/HousingTextureList.ROW_HEIGHT),null,
-                    value->HousingTextureList.generalTexture(value) || ScreenTextureList.artwork(value,input)).visibleRows(Math.max(2,(ySize-68)/HousingTextureList.ROW_HEIGHT)).custom(this::choose);
+                    value->HousingTextureList.generalTexture(value) || ScreenTextureList.artwork(value,input)).visibleRows(Math.max(2,(ySize-68)/HousingTextureList.ROW_HEIGHT)).custom(this::choose)
+                    .redstone(()->choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)).vehicle(()->choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE));
             buttonList.add(new CockpitButton(30,cx,guiTop+34,controlW,20,"Animation: "+(screen.animated?"On":"Off")));
             buttonList.add(new CockpitButton(31,cx,guiTop+58,controlW,20,"Speed: "+screen.speed));
             text(0,cx,guiTop+94,controlW,Integer.toString(screen.gate));
@@ -72,24 +74,22 @@ public final class GuiCockpit extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton button){
         if(button.id==2){save();mc.player.closeScreen();return;}
-        if(button.id==0 || button.id==1){save();page=Math.floorMod(page+(button.id==0?-1:1),pages());initGui();return;}
+        if(button.id==0 || button.id==1){save();page=Math.floorMod(page+(button.id==0?-1:1)*GuiOptionCycle.direction(),pages());initGui();return;}
         int d=displayIndex(),c=controlIndex();
         if(button.id==10)tile.setTaxiMode(!tile.isTaxiMode());
-        else if(button.id==11)tile.configure((tile.getRedstoneMode()+1)%3,0,mc.world);
+        else if(button.id==11)tile.configure(GuiOptionCycle.next(tile.getRedstoneMode(),3),0,mc.world);
         else if(button.id>=20 && button.id<=22){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Mode",button.id-20);packet(2,tag);return;}
         else if(button.id==30)tile.displays.get(d).animated=!tile.displays.get(d).animated;
-        else if(button.id==31)tile.displays.get(d).speed=tile.displays.get(d).speed%16+1;
+        else if(button.id==31)tile.displays.get(d).speed=GuiOptionCycle.next(tile.displays.get(d).speed,1,16);
         else if(button.id==32)tile.displays.get(d).inverted=!tile.displays.get(d).inverted;
         else if(button.id==33)tile.displays.get(d).texture=-1;
         else if(button.id==34)tile.setSideTexture(-1);
-        else if(button.id==40)tile.controls.get(c).kind=(tile.controls.get(c).kind+1)%3;
+        else if(button.id==40)tile.controls.get(c).kind=GuiOptionCycle.next(tile.controls.get(c).kind,3);
         else if(button.id==41){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Control",c);tag.setDouble("Column",((tile.controls.get(c).level/5+1)%4)/3D);packet(1,tag);return;}
         save();initGui();
     }
     @Override protected void keyTyped(char ch,int key)throws IOException{boolean consumed=false;for(GuiTextField f:fields)consumed|=f.textboxKeyTyped(ch,key);if(consumed)save();else super.keyTyped(ch,key);}
-    @Override protected void mouseClicked(int x,int y,int button)throws IOException{for(GuiTextField f:fields)f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
-    @Override public void handleMouseInput()throws IOException{super.handleMouseInput();if(textures!=null){int d=org.lwjgl.input.Mouse.getEventDWheel();if(d!=0)textures.wheel(org.lwjgl.input.Mouse.getEventX()*width/mc.displayWidth,height-org.lwjgl.input.Mouse.getEventY()*height/mc.displayHeight-1,d);}}
-    @Override protected void mouseReleased(int x,int y,int state){if(textures!=null)textures.release();super.mouseReleased(x,y,state);}
+    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,30,31,32,40))return;for(GuiTextField f:fields)f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
     @Override public void updateScreen(){for(GuiTextField f:fields)f.updateCursorCounter();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);}

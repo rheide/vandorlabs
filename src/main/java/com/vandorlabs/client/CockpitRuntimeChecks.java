@@ -27,14 +27,14 @@ final class CockpitRuntimeChecks {
                 clear(world);Block block=Block.getBlockFromName("vandorlabs:"+id);world.setBlockState(ROOT,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing));CockpitAssembly.install(world,ROOT,player);
                 TileEntityCockpit tile=(TileEntityCockpit)world.getTileEntity(ROOT);tile.setTaxiMode(false);tile.setSideTexture(14);
                 for(BlockPos p:tile.data().cells(ROOT,facing)){require(CockpitAssembly.root(world,p)==tile,"anchor resolution "+id+facing);for(AxisAlignedBB b:CockpitAssembly.boxes(world,p))require(b.minX>=-1e-8 && b.maxX<=1+1e-8 && b.minY>=-1e-8 && b.maxY<=1+1e-8 && b.minZ>=-1e-8 && b.maxZ<=1+1e-8,"clipped collision");}
-                if(id.equals("cockpit_a") || id.equals("cockpit_b")){
+                if(id.equals("cockpit")){
                     require(tile.display("touch_center_keyboard")!=null && tile.control("touch_center_keyboard/2")!=null,"new center keyboard");
                     AxisAlignedBB footwell=new AxisAlignedBB(.60,.25,-.20,.61,.35,-.19);
                     for(AxisAlignedBB b:tile.data().boxes)require(!b.intersects(footwell),"angled console must clear footwell");
                 }
                 for(CockpitData.Surface surface:tile.data().surfaces)if("touch".equals(surface.role))require(Math.abs(surface.u.lengthVector()/surface.v.lengthVector()-2)<1e-6,"half-height keyboard aspect "+id+surface.id);
-                if(id.equals("cockpit_a")||id.equals("cockpit_b")){require(tile.display("touch_left_aux")==null&&tile.display("touch_right_trackpad")==null,"retired armrest touch areas removed");for(Vec3d pivot:tile.data().pivots.values())require(pivot.z<.5,"throttle assemblies moved forward");}
-                for(CockpitData.Surface surface:tile.data().surfaces)if("touch".equals(surface.role)){Vec3d p=surface.point(.5,.5);require(!tile.use(CockpitData.rotate(p.add(surface.normal.scale(.4)),facing),CockpitData.rotate(p.subtract(surface.normal.scale(.3)),facing)),"blank touch area remains inactive");}
+                if(id.equals("cockpit")){require(tile.display("touch_left_aux")==null&&tile.display("touch_right_trackpad")==null,"retired armrest touch areas removed");for(Vec3d pivot:tile.data().pivots.values())require(pivot.z<.5,"throttle assemblies moved forward");}
+                for(CockpitData.Surface surface:tile.data().surfaces)if("touch".equals(surface.role)){TileEntityCockpit.Display blank=tile.display(surface.id);int previous=blank.texture;blank.texture=-1;Vec3d p=surface.point(.5,.5);require(!tile.use(CockpitData.rotate(p.add(surface.normal.scale(.4)),facing),CockpitData.rotate(p.subtract(surface.normal.scale(.3)),facing)),"blank touch area remains inactive");blank.texture=previous;}
                 int channel=62000;
                 for(TileEntityCockpit.Control c:tile.controls){c.setRedstoneChannels(ChannelList.of(channel++));c.kind=1;for(int step=0;step<4;step++){c.activate(step/3D);require(RedstoneChannels.level(world,c.getRedstoneChannel())==step*5,"independent detents "+c.id);}c.kind=2;c.activate(.5);require(c.level==15,"pulse starts");tile.expire(c.until);require(c.level==0 && RedstoneChannels.level(world,c.getRedstoneChannel())==0,"pulse releases");}
                 for(CockpitData.Surface surface:tile.data().surfaces){TileEntityCockpit.Display display=tile.display(surface.id);display.texture=surfaces%ScreenHousingTextures.IDS.length;display.speed=3;surfaces++;
@@ -70,7 +70,7 @@ final class CockpitRuntimeChecks {
             }
             roundTrip(world,player);
         }finally{clear(world);player.setPositionAndUpdate(before.x,before.y,before.z);}
-        System.out.println("[vandorlabs][reprolab] cockpit-runtime PASS four models four facings reservations clipped-collision independent-surfaces touch detents pulses save configured-items stale-render-bounds vehicle-round-trip");
+        System.out.println("[vandorlabs][reprolab] cockpit-runtime PASS three models four facings reservations clipped-collision independent-surfaces touch detents pulses save configured-items stale-render-bounds vehicle-round-trip");
     }
     private static void roundTrip(WorldServer world,EntityPlayerMP player)throws Exception{
         EntityGroundVehicle craft=null;net.minecraft.entity.passive.EntityVillager passenger=null;BlockPos base=ROOT.add(-1,-2,-2);
@@ -79,7 +79,7 @@ final class CockpitRuntimeChecks {
             for(int x=0;x<4;x++)for(int z=0;z<4;z++)world.setBlockState(base.add(x,1,z),Blocks.STONE.getDefaultState());
             BlockTelescopicLandingGear gear=(BlockTelescopicLandingGear)Block.getBlockFromName("vandorlabs:landing_strut");
             for(BlockPos p:new BlockPos[]{base,base.east(3),base.south(3)}){world.setBlockState(p,gear.getDefaultState());TileEntityLandingGear t=(TileEntityLandingGear)world.getTileEntity(p);t.configure(0,0,16,0);require(gear.setExtended(world,p,true),"vehicle supports");t.progress=t.previous=1;}
-            world.setBlockState(ROOT,Block.getBlockFromName("vandorlabs:cockpit_a").getDefaultState());CockpitAssembly.install(world,ROOT,player);TileEntityCockpit cockpit=(TileEntityCockpit)world.getTileEntity(ROOT);cockpit.setTaxiMode(false);
+            world.setBlockState(ROOT,Block.getBlockFromName("vandorlabs:cockpit").getDefaultState());CockpitAssembly.install(world,ROOT,player);TileEntityCockpit cockpit=(TileEntityCockpit)world.getTileEntity(ROOT);cockpit.setTaxiMode(false);
             TileEntityCockpit.Control output=cockpit.controls.get(0);output.kind=1;output.setRedstoneChannels(ChannelList.of(63000));output.activate(2/3D);
             world.setBlockState(base.add(0,2,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState());for(int x=1;x<4;x++)world.setBlockState(base.add(x,2,0),Block.getBlockFromName("vandorlabs:antigravity_plate").getDefaultState());
             BlockPos passengerChair=base.add(3,2,3);world.setBlockState(passengerChair,ModBlocks.PROGRAMMABLE_CHAIR.getDefaultState());ModBlocks.PROGRAMMABLE_CHAIR.onBlockPlacedBy(world,passengerChair,world.getBlockState(passengerChair),player,new ItemStack(ModBlocks.PROGRAMMABLE_CHAIR));

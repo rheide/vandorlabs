@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "model": "cockpit_b",
+  "model": "cockpit",
   "units": "blocks",
   "surfaces": [
     {

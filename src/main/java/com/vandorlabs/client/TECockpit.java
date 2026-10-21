@@ -33,18 +33,25 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
                 for(double[] p:points){Vec3d v=plane.point(p[0],p[1]);float colorValue=blank?0:1;buffer.pos(v.x,v.y,v.z).tex(uv[2]+p[0]*(uv[3]-uv[2]),uv[1]+p[1]*(uv[0]-uv[1])).color(colorValue,colorValue,colorValue,1F).normal((float)plane.normal.x,(float)plane.normal.y,(float)plane.normal.z).endVertex();}
                 Tessellator.getInstance().draw();
                 if(blank)GlStateManager.enableTexture2D();
-                if("touch".equals(plane.role) && screen.active && screen.texture>=0)rows(tile,plane);
+                if(screen.active&&screen.texture==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)rows(tile,plane);
+                if(screen.active&&screen.texture==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)vehicle(tile,plane);
             }
         }finally{
             GlStateManager.popMatrix();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.bindTexture(oldTexture);GlStateManager.setActiveTexture(oldActive);
             if(lighting)GlStateManager.enableLighting();else GlStateManager.disableLighting();if(cull)GlStateManager.enableCull();else GlStateManager.disableCull();if(blend)GlStateManager.enableBlend();else GlStateManager.disableBlend();GlStateManager.color(color.get(0),color.get(1),color.get(2),color.get(3));
         }
     }
+    private static void vehicle(TileEntityCockpit tile,CockpitData.Surface plane){
+        int height="touch".equals(plane.role)?64:128;
+        Vec3d o=plane.point(0,1).add(plane.normal.scale(.0005)),u=plane.u.scale(1D/128),v=plane.v.scale(-1D/height),n=plane.normal.scale(1D/128);
+        FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);matrix.put(new float[]{(float)u.x,(float)u.y,(float)u.z,0,(float)v.x,(float)v.y,(float)v.z,0,(float)n.x,(float)n.y,(float)n.z,0,(float)o.x,(float)o.y,(float)o.z,1}).flip();
+        GlStateManager.pushMatrix();GlStateManager.multMatrix(matrix);RedstoneScreenRenderer.drawVehicleContents(tile.getWorld(),tile.getPos(),height,height==64?0:24);GlStateManager.popMatrix();
+    }
     private static void rows(TileEntityCockpit tile,CockpitData.Surface plane){
         Vec3d o=plane.point(0,1).add(plane.normal.scale(.0005)),u=plane.u.scale(1D/192),v=plane.v.scale(-1D/64),n=plane.normal.scale(1D/192);
         FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);matrix.put(new float[]{(float)u.x,(float)u.y,(float)u.z,0,(float)v.x,(float)v.y,(float)v.z,0,(float)n.x,(float)n.y,(float)n.z,0,(float)o.x,(float)o.y,(float)o.z,1});matrix.flip();
         GlStateManager.pushMatrix();GlStateManager.multMatrix(matrix);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
-        for(int row=0;row<3;row++){TileEntityCockpit.Control c=tile.control(plane.id+"/"+row);int y=row*21;Gui.drawRect(0,y,192,y+20,0x99071018);String label=c.label.length()>18?c.label.substring(0,18):c.label;Minecraft.getMinecraft().fontRenderer.drawString(label,4,y+6,0xffffff);Minecraft.getMinecraft().fontRenderer.drawString(Integer.toString(c.level),166,y+6,c.level>0?0x63ffd5:0x9daab0);
+        for(int row=0;row<3;row++){TileEntityCockpit.Control c=tile.control(plane.id+"/"+row);int y=row*21;Gui.drawRect(0,y,192,y+20,0x99071018);String label=c.label.length()>18?c.label.substring(0,18):c.label;Minecraft.getMinecraft().fontRenderer.drawString(label,4,y+6,0xffffff);
             if(c.kind==1)for(int i=0;i<4;i++)Gui.drawRect(116+i*10,y+6,123+i*10,y+14,i*5<=c.level?0xff46d4b5:0xff33434d);
         }
         GlStateManager.popMatrix();GlStateManager.color(1,1,1,1);

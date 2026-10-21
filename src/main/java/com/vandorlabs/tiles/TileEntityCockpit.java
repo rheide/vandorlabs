@@ -11,7 +11,7 @@ import java.util.*;
 
 /** One persistent controller owns every display and independent touch/throttle output. */
 public class TileEntityCockpit extends TileEntityVehicleController {
-    private String design="cockpit_a";
+    private String design="cockpit";
     private int sideTexture=-1;
     public int sideTexture(){return sideTexture;}
     public void setSideTexture(int value){
@@ -40,8 +40,10 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     private void prepare(){
         if(!displays.isEmpty())return;
         for(CockpitData.Surface surface:data().surfaces){
-            Display display=new Display(surface.id,surface.role);displays.add(display);
-            if("touch".equals(surface.role))for(int row=0;row<3;row++){Control c=new Control(surface.id+"/"+row);controls.add(c);}
+            Display display=new Display(surface.id,surface.role);
+            display.texture="touch".equals(surface.role)?ScreenHousingTextures.screenIndex("console_inputs/console_controls_communications_keyboard_static"):design.equals("yoke_screen")||surface.id.equals("screen_center")?TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:ScreenHousingTextures.screenIndex("analysis_bare_gas_giant_static");
+            displays.add(display);
+            for(int row=0;row<3;row++){Control c=new Control(surface.id+"/"+row);controls.add(c);}
         }
         for(String part:data().controls){Control c=new Control(part);c.kind=1;controls.add(c);}
     }
@@ -55,17 +57,18 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     public boolean expire(long now){boolean changed=false;for(Control c:controls)if(c.until>0 && now>=c.until){c.until=0;c.level=0;if(ordinary())RedstoneChannels.inputChanged(c);changed=true;}if(changed)changed();return changed;}
     public void updatePower(){boolean dirty=false;for(Display d:displays){boolean active=d.gate==0 || (RedstoneChannels.level(world,d.gate)>0)!=d.inverted;if(active!=d.active){d.active=active;dirty=true;}}if(dirty)changed();}
     @Override public void update(){prepare();if(world==null || world.isRemote)return;expire(world.getTotalWorldTime());updatePower();if(data().seat!=null)super.update();}
-    public boolean use(Vec3d start,Vec3d end){
+    public boolean use(Vec3d start,Vec3d end){return use(start,end,null);}
+    public boolean use(Vec3d start,Vec3d end,net.minecraft.entity.player.EntityPlayer actor){
         prepare();start=CockpitData.unrotate(start,facing());end=CockpitData.unrotate(end,facing());
         CockpitData.Surface nearest=null;double[] uv=null;
-        for(CockpitData.Surface surface:data().surfaces)if("touch".equals(surface.role) && display(surface.id).active && display(surface.id).texture>=0){double[] hit=surface.hit(start,end);if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
+        for(CockpitData.Surface surface:data().surfaces)if(display(surface.id).active && ("touch".equals(surface.role)&&display(surface.id).texture>=0||display(surface.id).texture<=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)){double[] hit=surface.hit(start,end);if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
         String throttle=null;double distance=uv==null?Double.POSITIVE_INFINITY:start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2])));
         for(Map.Entry<String,Vec3d> part:data().pivots.entrySet()){
             Vec3d p=part.getValue();RayTraceResult hit=new AxisAlignedBB(p.x-.11,p.y-.05,p.z-.26,p.x+.11,p.y+.24,p.z+.26).calculateIntercept(start,end);
             if(hit!=null && start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);throttle=part.getKey();}
         }
         if(throttle!=null){Control c=control(throttle);c.activate(((c.level/5+1)%4)/3D);return true;}
-        if(nearest!=null){Control c=control(nearest.id+"/"+Math.min(2,(int)((1-uv[1])*3)));c.activate(uv[0]);return true;}
+        if(nearest!=null){if(display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){int x=(int)(uv[0]*128),y=(int)((1-uv[1])*("touch".equals(nearest.role)?64:128)),top="touch".equals(nearest.role)?0:24;int action=y>=top&&y<top+10?0:y>=top+12&&y<top+22?1+Math.min(2,Math.max(0,(x-6)/39)):y>=top+36&&y<top+46&&x<48?4:-1;if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);return true;}Control c=control(nearest.id+"/"+Math.min(2,(int)((1-uv[1])*3)));c.activate(uv[0]);return true;}
         return false;
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
@@ -90,7 +93,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public ChannelList channels=ChannelList.EMPTY;
         public int kind,level;
         public long until;
-        Control(String id){this.id=id;label=id.substring(id.lastIndexOf('/')+1);}
+        Control(String id){this.id=id;}
         public TileEntity channelTile(){return TileEntityCockpit.this;}
         public int getRedstoneChannel(){return channels.first();}
         public ChannelList getRedstoneChannels(){return channels;}
@@ -112,6 +115,6 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public boolean animated=true,inverted,active=true;
         Display(String id,String role){this.id=id;this.role=role;}
         public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);return tag;}
-        public void read(NBTTagCompound tag){texture=tag.getInteger("Texture");if(texture<-1 || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=Math.max(1,Math.min(16,tag.getInteger("Speed")));gate=Math.max(0,Math.min(65535,tag.getInteger("Gate")));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");active=gate==0 || tag.getBoolean("Active");}
+        public void read(NBTTagCompound tag){texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=Math.max(1,Math.min(16,tag.getInteger("Speed")));gate=Math.max(0,Math.min(65535,tag.getInteger("Gate")));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");active=gate==0 || tag.getBoolean("Active");}
     }
 }

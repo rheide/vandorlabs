@@ -33,7 +33,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public final class CockpitModels {
     public static final String DOMAIN = "vandorlabs";
     private static final String[] IDS = {
-        "cockpit_a", "cockpit_b", "chair_siderests", "yoke_screen"
+        "cockpit", "chair_siderests", "yoke_screen"
     };
     private static final CockpitModels INSTANCE = new CockpitModels();
     private static final Gson GSON = new Gson();

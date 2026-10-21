@@ -18,12 +18,13 @@ final class CockpitDialogRuntimeChecks {
         Field page=GuiCockpit.class.getDeclaredField("page"),fields=GuiCockpit.class.getDeclaredField("fields");page.setAccessible(true);fields.setAccessible(true);
         Field buttons;try{buttons=GuiScreen.class.getDeclaredField("buttonList");}catch(NoSuchFieldException mapped){buttons=GuiScreen.class.getDeclaredField("field_146292_n");}buttons.setAccessible(true);
         try{
-            for(int model=0;model<4;model++){
+            for(int model=0;model<com.vandorlabs.cockpit.CockpitData.IDS.length;model++){
                 TileEntityCockpit tile=(TileEntityCockpit)mc.world.getTileEntity(new BlockPos(222+model*6,30,120));
                 require(tile!=null,"fixture synchronized");GuiCockpit gui=new GuiCockpit(new ContainerCockpit(tile,null));gui.inventorySlots.windowId=-77;mc.displayGuiScreen(gui);
                 int count=(tile.data().seat==null?0:1)+1+tile.displays.size()+tile.controls.size();
                 for(int[] size:new int[][]{{320,240},{460,340},{new ScaledResolution(mc).getScaledWidth(),new ScaledResolution(mc).getScaledHeight()}})for(int index=0;index<count;index++){
                     page.setInt(gui,index);gui.setWorldAndResolution(mc,size[0],size[1]);
+                    if(size[0]==320)checkDrag(gui);
                     List<Rectangle> occupied=new ArrayList<>();
                     for(Object raw:(List<?>)buttons.get(gui)){GuiButton button=(GuiButton)raw;if(button.visible)add(occupied,new Rectangle(button.x,button.y,button.width,button.height),size);}
                     for(Object raw:(List<?>)fields.get(gui)){GuiTextField field=(GuiTextField)raw;add(occupied,new Rectangle(field.x,field.y,field.width,field.height),size);}
@@ -35,6 +36,14 @@ final class CockpitDialogRuntimeChecks {
         }finally{mc.displayGuiScreen(previous);if(previous==null)mc.player.openContainer=mc.player.inventoryContainer;}
         System.out.println("[vandorlabs][reprolab] cockpit-dialog PASS "+checked+" pages/resolutions visible control bounds and overlap checks");
     }
+    private static void checkDrag(GuiCockpit gui)throws Exception{
+        Field field=GuiCockpit.class.getDeclaredField("textures");field.setAccessible(true);HousingTextureList list=(HousingTextureList)field.get(gui);if(list==null)return;
+        int x=value(list,"x"),y=value(list,"y"),width=value(list,"width"),count=value(list,"count");
+        Field rows=HousingTextureList.class.getDeclaredField("rows");rows.setAccessible(true);if(((List<?>)rows.get(list)).size()<=count)return;
+        gui.mouseClicked(x+width+3,y+1,0);gui.mouseClickMove(x+width+3,y+count*HousingTextureList.ROW_HEIGHT-1,0,100);
+        require(value(list,"scroll")>0,"actual mouse drag scrolls texture list");gui.mouseReleased(x+width+3,y,0);
+    }
+    private static int value(Object object,String name)throws Exception{Field field=object.getClass().getDeclaredField(name);field.setAccessible(true);return field.getInt(object);}
     private static void add(List<Rectangle> occupied,Rectangle next,int[] size){require(next.x>=0 && next.y>=0 && next.x+next.width<=size[0] && next.y+next.height<=size[1],"control outside screen "+next);for(Rectangle other:occupied)require(!next.intersects(other),"overlapping controls "+next+" and "+other);occupied.add(next);}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("cockpit-dialog: "+message);}
 }

@@ -74,14 +74,17 @@ final class RedstoneScreenRenderer {
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
     }
     static void drawVehicle(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,IBlockState state,int slot){
-        com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
-        boolean hover=craft!=null&&craft.hover;
-        com.vandorlabs.tiles.TileEntityAutopilot autopilot=com.vandorlabs.vehicle.VehicleStatus.find(tile.getWorld(),tile.getPos());
-        boolean on=autopilot!=null&&autopilot.enabled();
         int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),slot),top=RedstoneScreenInteractions.rowTop(state.getBlock(),slot);
         ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile,slot);
         FloatBuffer transform=MATRICES.get(q);if(transform==null){transform=matrix(q,height);MATRICES.put(q,transform);}
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
+        drawVehicleContents(tile.getWorld(),tile.getPos(),height,top);GlStateManager.popMatrix();
+    }
+    static void drawVehicleContents(net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos,int height,int top){
+        com.vandorlabs.vehicle.EntityGroundVehicle craft=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).craft:null;
+        boolean hover=craft!=null&&craft.hover;
+        com.vandorlabs.tiles.TileEntityAutopilot autopilot=com.vandorlabs.vehicle.VehicleStatus.find(world,pos);
+        boolean on=autopilot!=null&&autopilot.enabled();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.enableTexture2D();
         bindWhite();
@@ -98,8 +101,9 @@ final class RedstoneScreenRenderer {
         if(autopilot!=null)text(font,font.trimStringToWidth(autopilot.status,114),8,top+25,0xCEE9ED);
         text(font,"Next >",8,top+37,autopilot==null?0x77838C:0xFFFFFF);
         if(hover){double clearance=craft.groundClearance();text(font,Double.isFinite(clearance)?String.format(java.util.Locale.ROOT,"Height: %.1f blocks",clearance):"Height: 32+ blocks",8,top+47,0xC1E8FF);}
-        GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
+        GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();
     }
+
     private static void rect(BufferBuilder b,int left,int top,int right,int bottom,double z,int color){
         int r=color>>16&255,g=color>>8&255,blue=color&255,a=color>>>24;
         b.pos(left,bottom,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();b.pos(right,bottom,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();

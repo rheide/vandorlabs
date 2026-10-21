@@ -61,7 +61,7 @@ public final class CockpitAssembly {
         if(world.isRemote)return true;
         if(player.isSneaking() || player.getHeldItemMainhand().getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER){com.vandorlabs.container.ContainerCockpit.open(player,root);return true;}
         Vec3d eye=player.getPositionEyes(1).subtract(new Vec3d(root.getPos())),end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(8));
-        if(root.use(eye,end))return true;
+        if(root.use(eye,end,player))return true;
         if(root.data().seat==null){com.vandorlabs.container.ContainerCockpit.open(player,root);return true;}
         for(com.vandorlabs.entity.EntityChairSeat mount:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,new AxisAlignedBB(root.getPos()).grow(2)))if(root.getPos().equals(mount.getChairPos()) && !mount.isDead){if(mount.getPassengers().isEmpty() && player.startRiding(mount,true))com.vandorlabs.vehicle.VehicleService.taxiAssembly((net.minecraft.entity.player.EntityPlayerMP)player,root.getPos());return true;}
         com.vandorlabs.entity.EntityChairSeat mount=new com.vandorlabs.entity.EntityChairSeat(world,root.getPos(),root.seatHeight());Vec3d seat=CockpitData.rotate(root.data().seat,root.facing());mount.setPosition(root.getPos().getX()+seat.x,mount.posY,root.getPos().getZ()+seat.z);mount.rotationYaw=root.facing().getHorizontalAngle();

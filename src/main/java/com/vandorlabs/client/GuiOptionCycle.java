@@ -11,6 +11,7 @@ final class GuiOptionCycle {
     private static int step=1;
     private GuiOptionCycle(){}
     interface Action {void run(GuiButton button)throws IOException;}
+    static int direction(){return step;}
     static int next(int value,int count){return Math.floorMod(value+step,count);}
     static int next(int value,int low,int high){return low+next(value-low,high-low+1);}
     static EnumFacing next(EnumFacing facing){return step<0?facing.rotateYCCW():facing.rotateY();}

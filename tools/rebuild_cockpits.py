@@ -50,12 +50,17 @@ def components():
 
 
 def main():
-    models = [geometry.cockpit('cockpit_a', True), geometry.cockpit('cockpit_b', False)] + components()
+    models = [geometry.cockpit('cockpit', False)] + components()
     geometry.texture_files()
+    for material,source in [('screen_back','door_side'),('horizontal','metal_side')]:
+        shutil.copyfile(PROJECT/'texture-packs/default/assets/vandorlabs/textures/blocks/programmable_glass'/(source+'.png'),geometry.ROOT/'assets/vandorlabs/textures/models/cockpits'/(material+'.png'))
     for model in models:
         for node in model.nodes:
             # Only the console shell and armrest casing use the selectable skin.
             casing = node['name'] in ('continuous_console_wall','fascia_solid_apron','fascia_frame','base') or 'armrest' in node['name'] or 'siderest' in node['name'] or model.id == 'chair_siderests' and node['name'] == 'chair' or model.id == 'yoke_screen' and node['name'] == 'screen_center'
+            if node['category']=='screen':
+                for primitive in node['boxes']+node.get('meshes',[]):
+                    if primitive['material']!='blank':primitive['material']='screen_back'
             if casing:
                 for primitive in node['boxes'] + node.get('meshes', []):
                     if primitive['material'] in ('housing','housing_dark','frame'):
@@ -83,7 +88,7 @@ def main():
                 if fresh.size == existing.size and fresh.convert('RGBA').tobytes() == existing.convert('RGBA').tobytes():
                     continue
         shutil.copyfile(source, target)
-    print('Rebuilt four cockpit assemblies and input planes')
+    print('Rebuilt cockpit, chair and yoke assemblies and input planes')
 
 
 if __name__ == '__main__':
