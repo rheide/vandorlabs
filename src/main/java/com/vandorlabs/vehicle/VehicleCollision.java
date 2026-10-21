@@ -148,7 +148,7 @@ public final class VehicleCollision {
                     if(part.window)for(int i=0;i<face.vertices.length;i++){
                         Vec3d a=com.vandorlabs.canopy.CanopyMesh.rotate(face.vertices[i],part.facing),b=com.vandorlabs.canopy.CanopyMesh.rotate(face.vertices[(i+1)%face.vertices.length],part.facing);
                         int steps=Math.max(1,(int)Math.ceil(a.distanceTo(b)*8));
-                        for(int step=0;step<steps;step++){Vec3d from=a.add(b.subtract(a).scale(step/(double)steps)),to=a.add(b.subtract(a).scale((step+1D)/steps));rails.add(new AxisAlignedBB(from,to).grow(1D/16+.002).offset(part.pos));if(all.size()+rails.size()>maximum)throw new IllegalArgumentException("Deferred rails exceed their coordinate budget.");}
+                        for(int step=0;step<steps;step++){Vec3d from=a.add(b.subtract(a).scale(step/(double)steps)),to=a.add(b.subtract(a).scale((step+1D)/steps));rails.add(new AxisAlignedBB(from.x,from.y,from.z,to.x,to.y,to.z).grow(1D/16+.002).offset(part.pos));if(all.size()+rails.size()>maximum)throw new IllegalArgumentException("Deferred rails exceed their coordinate budget.");}
                     }
                 }
                 all.addAll(rails);

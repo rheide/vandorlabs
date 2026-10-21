@@ -41,13 +41,16 @@ def main():
                 time.sleep(2)
             until=time.monotonic()+600
             while any(client.poll() is None for client,_ in clients):
+                if proc.poll() is not None:raise RuntimeError('Dedicated server stopped: '+str(output/'server.log'))
                 if time.monotonic()>until:raise TimeoutError('Dedicated client timeout')
                 time.sleep(.25)
             if any(client.returncode for client,_ in clients):raise RuntimeError('Dedicated client failed: '+str(output))
             print('PASS: dedicated driver and observer, four delay profiles, jitter and dropped application messages',flush=True)
         finally:
             for client,stream in clients:
-                if client.poll() is None:client.terminate()
+                if client.poll() is None:
+                    subprocess.run(['taskkill','/PID',str(client.pid),'/T','/F'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW)
+                    client.wait(timeout=15)
                 stream.close()
             if proc.poll() is None:
                 proc.stdin.write(b'stop\n');proc.stdin.flush()

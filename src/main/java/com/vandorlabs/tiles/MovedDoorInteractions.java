@@ -53,7 +53,7 @@ public final class MovedDoorInteractions {
     }
     public static RayTraceResult trace(World world,Vec3d start,Vec3d end) {
         RayTraceResult nearest=null;double distance=Double.POSITIVE_INFINITY;
-        for(TileEntitySpaceDoor door:doors(world,new AxisAlignedBB(start,end))) {
+        for(TileEntitySpaceDoor door:doors(world,new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z))) {
             if(!(door instanceof TileEntityLargeProgrammableDoor)) {
                 for(int half=0;half<2;half++) {
                     BlockPos pos=door.getPos().up(half);if(!world.isBlockLoaded(pos))continue;

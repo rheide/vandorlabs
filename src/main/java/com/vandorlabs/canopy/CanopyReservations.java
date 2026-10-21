@@ -32,7 +32,7 @@ public final class CanopyReservations {
             List<AxisAlignedBB> result=new ArrayList<>(faces.size()*64);
             for(int sample=0;sample<64;sample++)for(CanopyMesh.Face face:faces){
                 AxisAlignedBB local=CanopyPose.sweptBounds(face,kind,width,settings,progress*sample/64,progress*(sample+1D)/64);
-                Vec3d a=CanopyMesh.rotate(new Vec3d(local.minX,local.minY,local.minZ),facing),b=CanopyMesh.rotate(new Vec3d(local.maxX,local.maxY,local.maxZ),facing);result.add(new AxisAlignedBB(a,b).offset(pos));
+                Vec3d a=CanopyMesh.rotate(new Vec3d(local.minX,local.minY,local.minZ),facing),b=CanopyMesh.rotate(new Vec3d(local.maxX,local.maxY,local.maxZ),facing);result.add(new AxisAlignedBB(a.x,a.y,a.z,b.x,b.y,b.z).offset(pos));
             }
             return new SweepCache(key,result);
         }

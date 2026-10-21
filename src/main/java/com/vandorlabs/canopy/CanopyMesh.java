@@ -165,7 +165,7 @@ public final class CanopyMesh {
                 for(int step=0;step<steps;step++) {
                     Vec3d from=a.add(b.subtract(a).scale(step/(double)steps));
                     Vec3d to=a.add(b.subtract(a).scale((step+1D)/steps));
-                    rails.add(new AxisAlignedBB(from,to).grow(1D/16+.002).offset(pos));
+                    rails.add(new AxisAlignedBB(from.x,from.y,from.z,to.x,to.y,to.z).grow(1D/16+.002).offset(pos));
                 }
             }
         }

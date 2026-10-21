@@ -41,8 +41,10 @@ public final class CockpitData {
         }
         for(JsonElement e:assembly.getAsJsonArray("collision_boxes")){
             JsonObject b=e.getAsJsonObject();
-            if(!convex.contains(b.get("part").getAsString()+"/"+b.get("box").getAsString()))
-                boxes.add(new AxisAlignedBB(vector(b.getAsJsonArray("min")),vector(b.getAsJsonArray("max"))));
+            if(!convex.contains(b.get("part").getAsString()+"/"+b.get("box").getAsString())){
+                Vec3d min=vector(b.getAsJsonArray("min")),max=vector(b.getAsJsonArray("max"));
+                boxes.add(new AxisAlignedBB(min.x,min.y,min.z,max.x,max.y,max.z));
+            }
         }
         for(JsonElement e:json(id,"surfaces").getAsJsonArray("surfaces"))surfaces.add(new Surface(e.getAsJsonObject()));
         for(JsonElement e:json(id,"rig").getAsJsonArray("parts")){JsonObject part=e.getAsJsonObject();String name=part.get("id").getAsString();controls.add(name);pivots.put(name,vector(part.getAsJsonArray("pivot")));}
@@ -59,7 +61,7 @@ public final class CockpitData {
     public static Vec3d unrotate(Vec3d p,EnumFacing facing){return rotate(p,facing==EnumFacing.EAST?EnumFacing.WEST:facing==EnumFacing.WEST?EnumFacing.EAST:facing);}
     public static AxisAlignedBB rotate(AxisAlignedBB b,EnumFacing facing){
         Vec3d a=rotate(new Vec3d(b.minX,b.minY,b.minZ),facing),c=rotate(new Vec3d(b.maxX,b.maxY,b.maxZ),facing);
-        return new AxisAlignedBB(a,c);
+        return new AxisAlignedBB(a.x,a.y,a.z,c.x,c.y,c.z);
     }
     public BlockPos cell(BlockPos root,BlockPos cell,EnumFacing facing){return root.add(new BlockPos(rotate(new Vec3d(cell).addVector(.5,0,.5),facing)));}
     public List<BlockPos> cells(BlockPos root,EnumFacing facing){List<BlockPos> result=new ArrayList<>();for(BlockPos cell:cells)result.add(cell(root,cell,facing));return result;}

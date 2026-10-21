@@ -49,7 +49,7 @@ public final class CanopyInteractions {
 
     public static RayTraceResult trace(World world, Vec3d start, Vec3d end) {
         RayTraceResult best = null;
-        for (TileEntityCanopy t : owners(world, new AxisAlignedBB(start, end))) {
+        for (TileEntityCanopy t : owners(world, new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z))) {
             RayTraceResult hit = t.trace(start, end);
             if (hit != null
                     && (best == null
