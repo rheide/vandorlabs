@@ -20,14 +20,17 @@ public final class RenderTurntable extends Render<EntityTurntable> {
     private static final Map<EntityTurntable,Mesh> CACHE=new HashMap<>();
     private static long buildNanos;
     private static int buildCells;
+    static boolean cacheWalls=true;
+    static int wallBuilds(EntityTurntable entity){Mesh mesh=CACHE.get(entity);return mesh==null?0:mesh.opaqueTiles.builds;}
     public static void beginFrame(){buildNanos=2_000_000L;buildCells=512;}
     private static final class Mesh {
         TurntableSnapshot snapshot;int layer,cell,storedEntity,batchCells;
         BufferBuilder builder;
         final Map<BlockRenderLayer,List<Integer>> lists=new EnumMap<>(BlockRenderLayer.class);
-        final List<Entity> entities=new ArrayList<>();final List<TileEntity> tiles=new ArrayList<>();
+        final List<Entity> entities=new ArrayList<>();final List<TileEntity> tiles=new ArrayList<>(),translucentTiles=new ArrayList<>();
         final Map<TileEntity,net.minecraft.util.math.Vec3d> centers=new IdentityHashMap<>();
-        void delete(){for(List<Integer> layer:lists.values())for(int list:layer)GL11.glDeleteLists(list,1);lists.clear();builder=null;}
+        final VehicleOpaqueTileCache opaqueTiles=new VehicleOpaqueTileCache();
+        void delete(){for(List<Integer> layer:lists.values())for(int list:layer)GL11.glDeleteLists(list,1);lists.clear();builder=null;opaqueTiles.delete();}
         void draw(BlockRenderLayer layer){List<Integer> ready=lists.get(layer);if(ready!=null)for(int list:ready)GL11.glCallList(list);}
     }
     public RenderTurntable(RenderManager manager){super(manager);shadowSize=0;}
@@ -37,10 +40,11 @@ public final class RenderTurntable extends Render<EntityTurntable> {
         Iterator<Map.Entry<EntityTurntable,Mesh>> entries=CACHE.entrySet().iterator();while(entries.hasNext()){Map.Entry<EntityTurntable,Mesh> entry=entries.next();if(entry.getKey().isDead||entry.getKey().world!=entity.world){entry.getValue().delete();entries.remove();}}
         Mesh mesh=CACHE.computeIfAbsent(entity,k->new Mesh());
         if(mesh.snapshot==entity.snapshot){build(entity,mesh);return mesh;}
-        mesh.delete();mesh.entities.clear();mesh.tiles.clear();mesh.centers.clear();mesh.snapshot=entity.snapshot;
+        mesh.delete();mesh.entities.clear();mesh.tiles.clear();mesh.translucentTiles.clear();mesh.centers.clear();mesh.snapshot=entity.snapshot;
         mesh.layer=mesh.cell=mesh.storedEntity=mesh.batchCells=0;
         for(TileEntity tile:entity.view.tiles.values()){
             mesh.tiles.add(tile);net.minecraft.util.math.AxisAlignedBB bounds=new net.minecraft.util.math.AxisAlignedBB(tile.getPos());
+            if(tile.shouldRenderInPass(1)||!tile.getClass().getName().startsWith("com.vandorlabs."))mesh.translucentTiles.add(tile);
             if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy){
                 List<net.minecraft.util.math.AxisAlignedBB> boxes=((com.vandorlabs.tiles.TileEntityCanopy)tile).boxes();
                 if(!boxes.isEmpty()){bounds=boxes.get(0);for(int i=1;i<boxes.size();i++)bounds=bounds.union(boxes.get(i));}
@@ -80,11 +84,14 @@ public final class RenderTurntable extends Render<EntityTurntable> {
     }
     @Override public void doRender(EntityTurntable entity,double x,double y,double z,float yaw,float partial){
         if(entity.snapshot==null||entity.view==null)return;Minecraft mc=Minecraft.getMinecraft();
+        long profile=TurntablePerformance.start();
         GlStateManager.pushMatrix();
         try(TurntableRenderState state=new TurntableRenderState()){GlStateManager.translate(x,y,z);TurntableGeometry.Face face=entity.snapshot.layout.basis;GlStateManager.rotate((float)-entity.angle(partial),face.x,face.y,face.z);
             GlStateManager.translate(entity.snapshot.origin.getX()-entity.posX,entity.snapshot.origin.getY()-entity.posY,entity.snapshot.origin.getZ()-entity.posZ);
             bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.disableCull();RenderHelper.disableStandardItemLighting();
+            long buildProfile=TurntablePerformance.start();
             Mesh mesh=mesh(entity);
+            TurntablePerformance.end("render.mesh-build",buildProfile);
             for(BlockRenderLayer layer:BlockRenderLayer.values())if(layer!=BlockRenderLayer.TRANSLUCENT){GlStateManager.disableBlend();GlStateManager.depthMask(true);mesh.draw(layer);}
             TileEntityRendererDispatcher dispatcher=TileEntityRendererDispatcher.instance;
             net.minecraft.world.World oldWorld=dispatcher.world;
@@ -96,18 +103,28 @@ public final class RenderTurntable extends Render<EntityTurntable> {
             dispatcher.entityX=camera[0]+entity.posX-entity.snapshot.origin.getX();
             dispatcher.entityY=camera[1]+entity.posY-entity.snapshot.origin.getY();
             dispatcher.entityZ=camera[2]+entity.posZ-entity.snapshot.origin.getZ();
-            List<TileEntity> tiles=mesh.tiles;
+            long tileProfile=TurntablePerformance.start();
+            List<TileEntity> tiles=mesh.translucentTiles;
             tiles.sort((a,b)->{int distance=Double.compare(mesh.centers.get(b).squareDistanceTo(dispatcher.entityX,dispatcher.entityY,dispatcher.entityZ),mesh.centers.get(a).squareDistanceTo(dispatcher.entityX,dispatcher.entityY,dispatcher.entityZ));return distance!=0?distance:a.getPos().compareTo(b.getPos());});
             try{for(int pass=0;pass<2;pass++){
                 net.minecraftforge.client.ForgeHooksClient.setRenderPass(pass);
                 if(pass==1){bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.depthMask(false);mesh.draw(BlockRenderLayer.TRANSLUCENT);GlStateManager.depthMask(true);}
-                for(TileEntity tile:tiles){
+                for(TileEntity tile:pass==0?mesh.tiles:tiles){
                     if(!tile.shouldRenderInPass(pass))continue;
                     TileEntitySpecialRenderer<TileEntity> renderer=dispatcher.getRenderer(tile);if(renderer==null)continue;BlockPos p=tile.getPos();GlStateManager.pushMatrix();
-                    try{renderer.render(tile,p.getX(),p.getY(),p.getZ(),partial,-1,1);}catch(RuntimeException failure){com.vandorlabs.vehicle.VehicleCompatibility.warn(tile.getBlockType(),"turntable renderer",failure);}finally{GlStateManager.popMatrix();}
+                    long rendererProfile=TurntablePerformance.start();
+                    try{
+                        boolean rigid=cacheWalls&&pass==0&&VehicleOpaqueTileCache.eligible(tile,renderer);
+                        if(rigid&&(mesh.opaqueTiles.ready(tile)||buildCells>0&&buildNanos>0)){
+                            boolean ready=mesh.opaqueTiles.ready(tile);long began=ready?0:System.nanoTime();
+                            mesh.opaqueTiles.draw(tile,renderer,entity.snapshot.blocks,partial);
+                            if(!ready){buildNanos-=System.nanoTime()-began;buildCells--;}
+                        }else renderer.render(tile,p.getX(),p.getY(),p.getZ(),partial,-1,1);
+                    }catch(RuntimeException failure){com.vandorlabs.vehicle.VehicleCompatibility.warn(tile.getBlockType(),"turntable renderer",failure);}finally{GlStateManager.popMatrix();if(TurntablePerformance.ENABLED)TurntablePerformance.end("renderer."+renderer.getClass().getSimpleName(),rendererProfile);}
                 }
             }}finally{net.minecraftforge.client.ForgeHooksClient.setRenderPass(oldPass);dispatcher.world=oldWorld;dispatcher.entityX=oldX;dispatcher.entityY=oldY;dispatcher.entityZ=oldZ;}
+            TurntablePerformance.end("render.tile-renderers-and-sort",tileProfile);
             for(Entity copy:mesh.entities)mc.getRenderManager().renderEntity(copy,copy.posX,copy.posY,copy.posZ,copy.rotationYaw,partial,false);
-        }finally{GlStateManager.popMatrix();}
+        }finally{GlStateManager.popMatrix();TurntablePerformance.end(entity.angle(0)==entity.angle(1)?"render.paused":"render.rotating",profile);}
     }
 }

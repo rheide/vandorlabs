@@ -29,6 +29,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     private List<AxisAlignedBB> localBoxes=Collections.emptyList(),worldBoxes=Collections.emptyList();
     private double boxesAt=Double.NaN;
     private AxisAlignedBB localExtent=new AxisAlignedBB(0,0,0,1,1,1);
+    private AxisAlignedBB surfaceExtent;
     private byte[] wire;
     private byte[] incoming;
     private java.util.concurrent.Future<NBTTagCompound> decoded;
@@ -41,6 +42,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     @Override protected void entityInit(){dataManager.register(ANGLE,0F);dataManager.register(RATE,0F);}
     public void install(TurntableSnapshot snapshot){
         this.snapshot=snapshot;unavailable=null;wire=null;incoming=null;
+        surfaceExtent=null;for(BlockPos cell:snapshot.layout.cells){AxisAlignedBB box=new AxisAlignedBB(cell);surfaceExtent=surfaceExtent==null?box:surfaceExtent.union(box);}
         setPosition(snapshot.layout.pivot.x,snapshot.layout.pivot.y,snapshot.layout.pivot.z);
         view=new VehicleWorld(world,snapshot.blocks);view.origin=snapshot.origin;
         try{localBoxes=new VehicleCollision(view).boxes;}catch(IllegalArgumentException empty){localBoxes=Collections.emptyList();}
@@ -69,7 +71,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     private void updateBounds(){
         if(snapshot==null){setEntityBoundingBox(new AxisAlignedBB(posX-32,posY-32,posZ-32,posX+32,posY+32,posZ+32));return;}
         AxisAlignedBB bounds=transformed(localExtent,angle);
-        for(BlockPos cell:snapshot.layout.cells)bounds=bounds.union(new AxisAlignedBB(cell));setEntityBoundingBox(bounds.grow(2));
+        if(surfaceExtent!=null)bounds=bounds.union(surfaceExtent);setEntityBoundingBox(bounds.grow(2));
     }
     @Override public void onUpdate(){
         super.onUpdate();motionX=motionY=motionZ=0;previous=angle;
@@ -106,6 +108,10 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         previous=angle;dataManager.set(ANGLE,(float)angle);dataManager.set(RATE,0F);updateBounds();
     }
     private boolean moveAngle(double delta){
+        long profile=TurntablePerformance.start();
+        try{return moveAngleMeasured(delta);}finally{TurntablePerformance.end("server.move-angle",profile);}
+    }
+    private boolean moveAngleMeasured(double delta){
         TileEntityTurntableController owner=owner();if(owner==null||snapshot==null)return false;
         double next=TurntableGeometry.wrap(angle+delta);List<AxisAlignedBB> before=collisionBoxes(),after=boxes(next);
         AxisAlignedBB swept=getEntityBoundingBox().union(transformed(localExtent,next));
@@ -115,8 +121,11 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
         if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false)){
             owner.status("Rotation waiting for surrounding chunks to load");return false;
         }
+        long obstacleProfile=TurntablePerformance.start();
         List<AxisAlignedBB> obstacles=world.getCollisionBoxes(this,swept);
-        for(int i=0;i<after.size();i++){
+        TurntablePerformance.end("server.obstacle-query",obstacleProfile);
+        long collisionProfile=TurntablePerformance.start();
+        try{for(int i=0;i<after.size();i++){
             AxisAlignedBB sweep=before.get(i).union(after.get(i));
             for(int n=1;n<samples;n++)sweep=sweep.union(transformed(localBoxes.get(i),angle+delta*n/samples));
             double extra=(snapshot.layout.size+snapshot.height)*(1-Math.cos(Math.toRadians(Math.abs(delta)/samples/2)));
@@ -126,7 +135,9 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
                 owner.status("Rotation blocked at "+at.getX()+", "+at.getY()+", "+at.getZ()+"; clear the moving contents");return false;
             }
         }
-        carry(delta);angle=next;worldBoxes=after;boxesAt=angle;updateBounds();return true;
+        }finally{TurntablePerformance.end("server.swept-collision",collisionProfile);}
+        long carryProfile=TurntablePerformance.start();
+        carry(delta);TurntablePerformance.end("server.carry",carryProfile);angle=next;worldBoxes=after;boxesAt=angle;return true;
     }
     private void carry(double delta){
         carriedVehicles=0;

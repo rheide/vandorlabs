@@ -35,13 +35,13 @@ final class ExistingTurntableRuntimeChecks {
                 started=world.getTotalWorldTime();return true;
             }
             if(step==1){
-                if(world.getTotalWorldTime()-started<360)return false;
+                if(world.getTotalWorldTime()-started<(com.vandorlabs.turntable.TurntablePerformance.ENABLED?800:360))return false;
                 EntityTurntable display=controller.display();angle=display==null?0:display.angle();
                 System.out.println("[vandorlabs][reprolab] existing-turntable status="+controller.message+" angle="+angle+" powered="+controller.running());
                 if(display==null||!controller.running()||angle<10||!controller.message.startsWith("Rotating"))throw new IllegalStateException("Existing turntable stopped: "+controller.message+" angle="+angle);
                 BlockIndustrialLever lever=(BlockIndustrialLever)world.getBlockState(input).getBlock();lever.onBlockActivated(world,input,world.getBlockState(input),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);started=world.getTotalWorldTime();return true;
             }
-            if(world.getTotalWorldTime()-started<40)return false;
+            if(world.getTotalWorldTime()-started<(com.vandorlabs.turntable.TurntablePerformance.ENABLED?240:40))return false;
             EntityTurntable paused=controller.display();
             if(paused==null||controller.running()||Math.abs(((paused.angle()-angle+540)%360)-180)>.6)throw new IllegalStateException("Existing turntable did not retain its paused heading: "+controller.message);
             TurntableTransactionsChecks.restore(controller,player);if(controller.captureId!=null)throw new IllegalStateException("Existing turntable return retained: "+controller.message);

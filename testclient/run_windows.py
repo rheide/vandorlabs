@@ -42,6 +42,7 @@ def main():
     parser.add_argument('--max-heap', default='3G', help='Maximum heap for the isolated client, such as 3G or 4096M')
     parser.add_argument('--all-mods', type=Path, help='Use all installed mod JARs for compatibility reproduction')
     parser.add_argument('--vehicle-preservation-mods', type=Path, help='Additional Mekanism and Malisis fixtures for mandatory preservation checks')
+    parser.add_argument('--profile-turntables', action='store_true', help='Log turntable render and server collision CPU timings every ten seconds')
     parser.add_argument('--trace-chunks', action='store_true', help='Trace tile-map mutations during chunk packets')
     parser.add_argument('--focus', choices=['canopy-glass-order', 'gear-animations', 'canopy-animations', 'connection-acceptance', 'large-canopy', 'vehicle-controller', 'regular-dialog', 'pilot-inspection', 'armor', 'pilot-seat', 'vehicles', 'vehicle-render', 'vehicle-taxi', 'hover-controls', 'wheel-motion', 'moat', 'pulse-screen', 'followups', 'vehicle-status', 'vehicle-motion', 'vehicle-network', 'canopies', 'diagonal-joins', 'ramps', 'redstone-inversion', 'doors', 'block-categories', 'machinery', 'glass-appearance'])
     parser.add_argument('--disable-categories', help='Comma-separated category keys for isolated availability checks')
@@ -186,6 +187,8 @@ def main():
         properties.append('-Dvandorlabs.foreignVehicleChecks=true')
     if args.world_copy:
         properties.append('-Dvandorlabs.existingWorldChecks=true')
+    if args.profile_turntables:
+        properties += ['-Dvandorlabs.profileTurntables=true']
     if args.turntable_position:
         if not args.world_copy or not re.fullmatch(r'-?\d+,-?\d+,-?\d+',args.turntable_position):
             parser.error('--turntable-position requires --world-copy and x,y,z coordinates')

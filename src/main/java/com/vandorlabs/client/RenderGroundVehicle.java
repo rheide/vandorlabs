@@ -272,6 +272,12 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
                 catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(draw.tile.getBlockType(),"canopy glass renderer",error);}
                 finally{GlStateManager.popMatrix();}
             }
+            List<TileEntity> liquids=new ArrayList<>();
+            for(TileEntity tile:e.view.tiles.values()){com.vandorlabs.blocks.ContainedFluids fluid=com.vandorlabs.blocks.WaterloggedParts.data(tile);if(fluid!=null&&fluid.any())liquids.add(tile);}
+            liquids.sort((a,b)->Double.compare(b.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z),a.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z)));
+            GlStateManager.depthMask(false);
+            try{for(TileEntity tile:liquids){BlockPos p=tile.getPos();WaterloggedRenderer.render(tile,p.getX(),p.getY(),p.getZ());}}
+            finally{GlStateManager.depthMask(true);}
         }finally{dispatcher.world=previousWorld;dispatcher.entityX=cameraX;dispatcher.entityY=cameraY;dispatcher.entityZ=cameraZ;}
         GlStateManager.color(1,1,1,1);GlStateManager.popMatrix();
     }

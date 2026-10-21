@@ -16,9 +16,14 @@ final class VehicleOpaqueTileCache {
     int builds,hits;
     static boolean eligible(TileEntity tile,TileEntitySpecialRenderer<?> renderer){
         if(!((Object)renderer instanceof TEAnimatedScreenSelector) || !(tile.getBlockType() instanceof BlockProgrammableWall))return false;
+        if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
+            if(screen.fluids.any()||screen.hasRedstoneScreen(0)||screen.hasRedstoneScreen(1)||screen.hasVehicleStatus(0)||screen.hasVehicleStatus(1))return false;
+        }
         BlockProgrammableWall wall=(BlockProgrammableWall)tile.getBlockType();
         return !wall.isPortholeShape() && !(wall instanceof BlockProgrammableDiagonalGlass);
     }
+    boolean ready(TileEntity tile){Entry entry=entries.get(tile);return entry!=null&&entry.light==tile.getWorld().getCombinedLight(tile.getPos(),0)&&entry.format==BlockSurfaceFormat.get().getNextOffset()&&entry.pass==net.minecraftforge.client.MinecraftForgeClient.getRenderPass();}
     void draw(TileEntity tile,TileEntitySpecialRenderer<TileEntity> renderer,VehicleStructure structure,float partial){
         if(!enabled || !eligible(tile,renderer) || BlockSurfaceFormat.get().getNextOffset()!=32){renderer.render(tile,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ(),partial,-1,1);return;}
         // Texture binds can be omitted by GlStateManager when compiling a list.

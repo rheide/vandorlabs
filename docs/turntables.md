@@ -134,3 +134,18 @@ checkpoints only its affected chunks, verifies their transaction markers in
 region storage, then retires its recovery journal. Slow storage delays completion
 without a server-thread disk wait. Conflicting recovery contents retain their
 journal rather than overwriting newer blocks, inventories or entities.
+
+
+### Rotation performance diagnostics
+
+Add the JVM option `-Dvandorlabs.profileTurntables=true` to log turntable CPU timings every ten seconds. Diagnostics are disabled by default. The isolated live-client launcher also accepts `--profile-turntables`; combine it with `--world-copy` and `--turntable-position x,y,z` to compare sustained rotation with a captured, paused platform in a disposable save. The profiling scenario runs rotation for 800 ticks and pauses for 240 ticks before restoring the contents.
+
+The log separates mesh construction, tile renderers and sorting, individual tile renderer classes, server obstacle queries, swept collision, and rider transport. Each section reports call count, mean, recent p95, and maximum duration in microseconds. Parent sections include their child timings; do not add them together. Recent p95 uses the last 512 calls, while mean and maximum cover the whole reporting interval. Initial mesh compilation and resource loading should be assessed separately from later intervals.
+
+These measurements time CPU work and any driver waits encountered by the calling thread. They are not GPU execution timings or whole-frame FPS. Compare the same view, graphics settings, structure, and loaded surroundings while paused and rotating; use a full CPU/GPU profiler if these sections do not explain the slowdown. Reducing visual interpolation does not reduce server collision work.
+
+The 2.3 native-client comparison used 64 opaque programmable walls, identical camera and lighting, 64 warm-up draws and 32 measured draws per path. Cached rendering produced identical pixels and reduced median rendering CPU time from 318 to 116 microseconds (64%); p95 fell from 595 to 190 microseconds. Rotation reused all 64 cached wall meshes. This isolates wall drawing and does not predict the same percentage improvement in whole-frame FPS.
+
+An isolated server fixture with 128 captured walls above 256 floor blocks measured 488 microseconds median, 539 microseconds p95 and 701 microseconds maximum per movement update. This is a current-build measurement, not a before/after comparison or a substitute for profiling a populated world.
+
+Rigid opaque wall artwork now compiles within the shared mesh budget; translucent and interactive surfaces continue to render live. The renderer sorts only surfaces needing the translucent pass, and platform bounds reuse a precomputed extent. Smooth interpolation remains enabled: lowering its visual rate would leave server obstacle queries and collision work unchanged. For a remaining slowdown, first compare the diagnostic sections in the affected save; consider spatial collision indexing or batching remaining live renderers when measurements identify either as the dominant cost.
