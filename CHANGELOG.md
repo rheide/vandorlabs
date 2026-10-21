@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Use still-fluid artwork on the remaining native-water faces at contained-fluid contacts, including flush diagonal-glass ends beneath porthole walls. Preserve visible boundaries beside dry compartments.
+
 - Inset exposed door water surfaces to prevent z-fighting with the door top at a two-block water level, while preserving seamless water between door blocks.
 
 - Let vanilla sponges absorb contained water from supported Vandor blocks, retaining the blocks and other liquids. Bound absorption to connected water within vanilla sponge reach.

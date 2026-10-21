@@ -58,7 +58,13 @@ public final class ConnectedFluidRenderer extends BlockFluidRenderer {
         try{delegate.renderFluid(connected,visible,pos,scratch);scratch.finishDrawing();finished=true;ByteBuffer bytes=scratch.getByteBuffer();int count=scratch.getVertexCount(),written=0,stride=DefaultVertexFormats.BLOCK.getNextOffset();
             for(int first=0;first<count;first+=4){List<double[]> polygon=new ArrayList<>();for(int vertex=0;vertex<4;vertex++){int at=(first+vertex)*stride;polygon.add(new double[]{bytes.getFloat(at)-pos.getX(),bytes.getFloat(at+4)-pos.getY(),bytes.getFloat(at+8)-pos.getZ(),bytes.getFloat(at+16),bytes.getFloat(at+20),bytes.get(at+12)&255,bytes.get(at+13)&255,bytes.get(at+14)&255,bytes.get(at+15)&255,bytes.getShort(at+24)&65535,bytes.getShort(at+26)&65535,0});}
                 EnumFacing boundary=boundary(polygon);WaterloggedSurfaceMesh.Contact contact=boundary==null?null:contacts.get(pos.offset(boundary));List<List<double[]>> pieces;
-                if(contact==null)pieces=Collections.singletonList(polygon);else{int axis=boundary.getAxis()==EnumFacing.Axis.X?0:boundary.getAxis()==EnumFacing.Axis.Y?1:2;for(double[] vertex:polygon){vertex[11]=vertex[axis];vertex[axis]=boundary.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1:0;}pieces=contact.subtract(polygon,boundary);for(List<double[]> piece:pieces)for(double[] vertex:piece)vertex[axis]=vertex[11];}
+                if(contact==null)pieces=Collections.singletonList(polygon);else{
+                    // A flush diagonal end leaves part of the native face against the
+                    // panel itself. It is stationary connected water too, not a waterfall.
+                    net.minecraft.client.renderer.texture.TextureAtlasSprite still=WaterloggedRenderer.sprite(fluid);
+                    int textureAxis=boundary.getAxis()==EnumFacing.Axis.X?0:boundary.getAxis()==EnumFacing.Axis.Y?1:2;
+                    for(double[] vertex:polygon){double u=textureAxis==0?vertex[2]:vertex[0],v=textureAxis==1?vertex[2]:1-vertex[1];vertex[3]=still.getInterpolatedU(u*16);vertex[4]=still.getInterpolatedV(v*16);}
+                    int axis=boundary.getAxis()==EnumFacing.Axis.X?0:boundary.getAxis()==EnumFacing.Axis.Y?1:2;for(double[] vertex:polygon){vertex[11]=vertex[axis];vertex[axis]=boundary.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1:0;}pieces=contact.subtract(polygon,boundary);for(List<double[]> piece:pieces)for(double[] vertex:piece)vertex[axis]=vertex[11];}
                 for(List<double[]> piece:pieces)if(piece.size()==4){for(double[] vertex:piece)append(destination,vertex,pos);written+=4;}else for(int i=1;i+1<piece.size();i++){append(destination,piece.get(0),pos);append(destination,piece.get(i),pos);append(destination,piece.get(i+1),pos);append(destination,piece.get(i+1),pos);written+=4;}
             }return written>0;
         }finally{if(!finished)scratch.finishDrawing();scratch.reset();}
