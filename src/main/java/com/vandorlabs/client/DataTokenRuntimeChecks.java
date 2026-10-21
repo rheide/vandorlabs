@@ -32,7 +32,7 @@ final class DataTokenRuntimeChecks {
                 faces.add(quad.getFace());
                 if(quad.getFace()!=EnumFacing.NORTH&&quad.getFace()!=EnumFacing.SOUTH&&!quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge"))throw new IllegalStateException("Transparent token edge material "+type+designs[i]);
             }
-            if(faces.size()!=6||solidFaces!=model.getQuads(null,null,0).size()-2)throw new IllegalStateException("Open token silhouette "+type+designs[i]);
+            if(faces.size()!=6||solidFaces!=model.getQuads(null,null,0).size()-6)throw new IllegalStateException("Open token silhouette "+type+designs[i]);
             if(Math.abs(maxZ-minZ-1/16D)>1e-6)throw new IllegalStateException("Token gained block-like thickness");
             BufferedImage front=appearance(mc,stack,model,0),side=appearance(mc,stack,model,90);
             checkRectangle(front,kind==0?8.5:12,kind==0?14:12);checkRectangle(side,1,kind==0?14:12);
@@ -51,7 +51,7 @@ final class DataTokenRuntimeChecks {
         }}finally{canvas.dispose();views.dispose();}
         javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_data_tokens_held.png"));
         javax.imageio.ImageIO.write(closeups,"png",new File(output,"shot_data_tokens_closeups.png"));
-        System.out.println("[vandorlabs][reprolab] data-token-models PASS fourteen solid cuboids rectangular fronts edge-on solid coverage one-unit depth opaque side material and both first-person hand corners");
+        System.out.println("[vandorlabs][reprolab] data-token-models PASS fourteen closed corner-clipped props rectangular fronts edge-on solid coverage one-unit depth opaque side material and both first-person hand corners");
     }
     private static void checkRectangle(BufferedImage image,double width,double height){
         int left=(int)Math.round(128-width*8),right=(int)Math.round(128+width*8),top=(int)Math.round(128-height*8),bottom=(int)Math.round(128+height*8);

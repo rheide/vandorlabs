@@ -43,6 +43,14 @@ final class DoorSecurityRuntimeChecks {
             require(!tile.keyReader(0).isEmpty()&&!tile.keyReader(1).isEmpty(),"both faces hold separate physical cards");
             TileEntitySpaceDoor both=(TileEntitySpaceDoor)net.minecraft.tileentity.TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));both.setWorld(world);require(!both.keyReader(0).isEmpty()&&!both.keyReader(1).isEmpty(),"both physical cards survive save/load");
             player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);tile.useSecurity(player,EnumHand.MAIN_HAND,1);require(!tile.keyReader(0).isEmpty()&&tile.keyReader(1).isEmpty()&&world.getBlockState(pos).getValue(BlockDoor.OPEN),"removal only affects clicked reader");player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);tile.useSecurity(player,EnumHand.MAIN_HAND,0);require(!world.getBlockState(pos).getValue(BlockDoor.OPEN),"door closes when both readers release");
+            tile.configureSecurity(4,8);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CARD,2,3));
+            block.onBlockActivated(world,pos,world.getBlockState(pos),player,EnumHand.MAIN_HAND,facing,.5F,.5F,.5F);
+            require(tile.keyReader(0).returning(),"valid card anywhere on leaf enters reader");tile.keyReader(0).expire(world.getTotalWorldTime()+8);
+            require(world.getBlockState(pos).getValue(BlockDoor.OPEN),"return toggle opens door");
+            TileEntitySpaceDoor toggled=(TileEntitySpaceDoor)net.minecraft.tileentity.TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));toggled.setWorld(world);require(toggled.securityToggle()&&!tile.itemSettings().hasKey("DoorSecurityToggled"),"toggle saved but never copied into item");
+            tile.keyReader(0).takeForDrop();tile.useSecurity(player,EnumHand.MAIN_HAND,1);tile.keyReader(1).expire(world.getTotalWorldTime()+8);
+            require(!world.getBlockState(pos).getValue(BlockDoor.OPEN),"other panel toggles the same door closed");tile.keyReader(1).takeForDrop();
+            tile.configureSecurity(3,8);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CARD,1,3));tile.useSecurity(player,EnumHand.MAIN_HAND,0);require(tile.keyReader(0).behavior==1&&world.getBlockState(pos).getValue(BlockDoor.OPEN),"retained pulse uses shared reader behavior");tile.keyReader(0).takeForDrop();
             tile.setPlacementDepth(1);require(tile.panelMode()==1,"both restricted to centered");tile.setPlacementDepth(0);tile.configureSecurity(1,8);
             player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CARD,2,3));tile.useSecurity(player,EnumHand.MAIN_HAND);
             require(tile.keyReader().returning()&&player.getHeldItemMainhand().getCount()==1,"return mode borrows one");tile.keyReader().expire(world.getTotalWorldTime()+8);

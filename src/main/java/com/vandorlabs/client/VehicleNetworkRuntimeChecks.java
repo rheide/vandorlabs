@@ -10,7 +10,7 @@ import java.util.*;
 /** Actual remote driver/observer clients, with opt-in server delay/jitter/message-loss injection. */
 public final class VehicleNetworkRuntimeChecks {
     private static int phase=-1,elapsed,ticks,samples,reversals;
-    private static long lastState=Long.MIN_VALUE;
+    private static long lastState=Long.MIN_VALUE,lastSample;
     private static float previousYaw;
     private static boolean sampled,done;
     private static boolean sawOpen,sawClosed;
@@ -37,13 +37,15 @@ public final class VehicleNetworkRuntimeChecks {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),phase<4);
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),phase<4);
         }
-        if(sampled && elapsed>40 && elapsed<220 && phase<4) {
+        long now=System.nanoTime();
+        // A render/JIT pause can span many simulation steps; measure per-frame snaps only during consecutive frames.
+        if(sampled && now-lastSample<250000000L && elapsed>40 && elapsed<220 && phase<4) {
             float delta=MathHelper.wrapDegrees(craft.visualPose(1).yaw-previousYaw);
             if(delta<-.1)reversals++;
             if(Math.abs(delta)>15)throw new IllegalStateException("periodic heading snap: "+delta);
             samples++;
         }
-        sampled=true;previousYaw=craft.visualPose(1).yaw;
+        sampled=true;lastSample=now;previousYaw=craft.visualPose(1).yaw;
         if(phase<4)return false;
         KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),false);
         if(phases.size()!=4 || samples<100 || System.nanoTime()-lastState>3000000000L)throw new IllegalStateException("missing latency profiles or stalled observer");

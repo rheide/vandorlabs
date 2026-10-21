@@ -8,14 +8,14 @@ for kind in ('card','chip'):
     for name in ('unbranded','pinnacle','ashiro','paladyne','vektor','seyr','vandor'):
         identifier=f'data_{kind}_{name}'
         art=Image.open(textures/(identifier+'.png')).convert('RGBA')
-        assert art.size==(128,128) and art.getchannel('A').getextrema()==(255,255),identifier
+        assert art.size==(128,128) and sum(a==0 for a in art.getchannel('A').getdata())==4,identifier
         model=json.loads((root/'src/main/resources/assets/vandorlabs/models/item'/(identifier+'.json')).read_text())
-        assert len(model['elements'])==1,identifier
+        assert len(model['elements'])==3,identifier
         element=model['elements'][0]
         assert set(element['faces'])=={'north','south','east','west','up','down'},identifier
         assert element['to'][2]-element['from'][2]==1,identifier
-        width=element['to'][0]-element['from'][0];height=element['to'][1]-element['from'][1]
+        width=max(e['to'][0] for e in model['elements'])-min(e['from'][0] for e in model['elements']);height=max(e['to'][1] for e in model['elements'])-min(e['from'][1] for e in model['elements'])
         assert (width<height if kind=='card' else width==height),identifier
         for face in ('east','west','up','down'):assert element['faces'][face]['texture']=='#edge',identifier
         for face in ('north','south'):assert element['faces'][face]['texture']=='#front',identifier
-print('PASS: fourteen closed cuboids; rectangular cards, square chips, one-unit depth and opaque 128px artwork')
+print('PASS: fourteen closed corner-clipped props; rectangular cards, square chips, one-unit depth and 128px artwork with four clipped corner pixels')

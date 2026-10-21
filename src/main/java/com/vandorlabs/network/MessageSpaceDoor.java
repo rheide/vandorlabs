@@ -69,7 +69,7 @@ public class MessageSpaceDoor implements IMessage {
         @Override public IMessage onMessage(MessageSpaceDoor m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if (m.panelMode>2||m.panelMode==2&&m.depth!=0||m.securityMode>2||m.securityAllowed>127||!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || !TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
+                if (m.panelMode>2||m.panelMode==2&&m.depth!=0||m.securityMode>4||m.securityAllowed>127||!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || !TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
                         || !SpaceDoorData.validTrigger(m.trigger)
                         || m.faceTexture< -1 || (m.faceTexture!=-1 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.faceTexture))
                         || m.depth<0 || m.depth>2 || m.channel<0 || m.pos==null || m.getRedstoneChannels()==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)

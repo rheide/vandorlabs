@@ -8,6 +8,19 @@ import java.util.List;
 public final class DiagonalMeshClip {
     private DiagonalMeshClip() { }
 
+    /** Keep n dot position <= distance, interpolating all attached attributes. */
+    public static List<double[]> plane(List<double[]> input,double nx,double ny,double nz,double distance) {
+        List<double[]> output=new ArrayList<>();
+        if(input.isEmpty())return output;
+        double[] a=input.get(input.size()-1);double da=nx*a[0]+ny*a[1]+nz*a[2]-distance;
+        for(double[] b:input){
+            double db=nx*b[0]+ny*b[1]+nz*b[2]-distance;boolean ai=da<=1e-10,bi=db<=1e-10;
+            if(ai!=bi){double t=da/(da-db);double[] v=new double[a.length];for(int i=0;i<v.length;i++)v[i]=a[i]+t*(b[i]-a[i]);output.add(v);}
+            if(bi)output.add(b);a=b;da=db;
+        }
+        return output;
+    }
+
     public static List<double[]> polygon(double[] bounds, double[]... vertices) {
         List<double[]> polygon=new ArrayList<>(Arrays.asList(vertices));
         if(bounds==null)return polygon;

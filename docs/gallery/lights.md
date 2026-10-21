@@ -31,7 +31,7 @@ Light Frames attach flush to the supporting wall, floor or ceiling. **Size: Smal
 
 Programmable Light, Light Slab and Light Frame can follow signal strength rather
 than a fixed brightness. Select **Signal + offset** and use the brightness slider
-as a signed offset; the result is clamped to 0Ã¢â‚¬â€œ15. Joined lights use the strongest
+as a signed offset; the result is clamped to 0-15. Joined lights use the strongest
 loaded signal received by the group. Manual brightness remains available.
 
 See the [Wall Slider controlling a light](version-1.6.md#slider-controlling-a-light)

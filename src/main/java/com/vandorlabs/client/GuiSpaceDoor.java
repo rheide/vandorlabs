@@ -16,6 +16,7 @@ import java.io.IOException;
 
 /** List selector with server-authoritative live updates, like programmable screens. */
 public class GuiSpaceDoor extends GuiMaterialPicker {
+    private static final int SECURITY_CARDS_Y=196;
     private int textureLayout;
     private final TileEntitySpaceDoor tile;
     private HousingTextureList textureList;
@@ -59,10 +60,10 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+145,154,18);
         ChannelFields.configure(channelField);channelField.setText(channelText);
         buttonList.add(layout.control(19,168,securityLabel()));
-        done=layout.done(1);buttonList.add(done);updateChannelValidity();
+        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();
     }
     private String panelLabel(){return "Panel: "+new String[]{"Off","On","Both"}[panelMode];}
-    private String securityLabel(){return "Security: "+new String[]{"Off","Return After Open","Stay Inserted"}[securityMode];}
+    private String securityLabel(){return (securityMode==0?"Security: ":"")+TileEntitySpaceDoor.securityLabel(securityMode);}
     private int channel() {return ChannelFields.first(channelField);}
     private void updateHingeButton() {
         hingeButton.enabled=!motion.sliding;
@@ -102,7 +103,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         else if (button.id==16) { trigger=GuiOptionCycle.next(trigger,3); button.displayString=triggerLabel(); }
         else if(button.id==18){textureLayout=GuiOptionCycle.next(textureLayout,3);tileTexture=textureLayout==1;tile.setTextureLayout(textureLayout);button.displayString=layoutLabel();}
         else if (button.id==17) { panelMode=GuiOptionCycle.next(panelMode,depth==0?3:2);panel=panelMode>0;button.displayString=panelLabel(); }
-        else if(button.id==19){securityMode=GuiOptionCycle.next(securityMode,3);button.displayString=securityLabel();}
+        else if(button.id==19){int[] modes={0,2,3,4,1};int index=0;while(modes[index]!=securityMode)index++;securityMode=modes[GuiOptionCycle.next(index,5)];button.displayString=securityLabel();}
         else return;
         sendUpdate();
     }
@@ -111,7 +112,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19))return;
-        if((button==0||button==1)&&y>=guiTop+188&&y<guiTop+206&&x>=layout.controlsX&&x<layout.controlsX+154){int design=(x-layout.controlsX)/22;securityAllowed^=1<<design;sendUpdate();return;}
+        if((button==0||button==1)&&y>=guiTop+SECURITY_CARDS_Y&&y<guiTop+SECURITY_CARDS_Y+18&&x>=layout.controlsX&&x<layout.controlsX+154){int design=(x-layout.controlsX)/22;securityAllowed^=1<<design;sendUpdate();return;}
         channelField.mouseClicked(x,y,button);
         int before=textureList.selected();
         if(textureList.click(x,y,button)) {
@@ -148,7 +149,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         textureList.draw(fontRenderer,mouseX,mouseY);
-        for(int i=0;i<7;i++){int x=layout.controlsX+i*22,y=guiTop+188;drawRect(x-1,y-1,x+17,y+17,(securityAllowed&(1<<i))!=0?0xff45765a:0xff28343e);net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();mc.getRenderItem().renderItemAndEffectIntoGUI(new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,i),x,y);net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();}
+        for(int i=0;i<7;i++){int x=layout.controlsX+i*22,y=guiTop+SECURITY_CARDS_Y;drawRect(x-1,y-1,x+17,y+17,(securityAllowed&(1<<i))!=0?0xff45765a:0xff28343e);net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();mc.getRenderItem().renderItemAndEffectIntoGUI(new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,i),x,y);net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();}
 
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
@@ -161,5 +162,6 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override public void drawScreen(int x,int y,float partial) {
         drawDefaultBackground(); super.drawScreen(x,y,partial); channelField.drawTextBox();
+        if(y>=guiTop+SECURITY_CARDS_Y-1 && y<guiTop+SECURITY_CARDS_Y+17 && x>=layout.controlsX && x<layout.controlsX+154){int card=(x-layout.controlsX)/22;if((x-layout.controlsX)%22<18)drawHoveringText(java.util.Arrays.asList(new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,card).getDisplayName(),(securityAllowed&(1<<card))!=0?"Allowed":"Blocked","Click to toggle"),x,y);}
     }
 }

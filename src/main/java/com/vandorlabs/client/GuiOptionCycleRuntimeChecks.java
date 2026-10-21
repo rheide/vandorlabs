@@ -46,6 +46,7 @@ final class GuiOptionCycleRuntimeChecks {
                 GuiButton button=find(gui,id);
                 if(button==null || !button.visible || !button.enabled)continue;
                 String initial=button.displayString;
+                if(gui instanceof GuiTokenSlot&&id==1){GuiTokenSlot mount=(GuiTokenSlot)gui;int start=mount.behaviorDraft();click(mouse,gui,button,1);require(mount.behaviorDraft()==Math.floorMod(start-1,4),"mount right-click selects previous behavior");mount.updateScreen();require(mount.behaviorDraft()==Math.floorMod(start-1,4),"mount draft survives screen refresh");click(mouse,gui,find(gui,id),0);}
                 if(gui instanceof GuiRedstoneChannel && id==19){int start=((GuiRedstoneChannel)gui).pilotHeightDraft();click(mouse,gui,button,1);require(((GuiRedstoneChannel)gui).pilotHeightDraft()==Math.floorMod(start-1,4),"Pilot Seat height right-click selects previous with wraparound");click(mouse,gui,find(gui,id),0);require(((GuiRedstoneChannel)gui).pilotHeightDraft()==start,"Pilot Seat height restores after forward click");}
                 // Both orders must undo one another. Multi-valued cycles expose forward-only right clicks.
                 click(mouse,gui,button,1);click(mouse,gui,find(gui,id),0);

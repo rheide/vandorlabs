@@ -63,7 +63,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         BlockPos securityRoot=state.getValue(HALF)==BlockDoor.EnumDoorHalf.UPPER?pos.down():pos;
         TileEntity securityRaw=world.getTileEntity(securityRoot);
         if(securityRaw instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)securityRaw).securityMode()>0&&!player.isSneaking()&&player.getHeldItem(hand).getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER){
-            if(hitControlPanel(world,pos,state,face,x,y,z))return ((TileEntitySpaceDoor)securityRaw).useSecurity(player,hand,((TileEntitySpaceDoor)securityRaw).readerIndex(new Vec3d(pos.getX()+x,pos.getY()+y,pos.getZ()+z)));return true;
+            if(hitControlPanel(world,pos,state,face,x,y,z)||((TileEntitySpaceDoor)securityRaw).holdingCredential(player,hand))return ((TileEntitySpaceDoor)securityRaw).useSecurity(player,hand,((TileEntitySpaceDoor)securityRaw).readerIndex(new Vec3d(pos.getX()+x,pos.getY()+y,pos.getZ()+z)));return true;
         }
         if (hand != EnumHand.MAIN_HAND || !player.capabilities.isCreativeMode
                 || (!player.isSneaking() && !hitControlPanel(world,pos,state,face,x,y,z)))

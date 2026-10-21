@@ -53,7 +53,7 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
             double normal=front==EnumFacing.SOUTH?pos.getZ()+z-tile.getPos().getZ():front==EnumFacing.NORTH?1-(pos.getZ()+z-tile.getPos().getZ()):front==EnumFacing.EAST?pos.getX()+x-tile.getPos().getX():1-(pos.getX()+x-tile.getPos().getX());
             panelHit=face==panelFace && BlockConfigurableSpaceDoor.panelContains(tile,normal,pos.getY()+y-tile.getPos().getY(),1.5);
         }
-        if(tile.securityMode()>0&&!player.isSneaking()&&player.getHeldItem(hand).getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER){if(panelHit)return tile.useSecurity(player,hand,tile.readerIndex(new Vec3d(pos.getX()+x,pos.getY()+y,pos.getZ()+z)));return true;}
+        if(tile.securityMode()>0&&!player.isSneaking()&&player.getHeldItem(hand).getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER){if(panelHit||tile.holdingCredential(player,hand))return tile.useSecurity(player,hand,tile.readerIndex(new Vec3d(pos.getX()+x,pos.getY()+y,pos.getZ()+z)));return true;}
         if(hand!=EnumHand.MAIN_HAND)return false;
         if(player.isSneaking() || player.capabilities.isCreativeMode && panelHit){
             if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,player.capabilities.isCreativeMode?com.vandorlabs.GuiHandler.GUI_SPACE_DOOR:com.vandorlabs.GuiHandler.GUI_REDSTONE_CHANNEL,world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ());

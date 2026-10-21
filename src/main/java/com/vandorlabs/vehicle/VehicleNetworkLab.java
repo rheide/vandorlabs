@@ -21,6 +21,7 @@ public final class VehicleNetworkLab {
     private static final Random random=new Random(719);
     private static EntityGroundVehicle craft;
     private static int ticks,inputs,states;
+    private static boolean prepared;
     private static final List<BlockPos> passengerSeats=new ArrayList<>();
     private static final Set<BlockPos> testedSeats=new HashSet<>();
     private static final class Delivery {final long at;final Runnable action;Delivery(long at,Runnable action){this.at=at;this.action=action;}}
@@ -46,12 +47,11 @@ public final class VehicleNetworkLab {
         net.minecraft.server.MinecraftServer server=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance();
         Iterator<Delivery> ready=deliveries.iterator();List<Runnable> work=new ArrayList<>();long now=System.nanoTime();
         while(ready.hasNext()){Delivery d=ready.next();if(now>=d.at){work.add(d.action);ready.remove();}}for(Runnable action:work)action.run();
+        WorldServer world=server.getWorld(0);
+        if(!prepared){prepared=true;world.getGameRules().setOrCreateGameRule("doMobSpawning","false");world.setWorldTime(6000);for(BlockPos at:BlockPos.getAllInBox(new BlockPos(-48,100,-48),new BlockPos(48,100,48)))world.setBlockState(at,Blocks.STONE.getDefaultState(),2);}
         EntityPlayerMP driver=server.getPlayerList().getPlayerByUsername("VDriver"),observer=server.getPlayerList().getPlayerByUsername("VObserver");
         if(driver==null || observer==null)return;
-        WorldServer world=server.getWorld(0);
         if(craft==null) {
-            world.getGameRules().setOrCreateGameRule("doMobSpawning","false");world.setWorldTime(6000);
-            for(BlockPos at:BlockPos.getAllInBox(new BlockPos(-48,100,-48),new BlockPos(48,100,48)))world.setBlockState(at,Blocks.STONE.getDefaultState(),2);
             List<VehicleStructure.Cell> cells=new ArrayList<>();
             for(int x=0;x<12;x++)for(int z=0;z<5;z++)cells.add(new VehicleStructure.Cell(new BlockPos(x,0,z),Blocks.STONE.getDefaultState(),null));
             BlockPos seat=new BlockPos(11,1,2);cells.add(new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),null));
@@ -82,7 +82,7 @@ public final class VehicleNetworkLab {
             if(!craft.board(observer,firstPassenger)||craft.getControllingPassenger()!=null||!craft.board(driver)||craft.getControllingPassenger()!=driver)throw new IllegalStateException("Passenger-first boarding took pilot control");
         }
         ticks++;
-        BlockPos selected=passengerSeats.get(Math.min(passengerSeats.size()-1,(ticks-1)*passengerSeats.size()/900));
+        BlockPos selected=passengerSeats.get(((ticks-1)/24)%passengerSeats.size());
         craft.assignSeat(observer,selected);craft.updatePassenger(observer);testedSeats.add(selected);
         if(observer.getRidingEntity()!=craft||driver.getRidingEntity()!=craft||craft.getPassengers().size()!=2||craft.getControllingPassenger()!=driver)throw new IllegalStateException("Dedicated passenger seating lost a rider or pilot control");
         net.minecraft.util.math.Vec3d expected=craft.seatPosition(new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw),observer);

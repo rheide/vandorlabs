@@ -27,8 +27,12 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
   GlStateManager.pushMatrix();try(TurntableRenderState saved=new TurntableRenderState()){
    GlStateManager.disableCull();GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);Tessellator.getInstance().getBuffer().setTranslation(0,0,0);
    int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
-   if(tile.isEmpty()&&tile.effectiveAllowed()!=0){
-    Minecraft mc=Minecraft.getMinecraft();mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);TextureAtlasSprite logo=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/access_reader/logos/"+com.vandorlabs.items.ItemDesignToken.DESIGNS[tile.logoDesign()]);
+   if(tile.rejected()){
+    GlStateManager.disableTexture2D();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
+    for(int pixel=-2;pixel<=2;pixel++)for(int direction:new int[]{-1,1})panel(facing,rotation,(pixel-.35)/16,(pixel+.35)/16,(direction*pixel-.35)/16,(direction*pixel+.35)/16,.026,0xffb340);
+    GlStateManager.enableTexture2D();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
+   }else if(tile.isEmpty()&&tile.effectiveAllowed()!=0){
+    Minecraft mc=Minecraft.getMinecraft();mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);TextureAtlasSprite logo=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/access_reader/logos/"+com.vandorlabs.items.ItemDesignToken.DESIGNS[ReaderLogoCycle.design(tile)]);
     double half=2.2/16;BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR);
     double[][] points={{-half,-half,0,1},{half,-half,1,1},{half,half,1,0},{-half,half,0,0}};
     for(double[] c:points){Vec3d v=TokenSlotGeometry.point(facing,rotation,c[0],c[1],.025);b.pos(v.x,v.y,v.z).tex(c[2]==0?logo.getMaxU():logo.getMinU(),c[3]==0?logo.getMinV():logo.getMaxV()).color(255,255,255,255).endVertex();}Tessellator.getInstance().draw();

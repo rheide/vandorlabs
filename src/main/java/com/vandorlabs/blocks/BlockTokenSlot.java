@@ -29,6 +29,7 @@ public final class BlockTokenSlot extends BlockVandorSwitch {
             else if(!world.isRemote){ItemStack removed=tile.removeStackFromSlot(0);if(!player.inventory.addItemStackToInventory(removed)&&!removed.isEmpty())player.dropItem(removed,false);}return true;
         }
         if(!tile.accepts(held))return false;
+        if(!tile.authorized(held)){tile.reject();return true;}
         if(!tile.isEmpty())return true;
         if(tile.behavior>=2){if(!world.isRemote)tile.insertToggle(player,held);return true;}
         if(!world.isRemote){ItemStack inserted=held.copy();inserted.setCount(1);tile.setInventorySlotContents(0,inserted);if(!player.capabilities.isCreativeMode)held.shrink(1);}return true;

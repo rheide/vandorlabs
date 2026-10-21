@@ -9,8 +9,6 @@ public final class ContainerTokenSlot extends Container {
  public ContainerTokenSlot(InventoryPlayer player,TileEntityTokenSlot tile){
   this.tile=tile;InventoryBasic filters=new InventoryBasic("Accepted designs",false,7);
   for(int i=0;i<7;i++){filters.setInventorySlotContents(i,new ItemStack(tile.chip()?com.vandorlabs.items.ModItems.DATA_CHIP:com.vandorlabs.items.ModItems.DATA_CARD,1,i));addSlotToContainer(new Slot(filters,i,12+i*40,102){@Override public boolean isItemValid(ItemStack item){return false;}@Override public boolean canTakeStack(EntityPlayer player){return false;}});}
-  for(int row=0;row<3;row++)for(int col=0;col<9;col++)addSlotToContainer(new Slot(player,col+row*9+9,73+col*18,130+row*18));
-  for(int col=0;col<9;col++)addSlotToContainer(new Slot(player,col,73+col*18,188));
  }
  @Override public boolean canInteractWith(EntityPlayer player){return tile.isUsableByPlayer(player);}
  @Override public ItemStack slotClick(int id,int button,ClickType type,EntityPlayer player){
