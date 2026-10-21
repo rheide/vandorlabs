@@ -12,6 +12,12 @@ import java.util.*;
 /** One persistent controller owns every display and independent touch/throttle output. */
 public class TileEntityCockpit extends TileEntityVehicleController {
     private String design="cockpit_a";
+    private int sideTexture=-1;
+    public int sideTexture(){return sideTexture;}
+    public void setSideTexture(int value){
+        if(value< -1 || value>=ScreenHousingTextures.IDS.length)return;
+        sideTexture=value;changed();
+    }
     public final List<Display> displays=new ArrayList<>();
     public final List<Control> controls=new ArrayList<>();
     public TileEntityCockpit(){initializeControls();}
@@ -52,7 +58,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     public boolean use(Vec3d start,Vec3d end){
         prepare();start=CockpitData.unrotate(start,facing());end=CockpitData.unrotate(end,facing());
         CockpitData.Surface nearest=null;double[] uv=null;
-        for(CockpitData.Surface surface:data().surfaces)if("touch".equals(surface.role) && display(surface.id).active){double[] hit=surface.hit(start,end);if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
+        for(CockpitData.Surface surface:data().surfaces)if("touch".equals(surface.role) && display(surface.id).active && display(surface.id).texture>=0){double[] hit=surface.hit(start,end);if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
         String throttle=null;double distance=uv==null?Double.POSITIVE_INFINITY:start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2])));
         for(Map.Entry<String,Vec3d> part:data().pivots.entrySet()){
             Vec3d p=part.getValue();RayTraceResult hit=new AxisAlignedBB(p.x-.11,p.y-.05,p.z-.26,p.x+.11,p.y+.24,p.z+.26).calculateIntercept(start,end);
@@ -63,13 +69,15 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         return false;
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);tag.setString("CockpitDesign",design);prepare();
+        super.writeToNBT(tag);tag.setString("CockpitDesign",design);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
         NBTTagList screens=new NBTTagList();for(Display d:displays)screens.appendTag(d.write());tag.setTag("CockpitDisplays",screens);
         NBTTagList outputs=new NBTTagList();for(Control c:controls)outputs.appendTag(c.write());tag.setTag("CockpitControls",outputs);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
         if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);
         super.readFromNBT(tag);design=tag.hasKey("CockpitDesign",8)?tag.getString("CockpitDesign"):design;CockpitData.get(design);
+        sideTexture=tag.hasKey("CockpitSideTexture",3)?tag.getInteger("CockpitSideTexture"):-1;
+        if(sideTexture< -1 || sideTexture>=ScreenHousingTextures.IDS.length)sideTexture=-1;
         displays.clear();controls.clear();prepare();
         NBTTagList screens=tag.getTagList("CockpitDisplays",10);for(int i=0;i<Math.min(32,screens.tagCount());i++){NBTTagCompound saved=screens.getCompoundTagAt(i);Display d=display(saved.getString("Id"));if(d!=null)d.read(saved);}
         NBTTagList outputs=tag.getTagList("CockpitControls",10);for(int i=0;i<Math.min(64,outputs.tagCount());i++){NBTTagCompound saved=outputs.getCompoundTagAt(i);Control c=control(saved.getString("Id"));if(c!=null)c.read(saved);}

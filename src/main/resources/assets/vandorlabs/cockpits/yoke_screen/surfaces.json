@@ -8,19 +8,19 @@
       "role": "touch",
       "node": "base",
       "origin_blocks": [
-        0.125,
+        0.1875,
         0.5165625,
-        0.40625
+        0.63125
       ],
       "u_vector_blocks": [
-        0.75,
+        0.625,
         0.0,
         0.0
       ],
       "v_vector_blocks": [
         0.0,
         0.0,
-        -0.10625
+        -0.3125
       ],
       "normal": [
         0.0,
@@ -29,31 +29,31 @@
       ],
       "corners_blocks": [
         [
-          0.125,
+          0.1875,
           0.5165625,
-          0.40625
+          0.63125
         ],
         [
-          0.875,
+          0.8125,
           0.5165625,
-          0.40625
+          0.63125
         ],
         [
-          0.875,
+          0.8125,
           0.5165625,
-          0.3
+          0.31875
         ],
         [
-          0.125,
+          0.1875,
           0.5165625,
-          0.3
+          0.31875
         ]
       ],
       "size_model_pixels": [
-        12.0,
-        1.7
+        10.0,
+        5.0
       ],
-      "overlay_offset_blocks": 0.0015625,
+      "overlay_offset_blocks": 0.003125,
       "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
       "material": "blank",
       "base_rgb": [
@@ -100,12 +100,12 @@
         ],
         [
           0.875,
-          0.93091264,
+          0.93091263,
           0.14006429
         ],
         [
           0.125,
-          0.93091264,
+          0.93091263,
           0.14006429
         ]
       ],
@@ -113,7 +113,7 @@
         12.0,
         6.0
       ],
-      "overlay_offset_blocks": 0.0015625,
+      "overlay_offset_blocks": 0.003125,
       "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
       "material": "blank",
       "base_rgb": [

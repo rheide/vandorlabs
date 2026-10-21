@@ -18,7 +18,7 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
     @Override public void render(TileEntityCockpit tile,double x,double y,double z,float partial,int stage,float alpha){
         if(!tile.hasLiveBlock())return;
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);EnumFacing facing=tile.facing();
-        CockpitRenderer.renderAnimated(tile.design(),x,y,z,facing,light,id->{TileEntityCockpit.Control c=tile.control(id);return c==null?0:c.level/5D;});
+        CockpitRenderer.renderAnimated(tile.design(),x,y,z,facing,light,id->{TileEntityCockpit.Control c=tile.control(id);return c==null?0:c.level/5D;},tile.sideTexture());
         float oldU=OpenGlHelper.lastBrightnessX,oldV=OpenGlHelper.lastBrightnessY;
         boolean lighting=GL11.glIsEnabled(GL11.GL_LIGHTING),cull=GL11.glIsEnabled(GL11.GL_CULL_FACE),blend=GL11.glIsEnabled(GL11.GL_BLEND);
         int oldActive=GL11.glGetInteger(org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE);GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);int oldTexture=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
@@ -27,12 +27,13 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
         try{
             GlStateManager.translate(x+.5,y,z+.5);GlStateManager.rotate(facing==EnumFacing.EAST?-90:facing==EnumFacing.WEST?90:facing==EnumFacing.SOUTH?180:0,0,1,0);GlStateManager.translate(-.5,0,-.5);
             GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
-            for(CockpitData.Surface plane:tile.data().surfaces){TileEntityCockpit.Display screen=tile.display(plane.id);double[] uv=TEAnimatedScreenSelector.bindCockpit(tile,screen);
+            for(CockpitData.Surface plane:tile.data().surfaces){TileEntityCockpit.Display screen=tile.display(plane.id);boolean blank=screen.texture<0||!screen.active;double[] uv=blank?new double[]{0,1,0,1}:TEAnimatedScreenSelector.bindCockpit(tile,screen);if(blank)GlStateManager.disableTexture2D();
                 BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
                 double[][] points={{0,0},{1,0},{1,1},{0,1}};
-                for(double[] p:points){Vec3d v=plane.point(p[0],p[1]);buffer.pos(v.x,v.y,v.z).tex(uv[2]+p[0]*(uv[3]-uv[2]),uv[1]+p[1]*(uv[0]-uv[1])).color(1F,1F,1F,1F).normal((float)plane.normal.x,(float)plane.normal.y,(float)plane.normal.z).endVertex();}
+                for(double[] p:points){Vec3d v=plane.point(p[0],p[1]);float colorValue=blank?0:1;buffer.pos(v.x,v.y,v.z).tex(uv[2]+p[0]*(uv[3]-uv[2]),uv[1]+p[1]*(uv[0]-uv[1])).color(colorValue,colorValue,colorValue,1F).normal((float)plane.normal.x,(float)plane.normal.y,(float)plane.normal.z).endVertex();}
                 Tessellator.getInstance().draw();
-                if("touch".equals(plane.role) && screen.active)rows(tile,plane);
+                if(blank)GlStateManager.enableTexture2D();
+                if("touch".equals(plane.role) && screen.active && screen.texture>=0)rows(tile,plane);
             }
         }finally{
             GlStateManager.popMatrix();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.bindTexture(oldTexture);GlStateManager.setActiveTexture(oldActive);

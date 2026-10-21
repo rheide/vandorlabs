@@ -548,10 +548,10 @@ tile.vandorlabs.ski_landing_gear.name=Ski Landing Gear
 tile.vandorlabs.landing_strut.name=Landing Strut
 tile.vandorlabs.angled_landing_strut.name=Angled Landing Strut
 
-tile.cockpit_a.name=Cockpit A
-tile.cockpit_b.name=Cockpit B
-tile.chair_siderests.name=Pilot Chair with Side Controls
-tile.yoke_screen.name=Yoke and Screen
+tile.vandorlabs.cockpit_a.name=Cockpit A
+tile.vandorlabs.cockpit_b.name=Cockpit B
+tile.vandorlabs.chair_siderests.name=Advanced Pilot Chair
+tile.vandorlabs.yoke_screen.name=Yoke and Screen
 
 tile.vandorlabs.turntable_controller.name=Turntable Controller
 tile.vandorlabs.turntable_surface.name=Turntable Surface
@@ -586,3 +586,6 @@ item.vandorlabs.data_chip.vandor.name=Vandor Data Chip
 
 tile.vandorlabs.gear_mount.name=Landing Gear Mount
 tile.vandorlabs.large_gear_mount.name=Large Landing Gear Mount
+
+tile.vandorlabs.data_card_slot.name=Data Card Mount
+tile.vandorlabs.data_chip_slot.name=Data Chip Mount

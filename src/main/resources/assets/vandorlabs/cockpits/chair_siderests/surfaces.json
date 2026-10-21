@@ -10,17 +10,17 @@
       "origin_blocks": [
         0.915625,
         0.6634375,
-        0.7375
+        0.13125
       ],
       "u_vector_blocks": [
+        0.0,
+        0.0,
+        0.5875
+      ],
+      "v_vector_blocks": [
         0.29375,
         0.0,
         0.0
-      ],
-      "v_vector_blocks": [
-        0.0,
-        0.0,
-        -0.60625
       ],
       "normal": [
         0.0,
@@ -31,29 +31,29 @@
         [
           0.915625,
           0.6634375,
-          0.7375
-        ],
-        [
-          1.209375,
-          0.6634375,
-          0.7375
-        ],
-        [
-          1.209375,
-          0.6634375,
           0.13125
         ],
         [
           0.915625,
           0.6634375,
+          0.71875
+        ],
+        [
+          1.209375,
+          0.6634375,
+          0.71875
+        ],
+        [
+          1.209375,
+          0.6634375,
           0.13125
         ]
       ],
       "size_model_pixels": [
-        4.7,
-        9.7
+        9.4,
+        4.7
       ],
-      "overlay_offset_blocks": 0.0015625,
+      "overlay_offset_blocks": 0.003125,
       "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
       "material": "blank",
       "base_rgb": [

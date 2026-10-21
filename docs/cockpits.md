@@ -1,10 +1,9 @@
 # Cockpits and peripheral controls
 
-Cockpit A, Cockpit B, the chair with side controls, and Yoke and Screen are work in progress and temporarily hidden from creative selection. Existing assemblies and their configuration remain supported.
+Cockpit A, Cockpit B, Advanced Pilot Chair, and Yoke and Screen are available in the creative menu.
 
 Cockpit A and Cockpit B combine a Pilot Seat, vehicle mode controls, independent
-screens and touch panels, and physical throttle controls. The chair with side
-controls provides a smaller seated arrangement. Yoke and Screen is a standalone
+screens and touch panels, and physical throttle controls. Advanced Pilot Chair provides a smaller seated arrangement with red upholstery. Yoke and Screen is a standalone
 peripheral and does not add a passenger seat to a vehicle.
 
 Both cockpit consoles have continuous shells, tilted screen banks and a center
@@ -17,12 +16,13 @@ the assembly. Collision follows the component boxes and narrow slices of angled 
 solids, leaving the cockpit interior open. Configured item drops preserve displays, channels and controls.
 
 Use the Configurizer or sneak-right-click any part to open the combined dialog.
-Use the arrows to select the Pilot page, individual surface pages and individual
-output pages. Each screen or touch panel has its own artwork, animation speed,
+Use the arrows to select the Pilot page, the sidewall and armrest casing picker, individual surface pages and individual output pages. Each screen or touch panel has its own artwork, animation speed,
 animation toggle and optional ON/OFF channel gate. Channel zero leaves a surface
 enabled continuously.
 
-Each touch panel contains three independent rows. Configure their labels, output
+Unconfigured touch areas are black and inactive. All touch areas use a 2:1 aspect ratio for half-height keyboard artwork. The right armrest has one rectangular touch area facing the seat; Cockpit A and B have no left-armrest touch panel, and their throttle assemblies sit farther forward.
+
+Each configured touch panel contains three independent rows. Configure their labels, output
 channels and control type: toggle, four-position slider (0, 5, 10, 15), or a
 one-second pulse. Operate a row directly on the model. Physical throttles cycle
 through the same four levels, and their output channels can operate separately

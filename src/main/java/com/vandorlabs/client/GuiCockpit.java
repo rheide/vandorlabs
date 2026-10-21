@@ -17,43 +17,50 @@ public final class GuiCockpit extends GuiContainer {
     private HousingTextureList textures;
     private int page;
     private boolean seating(){return tile.data().seat!=null;}
-    private int displayIndex(){return page-(seating()?1:0);}
+    private boolean pilotPage(){return seating()&&page==0;}
+    private boolean sidePage(){return page==(seating()?1:0);}
+    private int displayIndex(){return page-(seating()?1:0)-1;}
     private int controlIndex(){return displayIndex()-tile.displays.size();}
-    private int pages(){return (seating()?1:0)+tile.displays.size()+tile.controls.size();}
+    private int pages(){return (seating()?1:0)+1+tile.displays.size()+tile.controls.size();}
     public GuiCockpit(ContainerCockpit container){super(container);cockpit=container;tile=container.tile;xSize=580;ySize=280;}
     @Override public void initGui(){
         xSize=Math.min(580,width-12);ySize=Math.min(280,height-12);super.initGui();buttonList.clear();fields.clear();textures=null;org.lwjgl.input.Keyboard.enableRepeatEvents(true);
-        buttonList.add(new GuiButton(0,guiLeft+8,guiTop+6,24,20,"<"));buttonList.add(new GuiButton(1,guiLeft+xSize-32,guiTop+6,24,20,">"));
-        buttonList.add(new GuiButton(2,guiLeft+xSize-92,guiTop+ySize-26,84,20,"Done"));
+        buttonList.add(new CockpitButton(0,guiLeft+8,guiTop+6,24,20,"<"));buttonList.add(new CockpitButton(1,guiLeft+xSize-32,guiTop+6,24,20,">"));
+        buttonList.add(new CockpitButton(2,guiLeft+xSize-92,guiTop+ySize-26,84,20,"Done"));
         int d=displayIndex(),c=controlIndex(),x=guiLeft+12,y=guiTop+48,w=xSize-24;
-        if(d<0){
-            buttonList.add(new GuiButton(10,x,guiTop+30,w/2-2,20,"Taxi on boarding: "+(tile.isTaxiMode()?"On":"Off")));
-            buttonList.add(new GuiButton(11,x+w/2+2,guiTop+30,w/2-2,20,"Trigger: "+new String[]{"Disabled","ON","OFF"}[tile.getRedstoneMode()]));
+        if(pilotPage()){
+            buttonList.add(new CockpitButton(10,x,guiTop+30,w/2-2,20,"Taxi on boarding: "+(tile.isTaxiMode()?"On":"Off")));
+            buttonList.add(new CockpitButton(11,x+w/2+2,guiTop+30,w/2-2,20,"Trigger: "+new String[]{"Disabled","ON","OFF"}[tile.getRedstoneMode()]));
             text(0,x,guiTop+72,w,tile.getRedstoneChannels().toString());
             for(int i=0;i<3;i++)text(i+1,x,guiTop+102+i*28,w,tile.modeChannels(i).toString());
-            for(int i=0;i<3;i++)buttonList.add(new GuiButton(20+i,x+i*w/3,guiTop+ySize-50,w/3-2,20,new String[]{"Block mode","Taxi mode","Hover mode"}[i]));
+            for(int i=0;i<3;i++)buttonList.add(new CockpitButton(20+i,x+i*w/3,guiTop+ySize-50,w/3-2,20,new String[]{"Block mode","Taxi mode","Hover mode"}[i]));
+        }else if(sidePage()){
+            textures=new HousingTextureList(x,guiTop+34,w-8,tile.sideTexture(),8).visibleRows(Math.max(2,(ySize-68)/HousingTextureList.ROW_HEIGHT));
+            buttonList.add(new CockpitButton(34,x,guiTop+ySize-26,110,20,"Default casing"));
         }else if(d<tile.displays.size()){
             TileEntityCockpit.Display screen=tile.displays.get(d);boolean input="touch".equals(screen.role);int controlW=Math.min(154,(xSize-30)/2),cx=guiLeft+xSize-controlW-12;
             textures=new HousingTextureList(x,guiTop+34,cx-x-10,screen.texture,Math.max(3,(ySize-72)/HousingTextureList.ROW_HEIGHT),null,
-                    value->HousingTextureList.generalTexture(value) || ScreenTextureList.artwork(value,input)).custom(this::choose);
-            buttonList.add(new GuiButton(30,cx,guiTop+34,controlW,20,"Animation: "+(screen.animated?"On":"Off")));
-            buttonList.add(new GuiButton(31,cx,guiTop+58,controlW,20,"Speed: "+screen.speed));
+                    value->HousingTextureList.generalTexture(value) || ScreenTextureList.artwork(value,input)).visibleRows(Math.max(2,(ySize-68)/HousingTextureList.ROW_HEIGHT)).custom(this::choose);
+            buttonList.add(new CockpitButton(30,cx,guiTop+34,controlW,20,"Animation: "+(screen.animated?"On":"Off")));
+            buttonList.add(new CockpitButton(31,cx,guiTop+58,controlW,20,"Speed: "+screen.speed));
             text(0,cx,guiTop+94,controlW,Integer.toString(screen.gate));
-            buttonList.add(new GuiButton(32,cx,guiTop+118,controlW,20,"Gate: "+(screen.inverted?"OFF":"ON")));
-            buttonList.add(new GuiButton(33,cx,guiTop+142,controlW,20,"Blank surface"));
+            buttonList.add(new CockpitButton(32,cx,guiTop+118,controlW,20,"Gate: "+(screen.inverted?"OFF":"ON")));
+            buttonList.add(new CockpitButton(33,cx,guiTop+142,controlW,20,"Blank surface"));
         }else{
             TileEntityCockpit.Control control=tile.controls.get(c);
             text(0,x,y+12,w,control.label);text(1,x,y+52,w,control.channels.toString());
-            buttonList.add(new GuiButton(40,x,y+84,w,20,"Control: "+new String[]{"Toggle","Slider (0 / 5 / 10 / 15)","Pulse (1 second)"}[control.kind]));
-            buttonList.add(new GuiButton(41,x,y+110,w,20,"Output: "+control.level+"  (operate)"));
+            buttonList.add(new CockpitButton(40,x,y+84,w,20,"Control: "+new String[]{"Toggle","Slider (0 / 5 / 10 / 15)","Pulse (1 second)"}[control.kind]));
+            buttonList.add(new CockpitButton(41,x,y+110,w,20,"Output: "+control.level+"  (operate)"));
         }
     }
     private void text(int id,int x,int y,int width,String value){GuiTextField field=new GuiTextField(id,fontRenderer,x,y,width,18);field.setMaxStringLength(id==0?128:256);field.setText(value);fields.add(field);}
     private void packet(int op,NBTTagCompound values){com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCockpit(inventorySlots.windowId,op,values));}
-    private void choose(int value){tile.displays.get(displayIndex()).texture=value;save();}
+    private void choose(int value){if(sidePage())tile.setSideTexture(value);else tile.displays.get(displayIndex()).texture=value;save();}
     private void save(){
         int d=displayIndex(),c=controlIndex();NBTTagCompound tag;
-        if(d<0){if(fields.size()!=4)return;for(GuiTextField f:fields)if(ChannelList.parse(f.getText())==null){f.setTextColor(0xff7777);return;}tag=new NBTTagCompound();tag.setBoolean("Pilot",true);tag.setString("Channels",fields.get(0).getText());tag.setBoolean("Taxi",tile.isTaxiMode());tag.setInteger("Trigger",tile.getRedstoneMode());for(int i=0;i<3;i++)tag.setString("Mode"+i,fields.get(i+1).getText());
+        if(pilotPage()){if(fields.size()!=4)return;for(GuiTextField f:fields)if(ChannelList.parse(f.getText())==null){f.setTextColor(0xff7777);return;}tag=new NBTTagCompound();tag.setBoolean("Pilot",true);tag.setString("Channels",fields.get(0).getText());tag.setBoolean("Taxi",tile.isTaxiMode());tag.setInteger("Trigger",tile.getRedstoneMode());for(int i=0;i<3;i++)tag.setString("Mode"+i,fields.get(i+1).getText());
+        }else if(sidePage()){
+            tag=new NBTTagCompound();tag.setInteger("SideTexture",tile.sideTexture());
         }else if(d<tile.displays.size()){
             TileEntityCockpit.Display screen=tile.displays.get(d);try{int gate=Integer.parseInt(fields.get(0).getText());if(gate<0 || gate>65535)throw new NumberFormatException();screen.gate=gate;}catch(NumberFormatException bad){fields.get(0).setTextColor(0xff7777);return;}
             tag=screen.write();tag.setInteger("Display",d);
@@ -74,6 +81,7 @@ public final class GuiCockpit extends GuiContainer {
         else if(button.id==31)tile.displays.get(d).speed=tile.displays.get(d).speed%16+1;
         else if(button.id==32)tile.displays.get(d).inverted=!tile.displays.get(d).inverted;
         else if(button.id==33)tile.displays.get(d).texture=-1;
+        else if(button.id==34)tile.setSideTexture(-1);
         else if(button.id==40)tile.controls.get(c).kind=(tile.controls.get(c).kind+1)%3;
         else if(button.id==41){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Control",c);tag.setDouble("Column",((tile.controls.get(c).level/5+1)%4)/3D);packet(1,tag);return;}
         save();initGui();
@@ -86,11 +94,24 @@ public final class GuiCockpit extends GuiContainer {
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){}
-    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);int d=displayIndex(),c=controlIndex();String title=d<0?"Pilot / vehicle modes":d<tile.displays.size()?tile.displays.get(d).id:tile.controls.get(c).id;drawCenteredString(fontRenderer,title,guiLeft+xSize/2,guiTop+12,0xffffff);
+    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);int d=displayIndex(),c=controlIndex();String title=pilotPage()?"Pilot / vehicle modes":sidePage()?"Sidewalls and armrests":d<tile.displays.size()?tile.displays.get(d).id:tile.controls.get(c).id;drawCenteredString(fontRenderer,title,guiLeft+xSize/2,guiTop+12,0xffffff);
+        net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
         if(textures!=null)textures.draw(fontRenderer,x,y);for(GuiTextField f:fields)f.drawTextBox();
-        if(d<0){fontRenderer.drawString("Trigger channels",guiLeft+12,guiTop+61,0xffffff);for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Block channels","Taxi channels","Hover channels"}[i],guiLeft+12,guiTop+91+i*28,0xffffff);}
+        if(pilotPage()){fontRenderer.drawString("Trigger channels",guiLeft+12,guiTop+61,0xffffff);for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Block channels","Taxi channels","Hover channels"}[i],guiLeft+12,guiTop+91+i*28,0xffffff);}
+        else if(sidePage()){}
         else if(d>=tile.displays.size()){fontRenderer.drawString("Label",guiLeft+12,guiTop+48,0xffffff);fontRenderer.drawString("Output channels",guiLeft+12,guiTop+88,0xffffff);}
         else fontRenderer.drawString("Gate channel (0 = always)",fields.get(0).x,guiTop+83,0xffffff);
+    }
+    /** A solid panel button has no vanilla 256-pixel atlas width limit. */
+    private static final class CockpitButton extends GuiButton {
+        CockpitButton(int id,int x,int y,int width,int height,String label){super(id,x,y,width,height,label);}
+        @Override public void drawButton(net.minecraft.client.Minecraft mc,int mx,int my,float partial){
+            if(!visible)return;hovered=mx>=x&&my>=y&&mx<x+width&&my<y+height;
+            net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
+            drawRect(x,y,x+width,y+height,enabled&&hovered?0xff64879d:0xff3c5363);
+            drawRect(x+1,y+1,x+width-1,y+height-1,enabled&&hovered?0xff344e60:0xff243642);
+            drawCenteredString(mc.fontRenderer,mc.fontRenderer.trimStringToWidth(displayString,width-8),x+width/2,y+(height-8)/2,enabled?0xffffff:0x8b969d);
+        }
     }
     @Override public boolean doesGuiPauseGame(){return false;}
 }

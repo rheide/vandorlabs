@@ -11,6 +11,14 @@ import java.io.File;
 
 final class CockpitItemRuntimeChecks {
     static void run(Minecraft mc,File output)throws Exception{
+        for(String id:CockpitData.IDS){ItemStack named=new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id)));if(!net.minecraft.client.resources.I18n.hasKey(named.getUnlocalizedName()+".name"))throw new IllegalStateException("Cockpit inventory name missing: "+id);}
+        for(String id:CockpitData.IDS){
+            net.minecraft.util.ResourceLocation model=com.vandorlabs.client.cockpits.CockpitModels.rig(id).staticResource;
+            net.minecraft.client.renderer.block.model.IBakedModel custom=com.vandorlabs.client.cockpits.CockpitModels.baked(model,14);
+            net.minecraft.client.renderer.texture.TextureAtlasSprite selected=mc.getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(14));
+            boolean found=false;for(net.minecraft.client.renderer.block.model.BakedQuad quad:custom.getQuads(null,null,0))if(quad.getSprite()==selected)found=true;
+            if(!found)throw new IllegalStateException("Cockpit casing material was not applied: "+id);
+        }
         removalChecks(mc);
         GuiScreen previous=mc.currentScreen;Icons icons=new Icons();try{
             mc.displayGuiScreen(icons);mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();icons.drawScreen(0,0,0);

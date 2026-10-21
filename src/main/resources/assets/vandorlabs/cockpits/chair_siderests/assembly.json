@@ -144,7 +144,7 @@
       "box": "chair_back_padding",
       "min": [
         0.1875,
-        0.575,
+        0.6875,
         0.73
       ],
       "max": [
@@ -191,7 +191,7 @@
       ],
       "max": [
         0.125,
-        0.65625,
+        0.5875,
         0.90625
       ]
     },
@@ -289,7 +289,7 @@
       ],
       "max": [
         1.25,
-        0.65625,
+        0.5875,
         0.90625
       ]
     },
@@ -332,11 +332,13 @@
       "max": [
         1.228125,
         0.661875,
-        0.75625
+        0.7375
       ]
     }
   ],
-  "collision_note": "Conservative per-cuboid transformed AABBs; split/clip to cell when installing. Do not make the full multiblock one solid collision box.",
+  "collision_convex_solids": [],
+  "collision_note": "Per-part AABBs are broad-phase bounds. The angled wall AABBs overestimate the footwell; use collision_convex_solids to derive tighter cell-local collision shapes. Do not make the full multiblock one solid collision box.",
+  "design_contract": {},
   "seat_position_blocks": [
     0.5,
     0.5375,

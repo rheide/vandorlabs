@@ -1,0 +1,521 @@
+{
+  "id": "chair_siderests",
+  "title": "chair_siderests",
+  "description": "Editable cockpit component geometry. Dimensions use model pixels.",
+  "nodes": [
+    {
+      "name": "chair",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "boxes": [
+        {
+          "name": "chair_base",
+          "from": [
+            3.0,
+            0.0,
+            3.0
+          ],
+          "to": [
+            13.0,
+            1.5,
+            13.5
+          ],
+          "material": "housing_dark"
+        },
+        {
+          "name": "chair_pedestal",
+          "from": [
+            5.0,
+            1.5,
+            5.0
+          ],
+          "to": [
+            11.0,
+            5.8,
+            11.5
+          ],
+          "material": "mechanism"
+        },
+        {
+          "name": "chair_seat_pan",
+          "from": [
+            2.0,
+            5.8,
+            0.75
+          ],
+          "to": [
+            14.0,
+            7.4,
+            13.6
+          ],
+          "material": "frame"
+        },
+        {
+          "name": "chair_seat_pad",
+          "from": [
+            2.8,
+            7.4,
+            1.25
+          ],
+          "to": [
+            13.2,
+            8.6,
+            12.4
+          ],
+          "material": "cushion"
+        },
+        {
+          "name": "chair_front_band",
+          "from": [
+            2.8,
+            6.4,
+            0.7
+          ],
+          "to": [
+            13.2,
+            7.25,
+            0.9
+          ],
+          "material": "cushion_edge"
+        },
+        {
+          "name": "chair_back_shell",
+          "from": [
+            2.0,
+            7.4,
+            12.0
+          ],
+          "to": [
+            14.0,
+            22.0,
+            14.5
+          ],
+          "material": "frame"
+        },
+        {
+          "name": "chair_back_padding",
+          "from": [
+            3.0,
+            9.2,
+            11.68
+          ],
+          "to": [
+            13.0,
+            20.9,
+            12.01
+          ],
+          "material": "cushion"
+        },
+        {
+          "name": "chair_lumbar",
+          "from": [
+            3.0,
+            8.5,
+            11.2
+          ],
+          "to": [
+            13.0,
+            11.0,
+            11.7
+          ],
+          "material": "cushion_edge"
+        },
+        {
+          "name": "chair_back_rear",
+          "from": [
+            3.0,
+            8.3,
+            14.5
+          ],
+          "to": [
+            13.0,
+            20.9,
+            14.7
+          ],
+          "material": "housing_dark"
+        }
+      ],
+      "meshes": []
+    },
+    {
+      "name": "siderest_left",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "boxes": [
+        {
+          "name": "left_siderest",
+          "from": [
+            -4.0,
+            0.0,
+            1.0
+          ],
+          "to": [
+            2.0,
+            10.5,
+            14.5
+          ],
+          "material": "housing_dark"
+        },
+        {
+          "name": "left_siderest_top",
+          "from": [
+            -4.0,
+            9.4,
+            0.9
+          ],
+          "to": [
+            2.0,
+            10.5,
+            14.5
+          ],
+          "material": "housing"
+        },
+        {
+          "name": "left_siderest_edge",
+          "from": [
+            -4.0,
+            10.5,
+            12.8
+          ],
+          "to": [
+            2.0,
+            10.9,
+            14.5
+          ],
+          "material": "frame"
+        },
+        {
+          "name": "slider_left_rim",
+          "from": [
+            -3.2,
+            10.5,
+            3.0
+          ],
+          "to": [
+            -1.6,
+            10.65,
+            10.8
+          ],
+          "material": "frame"
+        },
+        {
+          "name": "slider_left_slot",
+          "from": [
+            -2.98,
+            10.65,
+            3.2
+          ],
+          "to": [
+            -1.82,
+            10.675,
+            10.6
+          ],
+          "material": "slot"
+        },
+        {
+          "name": "slider_right_rim",
+          "from": [
+            -0.4,
+            10.5,
+            3.0
+          ],
+          "to": [
+            1.2,
+            10.65,
+            10.8
+          ],
+          "material": "frame"
+        },
+        {
+          "name": "slider_right_slot",
+          "from": [
+            -0.18,
+            10.65,
+            3.2
+          ],
+          "to": [
+            0.98,
+            10.675,
+            10.6
+          ],
+          "material": "slot"
+        }
+      ],
+      "meshes": []
+    },
+    {
+      "name": "siderest_right",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "boxes": [
+        {
+          "name": "right_siderest",
+          "from": [
+            14.0,
+            0.0,
+            1.0
+          ],
+          "to": [
+            20.0,
+            10.5,
+            14.5
+          ],
+          "material": "housing_dark"
+        },
+        {
+          "name": "right_siderest_top",
+          "from": [
+            14.0,
+            9.4,
+            0.9
+          ],
+          "to": [
+            20.0,
+            10.5,
+            14.5
+          ],
+          "material": "housing"
+        },
+        {
+          "name": "right_siderest_edge",
+          "from": [
+            14.0,
+            10.5,
+            12.8
+          ],
+          "to": [
+            20.0,
+            10.9,
+            14.5
+          ],
+          "material": "frame"
+        },
+        {
+          "name": "touch_right_single_rim",
+          "from": [
+            14.35,
+            10.42,
+            1.8
+          ],
+          "to": [
+            19.65,
+            10.59,
+            12.1
+          ],
+          "material": "mechanism"
+        },
+        {
+          "name": "touch_right_single",
+          "from": [
+            14.65,
+            10.595,
+            2.1
+          ],
+          "to": [
+            19.35,
+            10.615,
+            11.8
+          ],
+          "material": "blank"
+        }
+      ],
+      "meshes": []
+    },
+    {
+      "name": "slider_left",
+      "origin": [
+        -2.4,
+        10.7,
+        9.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "boxes": [
+        {
+          "name": "slider_left_stem",
+          "from": [
+            -0.4,
+            -0.4,
+            -0.5
+          ],
+          "to": [
+            0.4,
+            1.6,
+            0.5
+          ],
+          "material": "mechanism"
+        },
+        {
+          "name": "slider_left_grip",
+          "from": [
+            -0.98,
+            1.15,
+            -1.0
+          ],
+          "to": [
+            0.98,
+            2.15,
+            1.0
+          ],
+          "material": "amber_dark"
+        },
+        {
+          "name": "slider_left_cap",
+          "from": [
+            -0.98,
+            2.15,
+            -1.0
+          ],
+          "to": [
+            0.98,
+            2.55,
+            1.0
+          ],
+          "material": "amber"
+        }
+      ],
+      "meshes": [],
+      "animation": {
+        "type": "translation",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "values": [
+          0.0,
+          -1.0,
+          -2.0,
+          -3.0
+        ]
+      }
+    },
+    {
+      "name": "slider_right",
+      "origin": [
+        0.4,
+        10.7,
+        9.0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "boxes": [
+        {
+          "name": "slider_right_stem",
+          "from": [
+            -0.4,
+            -0.4,
+            -0.5
+          ],
+          "to": [
+            0.4,
+            1.6,
+            0.5
+          ],
+          "material": "mechanism"
+        },
+        {
+          "name": "slider_right_grip",
+          "from": [
+            -0.98,
+            1.15,
+            -1.0
+          ],
+          "to": [
+            0.98,
+            2.15,
+            1.0
+          ],
+          "material": "amber_dark"
+        },
+        {
+          "name": "slider_right_cap",
+          "from": [
+            -0.98,
+            2.15,
+            -1.0
+          ],
+          "to": [
+            0.98,
+            2.55,
+            1.0
+          ],
+          "material": "amber"
+        }
+      ],
+      "meshes": [],
+      "animation": {
+        "type": "translation",
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "values": [
+          0.0,
+          -1.0,
+          -2.0,
+          -3.0
+        ]
+      }
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "touch_right_single",
+      "role": "touch",
+      "node": "siderest_right",
+      "origin": [
+        14.65,
+        10.615,
+        11.8
+      ],
+      "u": [
+        4.7,
+        0.0,
+        0.0
+      ],
+      "v": [
+        0.0,
+        0.0,
+        -9.7
+      ],
+      "normal": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "render_offset": 0.025
+    }
+  ]
+}

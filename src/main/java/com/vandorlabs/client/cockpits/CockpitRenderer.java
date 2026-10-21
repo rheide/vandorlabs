@@ -24,10 +24,15 @@ public final class CockpitRenderer {
     /** Each callback result is a position from 0 to 3, including fractions. */
     public static void renderAnimated(String id, double x, double y, double z,
             EnumFacing facing, int packedLight, ToDoubleFunction<String> detents) {
+        renderAnimated(id,x,y,z,facing,packedLight,detents,-1);
+    }
+    public static void renderAnimated(String id, double x, double y, double z,
+            EnumFacing facing, int packedLight, ToDoubleFunction<String> detents,int sideTexture) {
         if (!CockpitModels.ready()) return;
         CockpitModels.Rig rig = CockpitModels.rig(id);
         atAnchor(x, y, z, facing, packedLight, () -> {
-            draw(rig.staticResource);
+            Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelRenderer()
+                .renderModelBrightnessColor(CockpitModels.baked(rig.staticResource,sideTexture),1,1,1,1);
             for (CockpitModels.Part part : rig.parts) {
                 double value = CockpitMotion.sample(part.values, detents.applyAsDouble(part.id));
                 GlStateManager.pushMatrix();

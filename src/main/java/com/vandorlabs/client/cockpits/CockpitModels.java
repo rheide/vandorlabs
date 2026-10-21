@@ -40,6 +40,9 @@ public final class CockpitModels {
     private static final Map<String, Rig> RIGS = new LinkedHashMap<>();
     private static final Map<ResourceLocation, IModel> RAW = new LinkedHashMap<>();
     private static final Map<ResourceLocation, IBakedModel> BAKED = new LinkedHashMap<>();
+    private static final Map<String,IBakedModel> SKINS=new LinkedHashMap<String,IBakedModel>(16,.75F,true){
+        @Override protected boolean removeEldestEntry(Map.Entry<String,IBakedModel> entry){return size()>64;}
+    };
     private static boolean installed;
 
     private CockpitModels() {}
@@ -65,6 +68,15 @@ public final class CockpitModels {
         IBakedModel model = BAKED.get(id);
         if (model == null) throw new IllegalStateException("Cockpit model is not baked: " + id);
         return model;
+    }
+    public static IBakedModel baked(ResourceLocation id,int skin){
+        if(skin<0)return baked(id);
+        String key=id+"/"+skin;
+        return SKINS.computeIfAbsent(key,k->{
+            String texture=com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(skin);
+            IModel raw=RAW.get(id).retexture(com.google.common.collect.ImmutableMap.of("#sidewall",texture));
+            return raw.bake(raw.getDefaultState(),DefaultVertexFormats.ITEM,location->Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(location.toString()));
+        });
     }
 
     /** Reloads both metadata and models BEFORE atlas stitching, including F3+T. */
@@ -102,6 +114,7 @@ public final class CockpitModels {
     @SubscribeEvent
     public void afterBake(ModelBakeEvent event) {
         BAKED.clear();
+        SKINS.clear();
         Minecraft mc = Minecraft.getMinecraft();
         for (Map.Entry<ResourceLocation, IModel> entry : RAW.entrySet()) {
             IModel raw = entry.getValue();
