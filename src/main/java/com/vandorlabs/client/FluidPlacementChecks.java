@@ -38,10 +38,11 @@ final class FluidPlacementChecks {
                     require(floorSide?captured==null:captured!=null&&captured.getFluid()==expected,"capture immersed fluid side / retain dry floor clearance "+id+" "+liquid+" side="+side);
                 }
                 if(id.equals("programmable_slab")||id.equals("programmable_stairs"))require(!WaterloggedParts.data(world.getTileEntity(pos)).occupied(1),"partial block must not store an unreachable second bucket");
-                if(id.equals("programmable_door")){require(world.getBlockState(pos.up()).getBlock()==block,"door upper placed");require(WaterloggedParts.data(world.getTileEntity(pos.up()))==WaterloggedParts.data(world.getTileEntity(pos)),"door halves share captured fluid");}
+                if(id.equals("programmable_door")){require(world.getBlockState(pos.up()).getBlock()==block,"door upper placed");require(WaterloggedParts.data(world.getTileEntity(pos.up()))!=WaterloggedParts.data(world.getTileEntity(pos)),"door halves store captured fluid independently");}
                 clearTicks(world,pos);cases++;
             }
             boundaryChecks(world,player,pos);
+            doorHeightChecks(world,player,pos);
         }finally{
             player.capabilities.isCreativeMode=creative;player.rotationYaw=yaw;player.setHeldItem(EnumHand.MAIN_HAND,held);world.setBlockToAir(pos);for(EnumFacing face:EnumFacing.values())world.setBlockToAir(pos.offset(face));
             java.util.Set<?> pending=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(WorldServer.class,world,"pendingTickListEntriesHashSet","field_73064_N");
@@ -50,7 +51,23 @@ final class FluidPlacementChecks {
             clearTicks(world,pos);
             require(pending.size()==ordered.size(),"placement fixture scheduled tick cleanup mismatch");
         }
-        System.out.println("[vandorlabs][reprolab] fluid-item-placement PASS cases="+cases+" liquids="+liquids.size()+" source/flowing water/lava registered mod liquids eleven families four directions shared door halves");
+        System.out.println("[vandorlabs][reprolab] fluid-item-placement PASS cases="+cases+" liquids="+liquids.size()+" source/flowing water/lava registered mod liquids eleven families four directions independent door halves");
+    }
+    private static void doorHeightChecks(WorldServer world,net.minecraft.entity.player.EntityPlayerMP player,BlockPos pos){
+        Block block=Block.getBlockFromName("vandorlabs:programmable_door");int cases=0;
+        for(int direction=0;direction<4;direction++)for(int wet=0;wet<3;wet++){
+            world.setBlockToAir(pos);world.setBlockToAir(pos.up());for(int y=0;y<2;y++)for(EnumFacing face:EnumFacing.HORIZONTALS)world.setBlockToAir(pos.up(y).offset(face));world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),2);
+            for(int y=0;y<2;y++)world.setBlockState(pos.up(y),wet==2||wet==y?Blocks.WATER.getDefaultState():Blocks.AIR.getDefaultState(),2);
+            player.rotationYaw=direction*90;ItemStack item=new ItemStack(block);player.setHeldItem(EnumHand.MAIN_HAND,item);
+            require(item.onItemUse(player,world,pos.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1,.5F)==EnumActionResult.SUCCESS,"partial immersion door placement");
+            for(int y=0;y<2;y++)for(int side=0;side<2;side++)require(WaterloggedParts.data(world.getTileEntity(pos.up(y))).occupied(side)==(wet==2||wet==y),"door captures only replaced cell y="+y+" wet="+wet);
+            for(int y=0;y<2;y++){
+                net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos.up(y));net.minecraft.tileentity.TileEntity copy=net.minecraft.tileentity.TileEntity.create(world,tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));
+                require(WaterloggedParts.data(copy).any()==(wet==2||wet==y),"per-cell fluid persistence");
+            }
+            clearTicks(world,pos);cases++;
+        }
+        System.out.println("[vandorlabs][reprolab] door-fluid-height PASS cases="+cases+" real placement lower-only upper-only both four facings per-cell persistence");
     }
     private static void clearTicks(WorldServer world,BlockPos pos){
         // Do not accumulate many different scheduled block types in the same test cell.

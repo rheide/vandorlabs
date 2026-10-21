@@ -28,7 +28,7 @@ final class OpeningFluidVisualChecks {
             mc.world.setBlockState(pos,saved.withProperty(kind==0?BlockVandorDoor.OPEN:BlockProgrammableTrapdoor.OPEN,open),2);
             java.util.List<WaterloggedSurfaceMesh.Surface> mesh=WaterloggedSurfaceMesh.get(tile);require(!mesh.isEmpty(),"fluid mesh present");boolean divider=false;
             for(WaterloggedSurfaceMesh.Surface face:mesh){divider|=face.boundary==null;for(Vec3d point:face.vertices)require(point.x>=-1e-7&&point.x<=1+1e-7&&point.y>=-1e-7&&point.y<=1+1e-7&&point.z>=-1e-7&&point.z<=1+1e-7,"clipped fluid polygon");}
-            require(divider!=open,"only the closed leaf has an internal fluid boundary");if(kind==0){boolean upperDivider=false;for(WaterloggedSurfaceMesh.Surface face:WaterloggedSurfaceMesh.get(mc.world.getTileEntity(pos.up())))upperDivider|=face.boundary==null;require(upperDivider!=open,"upper fluid mesh follows the shared open state");}picture(mc,output,kind,tile,open);
+            require(divider!=open,"only the closed leaf has an internal fluid boundary");if(kind==0){boolean upperDivider=false;for(WaterloggedSurfaceMesh.Surface face:WaterloggedSurfaceMesh.get(mc.world.getTileEntity(pos.up())))upperDivider|=face.boundary==null;require(!upperDivider&&WaterloggedSurfaceMesh.get(mc.world.getTileEntity(pos.up())).isEmpty(),"dry upper half has no fluid mesh");}picture(mc,output,kind,tile,open);
         }}finally{mc.world.setBlockState(pos,saved,2);}
     }System.out.println("[vandorlabs][reprolab] opening-fluid-surfaces PASS closed diagonal half-spaces open joined passage restored closed side");}
     private static void picture(Minecraft mc,File output,int kind,TileEntity tile,boolean open)throws Exception{
