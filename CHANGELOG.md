@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Add animated insert-to-toggle-and-return behavior to Data Card and Data Chip Mounts, with saved output, inventory-safe returns and reload-safe scan progress.
+
 - Add compact Data Card and Data Chip Mounts, with independent design allow-lists, non-consuming filter slots, output channels and continuous/pulse behavior.
 - Correct cockpit dialog sizing and contrast, keyboard proportions, armrest orientation and overlapping chair geometry. Add selectable casing textures, name Advanced Pilot Chair and use red upholstery.
 - Support Programmable Chair passengers in captured vehicles, preserving their style, height and assigned seat through movement, assembly and parking.

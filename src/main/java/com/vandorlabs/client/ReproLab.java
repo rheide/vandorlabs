@@ -903,6 +903,7 @@ public class ReproLab {
                 // Never save the previous camera's framebuffer under this shot's name.
                 if(renderedFrames-cameraChangedAtFrame<2)break;
                 Shot s = SHOTS.get(shotIndex);
+                if(s.name.equals("utility22_card_mounts")&&!TokenSlotToggleRuntimeCheck.done()){if(++pendingGalleryTicks>600)throw new IllegalStateException("Token toggle return test timed out");break;}
                 if(s.name.startsWith("joined_texture_")&&!(mc.world.getTileEntity(new BlockPos(550,32,120)) instanceof TileEntityAnimatedScreenSelector)){if(++pendingGalleryTicks>600)throw new IllegalStateException("Joined texture fixture did not arrive");break;}
                 if(s.name.startsWith("turntable_")&&!TurntableDialogRuntimeChecks.ready(mc,s.name.startsWith("turntable_large_")?new BlockPos(779,31,120):new BlockPos(341,31,120))){if(++pendingGalleryTicks>600)throw new IllegalStateException("Turntable chunks/snapshot did not arrive");break;}
                 if(s.name.equals("turntable_floor")&&!TurntableMovementRuntimeChecks.done()){
@@ -959,6 +960,9 @@ public class ReproLab {
                             : CAPTURE_SETTLE_TICKS;
                 } else {
                     writeManifest();
+                    if(System.getProperty("vandorlabs.reproShotPrefix","").equals("utility22_card_mounts")){
+                        state=999;mc.shutdown();return;
+                    }
                     if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
                         System.out.println("[vandorlabs][reprolab] connection-acceptance PASS "+SHOTS.size()+" pages");
                         state=999;mc.shutdown();return;
@@ -3090,6 +3094,7 @@ public class ReproLab {
 
     private static void beginShot(Minecraft mc, Shot s, boolean first) {
         if(mc.currentScreen==null)mc.player.openContainer=mc.player.inventoryContainer;
+        if(s.name.equals("utility22_card_mounts"))onServer(mc,()->TokenSlotToggleRuntimeCheck.start(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName())));
         if(s.name.startsWith("joined_texture_"))onServer(mc,()->TextureLayoutVisualFixtures.build(mc.getIntegratedServer().getWorld(0)));
         if(s.name.startsWith("joined_texture_")||s.name.startsWith("fixed_gear_")||s.name.startsWith("gallery_gear_")){mc.world.setWorldTime(6000);mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getWorld(0).setWorldTime(6000));}
         if(s.name.startsWith("utility22_")||s.name.startsWith("turntable_"))mc.gameSettings.hideGUI=!s.name.startsWith("utility22_data_");

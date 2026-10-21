@@ -21,9 +21,9 @@ public final class GuiTokenSlot extends GuiContainer {
         for(int i=8;i<inventorySlots.inventorySlots.size();i++){inventorySlots.inventorySlots.get(i).xPos=(xSize-162)/2+(i-8)%9*18;inventorySlots.inventorySlots.get(i).yPos=i<35?148+(i-8)/9*18:206;}
         labels();
     }
-    private void labels(){buttonList.get(0).displayString="Any type of "+(tile.chip()?"chip":"card")+": "+(tile.any?"Yes":"No");buttonList.get(1).displayString=tile.behavior==0?"Signal while accepted item is inserted":"Pulse for one second on insertion";}
+    private void labels(){buttonList.get(0).displayString="Any type of "+(tile.chip()?"chip":"card")+": "+(tile.any?"Yes":"No");buttonList.get(1).displayString=tile.behavior==0?"Keep inserted: continuous signal":tile.behavior==1?"Keep inserted: one-second pulse":"Insert to toggle, then return item";}
     private void save(){if(com.vandorlabs.redstone.ChannelList.parse(channels.getText())==null){channels.setTextColor(0xff7777);return;}channels.setTextColor(0xffffff);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageTokenSlot(inventorySlots.windowId,tile.behavior,tile.any,tile.allowed,channels.getText()));}
-    @Override protected void actionPerformed(GuiButton button){if(button.id==0)tile.any=!tile.any;else if(button.id==1)tile.behavior=1-tile.behavior;save();labels();}
+    @Override protected void actionPerformed(GuiButton button){if(button.id==0)tile.any=!tile.any;else if(button.id==1)tile.behavior=(tile.behavior+(isShiftKeyDown()?2:1))%3;save();labels();}
     @Override protected void keyTyped(char ch,int key)throws IOException{if(channels.textboxKeyTyped(ch,key))save();else super.keyTyped(ch,key);}
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{channels.mouseClicked(x,y,button);super.mouseClicked(x,y,button);}
     @Override public void updateScreen(){channels.updateCursorCounter();labels();}

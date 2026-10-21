@@ -29,12 +29,13 @@ public final class BlockTokenSlot extends BlockVandorSwitch {
         }
         if(!tile.accepts(held))return false;
         if(!tile.isEmpty())return true;
+        if(tile.behavior==2){if(!world.isRemote)tile.insertToggle(player,held);return true;}
         if(!world.isRemote){ItemStack inserted=held.copy();inserted.setCount(1);tile.setInventorySlotContents(0,inserted);if(!player.capabilities.isCreativeMode)held.shrink(1);}return true;
     }
     @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityTokenSlot)((TileEntityTokenSlot)raw).scheduledTick();}
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);
-        if(!world.isRemote&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)&&raw instanceof TileEntityTokenSlot){ItemStack stack=((TileEntityTokenSlot)raw).removeStackFromSlot(0);if(!stack.isEmpty())net.minecraft.inventory.InventoryHelper.spawnItemStack(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,stack);}
+        if(!world.isRemote&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)&&raw instanceof TileEntityTokenSlot){ItemStack stack=((TileEntityTokenSlot)raw).takeForDrop();if(!stack.isEmpty())net.minecraft.inventory.InventoryHelper.spawnItemStack(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,stack);}
         super.breakBlock(world,pos,state);
     }
 }

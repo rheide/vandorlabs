@@ -26,8 +26,13 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
                 else{int count=Integer.bitCount(tile.allowed&126),index=0;boolean plain=(tile.allowed&1)!=0;double bottom=plain&&count>0?-half+.025:-half+.006;if(plain)panel(facing,rotation,-half,half,-half,count>0?bottom-.003:half,COLORS[0]);for(int i=1;i<7;i++)if((tile.allowed&(1<<i))!=0){double a=-half+2*half*index/count,b=-half+2*half*(++index)/count;panel(facing,rotation,a+.003,b-.003,bottom,half-.006,COLORS[i]);}}
                 GlStateManager.enableTexture2D();
             }else{
-                Vec3d center=TokenSlotGeometry.point(facing,rotation,0,0,.075),u=TokenSlotGeometry.point(facing,rotation,-1,0,.075).subtract(center),v=TokenSlotGeometry.point(facing,rotation,0,1,.075).subtract(center),n=new Vec3d(facing.getDirectionVec());
-                java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);matrix.put(new float[]{(float)u.x,(float)u.y,(float)u.z,0,(float)v.x,(float)v.y,(float)v.z,0,(float)n.x,(float)n.y,(float)n.z,0,(float)center.x,(float)center.y,(float)center.z,1}).flip();GlStateManager.multMatrix(matrix);double scale=tile.chip()?.35:.5;GlStateManager.scale(scale,scale,scale);GlStateManager.color(1,1,1,1);
+                float age=tile.animationAge(partial);double slide=tile.returning()?(age<8?age/8:age>12?(20-age)/8:1):1;slide=slide*slide*(3-2*slide);
+                if(tile.returning()){
+                    double half=(tile.chip()?2.5:3.5)/16;GlStateManager.disableTexture2D();
+                    panel(facing,rotation,-half,half,-half,-half+.025,tile.getOutputLevel()>0?0x5fffb3:0x53c9ff);GlStateManager.enableTexture2D();
+                }
+                double depth=.075+.32*(1-slide);Vec3d center=TokenSlotGeometry.point(facing,rotation,0,0,depth),u=TokenSlotGeometry.point(facing,rotation,-1,0,depth).subtract(center),v=TokenSlotGeometry.point(facing,rotation,0,1,depth).subtract(center),n=new Vec3d(facing.getDirectionVec());
+                java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);matrix.put(new float[]{(float)u.x,(float)u.y,(float)u.z,0,(float)v.x,(float)v.y,(float)v.z,0,(float)n.x,(float)n.y,(float)n.z,0,(float)center.x,(float)center.y,(float)center.z,1}).flip();GlStateManager.multMatrix(matrix);GlStateManager.rotate((float)((1-slide)*-18),1,0,0);double scale=tile.chip()?.35:.5;GlStateManager.scale(scale,scale,scale);GlStateManager.color(1,1,1,1);
                 Minecraft.getMinecraft().getRenderItem().renderItem(tile.getStackInSlot(0),ItemCameraTransforms.TransformType.FIXED);
             }
         }finally{GlStateManager.enableTexture2D();GlStateManager.popMatrix();}

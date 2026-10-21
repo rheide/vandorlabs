@@ -31,14 +31,25 @@ final class TokenSlotRuntimeChecks {
                 require(accepted.getCount()==1&&tile.getOutputLevel()==15&&RedstoneChannels.level(world,64211)==15,"matching design powers block and channel");
                 NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityTokenSlot copy=(TileEntityTokenSlot)net.minecraft.tileentity.TileEntity.create(world,saved);require(copy!=null&&copy.matches()&&copy.getStackInSlot(0).getDisplayName().equals("Reader persistence fixture"),"full token NBT preserved");
                 tile.setLocalOn(false);require(tile.getOutputLevel()==15,"generic switch calls cannot replace token policy");
-                tile.clear();require(RedstoneChannels.level(world,64211)==0,"removal releases channel");checked++;
+                tile.clear();require(RedstoneChannels.level(world,64211)==0,"removal releases channel");
+                tile.configure(false,1<<design,2);ItemStack tap=accepted.copy();tap.setCount(2);
+                require(tile.insertToggle(player,tap)&&tap.getCount()==1&&tile.returning(),"toggle borrows exactly one item");
+                require(tile.removeStackFromSlot(0).isEmpty()&&!tile.isItemValidForSlot(0,tap),"pending return cannot be extracted or automated");
+                NBTTagCompound pending=tile.writeToNBT(new NBTTagCompound());TileEntityTokenSlot pendingCopy=(TileEntityTokenSlot)net.minecraft.tileentity.TileEntity.create(world,pending);
+                pendingCopy.expire(world.getTotalWorldTime()+8);require(pendingCopy.getOutputLevel()==15,"insertion flips saved output at scan midpoint");
+                pendingCopy.configure(false,1<<design,2);require(pendingCopy.getOutputLevel()==15,"unchanged settings do not clear toggle");
+                TileEntityTokenSlot resumed=(TileEntityTokenSlot)net.minecraft.tileentity.TileEntity.create(world,pendingCopy.writeToNBT(new NBTTagCompound()));resumed.expire(world.getTotalWorldTime()+40);
+                require(resumed.getOutputLevel()==15&&resumed.returning(),"offline owner retains item and reload cannot toggle twice");
+                require(resumed.takeForDrop().getCount()==1&&resumed.takeForDrop().isEmpty(),"interrupted insertion drops once");
+                TileEntityTokenSlot emptyLatched=(TileEntityTokenSlot)net.minecraft.tileentity.TileEntity.create(world,resumed.writeToNBT(new NBTTagCompound()));require(emptyLatched.isEmpty()&&emptyLatched.getOutputLevel()==15,"empty toggle state persists");emptyLatched.configure(true,127,2);require(emptyLatched.getOutputLevel()==0,"policy change resets toggle");
+                tile.takeForDrop();tile.configure(false,1<<design,0);checked++;
             }
             tile.configure(true,0,0);tile.setInventorySlotContents(0,new ItemStack(chip?ModItems.DATA_CHIP:ModItems.DATA_CARD,1,6));require(tile.getOutputLevel()==15,"Any accepts company tokens");tile.clear();
             tile.configure(false,2,1);tile.setInventorySlotContents(0,new ItemStack(chip?ModItems.DATA_CHIP:ModItems.DATA_CARD,1,1));require(tile.getOutputLevel()==15,"pulse on accepted insertion");NBTTagCompound expired=tile.writeToNBT(new NBTTagCompound());expired.setLong("TokenPulseUntil",world.getTotalWorldTime()-1);tile.readFromNBT(expired);tile.refresh();require(tile.getOutputLevel()==0&&RedstoneChannels.level(world,64211)==0,"pulse expires without losing token");tile.clear();
             ContainerTokenSlot container=new ContainerTokenSlot(player.inventory,tile);player.inventory.setItemStack(new ItemStack(chip?ModItems.DATA_CHIP:ModItems.DATA_CARD,5,3));container.slotClick(1,0,ClickType.PICKUP,player);require(player.inventory.getItemStack().getCount()==5&&!tile.any&&(tile.allowed&8)!=0,"filter accepts a design without consuming items");player.inventory.setItemStack(ItemStack.EMPTY);
             player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);world.setBlockToAir(pos);world.setBlockToAir(support);
         }
-        player.inventory.clear();System.out.println("[vandorlabs][reprolab] token-mounts PASS cases="+checked+" six-faces floor-ceiling-rotations seven-designs survival-count authorization channels pulses full-item-NBT nonconsuming-filters");
+        player.inventory.clear();System.out.println("[vandorlabs][reprolab] token-mounts PASS cases="+checked+" six-faces floor-ceiling-rotations seven-designs survival-count authorization channels pulses toggle-reload-lock offline-return full-item-NBT nonconsuming-filters");
     }
     private static void activate(BlockTokenSlot block,WorldServer world,BlockPos pos,EntityPlayerMP player,EnumFacing face){require(block.onBlockActivated(world,pos,world.getBlockState(pos),player,EnumHand.MAIN_HAND,face,.5F,.5F,.5F),"activation rejected");}
 }
