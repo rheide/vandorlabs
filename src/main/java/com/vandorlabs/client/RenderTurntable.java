@@ -88,7 +88,13 @@ public final class RenderTurntable extends Render<EntityTurntable> {
         GlStateManager.pushMatrix();
         try(TurntableRenderState state=new TurntableRenderState()){GlStateManager.translate(x,y,z);TurntableGeometry.Face face=entity.snapshot.layout.basis;GlStateManager.rotate((float)-entity.angle(partial),face.x,face.y,face.z);
             GlStateManager.translate(entity.snapshot.origin.getX()-entity.posX,entity.snapshot.origin.getY()-entity.posY,entity.snapshot.origin.getZ()-entity.posZ);
-            bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.disableCull();RenderHelper.disableStandardItemLighting();
+            // Entity rendering can follow native/third-party effects on another texture unit.
+            // Reestablish alpha, depth and atlas state before replaying cached block draws.
+            GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
+            GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();GlStateManager.bindTexture(0);
+            GlStateManager.enableDepth();GlStateManager.depthFunc(GL11.GL_ALWAYS);GlStateManager.depthFunc(GL11.GL_LEQUAL);
+            GlStateManager.enableAlpha();GlStateManager.alphaFunc(GL11.GL_ALWAYS,0);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
+            bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.resetColor();GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.disableCull();RenderHelper.disableStandardItemLighting();
             long buildProfile=TurntablePerformance.start();
             Mesh mesh=mesh(entity);
             TurntablePerformance.end("render.mesh-build",buildProfile);

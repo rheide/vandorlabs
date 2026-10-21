@@ -8,6 +8,8 @@ import org.lwjgl.opengl.GL14;
 public final class TurntableRenderState implements AutoCloseable {
     private final boolean lighting=GL11.glIsEnabled(GL11.GL_LIGHTING),cull=GL11.glIsEnabled(GL11.GL_CULL_FACE),blend=GL11.glIsEnabled(GL11.GL_BLEND),alpha=GL11.glIsEnabled(GL11.GL_ALPHA_TEST),depth=GL11.glIsEnabled(GL11.GL_DEPTH_TEST),mask=GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK);
     private final int texture=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D),src=GL11.glGetInteger(GL14.GL_BLEND_SRC_RGB),dst=GL11.glGetInteger(GL14.GL_BLEND_DST_RGB),srcA=GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA),dstA=GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
+    private final int alphaFunc=GL11.glGetInteger(GL11.GL_ALPHA_TEST_FUNC),depthFunc=GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
+    private final float alphaRef=GL11.glGetFloat(GL11.GL_ALPHA_TEST_REF);
     private final float u=OpenGlHelper.lastBrightnessX,v=OpenGlHelper.lastBrightnessY;
     private final int activeTexture=GL11.glGetInteger(org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE);
     public TurntableRenderState(){GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);}
@@ -19,6 +21,14 @@ public final class TurntableRenderState implements AutoCloseable {
         if(alpha){GlStateManager.disableAlpha();GlStateManager.enableAlpha();}else{GlStateManager.enableAlpha();GlStateManager.disableAlpha();}
         if(depth){GlStateManager.disableDepth();GlStateManager.enableDepth();}else{GlStateManager.enableDepth();GlStateManager.disableDepth();}
         GlStateManager.depthMask(!mask);GlStateManager.depthMask(mask);GlStateManager.tryBlendFuncSeparate(1,0,1,0);GlStateManager.tryBlendFuncSeparate(src,dst,srcA,dstA);
-        GlStateManager.bindTexture(0);GlStateManager.bindTexture(texture);GlStateManager.resetColor();GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,u,v);
+        GlStateManager.alphaFunc(GL11.GL_ALWAYS,0);GlStateManager.alphaFunc(alphaFunc,alphaRef);GlStateManager.depthFunc(GL11.GL_ALWAYS);GlStateManager.depthFunc(depthFunc);
+        // glPopAttrib restores both texture units, whereas Minecraft caches each one.
+        for(int slot=0;slot<2;slot++){int unit=slot==0?OpenGlHelper.defaultTexUnit:OpenGlHelper.lightmapTexUnit;
+            org.lwjgl.opengl.GL13.glActiveTexture(unit);int bound=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);boolean on=GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
+            GlStateManager.setActiveTexture(unit==OpenGlHelper.defaultTexUnit?OpenGlHelper.lightmapTexUnit:OpenGlHelper.defaultTexUnit);GlStateManager.setActiveTexture(unit);
+            if(on){GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();}else{GlStateManager.enableTexture2D();GlStateManager.disableTexture2D();}GlStateManager.bindTexture(0);GlStateManager.bindTexture(bound);
+        }
+        GlStateManager.setActiveTexture(activeTexture);
+        GlStateManager.resetColor();GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,u,v);
     }
 }

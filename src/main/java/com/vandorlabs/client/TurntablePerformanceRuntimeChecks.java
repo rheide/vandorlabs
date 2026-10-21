@@ -18,11 +18,17 @@ import java.util.*;
 
 /** Paired rigid-wall rendering and isolated server motion timings, separate from transfer I/O. */
 final class TurntablePerformanceRuntimeChecks {
-    private static TurntableSnapshot snapshot(BlockPos root,int size,int rows){
+    private static TurntableSnapshot snapshot(BlockPos root,int size,int rows){return snapshot(root,size,rows,false);}
+    private static TurntableSnapshot snapshot(BlockPos root,int size,int rows,boolean thrusters){
         NBTTagCompound surface=new NBTTagCompound();surface.setInteger("Normal",EnumFacing.UP.getIndex());NBTTagList positions=new NBTTagList();
         for(int x=0;x<size;x++)for(int z=0;z<size;z++)positions.appendTag(new NBTTagLong(root.add(x,0,z).toLong()));surface.setTag("Cells",positions);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
-        for(int x=0;x<size;x++)for(int y=0;y<rows;y++){TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(new BlockPos(x,y,0));tile.setHousingTexture(14);cells.add(new VehicleStructure.Cell(tile.getPos(),ModBlocks.PROGRAMMABLE_WALL.getDefaultState(),tile.writeToNBT(new NBTTagCompound())));}
+        for(int x=0;x<size;x++)for(int y=0;y<rows;y++){
+            BlockPos at=new BlockPos(x,y,0);net.minecraft.block.Block block=thrusters?net.minecraft.block.Block.getBlockFromName("vandorlabs:"+new String[]{"rocket_thruster","ion_drive","vertical_hover_thruster"}[(x+y)%3]):ModBlocks.PROGRAMMABLE_WALL;
+            net.minecraft.tileentity.TileEntity tile=block.createTileEntity(null,block.getDefaultState());tile.setPos(at);if(tile instanceof TileEntityAnimatedScreenSelector)((TileEntityAnimatedScreenSelector)tile).setHousingTexture(14);
+            cells.add(new VehicleStructure.Cell(at,block.getDefaultState(),tile.writeToNBT(new NBTTagCompound())));
+        }
+
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setTag("Surface",surface);tag.setLong("Origin",root.up().toLong());tag.setInteger("Height",rows);tag.setTag("Blocks",VehicleStructure.display(cells).write());return TurntableSnapshot.read(tag);
     }
     static void server(WorldServer world){
@@ -49,6 +55,19 @@ final class TurntablePerformanceRuntimeChecks {
         }
             if(RenderTurntable.wallBuilds(display)!=64)throw new IllegalStateException("Turntable rigid walls rebuilt during rotation: "+RenderTurntable.wallBuilds(display));
             if(!Arrays.equals(images[0].getRGB(0,0,320,240,null,0,320),images[1].getRGB(0,0,320,240,null,0,320)))throw new IllegalStateException("Turntable wall cache changed rendered pixels");
+            display.install(snapshot(BlockPos.ORIGIN,8,8,true));
+            for(int sample=0;sample<64;sample++){RenderTurntable.beginFrame();renderer.doRender(display,display.posX,display.posY,display.posZ,0,1);}
+            for(int angle=0;angle<24;angle++){
+                int[][] pixels=new int[2][];display.setAngle(angle*15);
+                for(int dirty=0;dirty<2;dirty++){
+                    GlStateManager.loadIdentity();GlStateManager.rotate(15,1,0,0);GlStateManager.rotate(20,0,1,0);GlStateManager.translate(-4,-5,-.5);GlStateManager.depthMask(true);GlStateManager.clear(16640);
+                    if(dirty==1){GlStateManager.alphaFunc(GL11.GL_GREATER,1);GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.disableTexture2D();GlStateManager.depthFunc(GL11.GL_GREATER);}
+                    else{GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.enableTexture2D();GlStateManager.depthFunc(GL11.GL_LEQUAL);}
+                    RenderTurntable.beginFrame();renderer.doRender(display,display.posX,display.posY,display.posZ,0,1);pixels[dirty]=net.minecraft.util.ScreenShotHelper.createScreenshot(320,240,frame).getRGB(0,0,320,240,null,0,320);
+                }
+                if(!Arrays.equals(pixels[0],pixels[1]))throw new IllegalStateException("Thruster turntable depends on incoming render state at angle "+angle*15);
+            }
+            System.out.println("[vandorlabs][reprolab] turntable-thruster-state PASS 64 thrusters 24 angles identical-pixels after foreign alpha texture-unit and depth state");
             for(long[] samples:cpu)Arrays.sort(samples);System.out.println("[vandorlabs][reprolab] turntable-wall-cache PASS walls=64 identical-pixels builds=64 baseline-median-us="+cpu[0][16]/1000+" cached-median-us="+cpu[1][16]/1000+" baseline-p95-us="+cpu[0][30]/1000+" cached-p95-us="+cpu[1][30]/1000);
         }finally{RenderTurntable.cacheWalls=true;display.setDead();RenderTurntable.clear();net.minecraftforge.client.ForgeHooksClient.setRenderPass(oldPass);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);GL11.glPopAttrib();frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);GlStateManager.enableDepth();GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.color(1,1,1,1);}
     }
