@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Inset exposed door water surfaces to prevent z-fighting with the door top at a two-block water level, while preserving seamless water between door blocks.
+
 - Let vanilla sponges absorb contained water from supported Vandor blocks, retaining the blocks and other liquids. Bound absorption to connected water within vanilla sponge reach.
 - Keep one-block-deep door waterlogging in the submerged block; bucket filling, draining, persistence and reversible opening fill operate per block.
 - Include diagonal waterlogged neighbors in native water corner-height calculations to prevent mismatched surfaces around shallow pools.

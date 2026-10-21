@@ -95,10 +95,15 @@ public final class WaterloggedSurfaceMesh {
         double[] p=OpeningFluids.plane(world,pos);boolean open=OpeningFluids.open(world,pos),joined=open&&source.fluids[0]!=null&&equal(source.fluids[0],source.fluids[1]);
         for(int side=0;side<(joined?1:2);side++){
             if(source.fluids[side]==null)continue;
-            Region region=new Region(side).add(-1,0,0,0).add(1,0,0,1).add(0,-1,0,0).add(0,1,0,1).add(0,0,-1,0).add(0,0,1,1);
+            // Keep an exposed door water surface off the coplanar top of its frame.
+            // Internal boundaries between two wet door cells retain their full height.
+            BlockPos above=pos.up();boolean covered=WaterloggedParts.nativeFluid(world.getBlockState(above))==source.fluids[side].getFluid();
+            if(!covered&&WaterloggedParts.supports(world.getBlockState(above)))covered=equal(source.fluids[side],WaterloggedParts.fluid(world,above,0))||equal(source.fluids[side],WaterloggedParts.fluid(world,above,1));
+            double height=world.getBlockState(pos).getBlock() instanceof BlockConfigurableSpaceDoor&&!covered?1-.001:1;
+            Region region=new Region(side).add(-1,0,0,0).add(1,0,0,1).add(0,-1,0,0).add(0,1,0,height).add(0,0,-1,0).add(0,0,1,1);
             double sign=side==0?1:-1,limit=side==0?p[3]:p[4];if(open)limit=(p[3]+p[4])/2;
             double[] divider={sign*p[0],sign*p[1],sign*p[2],sign*limit};if(!joined)region.planes.add(divider);source.regions.add(region);
-            for(EnumFacing face:EnumFacing.values()){List<double[]> polygon=cube(face);for(double[] plane:region.planes)polygon=clip(polygon,plane);if(area(polygon)>1e-10)source.surfaces.add(new Surface(polygon,side,axis(face),face));}
+            for(EnumFacing face:EnumFacing.values()){List<double[]> polygon=cube(face);for(double[] point:polygon)point[1]*=height;for(double[] plane:region.planes)polygon=clip(polygon,plane);if(area(polygon)>1e-10)source.surfaces.add(new Surface(polygon,side,axis(face),face));}
             if(!joined){int axis=Math.abs(p[0])>Math.abs(p[1])?(Math.abs(p[0])>Math.abs(p[2])?0:2):(Math.abs(p[1])>Math.abs(p[2])?1:2);int a=(axis+1)%3,b=(axis+2)%3;List<double[]> face=new ArrayList<>();for(double[] pair:new double[][]{{0,0},{1,0},{1,1},{0,1}}){double[] point=new double[3];point[a]=pair[0];point[b]=pair[1];point[axis]=(limit-p[a]*point[a]-p[b]*point[b])/p[axis];face.add(point);}for(int i=0;i<6;i++)face=clip(face,region.planes.get(i));if(area(face)>1e-10){Vec3d normal=normal(face);if(normal.x*divider[0]+normal.y*divider[1]+normal.z*divider[2]<0)Collections.reverse(face);source.surfaces.add(new Surface(face,side,axis,null));}}
         }
     }
