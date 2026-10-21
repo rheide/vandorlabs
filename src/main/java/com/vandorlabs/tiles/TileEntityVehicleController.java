@@ -15,7 +15,7 @@ public class TileEntityVehicleController extends TileEntityPilotSeat {
     @Override public void setTaxiMode(boolean value){initializeControls();super.setTaxiMode(value);}
     @Override public void setVehicleChannels(ChannelList value,World real){initializeControls();super.setVehicleChannels(value,real);}
     @Override public void setModeChannels(int mode,ChannelList value){initializeControls();super.setModeChannels(mode,value);}
-    @Override public void configure(int mode,int unused,World real){initializeControls();super.configure(mode,0,real);}
+    @Override public void configure(int mode,int height,World real){initializeControls();super.configure(mode,height,real);}
     @Override public void update(){
         if(world==null || world.isRemote)return;
         if(!initialized){

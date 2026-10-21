@@ -148,9 +148,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(currentVisual==null)return new VehiclePose(posX,posY,posZ,rotationYaw);
         return previousVisual.interpolate(currentVisual,partial);
     }
-    public Vec3d seatPosition(VehiclePose pose,Entity passenger) {
+    public Vec3d seatPosition(VehiclePose pose,Entity passenger) {return seatPosition(pose,passenger,0);}
+    public Vec3d seatPosition(VehiclePose pose,Entity passenger,float partial) {
         BlockPos seat=seatForPassenger(passenger);
-        if(view.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityCockpit){com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)view.getTileEntity(seat);Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.seatLocation(),cockpit.facing());return pose.world(new Vec3d(seat.getX()+at.x,seat.getY()+cockpit.seatHeight()+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+at.z),structure.bounds.maxX/2,structure.bounds.maxZ/2);}
+        if(view.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityCockpit){com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)view.getTileEntity(seat);Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.seatLocation(partial),cockpit.facing());return pose.world(new Vec3d(seat.getX()+at.x,seat.getY()+cockpit.seatHeight()+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+at.z),structure.bounds.maxX/2,structure.bounds.maxZ/2);}
         return pose.world(new Vec3d(seat.getX()+.5,seat.getY()+VehicleSeats.height(view,seat)+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+.5),structure.bounds.maxX/2,structure.bounds.maxZ/2);
     }
     @Override public AxisAlignedBB getRenderBoundingBox() {
@@ -254,7 +255,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             Vec3d at=seatPosition(world.isRemote?visualPose(1):new VehiclePose(posX,posY,posZ,rotationYaw),passenger);
             passenger.setPosition(at.x,at.y,at.z);
             if(world.isRemote) {
-                Vec3d before=seatPosition(visualPose(0),passenger);
+                Vec3d before=seatPosition(visualPose(0),passenger,-1);
                 passenger.prevPosX=passenger.lastTickPosX=before.x;
                 passenger.prevPosY=passenger.lastTickPosY=before.y;
                 passenger.prevPosZ=passenger.lastTickPosZ=before.z;

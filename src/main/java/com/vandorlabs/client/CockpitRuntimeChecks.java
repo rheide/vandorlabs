@@ -37,11 +37,11 @@ final class CockpitRuntimeChecks {
                 for(CockpitData.Surface surface:tile.data().surfaces)if("touch".equals(surface.role)){TileEntityCockpit.Display blank=tile.display(surface.id);int previous=blank.texture;blank.texture=-1;Vec3d p=surface.point(.5,.5);require(!tile.use(CockpitData.rotate(p.add(surface.normal.scale(.4)),facing),CockpitData.rotate(p.subtract(surface.normal.scale(.3)),facing)),"blank touch area remains inactive");blank.texture=previous;}
                 int channel=62000;
                 for(TileEntityCockpit.Control c:tile.controls){c.setRedstoneChannels(ChannelList.of(channel++));c.kind=1;for(int step=0;step<4;step++){c.activate(step/3D);require(RedstoneChannels.level(world,c.getRedstoneChannel())==step*5,"independent detents "+c.id);}c.kind=2;c.activate(.5);require(c.level==15,"pulse starts");tile.expire(c.until);require(c.level==0 && RedstoneChannels.level(world,c.getRedstoneChannel())==0,"pulse releases");}
-                for(CockpitData.Surface surface:tile.data().surfaces){TileEntityCockpit.Display display=tile.display(surface.id);display.texture=surfaces%ScreenHousingTextures.IDS.length;display.speed=3;surfaces++;
+                for(CockpitData.Surface surface:tile.data().surfaces){TileEntityCockpit.Display display=tile.display(surface.id);display.texture=surfaces%ScreenHousingTextures.IDS.length;display.speed=2;surfaces++;
                     if("touch".equals(surface.role)){TileEntityCockpit.Control c=tile.control(surface.id+"/1");c.kind=0;c.level=0;Vec3d p=surface.point(.5,.5);require(tile.use(CockpitData.rotate(p.add(surface.normal.scale(.4)),facing),CockpitData.rotate(p.subtract(surface.normal.scale(.3)),facing)),"touch ray "+id+surface.id);require(c.level==15,"touch row "+id+surface.id);}
                 }
                 TileEntityCockpit copy=(TileEntityCockpit)TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(copy.design().equals(id) && copy.displays.size()==tile.displays.size() && copy.controls.size()==tile.controls.size(),"saved surface identities");require(copy.sideTexture()==14,"casing material saved independently");
-                for(int i=0;i<copy.displays.size();i++)require(copy.displays.get(i).texture==tile.displays.get(i).texture && copy.displays.get(i).speed==3,"independent screen persistence");
+                for(int i=0;i<copy.displays.size();i++)require(copy.displays.get(i).texture==tile.displays.get(i).texture && copy.displays.get(i).speed==2,"independent screen persistence");
                 // Older kits used a different surface order and lacked the center keyboard.
                 NBTTagCompound legacy=tile.writeToNBT(new NBTTagCompound());
                 net.minecraft.nbt.NBTTagList oldScreens=new net.minecraft.nbt.NBTTagList();
@@ -53,7 +53,10 @@ final class CockpitRuntimeChecks {
                 require(dialog.canInteractWith(player),"fresh reachable dialog");
                 if(!tile.displays.isEmpty()){
                     NBTTagCompound settings=tile.displays.get(0).write();settings.setInteger("Display",0);settings.setInteger("Speed",5);dialog.update(player,0,settings);
-                    require(tile.displays.get(0).speed==5,"reachable display edit applied");
+                    require(tile.displays.get(0).speed==2,"reachable display edit applied");
+                    net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();NBTTagCompound row=new NBTTagCompound();row.setString("Label","Reactor");com.vandorlabs.redstone.ChannelData.write(row,ChannelList.of(61999));row.setInteger("Kind",1);row.setInteger("Min",3);row.setInteger("Max",13);rows.appendTag(row);NBTTagCompound editor=new NBTTagCompound();editor.setInteger("RedstoneDisplay",0);editor.setTag("Rows",rows);dialog.update(player,0,editor);
+                    require(tile.displays.get(0).rows==1&&tile.displays.get(0).texture==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE,"shared redstone editor applies surface mode and row count");TileEntityCockpit.Control rowControl=tile.control(tile.displays.get(0).id+"/0");rowControl.activate(1D/3);require(rowControl.level==3,"configured slider low level");rowControl.activate(1);require(rowControl.level==13,"configured slider high level");
+                    TileEntityCockpit rowCopy=(TileEntityCockpit)TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(rowCopy.displays.get(0).rows==1&&rowCopy.control(rowCopy.displays.get(0).id+"/0").min==3,"redstone rows persist");
                     NBTTagCompound invalid=settings.copy();invalid.setInteger("Display",tile.displays.size());dialog.update(player,0,invalid);
                     Vec3d near=player.getPositionVector();player.setPositionAndUpdate(ROOT.getX()+20,ROOT.getY(),ROOT.getZ());require(!dialog.canInteractWith(player),"distant dialog rejected");
                     NBTTagCompound snapshot=tile.writeToNBT(new NBTTagCompound());dialog.update(player,0,settings);require(snapshot.equals(tile.writeToNBT(new NBTTagCompound())),"distant edit mutated cockpit");player.setPositionAndUpdate(near.x,near.y,near.z);

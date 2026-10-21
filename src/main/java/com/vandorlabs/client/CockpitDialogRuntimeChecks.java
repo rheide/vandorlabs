@@ -21,6 +21,12 @@ final class CockpitDialogRuntimeChecks {
             for(int model=0;model<com.vandorlabs.cockpit.CockpitData.IDS.length;model++){
                 TileEntityCockpit tile=(TileEntityCockpit)mc.world.getTileEntity(new BlockPos(222+model*6,30,120));
                 require(tile!=null,"fixture synchronized");GuiCockpit gui=new GuiCockpit(new ContainerCockpit(tile,null));gui.inventorySlots.windowId=-77;mc.displayGuiScreen(gui);
+                page.setInt(gui,(tile.data().seat==null?0:1)+1);gui.initGui();
+                java.lang.reflect.Method redstone=GuiCockpit.class.getDeclaredMethod("redstone");redstone.setAccessible(true);redstone.invoke(gui);
+                require(mc.currentScreen instanceof GuiRedstoneScreen,"Redstone selection opens the shared row editor");
+                GuiRedstoneScreen editor=(GuiRedstoneScreen)mc.currentScreen;
+                for(int[] size:new int[][]{{320,240},{460,340}}){editor.setWorldAndResolution(mc,size[0],size[1]);editor.checkLayout();}
+                mc.displayGuiScreen(gui);
                 int count=(tile.data().seat==null?0:1)+1+tile.displays.size()+tile.controls.size();
                 for(int[] size:new int[][]{{320,240},{460,340},{new ScaledResolution(mc).getScaledWidth(),new ScaledResolution(mc).getScaledHeight()}})for(int index=0;index<count;index++){
                     page.setInt(gui,index);gui.setWorldAndResolution(mc,size[0],size[1]);

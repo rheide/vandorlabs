@@ -179,11 +179,14 @@ public final class VehicleClient {
     }
     private static UUID cameraCraft;
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST) public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Pre event) {
+        if(event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat){
+            com.vandorlabs.entity.EntityChairSeat seat=(com.vandorlabs.entity.EntityChairSeat)event.getEntityPlayer().getRidingEntity();Vec3d at=seat.cockpitRiderPosition(event.getEntityPlayer(),event.getPartialRenderTick());if(at!=null){Entity r=event.getEntityPlayer();float p=event.getPartialRenderTick();GlStateManager.pushMatrix();GlStateManager.translate(at.x-(r.lastTickPosX+(r.posX-r.lastTickPosX)*p),at.y-(r.lastTickPosY+(r.posY-r.lastTickPosY)*p),at.z-(r.lastTickPosZ+(r.posZ-r.lastTickPosZ)*p));}return;
+        }
         if(!(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityPlayer().getRidingEntity();
         if(craft.structure==null)return;
         float partial=event.getPartialRenderTick();
-        Vec3d at=craft.seatPosition(craft.visualPose(partial),event.getEntityPlayer());
+        Vec3d at=craft.seatPosition(craft.visualPose(partial),event.getEntityPlayer(),partial);
         Entity rider=event.getEntityPlayer();
         GlStateManager.pushMatrix();
         GlStateManager.translate(at.x-(rider.lastTickPosX+(rider.posX-rider.lastTickPosX)*partial),
@@ -191,6 +194,7 @@ public final class VehicleClient {
                 at.z-(rider.lastTickPosZ+(rider.posZ-rider.lastTickPosZ)*partial));
     }
     @SubscribeEvent public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Post event) {
+        if(event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat && ((com.vandorlabs.entity.EntityChairSeat)event.getEntityPlayer().getRidingEntity()).cockpitRiderPosition(event.getEntityPlayer(),event.getPartialRenderTick())!=null){GlStateManager.popMatrix();return;}
         if(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle
                 && ((EntityGroundVehicle)event.getEntityPlayer().getRidingEntity()).structure!=null)GlStateManager.popMatrix();
     }
@@ -212,7 +216,7 @@ public final class VehicleClient {
         if(mc.player==null || !(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle e=(EntityGroundVehicle)mc.player.getRidingEntity();if(e.structure==null)return;cameraFor(e);
         float partial=(float)event.getRenderPartialTicks();
-        Vec3d at=e.seatPosition(e.visualPose(partial),mc.player);
+        Vec3d at=e.seatPosition(e.visualPose(partial),mc.player,partial);
         Vec3d delta=at.subtract(mc.player.lastTickPosX+(mc.player.posX-mc.player.lastTickPosX)*partial,
                 mc.player.lastTickPosY+(mc.player.posY-mc.player.lastTickPosY)*partial,
                 mc.player.lastTickPosZ+(mc.player.posZ-mc.player.lastTickPosZ)*partial);

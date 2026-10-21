@@ -15,13 +15,14 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     private int sideTexture=-1;
     public final com.vandorlabs.cockpit.CockpitActuator screenLift=new com.vandorlabs.cockpit.CockpitActuator(),seatSlide=new com.vandorlabs.cockpit.CockpitActuator();
     private long screenButtonUntil,seatButtonUntil;
-    private double lastSeatSlide=-1;
+
     private boolean vehicleMotionWasMoving;
     public boolean motionCompleted(){boolean moving=screenLift.moving(world.getTotalWorldTime())||seatSlide.moving(world.getTotalWorldTime());boolean completed=vehicleMotionWasMoving&&!moving;vehicleMotionWasMoving=moving;return completed;}
     public String seatBlockReason="";
     public double screens(float partial){return design.equals("cockpit")&&world!=null?screenLift.sample(world.getTotalWorldTime()+partial):0;}
     public double seatSlide(float partial){return design.equals("cockpit")&&world!=null?seatSlide.sample(world.getTotalWorldTime()+partial):0;}
-    public Vec3d seatLocation(){return data().seat==null?null:data().seat.addVector(0,0,seatSlide(0));}
+    public Vec3d seatLocation(){return seatLocation(0);}
+    public Vec3d seatLocation(float partial){return data().seat==null?null:data().seat.addVector(0,0,seatSlide(partial));}
     public double visualDetent(String id,float partial){
         if(id.equals("screen_lift_button")||id.equals("seat_slide_button")){double remaining=(id.equals("screen_lift_button")?screenButtonUntil:seatButtonUntil)-(world.getTotalWorldTime()+partial);return remaining>0?Math.min(1,remaining/4)*3:0;}
         if(id.equals("seat_assembly"))return seatSlide(partial)*3;
@@ -77,6 +78,13 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         if("touch".equals(surface.role))return ScreenHousingTextures.screenIndex("console_inputs/"+(surface.id.equals("touch_left_forward")?"console_controls_navigation_controls_static":surface.id.equals("touch_right_forward")?"console_controls_sensor_controls_static":surface.id.equals("touch_center_keyboard")?"extra_bare_personal_terminal_static":"console_controls_communications_keyboard_static"));
         return design.equals("yoke_screen")||surface.id.equals("screen_center")?TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:ScreenHousingTextures.screenIndex(surface.id.equals("screen_left")?"bridge_bare_pilot_static":"bridge_bare_engineering_static");
     }
+    public boolean configureRows(int index,NBTTagList rows){
+        if(index<0||index>=displays.size()||rows.tagCount()>3)return false;
+        for(int i=0;i<rows.tagCount();i++){NBTTagCompound row=rows.getCompoundTagAt(i);int kind=row.getInteger("Kind"),min=row.getInteger("Min"),max=row.getInteger("Max");if(row.getString("Label").length()>24||kind<0||kind>2||min<0||min>13||max<min+2||max>15)return false;ChannelData.read(row,0);}
+        Display d=displays.get(index);d.rows=rows.tagCount();
+        for(int i=0;i<3;i++){Control c=control(d.id+"/"+i);NBTTagCompound row=i<d.rows?rows.getCompoundTagAt(i):new NBTTagCompound();c.kind=row.getInteger("Kind");c.label=row.getString("Label");c.min=i<d.rows?row.getInteger("Min"):5;c.max=i<d.rows?row.getInteger("Max"):15;c.level=0;c.until=0;c.setRedstoneChannels(i<d.rows?ChannelData.read(row,0):ChannelList.EMPTY);if(ordinary())RedstoneChannels.inputChanged(c);}
+        d.texture=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;changed();return true;
+    }
     public Control control(String id){prepare();for(Control c:controls)if(c.id.equals(id))return c;return null;}
     public Display display(String id){prepare();for(Display d:displays)if(d.id.equals(id))return d;return null;}
     public void changed(){markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
@@ -86,7 +94,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     @Override public void onChunkUnload(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.onChunkUnload();}
     public boolean expire(long now){boolean changed=false;for(Control c:controls)if(c.until>0 && now>=c.until){c.until=0;c.level=0;if(ordinary())RedstoneChannels.inputChanged(c);changed=true;}if(changed)changed();return changed;}
     public void updatePower(){boolean dirty=false;for(Display d:displays){boolean active=d.gate==0 || (RedstoneChannels.level(world,d.gate)>0)!=d.inverted;if(active!=d.active){d.active=active;dirty=true;}}if(dirty)changed();}
-    @Override public void update(){prepare();if(world==null || world.isRemote)return;expire(world.getTotalWorldTime());updatePower();if(design.equals("cockpit")){com.vandorlabs.cockpit.CockpitReservations.tick(this);double slide=seatSlide(0);if(slide!=lastSeatSlide){lastSeatSlide=slide;for(com.vandorlabs.entity.EntityChairSeat mount:world.getEntitiesWithinAABB(com.vandorlabs.entity.EntityChairSeat.class,new AxisAlignedBB(pos).grow(3)))if(pos.equals(mount.getChairPos()))mount.setSeatY(seatHeight());}}if(data().seat!=null)super.update();}
+    @Override public void update(){prepare();if(world==null || world.isRemote)return;expire(world.getTotalWorldTime());updatePower();if(design.equals("cockpit")){com.vandorlabs.cockpit.CockpitReservations.tick(this);}if(data().seat!=null)super.update();}
     public boolean use(Vec3d start,Vec3d end){return use(start,end,null);}
     public boolean use(Vec3d start,Vec3d end,net.minecraft.entity.player.EntityPlayer actor){
         prepare();start=CockpitData.unrotate(start,facing());end=CockpitData.unrotate(end,facing());
@@ -99,7 +107,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         for(CockpitData.Surface surface:data().surfaces)if(display(surface.id).active && ("touch".equals(surface.role)&&display(surface.id).texture>=0||display(surface.id).texture<=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)){double offset="screen".equals(surface.role)?-.75*screens(0):0;double slide=design.equals("cockpit")&&surface.id.equals("touch_right_keyboard")?seatSlide(0):0;double[] hit=surface.hit(start.addVector(0,-offset,-slide),end.addVector(0,-offset,-slide));if(hit!=null&&"screen".equals(surface.role)&&surface.origin.y+surface.u.y*hit[0]+surface.v.y*hit[1]+offset<10.5/16)hit=null;if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
         ControlHit lever=controlHitLocal(start,end);
         if(lever!=null&&(uv==null||lever.distance<start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2]))))){Control c=control(lever.id);c.activate(((c.level/5+1)%4)/3D);return true;}
-        if(nearest!=null){if(display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){int x=(int)(uv[0]*128),y=(int)((1-uv[1])*("touch".equals(nearest.role)?64:128)),top="touch".equals(nearest.role)?0:24;int action=y>=top&&y<top+10?0:y>=top+12&&y<top+22?1+Math.min(2,Math.max(0,(x-6)/39)):y>=top+36&&y<top+46&&x<48?4:-1;if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);return true;}Control c=control(nearest.id+"/"+Math.min(2,(int)((1-uv[1])*3)));c.activate(uv[0]);return true;}
+        if(nearest!=null){if(display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){int x=(int)(uv[0]*128),y=(int)((1-uv[1])*("touch".equals(nearest.role)?64:128)),top="touch".equals(nearest.role)?0:24;int action=y>=top&&y<top+10?0:y>=top+12&&y<top+22?1+Math.min(2,Math.max(0,(x-6)/39)):y>=top+36&&y<top+46&&x<48?4:-1;if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);return true;}int rows=display(nearest.id).rows;if(rows==0)return true;Control c=control(nearest.id+"/"+Math.min(rows-1,(int)((1-uv[1])*rows)));c.activate(uv[0]);return true;}
         return false;
     }
     private static final class ControlHit {String id;Vec3d point;double distance;ControlHit(String id,Vec3d point,double distance){this.id=id;this.point=point;this.distance=distance;}}
@@ -137,7 +145,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public final String id;
         public String label="";
         public ChannelList channels=ChannelList.EMPTY;
-        public int kind,level;
+        public int kind,level,min=5,max=15;
         public long until;
         Control(String id){this.id=id;}
         public TileEntity channelTile(){return TileEntityCockpit.this;}
@@ -148,19 +156,21 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public boolean hasLocalRedstoneSignal(){return level>0;}
         public int localSignalLevel(int channel){return level;}
         public void setChannelSignal(boolean ignored){}
+        public int sliderLevel(int segment){return segment==0?0:min+(max-min)*(Math.max(1,Math.min(3,segment))-1)/2;}
+        public double nextColumn(){int segment=0;for(int i=1;i<4;i++)if(Math.abs(sliderLevel(i)-level)<Math.abs(sliderLevel(segment)-level))segment=i;return ((segment+1)%4)/3D;}
         public void activate(double column){
-            level=kind==1?Math.max(0,Math.min(15,(int)Math.round(column*3)*5)):kind==2?15:level==0?15:0;
+            level=kind==1?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:level==0?15:0;
             until=kind==2?world.getTotalWorldTime()+20:0;if(ordinary())RedstoneChannels.inputChanged(this);changed();
         }
-        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setString("Label",label);ChannelData.write(tag,channels);tag.setInteger("Kind",kind);tag.setInteger("Level",level);tag.setLong("Until",until);return tag;}
-        public void read(NBTTagCompound tag){label=tag.getString("Label");if(label.length()>32)label=label.substring(0,32);channels=ChannelData.read(tag,0);kind=Math.max(0,Math.min(2,tag.getInteger("Kind")));level=Math.max(0,Math.min(15,tag.getInteger("Level")));until=Math.max(0,tag.getLong("Until"));}
+        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setString("Label",label);ChannelData.write(tag,channels);tag.setInteger("Min",min);tag.setInteger("Max",max);tag.setInteger("Kind",kind);tag.setInteger("Level",level);tag.setLong("Until",until);return tag;}
+        public void read(NBTTagCompound tag){label=tag.getString("Label");if(label.length()>32)label=label.substring(0,32);channels=ChannelData.read(tag,0);min=tag.hasKey("Min",3)?Math.max(0,Math.min(13,tag.getInteger("Min"))):5;max=tag.hasKey("Max",3)?Math.max(min+2,Math.min(15,tag.getInteger("Max"))):15;kind=Math.max(0,Math.min(2,tag.getInteger("Kind")));level=Math.max(0,Math.min(15,tag.getInteger("Level")));until=Math.max(0,tag.getLong("Until"));}
     }
     public static final class Display {
         public final String id,role;
-        public int texture=-1,speed=1,gate;
+        public int texture=-1,speed=1,gate,rows=3;
         public boolean animated=true,inverted,active=true;
         Display(String id,String role){this.id=id;this.role=role;}
-        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);return tag;}
-        public void read(NBTTagCompound tag){texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=Math.max(1,Math.min(16,tag.getInteger("Speed")));gate=Math.max(0,Math.min(65535,tag.getInteger("Gate")));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");active=gate==0 || tag.getBoolean("Active");}
+        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);tag.setInteger("Rows",rows);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);return tag;}
+        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(3,tag.getInteger("Rows"))):3;texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,Math.min(65535,tag.getInteger("Gate")));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");active=gate==0 || tag.getBoolean("Active");}
     }
 }

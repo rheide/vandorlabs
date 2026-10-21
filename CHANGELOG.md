@@ -2,6 +2,10 @@
 
 ## 2.3
 
+- Preserve Advanced Pilot Chair height when saving pilot controls or reopening the casing page. Synchronize cockpit riders and their camera to the seat timeline instead of periodic mount position packets.
+- Match cockpit screen/input playback to Programmable Screen speeds. Open the shared redstone row editor from cockpit surface selectors, including row labels, channels, pulse/toggle/slider controls and slider limits.
+- Angle all three cockpit keyboard decks with matching 2:1 proportions, lower the extended screen bank by 2px, and tile casing artwork at one-block scale.
+
 - Add small cockpit buttons for retracting the whole screen bank and sliding the seat and armrests backwards for exit clearance, with reversible saved motion, blocked-path checks, rear reservations and vehicle support.
 - Lower Advanced Pilot Chair by 6px by default and add +0/+2/+4/+6px height settings for its chair, side rests, controls and rider. Preserve height through configured items and vehicles.
 - Flip new Cockpit placement, use red seat upholstery, enlarge the side screens with a shallower tilt, separate the outer input decks and add an angled center deck. Default to Bridge Bare Pilot/Engineering, Navigation/Sensor Controls and Bare Personal Terminal.

@@ -192,7 +192,7 @@ def add_continuous_fascia(m, large):
     chain = ([(2.5, -4), (10, front_z), (22, front_z), (29.5, -4)] if large else
              [(2.25, -3.75), (9.5, front_z), (22.5, front_z), (29.75, -3.75)])
     pitch, height, depth = (-4 if large else -4), 8, .8
-    pivot = vec([16, 13, front_z])
+    pivot = vec([16, 11, front_z])
     bank_rotation = rotation([pitch, 0, 0])
     directions = [vec([b[0]-a[0], b[1]-a[1]]) for a,b in zip(chain, chain[1:])]
     directions = [d/np.linalg.norm(d) for d in directions]
@@ -217,7 +217,7 @@ def add_continuous_fascia(m, large):
         m.prism(apron, label+'_solid_screen_riser', [(q[0], q[2]) for q in base],
                 10.5, base[:,1].tolist(), 'housing')
         midpoint = (first+last)/2
-        local_origin = vec([midpoint[0], 13, midpoint[1]]) - pivot
+        local_origin = vec([midpoint[0], 11, midpoint[1]]) - pivot
         origin = bank_rotation @ local_origin + pivot
         yaw = math.degrees(math.atan2(-directions[index][1], directions[index][0]))
         angles = matrix_euler(bank_rotation @ rotation([0, yaw, 0]))
@@ -230,17 +230,21 @@ def add_continuous_fascia(m, large):
             'origin': [-width/2+margin_x, margin_y, .035],
             'u': [width-2*margin_x, 0, 0], 'v': [0, height-2*margin_y, 0],
             'normal': [0, 0, 1], 'render_offset': .025})
-        front_corners = np.asarray([[first[0],13,first[1]], [last[0],13,last[1]],
-                                   [last[0],13+height,last[1]], [first[0],13+height,first[1]]])
+        front_corners = np.asarray([[first[0],11,first[1]], [last[0],11,last[1]],
+                                   [last[0],11+height,last[1]], [first[0],11+height,first[1]]])
         front_corners = (front_corners-pivot) @ bank_rotation.T + pivot
         facets.append({'screen': name, 'frame_mesh': label+'_joined_frame',
                        'front_corners_model_pixels': front_corners.round(9).tolist(),
                        'black_inset_model_pixels': [margin_x, margin_y]})
         if label != 'center':
-            # A flush rectangular touch inset in the solid common ledge.
-            touch_node = m.node('touch_ledge_'+label, [midpoint[0]+(-1.25 if label=='left' else 1.25), 0, midpoint[1]], [0, yaw, 0])
-            m.touch(touch_node, 'touch_'+label+'_forward', -width/2+.8, width/2-.8,
-                    1.0, 1.0+(width-1.6)/2, 10.5, rim=.18)
+            # Match the center's 8x4 half-console deck, angled toward the seated pilot.
+            offset = -2.25 if label=='left' else 2.25
+            plan = rotation([0,yaw,0]) @ vec([0,0,2.7])
+            touch_node = m.node('touch_ledge_'+label, [midpoint[0]+offset+plan[0],11.5,midpoint[1]+plan[2]], [22.5,yaw,0])
+            m.touch(touch_node, 'touch_'+label+'_forward', -4,4,-2,2,0,rim=.18)
+            deck = np.asarray([[-4.18,-.08,-2.18],[4.18,-.08,-2.18],[4.18,-.08,2.18],[-4.18,-.08,2.18]]) @ rotation([22.5,yaw,0]).T + vec(touch_node['origin'])
+            support=m.node(label+'_input_base')
+            m.prism(support,label+'_keyboard_wedge',[(p[0],p[2]) for p in deck],10.5,deck[:,1].tolist(),'housing')
     # A shallow angled half-console input deck, with a solid wedge into the ledge.
     n = m.node('center_input', [16,11.5,-8.2], [22.5,0,0])
     m.touch(n, 'touch_center_keyboard', -4, 4, -2, 2, 0, rim=.18)
@@ -400,25 +404,31 @@ def export_obj(m, path, detent=0, static_only=False, moving_only=None):
     v_count = vt_count = vn_count = 0
     for node, box, verts, matrix in primitives_world(m, detent, static_only, moving_only):
         out += ['', f"g {node['name']}__{box['name']}", 'usemtl '+box['material']]
-        for p in verts / 16:
-            out.append('v '+' '.join(f'{x:.8f}' for x in p))
-        # Consistent full material-square mapping. Surface replacement uses separate UV metadata.
-        for u, v in [(0, 0), (1, 0), (1, 1), (0, 1)]:
-            out.append(f'vt {u:.8f} {v:.8f}')
         faces = box['faces'] if 'vertices' in box else [indices for _, indices, _ in FACES]
         for indices in faces:
-            norm = np.cross(verts[indices[1]]-verts[indices[0]], verts[indices[2]]-verts[indices[0]])
-            norm /= np.linalg.norm(norm)
+            points=verts[indices]
+            norm=np.cross(points[1]-points[0],points[2]-points[0]);norm/=np.linalg.norm(norm)
             material=box['material']
             if (node['name']=='fascia_frame' or node['name'].startswith('screen_')) and norm[2]<-.2 and material!='blank':material='screen_back'
-            if norm[1]>.7 and material in ('housing','housing_dark','frame','sidewall','screen_back'):
-                material='horizontal'
-            out.append('usemtl '+material)
-            out.append('vn '+' '.join(f'{x:.8f}' for x in norm))
-            vn_count += 1
-            out.append('f '+' '.join(f'{v_count+i+1}/{vt_count+j+1}/{vn_count}' for j, i in enumerate(indices)))
-        v_count += len(verts)
-        vt_count += 4
+            if norm[1]>.7 and material in ('housing','housing_dark','frame','sidewall','screen_back'):material='horizontal'
+            tiled=material in ('housing','housing_dark','frame','sidewall','screen_back','horizontal','mechanism')
+            width=float(np.linalg.norm(points[1]-points[0]));height=float(np.linalg.norm(points[3]-points[0]))
+            cols=max(1,math.ceil(width/16)) if tiled else 1;rows=max(1,math.ceil(height/16)) if tiled else 1
+            # Bilinear subdivision also covers the authored trapezoidal housing faces.
+            for row in range(rows):
+                for col in range(cols):
+                    a=min(1,col*16/width) if tiled else 0;b=min(1,(col+1)*16/width) if tiled else 1
+                    c=min(1,row*16/height) if tiled else 0;d=min(1,(row+1)*16/height) if tiled else 1
+                    coords=[(a,c),(b,c),(b,d),(a,d)]
+                    for u,v in coords:
+                        p=((1-u)*(1-v)*points[0]+u*(1-v)*points[1]+u*v*points[2]+(1-u)*v*points[3])/16
+                        out.append('v '+' '.join(f'{x:.8f}' for x in p))
+                    # Each piece samples at most one texture square; never wrap across an atlas sprite.
+                    uw=(b-a)*width/16 if tiled else 1;vh=(d-c)*height/16 if tiled else 1
+                    for u,v in [(0,0),(uw,0),(uw,vh),(0,vh)]:out.append(f'vt {u:.8f} {v:.8f}')
+                    out.append('usemtl '+material);out.append('vn '+' '.join(f'{x:.8f}' for x in norm));vn_count+=1
+                    out.append('f '+' '.join(f'{v_count+j+1}/{vt_count+j+1}/{vn_count}' for j in range(4)))
+                    v_count+=4;vt_count+=4
     path.write_text('\n'.join(out)+'\n', encoding='utf-8')
 
 

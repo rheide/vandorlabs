@@ -76,7 +76,10 @@ final class PlacedSeatCamera {
     }
     static boolean wheel(net.minecraftforge.client.event.MouseEvent event){Minecraft mc=Minecraft.getMinecraft();if(event.getDwheel()==0||mc.currentScreen!=null||mc.gameSettings.thirdPersonView==0||seat(mc)==null)return false;tick(mc);distance=MathHelper.clamp(distance+(event.getDwheel()<0?2:-2),4,96);event.setCanceled(true);return true;}
     static boolean camera(net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup event){
-        Minecraft mc=Minecraft.getMinecraft();if(mc.gameSettings.thirdPersonView==0||mc.gameSettings.debugCamEnable||seat(mc)==null)return false;if(mount==null||world.get()!=mc.world)tick(mc);
+        Minecraft mc=Minecraft.getMinecraft();if(mc.gameSettings.debugCamEnable||seat(mc)==null)return false;
+        com.vandorlabs.entity.EntityChairSeat mountEntity=(com.vandorlabs.entity.EntityChairSeat)mc.player.getRidingEntity();float renderPartial=(float)event.getRenderPartialTicks();Vec3d anchor=mountEntity.cockpitRiderPosition(mc.player,renderPartial);
+        if(anchor!=null){Vec3d delta=anchor.subtract(mc.player.lastTickPosX+(mc.player.posX-mc.player.lastTickPosX)*renderPartial,mc.player.lastTickPosY+(mc.player.posY-mc.player.lastTickPosY)*renderPartial,mc.player.lastTickPosZ+(mc.player.posZ-mc.player.lastTickPosZ)*renderPartial);double yaw=Math.toRadians(event.getYaw()+180),pitch=Math.toRadians(event.getPitch()),dx=Math.cos(yaw)*delta.x+Math.sin(yaw)*delta.z,dz=-Math.sin(yaw)*delta.x+Math.cos(yaw)*delta.z;GlStateManager.translate(-dx,-(Math.cos(pitch)*delta.y-Math.sin(pitch)*dz),-(Math.sin(pitch)*delta.y+Math.cos(pitch)*dz));}
+        if(mc.gameSettings.thirdPersonView==0)return true;if(mount==null||world.get()!=mc.world)tick(mc);
         float partial=(float)event.getRenderPartialTicks();Vec3d eye=new Vec3d(mc.player.prevPosX+(mc.player.posX-mc.player.prevPosX)*partial,mc.player.prevPosY+(mc.player.posY-mc.player.prevPosY)*partial+mc.player.getEyeHeight(),mc.player.prevPosZ+(mc.player.posZ-mc.player.prevPosZ)*partial);
         boolean front=mc.gameSettings.thirdPersonView==2;Vec3d away=Vec3d.fromPitchYaw(mc.player.rotationPitch,mc.player.rotationYaw).scale(front?1:-1);
         double vanilla=vanillaArm(mc,eye,front),arm=distance;

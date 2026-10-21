@@ -734,7 +734,7 @@ public class TEAnimatedScreenSelector
             String source=entry.get("source").getAsString(),id=source.replaceFirst("^console_inputs/","").replaceFirst("_static$","");
             boolean input=source.startsWith("console_inputs/");
             if(input && TileEntityAnimatedScreenSelector.getInputFrameCount(id)>1 || !input && ModBlocks.DISPLAY_SCREEN_IDS.contains(id)){
-                AnimData data=input?inputAnimData(id):animData(id);int frame=AnimationFrames.frame(tile.getWorld().getTotalWorldTime(),screen.speed,data.frameCount);
+                AnimData data=input?inputAnimData(id):animData(id);int frame=AnimationFrames.frame(tile.getWorld().getTotalWorldTime(),com.vandorlabs.animation.ScreenBehavior.animationTicks(screen.speed),data.frameCount);
                 Minecraft.getMinecraft().getTextureManager().bindTexture(data.texture);return new double[]{AnimationFrames.top(frame,data.frameCount),AnimationFrames.bottom(frame,data.frameCount),0,1};
             }
         }

@@ -9,7 +9,7 @@ import net.minecraft.world.World;
 
 /** Invisible, non-colliding mount used to give bridge chairs vanilla riding
  * posture without turning the decorative chair itself into an entity. */
-public class EntityChairSeat extends Entity {
+public class EntityChairSeat extends Entity implements net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData {
 
     /** In the riding pose the rendered pelvis is about 0.725 blocks above
      * EntityPlayer's origin. The manifest marker describes the cushion where
@@ -49,6 +49,28 @@ public class EntityChairSeat extends Entity {
     }
 
     @Override protected void entityInit() { }
+    @Override public void writeSpawnData(io.netty.buffer.ByteBuf out){out.writeBoolean(chairPos!=null);if(chairPos!=null)out.writeLong(chairPos.toLong());}
+    @Override public void readSpawnData(io.netty.buffer.ByteBuf in){chairPos=in.readBoolean()?BlockPos.fromLong(in.readLong()):null;}
+    public com.vandorlabs.tiles.TileEntityCockpit cockpit(){
+        if(chairPos==null||world==null)return null;
+        net.minecraft.tileentity.TileEntity tile=world.getTileEntity(chairPos);
+        return tile instanceof com.vandorlabs.tiles.TileEntityCockpit?(com.vandorlabs.tiles.TileEntityCockpit)tile:null;
+    }
+    /** The rider, camera and seat renderer share the tile's persisted timeline. */
+    public net.minecraft.util.math.Vec3d cockpitRiderPosition(Entity passenger,float partial){
+        com.vandorlabs.tiles.TileEntityCockpit tile=cockpit();if(tile==null||tile.data().seat==null)return null;
+        net.minecraft.util.math.Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(tile.seatLocation(partial),tile.facing());
+        return new net.minecraft.util.math.Vec3d(chairPos.getX()+at.x,chairPos.getY()+tile.seatHeight()+.35-RIDER_PELVIS_OFFSET+passenger.getYOffset(),chairPos.getZ()+at.z);
+    }
+    @Override public void updatePassenger(Entity passenger){
+        net.minecraft.util.math.Vec3d at=cockpitRiderPosition(passenger,0);
+        if(!isPassenger(passenger)||at==null){super.updatePassenger(passenger);return;}
+        passenger.setPosition(at.x,at.y,at.z);
+        if(world.isRemote){net.minecraft.util.math.Vec3d before=cockpitRiderPosition(passenger,-1);passenger.prevPosX=passenger.lastTickPosX=before.x;passenger.prevPosY=passenger.lastTickPosY=before.y;passenger.prevPosZ=passenger.lastTickPosZ=before.z;}
+    }
+    @Override public void setPositionAndRotationDirect(double x,double y,double z,float yaw,float pitch,int increments,boolean teleport){
+        if(cockpit()==null)super.setPositionAndRotationDirect(x,y,z,yaw,pitch,increments,teleport);
+    }
     private void cockpitOffset(){
         if(chairPos==null || !(world.getTileEntity(chairPos) instanceof com.vandorlabs.tiles.TileEntityCockpit))return;
         com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)world.getTileEntity(chairPos);if(cockpit.data().seat==null)return;
@@ -58,6 +80,7 @@ public class EntityChairSeat extends Entity {
     @Override
     public void onUpdate() {
         super.onUpdate();
+        com.vandorlabs.tiles.TileEntityCockpit cockpit=cockpit();if(cockpit!=null){setSeatY(cockpit.seatHeight());}
         if (!world.isRemote) {
             IBlockState state = chairPos == null ? null
                     : world.getBlockState(chairPos);

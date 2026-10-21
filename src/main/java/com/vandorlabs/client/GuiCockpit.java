@@ -44,21 +44,22 @@ public final class GuiCockpit extends GuiMaterialPicker {
             TileEntityCockpit.Display screen=tile.displays.get(d);boolean input="touch".equals(screen.role);int controlW=Math.min(154,(xSize-30)/2),cx=guiLeft+xSize-controlW-12;
             textures=new HousingTextureList(x,guiTop+34,cx-x-10,screen.texture,Math.max(3,(ySize-72)/HousingTextureList.ROW_HEIGHT),null,
                     value->HousingTextureList.generalTexture(value) || ScreenTextureList.artwork(value,input)).visibleRows(Math.max(2,(ySize-68)/HousingTextureList.ROW_HEIGHT)).custom(this::choose)
-                    .redstone(()->choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)).vehicle(()->choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE));
+                    .redstone(this::redstone).vehicle(()->choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE));
             buttonList.add(new CockpitButton(30,cx,guiTop+34,controlW,20,"Animation: "+(screen.animated?"On":"Off")));
-            buttonList.add(new CockpitButton(31,cx,guiTop+58,controlW,20,"Speed: "+screen.speed));
+            buttonList.add(new CockpitButton(31,cx,guiTop+58,controlW,20,"Speed: "+new String[]{"Slow","Normal","Fast"}[screen.speed]));
             text(0,cx,guiTop+94,controlW,Integer.toString(screen.gate));
             buttonList.add(new CockpitButton(32,cx,guiTop+118,controlW,20,"Gate: "+(screen.inverted?"OFF":"ON")));
             buttonList.add(new CockpitButton(33,cx,guiTop+142,controlW,20,"Blank surface"));
         }else{
             TileEntityCockpit.Control control=tile.controls.get(c);
             text(0,x,y+12,w,control.label);text(1,x,y+52,w,control.channels.toString());
-            buttonList.add(new CockpitButton(40,x,y+84,w,20,"Control: "+new String[]{"Toggle","Slider (0 / 5 / 10 / 15)","Pulse (1 second)"}[control.kind]));
+            buttonList.add(new CockpitButton(40,x,y+84,w,20,"Control: "+new String[]{"Toggle","Slider","Pulse (1 second)"}[control.kind]));
             buttonList.add(new CockpitButton(41,x,y+110,w,20,"Output: "+control.level+"  (operate)"));
         }
     }
     private void text(int id,int x,int y,int width,String value){GuiTextField field=new GuiTextField(id,fontRenderer,x,y,width,18);field.setMaxStringLength(id==0?128:256);field.setText(value);fields.add(field);}
     private void packet(int op,NBTTagCompound values){com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCockpit(inventorySlots.windowId,op,values));}
+    private void redstone(){choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);mc.displayGuiScreen(new GuiRedstoneScreen(this,cockpit,displayIndex()));}
     private void choose(int value){if(sidePage())tile.setSideTexture(value);else tile.displays.get(displayIndex()).texture=value;save();}
     private void save(){
         int d=displayIndex(),c=controlIndex();NBTTagCompound tag;
@@ -83,12 +84,12 @@ public final class GuiCockpit extends GuiMaterialPicker {
         else if(button.id==12)tile.setHeight(GuiOptionCycle.next(tile.getHeight(),4));
         else if(button.id>=20 && button.id<=22){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Mode",button.id-20);packet(2,tag);return;}
         else if(button.id==30)tile.displays.get(d).animated=!tile.displays.get(d).animated;
-        else if(button.id==31)tile.displays.get(d).speed=GuiOptionCycle.next(tile.displays.get(d).speed,1,16);
+        else if(button.id==31)tile.displays.get(d).speed=GuiOptionCycle.next(tile.displays.get(d).speed,3);
         else if(button.id==32)tile.displays.get(d).inverted=!tile.displays.get(d).inverted;
         else if(button.id==33)tile.displays.get(d).texture=-1;
         else if(button.id==34)tile.setSideTexture(-1);
         else if(button.id==40)tile.controls.get(c).kind=GuiOptionCycle.next(tile.controls.get(c).kind,3);
-        else if(button.id==41){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Control",c);tag.setDouble("Column",((tile.controls.get(c).level/5+1)%4)/3D);packet(1,tag);return;}
+        else if(button.id==41){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Control",c);tag.setDouble("Column",tile.controls.get(c).nextColumn());packet(1,tag);return;}
         save();initGui();
     }
     @Override protected void keyTyped(char ch,int key)throws IOException{boolean consumed=false;for(GuiTextField f:fields)consumed|=f.textboxKeyTyped(ch,key);if(consumed)save();else super.keyTyped(ch,key);}

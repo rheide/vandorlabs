@@ -62,8 +62,8 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
     private static void rows(TileEntityCockpit tile,CockpitData.Surface plane){
         FloatBuffer matrix=matrix(plane,192,64);
         GlStateManager.pushMatrix();GlStateManager.multMatrix(matrix);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
-        for(int row=0;row<3;row++){TileEntityCockpit.Control c=tile.control(plane.id+"/"+row);int y=row*21;Gui.drawRect(0,y,192,y+20,0x99071018);String label=c.label.length()>18?c.label.substring(0,18):c.label;Minecraft.getMinecraft().fontRenderer.drawString(label,4,y+6,0xffffff);
-            if(c.kind==1)for(int i=0;i<4;i++)Gui.drawRect(116+i*10,y+6,123+i*10,y+14,i*5<=c.level?0xff46d4b5:0xff33434d);
+        int count=tile.display(plane.id).rows;for(int row=0;row<count;row++){TileEntityCockpit.Control c=tile.control(plane.id+"/"+row);int y=row*64/Math.max(1,count);Gui.drawRect(0,y,192,y+20,0x99071018);String label=c.label.length()>18?c.label.substring(0,18):c.label;Minecraft.getMinecraft().fontRenderer.drawString(label,4,y+6,0xffffff);
+            if(c.kind==1)for(int i=0;i<4;i++)Gui.drawRect(116+i*10,y+6,123+i*10,y+14,c.sliderLevel(i)<=c.level?0xff46d4b5:0xff33434d);else Gui.drawRect(158,y+5,185,y+15,c.level>0?0xff46d4b5:0xff33434d);
         }
         GlStateManager.popMatrix();GlStateManager.color(1,1,1,1);
     }

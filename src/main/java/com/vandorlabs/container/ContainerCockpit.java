@@ -35,6 +35,7 @@ public final class ContainerCockpit extends Container {
     }
     public void update(EntityPlayerMP player,int operation,NBTTagCompound values){
         if(!canInteractWith(player))return;int previousHeight=tile.getHeight();
+        if(operation==0&&values.hasKey("RedstoneDisplay",3)&&!tile.configureRows(values.getInteger("RedstoneDisplay"),values.getTagList("Rows",10)))return;
         if(operation==1){int i=values.getInteger("Control");double column=values.getDouble("Column");if(i<0 || i>=tile.controls.size() || !Double.isFinite(column) || column<0 || column>1)return;tile.controls.get(i).activate(column);
         }else if(operation==2){if(tile.data().seat==null)return;VehicleService.screenMode(player,tile.getPos(),craft,values.getInteger("Mode"));return;
         }else if(operation==0){
