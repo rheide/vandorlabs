@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Move the outer cockpit keyboard decks and their supports 2.5px toward the pilot to clear the lowered side screens.
+
 - Support contained fluid sides on Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor. Fill open passages from stored or adjacent water and restore the original sides on closing without creating source blocks. Share door-half storage and render diagonal fluid boundaries as continuous planes.
 - Reestablish texture units, alpha testing and depth state before drawing cached turntable contents, and synchronize both texture-unit caches when restoring nested render state.
 

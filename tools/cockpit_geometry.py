@@ -240,7 +240,8 @@ def add_continuous_fascia(m, large):
             # Match the center's 8x4 half-console deck, angled toward the seated pilot.
             offset = -2.25 if label=='left' else 2.25
             plan = rotation([0,yaw,0]) @ vec([0,0,2.7])
-            touch_node = m.node('touch_ledge_'+label, [midpoint[0]+offset+plan[0],11.5,midpoint[1]+plan[2]], [22.5,yaw,0])
+            # Move toward the pilot without shifting inward toward the center keyboard.
+            touch_node = m.node('touch_ledge_'+label, [midpoint[0]+offset+plan[0],11.5,midpoint[1]+plan[2]+2.5], [22.5,yaw,0])
             m.touch(touch_node, 'touch_'+label+'_forward', -4,4,-2,2,0,rim=.18)
             deck = np.asarray([[-4.18,-.08,-2.18],[4.18,-.08,-2.18],[4.18,-.08,2.18],[-4.18,-.08,2.18]]) @ rotation([22.5,yaw,0]).T + vec(touch_node['origin'])
             support=m.node(label+'_input_base')
