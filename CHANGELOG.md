@@ -2,6 +2,12 @@
 
 ## 2.3
 
+- Automatically retain source and flowing liquids when placing supported walls, glass, portholes, diagonal variants, doors, trapdoors, slabs and stairs in fluid. Respect wet/dry boundaries on the two faces, preserve registered fluid identities and share door-half capture through Forge placement snapshots.
+- Join contained water/lava to ordinary world liquid without duplicate boundary faces or false falling-water borders. Clip the native liquid face to the actual wet compartment while retaining exposed faces beside dry compartments.
+- Rebuild adjacent native-fluid meshes when contained-fluid packets fill or drain a side, including across chunk/section boundaries and both door halves.
+- Preserve diagonal thickness faces against solid neighbours and retain glass rim geometry at flat porthole joins. Add rendered contact matrices across shapes, orientations, inversions, fills and frame settings, plus real submerged item-placement and native liquid vertex regressions.
+- Render opaque diagonal-glass rails before translucent world water. Use still liquid artwork, vanilla alpha and directional lighting for contained fluid. Restore the dedicated glass interior material and existing wall UV mapping on diagonal rim interiors, keeping clipped pane edges aligned with their inward-facing caps.
+
 - Move the outer cockpit keyboard decks and their supports 2.5px toward the pilot to clear the lowered side screens.
 
 - Support contained fluid sides on Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor. Fill open passages from stored or adjacent water and restore the original sides on closing without creating source blocks. Share door-half storage and render diagonal fluid boundaries as continuous planes.

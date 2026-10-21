@@ -12,6 +12,7 @@ import net.minecraft.world.World;
 
 final class WaterloggedRuntimeChecks {
     static void run(World world){
+        FluidPlacementChecks.run((net.minecraft.world.WorldServer)world);
         OpeningFluidRuntimeChecks.run(world);
         BlockPos pos=new BlockPos(146,230,146);
         try{

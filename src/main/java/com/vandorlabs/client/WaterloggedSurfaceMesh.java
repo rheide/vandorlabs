@@ -15,8 +15,8 @@ import java.util.*;
 @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid="vandorlabs",value=net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class WaterloggedSurfaceMesh {
     static final class Surface {
-        final Vec3d[] vertices;final int side,axis;final EnumFacing boundary;
-        Surface(List<double[]> polygon,int side,int axis,EnumFacing boundary){this.vertices=new Vec3d[polygon.size()];for(int i=0;i<vertices.length;i++){double[] p=polygon.get(i);vertices[i]=new Vec3d(p[0],p[1],p[2]);}this.side=side;this.axis=axis;this.boundary=boundary;}
+        final Vec3d[] vertices;final Vec3d normal;final int side,axis;final EnumFacing boundary;
+        Surface(List<double[]> polygon,int side,int axis,EnumFacing boundary){this.vertices=new Vec3d[polygon.size()];for(int i=0;i<vertices.length;i++){double[] p=polygon.get(i);vertices[i]=new Vec3d(p[0],p[1],p[2]);}normal=WaterloggedSurfaceMesh.normal(polygon).normalize();this.side=side;this.axis=axis;this.boundary=boundary;}
     }
     private static final class Region {
         final List<double[]> planes=new ArrayList<>();final int side;
@@ -25,7 +25,8 @@ public final class WaterloggedSurfaceMesh {
     }
     private static final class Source {
         final WaterloggedParts.Volume volume;final FluidStack[] fluids;final List<Region> regions=new ArrayList<>();final List<Surface> surfaces=new ArrayList<>();
-        Source(World world,BlockPos pos){volume=WaterloggedParts.volume(world,pos);ContainedFluids data=WaterloggedParts.data(world.getTileEntity(pos));fluids=new FluidStack[]{WaterloggedParts.fluid(world,pos,0),WaterloggedParts.fluid(world,pos,1)};}
+        Source(World world,BlockPos pos){this(world,pos,false);}
+        Source(World world,BlockPos pos,boolean detached){volume=detached?(WaterloggedParts.panel(world.getBlockState(pos))||OpeningFluids.supports(world.getBlockState(pos))?null:WaterloggedParts.uncachedVolume(world,pos)):WaterloggedParts.volume(world,pos);fluids=new FluidStack[]{WaterloggedParts.fluid(world,pos,0),WaterloggedParts.fluid(world,pos,1)};}
     }
     private static final class Entry {
         final Object[] volumes;final FluidStack[] fluids;final List<Surface> mesh;
@@ -56,6 +57,7 @@ public final class WaterloggedSurfaceMesh {
         for(int i=0;i<sources.length;i++)if(sources[i]!=null)build(sources[i],world,i==0?pos:pos.offset(EnumFacing.values()[i-1]));
         List<Surface> mesh=new ArrayList<>();Source own=sources[0];if(own!=null)for(Surface surface:own.surfaces){
             FluidStack fluid=own.fluids[surface.side];if(fluid==null)continue;List<List<double[]>> pieces=new ArrayList<>();pieces.add(points(surface.vertices));
+            if(surface.boundary!=null){BlockPos next=pos.offset(surface.boundary);if(world.isBlockLoaded(next)){IBlockState liquid=world.getBlockState(next);net.minecraftforge.fluids.Fluid nativeFluid=WaterloggedParts.nativeFluid(liquid);if(nativeFluid==fluid.getFluid())continue;}}
             Source neighbor=surface.boundary==null?null:sources[surface.boundary.getIndex()+1];
             if(neighbor!=null)for(Region region:neighbor.regions)if(equal(fluid,neighbor.fluids[region.side])){
                 List<List<double[]>> remaining=new ArrayList<>();for(List<double[]> piece:pieces)subtract(piece,region,surface.boundary,remaining);pieces=remaining;
@@ -63,6 +65,20 @@ public final class WaterloggedSurfaceMesh {
             for(List<double[]> piece:pieces)if(area(piece)>1e-10)mesh.add(new Surface(piece,surface.side,surface.axis,surface.boundary));
         }
         cache.entries.put(pos.toImmutable(),new Entry(volumes,fluids,mesh,tile));return mesh;
+    }
+    static final class Contact {
+        final Source source;final FluidStack fluid;
+        Contact(Source source,FluidStack fluid){this.source=source;this.fluid=fluid;}
+        boolean touches(EnumFacing face){for(Surface surface:source.surfaces)if(surface.boundary==face&&equal(fluid,source.fluids[surface.side]))return true;return false;}
+        java.util.List<java.util.List<double[]>> subtract(java.util.List<double[]> polygon,EnumFacing offset){
+            java.util.List<java.util.List<double[]>> pieces=new ArrayList<>();pieces.add(polygon);
+            for(Region region:source.regions)if(equal(fluid,source.fluids[region.side])){java.util.List<java.util.List<double[]>> next=new ArrayList<>();for(java.util.List<double[]> piece:pieces)WaterloggedSurfaceMesh.subtract(piece,region,offset,next);pieces=next;}return pieces;
+        }
+    }
+    static Contact contact(TileEntity tile,FluidStack fluid){
+        if(tile==null||tile.getWorld()==null)return null;World world=tile.getWorld();BlockPos pos=tile.getPos();IBlockState state=world.getBlockState(pos);
+        if(!WaterloggedParts.supports(state))return null;
+        Source source=new Source(world,pos,true);if(!equal(fluid,source.fluids[0])&&!equal(fluid,source.fluids[1]))return null;build(source,world,pos);return new Contact(source,fluid);
     }
     private static boolean equal(FluidStack a,FluidStack b){return a==null?b==null:b!=null&&a.isFluidEqual(b);}
     private static List<double[]> points(Vec3d[] vertices){List<double[]> out=new ArrayList<>();for(Vec3d v:vertices)out.add(new double[]{v.x,v.y,v.z});return out;}
@@ -96,7 +112,8 @@ public final class WaterloggedSurfaceMesh {
         boolean shallow=diagonal&&mode==2;double lower=diagonal?BlockProgrammableWall.flatEnd(state,world,pos,false):Double.NaN,upper=diagonal?BlockProgrammableWall.flatEnd(state,world,pos,true):Double.NaN;
         double[] cuts=diagonal&&( !Double.isNaN(lower)||!Double.isNaN(upper))?new double[]{0,.25,.75,1}:new double[]{0,1};
         boolean inset=state.getBlock() instanceof BlockProgrammableGlass&&PanelJoins.flatCorner(state,world,pos)==null||wall!=null&&wall.isPortholeShape();
-        for(int side=0;side<2;side++)if(source.volume.hasSide(side))for(int band=0;band+1<cuts.length;band++){
+        int fill=diagonal?BlockProgrammableWall.fill(world,pos):0;
+        for(int side=0;side<2;side++)if((fill&(1<<side))==0)for(int band=0;band+1<cuts.length;band++){
             double lo=cuts[band],hi=cuts[band+1];double a=diagonal?DiagonalWallGeometry.near(mode,inverted,lo,lower,upper):PanelJoins.flatNear(state,world,pos)/16D;
             double b=diagonal?DiagonalWallGeometry.near(mode,inverted,hi,lower,upper):a;
             double depth=(side==0?(inset?1D/16:0):(inset?3D/16:.25))+(side==0?-.0001:.0001);

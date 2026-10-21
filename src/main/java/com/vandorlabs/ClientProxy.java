@@ -80,6 +80,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ConnectedFluidRenderer.Installer());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCockpit.class,new com.vandorlabs.client.TECockpit());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTurntableSurface.class,new com.vandorlabs.client.TETurntableSurface());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTokenSlot.class,new com.vandorlabs.client.TETokenSlot());

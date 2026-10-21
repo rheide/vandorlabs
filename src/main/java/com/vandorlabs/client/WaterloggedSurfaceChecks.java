@@ -22,6 +22,10 @@ final class WaterloggedSurfaceChecks {
         ContainedFluids fluids=WaterloggedParts.data(world.getTileEntity(pos));fluids.set(0,new FluidStack(FluidRegistry.WATER,1000));
     }}
     static void run(Minecraft mc,File output)throws Exception{OpeningFluidVisualChecks.run(mc,output);
+        ContainedFluidUpdateChecks.run(mc.world);
+        require(WaterloggedRenderer.sprite(new FluidStack(FluidRegistry.WATER,1000))==mc.getTextureMapBlocks().getAtlasSprite(FluidRegistry.WATER.getStill().toString()),"contained water must use still artwork on every face");
+        NativeFluidContactChecks.run(mc,output);
+        SubmergedGlassChecks.run(mc,output);
         for(int kind=0;kind<IDS.length;kind++){
             TileEntity tile=mc.world.getTileEntity(at(kind));require(tile!=null,"fluid fixture synchronized");List<WaterloggedSurfaceMesh.Surface> mesh=WaterloggedSurfaceMesh.get(tile);
             require(mesh==WaterloggedSurfaceMesh.get(tile),"fluid surface cache reuse");

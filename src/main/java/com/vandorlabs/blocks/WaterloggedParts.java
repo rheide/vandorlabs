@@ -21,6 +21,8 @@ import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 @Mod.EventBusSubscriber(modid="vandorlabs")
 public final class WaterloggedParts {
     private WaterloggedParts(){}
+    /** Registered fluids may use water/lava materials without being vanilla water/lava. */
+    public static Fluid nativeFluid(IBlockState state){Fluid registered=FluidRegistry.lookupFluidForBlock(state.getBlock());return registered!=null?registered:state.getMaterial()==Material.WATER?FluidRegistry.WATER:state.getMaterial()==Material.LAVA?FluidRegistry.LAVA:null;}
     public static boolean supports(IBlockState state){return state.getBlock() instanceof BlockProgrammableSlab||state.getBlock() instanceof BlockProgrammableStairs||panel(state)||OpeningFluids.supports(state);}
     public static boolean panel(IBlockState state){return state.getBlock() instanceof BlockProgrammableWall||state.getBlock() instanceof BlockProgrammableGlass;}
     public static ContainedFluids data(TileEntity tile){tile=OpeningFluids.root(tile);if(tile instanceof TileEntitySpaceDoor)return ((TileEntitySpaceDoor)tile).fluids;if(tile instanceof TileEntityProgrammableTrapdoor)return ((TileEntityProgrammableTrapdoor)tile).fluids;return tile instanceof TileEntityAnimatedScreenSelector?((TileEntityAnimatedScreenSelector)tile).fluids:tile instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)tile).fluids:null;}
@@ -48,12 +50,17 @@ public final class WaterloggedParts {
         return coordinate<mid?0:1;
     }
     public static Volume volume(World world,BlockPos pos){
+        return volume(world,pos,true);
+    }
+    /** Chunk workers must not mutate the tile's main-thread geometry cache. */
+    public static Volume uncachedVolume(World world,BlockPos pos){return volume(world,pos,false);}
+    private static Volume volume(World world,BlockPos pos,boolean cached){
         ContainedFluids data=data(world.getTileEntity(pos));long tick=world.getTotalWorldTime();
-        if(data!=null&&data.geometry!=null&&data.geometryTick==tick&&pos.equals(data.geometryPos))return data.geometry;
+        if(cached&&data!=null&&data.geometry!=null&&data.geometryTick==tick&&pos.equals(data.geometryPos))return data.geometry;
         IBlockState state=world.getBlockState(pos).getActualState(world,pos);int mapping=panel(state)?PanelJoins.flatFacing(state,world,pos).getIndex():0;List<AxisAlignedBB> solid=new ArrayList<>();state.addCollisionBoxToList(world,pos,new AxisAlignedBB(pos),solid,null,false);
         List<AxisAlignedBB> local=new ArrayList<>();for(AxisAlignedBB box:solid)if(box.intersects(new AxisAlignedBB(pos)))local.add(box.offset(-pos.getX(),-pos.getY(),-pos.getZ()).intersect(new AxisAlignedBB(0,0,0,1,1,1)));
         // Include the side mapping in the cache even when two poses share collision bounds.
-        if(data!=null&&data.geometry!=null&&data.geometry.solid.equals(local)&&data.geometryState==state&&data.geometryMapping==mapping&&pos.equals(data.geometryPos)){data.geometryTick=tick;return data.geometry;}
+        if(cached&&data!=null&&data.geometry!=null&&data.geometry.solid.equals(local)&&data.geometryState==state&&data.geometryMapping==mapping&&pos.equals(data.geometryPos)){data.geometryTick=tick;return data.geometry;}
         Volume result=new Volume(local);double[][] cuts=new double[3][];
         for(int axis=0;axis<3;axis++){TreeSet<Double> points=new TreeSet<>();points.add(0D);points.add(1D);if(OpeningFluids.supports(state)){points.add(.5);double[] plane=OpeningFluids.plane(world,pos);if(Math.abs(plane[axis])>.999)for(int end=3;end<5;end++){double cut=plane[end]/plane[axis];if(cut>0&&cut<1)points.add(cut);}}for(AxisAlignedBB b:local){points.add(axis==0?b.minX:axis==1?b.minY:b.minZ);points.add(axis==0?b.maxX:axis==1?b.maxY:b.maxZ);}cuts[axis]=points.stream().mapToDouble(Double::doubleValue).toArray();}
         int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;int[][][] owners=new int[nx][ny][nz];
@@ -67,7 +74,7 @@ public final class WaterloggedParts {
                 result.faces.add(new Face(vertices,side,face.getAxis()==EnumFacing.Axis.X?0:face.getAxis()==EnumFacing.Axis.Y?1:2));
             }
         }
-        if(data!=null){data.geometry=result;data.geometryPos=pos.toImmutable();data.geometryTick=tick;data.geometryState=state;data.geometryMapping=mapping;}return result;
+        if(cached&&data!=null){data.geometry=result;data.geometryPos=pos.toImmutable();data.geometryTick=tick;data.geometryState=state;data.geometryMapping=mapping;}return result;
     }
     public static List<AxisAlignedBB> gaps(IBlockAccess access,BlockPos pos){if(!(access instanceof World))return Collections.emptyList();List<AxisAlignedBB> boxes=new ArrayList<>();for(Cell cell:volume((World)access,pos).cells)boxes.add(cell.box.offset(pos));return boxes;}
     private static Material material(FluidStack fluid){return fluid.getFluid().getBlock()==null?Material.WATER:fluid.getFluid().getBlock().getDefaultState().getMaterial();}
@@ -81,8 +88,30 @@ public final class WaterloggedParts {
     public static Boolean entity(IBlockAccess world,BlockPos pos,Entity entity,double height,Material material,boolean head){if(!(world instanceof World)||!wet(world,pos))return null;if(!head)return intersects((World)world,pos,entity.getEntityBoundingBox(),material);ContainedFluids data=data(world.getTileEntity(pos));if(!matches(fluid((World)world,pos,0),material)&&!matches(fluid((World)world,pos,1),material))return null;for(Cell cell:volume((World)world,pos).cells){FluidStack fluid=fluid((World)world,pos,cell.side);if(fluid!=null&&material(fluid)==material&&cell.box.offset(pos).contains(new Vec3d(entity.posX,height,entity.posZ)))return true;}return false;}
     public static int light(IBlockAccess world,BlockPos pos){ContainedFluids data=data(world.getTileEntity(pos));int light=0;if(data!=null)for(int i=0;i<2;i++){FluidStack fluid=data.get(i);if(fluid!=null)light=Math.max(light,fluid.getFluid().getLuminosity(fluid));}return light;}
     @SubscribeEvent public static void placed(net.minecraftforge.event.world.BlockEvent.PlaceEvent event){
-        if(event.getWorld().isRemote||!supports(event.getPlacedBlock()))return;Fluid fluid=FluidRegistry.lookupFluidForBlock(event.getBlockSnapshot().getReplacedBlock().getBlock());if(fluid==null||fluid.isGaseous())return;
-        ContainedFluids data=data(event.getWorld().getTileEntity(event.getPos()));if(data!=null){Volume volume=volume(event.getWorld(),event.getPos());for(int side=0;side<2;side++)if(volume.hasSide(side)){data.set(side,new FluidStack(fluid,1000));break;}}
+        if(event.getWorld().isRemote)return;
+        World world=event.getWorld();Map<ContainedFluids,PlacementFill> fills=new IdentityHashMap<>();
+        java.util.List<net.minecraftforge.common.util.BlockSnapshot> snapshots=event instanceof net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent?((net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent)event).getReplacedBlockSnapshots():java.util.Collections.singletonList(event.getBlockSnapshot());
+        for(net.minecraftforge.common.util.BlockSnapshot snapshot:snapshots){
+            BlockPos pos=snapshot.getPos();IBlockState state=world.getBlockState(pos);if(!supports(state))continue;ContainedFluids data=data(world.getTileEntity(pos));if(data==null)continue;
+            PlacementFill fill=fills.computeIfAbsent(data,key->new PlacementFill());Fluid replaced=nativeFluid(snapshot.getReplacedBlock());if(replaced!=null&&!replaced.isGaseous()&&fill.fallback==null)fill.fallback=replaced;
+            if(!panel(state)&&!OpeningFluids.supports(state)){Volume volume=volume(world,pos);for(int side=0;side<2;side++)fill.available[side]=volume.hasSide(side);}
+            // Inspect the two sides of the separating leaf. Transverse water above/beside a
+            // wall must not turn its dry face wet merely because both touch that cell edge.
+            if(panel(state)||OpeningFluids.supports(state))for(EnumFacing face:placementFaces(world,pos,state)){
+                BlockPos next=pos.offset(face);if(!world.isBlockLoaded(next))continue;Fluid adjacent=nativeFluid(world.getBlockState(next));if(adjacent==null||adjacent.isGaseous())continue;
+                Vec3d sample=new Vec3d(.5,.5,.5).add(new Vec3d(face.getDirectionVec()).scale(.51));fill.sides[side(world,pos,sample)]=adjacent;
+            }
+        }
+        for(Map.Entry<ContainedFluids,PlacementFill> entry:fills.entrySet()){
+            PlacementFill fill=entry.getValue();boolean boundary=fill.sides[0]!=null||fill.sides[1]!=null;
+            for(int side=0;side<2;side++){Fluid fluid=boundary?fill.sides[side]:fill.fallback;if(fluid!=null&&!entry.getKey().occupied(side)&&fill.available[side])entry.getKey().set(side,new FluidStack(fluid,1000));}
+        }
+    }
+    private static final class PlacementFill {Fluid fallback;final Fluid[] sides=new Fluid[2];final boolean[] available={true,true};}
+    private static EnumFacing[] placementFaces(World world,BlockPos pos,IBlockState state){
+        if(OpeningFluids.supports(state)){double[] normal=OpeningFluids.plane(world,pos);int axis=Math.abs(normal[0])>Math.abs(normal[1])?0:1;if(Math.abs(normal[2])>Math.abs(normal[axis]))axis=2;return axis==0?new EnumFacing[]{EnumFacing.WEST,EnumFacing.EAST}:axis==1?new EnumFacing[]{EnumFacing.DOWN,EnumFacing.UP}:new EnumFacing[]{EnumFacing.NORTH,EnumFacing.SOUTH};}
+        if(state.getBlock() instanceof BlockProgrammableWall&&((BlockProgrammableWall)state.getBlock()).isDiagonalShape()&&BlockProgrammableWall.geometry(world,pos)==2)return new EnumFacing[]{EnumFacing.DOWN,EnumFacing.UP};
+        EnumFacing facing=PanelJoins.flatFacing(state,world,pos);return new EnumFacing[]{facing,facing.getOpposite()};
     }
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST)
     public static void bucket(PlayerInteractEvent.RightClickBlock event){

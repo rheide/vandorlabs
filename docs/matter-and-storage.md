@@ -31,6 +31,8 @@ Programmable Walls, Porthole Walls, Glass Walls and their diagonal variants can 
 
 Registered Forge liquids with a compatible bucket or fluid container are supported; gases are excluded. The visible liquid fills the free space around the configured wall geometry and uses the fluid's texture, colour and luminosity. Contents stay contained and do not spread into neighbouring blocks. Saving, copying and vehicle capture preserve both sides. Slabs and stairs use the same contained-fluid storage; older waterlogged saves migrate automatically.
 
+Placing a supported block into liquid automatically captures it in the free space. At a wet/dry boundary only the face adjoining liquid fills; the opposite face stays dry. Opposing liquids can fill their respective sides independently. An isolated replaced fluid cell is retained when neither face adjoins another liquid. This includes source and flowing water/lava and registered Forge liquids, with the same behavior for doors, trapdoors and diagonal variants. Ordinary water and lava join the matching contained liquid without an internal border; an empty compartment or a different liquid retains its visible boundary.
+
 Visible fluid follows continuous diagonal surfaces and reaches inset porthole/glass panes. Adjacent volumes of the same liquid omit their shared faces, including partial joins; different liquids retain their separating interface. The visible surface cache refreshes after shape or fluid changes, rather than rebuilding meshes during rotation. Entity collision remains based on the solid block's collision geometry.
 
 ### Doors and trapdoors
