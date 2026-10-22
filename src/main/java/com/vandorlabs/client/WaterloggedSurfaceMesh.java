@@ -64,7 +64,17 @@ public final class WaterloggedSurfaceMesh {
             if(neighbor!=null)for(Region region:neighbor.regions)if(equal(fluid,neighbor.fluids[region.side])){
                 List<List<double[]>> remaining=new ArrayList<>();for(List<double[]> piece:pieces)subtract(piece,region,surface.boundary,remaining);pieces=remaining;
             }
-            for(List<double[]> piece:pieces)if(area(piece)>1e-10)mesh.add(new Surface(piece,surface.side,surface.axis,surface.boundary));
+            for(List<double[]> piece:pieces)if(area(piece)>1e-10){
+                // Free surfaces follow native source/flowing-water corner heights. Covered
+                // compartments retain their full volume and seamless vertical joins.
+                if(fluid.getFluid()==net.minecraftforge.fluids.FluidRegistry.WATER||fluid.getFluid()==net.minecraftforge.fluids.FluidRegistry.LAVA){
+                    for(double[] point:piece)if(point[1]>.998){
+                        double height=ContainedFluidHeights.height(world,pos,fluid.getFluid(),point[0],point[2]);
+                        if(height<.998)point[1]=height;
+                    }
+                }
+                mesh.add(new Surface(piece,surface.side,surface.axis,surface.boundary));
+            }
         }
         Entry entry=new Entry(volumes,fluids,mesh,tile);cache.entries.put(pos.toImmutable(),entry);return entry;
     }
@@ -123,7 +133,7 @@ public final class WaterloggedSurfaceMesh {
         for(int side=0;side<2;side++)if((fill&(1<<side))==0)for(int band=0;band+1<cuts.length;band++){
             double lo=cuts[band],hi=cuts[band+1];double a=diagonal?DiagonalWallGeometry.near(mode,inverted,lo,lower,upper):PanelJoins.flatNear(state,world,pos)/16D;
             double b=diagonal?DiagonalWallGeometry.near(mode,inverted,hi,lower,upper):a;
-            double depth=(side==0?(inset?1D/16:0):(inset?3D/16:.25))+(side==0?-.0001:.0001);
+            double depth=(side==0?(inset?1D/16:0):(inset?3D/16:.25))+(side==0?-.001:.001);
             double slope=(b-a)/(hi-lo),intercept=a-slope*lo+depth+(shallow?DiagonalWallGeometry.band(mode,inverted):0);
             Region region=new Region(side);region.add(-1,0,0,0).add(1,0,0,1).add(0,-1,0,0).add(0,1,0,1).add(0,0,-1,0).add(0,0,1,1);
             region.planes.add(worldPlane(facing,shallow?new double[]{0,0,-1,-lo}:new double[]{0,-1,0,-lo}));region.planes.add(worldPlane(facing,shallow?new double[]{0,0,1,hi}:new double[]{0,1,0,hi}));

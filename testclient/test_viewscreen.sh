@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
-unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY
+unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
@@ -11,7 +11,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = cockpit ]; then
+        if [ "$TARGET" = fluids ]; then
+            PREFIX=fluid_
+            export VANDOR_LABS_FLUID_CHECKS_ONLY=true
+        elif [ "$TARGET" = cockpit ]; then
             PREFIX=cockpit_
             export VANDOR_LABS_COCKPIT_CHECKS_ONLY=true
         elif [ "$TARGET" = glass-appearance ]; then
@@ -64,8 +67,11 @@ RUN_OUT=$(mktemp -d "$ROOT/testclient/render-run.XXXXXX")
 cd "$ROOT"
 BUILD_ARGS=(build --no-daemon)
 if [ "${VANDOR_LABS_TEST_OFFLINE:-false}" = true ]; then BUILD_ARGS+=(--offline); fi
-JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew "${BUILD_ARGS[@]}"
-TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$ROOT/testclient/runtime/game"}
+if [ "${VANDOR_LABS_TEST_SKIP_BUILD:-false}" != true ]; then
+    JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew "${BUILD_ARGS[@]}"
+fi
+TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$RUN_OUT/game"}
+export VANDOR_LABS_TEST_GAME_DIR="$TEST_RUNTIME_GAME"
 mkdir -p "$TEST_RUNTIME_GAME/mods"
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 TEST_JAR=${VANDOR_LABS_TEST_JAR:-build/libs/vandorlabs-$VERSION.jar}
@@ -88,6 +94,11 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = fluids ]; then
+        grep -q 'fluid-focused PASS' "$RUN_OUT/client.log"
+        echo "Live fluid checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = cockpit ]; then
         grep -q 'cockpit-focused PASS' "$RUN_OUT/client.log"
         echo "Live cockpit checks passed: $RUN_OUT"

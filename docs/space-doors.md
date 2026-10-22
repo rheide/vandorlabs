@@ -193,3 +193,5 @@ The company filter, behavior and panel arrangement are saved and copied with con
 ## Water on either side
 
 Use a fluid bucket on either face to fill that side of a Programmable Door; its two halves share the contents. Water on one side, including adjacent world water, fills the passage when the door opens. Closing clears the temporary fill on the dry side and retains the original contents. Water originally present on both sides remains on both sides. This also works for Programmable Trapdoor and Programmable Diagonal Trapdoor. See [contained fluids](matter-and-storage.md#doors-and-trapdoors).
+
+Opening a Programmable Door with stored water on just one side releases a pulse of ordinary flowing water into the dry side. The released water follows vanilla spreading and decay, without creating a source block; saved door compartments remain independent. Both-wet doors, lava, trapdoors and other waterlogged blocks do not release this pulse.

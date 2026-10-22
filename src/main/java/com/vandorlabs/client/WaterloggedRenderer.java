@@ -31,17 +31,23 @@ final class WaterloggedRenderer {
                     net.minecraft.util.math.BlockPos sample=face.boundary==null||face.boundary==net.minecraft.util.EnumFacing.UP?tile.getPos():tile.getPos().offset(face.boundary);
                     int light=fluid.getBlock()==null?tile.getWorld().getCombinedLight(sample,fluid.getLuminosity(stack)):fluid.getBlock().getDefaultState().getPackedLightmapCoords(tile.getWorld(),sample);
                     TextureAtlasSprite sprite=still;
-                    if(face.vertices.length==4)for(Vec3d vertex:face.vertices)vertex(buffer,sprite,face.axis,vertex,color,shade,light,normal);
-                    else for(int i=1;i+1<face.vertices.length;i++){
-                        vertex(buffer,sprite,face.axis,face.vertices[0],color,shade,light,normal);
-                        vertex(buffer,sprite,face.axis,face.vertices[i],color,shade,light,normal);
-                        vertex(buffer,sprite,face.axis,face.vertices[i+1],color,shade,light,normal);
-                        vertex(buffer,sprite,face.axis,face.vertices[i+1],color,shade,light,normal);
-                    }
+                    emit(buffer,sprite,face,color,shade,light,normal,false);
+                    // Like vanilla's free water surface, the top remains visible from below.
+                    if(face.boundary==net.minecraft.util.EnumFacing.UP)emit(buffer,sprite,face,color,shade,light,normal.scale(-1),true);
                 }
             }
             tess.draw();
         }finally{GlStateManager.depthMask(depthMask);GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.disableBlend();GlStateManager.resetColor();GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();}
+    }
+    private static void emit(BufferBuilder buffer,TextureAtlasSprite sprite,WaterloggedSurfaceMesh.Surface face,int color,float shade,int light,Vec3d normal,boolean reverse){
+        int count=face.vertices.length;
+        if(count==4){for(int i=0;i<4;i++)vertex(buffer,sprite,face.axis,face.vertices[reverse?3-i:i],color,shade,light,normal);}
+        else for(int i=1;i+1<count;i++){
+            vertex(buffer,sprite,face.axis,face.vertices[0],color,shade,light,normal);
+            vertex(buffer,sprite,face.axis,face.vertices[reverse?i+1:i],color,shade,light,normal);
+            vertex(buffer,sprite,face.axis,face.vertices[reverse?i:i+1],color,shade,light,normal);
+            vertex(buffer,sprite,face.axis,face.vertices[reverse?i:i+1],color,shade,light,normal);
+        }
     }
     private static void vertex(BufferBuilder buffer,TextureAtlasSprite sprite,int axis,Vec3d p,int color,float shade,int light,Vec3d normal){
         double u=axis==0?p.z:p.x,v=axis==1?p.z:1-p.y;

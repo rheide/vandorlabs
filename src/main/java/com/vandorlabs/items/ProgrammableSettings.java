@@ -38,6 +38,7 @@ public final class ProgrammableSettings {
     public static final String TRAPDOOR_POSITION = "trapdoor_position";
     public static final String DIAGONAL_GEOMETRY = "diagonal_geometry";
     public static final String FACE_TEXTURES = "face_textures";
+    public static final String STAIR_TREAD="stair_tread",STAIR_ROLL="stair_roll";
     public static final String WALL_TEXTURE = "wall_texture";
     public static final String PRIMARY_TEXTURE = "primary_texture";
     public static final String PRIMARY_KIND = "primary_kind";
@@ -194,6 +195,7 @@ public final class ProgrammableSettings {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
             if(TileEntityAnimatedScreenSelector.supportsSideTexture(block))out.setInteger(SIDE_TEXTURE,screen.getSideTexture());
+            if(block==ModBlocks.PROGRAMMABLE_STAIRS){out.setInteger(STAIR_TREAD,screen.stairTread());out.setInteger(STAIR_ROLL,screen.stairRoll());}
             if (block == ModBlocks.PROGRAMMABLE_STORAGE || block == ModBlocks.PROGRAMMABLE_BLOCK || block == ModBlocks.PROGRAMMABLE_SLAB || block == ModBlocks.PROGRAMMABLE_STAIRS) {
                 NBTTagCompound faces = new NBTTagCompound();
                 faces.setBoolean("enabled", screen.getFaceTextures().enabled);
@@ -371,6 +373,8 @@ public final class ProgrammableSettings {
         if (tile == null || values == null || values.hasNoTags()) return false;
         for(String key:new String[]{TEXTURE_LAYOUT,DOOR_TEXTURE_LAYOUT,TRAPDOOR_TEXTURE_LAYOUT})if(values.hasKey(key,3) && !com.vandorlabs.render.TextureLayoutMode.valid(values.getInteger(key)))return false;
         if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Mode",3) && !com.vandorlabs.render.TextureLayoutMode.valid(values.getCompoundTag(GLASS_LAYOUT).getInteger("Mode")))return false;
+        if(values.hasKey(STAIR_TREAD,3)&&!com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(values.getInteger(STAIR_TREAD)))return false;
+        if(values.hasKey(STAIR_ROLL,3)&&(values.getInteger(STAIR_ROLL)<0||values.getInteger(STAIR_ROLL)>2))return false;
         boolean applicable = false;
         if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
@@ -491,6 +495,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             long before=screen.getSettingsRevision();
+            if(block==ModBlocks.PROGRAMMABLE_STAIRS&&(values.hasKey(STAIR_TREAD,3)||values.hasKey(STAIR_ROLL,3))){screen.setStairGeometry(number(values,STAIR_TREAD,screen.stairTread()),number(values,STAIR_ROLL,screen.stairRoll()));applicable=true;}
             if (values.hasKey(WALL_TEXTURE, 3)) {
                 screen.setHousingTexture(values.getInteger(WALL_TEXTURE));
                 applicable = true;

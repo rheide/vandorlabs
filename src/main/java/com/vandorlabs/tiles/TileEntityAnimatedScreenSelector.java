@@ -281,6 +281,16 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         }
     }
 
+    private int stairTread=8,stairRoll;
+    public int stairTread(){return stairTread;}
+    public int stairRoll(){return stairRoll;}
+    public int stairGeometry(){return stairTread|(stairRoll<<5);}
+    public void setStairGeometry(int tread,int roll){
+        if(!com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)||roll<0||roll>2)return;
+        if(stairTread==tread&&stairRoll==roll)return;
+        stairTread=tread;stairRoll=roll;fluids.invalidateGeometry();settingsChanged();
+        if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}
+    }
     public int getHousingTexture() { return housingTexture; }
     public int getSideTexture(){return sideTexture;}
     public static boolean supportsSideTexture(net.minecraft.block.Block block) {
@@ -518,6 +528,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+        compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
         super.writeToNBT(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
@@ -551,6 +562,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public void readFromNBT(NBTTagCompound compound) {
+        int previousStair=stairGeometry();
+        int tread=compound.hasKey("StairTread",3)?compound.getInteger("StairTread"):8;
+        stairTread=com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)?tread:8;
+        stairRoll=Math.max(0,Math.min(2,compound.getInteger("StairRoll")));if(previousStair!=stairGeometry())fluids.invalidateGeometry();
         ChannelList previousChannels=channels;
         FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
@@ -624,7 +639,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         diagonalJoin=Math.max(0,Math.min(11,compound.getInteger("DiagonalJoin")));
         diagonalFill = Math.max(0, Math.min(3, compound.getInteger("DiagonalFill")));
         if (world != null && world.isRemote
-                && (oldMainLayout!=getMainTextureLayout() || oldSurfaceLayout!=getSurfaceTextureLayout() || oldGlassLayout!=getGlassTextureLayout() || !previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
+                && (previousStair!=stairGeometry() || oldMainLayout!=getMainTextureLayout() || oldSurfaceLayout!=getSurfaceTextureLayout() || oldGlassLayout!=getGlassTextureLayout() || !previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
                 || previousFill != diagonalFill || previousJoin!=diagonalJoin || previousGlassShade!=glassShade || previousPortholeJoin!=joinPortholes))
         {

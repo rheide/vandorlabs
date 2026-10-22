@@ -23,8 +23,16 @@ final class DoorCompanyFilterChecks {
                 parent.setWorldAndResolution(mc,size[0],size[1]);
                 parent.mouseClicked(layout.controlsX+140,layout.top+200,1);if(allowed.getInt(parent)!=127)throw new IllegalStateException("Right-click must clear filter to any card");cases++;
             }
-            mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();parent.drawScreen(-1,-1,0);
-            javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new java.io.File(output,"door-company-filter-"+size[0]+".png"));
+            net.minecraft.client.shader.Framebuffer frame=new net.minecraft.client.shader.Framebuffer(size[0]*2,size[1]*2,true);
+            org.lwjgl.opengl.GL11.glPushAttrib(org.lwjgl.opengl.GL11.GL_ALL_ATTRIB_BITS);
+            net.minecraft.client.renderer.GlStateManager.matrixMode(5889);net.minecraft.client.renderer.GlStateManager.pushMatrix();net.minecraft.client.renderer.GlStateManager.loadIdentity();net.minecraft.client.renderer.GlStateManager.ortho(0,size[0],size[1],0,1000,3000);
+            net.minecraft.client.renderer.GlStateManager.matrixMode(5888);net.minecraft.client.renderer.GlStateManager.pushMatrix();net.minecraft.client.renderer.GlStateManager.loadIdentity();net.minecraft.client.renderer.GlStateManager.translate(0,0,-2000);
+            try{
+                frame.bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);parent.drawScreen(-1,-1,0);
+                javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(frame.framebufferWidth,frame.framebufferHeight,frame),"png",new java.io.File(output,"door-company-filter-"+size[0]+".png"));
+            }finally{
+                net.minecraft.client.renderer.GlStateManager.popMatrix();net.minecraft.client.renderer.GlStateManager.matrixMode(5889);net.minecraft.client.renderer.GlStateManager.popMatrix();net.minecraft.client.renderer.GlStateManager.matrixMode(5888);org.lwjgl.opengl.GL11.glPopAttrib();frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);
+            }
         }}finally{mc.player.inventory.setInventorySlotContents(0,held);mc.displayGuiScreen(previous);mc.player.openContainer=mc.player.inventoryContainer;}
         for(int company=1;company<7;company++){
             TileEntitySpaceDoor door=new TileEntitySpaceDoor();door.configureSecurity(2,1<<company);TileEntitySpaceDoor saved=new TileEntitySpaceDoor();saved.readFromNBT(door.writeToNBT(new NBTTagCompound()));

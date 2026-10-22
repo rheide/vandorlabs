@@ -7,6 +7,8 @@ from export_gallery import SHOTS
 
 source, prefix, target = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 selected = [name for name in SHOTS if name.startswith(prefix)]
+if target == 'utility22_card_mounts':
+    selected=['utility22_card_mounts']
 if target == 'gallery_distant_geometry':
     selected=['gallery_distant_geometry']
 if target == 'dialogs':
@@ -34,6 +36,14 @@ log = (source / 'client.log').read_text()
 def require(marker):
     assert marker in log, 'Missing runtime result: ' + marker
 
+if target == 'utility22_card_mounts':
+    for marker in ('waterlogged-surfaces PASS', 'waterlogged-render-performance PASS pixel-identical cases=145',
+                   'native-fluid-contacts PASS cases=15552', 'submerged-glass-compositing PASS',
+                   'opening-fluids PASS', 'contained-water-sponge PASS', 'door-security PASS',
+                   'vanilla-texture-copy PASS', 'stair-configuration PASS', 'stair-mesh PASS variants=600',
+                   'stair-icons PASS padded variants=15', 'door-company-filter PASS', 'fluid-free-height PASS',
+                   'fluid-waterline PASS', 'cockpit-runtime PASS', 'token-mount-dialog PASS'):
+        require(marker)
 if target == 'door-selection': require('moved-door-selection PASS large=40 regular=24 xTips=16')
 if target == 'control-icons' or target == 'gallery_close_control_': require('twin-power-lever-models PASS poses=32')
 if target == 'control-icons':

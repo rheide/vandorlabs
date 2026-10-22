@@ -20,17 +20,21 @@ public final class ProgrammableStairsModel implements IBakedModel {
     private final int itemSide;
     private final FaceTextures itemFaces;
     private final int itemLayout;
+    private int itemGeometry=8;
+    private ItemCameraTransforms paddedTransforms;
+    private final com.google.common.cache.Cache<String,List<BakedQuad>> geometry=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(512).build();
     private final Map<BakedQuad,Map<Integer,BakedQuad>> cache=new java.util.concurrent.ConcurrentHashMap<>();
     public ProgrammableStairsModel(IBakedModel base) { this(base,0,-1,FaceTextures.DEFAULT,0); }
     private ProgrammableStairsModel(IBakedModel base,int finish,int sideFinish,FaceTextures faces,int layout) {
         this.base=base;itemFinish=finish;itemSide=sideFinish;itemFaces=faces;itemLayout=layout;
     }
     public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed) {
-        int finish=itemFinish,sideFinish=itemSide;FaceTextures faces=itemFaces;int layout=itemLayout;
+        int finish=itemFinish,sideFinish=itemSide;FaceTextures faces=itemFaces;int layout=itemLayout;int stairGeometry=itemGeometry;
         EnumFacing facing=EnumFacing.EAST; // vanilla item stairs rise towards +X
         if (state!=null) facing=state.getValue(BlockStairs.FACING);
         if (state instanceof IExtendedBlockState) {
             IExtendedBlockState e=(IExtendedBlockState)state;
+            Integer shape=e.getValue(ProgrammableHousingState.STAIR_GEOMETRY);if(shape!=null)stairGeometry=shape;
             Integer sf=e.getValue(ProgrammableHousingState.SIDE_FINISH);if(sf!=null)sideFinish=sf;
             Integer value=e.getValue(ProgrammableHousingState.FINISH);
             if(value!=null)finish=value;
@@ -38,7 +42,15 @@ public final class ProgrammableStairsModel implements IBakedModel {
             Integer sampled=e.getValue(ProgrammableHousingState.TILE_SIDES);if(sampled!=null)layout=sampled;
         }
         List<BakedQuad> result=new ArrayList<>();
-        for(BakedQuad quad:base.getQuads(state,side,seed)) {
+        List<BakedQuad> source;
+        if(stairGeometry==8)source=base.getQuads(state,side,seed);
+        else {
+            if(side!=null)return Collections.emptyList();
+            IBlockState shape=state==null?com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STAIRS.getDefaultState().withProperty(BlockStairs.FACING,EnumFacing.EAST):state;
+            String key=stairGeometry+":"+shape.getValue(BlockStairs.FACING)+":"+shape.getValue(BlockStairs.HALF)+":"+shape.getValue(BlockStairs.SHAPE);
+            source=geometry.getIfPresent(key);if(source==null){source=ProgrammableStairMesh.quads(shape,stairGeometry,base.getParticleTexture());geometry.put(key,source);}
+        }
+        for(BakedQuad quad:source) {
             EnumFacing local=quad.getFace();
             // Front is the low riser facing the player, opposite the rise direction.
             if(local.getAxis()!=EnumFacing.Axis.Y)
@@ -79,13 +91,16 @@ public final class ProgrammableStairsModel implements IBakedModel {
     public boolean isGui3d(){return base.isGui3d();}
     public boolean isBuiltInRenderer(){return false;}
     public TextureAtlasSprite getParticleTexture(){return base.getParticleTexture();}
-    public ItemCameraTransforms getItemCameraTransforms(){return base.getItemCameraTransforms();}
+    public ItemCameraTransforms getItemCameraTransforms(){if(paddedTransforms==null)paddedTransforms=ControlItemPadding.fit(this,base.getItemCameraTransforms());return paddedTransforms;}
     public ItemOverrideList getOverrides(){return new ItemOverrideList(Collections.emptyList()) {
         @Override public IBakedModel handleItemState(IBakedModel original,ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity) {
             NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
             if(tag==null)return original;
-            return new ProgrammableStairsModel(base,tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE),
+            ProgrammableStairsModel model=new ProgrammableStairsModel(base,tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE),
                     tag.hasKey("SideTexture",3)?tag.getInteger("SideTexture"):-1,new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),tag.hasKey("MainTextureLayout",3)?tag.getInteger("MainTextureLayout"):tag.getBoolean("SlabTileSides")?1:0);
+            int tread=tag.hasKey("StairTread",3)?tag.getInteger("StairTread"):8;
+            model.itemGeometry=(com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)?tread:8)|(Math.max(0,Math.min(2,tag.getInteger("StairRoll")))<<5);
+            return model;
         }
     };}
 }

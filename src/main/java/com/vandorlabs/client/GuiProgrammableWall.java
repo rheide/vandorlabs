@@ -157,9 +157,17 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                 if(diagonalGlass)buttonList.add(new GuiButton(116,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,"Join: "+(tile.isGlassTextureJoin()?"On":"Off")));y+=24;
             }
         }
+        if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableStairs){
+            int step=Integer.numberOfTrailingZeros(tile.stairTread());
+            buttonList.add(new net.minecraftforge.fml.client.config.GuiSlider(130,controlsX,y,controlsWidth,20,"Step size: "," px",0,4,step,false,true,slider->{
+                tile.setStairGeometry(1<<slider.getValueInt(),tile.stairRoll());slider.displayString="Step size: "+tile.stairTread()+" px";sendStairs();
+            }));buttonList.get(buttonList.size()-1).displayString="Step size: "+tile.stairTread()+" px";y+=24;
+            buttonList.add(new GuiButton(131,controlsX,y,controlsWidth,20,"Orientation: "+(tile.stairRoll()==0?"Normal":"Sideways")));
+        }
         buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
     }
 
+    private void sendStairs(){PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageStairGeometry(tile.getPos(),tile.stairTread(),tile.stairRoll()));}
     private String shadeLabel() { return "Glass: " + SHADES[shade]; }
     private String joinLabel() { return "Join: " + (join ? "On" : "Off"); }
     private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
@@ -218,13 +226,14 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114,115,116))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114,115,116,131))return;
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==131){tile.setStairGeometry(tile.stairTread(),tile.stairRoll()==0?1:0);sendStairs();initGui();return;}
         if(button.id==129){faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}
         if(glassSurface() && (button.id==115 || button.id==116)){
             int mode=button.id==115?GuiOptionCycle.next(tile.getGlassTextureLayout(),3):tile.getGlassTextureLayout();tile.setGlassLayout(mode!=1,button.id==116?!tile.isGlassTextureJoin():tile.isGlassTextureJoin());tile.setGlassTextureLayout(mode);sendPortholeSettings();initGui();return;

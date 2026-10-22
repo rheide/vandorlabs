@@ -12,6 +12,8 @@ import net.minecraft.world.World;
 
 final class WaterloggedRuntimeChecks {
     static void run(World world){
+        net.minecraft.world.WorldServer serverWorld=(net.minecraft.world.WorldServer)world;
+        VanillaTextureCopyChecks.run(serverWorld);StairConfigurationChecks.server(serverWorld,serverWorld.getMinecraftServer().getPlayerList().getPlayers().get(0));DoorWaterGushChecks.run(serverWorld);
         FluidPlacementChecks.run((net.minecraft.world.WorldServer)world);
         OpeningFluidRuntimeChecks.run(world);
         SpongeFluidChecks.run(world);

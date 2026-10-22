@@ -130,3 +130,5 @@ Low/High limits. Tilt directions are relative to the destination’s mounting or
 The separate **Switch Rotation** option controls copying floor/ceiling rotation.
 
 Sneak-right-click a vanilla solid block to sample its material, including metadata variants such as wool colors and log types. Applying transfers the sampled material to compatible programmable surfaces without copying inventories, channels or other settings.
+
+Stair copies can independently include **Stair step size** and **Stair orientation** in the Blocks options.

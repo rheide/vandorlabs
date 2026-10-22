@@ -24,7 +24,7 @@ final class DoorFluidSurfaceChecks {
             List<BlockPos> pool=new ArrayList<>();for(int y=0;y<levels;y++)for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)if(x!=0||z!=0){BlockPos at=pos.add(x,y,z);world.setBlockState(at,Blocks.WATER.getDefaultState(),2);pool.add(at);}
             if(levels==1){require(!WaterloggedParts.wet(world,pos.up()),"lower-only water never renders in upper door");require(WaterloggedSurfaceMesh.get(world.getTileEntity(pos.up())).isEmpty(),"upper door emits no water mesh");}
             BlockPos surfacePos=pos.up(levels-1);
-            for(WaterloggedSurfaceMesh.Surface surface:WaterloggedSurfaceMesh.get(world.getTileEntity(surfacePos)))if(surface.boundary==EnumFacing.UP)for(net.minecraft.util.math.Vec3d vertex:surface.vertices)require(vertex.y<.9995&&vertex.y>.9985,"exposed water stays below coplanar door frame");
+            for(WaterloggedSurfaceMesh.Surface surface:WaterloggedSurfaceMesh.get(world.getTileEntity(surfacePos)))if(surface.boundary==EnumFacing.UP)for(net.minecraft.util.math.Vec3d vertex:surface.vertices)require(vertex.y<.9995&&vertex.y>.5,"exposed water stays below coplanar door frame");
             if(levels==2){for(WaterloggedSurfaceMesh.Surface surface:WaterloggedSurfaceMesh.get(world.getTileEntity(pos)))require(surface.boundary!=EnumFacing.UP,"no internal water cap between door blocks");for(WaterloggedSurfaceMesh.Surface surface:WaterloggedSurfaceMesh.get(world.getTileEntity(pos.up())))require(surface.boundary!=EnumFacing.DOWN,"no internal bottom cap between door blocks");}
             Map<String,Double> heights=new HashMap<>();int shared=0;
             for(BlockPos at:pool)if(at.getY()==surfacePos.getY())for(double[][] quad:NativeFluidContactChecks.render(mc,world,at,world.getBlockState(at))){

@@ -21,9 +21,13 @@ final class WaterloggedSurfaceChecks {
         BlockPos pos=at(kind).east(column);Block block=Block.getBlockFromName("vandorlabs:"+IDS[kind]);require(block!=null,"fluid fixture block "+IDS[kind]);world.setBlockState(pos,block.getDefaultState(),2);
         ContainedFluids fluids=WaterloggedParts.data(world.getTileEntity(pos));fluids.set(0,new FluidStack(FluidRegistry.WATER,1000));
     }}
-    static void run(Minecraft mc,File output)throws Exception{OpeningFluidVisualChecks.run(mc,output);
+    static void run(Minecraft mc,File output)throws Exception{
+        DoorCompanyFilterChecks.run(mc,output);StairConfigurationChecks.client(mc);StairIconChecks.run(mc,output);
+        OpeningFluidVisualChecks.run(mc,output);
         ContainedFluidUpdateChecks.run(mc.world);
         ContainedFluidImmersionChecks.run(mc);
+        FluidHeightRegressionChecks.run(mc,output);
+        FluidWaterlineChecks.run(mc,output);
         DoorFluidSurfaceChecks.run(mc,output);
         WaterloggedRenderChecks.run(mc,output);
         require(WaterloggedRenderer.sprite(new FluidStack(FluidRegistry.WATER,1000))==mc.getTextureMapBlocks().getAtlasSprite(FluidRegistry.WATER.getStill().toString()),"contained water must use still artwork on every face");
@@ -34,12 +38,12 @@ final class WaterloggedSurfaceChecks {
             TileEntity tile=mc.world.getTileEntity(at(kind));require(tile!=null,"fluid fixture synchronized");List<WaterloggedSurfaceMesh.Surface> mesh=WaterloggedSurfaceMesh.get(tile);
             require(mesh==WaterloggedSurfaceMesh.get(tile),"fluid surface cache reuse");
             for(WaterloggedSurfaceMesh.Surface face:mesh){require(face.boundary!=EnumFacing.EAST,"matching adjacent fluids must not draw an internal border: "+IDS[kind]);
-                for(Vec3d p:face.vertices){require(p.x>=-1e-8&&p.x<=1+1e-8&&p.y>=-1e-8&&p.y<=1+1e-8&&p.z>=-1e-8&&p.z<=1+1e-8,"fluid stays inside block");if(face.boundary==EnumFacing.UP)require(p.y==1,"no horizontal internal slice caps");}
+                for(Vec3d p:face.vertices){require(p.x>=-1e-8&&p.x<=1+1e-8&&p.y>=-1e-8&&p.y<=1+1e-8&&p.z>=-1e-8&&p.z<=1+1e-8,"fluid stays inside block");if(face.boundary==EnumFacing.UP)require(p.y>0&&p.y<1,"exposed water surface below block top");}
             }
             require(!mesh.isEmpty(),"filled fluid surface present");
             TileEntity neighbor=mc.world.getTileEntity(at(kind).east());ContainedFluids data=WaterloggedParts.data(neighbor);data.set(0,new FluidStack(FluidRegistry.LAVA,1000));
             boolean boundary=false;for(WaterloggedSurfaceMesh.Surface face:WaterloggedSurfaceMesh.get(tile))boundary|=face.boundary==EnumFacing.EAST;require(boundary,"different fluids retain their interface");data.set(0,new FluidStack(FluidRegistry.WATER,1000));
-            if(kind==1||kind==2){double expected=PanelJoins.flatNear(mc.world.getBlockState(at(kind)),mc.world,at(kind))/16D+1D/16-.0001;boolean inset=false;for(WaterloggedSurfaceMesh.Surface face:WaterloggedSurfaceMesh.get(tile))if(face.boundary==null){for(Vec3d p:face.vertices)require(Math.abs(p.z-expected)<1e-6,"fluid reaches recessed pane");inset=true;}require(inset,"recessed fluid contact surface");}
+            if(kind==1||kind==2){double expected=PanelJoins.flatNear(mc.world.getBlockState(at(kind)),mc.world,at(kind))/16D+1D/16-.001;boolean inset=false;for(WaterloggedSurfaceMesh.Surface face:WaterloggedSurfaceMesh.get(tile))if(face.boundary==null){for(Vec3d p:face.vertices)require(Math.abs(p.z-expected)<1e-6,"fluid reaches recessed pane");inset=true;}require(inset,"recessed fluid contact surface");}
             picture(mc,output,kind);
         }
         System.out.println("[vandorlabs][reprolab] waterlogged-surfaces PASS six panel families continuous slopes recessed panes same-fluid joins different-fluid interfaces cached surfaces");

@@ -750,15 +750,20 @@ check.dependsOn testModularGear
 task verifyRelease {
     group = 'verification'
     description = 'Validate a standard release JAR with geometry and live rendering/gameplay regressions'
-    dependsOn assemble, testDiagonalJoins
+    dependsOn build, testDiagonalJoins
     doLast {
+        def releaseJar = file("$buildDir/libs/vandorlabs-${version}.jar")
+        def digest = { java.security.MessageDigest.getInstance('SHA-256').digest(releaseJar.bytes).encodeHex().toString() }
+        def expectedDigest = digest()
         if (System.getProperty('os.name').toLowerCase().contains('windows')) {
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'glass-appearance', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--shot-prefix', 'utility22_card_mounts', '--timeout', '900' }
         } else {
-            exec { commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'glass-appearance' }
-            exec { commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility22_card_mounts' }
+            exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'glass-appearance' }
+            exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility22_card_mounts' }
         }
+        if (digest() != expectedDigest) throw new GradleException('Release JAR changed during live validation')
+        logger.lifecycle('Release JAR verified SHA-256: ' + expectedDigest)
     }
 }
 tasks.matching { it.name == 'publish' || it.name == 'publishToMavenLocal' || it.name.startsWith('publishMaven') }.all { dependsOn verifyRelease }

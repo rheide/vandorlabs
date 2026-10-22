@@ -13,6 +13,7 @@ import net.minecraftforge.common.property.IUnlistedProperty;
 
 /** Settings sampled when a chunk mesh is built. Registry metadata is unchanged. */
 public final class ProgrammableHousingState {
+    public static final IUnlistedProperty<Integer> STAIR_GEOMETRY=integer("stair_geometry");
     public static final IUnlistedProperty<Integer> SIDE_FINISH=integer("housing_side_finish");
     public static final IUnlistedProperty<Integer> FINISH = integer("housing_finish");
     public static final IUnlistedProperty<Integer> VISIBLE = integer("housing_visible_faces");

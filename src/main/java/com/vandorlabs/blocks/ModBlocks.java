@@ -463,6 +463,7 @@ public class ModBlocks {
                         : block == PROGRAMMABLE_TRAPDOOR ? new com.vandorlabs.items.ItemProgrammableTrapdoor((BlockProgrammableTrapdoor)block)
                         : block == PROGRAMMABLE_DIAGONAL_TRAPDOOR ? new com.vandorlabs.items.ItemDiagonalTrapdoor((BlockProgrammableDiagonalTrapdoor)block)
                         : block instanceof BlockLargeProgrammableDoor ? new com.vandorlabs.items.ItemLargeProgrammableDoor((BlockLargeProgrammableDoor)block)
+                        : block == PROGRAMMABLE_STAIRS ? new com.vandorlabs.items.ItemProgrammableStairs((BlockProgrammableStairs)block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
                         ? new ItemDiagonalWall((BlockProgrammableWall) block) : block instanceof com.vandorlabs.gear.LargeGearBlock ? new com.vandorlabs.gear.ItemLargeGear((com.vandorlabs.gear.LargeGearBlock)block) : new ItemBlock(block);

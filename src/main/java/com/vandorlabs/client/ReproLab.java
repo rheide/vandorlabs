@@ -656,6 +656,9 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("captured glass live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.fluidChecksOnly")) {
+            try {if(FluidFocusedChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("fluid focused checks",failure);}return;
+        }
         if(Boolean.getBoolean("vandorlabs.cockpitChecksOnly")) {
             try {if(CockpitFocusedChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("cockpit focused checks",failure);}return;
         }

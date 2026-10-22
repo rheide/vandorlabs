@@ -50,7 +50,7 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
 
 - **Structure**: programmable hull, padding, pipe, and vent finishes, wall
   panels, ribs, and cockpit glass. Shift-right-click a Programmable Diagonal
-  Wall in creative mode to choose half/full width, half height, slope direction, and inside/outside fill. Programmable Stairs support the same optional face overrides as Block and Slab; matching slabs combine into a full block. Diagonal Portholes support joined openings in both tall and shallow arrangements.
+  Wall in creative mode to choose half/full width, half height, slope direction, and inside/outside fill. Programmable Stairs support the same optional face overrides as Block and Slab, a 1–16px step-size slider, and Normal / Sideways orientation with the wing edge inferred from side placement; matching slabs combine into a full block. Diagonal Portholes support joined openings in both tall and shallow arrangements.
 - **Screens**: static planet/ship/science viewscreens (directional) and
   sequenced animated displays with static/animated/off modes that wake on
   redstone and sleep when power drops.

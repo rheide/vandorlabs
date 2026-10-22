@@ -78,7 +78,7 @@ public final class ConnectedFluidRenderer extends BlockFluidRenderer {
         final IBlockAccess source;final Map<BlockPos,WaterloggedSurfaceMesh.Contact> contacts;final IBlockState liquid;
         Access(IBlockAccess source,Map<BlockPos,WaterloggedSurfaceMesh.Contact> contacts,Material material){this.source=source;this.contacts=contacts;liquid=(material==Material.WATER?net.minecraft.init.Blocks.WATER:net.minecraft.init.Blocks.LAVA).getDefaultState();}
         public TileEntity getTileEntity(BlockPos p){return source.getTileEntity(p);}public int getCombinedLight(BlockPos p,int minimum){return source.getCombinedLight(p,minimum);}
-        public IBlockState getBlockState(BlockPos p){return contacts.containsKey(p)||contacts.containsKey(p.down())?liquid:source.getBlockState(p);}
+        public IBlockState getBlockState(BlockPos p){return contacts.containsKey(p)?liquid:source.getBlockState(p);}
         public boolean isAirBlock(BlockPos p){return getBlockState(p).getMaterial()==Material.AIR;}public net.minecraft.world.biome.Biome getBiome(BlockPos p){return source.getBiome(p);}public int getStrongPower(BlockPos p,EnumFacing face){return source.getStrongPower(p,face);}public WorldType getWorldType(){return source.getWorldType();}public boolean isSideSolid(BlockPos p,EnumFacing face,boolean fallback){return source.isSideSolid(p,face,fallback);}
     }
 }

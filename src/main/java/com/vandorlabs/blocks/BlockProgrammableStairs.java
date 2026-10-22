@@ -31,7 +31,14 @@ public final class BlockProgrammableStairs extends BlockStairs {
     @Override protected BlockStateContainer createBlockState() {
         return new HousingBlockState(this,new IProperty[]{FACING,HALF,SHAPE},
                 new IUnlistedProperty[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH,ProgrammableHousingState.FACES,
-                        ProgrammableHousingState.TILE_SIDES});
+                        ProgrammableHousingState.TILE_SIDES,ProgrammableHousingState.STAIR_GEOMETRY});
+    }
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,net.minecraft.entity.EntityLivingBase player){
+        IBlockState state=super.getStateForPlacement(world,pos,side,x,y,z,meta,player);
+        if(side.getAxis().isHorizontal()){
+            EnumFacing rise=player.getHorizontalFacing();if(rise.getAxis()==side.getAxis())rise=side.rotateY();
+            state=state.withProperty(FACING,rise).withProperty(HALF,EnumHalf.BOTTOM);
+        }return state;
     }
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
     @Override public TileEntity createTileEntity(World world,IBlockState state) { return new TileEntityAnimatedScreenSelector(); }
@@ -40,7 +47,7 @@ public final class BlockProgrammableStairs extends BlockStairs {
         TileEntityAnimatedScreenSelector tile=raw instanceof TileEntityAnimatedScreenSelector?(TileEntityAnimatedScreenSelector)raw:null;
         return HousingBlockState.sample((IExtendedBlockState)state,tile==null?0:tile.getHousingTexture(),
                 tile==null?-1:tile.getSideTexture(),tile==null?com.vandorlabs.tiles.FaceTextures.DEFAULT:tile.getFaceTextures(),
-                tile==null?0:tile.getMainTextureLayout(),63,0);
+                tile==null?0:tile.getMainTextureLayout(),63,0).withProperty(ProgrammableHousingState.STAIR_GEOMETRY,tile==null?8:tile.stairGeometry());
     }
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
@@ -112,6 +119,21 @@ public final class BlockProgrammableStairs extends BlockStairs {
             World world, BlockPos pos, EntityPlayer player) {
         return createConfiguredDrop(world.getTileEntity(pos));
     }
+
+    @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return ProgrammableStairGeometry.settings(world,pos)>>5!=0?state.withProperty(SHAPE,EnumShape.STRAIGHT):super.getActualState(state,world,pos);}
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> out,net.minecraft.entity.Entity entity,boolean actual){
+        int settings=ProgrammableStairGeometry.settings(world,pos);
+        if(settings==8){super.addCollisionBoxToList(state,world,pos,query,out,entity,actual);return;}
+        for(AxisAlignedBB box:ProgrammableStairGeometry.boxes(getActualState(state,world,pos),settings))if(box.offset(pos).intersects(query))out.add(box.offset(pos));
+    }
+    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){
+        int settings=ProgrammableStairGeometry.settings(world,pos);if(settings==8)return super.collisionRayTrace(state,world,pos,start,end);
+        RayTraceResult nearest=null;for(AxisAlignedBB box:ProgrammableStairGeometry.boxes(getActualState(state,world,pos),settings)){
+            RayTraceResult hit=box.offset(pos).calculateIntercept(start,end);if(hit!=null&&(nearest==null||start.squareDistanceTo(hit.hitVec)<start.squareDistanceTo(nearest.hitVec)))nearest=new RayTraceResult(hit.hitVec,hit.sideHit,pos);
+        }return nearest;
+    }
+    @Override public boolean isSideSolid(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){int settings=ProgrammableStairGeometry.settings(world,pos);return settings==8?super.isSideSolid(state,world,pos,side):ProgrammableStairGeometry.solidFace(getActualState(state,world,pos),settings,side);}
+    @Override public BlockFaceShape getBlockFaceShape(IBlockAccess world,IBlockState state,BlockPos pos,EnumFacing side){return isSideSolid(state,world,pos,side)?BlockFaceShape.SOLID:BlockFaceShape.UNDEFINED;}
 
     @Override public Boolean isAABBInsideMaterial(World world,BlockPos pos,AxisAlignedBB box,net.minecraft.block.material.Material material){return WaterloggedParts.intersects(world,pos,box,material);}
     @Override public Boolean isAABBInsideLiquid(World world,BlockPos pos,AxisAlignedBB box){return WaterloggedParts.liquid(world,pos,box);}

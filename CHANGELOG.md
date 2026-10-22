@@ -2,9 +2,11 @@
 
 ## 2.3
 
-- Replace the Programmable Door card multiselect with Any card and an optional, non-consuming single-company card sample.
-
 - Sample vanilla solid-block materials with the Duplifier, preserving block metadata and applying through the existing shared material path.
+- Add saved Programmable Stairs step sizes from 1 to 16 pixels and Normal / Sideways orientation. Infer the solid wing edge from side placement; share rendering, collision and fluid geometry and retain shape in configured items and copies.
+- Replace the Programmable Door card multiselect with Any card and an optional, non-consuming single-company card sample.
+- Release ordinary flowing water when a door with just one stored water side opens; retain compartment storage and leave other waterlogged blocks unchanged.
+- Match contained and native free-liquid heights, separate inset pane contacts from frame pixels, and render the underside of free water surfaces at close waterline views.
 
 - Keep Advanced Pilot Chair armrest slider selection on each moving grip at every height and detent. Allow held Canopies to mount above the Cockpit reservation without boarding the seat or replacing its parts.
 

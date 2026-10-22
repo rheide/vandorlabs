@@ -54,5 +54,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageGearMotion.Handler.class,MessageGearMotion.class,id++,Side.CLIENT);
         INSTANCE.registerMessage(MessageTokenSlot.Handler.class,MessageTokenSlot.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageWirelessRedstone.Handler.class,MessageWirelessRedstone.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageStairGeometry.Handler.class,MessageStairGeometry.class,id++,Side.SERVER);
     }
 }
