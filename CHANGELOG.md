@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Replace the Programmable Door card multiselect with Any card and an optional, non-consuming single-company card sample.
+
 - Sample vanilla solid-block materials with the Duplifier, preserving block metadata and applying through the existing shared material path.
 
 - Keep Advanced Pilot Chair armrest slider selection on each moving grip at every height and detent. Allow held Canopies to mount above the Cockpit reservation without boarding the seat or replacing its parts.

@@ -62,6 +62,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         buttonList.add(layout.control(19,168,securityLabel()));
         done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();
     }
+    private net.minecraft.item.ItemStack companyCard(){return Integer.bitCount(securityAllowed)==1?new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,Integer.numberOfTrailingZeros(securityAllowed)):net.minecraft.item.ItemStack.EMPTY;}
     private String panelLabel(){return "Panel: "+new String[]{"Off","On","Both"}[panelMode];}
     private String securityLabel(){return (securityMode==0?"Security: ":"")+TileEntitySpaceDoor.securityLabel(securityMode);}
     private int channel() {return ChannelFields.first(channelField);}
@@ -112,7 +113,14 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19))return;
-        if((button==0||button==1)&&y>=guiTop+SECURITY_CARDS_Y&&y<guiTop+SECURITY_CARDS_Y+18&&x>=layout.controlsX&&x<layout.controlsX+154){int design=(x-layout.controlsX)/22;securityAllowed^=1<<design;sendUpdate();return;}
+        if((button==0||button==1)&&y>=guiTop+SECURITY_CARDS_Y&&y<guiTop+SECURITY_CARDS_Y+18&&x>=layout.controlsX&&x<layout.controlsX+154){
+            if(x<layout.controlsX+128){securityAllowed=127;sendUpdate();return;}
+            if(button==1){securityAllowed=127;sendUpdate();return;}
+            net.minecraft.item.ItemStack initial=companyCard();
+            mc.displayGuiScreen(new GuiCustomTexture(this,"Door company card","Use company",initial,
+                    stack->!stack.isEmpty()&&stack.getItem()==com.vandorlabs.items.ModItems.DATA_CARD&&stack.getMetadata()>=0&&stack.getMetadata()<7,
+                    stack->{securityAllowed=stack.getMetadata()==0?127:1<<stack.getMetadata();sendUpdate();}));return;
+        }
         channelField.mouseClicked(x,y,button);
         int before=textureList.selected();
         if(textureList.click(x,y,button)) {
@@ -149,7 +157,11 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         textureList.draw(fontRenderer,mouseX,mouseY);
-        for(int i=0;i<7;i++){int x=layout.controlsX+i*22,y=guiTop+SECURITY_CARDS_Y;drawRect(x-1,y-1,x+17,y+17,(securityAllowed&(1<<i))!=0?0xff45765a:0xff28343e);net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();mc.getRenderItem().renderItemAndEffectIntoGUI(new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,i),x,y);net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();}
+        int x=layout.controlsX+136,y=guiTop+SECURITY_CARDS_Y;
+        drawRect(x-1,y-1,x+17,y+17,0xff647480);drawRect(x,y,x+16,y+16,0xff28343e);
+        drawRect(layout.controlsX,y-1,layout.controlsX+128,y+17,securityAllowed==127?0xff45765a:0xff28343e);
+        fontRenderer.drawString("Any card",layout.controlsX+4,y+4,0xffdae8f0);
+        net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();mc.getRenderItem().renderItemAndEffectIntoGUI(companyCard(),x,y);net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
 
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
@@ -162,6 +174,6 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override public void drawScreen(int x,int y,float partial) {
         drawDefaultBackground(); super.drawScreen(x,y,partial); channelField.drawTextBox();
-        if(y>=guiTop+SECURITY_CARDS_Y-1 && y<guiTop+SECURITY_CARDS_Y+17 && x>=layout.controlsX && x<layout.controlsX+154){int card=(x-layout.controlsX)/22;if((x-layout.controlsX)%22<18)drawHoveringText(java.util.Arrays.asList(com.vandorlabs.items.ItemDesignToken.filterName(new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,card)),(securityAllowed&(1<<card))!=0?"Allowed":"Blocked","Click to toggle"),x,y);}
+        if(y>=guiTop+SECURITY_CARDS_Y-1&&y<guiTop+SECURITY_CARDS_Y+17&&x>=layout.controlsX&&x<layout.controlsX+154)drawHoveringText(java.util.Arrays.asList("Empty filter: any card","Click the slot to choose one company card","Right-click the slot or click Any card to clear","The sample card is not consumed"),x,y);
     }
 }

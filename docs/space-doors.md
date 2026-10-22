@@ -184,11 +184,11 @@ Security appears below Channels in the Programmable Door dialog. **Off** preserv
 
 ![Door scanning and returning a security card](images/gallery/version-2.3/door-security-pulse-return.gif)
 
-Click the seven card icons to choose accepted designs. The plain icon's tooltip is **Any Card**: selecting it accepts the whole card family and keeps an unbranded background. Disable it to restrict access to the selected company cards. Icons have Allowed/Blocked tooltips. A disallowed card stays in the player's hand and briefly flashes an amber X on the reader. Company-only backgrounds cycle every three seconds while a player is nearby.
+Leave the company sample slot empty for **Any card**, or click the slot and drag one company-specific Data Card from your inventory into the sample picker. The filter copies one card without consuming it. Right-click the slot, or click **Any card**, to clear the company restriction. A disallowed card stays in the player's hand and briefly flashes an amber X on the reader. Older multi-company filters narrow to the first selected company; a saved Any Card filter continues to accept every card.
 
 Right-click anywhere on a secured door leaf with an accepted card to insert it into the reader on that side, including any cell of a large door. Click the panel with an empty hand to remove a retained card. Centered doors can use **Panel: Both**; each reader holds its own physical item, and either side can operate the shared door state. Non-centered doors offer Off or On only.
 
-The allow-list, behavior and panel arrangement are saved and copied with configured items; inserted cards are never duplicated by pick-block. A card awaiting return is retained safely while its owner is offline or has no inventory space. See [Data Card and Data Chip Mounts](data-mounts.md) for the shared reader behavior.
+The company filter, behavior and panel arrangement are saved and copied with configured items; inserted cards are never duplicated by pick-block. A card awaiting return is retained safely while its owner is offline or has no inventory space. See [Data Card and Data Chip Mounts](data-mounts.md) for the shared reader behavior.
 
 ## Water on either side
 

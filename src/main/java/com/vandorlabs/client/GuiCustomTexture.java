@@ -32,7 +32,7 @@ final class GuiCustomTexture extends GuiScreen {
     @Override public void drawScreen(int x,int y,float partial){
         drawDefaultBackground();drawRect(left,top,left+252,top+198,0xFF18242F);
         fontRenderer.drawString(title,left+12,top+12,0xFFFFFF);
-        fontRenderer.drawString("Drag a block into the sample slot",left+12,top+63,0xCCDDEE);
+        fontRenderer.drawString("Drag an item into the sample slot",left+12,top+63,0xCCDDEE);
         drawRect(left+115,top+34,left+137,top+56,0xFF8193A6);drawRect(left+116,top+35,left+136,top+55,0xFF101821);
         net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();
         if(!sample.isEmpty())itemRender.renderItemAndEffectIntoGUI(sample,left+118,top+37);
