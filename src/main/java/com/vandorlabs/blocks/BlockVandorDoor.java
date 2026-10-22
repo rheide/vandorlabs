@@ -348,7 +348,7 @@ public class BlockVandorDoor extends BlockVandorDirectional {
             changed = true;
         }
         if (changed && openChanged) {
-            if(open)DoorWaterGush.opened(world,lowerPos);
+            DoorWaterGush.opened(world,lowerPos);
             world.playSound(null, pos, open ? SoundEvents.BLOCK_IRON_DOOR_OPEN : SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
     }
@@ -413,7 +413,7 @@ public class BlockVandorDoor extends BlockVandorDirectional {
             changed = true;
         }
         if (changed) {
-            if(open)DoorWaterGush.opened(world,lowerPos);
+            DoorWaterGush.opened(world,lowerPos);
             world.playSound(null, pos, open ? SoundEvents.BLOCK_IRON_DOOR_OPEN : SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
     }

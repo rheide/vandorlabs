@@ -74,7 +74,7 @@ final class WaterloggedRenderChecks {
     }
     private static double median(double[][] samples,int column){double[] values=new double[samples.length];for(int i=0;i<values.length;i++)values[i]=samples[i][column];Arrays.sort(values);return values[values.length/2];}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException(message);}
-    // Frozen reference: preserve per-side draws, fluid decoding and triangle allocation so the
+    // Reference preserves per-side draws, fluid decoding and triangle allocation so the
     // live release suite detects changes to vertex order, tint, lighting or transparency.
 private static final class Reference {
     static TextureAtlasSprite sprite(FluidStack stack){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(stack.getFluid().getStill(stack).toString());}
@@ -99,6 +99,13 @@ private static final class Reference {
                     TextureAtlasSprite sprite=still;
                     if(face.vertices.length==4)for(Vec3d vertex:face.vertices)vertex(buffer,sprite,face.axis,vertex,color,shade,light,normal);
                     else for(int i=1;i+1<face.vertices.length;i++)for(Vec3d vertex:new Vec3d[]{face.vertices[0],face.vertices[i],face.vertices[i+1],face.vertices[i+1]})vertex(buffer,sprite,face.axis,vertex,color,shade,light,normal);
+                    // The sidedness contract includes interior water views. Keep the
+                    // independent per-side/triangle reference implementation for parity.
+                    if(face.boundary!=net.minecraft.util.EnumFacing.DOWN){
+                        Vec3d reverse=normal.scale(-1);
+                        if(face.vertices.length==4)for(int i=3;i>=0;i--)vertex(buffer,sprite,face.axis,face.vertices[i],color,shade,light,reverse);
+                        else for(int i=1;i+1<face.vertices.length;i++)for(Vec3d vertex:new Vec3d[]{face.vertices[0],face.vertices[i+1],face.vertices[i],face.vertices[i]})vertex(buffer,sprite,face.axis,vertex,color,shade,light,reverse);
+                    }
                 }
                 tess.draw();
             }

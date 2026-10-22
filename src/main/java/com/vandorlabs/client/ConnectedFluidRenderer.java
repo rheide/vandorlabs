@@ -39,9 +39,9 @@ public final class ConnectedFluidRenderer extends BlockFluidRenderer {
         Material material=state.getMaterial();if(material!=Material.WATER&&material!=Material.LAVA)return delegate.renderFluid(access,state,pos,destination);
         FluidStack fluid=null;Map<BlockPos,WaterloggedSurfaceMesh.Contact> contacts=null;
         // Vanilla averages four cells at every surface corner. Include diagonal cells,
-        // otherwise the two water blocks sharing that corner compute different heights.
+        // including columns above, otherwise shared falling-water corners disagree.
         for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++)for(int dy=-1;dy<=1;dy++){
-            if(dy!=0&&(dx!=0||dz!=0)||dx==0&&dy==0&&dz==0)continue;
+            if(dy<0&&(dx!=0||dz!=0)||dx==0&&dy==0&&dz==0)continue;
             BlockPos next=pos.add(dx,dy,dz);if(!WaterloggedParts.supports(access.getBlockState(next)))continue;
             TileEntity tile=access.getTileEntity(next);if(tile==null)continue;
             if(fluid==null)fluid=new FluidStack(material==Material.WATER?FluidRegistry.WATER:FluidRegistry.LAVA,1000);

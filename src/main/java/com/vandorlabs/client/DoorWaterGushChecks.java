@@ -23,13 +23,59 @@ final class DoorWaterGushChecks {
                 require(dry!=null,"dry exit direction");BlockPos out=pos.up(half).offset(dry);
                 block.onBlockActivated(world,pos,state,player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.2F,.5F);
                 require(world.getBlockState(pos).getValue(BlockVandorDoor.OPEN),"real manual door opens");
-                IBlockState released=world.getBlockState(out);require(fill==0?released.getBlock()==Blocks.FLOWING_WATER&&released.getValue(BlockLiquid.LEVEL)>0:released.getMaterial()!=net.minecraft.block.material.Material.WATER,"one-sided water only");
+                IBlockState released=world.getBlockState(out);require(fill==0?released.getBlock()==Blocks.FLOWING_WATER&&released.getValue(BlockLiquid.LEVEL)==0:released.getMaterial()!=net.minecraft.block.material.Material.WATER,"one-sided water only");
                 require(fluids.occupied(wet)&&fluids.occupied(1-wet)==(fill==1),"saved sides remain independent");
-                if(fill==0){Blocks.FLOWING_WATER.updateTick(world,out,released,world.rand);boolean spread=world.getBlockState(out.down()).getMaterial()==net.minecraft.block.material.Material.WATER;for(EnumFacing side:EnumFacing.HORIZONTALS)spread|=world.getBlockState(out.offset(side)).getMaterial()==net.minecraft.block.material.Material.WATER;require(spread,"released water spreads through vanilla fluid update");}
+                if(fill==0){
+                    // Bounded channel: the same source must still feed its far end after
+                    // many vanilla fluid updates, and drain when the real door closes.
+                    for(int distance=1;distance<=9;distance++){
+                        BlockPos channel=pos.up(half).offset(dry,distance);
+                        world.setBlockState(channel.down(),Blocks.STONE.getDefaultState(),2);
+                        world.setBlockState(channel.offset(dry.rotateY()),Blocks.STONE.getDefaultState(),2);
+                        world.setBlockState(channel.offset(dry.rotateYCCW()),Blocks.STONE.getDefaultState(),2);
+                    }
+                    for(int tick=0;tick<40;tick++){flow(world,pos.up(half),dry);block.updateTick(world,pos,world.getBlockState(pos),world.rand);}
+                    require(world.getBlockState(out).getValue(BlockLiquid.LEVEL)==0,"outlet sustains source");
+                    require(world.getBlockState(pos.up(half).offset(dry,6)).getMaterial()==net.minecraft.block.material.Material.WATER,"continuous flow reaches channel end");
+                    net.minecraft.nbt.NBTTagCompound saved=lower.writeToNBT(new net.minecraft.nbt.NBTTagCompound());lower.readFromNBT(saved);lower.onLoad();
+                    require(lower.waterOutlets()!=0,"source ownership survives save/load");
+                    block.onBlockActivated(world,pos,world.getBlockState(pos),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.2F,.5F);
+                    require(!world.getBlockState(pos).getValue(BlockVandorDoor.OPEN),"real door closes");
+                    for(int tick=0;tick<80;tick++){flow(world,pos.up(half),dry);block.updateTick(world,pos,world.getBlockState(pos),world.rand);}
+                    require(world.getBlockState(out).getMaterial()!=net.minecraft.block.material.Material.WATER,"closed door outlet drains");
+                    require(world.getBlockState(pos.up(half).offset(dry,6)).getMaterial()!=net.minecraft.block.material.Material.WATER,"closed channel drains");
+                    require(lower.waterOutlets()==0,"source ownership released");
+                }
+                cases++;
+            }
+            for(int scenario=0;scenario<4;scenario++){
+                clear(world,pos);world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),2);
+                IBlockState state=block.getDefaultState().withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH);
+                world.setBlockState(pos,state,2);world.setBlockState(pos.up(),state.withProperty(BlockVandorDoor.HALF,BlockDoor.EnumDoorHalf.UPPER),2);
+                TileEntitySpaceDoor lower=(TileEntitySpaceDoor)world.getTileEntity(pos);lower.setPanelMode(0);lower.fluids.set(0,new FluidStack(FluidRegistry.WATER,1000));
+                BlockPos out=pos.north();
+                if(scenario==0)world.setBlockState(out,Blocks.WATER.getDefaultState(),2);
+                if(scenario==3)world.setBlockState(out,Blocks.STONE.getDefaultState(),2);
+                block.onBlockActivated(world,pos,state,player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.2F,.5F);
+                require(!lower.itemSettings().hasKey("DoorWaterOutlets"),"copied settings exclude outlet ownership");
+                if(scenario==0){
+                    require(lower.waterOutlets()==0,"existing source never claimed");
+                    block.onBlockActivated(world,pos,world.getBlockState(pos),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.2F,.5F);
+                    require(world.getBlockState(out).getValue(BlockLiquid.LEVEL)==0,"existing source retained after close");
+                }else if(scenario==1){
+                    lower.fluids.set(0,null);block.updateTick(world,pos,world.getBlockState(pos),world.rand);
+                    require(lower.waterOutlets()==0&&world.getBlockState(out).getValue(BlockLiquid.LEVEL)>0,"drained open door releases source");
+                }else if(scenario==2){
+                    world.setBlockToAir(pos);
+                    require(world.getBlockState(out).getValue(BlockLiquid.LEVEL)>0,"removed door releases source");
+                }else require(world.getBlockState(out).getBlock()==Blocks.STONE&&lower.waterOutlets()==0,"solid outlet obstruction preserved");
                 cases++;
             }
         }finally{clear(world,pos);player.capabilities.isCreativeMode=creative;player.setHeldItem(EnumHand.MAIN_HAND,held);}
-        System.out.println("[vandorlabs][reprolab] door-water-gush PASS cases="+cases+" real opening four facings both source sides independent halves vanilla spreading no source blocks both-wet and lava preserved");
+        System.out.println("[vandorlabs][reprolab] door-water-gush PASS cases="+cases+" real opening/closing four facings both source sides independent halves sustained vanilla channel flow save/load and drainage both-wet and lava preserved");
     }
-    private static void clear(WorldServer world,BlockPos pos){for(BlockPos at:BlockPos.getAllInBox(pos.add(-3,-2,-3),pos.add(3,3,3)))world.setBlockState(at,Blocks.AIR.getDefaultState(),2);}
+    private static void flow(WorldServer world,BlockPos pos,EnumFacing dry){
+        for(int i=1;i<=9;i++){BlockPos at=pos.offset(dry,i);IBlockState state=world.getBlockState(at);if(state.getMaterial()==net.minecraft.block.material.Material.WATER)Blocks.FLOWING_WATER.updateTick(world,at,state,world.rand);}
+    }
+    private static void clear(WorldServer world,BlockPos pos){for(BlockPos at:BlockPos.getAllInBox(pos.add(-11,-2,-11),pos.add(11,3,11)))world.setBlockState(at,Blocks.AIR.getDefaultState(),2);}
 }

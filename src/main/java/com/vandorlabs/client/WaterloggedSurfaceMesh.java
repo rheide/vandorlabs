@@ -53,9 +53,8 @@ public final class WaterloggedSurfaceMesh {
         if(cached!=null&&cached.tile.get()==tile&&cached.fluidsRevision==ContainedFluids.revision()&&cached.panelsRevision==panelRevision()&&cached.vehicleRevision==vehicleRevision(world))return cached;
         Source[] sources=new Source[7];Object[] volumes=new Object[7];FluidStack[] fluids=new FluidStack[14];
         for(int index=0;index<7;index++){BlockPos at=index==0?pos:pos.offset(EnumFacing.values()[index-1]);if(!world.isBlockLoaded(at)||!WaterloggedParts.wet(world,at))continue;Source source=new Source(world,at);sources[index]=source;volumes[index]=source.volume;fluids[index*2]=source.fluids[0];fluids[index*2+1]=source.fluids[1];}
-        boolean same=cached!=null&&Arrays.equals(volumes,cached.volumes);
-        if(same)for(int i=0;i<fluids.length;i++)if(!equal(fluids[i],cached.fluids[i])){same=false;break;}
-        if(same){Entry entry=new Entry(volumes,fluids,cached.mesh,tile);cache.entries.put(pos.toImmutable(),entry);return entry;}
+        // A changed diagonal wet column can alter corner heights without changing
+        // these seven local volumes. Rebuild after revision invalidation as well.
         for(int i=0;i<sources.length;i++)if(sources[i]!=null)build(sources[i],world,i==0?pos:pos.offset(EnumFacing.values()[i-1]));
         List<Surface> mesh=new ArrayList<>();Source own=sources[0];if(own!=null)for(Surface surface:own.surfaces){
             FluidStack fluid=own.fluids[surface.side];if(fluid==null)continue;List<List<double[]>> pieces=new ArrayList<>();pieces.add(points(surface.vertices));

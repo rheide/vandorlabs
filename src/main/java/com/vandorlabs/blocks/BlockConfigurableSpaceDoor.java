@@ -100,8 +100,9 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         if(z>=start&&z<=end)return true;
         z=(1-localZ-tile.positionOffset())*16;return tile.panelMode()==2&&z>=start&&z<=end;
     }
-    @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntitySpaceDoor)((TileEntitySpaceDoor)raw).tickReaders();}
+    @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntitySpaceDoor)((TileEntitySpaceDoor)raw).tickReaders();DoorWaterGush.opened(world,pos);}
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
+        DoorWaterGush.stop(world,state.getValue(HALF)==BlockDoor.EnumDoorHalf.UPPER?pos.down():pos);
         if(!world.isRemote&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)){TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntitySpaceDoor){for(int side=0;side<2;side++){ItemStack token=((TileEntitySpaceDoor)raw).keyReader(side).takeForDrop();if(!token.isEmpty())net.minecraft.inventory.InventoryHelper.spawnItemStack(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,token);}}}
         super.breakBlock(world,pos,state);
     }

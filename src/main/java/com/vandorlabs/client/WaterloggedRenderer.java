@@ -32,8 +32,8 @@ final class WaterloggedRenderer {
                     int light=fluid.getBlock()==null?tile.getWorld().getCombinedLight(sample,fluid.getLuminosity(stack)):fluid.getBlock().getDefaultState().getPackedLightmapCoords(tile.getWorld(),sample);
                     TextureAtlasSprite sprite=still;
                     emit(buffer,sprite,face,color,shade,light,normal,false);
-                    // Like vanilla's free water surface, the top remains visible from below.
-                    if(face.boundary==net.minecraft.util.EnumFacing.UP)emit(buffer,sprite,face,color,shade,light,normal.scale(-1),true);
+                    // Vanilla water sides and free tops remain visible from inside the liquid.
+                    if(face.boundary!=net.minecraft.util.EnumFacing.DOWN)emit(buffer,sprite,face,color,shade,light,normal.scale(-1),true);
                 }
             }
             tess.draw();
