@@ -74,7 +74,14 @@ public final class ItemDuplifier extends Item {
 
     public static String copyFrom(World world, BlockPos pos, ItemStack tool) {
         NBTTagCompound settings = ProgrammableSettings.capture(world, pos);
-        if (settings == null) return null;
+        if (settings == null) {
+            net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
+            if(state.getBlock().getRegistryName()==null||!"minecraft".equals(state.getBlock().getRegistryName().getResourceDomain())||state.getMaterial()==net.minecraft.block.material.Material.AIR||state.getMaterial().isLiquid())return null;
+            settings=new NBTTagCompound();
+            int choice=com.vandorlabs.tiles.CustomBlockMaterials.identifier(state.getBlock(),state.getBlock().getMetaFromState(state));
+            settings.setInteger(ProgrammableSettings.WALL_TEXTURE,choice);settings.setInteger(ProgrammableSettings.SIDE_TEXTURE,choice);
+            settings.setInteger(ProgrammableSettings.GLASS_MATERIAL,choice);settings.setInteger(ProgrammableSettings.DOOR_FACE_TEXTURE,choice);
+        }
         Block block = world.getBlockState(pos).getBlock();
         if (block instanceof BlockPropulsionLight) {
             String family = ((BlockPropulsionLight) block).familyId();

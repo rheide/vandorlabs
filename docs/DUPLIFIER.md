@@ -128,3 +128,5 @@ For Thruster Lever, Airliner Throttle and Fighter Throttle, **Common → Signal
 Levels** includes base height, tilt angle and tilt direction together with
 Low/High limits. Tilt directions are relative to the destination’s mounting orientation.
 The separate **Switch Rotation** option controls copying floor/ceiling rotation.
+
+Sneak-right-click a vanilla solid block to sample its material, including metadata variants such as wool colors and log types. Applying transfers the sampled material to compatible programmable surfaces without copying inventories, channels or other settings.
