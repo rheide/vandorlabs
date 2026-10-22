@@ -85,7 +85,33 @@ public final class WaterloggedParts {
         for(Cell cell:volume(world,pos).cells)if(fluids[cell.side]!=null&&(material==null||material(fluids[cell.side])==material)&&cell.box.offset(pos).intersects(box))return true;return false;
     }
     private static boolean matches(FluidStack fluid,Material material){return fluid!=null&&material(fluid)==material;}
-    public static Boolean entity(IBlockAccess world,BlockPos pos,Entity entity,double height,Material material,boolean head){if(!(world instanceof World)||!wet(world,pos))return null;if(!head)return intersects((World)world,pos,entity.getEntityBoundingBox(),material);ContainedFluids data=data(world.getTileEntity(pos));if(!matches(fluid((World)world,pos,0),material)&&!matches(fluid((World)world,pos,1),material))return null;for(Cell cell:volume((World)world,pos).cells){FluidStack fluid=fluid((World)world,pos,cell.side);if(fluid!=null&&material(fluid)==material&&cell.box.offset(pos).contains(new Vec3d(entity.posX,height,entity.posZ)))return true;}return false;}
+    /** Half-open cells give shared partition boundaries one owner instead of an air seam. */
+    public static FluidStack atPoint(IBlockAccess access,BlockPos pos,Vec3d point){
+        if(!(access instanceof World)||!wet(access,pos))return null;
+        World world=(World)access;Vec3d local=point.subtract(pos.getX(),pos.getY(),pos.getZ());
+        for(Cell cell:volume(world,pos).cells){AxisAlignedBB b=cell.box;
+            if(local.x>=b.minX&&local.x<b.maxX&&local.y>=b.minY&&local.y<b.maxY&&local.z>=b.minZ&&local.z<b.maxZ)return fluid(world,pos,cell.side);
+        }
+        return null;
+    }
+    public static IBlockState viewpoint(IBlockState state,IBlockAccess world,BlockPos pos,Vec3d point){
+        FluidStack fluid=atPoint(world,pos,point);
+        return fluid==null||fluid.getFluid().getBlock()==null?state:fluid.getFluid().getBlock().getDefaultState();
+    }
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    public static Vec3d fogColor(World world,BlockPos pos,Entity entity,Vec3d original,float partialTicks){
+        Vec3d eye=net.minecraft.client.renderer.ActiveRenderInfo.projectViewFromEntity(entity,partialTicks);
+        FluidStack fluid=atPoint(world,pos,eye);
+        if(fluid==null||fluid.getFluid().getBlock()==null)return original;
+        IBlockState state=fluid.getFluid().getBlock().getDefaultState();
+        return state.getBlock().getFogColor(world,pos,state,entity,original,partialTicks);
+    }
+    public static Boolean entity(IBlockAccess world,BlockPos pos,Entity entity,double height,Material material,boolean head){
+        if(!(world instanceof World)||!wet(world,pos))return null;
+        if(!head)return intersects((World)world,pos,entity.getEntityBoundingBox(),material);
+        if(!matches(fluid((World)world,pos,0),material)&&!matches(fluid((World)world,pos,1),material))return null;
+        return matches(atPoint(world,pos,new Vec3d(entity.posX,height,entity.posZ)),material);
+    }
     public static int light(IBlockAccess world,BlockPos pos){ContainedFluids data=data(world.getTileEntity(pos));int light=0;if(data!=null)for(int i=0;i<2;i++){FluidStack fluid=data.get(i);if(fluid!=null)light=Math.max(light,fluid.getFluid().getLuminosity(fluid));}return light;}
     @SubscribeEvent public static void placed(net.minecraftforge.event.world.BlockEvent.PlaceEvent event){
         if(event.getWorld().isRemote)return;

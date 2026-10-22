@@ -115,6 +115,9 @@ public final class BlockProgrammableStairs extends BlockStairs {
 
     @Override public Boolean isAABBInsideMaterial(World world,BlockPos pos,AxisAlignedBB box,net.minecraft.block.material.Material material){return WaterloggedParts.intersects(world,pos,box,material);}
     @Override public Boolean isAABBInsideLiquid(World world,BlockPos pos,AxisAlignedBB box){return WaterloggedParts.liquid(world,pos,box);}
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    @Override public net.minecraft.util.math.Vec3d getFogColor(net.minecraft.world.World world,BlockPos pos,IBlockState state,net.minecraft.entity.Entity entity,net.minecraft.util.math.Vec3d original,float partialTicks){return WaterloggedParts.fogColor(world,pos,entity,original,partialTicks);}
+    @Override public IBlockState getStateAtViewpoint(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,net.minecraft.util.math.Vec3d point){return WaterloggedParts.viewpoint(state,world,pos,point);}
     @Override public Boolean isEntityInsideMaterial(IBlockAccess world,BlockPos pos,IBlockState state,net.minecraft.entity.Entity entity,double height,net.minecraft.block.material.Material material,boolean head){return WaterloggedParts.entity(world,pos,entity,height,material,head);}
     @Override public int getLightValue(IBlockState state,IBlockAccess world,BlockPos pos){return WaterloggedParts.light(world,pos);}
 }
