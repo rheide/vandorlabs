@@ -281,6 +281,8 @@ def main():
             for scene in expected_scenes:
                 if 'documentation-animation PASS '+scene+' frames=' not in client_log:
                     raise SystemExit('Missing escalator animation: '+scene)
+        if args.focus == 'glass-appearance':
+            subprocess.run([sys.executable, str(root/'testclient/analyze_diagonal_frame_edges.py'), str(output)], check=True)
         if args.focus == 'pilot-seat':
             subprocess.run([sys.executable, str(root/'testclient/analyze_pilot_seat.py'), str(output)], check=True)
         if args.focus == 'connection-acceptance':

@@ -24,6 +24,24 @@ final class DiagonalContactChecks {
                 Block block=Block.getBlockFromName("vandorlabs:"+id);IBlockState state=block.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing).withProperty(BlockProgrammableWall.INVERTED,inverted);
                 world.setBlockState(pos,state,2);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);tile.setDiagonalGeometry(mode,fill);tile.setGlassAppearance(1,framed);
                 if(wet)for(int side=0;side<2;side++)tile.fluids.set(side,new FluidStack(FluidRegistry.WATER,1000));
+                if(block instanceof BlockProgrammableDiagonalGlass&&framed&&fill==0){
+                    float[] pane=(float[])payload.get(DiagonalWallMeshCache.get(tile,state,sprite,sprite));
+                    float[] frame=(float[])payload.get(DiagonalWallMeshCache.frame(tile,state,sprite));
+                    requireEndRails(pane,frame,sprite,"mode="+mode+" facing="+facing+" inverted="+inverted+" wet="+wet);
+                    if(mode==0&&facing==EnumFacing.NORTH&&!inverted){
+                        world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),2);
+                        world.setBlockState(pos.east(),Blocks.STONE.getDefaultState(),2);
+                        world.setBlockState(pos.west(),Blocks.STONE.getDefaultState(),2);
+                        requireEndRails((float[])payload.get(DiagonalWallMeshCache.get(tile,state,sprite,sprite)),(float[])payload.get(DiagonalWallMeshCache.frame(tile,state,sprite)),sprite,"floor and side contacts wet="+wet);
+                        ContactRenderCapture.save(Minecraft.getMinecraft(),output,"diagonal-glass-bottom-frame-"+(wet?"wet":"dry"),pos,pos.down(),pos.east(),pos.west());
+                        world.setBlockToAir(pos.down());world.setBlockToAir(pos.east());world.setBlockToAir(pos.west());
+                        if(wet){
+                            tile.fluids.set(1,null);
+                            ContactRenderCapture.save(Minecraft.getMinecraft(),output,"half-waterlogged-diagonal-glass",35,pos,pos);
+                            tile.fluids.set(1,new FluidStack(FluidRegistry.WATER,1000));
+                        }
+                    }
+                }
                 for(int axis=0;axis<3;axis++)for(int end=0;end<2;end++){
                     EnumFacing positive=axis==0?facing.rotateY():axis==1?EnumFacing.UP:facing.getOpposite();BlockPos next=pos.offset(end==0?positive.getOpposite():positive);
                     StaticSurfaceMesh reference=DiagonalWallMeshCache.get(tile,state,sprite,sprite);double before=area((float[])payload.get(reference),axis,end*16);
@@ -52,6 +70,37 @@ final class DiagonalContactChecks {
         }finally{world.setBlockToAir(pos);for(EnumFacing side:EnumFacing.values())world.setBlockToAir(pos.offset(side));}
         System.out.println("[vandorlabs][reprolab] diagonal-contact-matrix PASS cases="+cases+" three shapes wall/porthole/glass four facings inversions dry/wet solid contacts flat portholes removal cache restoration");
     }
+    /** Every horizontal end of a sloping pane needs its cyan frame artwork,
+     * including the edge raised four pixels by clipping a half-width slope. */
+    private static void requireEndRails(float[] pane,float[] frame,TextureAtlasSprite rail,String context){
+        int checked=0;
+        for(int q=0;q<pane.length;q+=32){
+            if(Math.abs(pane[q+6])<1e-5||Math.abs(pane[q+6])>.99999)continue;
+            for(int e=0;e<4;e++){
+                int a=q+e*8,b=q+((e+1)&3)*8;
+                if(Math.abs(pane[a]-pane[b])<15.99||Math.abs(pane[a+1]-pane[b+1])+Math.abs(pane[a+2]-pane[b+2])>1e-4)continue;
+                // Tessellation edges shared by two pane quads are not exposed rims.
+                int uses=0;
+                for(int other=0;other<pane.length;other+=32){
+                    if(Math.abs(pane[other+6])<1e-5||Math.abs(pane[other+6])>.99999)continue;
+                    for(int oe=0;oe<4;oe++){int oa=other+oe*8,ob=other+((oe+1)&3)*8;
+                        if(samePoint(pane,a,oa)&&samePoint(pane,b,ob)||samePoint(pane,a,ob)&&samePoint(pane,b,oa))uses++;
+                    }
+                }
+                if(uses!=1)continue;
+                boolean found=false;
+                for(int f=0;f<frame.length;f+=32){
+                    boolean matches=true;
+                    for(int k=0;k<3;k++)matches&=Math.abs(frame[f+k]-pane[a+k]-pane[a+5+k]*.01)<1e-4&&Math.abs(frame[f+8+k]-pane[b+k]-pane[a+5+k]*.01)<1e-4;
+                    matches&=Math.abs(frame[f+3]-rail.getInterpolatedU(0))<1e-6&&Math.abs(frame[f+19]-rail.getInterpolatedU(.5))<1e-6;
+                    if(matches){found=true;break;}
+                }
+                require(found,"exposed sloping pane end lost frame artwork "+context+" y="+pane[a+1]+" z="+pane[a+2]);checked++;
+            }
+        }
+        require(checked>=2,"missing sloping pane end coverage "+context);
+    }
+    private static boolean samePoint(float[] data,int a,int b){for(int k=0;k<3;k++)if(Math.abs(data[a+k]-data[b+k])>1e-4)return false;return true;}
     private static double area(float[] data,int axis,double edge){double area=0;for(int at=0;at<data.length;at+=32){boolean on=true;for(int v=0;v<4;v++)on&=Math.abs(data[at+8*v+axis]-edge)<1e-6;if(!on)continue;for(int v=1;v<3;v++){double[] a=new double[3],b=new double[3];for(int k=0;k<3;k++){a[k]=data[at+8*v+k]-data[at+k];b[k]=data[at+8*(v+1)+k]-data[at+k];}double x=a[1]*b[2]-a[2]*b[1],y=a[2]*b[0]-a[0]*b[2],z=a[0]*b[1]-a[1]*b[0];area+=Math.sqrt(x*x+y*y+z*z)/2;}}return area;}
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException(message);}
 }

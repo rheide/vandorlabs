@@ -69,7 +69,7 @@ public final class DiagonalMeshClip {
                 for(int axis=0;axis<3;axis++)for(int side=0;side<2;side++) {
                     double edge=bounds[box+axis+side*3];
                     List<double[]> outside=half(remainder,axis,edge,side==1,true);
-                    if(outside.size()>=3)next.add(outside);
+                    if(hasArea(outside))next.add(outside);
                     remainder=half(remainder,axis,edge,side==0,false);
                 }
             }
@@ -77,6 +77,7 @@ public final class DiagonalMeshClip {
         }
         List<double[]> out=new ArrayList<>();
         for(List<double[]> polygon:pieces) {
+            if(!hasArea(polygon))continue;
             if(polygon.size()==4)out.addAll(polygon);
             else for(int i=1;i+1<polygon.size();i++) {
                 out.add(polygon.get(0));out.add(polygon.get(i));
@@ -84,6 +85,21 @@ public final class DiagonalMeshClip {
             }
         }
         return out;
+    }
+
+    // Subtraction on a boundary can leave a polygon made entirely of repeated
+    // points or a line. It draws no pixels, but its duplicate edges would cancel
+    // real outline rails when the resulting mesh is used to generate a frame.
+    private static boolean hasArea(List<double[]> polygon){
+        if(polygon.size()<3)return false;
+        double x=0,y=0,z=0;double[] origin=polygon.get(0);
+        for(int i=1;i+1<polygon.size();i++){
+            double[] a=polygon.get(i),b=polygon.get(i+1);
+            double ax=a[0]-origin[0],ay=a[1]-origin[1],az=a[2]-origin[2];
+            double bx=b[0]-origin[0],by=b[1]-origin[1],bz=b[2]-origin[2];
+            x+=ay*bz-az*by;y+=az*bx-ax*bz;z+=ax*by-ay*bx;
+        }
+        return x*x+y*y+z*z>1e-20;
     }
 
     private static boolean contactCap(double[] bounds,int box,List<double[]> piece){

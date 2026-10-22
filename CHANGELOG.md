@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Restore the exposed frame rail at clipped diagonal-glass ends, including the bottom edge of half-width full-height panels. Discard zero-area clipping fragments that incorrectly cancel exposed frame edges; check rail positions and artwork across all diagonal shapes, orientations and wet/dry states.
+
 - Use still-fluid artwork on the remaining native-water faces at contained-fluid contacts, including flush diagonal-glass ends beneath porthole walls. Preserve visible boundaries beside dry compartments.
 
 - Inset exposed door water surfaces to prevent z-fighting with the door top at a two-block water level, while preserving seamless water between door blocks.
