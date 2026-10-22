@@ -132,5 +132,7 @@ public final class TurntableTransactions {
     }
     private static void finish(ArrayDeque<Work> queue,Work work){release(work);queue.remove();try{if(work.failure==null)work.complete.run();else work.failed.accept(work.failure);}catch(Exception callback){com.vandorlabs.VandorLabs.logger.error("Turntable completion callback failed",callback);work.owner.failure(callback.getMessage());}}
     public static void unload(WorldServer world){ArrayDeque<Work> queue=QUEUES.remove(world);if(queue!=null)for(Work work:queue)release(work);}
-    public static void drainForChecks(WorldServer world)throws Exception {long deadline=System.nanoTime()+15_000_000_000L;while(QUEUES.containsKey(world)&&!QUEUES.get(world).isEmpty()&&System.nanoTime()<deadline){tick(world);Thread.sleep(2);}if(QUEUES.containsKey(world)&&!QUEUES.get(world).isEmpty())throw new IllegalStateException("Deferred turntable transfer did not finish");}
+    // Match normal server-tick cadence: accelerated polling can exhaust checkpoint retries
+    // before the asynchronous vanilla chunk writer gets its normal opportunity to run.
+    public static void drainForChecks(WorldServer world)throws Exception {long deadline=System.nanoTime()+65_000_000_000L;while(QUEUES.containsKey(world)&&!QUEUES.get(world).isEmpty()&&System.nanoTime()<deadline){tick(world);Thread.sleep(50);}if(QUEUES.containsKey(world)&&!QUEUES.get(world).isEmpty())throw new IllegalStateException("Deferred turntable transfer did not finish");}
 }
