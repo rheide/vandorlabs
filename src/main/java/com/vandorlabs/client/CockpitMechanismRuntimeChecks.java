@@ -22,6 +22,7 @@ final class CockpitMechanismRuntimeChecks {
                 require(Math.abs(tile.data().surfaces.get(0).origin.y-(original.surfaces.get(0).origin.y-drop))<1e-8,"armrest touch height follows seat");
                 require(Math.abs(tile.seatHeight()-(original.riderY+.725-drop))<1e-8,"rider follows cushion");
                 TileEntityCockpit copy=(TileEntityCockpit)net.minecraft.tileentity.TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(copy.getHeight()==height,"height survives save");
+                sliders(tile,player);
                 for(AxisAlignedBB b:tile.data().boxes)require(b.minY>=0&&b.maxY>b.minY,"lowered supports stay above floor");
             }
             tile.setHeight(0);return;
@@ -31,6 +32,7 @@ final class CockpitMechanismRuntimeChecks {
         net.minecraft.block.Block block=world.getBlockState(tile.getPos()).getBlock();
         require(block.getStateForPlacement(world,tile.getPos(),net.minecraft.util.EnumFacing.UP,0,0,0,0,player).getValue(com.vandorlabs.blocks.BlockVandorDirectional.FACING)==player.getHorizontalFacing(),"cockpit places along player facing");
         require(tile.data().moving.values().stream().filter(part->part==1).count()<=32,"rigid seat collision boxes are not sliced redundantly");
+        canopies(tile,player);
         levers(tile,player);
         NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());
         tile.toggleScreens();require(tile.screenLift.target(),"screen button retracts");finish(tile,"CockpitScreenLift",world.getTotalWorldTime());require(Math.abs(tile.screens(0)-1)<1e-8,"screen bank reaches housing");
@@ -49,6 +51,34 @@ final class CockpitMechanismRuntimeChecks {
             for(float partial:new float[]{0,.25F,.5F,.75F}){Vec3d expected=CockpitData.rotate(tile.seatLocation(partial),tile.facing()).add(new Vec3d(tile.getPos()));Vec3d rider=received.cockpitRiderPosition(player,partial);require(Math.abs(expected.x-rider.x)<1e-8&&Math.abs(expected.z-rider.z)<1e-8,"rider stays on cushion throughout reversible motion");}
         }
         tile.readFromNBT(before);
+    }
+    private static void canopies(TileEntityCockpit tile,EntityPlayerMP player){
+        net.minecraft.item.ItemStack held=player.getHeldItemMainhand();boolean creative=player.capabilities.isCreativeMode;player.capabilities.isCreativeMode=true;
+        try{for(String id:new String[]{"canopy","long_canopy","regular_canopy_glass"}){
+            com.vandorlabs.blocks.BlockCanopy canopy=(com.vandorlabs.blocks.BlockCanopy)net.minecraft.block.Block.getBlockFromName("vandorlabs:"+id);
+            net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(canopy);player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,stack);
+            require(!CockpitAssembly.activate(tile.getWorld(),tile.getPos(),player,net.minecraft.util.EnumHand.MAIN_HAND),"held canopy reaches placement");
+            require(stack.getItem().onItemUse(player,tile.getWorld(),tile.getPos(),net.minecraft.util.EnumHand.MAIN_HAND,net.minecraft.util.EnumFacing.UP,.5F,1,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"canopy over cockpit "+id+tile.facing());
+            BlockPos anchor=tile.getPos().up((int)Math.ceil(tile.data().bounds.maxY));
+            require(tile.getWorld().getBlockState(anchor).getBlock()==canopy,"shell above cockpit reservation");
+            require(CockpitAssembly.root(tile.getWorld(),tile.getPos())==tile,"canopy retains cockpit");
+            tile.getWorld().destroyBlock(anchor,false);require(CockpitAssembly.root(tile.getWorld(),tile.getPos())==tile,"canopy removal retains cockpit");
+        }}finally{player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);player.capabilities.isCreativeMode=creative;}
+    }
+    private static void sliders(TileEntityCockpit tile,EntityPlayerMP player){
+        Vec3d eye=new Vec3d(tile.data().seat.x,tile.data().riderY+player.getEyeHeight(),tile.data().seat.z);
+        for(java.util.Map.Entry<String,Vec3d> part:tile.data().pivots.entrySet())for(int step=0;step<4;step++){
+            for(TileEntityCockpit.Control output:tile.controls)output.level=step*5;
+            TileEntityCockpit.Control selected=tile.control(part.getKey());
+            Vec3d target=part.getValue().addVector(0,.1,-step/16D);
+            Vec3d start=CockpitData.rotate(eye,tile.facing()).add(new Vec3d(tile.getPos()));
+            Vec3d end=start.add(CockpitData.rotate(target,tile.facing()).add(new Vec3d(tile.getPos())).subtract(start).normalize().scale(6));
+            RayTraceResult hit=tile.getWorld().rayTraceBlocks(start,end,false,false,false);
+            require(hit!=null&&CockpitAssembly.root(tile.getWorld(),hit.getBlockPos())==tile,"world ray reaches armrest "+part.getKey());
+            require(tile.use(start.subtract(new Vec3d(tile.getPos())),end.subtract(new Vec3d(tile.getPos())),player),"armrest activation");
+            require(selected.level==(step+1)%4*5,"correct armrest slider "+part.getKey()+" height="+tile.getHeight()+" facing="+tile.facing()+" step="+step);
+            for(TileEntityCockpit.Control other:tile.controls)if(other!=selected)require(other.level==step*5,"other armrest output unchanged");
+        }
     }
     private static void finish(TileEntityCockpit tile,String key,long now){NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());tag.getCompoundTag(key).setLong("Started",now-CockpitActuator.DURATION);tile.readFromNBT(tag);}
     static void levers(TileEntityCockpit tile,EntityPlayerMP player){

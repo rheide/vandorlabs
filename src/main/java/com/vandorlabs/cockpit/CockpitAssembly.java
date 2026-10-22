@@ -59,6 +59,7 @@ public final class CockpitAssembly {
     }
     public static boolean activate(World world,BlockPos pos,EntityPlayer player,EnumHand hand){
         if(hand!=EnumHand.MAIN_HAND)return false;TileEntityCockpit root=root(world,pos);if(root==null)return false;
+        if(player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock&&((net.minecraft.item.ItemBlock)player.getHeldItem(hand).getItem()).getBlock() instanceof com.vandorlabs.blocks.BlockCanopy)return false;
         if(world.isRemote)return true;
         if(player.isSneaking() || player.getHeldItemMainhand().getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER){com.vandorlabs.container.ContainerCockpit.open(player,root);return true;}
         Vec3d eye=player.getPositionEyes(1).subtract(new Vec3d(root.getPos())),end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(8));

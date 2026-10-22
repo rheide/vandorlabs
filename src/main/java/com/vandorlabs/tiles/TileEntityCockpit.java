@@ -114,10 +114,11 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     private ControlHit controlHitLocal(Vec3d start,Vec3d end){
         ControlHit nearest=null;
         for(Map.Entry<String,Vec3d> part:data().pivots.entrySet()){
-            Vec3d p=part.getValue().addVector(0,0,seatSlide(0)),a=start.subtract(p),b=end.subtract(p);boolean throttle=part.getKey().startsWith("throttle_");
+            boolean throttle=part.getKey().startsWith("throttle_");
+            Vec3d p=part.getValue().addVector(0,0,seatSlide(0)-(throttle?0:control(part.getKey()).level/5D/16)),a=start.subtract(p),b=end.subtract(p);
             double angle=throttle?Math.toRadians(22.5-control(part.getKey()).level/5D*22.5):0,c=Math.cos(angle),s=Math.sin(angle);
             if(throttle){a=new Vec3d(a.x,a.y*c+a.z*s,a.z*c-a.y*s);b=new Vec3d(b.x,b.y*c+b.z*s,b.z*c-b.y*s);}
-            AxisAlignedBB bounds=throttle?new AxisAlignedBB(-.075,-.025,-.078,.075,.335,.078):new AxisAlignedBB(-.085,-.05,-.30,.085,.36,.30);RayTraceResult hit=bounds.calculateIntercept(a,b);
+            AxisAlignedBB bounds=throttle?new AxisAlignedBB(-.075,-.025,-.078,.075,.335,.078):new AxisAlignedBB(-.04,-.03,-.047,.04,.15,.047);RayTraceResult hit=bounds.calculateIntercept(a,b);
             if(hit!=null){Vec3d v=hit.hitVec;Vec3d point=(throttle?new Vec3d(v.x,v.y*c-v.z*s,v.y*s+v.z*c):v).add(p);double distance=start.squareDistanceTo(point);if(nearest==null||distance<nearest.distance)nearest=new ControlHit(part.getKey(),point,distance);}
         }
         return nearest;

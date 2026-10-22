@@ -11,7 +11,13 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = pilot-seat ]; then
+        if [ "$TARGET" = cockpit ]; then
+            PREFIX=cockpit_
+            export VANDOR_LABS_COCKPIT_CHECKS_ONLY=true
+        elif [ "$TARGET" = glass-appearance ]; then
+            PREFIX=glass_
+            export VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY=true
+        elif [ "$TARGET" = pilot-seat ]; then
             PREFIX=pilot_seat_
             export VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY=true
         elif [ "$TARGET" = canopies ]; then
@@ -82,6 +88,17 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = cockpit ]; then
+        grep -q 'cockpit-focused PASS' "$RUN_OUT/client.log"
+        echo "Live cockpit checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = glass-appearance ]; then
+        python3 testclient/analyze_diagonal_frame_edges.py "$RUN_OUT"
+        grep -q 'glass-appearance-live PASS' "$RUN_OUT/client.log"
+        echo "Live glass checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = pilot-seat ]; then
         grep -q "pilot-seat-world PASS" "$RUN_OUT/client.log"
         grep -q "pilot-seat-model PASS" "$RUN_OUT/client.log"

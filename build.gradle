@@ -752,8 +752,13 @@ task verifyRelease {
     description = 'Validate a standard release JAR with geometry and live rendering/gameplay regressions'
     dependsOn assemble, testDiagonalJoins
     doLast {
-        exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'glass-appearance', '--timeout', '900' }
-        exec { commandLine 'python', 'testclient/run_windows.py', '--shot-prefix', 'utility22_card_mounts', '--timeout', '900' }
+        if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+            exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'glass-appearance', '--timeout', '900' }
+            exec { commandLine 'python', 'testclient/run_windows.py', '--shot-prefix', 'utility22_card_mounts', '--timeout', '900' }
+        } else {
+            exec { commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'glass-appearance' }
+            exec { commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility22_card_mounts' }
+        }
     }
 }
 tasks.matching { it.name == 'publish' || it.name == 'publishToMavenLocal' || it.name.startsWith('publishMaven') }.all { dependsOn verifyRelease }

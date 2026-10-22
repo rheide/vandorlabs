@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Keep Advanced Pilot Chair armrest slider selection on each moving grip at every height and detent. Allow held Canopies to mount above the Cockpit reservation without boarding the seat or replacing its parts.
+
 - Batch both contained-fluid sides into one draw, reuse cached fluid descriptions and remove per-triangle temporary arrays. Release checks compare rendered pixels against the previous renderer across all waterlogged block families.
 - Restore underwater camera effects and eye immersion inside contained fluids, including the exact center of an open waterlogged door. Keep dry door halves and dry compartments outside the fluid viewpoint.
 

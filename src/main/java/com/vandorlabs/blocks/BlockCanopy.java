@@ -323,8 +323,15 @@ public final class BlockCanopy extends Block {
             BlockPos dest=w.getBlockState(p).getBlock().isReplaceable(w,p) || b.sharesSeatBackrest(w.getBlockState(p))?p:p.offset(side);
             if(large && settings.mount>=2)dest=dest.offset(facing.rotateYCCW(),b.width/2).offset(facing,b.width/2);
             else dest=b.placementAnchor(dest,facing);
+            com.vandorlabs.tiles.TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(w,p);
+            if(cockpit!=null&&b.supportsSeatBackrest()){
+                // The whole cockpit has an upper reservation, including cells that look empty.
+                // Mount the shell above that envelope without replacing its controller or helpers.
+                facing=cockpit.facing();
+                dest=new BlockPos(p.getX(),cockpit.getPos().getY()+(int)Math.ceil(cockpit.data().bounds.maxY),p.getZ());
+            }
             // The clicked wall supports the rear of a long nose, rather than its front.
-            if(!large && (b.kind.startsWith("angled_") || b.opening()) && side.getAxis().isHorizontal() && side==facing)dest=dest.offset(facing,b.length-1);
+            if(cockpit==null && !large && (b.kind.startsWith("angled_") || b.opening()) && side.getAxis().isHorizontal() && side==facing)dest=dest.offset(facing,b.length-1);
             for(BlockPos cell:com.vandorlabs.canopy.LargeCanopyOwnership.itemCells(b,dest,facing,configured))
                 if(!w.isBlockModifiable(player,cell) || !player.canPlayerEdit(cell,side,held))return EnumActionResult.FAIL;
             if(!com.vandorlabs.canopy.LargeCanopyOwnership.fitsItem(b,w,dest,facing,configured))return EnumActionResult.FAIL;
