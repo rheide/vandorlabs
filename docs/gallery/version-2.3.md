@@ -79,6 +79,14 @@ Programmable walls, portholes and glass panels, including diagonal variants, sto
 
 Programmable Doors, Trapdoors and Diagonal Trapdoors also support two fluid sides. Water fills the passage while the leaf is open; closing restores the original sides and clears temporary water from a previously dry side.
 
+A door stores water independently in each of its two blocks. In this one-block-deep pool, only the lower half is waterlogged; the upper half stays dry.
+
+![Programmable Door with only its lower block waterlogged](../images/gallery/version-2.3/half-waterlogged-door.png)
+
+A half-width, full-height diagonal glass wall can hold water on one side while leaving the other side dry. The water follows the slope and the frame remains visible around the pane.
+
+![Half-width diagonal glass wall with water on one side](../images/gallery/version-2.3/half-waterlogged-diagonal-wall.png)
+
 The material catalog adds four Security Glass designs, three Ancient Relief textures under Tech, and ceiling-tile finishes with plain and speaker panels plus paired light artwork. Directional lights place their illuminated face away from the supporting face, including floor and ceiling placements.
 
 Browse the whole catalog through the [interactive texture browser and category collages](../texture-browser.md). It uses the same categories and selectable artwork as the mod.
