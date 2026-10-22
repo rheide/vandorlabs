@@ -15,6 +15,7 @@ final class WaterloggedRenderer {
         ContainedFluids data=WaterloggedParts.data(tile);if(data==null||!WaterloggedParts.wet(tile.getWorld(),tile.getPos()))return;
         WaterloggedSurfaceMesh.Entry entry=WaterloggedSurfaceMesh.entry(tile);
         java.util.List<WaterloggedSurfaceMesh.Surface> surfaces=entry.mesh;if(surfaces.isEmpty())return;
+        net.minecraft.block.material.Material cameraMaterial=cameraMaterial();
         float oldU=OpenGlHelper.lastBrightnessX,oldV=OpenGlHelper.lastBrightnessY;
         boolean depthMask=org.lwjgl.opengl.GL11.glGetBoolean(org.lwjgl.opengl.GL11.GL_DEPTH_WRITEMASK);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);
@@ -32,12 +33,26 @@ final class WaterloggedRenderer {
                     int light=fluid.getBlock()==null?tile.getWorld().getCombinedLight(sample,fluid.getLuminosity(stack)):fluid.getBlock().getDefaultState().getPackedLightmapCoords(tile.getWorld(),sample);
                     TextureAtlasSprite sprite=still;
                     emit(buffer,sprite,face,color,shade,light,normal,false);
-                    // Vanilla water sides and free tops remain visible from inside the liquid.
-                    if(face.boundary!=net.minecraft.util.EnumFacing.DOWN)emit(buffer,sprite,face,color,shade,light,normal.scale(-1),true);
+                    // Interior side faces are only useful to an immersed camera. Drawing them
+                    // from outside adds far-side sheets to per-tile translucent compositing.
+                    if(face.boundary==net.minecraft.util.EnumFacing.UP||(face.boundary!=net.minecraft.util.EnumFacing.DOWN&&fluid.getBlock()!=null&&fluid.getBlock().getDefaultState().getMaterial()==cameraMaterial))emit(buffer,sprite,face,color,shade,light,normal.scale(-1),true);
                 }
             }
             tess.draw();
         }finally{GlStateManager.depthMask(depthMask);GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.disableBlend();GlStateManager.resetColor();GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.popMatrix();}
+    }
+    private static net.minecraft.block.material.Material cameraMaterial(){
+        Minecraft mc=Minecraft.getMinecraft();net.minecraft.entity.Entity view=mc.getRenderViewEntity();
+        if(view==null||mc.world==null)return net.minecraft.block.material.Material.AIR;
+        float partial=mc.getRenderPartialTicks();
+        net.minecraft.block.material.Material material=ActiveRenderInfo.getBlockStateAtEntityViewpoint(mc.world,view,partial).getMaterial();
+        if(material!=net.minecraft.block.material.Material.WATER&&material!=net.minecraft.block.material.Material.LAVA)return material;
+        Vec3d eye=ActiveRenderInfo.projectViewFromEntity(view,partial);net.minecraft.util.math.BlockPos at=new net.minecraft.util.math.BlockPos(eye);
+        if(WaterloggedParts.supports(mc.world.getBlockState(at))){
+            FluidStack fluid=WaterloggedParts.atPoint(mc.world,at,eye);
+            if(fluid==null||eye.y-at.getY()>ContainedFluidHeights.height(mc.world,at,fluid.getFluid(),eye.x-at.getX(),eye.z-at.getZ()))return net.minecraft.block.material.Material.AIR;
+        }
+        return material;
     }
     private static void emit(BufferBuilder buffer,TextureAtlasSprite sprite,WaterloggedSurfaceMesh.Surface face,int color,float shade,int light,Vec3d normal,boolean reverse){
         int count=face.vertices.length;

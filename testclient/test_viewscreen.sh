@@ -86,6 +86,10 @@ cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
 cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     "$TEST_RUNTIME_GAME/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"
 cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
+# Optional renderer compatibility run, kept separate from the baseline client.
+if [ -n "${VANDOR_LABS_TEST_OPTIFINE:-}" ]; then
+    cp "$VANDOR_LABS_TEST_OPTIFINE" "$TEST_RUNTIME_GAME/mods/"
+fi
 # Allow the full software-rendered gallery to finish on a busy host.
 VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout "${VANDOR_LABS_TEST_TIMEOUT:-1200}" testclient/run.sh \
     > "$RUN_OUT/client.log" 2>&1
@@ -95,6 +99,7 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
 fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = fluids ]; then
+        grep -q 'fluid-pool PASS' "$RUN_OUT/client.log"
         grep -q 'fluid-focused PASS' "$RUN_OUT/client.log"
         echo "Live fluid checks passed: $RUN_OUT"
         exit 0

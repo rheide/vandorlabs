@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Limit interior water side faces to immersed camera views, preserving exterior pool compositing. Add whole-pool exterior comparisons across twelve camera angles, underwater forward-view checks, sorted chunk geometry bounds and optional OptiFine compatibility runs.
+
 - Sample vanilla solid-block materials with the Duplifier, preserving block metadata and applying through the existing shared material path.
 - Add saved Programmable Stairs step sizes from 1 to 16 pixels and Normal / Sideways orientation. Infer the solid wing edge from side placement; share rendering, collision and fluid geometry and retain shape in configured items and copies.
 - Replace the Programmable Door card multiselect with Any card and an optional, non-consuming single-company card sample.

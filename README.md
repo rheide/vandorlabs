@@ -338,6 +338,9 @@ Taxi Mode is enabled by default: sit down to assemble the connected craft, then 
 
 For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder containing the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. It defaults to the standard `.minecraft/mods` folder. Run `bash testclient/test_viewscreen.sh --full` for complete coverage.
 
+Fluid regressions include a filled pool viewed from twelve angles, comparison with the pre-regression exterior water renderer, bounds checks after chunk-buffer sorting, and an immersed forward-view pixel check. They run in `verifyRelease` and `bash testclient/test_viewscreen.sh --focus fluids`. To repeat the focused run with OptiFine, set `VANDOR_LABS_TEST_OPTIFINE` to the OptiFine JAR; the harness copies it into the isolated test client. Compatibility captures use shaders off.
+
+
 On Windows, build with Java 8, then use `build/tooling/python-runtime/python.exe testclient/run_windows.py`
 with the repository-local runtime, or another Python interpreter.
 The launcher defaults to Java 8, Forge profiles, libraries, assets and compatibility fixtures under `build/tooling/`; `--java` and `--minecraft-dir` override these locations. It runs in an isolated test world,
