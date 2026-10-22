@@ -2,6 +2,7 @@
 
 ## 2.3
 
+- Batch both contained-fluid sides into one draw, reuse cached fluid descriptions and remove per-triangle temporary arrays. Release checks compare rendered pixels against the previous renderer across all waterlogged block families.
 - Restore underwater camera effects and eye immersion inside contained fluids, including the exact center of an open waterlogged door. Keep dry door halves and dry compartments outside the fluid viewpoint.
 
 - Restore the exposed frame rail at clipped diagonal-glass ends, including the bottom edge of half-width full-height panels. Discard zero-area clipping fragments that incorrectly cancel exposed frame edges; check rail positions and artwork across all diagonal shapes, orientations and wet/dry states.

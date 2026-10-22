@@ -28,7 +28,7 @@ public final class WaterloggedSurfaceMesh {
         Source(World world,BlockPos pos){this(world,pos,false);}
         Source(World world,BlockPos pos,boolean detached){volume=detached?(WaterloggedParts.panel(world.getBlockState(pos))||OpeningFluids.supports(world.getBlockState(pos))?null:WaterloggedParts.uncachedVolume(world,pos)):WaterloggedParts.volume(world,pos);fluids=new FluidStack[]{WaterloggedParts.fluid(world,pos,0),WaterloggedParts.fluid(world,pos,1)};}
     }
-    private static final class Entry {
+    static final class Entry {
         final Object[] volumes;final FluidStack[] fluids;final List<Surface> mesh;
         final java.lang.ref.WeakReference<TileEntity> tile;final long fluidsRevision,panelsRevision;final int vehicleRevision;
         Entry(Object[] volumes,FluidStack[] fluids,List<Surface> mesh,TileEntity tile){this.volumes=volumes;this.fluids=fluids;this.mesh=mesh;this.tile=new java.lang.ref.WeakReference<>(tile);fluidsRevision=ContainedFluids.revision();panelsRevision=panelRevision();vehicleRevision=vehicleRevision(tile.getWorld());}
@@ -46,14 +46,16 @@ public final class WaterloggedSurfaceMesh {
     }
     private static final Map<World,WorldCache> WORLDS=new WeakHashMap<>();
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(!event.getWorld().isRemote)return;WorldCache cache=WORLDS.remove(event.getWorld());if(cache!=null)event.getWorld().removeEventListener(cache);}
-    static List<Surface> get(TileEntity tile){
+    static List<Surface> get(TileEntity tile){return entry(tile).mesh;}
+    // Fluid descriptions and surfaces share the same revision-checked cache lifetime.
+    static Entry entry(TileEntity tile){
         World world=tile.getWorld();BlockPos pos=tile.getPos();WorldCache cache=WORLDS.get(world);if(cache==null){cache=new WorldCache();WORLDS.put(world,cache);world.addEventListener(cache);}Entry cached=cache.entries.get(pos);
-        if(cached!=null&&cached.tile.get()==tile&&cached.fluidsRevision==ContainedFluids.revision()&&cached.panelsRevision==panelRevision()&&cached.vehicleRevision==vehicleRevision(world))return cached.mesh;
+        if(cached!=null&&cached.tile.get()==tile&&cached.fluidsRevision==ContainedFluids.revision()&&cached.panelsRevision==panelRevision()&&cached.vehicleRevision==vehicleRevision(world))return cached;
         Source[] sources=new Source[7];Object[] volumes=new Object[7];FluidStack[] fluids=new FluidStack[14];
         for(int index=0;index<7;index++){BlockPos at=index==0?pos:pos.offset(EnumFacing.values()[index-1]);if(!world.isBlockLoaded(at)||!WaterloggedParts.wet(world,at))continue;Source source=new Source(world,at);sources[index]=source;volumes[index]=source.volume;fluids[index*2]=source.fluids[0];fluids[index*2+1]=source.fluids[1];}
         boolean same=cached!=null&&Arrays.equals(volumes,cached.volumes);
         if(same)for(int i=0;i<fluids.length;i++)if(!equal(fluids[i],cached.fluids[i])){same=false;break;}
-        if(same){cache.entries.put(pos.toImmutable(),new Entry(volumes,fluids,cached.mesh,tile));return cached.mesh;}
+        if(same){Entry entry=new Entry(volumes,fluids,cached.mesh,tile);cache.entries.put(pos.toImmutable(),entry);return entry;}
         for(int i=0;i<sources.length;i++)if(sources[i]!=null)build(sources[i],world,i==0?pos:pos.offset(EnumFacing.values()[i-1]));
         List<Surface> mesh=new ArrayList<>();Source own=sources[0];if(own!=null)for(Surface surface:own.surfaces){
             FluidStack fluid=own.fluids[surface.side];if(fluid==null)continue;List<List<double[]>> pieces=new ArrayList<>();pieces.add(points(surface.vertices));
@@ -64,7 +66,7 @@ public final class WaterloggedSurfaceMesh {
             }
             for(List<double[]> piece:pieces)if(area(piece)>1e-10)mesh.add(new Surface(piece,surface.side,surface.axis,surface.boundary));
         }
-        cache.entries.put(pos.toImmutable(),new Entry(volumes,fluids,mesh,tile));return mesh;
+        Entry entry=new Entry(volumes,fluids,mesh,tile);cache.entries.put(pos.toImmutable(),entry);return entry;
     }
     static final class Contact {
         final Source source;final FluidStack fluid;

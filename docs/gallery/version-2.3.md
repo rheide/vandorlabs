@@ -79,7 +79,11 @@ Programmable walls, portholes and glass panels, including diagonal variants, sto
 
 Programmable Doors, Trapdoors and Diagonal Trapdoors also support two fluid sides. Water fills the passage while the leaf is open; closing restores the original sides and clears temporary water from a previously dry side.
 
-A door stores water independently in each of its two blocks. In this one-block-deep pool, only the lower half is waterlogged; the upper half stays dry.
+The shared fluid renderer uses fewer draw calls and allocations; see the [rendering measurements and regression coverage](../performance/waterlogged-2.3.md).
+
+Underwater fog and eye immersion follow the occupied fluid compartment, including the center of an open door. Looking out through a dry compartment restores the normal air view.
+
+A door stores water independently in each of its two blocks. In this one-block-deep pool, only the lower half is waterlogged; the upper half stays dry. Water effects stop when the player's eyes rise into that dry upper half.
 
 ![Programmable Door with only its lower block waterlogged](../images/gallery/version-2.3/half-waterlogged-door.png)
 
