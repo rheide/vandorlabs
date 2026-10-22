@@ -99,6 +99,8 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
 fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = fluids ]; then
+        grep -q 'fluid-boundary-matrix PASS' "$RUN_OUT/client.log"
+        grep -q 'submerged-contact-views PASS' "$RUN_OUT/client.log"
         grep -q 'fluid-pool PASS' "$RUN_OUT/client.log"
         grep -q 'fluid-focused PASS' "$RUN_OUT/client.log"
         echo "Live fluid checks passed: $RUN_OUT"

@@ -33,9 +33,9 @@ final class WaterloggedRenderer {
                     int light=fluid.getBlock()==null?tile.getWorld().getCombinedLight(sample,fluid.getLuminosity(stack)):fluid.getBlock().getDefaultState().getPackedLightmapCoords(tile.getWorld(),sample);
                     TextureAtlasSprite sprite=still;
                     emit(buffer,sprite,face,color,shade,light,normal,false);
-                    // Interior side faces are only useful to an immersed camera. Drawing them
-                    // from outside adds far-side sheets to per-tile translucent compositing.
-                    if(face.boundary==net.minecraft.util.EnumFacing.UP||(face.boundary!=net.minecraft.util.EnumFacing.DOWN&&fluid.getBlock()!=null&&fluid.getBlock().getDefaultState().getMaterial()==cameraMaterial))emit(buffer,sprite,face,color,shade,light,normal.scale(-1),true);
+                    // Only a free boundary has an underwater back face. Pane/leaf contacts
+                    // are solid interfaces, not water-air surfaces to paint over the block.
+                    if(face.boundary==net.minecraft.util.EnumFacing.UP||(face.boundary!=null&&face.boundary!=net.minecraft.util.EnumFacing.DOWN&&fluid.getBlock()!=null&&fluid.getBlock().getDefaultState().getMaterial()==cameraMaterial))emit(buffer,sprite,face,color,shade,light,normal.scale(-1),true);
                 }
             }
             tess.draw();

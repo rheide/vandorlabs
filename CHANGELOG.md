@@ -2,7 +2,8 @@
 
 ## 2.3
 
-- Limit interior water side faces to immersed camera views, preserving exterior pool compositing. Add whole-pool exterior comparisons across twelve camera angles, underwater forward-view checks, sorted chunk geometry bounds and optional OptiFine compatibility runs.
+- Cull contained-water faces at opaque neighbor contacts, separate closed-leaf fluid boundaries from door geometry, and prevent underwater back faces from painting water over panes or leaves. Preserve visible free water–air surfaces and exterior pool compositing.
+- Expand fluid regression coverage to 780 solid-contact geometry cases, 760 submerged contact/door camera views and 32 pool viewpoints above, below and across the waterline, including inward/outward glass and porthole views. Retain independent exterior comparisons, sorted chunk geometry checks and optional OptiFine compatibility runs.
 
 - Sample vanilla solid-block materials with the Duplifier, preserving block metadata and applying through the existing shared material path.
 - Add saved Programmable Stairs step sizes from 1 to 16 pixels and Normal / Sideways orientation. Infer the solid wing edge from side placement; share rendering, collision and fluid geometry and retain shape in configured items and copies.

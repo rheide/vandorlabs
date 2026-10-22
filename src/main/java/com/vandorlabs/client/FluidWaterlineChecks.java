@@ -34,8 +34,14 @@ final class FluidWaterlineChecks {
             image=net.minecraft.util.ScreenShotHelper.createScreenshot(128,128,frame);changed=0;
             for(int x=48;x<80;x++)for(int y=48;y<80;y++)if(image.getRGB(x,y)!=blank.getRGB(x,y))changed++;
             javax.imageio.ImageIO.write(image,"png",new java.io.File(output,"contained-waterline-forward.png"));
-            if(changed<900)throw new IllegalStateException("Water disappears looking forward through glass from inside: "+changed);
+            if(changed!=0)throw new IllegalStateException("Water paints a false surface on the glass pane: "+changed);
+            GlStateManager.loadIdentity();GlStateManager.translate(-.5,-top+.04,-.25);
+            GlStateManager.depthMask(true);GlStateManager.clear(16640);WaterloggedRenderer.render(tile,0,0,0);
+            image=net.minecraft.util.ScreenShotHelper.createScreenshot(128,128,frame);changed=0;
+            for(int x=48;x<80;x++)for(int y=48;y<80;y++)if(image.getRGB(x,y)!=blank.getRGB(x,y))changed++;
+            javax.imageio.ImageIO.write(image,"png",new java.io.File(output,"contained-waterline-outward-air.png"));
+            if(changed<900)throw new IllegalStateException("Free water-air boundary disappears from inside: "+changed);
         }finally{mc.setRenderViewEntity(oldView);camera.set(null,oldCamera);mc.world.setBlockToAir(pos);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);GL11.glPopAttrib();frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.enableCull();}
-        System.out.println("[vandorlabs][reprolab] fluid-waterline PASS actual perspective pixels from inside water below free surface and looking forward through glass");
+        System.out.println("[vandorlabs][reprolab] fluid-waterline PASS actual perspective pixels below free top and outward water-air boundary; no false water film on glass pane");
     }
 }

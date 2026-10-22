@@ -58,7 +58,7 @@ public final class WaterloggedSurfaceMesh {
         for(int i=0;i<sources.length;i++)if(sources[i]!=null)build(sources[i],world,i==0?pos:pos.offset(EnumFacing.values()[i-1]));
         List<Surface> mesh=new ArrayList<>();Source own=sources[0];if(own!=null)for(Surface surface:own.surfaces){
             FluidStack fluid=own.fluids[surface.side];if(fluid==null)continue;List<List<double[]>> pieces=new ArrayList<>();pieces.add(points(surface.vertices));
-            if(surface.boundary!=null){BlockPos next=pos.offset(surface.boundary);if(world.isBlockLoaded(next)){IBlockState liquid=world.getBlockState(next);net.minecraftforge.fluids.Fluid nativeFluid=WaterloggedParts.nativeFluid(liquid);if(nativeFluid==fluid.getFluid())continue;}}
+            if(surface.boundary!=null){BlockPos next=pos.offset(surface.boundary);if(world.isBlockLoaded(next)){IBlockState liquid=world.getBlockState(next);net.minecraftforge.fluids.Fluid nativeFluid=WaterloggedParts.nativeFluid(liquid);if(nativeFluid==fluid.getFluid()||liquid.doesSideBlockRendering(world,next,surface.boundary.getOpposite()))continue;}}
             Source neighbor=surface.boundary==null?null:sources[surface.boundary.getIndex()+1];
             if(neighbor!=null)for(Region region:neighbor.regions)if(equal(fluid,neighbor.fluids[region.side])){
                 List<List<double[]>> remaining=new ArrayList<>();for(List<double[]> piece:pieces)subtract(piece,region,surface.boundary,remaining);pieces=remaining;
@@ -113,6 +113,7 @@ public final class WaterloggedSurfaceMesh {
             double height=world.getBlockState(pos).getBlock() instanceof BlockConfigurableSpaceDoor&&!covered?1-.001:1;
             Region region=new Region(side).add(-1,0,0,0).add(1,0,0,1).add(0,-1,0,0).add(0,1,0,height).add(0,0,-1,0).add(0,0,1,1);
             double sign=side==0?1:-1,limit=side==0?p[3]:p[4];if(open)limit=(p[3]+p[4])/2;
+            else limit+=side==0?-.001:.001; // Fluid stays off the closed leaf's rendered plane.
             double[] divider={sign*p[0],sign*p[1],sign*p[2],sign*limit};if(!joined)region.planes.add(divider);source.regions.add(region);
             for(EnumFacing face:EnumFacing.values()){List<double[]> polygon=cube(face);for(double[] point:polygon)point[1]*=height;for(double[] plane:region.planes)polygon=clip(polygon,plane);if(area(polygon)>1e-10)source.surfaces.add(new Surface(polygon,side,axis(face),face));}
             if(!joined){int axis=Math.abs(p[0])>Math.abs(p[1])?(Math.abs(p[0])>Math.abs(p[2])?0:2):(Math.abs(p[1])>Math.abs(p[2])?1:2);int a=(axis+1)%3,b=(axis+2)%3;List<double[]> face=new ArrayList<>();for(double[] pair:new double[][]{{0,0},{1,0},{1,1},{0,1}}){double[] point=new double[3];point[a]=pair[0];point[b]=pair[1];point[axis]=(limit-p[a]*point[a]-p[b]*point[b])/p[axis];face.add(point);}for(int i=0;i<6;i++)face=clip(face,region.planes.get(i));if(area(face)>1e-10){Vec3d normal=normal(face);if(normal.x*divider[0]+normal.y*divider[1]+normal.z*divider[2]<0)Collections.reverse(face);source.surfaces.add(new Surface(face,side,axis,null));}}

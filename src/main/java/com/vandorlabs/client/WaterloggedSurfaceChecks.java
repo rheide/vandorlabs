@@ -26,6 +26,8 @@ final class WaterloggedSurfaceChecks {
         OpeningFluidVisualChecks.run(mc,output);
         ContainedFluidUpdateChecks.run(mc.world);
         ContainedFluidImmersionChecks.run(mc);
+        SubmergedContactViewChecks.run(mc,output);
+        FluidBoundaryMatrixChecks.run(mc);
         PoolFluidRegressionChecks.run(mc,output);
         FluidHeightRegressionChecks.run(mc,output);
         FluidWaterlineChecks.run(mc,output);
