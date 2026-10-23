@@ -57,11 +57,15 @@ final class StairAppearanceChecks {
             mc.gameSettings.ambientOcclusion=ao;
             IBlockState stone=Blocks.STONE.getDefaultState();mc.world.setBlockState(pos,stone,2);light(mc,pos);
             java.util.Map<EnumFacing,int[]> reference=render(mc,stone,pos);
+            mc.world.setBlockState(pos,Blocks.OAK_STAIRS.getDefaultState(),2);light(mc,pos);mc.world.setBlockState(pos.down(),stone,2);
+            int[] beneathVanilla=render(mc,stone,pos.down()).get(EnumFacing.UP);
             for(EnumFacing facing:EnumFacing.HORIZONTALS)for(BlockStairs.EnumHalf half:BlockStairs.EnumHalf.values())for(int roll=0;roll<3;roll++){
                 IBlockState state=ModBlocks.PROGRAMMABLE_STAIRS.getDefaultState().withProperty(BlockStairs.FACING,facing).withProperty(BlockStairs.HALF,half);
                 mc.world.setBlockState(pos,state,2);((TileEntityAnimatedScreenSelector)mc.world.getTileEntity(pos)).setStairGeometry(4,roll);light(mc,pos);
                 java.util.Map<EnumFacing,int[]> actual=render(mc,state,pos);
                 for(EnumFacing face:EnumFacing.values())require(java.util.Arrays.equals(actual.get(face),reference.get(face)),"rendered recess brightness/diffuse shading matches lit vanilla face "+ao+"/"+facing+"/"+half+"/"+roll+"/"+face+" actual="+java.util.Arrays.toString(actual.get(face))+" expected="+java.util.Arrays.toString(reference.get(face)));
+                mc.world.setBlockState(pos.down(),stone,2);
+                require(java.util.Arrays.equals(render(mc,stone,pos.down()).get(EnumFacing.UP),beneathVanilla),"block under empty stair region must not darken compared with vanilla "+ao+"/"+facing+"/"+half+"/"+roll);
             }
         }}finally{mc.gameSettings.ambientOcclusion=oldAo;}
     }
