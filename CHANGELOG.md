@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.4
+
+- Fix dedicated-server disconnects and crashes when players or entities approach a placed canopy, including Large Front Canopy Glass. Use a server-compatible collision-bounds constructor while preserving the existing geometry.
+- Existing saved canopies load with corrected collision bounds automatically; no block removal or world conversion is required.
+- Remove client-only bounding-box center calls from contained-fluid geometry, escalator landing steps and turntable collision checks to prevent similar dedicated-server failures.
+- Add a shared-bytecode check for client-only API references and a live regression for collision after loading saved canopy data.
+- Defer canopy, Autopilot, cockpit and credential-reader load callbacks until chunk tile iteration finishes. Reject non-finite saved canopy progress and overflowing footprint offsets.
+- Keep failed vehicle and turntable snapshot loads inert, preserving original component data. Refuse vehicle recovery that would overwrite changed blocks, inventory contents or an unrelated entity UUID.
+- Reduce vehicle movement state payloads from 105 to 82 bytes while preserving positions, steering, timing and input acknowledgements. Require matching 2.4 client and server builds.
+- Add load-failure, recovery-conflict and packet-boundary checks, with dedicated-server startup/reload coverage and contributor guidance for these invariants.
+
 ## 2.3
 
 - Extend release regressions for plain Canopy Glass sharing cockpit and Pilot Seat upper space, including rear wall clicks, all seat heights and facings, both placement orders, collision and removal.

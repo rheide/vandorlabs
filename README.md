@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-Current development version: **2.3**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.3**. See the [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).
+Current development version: **2.4**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.4**. See the [2.4 stability and network changes](docs/versions/version-2.4.md), [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).
 
 **Vehicle systems:** [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
 
@@ -337,6 +337,8 @@ the sneak key to dismount. Craft it with three red wool and three iron ingots.
 Taxi Mode is enabled by default: sit down to assemble the connected craft, then use W/S to drive, A/D to steer and Space to brake. Dismount to park it as blocks; a blocked parking area preserves the vehicle for recovery. Disable Taxi Mode to use manual Configurizer conversion with an assembly/parking preview. Seat settings include cushion height and redstone polarity; armrests hide beside solid walls. See [Pilot Seat and Taxi Mode](docs/pilot-seat-taxi.md) and the [ground vehicle guide](docs/ground-vehicles-analysis.md) for compatibility and limits.
 
 ## Testing in game
+
+The build checks shared bytecode for client-only API references with `testDedicatedServerLinkage`. See [dedicated-server API compatibility](docs/server-compatibility.md) for coverage, saved-canopy recovery and its runtime limits.
 
 For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder containing the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. It defaults to the standard `.minecraft/mods` folder. Run `bash testclient/test_viewscreen.sh --full` for complete coverage.
 

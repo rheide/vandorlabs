@@ -2,6 +2,7 @@
 
 Release highlights, feature explanations and illustrated examples, newest first. For detailed changes, see the [changelog](../../CHANGELOG.md). Older guides describe their release; use the current feature documentation for present-day behavior.
 
+- [Vandor Labs 2.4: dedicated-server stability and smaller movement packets](version-2.4.md)
 - [Vandor Labs 2.3: working cockpits, access control and smoother movement](version-2.3.md)
 - [Vandor Labs 2.2](version-2.2.md)
 - [Vandor Labs 2.1: hover, navigate, unfold](version-2.1.md)
