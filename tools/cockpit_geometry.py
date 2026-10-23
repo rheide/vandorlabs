@@ -261,7 +261,7 @@ def add_continuous_fascia(m, large):
     }
 
 
-def cockpit(identifier, large):
+def cockpit(identifier, large, single_throttle=False):
     m = Model(identifier, 'Cockpit',
               'Complete two-by-two cockpit: one solid U-shaped console wall, a joined three-facet blank screen bank, integrated chair, rectangular touch insets, center yoke and animated throttles.')
     plinth = m.node('assembly_floor')
@@ -300,7 +300,8 @@ def cockpit(identifier, large):
         m.box(n, side+'_solid_wall', [xmin,.65,1.5], [xmax,8.9,14.5], 'housing')
         m.box(n, side+'_armrest_top', [xmin,8.9,1.5], [xmax,10.5,14.5], 'housing')
         if left:
-            lever_x = [4.15] if large else [2.15, 5.25]
+            # Retain the earlier single-throttle center without changing the current console.
+            lever_x = [4.15] if large or single_throttle else [2.15, 5.25]
             for index, x in enumerate(lever_x):
                 name = 'throttle_left' if index == 0 else 'throttle_right'
                 m.box(n, name+'_slot_rim', [x-.9,10.5,.5], [x+.9,10.65,7.7], 'frame')
@@ -507,7 +508,7 @@ def model_metadata(m):
         'collision_note': 'Per-part AABBs are broad-phase bounds. The angled wall AABBs overestimate the footwell; use collision_convex_solids to derive tighter cell-local collision shapes. Do not make the full multiblock one solid collision box.',
         'design_contract': copy.deepcopy(m.design_contract),
     }
-    if m.id in ('cockpit',):
+    if m.id in ('cockpit','cockpit_single'):
         # Derived from the source-verified vanilla 1.12.2 riding reference.
         # The entity origin and cushion/hip points are intentionally distinct.
         hip = vec([16, 12.04, 9.3])/16

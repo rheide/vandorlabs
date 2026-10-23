@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Correct stretched cockpit Redstone text, restore buttons after shared renderer buffer offsets, and align four-position slider clicks with their visible segments.
+- Open cockpit configuration on the clicked screen, keyboard or throttle page, including blank and gated-off displays.
+- Give physical cockpit throttles the Thruster Lever's configurable Low/High levels and four-position Off/Low/Medium/High behavior, keeping animation aligned with custom output levels.
+- Add a saved Single/Twin cockpit throttle layout. Preserve both controls' settings and suppress the hidden right throttle's output in Single mode.
+- Hide unavailable Autopilot and departure controls on Vehicle Status displays while retaining vehicle mode controls.
+
 - Hide retired block items from JEI's registry scans, including duplicate Power Lever/Industrial Power Lever sizes and the old Landing Gear, Ski Landing Gear and landing struts. Preserve saved blocks and inventory items; current modular gear and configurable lever sizes remain available.
 
 ## 2.4

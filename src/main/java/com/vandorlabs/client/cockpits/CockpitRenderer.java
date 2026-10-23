@@ -42,7 +42,7 @@ public final class CockpitRenderer {
                 double value = CockpitMotion.sample(part.values, detents.applyAsDouble(part.id));
                 GlStateManager.pushMatrix();
                 try {
-                    if(id.equals("cockpit")&&(part.id.startsWith("throttle_")||part.id.endsWith("_button")))GlStateManager.translate(0,0,detents.applyAsDouble("seat_assembly")/3);
+                    if(id.startsWith("cockpit")&&(part.id.startsWith("throttle_")||part.id.endsWith("_button")))GlStateManager.translate(0,0,detents.applyAsDouble("seat_assembly")/3);
                     GlStateManager.translate(part.pivot[0],adjustable?com.vandorlabs.cockpit.CockpitData.chairY(part.pivot[1],height):part.pivot[1],part.pivot[2]);
                     if ("rotation".equals(part.type)) {
                         GlStateManager.rotate((float) value, (float) part.axis[0],

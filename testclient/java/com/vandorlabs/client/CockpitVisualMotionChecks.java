@@ -11,6 +11,12 @@ public final class CockpitVisualMotionChecks {
     private static void require(boolean ok,String text){if(!ok)throw new IllegalStateException("cockpit visual motion: "+text);}
     public static void main(String[] args){
         net.minecraft.init.Bootstrap.register();
+        for(String id:new String[]{"cockpit","cockpit_single","chair_siderests","yoke_screen"}){
+            com.vandorlabs.cockpit.CockpitData data=com.vandorlabs.cockpit.CockpitData.get(id);
+            require(!data.cells.isEmpty()&&!data.boxes.isEmpty(),"complete variant geometry "+id);
+            if(id.startsWith("cockpit")){require(data.seat!=null&&Double.isFinite(data.riderY),"variant rider metadata "+id);require(data.pivots.keySet().stream().filter(part->part.startsWith("throttle_")).count()==(id.equals("cockpit_single")?1:2),"variant physical grip metadata "+id);}
+            for(com.vandorlabs.cockpit.CockpitData.Surface surface:data.surfaces){com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(surface,3);require(Math.abs((surface.u.lengthVector()/128)/(surface.v.lengthVector()/layout.height)-1)<.015,"square display pixel scale "+id+surface.id);}
+        }
         CockpitActuator legacy=new CockpitActuator();legacy.toggle(1000);
         double skipped=legacy.sample(1028),rewound=legacy.sample(1003);
         System.out.println("Legacy world-clock reproduction: first pose="+skipped+" corrected pose="+rewound);

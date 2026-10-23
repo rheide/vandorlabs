@@ -1,0 +1,427 @@
+{
+  "schema_version": 1,
+  "model": "cockpit_single",
+  "units": "blocks",
+  "surfaces": [
+    {
+      "id": "touch_right_keyboard",
+      "role": "touch",
+      "node": "armrest_right",
+      "origin_blocks": [
+        1.609375,
+        0.6634375,
+        0.1875
+      ],
+      "u_vector_blocks": [
+        0.0,
+        0.0,
+        0.64375
+      ],
+      "v_vector_blocks": [
+        0.321875,
+        0.0,
+        0.0
+      ],
+      "normal": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "corners_blocks": [
+        [
+          1.609375,
+          0.6634375,
+          0.1875
+        ],
+        [
+          1.609375,
+          0.6634375,
+          0.83125
+        ],
+        [
+          1.93125,
+          0.6634375,
+          0.83125
+        ],
+        [
+          1.93125,
+          0.6634375,
+          0.1875
+        ]
+      ],
+      "size_model_pixels": [
+        10.3,
+        5.15
+      ],
+      "overlay_offset_blocks": 0.003125,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    },
+    {
+      "id": "screen_left",
+      "role": "screen",
+      "node": "screen_left",
+      "origin_blocks": [
+        0.1514793,
+        0.74047431,
+        -0.24559929
+      ],
+      "u_vector_blocks": [
+        0.43465822,
+        -0.0334568,
+        -0.47845452
+      ],
+      "v_vector_blocks": [
+        0.0,
+        0.46137337,
+        -0.03226237
+      ],
+      "normal": [
+        0.74098695,
+        0.04684283,
+        0.66988364
+      ],
+      "corners_blocks": [
+        [
+          0.1514793,
+          0.74047431,
+          -0.24559929
+        ],
+        [
+          0.58613752,
+          0.70701751,
+          -0.72405381
+        ],
+        [
+          0.58613752,
+          1.16839089,
+          -0.75631618
+        ],
+        [
+          0.1514793,
+          1.20184769,
+          -0.27786166
+        ]
+      ],
+      "size_model_pixels": [
+        10.356411,
+        7.4
+      ],
+      "overlay_offset_blocks": 0.003125,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    },
+    {
+      "id": "touch_left_forward",
+      "role": "touch",
+      "node": "touch_ledge_left",
+      "origin_blocks": [
+        0.27133514,
+        0.67755496,
+        0.04983806
+      ],
+      "u_vector_blocks": [
+        0.33575971,
+        0.0,
+        -0.37049348
+      ],
+      "v_vector_blocks": [
+        -0.17114567,
+        0.09567086,
+        -0.15510076
+      ],
+      "normal": [
+        0.28356343,
+        0.92387953,
+        0.25697936
+      ],
+      "corners_blocks": [
+        [
+          0.27133514,
+          0.67755496,
+          0.04983806
+        ],
+        [
+          0.60709485,
+          0.67755496,
+          -0.32065541
+        ],
+        [
+          0.43594918,
+          0.77322581,
+          -0.47575618
+        ],
+        [
+          0.10018947,
+          0.77322581,
+          -0.1052627
+        ]
+      ],
+      "size_model_pixels": [
+        8.0,
+        4.0
+      ],
+      "overlay_offset_blocks": 0.003125,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    },
+    {
+      "id": "screen_center",
+      "role": "screen",
+      "node": "screen_center",
+      "origin_blocks": [
+        0.6075,
+        0.70635692,
+        -0.73350076
+      ],
+      "u_vector_blocks": [
+        0.785,
+        0.0,
+        0.0
+      ],
+      "v_vector_blocks": [
+        0.0,
+        0.46137337,
+        -0.03226237
+      ],
+      "normal": [
+        0.0,
+        0.06975647,
+        0.99756405
+      ],
+      "corners_blocks": [
+        [
+          0.6075,
+          0.70635692,
+          -0.73350076
+        ],
+        [
+          1.3925,
+          0.70635692,
+          -0.73350076
+        ],
+        [
+          1.3925,
+          1.16773029,
+          -0.76576313
+        ],
+        [
+          0.6075,
+          1.16773029,
+          -0.76576313
+        ]
+      ],
+      "size_model_pixels": [
+        12.56,
+        7.4
+      ],
+      "overlay_offset_blocks": 0.003125,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    },
+    {
+      "id": "screen_right",
+      "role": "screen",
+      "node": "screen_right",
+      "origin_blocks": [
+        1.41386248,
+        0.70701751,
+        -0.72405381
+      ],
+      "u_vector_blocks": [
+        0.43465822,
+        0.0334568,
+        0.47845452
+      ],
+      "v_vector_blocks": [
+        -0.0,
+        0.46137337,
+        -0.03226237
+      ],
+      "normal": [
+        -0.74098695,
+        0.04684283,
+        0.66988364
+      ],
+      "corners_blocks": [
+        [
+          1.41386248,
+          0.70701751,
+          -0.72405381
+        ],
+        [
+          1.8485207,
+          0.74047431,
+          -0.24559929
+        ],
+        [
+          1.8485207,
+          1.20184769,
+          -0.27786166
+        ],
+        [
+          1.41386248,
+          1.16839089,
+          -0.75631618
+        ]
+      ],
+      "size_model_pixels": [
+        10.356411,
+        7.4
+      ],
+      "overlay_offset_blocks": 0.003125,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    },
+    {
+      "id": "touch_right_forward",
+      "role": "touch",
+      "node": "touch_ledge_right",
+      "origin_blocks": [
+        1.39290515,
+        0.67755496,
+        -0.32065541
+      ],
+      "u_vector_blocks": [
+        0.33575971,
+        0.0,
+        0.37049348
+      ],
+      "v_vector_blocks": [
+        0.17114567,
+        0.09567086,
+        -0.15510076
+      ],
+      "normal": [
+        -0.28356343,
+        0.92387953,
+        0.25697936
+      ],
+      "corners_blocks": [
+        [
+          1.39290515,
+          0.67755496,
+          -0.32065541
+        ],
+        [
+          1.72866486,
+          0.67755496,
+          0.04983806
+        ],
+        [
+          1.89981053,
+          0.77322581,
+          -0.1052627
+        ],
+        [
+          1.56405082,
+          0.77322581,
+          -0.47575618
+        ]
+      ],
+      "size_model_pixels": [
+        8.0,
+        4.0
+      ],
+      "overlay_offset_blocks": 0.003125,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    },
+    {
+      "id": "touch_center_keyboard",
+      "role": "touch",
+      "node": "center_input",
+      "origin_blocks": [
+        0.75,
+        0.67755496,
+        -0.39426452
+      ],
+      "u_vector_blocks": [
+        0.5,
+        0.0,
+        0.0
+      ],
+      "v_vector_blocks": [
+        0.0,
+        0.09567086,
+        -0.23096988
+      ],
+      "normal": [
+        0.0,
+        0.92387953,
+        0.38268343
+      ],
+      "corners_blocks": [
+        [
+          0.75,
+          0.67755496,
+          -0.39426452
+        ],
+        [
+          1.25,
+          0.67755496,
+          -0.39426452
+        ],
+        [
+          1.25,
+          0.77322581,
+          -0.6252344
+        ],
+        [
+          0.75,
+          0.77322581,
+          -0.6252344
+        ]
+      ],
+      "size_model_pixels": [
+        8.0,
+        4.0
+      ],
+      "overlay_offset_blocks": 0.003125,
+      "uv_convention": "origin is lower-left; u runs right, v runs up/away across the face",
+      "material": "blank",
+      "base_rgb": [
+        0,
+        0,
+        0
+      ],
+      "rectangular": true
+    }
+  ]
+}

@@ -50,13 +50,13 @@ def components():
 
 
 def main():
-    models = [geometry.cockpit('cockpit', False)] + components()
+    models = [geometry.cockpit('cockpit', False), geometry.cockpit('cockpit_single', False, single_throttle=True)] + components()
     geometry.texture_files()
     for material,source in [('screen_back','door_side'),('horizontal','metal_side')]:
         shutil.copyfile(PROJECT/'texture-packs/default/assets/vandorlabs/textures/blocks/programmable_glass'/(source+'.png'),geometry.ROOT/'assets/vandorlabs/textures/models/cockpits'/(material+'.png'))
     for model in models:
         for node in model.nodes:
-            if model.id=='cockpit':
+            if model.id in ('cockpit','cockpit_single'):
                 for box in node['boxes']+node.get('meshes',[]):
                     if box['material'] in ('cushion','cushion_edge'):box['material']='red_'+box['material']
             # Only the console shell and armrest casing use the selectable skin.

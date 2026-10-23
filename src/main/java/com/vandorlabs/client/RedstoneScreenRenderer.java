@@ -13,7 +13,7 @@ import org.lwjgl.BufferUtils;
 /** Text and buttons share an affine 128-pixel display plane with hit testing. */
 final class RedstoneScreenRenderer {
     /** Display lists can change driver bindings without updating Minecraft's texture cache. */
-    private static void bindWhite(){GlStateManager.enableLighting();GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);
+    static void bindWhite(){GlStateManager.enableLighting();GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);
         GlStateManager.enableCull();GlStateManager.disableCull();
         // UI vertices are already in the display's local matrix. A different tile
         // may have left an offset on the singleton buffer instead of Forge's batch buffer.
@@ -90,26 +90,26 @@ final class RedstoneScreenRenderer {
         bindWhite();
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
         rect(buffer,0,0,128,height,0,craft==null?0xFF362B19:hover?0xFF152D48:0xFF153A29);
-        rect(buffer,6,top,122,top+10,.01,on?0xFF37D8AD:0xFF495C69);
+        if(autopilot!=null)rect(buffer,6,top,122,top+10,.01,on?0xFF37D8AD:0xFF495C69);
         int mode=craft==null?0:hover?2:1;
         for(int i=0;i<3;i++)rect(buffer,6+i*39,top+12,43+i*39,top+22,.01,i==mode?0xFF37D8AD:0xFF495C69);
-        rect(buffer,6,top+36,48,top+46,.01,autopilot==null?0xFF303A42:0xFF495C69);Tessellator.getInstance().draw();
+        if(autopilot!=null)rect(buffer,6,top+36,48,top+46,.01,0xFF495C69);Tessellator.getInstance().draw();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
         if(height>64)text(font,"VEHICLE STATUS",8,8,0xE1EEFF);
-        text(font,autopilot==null?"Autopilot: none":on?"AUTOPILOT ON":"Autopilot OFF",8,top+1,on?0x072D24:0xFFFFFF);
+        if(autopilot!=null)text(font,on?"AUTOPILOT ON":"Autopilot OFF",8,top+1,on?0x072D24:0xFFFFFF);
         String[] modes={"Block","Taxi","Hover"};for(int i=0;i<3;i++)text(font,modes[i],8+i*39,top+13,i==mode?0x072D24:0xFFFFFF);
         if(autopilot!=null)text(font,font.trimStringToWidth(autopilot.status,114),8,top+25,0xCEE9ED);
-        text(font,"Next >",8,top+37,autopilot==null?0x77838C:0xFFFFFF);
+        if(autopilot!=null)text(font,"Next >",8,top+37,0xFFFFFF);
         if(hover){double clearance=craft.groundClearance();text(font,Double.isFinite(clearance)?String.format(java.util.Locale.ROOT,"Height: %.1f blocks",clearance):"Height: 32+ blocks",8,top+47,0xC1E8FF);}
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();
     }
 
-    private static void rect(BufferBuilder b,int left,int top,int right,int bottom,double z,int color){
+    static void rect(BufferBuilder b,int left,int top,int right,int bottom,double z,int color){
         int r=color>>16&255,g=color>>8&255,blue=color&255,a=color>>>24;
         b.pos(left,bottom,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();b.pos(right,bottom,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();
         b.pos(right,top,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();b.pos(left,top,z).color(r,g,blue,a).tex(.5,.5).lightmap(240,240).normal(0,0,1).endVertex();
     }
-    private static void text(FontRenderer font,String value,int x,int y,int color){
+    static void text(FontRenderer font,String value,int x,int y,int color){
         GlStateManager.pushMatrix();GlStateManager.translate(0,0,.04F);
         font.drawString(value,x,y,color);GlStateManager.popMatrix();
     }

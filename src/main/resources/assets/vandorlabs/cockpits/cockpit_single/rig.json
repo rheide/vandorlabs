@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "id": "cockpit_single",
+  "units_per_block": 16,
+  "static_model": "vandorlabs:block/cockpits/cockpit_single/static.obj",
+  "poses": {
+    "off": "vandorlabs:block/cockpits/cockpit_single/off.obj",
+    "low": "vandorlabs:block/cockpits/cockpit_single/low.obj",
+    "medium": "vandorlabs:block/cockpits/cockpit_single/medium.obj",
+    "high": "vandorlabs:block/cockpits/cockpit_single/high.obj"
+  },
+  "render_bounds_blocks": [
+    0.015625,
+    -0.06598782,
+    -0.96875,
+    1.984375,
+    1.325,
+    1.91875
+  ],
+  "parts": [
+    {
+      "id": "throttle_left",
+      "model": "vandorlabs:block/cockpits/cockpit_single/throttle_left.obj",
+      "pivot": [
+        0.259375,
+        0.66875,
+        0.2625
+      ],
+      "type": "rotation",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "values": [
+        22.5,
+        0,
+        -22.5,
+        -45
+      ],
+      "interactive": true
+    },
+    {
+      "id": "screen_bank",
+      "model": "vandorlabs:block/cockpits/cockpit_single/screen_bank.obj",
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "values": [
+        0.0,
+        -0.25,
+        -0.5,
+        -0.75
+      ],
+      "interactive": false
+    },
+    {
+      "id": "screen_lift_button",
+      "model": "vandorlabs:block/cockpits/cockpit_single/screen_lift_button.obj",
+      "pivot": [
+        1.71875,
+        0.66875,
+        0.128125
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        -1,
+        0
+      ],
+      "values": [
+        0.0,
+        0.009375,
+        0.01875,
+        0.028125
+      ],
+      "interactive": false
+    },
+    {
+      "id": "seat_slide_button",
+      "model": "vandorlabs:block/cockpits/cockpit_single/seat_slide_button.obj",
+      "pivot": [
+        0.246875,
+        0.66875,
+        0.646875
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        -1,
+        0
+      ],
+      "values": [
+        0.0,
+        0.009375,
+        0.01875,
+        0.028125
+      ],
+      "interactive": false
+    },
+    {
+      "id": "seat_assembly",
+      "model": "vandorlabs:block/cockpits/cockpit_single/seat_assembly.obj",
+      "pivot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "type": "translation",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "values": [
+        0.0,
+        0.3333333333333333,
+        0.6666666666666666,
+        1.0
+      ],
+      "interactive": false
+    }
+  ]
+}

@@ -8,6 +8,8 @@
 - Keep release regressions separate from documentation capture. Prefer exhaustive non-rendering matrices plus targeted rendered regressions over unasserted gallery screenshots. Parallel capture must use isolated worlds, retain stateful scene groups, and verify merged scene coverage and identical artifact hashes before running image analyzers.
 - Drive cosmetic mechanism animation with a pause-aware client clock rather than repeatedly comparing client world time with server start timestamps. Repeated packets must not restart motion, and vehicle tile replacement must retain visual state by world/position. Keep authoritative collision and saved timelines on the server; test clock corrections and reversals with `testCockpitVisualMotion` and the focused cockpit client check.
 
+- Cockpit Redstone overlays must use square-pixel layouts derived from the authored surface aspect, with the same slider regions used by hit testing. Reuse the batched screen renderer to reset shared buffer translations and layer solid controls before text. The focused cockpit suite checks rendered glyph proportions, buffer contamination, clicked-page selection, four-step throttle limits and both saved throttle layouts.
+
 - Right-clicking a dialog option must select its previous value. Keep left-click and right-click cycling consistent across dialogs.
 - Follow the existing screen, texture-list and door dialogs for layout and interaction conventions. Texture lists must support both wheel scrolling and dragging their scrollbar.
 - Match the mod's established texture resolutions; do not ship oversized textures. Turntable surface artwork may use a larger resolution because it can span multiple blocks.

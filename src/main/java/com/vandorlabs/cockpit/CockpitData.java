@@ -30,7 +30,7 @@ public final class CockpitData {
     private static Vec3d vector(JsonArray a){return new Vec3d(a.get(0).getAsDouble(),a.get(1).getAsDouble(),a.get(2).getAsDouble());}
     private static AxisAlignedBB box(JsonArray a){return new AxisAlignedBB(a.get(0).getAsDouble(),a.get(1).getAsDouble(),a.get(2).getAsDouble(),a.get(3).getAsDouble(),a.get(4).getAsDouble(),a.get(5).getAsDouble());}
     private CockpitData(String id){
-        this.id=id;JsonObject assembly=json(id,"assembly");
+        this.id=id.equals("cockpit_single")?"cockpit":id;JsonObject assembly=json(id,"assembly");
         bounds=box(assembly.getAsJsonArray("bounds_blocks"));
         seat=assembly.get("seat_position_blocks").isJsonNull()?null:vector(assembly.getAsJsonArray("seat_position_blocks"));
         riderY=assembly.has("rider_entity_origin_blocks")?vector(assembly.getAsJsonArray("rider_entity_origin_blocks")).y:seat==null?0:seat.y-.4890625;
@@ -53,7 +53,7 @@ public final class CockpitData {
     }
     private void addBox(AxisAlignedBB box,String part){boxes.add(box);if(id.equals("cockpit")&&(part.equals("seat_assembly")||part.equals("screen_bank")||part.endsWith("_button")))moving.put(box,part.equals("screen_bank")?2:1);}
     public static synchronized CockpitData get(String id){
-        if(!Arrays.asList(IDS).contains(id))throw new IllegalArgumentException("Unknown cockpit "+id);
+        if(!Arrays.asList(IDS).contains(id)&&!id.equals("cockpit_single"))throw new IllegalArgumentException("Unknown cockpit "+id);
         CockpitData found=CACHE.get(id);if(found==null){found=new CockpitData(id);CACHE.put(id,found);}return found;
     }
     /** Lower the upper chair by up to six pixels while its support stays on the floor. */

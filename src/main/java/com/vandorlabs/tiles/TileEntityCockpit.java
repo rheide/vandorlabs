@@ -13,6 +13,11 @@ import java.util.*;
 public class TileEntityCockpit extends TileEntityVehicleController {
     private String design="cockpit";
     private int sideTexture=-1;
+    private int throttleCount=2;
+    public int throttleCount(){return throttleCount;}
+    public String modelId(){return design.equals("cockpit")&&throttleCount==1?"cockpit_single":design;}
+    public void setThrottleCount(int count){if(!design.equals("cockpit")||count<1||count>2||count==throttleCount)return;throttleCount=count;if(ordinary())for(Control c:controls)RedstoneChannels.inputChanged(c);changed();}
+
     public final com.vandorlabs.cockpit.CockpitActuator screenLift=new com.vandorlabs.cockpit.CockpitActuator(),seatSlide=new com.vandorlabs.cockpit.CockpitActuator();
     private long screenButtonUntil,seatButtonUntil;
 
@@ -32,7 +37,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         if(id.equals("screen_lift_button")||id.equals("seat_slide_button")){double remaining=(id.equals("screen_lift_button")?screenButtonUntil:seatButtonUntil)-(world.getTotalWorldTime()+partial);return remaining>0?Math.min(1,remaining/4)*3:0;}
         if(id.equals("seat_assembly"))return seatSlide(partial)*3;
         if(id.equals("screen_bank"))return screens(partial)*3;
-        Control c=control(id);return c==null?0:c.level/5D;
+        Control c=control(id);return c==null?0:c.isThrottle()?c.step():c.level/5D;
     }
     public AxisAlignedBB posedBox(AxisAlignedBB box){int part=data().moving.getOrDefault(box,0);return part==1?box.offset(0,0,seatSlide(0)):part==2?box.offset(0,-.75*screens(0),0):box;}
     private boolean controlClient(){return world==null||(world instanceof VehicleWorld?((VehicleWorld)world).parent.isRemote:world.isRemote);}
@@ -55,7 +60,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     public TileEntityCockpit(){initializeControls();}
     public TileEntityCockpit(String design){this();this.design=design;prepare();}
     public String design(){return design;}
-    public CockpitData data(){return CockpitData.get(design,getHeight());}
+    public CockpitData data(){return CockpitData.get(modelId(),getHeight());}
     private EnumFacing lastFacing=EnumFacing.NORTH;
     /** Removal and replacement can precede the renderer's final queued bounds query. */
     public boolean hasLiveBlock(){
@@ -77,7 +82,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
             displays.add(display);
             for(int row=0;row<3;row++){Control c=new Control(surface.id+"/"+row);controls.add(c);}
         }
-        for(String part:data().controls){Control c=new Control(part);c.kind=1;controls.add(c);}
+        for(String part:CockpitData.get(design,getHeight()).controls){Control c=new Control(part);c.kind=1;controls.add(c);}
     }
     private int defaultTexture(CockpitData.Surface surface){
         if("touch".equals(surface.role))return ScreenHousingTextures.screenIndex("console_inputs/"+(surface.id.equals("touch_left_forward")?"console_controls_navigation_controls_static":surface.id.equals("touch_right_forward")?"console_controls_sensor_controls_static":surface.id.equals("touch_center_keyboard")?"extra_bare_personal_terminal_static":"console_controls_communications_keyboard_static"));
@@ -111,9 +116,23 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         CockpitData.Surface nearest=null;double[] uv=null;
         for(CockpitData.Surface surface:data().surfaces)if(display(surface.id).active && ("touch".equals(surface.role)&&display(surface.id).texture>=0||display(surface.id).texture<=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)){double offset="screen".equals(surface.role)?-.75*screens(0):0;double slide=design.equals("cockpit")&&surface.id.equals("touch_right_keyboard")?seatSlide(0):0;double[] hit=surface.hit(start.addVector(0,-offset,-slide),end.addVector(0,-offset,-slide));if(hit!=null&&"screen".equals(surface.role)&&surface.origin.y+surface.u.y*hit[0]+surface.v.y*hit[1]+offset<10.5/16)hit=null;if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
         ControlHit lever=controlHitLocal(start,end);
-        if(lever!=null&&(uv==null||lever.distance<start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2]))))){Control c=control(lever.id);c.activate(((c.level/5+1)%4)/3D);return true;}
-        if(nearest!=null){if(display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){int x=(int)(uv[0]*128),y=(int)((1-uv[1])*("touch".equals(nearest.role)?64:128)),top="touch".equals(nearest.role)?0:24;int action=y>=top&&y<top+10?0:y>=top+12&&y<top+22?1+Math.min(2,Math.max(0,(x-6)/39)):y>=top+36&&y<top+46&&x<48?4:-1;if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);return true;}int rows=display(nearest.id).rows;if(rows==0)return true;Control c=control(nearest.id+"/"+Math.min(rows-1,(int)((1-uv[1])*rows)));c.activate(uv[0]);return true;}
+        if(lever!=null&&(uv==null||lever.distance<start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2]))))){Control c=control(lever.id);c.activate(c.nextColumn());return true;}
+        if(nearest!=null){if(display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){int x=(int)(uv[0]*128),y=(int)((1-uv[1])*("touch".equals(nearest.role)?64:128)),top="touch".equals(nearest.role)?0:24;int action=y>=top&&y<top+10?0:y>=top+12&&y<top+22?1+Math.min(2,Math.max(0,(x-6)/39)):y>=top+36&&y<top+46&&x<48?4:-1;if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);return true;}com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(nearest,display(nearest.id).rows);if(layout.rows==0)return true;Control c=control(nearest.id+"/"+layout.row(uv[1]));c.activate(c.kind==1?layout.sliderColumn(uv[0]):uv[0]);return true;}
         return false;
+    }
+    /** Cosmetic dialog navigation uses the same posed screen planes and grip rays as interaction. */
+    public int configurationPage(Vec3d start,Vec3d end){
+        prepare();start=CockpitData.unrotate(start,facing());end=CockpitData.unrotate(end,facing());
+        int base=(data().seat==null?0:1)+1,index=-1;double distance=Double.POSITIVE_INFINITY;
+        for(int i=0;i<data().surfaces.size();i++){
+            CockpitData.Surface surface=data().surfaces.get(i);double lift="screen".equals(surface.role)?-.75*screens(0):0,slide=design.equals("cockpit")&&surface.id.equals("touch_right_keyboard")?seatSlide(0):0;
+            double[] hit=surface.hit(start.addVector(0,-lift,-slide),end.addVector(0,-lift,-slide));
+            if(hit!=null&&("screen".equals(surface.role)&&surface.origin.y+surface.u.y*hit[0]+surface.v.y*hit[1]+lift<10.5/16))continue;
+            if(hit!=null){double d=start.squareDistanceTo(start.add(end.subtract(start).scale(hit[2])));if(d<distance){distance=d;index=i;}}
+        }
+        ControlHit grip=controlHitLocal(start,end);
+        if(grip!=null&&grip.distance<distance){for(int i=0;i<controls.size();i++)if(controls.get(i).id.equals(grip.id))return base+displays.size()+i;}
+        return index<0?0:base+index;
     }
     private static final class ControlHit {String id;Vec3d point;double distance;ControlHit(String id,Vec3d point,double distance){this.id=id;this.point=point;this.distance=distance;}}
     private ControlHit controlHitLocal(Vec3d start,Vec3d end){
@@ -121,7 +140,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         for(Map.Entry<String,Vec3d> part:data().pivots.entrySet()){
             boolean throttle=part.getKey().startsWith("throttle_");
             Vec3d p=part.getValue().addVector(0,0,seatSlide(0)-(throttle?0:control(part.getKey()).level/5D/16)),a=start.subtract(p),b=end.subtract(p);
-            double angle=throttle?Math.toRadians(22.5-control(part.getKey()).level/5D*22.5):0,c=Math.cos(angle),s=Math.sin(angle);
+            double angle=throttle?Math.toRadians(22.5-control(part.getKey()).step()*22.5):0,c=Math.cos(angle),s=Math.sin(angle);
             if(throttle){a=new Vec3d(a.x,a.y*c+a.z*s,a.z*c-a.y*s);b=new Vec3d(b.x,b.y*c+b.z*s,b.z*c-b.y*s);}
             AxisAlignedBB bounds=throttle?new AxisAlignedBB(-.075,-.025,-.078,.075,.335,.078):new AxisAlignedBB(-.04,-.03,-.047,.04,.15,.047);RayTraceResult hit=bounds.calculateIntercept(a,b);
             if(hit!=null){Vec3d v=hit.hitVec;Vec3d point=(throttle?new Vec3d(v.x,v.y*c-v.z*s,v.y*s+v.z*c):v).add(p);double distance=start.squareDistanceTo(point);if(nearest==null||distance<nearest.distance)nearest=new ControlHit(part.getKey(),point,distance);}
@@ -131,7 +150,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     /** Actual grip targeting is shared with activation, including from a seated eye. */
     public RayTraceResult controlRay(Vec3d start,Vec3d end){ControlHit hit=controlHitLocal(CockpitData.unrotate(start,facing()),CockpitData.unrotate(end,facing()));return hit==null?null:new RayTraceResult(CockpitData.rotate(hit.point,facing()),EnumFacing.UP,pos);}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);screenLift.write(tag,"CockpitScreenLift");seatSlide.write(tag,"CockpitSeatSlide");tag.setLong("CockpitScreenButton",screenButtonUntil);tag.setLong("CockpitSeatButton",seatButtonUntil);tag.setString("CockpitDesign",design);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
+        super.writeToNBT(tag);screenLift.write(tag,"CockpitScreenLift");seatSlide.write(tag,"CockpitSeatSlide");tag.setLong("CockpitScreenButton",screenButtonUntil);tag.setLong("CockpitSeatButton",seatButtonUntil);tag.setString("CockpitDesign",design);tag.setInteger("CockpitThrottles",throttleCount);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
         NBTTagList screens=new NBTTagList();for(Display d:displays)screens.appendTag(d.write());tag.setTag("CockpitDisplays",screens);
         NBTTagList outputs=new NBTTagList();for(Control c:controls)outputs.appendTag(c.write());tag.setTag("CockpitControls",outputs);return tag;
     }
@@ -141,6 +160,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         screenLift.read(tag,"CockpitScreenLift");seatSlide.read(tag,"CockpitSeatSlide");screenButtonUntil=tag.getLong("CockpitScreenButton");seatButtonUntil=tag.getLong("CockpitSeatButton");
         sideTexture=tag.hasKey("CockpitSideTexture",3)?tag.getInteger("CockpitSideTexture"):-1;
         if(sideTexture< -1 || sideTexture>=ScreenHousingTextures.IDS.length)sideTexture=-1;
+        throttleCount=tag.hasKey("CockpitThrottles",3)&&tag.getInteger("CockpitThrottles")==1?1:2;
         displays.clear();controls.clear();prepare();
         NBTTagList screens=tag.getTagList("CockpitDisplays",10);for(int i=0;i<Math.min(32,screens.tagCount());i++){NBTTagCompound saved=screens.getCompoundTagAt(i);Display d=display(saved.getString("Id"));if(d!=null)d.read(saved);}
         NBTTagList outputs=tag.getTagList("CockpitControls",10);for(int i=0;i<Math.min(64,outputs.tagCount());i++){NBTTagCompound saved=outputs.getCompoundTagAt(i);Control c=control(saved.getString("Id"));if(c!=null)c.read(saved);}
@@ -159,17 +179,20 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public ChannelList getRedstoneChannels(){return channels;}
         public void setRedstoneChannel(int channel){setRedstoneChannels(ChannelList.of(channel));}
         public void setRedstoneChannels(ChannelList next){ChannelList before=channels;channels=next;if(ordinary())RedstoneChannels.channelChanged(this,before);changed();}
-        public boolean hasLocalRedstoneSignal(){return level>0;}
-        public int localSignalLevel(int channel){return level;}
+        public boolean active(){return !id.equals("throttle_right")||throttleCount==2;}
+        public boolean hasLocalRedstoneSignal(){return active()&&level>0;}
+        public int localSignalLevel(int channel){return active()?level:0;}
         public void setChannelSignal(boolean ignored){}
-        public int sliderLevel(int segment){return segment==0?0:min+(max-min)*(Math.max(1,Math.min(3,segment))-1)/2;}
+        public boolean isThrottle(){return id.startsWith("throttle_");}
+        public int step(){return com.vandorlabs.tiles.TileEntitySignalControl.stepForLevel(level,min,max);}
+        public int sliderLevel(int segment){if(isThrottle())return TileEntitySignalControl.levelForStep(segment,min,max);return segment==0?0:min+(max-min)*(Math.max(1,Math.min(3,segment))-1)/2;}
         public double nextColumn(){int segment=0;for(int i=1;i<4;i++)if(Math.abs(sliderLevel(i)-level)<Math.abs(sliderLevel(segment)-level))segment=i;return ((segment+1)%4)/3D;}
         public void activate(double column){
-            level=kind==1?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:level==0?15:0;
+            level=(kind==1||isThrottle())?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:level==0?15:0;
             until=kind==2?world.getTotalWorldTime()+20:0;if(ordinary())RedstoneChannels.inputChanged(this);changed();
         }
         public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setString("Label",label);ChannelData.write(tag,channels);tag.setInteger("Min",min);tag.setInteger("Max",max);tag.setInteger("Kind",kind);tag.setInteger("Level",level);tag.setLong("Until",until);return tag;}
-        public void read(NBTTagCompound tag){label=tag.getString("Label");if(label.length()>32)label=label.substring(0,32);channels=ChannelData.read(tag,0);min=tag.hasKey("Min",3)?Math.max(0,Math.min(13,tag.getInteger("Min"))):5;max=tag.hasKey("Max",3)?Math.max(min+2,Math.min(15,tag.getInteger("Max"))):15;kind=Math.max(0,Math.min(2,tag.getInteger("Kind")));level=Math.max(0,Math.min(15,tag.getInteger("Level")));until=Math.max(0,tag.getLong("Until"));}
+        public void read(NBTTagCompound tag){label=tag.getString("Label");if(label.length()>32)label=label.substring(0,32);channels=ChannelData.read(tag,0);min=tag.hasKey("Min",3)?Math.max(0,Math.min(13,tag.getInteger("Min"))):5;max=tag.hasKey("Max",3)?Math.max(min+2,Math.min(15,tag.getInteger("Max"))):15;kind=Math.max(0,Math.min(2,tag.getInteger("Kind")));level=Math.max(0,Math.min(15,tag.getInteger("Level")));until=Math.max(0,tag.getLong("Until"));if(isThrottle()){kind=1;until=0;if(!TileEntitySignalControl.validLimits(min,max)){min=5;max=15;}}}
     }
     public static final class Display {
         public final String id,role;

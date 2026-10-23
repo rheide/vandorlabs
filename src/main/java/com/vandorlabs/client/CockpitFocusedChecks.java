@@ -2,7 +2,7 @@ package com.vandorlabs.client;
 import net.minecraft.client.Minecraft;
 final class CockpitFocusedChecks {
     private static int ticks;
-    static boolean tick(Minecraft mc)throws Exception{
+    static boolean tick(Minecraft mc,java.io.File output)throws Exception{
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
         if(ticks!=80)return false;
         mc.getIntegratedServer().addScheduledTask(()->{
@@ -10,6 +10,9 @@ final class CockpitFocusedChecks {
             catch(Exception failure){throw new IllegalStateException(failure);}
         }).get();
         visualClock(mc);
+        CockpitRedstoneRenderChecks.run(mc,output);
+        CockpitControlDialogChecks.run(mc,output);
+        VehicleStatusRenderChecks.run(mc,output);
         System.out.println("[vandorlabs][reprolab] cockpit-focused PASS");return true;
     }
     private static void visualClock(Minecraft mc){
