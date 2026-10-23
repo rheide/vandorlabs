@@ -24,7 +24,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
     private ItemCameraTransforms paddedTransforms;
     private final com.google.common.cache.Cache<String,List<BakedQuad>> geometry=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(512).build();
     private final Map<BakedQuad,Map<Integer,BakedQuad>> cache=new java.util.concurrent.ConcurrentHashMap<>();
-    public ProgrammableStairsModel(IBakedModel base) { this(base,0,-1,FaceTextures.DEFAULT,0); }
+    public ProgrammableStairsModel(IBakedModel base) { this(base,0,-1,FaceTextures.DEFAULT,1); }
     private ProgrammableStairsModel(IBakedModel base,int finish,int sideFinish,FaceTextures faces,int layout) {
         this.base=base;itemFinish=finish;itemSide=sideFinish;itemFaces=faces;itemLayout=layout;
     }

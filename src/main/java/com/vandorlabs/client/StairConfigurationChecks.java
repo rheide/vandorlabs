@@ -75,7 +75,7 @@ final class StairConfigurationChecks {
             double expected=0;int count=16/tread;for(int x=0;x<count;x++)for(int z=0;z<count;z++)expected+=ProgrammableStairGeometry.height(x,z,count,corner)/(count*count);
             require(Math.abs(volume-expected)<1e-6,"rendered mesh volume matches collision "+tread+"/"+roll+" actual="+volume);cases++;
         }}finally{mc.world.setBlockToAir(pos);}
-        mountedTextures(mc,pos);
+        mountedTextures(mc,pos);StairAppearanceChecks.run(mc,pos);
         System.out.println("[vandorlabs][reprolab] stair-mesh PASS variants="+cases+" outward winding closed surface collision volume parity textures");
     }
     private static void mountedTextures(Minecraft mc,BlockPos pos){

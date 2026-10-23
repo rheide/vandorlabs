@@ -35,9 +35,12 @@ final class ProgrammableStairMesh {
         Vec3d textureNormal=textureVertices[1].subtract(textureVertices[0]).crossProduct(textureVertices[2].subtract(textureVertices[0]));EnumFacing textureFace=EnumFacing.getFacingFromVector((float)textureNormal.x,(float)textureNormal.y,(float)textureNormal.z);
         int[] data=new int[28];for(int i=0;i<4;i++){
             Vec3d p=vertices[i],uv=textureVertices[i];int at=i*7;double u=textureFace.getAxis()==EnumFacing.Axis.X?uv.z:uv.x,v=textureFace.getAxis()==EnumFacing.Axis.Y?uv.z:1-uv.y;
+            if(textureFace==EnumFacing.EAST || textureFace==EnumFacing.NORTH)u=1-u;
+            if(textureFace==EnumFacing.DOWN)v=1-v;
             data[at]=Float.floatToRawIntBits((float)p.x);data[at+1]=Float.floatToRawIntBits((float)p.y);data[at+2]=Float.floatToRawIntBits((float)p.z);data[at+3]=-1;
             data[at+4]=Float.floatToRawIntBits(sprite.getInterpolatedU(u*16));data[at+5]=Float.floatToRawIntBits(sprite.getInterpolatedV(v*16));
         }
-        result.add(new BakedQuad(data,-1,face,sprite,true,DefaultVertexFormats.BLOCK));
+        net.minecraftforge.client.ForgeHooksClient.fillNormal(data,face);
+        result.add(new BakedQuad(data,-1,face,sprite,true,DefaultVertexFormats.ITEM));
     }
 }
