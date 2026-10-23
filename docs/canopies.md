@@ -140,3 +140,5 @@ python testclient/run_windows.py --focus canopy-animations
 The canopy release checks exercise six-face large-window placement, mounted hinges, closed-glazing placement protection and floor/ceiling frame clearance, exact ownership, removal, ceiling joins, all front/opening combinations, channel operation, finish copying, floor-button dust output and armrest masking. Animation capture records the actual client renderer; encode and validate it with `testclient/encode_animations.py`.
 
 When placing a Canopy or Long Canopy against the rear face of a Cockpit, its rear edge aligns with the clicked cockpit cell and the canopy extends forward. A solid block immediately behind the cockpit does not require additional placement clearance.
+
+Configurizer clicks on a shared cockpit cell configure the visible canopy or cockpit surface. The cockpit seat can extend and return beneath compatible upper canopy cells; returning releases the seat helpers without removing the canopy.

@@ -32,7 +32,7 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
   GlStateManager.pushMatrix();try{GlStateManager.translate(x,y,z);contents(tile,state.getValue(BlockVandorSwitch.FACING),state.getValue(BlockVandorSwitch.ROTATION),partial);}finally{GlStateManager.popMatrix();}
  }
  static void frame(boolean chip,EnumFacing facing){
-  net.minecraft.block.state.IBlockState state=net.minecraft.block.Block.getBlockFromName("vandorlabs:data_"+(chip?"chip":"card")+"_slot").getDefaultState().withProperty(BlockVandorSwitch.FACING,facing);
+  net.minecraft.block.state.IBlockState state=net.minecraft.block.Block.getBlockFromName("vandorlabs:"+(chip?"data_chip":"access_card")+"_slot").getDefaultState().withProperty(BlockVandorSwitch.FACING,facing);
   Minecraft mc=Minecraft.getMinecraft();mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);IBakedModel model=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);
   BufferBuilder b=Tessellator.getInstance().getBuffer();b.setTranslation(0,0,0);b.begin(7,DefaultVertexFormats.ITEM);for(EnumFacing side:FACES)for(BakedQuad q:model.getQuads(state,side,0))b.addVertexData(q.getVertexData());for(BakedQuad q:model.getQuads(state,null,0))b.addVertexData(q.getVertexData());Tessellator.getInstance().draw();
  }

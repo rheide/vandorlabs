@@ -18,19 +18,19 @@ final class DataTokenRuntimeChecks {
         BufferedImage montage=new BufferedImage(640*7,360*4,BufferedImage.TYPE_INT_RGB);java.awt.Graphics2D canvas=montage.createGraphics();
         BufferedImage closeups=new BufferedImage(256*14,256*4,BufferedImage.TYPE_INT_RGB);java.awt.Graphics2D views=closeups.createGraphics();
         try{for(int kind=0;kind<2;kind++)for(int i=0;i<7;i++){
-            String type=kind==0?"card":"chip";ItemStack stack=new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:data_"+type)),1,i);
+            String type=kind==0?"access_card":"data_chip";ItemStack stack=new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+type)),1,i);
             IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);Set<EnumFacing> faces=EnumSet.noneOf(EnumFacing.class);
             if(model.getQuads(null,null,0).size()<6||model.getQuads(null,null,0).size()>1024)throw new IllegalStateException("Token outline mesh missing or overly complex: "+type+designs[i]);
             if(!model.isGui3d())throw new IllegalStateException("Solid token model missing");
             int solidFaces=0;double minZ=1,maxZ=0;
             for(BakedQuad quad:model.getQuads(null,null,0)){
-                if(quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge")){
+                if(quad.getSprite().getIconName().equals("vandorlabs:items/"+type+"_edge")){
                     solidFaces++;
                     for(int pixel:quad.getSprite().getFrameTextureData(0)[0])if((pixel>>>24)!=255)throw new IllegalStateException("Non-opaque token body "+type+designs[i]);
                 }
                 int[] vertexData=quad.getVertexData();int stride=vertexData.length/4;for(int v=0;v<4;v++){float z=Float.intBitsToFloat(vertexData[v*stride+2]);minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);}
                 faces.add(quad.getFace());
-                if(quad.getFace()!=EnumFacing.NORTH&&quad.getFace()!=EnumFacing.SOUTH&&!quad.getSprite().getIconName().equals("vandorlabs:items/data_"+type+"_edge"))throw new IllegalStateException("Transparent token edge material "+type+designs[i]);
+                if(quad.getFace()!=EnumFacing.NORTH&&quad.getFace()!=EnumFacing.SOUTH&&!quad.getSprite().getIconName().equals("vandorlabs:items/"+type+"_edge"))throw new IllegalStateException("Transparent token edge material "+type+designs[i]);
             }
             if(faces.size()!=6||solidFaces!=model.getQuads(null,null,0).size()-6)throw new IllegalStateException("Open token silhouette "+type+designs[i]);
             if(Math.abs(maxZ-minZ-1/16D)>1e-6)throw new IllegalStateException("Token gained block-like thickness");
@@ -46,7 +46,7 @@ final class DataTokenRuntimeChecks {
                 double cx=totalX/(double)ink,cy=totalY/(double)ink;
                 if((left?cx>held.getWidth()*.35:cx<held.getWidth()*.65)||cy<held.getHeight()*.5)throw new IllegalStateException("Held token outside hand corner "+type+designs[i]+" left="+left+" centre="+cx+","+cy);
                 canvas.drawImage(held,i*640,(kind+(left?2:0))*360,null);
-                javax.imageio.ImageIO.write(held,"png",new File(output,"shot_data_"+type+"_"+designs[i]+(left?"_left":"")+"_held.png"));
+                javax.imageio.ImageIO.write(held,"png",new File(output,"shot_"+type+"_"+designs[i]+(left?"_left":"")+"_held.png"));
             }
         }}finally{canvas.dispose();views.dispose();}
         javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_data_tokens_held.png"));

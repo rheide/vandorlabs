@@ -41,7 +41,7 @@ if target == 'utility22_card_mounts':
                    'native-fluid-contacts PASS cases=15552', 'submerged-glass-compositing PASS',
                    'opening-fluids PASS', 'contained-water-sponge PASS', 'door-security PASS',
                    'diagonal-trapdoor-direction-dialog PASS', 'stair-dialog-live PASS', 'canopy-click-orientation PASS cases=160',
-                   'vanilla-texture-copy PASS', 'stair-configuration PASS', 'stair-mesh PASS variants=600', 'stair-appearance PASS', 'cockpit-rear-canopy PASS',
+                   'vanilla-texture-copy PASS', 'stair-configuration PASS', 'stair-mesh PASS variants=600', 'stair-appearance PASS', 'cockpit-rear-canopy PASS', 'cockpit-canopy-configurizer PASS', 'cockpit-canopy-seat PASS', 'mount-company-filter PASS', 'mount-filter-live PASS',
                    'stair-icons PASS padded variants=15', 'door-company-filter PASS', 'fluid-free-height PASS',
                    'fluid-render-bounds PASS cases=132 cameraViews=10', 'fluid-lightmap PASS cases=256', 'fluid-waterline PASS', 'fluid-pool PASS', 'fluid-boundary-matrix PASS',
                    'submerged-contact-views PASS', 'cockpit-runtime PASS', 'token-mount-dialog PASS'):

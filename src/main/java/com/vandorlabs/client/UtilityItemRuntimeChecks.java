@@ -11,10 +11,10 @@ import java.io.File;
 /** Actual inventory rendering, including depth/rotation, with padding on every side. */
 final class UtilityItemRuntimeChecks {
     private static final int BACK=0x203040;
-    private static final String[] IDS={"redstone_transmitter","redstone_receiver","programmable_matter_ingot","programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","gear_mount","large_gear_mount","data_card_slot","data_chip_slot","data_card:0","data_card:1","data_card:2","data_card:3","data_card:4","data_card:5","data_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6"};
+    private static final String[] IDS={"redstone_transmitter","redstone_receiver","programmable_matter_ingot","programmable_matter_infuser","programmable_matter_block","infuser_core","battery_block","hexagonal_fuel_tank","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","gear_mount","large_gear_mount","access_card_slot","data_chip_slot","access_card:0","access_card:1","access_card:2","access_card:3","access_card:4","access_card:5","access_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6"};
     static ItemStack stack(int i){String[] id=IDS[i].split(":");return new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id[0])),1,id.length==1?0:Integer.parseInt(id[1]));}
     static void run(Minecraft mc,File output)throws Exception{
-        for(Item token:new Item[]{com.vandorlabs.items.ModItems.DATA_CARD,com.vandorlabs.items.ModItems.DATA_CHIP}){
+        for(Item token:new Item[]{com.vandorlabs.items.ModItems.ACCESS_CARD,com.vandorlabs.items.ModItems.DATA_CHIP}){
         net.minecraft.util.NonNullList<ItemStack> cards=net.minecraft.util.NonNullList.create();
         token.getSubItems(com.vandorlabs.VandorLabs.VANDOR_LABS_TAB,cards);
         if(cards.size()!=7||token instanceof ItemBlock)throw new IllegalStateException("Seven non-placeable variants required: "+token.getRegistryName()+"");

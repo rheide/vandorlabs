@@ -99,6 +99,8 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
 fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = fluids ]; then
+        grep -q 'mount-company-filter PASS' "$RUN_OUT/client.log"
+        grep -q 'mount-filter-live PASS' "$RUN_OUT/client.log"
         grep -q 'stair-appearance PASS' "$RUN_OUT/client.log"
         grep -q 'diagonal-trapdoor-direction-dialog PASS' "$RUN_OUT/client.log"
         grep -q 'fluid-render-bounds PASS cases=132 cameraViews=10' "$RUN_OUT/client.log"

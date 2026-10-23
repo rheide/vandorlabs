@@ -8,7 +8,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.*;
 
-/** One physical token, with a non-consuming list of allowed designs. */
+/** One physical token, with one optional, non-consuming company filter. */
 public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements IInventory {
     private ItemStack token=ItemStack.EMPTY;
     private boolean chip;
@@ -26,14 +26,15 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     protected boolean installed(){return world!=null&&world.getTileEntity(pos)==(door==null?this:door);}
     protected int returnPulseTicks(){return door==null?20:100;}
     public int logoDesign(){if((effectiveAllowed()&1)!=0)return 0;if((effectiveAllowed()&(1<<logoDesign))!=0)return logoDesign;for(int i=0;i<7;i++)if((effectiveAllowed()&(1<<i))!=0)return i;return 0;}
-    public int effectiveAllowed(){return any?127:allowed;}
+    public static int singleCompany(int mask){return TileEntitySpaceDoor.singleCompany(mask);}
+    public int effectiveAllowed(){return any?127:singleCompany(allowed);}
     public void cycleLogo(){int mask=effectiveAllowed();if((mask&1)!=0)return;for(int i=1;i<=7;i++){int candidate=(logoDesign()+i)%7;if((mask&(1<<candidate))!=0){logoDesign=candidate;changed(false);return;}}}
     public static String behaviorName(int mode){return new String[]{"Stay Inserted","Stay Inserted: Pulse","Return After Open: Toggle","Return After Open: Pulse"}[Math.max(0,Math.min(3,mode))];}
 
     public TileEntityTokenSlot(){}
     public TileEntityTokenSlot(boolean chip){this.chip=chip;}
     public boolean chip(){return world!=null&&world.getBlockState(pos).getBlock() instanceof BlockTokenSlot?((BlockTokenSlot)world.getBlockState(pos).getBlock()).chip:chip;}
-    public boolean accepts(ItemStack stack){return !stack.isEmpty()&&stack.getItem()==(chip()?ModItems.DATA_CHIP:ModItems.DATA_CARD)&&stack.getMetadata()>=0&&stack.getMetadata()<7;}
+    public boolean accepts(ItemStack stack){return !stack.isEmpty()&&stack.getItem()==(chip()?ModItems.DATA_CHIP:ModItems.ACCESS_CARD)&&stack.getMetadata()>=0&&stack.getMetadata()<7;}
     public boolean authorized(ItemStack stack){return accepts(stack)&&((effectiveAllowed()&1)!=0||(effectiveAllowed()&(1<<stack.getMetadata()))!=0);}
     public boolean matches(){return authorized(token);}
     public boolean rejected(){return world!=null&&world.getTotalWorldTime()<rejectedUntil;}
@@ -103,13 +104,13 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
         markDirty();
     }
     public void configure(boolean any,int allowed,int behavior){
-        allowed&=127;behavior=behavior>=0&&behavior<=3?behavior:0;
+        allowed=singleCompany(any?127:allowed);any=allowed==127;behavior=behavior>=0&&behavior<=3?behavior:0;
         if(this.any!=any||this.allowed!=allowed||this.behavior!=behavior){pulseUntil=0;toggled=false;}
         this.any=any;this.allowed=allowed;this.behavior=behavior;changed(false);
     }
     @Override public void onLoad(){super.onLoad();if(world!=null&&!world.isRemote){pulseUntil=Math.min(pulseUntil,world.getTotalWorldTime()+20);scheduledTick();}}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("TokenLogo",logoDesign);tag.setLong("TokenRejectedUntil",rejectedUntil);tag.setBoolean("ChipSlot",chip());tag.setBoolean("AnyToken",any);tag.setInteger("AllowedTokens",allowed);tag.setInteger("TokenBehavior",behavior);tag.setLong("TokenPulseUntil",pulseUntil);tag.setBoolean("TokenToggled",toggled);tag.setBoolean("TokenToggleApplied",toggleApplied);tag.setLong("TokenInsertStarted",insertStarted);if(returnTo!=null)tag.setUniqueId("TokenReturnTo",returnTo);else{tag.removeTag("TokenReturnToMost");tag.removeTag("TokenReturnToLeast");}if(!token.isEmpty())tag.setTag("InsertedToken",token.writeToNBT(new NBTTagCompound()));else tag.removeTag("InsertedToken");return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);logoDesign=Math.max(0,Math.min(6,tag.getInteger("TokenLogo")));rejectedUntil=tag.getLong("TokenRejectedUntil");chip=tag.getBoolean("ChipSlot");any=!tag.hasKey("AnyToken")||tag.getBoolean("AnyToken");allowed=tag.hasKey("AllowedTokens")?tag.getInteger("AllowedTokens")&127:127;behavior=tag.getInteger("TokenBehavior");if(behavior<0||behavior>3)behavior=0;pulseUntil=tag.getLong("TokenPulseUntil");toggled=tag.getBoolean("TokenToggled");toggleApplied=tag.getBoolean("TokenToggleApplied");insertStarted=tag.getLong("TokenInsertStarted");returnTo=tag.hasUniqueId("TokenReturnTo")?tag.getUniqueId("TokenReturnTo"):null;token=tag.hasKey("InsertedToken",10)?new ItemStack(tag.getCompoundTag("InsertedToken")):ItemStack.EMPTY;if(!token.isEmpty())token.setCount(1);else returnTo=null;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);logoDesign=Math.max(0,Math.min(6,tag.getInteger("TokenLogo")));rejectedUntil=tag.getLong("TokenRejectedUntil");chip=tag.getBoolean("ChipSlot");any=!tag.hasKey("AnyToken")||tag.getBoolean("AnyToken");allowed=singleCompany(any?127:tag.hasKey("AllowedTokens")?tag.getInteger("AllowedTokens"):127);any=allowed==127;behavior=tag.getInteger("TokenBehavior");if(behavior<0||behavior>3)behavior=0;pulseUntil=tag.getLong("TokenPulseUntil");toggled=tag.getBoolean("TokenToggled");toggleApplied=tag.getBoolean("TokenToggleApplied");insertStarted=tag.getLong("TokenInsertStarted");returnTo=tag.hasUniqueId("TokenReturnTo")?tag.getUniqueId("TokenReturnTo"):null;token=tag.hasKey("InsertedToken",10)?new ItemStack(tag.getCompoundTag("InsertedToken")):ItemStack.EMPTY;if(!token.isEmpty())token.setCount(1);else returnTo=null;}
     @Override public int getSizeInventory(){return 1;}
     @Override public boolean isEmpty(){return token.isEmpty();}
     @Override public ItemStack getStackInSlot(int slot){return slot==0?token:ItemStack.EMPTY;}
@@ -126,7 +127,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     @Override public void setField(int id,int value){}
     @Override public int getFieldCount(){return 3;}
     @Override public void clear(){if(!returning())takeForDrop();}
-    @Override public String getName(){return "tile.vandorlabs."+(chip()?"data_chip_slot":"data_card_slot")+".name";}
+    @Override public String getName(){return "tile.vandorlabs."+(chip()?"data_chip_slot":"access_card_slot")+".name";}
     @Override public boolean hasCustomName(){return false;}
     @Override public ITextComponent getDisplayName(){return new TextComponentTranslation(getName());}
  @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox(){return new net.minecraft.util.math.AxisAlignedBB(pos).grow(.4);}

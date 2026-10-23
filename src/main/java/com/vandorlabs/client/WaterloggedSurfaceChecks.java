@@ -24,7 +24,7 @@ final class WaterloggedSurfaceChecks {
     static void run(Minecraft mc,File output)throws Exception{
         FluidLightmapChecks.run(mc);
         FluidRenderBoundsChecks.run(mc);
-        DoorCompanyFilterChecks.run(mc,output);StairConfigurationChecks.client(mc);StairIconChecks.run(mc,output);
+        DoorCompanyFilterChecks.run(mc,output);MountCompanyFilterChecks.run(mc,output);StairConfigurationChecks.client(mc);StairIconChecks.run(mc,output);
         OpeningFluidVisualChecks.run(mc,output);
         ContainedFluidUpdateChecks.run(mc.world);
         ContainedFluidImmersionChecks.run(mc);

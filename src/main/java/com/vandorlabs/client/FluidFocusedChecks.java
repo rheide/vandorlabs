@@ -16,6 +16,7 @@ final class FluidFocusedChecks {
         if(!checked){WaterloggedSurfaceChecks.run(mc,output);checked=true;}
         if(!StairDialogLiveChecks.tick(mc,output))return false;
         if(!DiagonalTrapdoorDirectionLiveChecks.tick(mc,output))return false;
+        if(!MountFilterLiveChecks.tick(mc,output))return false;
         System.out.println("[vandorlabs][reprolab] fluid-focused PASS");return true;
     }
 }

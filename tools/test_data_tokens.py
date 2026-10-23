@@ -6,7 +6,7 @@ root=Path(__file__).resolve().parents[1]
 for kind in ('card','chip'):
     textures=root/'texture-packs/additional/assets/vandorlabs/textures/items'
     for name in ('unbranded','pinnacle','ashiro','paladyne','vektor','seyr','vandor'):
-        identifier=f'data_{kind}_{name}'
+        identifier=('access_card' if kind=='card' else 'data_chip')+'_'+name
         art=Image.open(textures/(identifier+'.png')).convert('RGBA')
         assert art.size==(128,128) and sum(a==0 for a in art.getchannel('A').getdata())==4,identifier
         model=json.loads((root/'src/main/resources/assets/vandorlabs/models/item'/(identifier+'.json')).read_text())

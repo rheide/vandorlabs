@@ -30,7 +30,7 @@ def model(half,face,rotation,centered=False,height=None):
 
 def main():
     for kind,half in [('card',3.0),('chip',3.0)]:
-        name='data_'+kind+'_slot';variants={}
+        name=('access_card' if kind=='card' else 'data_chip')+'_slot';variants={}
         for face in NORMALS:
             for rotation in range(4):
                 authored=rotation if face in ('up','down') else 0

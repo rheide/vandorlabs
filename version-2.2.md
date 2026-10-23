@@ -48,7 +48,7 @@ Programmable armor gains complete **Pinnacle, Ashiro, Paladyne, Vektor, Seyr and
 
 ![Six company armor designs with their matching inventory icons](docs/images/gallery/armor/company-sets.png)
 
-Seven **Data Cards** and seven matching **Data Chips** add handheld props in unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor designs. Their thin item models retain the original transparent front/back artwork, with opaque edge materials and no added backing shape. They are creative-catalog items, with no placement or data-storage behavior.
+Seven **Access Cards** and seven matching **Data Chips** add handheld props in unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor designs. Their thin item models retain the original transparent front/back artwork, with opaque edge materials and no added backing shape. They are creative-catalog items, with no placement or data-storage behavior.
 
 Material tools also gain Stretch, Tile and Fit layouts, independent ON/OFF light artwork, nested texture folders, and water-filled programmable Slabs and Stairs.
 

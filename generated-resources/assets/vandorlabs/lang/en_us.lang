@@ -568,13 +568,13 @@ tile.vandorlabs.large_landing_wheel.name=Large Landing Gear Wheel
 tile.vandorlabs.large_gear_extender.name=Large Landing Gear Extender
 tile.vandorlabs.large_gear_swing_arm.name=Large Landing Gear Swing Arm
 
-item.vandorlabs.data_card.unbranded.name=Data Card
-item.vandorlabs.data_card.pinnacle.name=Pinnacle Data Card
-item.vandorlabs.data_card.ashiro.name=Ashiro Data Card
-item.vandorlabs.data_card.paladyne.name=Paladyne Data Card
-item.vandorlabs.data_card.vektor.name=Vektor Data Card
-item.vandorlabs.data_card.seyr.name=Seyr Data Card
-item.vandorlabs.data_card.vandor.name=Vandor Data Card
+item.vandorlabs.access_card.unbranded.name=Access Card
+item.vandorlabs.access_card.pinnacle.name=Pinnacle Access Card
+item.vandorlabs.access_card.ashiro.name=Ashiro Access Card
+item.vandorlabs.access_card.paladyne.name=Paladyne Access Card
+item.vandorlabs.access_card.vektor.name=Vektor Access Card
+item.vandorlabs.access_card.seyr.name=Seyr Access Card
+item.vandorlabs.access_card.vandor.name=Vandor Access Card
 item.vandorlabs.data_chip.unbranded.name=Data Chip
 item.vandorlabs.data_chip.pinnacle.name=Pinnacle Data Chip
 item.vandorlabs.data_chip.ashiro.name=Ashiro Data Chip
@@ -586,7 +586,7 @@ item.vandorlabs.data_chip.vandor.name=Vandor Data Chip
 tile.vandorlabs.gear_mount.name=Landing Gear Mount
 tile.vandorlabs.large_gear_mount.name=Large Landing Gear Mount
 
-tile.vandorlabs.data_card_slot.name=Data Card Mount
+tile.vandorlabs.access_card_slot.name=Access Card Mount
 tile.vandorlabs.data_chip_slot.name=Data Chip Mount
 
 tile.vandorlabs.redstone_transmitter.name=Redstone Transmitter

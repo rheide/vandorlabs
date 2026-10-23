@@ -30,16 +30,16 @@ final class TokenSlotToggleRuntimeCheck {
     private int stage;
     private TokenSlotToggleRuntimeCheck(WorldServer world,EntityPlayerMP player){
         this.world=world;this.player=player;inventory=player.inventory.writeToNBT(new NBTTagList());cursor=player.inventory.getItemStack().copy();
-        world.setBlockState(pos.south(),Blocks.STONE.getDefaultState(),2);world.setBlockState(pos,net.minecraft.block.Block.getBlockFromName("vandorlabs:data_card_slot").getDefaultState(),2);
+        world.setBlockState(pos.south(),Blocks.STONE.getDefaultState(),2);world.setBlockState(pos,net.minecraft.block.Block.getBlockFromName("vandorlabs:access_card_slot").getDefaultState(),2);
         tile=(TileEntityTokenSlot)world.getTileEntity(pos);tile.configure(false,8,2);tile.setRedstoneChannels(ChannelList.of(64213));
-        player.inventory.clear();player.inventory.setItemStack(ItemStack.EMPTY);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CARD,2,4));
+        player.inventory.clear();player.inventory.setItemStack(ItemStack.EMPTY);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.ACCESS_CARD,2,4));
         use(()->block().onBlockActivated(world,pos,world.getBlockState(pos),player,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,.5F));
         require(tile.isEmpty()&&player.getHeldItemMainhand().getCount()==2,"denied token untouched");
         player.setHeldItem(EnumHand.MAIN_HAND,card(2));
         use(()->block().onBlockActivated(world,pos,world.getBlockState(pos),player,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,.5F));
         require(tile.returning()&&count()==1,"one borrowed item");started=world.getTotalWorldTime();
     }
-    private static ItemStack card(int count){ItemStack item=new ItemStack(ModItems.DATA_CARD,count,3);item.setStackDisplayName("Toggle return fixture");return item;}
+    private static ItemStack card(int count){ItemStack item=new ItemStack(ModItems.ACCESS_CARD,count,3);item.setStackDisplayName("Toggle return fixture");return item;}
     private BlockTokenSlot block(){return (BlockTokenSlot)world.getBlockState(pos).getBlock();}
     private int count(){int n=0;for(int i=0;i<player.inventory.getSizeInventory();i++){ItemStack item=player.inventory.getStackInSlot(i);if(ItemStack.areItemsEqual(item,card(1))&&ItemStack.areItemStackTagsEqual(item,card(1)))n+=item.getCount();}return n;}
     private void use(Runnable work){double x=player.posX,y=player.posY,z=player.posZ;player.setPosition(pos.getX()+.5,pos.getY(),pos.getZ()-1);try{work.run();}finally{player.setPosition(x,y,z);}}

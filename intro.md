@@ -18,7 +18,7 @@ with modular landing gear, rotating platforms, industrial multiblocks and compan
 - **Rotate:** [Turntables](https://github.com/rheide/vandorlabs/blob/master/docs/turntables.md) display builds on floor, wall or ceiling platforms. Redstone controls rotation, direction and Restore; angle and speed sliders set the motion. Adjustable autosnap returns editable blocks when stopped near a quarter turn.
 - **Assemble:** build the [Assembly Press, Synthesis Tower and Enclosed Gantry](https://github.com/rheide/vandorlabs/blob/master/docs/universal-constructors.md) from a Core and Programmable Matter frame. These industrial multiblocks are decorative and do not process recipes yet.
 - **Store matter, power and fuel:** a sunlight-powered [Matter Infuser, RF Battery Blocks and Fuel Tanks](https://github.com/rheide/vandorlabs/blob/master/docs/matter-and-storage.md) support your workshop. Batteries and tanks offer Block/Hexagon shapes and configurable casing; tanks show real fluid levels through their windows and join along their connection axis.
-- **Outfit your crew:** [programmable armor](https://github.com/rheide/vandorlabs/blob/master/docs/programmable-armor.md) includes role designs and complete Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor sets. Matching [Data Cards and Data Chips](https://github.com/rheide/vandorlabs/blob/master/docs/matter-and-storage.md) are handheld decorative props.
+- **Outfit your crew:** [programmable armor](https://github.com/rheide/vandorlabs/blob/master/docs/programmable-armor.md) includes role designs and complete Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor sets. Matching [Access Cards and Data Chips](https://github.com/rheide/vandorlabs/blob/master/docs/matter-and-storage.md) are handheld decorative props.
 - **Enclose:** [Canopies and adjustable front windows](https://github.com/rheide/vandorlabs/blob/master/docs/canopies.md) offer sliding/hinged motion, glass or hull materials and redstone control.
 - **Move:** [deployable ramps, escalators, stairs, lifts and extending platforms](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/ramp-controller.md).
 - **Illuminate:** [programmable lights, light slabs and frames](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/lights.md), with independent on/off artwork and company light designs, plus [thrusters, ion drives, plasma vents, impulse engines and hover effects](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/propulsion.md).
@@ -31,5 +31,5 @@ and the [full changelog](https://github.com/rheide/vandorlabs/blob/master/CHANGE
 Browse the [illustrated block guide](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/README.md)
 and [animated examples](https://github.com/rheide/vandorlabs/blob/master/docs/animated-documentation.md).
 Crafting recipes appear in the in-game recipe book. Universal Constructor Cores
-and Data Cards/Chips are creative-only. Cockpit consoles and their chair/yoke
+and Access Cards/Chips are creative-only. Cockpit consoles and their chair/yoke
 peripherals remain work in progress and are temporarily hidden from creative selection.

@@ -657,7 +657,7 @@ public class ReproLab {
             return;
         }
         if(state==998){
-            try {if(StairDialogLiveChecks.tick(mc,outDir)&&DiagonalTrapdoorDirectionLiveChecks.tick(mc,outDir)){state=999;mc.shutdown();}}
+            try {if(StairDialogLiveChecks.tick(mc,outDir)&&DiagonalTrapdoorDirectionLiveChecks.tick(mc,outDir)&&MountFilterLiveChecks.tick(mc,outDir)){state=999;mc.shutdown();}}
             catch(Exception failure){throw new IllegalStateException("release placement dialogs",failure);}return;
         }
         if(Boolean.getBoolean("vandorlabs.fluidChecksOnly")) {
@@ -3115,7 +3115,7 @@ public class ReproLab {
         if(s.name.startsWith("utility22_")||s.name.startsWith("turntable_"))mc.gameSettings.hideGUI=!s.name.startsWith("utility22_data_");
         if(s.name.startsWith("utility22_data_")){
             int design=Integer.parseInt(s.name.substring(s.name.lastIndexOf('_')+1));
-            ItemStack card=new ItemStack(s.name.startsWith("utility22_data_chip_")?com.vandorlabs.items.ModItems.DATA_CHIP:com.vandorlabs.items.ModItems.DATA_CARD,1,design);
+            ItemStack card=new ItemStack(s.name.startsWith("utility22_data_chip_")?com.vandorlabs.items.ModItems.DATA_CHIP:com.vandorlabs.items.ModItems.ACCESS_CARD,1,design);
             EnumHand hand=s.name.contains("_left_")?EnumHand.OFF_HAND:EnumHand.MAIN_HAND;
             mc.player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);mc.player.setHeldItem(EnumHand.OFF_HAND,ItemStack.EMPTY);mc.player.setHeldItem(hand,card.copy());
             onServer(mc,()->{EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.setHeldItem(EnumHand.OFF_HAND,ItemStack.EMPTY);player.setHeldItem(hand,card.copy());});

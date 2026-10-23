@@ -19,14 +19,14 @@ final class SecurityAnimationDocumentation {
         for(boolean chip:new boolean[]{false,true})for(boolean returning:new boolean[]{false,true}){
             TileEntityTokenSlot source=(TileEntityTokenSlot)mc.world.getTileEntity(new BlockPos(270,chip?34:32,142));NBTTagCompound saved=source.writeToNBT(new NBTTagCompound());
             DocumentationRenderCapture.capture(output,(chip?"chip":"card")+(returning?"-return-pulse":"-stay-inserted"),64,.9,15,155,.5,.65,.5,frame->{
-                int age=frame<8?-1:frame-8;NBTTagCompound data=saved.copy();inserted(data,new ItemStack(chip?com.vandorlabs.items.ModItems.DATA_CHIP:com.vandorlabs.items.ModItems.DATA_CARD,1,3),age,returning,mc.world.getTotalWorldTime());if(!returning&&frame>=52)data.removeTag("InsertedToken");
+                int age=frame<8?-1:frame-8;NBTTagCompound data=saved.copy();inserted(data,new ItemStack(chip?com.vandorlabs.items.ModItems.DATA_CHIP:com.vandorlabs.items.ModItems.ACCESS_CARD,1,3),age,returning,mc.world.getTotalWorldTime());if(!returning&&frame>=52)data.removeTag("InsertedToken");
                 TileEntityTokenSlot tile=(TileEntityTokenSlot)net.minecraft.tileentity.TileEntity.create(mc.world,data);tile.setWorld(mc.world);TETokenSlot.frame(chip,EnumFacing.NORTH);new TETokenSlot().render(tile,0,0,0,0,-1,1);
             });
         }
         TileEntitySpaceDoor tile=(TileEntitySpaceDoor)mc.world.getTileEntity(new BlockPos(298,33,142));NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());
         try{for(boolean returning:new boolean[]{false,true})DocumentationRenderCapture.capture(output,"door-security-"+(returning?"pulse-return":"stay-inserted"),returning?150:90,1.9,14,155,.5,.95,.5,frame->{
             int age=frame<8?-1:frame-8;NBTTagCompound data=saved.copy();data.setInteger("DoorSecurityMode",returning?1:2);
-            NBTTagCompound reader=data.getCompoundTag("DoorKeyReader");inserted(reader,new ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,3),age,returning,mc.world.getTotalWorldTime());
+            NBTTagCompound reader=data.getCompoundTag("DoorKeyReader");inserted(reader,new ItemStack(com.vandorlabs.items.ModItems.ACCESS_CARD,1,3),age,returning,mc.world.getTotalWorldTime());
             int close=returning?116:56;if(returning)reader.setLong("TokenPulseUntil",frame>=16&&frame<close?mc.world.getTotalWorldTime()+1:0);if(!returning&&frame>=close)reader.removeTag("InsertedToken");data.setTag("DoorKeyReader",reader);tile.readFromNBT(data);
             float open=(float)Math.max(0,Math.min(1,(frame-16)/9D));if(frame>=close)open=(float)Math.max(0,1-(frame-close)/9D);
             TESlidingDoor.renderSpaceDoor(tile,mc.world.getBlockState(tile.getPos()),EnumFacing.SOUTH,open,0,0,0);

@@ -223,7 +223,7 @@ public class ModBlocks {
         PROGRAMMABLE_CHAIR = add(new BlockBridgeChair());
         PILOT_SEAT = add(new BlockPilotSeat());
         add(new BlockWirelessRedstone(true));add(new BlockWirelessRedstone(false));
-        add(new BlockTokenSlot("data_card_slot",false));
+        add(new BlockTokenSlot("access_card_slot",false));
         add(new BlockTokenSlot("data_chip_slot",true));
         VEHICLE_CONTROLLER = add(new BlockVehicleController());
         for(String id:com.vandorlabs.cockpit.CockpitData.IDS)if(id.equals("yoke_screen"))add(new BlockCockpitPeripheral(id));else add(new BlockCockpit(id));

@@ -2,6 +2,10 @@
 
 ## 2.3
 
+- Resolve Configurizer clicks on shared cockpit/canopy cells by the visible surface. Let the seat's upper rear reservation share compatible canopy space, retaining seat collision and preserving the canopy when returning.
+- Use Access Card names for card items and mounts, including registry IDs and assets, without legacy registry remapping.
+- Replace mount company multiselects with the door's shared inventory sample picker, one selected company, and click-to-clear wildcard. Retain the four shared reader behaviors and use the common redstone channel editor.
+
 - Add independent Auto / Left / Right hinge selection for diagonal trapdoors. Fresh vertical placement retains the clicked leaf's physical hinge edge, including reversed-facing continuations; the existing swing-direction option remains available.
 - Default new Programmable Stairs to Tile, preserve saved Fit settings, and match vanilla neighbor-brightness sampling and directional UVs on generated stair surfaces. Mounted surfaces carry their texture orientation and normals with them.
 - Align opening canopies placed against the rear of a Cockpit with its back edge, without reserving an extra block behind the cockpit.
@@ -69,9 +73,9 @@
 
 - Make the plain credential selector accept Any Card or Any Chip and keep its unbranded background fixed. Slow company logo cycling to three seconds. Batch reader overlays and reuse mounted-item transforms to reduce render calls and per-frame allocations.
 
-- Add animated insert-to-toggle-and-return behavior to Data Card and Data Chip Mounts, with saved output, inventory-safe returns and reload-safe scan progress.
+- Add animated insert-to-toggle-and-return behavior to Access Card and Data Chip Mounts, with saved output, inventory-safe returns and reload-safe scan progress.
 
-- Add compact Data Card and Data Chip Mounts, with independent design allow-lists, non-consuming filter slots, output channels and continuous/pulse behavior.
+- Add compact Access Card and Data Chip Mounts, with independent design allow-lists, non-consuming filter slots, output channels and continuous/pulse behavior.
 - Correct cockpit dialog sizing and contrast, keyboard proportions, armrest orientation and overlapping chair geometry. Add selectable casing textures, name Advanced Pilot Chair and use red upholstery.
 - Support Programmable Chair passengers in captured vehicles, preserving their style, height and assigned seat through movement, assembly and parking.
 - Use server-compatible bounds constructors for cockpit collision and related vehicle, gear, canopy and door interactions.
@@ -105,7 +109,7 @@
 
 - Preserve diagonal wall top and bottom caps against flat programmable glass walls while retaining aligned panel joins.
 
-- Use the standard first-person held-item pose for every data card and chip, keeping them beside the screen edge in either hand.
+- Use the standard first-person held-item pose for every access card and chip, keeping them beside the screen edge in either hand.
 
 - Preserve tinted wall windows and canopy glazing on captured turntable structures, with separate opaque and glass rendering passes.
 
@@ -140,7 +144,7 @@
 - Pause turntable captures at their current angle when redstone turns off. Add a paused Angle slider and explicit Restore with a visible nearest-quarter-turn preview. Carry Taxi craft about their physical center and cover both drive-on/rotate/drive-off and park/scan/rotate/reassemble journeys in live integration checks.
 - Compact the tank dialog, use square side windows, and add persistent Tile/Fit casing texture control without changing contents or connections.
 - Match tank shell shading and hexagon dimensions to hexagonal propulsion blocks. Give Rocket Thrusters, Ion Drives, Plasma Vents and Impulse Engines straight rear rims for clean tank-to-engine joins.
-- Give all seven Data Cards and seven Data Chips opaque, closed extruded edges and crisp 128px cutout artwork; verify inventory padding and held models.
+- Give all seven Access Cards and seven Data Chips opaque, closed extruded edges and crisp 128px cutout artwork; verify inventory padding and held models.
 
 - Prevent a cockpit destruction crash when the renderer queries a removed or replaced cockpit tile's bounds.
 - Update both cockpit consoles with continuous shells, tilted screen banks and center touch keyboards. Use tighter collision shapes around the angled footwell walls and preserve existing per-surface settings.
@@ -160,7 +164,7 @@
 - Preserve adjacent trapdoor-cover behavior for modular gear in the world and on captured vehicles. Modular wheels roll, reverse and steer in Taxi mode; Hover pauses wheel animation.
 
 - Prevent recursive chunk loads while rebuilding saved landing-gear membership.
-- Add seven Data Cards and seven matching Data Chips using the supplied item artwork: unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor.
+- Add seven Access Cards and seven matching Data Chips using the supplied item artwork: unbranded, Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor.
 - Update the three constructor meshes and company artwork, and replace Programmable Matter block/ingot textures with the supplied designs at standard resolution.
 - Add an instant Hexagon/Block tank shape setting, preserving fluid, capacity and axial connections in both hollow shapes.
 - Rotate only the circular surface disc while its square housing corners remain fixed. Preserve walking input while carrying players, use tighter rotated collision footprints, restore blocks automatically at the nearest quarter turn on stopping, and use redstone ON/OFF activation.

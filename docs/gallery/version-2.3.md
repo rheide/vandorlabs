@@ -26,9 +26,9 @@ All option buttons use left-click for the next value and right-click for the pre
 
 ## Cards and chips that do something
 
-**Data Card Mount** and **Data Chip Mount** accept a real item through their open top. Cards are rectangular, chips square, and both have thin solid edges and clipped corners. The seven designs cover the unbranded family plus Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor.
+**Access Card Mount** and **Data Chip Mount** accept a real item through their open top. Cards are rectangular, chips square, and both have thin solid edges and clipped corners. The seven designs cover the unbranded family plus Pinnacle, Ashiro, Paladyne, Vektor, Seyr and Vandor.
 
-Select company icons to restrict access. The plain icon means **Any Card** or **Any Chip**. With Any selected, the empty mount keeps an unbranded background. Company-only mounts cycle through accepted logos every three seconds while a player is nearby. Rejected items remain in the player's hand and briefly flash an amber X on the reader.
+Use **Any card** or **Any chip** to accept the whole family, or drag one company-specific item into the sample slot using the same inventory picker as the door dialog. The selected company name includes **Click to clear**; clicking it or right-clicking the slot returns to Any without consuming an item. Empty mounts show the chosen company logo, or an unbranded background for Any. Rejected items remain in the player's hand and briefly flash an amber X on the reader.
 
 | Keep the item inserted | Scan, pulse and return the item |
 | --- | --- |
@@ -43,7 +43,7 @@ Choose the behavior that fits the circuit:
 | Return After Open: Toggle | Scan toggles the saved output and returns the item. |
 | Return After Open: Pulse | Scan emits a pulse and returns the item. |
 
-The filters consume nothing. Insertion borrows one real item, including in Creative; a pending return stays safe if the player's inventory is full or they disconnect. See [Data Card and Data Chip Mounts](../data-mounts.md).
+The filters consume nothing. Insertion borrows one real item, including in Creative; a pending return stays safe if the player's inventory is full or they disconnect. See [Access Card and Data Chip Mounts](../data-mounts.md).
 
 ## Programmable Doors with access control
 

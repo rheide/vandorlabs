@@ -1,5 +1,4 @@
 package com.vandorlabs.client;
-
 import com.vandorlabs.container.ContainerTokenSlot;
 import com.vandorlabs.tiles.TileEntityTokenSlot;
 import net.minecraft.client.gui.*;
@@ -9,31 +8,35 @@ import java.io.IOException;
 
 public final class GuiTokenSlot extends GuiContainer {
     private final TileEntityTokenSlot tile;
+    private int behavior,allowed;
     private GuiTextField channels;
-    private int behavior;
-    public GuiTokenSlot(ContainerTokenSlot container){super(container);tile=container.tile;behavior=tile.behavior;xSize=308;ySize=160;}
+    public GuiTokenSlot(ContainerTokenSlot container){super(container);tile=container.tile;behavior=tile.behavior;allowed=tile.effectiveAllowed();xSize=308;ySize=160;}
     @Override public void initGui(){
+        String text=channels==null?tile.getRedstoneChannels().toString():channels.getText();
         xSize=Math.min(308,width-12);ySize=Math.min(160,height-12);super.initGui();org.lwjgl.input.Keyboard.enableRepeatEvents(true);buttonList.clear();
         buttonList.add(new GuiButton(1,guiLeft+12,guiTop+34,xSize-24,20,""));
-        channels=new GuiTextField(2,fontRenderer,guiLeft+74,guiTop+64,xSize-86,18);channels.setMaxStringLength(256);channels.setText(tile.getRedstoneChannels().toString());
-        for(int i=0;i<7;i++){inventorySlots.inventorySlots.get(i).xPos=12+i*(xSize-24)/7;inventorySlots.inventorySlots.get(i).yPos=102;}
-        buttonList.add(new GuiButton(3,guiLeft+12,guiTop+130,xSize-24,20,"Done"));
-        labels();
+        channels=new GuiTextField(2,fontRenderer,guiLeft+12,guiTop+76,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);
+        buttonList.add(new GuiButton(3,guiLeft+12,guiTop+130,xSize-24,20,"Done"));labels();
     }
     int behaviorDraft(){return behavior;}
+    int acceptedCompany(){return allowed;}
+    String companyLabel(){return CredentialFilterPicker.label(tile.chip(),allowed);}
     private void labels(){buttonList.get(0).displayString=TileEntityTokenSlot.behaviorName(behavior);}
-    private void save(){if(com.vandorlabs.redstone.ChannelList.parse(channels.getText())==null){channels.setTextColor(0xff7777);return;}channels.setTextColor(0xffffff);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageTokenSlot(inventorySlots.windowId,behavior,false,tile.effectiveAllowed(),channels.getText()));}
+    private void save(){if(com.vandorlabs.redstone.ChannelList.parse(channels.getText())==null){channels.setTextColor(0xff7777);return;}channels.setTextColor(0xffffff);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageTokenSlot(inventorySlots.windowId,behavior,false,allowed,channels.getText()));}
     @Override protected void actionPerformed(GuiButton button){if(button.id==3){mc.player.closeScreen();return;}behavior=GuiOptionCycle.next(behavior,4);save();labels();}
     @Override protected void keyTyped(char ch,int key)throws IOException{if(channels.textboxKeyTyped(ch,key))save();else super.keyTyped(ch,key);}
-    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1))return;channels.mouseClicked(x,y,button);super.mouseClicked(x,y,button);}
+    @Override protected void mouseClicked(int x,int y,int button)throws IOException{
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1))return;
+        if(CredentialFilterPicker.click(this,x,y,button,guiLeft+12,guiTop+104,tile.chip(),allowed,mask->{allowed=mask;save();}))return;
+        channels.mouseClicked(x,y,button);super.mouseClicked(x,y,button);
+    }
     @Override public void updateScreen(){channels.updateCursorCounter();labels();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mx,int my){
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);
-        for(net.minecraft.inventory.Slot slot:inventorySlots.inventorySlots){int color=slot.slotNumber<7&&(tile.effectiveAllowed()&(1<<slot.slotNumber))!=0?0xff45765a:0xff56616a;drawRect(guiLeft+slot.xPos-1,guiTop+slot.yPos-1,guiLeft+slot.xPos+17,guiTop+slot.yPos+17,color);}
+        CredentialFilterPicker.draw(mc,fontRenderer,guiLeft+12,guiTop+104,tile.chip(),allowed);
     }
-    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getDisplayName().getUnformattedText(),12,10,0xffffff);fontRenderer.drawString("Channels",12,69,0xffffff);fontRenderer.drawString("Accepted designs",12,90,0xffffff);}
+    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getDisplayName().getUnformattedText(),12,10,0xffffff);fontRenderer.drawString("Channels (0 = none)",12,63,0xffffff);}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);GlStateManager.disableLighting();GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
-    @Override protected void renderToolTip(net.minecraft.item.ItemStack stack,int x,int y){if(stack.getMetadata()==0&&stack.getItem() instanceof com.vandorlabs.items.ItemDesignToken)drawHoveringText(java.util.Collections.singletonList(com.vandorlabs.items.ItemDesignToken.filterName(stack)),x,y);else super.renderToolTip(stack,x,y);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

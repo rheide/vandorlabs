@@ -62,11 +62,8 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         buttonList.add(layout.control(19,168,securityLabel()));
         done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();
     }
-    private net.minecraft.item.ItemStack companyCard(){return Integer.bitCount(securityAllowed)==1?new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,Integer.numberOfTrailingZeros(securityAllowed)):net.minecraft.item.ItemStack.EMPTY;}
-    String companyLabel(){
-        net.minecraft.item.ItemStack card=companyCard();if(card.isEmpty()||card.getMetadata()==0)return "Any card";
-        String company=com.vandorlabs.items.ItemDesignToken.DESIGNS[card.getMetadata()];return Character.toUpperCase(company.charAt(0))+company.substring(1);
-    }
+    private net.minecraft.item.ItemStack companyCard(){return CredentialFilterPicker.sample(false,securityAllowed);}
+    String companyLabel(){return CredentialFilterPicker.label(false,securityAllowed);}
     private String panelLabel(){return "Panel: "+new String[]{"Off","On","Both"}[panelMode];}
     private String securityLabel(){return (securityMode==0?"Security: ":"")+TileEntitySpaceDoor.securityLabel(securityMode);}
     private int channel() {return ChannelFields.first(channelField);}
@@ -117,14 +114,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19))return;
-        if((button==0||button==1)&&y>=guiTop+SECURITY_CARDS_Y&&y<guiTop+SECURITY_CARDS_Y+18&&x>=layout.controlsX&&x<layout.controlsX+154){
-            if(x<layout.controlsX+128){securityAllowed=127;sendUpdate();return;}
-            if(button==1){securityAllowed=127;sendUpdate();return;}
-            net.minecraft.item.ItemStack initial=companyCard();
-            mc.displayGuiScreen(new GuiCustomTexture(this,"Door company card","Use company",initial,
-                    stack->!stack.isEmpty()&&stack.getItem()==com.vandorlabs.items.ModItems.DATA_CARD&&stack.getMetadata()>=0&&stack.getMetadata()<7,
-                    stack->{securityAllowed=stack.getMetadata()==0?127:1<<stack.getMetadata();sendUpdate();}));return;
-        }
+        if(CredentialFilterPicker.click(this,x,y,button,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed,mask->{securityAllowed=mask;sendUpdate();}))return;
         channelField.mouseClicked(x,y,button);
         int before=textureList.selected();
         if(textureList.click(x,y,button)) {
@@ -161,13 +151,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         textureList.draw(fontRenderer,mouseX,mouseY);
-        int x=layout.controlsX+136,y=guiTop+SECURITY_CARDS_Y;
-        drawRect(x-1,y-1,x+17,y+17,0xff647480);drawRect(x,y,x+16,y+16,0xff28343e);
-        drawRect(layout.controlsX,y-1,layout.controlsX+128,y+17,securityAllowed==127?0xff45765a:0xff28343e);
-        boolean filtered=!companyCard().isEmpty()&&companyCard().getMetadata()!=0;
-        fontRenderer.drawString(companyLabel(),layout.controlsX+4,filtered?y:y+4,0xffdae8f0);
-        if(filtered)fontRenderer.drawString("Click to clear",layout.controlsX+4,y+9,0xffaabcc8);
-        net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();mc.getRenderItem().renderItemAndEffectIntoGUI(companyCard(),x,y);net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
+        CredentialFilterPicker.draw(mc,fontRenderer,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed);
 
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
