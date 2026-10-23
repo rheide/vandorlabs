@@ -30,7 +30,7 @@ public final class CockpitReservations {
         World world=tile.getWorld();EntityGroundVehicle craft=world instanceof VehicleWorld?((VehicleWorld)world).craft:null;
         for(BlockPos p:rear(tile,tile.facing())){
             if(!world.isBlockLoaded(p)||p.getY()<0||p.getY()>=world.getHeight())return blocked(tile,actor,"unavailable rear space");
-            if(!world.isAirBlock(p)&&CockpitAssembly.root(world,p)!=tile)return blocked(tile,actor,"a block behind the seat: "+world.getBlockState(p).getBlock().getLocalizedName());
+            if(!world.isAirBlock(p)&&CockpitAssembly.root(world,p)!=tile&&!clearCanopy(tile,p))return blocked(tile,actor,"a block behind the seat: "+world.getBlockState(p).getBlock().getLocalizedName());
             if(craft==null&&actor!=null&&(!world.isBlockModifiable(actor,p)||!actor.canPlayerEdit(p,EnumFacing.UP,actor.getHeldItemMainhand())))return blocked(tile,actor,"protected rear space");
         }
         for(Map.Entry<AxisAlignedBB,Integer> part:tile.data().moving.entrySet())if(part.getValue()==1){
@@ -42,6 +42,13 @@ public final class CockpitReservations {
             for(net.minecraft.entity.Entity entity:physical.getEntitiesWithinAABBExcludingEntity(craft,absolute))if(entity.canBeCollidedWith()&&(craft==null||!craft.getPassengers().contains(entity))&&!(entity.getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat&&tile.getPos().equals(((com.vandorlabs.entity.EntityChairSeat)entity.getRidingEntity()).getChairPos())))return blocked(tile,actor,"an occupant in the seat path");
         }
         return true;
+    }
+    private static boolean clearCanopy(TileEntityCockpit tile,BlockPos pos){
+        // Match the existing Pilot Seat backrest rule. Upper shell cells share
+        // seat space even where conservative trim boxes touch the backrest.
+        return pos.getY()==tile.getPos().getY()+1
+                && tile.getWorld().getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockCanopy
+                && ((com.vandorlabs.blocks.BlockCanopy)tile.getWorld().getBlockState(pos).getBlock()).supportsSeatBackrest();
     }
     private static boolean terrainBlocked(World world,EntityGroundVehicle craft,AxisAlignedBB box){
         List<AxisAlignedBB> collisions=new ArrayList<>();
@@ -57,7 +64,7 @@ public final class CockpitReservations {
     }
     public static void tick(TileEntityCockpit tile){
         if(tile.seatSlide.target()||tile.seatSlide.moving(tile.getWorld().getTotalWorldTime())||tile.getWorld() instanceof VehicleWorld)return;
-        for(BlockPos p:rear(tile,tile.facing()))if(CockpitAssembly.root(tile.getWorld(),p)==tile){
+        for(BlockPos p:rear(tile,tile.facing()))if(tile.getWorld().getTileEntity(p) instanceof TileEntityCockpitPart && CockpitAssembly.root(tile.getWorld(),p)==tile){
             tile.getWorld().removeTileEntity(p);tile.getWorld().setBlockState(p,net.minecraft.init.Blocks.AIR.getDefaultState(),3);
         }
     }

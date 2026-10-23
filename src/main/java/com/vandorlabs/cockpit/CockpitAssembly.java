@@ -19,13 +19,22 @@ public final class CockpitAssembly {
         if(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockCanopy && ((com.vandorlabs.blocks.BlockCanopy)world.getBlockState(pos).getBlock()).supportsSeatBackrest())return below(world,pos);
         return null;
     }
-    /** Only authored upper cells share a shell; moving rear reservations never do. */
+    /** Shared cells route to the visible surface before resolving any canopy owner. */
+    public static TileEntityCockpit pointed(World world,BlockPos pos,EntityPlayer player){
+        TileEntityCockpit cockpit=root(world,pos);TileEntityCanopy canopy=TileEntityCanopy.at(world,pos);
+        if(cockpit==null||canopy==null)return cockpit;
+        Vec3d eye=player.getPositionEyes(1),end=eye.add(player.getLook(1).scale(8));
+        RayTraceResult body=ray(world,pos,eye,end),shell=canopy.owner().trace(eye,end);
+        return body!=null&&(shell==null||eye.squareDistanceTo(body.hitVec)<eye.squareDistanceTo(shell.hitVec))?cockpit:null;
+    }
+    /** Upper body cells and an active rear seat reservation can share a hollow shell. */
     public static TileEntityCockpit below(IBlockAccess world,BlockPos cell){
         if(world instanceof World&&!((World)world).isBlockLoaded(cell.down()))return null;
         TileEntity t=world.getTileEntity(cell.down());
         if(!(t instanceof TileEntityCockpit)&&!(t instanceof TileEntityCockpitPart))return null;
         TileEntityCockpit owner=root(world,cell.down());
-        return owner!=null&&cell.getY()==owner.getPos().getY()+1&&owner.data().cells(owner.getPos(),owner.facing()).contains(cell)?owner:null;
+        return owner!=null&&cell.getY()==owner.getPos().getY()+1&&(owner.data().cells(owner.getPos(),owner.facing()).contains(cell)
+                || owner.design().equals("cockpit") && (owner.seatSlide.target()||owner.getWorld()!=null && owner.seatSlide.moving(owner.getWorld().getTotalWorldTime())) && CockpitReservations.rear(owner,owner.facing()).contains(cell))?owner:null;
     }
     public static boolean shares(World world,BlockPos cell,com.vandorlabs.blocks.BlockCanopy canopy){
         return canopy.supportsSeatBackrest()&&world.getTileEntity(cell) instanceof TileEntityCockpitPart&&below(world,cell)!=null;

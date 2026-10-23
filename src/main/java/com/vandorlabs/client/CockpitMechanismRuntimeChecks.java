@@ -32,7 +32,7 @@ final class CockpitMechanismRuntimeChecks {
         net.minecraft.block.Block block=world.getBlockState(tile.getPos()).getBlock();
         require(block.getStateForPlacement(world,tile.getPos(),net.minecraft.util.EnumFacing.UP,0,0,0,0,player).getValue(com.vandorlabs.blocks.BlockVandorDirectional.FACING)==player.getHorizontalFacing(),"cockpit places along player facing");
         require(tile.data().moving.values().stream().filter(part->part==1).count()<=32,"rigid seat collision boxes are not sliced redundantly");
-        canopies(tile,player);rearCanopies(tile,player);
+        canopies(tile,player);rearCanopies(tile,player);CockpitCanopyInteractionChecks.movement(tile,player);
         CanopyOrientationChecks.run(world,player);
         levers(tile,player);
         NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());
@@ -86,6 +86,7 @@ final class CockpitMechanismRuntimeChecks {
             require(CockpitAssembly.boxes(tile.getWorld(),anchor).equals(body),"shared raised cockpit collision retained");
             require(CockpitAssembly.root(tile.getWorld(),anchor)==tile,"shared cell resolves cockpit controls");
             TileEntityCanopy shell=TileEntityCanopy.at(tile.getWorld(),anchor);
+            CockpitCanopyInteractionChecks.configuration(tile,shell,player);
             if(shell.opening()){
                 shell.targetOpen=true;shell.progress=shell.previous=1;
                 com.vandorlabs.canopy.CanopyReservations.releaseOpen(shell);

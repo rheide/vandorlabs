@@ -192,11 +192,8 @@ public final class BlockCanopy extends Block {
         // Let the held canopy use the actual clicked surface, including the rear follower cell.
         if(player!=null && player.getHeldItem(hand).getItem() instanceof CanopyItem)return false;
         TileEntityCanopy selected=TileEntityCanopy.at(w,p);
-        if(player!=null && selected!=null && com.vandorlabs.cockpit.CockpitAssembly.root(w,p)!=null){
-            Vec3d eye=player.getPositionEyes(1),end=eye.add(player.getLook(1).scale(8));
-            RayTraceResult body=com.vandorlabs.cockpit.CockpitAssembly.ray(w,p,eye,end),shell=selected.owner().trace(eye,end);
-            if(body!=null&&(shell==null||eye.squareDistanceTo(body.hitVec)<eye.squareDistanceTo(shell.hitVec)))return com.vandorlabs.cockpit.CockpitAssembly.activate(w,p,player,hand);
-        }
+        if(player!=null && selected!=null && com.vandorlabs.cockpit.CockpitAssembly.pointed(w,p,player)!=null)
+            return com.vandorlabs.cockpit.CockpitAssembly.activate(w,p,player,hand);
         if(player!=null && selected!=null && selected.owner().configurable() && player.isSneaking()) {
             if(!w.isRemote && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){BlockPos owner=selected.owner().getPos();player.openGui(VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LARGE_CANOPY,w,owner.getX(),owner.getY(),owner.getZ());}return true;
         }

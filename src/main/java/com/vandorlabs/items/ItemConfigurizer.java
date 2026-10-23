@@ -95,7 +95,7 @@ public final class ItemConfigurizer extends Item {
         if(craft!=null){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)configureCraft((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),craft);return;}
         BlockPos pos = ProgrammableTarget.settingsPos(world, event.getPos());
         IBlockState state = world.getBlockState(pos);
-        com.vandorlabs.tiles.TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(world,pos);
+        com.vandorlabs.tiles.TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.pointed(world,event.getPos(),event.getEntityPlayer());
         if(cockpit!=null){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)com.vandorlabs.container.ContainerCockpit.open(event.getEntityPlayer(),cockpit);return;}
         if (state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat) {
             event.setCanceled(true);
