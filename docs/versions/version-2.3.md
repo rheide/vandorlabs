@@ -4,6 +4,25 @@
 
 Build a cockpit with animated machinery and independent displays, secure a door with company cards, and link redstone across a vehicle or base. Version 2.3 also brings configurable turntable surfaces, two-sided fluid panels, more materials and improvements to capture, restoration and moving-model rendering.
 
+## Developer Notes
+
+This mod started out as a way to use AI to generate things that I felt were missing from Minecraft: more variety in modern and sci fi textures, better doors, and space-age thruster blocks that look cool on spacecraft. It was never intended to become what it is now, but as I started building, I kept on getting more and more ideas, and this has now expanded into something much, much larger. "Vehicle Mode" is a thing now, that lets you create vehicles and drive them around, as long as it has a Pilot Seat, a thruster block and at least 3 landing gear wheels. Hover mode is a thing for vehicles that have antigrav or repulsor blocks. Canopies can open, ramps can extend (this looks great for vehicle wings btw), moats can drop. Redstone channels and screen controls enable so mcuh configuration possibilities.
+
+Where to next? The recent versions introduce 6 different companies:
+
+- The titular Vandor Labs
+- Ashiro-Mai Technologies
+- Seyr Astronautics
+- Vektor Heavy Industries
+- Pinnacle Global
+- Paladyne Systems
+
+I am planning to build more on the lore of these companies. The latest version introduces Access Cards and Data Chips, which I intend to use to distribute lore in the game world. The Data Chips will also be used for a plausible way to distribute and come upon this high technology in a world where the most advanced wizard's vocabulary still consists of just "haaaa".
+
+Vehicle mode is a thing, but it definitely does not scale. I think this will naturally be limited to vehicles with at most the current block size limit, or maybe even less. There may be vehicle classes with different size limits, different levels of Vehicle Controller blocks, and different capabilities. I also want to hook these up to proper RF power and fuel/fluid support. There is now a Battery block and a Tank block. Different thrusters will probably require different fuels and different levels or RF, and I'm still contemplating whether to require that people actually hook up tanks and batteries to the thruster blocks, or if the scan for vehicle mode will automatically pick these up and link them. More to come on this.
+
+The big challenge though, is space. Let's go to space! Some other mods do this: Galacticraft and Advanced Rocketry allow for space dimensions, and have done a lot of work on procedural generation of alien worlds, which is not something I'm keen to duplicate at this point. What I am thinking about is a way to travel to these dimensions from a Vandor vehicle. I want this to work for very large vehicles, so I'm thinking about perhaps a kind of "jump" or "teleport" drive that simply displaces all the vehicle's blocks from one dimension to another. I think it can be done, though I have no idea of a timeline for this yet. More to come.
+
 ## A cockpit you can operate
 
 The **Cockpit** combines a red Pilot Chair, a three-screen console, four touch areas and two physical thrust levers. The center screen starts in **Vehicle Status**; the side screens start with **Bridge Bare Pilot** and **Bridge Bare Engineering**. Each display has its own texture, animation and channel settings.
