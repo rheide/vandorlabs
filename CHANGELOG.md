@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Extend release regressions for plain Canopy Glass sharing cockpit and Pilot Seat upper space, including rear wall clicks, all seat heights and facings, both placement orders, collision and removal.
+
 - Allow canopy placement against wall faces directly behind a cockpit or Pilot Seat by recognizing shared upper space in the client placement check as well as on the server.
 
 - Resolve Configurizer clicks on shared cockpit/canopy cells by the visible surface. Let the seat's upper rear reservation share compatible canopy space, retaining seat collision and preserving the canopy when returning.

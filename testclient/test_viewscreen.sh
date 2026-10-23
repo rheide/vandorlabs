@@ -113,7 +113,8 @@ if [ "$MODE" = focus ]; then
         exit 0
     fi
     if [ "$TARGET" = cockpit ]; then
-        grep -q 'cockpit-wall-canopy PASS cases=4' "$RUN_OUT/client.log"
+        grep -q 'plain-canopy-glass-pilot PASS cases=16' "$RUN_OUT/client.log"
+        grep -q 'cockpit-wall-canopy PASS cases=6' "$RUN_OUT/client.log"
         grep -q 'cockpit-focused PASS' "$RUN_OUT/client.log"
         echo "Live cockpit checks passed: $RUN_OUT"
         exit 0

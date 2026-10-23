@@ -24,6 +24,8 @@ Removing an open Front Canopy Glass or Large Front Canopy Glass releases its clo
 
 Canopy and Canopy Glass can share their open lower space with a Pilot Seat's backrest in either placement order. Hold the canopy item and click the seat's upper backrest area to place the shell; the seat passes that click through instead of boarding or opening its settings.
 
+Plain Canopy Glass also occupies the raised cockpit cell, at the same height as Canopy and Long Canopy. Place it by clicking the cockpit or Pilot Seat, or the adjacent face of a wall behind that upper cell. Pilot Seat sharing works at all four seat heights; removing the glass restores the upper reservation and retains the seat or cockpit.
+
 Hold a Canopy or Long Canopy and click an existing canopy to match its facing and upright or ceiling mounting. Placement uses the clicked surface, including rear helper cells. Canopies can share the raised part of a Cockpit, just as they share a Pilot Seat backrest; removing the canopy restores the cockpit reservation and preserves its controls. Empty-hand use still opens or closes the mechanism.
 
 ## Glass and materials
@@ -138,6 +140,8 @@ python testclient/run_windows.py --focus canopy-animations
 ```
 
 The canopy release checks exercise six-face large-window placement, mounted hinges, closed-glazing placement protection and floor/ceiling frame clearance, exact ownership, removal, ceiling joins, all front/opening combinations, channel operation, finish copying, floor-button dust output and armrest masking. Animation capture records the actual client renderer; encode and validate it with `testclient/encode_animations.py`.
+
+Cockpit release checks include plain Canopy Glass over every raised cockpit cell and both rear wall columns in all four facings. Pilot Seat checks cover all four heights and facings, clicks on the lower seat, upper backrest and rear wall, glass-first placement, retained collision and reservation restoration. Placement checks exercise both client eligibility and server item use.
 
 When placing a Canopy or Long Canopy against the rear face of a Cockpit, its rear edge aligns with the clicked cockpit cell and the canopy extends forward. A solid block immediately behind the cockpit does not require additional placement clearance.
 
