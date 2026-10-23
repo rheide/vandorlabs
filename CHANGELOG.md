@@ -2,6 +2,8 @@
 
 ## 2.4
 
+- Keep shader shadow-map draws separate from main-view vehicle visibility. Preserve the hidden-origin fallback for first-person pilots so the hull and cockpit screens remain visible when looking forward.
+
 - Add Ramp Controller Slab with top/bottom placement, six active scan faces, the full controller's settings and seven mode indicators. Use newly drawn half-height panels and preserve top-slab separation from the ground during vehicle discovery.
 
 - Follow actual overhanging diagonal-wall and canopy contacts during vehicle discovery, preventing attached ceiling slabs from being left behind and trapping a newly assembled Hover craft. Preserve empty-half slab separation from terrain.

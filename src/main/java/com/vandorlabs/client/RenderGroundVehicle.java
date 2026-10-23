@@ -28,6 +28,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     public static void beginFrame(){TECanopy.cleanup();if(VehicleDiagnostics.ENABLED){long now=System.nanoTime();if(lastFrame!=0 && !drawn.isEmpty())frameSamples[frameCount++%frameSamples.length]=now-lastFrame;lastFrame=now;}drawn.clear();fallbackDraws=tileDraws=0;buildNanos=2000000;buildCells=512;}
     private static long buildNanos;private static int buildCells;
     public static void renderMissing(float partial) {
+        if(VehicleRenderPass.shadow())return;
         Minecraft mc=Minecraft.getMinecraft();
         net.minecraft.entity.Entity camera=mc.getRenderViewEntity();
         if(mc.world==null || camera==null)return;
@@ -197,7 +198,9 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     }
     @Override public void doRender(EntityGroundVehicle e,double x,double y,double z,float yaw,float partial) {
         if(e.structure==null)return;
-        drawn.add(e);
+        // OptiFine renders entities into the shadow map before the main view.
+        // A shadow draw cannot suppress the hidden-origin fallback for the pilot.
+        if(!VehicleRenderPass.shadow())drawn.add(e);
         e.view.origin=new BlockPos(e.posX,e.posY,e.posZ);Regions regions=regions(e);List<Mesh> pair=new ArrayList<>();
         for(Mesh[] section:regions.sections.values()){pair.add(section[0]);pair.add(section[1]);}
         // Finish new/changed geometry before refreshing light on already visible regions.

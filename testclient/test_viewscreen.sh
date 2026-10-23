@@ -113,6 +113,8 @@ fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = render-regressions ]; then
         grep -q 'render-regressions PASS' "$RUN_OUT/client.log"
+        grep -q 'vehicle-interior-visibility PASS' "$RUN_OUT/client.log"
+        if [ -n "${VANDOR_LABS_TEST_OPTIFINE:-}" ]; then grep -q 'OptiFine shadow flag=true' "$RUN_OUT/client.log"; fi
         grep -q 'vehicle-vertex-format-live PASS' "$RUN_OUT/client.log"
         grep -q 'diagonal-filled-caps PASS' "$RUN_OUT/client.log"
         grep -q 'ramp-active-face-models PASS' "$RUN_OUT/client.log"

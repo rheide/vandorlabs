@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "2.4";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t229";
+    public static final String BUILD_ID = "t230";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;

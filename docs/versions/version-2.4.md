@@ -31,6 +31,11 @@ New Taxi/Hover conversion requires a dedicated Vehicle Controller; Vehicle Statu
 reports **Vehicle Controller missing** when absent. Legacy captured craft retain
 their safe parking recovery path.
 
+Shader shadow-map draws do not mark a vehicle as rendered for the main view.
+The hidden-origin fallback remains available from inside the cockpit, including
+when looking forward with the entity origin behind the camera. This visibility
+correction is client-side and remains compatible with existing 2.4 servers.
+
 Vehicle meshes retain their build vertex format and shader attributes, and rebuild
 when the active format changes. This corrects the hardcoded vanilla vertex stride
 that interpreted extended OptiFine shader records as positions. Hardware shader-pack
