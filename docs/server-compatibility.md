@@ -98,7 +98,7 @@ the artifact hash. This focused check supplements `verifyRelease` and the full l
 
 ## Communication changes and remaining opportunities
 
-Cockpit rendering in 2.4.1 development separates visual time from server world
+Cockpit rendering in 2.4 separates visual time from server world
 time. An integrated server can hide this distinction because both clocks normally
 advance together. On a remote server, time synchronization can skip or rewind an
 animation sampled from an absolute saved start tick. Cosmetic screen/seat movement

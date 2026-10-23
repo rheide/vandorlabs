@@ -14,6 +14,14 @@ and turntable collision also avoid client-only Minecraft bounding-box APIs.
 Canopy, Autopilot, cockpit and credential-reader initialization waits until chunk
 tile loading has finished. Saved canopy poses and footprint offsets are bounded.
 
+## Cockpit animation
+
+Cockpit screen-bank and sliding-seat movement, rider visuals and display playback
+use a pause-aware client clock. Remote server time corrections cannot rewind or
+skip visual motion, and repeated settings packets or replacement vehicle tiles do
+not restart it. Collision, reservations and saved motion remain server-authoritative;
+no extra animation packets are needed.
+
 ## Recovery protection
 
 Vehicle and turntable snapshot installation failures leave the entity inert and
