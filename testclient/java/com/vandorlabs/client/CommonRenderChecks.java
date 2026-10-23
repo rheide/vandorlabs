@@ -228,10 +228,20 @@ final class CommonRenderChecks {
             double x=random.nextInt(9)-4,y=random.nextInt(9)-4,z=random.nextInt(9)-4;
             double[][] vertices={{x,y,z,0,0},{x+2,y,z,1,0},{x+2,y+2,z,1,1},{x,y+2,z,0,1}};
             double[] bounds=i%3==0?null:i%3==1?new double[]{-2,-2,-2,3,3,3}:new double[]{-2,-2,-2,3,3,3,-1,-1,-1,1,1,1};
-            List<double[]> expected=LegacyDiagonalClip.quads(bounds,vertices),actual=com.vandorlabs.render.DiagonalMeshClip.quads(bounds,vertices);
+            // The legacy clipper emitted zero-area fragments removed by the contact-frame fix.
+            // Compare every surviving vertex and attribute, excluding only pixel-free fragments.
+            List<double[]> expected=visibleQuads(LegacyDiagonalClip.quads(bounds,vertices)),actual=visibleQuads(com.vandorlabs.render.DiagonalMeshClip.quads(bounds,vertices));
             require(expected.size()==actual.size(),"clipping changed vertex count");
             for(int v=0;v<expected.size();v++)require(Arrays.equals(expected.get(v),actual.get(v)),"clipping changed tessellation/attributes");
         }
+    }
+    private static List<double[]> visibleQuads(List<double[]> vertices){
+        List<double[]> out=new ArrayList<>();
+        for(int start=0;start<vertices.size();start+=4){
+            double twiceArea=0;
+            for(int v=0;v<4;v++){double[] a=vertices.get(start+v),b=vertices.get(start+(v+1)%4);twiceArea+=a[0]*b[1]-b[0]*a[1];}
+            if(Math.abs(twiceArea)>1e-12)out.addAll(vertices.subList(start,start+4));
+        }return out;
     }
     private static void require(boolean condition,String message){if(!condition)throw new AssertionError(message);}
 }

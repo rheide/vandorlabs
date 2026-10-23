@@ -44,6 +44,7 @@ public final class NonRenderingChecks {
         DiagonalJoinMatrixChecks.run();
         LandingGearFootprintChecks.run();
         SurfaceLayoutChecks.run();
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTokenSlot.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_token_slot"));
         DoorMaterialChecks.run();
         CommonRenderChecks.run();
         TrapdoorTextureChecks.run();

@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Add a saved Rotation: Normal / Reverse control for each diagonal trapdoor. Vertically placed rotating leaves inherit the clicked trapdoor's rotation direction; sliding motion and hinge positions remain independent.
+- Allow Canopy and Long Canopy to share the raised cockpit reservation, preserving cockpit collision and controls. Inherit facing and upright/inverted mounting when placing against another opening canopy.
 - Show the selected company name and “Click to clear” in the Programmable Door card filter; unrestricted filters remain “Any card”.
 
 - Remove native-water interface sheets over the solid footprints of wet walls, panes and doors, including the top/near half-width diagonal join. Retain genuine dry-gap boundaries and verify fully wet contacts across the native-fluid matrix.
@@ -14,13 +16,13 @@
 - Expand fluid regression coverage to 780 solid-contact geometry cases, 760 submerged contact/door camera views and 32 pool viewpoints above, below and across the waterline, including inward/outward glass and porthole views. Retain independent exterior comparisons, sorted chunk geometry checks and optional OptiFine compatibility runs.
 
 - Sample vanilla solid-block materials with the Duplifier, preserving block metadata and applying through the existing shared material path.
-- Add saved Programmable Stairs step sizes from 1 to 16 pixels and Normal / Sideways orientation. Infer the solid wing edge from side placement; share rendering, collision and fluid geometry and retain shape in configured items and copies.
+- Add saved Programmable Stairs step sizes of 1, 2, 4 and 8 pixels and dialog-controlled Normal / Sideways orientation. Keep vanilla wall placement, rotate face textures with sideways mounts and preserve exposed neighbor faces; share rendering, collision and fluid geometry and retain shape in configured items and copies.
 - Replace the Programmable Door card multiselect with Any card and an optional, non-consuming single-company card sample.
 - Continuously supply vanilla water flow while a door with just one stored water side stays open. Drain the managed outlet after closing, draining or removing the door, preserve existing sources and retain independent compartment storage.
 - Include wet diagonal columns above native flowing water when calculating shared corner heights, preventing gaps beneath stacked wet glass and doors.
 - Match contained and native free-liquid heights, separate inset pane contacts from frame pixels, and render water surfaces from inside the liquid, including forward views through glass near the waterline.
 
-- Keep Advanced Pilot Chair armrest slider selection on each moving grip at every height and detent. Allow held Canopies to mount above the Cockpit reservation without boarding the seat or replacing its parts.
+- Keep Advanced Pilot Chair armrest slider selection on each moving grip at every height and detent.
 
 - Batch both contained-fluid sides into one draw, reuse cached fluid descriptions and remove per-triangle temporary arrays. Release checks compare rendered pixels against the previous renderer across all waterlogged block families.
 - Restore underwater camera effects and eye immersion inside contained fluids, including the exact center of an open waterlogged door. Keep dry door halves and dry compartments outside the fluid viewpoint.

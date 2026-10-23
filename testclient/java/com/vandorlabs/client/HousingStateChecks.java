@@ -29,6 +29,8 @@ final class HousingStateChecks {
                         .withProperty(ProgrammableHousingState.TILE_SIDES,tile.isSlabTileSides()?1:0);
                 if(actual.getUnlistedNames().contains(ProgrammableHousingState.VISIBLE))reference=(IExtendedBlockState)
                         ReferenceHousingState.extend(state,world,pos,block instanceof BlockProgrammableSlab);
+                if(actual.getUnlistedNames().contains(ProgrammableHousingState.JOINED))reference=reference.withProperty(ProgrammableHousingState.JOINED,HousingFaceLayouts.NONE);
+                if(block instanceof BlockProgrammableStairs)reference=reference.withProperty(ProgrammableHousingState.STAIR_GEOMETRY,tile.stairGeometry());
                 require(block.getExtendedState(actual,world,pos)==actual,"unchanged sampled state lost identity");
                 direct(reference,actual);
                 same(reference,actual);
@@ -48,7 +50,7 @@ final class HousingStateChecks {
     private static void direct(IExtendedBlockState expected,IExtendedBlockState actual) {
         // These reads happen before asking for the complete unlisted map.
         for(net.minecraftforge.common.property.IUnlistedProperty<?> property:expected.getUnlistedNames()) {
-            require(Objects.equals(expected.getValue(property),actual.getValue(property)),"direct unlisted read differs");
+            require(Objects.equals(expected.getValue(property),actual.getValue(property)),"direct unlisted read differs: "+actual.getBlock()+"/"+property.getName()+" expected="+expected.getValue(property)+" actual="+actual.getValue(property));
             noOp(property,actual);
         }
         require(actual.getUnlistedNames().equals(expected.getUnlistedNames()),"unlisted names differ");

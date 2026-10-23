@@ -95,6 +95,8 @@ The material catalog adds four Security Glass designs, three Ancient Relief text
 
 Browse the whole catalog through the [interactive texture browser and category collages](../texture-browser.md). It uses the same categories and selectable artwork as the mod.
 
-The Advanced Pilot Chair armrest sliders remain independently selectable at every height and detent. Hold a regular or Long Canopy and use it on a Cockpit to mount the shell above the upper reservation; removing the canopy preserves the cockpit.
+The Advanced Pilot Chair armrest sliders remain independently selectable at every height and detent. Hold a regular or Long Canopy and use it on a Cockpit to share the raised upper part, preserving cockpit collision and controls; removing the canopy preserves the cockpit.
 
-Programmable Stairs offer a 1, 2, 4, 8 or 16 pixel step-size slider and Normal / Sideways orientation. Placing stairs against a vertical face automatically chooses the sideways direction and solid support edge. Shape settings persist in the world, configured items and Duplifier copies. Sneak-use the Duplifier on a vanilla solid block to sample its material and metadata.
+Programmable Stairs offer a 1, 2, 4 or 8 pixel step-size slider and Normal / Sideways orientation. Placement follows vanilla stairs, including on vertical faces. Select Sideways in the dialog to make a wing; its textures rotate with the geometry and exposed neighboring block faces remain visible. Shape settings persist in the world, configured items and Duplifier copies. Sneak-use the Duplifier on a vanilla solid block to sample its material and metadata.
+
+Programmable Diagonal Trapdoors also have a per-leaf **Rotation: Normal / Reverse** control. Fresh rotating leaves placed vertically against another trapdoor inherit its rotation direction. Configured items retain their saved direction.

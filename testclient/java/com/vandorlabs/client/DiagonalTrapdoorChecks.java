@@ -26,8 +26,41 @@ final class DiagonalTrapdoorChecks {
         block=new BlockProgrammableDiagonalTrapdoor();ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR=block;
         ForgeRegistries.BLOCKS.register(block);item=new ItemDiagonalTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
         require(new TileEntityProgrammableDiagonalTrapdoor().getHousingTexture()==ScreenHousingTextures.DEFAULT_TRAPDOOR,"default diagonal hatch texture missing");
-        mesh();clearance();openSelection();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();partialPatches();slidingStyles();boundaries();recipe();
+        rotationDirections();mesh();clearance();openSelection();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();partialPatches();slidingStyles();boundaries();recipe();
         System.out.println("PASS: Programmable Diagonal Trapdoor ("+assertions+" assertions; wall alignment, rigid geometry, placement, all square orders, saved settings, power, copying, recipe)");
+    }
+    private static double motion(NonRenderingChecks.MemoryWorld world,BlockPos pos,EnumFacing normal){
+        TileEntityProgrammableDiagonalTrapdoor tile=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(pos);
+        double[][] before=BlockProgrammableDiagonalTrapdoor.corners(world.getBlockState(pos),tile,0),after=BlockProgrammableDiagonalTrapdoor.corners(world.getBlockState(pos),tile,.25);
+        // Compare angular motion of an edge, independent of hinge translation and facing.
+        double ax=before[1][0]-before[0][0],az=before[1][2]-before[0][2];
+        double bx=after[1][0]-after[0][0],bz=after[1][2]-after[0][2];
+        return az*bx-ax*bz;
+    }
+    private static void rotationDirections(){
+        BlockPos base=new BlockPos(8,100,8);
+        for(int mode:new int[]{0,1})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean flipped:new boolean[]{false,true}){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+            TileEntityProgrammableDiagonalTrapdoor bottom=place(world,base,mode,facing,inverted,false,0);bottom.setRotationFlipped(flipped);
+            EntityPlayer actor=player(world);ItemStack held=new ItemStack(item);actor.setHeldItem(EnumHand.MAIN_HAND,held);
+            IBlockState state=block.getStateForPlacement(world,base.up(),EnumFacing.UP,.5F,1,.5F,0,actor);
+            require(item.placeBlockAt(held,actor,world,base.up(),EnumFacing.UP,.5F,1,.5F,state),"stacked rotating placement");
+            TileEntityProgrammableDiagonalTrapdoor top=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(base.up());
+            require(motion(world,base,facing)*motion(world,base.up(),facing)>0,"stacked leaves inherit actual rotation direction "+mode+"/"+facing+"/"+inverted+"/"+flipped);
+            double hinge=top.motionHinge(),before=motion(world,base.up(),facing);boolean bottomFlag=bottom.isRotationFlipped();
+            top.setRotationFlipped(!top.isRotationFlipped());require(before*motion(world,base.up(),facing)<0,"direction control reverses motion");
+            require(top.motionHinge()==hinge&&bottom.isRotationFlipped()==bottomFlag,"direction control leaves hinge and neighbor unchanged");
+            boolean expected=top.isRotationFlipped();top.readFromNBT(top.writeToNBT(new NBTTagCompound()));require(top.isRotationFlipped()==expected,"rotation direction persists");
+            ItemStack copied=block.configuredDrop(top);require(copied.getSubCompound("BlockEntityTag").getBoolean("DiagonalRotationFlipped")==expected,"configured item retains direction");
+            NBTTagCompound captured=ProgrammableSettings.capture(world,base.up());
+            BlockPos destination=base.east(6);TileEntityProgrammableDiagonalTrapdoor copiedTile=place(world,destination,mode,facing,inverted,false,0);
+            require(ProgrammableSettings.apply(world,destination,captured)&&copiedTile.isRotationFlipped()==expected,"Duplifier movement retains rotation direction");
+            NonRenderingChecks.MemoryWorld configuredWorld=new NonRenderingChecks.MemoryWorld(false);
+            require(item.placeBlockAt(copied,actor,configuredWorld,base,EnumFacing.UP,.5F,1,.5F,state),"configured direction item placement");
+            require(((TileEntityProgrammableDiagonalTrapdoor)configuredWorld.getTileEntity(base)).isRotationFlipped()==expected,"configured direction survives placement");
+            top.configure(0,mode,true,0,0);boolean slide=top.rotationReverse();top.setRotationFlipped(!expected);require(top.rotationReverse()==slide,"rotation control does not reverse sliding");
+        }
+        require(!new TileEntityProgrammableDiagonalTrapdoor().isRotationFlipped(),"legacy default remains automatic rotation");
     }
     private static void mesh() {
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=new net.minecraft.client.renderer.texture.TextureAtlasSprite("diagonal_check"){};

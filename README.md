@@ -50,7 +50,7 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
 
 - **Structure**: programmable hull, padding, pipe, and vent finishes, wall
   panels, ribs, and cockpit glass. Shift-right-click a Programmable Diagonal
-  Wall in creative mode to choose half/full width, half height, slope direction, and inside/outside fill. Programmable Stairs support the same optional face overrides as Block and Slab, a 1–16px step-size slider, and Normal / Sideways orientation with the wing edge inferred from side placement; matching slabs combine into a full block. Diagonal Portholes support joined openings in both tall and shallow arrangements.
+  Wall in creative mode to choose half/full width, half height, slope direction, and inside/outside fill. Programmable Stairs support the same optional face overrides as Block and Slab, a 1/2/4/8px step-size slider, and dialog-controlled Normal / Sideways orientation. Placement follows vanilla stairs; sideways mounts rotate their textures; matching slabs combine into a full block. Diagonal Portholes support joined openings in both tall and shallow arrangements.
 - **Screens**: static planet/ship/science viewscreens (directional) and
   sequenced animated displays with static/animated/off modes that wake on
   redstone and sleep when power drops.
@@ -96,7 +96,9 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   groups open together, rotating or sliding toward opposite sides. Half-width and
   half-height leaves also join three-leaf and other partial patches. Choose
   Slide over wall for the existing lift-and-slide motion, or Slide into wall
-  for direct sideways retraction.
+  for direct sideways retraction. Rotation: Normal / Reverse changes only the selected
+  leaf. Fresh rotating trapdoors placed vertically against another inherit its
+  rotation direction; configured items retain their saved direction.
   Craft one from a Programmable Trapdoor and an Industrial Alloy Ingot;
   see the [diagonal trapdoor guide](docs/gallery/programmable-diagonal-trapdoor.md).
 - **Programmable Matter Ingot**: a crafting item made from clay balls in all
@@ -464,4 +466,4 @@ The hidden fixed-design Space Door blocks and the old rotating/sliding aliases a
 
 ### Release verification
 
-Run `gradlew verifyRelease` with Java 8 before distributing or tagging a release. This builds the standard JAR and runs the diagonal geometry suite, live glass/frame contact checks, and live gameplay/fluid regressions against that artifact. The glass checks include dry and waterlogged half-width diagonal panels beside solid blocks and a floor. Publishing tasks depend on this gate; a failed or missing live check blocks publication. The Windows live-client launcher requires the local Minecraft/Forge test runtime described above.
+Run `gradlew verifyRelease` with Java 8 before distributing or tagging a release. This builds the standard JAR and runs the non-rendering and diagonal geometry suites, live glass/frame contact checks, live stair/trapdoor dialog checks, and live gameplay/fluid regressions against that artifact. The glass checks include dry and waterlogged half-width diagonal panels beside solid blocks and a floor. Publishing tasks depend on this gate; a failed or missing live check blocks publication. The Windows live-client launcher requires the local Minecraft/Forge test runtime described above.

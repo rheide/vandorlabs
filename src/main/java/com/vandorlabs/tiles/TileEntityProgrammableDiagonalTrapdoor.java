@@ -12,7 +12,7 @@ import java.util.*;
 
 /** Same event-driven controls, with groups laid out across the diagonal surface. */
 public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProgrammableTrapdoor {
-    private boolean reverse,cachedInverted;
+    private boolean reverse,cachedInverted,rotationFlipped;
     private EnumFacing cachedFacing=EnumFacing.NORTH,groupFacing=EnumFacing.NORTH;
     public boolean isReverse(){return reverse;}
     private TileEntityProgrammableDiagonalTrapdoor outsideReference(List<TileEntityProgrammableTrapdoor> leaves) {
@@ -42,14 +42,26 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
     }
     /** Keep every rotating row outside the surface, including reversed coplanar rows. */
     public boolean rotationReverse() {
-        if(sliding || position==2)return reverse;
         return rotationReverse(group());
     }
     public boolean rotationReverse(List<TileEntityProgrammableTrapdoor> leaves) {
-        if(sliding || position==2 || leaves.size()<2)return reverse;
+        if(sliding)return reverse;
+        if(position==2 || leaves.size()<2)return reverse ^ rotationFlipped;
         boolean opposite=facing()==outsideFacing(leaves).getOpposite();
-        return reverse ^ (isInverted()!=opposite);
+        return reverse ^ (isInverted()!=opposite) ^ rotationFlipped;
     }
+
+    public boolean isRotationFlipped(){return rotationFlipped;}
+    /** This control changes only the selected leaf's rotation, never its hinge or sliding direction. */
+    public void setRotationFlipped(boolean value){if(rotationFlipped==value)return;rotationFlipped=value;sync();}
+    public void matchRotation(TileEntityProgrammableDiagonalTrapdoor reference){
+        if(sliding||reference.sliding||position==2||reference.position==2)return;
+        // Tall leaves rotate around an axis whose Y component is positive.
+        // HALF reverses the angle in the mesh, even when facing is reversed to continue a plane.
+        boolean direction=rotationReverse() ^ isInverted();
+        if(direction!=(reference.rotationReverse() ^ reference.isInverted()))setRotationFlipped(!rotationFlipped);
+    }
+
 
     public boolean isInverted(){
         if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalTrapdoor)
@@ -140,7 +152,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
         super.configure(texture,mode,sliding,trigger,channel);
     }
     @Override protected void reconnectLoadedGroup(){if(position!=1)completeSquare(null,ItemStack.EMPTY);}
-    @Override public NBTTagCompound itemSettings(){NBTTagCompound tag=super.itemSettings();tag.setBoolean("DiagonalHalfHeight",position==2);tag.setBoolean("DiagonalFullWidth",position==1);return tag;}
+    @Override public NBTTagCompound itemSettings(){NBTTagCompound tag=super.itemSettings();tag.setBoolean("DiagonalRotationFlipped",rotationFlipped);tag.setBoolean("DiagonalHalfHeight",position==2);tag.setBoolean("DiagonalFullWidth",position==1);return tag;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean("DiagonalReverse",reverse);tag.setInteger("DiagonalFacing",facing().getHorizontalIndex());tag.setBoolean("DiagonalInverted",isInverted());tag.setInteger("DiagonalGroupFacing",groupFacing.getHorizontalIndex());return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);reverse=tag.getBoolean("DiagonalReverse");cachedFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalFacing"));cachedInverted=tag.getBoolean("DiagonalInverted");groupFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalGroupFacing"));}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);reverse=tag.getBoolean("DiagonalReverse");rotationFlipped=tag.getBoolean("DiagonalRotationFlipped");cachedFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalFacing"));cachedInverted=tag.getBoolean("DiagonalInverted");groupFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalGroupFacing"));}
 }

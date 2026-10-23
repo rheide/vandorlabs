@@ -20,6 +20,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     private int position,trigger,channel,tallWidth,doorDetail;
     private ChannelList channelList;
     private net.minecraft.util.EnumFacing facing;
+    private boolean rotationFlipped;
     private boolean sliding,slideIntoWall,slideOverSurface,inverted,cover,tileTexture;
     private boolean diagonal(){return tile instanceof TileEntityProgrammableDiagonalTrapdoor;}
     private GuiTextField channelField;
@@ -29,6 +30,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         cover=tile.isCover();position=tile.getPosition();sliding=tile.isSliding();slideIntoWall=tile.isSlideIntoWall();slideOverSurface=tile.isSlideOverSurface();trigger=tile.getTrigger();channelList=tile.getRedstoneChannels();channel=channelList.first();
         doorDetail=0;
         tileTexture=tile.isTileTexture();textureLayout=tile.getTextureLayout();tallWidth=position==0?0:1;facing=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING);
+        rotationFlipped=diagonal()&&((TileEntityProgrammableDiagonalTrapdoor)tile).isRotationFlipped();
         inverted=diagonal() && ((TileEntityProgrammableDiagonalTrapdoor)tile).isInverted();
         xSize=360;ySize=240;
     }
@@ -53,6 +55,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         buttonList.add(new GuiButton(6,controlsX,y,controlsWidth,20,layoutLabel()));y+=22;
         GuiButton direction=new GuiButton(diagonal()?5:8,controlsX,y,controlsWidth,20,diagonal()?"Reverse slope":facingLabel());
         direction.enabled=diagonal() || tile.canOffsetClosedLeaf();buttonList.add(direction);y+=22;
+        if(diagonal()){GuiButton rotation=new GuiButton(9,controlsX,y,controlsWidth,20,rotationLabel());rotation.enabled=!sliding;buttonList.add(rotation);y+=22;}
         buttonList.add(new GuiButton(3,controlsX,y,controlsWidth,20,triggerLabel()));y+=22;
         channelLabelY=y;
         channelField=new GuiTextField(0,fontRenderer,controlsX,y+11,controlsWidth,18);
@@ -60,6 +63,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         channelField.setText(channelText);
         done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");done.enabled=parsedChannel()>=0;buttonList.add(done);
     }
+    private String rotationLabel(){return "Rotation: "+(rotationFlipped?"Reverse":"Normal");}
     private String motionLabel(){return diagonal()?(sliding?slideIntoWall?"Slide into wall":"Slide over wall":"Rotating"):cover?(sliding?"Slide into next block":"Rotate into next block"):(sliding?slideOverSurface?"Slide over surface":"Sliding":"Rotating");}
     private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
     private String layoutLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
@@ -72,7 +76,8 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         int selected=textures.selected();
         tile.configureGroup(selected,position,sliding,trigger,channelList,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface);
         for(TileEntityProgrammableTrapdoor leaf:tile.group())leaf.setTextureLayout(textureLayout);
-        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList).withTextureLayout(textureLayout));
+        if(diagonal())((TileEntityProgrammableDiagonalTrapdoor)tile).setRotationFlipped(rotationFlipped);
+        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList).withTextureLayout(textureLayout).withRotationFlipped(rotationFlipped));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
@@ -86,6 +91,8 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
 
         }
         else if(button.id==8){if(!tile.canOffsetClosedLeaf())return;facing=GuiOptionCycle.next(facing);button.displayString=facingLabel();}
+        else if(button.id==9){rotationFlipped=!rotationFlipped;button.displayString=rotationLabel();}
+        for(GuiButton control:buttonList)if(control.id==9)control.enabled=!sliding;
         send();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {

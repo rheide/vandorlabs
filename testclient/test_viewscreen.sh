@@ -99,6 +99,7 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
 fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = fluids ]; then
+        grep -q 'diagonal-trapdoor-direction-dialog PASS' "$RUN_OUT/client.log"
         grep -q 'fluid-render-bounds PASS cases=132 cameraViews=10' "$RUN_OUT/client.log"
         grep -q 'fluid-lightmap PASS cases=256' "$RUN_OUT/client.log"
         grep -q 'fluid-boundary-matrix PASS' "$RUN_OUT/client.log"
@@ -130,10 +131,12 @@ if [ "$MODE" = focus ]; then
     fi
     if [ "$TARGET" = canopies ]; then
         grep -q "canopy-world PASS" "$RUN_OUT/client.log"
-        grep -q "canopy-composition PASS" "$RUN_OUT/client.log"
+        grep -q "canopy-three-wide PASS" "$RUN_OUT/client.log"
+        grep -q "canopy-surfaces PASS" "$RUN_OUT/client.log"
+        grep -q "canopy-harvest-clicks PASS" "$RUN_OUT/client.log"
         grep -q "canopy-icons PASS" "$RUN_OUT/client.log"
         grep -q "canopy-live PASS" "$RUN_OUT/client.log"
-        for name in closed open designs icons composable; do test -s "$RUN_OUT/shot_canopy_$name.png"; done
+        for name in closed open designs icons side_trim side_trim_shifted; do test -s "$RUN_OUT/shot_canopy_$name.png"; done
         echo "Live canopy checks passed: $RUN_OUT"
         exit 0
     fi

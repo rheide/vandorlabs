@@ -24,7 +24,7 @@ Removing an open Front Canopy Glass or Large Front Canopy Glass releases its clo
 
 Canopy and Canopy Glass can share their open lower space with a Pilot Seat's backrest in either placement order. Hold the canopy item and click the seat's upper backrest area to place the shell; the seat passes that click through instead of boarding or opening its settings.
 
-Hold a Canopy and click the rear glazing of another Canopy to place it facing the opposite direction. The placement uses the clicked rear cell and retains ceiling mounting; the shared rear glazing opens into a continuous cabin. Empty-hand use still opens or closes the mechanism.
+Hold a Canopy or Long Canopy and click an existing canopy to match its facing and upright or ceiling mounting. Placement uses the clicked surface, including rear helper cells. Canopies can share the raised part of a Cockpit, just as they share a Pilot Seat backrest; removing the canopy restores the cockpit reservation and preserves its controls. Empty-hand use still opens or closes the mechanism.
 
 ## Glass and materials
 

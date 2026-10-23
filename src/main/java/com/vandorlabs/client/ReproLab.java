@@ -656,6 +656,10 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("captured glass live checks",failure);}
             return;
         }
+        if(state==998){
+            try {if(StairDialogLiveChecks.tick(mc,outDir)&&DiagonalTrapdoorDirectionLiveChecks.tick(mc,outDir)){state=999;mc.shutdown();}}
+            catch(Exception failure){throw new IllegalStateException("release placement dialogs",failure);}return;
+        }
         if(Boolean.getBoolean("vandorlabs.fluidChecksOnly")) {
             try {if(FluidFocusedChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("fluid focused checks",failure);}return;
         }
@@ -966,7 +970,10 @@ public class ReproLab {
                             : CAPTURE_SETTLE_TICKS;
                 } else {
                     writeManifest();
-                    if(System.getProperty("vandorlabs.reproShotPrefix","").equals("utility22_card_mounts")||System.getProperty("vandorlabs.reproShotPrefix","").equals("utility22_cockpit")){
+                    if(System.getProperty("vandorlabs.reproShotPrefix","").equals("utility22_card_mounts")){
+                        mc.gameSettings.hideGUI=false;state=998;return;
+                    }
+                    if(System.getProperty("vandorlabs.reproShotPrefix","").equals("utility22_cockpit")){
                         state=999;mc.shutdown();return;
                     }
                     if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
