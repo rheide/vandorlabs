@@ -28,12 +28,13 @@ final class ProgrammableStairMesh {
         }return result;
     }
     private static void face(List<BakedQuad> result,IBlockState state,int roll,TextureAtlasSprite sprite,double[][] corners){
-        Vec3d[] vertices=new Vec3d[4];for(int i=0;i<4;i++)vertices[i]=ProgrammableStairGeometry.transform(new Vec3d(corners[i][0],corners[i][1],corners[i][2]),state,roll);
+        Vec3d[] vertices=new Vec3d[4],textureVertices=new Vec3d[4];for(int i=0;i<4;i++){Vec3d local=new Vec3d(corners[i][0],corners[i][1],corners[i][2]);vertices[i]=ProgrammableStairGeometry.transform(local,state,roll);textureVertices[i]=ProgrammableStairGeometry.transform(local,state,0);}
         // Top-half reflection reverses winding.
-        if(state.getValue(BlockStairs.HALF)==BlockStairs.EnumHalf.TOP){Vec3d swap=vertices[1];vertices[1]=vertices[3];vertices[3]=swap;}
+        if(state.getValue(BlockStairs.HALF)==BlockStairs.EnumHalf.TOP){Vec3d swap=vertices[1];vertices[1]=vertices[3];vertices[3]=swap;swap=textureVertices[1];textureVertices[1]=textureVertices[3];textureVertices[3]=swap;}
         Vec3d normal=vertices[1].subtract(vertices[0]).crossProduct(vertices[2].subtract(vertices[0])).normalize();EnumFacing face=EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z);
+        Vec3d textureNormal=textureVertices[1].subtract(textureVertices[0]).crossProduct(textureVertices[2].subtract(textureVertices[0]));EnumFacing textureFace=EnumFacing.getFacingFromVector((float)textureNormal.x,(float)textureNormal.y,(float)textureNormal.z);
         int[] data=new int[28];for(int i=0;i<4;i++){
-            Vec3d p=vertices[i];int at=i*7;double u=face.getAxis()==EnumFacing.Axis.X?p.z:p.x,v=face.getAxis()==EnumFacing.Axis.Y?p.z:1-p.y;
+            Vec3d p=vertices[i],uv=textureVertices[i];int at=i*7;double u=textureFace.getAxis()==EnumFacing.Axis.X?uv.z:uv.x,v=textureFace.getAxis()==EnumFacing.Axis.Y?uv.z:1-uv.y;
             data[at]=Float.floatToRawIntBits((float)p.x);data[at+1]=Float.floatToRawIntBits((float)p.y);data[at+2]=Float.floatToRawIntBits((float)p.z);data[at+3]=-1;
             data[at+4]=Float.floatToRawIntBits(sprite.getInterpolatedU(u*16));data[at+5]=Float.floatToRawIntBits(sprite.getInterpolatedV(v*16));
         }

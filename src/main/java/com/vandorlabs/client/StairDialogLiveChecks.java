@@ -31,7 +31,8 @@ final class StairDialogLiveChecks {
             javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new java.io.File(output,"stair-size-sideways-dialog.png"));
             GuiButton orientation=button(gui,131);gui.mouseClicked(orientation.x+4,orientation.y+8,1);
         }
-        if(ticks==90){check(mc,1,0);mc.player.closeScreen();System.out.println("[vandorlabs][reprolab] stair-dialog-live PASS real server container slider packet left/right orientation updates synchronized geometry");return true;}return false;
+        if(ticks==90){check(mc,1,0);GuiProgrammableWall gui=(GuiProgrammableWall)mc.currentScreen;GuiButton slider=button(gui,130);gui.mouseClicked(slider.x+slider.width-4,slider.y+10,0);gui.mouseReleased(slider.x+slider.width-4,slider.y+10,0);}
+        if(ticks==110){check(mc,8,0);mc.player.closeScreen();System.out.println("[vandorlabs][reprolab] stair-dialog-live PASS real server container slider packet left/right orientation updates synchronized geometry");return true;}return ticks>110;
     }
     private static void check(Minecraft mc,int tread,int roll)throws Exception{
         mc.getIntegratedServer().addScheduledTask(()->{

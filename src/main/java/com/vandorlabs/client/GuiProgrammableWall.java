@@ -158,8 +158,8 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             }
         }
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableStairs){
-            int step=Integer.numberOfTrailingZeros(tile.stairTread());
-            buttonList.add(new net.minecraftforge.fml.client.config.GuiSlider(130,controlsX,y,controlsWidth,20,"Step size: "," px",0,4,step,false,true,slider->{
+            int step=Math.min(3,Integer.numberOfTrailingZeros(tile.stairTread()));
+            buttonList.add(new net.minecraftforge.fml.client.config.GuiSlider(130,controlsX,y,controlsWidth,20,"Step size: "," px",0,3,step,false,true,slider->{
                 tile.setStairGeometry(1<<slider.getValueInt(),tile.stairRoll());slider.displayString="Step size: "+tile.stairTread()+" px";sendStairs();
             }));buttonList.get(buttonList.size()-1).displayString="Step size: "+tile.stairTread()+" px";y+=24;
             buttonList.add(new GuiButton(131,controlsX,y,controlsWidth,20,"Orientation: "+(tile.stairRoll()==0?"Normal":"Sideways")));

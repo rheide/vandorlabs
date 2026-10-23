@@ -33,13 +33,6 @@ public final class BlockProgrammableStairs extends BlockStairs {
                 new IUnlistedProperty[]{ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH,ProgrammableHousingState.FACES,
                         ProgrammableHousingState.TILE_SIDES,ProgrammableHousingState.STAIR_GEOMETRY});
     }
-    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,net.minecraft.entity.EntityLivingBase player){
-        IBlockState state=super.getStateForPlacement(world,pos,side,x,y,z,meta,player);
-        if(side.getAxis().isHorizontal()){
-            EnumFacing rise=player.getHorizontalFacing();if(rise.getAxis()==side.getAxis())rise=side.rotateY();
-            state=state.withProperty(FACING,rise).withProperty(HALF,EnumHalf.BOTTOM);
-        }return state;
-    }
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
     @Override public TileEntity createTileEntity(World world,IBlockState state) { return new TileEntityAnimatedScreenSelector(); }
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos) {
@@ -133,6 +126,7 @@ public final class BlockProgrammableStairs extends BlockStairs {
         }return nearest;
     }
     @Override public boolean isSideSolid(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){int settings=ProgrammableStairGeometry.settings(world,pos);return settings==8?super.isSideSolid(state,world,pos,side):ProgrammableStairGeometry.solidFace(getActualState(state,world,pos),settings,side);}
+    @Override public boolean doesSideBlockRendering(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return isSideSolid(state,world,pos,side);}
     @Override public BlockFaceShape getBlockFaceShape(IBlockAccess world,IBlockState state,BlockPos pos,EnumFacing side){return isSideSolid(state,world,pos,side)?BlockFaceShape.SOLID:BlockFaceShape.UNDEFINED;}
 
     @Override public Boolean isAABBInsideMaterial(World world,BlockPos pos,AxisAlignedBB box,net.minecraft.block.material.Material material){return WaterloggedParts.intersects(world,pos,box,material);}

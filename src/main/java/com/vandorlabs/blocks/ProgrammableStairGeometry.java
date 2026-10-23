@@ -17,6 +17,20 @@ public final class ProgrammableStairGeometry {
         if(roll==1){double old=y;y=z;z=1-old;}else if(roll==2){double old=y;y=1-z;z=old;}
         switch(state.getValue(BlockStairs.FACING)){case WEST:return new Vec3d(1-x,y,1-z);case NORTH:return new Vec3d(z,y,1-x);case SOUTH:return new Vec3d(1-z,y,x);default:return new Vec3d(x,y,z);}
     }
+    /** Resolve a mounted face back to the same stair before its sideways roll. */
+    public static EnumFacing unrolledFace(IBlockState state,int roll,EnumFacing face){
+        if(roll==0)return face;
+        Vec3d center=new Vec3d(.5,.5,.5);
+        for(EnumFacing local:EnumFacing.values()){
+            Vec3d point=center.add(new Vec3d(local.getDirectionVec()).scale(.5));
+            Vec3d mounted=transform(point,state,roll).subtract(center);
+            if(EnumFacing.getFacingFromVector((float)mounted.x,(float)mounted.y,(float)mounted.z)==face){
+                Vec3d normal=transform(point,state,0).subtract(center);
+                return EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z);
+            }
+        }
+        throw new IllegalArgumentException("Invalid stair face");
+    }
     public static double height(int x,int z,int count,BlockStairs.EnumShape shape){
         double main=(x+1D)/count;
         if(shape==BlockStairs.EnumShape.STRAIGHT)return main;

@@ -51,18 +51,20 @@ public final class ProgrammableStairsModel implements IBakedModel {
             source=geometry.getIfPresent(key);if(source==null){source=ProgrammableStairMesh.quads(shape,stairGeometry,base.getParticleTexture());geometry.put(key,source);}
         }
         for(BakedQuad quad:source) {
-            EnumFacing local=quad.getFace();
+            IBlockState orientation=state==null?com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STAIRS.getDefaultState().withProperty(BlockStairs.FACING,EnumFacing.EAST):state;
+            EnumFacing textureFace=com.vandorlabs.blocks.ProgrammableStairGeometry.unrolledFace(orientation,stairGeometry>>5,quad.getFace());
+            EnumFacing local=textureFace;
             // Front is the low riser facing the player, opposite the rise direction.
             if(local.getAxis()!=EnumFacing.Axis.Y)
                 for(int i=0;i<((facing.getOpposite().getHorizontalIndex()+2)&3);i++)local=local.rotateYCCW();
             int texture=faces.texture(local.getIndex(),ScreenHousingTextures.clamp(local.getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish));
             final int key=texture*3+layout;final int mode=layout;
             result.add(cache.computeIfAbsent(quad,q->new java.util.concurrent.ConcurrentHashMap<>())
-                    .computeIfAbsent(key,k->retexture(quad,texture,mode)));
+                    .computeIfAbsent(key,k->retexture(quad,texture,mode,textureFace)));
         }
         return result;
     }
-    private static BakedQuad retexture(BakedQuad quad,int texture,int layout) {
+    private static BakedQuad retexture(BakedQuad quad,int texture,int layout,EnumFacing textureFace) {
         TextureAtlasSprite old=quad.getSprite(),next=Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(ScreenHousingTextures.texture(texture));
         int[] data=quad.getVertexData().clone();int stride=data.length/4;
@@ -81,7 +83,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
         boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,(uhi-ulo)*unitU,(hi-lo)*unitV,aspect);
         for(int i=0;i<4;i++) {
             double uu=layout==2 && fit && uhi>ulo?(u[i]-ulo)*16/(uhi-ulo):layout==0?u[i]:com.vandorlabs.render.TextureLayoutMode.tileU(u[i],aspect);
-            double vv=fit && hi>lo && (layout==2 || quad.getFace().getAxis()!=EnumFacing.Axis.Y)?(v[i]-lo)*16/(hi-lo):layout==0?v[i]:com.vandorlabs.render.TextureLayoutMode.tileV(v[i],aspect);
+            double vv=fit && hi>lo && (layout==2 || textureFace.getAxis()!=EnumFacing.Axis.Y)?(v[i]-lo)*16/(hi-lo):layout==0?v[i]:com.vandorlabs.render.TextureLayoutMode.tileV(v[i],aspect);
             data[i*stride+4]=Float.floatToRawIntBits(next.getInterpolatedU(uu));
             data[i*stride+5]=Float.floatToRawIntBits(next.getInterpolatedV(vv));
         }
