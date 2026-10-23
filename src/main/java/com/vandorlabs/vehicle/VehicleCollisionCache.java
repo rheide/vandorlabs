@@ -19,7 +19,7 @@ public final class VehicleCollisionCache {
             "BlockAnimatedScreenSelector","BlockProgrammableDiagonalScreen","BlockProgrammableConsole","BlockProgrammableHalfConsole","BlockVandorConsole",
             "BlockPropulsionLight","BlockConnectedPropulsionLight","BlockConnectedHoverPropulsionLight","BlockTrianglePropulsionLight",
             "BlockProgrammableTrapdoor","BlockProgrammableDiagonalTrapdoor","BlockSignalControl","BlockVandorSwitch","BlockTwinPowerLever","BlockIndustrialLever","BlockCompactLever","BlockMountedSwitch","BlockRockerSwitch",
-            "BlockRampController","BlockControlledRamp"));
+            "BlockRampController","BlockRampControllerSlab","BlockControlledRamp"));
     private final LinkedHashMap<Pose,VehicleCollision.Geometry> entries=new LinkedHashMap<>(20,.75F,true);
     private NBTTagCompound configuration;
     private net.minecraft.world.World parent;

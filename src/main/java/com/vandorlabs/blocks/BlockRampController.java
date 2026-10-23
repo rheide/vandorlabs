@@ -15,27 +15,32 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/** Its facing is the scan direction, away from the player on placement. */
+/** The active face scans material; horizontal facing remains the default travel direction. */
 public class BlockRampController extends BlockVandorDirectional {
+    public static final net.minecraft.block.properties.PropertyDirection ACTIVE_FACE=net.minecraft.block.properties.PropertyDirection.create("active_face");
+    public static EnumFacing scanFacing(IBlockState state){EnumFacing face=state.getValue(ACTIVE_FACE);return face.getAxis()==EnumFacing.Axis.Y?face:state.getValue(FACING);}
     public static final net.minecraft.block.properties.PropertyInteger MODE=net.minecraft.block.properties.PropertyInteger.create("mode",0,6);
     public static final String[] MODE_TEXTURES={"ramp","filled_ramp","lift","extend","escalator_up","escalator_down","moat"};
     public static int modeIndex(boolean moat,int escalator,boolean elevator,boolean extend){return moat?6:escalator!=0?Math.max(1,Math.min(2,escalator))+3:elevator?(extend?3:2):(extend?1:0);}
     public static int modeIndex(NBTTagCompound data){return data==null?0:modeIndex(data.getBoolean("MoatMode"),data.getInteger("EscalatorMode"),data.getBoolean("Elevator"),data.getBoolean("ExtendSegments"));}
     public static final net.minecraft.block.properties.PropertyBool ACTIVE=net.minecraft.block.properties.PropertyBool.create("active");
-    public BlockRampController() {
-        super("programmable_ramp");
-        setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH).withProperty(ACTIVE,false).withProperty(MODE,0));
+    public BlockRampController() {this("programmable_ramp");}
+    protected BlockRampController(String name) {
+        super(name);
+        setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH).withProperty(ACTIVE_FACE,EnumFacing.NORTH).withProperty(ACTIVE,false).withProperty(MODE,0));
     }
     @Override protected net.minecraft.block.state.BlockStateContainer createBlockState() {
-        return new net.minecraft.block.state.BlockStateContainer(this,FACING,ACTIVE,MODE);
+        return new net.minecraft.block.state.BlockStateContainer(this,FACING,ACTIVE_FACE,ACTIVE,MODE);
     }
     @Override public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(FACING,EnumFacing.getHorizontal(meta&3)).withProperty(ACTIVE,(meta&4)!=0);
+        EnumFacing scan=(meta&8)!=0?((meta&1)==0?EnumFacing.UP:EnumFacing.DOWN):EnumFacing.getHorizontal(meta&3);
+        return getDefaultState().withProperty(FACING,scan.getAxis()==EnumFacing.Axis.Y?EnumFacing.NORTH:scan).withProperty(ACTIVE_FACE,scan).withProperty(ACTIVE,(meta&4)!=0);
     }
     @Override public int getMetaFromState(IBlockState state) {
-        return state.getValue(FACING).getHorizontalIndex() | (state.getValue(ACTIVE)?4:0);
+        EnumFacing scan=scanFacing(state);return (scan.getAxis()==EnumFacing.Axis.Y?8|(scan==EnumFacing.DOWN?1:0):scan.getHorizontalIndex()) | (state.getValue(ACTIVE)?4:0);
     }
     @Override public IBlockState getActualState(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos){
+        state=state.withProperty(ACTIVE_FACE,scanFacing(state));
         TileEntity tile=world.getTileEntity(pos);
         if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;return state.withProperty(MODE,modeIndex(ramp.moat,ramp.escalator,ramp.elevator,ramp.extendSegments));}
         return state.withProperty(MODE,0);
@@ -44,7 +49,8 @@ public class BlockRampController extends BlockVandorDirectional {
     @Override public TileEntity createTileEntity(World world, IBlockState state) { return new TileEntityRampController(); }
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ, int meta, net.minecraft.entity.EntityLivingBase placer) {
-        return getDefaultState().withProperty(FACING,DirectionalPlacement.alongPlayer(placer));
+        EnumFacing horizontal=DirectionalPlacement.alongPlayer(placer),scan=placer.rotationPitch>45?EnumFacing.DOWN:placer.rotationPitch< -45?EnumFacing.UP:horizontal;
+        return getDefaultState().withProperty(FACING,horizontal).withProperty(ACTIVE_FACE,scan);
     }
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player,
             EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
@@ -87,7 +93,7 @@ public class BlockRampController extends BlockVandorDirectional {
                         settings.getBoolean("ExtendSegments"), settings.getInteger("Speed"),
                         !settings.hasKey("MatchTextures") || settings.getBoolean("MatchTextures"),false,settings.getInteger("RampInterpolation"),settings.getInteger("EscalatorMode"),settings.getBoolean("MoatMode"));
                 ramp.setRedstoneChannels(com.vandorlabs.redstone.ChannelData.read(settings,settings.getInteger("Channel")));
-            } else ramp.updatePower();
+            } else {if(scanFacing(state).getAxis()==EnumFacing.Axis.Y)ramp.setPlacementDirection(state.getValue(FACING));ramp.updatePower();}
         }
     }
     @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,

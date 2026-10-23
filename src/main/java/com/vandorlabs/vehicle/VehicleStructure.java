@@ -89,6 +89,7 @@ public final class VehicleStructure {
     public List<BlockPos> pilotSeats(){
         return pilotSeats;
     }
+    public boolean hasDedicatedController(){return controller!=null&&controller.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController;}
     public Cell controller(){
         return controller;
     }

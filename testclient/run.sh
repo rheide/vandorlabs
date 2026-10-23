@@ -29,6 +29,9 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   "$JAVA" "-Xmx${VANDOR_LABS_TEST_HEAP:-2G}" "${CAPTURE_JVM[@]}" \
   -Dvandorlabs.fluidChecksOnly="${VANDOR_LABS_FLUID_CHECKS_ONLY:-false}" \
   -Dvandorlabs.cockpitChecksOnly="${VANDOR_LABS_COCKPIT_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.renderRegressionChecksOnly="${VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.existingVehicleHoverChecksOnly="${VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.hoverFixture="${VANDOR_LABS_HOVER_FIXTURE:-}" \
   -Dvandorlabs.creativeCatalogChecksOnly="${VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY:-false}" \
   -Dvandorlabs.canopyChecksOnly="${VANDOR_LABS_CANOPY_CHECKS_ONLY:-false}" \
   -Dvandorlabs.glassAppearanceChecksOnly="${VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY:-false}" \

@@ -67,6 +67,7 @@ final class ModularGearFollowupRuntimeChecks {
             for(BlockPos root:new BlockPos[]{at,at.east(4),at.south(4)})build(world,player,root,large,swing,true);
             BlockPos seat=at.add(2,2,2);world.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState());ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seat,world.getBlockState(seat),player,new ItemStack(ModBlocks.PILOT_SEAT));
             world.setBlockState(at.add(3,2,2),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState());
+            world.setBlockState(at.add(4,2,2),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState());
             VehicleScan scan=new VehicleScan(world,seat);for(int tick=0;tick<200&&!scan.step(128);tick++);
             require(scan.result!=null&&scan.error==null,"ski vehicle scan "+scan.error);require(scan.result.hasSkisOnly&&scan.result.gearCount==3,"all supports identified as skis");
             for(Block ice:new Block[]{Blocks.ICE,Blocks.PACKED_ICE,Blocks.FROSTED_ICE}){ground(world,at,ice);require(VehicleSkiTraction.canStart(world,scan.result,scan.origin),"ski Taxi on "+ice.getRegistryName());}

@@ -31,12 +31,12 @@ craft's physical propulsion or lift requirements.
 
 The cockpit’s casing page offers **Throttles: Single / Twin**. Single uses one centered throttle; Twin retains the two independent controls. Existing cockpits default to Twin. Switching to Single suppresses the hidden right throttle’s output while retaining its saved settings for a later return to Twin. The choice survives saving, configured item drops and vehicle conversion. Left-click advances the option; right-click selects the previous value.
 
-Vehicle Status only shows Autopilot and departure controls when an Autopilot Controller is available. Block, Taxi and Hover controls remain visible.
+Vehicle Status only shows Autopilot and departure controls when an Autopilot Controller is available. Block, Taxi and Hover controls require a connected Vehicle Controller. Without it the screen reports **Vehicle Controller missing**.
 
 The seated assemblies participate in normal craft discovery. Their reserved cells
-and saved controls survive conversion, movement and parking. A cockpit supplies
-vehicle controls when the craft has no separate Vehicle Controller; a separate
-Vehicle Controller takes precedence. The Pilot page includes boarding behavior,
+and saved controls survive conversion, movement and parking. A dedicated Vehicle Controller is required for new Taxi/Hover conversions.
+Older captured cockpit-only vehicles retain their saved settings and Configurizer
+parking recovery. The Pilot page includes boarding behavior,
 trigger channels, independent Block/Taxi/Hover channels and mode buttons. Vehicles
 with plates or landing struts retain their Hover-only mode restrictions. Ski-only
 vehicles can Taxi while all runners remain above ice, packed ice or frosted ice.

@@ -179,6 +179,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public java.util.List<BlockPos> vehicleSources(){return java.util.Collections.unmodifiableList(sources);}
     public int area() { return sources.size(); }
     public boolean isOpen() { return open; }
+    public boolean activeForModel(){return escalator!=0?beltRequested:open;}
     public boolean isMoving() { return moving; }
     public int durationTicks() { return duration; }
     public EnumFacing rampDirection() {
@@ -187,6 +188,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         return state!=null && state.getBlock() instanceof BlockRampController
                 ?state.getValue(BlockVandorDirectional.FACING):facing;
     }
+    public void setPlacementDirection(EnumFacing direction){if(direction!=null&&direction.getAxis().isHorizontal()&&configuredFacing==null){configuredFacing=direction;markDirty();}}
     public void setOwner(EntityPlayer player) { owner=player.getUniqueID(); markDirty(); }
     public double pose(double partial) {
         return moving?ControllerPlatform.pose(startPose,open,world.getTotalWorldTime()-startTick+partial,duration):startPose;
@@ -396,7 +398,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private boolean capture() {
         // Old saves retain their full journal until restored; only new deployments are capped.
         drop=Math.min(drop,ControllerPlatform.MAX_DROP);
-        EnumFacing scanFacing=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
+        EnumFacing scanFacing=BlockRampController.scanFacing(world.getBlockState(pos));
         facing=rampDirection();
         BlockPos seed=pos.offset(scanFacing);
         if (!world.isBlockLoaded(seed)) return fail("Load all platform chunks first");
@@ -526,7 +528,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if(escalator!=0)throw new IllegalArgumentException("Escalator geometry remains frozen in vehicle mode");
         if(usesNativeMoatGeometry())moatGeometryRevision=2;
         if(sources.isEmpty()){
-            facing=rampDirection();BlockPos seed=pos.offset(world.getBlockState(pos).getValue(BlockVandorDirectional.FACING));
+            facing=rampDirection();BlockPos seed=pos.offset(BlockRampController.scanFacing(world.getBlockState(pos)));
             IBlockState material=world.getBlockState(seed);
             boolean programmable=material.getBlock()==ModBlocks.PROGRAMMABLE_BLOCK||material.getBlock()==ModBlocks.PROGRAMMABLE_SLAB||material.getBlock()==ModBlocks.PROGRAMMABLE_STAIRS;
             boolean ieSlab=com.vandorlabs.compat.RampMaterials.isIESlab(world,seed);

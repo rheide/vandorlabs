@@ -591,3 +591,4 @@ tile.vandorlabs.data_chip_slot.name=Data Chip Mount
 
 tile.vandorlabs.redstone_transmitter.name=Redstone Transmitter
 tile.vandorlabs.redstone_receiver.name=Redstone Receiver
+tile.vandorlabs.programmable_ramp_slab.name=Ramp Controller Slab

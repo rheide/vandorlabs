@@ -122,6 +122,7 @@ final class AutopilotRuntimeChecks {
         world.setBlockState(controllerPos,ModBlocks.AUTOPILOT.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST),2);
         world.setBlockState(waypointPos,ModBlocks.WAYPOINT.getDefaultState(),2);TileEntityWaypoint waypoint=(TileEntityWaypoint)world.getTileEntity(waypointPos);waypoint.stopMode=0;waypoint.delay=0;
         world.setBlockState(seatPos,ModBlocks.PILOT_SEAT.getDefaultState(),2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seatPos,ModBlocks.PILOT_SEAT.getDefaultState(),owner,new net.minecraft.item.ItemStack(ModBlocks.PILOT_SEAT));
+        world.setBlockState(base.add(2,2,0),net.minecraft.block.Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);
         VehicleScan scan=new VehicleScan(world,seatPos);for(int i=0;i<100&&!scan.step(128);i++);require(scan.error==null&&scan.result!=null,"block waypoint fixture scan: "+scan.error);
         VehicleService.authorizeAssembly(owner,scan.result,scan.origin);EntityGroundVehicle craft=VehicleTransfer.assemble(world,scan.result,scan.origin,owner);
         modeChannelIntegration(world,craft,base);

@@ -72,7 +72,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
 
     /** Joining glass aligns the slope but cannot hide an opaque wall's end cap. */
     public static boolean coveredFlatEnd(IBlockState state,IBlockAccess world,BlockPos pos,boolean upper) {
-        return !Double.isNaN(flatEnd(state,world,pos,upper,true));
+        // A thin flat wall seals the sloped strip, not the wider filled shelf.
+        return fill(world,pos)==0 && !Double.isNaN(flatEnd(state,world,pos,upper,true));
     }
 
     private static double flatEnd(IBlockState state,IBlockAccess world,BlockPos pos,boolean upper,boolean covering) {

@@ -21,7 +21,8 @@ public final class VehicleScan {
     private final ArrayDeque<BlockPos> queue = new ArrayDeque<>();
     private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>();
     private final Map<BlockPos, VehicleStructure.Cell> cells = new LinkedHashMap<>();
-    private final Set<BlockPos> rampSections=new HashSet<>();
+    private final Set<BlockPos> rampSections=new HashSet<>(),overhangContacts=new HashSet<>();
+    private int contactChecks;
     private int minX, minY, minZ, maxX, maxY, maxZ, seats,autopilots,controllers;
     private BlockPos pilot;
     private Double gearBottomY;
@@ -48,7 +49,7 @@ public final class VehicleScan {
         require(world.getBlockState(p).getBlock()==expected, "Incomplete "+expected.getLocalizedName()+": expected a matching part at "+p.getX()+", "+p.getY()+", "+p.getZ()+" but found "+world.getBlockState(p).getBlock().getLocalizedName()+". Replace or complete this component.");
         enqueue(p);
     }
-    private static boolean slab(Block block){return block instanceof net.minecraft.block.BlockSlab || block instanceof BlockProgrammableSlab || block instanceof BlockProgrammableLightSlab;}
+    private static boolean slab(Block block){return block instanceof net.minecraft.block.BlockSlab || block instanceof BlockProgrammableSlab || block instanceof BlockProgrammableLightSlab || block instanceof BlockRampControllerSlab;}
     /** Empty half-block faces do not bridge the craft to the hangar floor. */
     public static boolean touches(World world,BlockPos p,IBlockState state,EnumFacing face){
         BlockPos other=p.offset(face);if(!world.isBlockLoaded(other))return true;
@@ -57,16 +58,41 @@ public final class VehicleScan {
         if(next.getBlock().isAir(next,world,other))return true;
         // Only slabs have a guaranteed empty half-cell. Non-solid decorative components
         // retain the existing six-neighbour attachment contract.
-        if(face.getAxis()==EnumFacing.Axis.Y && (slab(state.getBlock()) || slab(next.getBlock()))){
-            net.minecraft.util.math.AxisAlignedBB a=state.getBoundingBox(world,p).offset(p),b=next.getBoundingBox(world,other).offset(other);
-            final double e=1e-6;
-            switch(face.getAxis()){
-                case X:return Math.abs((face==EnumFacing.EAST?a.maxX:a.minX)-(face==EnumFacing.EAST?b.minX:b.maxX))<e && a.maxY>b.minY+e && a.minY<b.maxY-e && a.maxZ>b.minZ+e && a.minZ<b.maxZ-e;
-                case Y:return Math.abs((face==EnumFacing.UP?a.maxY:a.minY)-(face==EnumFacing.UP?b.minY:b.maxY))<e && a.maxX>b.minX+e && a.minX<b.maxX-e && a.maxZ>b.minZ+e && a.minZ<b.maxZ-e;
-                default:return Math.abs((face==EnumFacing.SOUTH?a.maxZ:a.minZ)-(face==EnumFacing.SOUTH?b.minZ:b.maxZ))<e && a.maxX>b.minX+e && a.minX<b.maxX-e && a.maxY>b.minY+e && a.minY<b.maxY-e;
+        if(face.getAxis()==EnumFacing.Axis.Y){
+            // Only a slab's own empty half disconnects it. Decorative walls and
+            // canopy bounds may stop short of their cell while remaining attached.
+            if(slab(state.getBlock())){
+                net.minecraft.util.math.AxisAlignedBB a=state.getBoundingBox(world,p);
+                if(face==EnumFacing.UP?a.maxY<1-1e-6:a.minY>1e-6)return false;
+            }
+            if(slab(next.getBlock())){
+                net.minecraft.util.math.AxisAlignedBB b=next.getBoundingBox(world,other);
+                if(face==EnumFacing.UP?b.minY>1e-6:b.maxY<1-1e-6)return false;
             }
         }
         return true;
+    }
+    /** Overhanging walls and shells can support blocks in diagonally adjacent cells. */
+    private void geometryContacts(BlockPos owner,List<net.minecraft.util.math.AxisAlignedBB> surfaces){
+        if(!overhangContacts.add(owner))return;
+        Map<BlockPos,List<net.minecraft.util.math.AxisAlignedBB>> shapes=new HashMap<>();
+        for(net.minecraft.util.math.AxisAlignedBB box:surfaces){
+            net.minecraft.util.math.AxisAlignedBB contact=box.grow(1e-6);
+            require(Double.isFinite(contact.minX)&&Double.isFinite(contact.maxX)&&Double.isFinite(contact.minY)&&Double.isFinite(contact.maxY)&&Double.isFinite(contact.minZ)&&Double.isFinite(contact.maxZ)&&contact.maxX-contact.minX<=64&&contact.maxY-contact.minY<=64&&contact.maxZ-contact.minZ<=64,"Invalid attachment geometry.");
+            for(BlockPos cursor:BlockPos.getAllInBox(new BlockPos(contact.minX,contact.minY,contact.minZ),new BlockPos(contact.maxX,contact.maxY,contact.maxZ))){
+                require(++contactChecks<=maxBlocks*128,"Attachment discovery limit exceeded.");
+                if(scheduled.contains(cursor))continue;
+                require(world.isBlockLoaded(cursor),"Overhanging geometry touches an unloaded chunk.");
+                IBlockState state=world.getBlockState(cursor);if(state.getBlock().isAir(state,world,cursor))continue;
+                BlockPos at=cursor.toImmutable();List<net.minecraft.util.math.AxisAlignedBB> boxes=shapes.get(at);
+                if(boxes==null){boxes=new ArrayList<>();state.addCollisionBoxToList(world,at,new net.minecraft.util.math.AxisAlignedBB(at).grow(2),boxes,null,false);shapes.put(at,boxes);}
+                for(net.minecraft.util.math.AxisAlignedBB shape:boxes)if(surfaceContact(box,shape)){enqueue(at);break;}
+            }
+        }
+    }
+    private static boolean surfaceContact(net.minecraft.util.math.AxisAlignedBB a,net.minecraft.util.math.AxisAlignedBB b){
+        double x=Math.min(a.maxX,b.maxX)-Math.max(a.minX,b.minX),y=Math.min(a.maxY,b.maxY)-Math.max(a.minY,b.minY),z=Math.min(a.maxZ,b.maxZ)-Math.max(a.minZ,b.minZ);
+        return x>=-1e-6&&y>=-1e-6&&z>=-1e-6&&(x>1e-7?1:0)+(y>1e-7?1:0)+(z>1e-7?1:0)>=2;
     }
     public boolean step(int budget) {
         if(error!=null || result!=null) return true;
@@ -142,6 +168,10 @@ public final class VehicleScan {
                     require(Math.abs(canopy.progress-(canopy.targetOpen?1:0))<.001, "Wait for the canopy to stop moving.");
                     for(BlockPos member:canopy.reservedCells())linked(member,block);
                     if(canopy.pair!=null)linked(canopy.pair,block);
+                    TileEntityCanopy owner=canopy.owner();if(owner.draws())geometryContacts(owner.getPos(),owner.boxes());
+                }
+                if(block instanceof BlockProgrammableWall&&((BlockProgrammableWall)block).isDiagonalShape()){
+                    List<net.minecraft.util.math.AxisAlignedBB> surfaces=new ArrayList<>();state.addCollisionBoxToList(world,p,new net.minecraft.util.math.AxisAlignedBB(p).grow(2),surfaces,null,false);geometryContacts(p,surfaces);
                 }
                 if(tile instanceof TileEntityProgrammableTrapdoor && data!=null) {
                     for(String key:new String[]{"TrapdoorPartner","TrapdoorSquare"})

@@ -3,7 +3,18 @@
 The standalone Landing Ramp items have been removed. Use **Ramp Controller**
 beside a horizontal platform made of matching slabs or ordinary
 solid blocks. Look toward the platform while placing the controller: its top
-arrow points to the seed block it will select.
+arrow points to the seed block it will select. Look steeply upward or downward
+to place its active face toward blocks above or below. This changes which side
+is scanned; the ramp still deploys horizontally in the placement heading or
+configured Direction.
+
+**Ramp Controller Slab** has the same modes, channels and configuration dialog in
+a horizontal half-height housing. Click the upper half of a side or the underside
+of a block to place a top slab; other placements make a bottom slab. Its active
+scan face can point in all six directions while travel stays horizontal. A top
+slab does not connect a vehicle to the ground through its empty lower half. The
+slab has newly drawn half-height side panels and the same seven mode indicators.
+Craft three Ramp Controllers in a row to obtain six slabs.
 
 Craft the controller with a piston in the center of a 3×3 crafting grid and
 Programmable Matter Ingots in the eight surrounding slots.

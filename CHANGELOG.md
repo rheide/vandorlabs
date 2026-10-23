@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 2.4
+
+- Add Ramp Controller Slab with top/bottom placement, six active scan faces, the full controller's settings and seven mode indicators. Use newly drawn half-height panels and preserve top-slab separation from the ground during vehicle discovery.
+
+- Follow actual overhanging diagonal-wall and canopy contacts during vehicle discovery, preventing attached ceiling slabs from being left behind and trapping a newly assembled Hover craft. Preserve empty-half slab separation from terrain.
+
+- Preserve the vehicle mesh vertex format, stride and shader attributes when converting blocks to Taxi/Hover, including cache invalidation after shader format changes.
+- Keep the exposed top and bottom caps of filled diagonal walls beneath adjoining flat walls.
+- Allow Ramp Controllers to scan upward or downward while retaining horizontal ramp deployment and existing horizontal controller metadata.
+- Require a dedicated Vehicle Controller for new Taxi/Hover conversions. Vehicle Status reports "Vehicle Controller missing" and hides mode controls when absent; previously captured craft retain their recovery path.
 
 - Correct stretched cockpit Redstone text, restore buttons after shared renderer buffer offsets, and align four-position slider clicks with their visible segments.
 - Open cockpit configuration on the clicked screen, keyboard or throttle page, including blank and gated-off displays.
@@ -9,8 +18,6 @@
 - Hide unavailable Autopilot and departure controls on Vehicle Status displays while retaining vehicle mode controls.
 
 - Hide retired block items from JEI's registry scans, including duplicate Power Lever/Industrial Power Lever sizes and the old Landing Gear, Ski Landing Gear and landing struts. Preserve saved blocks and inventory items; current modular gear and configurable lever sizes remain available.
-
-## 2.4
 
 - Animate cockpit screen banks and sliding seats with the client's pause-aware visual clock, avoiding skips or rewinds from server world-time corrections. Preserve visual motion across repeated settings packets and recreated vehicle tiles without increasing packet frequency. Server collision, reservations and saved motion remain authoritative.
 - Play cockpit display artwork from the same local visual clock so remote server time synchronization cannot stall or rewind its frames.

@@ -60,11 +60,14 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         int generation,light,level;
         net.minecraft.util.math.AxisAlignedBB bounds;
         Build pending;
+        VertexFormat format;
         void delete(){for(VertexBuffer b:buffers)b.deleteGlBuffers();buffers.clear();layers.clear();translucent.clear();sortedX=Double.NaN;if(pending!=null){pending.result.delete();pending=null;}}
     }
     private static final class Build {
         final Mesh result=new Mesh();final List<VehicleStructure.Cell> cells;
         final BufferBuilder component=new BufferBuilder(4096);
+        final VertexFormat format=new VertexFormat(DefaultVertexFormats.BLOCK);
+        final List<int[]> extendedComponents=new ArrayList<>();
         BufferBuilder builder;
         int layer,cell;
         Build(Mesh source,int light,int level){cells=source.cells;result.generation=generation;result.light=light;result.level=level;}
@@ -135,6 +138,9 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     @Override public boolean shouldRender(EntityGroundVehicle e,net.minecraft.client.renderer.culling.ICamera camera,double x,double y,double z){return e.structure==null || camera.isBoundingBoxInFrustum(e.getRenderBoundingBox());}
     private Mesh mesh(EntityGroundVehicle e,Mesh mesh,boolean propulsion) {
         int light=e.view.getCombinedLight(e.structure.seat,0),appearance=e.view.propulsionAppearance();
+        // OptiFine mutates the global BLOCK format when shaders toggle. Never draw
+        // old records with new pointers, even while a replacement build is pending.
+        if(mesh.format!=null&&!mesh.format.equals(DefaultVertexFormats.BLOCK)||mesh.pending!=null&&!mesh.pending.format.equals(DefaultVertexFormats.BLOCK)){mesh.delete();mesh.format=null;mesh.builtCells=null;}
         if(mesh.builtCells==mesh.cells && mesh.generation==generation && mesh.light==light && (!propulsion || mesh.level==appearance))return mesh;
         if(buildCells<=0 || buildNanos<=0)return mesh;
         if(mesh.pending==null)mesh.pending=new Build(mesh,light,appearance);
@@ -143,27 +149,28 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         try {
             while(job.layer<BlockRenderLayer.values().length && buildCells>0 && System.nanoTime()<deadline) {
                 BlockRenderLayer layer=BlockRenderLayer.values()[job.layer];net.minecraftforge.client.ForgeHooksClient.setRenderLayer(layer);
-                if(job.builder==null){job.builder=new BufferBuilder(65536);job.builder.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);}
+                if(job.builder==null){job.builder=new BufferBuilder(65536);job.builder.begin(GL11.GL_QUADS,job.format);}
                 while(job.cell<job.cells.size() && buildCells>0 && System.nanoTime()<deadline) {
                     VehicleStructure.Cell cell=job.cells.get(job.cell++);buildCells--;
-                    job.component.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
+                    job.component.begin(GL11.GL_QUADS,job.format);
                     try {if(cell.state.getBlock().canRenderInLayer(cell.state,layer))mc.getBlockRendererDispatcher().renderBlock(e.view.getBlockState(cell.pos),cell.pos,e.view,job.component);}
                     catch(RuntimeException | LinkageError error) {
-                        VehicleCompatibility.warn(cell.state.getBlock(),"block model",error);job.component.finishDrawing();job.component.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
+                        VehicleCompatibility.warn(cell.state.getBlock(),"block model",error);job.component.finishDrawing();job.component.begin(GL11.GL_QUADS,job.format);
                         if(layer==BlockRenderLayer.SOLID)mc.getBlockRendererDispatcher().getBlockModelRenderer().renderModel(e.view,mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(),cell.state,cell.pos,job.component,false);
                     }
-                    job.component.finishDrawing();if(job.component.getVertexCount()>0)job.builder.addVertexData(job.component.getVertexState().getRawBuffer());
+                    job.component.finishDrawing();if(job.component.getVertexCount()>0){int[] raw=job.component.getVertexState().getRawBuffer();if(job.format.getNextOffset()>28)job.extendedComponents.add(raw);else job.builder.addVertexData(raw);}
                 }
                 if(job.cell<job.cells.size())break;
+                if(!job.extendedComponents.isEmpty()){BlockMeshVbo.merge(job.builder,job.extendedComponents,job.format);job.extendedComponents.clear();}
                 job.builder.finishDrawing();
                 if(job.builder.getVertexCount()>0) {
-                    java.nio.ByteBuffer data=job.builder.getByteBuffer();int stride=DefaultVertexFormats.BLOCK.getNextOffset();
+                    java.nio.ByteBuffer data=job.builder.getByteBuffer();int stride=job.format.getNextOffset();
                     double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;
                     for(int vertex=0;vertex<job.builder.getVertexCount();vertex++){int offset=vertex*stride;float vx=data.getFloat(offset),vy=data.getFloat(offset+4),vz=data.getFloat(offset+8);minX=Math.min(minX,vx);minY=Math.min(minY,vy);minZ=Math.min(minZ,vz);maxX=Math.max(maxX,vx);maxY=Math.max(maxY,vy);maxZ=Math.max(maxZ,vz);}
                     net.minecraft.util.math.AxisAlignedBB bounds=new net.minecraft.util.math.AxisAlignedBB(minX,minY,minZ,maxX,maxY,maxZ);
                     job.result.bounds=job.result.bounds==null?bounds:job.result.bounds.union(bounds);
                     long upload=VehicleDiagnostics.ENABLED?System.nanoTime():0;
-                    VertexBuffer buffer=new VertexBuffer(DefaultVertexFormats.BLOCK);buffer.bufferData(job.builder.getByteBuffer());
+                    VertexBuffer buffer=new VertexBuffer(job.format);buffer.bufferData(job.builder.getByteBuffer());
                     if(VehicleDiagnostics.ENABLED)uploadSamples[uploadCount++%uploadSamples.length]=System.nanoTime()-upload;
                     if(layer==BlockRenderLayer.TRANSLUCENT)job.result.translucent.put(job.result.buffers.size(),job.builder.getVertexState());
                     job.result.buffers.add(buffer);job.result.layers.add(layer);
@@ -174,7 +181,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         if(job.layer==BlockRenderLayer.values().length) {
             mesh.pending=null;mesh.delete();mesh.buffers.addAll(job.result.buffers);mesh.layers.addAll(job.result.layers);mesh.translucent.putAll(job.result.translucent);
             mesh.builtCells=mesh.cells;mesh.generation=generation;mesh.light=job.result.light;mesh.level=job.result.level;
-            mesh.bounds=job.result.bounds;
+            mesh.bounds=job.result.bounds;mesh.format=job.format;
         }
         return mesh;
     }
@@ -183,7 +190,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         if(!Double.isNaN(mesh.sortedX) && (x-mesh.sortedX)*(x-mesh.sortedX)+(y-mesh.sortedY)*(y-mesh.sortedY)+(z-mesh.sortedZ)*(z-mesh.sortedZ)<1)return;
         mesh.sortedX=x;mesh.sortedY=y;mesh.sortedZ=z;
         for(Map.Entry<Integer,BufferBuilder.State> entry:mesh.translucent.entrySet()) {
-            BufferBuilder builder=new BufferBuilder(4096);builder.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
+            BufferBuilder builder=new BufferBuilder(4096);builder.begin(GL11.GL_QUADS,mesh.format);
             builder.setVertexState(entry.getValue());builder.sortVertexData((float)x,(float)y,(float)z);builder.finishDrawing();
             mesh.buffers.get(entry.getKey()).bufferData(builder.getByteBuffer());
         }
@@ -214,14 +221,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         for(BlockRenderLayer layer:BlockRenderLayer.values())for(Mesh mesh:pair)for(int i=0;i<mesh.buffers.size();i++) {
             if(mesh.layers.get(i)!=layer)continue;
             if(mesh.layers.get(i)==BlockRenderLayer.TRANSLUCENT){GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.depthMask(false);}else {GlStateManager.disableBlend();GlStateManager.depthMask(true);}
-            VertexBuffer buffer=mesh.buffers.get(i);buffer.bindBuffer();
-            GlStateManager.glEnableClientState(GL11.GL_VERTEX_ARRAY);GlStateManager.glEnableClientState(GL11.GL_COLOR_ARRAY);
-            GlStateManager.glVertexPointer(3,GL11.GL_FLOAT,28,0);GlStateManager.glColorPointer(4,GL11.GL_UNSIGNED_BYTE,28,12);
-            OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);GlStateManager.glTexCoordPointer(2,GL11.GL_FLOAT,28,16);
-            OpenGlHelper.setClientActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.glEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY);GlStateManager.glTexCoordPointer(2,GL11.GL_SHORT,28,24);
-            OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);buffer.drawArrays(GL11.GL_QUADS);buffer.unbindBuffer();
-            GlStateManager.glDisableClientState(GL11.GL_VERTEX_ARRAY);GlStateManager.glDisableClientState(GL11.GL_COLOR_ARRAY);GlStateManager.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);
-            OpenGlHelper.setClientActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.glDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY);OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
+            BlockMeshVbo.draw(mesh.buffers.get(i),mesh.format,layer);
         }
         GlStateManager.depthMask(true);GlStateManager.disableBlend();GlStateManager.enableLighting();
         VehicleWheelRenderer.render(e,regions.wheels,partial);

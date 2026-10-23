@@ -81,6 +81,10 @@ final class RedstoneScreenRenderer {
         drawVehicleContents(tile.getWorld(),tile.getPos(),height,top);GlStateManager.popMatrix();
     }
     static void drawVehicleContents(net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos,int height,int top){
+        if(!com.vandorlabs.vehicle.VehicleStatus.hasController(world,pos)){
+            GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);bindWhite();BufferBuilder missing=Tessellator.getInstance().getBuffer();missing.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());rect(missing,0,0,128,height,0,0xff362b19);Tessellator.getInstance().draw();
+            FontRenderer font=Minecraft.getMinecraft().fontRenderer;java.util.List<String> lines=font.listFormattedStringToWidth("Vehicle Controller missing",112);int y=Math.max(4,(height-lines.size()*10)/2);for(String line:lines){text(font,line,8,y,0xffd19b);y+=10;}GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();return;
+        }
         com.vandorlabs.vehicle.EntityGroundVehicle craft=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).craft:null;
         boolean hover=craft!=null&&craft.hover;
         com.vandorlabs.tiles.TileEntityAutopilot autopilot=com.vandorlabs.vehicle.VehicleStatus.find(world,pos);

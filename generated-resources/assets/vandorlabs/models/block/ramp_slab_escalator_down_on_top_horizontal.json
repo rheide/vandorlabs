@@ -1,0 +1,87 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "vandorlabs:block/ramp_slab_side_on",
+    "north": "vandorlabs:block/ramp_slab_escalator_down_on",
+    "south": "vandorlabs:block/ramp_slab_side_on",
+    "east": "vandorlabs:block/ramp_slab_side_right_on",
+    "west": "vandorlabs:block/ramp_slab_side_left_on",
+    "up": "vandorlabs:block/ramp_mode_escalator_down",
+    "down": "vandorlabs:block/ramp_elevator_controller_bottom_on"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        8,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#north",
+          "cullface": "north",
+          "uv": [
+            0,
+            0,
+            16,
+            8
+          ]
+        },
+        "south": {
+          "texture": "#south",
+          "cullface": "south",
+          "uv": [
+            0,
+            0,
+            16,
+            8
+          ]
+        },
+        "east": {
+          "texture": "#east",
+          "cullface": "east",
+          "uv": [
+            0,
+            0,
+            16,
+            8
+          ]
+        },
+        "west": {
+          "texture": "#west",
+          "cullface": "west",
+          "uv": [
+            0,
+            0,
+            16,
+            8
+          ]
+        },
+        "up": {
+          "texture": "#up",
+          "cullface": "up",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "down": {
+          "texture": "#down",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        }
+      }
+    }
+  ]
+}

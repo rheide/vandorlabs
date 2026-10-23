@@ -22,6 +22,37 @@ skip visual motion, and repeated settings packets or replacement vehicle tiles d
 not restart it. Collision, reservations and saved motion remain server-authoritative;
 no extra animation packets are needed.
 
+## Vehicle discovery and rendering
+
+Vehicle discovery follows actual overhanging diagonal-wall and canopy contacts,
+including ceiling slabs outside the usual six-neighbour attachment path. It
+excludes corner-only contacts and retains slab separation from hangar floors.
+New Taxi/Hover conversion requires a dedicated Vehicle Controller; Vehicle Status
+reports **Vehicle Controller missing** when absent. Legacy captured craft retain
+their safe parking recovery path.
+
+Vehicle meshes retain their build vertex format and shader attributes, and rebuild
+when the active format changes. This corrects the hardcoded vanilla vertex stride
+that interpreted extended OptiFine shader records as positions. Hardware shader-pack
+appearance remains a separate compatibility check.
+
+Filled diagonal walls retain exposed top and bottom caps at flat-wall contacts.
+
+## Ramp controllers
+
+Ramp Controller active faces can scan above or below while deployment stays
+horizontal. Existing horizontal placement metadata remains compatible. Ramp
+Controller Slab provides the same modes and dialog with top/bottom slab placement,
+new half-height side panels and padded configured item icons. Top slab placement
+keeps the empty lower half disconnected from the ground during vehicle discovery.
+
+## Cockpit controls
+
+Cockpit Redstone displays use square-pixel text and aligned control buttons. Clicked
+screens and controls select their own configuration page. Throttles support custom
+Low/High limits and four detents, with a saved Single/Twin layout. Vehicle Status
+omits Autopilot controls when no Autopilot Controller is present.
+
 ## Recovery protection
 
 Vehicle and turntable snapshot installation failures leave the entity inert and

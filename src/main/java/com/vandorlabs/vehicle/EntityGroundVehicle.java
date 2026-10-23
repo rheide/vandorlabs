@@ -98,6 +98,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public void flightInput(EntityPlayerMP player,byte direction,boolean toggle){flightInput(player,direction,toggle,false);}
     public void flightInput(EntityPlayerMP player,byte direction,boolean toggle,boolean sprint){
         if(getControllingPassenger()!=player || direction< -1 || direction>1 || autopilot.enabled())return;
+        if(toggle&&!structure.hasDedicatedController()){VehicleNetwork.error(player,"Vehicle Controller missing");return;}
         if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.hasNonWheeledGear?"Taxi requires wheels, or only skis above ice; otherwise select Park near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         vertical=direction;flightSprint=sprint;verticalAt=world.getTotalWorldTime();
     }

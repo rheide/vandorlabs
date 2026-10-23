@@ -12,7 +12,7 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod.EventBusSubscriber(modid="vandorlabs",value=Side.CLIENT)
 public final class RampModeModels {
     @SubscribeEvent public static void register(ModelRegistryEvent event){
-        Item.getItemFromBlock(ModBlocks.PROGRAMMABLE_RAMP).addPropertyOverride(new ResourceLocation("vandorlabs","ramp_mode"),
+        for(net.minecraft.block.Block block:new net.minecraft.block.Block[]{ModBlocks.PROGRAMMABLE_RAMP,ModBlocks.PROGRAMMABLE_RAMP_SLAB})Item.getItemFromBlock(block).addPropertyOverride(new ResourceLocation("vandorlabs","ramp_mode"),
                 (stack,world,entity)->BlockRampController.modeIndex(stack.getSubCompound("RampSettings")));
     }
     private RampModeModels(){}

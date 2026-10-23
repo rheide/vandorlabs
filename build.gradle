@@ -791,10 +791,12 @@ task verifyRelease {
         def digest = { java.security.MessageDigest.getInstance('SHA-256').digest(releaseJar.bytes).encodeHex().toString() }
         def expectedDigest = digest()
         if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+            exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'render-regressions', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'glass-appearance', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--shot-prefix', 'utility22_card_mounts', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'fluids', '--timeout', '900' }
         } else {
+            exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'render-regressions' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'glass-appearance' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility22_card_mounts' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'fluids' }

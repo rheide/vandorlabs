@@ -1,0 +1,22 @@
+{
+  "parent": "vandorlabs:block/ramp_slab_lift_off_bottom_horizontal",
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ],
+      "scale": [
+        0.52,
+        0.52,
+        0.52
+      ]
+    }
+  }
+}

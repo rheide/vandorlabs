@@ -1,0 +1,592 @@
+{
+  "variants": {
+    "active=false,active_face=north,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_bottom_horizontal"
+    },
+    "active=false,active_face=east,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_bottom_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_bottom_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_bottom_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_bottom_up"
+    },
+    "active=false,active_face=down,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_bottom_down"
+    },
+    "active=false,active_face=north,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_top_horizontal"
+    },
+    "active=false,active_face=east,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_top_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_top_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_top_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_top_up"
+    },
+    "active=false,active_face=down,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_off_top_down"
+    },
+    "active=false,active_face=north,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_bottom_horizontal"
+    },
+    "active=false,active_face=east,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_bottom_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_bottom_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_bottom_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_bottom_up"
+    },
+    "active=false,active_face=down,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_bottom_down"
+    },
+    "active=false,active_face=north,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_top_horizontal"
+    },
+    "active=false,active_face=east,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_top_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_top_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_top_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_top_up"
+    },
+    "active=false,active_face=down,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_off_top_down"
+    },
+    "active=false,active_face=north,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_bottom_horizontal"
+    },
+    "active=false,active_face=east,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_bottom_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_bottom_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_bottom_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_bottom_up"
+    },
+    "active=false,active_face=down,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_bottom_down"
+    },
+    "active=false,active_face=north,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_top_horizontal"
+    },
+    "active=false,active_face=east,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_top_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_top_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_top_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_top_up"
+    },
+    "active=false,active_face=down,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_off_top_down"
+    },
+    "active=false,active_face=north,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_bottom_horizontal"
+    },
+    "active=false,active_face=east,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_bottom_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_bottom_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_bottom_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_bottom_up"
+    },
+    "active=false,active_face=down,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_bottom_down"
+    },
+    "active=false,active_face=north,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_top_horizontal"
+    },
+    "active=false,active_face=east,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_top_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_top_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_top_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_top_up"
+    },
+    "active=false,active_face=down,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_off_top_down"
+    },
+    "active=false,active_face=north,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_bottom_horizontal"
+    },
+    "active=false,active_face=east,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_bottom_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_bottom_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_bottom_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_bottom_up"
+    },
+    "active=false,active_face=down,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_bottom_down"
+    },
+    "active=false,active_face=north,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_top_horizontal"
+    },
+    "active=false,active_face=east,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_top_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_top_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_top_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_top_up"
+    },
+    "active=false,active_face=down,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_off_top_down"
+    },
+    "active=false,active_face=north,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_bottom_horizontal"
+    },
+    "active=false,active_face=east,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_bottom_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_bottom_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_bottom_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_bottom_up"
+    },
+    "active=false,active_face=down,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_bottom_down"
+    },
+    "active=false,active_face=north,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_top_horizontal"
+    },
+    "active=false,active_face=east,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_top_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_top_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_top_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_top_up"
+    },
+    "active=false,active_face=down,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_off_top_down"
+    },
+    "active=false,active_face=north,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_bottom_horizontal"
+    },
+    "active=false,active_face=east,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_bottom_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_bottom_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_bottom_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_bottom_up"
+    },
+    "active=false,active_face=down,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_bottom_down"
+    },
+    "active=false,active_face=north,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_top_horizontal"
+    },
+    "active=false,active_face=east,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_top_horizontal",
+      "y": 90
+    },
+    "active=false,active_face=south,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_top_horizontal",
+      "y": 180
+    },
+    "active=false,active_face=west,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_top_horizontal",
+      "y": 270
+    },
+    "active=false,active_face=up,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_top_up"
+    },
+    "active=false,active_face=down,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_off_top_down"
+    },
+    "active=true,active_face=north,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_bottom_horizontal"
+    },
+    "active=true,active_face=east,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_bottom_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_bottom_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_bottom_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_bottom_up"
+    },
+    "active=true,active_face=down,half=bottom,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_bottom_down"
+    },
+    "active=true,active_face=north,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_top_horizontal"
+    },
+    "active=true,active_face=east,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_top_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_top_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_top_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_top_up"
+    },
+    "active=true,active_face=down,half=top,mode=0": {
+      "model": "vandorlabs:ramp_slab_ramp_on_top_down"
+    },
+    "active=true,active_face=north,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_bottom_horizontal"
+    },
+    "active=true,active_face=east,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_bottom_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_bottom_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_bottom_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_bottom_up"
+    },
+    "active=true,active_face=down,half=bottom,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_bottom_down"
+    },
+    "active=true,active_face=north,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_top_horizontal"
+    },
+    "active=true,active_face=east,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_top_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_top_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_top_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_top_up"
+    },
+    "active=true,active_face=down,half=top,mode=1": {
+      "model": "vandorlabs:ramp_slab_filled_ramp_on_top_down"
+    },
+    "active=true,active_face=north,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_bottom_horizontal"
+    },
+    "active=true,active_face=east,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_bottom_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_bottom_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_bottom_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_bottom_up"
+    },
+    "active=true,active_face=down,half=bottom,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_bottom_down"
+    },
+    "active=true,active_face=north,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_top_horizontal"
+    },
+    "active=true,active_face=east,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_top_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_top_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_top_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_top_up"
+    },
+    "active=true,active_face=down,half=top,mode=2": {
+      "model": "vandorlabs:ramp_slab_lift_on_top_down"
+    },
+    "active=true,active_face=north,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_bottom_horizontal"
+    },
+    "active=true,active_face=east,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_bottom_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_bottom_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_bottom_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_bottom_up"
+    },
+    "active=true,active_face=down,half=bottom,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_bottom_down"
+    },
+    "active=true,active_face=north,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_top_horizontal"
+    },
+    "active=true,active_face=east,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_top_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_top_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_top_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_top_up"
+    },
+    "active=true,active_face=down,half=top,mode=3": {
+      "model": "vandorlabs:ramp_slab_extend_on_top_down"
+    },
+    "active=true,active_face=north,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_bottom_horizontal"
+    },
+    "active=true,active_face=east,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_bottom_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_bottom_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_bottom_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_bottom_up"
+    },
+    "active=true,active_face=down,half=bottom,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_bottom_down"
+    },
+    "active=true,active_face=north,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_top_horizontal"
+    },
+    "active=true,active_face=east,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_top_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_top_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_top_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_top_up"
+    },
+    "active=true,active_face=down,half=top,mode=4": {
+      "model": "vandorlabs:ramp_slab_escalator_up_on_top_down"
+    },
+    "active=true,active_face=north,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_bottom_horizontal"
+    },
+    "active=true,active_face=east,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_bottom_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_bottom_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_bottom_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_bottom_up"
+    },
+    "active=true,active_face=down,half=bottom,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_bottom_down"
+    },
+    "active=true,active_face=north,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_top_horizontal"
+    },
+    "active=true,active_face=east,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_top_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_top_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_top_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_top_up"
+    },
+    "active=true,active_face=down,half=top,mode=5": {
+      "model": "vandorlabs:ramp_slab_escalator_down_on_top_down"
+    },
+    "active=true,active_face=north,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_bottom_horizontal"
+    },
+    "active=true,active_face=east,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_bottom_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_bottom_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_bottom_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_bottom_up"
+    },
+    "active=true,active_face=down,half=bottom,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_bottom_down"
+    },
+    "active=true,active_face=north,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_top_horizontal"
+    },
+    "active=true,active_face=east,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_top_horizontal",
+      "y": 90
+    },
+    "active=true,active_face=south,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_top_horizontal",
+      "y": 180
+    },
+    "active=true,active_face=west,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_top_horizontal",
+      "y": 270
+    },
+    "active=true,active_face=up,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_top_up"
+    },
+    "active=true,active_face=down,half=top,mode=6": {
+      "model": "vandorlabs:ramp_slab_moat_on_top_down"
+    }
+  }
+}

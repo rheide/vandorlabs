@@ -90,6 +90,7 @@ final class ModularGearRuntimeChecks {
             NBTTagCompound settings=gear.settings();settings.setString("Channels","65003");gear.configure(settings);
             Block pilot=Block.getBlockFromName("vandorlabs:pilot_seat");world.setBlockState(seat,pilot.getDefaultState());pilot.onBlockPlacedBy(world,seat,world.getBlockState(seat),player,new ItemStack(pilot));
             world.setBlockState(base.add(0,2,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState());for(int x=0;x<3;x++)world.setBlockState(base.add(x,2,2),Block.getBlockFromName("vandorlabs:antigravity_plate").getDefaultState());
+            world.setBlockState(base.add(2,2,1),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState());
             VehicleScan scan=new VehicleScan(world,seat);for(int tick=0;tick<200&&!scan.step(128);tick++);require(scan.error==null&&scan.result!=null,"vehicle scan "+scan.error);require(scan.result.gearCount==3&&scan.result.hasNonWheeledGear,"count shared control as three physical mounting supports");
             player.setPositionAndUpdate(base.getX()-2,base.getY()+2,base.getZ()-2);craft=VehicleTransfer.assemble(world,scan.result,scan.origin,player);require(craft.hover,"modular gear enters Hover");craft.rotationYaw=90;
             GearTileEntity captured=null;for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&((GearTileEntity)raw).isController())captured=(GearTileEntity)raw;

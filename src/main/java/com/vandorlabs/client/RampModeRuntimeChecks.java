@@ -38,7 +38,7 @@ final class RampModeRuntimeChecks {
         IBlockState actual=block.getActualState(mc.world.getBlockState(pos),mc.world,pos);require(actual.getValue(BlockRampController.MODE)==mode,"actual state follows synchronized tile");
         String expected="vandorlabs:block/ramp_mode_"+BlockRampController.MODE_TEXTURES[mode];require(fronts.add(expected),"seven distinct mode sprite names");
         for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean active:new boolean[]{false,true}){
-            IBlockState state=actual.withProperty(BlockRampController.FACING,facing).withProperty(BlockRampController.ACTIVE,active);
+            IBlockState state=actual.withProperty(BlockRampController.FACING,facing).withProperty(BlockRampController.ACTIVE_FACE,facing).withProperty(BlockRampController.ACTIVE,active);
             IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(state);java.util.List<BakedQuad> quads=model.getQuads(state,facing,0);
             require(!quads.isEmpty(),"front baked for "+facing+" active="+active);
             for(BakedQuad quad:quads)require(quad.getSprite().getIconName().equals(expected),"front uses mode sprite actual="+quad.getSprite().getIconName()+" facing="+facing+" active="+active);

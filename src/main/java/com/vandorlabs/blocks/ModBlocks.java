@@ -59,6 +59,7 @@ public class ModBlocks {
     public static Block PROGRAMMABLE_FULL_INPUT;
     public static Block CONTROLLED_RAMP;
     public static Block PROGRAMMABLE_RAMP;
+    public static Block PROGRAMMABLE_RAMP_SLAB;
     public static Block AUTOPILOT, WAYPOINT;
     public static final List<Block> BLOCKS = new ArrayList<>();
     /** Ids of every "display" (animated screen) block, sorted. Populated
@@ -248,6 +249,7 @@ public class ModBlocks {
         PROGRAMMABLE_FULL_INPUT = new BlockProgrammableFullInput();
         add(PROGRAMMABLE_FULL_INPUT);
         PROGRAMMABLE_RAMP = add(new BlockRampController());
+        PROGRAMMABLE_RAMP_SLAB = add(new BlockRampControllerSlab());
         AUTOPILOT = add(new BlockAutopilot(false));
         WAYPOINT = add(new BlockAutopilot(true));
         CONTROLLED_RAMP = new BlockControlledRamp();
@@ -500,6 +502,8 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onModelRegister(ModelRegistryEvent event) {
+        ModelLoader.setCustomStateMapper(PROGRAMMABLE_RAMP,new StateMap.Builder().ignore(BlockVandorDirectional.FACING).build());
+        ModelLoader.setCustomStateMapper(PROGRAMMABLE_RAMP_SLAB,new StateMap.Builder().ignore(BlockVandorDirectional.FACING).build());
         for (Block block : BLOCKS) {
             if (!NO_ITEM.contains(block)) {
                 Item item = Item.getItemFromBlock(block);

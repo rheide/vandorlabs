@@ -1,5 +1,7 @@
 # Pilot Seat, Taxi and Hover modes
 
+Vehicle Status displays **Vehicle Controller missing** and omits mode controls when no dedicated Vehicle Controller is connected. A cockpit does not replace this block.
+
 A craft needs one Vehicle Controller, at least one Pilot Seat, and at least three landing gear or wheel supports among its connected blocks. Taxi and Hover require at least one Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine. Hover additionally requires at least three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters. Taxi Mode is enabled by default: sitting assembles the craft, and leaving the last occupied seat attempts to restore it as blocks when that controlling pilot's seat has Taxi Mode enabled. Disable Taxi Mode on a Pilot Seat to board it without automatic assembly and use the Vehicle Controller for manual assembly and parking.
 
 Canopy and Canopy Glass share the space above the seat's lower block with its backrest. Either placement order works: holding a canopy item passes clicks on the seat through to placement, including when sneaking. Empty-hand boarding and configuration tools retain their usual actions.
