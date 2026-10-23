@@ -39,6 +39,13 @@ vehicles can Taxi while all runners remain above ice, packed ice or frosted ice.
 
 ## Moving screens and exit clearance
 
+Cockpit display playback and mechanical movement use a pause-aware client visual
+clock. Server time synchronization cannot rewind or skip their rendered frames.
+Screen and seat target changes animate locally; repeated settings updates do not
+restart movement, including when a vehicle recreates its local cockpit tile.
+Server collision, rear reservations and saved motion keep their authoritative
+timeline. This does not require additional animation packets.
+
 Press the small button between the right keyboard and right armrest to retract the three-screen bank into the console housing. Press again to raise it. The displays move with their frame and retain their individual settings.
 
 ![Retracting cockpit screens](images/gallery/version-2.3/cockpit-screens.gif)

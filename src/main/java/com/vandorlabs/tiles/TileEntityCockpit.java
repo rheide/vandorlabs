@@ -19,8 +19,13 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     private boolean vehicleMotionWasMoving;
     public boolean motionCompleted(){boolean moving=screenLift.moving(world.getTotalWorldTime())||seatSlide.moving(world.getTotalWorldTime());boolean completed=vehicleMotionWasMoving&&!moving;vehicleMotionWasMoving=moving;return completed;}
     public String seatBlockReason="";
-    public double screens(float partial){return design.equals("cockpit")&&world!=null?screenLift.sample(world.getTotalWorldTime()+partial):0;}
-    public double seatSlide(float partial){return design.equals("cockpit")&&world!=null?seatSlide.sample(world.getTotalWorldTime()+partial):0;}
+    private double mechanism(boolean screens,float partial){
+        if(!design.equals("cockpit")||world==null)return 0;
+        if(controlClient()&&com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.cockpitMotion(this,screens,partial);
+        return (screens?screenLift:seatSlide).sample(world.getTotalWorldTime()+partial);
+    }
+    public double screens(float partial){return mechanism(true,partial);}
+    public double seatSlide(float partial){return mechanism(false,partial);}
     public Vec3d seatLocation(){return seatLocation(0);}
     public Vec3d seatLocation(float partial){return data().seat==null?null:data().seat.addVector(0,0,seatSlide(partial));}
     public double visualDetent(String id,float partial){

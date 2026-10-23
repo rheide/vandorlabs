@@ -28,7 +28,7 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 }
 
-version = '2.4'
+version = '2.4.1'
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
 
@@ -106,6 +106,14 @@ task testNetworkBoundaries(type: JavaExec) {
     main = 'com.vandorlabs.client.NetworkBoundaryChecks'
 }
 check.dependsOn testNetworkBoundaries
+
+task testCockpitVisualMotion(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CockpitVisualMotionChecks'
+}
+check.dependsOn testCockpitVisualMotion
 
 task testLoadSafety(type: JavaExec) {
     group = 'verification'

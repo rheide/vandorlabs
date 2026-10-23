@@ -98,6 +98,15 @@ the artifact hash. This focused check supplements `verifyRelease` and the full l
 
 ## Communication changes and remaining opportunities
 
+Cockpit rendering in 2.4.1 development separates visual time from server world
+time. An integrated server can hide this distinction because both clocks normally
+advance together. On a remote server, time synchronization can skip or rewind an
+animation sampled from an absolute saved start tick. Cosmetic screen/seat movement
+and display playback now use a pause-aware client clock. Motion survives duplicate
+settings packets and replacement vehicle tiles without extra network messages;
+server collision and saved timelines remain unchanged. `testCockpitVisualMotion`
+and the focused cockpit live check cover these boundaries.
+
 Vehicle state messages use 82 payload bytes in 2.4, compared with the measured
 105-byte generic envelope in 2.3: 23 bytes, or approximately 22 percent, less per
 state update. Position, vertical motion, speed, steering, yaw, server tick, hover

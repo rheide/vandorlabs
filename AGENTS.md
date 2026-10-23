@@ -5,6 +5,7 @@
 - Failed vehicle or turntable deserialization must leave the entity inert and retain its original snapshot NBT for the next save. Do not keep a partially installed live snapshot after an installation failure.
 - Network optimizations need before/after byte or message counts and round-trip checks. Keep world access on the server thread, preserve authorization/container/loaded-chunk checks, and bound decoded lengths before allocating.
 - Keep release regressions separate from documentation capture. Prefer exhaustive non-rendering matrices plus targeted rendered regressions over unasserted gallery screenshots. Parallel capture must use isolated worlds, retain stateful scene groups, and verify merged scene coverage and identical artifact hashes before running image analyzers.
+- Drive cosmetic mechanism animation with a pause-aware client clock rather than repeatedly comparing client world time with server start timestamps. Repeated packets must not restart motion, and vehicle tile replacement must retain visual state by world/position. Keep authoritative collision and saved timelines on the server; test clock corrections and reversals with `testCockpitVisualMotion` and the focused cockpit client check.
 
 - Right-clicking a dialog option must select its previous value. Keep left-click and right-click cycling consistent across dialogs.
 - Follow the existing screen, texture-list and door dialogs for layout and interaction conventions. Texture lists must support both wheel scrolling and dragging their scrollbar.

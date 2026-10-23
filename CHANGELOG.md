@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.1 (in development)
+
+- Animate cockpit screen banks and sliding seats with the client's pause-aware visual clock, avoiding skips or rewinds from server world-time corrections. Preserve visual motion across repeated settings packets and recreated vehicle tiles without increasing packet frequency. Server collision, reservations and saved motion remain authoritative.
+- Play cockpit display artwork from the same local visual clock so remote server time synchronization cannot stall or rewind its frames.
+
 ## 2.4
 
 - Fix dedicated-server disconnects and crashes when players or entities approach a placed canopy, including Large Front Canopy Glass. Use a server-compatible collision-bounds constructor while preserving the existing geometry.

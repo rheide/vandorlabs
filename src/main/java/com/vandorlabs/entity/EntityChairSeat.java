@@ -56,7 +56,7 @@ public class EntityChairSeat extends Entity implements net.minecraftforge.fml.co
         net.minecraft.tileentity.TileEntity tile=world.getTileEntity(chairPos);
         return tile instanceof com.vandorlabs.tiles.TileEntityCockpit?(com.vandorlabs.tiles.TileEntityCockpit)tile:null;
     }
-    /** The rider, camera and seat renderer share the tile's persisted timeline. */
+    /** Rider and camera share the rendered seat pose; the server keeps its persisted timeline. */
     public net.minecraft.util.math.Vec3d cockpitRiderPosition(Entity passenger,float partial){
         com.vandorlabs.tiles.TileEntityCockpit tile=cockpit();if(tile==null||tile.data().seat==null)return null;
         net.minecraft.util.math.Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(tile.seatLocation(partial),tile.facing());
