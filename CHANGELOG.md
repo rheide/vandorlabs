@@ -2,6 +2,14 @@
 
 ## 2.3
 
+- Show the selected company name and “Click to clear” in the Programmable Door card filter; unrestricted filters remain “Any card”.
+
+- Remove native-water interface sheets over the solid footprints of wet walls, panes and doors, including the top/near half-width diagonal join. Retain genuine dry-gap boundaries and verify fully wet contacts across the native-fluid matrix.
+
+- Include contained water in wet glass, wall, porthole and slab render bounds, preventing water rectangles from disappearing when the solid pane leaves the camera view. Add bounds/frustum regressions and close-range pool-edge views.
+
+- Match vanilla water lightmap channel order for contained water and native water adjoining programmable blocks, correcting overly bright pool edges under uneven sky/block lighting. Add a direct vanilla vertex comparison across all 256 light-level pairs.
+
 - Cull contained-water faces at opaque neighbor contacts, separate closed-leaf fluid boundaries from door geometry, and prevent underwater back faces from painting water over panes or leaves. Preserve visible free water–air surfaces and exterior pool compositing.
 - Expand fluid regression coverage to 780 solid-contact geometry cases, 760 submerged contact/door camera views and 32 pool viewpoints above, below and across the waterline, including inward/outward glass and porthole views. Retain independent exterior comparisons, sorted chunk geometry checks and optional OptiFine compatibility runs.
 

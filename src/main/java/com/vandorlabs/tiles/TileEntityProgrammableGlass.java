@@ -10,6 +10,10 @@ import net.minecraft.world.World;
 
 /** Glass tint is synchronized independently of the baked frame geometry. */
 public final class TileEntityProgrammableGlass extends TileEntity {
+    @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox(){
+        net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
+        return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
+    }
     @Override public void markDirty(){super.markDirty();GlassMaterials.changed();}
     public final com.vandorlabs.blocks.ContainedFluids fluids=new com.vandorlabs.blocks.ContainedFluids(this);
     private int shade;

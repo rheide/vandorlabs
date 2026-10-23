@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fluids.*;
 import java.util.*;
 
-/** Retained native water at a flush glass/porthole end must not become a flowing strip. */
+/** A wet flush glass/porthole join must not retain a water sheet over its solid footprint. */
 final class DiagonalFluidJoinChecks {
     static void run(Minecraft mc,java.io.File output)throws Exception{
         World world=mc.world;BlockPos pos=new BlockPos(330,48,146);int cases=0,vertices=0;boolean flushStrip=false;
@@ -39,8 +39,8 @@ final class DiagonalFluidJoinChecks {
             }
             world.setBlockToAir(join);world.setBlockToAir(pos);
         }}finally{for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++)world.setBlockToAir(pos.add(x,y,z));}
-        require(cases>0&&vertices>0&&flushStrip,"joined water fixtures must exercise the visible flush-end top strip");
-        System.out.println("[vandorlabs][reprolab] diagonal-fluid-joins PASS cases="+cases+" stillVertices="+vertices+" half/full-width four facings inversions upper/lower portholes both wet sides flush top strip");
+        require(cases==64&&!flushStrip,"water sheet remains over the half-width top/near glass-porthole join");
+        System.out.println("[vandorlabs][reprolab] diagonal-fluid-joins PASS cases="+cases+" stillVertices="+vertices+" half/full-width four facings inversions upper/lower portholes both wet sides no top/near pane-footprint strip");
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException(message);}
 }

@@ -63,6 +63,10 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();
     }
     private net.minecraft.item.ItemStack companyCard(){return Integer.bitCount(securityAllowed)==1?new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CARD,1,Integer.numberOfTrailingZeros(securityAllowed)):net.minecraft.item.ItemStack.EMPTY;}
+    String companyLabel(){
+        net.minecraft.item.ItemStack card=companyCard();if(card.isEmpty()||card.getMetadata()==0)return "Any card";
+        String company=com.vandorlabs.items.ItemDesignToken.DESIGNS[card.getMetadata()];return Character.toUpperCase(company.charAt(0))+company.substring(1);
+    }
     private String panelLabel(){return "Panel: "+new String[]{"Off","On","Both"}[panelMode];}
     private String securityLabel(){return (securityMode==0?"Security: ":"")+TileEntitySpaceDoor.securityLabel(securityMode);}
     private int channel() {return ChannelFields.first(channelField);}
@@ -160,7 +164,9 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         int x=layout.controlsX+136,y=guiTop+SECURITY_CARDS_Y;
         drawRect(x-1,y-1,x+17,y+17,0xff647480);drawRect(x,y,x+16,y+16,0xff28343e);
         drawRect(layout.controlsX,y-1,layout.controlsX+128,y+17,securityAllowed==127?0xff45765a:0xff28343e);
-        fontRenderer.drawString("Any card",layout.controlsX+4,y+4,0xffdae8f0);
+        boolean filtered=!companyCard().isEmpty()&&companyCard().getMetadata()!=0;
+        fontRenderer.drawString(companyLabel(),layout.controlsX+4,filtered?y:y+4,0xffdae8f0);
+        if(filtered)fontRenderer.drawString("Click to clear",layout.controlsX+4,y+9,0xffaabcc8);
         net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();mc.getRenderItem().renderItemAndEffectIntoGUI(companyCard(),x,y);net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
 
     }
@@ -174,6 +180,6 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override public void drawScreen(int x,int y,float partial) {
         drawDefaultBackground(); super.drawScreen(x,y,partial); channelField.drawTextBox();
-        if(y>=guiTop+SECURITY_CARDS_Y-1&&y<guiTop+SECURITY_CARDS_Y+17&&x>=layout.controlsX&&x<layout.controlsX+154)drawHoveringText(java.util.Arrays.asList("Empty filter: any card","Click the slot to choose one company card","Right-click the slot or click Any card to clear","The sample card is not consumed"),x,y);
+        if(y>=guiTop+SECURITY_CARDS_Y-1&&y<guiTop+SECURITY_CARDS_Y+17&&x>=layout.controlsX&&x<layout.controlsX+154)drawHoveringText(java.util.Arrays.asList("Empty filter: any card","Click the slot to choose one company card","Right-click the slot or click the company name to clear","The sample card is not consumed"),x,y);
     }
 }

@@ -24,7 +24,7 @@ public final class WaterloggedSurfaceMesh {
         Region add(double x,double y,double z,double d){planes.add(new double[]{x,y,z,d});return this;}
     }
     private static final class Source {
-        final WaterloggedParts.Volume volume;final FluidStack[] fluids;final List<Region> regions=new ArrayList<>();final List<Surface> surfaces=new ArrayList<>();
+        final WaterloggedParts.Volume volume;final FluidStack[] fluids;final List<Region> regions=new ArrayList<>();final List<Surface> surfaces=new ArrayList<>();boolean splitRegions;
         Source(World world,BlockPos pos){this(world,pos,false);}
         Source(World world,BlockPos pos,boolean detached){volume=detached?(WaterloggedParts.panel(world.getBlockState(pos))||OpeningFluids.supports(world.getBlockState(pos))?null:WaterloggedParts.uncachedVolume(world,pos)):WaterloggedParts.volume(world,pos);fluids=new FluidStack[]{WaterloggedParts.fluid(world,pos,0),WaterloggedParts.fluid(world,pos,1)};}
     }
@@ -82,14 +82,23 @@ public final class WaterloggedSurfaceMesh {
         Contact(Source source,FluidStack fluid){this.source=source;this.fluid=fluid;}
         boolean touches(EnumFacing face){for(Surface surface:source.surfaces)if(surface.boundary==face&&equal(fluid,source.fluids[surface.side]))return true;return false;}
         java.util.List<java.util.List<double[]>> subtract(java.util.List<double[]> polygon,EnumFacing offset){
-            java.util.List<java.util.List<double[]>> pieces=new ArrayList<>();pieces.add(polygon);
-            for(Region region:source.regions)if(equal(fluid,source.fluids[region.side])){java.util.List<java.util.List<double[]>> next=new ArrayList<>();for(java.util.List<double[]> piece:pieces)WaterloggedSurfaceMesh.subtract(piece,region,offset,next);pieces=next;}return pieces;
+            // Retain only genuinely dry (or different-liquid) voids. Subtracting just
+            // wet voids leaves the solid pane/leaf footprint as a false water sheet.
+            java.util.List<java.util.List<double[]>> pieces=new ArrayList<>();
+            for(Region region:source.regions)if(!equal(fluid,source.fluids[region.side])){
+                List<double[]> piece=polygon;
+                for(double[] plane:region.planes){double d=plane[3]+plane[0]*offset.getFrontOffsetX()+plane[1]*offset.getFrontOffsetY()+plane[2]*offset.getFrontOffsetZ();piece=DiagonalMeshClip.plane(piece,plane[0],plane[1],plane[2],d);if(area(piece)<1e-10)break;}
+                if(area(piece)>1e-10)pieces.add(piece);
+            }
+            return pieces;
         }
     }
     static Contact contact(TileEntity tile,FluidStack fluid){
         if(tile==null||tile.getWorld()==null)return null;World world=tile.getWorld();BlockPos pos=tile.getPos();IBlockState state=world.getBlockState(pos);
         if(!WaterloggedParts.supports(state))return null;
-        Source source=new Source(world,pos,true);if(!equal(fluid,source.fluids[0])&&!equal(fluid,source.fluids[1]))return null;build(source,world,pos);return new Contact(source,fluid);
+        Source source=new Source(world,pos,true);if(!equal(fluid,source.fluids[0])&&!equal(fluid,source.fluids[1]))return null;
+        FluidStack first=source.fluids[0],second=source.fluids[1];source.fluids[0]=fluid;source.fluids[1]=fluid;source.splitRegions=true;
+        build(source,world,pos);source.fluids[0]=first;source.fluids[1]=second;return new Contact(source,fluid);
     }
     private static boolean equal(FluidStack a,FluidStack b){return a==null?b==null:b!=null&&a.isFluidEqual(b);}
     private static List<double[]> points(Vec3d[] vertices){List<double[]> out=new ArrayList<>();for(Vec3d v:vertices)out.add(new double[]{v.x,v.y,v.z});return out;}
@@ -103,7 +112,7 @@ public final class WaterloggedSurfaceMesh {
     }
     /** Exact half-spaces avoid collision-slice seams on diagonal leaves. */
     private static void opening(Source source,World world,BlockPos pos){
-        double[] p=OpeningFluids.plane(world,pos);boolean open=OpeningFluids.open(world,pos),joined=open&&source.fluids[0]!=null&&equal(source.fluids[0],source.fluids[1]);
+        double[] p=OpeningFluids.plane(world,pos);boolean open=OpeningFluids.open(world,pos),joined=!source.splitRegions&&open&&source.fluids[0]!=null&&equal(source.fluids[0],source.fluids[1]);
         for(int side=0;side<(joined?1:2);side++){
             if(source.fluids[side]==null)continue;
             // Keep an exposed door water surface off the coplanar top of its frame.

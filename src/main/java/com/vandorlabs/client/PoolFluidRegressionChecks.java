@@ -36,13 +36,15 @@ final class PoolFluidRegressionChecks {
                 }
                 mc.world.setBlockState(p,state,2);TileEntity tile=mc.world.getTileEntity(p);ContainedFluids fluid=WaterloggedParts.data(tile);if(fluid!=null){int side=WaterloggedParts.side(mc.world,p,new net.minecraft.util.math.Vec3d(x==0?.99:x==6?.01:.5,.5,z==0?.99:z==6?.01:.5));fluid.set(side,new FluidStack(FluidRegistry.WATER,1000));}cells.add(p);
             }
-            for(int view=0;view<32;view++){
+            for(int view=0;view<40;view++){
                 double angle=Math.toRadians(view*30),cx=3.5+10*Math.sin(angle),cz=3.5+10*Math.cos(angle),cy=view%2==0?8:3.8;
                 double tx=3.5,ty=2,tz=3.5;
                 if(view>=12&&view<24){cx=3.5;cz=3.5;cy=new double[]{3.86,3.9,2.5,1.5}[(view-12)%4];tx=cx+Math.sin(angle)*4;tz=cz+Math.cos(angle)*4;ty=cy+(view%3==0?.12:0);}
                 else if(view>=24){cy=view%2==0?3.86:3.9;ty=cy+(view%3==0?.12:0);}
+                if(view>=32){int edge=(view-32)/2;double along=view%2==0?2.5:4.5;cx=edge==1?.5:edge==3?6.5:along;cz=edge==0?.5:edge==2?6.5:along;cy=4.2;tx=cx+(edge==1?.45:edge==3?-.45:0);tz=cz+(edge==0?.45:edge==2?-.45:0);ty=3.88;}
                 probe.setPosition(origin.getX()+cx,origin.getY()+cy,origin.getZ()+cz);probe.prevPosX=probe.posX;probe.prevPosY=probe.posY;probe.prevPosZ=probe.posZ;
                 frame.bindFramebuffer(true);GlStateManager.loadIdentity();GLU.gluLookAt((float)cx,(float)cy,(float)cz,(float)tx,(float)ty,(float)tz,0,1,0);
+                net.minecraft.client.renderer.culling.Frustum frustum=new net.minecraft.client.renderer.culling.Frustum();frustum.setPosition(origin.getX(),origin.getY(),origin.getZ());
                 GlStateManager.clearColor(.16F,.18F,.2F,1);GlStateManager.depthMask(true);GlStateManager.clear(16640);GlStateManager.enableDepth();GlStateManager.enableCull();GlStateManager.disableFog();GlStateManager.disableLighting();
                 mc.getTextureManager().bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
                 for(int pass=0;pass<2;pass++){
@@ -52,10 +54,10 @@ final class PoolFluidRegressionChecks {
                     if(pass==1)buffer.sortVertexData((float)cx+origin.getX(),(float)cy+origin.getY(),(float)cz+origin.getZ());
                     buffer.finishDrawing();checkBounds(buffer);new WorldVertexBufferUploader().draw(buffer);
                     net.minecraftforge.client.ForgeHooksClient.setRenderPass(pass);
-                    for(BlockPos p:cells){TileEntity tile=mc.world.getTileEntity(p);if(tile==null||!tile.shouldRenderInPass(pass))continue;net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer renderer=net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance.getRenderer(tile);if(renderer!=null)renderer.render(tile,p.getX()-origin.getX(),p.getY()-origin.getY(),p.getZ()-origin.getZ(),0,-1,1);}
+                    for(BlockPos p:cells){TileEntity tile=mc.world.getTileEntity(p);if(tile==null||!tile.shouldRenderInPass(pass)||!frustum.isBoundingBoxInFrustum(tile.getRenderBoundingBox()))continue;net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer renderer=net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance.getRenderer(tile);if(renderer!=null)renderer.render(tile,p.getX()-origin.getX(),p.getY()-origin.getY(),p.getZ()-origin.getZ(),0,-1,1);}
                 }
                 javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(640,480,frame),"png",new java.io.File(output,"fluid-pool-view-"+view+".png"));
-                if(view>=12&&view<24)continue;
+                if(view>=12&&view<24||view>=32)continue;
                 // Independent pre-regression reference: an above-water camera must
                 // not acquire extra back-facing water sheets across the whole pool.
                 int[][] pixels=new int[2][];
@@ -73,7 +75,7 @@ final class PoolFluidRegressionChecks {
                 if(changed!=0)throw new IllegalStateException("Exterior pool gained back-facing water sheets: view="+view+" changedPixels="+changed);
             }
         }finally{mc.setRenderViewEntity(oldView);camera.set(null,oldCamera);for(BlockPos p:cells)mc.world.setBlockToAir(p);net.minecraftforge.client.ForgeHooksClient.setRenderPass(oldPass);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);GL11.glPopAttrib();frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.enableCull();}
-        System.out.println("[vandorlabs][reprolab] fluid-pool PASS 32 above/below waterline level/upward inward/outward glass/porthole perspectives exterior reference parity bounded sorted geometry");
+        System.out.println("[vandorlabs][reprolab] fluid-pool PASS 40 frustum-culled near-edge and above/below waterline level/upward inward/outward glass/porthole perspectives exterior reference parity bounded sorted geometry");
     }
     private static void checkBounds(BufferBuilder buffer){
         if(buffer.getVertexCount()%4!=0)throw new IllegalStateException("Incomplete pool quad");

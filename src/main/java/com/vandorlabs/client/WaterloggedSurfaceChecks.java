@@ -22,6 +22,8 @@ final class WaterloggedSurfaceChecks {
         ContainedFluids fluids=WaterloggedParts.data(world.getTileEntity(pos));fluids.set(0,new FluidStack(FluidRegistry.WATER,1000));
     }}
     static void run(Minecraft mc,File output)throws Exception{
+        FluidLightmapChecks.run(mc);
+        FluidRenderBoundsChecks.run(mc);
         DoorCompanyFilterChecks.run(mc,output);StairConfigurationChecks.client(mc);StairIconChecks.run(mc,output);
         OpeningFluidVisualChecks.run(mc,output);
         ContainedFluidUpdateChecks.run(mc.world);

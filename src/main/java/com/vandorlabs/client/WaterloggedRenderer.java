@@ -67,6 +67,6 @@ final class WaterloggedRenderer {
     private static void vertex(BufferBuilder buffer,TextureAtlasSprite sprite,int axis,Vec3d p,int color,float shade,int light,Vec3d normal){
         double u=axis==0?p.z:p.x,v=axis==1?p.z:1-p.y;
         double scale=16;
-        buffer.pos(p.x,p.y,p.z).color((color>>16&255)*shade/255F,(color>>8&255)*shade/255F,(color&255)*shade/255F,(color>>>24)/255F).tex(sprite.getInterpolatedU(u*scale),sprite.getInterpolatedV(v*scale)).lightmap(light&65535,light>>16).normal((float)normal.x,(float)normal.y,(float)normal.z).endVertex();
+        buffer.pos(p.x,p.y,p.z).color((color>>16&255)*shade/255F,(color>>8&255)*shade/255F,(color&255)*shade/255F,(color>>>24)/255F).tex(sprite.getInterpolatedU(u*scale),sprite.getInterpolatedV(v*scale)).lightmap(light>>16&65535,light&65535).normal((float)normal.x,(float)normal.y,(float)normal.z).endVertex();
     }
 }

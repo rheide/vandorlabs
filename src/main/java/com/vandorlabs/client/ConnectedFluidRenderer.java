@@ -59,8 +59,8 @@ public final class ConnectedFluidRenderer extends BlockFluidRenderer {
             for(int first=0;first<count;first+=4){List<double[]> polygon=new ArrayList<>();for(int vertex=0;vertex<4;vertex++){int at=(first+vertex)*stride;polygon.add(new double[]{bytes.getFloat(at)-pos.getX(),bytes.getFloat(at+4)-pos.getY(),bytes.getFloat(at+8)-pos.getZ(),bytes.getFloat(at+16),bytes.getFloat(at+20),bytes.get(at+12)&255,bytes.get(at+13)&255,bytes.get(at+14)&255,bytes.get(at+15)&255,bytes.getShort(at+24)&65535,bytes.getShort(at+26)&65535,0});}
                 EnumFacing boundary=boundary(polygon);WaterloggedSurfaceMesh.Contact contact=boundary==null?null:contacts.get(pos.offset(boundary));List<List<double[]>> pieces;
                 if(contact==null)pieces=Collections.singletonList(polygon);else{
-                    // A flush diagonal end leaves part of the native face against the
-                    // panel itself. It is stationary connected water too, not a waterfall.
+                    // Any retained dry-gap boundary uses still artwork. Solid pane/leaf
+                    // footprints are clipped away along with matching wet compartments.
                     net.minecraft.client.renderer.texture.TextureAtlasSprite still=WaterloggedRenderer.sprite(fluid);
                     int textureAxis=boundary.getAxis()==EnumFacing.Axis.X?0:boundary.getAxis()==EnumFacing.Axis.Y?1:2;
                     for(double[] vertex:polygon){double u=textureAxis==0?vertex[2]:vertex[0],v=textureAxis==1?vertex[2]:1-vertex[1];vertex[3]=still.getInterpolatedU(u*16);vertex[4]=still.getInterpolatedV(v*16);}
@@ -73,7 +73,7 @@ public final class ConnectedFluidRenderer extends BlockFluidRenderer {
         for(int axis=0;axis<3;axis++)for(int side=0;side<2;side++){boolean same=true;for(double[] p:polygon)same&=Math.abs(p[axis]-side)<.002;if(same)return axis==0?(side==0?EnumFacing.WEST:EnumFacing.EAST):axis==1?(side==0?EnumFacing.DOWN:EnumFacing.UP):(side==0?EnumFacing.NORTH:EnumFacing.SOUTH);}
         return null;
     }
-    private static void append(BufferBuilder buffer,double[] p,BlockPos pos){buffer.pos(p[0]+pos.getX(),p[1]+pos.getY(),p[2]+pos.getZ()).color((int)Math.round(p[5]),(int)Math.round(p[6]),(int)Math.round(p[7]),(int)Math.round(p[8])).tex(p[3],p[4]).lightmap((int)Math.round(p[9]),(int)Math.round(p[10])).endVertex();}
+    private static void append(BufferBuilder buffer,double[] p,BlockPos pos){buffer.pos(p[0]+pos.getX(),p[1]+pos.getY(),p[2]+pos.getZ()).color((int)Math.round(p[5]),(int)Math.round(p[6]),(int)Math.round(p[7]),(int)Math.round(p[8])).tex(p[3],p[4]).lightmap((int)Math.round(p[10]),(int)Math.round(p[9])).endVertex();}
     private static final class Access implements IBlockAccess {
         final IBlockAccess source;final Map<BlockPos,WaterloggedSurfaceMesh.Contact> contacts;final IBlockState liquid;
         Access(IBlockAccess source,Map<BlockPos,WaterloggedSurfaceMesh.Contact> contacts,Material material){this.source=source;this.contacts=contacts;liquid=(material==Material.WATER?net.minecraft.init.Blocks.WATER:net.minecraft.init.Blocks.LAVA).getDefaultState();}

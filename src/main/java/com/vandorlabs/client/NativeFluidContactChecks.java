@@ -42,6 +42,12 @@ final class NativeFluidContactChecks {
                         for(double[][] quad:quads)for(double[] vertex:quad){vertex[0]+=face.getFrontOffsetX();vertex[1]+=face.getFrontOffsetY();vertex[2]+=face.getFrontOffsetZ();}
                         int axis=face.getAxis()==EnumFacing.Axis.X?0:face.getAxis()==EnumFacing.Axis.Y?1:2;double edge=face.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1:0;
                         stillVertices+=assertStill(quads,axis,edge,new FluidStack(fluid,1000));
+                        if(fill==2)for(double[][] quad:quads){
+                            boolean boundary=true;for(double[] vertex:quad)boundary&=Math.abs(vertex[axis]-edge)<.003;
+                            if(boundary){Vec3d a=new Vec3d(quad[0][0],quad[0][1],quad[0][2]),b=new Vec3d(quad[1][0],quad[1][1],quad[1][2]),c=new Vec3d(quad[2][0],quad[2][1],quad[2][2]);
+                                require(b.subtract(a).crossProduct(c.subtract(a)).lengthSquared()<1e-12,"native water film over a fully wet solid/pane contact "+id+" face="+face+" mode="+mode+" facing="+facing);
+                            }
+                        }
                         // Horizontal boundaries include vanilla's deliberately inset surface height.
                         // Side probes avoid the wall itself and one collision-slice width near slopes.
                         if(axis!=1)for(int a=1;a<8;a++)for(int b=1;b<8;b++){
@@ -64,7 +70,7 @@ final class NativeFluidContactChecks {
             }
         }finally{world.setBlockToAir(pos);for(EnumFacing face:EnumFacing.values())world.setBlockToAir(pos.offset(face));}
         require(wetSamples>1000&&drySamples>1000,"native contact coverage");
-        System.out.println("[vandorlabs][reprolab] native-fluid-contacts PASS cases="+cases+" wetSamples="+wetSamples+" drySamples="+drySamples+" stillVertices="+stillVertices+" source/flow water/lava shapes facings inversions six boundaries both renderers");
+        System.out.println("[vandorlabs][reprolab] native-fluid-contacts PASS cases="+cases+" wetSamples="+wetSamples+" drySamples="+drySamples+" stillVertices="+stillVertices+" source/flow water/lava shapes facings inversions six boundaries both renderers no films over fully wet solid contacts");
     }
     static List<double[][]> render(Minecraft mc,World world,BlockPos pos,IBlockState state){
         BufferBuilder buffer=new BufferBuilder(4096);buffer.begin(7,DefaultVertexFormats.BLOCK);mc.getBlockRendererDispatcher().renderBlock(state,pos,world,buffer);buffer.finishDrawing();

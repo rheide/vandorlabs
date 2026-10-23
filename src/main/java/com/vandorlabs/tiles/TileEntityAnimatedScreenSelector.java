@@ -158,7 +158,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             return new net.minecraft.util.math.AxisAlignedBB(pos).grow(.125);
         if (ceilingMounted) return new net.minecraft.util.math.AxisAlignedBB(
                 pos.add(-1,0,-1),pos.add(2,1,2));
-        return super.getRenderBoundingBox();
+        net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
+        return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
     }
     public void setCeilingMounted(boolean value) {
         if(ceilingMounted==value)return;

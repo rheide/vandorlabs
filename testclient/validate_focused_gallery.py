@@ -42,7 +42,7 @@ if target == 'utility22_card_mounts':
                    'opening-fluids PASS', 'contained-water-sponge PASS', 'door-security PASS',
                    'vanilla-texture-copy PASS', 'stair-configuration PASS', 'stair-mesh PASS variants=600',
                    'stair-icons PASS padded variants=15', 'door-company-filter PASS', 'fluid-free-height PASS',
-                   'fluid-waterline PASS', 'fluid-pool PASS', 'fluid-boundary-matrix PASS',
+                   'fluid-render-bounds PASS cases=132 cameraViews=10', 'fluid-lightmap PASS cases=256', 'fluid-waterline PASS', 'fluid-pool PASS', 'fluid-boundary-matrix PASS',
                    'submerged-contact-views PASS', 'cockpit-runtime PASS', 'token-mount-dialog PASS'):
         require(marker)
 if target == 'door-selection': require('moved-door-selection PASS large=40 regular=24 xTips=16')
