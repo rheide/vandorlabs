@@ -25,7 +25,7 @@ with modular landing gear, rotating platforms, industrial multiblocks and compan
 - **Control:** [buttons, switches, levers, sliders, aircraft throttles, screen controls and triggers](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/controls.md), linked by redstone channels carrying levels 0-15.
 - **Customise:** edit settings with the [Configurizer](https://github.com/rheide/vandorlabs/blob/master/docs/CONFIGURIZER.md), copy them with the [Duplifier](https://github.com/rheide/vandorlabs/blob/master/docs/DUPLIFIER.md), and choose [materials or custom artwork](https://github.com/rheide/vandorlabs/blob/master/docs/unified-materials.md). Company logos, murals and backgrounds have their own Corp category.
 
-See [what's new in 2.2](https://github.com/rheide/vandorlabs/blob/master/version-2.2.md)
+See [what's new in 2.2](https://github.com/rheide/vandorlabs/blob/master/docs/versions/version-2.2.md)
 and the [full changelog](https://github.com/rheide/vandorlabs/blob/master/CHANGELOG.md).
 
 Browse the [illustrated block guide](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/README.md)

@@ -1,8 +1,10 @@
 # Version 1.7
 
+[All version guides](README.md)
+
 Programmable Helmet, Chestplate, Leggings and Boots have vanilla diamond armor stats. Craft them with Programmable Matter Ingots in the vanilla patterns: 5 for a helmet, 8 for a chestplate, 7 for leggings and 4 for boots. All pieces start with Civilian Staff.
 
-Choose among eight matching role designs, or any default block material. The [armor gallery](armor.md) shows every full role set on an armor stand with its matching icons.
+Choose among eight matching role designs, or any default block material. The [armor gallery](../gallery/armor.md) shows every full role set on an armor stand with its matching icons.
 
 ![Civilian Staff armor on an armor stand](../images/gallery/armor/civilian-staff.png)
 
@@ -10,7 +12,7 @@ Shift-right-click a block face while holding armor to copy its displayed texture
 
 To open the categorized picker, aim into the air and shift-right-click. Creative players can hold the armor directly; survival players hold a Configurizer in the main hand and armor in the offhand. Picking another material replaces a sampled texture. Ordinary right-click equips the armor.
 
-See the [armor guide](../programmable-armor.md), [current block materials](building.md#programmable-block-finishes), [door artwork](doors.md) and [shared texture guide](../unified-materials.md).
+See the [armor guide](../programmable-armor.md), [current block materials](../gallery/building.md#programmable-block-finishes), [door artwork](../gallery/doors.md) and [shared texture guide](../unified-materials.md).
 
 ## Design armor on a stand
 
@@ -47,7 +49,7 @@ and handles block movement. Selection outlines follow the transformed model. Shi
 the control to open the dialog, or use the Configurizer in survival; click
 **Done** to apply. Saved worlds, configured drops and pick-block retain the
 settings, and the Duplifier copies them through **Signal Levels**. See the
-[controls guide](controls.md#control-base-height-and-tilt).
+[controls guide](../gallery/controls.md#control-base-height-and-tilt).
 
 ![Throttle base height and tilt in the settings dialog](../images/gallery/controls/airliner-throttle-config.png)
 
@@ -56,7 +58,7 @@ settings, and the Duplifier copies them through **Signal Levels**. See the
 All eight roles now offer an **Open** helmet and a **Short Sleeves** chestplate
 in the Armor list, adding 16 choices. Each appears only for its corresponding
 piece. The original full designs and Civilian Staff defaults remain available.
-The [armor gallery](armor.md#open-helmets-and-short-sleeves) shows every alternate
+The [armor gallery](../gallery/armor.md#open-helmets-and-short-sleeves) shows every alternate
 set on an armor stand. Duplifier copies match Open helmets with Short Sleeves
 chestplates; leggings and boots use the role’s standard artwork.
 
@@ -72,7 +74,7 @@ channel configuration and linked switching.
 
 Craft it from two vanilla levers and one Industrial Alloy Ingot. Change
 **Size: Small/Large** in its configuration dialog and click **Done**. Existing
-Large levers retain their size. See the [controls gallery](controls.md) for both
+Large levers retain their size. See the [controls gallery](../gallery/controls.md) for both
 states and mounting details.
 
 ## Rocker Switch
@@ -84,7 +86,7 @@ configuration and linked switching. Mount it on walls, floors or ceilings.
 
 Craft it with one stick above one Industrial Alloy Ingot. Existing Rocker Switches use the new design and keep their channel and mounting orientation.
 Rocker Switch and Wall Slider are 8% smaller, including their selection and collision bounds.
-See the [controls gallery](controls.md#rocker-switch) for the two positions.
+See the [controls gallery](../gallery/controls.md#rocker-switch) for the two positions.
 
 ## Push Button
 
@@ -114,7 +116,7 @@ Framed doors fit the complete artwork into the frame opening with a one-pixel in
 at its outer edges, so the leaf rails remain visible.
 Both openings use the same subtle translucent
 reflection material as Programmable Glass, behind the cutout frame.
-See the [door gallery](doors.md) for regular and large examples.
+See the [door gallery](../gallery/doors.md) for regular and large examples.
 
 ## Mounting options on switches and levers
 
@@ -128,4 +130,4 @@ and replacement, and the Duplifier’s **Signal Levels** option.
 Compact and Industrial levers now share one **Industrial Power Lever** item.
 Choose **Size: Compact/Industrial** in its dialog; existing placed Compact
 levers retain their size. Craft the unified item using its Industrial recipe.
-See the [controls gallery](controls.md#control-base-height-and-tilt) for examples.
+See the [controls gallery](../gallery/controls.md#control-base-height-and-tilt) for examples.

@@ -1,6 +1,6 @@
 # Buttons, switches, and levers
 
-Version 1.6 adds [signal-level controls and live demonstrations](version-1.6.md).
+Version 1.6 adds [signal-level controls and live demonstrations](../versions/version-1.6.md).
 
 These controls generate local redstone power and can participate in virtual redstone channels. Each image shows the off and on positions side by side. Place the control on the intended face, then right-click to operate it. In Creative mode, shift-right-click for supported channel settings.
 
@@ -72,7 +72,7 @@ Push Button and Rocker Switch share the compact palette and light-like cyan face
 Rocker Switch and Wall Slider use compact models reduced by 8%.
 All four detailed models mount on walls, floors and ceilings. The floor-mounted
 Wall Slider puts Off nearest the placing player. Twin handles move together;
-Grip buttons are decorative. See the [signal-level guide and GIF examples](version-1.6.md)
+Grip buttons are decorative. See the [signal-level guide and GIF examples](../versions/version-1.6.md)
 for lighting, propulsion and screen settings.
 
 ## Control base height and tilt

@@ -1,6 +1,6 @@
 # Lights
 
-Version 1.6 adds [signal-level controls and live demonstrations](version-1.6.md).
+Version 1.6 adds [signal-level controls and live demonstrations](../versions/version-1.6.md).
 
 Programmable Light offers selectable artwork with matching unlit and lit textures; the close-ups place those states side by side. In Creative mode, shift-right-click to choose the appearance, wall finish, redstone behavior, channel, and Join setting. Normal right-click changes its manual state. A joined group can respond together to a signal received by one member.
 
@@ -34,5 +34,5 @@ than a fixed brightness. Select **Signal + offset** and use the brightness slide
 as a signed offset; the result is clamped to 0-15. Joined lights use the strongest
 loaded signal received by the group. Manual brightness remains available.
 
-See the [Wall Slider controlling a light](version-1.6.md#slider-controlling-a-light)
+See the [Wall Slider controlling a light](../versions/version-1.6.md#slider-controlling-a-light)
 for an animated example and the complete signal settings.

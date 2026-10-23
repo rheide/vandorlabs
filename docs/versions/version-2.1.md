@@ -1,5 +1,7 @@
 # Vandor Labs 2.1: hover, navigate, unfold
 
+[All version guides](README.md)
+
 Lift your craft off the ground, send it between waypoints, and build a cockpit with working status displays and momentary controls. Version 2.1 adds Hover and Autopilot, separates vehicle assembly from the Pilot Seat, and turns a stored tower of blocks into a deployable Moat bridge.
 
 ## Three blocks for a working vehicle

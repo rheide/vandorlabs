@@ -1,7 +1,7 @@
 # Programmable displays and consoles
 
 The standalone diagonal half console and per-face block/slab finishes are
-covered in [the 1.1 guide](version-1.1.md).
+covered in [the 1.1 guide](../versions/version-1.1.md).
 
 Programmable displays let you choose the visible artwork and how it behaves. Their settings persist with the block. Screen-capable blocks can choose **Off**, **Static**, or **Animated** display, animation speed, and redstone behavior. Many also offer a separate wall or side texture so the housing can match nearby construction.
 
@@ -63,5 +63,5 @@ Sliders use four bordered settings matching the levers: Off, Low, Medium and
 High, with default outputs 0, 5, 10 and 15. Off glows amber; the selected powered
 setting glows cyan. There are no numbers on the indicators. Slider rows keep a
 narrow label area so the controls occupy most of the line. See the
-[signal-level guide](version-1.6.md#slider-rows-on-screens-and-inputs) for limits,
+[signal-level guide](../versions/version-1.6.md#slider-rows-on-screens-and-inputs) for limits,
 saving and copying behavior.

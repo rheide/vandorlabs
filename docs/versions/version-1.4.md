@@ -1,5 +1,7 @@
 # Version 1.4
 
+[All version guides](README.md)
+
 Version 1.4 turns existing programmable screens, inputs and consoles into
 editable redstone control panels, adds multi-channel controls and selectable
 propulsion particle intensity, and

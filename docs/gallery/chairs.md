@@ -1,7 +1,7 @@
 # Chairs
 
 Luxury and military seats now join into benches. See
-[connected seating in 1.1](version-1.1.md#connected-seating).
+[connected seating in 1.1](../versions/version-1.1.md#connected-seating).
 
 Programmable Chair includes five sittable designs. Right-click a chair to sit; sneak to get up. Choose the appearance that fits the room: command and operator seats for workstations, or companion, conference, and mess hall seats for shared spaces.
 

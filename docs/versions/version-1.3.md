@@ -1,5 +1,7 @@
 # Version 1.3
 
+[All version guides](README.md)
+
 New since 1.2, including the latest improvements on the 1.3 branch: moving hatches, more connected surfaces, a shared material catalog, programmable storage and smoother rendering in builds with many programmable blocks.
 
 ## Trapdoors that fit your ship
@@ -12,7 +14,7 @@ New since 1.2, including the latest improvements on the 1.3 branch: moving hatch
 
 ![Opposing next-block mounts](../images/gallery/tasks/trapdoor-opposing-next.gif)
 
-The eight dedicated finishes now have short names: Armored Hatch, Slit Hatch, Utility Hatch, Viewport Hatch, Industrial Hatch, Service Hatch, Twin-Window Hatch and Reinforced Hatch. Armored Hatch is the default; existing texture IDs and saved choices are preserved. See the [trapdoor guide](programmable-trapdoor.md) for all five movements and placement rules.
+The eight dedicated finishes now have short names: Armored Hatch, Slit Hatch, Utility Hatch, Viewport Hatch, Industrial Hatch, Service Hatch, Twin-Window Hatch and Reinforced Hatch. Armored Hatch is the default; existing texture IDs and saved choices are preserved. See the [trapdoor guide](../gallery/programmable-trapdoor.md) for all five movements and placement rules.
 
 ## Hatches for diagonal walls
 
@@ -26,7 +28,7 @@ Connected panels support rectangular and staggered surfaces, opposite slopes and
 
 ![Three-leaf shallow staggered patch rotates together](../images/gallery/tasks/trapdoor-patch-shallow-stagger-rotating.gif)
 
-The [diagonal trapdoor guide](programmable-diagonal-trapdoor.md) illustrates every shape and movement, including partial patches. Groups and redstone channels use loaded chunks without forcing distant chunks to load.
+The [diagonal trapdoor guide](../gallery/programmable-diagonal-trapdoor.md) illustrates every shape and movement, including partial patches. Groups and redstone channels use loaded chunks without forcing distant chunks to load.
 
 ## One material catalog across programmable shapes
 
@@ -81,4 +83,4 @@ Moving cells retain opaque colors and their source texture coordinates with the 
 | --- | --- |
 | ![Programmable Ramp in Lift mode](../images/gallery/ramp-controller/lift.gif) | ![Programmable Ramp in Extend mode](../images/gallery/ramp-controller/extend.gif) |
 
-See [all door motions](doors.md), [all ramp examples](ramp-controller.md), and the [animation capture guide](../animated-documentation.md). These images are real Forge runtime captures. They document motion; hardware shader appearance remains a separate validation task.
+See [all door motions](../gallery/doors.md), [all ramp examples](../gallery/ramp-controller.md), and the [animation capture guide](../animated-documentation.md). These images are real Forge runtime captures. They document motion; hardware shader appearance remains a separate validation task.

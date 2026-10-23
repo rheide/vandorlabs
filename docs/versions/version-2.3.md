@@ -1,5 +1,7 @@
 # Vandor Labs 2.3: working cockpits, access control and smoother movement
 
+[All version guides](README.md)
+
 Build a cockpit with animated machinery and independent displays, secure a door with company cards, and link redstone across a vehicle or base. Version 2.3 also brings configurable turntable surfaces, two-sided fluid panels, more materials and improvements to capture, restoration and moving-model rendering.
 
 ## A cockpit you can operate

@@ -1,6 +1,6 @@
 # Propulsion and hover systems
 
-Version 1.6 adds [signal-level controls and live demonstrations](version-1.6.md).
+Version 1.6 adds [signal-level controls and live demonstrations](../versions/version-1.6.md).
 
 The four programmable thruster families each offer **Block**, **Hexagon**, and **Wedge** shapes. Choose the shape in the Creative-mode shift-right-click dialog. Placement still sets the facing and, for wedges, the clicked corner. Change **Shape** first; the **Join** option updates immediately to show the choices available for that shape.
 
@@ -26,7 +26,7 @@ follow the incoming 0–15 level. The selected particle density remains separate
 set a particle threshold to choose when the stream starts. Physical redstone and
 configured channels combine using the strongest signal.
 
-The [Thruster Lever demonstration](version-1.6.md#lever-controlling-a-thruster)
+The [Thruster Lever demonstration](../versions/version-1.6.md#lever-controlling-a-thruster)
 shows brightness at 0, 5, 10 and 15, with particles starting at level 10.
 
 ## Activation polarity

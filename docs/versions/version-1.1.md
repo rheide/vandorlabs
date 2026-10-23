@@ -1,6 +1,8 @@
 # New in 1.1
 
-[Back to the block guide](README.md)
+[All version guides](README.md)
+
+[Back to the block guide](../gallery/README.md)
 
 Open programmable configuration dialogs with **shift-right-click in creative
 mode**, or use the Configurizer.

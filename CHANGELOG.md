@@ -202,7 +202,7 @@
 - Join diagonal wall/glass artwork across connected vertical rows and folds using a stable texture origin.
 - Detect constructor frames from any bottom Core corner along either horizontal axis, regardless of the placed Core facing. Report a mismatched cell when assembly fails.
 
-See the [2.2 release highlights](version-2.2.md), [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), and [material settings](docs/unified-materials.md).
+See the [2.2 release highlights](docs/versions/version-2.2.md), [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), and [material settings](docs/unified-materials.md).
 
 ## 2.1
 
@@ -308,7 +308,7 @@ See the [2.2 release highlights](version-2.2.md), [matter and storage](docs/matt
 - Add redstone-controlled Escalator Up/Down modes with rider transport, nearby-player sleeping and preserved extended ramp geometry.
 - Fix floor-mounted Push Button notification order so neighboring dust receives the press immediately. Keep ordinary sliding trapdoors selectable and collidable outside their original cells.
 - Reuse settled canopy poses and submit rectangular faces as direct quads. Cache vehicle hull rendering and cull offscreen tile renderers.
-- Add block-category availability settings and live canopy animations for widths, opening modes, large hinges and ceiling mounts. See the [2.0 feature guide](docs/gallery/version-2.0.md).
+- Add block-category availability settings and live canopy animations for widths, opening modes, large hinges and ceiling mounts. See the [2.0 feature guide](docs/versions/version-2.0.md).
 
 ## 1.8
 
@@ -473,7 +473,7 @@ See the [2.2 release highlights](version-2.2.md), [matter and storage](docs/matt
 
 ## 1.3
 
-See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated programmable block improvements](docs/gallery/task-improvements.md), and [filesystem texture setup](docs/filesystem-textures.md).
+See the [animated 1.3 highlights](docs/versions/version-1.3.md), [illustrated programmable block improvements](docs/gallery/task-improvements.md), and [filesystem texture setup](docs/filesystem-textures.md).
 
 ### Latest improvements
 
@@ -622,7 +622,7 @@ See the [animated 1.3 highlights](docs/gallery/version-1.3.md), [illustrated pro
 
 ## 1.1
 
-See the [illustrated guide](docs/gallery/version-1.1.md) for examples and settings.
+See the [illustrated guide](docs/versions/version-1.1.md) for examples and settings.
 
 ### Added
 

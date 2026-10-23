@@ -1,6 +1,6 @@
 # Animated documentation
 
-The canopy, door, trapdoor and Ramp Controller guides use live in-game GIFs showing complete opening/deployment and closing/retraction cycles. The [version 1.6 guide](gallery/version-1.6.md) adds channel-linked control demonstrations: a Thruster Lever drives a Rocket Thruster, and a Wall Slider drives a Programmable Light. The clips are **420×350**, 70% of the prototype's 600×500 dimensions. Design, configuration and selection-outline illustrations remain still images where motion would hide the relevant detail.
+The canopy, door, trapdoor and Ramp Controller guides use live in-game GIFs showing complete opening/deployment and closing/retraction cycles. The [version 1.6 guide](versions/version-1.6.md) adds channel-linked control demonstrations: a Thruster Lever drives a Rocket Thruster, and a Wall Slider drives a Programmable Light. The clips are **420×350**, 70% of the prototype's 600×500 dimensions. Design, configuration and selection-outline illustrations remain still images where motion would hide the relevant detail.
 
 ![Observation door opening and closing](images/gallery/doors/observation-rotating.gif)
 
@@ -8,7 +8,7 @@ The recorder changes normal server-side block states or redstone inputs and capt
 
 The encoder uses a shared 256-color palette and a regular 50 ms output timeline for motion clips and 100 ms for signal demonstrations, selecting the nearest real captured pose. It does not interpolate geometry or alter motion speed. GIFs loop continuously; palette colors have less precision than the original screenshots. Viewers that render GIF animations show movement; print/PDF exports may show a still.
 
-The [2.3 feature guide](gallery/version-2.3.md) adds captures of the cockpit screen lift, sliding seat and armrests, Advanced Pilot Chair height steps, card/chip insertion and secured doors. These use the live Minecraft renderers at deterministic animation poses. Motion captures use a 50 ms timeline; the chair-height example holds each discrete setting. Door pulse examples retain the five-second opening window.
+The [2.3 feature guide](versions/version-2.3.md) adds captures of the cockpit screen lift, sliding seat and armrests, Advanced Pilot Chair height steps, card/chip insertion and secured doors. These use the live Minecraft renderers at deterministic animation poses. Motion captures use a 50 ms timeline; the chair-height example holds each discrete setting. Door pulse examples retain the five-second opening window.
 
 ## Reproduce
 
@@ -51,7 +51,7 @@ python testclient/run_windows.py --focus canopy-animations --animation-filter ca
 python testclient/encode_animations.py <capture-directory> --report docs/canopy-animation-validation.json
 ```
 
-This records nine scenes using the actual renderer and sixteen-tick canopy clocks. The six narrow-shell scenes cover single Flat, double Angled and triple Long Angled profiles in both opening modes. The remaining scenes show a large top hinge, a 5 × 5 left hinge and an inverted double Canopy. Camera crops include the complete moving geometry. See [the canopy guide](canopies.md) and [2.0 highlights](gallery/version-2.0.md).
+This records nine scenes using the actual renderer and sixteen-tick canopy clocks. The six narrow-shell scenes cover single Flat, double Angled and triple Long Angled profiles in both opening modes. The remaining scenes show a large top hinge, a 5 × 5 left hinge and an inverted double Canopy. Camera crops include the complete moving geometry. See [the canopy guide](canopies.md) and [2.0 highlights](versions/version-2.0.md).
 
 ## Landing gear animations
 
@@ -65,8 +65,8 @@ The twelve scenes cover standard and Large Extenders and Swing Arms with Plates,
 - [Programmable Trapdoor](gallery/programmable-trapdoor.md): three in-block motions, two next-block motions and opposing mounts.
 - [Programmable Diagonal Trapdoor](gallery/programmable-diagonal-trapdoor.md): three motions, all three shapes, rectangular/staggered/partial groups and joined slope orientations.
 - [Ramp Controller](gallery/ramp-controller.md): four deployment modes, four slope/tread examples, and uphill/downhill escalators controlled by redstone.
-- [Version 1.6 signal levels](gallery/version-1.6.md): linked levers, sliders, thrusters and lights.
-- [Version 1.3 highlights](gallery/version-1.3.md): selected animations with the new features.
+- [Version 1.6 signal levels](versions/version-1.6.md): linked levers, sliders, thrusters and lights.
+- [Version 1.3 highlights](versions/version-1.3.md): selected animations with the new features.
 
 The complete capture set:
 

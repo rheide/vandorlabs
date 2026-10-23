@@ -1,5 +1,7 @@
 # Version 1.2
 
+[All version guides](README.md)
+
 ## Connected Duplifier applications
 
 The Duplifier dialog now offers **Connected Matching Blocks**, Off by default.
@@ -11,7 +13,7 @@ See [Duplifier settings](../DUPLIFIER.md) for matching rules and limits.
 
 The shared finish menu now has 78 choices for Programmable Blocks and compatible shapes: 28 original finishes, 16 selected finishes from the first texture pack with shorter `T1` names, 23 selected finishes from the second pack with descriptive `T2` names and 64×64 artwork, and 11 new finishes named Hull Plating 1–11.
 
-The [Programmable Block finish overview](building.md#programmable-block-finishes) shows every choice on a full block, with up to ten blocks per screenshot and names in the same left-to-right order. Removed pack finishes have no save remaps, so an older saved finish number may now show different artwork.
+The [Programmable Block finish overview](../gallery/building.md#programmable-block-finishes) shows every choice on a full block, with up to ten blocks per screenshot and names in the same left-to-right order. Removed pack finishes have no save remaps, so an older saved finish number may now show different artwork.
 
 ![Hull Plating finishes on Programmable Blocks](../images/gallery/building/finishes-08.png)
 

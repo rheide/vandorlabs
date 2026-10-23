@@ -1,5 +1,7 @@
 # Version 1.6
 
+[All version guides](README.md)
+
 Version 1.6 carries redstone signal levels through channels, lights, propulsion
 blocks and screen controls. It also adds four-position levers, sliders and
 aircraft throttles with configurable output limits.
@@ -18,8 +20,8 @@ choices, and the extra split choices for regular doors and trapdoors, were
 reverted. Large Programmable Doors retain their existing **Sliding X** mode.
 Without a frame, Sliding X leaves one Minecraft pixel (1/16 block) of each
 panel visible inside the opening so it can be clicked to close the door.
-See the [door guide](doors.md), [trapdoor guide](programmable-trapdoor.md) and
-[diagonal trapdoor guide](programmable-diagonal-trapdoor.md) for the available
+See the [door guide](../gallery/doors.md), [trapdoor guide](../gallery/programmable-trapdoor.md) and
+[diagonal trapdoor guide](../gallery/programmable-diagonal-trapdoor.md) for the available
 movement choices.
 
 Double Doors artwork now uses the same dark edge texture as the other

@@ -1,5 +1,7 @@
 # Vandor Labs 2.0: build it, board it, drive it
 
+[All version guides](README.md)
+
 Your cockpit can now be part of a working ground craft. Version 2.0 brings Taxi Mode, a configurable Pilot Seat, moving cockpit shells, broad adjustable windows and escalators, alongside more flexible glass and cleaner panel connections.
 
 ## Turn a build into a vehicle
@@ -61,4 +63,4 @@ Stationary ramps reuse their prepared geometry and collision boxes, reducing rep
 
 Floor-mounted Push Buttons now update adjacent redstone dust immediately. Sliding trapdoors remain selectable after leaving their original block cell. Canopy rendering reuses settled poses and submits four-vertex faces directly, reducing vertex work for detailed shells. Vehicle rendering caches hull meshes and limits offscreen tile work.
 
-Block-category settings let a pack choose the available building families while preserving existing placed blocks. See [category settings](../block-categories.md), [ramp examples](ramp-controller.md) and the [changelog](../../CHANGELOG.md).
+Block-category settings let a pack choose the available building families while preserving existing placed blocks. See [category settings](../block-categories.md), [ramp examples](../gallery/ramp-controller.md) and the [changelog](../../CHANGELOG.md).

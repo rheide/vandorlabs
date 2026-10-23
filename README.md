@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-Current development version: **2.3**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.3**. See the [2.3 feature highlights and animations](docs/gallery/version-2.3.md), [2.1 feature highlights](docs/gallery/version-2.1.md), [2.0 feature guide](docs/gallery/version-2.0.md), and [changelog](CHANGELOG.md).
+Current development version: **2.3**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.3**. See the [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).
 
 **Vehicle systems:** [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
 
@@ -19,7 +19,7 @@ sliding doors, wall switches and throw levers, plus a few hand-built 3D
 levers, detailed doors, bridge chairs and matching material blocks. Everything
 is available in the `vandorlabs` creative tab. See the [quick player introduction](intro.md).
 
-**[Explore Vandor Labs 2.0: features and live animations](docs/gallery/version-2.0.md).** Drive a ground craft with Taxi Mode; build single, double or triple Canopies with forward/backward sliding or rear hinges; mount adjustable Front Canopy Glass (3 × 3) and Large Front Canopy Glass (5 × 5) on any face. One-screen dialogs combine Glass and normal materials in a large texture list, with Fit/Tile layout and redstone/channel controls. See the [canopy guide](docs/canopies.md) and [Pilot Seat settings](docs/pilot-seat-taxi.md).
+**[Explore Vandor Labs 2.0: features and live animations](docs/versions/version-2.0.md).** Drive a ground craft with Taxi Mode; build single, double or triple Canopies with forward/backward sliding or rear hinges; mount adjustable Front Canopy Glass (3 × 3) and Large Front Canopy Glass (5 × 5) on any face. One-screen dialogs combine Glass and normal materials in a large texture list, with Fit/Tile layout and redstone/channel controls. See the [canopy guide](docs/canopies.md) and [Pilot Seat settings](docs/pilot-seat-taxi.md).
 
 Ramp Controller also offers redstone-controlled **Escalator Up/Down** modes: the stairs stay extended, carry riders, and sleep when players leave the area. See the [settings and live animations](docs/gallery/ramp-controller.md#escalators).
 
@@ -27,13 +27,13 @@ Ramp Controller also offers redstone-controlled **Escalator Up/Down** modes: the
 
 **1.7:** Add Programmable Helmet, Chestplate, Leggings and Boots with diamond armor stats, eight role designs and selectable block materials. Each piece defaults to Civilian Staff and can copy a displayed world texture with shift-right-click. See the [armor guide](docs/programmable-armor.md) and [full-set gallery](docs/gallery/armor.md).
 
-**1.6:** Redstone channels carry levels 0–15. Use signal-driven programmable lights and propulsion brightness, bounded slider rows on screens and inputs, and exact-level or four-band Trigger artwork. Add four-position Thruster Levers, Wall Sliders, Airliner Throttles and Fighter Throttles. See the [1.6 guide and live demonstrations](docs/gallery/version-1.6.md).
+**1.6:** Redstone channels carry levels 0–15. Use signal-driven programmable lights and propulsion brightness, bounded slider rows on screens and inputs, and exact-level or four-band Trigger artwork. Add four-position Thruster Levers, Wall Sliders, Airliner Throttles and Fighter Throttles. See the [1.6 guide and live demonstrations](docs/versions/version-1.6.md).
 
-**1.5:** Add permanently double 3×3 doors, White Glass leaves with handles, eight light designs, screen row ordering and curved ramp profiles. Compatible opaque doors share Forge's renderer buffer. See the [1.5 highlights and measured door comparison](docs/gallery/version-1.5.md).
+**1.5:** Add permanently double 3×3 doors, White Glass leaves with handles, eight light designs, screen row ordering and curved ramp profiles. Compatible opaque doors share Forge's renderer buffer. See the [1.5 highlights and measured door comparison](docs/versions/version-1.5.md).
 
-**1.4:** Turn existing programmable screens, inputs and consoles into editable redstone control panels through the `Redstone...` artwork choice. Add comma-separated redstone channel lists and Off/Light/Medium/Heavy propulsion particles, plus performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/gallery/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
+**1.4:** Turn existing programmable screens, inputs and consoles into editable redstone control panels through the `Redstone...` artwork choice. Add comma-separated redstone channel lists and Off/Light/Medium/Heavy propulsion particles, plus performance improvements for programmable rendering, chunk meshes, collision and redstone. See the [1.4 highlights](docs/versions/version-1.4.md), [measurements and validation](docs/performance/1.4/README.md) and [diagonal chunk renderer](docs/performance/1.4/diagonal-chunks.md).
 
-**Version 1.3:** See the [animated highlights and new features](docs/gallery/version-1.3.md), including door, trapdoor and ramp motions, Programmable Storage, the reorganized material catalog and rendering improvements.
+**Version 1.3:** See the [animated highlights and new features](docs/versions/version-1.3.md), including door, trapdoor and ramp motions, Programmable Storage, the reorganized material catalog and rendering improvements.
 
 Texture choices share a [categorized picker with thumbnails and Custom block/door artwork](docs/unified-materials.md), including door, light and static screen artwork, plus Tech, Hull, Panels, Industrial, Trapdoors, Windows and Storage. Browse the [interactive texture catalog](https://rheide.github.io/vandorlabs/texture-browser/) or the [category collages](docs/texture-overview.md). New normal and diagonal trapdoors default to Armored Hatch. Add your own categories and PNGs with [filesystem textures](docs/filesystem-textures.md); first startup creates an Example folder and sample panel. Client and server texture folders may differ.
 
@@ -42,7 +42,7 @@ visual tour of the programmable blocks, doors, propulsion systems, controls,
 lighting, furniture, ramps, glass, and building materials.
 
 See the [changelog](CHANGELOG.md) for release notes and the
-[1.1 guide](docs/gallery/version-1.1.md) for face texture overrides,
+[1.1 guide](docs/versions/version-1.1.md) for face texture overrides,
 programmable stairs, diagonal options, connected seats, landing gear, and placement fixes.
 The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped seams and the proposed continuous geometry; that proposal is not implemented in `1.3-alpha`.
 
@@ -108,7 +108,7 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   Slab share artwork, brightness, joining and redstone settings. Place the slab
   against the top or underside of a block to choose its lower or upper half.
   Craft a Light Frame from a Programmable Light and iron bars, or six Light Slabs
-  from three Programmable Lights in a row. See [version 1.2 examples](docs/gallery/version-1.2.md).
+  from three Programmable Lights in a row. See [version 1.2 examples](docs/versions/version-1.2.md).
 - **Configurizer**: right-click a configurable block while holding it to open
   that block's settings menu, including in survival mode. Craft it from one
   Programmable Matter Ingot and one redstone; see the
@@ -126,7 +126,7 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
   Their recipes use Industrial Alloy and wool. See [seating](docs/gallery/chairs.md).
 - **Landing Gear**: one block with Small, Medium, Large and Extra Large sizes. Extra Large doubles Large's model dimensions and occupies a centered three-by-three footprint. Configure
   redstone mode/channel and extension from 0–4 blocks in half-block steps;
-  size and length changes preview immediately. See [2×2 alignment and adjacent covers](docs/landing-gear-covers.md). See [Landing Gear](docs/gallery/version-1.1.md#landing-gear).
+  size and length changes preview immediately. See [2×2 alignment and adjacent covers](docs/landing-gear-covers.md). See [Landing Gear](docs/versions/version-1.1.md#landing-gear).
 - **Ramp / Elevator Controller**: turns matching existing slabs or blocks into
   a ramp or moving lift. Configure signed start/end offsets, redstone polarity and
   Fast/Medium/Slow animation, with ramp tread sizes of 1, 2, 4, 8 or 16 pixels; activation selects the platform automatically and
@@ -414,7 +414,7 @@ license. The license does not grant rights in third-party names or trademarks.
 Earlier releases published under CC0 remain available under that irrevocable
 dedication.
 
-See the [1.3 highlights](docs/gallery/version-1.3.md) for new blocks and animated motion examples.
+See the [1.3 highlights](docs/versions/version-1.3.md) for new blocks and animated motion examples.
 
 Cargo artwork adds **Plain Cargo, Stepped Freight, Observation Leaf and Reinforced
 Leaf** to Doors, using mirrored left-hand artwork. Large doors also offer a

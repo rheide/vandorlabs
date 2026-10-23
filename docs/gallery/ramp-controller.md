@@ -1,7 +1,7 @@
 # Ramp Controller
 
 Version 1.1 seals transparent controller texture edges. See the
-[controller close-up](version-1.1.md#placement-and-compatibility-fixes).
+[controller close-up](../versions/version-1.1.md#placement-and-compatibility-fixes).
 
 The Ramp Controller controls a platform of matching slabs or solid blocks. It can form a slope, fill the space beneath that slope, lift the whole platform, or extend it into a solid run. The clips show each mode deploying and returning to its off position.
 

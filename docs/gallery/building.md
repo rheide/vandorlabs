@@ -1,7 +1,7 @@
 # Building blocks, finishes, and glass
 
 For face texture overrides, diagonal portholes, half-height walls and fill
-options, see [the 1.1 additions](version-1.1.md).
+options, see [the 1.1 additions](../versions/version-1.1.md).
 
 Programmable Block, Wall, Slab, Stairs, Ramp, and other compatible shapes use a shared finish list. Choose a material with shift-right-click in Creative mode, or use the [Configurizer](../CONFIGURIZER.md) in survival. Some screen blocks use the same list for their wall or side texture while keeping a separate primary screen selection. The [Duplifier](../DUPLIFIER.md) can carry a compatible finish to another shape.
 
@@ -187,6 +187,6 @@ Existing regular glass remains Framed with Normal tint; diagonal glass defaults 
 For configurable cockpit shells and 3 × 3 / 5 × 5 front windows using the same glass finishes, see the [canopy guide](../canopies.md).
 
 Diagonal placement follows the clicked edge; the dialog can reverse the slope.
-See [placement, joining and recipes](version-1.1.md#diagonal-building-blocks).
+See [placement, joining and recipes](../versions/version-1.1.md#diagonal-building-blocks).
 
 Diagonal glass uses the regular glass one-pixel perimeter artwork on its sloping faces. Perpendicular joined panes suppress internal edge frames; a middle pane joining two bends ends between its connecting arms rather than protruding past the corner. Both regular diagonal walls and glass use the same corrected corner geometry.
