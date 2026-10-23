@@ -28,7 +28,7 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 }
 
-version = '2.3'
+version = '2.4'
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
 
@@ -88,6 +88,33 @@ task testNonRendering(type: JavaExec) {
     workingDir = file("$buildDir/non-rendering-checks")
     doFirst { workingDir.mkdirs() }
 }
+
+task testDedicatedServerLinkage(type: JavaExec) {
+    group = 'verification'
+    description = 'Reject shared-code references to client-only Minecraft and Forge APIs'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.validation.DedicatedServerLinkageChecks'
+    args file("$buildDir/classes/java/main").absolutePath
+}
+check.dependsOn testDedicatedServerLinkage
+
+task testNetworkBoundaries(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NetworkBoundaryChecks'
+}
+check.dependsOn testNetworkBoundaries
+
+task testLoadSafety(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'load-safety'
+}
+check.dependsOn testLoadSafety
 
 task testFilesystemTextureNames(type: JavaExec) {
     group = 'verification'
@@ -758,9 +785,11 @@ task verifyRelease {
         if (System.getProperty('os.name').toLowerCase().contains('windows')) {
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'glass-appearance', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--shot-prefix', 'utility22_card_mounts', '--timeout', '900' }
+            exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'fluids', '--timeout', '900' }
         } else {
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'glass-appearance' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility22_card_mounts' }
+            exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'fluids' }
         }
         if (digest() != expectedDigest) throw new GradleException('Release JAR changed during live validation')
         logger.lifecycle('Release JAR verified SHA-256: ' + expectedDigest)

@@ -136,6 +136,7 @@ if [ "$MODE" = focus ]; then
     fi
     if [ "$TARGET" = canopies ]; then
         grep -q "canopy-world PASS" "$RUN_OUT/client.log"
+        grep -q "canopy-saved-collision PASS" "$RUN_OUT/client.log"
         grep -q "canopy-three-wide PASS" "$RUN_OUT/client.log"
         grep -q "canopy-surfaces PASS" "$RUN_OUT/client.log"
         grep -q "canopy-harvest-clicks PASS" "$RUN_OUT/client.log"

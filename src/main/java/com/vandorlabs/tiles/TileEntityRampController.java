@@ -836,7 +836,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         double walkX=previous==null?entity.motionX:entity.posX-previous.x,walkZ=previous==null?entity.motionZ:entity.posZ-previous.z;
         if((walkX*facing.getFrontOffsetX()+walkZ*facing.getFrontOffsetZ())*delta>=-1e-6)return 0;
         int sign=endOffsetValue()>=0?-1:1;double x=facing.getFrontOffsetX()*sign,z=facing.getFrontOffsetZ()*sign;
-        double edge=x<0?body.getCenter().x-platform.minX:x>0?platform.maxX-body.getCenter().x:z<0?body.getCenter().z-platform.minZ:platform.maxZ-body.getCenter().z;
+        double centerX=(body.minX+body.maxX)*.5,centerZ=(body.minZ+body.maxZ)*.5;
+        double edge=x<0?centerX-platform.minX:x>0?platform.maxX-centerX:z<0?centerZ-platform.minZ:platform.maxZ-centerZ;
         if(edge>.65)return 0;
         AxisAlignedBB toward=body.offset(x*.2,0,z*.2);double top=body.minY;
         for(AxisAlignedBB box:com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(world,pos,entity,body.expand(x*.4,entity.stepHeight,z*.4)))

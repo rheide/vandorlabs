@@ -22,9 +22,9 @@ public class VandorLabs {
 
     public static final String MODID = "vandorlabs";
     public static final String NAME = "Vandor Labs";
-    public static final String VERSION = "2.3";
+    public static final String VERSION = "2.4";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t214";
+    public static final String BUILD_ID = "t217";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;

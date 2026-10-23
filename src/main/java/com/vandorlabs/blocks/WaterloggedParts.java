@@ -65,7 +65,7 @@ public final class WaterloggedParts {
         for(int axis=0;axis<3;axis++){TreeSet<Double> points=new TreeSet<>();points.add(0D);points.add(1D);if(OpeningFluids.supports(state)){points.add(.5);double[] plane=OpeningFluids.plane(world,pos);if(Math.abs(plane[axis])>.999)for(int end=3;end<5;end++){double cut=plane[end]/plane[axis];if(cut>0&&cut<1)points.add(cut);}}for(AxisAlignedBB b:local){points.add(axis==0?b.minX:axis==1?b.minY:b.minZ);points.add(axis==0?b.maxX:axis==1?b.maxY:b.maxZ);}cuts[axis]=points.stream().mapToDouble(Double::doubleValue).toArray();}
         int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;int[][][] owners=new int[nx][ny][nz];
         for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++){
-            AxisAlignedBB box=new AxisAlignedBB(cuts[0][x],cuts[1][y],cuts[2][z],cuts[0][x+1],cuts[1][y+1],cuts[2][z+1]);Vec3d center=box.getCenter();int side=side(world,pos,center);for(AxisAlignedBB b:local)if(b.contains(center)){side=-1;break;}owners[x][y][z]=side;if(side>=0)result.cells.add(new Cell(box,side));
+            AxisAlignedBB box=new AxisAlignedBB(cuts[0][x],cuts[1][y],cuts[2][z],cuts[0][x+1],cuts[1][y+1],cuts[2][z+1]);Vec3d center=new Vec3d((box.minX+box.maxX)*.5,(box.minY+box.maxY)*.5,(box.minZ+box.maxZ)*.5);int side=side(world,pos,center);for(AxisAlignedBB b:local)if(b.contains(center)){side=-1;break;}owners[x][y][z]=side;if(side>=0)result.cells.add(new Cell(box,side));
         }
         for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++)if(owners[x][y][z]>=0){
             int side=owners[x][y][z];double a=cuts[0][x],b=cuts[0][x+1],c=cuts[1][y],d=cuts[1][y+1],e=cuts[2][z],f=cuts[2][z+1];

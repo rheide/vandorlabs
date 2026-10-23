@@ -26,8 +26,26 @@ public final class VehicleNetwork {
         public double x,y,z,dy,speed;public float yaw,steering;
         public Packet(){}
         public Packet(int type){this.type=type;}
-        public void toBytes(ByteBuf b){b.writeByte(type);b.writeInt(entity);b.writeLong(token.getMostSignificantBits());b.writeLong(token.getLeastSignificantBits());b.writeInt(sequence);b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);if(type==STATE){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);}}
-        public void fromBytes(ByteBuf b){try{type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())throw new IllegalArgumentException();data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);valid=text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH && type<=MODE_SELECT;if(type==STATE){serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();valid=valid && Double.isFinite(x) && Double.isFinite(y) && Double.isFinite(z) && Double.isFinite(dy) && Double.isFinite(speed) && Float.isFinite(yaw) && Float.isFinite(steering);}}catch(Exception e){valid=false;}}
+        public void toBytes(ByteBuf b){
+            b.writeByte(type);b.writeInt(entity);b.writeLong(token.getMostSignificantBits());b.writeLong(token.getLeastSignificantBits());b.writeInt(sequence);
+            if(type==STATE){b.writeBoolean(flag);writeState(b);return;}
+            b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);
+        }
+        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);}
+        public void fromBytes(ByteBuf b){
+            valid=false;
+            try{
+                type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();
+                if(type==STATE){
+                    flag=b.readBoolean();serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();
+                    valid=!b.isReadable()&&Double.isFinite(x)&&Double.isFinite(y)&&Double.isFinite(z)&&Double.isFinite(dy)&&Double.isFinite(speed)&&Float.isFinite(yaw)&&Float.isFinite(steering);return;
+                }
+                total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());
+                int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())return;
+                data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);
+                valid=!b.isReadable()&&text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH&&type<=MODE_SELECT;
+            }catch(Exception malformed){valid=false;}
+        }
     }
     public static final class Server implements IMessageHandler<Packet,IMessage> {
         public IMessage onMessage(Packet message,MessageContext ctx) {

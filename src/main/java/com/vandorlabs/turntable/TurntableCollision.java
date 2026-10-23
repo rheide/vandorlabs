@@ -9,7 +9,7 @@ public final class TurntableCollision {
     private TurntableCollision(){}
     /** Exact separating-axis test for a cardinal-axis rotated box against terrain. */
     public static boolean intersects(AxisAlignedBB source,Vec3d pivot,TurntableGeometry.Face face,double angle,AxisAlignedBB obstacle){
-        Vec3d center=source.getCenter(),target=obstacle.getCenter();double[] rotated=TurntableGeometry.rotate(center.x-pivot.x,center.y-pivot.y,center.z-pivot.z,face,angle);
+        Vec3d center=new Vec3d((source.minX+source.maxX)*.5,(source.minY+source.maxY)*.5,(source.minZ+source.maxZ)*.5),target=new Vec3d((obstacle.minX+obstacle.maxX)*.5,(obstacle.minY+obstacle.maxY)*.5,(obstacle.minZ+obstacle.maxZ)*.5);double[] rotated=TurntableGeometry.rotate(center.x-pivot.x,center.y-pivot.y,center.z-pivot.z,face,angle);
         double[] delta={rotated[0]+pivot.x-target.x,rotated[1]+pivot.y-target.y,rotated[2]+pivot.z-target.z};
         double[] half={(source.maxX-source.minX)/2,(source.maxY-source.minY)/2,(source.maxZ-source.minZ)/2},other={(obstacle.maxX-obstacle.minX)/2,(obstacle.maxY-obstacle.minY)/2,(obstacle.maxZ-obstacle.minZ)/2};
         double[][] axes=new double[3][];for(int i=0;i<3;i++)axes[i]=TurntableGeometry.rotate(i==0?1:0,i==1?1:0,i==2?1:0,face,angle);

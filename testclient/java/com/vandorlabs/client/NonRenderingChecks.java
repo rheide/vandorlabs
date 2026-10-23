@@ -34,6 +34,7 @@ public final class NonRenderingChecks {
         ModBlocks.PROGRAMMABLE_DIAGONAL_WALL = new BlockProgrammableWall("programmable_diagonal_wall", BlockProgrammableWall.Shape.DIAGONAL);
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_glass"));
         if(args.length>0 && args[0].equals("diagonal-joins")){DiagonalJoinMatrixChecks.run();return;}
+        if(args.length>0 && args[0].equals("load-safety")){LoadSafetyChecks.run();return;}
         DiagonalSurfaceChecks.run();
         placement();
         contiguous();
@@ -212,10 +213,11 @@ public final class NonRenderingChecks {
         System.out.println("PASS: 2.5-block slab clearance in Ramp, Lift and Extend; ground/ceiling contact and real obstructions");
     }
 
-    static final class MemoryWorld extends World {
+    static class MemoryWorld extends World {
         final Map<BlockPos,IBlockState> states=new HashMap<>();
         final Map<BlockPos,TileEntity> tiles=new HashMap<>();
         boolean chunkLimit;
+        boolean tileLoadGuard;
         long time;
         int updates,renderUpdates,dirty,lightChecks,stateReads;
         BlockPos renderMin,renderMax;
@@ -249,13 +251,15 @@ public final class NonRenderingChecks {
             };
         }
         @Override public net.minecraft.world.chunk.IChunkProvider getChunkProvider(){return createChunkProvider();}
+        @Override public net.minecraft.world.chunk.Chunk getChunkFromChunkCoords(int x,int z){return getChunkProvider().provideChunk(x,z);}
         @Override protected boolean isChunkLoaded(int x,int z,boolean empty){return !chunkLimit || x==0&&z==0;}
-        private void loaded(BlockPos p){if(!isBlockLoaded(p))throw new IllegalStateException("read unloaded chunk "+p);}
+        private void loaded(BlockPos p){if(tileLoadGuard&&!tiles.containsKey(p))throw new IllegalStateException("neighbor read during tile onLoad "+p);if(!isBlockLoaded(p))throw new IllegalStateException("read unloaded chunk "+p);}
         @Override public IBlockState getBlockState(BlockPos p){stateReads++;loaded(p);return states.getOrDefault(p,Blocks.AIR.getDefaultState());}
         @Override public void removeTileEntity(BlockPos p){TileEntity tile=tiles.remove(p);if(tile!=null)tile.invalidate();}
         @Override public void playEvent(net.minecraft.entity.player.EntityPlayer player,int event,BlockPos p,int data){}
-        @Override public TileEntity getTileEntity(BlockPos p){loaded(p);return tiles.get(p);}
+        @Override public TileEntity getTileEntity(BlockPos p){if(tileLoadGuard)throw new IllegalStateException("tile query during onLoad "+p);loaded(p);return tiles.get(p);}
         @Override public boolean setBlockState(BlockPos p,IBlockState state,int flags) {
+            if(tileLoadGuard)throw new IllegalStateException("block mutation during onLoad "+p);
             loaded(p);IBlockState before=states.put(p.toImmutable(),state);
             TileEntity previous=tiles.get(p);
             if(before!=null && previous!=null && !previous.shouldRefresh(this,p,before,state))return true;

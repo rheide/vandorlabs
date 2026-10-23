@@ -341,7 +341,13 @@ public final class VehicleTransfer {
         VehicleStructure affected=undo.hasKey("ParkedCraft",10)?VehicleStructure.read(undo.getCompoundTag("ParkedCraft")):structure;
         for(VehicleStructure.Cell cell:affected.cells){BlockPos p=origin.add(cell.pos);long key=((long)(p.getX()>>4)<<32)^((p.getZ()>>4)&0xffffffffL);if(chunks.add(key))world.getChunkFromBlockCoords(p);}
         world.getChunkFromBlockCoords(new BlockPos(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z")));
+        VehicleStructure restoreSource=undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure;
+        BlockPos restoreOrigin=undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin;
+        if(!undo.getBoolean("Parking"))for(VehicleStructure.Cell cell:restoreSource.cells)world.getChunkFromBlockCoords(restoreOrigin.add(cell.pos));
+        requireUnchangedRecovery(world,undo.getBoolean("Parking")?affected:restoreSource,undo.getBoolean("Parking")?origin:restoreOrigin);
         UUID id=undo.getUniqueId("Entity");
+        for(net.minecraft.entity.Entity entity:world.loadedEntityList)
+            if(entity.getUniqueID().equals(id)&&!(entity instanceof EntityGroundVehicle))throw new IOException("Recovery entity UUID conflict; journal retained.");
         for(net.minecraft.entity.Entity entity:new ArrayList<>(world.loadedEntityList))
             if(entity.getUniqueID().equals(id)){entity.removePassengers();world.removeEntityDangerously(entity);}
         if(undo.getBoolean("Parking")) {
@@ -358,6 +364,18 @@ public final class VehicleTransfer {
         }else {VehicleOwnership.update(world,id,1,false);blocks(world,undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure,undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);}
         flush(world);Files.deleteIfExists(journal(world));
         }
+    }
+    /** A retained journal must not overwrite edits made after the original interrupted transfer. */
+    static void requireUnchangedRecovery(net.minecraft.world.World world,VehicleStructure snapshot,BlockPos origin)throws IOException {
+        List<VehicleStructure.Cell> present=new ArrayList<>();
+        for(VehicleStructure.Cell cell:snapshot.cells){
+            BlockPos target=origin.add(cell.pos);
+            if(!world.isBlockLoaded(target))throw new IOException("Recovery chunk unavailable; journal retained.");
+            if(world.isAirBlock(target))continue;
+            if(world.getBlockState(target)!=cell.state)throw new IOException("Recovery blocked by changed blocks at "+target+"; journal retained.");
+            present.add(cell);
+        }
+        if(!VehicleStructure.display(present).matches(world,origin))throw new IOException("Recovery blocked by changed block contents; journal retained.");
     }
     public static void blocks(WorldServer world,VehicleStructure structure,BlockPos origin,boolean place) {
         long began=System.nanoTime();

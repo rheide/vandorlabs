@@ -89,7 +89,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     public Display display(String id){prepare();for(Display d:displays)if(d.id.equals(id))return d;return null;}
     public void changed(){markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
     private boolean ordinary(){return world!=null && !world.isRemote && !(world instanceof VehicleWorld);}
-    @Override public void onLoad(){super.onLoad();prepare();if(ordinary())for(Control c:controls)RedstoneChannels.register(c);}
+    @Override public void onLoad(){super.onLoad();prepare();if(ordinary())DeferredTileLoad.schedule(this,()->{for(Control c:controls)RedstoneChannels.register(c);});}
     @Override public void invalidate(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.invalidate();}
     @Override public void onChunkUnload(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.onChunkUnload();}
     public boolean expire(long now){boolean changed=false;for(Control c:controls)if(c.until>0 && now>=c.until){c.until=0;c.level=0;if(ordinary())RedstoneChannels.inputChanged(c);changed=true;}if(changed)changed();return changed;}

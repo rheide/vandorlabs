@@ -181,7 +181,7 @@ public final class EntityTurntable extends Entity implements IEntityAdditionalSp
     @Override protected void readEntityFromNBT(NBTTagCompound tag){
         controller=BlockPos.fromLong(tag.getLong("Controller"));controllerKey=tag.hasUniqueId("ControllerKey")?tag.getUniqueId("ControllerKey"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;
         angle=previous=Double.isFinite(tag.getDouble("Angle"))?TurntableGeometry.wrap(tag.getDouble("Angle")):0;
-        if(tag.hasKey("Snapshot",10)){unavailable=tag.getCompoundTag("Snapshot").copy();try{install(TurntableSnapshot.read(unavailable));}catch(RuntimeException missing){com.vandorlabs.VandorLabs.logger.warn("Turntable snapshot retained pending unavailable components",missing);}}
+        if(tag.hasKey("Snapshot",10)){NBTTagCompound original=tag.getCompoundTag("Snapshot").copy();try{install(TurntableSnapshot.read(original));}catch(RuntimeException | LinkageError missing){snapshot=null;view=null;wire=null;incoming=null;localBoxes=worldBoxes=Collections.emptyList();surfaceExtent=null;unavailable=original;com.vandorlabs.VandorLabs.logger.warn("Turntable snapshot retained pending unavailable components",missing);}}
         dataManager.set(ANGLE,(float)angle);
     }
     public byte[] wire()throws java.io.IOException{if(wire==null && snapshot!=null)wire=snapshot.encode();return wire;}

@@ -76,11 +76,26 @@ public final class CanopyRuntimeChecks {
                 .addScheduledTask(
                         () -> {
                             World w = mc.getIntegratedServer().getEntityWorld();
+                            int reloads=0;
                             for (EnumFacing f : EnumFacing.HORIZONTALS)
                                 for (String id : IDS) {
                                     clear(w);
                                     BlockCanopy b = block(id);
                                     TileEntityCanopy t = place(w, b, TEST, f);
+                                    // Recreate the saved owner without replaying placement: existing
+                                    // worlds must regain collision after the dedicated-server fix.
+                                    AxisAlignedBB region=new AxisAlignedBB(TEST).grow(12);
+                                    java.util.List<AxisAlignedBB> expected=new java.util.ArrayList<>();
+                                    t.addCollisionBoxes(region,expected);
+                                    require(!expected.isEmpty(),"fresh collision query "+id);
+                                    NBTTagCompound ownerTag=t.writeToNBT(new NBTTagCompound());
+                                    TileEntityCanopy loaded=new TileEntityCanopy();
+                                    loaded.setWorld(w);loaded.readFromNBT(ownerTag);w.setTileEntity(TEST,loaded);
+                                    java.util.List<AxisAlignedBB> actual=new java.util.ArrayList<>();
+                                    loaded.addCollisionBoxes(region,actual);
+                                    require(expected.equals(actual),"saved collision query "+id+" "+f);
+                                    require(loaded.large.key().equals(t.large.key()),"saved collision settings "+id);
+                                    t=loaded;reloads++;
                                     for (BlockPos cell : b.cells(TEST, f))
                                         require(
                                                 TileEntityCanopy.at(w, cell).owner() == t,
@@ -316,6 +331,7 @@ public final class CanopyRuntimeChecks {
                             CanopyAssemblyRuntimeChecks.check(w);
                             CanopyReleaseRuntimeChecks.run((EntityPlayerMP)w.playerEntities.get(0));
                             LargeCanopyRuntimeChecks.run(mc.getIntegratedServer().getPlayerList().getPlayers().get(0));
+                            System.out.println("[vandorlabs][reprolab] canopy-saved-collision PASS cases="+reloads+" existing-NBT cold-bounds ordered-collision");
                             clear(w);
                             place(w, block("canopy"), TEST, EnumFacing.NORTH);
                             System.out.println(

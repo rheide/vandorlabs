@@ -378,7 +378,12 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         if(boundsFaces!=geometry||boundsFacing!=direction||!pos.equals(boundsPos)){
             double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;
             for(CanopyMesh.Face face:geometry)for(Vec3d point:face.vertices){minX=Math.min(minX,point.x);minY=Math.min(minY,point.y);minZ=Math.min(minZ,point.z);maxX=Math.max(maxX,point.x);maxY=Math.max(maxY,point.y);maxZ=Math.max(maxZ,point.z);}
-            posedBounds=geometry.isEmpty()?null:new AxisAlignedBB(CanopyMesh.rotate(new Vec3d(minX,minY,minZ),direction),CanopyMesh.rotate(new Vec3d(maxX,maxY,maxZ),direction)).offset(pos);
+            if(geometry.isEmpty())posedBounds=null;
+            else{
+                Vec3d min=CanopyMesh.rotate(new Vec3d(minX,minY,minZ),direction),max=CanopyMesh.rotate(new Vec3d(maxX,maxY,maxZ),direction);
+                // The two-Vec3d constructor is client-only in Minecraft 1.12.2.
+                posedBounds=new AxisAlignedBB(min.x,min.y,min.z,max.x,max.y,max.z).offset(pos);
+            }
             boundsFaces=geometry;boundsFacing=direction;boundsPos=pos.toImmutable();
         }
         return posedBounds;
@@ -486,7 +491,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         markDirty();
         boolean next=powered==large.activateOnPower;if(next!=targetOpen){targetOpen=next;reservationGeometryChanged();com.vandorlabs.canopy.CanopyReservations.targetChanged(this);sync();}
     }
-    @Override public void onLoad(){super.onLoad();reservationGeometryChanged();com.vandorlabs.redstone.RedstoneChannels.register(this);com.vandorlabs.canopy.CanopyReservations.loaded(this);}
+    @Override public void onLoad(){super.onLoad();reservationGeometryChanged();DeferredTileLoad.schedule(this,()->{com.vandorlabs.redstone.RedstoneChannels.register(this);com.vandorlabs.canopy.CanopyReservations.loaded(this);});}
     @Override public void invalidate(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();}
     @Override public void onChunkUnload(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override
@@ -517,7 +522,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         super.readFromNBT(n);
         large.read(n);
         ownedCells=null;
-        if(n.hasKey("CanopyFootprint",11)){int[] offsets=n.getIntArray("CanopyFootprint");if(offsets.length>0 && offsets.length<=3000 && offsets.length%3==0){ownedCells=new ArrayList<>();for(int i=0;i<offsets.length;i+=3)if(Math.abs(offsets[i])<=8 && Math.abs(offsets[i+1])<=8 && Math.abs(offsets[i+2])<=8)ownedCells.add(pos.add(offsets[i],offsets[i+1],offsets[i+2]));}}
+        if(n.hasKey("CanopyFootprint",11)){int[] offsets=n.getIntArray("CanopyFootprint");if(offsets.length>0 && offsets.length<=3000 && offsets.length%3==0){ownedCells=new ArrayList<>();for(int i=0;i<offsets.length;i+=3)if(Math.abs((long)offsets[i])<=8 && Math.abs((long)offsets[i+1])<=8 && Math.abs((long)offsets[i+2])<=8)ownedCells.add(pos.add(offsets[i],offsets[i+1],offsets[i+2]));}}
         releasedHelpers.clear();for(int index:n.getIntArray("CanopyReleasedHelpers"))if(index>=0&&index<1000)releasedHelpers.add(index);waitingForReservations=n.getBoolean("CanopyWaitingForReservations");reservationGeometryChanged();
         centeredPlacement=n.getBoolean("CenteredPlacement");
         hollowPlacement=n.getBoolean("HollowPlacement");
@@ -532,7 +537,8 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         joinedWidth=n.hasKey("CanopyWidth",3)?Math.max(1,Math.min(9,n.getInteger("CanopyWidth"))):pair==null?1:2;
         effectivePowerKnown=n.getBoolean("CanopyPowerKnown");lastEffectivePower=n.getBoolean("CanopyLastPower");lastPowerPolarity=n.getBoolean("CanopyLastPolarity");
         targetOpen = n.getBoolean("Open");
-        progress = previous = Math.max(0, Math.min(1, n.getFloat("Progress")));
+        float savedProgress=n.getFloat("Progress");
+        progress = previous = Float.isFinite(savedProgress)?Math.max(0, Math.min(1, savedProgress)):0;
         cachedKey = null;
     }
 

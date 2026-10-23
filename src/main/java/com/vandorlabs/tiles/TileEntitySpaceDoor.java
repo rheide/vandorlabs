@@ -262,7 +262,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         migrateLegacyMotion=false;
         if (!world.isRemote) markDirty();
     }
-    @Override public void onLoad() { super.onLoad(); com.vandorlabs.blocks.DoorWaterGush.schedule(world,pos); migrateLegacyMotion();if(isLowerDoor()&&securityMode>0)tickReaders(); }
+    @Override public void onLoad() { super.onLoad(); if(world!=null&&world.isRemote)migrateLegacyMotion();else DeferredTileLoad.schedule(this,()->{com.vandorlabs.blocks.DoorWaterGush.schedule(world,pos);migrateLegacyMotion();if(isLowerDoor()&&securityMode>0)tickReaders();}); }
     public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15 || design==16 || design==29; }
     public boolean hasGlass() { return faceTexture<0 && hasGlassDesign(design); }
     @Override
