@@ -626,6 +626,10 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.creativeCatalogChecksOnly")) {
+            if(++holdTicks==40){CreativeCatalogRuntimeChecks.run();mc.shutdown();}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.blockCategoryChecksOnly")) {
             if(++holdTicks==40){onServer(mc,()->BlockAvailabilityRuntimeChecks.run(mc.getIntegratedServer().getWorld(0)));mc.shutdown();}
             return;

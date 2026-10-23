@@ -466,7 +466,7 @@ public class ModBlocks {
                         : block == PROGRAMMABLE_STAIRS ? new com.vandorlabs.items.ItemProgrammableStairs((BlockProgrammableStairs)block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
-                        ? new ItemDiagonalWall((BlockProgrammableWall) block) : block instanceof com.vandorlabs.gear.LargeGearBlock ? new com.vandorlabs.gear.ItemLargeGear((com.vandorlabs.gear.LargeGearBlock)block) : new ItemBlock(block);
+                        ? new ItemDiagonalWall((BlockProgrammableWall) block) : block instanceof com.vandorlabs.gear.LargeGearBlock ? new com.vandorlabs.gear.ItemLargeGear((com.vandorlabs.gear.LargeGearBlock)block) : new com.vandorlabs.items.ItemCatalogBlock(block);
                 event.getRegistry().register(item.setRegistryName(block.getRegistryName()));
             }
         }

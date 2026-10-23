@@ -15,6 +15,7 @@ import net.minecraft.world.World;
 /** Configuration, legacy defaults and inventory round trips for the merged lever. */
 final class PowerLeverRuntimeChecks {
     static void run(World world,EntityPlayer player){
+        CreativeCatalogRuntimeChecks.run();
         BlockPos pos=new BlockPos(41,88,41);world.setBlockState(pos.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
         BlockTwinPowerLever canonical=(BlockTwinPowerLever)Block.getBlockFromName("vandorlabs:small_power_lever");
         for(String id:new String[]{"small_power_lever","large_power_lever"}){
@@ -37,4 +38,5 @@ final class PowerLeverRuntimeChecks {
         world.setBlockToAir(pos.down());System.out.println("[vandorlabs][reprolab] power-lever-size PASS legacy defaults, NBT, channels, pick/drop/placement");
     }
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException(message);}
+
 }

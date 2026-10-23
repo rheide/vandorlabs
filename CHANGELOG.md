@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Hide retired block items from JEI's registry scans, including duplicate Power Lever/Industrial Power Lever sizes and the old Landing Gear, Ski Landing Gear and landing struts. Preserve saved blocks and inventory items; current modular gear and configurable lever sizes remain available.
+
 ## 2.4
 
 - Animate cockpit screen banks and sliding seats with the client's pause-aware visual clock, avoiding skips or rewinds from server world-time corrections. Preserve visual motion across repeated settings packets and recreated vehicle tiles without increasing packet frequency. Server collision, reservations and saved motion remain authoritative.

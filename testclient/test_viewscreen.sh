@@ -2,6 +2,7 @@
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
 unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
+unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
@@ -11,7 +12,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = fluids ]; then
+        if [ "$TARGET" = creative-catalog ]; then
+            PREFIX=catalog_
+            export VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY=true
+        elif [ "$TARGET" = fluids ]; then
             PREFIX=fluid_
             export VANDOR_LABS_FLUID_CHECKS_ONLY=true
         elif [ "$TARGET" = cockpit ]; then
@@ -87,6 +91,9 @@ cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     "$TEST_RUNTIME_GAME/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"
 cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
 # Optional renderer compatibility run, kept separate from the baseline client.
+if [ -n "${VANDOR_LABS_TEST_JEI:-}" ]; then
+    cp "$VANDOR_LABS_TEST_JEI" "$TEST_RUNTIME_GAME/mods/"
+fi
 if [ -n "${VANDOR_LABS_TEST_OPTIFINE:-}" ]; then
     cp "$VANDOR_LABS_TEST_OPTIFINE" "$TEST_RUNTIME_GAME/mods/"
 fi
@@ -98,6 +105,14 @@ if grep -q 'Exception loading model' "$RUN_OUT/client.log"; then
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = creative-catalog ]; then
+        grep -q 'creative-catalog PASS' "$RUN_OUT/client.log"
+        if [ -n "${VANDOR_LABS_TEST_JEI:-}" ]; then
+            grep -q 'creative-catalog-JEI-live PASS' "$RUN_OUT/client.log"
+        fi
+        echo "Live creative catalog checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = fluids ]; then
         grep -q 'mount-company-filter PASS' "$RUN_OUT/client.log"
         grep -q 'mount-filter-live PASS' "$RUN_OUT/client.log"
