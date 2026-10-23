@@ -12,6 +12,7 @@
 
 - Add independent Auto / Left / Right hinge selection for diagonal trapdoors. Fresh vertical placement retains the clicked leaf's physical hinge edge, including reversed-facing continuations; the existing swing-direction option remains available.
 - Default new Programmable Stairs to Tile, preserve saved Fit settings, and match vanilla neighbor-brightness sampling and directional UVs on generated stair surfaces. Mounted surfaces carry their texture orientation and normals with them.
+- Preserve lighting of the neighboring block visible through the empty recess beneath sideways stairs.
 - Align opening canopies placed against the rear of a Cockpit with its back edge, without reserving an extra block behind the cockpit.
 - Add a saved Rotation: Normal / Reverse control for each diagonal trapdoor. Vertically placed rotating leaves inherit the clicked trapdoor's rotation direction; sliding motion and hinge positions remain independent.
 - Allow Canopy and Long Canopy to share the raised cockpit reservation, preserving cockpit collision and controls. Inherit facing and upright/inverted mounting when placing against another opening canopy.
@@ -56,7 +57,7 @@
 
 - Move the outer cockpit keyboard decks and their supports 2.5px toward the pilot to clear the lowered side screens.
 
-- Support contained fluid sides on Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor. Fill open passages from stored or adjacent water and restore the original sides on closing without creating source blocks. Keep upper/lower door fluid storage independent and render diagonal fluid boundaries as continuous planes.
+- Support contained fluid sides on Programmable Door, Programmable Trapdoor and Programmable Diagonal Trapdoor. Fill open passages from stored or adjacent water and restore the original sides on closing. Keep upper/lower door fluid storage independent and render diagonal fluid boundaries as continuous planes; only doors supply the managed outward water flow described above.
 - Reestablish texture units, alpha testing and depth state before drawing cached turntable contents, and synchronize both texture-unit caches when restoring nested render state.
 
 - Preserve Advanced Pilot Chair height when saving pilot controls or reopening the casing page. Synchronize cockpit riders and their camera to the seat timeline instead of periodic mount position packets.
@@ -79,7 +80,7 @@
 
 - Add animated insert-to-toggle-and-return behavior to Access Card and Data Chip Mounts, with saved output, inventory-safe returns and reload-safe scan progress.
 
-- Add compact Access Card and Data Chip Mounts, with independent design allow-lists, non-consuming filter slots, output channels and continuous/pulse behavior.
+- Add compact Access Card and Data Chip Mounts, with a non-consuming single-company sample filter or Any, output channels and continuous/pulse behavior.
 - Correct cockpit dialog sizing and contrast, keyboard proportions, armrest orientation and overlapping chair geometry. Add selectable casing textures, name Advanced Pilot Chair and use red upholstery.
 - Support Programmable Chair passengers in captured vehicles, preserving their style, height and assigned seat through movement, assembly and parking.
 - Use server-compatible bounds constructors for cockpit collision and related vehicle, gear, canopy and door interactions.

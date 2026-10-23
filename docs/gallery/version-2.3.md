@@ -45,9 +45,11 @@ Choose the behavior that fits the circuit:
 
 The filters consume nothing. Insertion borrows one real item, including in Creative; a pending return stays safe if the player's inventory is full or they disconnect. See [Access Card and Data Chip Mounts](../data-mounts.md).
 
+Mounts use the shared redstone channel editor, with channel 0 meaning no channel. Data Card is now named **Access Card**, including the `access_card` item and `access_card_slot` mount registry IDs and their assets. The old registry IDs have no remapping aliases.
+
 ## Programmable Doors with access control
 
-The door's **Security** controls replace its ordinary panel with a card reader and use the same a company-card sample filter and four behaviors. Use a valid card anywhere on the door leaf to insert it in the panel on that side. Centered doors can have panels on **Both** sides, with a separate physical card on each side.
+The door's **Security** controls replace its ordinary panel with a card reader and use the same single-company sample filter and four behaviors as the mounts. **Any card** accepts the whole family; selecting a sample shows its company name and **Click to clear**. Use a valid card anywhere on the door leaf to insert it in the panel on that side. Centered doors can have panels on **Both** sides, with a separate physical card on each side.
 
 | Stay Inserted | Return After Open: Pulse |
 | --- | --- |
@@ -79,6 +81,10 @@ Programmable walls, portholes and glass panels, including diagonal variants, sto
 
 Programmable Doors, Trapdoors and Diagonal Trapdoors also support two fluid sides. Water fills the passage while the leaf is open; closing restores the original sides and clears temporary water from a previously dry side.
 
+Opening a Programmable Door with water stored on only one side continuously supplies vanilla water flow into the dry side. Closing, draining or removing the door clears its managed outlet while preserving existing water sources. This outward-flow behavior applies only to doors.
+
+Contained water meets native still and flowing water at matching heights, including stacked diagonal panels. Rendering fixes remove duplicate water sheets against solid blocks, panes and submerged door leaves, preserve visible water through glass and portholes from either side, and keep water in view when its containing pane leaves the camera view. Water lighting now uses vanilla lightmap ordering. Release regressions cover solid contacts, submerged doors, diagonal slivers and viewpoints above, below and across the waterline, including forward and grazing-angle views.
+
 The shared fluid renderer uses fewer draw calls and allocations; see the [rendering measurements and regression coverage](../performance/waterlogged-2.3.md).
 
 Underwater fog and eye immersion follow the occupied fluid compartment, including the center of an open door. Looking out through a dry compartment restores the normal air view.
@@ -97,6 +103,10 @@ Browse the whole catalog through the [interactive texture browser and category c
 
 The Advanced Pilot Chair armrest sliders remain independently selectable at every height and detent. Hold a regular or Long Canopy and use it on a Cockpit to share the raised upper part, preserving cockpit collision and controls; removing the canopy preserves the cockpit. Placement against the rear cockpit face aligns the canopy’s rear edge and extends forward, without needing an extra clear block behind it.
 
-Programmable Stairs offer a 1, 2, 4 or 8 pixel step-size slider and Normal / Sideways orientation. Placement follows vanilla stairs, including on vertical faces. Select Sideways in the dialog to make a wing; its textures rotate with the geometry and exposed neighboring block faces remain visible. New stairs use Tile texture mode; saved Fit settings remain unchanged. Generated surfaces use vanilla directional UVs and neighbor-brightness lighting. Shape settings persist in the world, configured items and Duplifier copies. Sneak-use the Duplifier on a vanilla solid block to sample its material and metadata.
+Clicking the wall directly behind the seat also places the canopy over the shared upper space. Plain **Canopy Glass** shares that same height over cockpits and Pilot Seats, at every seat height and in either placement order. Removing it restores the upper reservation. Canopy and Long Canopy inherit the clicked canopy's facing and upright or ceiling mounting. Configurizer clicks select the visible canopy or cockpit surface, and the cockpit seat can slide back and return beneath compatible canopies without removing them. See [canopy placement and sharing](../canopies.md).
+
+Programmable Stairs offer a 1, 2, 4 or 8 pixel step-size slider and Normal / Sideways orientation. Placement follows vanilla stairs, including on vertical faces. Select Sideways in the dialog to make a wing; its textures rotate with the geometry and exposed neighboring block faces remain visible. New stairs use Tile texture mode; saved Fit settings remain unchanged. Generated surfaces use vanilla directional UVs and neighbor-brightness lighting, and the empty recess does not incorrectly darken the block visible beneath it. Shape settings persist in the world, configured items and Duplifier copies. Sneak-use the Duplifier on a vanilla solid block to sample its material and metadata.
 
 Programmable Diagonal Trapdoors also have a per-leaf **Rotation: Normal / Reverse** control. Fresh rotating leaves placed vertically against another trapdoor inherit its rotation direction. Configured items retain their saved direction.
+
+The separate **Hinge: Auto / Left / Right** option chooses the physical hinge edge. Fresh vertical placement preserves the clicked leaf's hinge edge, including when the new leaf faces the opposite direction. Hinge side and rotation direction remain independently configurable.
