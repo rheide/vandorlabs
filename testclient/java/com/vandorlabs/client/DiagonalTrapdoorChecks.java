@@ -26,7 +26,7 @@ final class DiagonalTrapdoorChecks {
         block=new BlockProgrammableDiagonalTrapdoor();ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR=block;
         ForgeRegistries.BLOCKS.register(block);item=new ItemDiagonalTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
         require(new TileEntityProgrammableDiagonalTrapdoor().getHousingTexture()==ScreenHousingTextures.DEFAULT_TRAPDOOR,"default diagonal hatch texture missing");
-        rotationDirections();mesh();clearance();openSelection();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();partialPatches();slidingStyles();boundaries();recipe();
+        hingeSides();rotationDirections();mesh();clearance();openSelection();placement();groups();copyAndPower();continuedSurfaces();expandedGroups();staggeredModes();partialPatches();slidingStyles();boundaries();recipe();
         System.out.println("PASS: Programmable Diagonal Trapdoor ("+assertions+" assertions; wall alignment, rigid geometry, placement, all square orders, saved settings, power, copying, recipe)");
     }
     private static double motion(NonRenderingChecks.MemoryWorld world,BlockPos pos,EnumFacing normal){
@@ -37,15 +37,57 @@ final class DiagonalTrapdoorChecks {
         double bx=after[1][0]-after[0][0],bz=after[1][2]-after[0][2];
         return az*bx-ax*bz;
     }
+    private static void hingeSides(){
+        BlockPos base=new BlockPos(8,100,8);
+        for(int mode=0;mode<3;mode++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(int side=1;side<=2;side++){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+            TileEntityProgrammableDiagonalTrapdoor leaf=place(world,base,mode,facing,inverted,false,0);leaf.setHingeSide(side);
+            double hinge=side==1?1/16D:15/16D;require(leaf.motionHinge()==hinge,"explicit hinge edge");
+            double[][] closed=BlockProgrammableDiagonalTrapdoor.corners(world.getBlockState(base),leaf,0);
+            for(double pose:new double[]{.25,.5,1}){
+                double[][] moving=BlockProgrammableDiagonalTrapdoor.corners(world.getBlockState(base),leaf,pose);
+                // A point on the hinge axis must stay fixed throughout the actual rendered motion.
+                int depth=mode==2?2:4;double along=(hinge-TrapdoorGeometry.EDGE_CLEARANCE)/(1-2*TrapdoorGeometry.EDGE_CLEARANCE);
+                for(int axis=0;axis<3;axis++){
+                    double a=(closed[0][axis]+closed[depth][axis])*.5*(1-along)+(closed[1][axis]+closed[depth+1][axis])*.5*along;
+                    double b=(moving[0][axis]+moving[depth][axis])*.5*(1-along)+(moving[1][axis]+moving[depth+1][axis])*.5*along;
+                    require(Math.abs(a-b)<1e-8,"hinge axis stays fixed throughout swing");
+                }
+            }
+            leaf.readFromNBT(leaf.writeToNBT(new NBTTagCompound()));require(leaf.getHingeSide()==side&&leaf.motionHinge()==hinge,"hinge persists");
+            ItemStack configured=block.configuredDrop(leaf);require(configured.getSubCompound("BlockEntityTag").getInteger("DiagonalHingeSide")==side,"configured item hinge");
+            NonRenderingChecks.MemoryWorld placedWorld=new NonRenderingChecks.MemoryWorld(false);
+            require(item.placeBlockAt(configured,null,placedWorld,base,EnumFacing.UP,.5F,.5F,.5F,world.getBlockState(base)),"configured hinge item placement");
+            require(((TileEntityProgrammableDiagonalTrapdoor)placedWorld.getTileEntity(base)).getHingeSide()==side,"configured hinge survives placement");
+            BlockPos target=base.east(6);TileEntityProgrammableDiagonalTrapdoor copy=place(world,target,mode,facing,inverted,false,0);
+            require(ProgrammableSettings.apply(world,target,ProgrammableSettings.capture(world,base))&&copy.getHingeSide()==side,"Duplifier hinge");
+            leaf.configure(0,mode,true,0,0);double slide=leaf.motionHinge();boolean reverse=leaf.rotationReverse();leaf.setHingeSide(3-side);
+            require(leaf.motionHinge()==slide&&leaf.rotationReverse()==reverse,"hinge control does not change sliding");
+        }
+        for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(int edge=1;edge<=2;edge++)for(EnumFacing direction:new EnumFacing[]{EnumFacing.UP,EnumFacing.DOWN}){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);TileEntityProgrammableDiagonalTrapdoor reference=place(world,base,0,facing,inverted,false,0);reference.setHingeSide(edge);
+            EntityPlayer actor=player(world);ItemStack held=new ItemStack(item);actor.setHeldItem(EnumHand.MAIN_HAND,held);BlockPos target=base.offset(direction);
+            IBlockState state=block.getStateForPlacement(world,target,direction,.5F,.5F,.5F,0,actor);
+            require(item.placeBlockAt(held,actor,world,target,direction,.5F,.5F,.5F,state),"hinge inheritance placement");
+            TileEntityProgrammableDiagonalTrapdoor leaf=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(target);
+            require(reference.getHingeSide()==edge,"clicked hinge retained");require(leaf.getHingeSide()==(leaf.facing()==facing?edge:3-edge),"physical edge inherited above and below");
+            leaf.readFromNBT(leaf.writeToNBT(new NBTTagCompound()));leaf.completeSquare(null,ItemStack.EMPTY);
+            require(leaf.getHingeSide()==(leaf.facing()==facing?edge:3-edge),"reconnect retains explicit hinge");
+        }
+        require(new TileEntityProgrammableDiagonalTrapdoor().getHingeSide()==0,"legacy hinge remains automatic");
+    }
     private static void rotationDirections(){
         BlockPos base=new BlockPos(8,100,8);
         for(int mode:new int[]{0,1})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean flipped:new boolean[]{false,true}){
             NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
             TileEntityProgrammableDiagonalTrapdoor bottom=place(world,base,mode,facing,inverted,false,0);bottom.setRotationFlipped(flipped);
+            double originalHinge=bottom.motionHinge();
             EntityPlayer actor=player(world);ItemStack held=new ItemStack(item);actor.setHeldItem(EnumHand.MAIN_HAND,held);
             IBlockState state=block.getStateForPlacement(world,base.up(),EnumFacing.UP,.5F,1,.5F,0,actor);
             require(item.placeBlockAt(held,actor,world,base.up(),EnumFacing.UP,.5F,1,.5F,state),"stacked rotating placement");
             TileEntityProgrammableDiagonalTrapdoor top=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(base.up());
+            require(bottom.motionHinge()==originalHinge,"stacking must not move clicked hinge");
+            require(Math.abs(top.motionHinge()-(top.facing()==bottom.facing()?originalHinge:1-originalHinge))<1e-9,"stacked leaves share physical hinge edge "+facing+"/"+inverted);
             require(motion(world,base,facing)*motion(world,base.up(),facing)>0,"stacked leaves inherit actual rotation direction "+mode+"/"+facing+"/"+inverted+"/"+flipped);
             double hinge=top.motionHinge(),before=motion(world,base.up(),facing);boolean bottomFlag=bottom.isRotationFlipped();
             top.setRotationFlipped(!top.isRotationFlipped());require(before*motion(world,base.up(),facing)<0,"direction control reverses motion");

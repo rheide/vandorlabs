@@ -13,6 +13,7 @@ import java.util.*;
 /** Same event-driven controls, with groups laid out across the diagonal surface. */
 public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProgrammableTrapdoor {
     private boolean reverse,cachedInverted,rotationFlipped;
+    private int hingeSide; // 0: assembly default, 1: local left, 2: local right
     private EnumFacing cachedFacing=EnumFacing.NORTH,groupFacing=EnumFacing.NORTH;
     public boolean isReverse(){return reverse;}
     private TileEntityProgrammableDiagonalTrapdoor outsideReference(List<TileEntityProgrammableTrapdoor> leaves) {
@@ -46,11 +47,14 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
     }
     public boolean rotationReverse(List<TileEntityProgrammableTrapdoor> leaves) {
         if(sliding)return reverse;
-        if(position==2 || leaves.size()<2)return reverse ^ rotationFlipped;
+        boolean hingeReverse=hingeSide==0?reverse:hingeSide==2;
+        if(position==2 || leaves.size()<2)return hingeReverse ^ rotationFlipped;
         boolean opposite=facing()==outsideFacing(leaves).getOpposite();
-        return reverse ^ (isInverted()!=opposite) ^ rotationFlipped;
+        return hingeReverse ^ (isInverted()!=opposite) ^ rotationFlipped;
     }
 
+    public int getHingeSide(){return hingeSide;}
+    public void setHingeSide(int value){if(value<0||value>2)throw new IllegalArgumentException("Invalid hinge side");if(hingeSide==value)return;hingeSide=value;sync();}
     public boolean isRotationFlipped(){return rotationFlipped;}
     /** This control changes only the selected leaf's rotation, never its hinge or sliding direction. */
     public void setRotationFlipped(boolean value){if(rotationFlipped==value)return;rotationFlipped=value;sync();}
@@ -74,7 +78,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
         return cachedFacing;
     }
     void setOpeningSide(boolean value){reverse=value;}
-    @Override public double motionHinge(){return assembly.isEmpty()?(reverse?15/16D:1/16D):assemblyHinge;}
+    @Override public double motionHinge(){return !sliding && hingeSide!=0?(hingeSide==2?15/16D:1/16D):assembly.isEmpty()?(reverse?15/16D:1/16D):assemblyHinge;}
     private EnumFacing width(){return facing().rotateYCCW();}
     private EnumFacing along(){return position==2?facing().getOpposite():EnumFacing.UP;}
     @Override public boolean compatible(TileEntityProgrammableTrapdoor raw) {
@@ -152,7 +156,7 @@ public final class TileEntityProgrammableDiagonalTrapdoor extends TileEntityProg
         super.configure(texture,mode,sliding,trigger,channel);
     }
     @Override protected void reconnectLoadedGroup(){if(position!=1)completeSquare(null,ItemStack.EMPTY);}
-    @Override public NBTTagCompound itemSettings(){NBTTagCompound tag=super.itemSettings();tag.setBoolean("DiagonalRotationFlipped",rotationFlipped);tag.setBoolean("DiagonalHalfHeight",position==2);tag.setBoolean("DiagonalFullWidth",position==1);return tag;}
+    @Override public NBTTagCompound itemSettings(){NBTTagCompound tag=super.itemSettings();tag.setInteger("DiagonalHingeSide",hingeSide);tag.setBoolean("DiagonalRotationFlipped",rotationFlipped);tag.setBoolean("DiagonalHalfHeight",position==2);tag.setBoolean("DiagonalFullWidth",position==1);return tag;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean("DiagonalReverse",reverse);tag.setInteger("DiagonalFacing",facing().getHorizontalIndex());tag.setBoolean("DiagonalInverted",isInverted());tag.setInteger("DiagonalGroupFacing",groupFacing.getHorizontalIndex());return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);reverse=tag.getBoolean("DiagonalReverse");rotationFlipped=tag.getBoolean("DiagonalRotationFlipped");cachedFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalFacing"));cachedInverted=tag.getBoolean("DiagonalInverted");groupFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalGroupFacing"));}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);hingeSide=Math.max(0,Math.min(2,tag.getInteger("DiagonalHingeSide")));reverse=tag.getBoolean("DiagonalReverse");rotationFlipped=tag.getBoolean("DiagonalRotationFlipped");cachedFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalFacing"));cachedInverted=tag.getBoolean("DiagonalInverted");groupFacing=EnumFacing.getHorizontal(tag.getInteger("DiagonalGroupFacing"));}
 }

@@ -23,6 +23,8 @@ public final class MessageProgrammableTrapdoor implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private Integer hingeSide;
+    public MessageProgrammableTrapdoor withHingeSide(int value){if(value<0||value>2)throw new IllegalArgumentException("Invalid hinge side");hingeSide=value;return this;}
     private Boolean rotationFlipped;
     public MessageProgrammableTrapdoor withRotationFlipped(boolean value){rotationFlipped=value;return this;}
     private int layout=1;
@@ -42,10 +44,10 @@ public final class MessageProgrammableTrapdoor implements IMessage {
     public MessageProgrammableTrapdoor(BlockPos pos,int texture,int position,boolean sliding,int trigger,int channel,boolean inverted,boolean cover,boolean tileTexture,net.minecraft.util.EnumFacing facing,boolean slideIntoWall,boolean slideOverSurface){this(pos,texture,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall);this.slideOverSurface=slideOverSurface;}
     @Override public void toBytes(ByteBuf b){b.writeLong(pos.toLong());b.writeInt(texture);b.writeInt(position);b.writeBoolean(sliding);b.writeInt(trigger);b.writeInt(channel);b.writeBoolean(inverted);b.writeBoolean(cover);b.writeBoolean(tileTexture);b.writeByte(facing.getHorizontalIndex());b.writeBoolean(slideIntoWall);b.writeBoolean(slideOverSurface);
         // Keep the channel list last; its decoder validates the exact remaining length.
-        b.writeByte((layout<0?(tileTexture?1:0):layout)|(rotationFlipped==null?0:4|(rotationFlipped?8:0)));ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+        b.writeByte((layout<0?(tileTexture?1:0):layout)|(rotationFlipped==null?0:4|(rotationFlipped?8:0))|(hingeSide==null?0:(hingeSide+1)<<4));ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
     @Override public void fromBytes(ByteBuf b){pos=BlockPos.fromLong(b.readLong());texture=b.readInt();position=b.readInt();sliding=b.readBoolean();trigger=b.readInt();channel=b.readInt();inverted=b.readBoolean();cover=b.readBoolean();tileTexture=b.readBoolean();facing=net.minecraft.util.EnumFacing.getHorizontal(b.readUnsignedByte());slideIntoWall=b.isReadable() && b.readBoolean();slideOverSurface=b.isReadable() && b.readBoolean();
-        int flags=b.readUnsignedByte();layout=(flags&~15)==0?flags&3:-1;rotationFlipped=(flags&4)==0?null:(flags&8)!=0;channels=ChannelData.read(b,channel);invalidChannels=channels==null;
+        int flags=b.readUnsignedByte();layout=(flags&~63)==0?flags&3:-1;hingeSide=(flags>>4&3)==0?null:(flags>>4&3)-1;rotationFlipped=(flags&4)==0?null:(flags&8)!=0;channels=ChannelData.read(b,channel);invalidChannels=channels==null;
     }
     public static final class Handler implements IMessageHandler<MessageProgrammableTrapdoor,IMessage> {
         @Override public IMessage onMessage(MessageProgrammableTrapdoor m,MessageContext context) {
@@ -61,6 +63,7 @@ public final class MessageProgrammableTrapdoor implements IMessage {
                 for(TileEntityProgrammableTrapdoor leaf:leaves)if(!leaf.usable(player))return;
                 ((TileEntityProgrammableTrapdoor)raw).configureGroup(m.texture,m.position,m.sliding,m.trigger,m.getRedstoneChannels(),m.inverted,m.cover,m.tileTexture,m.facing,m.slideIntoWall,m.slideOverSurface);
                 for(TileEntityProgrammableTrapdoor leaf:leaves)leaf.setTextureLayout(m.layout);
+                if(m.hingeSide!=null && raw instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)((com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)raw).setHingeSide(m.hingeSide);
                 if(m.rotationFlipped!=null && raw instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)((com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)raw).setRotationFlipped(m.rotationFlipped);
             });return null;
         }

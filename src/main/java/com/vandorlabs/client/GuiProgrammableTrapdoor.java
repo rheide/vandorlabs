@@ -21,6 +21,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     private ChannelList channelList;
     private net.minecraft.util.EnumFacing facing;
     private boolean rotationFlipped;
+    private int hingeSide;
     private boolean sliding,slideIntoWall,slideOverSurface,inverted,cover,tileTexture;
     private boolean diagonal(){return tile instanceof TileEntityProgrammableDiagonalTrapdoor;}
     private GuiTextField channelField;
@@ -30,6 +31,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         cover=tile.isCover();position=tile.getPosition();sliding=tile.isSliding();slideIntoWall=tile.isSlideIntoWall();slideOverSurface=tile.isSlideOverSurface();trigger=tile.getTrigger();channelList=tile.getRedstoneChannels();channel=channelList.first();
         doorDetail=0;
         tileTexture=tile.isTileTexture();textureLayout=tile.getTextureLayout();tallWidth=position==0?0:1;facing=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockProgrammableTrapdoor.FACING);
+        hingeSide=diagonal()?((TileEntityProgrammableDiagonalTrapdoor)tile).getHingeSide():0;
         rotationFlipped=diagonal()&&((TileEntityProgrammableDiagonalTrapdoor)tile).isRotationFlipped();
         inverted=diagonal() && ((TileEntityProgrammableDiagonalTrapdoor)tile).isInverted();
         xSize=360;ySize=240;
@@ -53,8 +55,9 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         if(diagonal())buttonList.add(new GuiButton(7,controlsX+(controlsWidth+2)/2,y,(controlsWidth-2)/2,20,heightLabel()));
         y+=22;
         buttonList.add(new GuiButton(6,controlsX,y,controlsWidth,20,layoutLabel()));y+=22;
-        GuiButton direction=new GuiButton(diagonal()?5:8,controlsX,y,controlsWidth,20,diagonal()?"Reverse slope":facingLabel());
-        direction.enabled=diagonal() || tile.canOffsetClosedLeaf();buttonList.add(direction);y+=22;
+        GuiButton direction=new GuiButton(diagonal()?5:8,controlsX,y,diagonal()?(controlsWidth-2)/2:controlsWidth,20,diagonal()?"Flip slope":facingLabel());
+        direction.enabled=diagonal() || tile.canOffsetClosedLeaf();buttonList.add(direction);
+        if(diagonal()){GuiButton hinge=new GuiButton(10,controlsX+(controlsWidth+2)/2,y,(controlsWidth-2)/2,20,hingeLabel());hinge.enabled=!sliding;buttonList.add(hinge);}y+=22;
         if(diagonal()){GuiButton rotation=new GuiButton(9,controlsX,y,controlsWidth,20,rotationLabel());rotation.enabled=!sliding;buttonList.add(rotation);y+=22;}
         buttonList.add(new GuiButton(3,controlsX,y,controlsWidth,20,triggerLabel()));y+=22;
         channelLabelY=y;
@@ -63,6 +66,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         channelField.setText(channelText);
         done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");done.enabled=parsedChannel()>=0;buttonList.add(done);
     }
+    private String hingeLabel(){return "Hinge: "+new String[]{"Auto","Left","Right"}[hingeSide];}
     private String rotationLabel(){return "Rotation: "+(rotationFlipped?"Reverse":"Normal");}
     private String motionLabel(){return diagonal()?(sliding?slideIntoWall?"Slide into wall":"Slide over wall":"Rotating"):cover?(sliding?"Slide into next block":"Rotate into next block"):(sliding?slideOverSurface?"Slide over surface":"Sliding":"Rotating");}
     private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
@@ -76,8 +80,8 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         int selected=textures.selected();
         tile.configureGroup(selected,position,sliding,trigger,channelList,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface);
         for(TileEntityProgrammableTrapdoor leaf:tile.group())leaf.setTextureLayout(textureLayout);
-        if(diagonal())((TileEntityProgrammableDiagonalTrapdoor)tile).setRotationFlipped(rotationFlipped);
-        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList).withTextureLayout(textureLayout).withRotationFlipped(rotationFlipped));
+        if(diagonal()){((TileEntityProgrammableDiagonalTrapdoor)tile).setHingeSide(hingeSide);((TileEntityProgrammableDiagonalTrapdoor)tile).setRotationFlipped(rotationFlipped);}
+        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList).withTextureLayout(textureLayout).withRotationFlipped(rotationFlipped).withHingeSide(hingeSide));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
@@ -92,11 +96,12 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         }
         else if(button.id==8){if(!tile.canOffsetClosedLeaf())return;facing=GuiOptionCycle.next(facing);button.displayString=facingLabel();}
         else if(button.id==9){rotationFlipped=!rotationFlipped;button.displayString=rotationLabel();}
-        for(GuiButton control:buttonList)if(control.id==9)control.enabled=!sliding;
+        else if(button.id==10){hingeSide=GuiOptionCycle.next(hingeSide,3);button.displayString=hingeLabel();}
+        for(GuiButton control:buttonList)if(control.id==9 || control.id==10)control.enabled=!sliding;
         send();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,2,3,5,6,7,8,9))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,2,3,5,6,7,8,9,10))return;
         channelField.mouseClicked(x,y,button);int before=textures.selected();
         if(textures.click(x,y,button)){if(before!=textures.selected())send();return;}super.mouseClicked(x,y,button);
     }

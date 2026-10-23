@@ -31,6 +31,7 @@ public final class ProgrammableSettings {
     public static final String BLOCK_CONFIGURATION="block_configuration";
     public static final String SIGNAL_SETTINGS="signal_settings";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";
+    public static final String TRAPDOOR_HINGE_SIDE="trapdoor_hinge_side";
     public static final String TRAPDOOR_ROTATION_FLIPPED="trapdoor_rotation_flipped";
     public static final String TRAPDOOR_SLIDE_INTO_WALL="trapdoor_slide_into_wall";
     public static final String TRAPDOOR_COVER_FACING="trapdoor_cover_facing";
@@ -170,6 +171,7 @@ public final class ProgrammableSettings {
             com.vandorlabs.tiles.TileEntityProgrammableTrapdoor hatch=(com.vandorlabs.tiles.TileEntityProgrammableTrapdoor)tile;
             out.setInteger(WALL_TEXTURE,hatch.getHousingTexture());
             if(hatch instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor){
+                out.setInteger(TRAPDOOR_HINGE_SIDE,((com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)hatch).getHingeSide());
                 out.setBoolean(TRAPDOOR_ROTATION_FLIPPED,((com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)hatch).isRotationFlipped());
                 NBTTagCompound geometry=new NBTTagCompound();geometry.setInteger("mode",hatch.getPosition());out.setTag(DIAGONAL_GEOMETRY,geometry);
             } else out.setInteger(TRAPDOOR_POSITION,hatch.getPosition());
@@ -432,6 +434,7 @@ public final class ProgrammableSettings {
                         channels(values,leaf));
                 }
                 });
+                if(diagonal && values.hasKey(DOOR_SLIDING,1) && values.hasKey(TRAPDOOR_HINGE_SIDE,3))((com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)hatch).setHingeSide(Math.max(0,Math.min(2,values.getInteger(TRAPDOOR_HINGE_SIDE))));
                 if(diagonal && values.hasKey(DOOR_SLIDING,1) && values.hasKey(TRAPDOOR_ROTATION_FLIPPED,1))((com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor)hatch).setRotationFlipped(values.getBoolean(TRAPDOOR_ROTATION_FLIPPED));
             }
         } else if (tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight) {
