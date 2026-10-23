@@ -2,6 +2,9 @@
 
 ## 2.3
 
+- Add independent Auto / Left / Right hinge selection for diagonal trapdoors. Fresh vertical placement retains the clicked leaf's physical hinge edge, including reversed-facing continuations; the existing swing-direction option remains available.
+- Default new Programmable Stairs to Tile, preserve saved Fit settings, and match vanilla neighbor-brightness sampling and directional UVs on generated stair surfaces. Mounted surfaces carry their texture orientation and normals with them.
+- Align opening canopies placed against the rear of a Cockpit with its back edge, without reserving an extra block behind the cockpit.
 - Add a saved Rotation: Normal / Reverse control for each diagonal trapdoor. Vertically placed rotating leaves inherit the clicked trapdoor's rotation direction; sliding motion and hinge positions remain independent.
 - Allow Canopy and Long Canopy to share the raised cockpit reservation, preserving cockpit collision and controls. Inherit facing and upright/inverted mounting when placing against another opening canopy.
 - Show the selected company name and “Click to clear” in the Programmable Door card filter; unrestricted filters remain “Any card”.

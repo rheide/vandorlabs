@@ -32,7 +32,7 @@ final class CockpitMechanismRuntimeChecks {
         net.minecraft.block.Block block=world.getBlockState(tile.getPos()).getBlock();
         require(block.getStateForPlacement(world,tile.getPos(),net.minecraft.util.EnumFacing.UP,0,0,0,0,player).getValue(com.vandorlabs.blocks.BlockVandorDirectional.FACING)==player.getHorizontalFacing(),"cockpit places along player facing");
         require(tile.data().moving.values().stream().filter(part->part==1).count()<=32,"rigid seat collision boxes are not sliced redundantly");
-        canopies(tile,player);
+        canopies(tile,player);rearCanopies(tile,player);
         CanopyOrientationChecks.run(world,player);
         levers(tile,player);
         NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());
@@ -52,6 +52,23 @@ final class CockpitMechanismRuntimeChecks {
             for(float partial:new float[]{0,.25F,.5F,.75F}){Vec3d expected=CockpitData.rotate(tile.seatLocation(partial),tile.facing()).add(new Vec3d(tile.getPos()));Vec3d rider=received.cockpitRiderPosition(player,partial);require(Math.abs(expected.x-rider.x)<1e-8&&Math.abs(expected.z-rider.z)<1e-8,"rider stays on cushion throughout reversible motion");}
         }
         tile.readFromNBT(before);
+    }
+    private static void rearCanopies(TileEntityCockpit tile,EntityPlayerMP player){
+        net.minecraft.world.World world=tile.getWorld();net.minecraft.util.EnumFacing facing=tile.facing(),back=facing.getOpposite();
+        BlockPos rear=tile.getPos();for(BlockPos cell:tile.data().cells(tile.getPos(),facing))if(cell.getY()==tile.getPos().getY() && cell.subtract(rear).getX()*back.getDirectionVec().getX()+cell.subtract(rear).getZ()*back.getDirectionVec().getZ()>0)rear=cell;
+        net.minecraft.item.ItemStack held=player.getHeldItemMainhand();boolean creative=player.capabilities.isCreativeMode;player.capabilities.isCreativeMode=true;
+        try{for(String id:new String[]{"canopy","long_canopy"})for(int height=0;height<=1;height++){
+            BlockPos clicked=rear.up(height),wall=rear.offset(back).up();world.setBlockState(wall,net.minecraft.init.Blocks.STONE.getDefaultState(),2);
+            com.vandorlabs.blocks.BlockCanopy canopy=(com.vandorlabs.blocks.BlockCanopy)net.minecraft.block.Block.getBlockFromName("vandorlabs:"+id);
+            net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(canopy);player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,stack);
+            require(((net.minecraft.item.ItemBlock)stack.getItem()).canPlaceBlockOnSide(world,clicked,back,player,stack),"client rear cockpit placement accepted");
+            require(player.interactionManager.processRightClickBlock(player,world,stack,net.minecraft.util.EnumHand.MAIN_HAND,clicked,back,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"rear canopy placement without rear clearance "+id+"/"+facing+"/"+height);
+            TileEntityCanopy shell=TileEntityCanopy.at(world,rear.up());require(shell!=null,"canopy back aligned with cockpit back");shell=shell.constituent();
+            for(BlockPos cell:shell.cells())require(cell.subtract(rear).getX()*back.getDirectionVec().getX()+cell.subtract(rear).getZ()*back.getDirectionVec().getZ()<=0,"shell does not extend behind cockpit");
+            world.destroyBlock(shell.constituent().getPos(),false);require(world.getBlockState(wall).getBlock()==net.minecraft.init.Blocks.STONE,"rear wall retained");world.setBlockToAir(wall);
+            require(CockpitAssembly.root(world,rear.up())==tile,"cockpit restored after aligned canopy removal");
+            System.out.println("[vandorlabs][reprolab] cockpit-rear-canopy PASS "+id+"/"+facing+"/"+height);
+        }}finally{player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);player.capabilities.isCreativeMode=creative;}
     }
     private static void canopies(TileEntityCockpit tile,EntityPlayerMP player){
         net.minecraft.item.ItemStack held=player.getHeldItemMainhand();boolean creative=player.capabilities.isCreativeMode;player.capabilities.isCreativeMode=true;

@@ -306,6 +306,7 @@ public final class BlockCanopy extends Block {
         @Override
         public boolean canPlaceBlockOnSide(World world,BlockPos pos,EnumFacing side,EntityPlayer player,ItemStack stack){
             BlockCanopy canopy=(BlockCanopy)block;
+            if(canopy.supportsSeatBackrest() && com.vandorlabs.cockpit.CockpitAssembly.root(world,pos)!=null)return true;
             if(canopy.sharesUpperSpace(world,pos) || side==EnumFacing.UP && canopy.sharesUpperSpace(world,pos.up()))return true;
             return super.canPlaceBlockOnSide(world,pos,side,player,stack);
         }
@@ -342,6 +343,7 @@ public final class BlockCanopy extends Block {
                 // Share the raised cockpit body just as a Pilot Seat shares its backrest.
                 facing=cockpit.facing();
                 dest=new BlockPos(p.getX(),cockpit.getPos().getY()+1,p.getZ());
+                if(b.opening() && side==facing.getOpposite())dest=dest.offset(facing,b.length-1);
             }
             // The clicked wall supports the rear of a long nose, rather than its front.
             if((cockpit==null||clickedCanopy!=null) && !large && (b.kind.startsWith("angled_") || b.opening()) && side.getAxis().isHorizontal() && side==facing)dest=dest.offset(facing,b.length-1);
