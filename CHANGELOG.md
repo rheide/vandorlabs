@@ -2,6 +2,8 @@
 
 ## 2.3
 
+- Allow canopy placement against wall faces directly behind a cockpit or Pilot Seat by recognizing shared upper space in the client placement check as well as on the server.
+
 - Resolve Configurizer clicks on shared cockpit/canopy cells by the visible surface. Let the seat's upper rear reservation share compatible canopy space, retaining seat collision and preserving the canopy when returning.
 - Use Access Card names for card items and mounts, including registry IDs and assets, without legacy registry remapping.
 - Replace mount company multiselects with the door's shared inventory sample picker, one selected company, and click-to-clear wildcard. Retain the four shared reader behaviors and use the common redstone channel editor.

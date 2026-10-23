@@ -142,3 +142,5 @@ The canopy release checks exercise six-face large-window placement, mounted hing
 When placing a Canopy or Long Canopy against the rear face of a Cockpit, its rear edge aligns with the clicked cockpit cell and the canopy extends forward. A solid block immediately behind the cockpit does not require additional placement clearance.
 
 Configurizer clicks on a shared cockpit cell configure the visible canopy or cockpit surface. The cockpit seat can extend and return beneath compatible upper canopy cells; returning releases the seat helpers without removing the canopy.
+
+A solid wall directly behind the seat can also support a Canopy or Long Canopy. Click the wall face beside the raised cockpit/backrest cell: the canopy extends forward over the seat, and both client placement prediction and server placement accept the shared upper space.

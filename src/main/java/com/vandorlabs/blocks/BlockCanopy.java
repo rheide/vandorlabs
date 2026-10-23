@@ -304,7 +304,7 @@ public final class BlockCanopy extends Block {
         public boolean canPlaceBlockOnSide(World world,BlockPos pos,EnumFacing side,EntityPlayer player,ItemStack stack){
             BlockCanopy canopy=(BlockCanopy)block;
             if(canopy.supportsSeatBackrest() && com.vandorlabs.cockpit.CockpitAssembly.root(world,pos)!=null)return true;
-            if(canopy.sharesUpperSpace(world,pos) || side==EnumFacing.UP && canopy.sharesUpperSpace(world,pos.up()))return true;
+            if(canopy.sharesUpperSpace(world,pos) || canopy.sharesUpperSpace(world,pos.offset(side)))return true;
             return super.canPlaceBlockOnSide(world,pos,side,player,stack);
         }
 
