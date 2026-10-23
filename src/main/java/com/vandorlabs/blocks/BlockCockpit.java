@@ -21,7 +21,7 @@ public final class BlockCockpit extends BlockPilotSeat {
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityCockpit(design);}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return state;}
-    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,Block block,BlockPos from){}
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,Block block,BlockPos from){CockpitAssembly.restoreAbove(world,pos);}
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase placer,ItemStack stack){if(!world.isRemote)CockpitAssembly.install(world,pos,placer instanceof EntityPlayer?(EntityPlayer)placer:null);}
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return CockpitAssembly.bounds(world,pos);}
     @Override public AxisAlignedBB getCollisionBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return null;}

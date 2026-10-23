@@ -16,7 +16,28 @@ public final class CockpitAssembly {
         TileEntity t=world.getTileEntity(pos);
         if(t instanceof TileEntityCockpit)return (TileEntityCockpit)t;
         if(t instanceof TileEntityCockpitPart){BlockPos owner=((TileEntityCockpitPart)t).anchor;if(world instanceof World && !((World)world).isBlockLoaded(owner))return null;TileEntity r=world.getTileEntity(owner);return r instanceof TileEntityCockpit?(TileEntityCockpit)r:null;}
+        if(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockCanopy && ((com.vandorlabs.blocks.BlockCanopy)world.getBlockState(pos).getBlock()).supportsSeatBackrest())return below(world,pos);
         return null;
+    }
+    /** Only authored upper cells share a shell; moving rear reservations never do. */
+    public static TileEntityCockpit below(IBlockAccess world,BlockPos cell){
+        if(world instanceof World&&!((World)world).isBlockLoaded(cell.down()))return null;
+        TileEntity t=world.getTileEntity(cell.down());
+        if(!(t instanceof TileEntityCockpit)&&!(t instanceof TileEntityCockpitPart))return null;
+        TileEntityCockpit owner=root(world,cell.down());
+        return owner!=null&&cell.getY()==owner.getPos().getY()+1&&owner.data().cells(owner.getPos(),owner.facing()).contains(cell)?owner:null;
+    }
+    public static boolean shares(World world,BlockPos cell,com.vandorlabs.blocks.BlockCanopy canopy){
+        return canopy.supportsSeatBackrest()&&world.getTileEntity(cell) instanceof TileEntityCockpitPart&&below(world,cell)!=null;
+    }
+    /** Recreate the upper reservation after a shell releases it, just like a Pilot Seat. */
+    public static void restoreAbove(World world,BlockPos lower){
+        if(world.isRemote||com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)||!world.isBlockLoaded(lower.up())||!world.isAirBlock(lower.up()))return;
+        TileEntityCockpit owner=below(world,lower.up());if(owner==null)return;
+        Set<BlockPos> removing=REMOVING.get(world);if(removing!=null&&removing.contains(owner.getPos()))return;
+        world.setBlockState(lower.up(),net.minecraft.block.Block.getBlockFromName("vandorlabs:cockpit_part").getDefaultState(),2);
+        TileEntityCockpitPart part=(TileEntityCockpitPart)world.getTileEntity(lower.up());part.anchor=owner.getPos().toImmutable();part.markDirty();
+        world.notifyBlockUpdate(lower.up(),world.getBlockState(lower.up()),world.getBlockState(lower.up()),3);
     }
     public static List<AxisAlignedBB> boxes(IBlockAccess world,BlockPos pos){return boxes(world,pos,false);}
     private static List<AxisAlignedBB> boxes(IBlockAccess world,BlockPos pos,boolean collision){

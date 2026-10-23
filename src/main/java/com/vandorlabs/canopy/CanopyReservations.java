@@ -70,7 +70,8 @@ public final class CanopyReservations {
     private static boolean own(TileEntityCanopy member,BlockPos cell){TileEntityCanopy tile=pendingAware(member.getWorld(),cell);return tile!=null&&tile.block()==member.block()&&member.getPos().equals(tile.anchor);}
     /** Pilot seats recreate their invisible upper reservation when an open shell yields it. */
     private static boolean sharedBackrest(TileEntityCanopy member,BlockPos cell){
-        World world=member.getWorld();if(member.block()==null||!member.block().sharesSeatBackrest(world.getBlockState(cell)))return false;
+        World world=member.getWorld();if(member.block()!=null&&com.vandorlabs.cockpit.CockpitAssembly.shares(world,cell,member.block()))return true;
+        if(member.block()==null||!member.block().sharesSeatBackrest(world.getBlockState(cell)))return false;
         IBlockState lower=world.getBlockState(cell.down());
         return lower.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat&&!lower.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER)
                 &&world.getTileEntity(cell.down()) instanceof TileEntityPilotSeat;

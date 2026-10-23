@@ -153,10 +153,13 @@ final class CanopyReleaseRuntimeChecks {
             TileEntityCanopy first=TileEntityCanopy.at(world,BASE);RayTraceResult hit=first.trace(eye,target.add(look));require(hit!=null,"rear glass can be selected");
             Vec3d local=hit.hitVec.subtract(new Vec3d(hit.getBlockPos()));
             EnumActionResult result=player.interactionManager.processRightClickBlock(player,world,item,EnumHand.MAIN_HAND,hit.getBlockPos(),hit.sideHit,(float)local.x,(float)local.y,(float)local.z);
-            TileEntityCanopy second=TileEntityCanopy.at(world,BASE.offset(facing.getOpposite(),3));
-            require(result==EnumActionResult.SUCCESS && second!=null && second.facing()==facing.getOpposite(),"rear click places opposite canopy "+facing+" mount="+mount);
+            TileEntityCanopy second=TileEntityCanopy.at(world,BASE.offset(facing.getOpposite(),2));
+            require(result==EnumActionResult.SUCCESS && second!=null && second.facing()==facing,"rear click inherits canopy orientation "+facing+" mount="+mount);
             require(second.large.mount==mount,"back-to-back canopy retains ceiling mount");
             require(!first.targetOpen,"placing a canopy does not toggle its support");
+            world.destroyBlock(second.getPos(),false);
+            BlockPos opposite=BASE.offset(facing.getOpposite(),3);IBlockState reverseState=state.withProperty(BlockCanopy.FACING,facing.getOpposite());
+            world.setBlockState(opposite,reverseState,2);block.onBlockPlacedBy(world,opposite,reverseState,player,item);second=TileEntityCanopy.at(world,opposite);
             require((first.mask()&8)!=0 && (second.mask()&8)!=0,"back-to-back rear glazing has an open seam");
         }
         System.out.println("[vandorlabs][reprolab] canopy-back-to-back PASS real interaction facings=4 mounts=2 rear-points=2");

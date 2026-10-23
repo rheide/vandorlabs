@@ -32,7 +32,7 @@ public final class LargeCanopyOwnership {
     }
     public static boolean fitsItem(BlockCanopy block,World world,BlockPos pos,EnumFacing facing,ItemStack stack){for(BlockPos cell:itemCells(block,pos,facing,stack))if(!available(block,world,cell))return false;return true;}
     private static boolean blockAngleInvalid(TileEntityCanopy tile,LargeCanopySettings settings){return tile.block()!=null && tile.block().opening() && settings.angle>(tile.block().length==3?3:2);}
-    private static boolean available(BlockCanopy block,World world,BlockPos cell){return cell.getY()>=0 && cell.getY()<world.getHeight() && world.getWorldBorder().contains(cell) && world.isBlockLoaded(cell) && (world.getBlockState(cell).getBlock().isReplaceable(world,cell) || block.sharesSeatBackrest(world.getBlockState(cell)));}
+    private static boolean available(BlockCanopy block,World world,BlockPos cell){return cell.getY()>=0 && cell.getY()<world.getHeight() && world.getWorldBorder().contains(cell) && world.isBlockLoaded(cell) && (world.getBlockState(cell).getBlock().isReplaceable(world,cell) || block.sharesUpperSpace(world,cell));}
     public static boolean apply(TileEntityCanopy tile,EntityPlayer player,int depth,int scale,int shade,int tint){
         net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tile.large.write(tag);
         LargeCanopySettings next=new LargeCanopySettings();next.read(tag);next.depth=depth;next.scale=scale;next.shade=shade;next.tint=tint;

@@ -139,13 +139,17 @@ public final class BlockCanopy extends Block {
         return cells;
     }
 
+    public boolean sharesUpperSpace(World world,BlockPos cell){
+        return sharesSeatBackrest(world.getBlockState(cell))||com.vandorlabs.cockpit.CockpitAssembly.shares(world,cell,this);
+    }
+
     public boolean fits(World w, BlockPos p, EnumFacing f) {
         for (BlockPos cell : cells(p, f))
             if (cell.getY() < 0
                     || cell.getY() >= w.getHeight()
                     || !w.getWorldBorder().contains(cell)
                     || !w.isBlockLoaded(cell)
-                    || !(w.getBlockState(cell).getBlock().isReplaceable(w, cell) || sharesSeatBackrest(w.getBlockState(cell)))) return false;
+                    || !(w.getBlockState(cell).getBlock().isReplaceable(w, cell) || sharesUpperSpace(w,cell))) return false;
         return true;
     }
 
@@ -188,6 +192,11 @@ public final class BlockCanopy extends Block {
         // Let the held canopy use the actual clicked surface, including the rear follower cell.
         if(player!=null && player.getHeldItem(hand).getItem() instanceof CanopyItem)return false;
         TileEntityCanopy selected=TileEntityCanopy.at(w,p);
+        if(player!=null && selected!=null && com.vandorlabs.cockpit.CockpitAssembly.root(w,p)!=null){
+            Vec3d eye=player.getPositionEyes(1),end=eye.add(player.getLook(1).scale(8));
+            RayTraceResult body=com.vandorlabs.cockpit.CockpitAssembly.ray(w,p,eye,end),shell=selected.owner().trace(eye,end);
+            if(body!=null&&(shell==null||eye.squareDistanceTo(body.hitVec)<eye.squareDistanceTo(shell.hitVec)))return com.vandorlabs.cockpit.CockpitAssembly.activate(w,p,player,hand);
+        }
         if(player!=null && selected!=null && selected.owner().configurable() && player.isSneaking()) {
             if(!w.isRemote && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){BlockPos owner=selected.owner().getPos();player.openGui(VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LARGE_CANOPY,w,owner.getX(),owner.getY(),owner.getZ());}return true;
         }
@@ -244,7 +253,8 @@ public final class BlockCanopy extends Block {
             List<AxisAlignedBB> boxes,
             Entity e,
             boolean actual) {
-        /* Loaded-chunk event supplies surfaces once per owner, including moved shells. */
+        /* Loaded-chunk event supplies canopy surfaces once per owner. */
+        com.vandorlabs.cockpit.CockpitAssembly.collision(w,p,query,boxes);
     }
 
     @Override
@@ -275,7 +285,10 @@ public final class BlockCanopy extends Block {
         TileEntityCanopy t = TileEntityCanopy.at(w, p);
         if(t==null)return super.collisionRayTrace(s,w,p,start,end);
         TileEntityCanopy owner=t.owner();
-        if(owner.draws())return owner.trace(start,end);
+        if(owner.draws()){
+            RayTraceResult shell=owner.trace(start,end),cockpit=com.vandorlabs.cockpit.CockpitAssembly.ray(w,p,start,end);
+            return cockpit!=null&&(shell==null||start.squareDistanceTo(cockpit.hitVec)<start.squareDistanceTo(shell.hitVec))?cockpit:shell;
+        }
         // A loaded orphan reservation must remain removable even when it has no
         // visible owner. Never redirect its click to an unrelated canopy kind.
         if(t.anchor!=null && !t.anchor.equals(p) && w.isBlockLoaded(t.anchor)){
@@ -293,7 +306,7 @@ public final class BlockCanopy extends Block {
         @Override
         public boolean canPlaceBlockOnSide(World world,BlockPos pos,EnumFacing side,EntityPlayer player,ItemStack stack){
             BlockCanopy canopy=(BlockCanopy)block;
-            if(canopy.sharesSeatBackrest(world.getBlockState(pos)) || side==EnumFacing.UP && canopy.sharesSeatBackrest(world.getBlockState(pos.up())))return true;
+            if(canopy.sharesUpperSpace(world,pos) || side==EnumFacing.UP && canopy.sharesUpperSpace(world,pos.up()))return true;
             return super.canPlaceBlockOnSide(world,pos,side,player,stack);
         }
 
@@ -317,21 +330,21 @@ public final class BlockCanopy extends Block {
             if(held.hasTagCompound())settings.read(held.getTagCompound());
             boolean large=com.vandorlabs.canopy.LargeCanopySettings.supports(b.kind);
             settings.mount=large?(side==EnumFacing.UP?2:side==EnumFacing.DOWN?3:0):side==EnumFacing.DOWN?1:0;
-            if(!large && clickedCanopy!=null && side.getAxis().isHorizontal() && clickedCanopy.owner().large.mount<2)settings.mount=clickedCanopy.owner().large.mount;
+            if(!large && clickedCanopy!=null && clickedCanopy.owner().large.mount<2)settings.mount=clickedCanopy.owner().large.mount;
             net.minecraft.nbt.NBTTagCompound tag=configured.hasTagCompound()?configured.getTagCompound():new net.minecraft.nbt.NBTTagCompound();settings.write(tag);configured.setTagCompound(tag);
             EnumFacing facing=side.getAxis().isHorizontal() && (large || b.opening() || b.kind.startsWith("angled_"))?(large?side.getOpposite():side):b.placementFacing(player);
-            BlockPos dest=w.getBlockState(p).getBlock().isReplaceable(w,p) || b.sharesSeatBackrest(w.getBlockState(p))?p:p.offset(side);
+            if(clickedCanopy!=null)facing=clickedCanopy.owner().facing();
+            BlockPos dest=w.getBlockState(p).getBlock().isReplaceable(w,p) || b.sharesUpperSpace(w,p)?p:p.offset(side);
             if(large && settings.mount>=2)dest=dest.offset(facing.rotateYCCW(),b.width/2).offset(facing,b.width/2);
             else dest=b.placementAnchor(dest,facing);
             com.vandorlabs.tiles.TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(w,p);
-            if(cockpit!=null&&b.supportsSeatBackrest()){
-                // The whole cockpit has an upper reservation, including cells that look empty.
-                // Mount the shell above that envelope without replacing its controller or helpers.
+            if(clickedCanopy==null&&cockpit!=null&&b.supportsSeatBackrest()){
+                // Share the raised cockpit body just as a Pilot Seat shares its backrest.
                 facing=cockpit.facing();
-                dest=new BlockPos(p.getX(),cockpit.getPos().getY()+(int)Math.ceil(cockpit.data().bounds.maxY),p.getZ());
+                dest=new BlockPos(p.getX(),cockpit.getPos().getY()+1,p.getZ());
             }
             // The clicked wall supports the rear of a long nose, rather than its front.
-            if(cockpit==null && !large && (b.kind.startsWith("angled_") || b.opening()) && side.getAxis().isHorizontal() && side==facing)dest=dest.offset(facing,b.length-1);
+            if((cockpit==null||clickedCanopy!=null) && !large && (b.kind.startsWith("angled_") || b.opening()) && side.getAxis().isHorizontal() && side==facing)dest=dest.offset(facing,b.length-1);
             for(BlockPos cell:com.vandorlabs.canopy.LargeCanopyOwnership.itemCells(b,dest,facing,configured))
                 if(!w.isBlockModifiable(player,cell) || !player.canPlayerEdit(cell,side,held))return EnumActionResult.FAIL;
             if(!com.vandorlabs.canopy.LargeCanopyOwnership.fitsItem(b,w,dest,facing,configured))return EnumActionResult.FAIL;

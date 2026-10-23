@@ -33,6 +33,7 @@ final class CockpitMechanismRuntimeChecks {
         require(block.getStateForPlacement(world,tile.getPos(),net.minecraft.util.EnumFacing.UP,0,0,0,0,player).getValue(com.vandorlabs.blocks.BlockVandorDirectional.FACING)==player.getHorizontalFacing(),"cockpit places along player facing");
         require(tile.data().moving.values().stream().filter(part->part==1).count()<=32,"rigid seat collision boxes are not sliced redundantly");
         canopies(tile,player);
+        CanopyOrientationChecks.run(world,player);
         levers(tile,player);
         NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());
         tile.toggleScreens();require(tile.screenLift.target(),"screen button retracts");finish(tile,"CockpitScreenLift",world.getTotalWorldTime());require(Math.abs(tile.screens(0)-1)<1e-8,"screen bank reaches housing");
@@ -54,15 +55,29 @@ final class CockpitMechanismRuntimeChecks {
     }
     private static void canopies(TileEntityCockpit tile,EntityPlayerMP player){
         net.minecraft.item.ItemStack held=player.getHeldItemMainhand();boolean creative=player.capabilities.isCreativeMode;player.capabilities.isCreativeMode=true;
-        try{for(String id:new String[]{"canopy","long_canopy","regular_canopy_glass"}){
+        try{for(String id:new String[]{"canopy","long_canopy","regular_canopy_glass"})for(BlockPos anchor:tile.data().cells(tile.getPos(),tile.facing())){
+            if(anchor.getY()!=tile.getPos().getY()+1)continue;
             com.vandorlabs.blocks.BlockCanopy canopy=(com.vandorlabs.blocks.BlockCanopy)net.minecraft.block.Block.getBlockFromName("vandorlabs:"+id);
             net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(canopy);player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,stack);
             require(!CockpitAssembly.activate(tile.getWorld(),tile.getPos(),player,net.minecraft.util.EnumHand.MAIN_HAND),"held canopy reaches placement");
-            require(stack.getItem().onItemUse(player,tile.getWorld(),tile.getPos(),net.minecraft.util.EnumHand.MAIN_HAND,net.minecraft.util.EnumFacing.UP,.5F,1,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"canopy over cockpit "+id+tile.facing());
-            BlockPos anchor=tile.getPos().up((int)Math.ceil(tile.data().bounds.maxY));
-            require(tile.getWorld().getBlockState(anchor).getBlock()==canopy,"shell above cockpit reservation");
+            java.util.List<AxisAlignedBB> body=CockpitAssembly.boxes(tile.getWorld(),anchor);
+            require(!body.isEmpty(),"raised cockpit geometry exercised");
+            require(((net.minecraft.item.ItemBlock)stack.getItem()).canPlaceBlockOnSide(tile.getWorld(),anchor,net.minecraft.util.EnumFacing.UP,player,stack),"client accepts raised cockpit click");
+            require(player.interactionManager.processRightClickBlock(player,tile.getWorld(),stack,net.minecraft.util.EnumHand.MAIN_HAND,anchor,net.minecraft.util.EnumFacing.UP,.5F,.1F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"canopy over raised cockpit "+id+tile.facing());
+            require(tile.getWorld().getBlockState(anchor).getBlock()==canopy,"shell shares upper cockpit reservation");
             require(CockpitAssembly.root(tile.getWorld(),tile.getPos())==tile,"canopy retains cockpit");
-            tile.getWorld().destroyBlock(anchor,false);require(CockpitAssembly.root(tile.getWorld(),tile.getPos())==tile,"canopy removal retains cockpit");
+            require(CockpitAssembly.boxes(tile.getWorld(),anchor).equals(body),"shared raised cockpit collision retained");
+            require(CockpitAssembly.root(tile.getWorld(),anchor)==tile,"shared cell resolves cockpit controls");
+            TileEntityCanopy shell=TileEntityCanopy.at(tile.getWorld(),anchor);
+            if(shell.opening()){
+                shell.targetOpen=true;shell.progress=shell.previous=1;
+                com.vandorlabs.canopy.CanopyReservations.releaseOpen(shell);
+                require(CockpitAssembly.root(tile.getWorld(),anchor)==tile,"opening shell preserves cockpit");
+                require(com.vandorlabs.canopy.CanopyReservations.restoreFootprint(shell),"closing shell accepts shared cockpit helpers");
+                shell.targetOpen=false;shell.progress=shell.previous=0;
+            }
+            tile.getWorld().destroyBlock(anchor,false);
+            require(tile.getWorld().getTileEntity(anchor) instanceof TileEntityCockpitPart,"removing canopy restores upper reservation");require(CockpitAssembly.root(tile.getWorld(),tile.getPos())==tile,"canopy removal retains cockpit");
         }}finally{player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);player.capabilities.isCreativeMode=creative;}
     }
     private static void sliders(TileEntityCockpit tile,EntityPlayerMP player){
