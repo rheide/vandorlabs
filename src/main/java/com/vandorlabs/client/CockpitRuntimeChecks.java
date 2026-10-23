@@ -72,6 +72,7 @@ final class CockpitRuntimeChecks {
                 }
                 world.setBlockToAir(ROOT);
             }
+            CockpitLinkedScreenChecks.run(world,player);
             roundTrip(world,player);
         }finally{clear(world);player.setPositionAndUpdate(before.x,before.y,before.z);}
         System.out.println("[vandorlabs][reprolab] cockpit-runtime PASS three models four facings reservations clipped-collision independent-surfaces touch detents pulses save configured-items stale-render-bounds vehicle-round-trip");

@@ -2,6 +2,9 @@
 
 ## 2.4
 
+- Synchronize cockpit toggle and slider controls with regular redstone screens on shared channels, including partial channel banks, saved levels, pulses and carried controls. Persist pending control changes before rebuilding a carried ramp.
+- Allow six redstone items on cockpit display screens while retaining three on smaller touch panels. Preserve existing rows, settings and legacy control indices.
+
 - Keep shader shadow-map draws separate from main-view vehicle visibility. Preserve the hidden-origin fallback for first-person pilots so the hull and cockpit screens remain visible when looking forward.
 
 - Add Ramp Controller Slab with top/bottom placement, six active scan faces, the full controller's settings and seven mode indicators. Use newly drawn half-height panels and preserve top-slab separation from the ground during vehicle discovery.

@@ -16,7 +16,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     private int throttleCount=2;
     public int throttleCount(){return throttleCount;}
     public String modelId(){return design.equals("cockpit")&&throttleCount==1?"cockpit_single":design;}
-    public void setThrottleCount(int count){if(!design.equals("cockpit")||count<1||count>2||count==throttleCount)return;throttleCount=count;if(ordinary())for(Control c:controls)RedstoneChannels.inputChanged(c);changed();}
+    public void setThrottleCount(int count){if(!design.equals("cockpit")||count<1||count>2||count==throttleCount)return;Control right=control("throttle_right");if(ordinary())RedstoneChannels.unregister(right);throttleCount=count;if(ordinary())RedstoneChannels.register(right);changed();}
 
     public final com.vandorlabs.cockpit.CockpitActuator screenLift=new com.vandorlabs.cockpit.CockpitActuator(),seatSlide=new com.vandorlabs.cockpit.CockpitActuator();
     private long screenButtonUntil,seatButtonUntil;
@@ -83,17 +83,28 @@ public class TileEntityCockpit extends TileEntityVehicleController {
             for(int row=0;row<3;row++){Control c=new Control(surface.id+"/"+row);controls.add(c);}
         }
         for(String part:CockpitData.get(design,getHeight()).controls){Control c=new Control(part);c.kind=1;controls.add(c);}
+        // Append extra rows after the legacy controls to preserve existing control indices.
+        for(Display d:displays)for(int row=3;row<d.maxRows();row++)controls.add(new Control(d.id+"/"+row));
     }
     private int defaultTexture(CockpitData.Surface surface){
         if("touch".equals(surface.role))return ScreenHousingTextures.screenIndex("console_inputs/"+(surface.id.equals("touch_left_forward")?"console_controls_navigation_controls_static":surface.id.equals("touch_right_forward")?"console_controls_sensor_controls_static":surface.id.equals("touch_center_keyboard")?"extra_bare_personal_terminal_static":"console_controls_communications_keyboard_static"));
         return design.equals("yoke_screen")||surface.id.equals("screen_center")?TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:ScreenHousingTextures.screenIndex(surface.id.equals("screen_left")?"bridge_bare_pilot_static":"bridge_bare_engineering_static");
     }
     public boolean configureRows(int index,NBTTagList rows){
-        if(index<0||index>=displays.size()||rows.tagCount()>3)return false;
+        if(index<0||index>=displays.size())return false;Display d=displays.get(index);if(rows.tagCount()>d.maxRows())return false;
         for(int i=0;i<rows.tagCount();i++){NBTTagCompound row=rows.getCompoundTagAt(i);int kind=row.getInteger("Kind"),min=row.getInteger("Min"),max=row.getInteger("Max");if(row.getString("Label").length()>24||kind<0||kind>2||min<0||min>13||max<min+2||max>15)return false;ChannelData.read(row,0);}
-        Display d=displays.get(index);d.rows=rows.tagCount();
-        for(int i=0;i<3;i++){Control c=control(d.id+"/"+i);NBTTagCompound row=i<d.rows?rows.getCompoundTagAt(i):new NBTTagCompound();c.kind=row.getInteger("Kind");c.label=row.getString("Label");c.min=i<d.rows?row.getInteger("Min"):5;c.max=i<d.rows?row.getInteger("Max"):15;c.level=0;c.until=0;c.setRedstoneChannels(i<d.rows?ChannelData.read(row,0):ChannelList.EMPTY);if(ordinary())RedstoneChannels.inputChanged(c);}
-        d.texture=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;changed();return true;
+        boolean placed=ordinary();if(placed)RedstoneChannels.beginTransfer(world);
+        try{
+            if(placed)for(int i=0;i<d.maxRows();i++)RedstoneChannels.unregister(control(d.id+"/"+i));
+            d.rows=rows.tagCount();
+            for(int i=0;i<d.maxRows();i++){
+                Control c=control(d.id+"/"+i);NBTTagCompound row=i<d.rows?rows.getCompoundTagAt(i):new NBTTagCompound();int previousKind=c.kind;c.kind=row.getInteger("Kind");c.label=row.getString("Label");c.min=i<d.rows?row.getInteger("Min"):5;c.max=i<d.rows?row.getInteger("Max"):15;
+                if(i>=d.rows||previousKind!=c.kind){c.level=0;c.until=0;c.levels.clear();}
+                c.setRedstoneChannels(i<d.rows?ChannelData.read(row,0):ChannelList.EMPTY);
+                if(placed)RedstoneChannels.register(c);
+            }
+            d.texture=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;changed();return true;
+        }finally{if(placed)RedstoneChannels.endTransfer(world);}
     }
     public Control control(String id){prepare();for(Control c:controls)if(c.id.equals(id))return c;return null;}
     public Display display(String id){prepare();for(Display d:displays)if(d.id.equals(id))return d;return null;}
@@ -167,39 +178,54 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         initializeControls();if(ordinary() && world.getTileEntity(pos)==this)for(Control c:controls)RedstoneChannels.register(c);
     }
     @Override public AxisAlignedBB getRenderBoundingBox(){return hasLiveBlock()?CockpitData.rotate(data().bounds,facing()).offset(pos).grow(.05):new AxisAlignedBB(pos);}
-    public final class Control implements RedstoneChannelMember {
+    public final class Control implements RedstoneChannelLatch {
         public final String id;
         public String label="";
         public ChannelList channels=ChannelList.EMPTY;
         public int kind,level,min=5,max=15;
         public long until;
+        private final Map<Integer,Integer> levels=new HashMap<>();
         Control(String id){this.id=id;}
         public TileEntity channelTile(){return TileEntityCockpit.this;}
         public int getRedstoneChannel(){return channels.first();}
         public ChannelList getRedstoneChannels(){return channels;}
         public void setRedstoneChannel(int channel){setRedstoneChannels(ChannelList.of(channel));}
-        public void setRedstoneChannels(ChannelList next){ChannelList before=channels;channels=next;if(ordinary())RedstoneChannels.channelChanged(this,before);changed();}
+        public void setRedstoneChannels(ChannelList next){ChannelList before=channels;channels=next;levels.keySet().removeIf(channel->!next.contains(channel));for(int i=0;i<next.size();i++)levels.putIfAbsent(next.get(i),0);if(ordinary())RedstoneChannels.channelChanged(this,before);changed();}
+        public void setKind(int value){if(isThrottle())value=1;if(value<0||value>2||kind==value)return;if(ordinary())RedstoneChannels.unregister(this);boolean pulse=kind==2||value==2;kind=value;if(pulse){level=0;until=0;levels.clear();for(int i=0;i<channels.size();i++)levels.put(channels.get(i),0);}if(ordinary())RedstoneChannels.register(this);changed();}
         public boolean active(){return !id.equals("throttle_right")||throttleCount==2;}
-        public boolean hasLocalRedstoneSignal(){return active()&&level>0;}
-        public int localSignalLevel(int channel){return active()?level:0;}
-        public void setChannelSignal(boolean ignored){}
+        public boolean hasLocalRedstoneSignal(){if(!active())return false;if(kind==2||channels.isEmpty())return level>0;for(int i=0;i<channels.size();i++)if(latchedLevel(channels.get(i))>0)return true;return false;}
+        public boolean hasLocalRedstoneSignal(int channel){return localSignalLevel(channel)>0;}
+        public int localSignalLevel(int channel){return active()?(kind==2?level:latchedLevel(channel)):0;}
+        public boolean isChannelLatch(){return active()&&kind!=2;}
+        public int latchedLevel(int channel){return levels.getOrDefault(channel,level);}
+        public ChannelList latchedChannels(){int[] active=new int[channels.size()];int count=0;for(int i=0;i<channels.size();i++)if(latchedLevel(channels.get(i))>0)active[count++]=channels.get(i);return ChannelList.of(Arrays.copyOf(active,count));}
+        public boolean latchOn(){if(channels.isEmpty())return level>0;for(int i=0;i<channels.size();i++)if(latchedLevel(channels.get(i))==0)return false;return true;}
+        public void applyLinkedLatch(boolean on){applyLinkedChannels(on?channels:ChannelList.EMPTY);}
+        public void applyLinkedChannels(ChannelList active){Map<Integer,Integer> next=new HashMap<>();for(int i=0;i<channels.size();i++)next.put(channels.get(i),active.contains(channels.get(i))?15:0);applyLinkedLevels(next);}
+        public void applyLinkedLevels(Map<Integer,Integer> next){if(!levels.equals(next)){levels.clear();levels.putAll(next);markDirty();}}
+        public void setChannelSignal(boolean ignored){int strongest=0;for(int i=0;i<channels.size();i++)strongest=Math.max(strongest,RedstoneChannels.level(world,channels.get(i)));setChannelLevel(strongest);}
+        public void setChannelLevel(int aggregate){if(kind==2||channels.isEmpty())return;int next=kind==1?aggregate:RedstoneChannels.allPowered(world,channels)?15:0;if(level!=next){level=next;changed();}}
         public boolean isThrottle(){return id.startsWith("throttle_");}
         public int step(){return com.vandorlabs.tiles.TileEntitySignalControl.stepForLevel(level,min,max);}
         public int sliderLevel(int segment){if(isThrottle())return TileEntitySignalControl.levelForStep(segment,min,max);return segment==0?0:min+(max-min)*(Math.max(1,Math.min(3,segment))-1)/2;}
         public double nextColumn(){int segment=0;for(int i=1;i<4;i++)if(Math.abs(sliderLevel(i)-level)<Math.abs(sliderLevel(segment)-level))segment=i;return ((segment+1)%4)/3D;}
+        /** Set the owned state before consumers can clone a carried mechanism's snapshot. */
+        public void setLocalLevel(int next){level=Math.max(0,Math.min(15,next));until=kind==2?world.getTotalWorldTime()+20:0;if(kind!=2)for(int i=0;i<channels.size();i++)levels.put(channels.get(i),level);}
         public void activate(double column){
-            level=(kind==1||isThrottle())?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:level==0?15:0;
-            until=kind==2?world.getTotalWorldTime()+20:0;if(ordinary())RedstoneChannels.inputChanged(this);changed();
+            int next=(kind==1||isThrottle())?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:(channels.isEmpty()?level>0:RedstoneChannels.allPowered(world,channels))?0:15;
+            if(world instanceof VehicleWorld&&!((VehicleWorld)world).parent.isRemote&&((VehicleWorld)world).craft!=null){((VehicleWorld)world).craft.signals.activateCockpit(this,next);return;}
+            setLocalLevel(next);if(ordinary()){if(isChannelLatch())RedstoneChannels.latchLevelChanged(this,next);else RedstoneChannels.inputChanged(this);}changed();
         }
-        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setString("Label",label);ChannelData.write(tag,channels);tag.setInteger("Min",min);tag.setInteger("Max",max);tag.setInteger("Kind",kind);tag.setInteger("Level",level);tag.setLong("Until",until);return tag;}
-        public void read(NBTTagCompound tag){label=tag.getString("Label");if(label.length()>32)label=label.substring(0,32);channels=ChannelData.read(tag,0);min=tag.hasKey("Min",3)?Math.max(0,Math.min(13,tag.getInteger("Min"))):5;max=tag.hasKey("Max",3)?Math.max(min+2,Math.min(15,tag.getInteger("Max"))):15;kind=Math.max(0,Math.min(2,tag.getInteger("Kind")));level=Math.max(0,Math.min(15,tag.getInteger("Level")));until=Math.max(0,tag.getLong("Until"));if(isThrottle()){kind=1;until=0;if(!TileEntitySignalControl.validLimits(min,max)){min=5;max=15;}}}
+        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setString("Label",label);ChannelData.write(tag,channels);tag.setInteger("Min",min);tag.setInteger("Max",max);tag.setInteger("Kind",kind);tag.setInteger("Level",level);tag.setLong("Until",until);int[] saved=new int[channels.size()];for(int i=0;i<saved.length;i++)saved[i]=latchedLevel(channels.get(i));tag.setIntArray("Levels",saved);return tag;}
+        public void read(NBTTagCompound tag){label=tag.getString("Label");if(label.length()>32)label=label.substring(0,32);channels=ChannelData.read(tag,0);min=tag.hasKey("Min",3)?Math.max(0,Math.min(13,tag.getInteger("Min"))):5;max=tag.hasKey("Max",3)?Math.max(min+2,Math.min(15,tag.getInteger("Max"))):15;kind=Math.max(0,Math.min(2,tag.getInteger("Kind")));level=Math.max(0,Math.min(15,tag.getInteger("Level")));until=Math.max(0,tag.getLong("Until"));levels.clear();int[] saved=tag.getIntArray("Levels");for(int i=0;i<channels.size();i++)levels.put(channels.get(i),i<saved.length?Math.max(0,Math.min(15,saved[i])):level);if(isThrottle()){kind=1;until=0;if(!TileEntitySignalControl.validLimits(min,max)){min=5;max=15;}}}
     }
     public static final class Display {
         public final String id,role;
         public int texture=-1,speed=1,gate,rows=3;
         public boolean animated=true,inverted,active=true;
         Display(String id,String role){this.id=id;this.role=role;}
+        public int maxRows(){return "screen".equals(role)?6:3;}
         public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);tag.setInteger("Rows",rows);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);return tag;}
-        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(3,tag.getInteger("Rows"))):3;texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,Math.min(65535,tag.getInteger("Gate")));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");active=gate==0 || tag.getBoolean("Active");}
+        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(maxRows(),tag.getInteger("Rows"))):3;texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,Math.min(65535,tag.getInteger("Gate")));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");active=gate==0 || tag.getBoolean("Active");}
     }
 }

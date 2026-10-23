@@ -21,6 +21,7 @@ public final class VehicleRamps {
     }
     public static boolean signal(EntityGroundVehicle craft,BlockPos at,boolean powered){
         TileEntity raw=craft.view.getTileEntity(at);if(!(raw instanceof TileEntityRampController))return false;
+        craft.signals.persist();
         NBTTagCompound old=raw.writeToNBT(new NBTTagCompound());
         boolean deploy=powered==old.getBoolean("ActivateOnPower");
         boolean upgrade=old.getBoolean("MoatMode")&&old.getBoolean("MoatVerticalSources")&&old.getInteger("MoatGeometryRevision")==1;

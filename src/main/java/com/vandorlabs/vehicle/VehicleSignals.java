@@ -28,11 +28,18 @@ public final class VehicleSignals {
         for(TileEntityCockpit.Control control:tile.controls){Link link=links.get(control);if(link!=null){RedstoneChannels.channelChanged(link,control.getRedstoneChannels());RedstoneChannels.inputChanged(link);}}
         flush();
     }
+    public void activateCockpit(TileEntityCockpit.Control original,int level){
+        tick();BlockPos pos=original.channelTile().getPos();TileEntity tile=craft.view.getTileEntity(pos);if(!(tile instanceof TileEntityCockpit))return;
+        TileEntityCockpit.Control control=((TileEntityCockpit)tile).control(original.id);if(control==null)return;control.setLocalLevel(level);dirty.add(pos);
+        Link link=links.get(control);if(link instanceof LatchLink&&((LatchLink)link).isChannelLatch())RedstoneChannels.latchLevelChanged((LatchLink)link,level);else if(link!=null)RedstoneChannels.inputChanged(link);
+        flush();
+    }
     VehicleSignals(EntityGroundVehicle craft){this.craft=craft;}
     public void changed(BlockPos pos){if(!detached)dirty.add(pos.toImmutable());}
     private class Link implements RedstoneChannelMember {
         final RedstoneChannelMember source;final TileEntity anchor=new TileEntity(){};
-        Link(RedstoneChannelMember source){this.source=source;anchor.setWorld(craft.world);}
+        boolean registeredLatch;
+        Link(RedstoneChannelMember source){this.source=source;anchor.setWorld(craft.world);registeredLatch=source instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)source).isChannelLatch();}
         public TileEntity channelTile(){return anchor;}
         public boolean isChannelMemberActive(){return !detached&&!craft.isDead&&!craft.ownershipBlocked&&craft.view!=null&&craft.view.getTileEntity(source.channelTile().getPos())==source.channelTile();}
         public int getRedstoneChannel(){return source.getRedstoneChannel();}
@@ -125,6 +132,7 @@ public final class VehicleSignals {
             }
         }
         for(RedstoneChannelMember source:new ArrayList<>(links.keySet()))if(!wanted.contains(source)){Link old=links.remove(source);RedstoneChannels.unregister(old);screenPulses.remove(source);}
+        for(RedstoneChannelMember source:wanted){Link existing=links.get(source);boolean latch=source instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)source).isChannelLatch();if(existing!=null&&existing.registeredLatch!=latch){RedstoneChannels.unregister(existing);existing.registeredLatch=latch;RedstoneChannels.register(existing);}}
         for(RedstoneChannelMember source:wanted)if(!links.containsKey(source)){
             Link link=source instanceof RedstoneChannelLatch?new LatchLink((RedstoneChannelLatch)source):new Link(source);links.put(source,link);RedstoneChannels.register(link);
             if(source instanceof RedstoneScreenContents.Row&&((RedstoneScreenContents.Row)source).pulseUntil()>0)screenPulses.add((RedstoneScreenContents.Row)source);

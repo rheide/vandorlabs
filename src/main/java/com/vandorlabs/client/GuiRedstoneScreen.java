@@ -16,7 +16,7 @@ import java.util.*;
 public final class GuiRedstoneScreen extends GuiContainer {
     private final RedstoneScreenContents tile;
     private GuiCockpit cockpitParent;private com.vandorlabs.tiles.TileEntityCockpit cockpitTile;private int cockpitDisplay;
-    private int maxRows(){return tile==null?3:tile.maxRows();}
+    private int maxRows(){return tile==null?cockpitTile.displays.get(cockpitDisplay).maxRows():tile.maxRows();}
     private final List<Boolean> sliders=new ArrayList<>();
     private final List<Boolean> pulses=new ArrayList<>();
     private final List<Integer> mins=new ArrayList<>(),maxs=new ArrayList<>();

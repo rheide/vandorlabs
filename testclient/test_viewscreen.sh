@@ -151,6 +151,7 @@ if [ "$MODE" = focus ]; then
     fi
     if [ "$TARGET" = cockpit ]; then
         grep -q 'cockpit-controls PASS' "$RUN_OUT/client.log"
+        grep -q 'cockpit-linked-screens PASS' "$RUN_OUT/client.log"
         grep -q 'cockpit-redstone-render PASS' "$RUN_OUT/client.log"
         grep -q 'cockpit-control-dialog PASS' "$RUN_OUT/client.log"
         grep -q 'vehicle-status-autopilot-live PASS' "$RUN_OUT/client.log"

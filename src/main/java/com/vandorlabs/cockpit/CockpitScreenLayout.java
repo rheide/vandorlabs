@@ -6,7 +6,7 @@ public final class CockpitScreenLayout {
     public final int height,rows;
     public CockpitScreenLayout(CockpitData.Surface surface,int rows){
         height=Math.max(1,(int)Math.round(WIDTH*surface.v.lengthVector()/surface.u.lengthVector()));
-        this.rows=Math.max(0,Math.min(3,rows));
+        this.rows=Math.max(0,Math.min("screen".equals(surface.role)?6:3,rows));
     }
     public int row(double v){return rows==0?-1:Math.max(0,Math.min(rows-1,(int)((1-v)*rows)));}
     public int top(int row){return row*height/rows;}

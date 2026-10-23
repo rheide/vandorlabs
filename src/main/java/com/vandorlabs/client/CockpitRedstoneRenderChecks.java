@@ -16,17 +16,17 @@ final class CockpitRedstoneRenderChecks {
     static void run(Minecraft mc,File output)throws Exception{
         TileEntityCockpit tile=new TileEntityCockpit();tile.setWorld(mc.world);
         java.lang.reflect.Method rows=TECockpit.class.getDeclaredMethod("rows",TileEntityCockpit.class,CockpitData.Surface.class);rows.setAccessible(true);
-        for(CockpitData.Surface plane:tile.data().surfaces)if(plane.id.equals("screen_left")||plane.id.equals("screen_right")){
-            tile.display(plane.id).rows=3;
-            for(int i=0;i<3;i++){TileEntityCockpit.Control control=tile.control(plane.id+"/"+i);control.label="MMMM";control.kind=i==1?1:i==2?2:0;control.level=15;}
+        for(CockpitData.Surface plane:tile.data().surfaces)if(plane.id.equals("screen_left")||plane.id.equals("screen_right"))for(int count:new int[]{3,6}){
+            tile.display(plane.id).rows=count;
+            for(int i=0;i<count;i++){TileEntityCockpit.Control control=tile.control(plane.id+"/"+i);control.label="MMMM";control.kind=i%3==1?1:i%3==2?2:0;control.level=15;}
             BufferedImage clean=capture(mc,tile,plane,rows,false),dirty=capture(mc,tile,plane,rows,true);
-            javax.imageio.ImageIO.write(clean,"png",new File(output,"cockpit-redstone-"+plane.id+".png"));
-            javax.imageio.ImageIO.write(dirty,"png",new File(output,"cockpit-redstone-"+plane.id+"-offset.png"));
+            javax.imageio.ImageIO.write(clean,"png",new File(output,"cockpit-redstone-"+plane.id+"-"+count+".png"));
+            javax.imageio.ImageIO.write(dirty,"png",new File(output,"cockpit-redstone-"+plane.id+"-"+count+"-offset.png"));
             int minX=999,minY=999,maxX=-1,maxY=-1;
-            for(int y=0;y<clean.getHeight()/3;y++)for(int x=0;x<clean.getWidth()/2;x++)if((clean.getRGB(x,y)&0xffffff)==0xffffff){minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);}
+            for(int y=0;y<clean.getHeight()/count;y++)for(int x=0;x<clean.getWidth()/2;x++)if((clean.getRGB(x,y)&0xffffff)==0xffffff){minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);}
             double ratio=(maxX-minX+1D)/(maxY-minY+1D);
             boolean same=java.util.Arrays.equals(clean.getRGB(0,0,clean.getWidth(),clean.getHeight(),null,0,clean.getWidth()),dirty.getRGB(0,0,dirty.getWidth(),dirty.getHeight(),null,0,dirty.getWidth()));
-            System.out.println("[vandorlabs][reprolab] cockpit-redstone-measure "+plane.id+" glyphAspect="+ratio+" bufferTranslationInvariant="+same);
+            System.out.println("[vandorlabs][reprolab] cockpit-redstone-measure "+plane.id+" rows="+count+" glyphAspect="+ratio+" bufferTranslationInvariant="+same);
             if(!Boolean.getBoolean("vandorlabs.cockpitScreenBaseline")){
                 require(ratio>2.5&&ratio<4.5,"square font pixels on "+plane.id);
                 require(same,"shared buffer translation moved buttons on "+plane.id);
