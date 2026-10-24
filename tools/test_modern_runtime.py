@@ -14,15 +14,18 @@ from build_all import ROOT, java_home
 
 PLATFORM=ROOT/'platforms/neoforge-1.21.1'
 MARKERS={
-    'write':['filesystem-write PASS','wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
-    'read':['filesystem-read PASS','wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
-    'client':['filesystem-client PASS','block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','wireless-glyph-captures PASS','client-smoke PASS'],
+    'write':['basic-housing-server PASS','screen-families-server PASS','filesystem-write PASS','wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
+    'read':['basic-housing-read PASS','screen-families-read PASS','filesystem-read PASS','wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
+    'client':['screen-filesystem-client PASS','screen-families-client PASS','filesystem-client PASS','block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','wireless-glyph-captures PASS','client-smoke PASS'],
 }
 CLIENT_IMAGES=['modern-filesystem-world.png','modern-filesystem-picker-portrait.png','modern-filesystem-picker-missing.png','modern-filesystem-picker-wide.png','modern-world.png','modern-programmable-block.png','modern-programmable-block-gui2.png',
                'modern-screen-scale3.png','modern-screen-scale2.png','modern-screen-world-a.png','modern-screen-world-b.png',
                'modern-redstone-overlay-on.png','modern-redstone-editor.png','modern-redstone-editor-scale3.png','modern-redstone-editor-scale2.png','modern-redstone-overlay-eight.png',
                'modern-wireless-world.png','modern-wireless-receiver-dialog.png','modern-wireless-transmitter-dialog.png']
 CLIENT_IMAGES += [f'modern-wireless-on{level}-scale{scale}-{mode}.png' for level in (8,9) for scale in (2,3) for mode in ('actual','reference','negative','vanilla')]
+CLIENT_IMAGES += [f'modern-family-{family}-{suffix}.png' for family in range(7) for suffix in ('scale3','scale2','surface-dialog','art-world','editor-scale3','editor-scale2','overlay-world')]
+CLIENT_IMAGES += ['modern-family-1-art-off-target.png']
+CLIENT_IMAGES += [f'modern-screen-filesystem-{suffix}.png' for suffix in ('picker-portrait','picker-missing','picker-wide','world-portrait','world-wide')]
 FATAL=re.compile(r'\bFATAL\b|Encountered an unexpected exception|Exception in server tick loop|Failed to start the minecraft server|This crash report has been saved to|Preparing crash report|Caused by: java\.lang\.(?:AssertionError|IllegalStateException)|Modern client:|Modern runtime check:')
 
 
@@ -124,8 +127,14 @@ def run(phase,args):
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_filesystem_images.py'),
                         '--screenshots',str(PLATFORM/'run/client/screenshots'),
                         '--output-dir',str(args.log_dir/'filesystem-pixels')],check=True)
+        subprocess.run([sys.executable,str(ROOT/'tools/test_modern_filesystem_images.py'),
+                        '--screenshots',str(PLATFORM/'run/client/screenshots'),'--screen',
+                        '--output-dir',str(args.log_dir/'screen-filesystem-pixels')],check=True)
+        subprocess.run([sys.executable,str(ROOT/'tools/test_modern_screen_family_images.py'),
+                        '--screenshots',str(PLATFORM/'run/client/screenshots'),
+                        '--output-dir',str(args.log_dir/'screen-family-pixels')],check=True)
     print(f'Modern {phase} PASS: all {len(markers)} runtime markers and clean process completion',flush=True)
-    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images,'visual_checks':{'filesystem':'PASS','wireless_glyphs':'PASS'} if phase=='client' else {}}
+    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images,'visual_checks':{'filesystem':'PASS','wireless_glyphs':'PASS','screen_families':'PASS','screen_filesystem':'PASS'} if phase=='client' else {}}
 
 
 def main():
@@ -133,7 +142,7 @@ def main():
     parser.add_argument('--phase',choices=['write','read','both','client'],default='both')
     parser.add_argument('--verify-log',type=Path,help='Check an already completed log instead of launching a process')
     parser.add_argument('--compiled',action='store_true',help='Use the existing frozen classes/resources without recompilation')
-    parser.add_argument('--timeout',type=int,default=180)
+    parser.add_argument('--timeout',type=int,default=420)
     parser.add_argument('--log-dir',type=Path,default=ROOT/'build/reports/modern-runtime')
     args=parser.parse_args()
     if args.timeout<=0:parser.error('--timeout must be positive')

@@ -26,5 +26,5 @@ public final class WirelessContent {
     public static final DeferredHolder<MenuType<?>, MenuType<WirelessMenu>> MENU = VandorLabsModern.MENUS.register("wireless_redstone",
             () -> net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id, inventory, buffer) -> new WirelessMenu(id, inventory, buffer.readBlockPos())));
     public static void initialize() { }
-    private static BlockBehaviour.Properties properties() { return BlockBehaviour.Properties.of().strength(5, 6).sound(SoundType.METAL).requiresCorrectToolForDrops(); }
+    private static BlockBehaviour.Properties properties() { return BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL).strength(5, 6).sound(SoundType.METAL).requiresCorrectToolForDrops(); }
 }

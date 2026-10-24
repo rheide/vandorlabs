@@ -74,12 +74,6 @@ public final class WirelessScreen extends AbstractContainerScreen<WirelessMenu> 
                     graphics.flush(); graphics.pose().popPose();
                 }
             }
-            @Override protected void renderScrollingString(GuiGraphics graphics, net.minecraft.client.gui.Font font, int padding, int color) {
-                if (glyphCaptureMode == 3) { super.renderScrollingString(graphics, font, padding, color); return; }
-                graphics.pose().pushPose(); graphics.pose().translate(0, 0, 1);
-                super.renderScrollingString(graphics, font, padding, color);
-                graphics.pose().popPose();
-            }
             @Override protected void updateMessage() { setMessage(Component.literal(WirelessDialogLayout.levelLabel(onSlider, (int) Math.round(value * 15)))); }
             @Override protected void applyValue() {
                 int next = (int) Math.round(value * 15);

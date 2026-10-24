@@ -112,7 +112,7 @@ def main():
     write(resources / 'pack.mcmeta', {'pack':{'pack_format':34,'description':'Vandor Labs modern resources'}})
     write(resources / 'data/vandorlabs/loot_table/blocks/programmable_block.json', {'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:programmable_block','functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
     for tag in ('mineable/pickaxe','needs_stone_tool'):
-        write(resources / f'data/minecraft/tags/block/{tag}.json',{'replace':False,'values':['vandorlabs:programmable_block','vandorlabs:programmable_viewscreen','vandorlabs:redstone_transmitter','vandorlabs:redstone_receiver']})
+        write(resources / f'data/minecraft/tags/block/{tag}.json',{'replace':False,'values':['vandorlabs:programmable_matter_block','vandorlabs:programmable_block','vandorlabs:programmable_viewscreen','vandorlabs:redstone_transmitter','vandorlabs:redstone_receiver']})
     for id in ('programmable_matter_ingot','industrial_alloy_ingot'):
         source=ROOT / f'texture-packs/default/assets/vandorlabs/textures/items/{id}.png'
         output=assets / f'textures/item/{id}.png'
@@ -123,10 +123,18 @@ def main():
         model['textures']={key:value.replace(':items/',':item/') for key,value in model['textures'].items()}
         write(assets / f'models/item/{id}.json',model)
     write(assets / 'lang/en_us.json',lang)
-    for id in ('programmable_block','programmable_viewscreen','configurizer','industrial_alloy_ingot'):
+    for id in ('programmable_block','programmable_viewscreen','programmable_matter_block','configurizer','industrial_alloy_ingot'):
         recipe=json.loads((ROOT / f'src/main/resources/assets/vandorlabs/recipes/{id}.json').read_text())
         recipe['result']['id']=recipe['result'].pop('item')
         write(resources / f'data/vandorlabs/recipe/{id}.json',recipe)
+    write(assets / 'blockstates/programmable_matter_block.json', {'variants':{'':{'model':'vandorlabs:block/programmable_matter_block'}}})
+    write(assets / 'models/block/programmable_matter_block.json', {'parent':'minecraft:block/cube_all','textures':{'all':'vandorlabs:block/matter/matter'}})
+    matter_item=json.loads((ROOT / 'src/main/resources/assets/vandorlabs/models/item/programmable_matter_block.json').read_text())
+    write(assets / 'models/item/programmable_matter_block.json',matter_item)
+    matter_png=assets / 'textures/block/matter/matter.png'
+    matter_png.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(source_texture('matter/matter'),matter_png)
+    write(resources / 'data/vandorlabs/loot_table/blocks/programmable_matter_block.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:programmable_matter_block'}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
     for id in ('redstone_transmitter','redstone_receiver'):
         model=json.loads((ROOT / f'src/main/resources/assets/vandorlabs/models/block/{id}.json').read_text())
         model['textures']={key:value.replace(':blocks/',':block/') for key,value in model['textures'].items()}
@@ -143,5 +151,15 @@ def main():
         write(resources / f'data/vandorlabs/loot_table/blocks/{id}.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':f'vandorlabs:{id}'}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
     from generate_screen_resources import generate as generate_screen
     generate_screen(ROOT, resources)
-    write(OUT / 'adapter-coverage.json', {'registered':['programmable_block','programmable_viewscreen','configurizer','programmable_matter_ingot','industrial_alloy_ingot','redstone_transmitter','redstone_receiver'],'finish_count':len(entries),'unsupported_catalog_ids':[e['id'] for e in catalog if not e.get('retired') and not e.get('programmable_only') and not e.get('internal_model')],'programmable_block':{'implemented':['shared finish catalog','shared dialog controls','per-face settings','layout settings','NBT settings persistence','server-authoritative editing'],'pending':['filesystem/custom material sources','joined multi-block face layouts','shader format interoperability','live parity verification','all other block families']}})
+    native_blocks=['programmable_block','programmable_matter_block','programmable_viewscreen','programmable_console','programmable_half_console','programmable_input','programmable_half_input','programmable_diagonal_screen','programmable_diagonal_half_console','redstone_transmitter','redstone_receiver']
+    write(OUT / 'adapter-coverage.json', {
+        'registered_blocks':native_blocks,
+        'registered_direct_items':['configurizer','programmable_matter_ingot','industrial_alloy_ingot'],
+        'finish_count':len(entries),
+        'unsupported_catalog_ids':[e['id'] for e in catalog if not e.get('retired') and not e.get('programmable_only') and not e.get('internal_model') and e['id'] not in native_blocks],
+        'complete_families':[],
+        'coverage_inventory':'docs/development/feature-coverage.json',
+        'programmable_block':{
+            'implemented':['shared finish catalog','shared dialog controls','per-face settings','layout settings','NBT settings persistence','server-authoritative editing','filesystem material discovery and resource reload'],
+            'pending':['custom material definitions','joined multi-block face layouts','shader format interoperability','full family parity']}})
 if __name__ == '__main__': main()

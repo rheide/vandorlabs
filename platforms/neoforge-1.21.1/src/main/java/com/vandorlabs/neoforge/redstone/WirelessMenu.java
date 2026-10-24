@@ -15,10 +15,7 @@ public final class WirelessMenu extends AbstractContainerMenu {
         tile = entity;
     }
     @Override public boolean stillValid(Player player) {
-        BlockPos pos = tile.getBlockPos();
-        return player.isAlive() && !player.isSpectator() && player.mayBuild() && player.level() == tile.getLevel()
-                && player.level().hasChunkAt(pos) && player.level().getBlockEntity(pos) == tile
-                && player.distanceToSqr(pos.getCenter()) <= 64 && player.level().mayInteract(player, pos);
+        return com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(player, tile);
     }
     @Override public ItemStack quickMoveStack(Player player, int index) { return ItemStack.EMPTY; }
 }

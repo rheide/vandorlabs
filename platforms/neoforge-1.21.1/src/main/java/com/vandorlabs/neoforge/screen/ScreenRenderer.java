@@ -31,11 +31,11 @@ public final class ScreenRenderer implements BlockEntityRenderer<ProgrammableScr
     private static final Map<String,Animation> CACHE=new HashMap<>();
     private static final VisualClock CLOCK=new VisualClock();
     private static double visualTicks;
-    private static final ResourceLocation BLACK=ResourceLocation.withDefaultNamespace("textures/block/black_concrete.png");
+
     private static ResourceLocation texture(String atlasId){ResourceLocation id=ResourceLocation.parse(atlasId);return id.withPath("textures/"+id.getPath()+".png");}
     private static ResourceLocation resource(String path){return ResourceLocation.fromNamespaceAndPath("vandorlabs",path);}
     public static void tickClock(){visualTicks=CLOCK.sample(System.nanoTime(),Minecraft.getInstance().isPaused());}
-    public static void clearResources(){for(Animation animation:CACHE.values())if(animation.texture.getPath().startsWith("dynamic/"))Minecraft.getInstance().getTextureManager().release(animation.texture);CACHE.clear();}
+    public static void clearResources(){for(Animation animation:CACHE.values())if(animation.texture.getPath().startsWith("dynamic/"))Minecraft.getInstance().getTextureManager().release(animation.texture);CACHE.clear();ScreenRenderLayers.clear();}
     static int framesForChecks(String id){return animation(id).frames;}
     private static Animation animation(String id){
         return CACHE.computeIfAbsent(id,key->{
@@ -51,41 +51,55 @@ public final class ScreenRenderer implements BlockEntityRenderer<ProgrammableScr
             }catch(java.io.IOException error){throw new IllegalStateException("Cannot decode canonical screen animation "+key,error);}
         });
     }
+    @Override public net.minecraft.world.phys.AABB getRenderBoundingBox(ProgrammableScreenEntity screen){
+        var pos=screen.getBlockPos();return screen.ceilingMounted()?new net.minecraft.world.phys.AABB(pos.getX()-1,pos.getY(),pos.getZ()-1,pos.getX()+2,pos.getY()+1,pos.getZ()+2):new net.minecraft.world.phys.AABB(pos);
+    }
     @Override public void render(ProgrammableScreenEntity screen,float partial,PoseStack pose,MultiBufferSource buffers,int light,int overlay){
-        if(!ModernFinishCatalog.validChoice(screen.data().housingTexture))return;
         var housing=ModernFinishCatalog.entry(screen.data().housingTexture);
-        ResourceLocation housingTexture=texture(housing.texture());
-        Direction facing=screen.getBlockState().getValue(ProgrammableScreenBlock.FACING);
+        Direction facing=screen.facing();var family=screen.family();
         pose.pushPose();pose.translate(.5,.5,.5);
-        if(facing==Direction.UP){pose.mulPose(Axis.YP.rotationDegrees(180));pose.mulPose(Axis.XP.rotationDegrees(90));}
-        else if(facing==Direction.DOWN)pose.mulPose(Axis.XP.rotationDegrees(-90));
+        boolean fullRotation=family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.FLAT||family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.CONSOLE||family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL;
+        if(fullRotation&&facing==Direction.UP){pose.mulPose(Axis.YP.rotationDegrees(180));pose.mulPose(Axis.XP.rotationDegrees(90));}
+        else if(fullRotation&&facing==Direction.DOWN)pose.mulPose(Axis.XP.rotationDegrees(-90));
         else pose.mulPose(Axis.YP.rotationDegrees(180-facing.toYRot()));
         pose.translate(-.5,-.5,-.5);
-        ScreenHousingMesh mesh=ScreenHousingMesh.cube().textureLayout(screen.sides(),housing.u()/housing.v());
-        VertexConsumer walls=buffers.getBuffer(RenderType.entityCutout(housingTexture));
-        for(ScreenHousingMesh.Face face:mesh.quads)for(int i=0;i<4;i++){
-            ScreenHousingMesh.Vertex vertex=face.vertices[(4-i)&3];
-            walls.addVertex(pose.last(),(float)vertex.x/16,(float)vertex.y/16,(float)vertex.z/16).setColor(255,255,255,255).setUv((float)vertex.u/16*housing.u(),(float)vertex.v/16*housing.v()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose.last(),face.nx,face.ny,face.nz);
+        if(family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.HALF_CONSOLE&&screen.ceilingMounted())pose.translate(0,0,com.vandorlabs.render.InputSurfaceLayout.ceilingStart(16,screen.ceilingPosition())/16);
+        switch(family){
+            case FLAT->housing(pose,buffers,screen,housing,ScreenHousingMesh.cube(),light,false);
+            case CONSOLE,HALF_CONSOLE->{housing(pose,buffers,screen,housing,ScreenHousingMesh.box(0,0,0,16,1,16),light,false);housing(pose,buffers,screen,housing,family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.CONSOLE?ScreenHousingMesh.console():ScreenHousingMesh.halfConsole(),light,false);}
+            case DIAGONAL->housing(pose,buffers,screen,housing,ScreenHousingMesh.diagonal(screen.geometryInverted()),light,false);
+            case FULL_INPUT,HALF_INPUT->{var mounted=com.vandorlabs.render.ScreenFamilyPolicy.input(family,screen.keyboard(),screen.upper(),screen.ceilingMounted(),screen.wallPosition(),screen.data().smallInput,screen.ceilingPosition());var box=mounted.housing;housing(pose,buffers,screen,housing,ScreenHousingMesh.box(box.x0,box.y0,box.z0,box.x1,box.y1,box.z1),light,false);}
+            case DIAGONAL_HALF->{pose.pushPose();pose.translate(0,0,.5);pose.scale(1,.5f,.5f);housing(pose,buffers,screen,housing,ScreenHousingMesh.diagonal(false),light,screen.upper());pose.popPose();}
         }
-        if(screen.redstone().enabled()){RedstoneOverlayRenderer.draw(pose,buffers,screen.redstone());pose.popPose();return;}
-        ResourceLocation texture;float v0=0,v1=1,u1=1;
-        int mode=screen.effectiveMode();
-        if(mode==ScreenBehavior.OFF)texture=BLACK;
-        else if(screen.surface()>=0&&ModernFinishCatalog.validChoice(screen.surface())){var material=ModernFinishCatalog.entry(screen.surface());texture=texture(material.texture());u1=material.u();v1=material.v();}
-        else {
-            String id=ScreenArtwork.find(screen.data().selectedScreen).texture(screen.data().framed);
-            if(mode==ScreenBehavior.STATIC)texture=resource("textures/screens/"+id+"_static.png");
-            else {Animation animation=animation(id);texture=animation.texture;
-                int frame=(int)(visualTicks/ScreenBehavior.animationTicks(screen.data().animationSpeedIndex))%animation.frames;
-                v0=(float)frame/animation.frames;v1=(float)(frame+1)/animation.frames;
+        for(int slot=0;slot<2;slot++)if(screen.supportsSlot(slot)){
+            ScreenSurface.Quad surface=com.vandorlabs.render.ScreenFamilyPolicy.surface(family,slot,screen.keyboard(),screen.upper(),screen.geometryInverted(),screen.ceilingMounted(),screen.wallPosition(),screen.data().smallInput,screen.ceilingPosition());
+            if(screen.redstone(slot).enabled()){RedstoneOverlayRenderer.draw(pose,buffers,screen.redstone(slot),surface,com.vandorlabs.render.ScreenFamilyPolicy.half(family,slot));continue;}
+            // Vehicle Status retains its saved identity until the vehicle adapter is installed.
+            Frame frame=frame(screen,slot,light);var front=buffers.getBuffer(family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL||family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL_HALF?ScreenRenderLayers.diagonal(frame.texture):RenderType.entityCutoutNoCull(frame.texture));
+            boolean normalU=family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.FULL_INPUT||family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.HALF_INPUT||family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.HALF_CONSOLE||family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.CONSOLE&&slot==1;
+            boolean invertV=family==com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL_HALF&&screen.upper();
+            for(int i=0;i<4;i++){var vertex=surface.vertices[i];boolean left=i==0||i==3,top=i<2;
+                front.addVertex(pose.last(),(float)vertex.x/16,(float)vertex.y/16,(float)vertex.z/16).setColor(255,255,255,255).setUv(left==normalU?0:frame.u1,top!=invertV?frame.v0:frame.v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(frame.light).setNormal(pose.last(),surface.nx,surface.ny,surface.nz);
             }
         }
-        ScreenSurface.Quad surface=ScreenSurface.quad(ScreenSurface.Kind.FLAT,false);
-        VertexConsumer front=buffers.getBuffer(RenderType.entityCutout(texture));
-        for(int i=0;i<4;i++){
-            ScreenSurface.Vertex vertex=surface.vertices[i];
-            front.addVertex(pose.last(),(float)vertex.x/16,(float)vertex.y/16,(float)vertex.z/16).setColor(255,255,255,255).setUv(i==0||i==3?u1:0,i<2?v0:v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose.last(),surface.nx,surface.ny,surface.nz);
-        }
         pose.popPose();
+    }
+    private record Frame(ResourceLocation texture,float u1,float v0,float v1,int light){}
+    private static Frame frame(ProgrammableScreenEntity screen,int slot,int worldLight){
+        if(screen.surface(slot)>=0){var material=ModernFinishCatalog.entry(screen.surface(slot));return new Frame(texture(material.texture()),material.u(),0,material.v(),worldLight);}
+        int mode=screen.effectiveMode();boolean input=screen.inputSurface(slot);String id=input?screen.inputArtwork(slot):ScreenArtwork.active(screen.data().selectedScreen,screen.data().framed);String key=(input?"input/":"")+id;
+        if(mode==ScreenBehavior.OFF)return new Frame(resource("textures/screens/"+(input?key+"_off":ScreenArtwork.activeHasFrame(screen.data().selectedScreen,screen.data().framed)?"sequence_border_off":"screen_off")+".png"),1,0,1,worldLight);
+        if(mode==ScreenBehavior.STATIC||input&&InputArtwork.frames(id)==1)return new Frame(resource("textures/screens/"+key+"_static.png"),1,0,1,input?worldLight:15728880);
+        Animation animation=animation(key);int frame=(int)(visualTicks/ScreenBehavior.animationTicks(screen.data().animationSpeedIndex))%animation.frames;
+        return new Frame(animation.texture,1,(float)frame/animation.frames,(float)(frame+1)/animation.frames,input?worldLight:15728880);
+    }
+    private static void housing(PoseStack pose,MultiBufferSource buffers,ProgrammableScreenEntity screen,ModernFinishCatalog.Entry material,ScreenHousingMesh source,int light,boolean ceiling){
+        ScreenHousingMesh mesh=source.textureLayout(screen.sides(),material.u()/material.v());var out=buffers.getBuffer(RenderType.entityCutoutNoCull(texture(material.texture())));
+        faces(pose,out,mesh.quads,material,light,ceiling);faces(pose,out,mesh.triangles,material,light,ceiling);
+    }
+    private static void faces(PoseStack pose,VertexConsumer out,ScreenHousingMesh.Face[] faces,ModernFinishCatalog.Entry material,int light,boolean ceiling){
+        for(var face:faces)for(int i=0;i<4;i++){int count=face.vertices.length,j=i<count?i:count-1;var vertex=face.vertices[ceiling?j:(count-j)%count];
+            out.addVertex(pose.last(),(float)vertex.x/16,(float)(ceiling?32-vertex.y:vertex.y)/16,(float)vertex.z/16).setColor(255,255,255,255).setUv((float)vertex.u/16*material.u(),(float)vertex.v/16*material.v()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose.last(),face.nx,ceiling?-face.ny:face.ny,face.nz);
+        }
     }
 }

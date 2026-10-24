@@ -45,9 +45,19 @@ public final class ModernRuntimeChecks {
             var editing=player.containerMenu;player.containerMenu=player.inventoryMenu;require(!FinishPayload.apply(player,settings),"missing editing session accepted");player.containerMenu=editing;
             player.setGameMode(GameType.SURVIVAL);require(!FinishPayload.apply(player,settings),"survival editor accepted");
             player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,new net.minecraft.world.item.ItemStack(VandorLabsModern.CONFIGURIZER.get()));require(FinishPayload.apply(player,settings),"survival configurizer denied");
+            level.setBlock(pos.below(),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(),3);
+            player.setGameMode(GameType.ADVENTURE);
+            require(!FinishPayload.apply(player,settings),"adventure editor without whitelist accepted");
+            var tool=player.getMainHandItem();
+            tool.set(net.minecraft.core.component.DataComponents.CAN_PLACE_ON,new net.minecraft.world.item.AdventureModePredicate(java.util.List.of(net.minecraft.advancements.critereon.BlockPredicate.Builder.block().of(net.minecraft.world.level.block.Blocks.STONE).build()),false));
+            require(FinishPayload.apply(player,settings),"adventure matching Configurizer whitelist denied");
+            tool.set(net.minecraft.core.component.DataComponents.CAN_PLACE_ON,new net.minecraft.world.item.AdventureModePredicate(java.util.List.of(net.minecraft.advancements.critereon.BlockPredicate.Builder.block().of(VandorLabsModern.PROGRAMMABLE_BLOCK.get()).build()),false));
+            require(!FinishPayload.apply(player,settings),"adventure wrong Configurizer whitelist accepted");
+            player.setGameMode(GameType.SPECTATOR);require(!FinishPayload.apply(player,settings),"spectator editor accepted");
             player.setGameMode(GameType.CREATIVE);player.setPos(200,81,200);require(!FinishPayload.apply(player,settings),"remote editor accepted");
             CompoundTag legacy=saved.copy();legacy.remove("HousingTextureVersion");legacy.putInt(ProgrammableBlockDialog.MAIN_TEXTURE_KEY,15);
             restored.loadWithComponents(legacy,level.registryAccess());require(restored.settings().mainTexture==14,"legacy removed finish migration mismatch");
+            BasicHousingRuntimeChecks.run(level);
             FilesystemRuntimeChecks.run(level);
             com.vandorlabs.neoforge.redstone.WirelessRuntimeChecks.run(level);
             com.vandorlabs.neoforge.screen.ScreenRuntimeChecks.run(level);
@@ -74,6 +84,7 @@ public final class ModernRuntimeChecks {
         require(level.getBlockEntity(pos) instanceof ProgrammableBlockEntity,"saved programmable block missing");
         var tile=(ProgrammableBlockEntity)level.getBlockEntity(pos);
         require(tile.settings().mainTexture==3&&tile.settings().layout==2&&tile.settings().facesEnabled&&Arrays.equals(tile.settings().faces(),new int[]{0,1,2,3,-1,5}),"disk reload mismatch");
+        BasicHousingRuntimeChecks.read(level);
         FilesystemRuntimeChecks.read(level);
         com.vandorlabs.neoforge.redstone.WirelessRuntimeChecks.read(level);
         com.vandorlabs.neoforge.screen.ScreenRuntimeChecks.read(level);

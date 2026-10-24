@@ -14,12 +14,7 @@ public final class ProgrammableMenu extends AbstractContainerMenu {
         if(!(inventory.player.level().getBlockEntity(pos) instanceof ProgrammableBlockEntity entity))throw new IllegalArgumentException("Missing programmable block");
         tile=entity;
     }
-    public static boolean canConfigure(Player player) { return player.isCreative()||player.getMainHandItem().is(VandorLabsModern.CONFIGURIZER.get()); }
-    @Override public boolean stillValid(Player player) {
-        BlockPos pos=tile.getBlockPos();
-        return player.isAlive()&&!player.isSpectator()&&canConfigure(player)&&player.mayBuild()&&player.level()==tile.getLevel()
-            &&player.level().hasChunkAt(pos)&&player.level().getBlockEntity(pos)==tile
-            &&player.distanceToSqr(pos.getCenter())<=64&&player.level().mayInteract(player,pos);
-    }
+    public static boolean canConfigure(Player player) { return NativeConfigurationAccess.canConfigure(player); }
+    @Override public boolean stillValid(Player player) { return NativeConfigurationAccess.canEdit(player,tile); }
     @Override public ItemStack quickMoveStack(Player player,int index) { return ItemStack.EMPTY; }
 }

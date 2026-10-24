@@ -43,13 +43,13 @@ public record RedstoneConfigurationPayload(int menuId,BlockPos pos,String title,
     public static void register(RegisterPayloadHandlersEvent event){event.registrar("1").playToServer(TYPE,CODEC,RedstoneConfigurationPayload::handle);}
     private static void handle(RedstoneConfigurationPayload value,IPayloadContext context){context.enqueueWork(()->{if(context.player() instanceof ServerPlayer player)apply(player,value);});}
     public static boolean apply(ServerPlayer player,RedstoneConfigurationPayload value){
-        if(!(player.containerMenu instanceof ScreenMenu menu)||!menu.redstoneEditor||menu.containerId!=value.menuId||!menu.pos.equals(value.pos)||!menu.stillValid(player)||!ModernFinishCatalog.validChoice(value.housing)||!RedstoneScreenPolicy.validTitle(value.title)||value.rows.size()>RedstoneScreenPolicy.MAX_ROWS)return false;
+        if(!(player.containerMenu instanceof ScreenMenu menu)||!menu.redstoneEditor||menu.containerId!=value.menuId||!menu.pos.equals(value.pos)||!menu.stillValid(player)||!ModernFinishCatalog.validChoice(value.housing)||!RedstoneScreenPolicy.validTitle(value.title)||value.rows.size()>menu.tile.rowCapacity(menu.slot))return false;
         ListTag rows=new ListTag();
         for(Row row:value.rows){
             if(row.channels==null||row.kind<0||row.kind>2||!RedstoneScreenPolicy.validLabel(row.label)||!RedstoneScreenPolicy.validOptions(row.label,row.kind==1,row.kind==2,row.min,row.max))return false;
             CompoundTag tag=new CompoundTag();tag.putString("Label",row.label);tag.putIntArray("RedstoneChannels",row.channels.toArray());tag.putBoolean("Slider",row.kind==1);tag.putBoolean("Pulse",row.kind==2);tag.putInt("Min",row.min);tag.putInt("Max",row.max);rows.add(tag);
         }
-        if(!menu.tile.redstone().applyRowConfiguration(value.title,rows))return false;
+        if(!menu.tile.redstone(menu.slot).applyRowConfiguration(value.title,rows))return false;
         menu.tile.setHousingTexture(value.housing);return true;
     }
 }

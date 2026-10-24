@@ -11,8 +11,10 @@ public final class ScreenMenu extends AbstractContainerMenu {
     public final BlockPos pos;
     public final ProgrammableScreenEntity tile;
     public final boolean redstoneEditor;
+    public final int slot;
     public ScreenMenu(int id,Inventory inventory,BlockPos pos){this(id,inventory,pos,false);}
-    public ScreenMenu(int id,Inventory inventory,BlockPos pos,boolean redstoneEditor){super(ScreenRegistration.MENU.get(),id);this.redstoneEditor=redstoneEditor;this.pos=pos.immutable();if(!(inventory.player.level().getBlockEntity(pos) instanceof ProgrammableScreenEntity screen))throw new IllegalArgumentException("Missing programmable screen");tile=screen;}
-    @Override public boolean stillValid(Player player){return player.isAlive()&&player.mayBuild()&&com.vandorlabs.neoforge.ProgrammableMenu.canConfigure(player)&&!player.isSpectator()&&player.level()==tile.getLevel()&&player.level().hasChunkAt(pos)&&player.level().getBlockEntity(pos)==tile&&player.level().getBlockState(pos).is(ScreenRegistration.BLOCK.get())&&player.distanceToSqr(pos.getCenter())<=64&&player.level().mayInteract(player,pos);}
+    public ScreenMenu(int id,Inventory inventory,BlockPos pos,boolean redstoneEditor){this(id,inventory,pos,redstoneEditor,0);}
+    public ScreenMenu(int id,Inventory inventory,BlockPos pos,boolean redstoneEditor,int slot){super(ScreenRegistration.MENU.get(),id);this.redstoneEditor=redstoneEditor;this.slot=slot;this.pos=pos.immutable();if(!(inventory.player.level().getBlockEntity(pos) instanceof ProgrammableScreenEntity screen))throw new IllegalArgumentException("Missing programmable screen");tile=screen;if(!tile.supportsSlot(slot))throw new IllegalArgumentException("Unsupported screen slot "+slot);}
+    @Override public boolean stillValid(Player player){return com.vandorlabs.neoforge.NativeConfigurationAccess.canEdit(player,tile)&&ScreenRegistration.isScreen(player.level().getBlockState(pos).getBlock())&&tile.supportsSlot(slot);}
     @Override public ItemStack quickMoveStack(Player player,int slot){return ItemStack.EMPTY;}
 }

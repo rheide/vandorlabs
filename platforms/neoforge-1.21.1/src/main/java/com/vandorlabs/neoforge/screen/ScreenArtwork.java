@@ -7,7 +7,7 @@ import java.util.List;
 
 /** Logical artwork pairs generated from the same display registry as Forge. */
 public final class ScreenArtwork {
-    public record Entry(String id,String bare,String framed,String label){public boolean paired(){return !bare.equals(framed);}public String texture(boolean frame){return frame?framed:bare;}}
+    public record Entry(String id,String bare,String framed,String label,boolean bareHasFrame,boolean framedHasFrame){public boolean paired(){return !bare.equals(framed);}public String texture(boolean frame){return frame?framed:bare;}}
     public static final List<Entry> ENTRIES;
     static {
         var stream=ScreenArtwork.class.getResourceAsStream("/assets/vandorlabs/data/screen_artwork.json");
@@ -16,5 +16,8 @@ public final class ScreenArtwork {
     }
     private ScreenArtwork(){}
     public static Entry find(String id){for(Entry entry:ENTRIES)if(entry.id.equals(id)||entry.bare.equals(id)||entry.framed.equals(id))return entry;return ENTRIES.stream().filter(e->e.id.equals("engineering_screen")).findFirst().orElseThrow();}
+    /** Raw legacy variant IDs stay authoritative when a historical framed flag disagrees. */
+    public static String active(String selected,boolean frame){Entry entry=find(selected);return selected.equals(entry.bare)||selected.equals(entry.framed)?selected:entry.texture(frame);}
+    public static boolean activeHasFrame(String selected,boolean frame){Entry entry=find(selected);return active(selected,frame).equals(entry.framed)?entry.framedHasFrame:entry.bareHasFrame;}
     public static boolean valid(String id){for(Entry entry:ENTRIES)if(entry.id.equals(id)||entry.bare.equals(id)||entry.framed.equals(id))return true;return false;}
 }

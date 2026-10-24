@@ -41,7 +41,7 @@ public final class ProgrammableBlock extends DirectionalBlock implements net.min
     }
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (!player.isShiftKeyDown()&&!player.getMainHandItem().is(VandorLabsModern.CONFIGURIZER.get())) return InteractionResult.PASS;
-        if (!ProgrammableMenu.canConfigure(player)||!player.isAlive()||player.isSpectator()||!player.mayBuild()) return InteractionResult.PASS;
+        if (!NativeConfigurationAccess.canEdit(player,level,pos)) return InteractionResult.PASS;
         if (!level.isClientSide&&player instanceof net.minecraft.server.level.ServerPlayer serverPlayer&&level.getBlockEntity(pos) instanceof ProgrammableBlockEntity tile) {
             ProgrammableMenu menu = new ProgrammableMenu(0,player.getInventory(),pos);
             if(!menu.stillValid(player))return InteractionResult.FAIL;

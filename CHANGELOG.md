@@ -16,6 +16,16 @@
   saved identities and updating artwork dimensions in an open picker. Keep
   native channel membership event-driven with explicit removal and unload cleanup.
 
+- Add native console, half-console, input and diagonal screen variants with
+  authored surfaces, independent console slots, shared row editors and native
+  ray interaction. Preserve placement defaults, solid fluid behavior, light,
+  canonical metal properties and held-item Adventure editing permissions.
+- Add the plain native Programmable Matter block with its original artwork,
+  padded item, recipe and loot. Verify filesystem materials on full viewscreen
+  housing and display surfaces through actual selection and open-picker reloads.
+  These adapters remain experimental; vehicles, moving assemblies, custom block
+  samples and the other outstanding families remain under conversion.
+
 ## 2.5
 
 - Share navigation-table activation with Core-based multiblocks: consume physical redstone or input channels, optionally require a matching Data Chip, and never emit physical or channel power from Cores or reserved cells.

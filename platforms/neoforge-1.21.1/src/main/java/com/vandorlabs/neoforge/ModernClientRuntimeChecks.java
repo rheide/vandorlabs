@@ -22,7 +22,7 @@ import net.neoforged.neoforge.client.event.RenderFrameEvent;
 /** Opt-in native client rendering, menu input and network round-trip checks. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class ModernClientRuntimeChecks {
-    private static int ticks,totalTicks,stage,stageStart,screenTick,redstoneTick,wirelessTick,filesystemTick;
+    private static int ticks,totalTicks,stage,stageStart,screenTick,redstoneTick,wirelessTick,filesystemTick,familyTick,screenFilesystemTick;
     private static String screenshot;
     private static long renderedFrames;
     public static long renderedFrames(){return renderedFrames;}
@@ -47,7 +47,7 @@ public final class ModernClientRuntimeChecks {
         if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen onboarding) { onboarding.onClose();return; }
         if(mc.player==null||mc.level==null||mc.gameMode==null)return;
         ticks++;
-        require(ticks<2400,"smoke timed out at stage "+stage);
+        require(ticks<6000,"smoke timed out at stage "+stage);
         BlockPos pos=new BlockPos(0,80,0);
         if(stage==0) {
             if(ticks<60||!(mc.level.getBlockEntity(pos) instanceof ProgrammableBlockEntity))return;
@@ -82,16 +82,35 @@ public final class ModernClientRuntimeChecks {
         } else if(stage==32) {
             if(com.vandorlabs.neoforge.client.FilesystemClientChecks.tick(mc,filesystemTick++)) {stage=4;screenTick=0;}
         } else if(stage==4) {
-            if(com.vandorlabs.neoforge.screen.ScreenClientChecks.tick(mc,screenTick++)) { capture("modern-screen.png");stage=41;redstoneTick=0; }
+            if(com.vandorlabs.neoforge.screen.ScreenClientChecks.tick(mc,screenTick++)) { capture("modern-screen.png");stage=43;screenFilesystemTick=0; }
+        } else if(stage==43) {
+            if(com.vandorlabs.neoforge.client.ScreenFilesystemClientChecks.tick(mc,screenFilesystemTick++)) {stage=41;redstoneTick=0;}
         } else if(stage==41) {
             if(com.vandorlabs.neoforge.screen.RedstoneClientChecks.tick(mc,redstoneTick++)) { stage=40;wirelessTick=0; }
         } else if(stage==40) {
-            if(com.vandorlabs.neoforge.redstone.WirelessClientChecks.tick(mc,wirelessTick++)) { stage=5;stageStart=ticks; }
+            if(com.vandorlabs.neoforge.redstone.WirelessClientChecks.tick(mc,wirelessTick++)) { stage=42;familyTick=0; }
+        } else if(stage==42) {
+            if(com.vandorlabs.neoforge.screen.ScreenFamilyClientChecks.tick(mc,familyTick++)) {stage=5;stageStart=ticks;}
         } else if(stage==5&&ticks-stageStart>40&&captured.containsAll(Set.of("modern-world.png","modern-programmable-block.png","modern-programmable-block-gui2.png","modern-screen.png","modern-filesystem-world.png","modern-filesystem-picker-portrait.png","modern-filesystem-picker-missing.png","modern-filesystem-picker-wide.png","modern-redstone-overlay-on.png","modern-redstone-editor.png","modern-redstone-editor-scale3.png","modern-redstone-editor-scale2.png","modern-redstone-overlay-eight.png","modern-wireless-world.png","modern-wireless-receiver-dialog.png","modern-wireless-transmitter-dialog.png"))) {
             System.out.println("[vandorlabs][modern] client-smoke PASS placed world, native dialogs and rendered screenshots");mc.stop();stage=6;
         }
     }
+    private static void matterGeometry(Minecraft mc) {
+        var state=mc.level.getBlockState(BasicHousingRuntimeChecks.MATTER_POS);
+        require(state.is(VandorLabsModern.MATTER_BLOCK.get()),"actual matter block absent");
+        var model=mc.getBlockRenderer().getBlockModel(state);int count=0;
+        for(Direction face:Direction.values())for(var quad:model.getQuads(state,face,RandomSource.create(0))) {
+            count++;require(quad.getSprite().contents().name().toString().equals("vandorlabs:block/matter/matter"),"wrong canonical matter artwork");
+            require(quad.getSprite().contents().width()==128&&quad.getSprite().contents().height()==128,"matter artwork resolution drift");
+        }
+        require(count==6,"matter full cube faces missing");
+        var stack=new net.minecraft.world.item.ItemStack(VandorLabsModern.MATTER_BLOCK_ITEM.get());
+        var item=mc.getItemRenderer().getModel(stack,mc.level,mc.player,0);
+        var gui=item.getTransforms().getTransform(net.minecraft.world.item.ItemDisplayContext.GUI);
+        require(gui.scale.x()==.5F&&gui.scale.y()==.5F&&gui.scale.z()==.5F,"canonical padded matter item scale drift");
+    }
     private static void geometry(Minecraft mc,BlockPos pos) {
+        matterGeometry(mc);
         var state=mc.level.getBlockState(pos);var tile=(ProgrammableBlockEntity)mc.level.getBlockEntity(pos);var model=mc.getBlockRenderer().getBlockModel(state);
         Set<String> sprites=new HashSet<>();int quads=0;
         for(Direction face:Direction.values())for(var quad:model.getQuads(state,face,RandomSource.create(0),tile.getModelData(),null)) {

@@ -30,20 +30,24 @@
         "programmable_matter_block"
       ],
       "modern_registered_block_ids": [
-        "programmable_block"
+        "programmable_block",
+        "programmable_matter_block"
       ],
       "remaining": [
-        "unregistered programmable_matter_block static adapter",
         "joined multi-block Stretch/Fit faces",
-        "custom and filesystem materials",
+        "custom block material definitions and sampling",
         "complete creative/search catalog configuration",
-        "rendered parity acceptance"
+        "joined-face and shader render acceptance"
       ],
       "implemented": [
         "canonical stable housing indices and legacy saved defaults",
         "native per-face model data and configuration-preserving drops/picks",
         "shared categorized thumbnail picker and exact controls at GUI scales 2 and 3",
-        "bounded server-owned settings and unresolved external-ID retention"
+        "bounded server-owned settings and unresolved external-ID retention",
+        "filesystem material discovery, stable external IDs, missing-file fallback and already-open picker dimension reload accepted in native client",
+        "plain matter block with canonical artwork, padded item, nine-ingot recipe, loot and subsequent-process state recovery",
+        "canonical metal hardness, blast resistance, map color, opacity and stone-tool harvest boundary",
+        "held-item Adventure support-block permission parity and exact editing sessions"
       ]
     },
     {
@@ -96,10 +100,9 @@
         "programmable_viewscreen"
       ],
       "remaining": [
-        "custom/filesystem material adapters and reload acceptance",
-        "vehicle overlay selections",
-        "complete original settings schema and all family variants",
-        "full-family rendered acceptance"
+        "custom block material definitions and sampling",
+        "vehicle overlays and carried-assembly integration",
+        "full facing/mount and shader render acceptance"
       ],
       "implemented": [
         "canonical static/animated artwork and shared pause-aware clock",
@@ -107,14 +110,16 @@
         "shared selector/tree/scrollbar at GUI scales 2 and 3",
         "native toggle/slider/pulse overlay and eight-row editor",
         "bidirectional partial-channel latch banks and subsequent-process persistence",
-        "bounded settings, real ray interaction and exact editing authorization"
+        "bounded settings, real ray interaction and exact editing authorization",
+        "filesystem high-ID surface/housing selection through actual widgets and server round trips",
+        "same-open-picker missing-file and dimension reload, native direct-resource pixels and emitted housing/surface UVs"
       ]
     },
     {
       "id": "console_input_variants",
       "label": "Console, input and diagonal screen variants",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "unimplemented",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_console",
         "programmable_diagonal_half_console",
@@ -123,12 +128,25 @@
         "programmable_half_input",
         "programmable_input"
       ],
-      "modern_registered_block_ids": [],
+      "modern_registered_block_ids": [
+        "programmable_console",
+        "programmable_diagonal_half_console",
+        "programmable_diagonal_screen",
+        "programmable_half_console",
+        "programmable_half_input",
+        "programmable_input"
+      ],
       "remaining": [
-        "all native block variants and surface mappings",
-        "shared dialog and input rows",
-        "light/fluid/controls",
-        "live parity"
+        "external-material reload acceptance on each mounted surface",
+        "custom block materials and vehicle/carried integration",
+        "full mount/facing and shader render acceptance"
+      ],
+      "implemented": [
+        "six authored console/input/diagonal block variants with shared mount surfaces and exact ray policy",
+        "dual-slot console persistence, canonical artwork and slot-specific settings/editor sessions",
+        "explicit placement defaults, dry solid-material fluid rejection, light and mining properties",
+        "native selector and four/eight-row editor controls at GUI scales 2 and 3",
+        "real native overlay ray interaction and inspected artwork/control captures"
       ]
     },
     {
@@ -303,7 +321,6 @@
         "redstone_transmitter"
       ],
       "remaining": [
-        "plain-item drop/pick/placement parity acceptance",
         "carried assembly interaction"
       ],
       "implemented": [
@@ -311,7 +328,9 @@
         "deferred loaded-world lifecycle and stale identity exclusion",
         "directional analog/digital ports, partial overlaps and native world propagation",
         "actual six-face models and reverse-cycling/slider dialog round trips",
-        "subsequent-process exact saved configuration recovery"
+        "subsequent-process exact saved configuration recovery",
+        "plain pick/drop items and actual default item placement",
+        "held-item Adventure support-block permission, canonical metal properties and stone-tool boundary"
       ]
     },
     {
@@ -572,14 +591,18 @@
       "id": "material_workflows",
       "label": "Filesystem and custom material workflows",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "unimplemented",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "modern_registered_block_ids": [],
       "remaining": [
-        "native resource discovery/reload",
-        "stable external material identities",
-        "shared metadata/picker policies",
-        "resource-pack parity and live reload"
+        "custom block sample definitions and native sampling/rendering",
+        "external materials across remaining block families",
+        "full resource-pack and shader acceptance"
+      ],
+      "implemented": [
+        "shared filesystem discovery, stable identifiers, labels and image-padding policy",
+        "native resource pack and missing-file appearance matching the legacy fallback",
+        "cube and full viewscreen open-picker portrait/wide reload and saved-ID retention"
       ]
     },
     {

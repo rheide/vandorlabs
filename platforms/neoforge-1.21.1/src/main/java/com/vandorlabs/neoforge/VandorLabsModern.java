@@ -23,7 +23,11 @@ public final class VandorLabsModern {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, MODID);
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
     public static final DeferredHolder<Block, ProgrammableBlock> PROGRAMMABLE_BLOCK = BLOCKS.register("programmable_block",
-        () -> new ProgrammableBlock(BlockBehaviour.Properties.of().strength(5, 10).sound(SoundType.METAL).requiresCorrectToolForDrops()));
+        () -> new ProgrammableBlock(BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL).strength(5, 6).sound(SoundType.METAL).requiresCorrectToolForDrops()));
+    public static final DeferredHolder<Block, Block> MATTER_BLOCK = BLOCKS.register("programmable_matter_block",
+        () -> new Block(BlockBehaviour.Properties.of().mapColor(net.minecraft.world.level.material.MapColor.METAL).strength(5,6).sound(SoundType.METAL).requiresCorrectToolForDrops()));
+    public static final DeferredHolder<Item, BlockItem> MATTER_BLOCK_ITEM = ITEMS.register("programmable_matter_block",
+        () -> new BlockItem(MATTER_BLOCK.get(),new Item.Properties()));
     public static final DeferredHolder<Item, Item> MATTER_INGOT = ITEMS.register("programmable_matter_ingot", () -> new Item(new Item.Properties()));
     public static final DeferredHolder<Item, Item> ALLOY_INGOT = ITEMS.register("industrial_alloy_ingot", () -> new Item(new Item.Properties()));
     public static final DeferredHolder<Item, Item> CONFIGURIZER = ITEMS.register("configurizer", () -> new Item(new Item.Properties().stacksTo(1)));
@@ -35,7 +39,7 @@ public final class VandorLabsModern {
         TABS.register("vandorlabs", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.vandorlabs"))
             .icon(() -> PROGRAMMABLE_ITEM.get().getDefaultInstance())
-            .displayItems((parameters, output) -> { output.accept(PROGRAMMABLE_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get());output.accept(ALLOY_INGOT.get());output.accept(com.vandorlabs.neoforge.screen.ScreenRegistration.ITEM.get());output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.TRANSMITTER_ITEM.get());output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.RECEIVER_ITEM.get()); }).build());
+            .displayItems((parameters, output) -> { output.accept(PROGRAMMABLE_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get());output.accept(MATTER_BLOCK_ITEM.get());output.accept(ALLOY_INGOT.get());com.vandorlabs.neoforge.screen.ScreenRegistration.creativeItems().forEach(output::accept);output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.TRANSMITTER_ITEM.get());output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.RECEIVER_ITEM.get()); }).build());
     }
     public VandorLabsModern(IEventBus bus) {
         FilesystemMaterials.initialize();

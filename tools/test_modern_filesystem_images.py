@@ -8,14 +8,14 @@ import numpy as np
 from PIL import Image
 
 
-def thumbnail(path):
+def thumbnail(path,screen=False):
     image=Image.open(path).convert('RGB')
     if image.size!=(1280,720):raise AssertionError('Expected GUI-scale-2 1280x720 filesystem capture')
     scale=2;width,height=640,360;pw,ph=min(460,width-8),min(332,height-8)
-    left,top=(width-pw)//2,(height-ph)//2;list_x=left+12;controls=left+pw-166;list_width=controls-list_x-19;list_y=top+30
+    left,top=(width-pw)//2,(height-ph)//2;list_x=left+12;controls=left+pw-166;list_width=controls-list_x-19;list_y=top+(54 if screen else 30)
     data=np.asarray(image)
-    if tuple(data[(top+1)*scale,(left+1)*scale])!=(32,32,40):raise AssertionError('Filesystem capture does not show the actual picker header')
-    if tuple(data[(top+20)*scale,(left+1)*scale])!=(16,16,18):raise AssertionError('Filesystem capture does not show the actual picker panel')
+    if tuple(data[(top+1)*scale,(left+1)*scale])!=((48,72,88) if screen else (32,32,40)):raise AssertionError('Filesystem capture does not show the actual picker header')
+    if tuple(data[(top+(25 if screen else 20))*scale,(left+1)*scale])!=((25,35,44) if screen else (16,16,18)):raise AssertionError('Filesystem capture does not show the actual picker panel')
     selected=[]
     for row in range((ph-64)//22):
         strip=data[(list_y+row*22+1)*scale,list_x*scale:(list_x+list_width)*scale]
@@ -38,7 +38,8 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--screenshots',type=Path,required=True)
     parser.add_argument('--output-dir',type=Path,required=True)
-    args=parser.parse_args();crops={name:thumbnail(args.screenshots/f'modern-filesystem-picker-{name}.png') for name in ('portrait','missing','wide')}
+    parser.add_argument('--screen',action='store_true',help='Inspect the existing programmable-screen picker')
+    args=parser.parse_args();prefix='modern-screen-filesystem' if args.screen else 'modern-filesystem';crops={name:thumbnail(args.screenshots/f'{prefix}-picker-{name}.png',args.screen) for name in ('portrait','missing','wide')}
     portrait,wide=authored_bounds(crops['portrait']),authored_bounds(crops['wide'])
     if portrait!=[4,0,12,16]:raise AssertionError(f'Portrait thumbnail aspect/centering differs: {portrait}')
     if wide!=[0,6,16,10]:raise AssertionError(f'Already-open picker retained stale dimensions: {wide}')

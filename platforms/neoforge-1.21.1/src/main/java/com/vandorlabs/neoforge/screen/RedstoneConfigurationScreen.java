@@ -29,22 +29,22 @@ public final class RedstoneConfigurationScreen extends AbstractContainerScreen<S
     private List<RedstoneDialogLayout.Control> controls=List.of();
     private final Map<Integer,Button> buttons=new HashMap<>();
     public RedstoneConfigurationScreen(ScreenMenu menu,Inventory inventory,Component ignored){
-        super(menu,inventory,menu.tile.getBlockState().getBlock().getName());heading=menu.tile.redstone().title();texture=menu.tile.data().housingTexture;
-        for(var row:menu.tile.redstone().rows()){labels.add(row.label);channels.add(row.channels);kinds.add(row.pulse?2:row.slider?1:0);mins.add(row.min);maxs.add(row.max);}if(!labels.isEmpty())selected=0;
+        super(menu,inventory,menu.tile.getBlockState().getBlock().getName());heading=menu.tile.redstone(menu.slot).title();texture=menu.tile.data().housingTexture;
+        for(var row:menu.tile.redstone(menu.slot).rows()){labels.add(row.label);channels.add(row.channels);kinds.add(row.pulse?2:row.slider?1:0);mins.add(row.min);maxs.add(row.max);}if(!labels.isEmpty())selected=0;
     }
     private EditBox field(com.vandorlabs.ui.ProgrammableDialogLayout.Button bounds,int limit){var field=new EditBox(font,bounds.x,bounds.y,bounds.width,bounds.height,Component.empty());field.setMaxLength(limit);addRenderableWidget(field);return field;}
     @Override protected void init(){
-        if(labelField!=null)store();super.init();clearWidgets();buttons.clear();panel=new RedstoneDialogLayout(width,height,true);
+        if(labelField!=null)store();super.init();clearWidgets();buttons.clear();panel=new RedstoneDialogLayout(width,height,!com.vandorlabs.render.ScreenFamilyPolicy.half(menu.tile.family(),menu.slot));
         titleField=field(panel.title(),RedstoneScreenPolicy.MAX_TITLE);titleField.setValue(heading);titleField.setFilter(text->font.width(text.trim())<=112||font.width(text)<=font.width(titleField.getValue()));
         labelField=field(panel.label(),RedstoneScreenPolicy.MAX_LABEL);channelField=field(panel.channels(),ChannelList.MAX_TEXT_LENGTH);channelField.setFilter(text->text.matches("[0-9, ]*"));
         NativeMaterialPicker previous=housing;housing=new NativeMaterialPicker(panel.left+12,panel.top+54,panel.width-188,Math.max(2,(panel.height-88)/22),texture,value->texture=value);housing.keepView(previous);
         refreshControls();for(var control:controls){var b=control.bounds;Button button=Button.builder(Component.literal(b.label),ignored->action(b.id,1)).bounds(b.x,b.y,b.width,b.height).build();buttons.put(b.id,button);addRenderableWidget(button);}load();refresh();
     }
     private int kind(){return selected<0?0:kinds.get(selected);}
-    private void refreshControls(){controls=panel.controls(materials,selected,labels.size(),RedstoneScreenPolicy.MAX_ROWS,kind(),selected<0?5:mins.get(selected),selected<0?15:maxs.get(selected));}
-    private void refresh(){refreshControls();for(var control:controls){Button button=buttons.get(control.bounds.id);button.visible=control.visible;button.active=control.enabled;button.setMessage(Component.literal(control.bounds.label));}titleField.visible=!materials;labelField.visible=!materials&&selected>=0;channelField.visible=!materials&&selected>=0;}
+    private void refreshControls(){controls=panel.controls(materials,selected,labels.size(),menu.tile.rowCapacity(menu.slot),kind(),selected<0?5:mins.get(selected),selected<0?15:maxs.get(selected));}
+    private void refresh(){refreshControls();for(var control:controls){Button button=buttons.get(control.bounds.id);button.visible=control.visible;button.active=control.enabled;button.setMessage(Component.literal(control.bounds.label));}titleField.visible=panel.header&&!materials;labelField.visible=!materials&&selected>=0;channelField.visible=!materials&&selected>=0;}
     private boolean store(){
-        boolean validTitle=RedstoneScreenPolicy.validTitle(titleField.getValue())&&font.width(titleField.getValue().trim())<=RedstoneScreenOverlay.TITLE_WIDTH;titleField.setTextColor(validTitle?0xE0E0E0:0xFF7777);if(!validTitle)return false;heading=titleField.getValue().trim();if(selected<0)return true;
+        boolean validTitle=!panel.header||RedstoneScreenPolicy.validTitle(titleField.getValue())&&font.width(titleField.getValue().trim())<=RedstoneScreenOverlay.TITLE_WIDTH;titleField.setTextColor(validTitle?0xE0E0E0:0xFF7777);if(!validTitle)return false;if(panel.header)heading=titleField.getValue().trim();if(selected<0)return true;
         ChannelList list=ChannelList.parse(channelField.getValue());channelField.setTextColor(list==null?0xFF7777:0xE0E0E0);
         boolean label=RedstoneScreenPolicy.validLabel(labelField.getValue())&&font.width(labelField.getValue().trim())<=(kind()==1?50:86)&&(kind()!=1||labelField.getValue().length()<=11);labelField.setTextColor(label?0xE0E0E0:0xFF7777);if(!label||list==null)return false;labels.set(selected,labelField.getValue().trim());channels.set(selected,list);return true;
     }
@@ -57,7 +57,7 @@ public final class RedstoneConfigurationScreen extends AbstractContainerScreen<S
         if(id==9&&selected>=0){maxs.set(selected,RedstoneDialogLayout.nextHigh(mins.get(selected),maxs.get(selected),direction));refresh();return;}
         if(!store())return;
         if(id<2){materials=id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
-        else if(id==2&&labels.size()<RedstoneScreenPolicy.MAX_ROWS){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);kinds.add(0);mins.add(5);maxs.add(15);selected=labels.size()-1;scroll=Math.max(0,selected-panel.visibleRows()+1);load();refresh();setFocused(labelField);labelField.setFocused(true);}
+        else if(id==2&&labels.size()<menu.tile.rowCapacity(menu.slot)){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);kinds.add(0);mins.add(5);maxs.add(15);selected=labels.size()-1;scroll=Math.max(0,selected-panel.visibleRows()+1);load();refresh();setFocused(labelField);labelField.setFocused(true);}
         else if(id==5||id==6){int next=RedstoneDialogLayout.moveRows(labels,channels,selected,id==5?-1:1);if(next!=selected){Collections.swap(kinds,selected,next);Collections.swap(mins,selected,next);Collections.swap(maxs,selected,next);selected=next;scroll=Math.max(Math.min(scroll,selected),selected-panel.visibleRows()+1);load();refresh();}}
         else if(id==4)send();
     }
@@ -77,7 +77,7 @@ public final class RedstoneConfigurationScreen extends AbstractContainerScreen<S
         graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xFF19232C);graphics.drawString(font,title,panel.left+12,panel.top+10,0xFFFFFF,false);
         if(materials){housing.draw(graphics,font,x,y);return;}
         for(int i=0;i<panel.visibleRows()&&scroll+i<labels.size();i++){int row=scroll+i,yy=panel.top+panel.rowListTop+i*20;graphics.fill(panel.left+12,yy,panel.left+panel.width-180,yy+18,row==selected?0xFF365C70:0xFF22313E);graphics.drawString(font,font.plainSubstrByWidth(labels.get(row),panel.width-204),panel.left+18,yy+5,0xE0ECF5,false);}
-        graphics.drawString(font,"Header",panel.left+12,panel.top+55,0xDAE8F0,false);graphics.fill(panel.left+12,panel.top+76,panel.left+panel.width-180,panel.top+77,0xFF365366);
+        if(panel.header){graphics.drawString(font,"Header",panel.left+12,panel.top+55,0xDAE8F0,false);graphics.fill(panel.left+12,panel.top+76,panel.left+panel.width-180,panel.top+77,0xFF365366);}
         graphics.drawString(font,font.plainSubstrByWidth("Text is limited to screen width.",panel.width-192),panel.left+12,panel.top+panel.height-14,0xADBECA,false);
         if(selected>=0){graphics.drawString(font,"Label",panel.controlsX,panel.top+94,0xDAE8F0,false);graphics.drawString(font,"Channels (0 = none)",panel.controlsX,panel.top+127,0xDAE8F0,false);}else graphics.drawWordWrap(font,Component.literal("Add an item to create a control."),panel.controlsX,panel.top+105,148,0xADBECA);
     }

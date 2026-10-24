@@ -50,6 +50,7 @@ public final class ScreenRuntimeChecks {
         tile.setChannelLevel(0);require(tile.effectiveMode()==2,"inverted unpowered screen must animate");
         ScreenPayload.apply(player,packet);
         RedstoneOverlayRuntimeChecks.run(level);
+        ScreenFamilyRuntimeChecks.run(level);
         System.out.println("[vandorlabs][modern] screen-server PASS schema, codec roundtrip, mode/speed/sides/channels, inverted power, exact menu, distance and permissions");
     }
     public static void read(ServerLevel level){
@@ -58,6 +59,7 @@ public final class ScreenRuntimeChecks {
         var tile=(ProgrammableScreenEntity)level.getBlockEntity(pos);
         require(tile.data().displayMode==1&&tile.data().animationSpeedIndex==2&&tile.sides()==2&&tile.data().housingTexture==3&&tile.getRedstoneChannels().toString().equals("5, 9"),"disk reload mismatch");
         RedstoneOverlayRuntimeChecks.read(level);
+        ScreenFamilyRuntimeChecks.read(level);
         System.out.println("[vandorlabs][modern] screen-read PASS settings recovered from disk");
     }
 }

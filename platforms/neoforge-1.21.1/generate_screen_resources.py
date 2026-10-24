@@ -11,6 +11,8 @@ def generate(root, resources):
     white.parent.mkdir(parents=True, exist_ok=True)
     Image.new('RGBA', (1, 1), (255, 255, 255, 255)).save(white)
     blocks = json.loads((root / 'generated-resources/assets/vandorlabs/data/blocks.json').read_text())
+    by_id = {entry["id"]: entry for entry in blocks}
+    authored_labels = {entry['source']: entry['label'] for entry in json.loads((root / 'generated-resources/assets/vandorlabs/data/unified_textures.json').read_text())}
     bare, framed = {}, {}
     for entry in blocks:
         if entry.get('type') != 'display':
@@ -34,7 +36,7 @@ def generate(root, resources):
                     destination = assets / f'textures/screens/{name}{suffix}'
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(source, destination)
-        result.append({'id': key, 'bare': first, 'framed': second, 'label': key.replace('_', ' ').title()})
+        result.append({'id': key, 'bare': first, 'framed': second, 'label': re.sub(r'\b(Bare|Framed)\s+', '', authored_labels[first + '_static']), 'bareHasFrame': by_id[first].get('framed', False), 'framedHasFrame': by_id[second].get('framed', False)})
     def write(path, data):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, indent=2) + '\n')
@@ -70,4 +72,32 @@ def generate(root, resources):
     write(assets / 'models/block/programmable_viewscreen.json', {'textures': {'particle': 'vandorlabs:housing/dark_wall_panel'}, 'elements': []})
     write(assets / 'models/item/programmable_viewscreen.json', {'parent': 'minecraft:block/cube_all', 'textures': {'all': 'vandorlabs:housing/dark_wall_panel'}, 'display': {'gui': {'rotation': [30, 225, 0], 'scale': [.58, .58, .58]}}})
     write(resources / 'data/vandorlabs/loot_table/blocks/programmable_viewscreen.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': 'vandorlabs:programmable_viewscreen', 'functions': [{'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': ['minecraft:block_entity_data']}]}], 'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})
+    families = ('programmable_console', 'programmable_half_console', 'programmable_input', 'programmable_half_input', 'programmable_diagonal_screen', 'programmable_diagonal_half_console')
+    for family in families:
+        # Keep the authored housing and GUI transforms, including the square-padded input artwork.
+        model = json.loads((root / f'src/main/resources/assets/vandorlabs/models/item/{family}.json').read_text())
+        model['parent'] = 'minecraft:block/block'
+        for key, texture in model['textures'].items():
+            namespace, path = texture.split(':', 1)
+            if namespace != 'vandorlabs':
+                raise ValueError(f'Unexpected screen item namespace: {texture}')
+            relative = path.removeprefix('blocks/')
+            source = root / f'texture-packs/default/assets/vandorlabs/textures/blocks/{relative}.png'
+            if not source.exists():
+                source = root / f'src/main/resources/assets/vandorlabs/textures/blocks/{relative}.png'
+            if not source.exists():
+                raise FileNotFoundError(source)
+            destination = assets / f'textures/block/screen_items/{relative}.png'
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+            model['textures'][key] = f'vandorlabs:block/screen_items/{relative}'
+        write(assets / f'models/item/{family}.json', model)
+        write(assets / f'blockstates/{family}.json', {'variants': {'': {'model': f'vandorlabs:block/{family}'}}})
+        write(assets / f'models/block/{family}.json', {'textures': {'particle': 'vandorlabs:housing/dark_wall_panel'}, 'elements': []})
+        write(resources / f'data/vandorlabs/loot_table/blocks/{family}.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': f'vandorlabs:{family}', 'functions': [{'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': ['minecraft:block_entity_data']}]}], 'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})
+    for tag in ('mineable/pickaxe', 'needs_stone_tool'):
+        path = resources / f'data/minecraft/tags/block/{tag}.json'
+        data = json.loads(path.read_text())
+        data['values'] = list(dict.fromkeys(data['values'] + ['vandorlabs:' + family for family in families]))
+        write(path, data)
     return len(result)

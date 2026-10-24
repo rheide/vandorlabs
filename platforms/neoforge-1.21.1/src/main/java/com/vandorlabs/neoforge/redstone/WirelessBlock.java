@@ -66,7 +66,7 @@ public final class WirelessBlock extends DirectionalBlock implements EntityBlock
         }
     }
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (!player.isAlive() || player.isSpectator() || !player.mayBuild()) return InteractionResult.PASS;
+        if (!com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(player, level, pos)) return InteractionResult.PASS;
         if (player instanceof ServerPlayer server && level.getBlockEntity(pos) instanceof WirelessBlockEntity tile) {
             WirelessMenu menu = new WirelessMenu(0, player.getInventory(), pos);
             if (!menu.stillValid(player)) return InteractionResult.FAIL;

@@ -94,15 +94,41 @@ public final class WirelessRuntimeChecks {
         player.containerMenu = player.inventoryMenu;
         require(!WirelessPayload.apply(player, valid), "missing settings session accepted"); player.containerMenu = menu;
         player.setPos(200, 81, 200); require(!WirelessPayload.apply(player, valid), "distance permission accepted"); player.setPos(14.5, 81, .5);
-        player.setGameMode(GameType.ADVENTURE); require(!WirelessPayload.apply(player, valid), "adventure edit permission accepted"); player.setGameMode(GameType.CREATIVE);
+        var previousHeld = player.getMainHandItem();
+        player.setGameMode(GameType.ADVENTURE); player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STICK));
+        require(!WirelessPayload.apply(player, valid), "adventure edit without held-item permission accepted");
+        var permitted = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STICK);
+        permitted.set(net.minecraft.core.component.DataComponents.CAN_PLACE_ON, new net.minecraft.world.item.AdventureModePredicate(java.util.List.of(
+                net.minecraft.advancements.critereon.BlockPredicate.Builder.block().of(Blocks.STONE).build()), false));
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, permitted);
+        require(WirelessPayload.apply(player, valid), "legacy adventure held-item edit permission rejected");
+        permitted.set(net.minecraft.core.component.DataComponents.CAN_PLACE_ON, new net.minecraft.world.item.AdventureModePredicate(java.util.List.of(
+                net.minecraft.advancements.critereon.BlockPredicate.Builder.block().of(WirelessContent.TRANSMITTER.get()).build()), false));
+        require(!WirelessPayload.apply(player, valid), "adventure whitelist for another block accepted");
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, previousHeld); player.setGameMode(GameType.CREATIVE);
         net.minecraft.world.item.ItemStack held = player.getMainHandItem(); player.setGameMode(GameType.SURVIVAL);
         for (BlockPos endpoint : new BlockPos[]{TX, RX}) {
+            require(level.getBlockState(endpoint).getMapColor(level, endpoint) == net.minecraft.world.level.material.MapColor.METAL, "legacy iron material map color");
             player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WOODEN_PICKAXE));
             require(!player.hasCorrectToolForDrops(level.getBlockState(endpoint)), "wooden pickaxe must not harvest wireless endpoint");
             player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE_PICKAXE));
             require(player.hasCorrectToolForDrops(level.getBlockState(endpoint)), "stone pickaxe must harvest wireless endpoint");
         }
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, held); player.setGameMode(GameType.CREATIVE);
+        net.minecraft.world.item.ItemStack plainReceiver = null;
+        for (BlockPos endpoint : new BlockPos[]{TX, RX}) {
+            var state = level.getBlockState(endpoint); var tile = level.getBlockEntity(endpoint);
+            var picked = state.getBlock().getCloneItemStack(state,
+                    new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(endpoint), Direction.UP, endpoint, false), level, endpoint, player);
+            var drops = net.minecraft.world.level.block.Block.getDrops(state, level, endpoint, tile, player,
+                    new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE_PICKAXE));
+            require(picked.is(state.getBlock().asItem()) && !picked.has(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA)
+                    && !picked.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA), "wireless pick must retain legacy plain-item behavior");
+            require(drops.size() == 1 && drops.get(0).is(state.getBlock().asItem())
+                    && !drops.get(0).has(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA)
+                    && !drops.get(0).has(net.minecraft.core.component.DataComponents.CUSTOM_DATA), "wireless drop must not preserve endpoint settings");
+            if (endpoint.equals(RX)) plainReceiver = picked.copy();
+        }
 
         RegistryFriendlyByteBuf bytes = new RegistryFriendlyByteBuf(Unpooled.buffer(), level.registryAccess());
         try {
@@ -147,6 +173,17 @@ public final class WirelessRuntimeChecks {
         require(ModernRedstoneChannels.level(level, 101) == 0, "chunk unload retained transmitter");
         ModernRedstoneChannels.queueRegistration(transmitter); settle(level);
         require(receiver.outputLevel() == 9, "wireless final saved state");
+        BlockPos replacement = new BlockPos(20, 80, 0), support = replacement.below(); var previousSupport = level.getBlockState(support);
+        level.setBlock(support, Blocks.STONE.defaultBlockState(), 3);
+        player.setPos(20.5, 80, -2); player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, plainReceiver);
+        var placement = plainReceiver.getItem().useOn(new net.minecraft.world.item.context.UseOnContext(player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(support).add(0, .5, 0), Direction.UP, support, false)));
+        require(placement.consumesAction() && level.getBlockEntity(replacement) instanceof WirelessBlockEntity, "plain endpoint item actual placement");
+        WirelessBlockEntity placed = (WirelessBlockEntity) level.getBlockEntity(replacement);
+        require(placed.getRedstoneChannels().isEmpty() && placed.analog() && placed.onLevel() == 15 && placed.offLevel() == 0,
+                "plain endpoint placement must use legacy defaults rather than copied configuration");
+        level.setBlock(replacement, Blocks.AIR.defaultBlockState(), 3); level.setBlock(support, previousSupport, 3);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, held);
         System.out.println("[vandorlabs][modern] wireless-write PASS directional analog/digital, exact levels/partial overlap, menu permission rejection, payload/NBT roundtrip, deferred stale identity, unload cleanup");
     }
 

@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.vandorlabs.render.ScreenSurface;
 import com.vandorlabs.ui.RedstoneScreenLayout;
 import com.vandorlabs.ui.RedstoneScreenOverlay;
-import java.util.ArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -21,16 +20,18 @@ final class RedstoneOverlayRenderer {
     private static final RedstoneScreenOverlay.RowAccess<ModernRedstoneScreenContents.Row> ROWS=new RedstoneScreenOverlay.RowAccess<>(){
         public String label(ModernRedstoneScreenContents.Row row){return row.label;}public boolean slider(ModernRedstoneScreenContents.Row row){return row.slider;}public boolean pulse(ModernRedstoneScreenContents.Row row){return row.pulse;}public boolean active(ModernRedstoneScreenContents.Row row){return row.active();}public int segments(ModernRedstoneScreenContents.Row row){return row.segments();}public int selected(ModernRedstoneScreenContents.Row row){return row.selectedSegment();}
     };
-    private static final Matrix4f AFFINE=affine();
+    private static final java.util.Map<ScreenSurface.Quad,Matrix4f[]> AFFINES=new java.util.IdentityHashMap<>();
     private RedstoneOverlayRenderer(){}
-    private static Matrix4f affine(){
-        RedstoneScreenLayout layout=RedstoneScreenLayout.of(false);ScreenSurface.Quad q=ScreenSurface.quad(ScreenSurface.Kind.FLAT,false);
+    private static Matrix4f affine(ScreenSurface.Quad q,boolean half){
+        RedstoneScreenLayout layout=RedstoneScreenLayout.of(half);
         return new Matrix4f().zero().m00((float)(q.topLeft.x-q.topRight.x)/128/16).m11((float)(q.bottomRight.y-q.topRight.y)/layout.height/16).m12((float)(q.bottomRight.z-q.topRight.z)/layout.height/16).m21(q.ny/16).m22(q.nz/16).m30((float)q.topRight.x/16).m31(((float)q.topRight.y+q.ny*.02f)/16).m32(((float)q.topRight.z+q.nz*.02f)/16).m33(1);
     }
-    static void draw(PoseStack stack,MultiBufferSource buffers,ModernRedstoneScreenContents screen){
+    static void draw(PoseStack stack,MultiBufferSource buffers,ModernRedstoneScreenContents screen){draw(stack,buffers,screen,ScreenSurface.quad(ScreenSurface.Kind.FLAT,false),false);}
+    static void draw(PoseStack stack,MultiBufferSource buffers,ModernRedstoneScreenContents screen,ScreenSurface.Quad surface,boolean half){
         var cache=PLANS.computeIfAbsent(screen,ignored->new RedstoneScreenOverlay.Cache());
-        RedstoneScreenOverlay plan=cache.plan(RedstoneScreenLayout.of(false),screen.title(),screen.rows(),ROWS);
-        stack.pushPose();stack.mulPose(AFFINE);var pose=stack.last();var out=buffers.getBuffer(SOLID);
+        RedstoneScreenOverlay plan=cache.plan(RedstoneScreenLayout.of(half),screen.title(),screen.rows(),ROWS);
+        var transforms=AFFINES.computeIfAbsent(surface,ignored->new Matrix4f[2]);int index=half?1:0;if(transforms[index]==null)transforms[index]=affine(surface,half);
+        stack.pushPose();stack.mulPose(transforms[index]);var pose=stack.last();var out=buffers.getBuffer(SOLID);
         for(int i=0;i<plan.solids.size();i++){var rect=plan.solids.get(i);float z=(float)rect.layer;
             vertex(out,pose,rect.left,rect.bottom,z,rect.color);vertex(out,pose,rect.right,rect.bottom,z,rect.color);vertex(out,pose,rect.right,rect.top,z,rect.color);vertex(out,pose,rect.left,rect.top,z,rect.color);
         }
