@@ -65,6 +65,14 @@ public final class NavigationLayout {
                 default: return new Vec3(p.z, p.y, -p.x);
             }
         }
+        public Vec3 modulePoint(Cell cell,Vec3 p){
+            switch(this){
+                case EAST:return new Vec3(cell.x+1-p.z,cell.y+p.y,cell.z+p.x);
+                case SOUTH:return new Vec3(cell.x+1-p.x,cell.y+p.y,cell.z+1-p.z);
+                case WEST:return new Vec3(cell.x+p.z,cell.y+p.y,cell.z+1-p.x);
+                default:return new Vec3(cell.x+p.x,cell.y+p.y,cell.z+p.z);
+            }
+        }
     }
 
     public static final class Cell {
@@ -171,14 +179,60 @@ public final class NavigationLayout {
         public Vec3 moduleAnchor(Cell cell, Vec3 modelPixels) {
             Tile t = tiles.get(cell);
             if (t == null) throw new IllegalArgumentException("Cell is not a member: " + cell);
-            return worldPoint(new Vec3(t.localX + modelPixels.x / 16.0,
-                    modelPixels.y / 16.0, t.localZ + modelPixels.z / 16.0));
+            return t.facing.modulePoint(cell,modelPixels.scale(1.0/16));
         }
         public Screen screen() { return new Screen(this); }
     }
 
     public static Layout build(Kind kind, Facing facing, Collection<Cell> members, boolean complete) {
         return build(kind, facing, members, complete, DEFAULT_MAX_CELLS);
+    }
+
+    /** Flat modules share a rectangle while retaining each module's placed facing. */
+    public static Layout mixedFlat(Map<Cell,Facing> members,boolean complete){
+        if(members.isEmpty())throw new IllegalArgumentException("Empty component");
+        Facing uniform=members.values().iterator().next();boolean same=true;
+        for(Facing facing:members.values())same&=facing==uniform;
+        if(same)return build(Kind.FLAT,uniform,members.keySet(),complete);
+        Cell first=null;Facing canonical=null;
+        for(Map.Entry<Cell,Facing> entry:members.entrySet()){
+            Cell cell=entry.getKey();Vec3 normal=entry.getValue().rotateDirection(new Vec3(0,0,-1));
+            if(members.containsKey(new Cell(cell.x+(int)normal.x,cell.y,cell.z+(int)normal.z)))continue;
+            if(first==null||cell.z<first.z||cell.z==first.z&&cell.x<first.x){first=cell;canonical=entry.getValue();}
+        }
+        if(canonical==null){canonical=Facing.NORTH;for(Cell cell:members.keySet())if(first==null||cell.z<first.z||cell.z==first.z&&cell.x<first.x)first=cell;}
+        Layout bounds=build(Kind.FLAT,canonical,members.keySet(),complete);
+        Cell owner=null;long best=Long.MAX_VALUE;
+        for(Map.Entry<Cell,Facing> entry:members.entrySet()){
+            Cell cell=entry.getKey();Vec3 normal=entry.getValue().rotateDirection(new Vec3(0,0,-1));
+            if(members.containsKey(new Cell(cell.x+(int)normal.x,cell.y,cell.z+(int)normal.z)))continue;
+            Tile tile=bounds.tiles.get(cell);
+            long score=(entry.getValue()==canonical?0:1000000L)+tile.localZ*1000L+Math.abs(2*tile.localX-(bounds.width-1))*2L+tile.localX;
+            if(score<best){best=score;owner=cell;}
+        }
+        if(owner==null)owner=bounds.chipOwner;
+        Map<Cell,Tile> tiles=new LinkedHashMap<>();
+        for(Map.Entry<Cell,Facing> entry:members.entrySet()){
+            Cell cell=entry.getKey();Facing facing=entry.getValue();int mask=0;
+            for(int bit:new int[]{NORTH,EAST,SOUTH,WEST}){
+                Vec3 direction=facing.rotateDirection(new Vec3(bit==EAST?1:bit==WEST?-1:0,0,bit==SOUTH?1:bit==NORTH?-1:0));
+                if(members.containsKey(new Cell(cell.x+(int)direction.x,cell.y,cell.z+(int)direction.z)))mask|=bit;
+            }
+            Tile placement=bounds.tiles.get(cell);
+            tiles.put(cell,new Tile(cell,placement.localX,placement.localZ,mask,cell.equals(owner),Kind.FLAT,facing));
+        }
+        return new Layout(Kind.FLAT,canonical,bounds.width,bounds.depth,bounds.originCell,owner,tiles);
+    }
+
+    /** The authored black face, including edges exposed by neighbouring modules. */
+    public static Vec3[] surface(Kind kind,Facing facing,Cell cell,int mask){
+        double left=(mask&WEST)!=0?0:.125,right=(mask&EAST)!=0?1:.875;
+        double front=kind==Kind.FLAT&&(mask&NORTH)!=0?0:.125,rear=kind==Kind.FLAT&&(mask&SOUTH)!=0?1:.875;
+        double frontY=kind==Kind.FLAT?.875:.5;
+        Vec3 normal=facing.rotateDirection(kind==Kind.FLAT?new Vec3(0,1,0):new Vec3(0,2/Math.sqrt(5),-1/Math.sqrt(5)));
+        Vec3[] result={new Vec3(right,frontY,front),new Vec3(left,frontY,front),new Vec3(left,.875,rear),new Vec3(right,.875,rear)};
+        for(int i=0;i<4;i++)result[i]=facing.modulePoint(cell,result[i]).plus(normal.scale(OVERLAY_OFFSET_BLOCKS));
+        return result;
     }
 
     /**

@@ -72,7 +72,36 @@ public final class NavigationLayoutTest {
         require(new ArrayList<Cell>(reversed.tiles.keySet()).equals(new ArrayList<Cell>(layout.tiles.keySet())),
                 "Input order must not change assignment order");
     }
+    private static void mixed(){
+        for(int code=0;code<256;code++){
+            java.util.Map<Cell,Facing> input=new java.util.LinkedHashMap<>();
+            for(int i=0;i<4;i++)input.put(new Cell(i%2,64,i/2),Facing.values()[(code>>(i*2))&3]);
+            Layout layout=NavigationLayout.mixedFlat(input,true);
+            int owners=0;double area=0;
+            for(Tile tile:layout.tiles.values()){
+                if(tile.chip)owners++;
+                Vec3[] corners=NavigationLayout.surface(Kind.FLAT,input.get(tile.cell),tile.cell,tile.connections);
+                double minX=Double.MAX_VALUE,maxX=-minX,minZ=minX,maxZ=-minX;
+                for(Vec3 p:corners){minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z);}
+                close(minX,tile.cell.x+(tile.cell.x==0?.125:0),"No internal X divider");
+                close(maxX,tile.cell.x+(tile.cell.x==1?.875:1),"No internal X divider");
+                close(minZ,tile.cell.z+(tile.cell.z==0?.125:0),"No internal Z divider");
+                close(maxZ,tile.cell.z+(tile.cell.z==1?.875:1),"No internal Z divider");
+                area+=(maxX-minX)*(maxZ-minZ);
+            }
+            require(owners==1,"Mixed facing single owner");close(area,1.75*1.75,"Continuous screen area");
+            java.util.List<Cell> reverse=new java.util.ArrayList<>(input.keySet());Collections.reverse(reverse);
+            java.util.Map<Cell,Facing> reversed=new java.util.LinkedHashMap<>();for(Cell cell:reverse)reversed.put(cell,input.get(cell));
+            Layout again=NavigationLayout.mixedFlat(reversed,true);
+            require(layout.chipOwner.equals(again.chipOwner)&&layout.facing==again.facing,"Stable mixed owner/orientation");
+        }
+        for(int bits=0;bits<16;bits++){
+            boolean redstone=(bits&1)!=0,security=(bits&2)!=0,power=(bits&4)!=0,chip=(bits&8)!=0;
+            require(NavigationScreenPolicy.visible(redstone,security,power,chip)==((!redstone||power)&&(!security||chip)),"Display gate truth table");
+        }
+    }
     public static void main(String[] args) {
+        mixed();
         for (Facing f : Facing.values()) {
             for (int w = 1; w <= 8; w++) for (int d = 1; d <= 8; d++) verify(Kind.FLAT, f, w, d);
             for (int w = 1; w <= 16; w++) verify(Kind.ANGLED, f, w, 1);
@@ -93,6 +122,6 @@ public final class NavigationLayoutTest {
         rejected(() -> NavigationLayout.build(Kind.FLAT, Facing.NORTH, levels, true), "mixed heights");
         rejected(() -> NavigationLayout.build(Kind.FLAT, Facing.NORTH,
                 rectangle(Facing.NORTH, 17, 16), true), "oversize component");
-        System.out.println("PASS: " + checks + " assertions; 320 layouts across four facings.");
+        System.out.println("PASS: " + checks + " assertions; 320 uniform layouts, 256 mixed layouts and 16 display gate combinations.");
     }
 }
