@@ -9,25 +9,18 @@ import net.minecraft.util.math.*;
 import java.util.*;
 
 /** Cached assembly geometry and an input-only, optionally secured display. */
-public final class TileEntityNavigationTable extends TileEntityTokenSlot {
+public final class TileEntityNavigationTable extends TileEntitySecuredDisplay {
     private static final class LayoutState {
         final int connections,width,depth;final BlockPos offset,origin;final boolean formed;final EnumFacing facing;
         LayoutState(int connections,BlockPos offset,boolean formed,BlockPos origin,int width,int depth,EnumFacing facing){this.connections=connections;this.offset=offset;this.formed=formed;this.origin=origin;this.width=width;this.depth=depth;this.facing=facing;}
     }
     private volatile LayoutState layout=new LayoutState(0,BlockPos.ORIGIN,false,BlockPos.ORIGIN,1,1,EnumFacing.NORTH);
-    private volatile NavigationScreenSettings settings=NavigationScreenSettings.DEFAULT;
-    private boolean physicalInput,channelInput,screenOn,configuring;
-    public TileEntityNavigationTable(){super(true);}
-    @Override public boolean chip(){return true;}
-    private boolean authoritative(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world).isRemote;}
     @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return hasMount()&&super.isItemValidForSlot(slot,stack);}
-    public NavigationScreenSettings screenSettings(){return settings;}
-    public boolean screenOn(){return screenOn;}
-    @Override public boolean indicatorOn(){return credentialPresent();}
-    public boolean credentialPresent(){return !isEmpty()&&matches();}
-    public net.minecraft.block.state.IBlockState renderState(net.minecraft.block.state.IBlockState state){LayoutState current=layout;return state.withProperty(BlockNavigationTable.CONNECTIONS,current.connections).withProperty(BlockNavigationTable.CHIP,current.formed&&current.offset.equals(BlockPos.ORIGIN));}
+    @Override protected TileEntitySecuredDisplay displayOwner(){return reader();}
+    public net.minecraft.block.state.IBlockState renderState(net.minecraft.block.state.IBlockState state){LayoutState current=layout;return state.withProperty(BlockNavigationTable.CONNECTIONS,current.connections).withProperty(BlockNavigationTable.CHIP,current.formed&&current.offset.equals(BlockPos.ORIGIN)&&screenSettings().security);}
     public int connections(){return layout.connections;}
-    public boolean hasMount(){LayoutState current=layout;return current.formed&&current.offset.equals(BlockPos.ORIGIN);}
+    public boolean ownsReader(){LayoutState current=layout;return current.formed&&current.offset.equals(BlockPos.ORIGIN);}
+    public boolean hasMount(){return ownsReader()&&screenSettings().security;}
     public boolean formed(){return layout.formed;}
     public BlockPos owner(){return pos.add(layout.offset);}
     public BlockPos origin(){return pos.add(layout.origin);}
@@ -44,7 +37,7 @@ public final class TileEntityNavigationTable extends TileEntityTokenSlot {
         if(before.connections==mask&&before.offset.equals(offset)&&before.formed==valid&&before.origin.equals(relativeOrigin)&&before.width==width&&before.depth==depth&&before.facing==facing)return;
         layout=new LayoutState(mask,offset,valid,relativeOrigin,width,depth,facing);publish();refresh();
     }
-    private List<TileEntityNavigationTable> members(){
+    @Override protected List<TileEntityNavigationTable> members(){
         List<TileEntityNavigationTable> result=new ArrayList<>();LayoutState current=layout;
         if(!current.formed){result.add(this);return result;}
         NavigationLayout.Facing direction=NavigationLayout.Facing.valueOf(current.facing.name());BlockPos origin=origin();
@@ -56,49 +49,10 @@ public final class TileEntityNavigationTable extends TileEntityTokenSlot {
         }
         return result;
     }
-    public void configureDisplay(NavigationScreenSettings next,boolean any,int allowed,int behavior,ChannelList channels){
-        if(!authoritative())return;TileEntityNavigationTable root=reader();if(root==null)return;
-        root.configuring=true;
-        try{
-            root.settings=next;root.configure(any,allowed,behavior);root.setRedstoneChannels(channels);
-            for(TileEntityNavigationTable tile:root.members()){
-                tile.settings=next;
-                if(tile!=root){tile.configure(root.any,root.allowed,root.behavior);tile.setRedstoneChannels(channels);}
-                tile.publish();
-            }
-        }finally{root.configuring=false;}
-        root.refreshInputs();
-    }
-    @Override public boolean moveReaderTo(TileEntityTokenSlot target){
-        NavigationScreenSettings saved=settings;
-        if(!super.moveReaderTo(target))return false;
-        if(target instanceof TileEntityNavigationTable){((TileEntityNavigationTable)target).settings=saved;((TileEntityNavigationTable)target).publish();}
-        return true;
-    }
-    public void sampleInput(){
-        if(!authoritative())return;boolean next=LoadedRedstonePower.isPowered(world,pos);
-        if(next!=physicalInput){physicalInput=next;refresh();}
-    }
-    public void refreshInputs(){
-        if(!authoritative())return;
-        for(TileEntityNavigationTable tile:members())tile.physicalInput=LoadedRedstonePower.isPowered(world,tile.pos);
-        refresh();
-    }
-    @Override public void setChannelSignal(boolean value){if(channelInput!=value){channelInput=value;refresh();}}
-    @Override public int getOutputLevel(){return 0;}
-    @Override public boolean hasLocalRedstoneSignal(){return false;}
-    @Override public boolean hasLocalRedstoneSignal(int channel){return false;}
-    @Override public int localSignalLevel(int channel){return 0;}
-    @Override public void refresh(){
-        if(!authoritative())return;TileEntityNavigationTable root=reader();if(root==null||root.configuring)return;
-        if(SignalUpdateBatch.isActive()){SignalUpdateBatch.afterSignals(root,root::refresh);return;}
-        List<TileEntityNavigationTable> members=root.members();boolean powered=false;for(TileEntityNavigationTable tile:members)if(tile.physicalInput||tile.channelInput){powered=true;break;}
-        NavigationScreenSettings config=root.settings;
-        boolean active=root.layout.formed&&NavigationScreenPolicy.visible(config.redstone,config.security,powered,root.credentialPresent());
-        for(TileEntityNavigationTable tile:members)if(tile.screenOn!=active){tile.screenOn=active;tile.publish();}
-    }
-    private void publish(){
-        markDirty();if(world!=null&&!world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);
+    public boolean nearDisplayMember(net.minecraft.entity.player.EntityPlayer player){
+        if(player.world!=world||!formed())return false;
+        for(TileEntityNavigationTable tile:members())if(player.getDistanceSq(tile.pos)<=64)return true;
+        return false;
     }
     public MachineMountSurface mount(){
         if(!hasMount())return null;EnumFacing facing=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
@@ -112,12 +66,11 @@ public final class TileEntityNavigationTable extends TileEntityTokenSlot {
     @Override public void onChunkUnload(){NavigationAssemblies.around(world,pos);super.onChunkUnload();}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
         super.writeToNBT(tag);LayoutState current=layout;tag.setInteger("NavigationConnections",current.connections);tag.setLong("NavigationOwner",current.offset.toLong());tag.setBoolean("NavigationFormed",current.formed);
-        tag.setLong("NavigationOrigin",current.origin.toLong());tag.setInteger("NavigationWidth",current.width);tag.setInteger("NavigationDepth",current.depth);tag.setInteger("NavigationFacing",current.facing.getHorizontalIndex());settings.write(tag);tag.setBoolean("NavigationScreenOn",screenOn);return tag;
+        tag.setLong("NavigationOrigin",current.origin.toLong());tag.setInteger("NavigationWidth",current.width);tag.setInteger("NavigationDepth",current.depth);tag.setInteger("NavigationFacing",current.facing.getHorizontalIndex());return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);
         int width=Math.max(1,Math.min(256,tag.getInteger("NavigationWidth"))),depth=Math.max(1,Math.min(256,tag.getInteger("NavigationDepth")));if(width*depth>256){width=1;depth=1;}
         layout=new LayoutState(tag.getInteger("NavigationConnections")&15,BlockPos.fromLong(tag.getLong("NavigationOwner")),tag.getBoolean("NavigationFormed"),BlockPos.fromLong(tag.getLong("NavigationOrigin")),width,depth,EnumFacing.getHorizontal(tag.getInteger("NavigationFacing")));
-        settings=NavigationScreenSettings.read(tag);screenOn=tag.getBoolean("NavigationScreenOn");
     }
 }

@@ -35,6 +35,8 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileEntityConstructor)((TileEntityConstructor)tile).dismantle(state);TokenSlotInteractions.drop(world,pos);super.breakBlock(world,pos,state);}
     @Override public int damageDropped(IBlockState state){return 0;}
     @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){TokenSlotInteractions.tick(world,pos);}
-    @Override public boolean canProvidePower(IBlockState state){return specification().hasChip();}
-    @Override public int getWeakPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,EnumFacing side){TileEntity tile=world.getTileEntity(pos);return tile instanceof TileEntityConstructor?((TileEntityConstructor)tile).getOutputLevel():0;}
+    @Override public boolean canProvidePower(IBlockState state){return false;}
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,Block block,BlockPos from){TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityConstructor)((TileEntityConstructor)raw).sampleInput(pos);}
+    @Override public int getStrongPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,EnumFacing side){return 0;}
+    @Override public int getWeakPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,EnumFacing side){return 0;}
 }

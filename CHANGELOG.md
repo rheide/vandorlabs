@@ -2,6 +2,10 @@
 
 ## 2.5
 
+- Share navigation-table activation with Core-based multiblocks: consume physical redstone or input channels, optionally require a matching Data Chip, and never emit physical or channel power from Cores or reserved cells.
+- Configure each modeled screen, half-screen and keyboard independently through the Configurizer, using the standard material/screen/panel artwork picker, custom block samples and static/animated playback. Preserve the authored planes, facing, model artwork and saved choices.
+- Render integrated chip holders with the native Data Chip Mount frame, contents and retained-item behavior. Use a pause-aware insertion clock that survives repeated packets, tile replacement and world-time corrections. Hide multiblock and navigation-table/console mounts while Security is disabled, retaining any stored chip safely until Security is re-enabled.
+
 - Prevent client crashes during rapid multiblock destruction: stale Core tiles now return safe local render bounds and emit no geometry after their block disappears, including during shader shadow passes. Guard detached, invalidated and replaced Core states through the same lifecycle checks.
 
 - Cache native-water adjacency for door and trapdoor render hints, avoiding repeated neighbour scans during pass selection, batching and fluid drawing. Keep stored fluids live, invalidate on world/chunk updates, and share bounded neighbourhood invalidation with fluid surface meshes. Add legacy-parity matrices and actual-client CPU/allocation comparisons.

@@ -50,7 +50,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public static String securityLabel(int mode){return mode==0?"Off":TileEntityTokenSlot.behaviorName(securityBehavior(mode));}
     public boolean securityToggle(){return securityToggled;}
     void toggleCredential(){securityToggled=!securityToggled;BlockPos other=mate();net.minecraft.tileentity.TileEntity raw=other==null?null:world.getTileEntity(other);if(raw instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)raw).securityMode()==4){TileEntitySpaceDoor paired=(TileEntitySpaceDoor)raw;paired.securityToggled=securityToggled;paired.securityChanged();}securityChanged();}
-    private final TileEntityTokenSlot keyReader=new TileEntityTokenSlot(false).forDoor(this),rearKeyReader=new TileEntityTokenSlot(false).forDoor(this);
+    private final TileEntityTokenSlot keyReader=new TileEntityTokenSlot(false).forDoor(this,0),rearKeyReader=new TileEntityTokenSlot(false).forDoor(this,1);
     boolean usableReader(net.minecraft.entity.player.EntityPlayer player){
         if(world instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.EntityGroundVehicle craft=((com.vandorlabs.vehicle.VehicleWorld)world).craft;return craft!=null&&!craft.isDead&&!craft.ownershipBlocked&&!craft.transferInProgress&&player.world==craft.world&&player.getDistanceSqToCenter(new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(pos).addVector(.5,.5,.5))))<=64;}
         return usable(player);

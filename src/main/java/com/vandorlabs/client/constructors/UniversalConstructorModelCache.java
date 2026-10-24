@@ -50,6 +50,7 @@ public final class UniversalConstructorModelCache {
         for(com.vandorlabs.blocks.FrameMachineDesign spec:com.vandorlabs.blocks.FrameMachineDesign.all()){
             String[] paths=spec.state_models!=null?spec.state_models:spec.hasChip()?new String[]{"complete.obj","active/complete.obj"}:new String[]{"complete.obj"};
             for(String path:paths)register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
+            if(spec.hasChip())for(String path:new String[]{"static.obj","active/static.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
         }
         MinecraftForge.EVENT_BUS.register(EVENTS);
     }

@@ -48,7 +48,7 @@ def generate():
         path=ASSETS/'blockstates'/f'navigation_table_{kind}.json'
         data=json.loads(path.read_text())
         for key,variants in data['variants'].items():
-            if key.startswith('chip='):
+            if key.startswith('chip=') or key in ('inventory','normal'):
                 for variant in variants:variant['model']=variant['model'].replace('_chip.obj','.obj')
         path.write_text(json.dumps(data,indent=2)+'\n')
 if __name__=='__main__':generate()

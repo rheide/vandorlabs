@@ -24,7 +24,9 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     private TileEntitySpaceDoor door;
     private int publishedLevel=-1;
     protected void outputChanged(){world.notifyNeighborsOfStateChange(pos,world.getBlockState(pos).getBlock(),false);}
-    TileEntityTokenSlot forDoor(TileEntitySpaceDoor owner){door=owner;return this;}
+    private int visualSlot;
+    TileEntityTokenSlot forDoor(TileEntitySpaceDoor owner,int side){door=owner;visualSlot=side+1;return this;}
+    public int visualSlot(){return visualSlot;}
     protected boolean installed(){return world!=null&&world.getTileEntity(pos)==(door==null?this:door);}
     protected int returnPulseTicks(){return door==null?20:100;}
     public int logoDesign(){if((effectiveAllowed()&1)!=0)return 0;if((effectiveAllowed()&(1<<logoDesign))!=0)return logoDesign;for(int i=0;i<7;i++)if((effectiveAllowed()&(1<<i))!=0)return i;return 0;}
@@ -43,11 +45,14 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     public boolean rejected(){return world!=null&&world.getTotalWorldTime()<rejectedUntil;}
     public void reject(){if(world!=null&&!world.isRemote){rejectedUntil=world.getTotalWorldTime()+12;changed(false);}}
     public boolean returning(){return returnTo!=null&&!token.isEmpty();}
+    private long insertionSequence;
+    public long insertionStarted(){return insertStarted;}
+    public long insertionSequence(){return insertionSequence;}
     public float animationAge(float partial){return !token.isEmpty()&&world!=null?(float)Math.max(0,Math.min(20,world.getTotalWorldTime()-insertStarted+partial)):20;}
     /** Borrows exactly one real item, including in Creative, until the animation finishes. */
     public boolean insertToggle(EntityPlayer player,ItemStack stack){
         if(world==null||world.isRemote||(behavior!=2&&behavior!=3)||!isEmpty()||!isUsableByPlayer(player)||!authorized(stack))return false;
-        token=stack.copy();token.setCount(1);stack.shrink(1);returnTo=player.getUniqueID();insertStarted=world.getTotalWorldTime();toggleApplied=false;changed(false);sound(net.minecraft.init.SoundEvents.BLOCK_IRON_TRAPDOOR_OPEN,1.4F);schedule(8);return true;
+        token=stack.copy();token.setCount(1);stack.shrink(1);returnTo=player.getUniqueID();insertStarted=world.getTotalWorldTime();insertionSequence++;toggleApplied=false;changed(false);sound(net.minecraft.init.SoundEvents.BLOCK_IRON_TRAPDOOR_OPEN,1.4F);schedule(8);return true;
     }
     private void sound(net.minecraft.util.SoundEvent sound,float pitch){if(world!=null&&!world.isRemote&&installed()&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld))world.playSound(null,pos,sound,net.minecraft.util.SoundCategory.BLOCKS,.25F,pitch);}
     @Override public boolean isChannelLatch(){return false;}
@@ -101,7 +106,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     }
     private void changed(boolean inserted){
         if(world!=null&&!world.isRemote){
-            if(inserted)insertStarted=world.getTotalWorldTime();
+            if(inserted){insertStarted=world.getTotalWorldTime();insertionSequence++;}
             if(inserted&&matches()&&behavior==1){pulseUntil=world.getTotalWorldTime()+returnPulseTicks();schedule(returnPulseTicks());}
             if(token.isEmpty()&&behavior==1)pulseUntil=0;
             refresh();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);
@@ -115,9 +120,9 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     }
     @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,()->{pulseUntil=Math.min(pulseUntil,world.getTotalWorldTime()+20);scheduledTick();});}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);return writeReaderData(tag);}
-    private NBTTagCompound writeReaderData(NBTTagCompound tag){tag.setInteger("TokenLogo",logoDesign);tag.setLong("TokenRejectedUntil",rejectedUntil);tag.setBoolean("ChipSlot",chip());tag.setBoolean("AnyToken",any);tag.setInteger("AllowedTokens",allowed);tag.setInteger("TokenBehavior",behavior);tag.setLong("TokenPulseUntil",pulseUntil);tag.setBoolean("TokenToggled",toggled);tag.setBoolean("TokenToggleApplied",toggleApplied);tag.setLong("TokenInsertStarted",insertStarted);if(returnTo!=null)tag.setUniqueId("TokenReturnTo",returnTo);else{tag.removeTag("TokenReturnToMost");tag.removeTag("TokenReturnToLeast");}if(!token.isEmpty())tag.setTag("InsertedToken",token.writeToNBT(new NBTTagCompound()));else tag.removeTag("InsertedToken");return tag;}
+    private NBTTagCompound writeReaderData(NBTTagCompound tag){tag.setInteger("TokenLogo",logoDesign);tag.setLong("TokenRejectedUntil",rejectedUntil);tag.setBoolean("ChipSlot",chip());tag.setBoolean("AnyToken",any);tag.setInteger("AllowedTokens",allowed);tag.setInteger("TokenBehavior",behavior);tag.setLong("TokenPulseUntil",pulseUntil);tag.setBoolean("TokenToggled",toggled);tag.setBoolean("TokenToggleApplied",toggleApplied);tag.setLong("TokenInsertStarted",insertStarted);tag.setLong("TokenInsertionSequence",insertionSequence);if(returnTo!=null)tag.setUniqueId("TokenReturnTo",returnTo);else{tag.removeTag("TokenReturnToMost");tag.removeTag("TokenReturnToLeast");}if(!token.isEmpty())tag.setTag("InsertedToken",token.writeToNBT(new NBTTagCompound()));else tag.removeTag("InsertedToken");return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);readReaderData(tag);}
-    private void readReaderData(NBTTagCompound tag){logoDesign=Math.max(0,Math.min(6,tag.getInteger("TokenLogo")));rejectedUntil=tag.getLong("TokenRejectedUntil");chip=tag.getBoolean("ChipSlot");any=!tag.hasKey("AnyToken")||tag.getBoolean("AnyToken");allowed=singleCompany(any?127:tag.hasKey("AllowedTokens")?tag.getInteger("AllowedTokens"):127);any=allowed==127;behavior=tag.getInteger("TokenBehavior");if(behavior<0||behavior>3)behavior=0;pulseUntil=tag.getLong("TokenPulseUntil");toggled=tag.getBoolean("TokenToggled");toggleApplied=tag.getBoolean("TokenToggleApplied");insertStarted=tag.getLong("TokenInsertStarted");returnTo=tag.hasUniqueId("TokenReturnTo")?tag.getUniqueId("TokenReturnTo"):null;token=tag.hasKey("InsertedToken",10)?new ItemStack(tag.getCompoundTag("InsertedToken")):ItemStack.EMPTY;if(!token.isEmpty())token.setCount(1);else returnTo=null;}
+    private void readReaderData(NBTTagCompound tag){logoDesign=Math.max(0,Math.min(6,tag.getInteger("TokenLogo")));rejectedUntil=tag.getLong("TokenRejectedUntil");chip=tag.getBoolean("ChipSlot");any=!tag.hasKey("AnyToken")||tag.getBoolean("AnyToken");allowed=singleCompany(any?127:tag.hasKey("AllowedTokens")?tag.getInteger("AllowedTokens"):127);any=allowed==127;behavior=tag.getInteger("TokenBehavior");if(behavior<0||behavior>3)behavior=0;pulseUntil=tag.getLong("TokenPulseUntil");toggled=tag.getBoolean("TokenToggled");toggleApplied=tag.getBoolean("TokenToggleApplied");insertStarted=tag.getLong("TokenInsertStarted");insertionSequence=tag.getLong("TokenInsertionSequence");returnTo=tag.hasUniqueId("TokenReturnTo")?tag.getUniqueId("TokenReturnTo"):null;token=tag.hasKey("InsertedToken",10)?new ItemStack(tag.getCompoundTag("InsertedToken")):ItemStack.EMPTY;if(!token.isEmpty())token.setCount(1);else returnTo=null;}
     /** Move one physical mount when a joined assembly chooses a new owning module. */
     public boolean moveReaderTo(TileEntityTokenSlot target){
         if(target==this)return true;

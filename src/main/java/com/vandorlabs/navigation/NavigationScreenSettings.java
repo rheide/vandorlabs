@@ -20,7 +20,7 @@ public final class NavigationScreenSettings {
         if(entry!=null&&entry.has("detail")&&entry.get("detail").getAsInt()>0)return false;
         String category=ScreenHousingTextures.category(choice);
         if(category.equals("Doors")||category.equals("Double Doors")||category.equals("Lights"))return false;
-        return !category.equals("Screens")||entry!=null&&!entry.get("source").getAsString().startsWith("console_inputs/");
+        return !category.equals("Screens")||entry!=null&&entry.has("source");
     }
     public void write(NBTTagCompound tag){
         tag.setInteger("NavigationTexture",texture);tag.setBoolean("NavigationAnimated",animated);tag.setInteger("NavigationSpeed",speed);

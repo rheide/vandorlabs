@@ -44,7 +44,7 @@ final class BridgeMachineChecks {
         Vec3d before=player.getPositionVector();float yaw=player.rotationYaw,pitch=player.rotationPitch;
         try{for(FrameMachineDesign spec:FrameMachineDesign.all())if(spec.hasChip()){
             clear(world,root);frame(world,root,spec,0);frame(world,root,spec,2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);
-            require(tile.assemble(),spec.design+" chip fixture forms");tile.setRedstoneChannels(ChannelList.of(64123));RedstoneChannels.register(tile);
+            require(tile.assemble(),spec.design+" chip fixture forms");tile.configureDisplay(new NavigationScreenSettings(-1,true,1,false,true),true,127,0,ChannelList.EMPTY);tile.setRedstoneChannels(ChannelList.of(64123));RedstoneChannels.register(tile);
             MachineMountSurface mount=tile.mount();Vec3d eye=mount.center.add(mount.normal.scale(2.5));Vec3d direction=mount.center.subtract(eye);
             player.setPosition(eye.x,eye.y-player.getEyeHeight(),eye.z);player.rotationYaw=(float)Math.toDegrees(Math.atan2(-direction.x,direction.z));player.rotationPitch=0;player.capabilities.isCreativeMode=false;
             require(mount.hit(player),"authored chip plane is reachable");
@@ -52,9 +52,9 @@ final class BridgeMachineChecks {
                 tile.configure(false,1<<4,mode);ItemStack stack=new ItemStack(ModItems.DATA_CHIP,2,4);stack.setStackDisplayName("Integrated reader fixture");player.setHeldItem(EnumHand.MAIN_HAND,stack);
                 require(TokenSlotInteractions.activate(tile,player,EnumHand.MAIN_HAND),"same mount interaction accepts chip");
                 require(stack.getCount()==1&&!tile.isEmpty(),"one real item is consumed/borrowed");
-                if(mode>=2){tile.expire(world.getTotalWorldTime()+8);require(tile.getOutputLevel()==15,"borrowed scan triggers at midpoint");}
-                else require(tile.getOutputLevel()==15,"retained chip drives machine and channels");
-                require(RedstoneChannels.level(world,64123)==15,"embedded chip uses shared channel bank");
+                if(mode>=2){tile.expire(world.getTotalWorldTime()+8);require(tile.screenOn()&&tile.getOutputLevel()==0,"borrowed credential authorizes without output");}
+                else require(tile.screenOn()&&tile.getOutputLevel()==0,"retained chip authorizes without output");
+                require(RedstoneChannels.level(world,64123)==0,"embedded chip never publishes channel power");
                 NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityConstructor copy=new TileEntityConstructor();copy.readFromNBT(saved);copy.setWorld(world);
                 require(copy.getStackInSlot(0).getDisplayName().equals("Integrated reader fixture")&&copy.returning()==(mode>=2),"full item and pending return survive NBT");
                 if(mode>=2){tile.expire(world.getTotalWorldTime()+25);require(tile.isEmpty(),"borrowed chip returns to its player");}
@@ -79,9 +79,9 @@ final class BridgeMachineChecks {
             }
             NavigationAssemblies.rebuild(world,base);List<TileEntityNavigationTable> tiles=new ArrayList<>();
             for(BlockPos p:BlockPos.getAllInBox(base,base.add(3,0,3)))if(world.getTileEntity(p) instanceof TileEntityNavigationTable)tiles.add((TileEntityNavigationTable)world.getTileEntity(p));
-            require(tiles.stream().filter(TileEntityNavigationTable::hasMount).count()==1,"exactly one mount in every joined facing");
-            TileEntityNavigationTable owner=tiles.stream().filter(TileEntityNavigationTable::hasMount).findFirst().get();
-            owner.setInventorySlotContents(0,new ItemStack(ModItems.DATA_CHIP,1,4));owner.setRedstoneChannels(ChannelList.of(64124));RedstoneChannels.register(owner);
+            require(tiles.stream().filter(TileEntityNavigationTable::ownsReader).count()==1,"exactly one mount in every joined facing");
+            TileEntityNavigationTable owner=tiles.stream().filter(TileEntityNavigationTable::ownsReader).findFirst().get();
+            owner.configureDisplay(new NavigationScreenSettings(-1,true,1,false,true),true,127,0,ChannelList.EMPTY);owner.setInventorySlotContents(0,new ItemStack(ModItems.DATA_CHIP,1,4));owner.setRedstoneChannels(ChannelList.of(64124));RedstoneChannels.register(owner);
             // Extend the front width from 3 to 5: ownership moves from X1 to X2.
             for(int x=3;x<5;x++)for(int z=0;z<depth;z++){
                 EnumFacing right=facing.rotateY();BlockPos origin=base;
@@ -119,18 +119,19 @@ final class BridgeMachineChecks {
     }
     private static boolean runtimeDone;
     static boolean tick(Minecraft mc,File output)throws Exception{
-        if(++ticks<30)return false;
+        if(++ticks==1){mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);mc.getToastGui().clear();}
+        if(ticks<30)return false;
         if(!runtimeDone){
         mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
             world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");world.setWorldTime(6000);
-            com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,player);TokenSlotRuntimeChecks.run(world);chipMachines(world,player);navigation(world);NavigationRuntimeChecks.run(world);steering(world);
+            com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,player);TokenSlotRuntimeChecks.run(world);chipMachines(world,player);navigation(world);NavigationRuntimeChecks.run(world);MachineDisplayRuntimeChecks.run(world,player);steering(world);
         }).get();
         for(FrameMachineDesign spec:FrameMachineDesign.all()){
             String path=spec.state_models!=null?spec.state_models[1]:"complete.obj";
             require(com.vandorlabs.client.constructors.UniversalConstructorModelCache.get(spec.design,path).getQuadCount()>10,"actual baked OBJ is available for "+spec.design);
         }
-        UtilityItemRuntimeChecks.run(mc,output);ConstructorRenderLifetimeChecks.run(mc);runtimeDone=true;
+        UtilityItemRuntimeChecks.run(mc,output);ConstructorRenderLifetimeChecks.run(mc);MachineDisplayVisualChecks.run(mc,output);runtimeDone=true;
         }
         if(!NavigationClientChecks.tick(mc,output))return false;
         System.out.println("[vandorlabs] bridge-machines PASS assembly regressions embedded mount behavior joining models item padding reverse steering");return true;

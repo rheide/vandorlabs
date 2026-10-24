@@ -64,6 +64,8 @@ def main():
     # with the original example source from an artwork archive.
     from generate_navigation_mounts import generate
     generate()
+    from generate_machine_surfaces import generate as generate_surfaces
+    generate_surfaces(args.archives)
     print(f'Imported {len(specs)} frame machines and two modular navigation tables')
 
 

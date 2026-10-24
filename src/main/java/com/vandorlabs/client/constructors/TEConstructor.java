@@ -15,7 +15,7 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
         @Override protected BlockPos originOffset(TileEntityConstructor tile){return BlockPos.ORIGIN.subtract(tile.pivot());}
         @Override protected void drawMachine(TileEntityConstructor tile,double x,double y,double z,float partial,BufferBuilder buffer){
             FrameMachineDesign spec=tile.core().specification();
-            String path=spec.state_models!=null?spec.state_models[tile.activity()]:spec.hasChip()&&tile.getOutputLevel()>0?"active/complete.obj":"complete.obj";
+            String path=spec.state_models!=null?spec.state_models[tile.screenOn()?tile.activity():0]:spec.hasChip()?(tile.screenOn()?"active/static.obj":"static.obj"):"complete.obj";
             drawPart(tile,path,buffer,x,y,z,0,0,0);
         }
     };
@@ -24,6 +24,7 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
         if(!tile.formed())return;
         body.setRendererDispatcher(net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance);
         body.render(tile,x,y,z,partial,stage,alpha);
-        com.vandorlabs.blocks.MachineMountSurface mount=tile.mount();if(mount!=null)com.vandorlabs.client.TETokenSlot.embedded(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);
+        com.vandorlabs.client.MachineDisplayRenderer.render(tile,x,y,z);
+        com.vandorlabs.blocks.MachineMountSurface mount=tile.mount();if(mount!=null)com.vandorlabs.client.TETokenSlot.nativeMount(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);
     }
 }

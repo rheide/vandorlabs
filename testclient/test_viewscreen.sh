@@ -124,6 +124,10 @@ if [ "$MODE" = focus ]; then
         grep -q 'navigation-tables PASS' "$RUN_OUT/client.log"
         grep -q 'navigation-display-inputs PASS' "$RUN_OUT/client.log"
         grep -q 'navigation-display-client PASS' "$RUN_OUT/client.log"
+        grep -q 'constructor-render-lifetime PASS' "$RUN_OUT/client.log"
+        grep -q 'machine-display-inputs PASS' "$RUN_OUT/client.log"
+        grep -q 'machine-display-pixels PASS' "$RUN_OUT/client.log"
+        grep -q 'machine-display-client PASS' "$RUN_OUT/client.log"
         grep -q 'reverse-hover-steering PASS' "$RUN_OUT/client.log"
         echo "Live bridge machine regressions passed: $RUN_OUT"
         exit 0

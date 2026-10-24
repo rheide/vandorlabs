@@ -80,6 +80,19 @@ for kind in ['flat','angled']:
         top=(14 if kind=='flat' else 8)/16
         assert abs(max(p[1] for p in points)-(top-.5/16))<1e-8,path
 print('Navigation emitted geometry PASS joined display edges and 12 native-scale mounts with top clearance')
+for spec in specs:
+    surfaces=spec.get('surfaces',[])
+    assert len(surfaces)<=3 and len({s['id'] for s in surfaces})==len(surfaces),spec['design']
+    for surface in surfaces:
+        points=surface['corners'];normal=surface['normal'];assert len(points)==4 and len(normal)==3
+        assert abs(sum(n*n for n in normal)-1)<1e-6,spec['design']
+        for point in points:
+            assert len(point)==3 and all(math.isfinite(v) and -.001<=v<=limit+.001 for v,limit in zip(point,[spec['width'],spec['height'],spec['depth']])),(spec['design'],point)
+            assert abs(sum((point[i]-points[0][i])*normal[i] for i in range(3)))<1e-6,spec['design']
+    if spec.get('chip_anchor'):
+        for path in ['static.obj','active/static.obj']:
+            text=(ASSETS/'models/block'/spec['model']/path).read_text();assert 'g card_holder' not in text,(spec['design'],path)
+print('Machine display metadata PASS authored finite coplanar planes and holder-free body meshes')
 print(f'Bridge model assets PASS designs={len(specs)} OBJ states/variants={models} animated materials={animations} bounded geometry shared state topology complete navigation variants padded Core items')
 if len(sys.argv)>1:
     with ZipFile(sys.argv[1]) as archive:

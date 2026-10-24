@@ -11,6 +11,8 @@ public final class FrameMachineDesign {
     public int width,height,depth;
     public double[] chip_anchor,chip_size;
     public String[] state_models;
+    public Surface[] surfaces=new Surface[0];
+    public static final class Surface {public String id,label;public double[][] corners;public double[] normal;}
     private static final Map<String,FrameMachineDesign> DESIGNS=load();
     private static Map<String,FrameMachineDesign> load(){
         try(InputStream stream=FrameMachineDesign.class.getResourceAsStream("/assets/vandorlabs/data/frame_machines.json")){

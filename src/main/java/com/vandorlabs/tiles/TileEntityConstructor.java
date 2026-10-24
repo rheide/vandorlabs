@@ -11,11 +11,22 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 
 /** Validate first, then reserve a footprint; reconstruction restores the consumed frame. */
-public final class TileEntityConstructor extends TileEntityTokenSlot {
-    public TileEntityConstructor(){super(true);}
+public final class TileEntityConstructor extends TileEntitySecuredDisplay {
+    public TileEntityConstructor(){super();}
     @Override public boolean chip(){return true;}
     @Override public boolean accepts(net.minecraft.item.ItemStack stack){BlockConstructorCore core=core();return core!=null&&core.specification().hasChip()&&super.accepts(stack);}
     @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return formed()&&super.isItemValidForSlot(slot,stack);}
+    private int[] surfaceTextures=new int[0];
+    @Override public boolean nativeArtwork(){return true;}
+    @Override public int surfaceCount(){BlockConstructorCore core=core();return core==null||core.specification().surfaces==null?0:core.specification().surfaces.length;}
+    @Override public String surfaceLabel(int slot){return core().specification().surfaces[slot].label;}
+    @Override public int surfaceChoice(int slot){return slot<surfaceTextures.length?surfaceTextures[slot]:-2;}
+    public static boolean validSurface(int choice){return choice==-2||com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice);}
+    public void configureMachine(com.vandorlabs.navigation.NavigationScreenSettings config,int[] textures,boolean any,int allowed,int behavior,com.vandorlabs.redstone.ChannelList channels){
+        if(!authoritative()||textures.length!=surfaceCount()||textures.length>3||config.security&&!supportsSecurity())return;
+        for(int choice:textures)if(!validSurface(choice))return;
+        surfaceTextures=textures.clone();configureDisplay(config,any,allowed,behavior,channels);publish();
+    }
     private boolean changing;private IBlockState removedState;
     private int coreX,coreZ;
     private int activity=1;
@@ -71,7 +82,7 @@ public final class TileEntityConstructor extends TileEntityTokenSlot {
                 world.setBlockState(p,part.getDefaultState(),2);((TileEntityConstructorPart)world.getTileEntity(p)).owner(pos,frame(x,y,z));
             }
             world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,true),3);markDirty();
-            world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);refresh();return true;
+            world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);refreshInputs();return true;
         }finally{changing=false;}
     }
     public void dismantle(IBlockState state){removedState=state;try{dismantle();}finally{removedState=null;}}
@@ -87,25 +98,39 @@ public final class TileEntityConstructor extends TileEntityTokenSlot {
             if(removedState==null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,false),3);markDirty();refresh();
         }finally{changing=false;}
     }
+    @Override public boolean supportsSecurity(){BlockConstructorCore core=core();return core!=null&&core.specification().hasChip();}
+    private final java.util.Set<BlockPos> poweredInputs=new java.util.HashSet<>();
+    @Override protected boolean physicalPower(){
+        poweredInputs.clear();if(!formed())return false;
+        BlockConstructorCore core=core();
+        for(int y=0;y<core.height;y++)for(int x=0;x<core.width;x++)for(int z=0;z<core.depth;z++){
+            BlockPos at=cell(x,y,z);if(world.isBlockLoaded(at)&&com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,at))poweredInputs.add(at);
+        }
+        return !poweredInputs.isEmpty();
+    }
+    public void sampleInput(BlockPos at){
+        if(!authoritative()||changing)return;
+        if(!formed()){poweredInputs.clear();physicalInput(false);return;}
+        if(!world.isBlockLoaded(at))return;
+        boolean member=at.equals(pos);net.minecraft.tileentity.TileEntity raw=world.getTileEntity(at);
+        member|=raw instanceof TileEntityConstructorPart&&((TileEntityConstructorPart)raw).owner().equals(pos);
+        if(!member)return;
+        if(com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,at))poweredInputs.add(at.toImmutable());else poweredInputs.remove(at);
+        physicalInput(!poweredInputs.isEmpty());
+    }
+    @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,this::refreshInputs);}
     public com.vandorlabs.blocks.MachineMountSurface mount(){
-        if(!formed()||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
+        if(!formed()||!screenSettings().security||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
         Vec3d local=new Vec3d(spec.chip_anchor[0],spec.chip_anchor[1],spec.chip_anchor[2]);
         Vec3d center=MachineMountSurface.rotate(local,facing(),core().width,core().depth).add(new Vec3d(pos.subtract(pivot())));
-        return new MachineMountSurface(center,facing(),spec.chip_size[0]/16,spec.chip_size[1]/16);
+        return new MachineMountSurface(center,facing(),TokenSlotGeometry.CHIP_SIZE,TokenSlotGeometry.CHIP_SIZE);
     }
-    @Override public int getOutputLevel(){return world!=null&&formed()&&core().specification().hasChip()?super.getOutputLevel():0;}
-    @Override protected void outputChanged(){
-        if(!formed()){super.outputChanged();return;}
-        for(int y=0;y<core().height;y++)for(int x=0;x<core().width;x++)for(int z=0;z<core().depth;z++){
-            BlockPos p=cell(x,y,z);if(world.isBlockLoaded(p))world.notifyNeighborsOfStateChange(p,world.getBlockState(p).getBlock(),false);
-        }
-    }
-    @Override public boolean isUsableByPlayer(net.minecraft.entity.player.EntityPlayer player){return mount()!=null&&super.isUsableByPlayer(player);}
+    @Override public boolean isUsableByPlayer(net.minecraft.entity.player.EntityPlayer player){return formed()&&super.isUsableByPlayer(player);}
     @Override public AxisAlignedBB getRenderBoundingBox(){if(!formed())return new AxisAlignedBB(pos);BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin.getX(),origin.getY(),origin.getZ(),origin.getX()+(turn?core().depth:core().width),origin.getY()+core().height,origin.getZ()+(turn?core().width:core().depth));}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
-    @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip();}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):1;}
+    @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip()&&surfaceCount()==0;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity);tag.setIntArray("MachineSurfaceTextures",surfaceTextures);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):1;}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}

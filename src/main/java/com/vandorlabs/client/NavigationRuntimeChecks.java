@@ -31,10 +31,11 @@ final class NavigationRuntimeChecks {
                 Vec3d local=MachineMountSurface.rotate(new Vec3d(x+.5,0,z+.5),facing,2,depth);BlockPos at=base.add((int)Math.floor(local.x),0,(int)Math.floor(local.z));
                 world.setBlockState(at,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,z==0?facing:facing.getOpposite()),2);
             }
-            NavigationAssemblies.rebuild(world,base);TileEntityNavigationTable root=table(world,base).reader();require(root!=null&&root.hasMount(),"mixed-facing rectangle forms");
+            NavigationAssemblies.rebuild(world,base);TileEntityNavigationTable root=table(world,base).reader();require(root!=null&&root.ownsReader(),"mixed-facing rectangle forms");
             java.util.List<BlockPos> members=new java.util.ArrayList<>();for(BlockPos at:BlockPos.getAllInBox(base,base.add(1,0,1)))if(world.getTileEntity(at) instanceof TileEntityNavigationTable)members.add(at.toImmutable());
             BlockPos powered=members.get(members.size()-1);
             require(root.screenSettings().texture==-1,"new assembly defaults black");
+            require(root.mount()==null,"security-disabled mount hidden");root.configureDisplay(new NavigationScreenSettings(-1,true,1,false,true),true,127,0,ChannelList.EMPTY);
             MachineMountSurface mount=root.mount();require(Math.abs(mount.width-6D/16)<1e-9&&mount.width==mount.height,"standalone mount proportions");
             double top=kind.equals("flat")?14D/16:8D/16;
             require(Math.abs(mount.center.y-root.getPos().getY()+mount.height/2-(top-.5/16))<1e-9,"half-pixel clearance below front top");
@@ -83,7 +84,7 @@ final class NavigationRuntimeChecks {
             com.vandorlabs.vehicle.VehicleStructure rotated=com.vandorlabs.vehicle.VehicleRotation.rotate(snapshot,view,turns);
             com.vandorlabs.vehicle.VehicleWorld carried=new com.vandorlabs.vehicle.VehicleWorld(world,rotated);
             TileEntityNavigationTable root=null;
-            for(net.minecraft.tileentity.TileEntity raw:carried.tiles.values()){TileEntityNavigationTable tile=(TileEntityNavigationTable)raw;if(tile.hasMount())root=tile;}
+            for(net.minecraft.tileentity.TileEntity raw:carried.tiles.values()){TileEntityNavigationTable tile=(TileEntityNavigationTable)raw;if(tile.ownsReader())root=tile;}
             require(root!=null&&!root.isEmpty(),"rotated snapshot retains the single physical chip");
             root.configureDisplay(new NavigationScreenSettings(root.screenSettings().texture,true,1,true,true),false,16,0,ChannelList.EMPTY);
             require(!root.screenOn(),"carried input starts off");

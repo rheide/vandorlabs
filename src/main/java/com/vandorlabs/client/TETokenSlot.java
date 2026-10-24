@@ -47,7 +47,7 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
   GlStateManager.pushMatrix();try(TurntableRenderState saved=new TurntableRenderState()){
    GlStateManager.disableCull();GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);Tessellator.getInstance().getBuffer().setTranslation(0,0,0);
    int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
-   boolean rejected=tile.rejected();
+   float visualAge=TokenSlotVisualMotion.age(tile);boolean rejected=tile.rejected();
    if(!rejected&&tile.isEmpty()&&tile.effectiveAllowed()!=0){
     Minecraft mc=Minecraft.getMinecraft();mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);TextureAtlasSprite logo=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/access_reader/logos/"+com.vandorlabs.items.ItemDesignToken.DESIGNS[ReaderLogoCycle.design(tile)]);
     double half=2.2/16;BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR);
@@ -64,7 +64,7 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
    panel(overlays,basis,-2.1/16,-.9/16,-h+.22/16,-h+.47/16,.098,0xc68a37);Tessellator.getInstance().draw();GlStateManager.enableTexture2D();
    OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
    if(!tile.isEmpty()){
-    float age=tile.animationAge(partial);double slide=age<8?age/8:tile.returning()&&age>12?(20-age)/8:1;slide=slide*slide*(3-2*slide);
+    float age=visualAge;double slide=age<8?age/8:tile.returning()&&age>12?(20-age)/8:1;slide=slide*slide*(3-2*slide);
     double offset=.60*(1-slide);GlStateManager.multMatrix(basis.itemMatrix);GlStateManager.translate(0,offset,0);double scale=tile.chip()?.38:.5;GlStateManager.scale(scale,scale,1);GlStateManager.color(1,1,1,1);Minecraft.getMinecraft().getRenderItem().renderItem(tile.getStackInSlot(0),ItemCameraTransforms.TransformType.FIXED);
    }
   }finally{GlStateManager.enableTexture2D();GlStateManager.popMatrix();}
@@ -74,7 +74,7 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
   embedded(tile,surface,x,y,z,partial,false);
  }
  /** Use the standalone reader's exact frame, dimensions and contents. */
- static void nativeMount(TileEntityTokenSlot tile,MachineMountSurface surface,double x,double y,double z,float partial){embedded(tile,surface,x,y,z,partial,true);}
+ public static void nativeMount(TileEntityTokenSlot tile,MachineMountSurface surface,double x,double y,double z,float partial){embedded(tile,surface,x,y,z,partial,true);}
  private static void embedded(TileEntityTokenSlot tile,MachineMountSurface surface,double x,double y,double z,float partial,boolean nativeFrame){
   EnumFacing facing=EnumFacing.getFacingFromVector((float)surface.normal.x,(float)surface.normal.y,(float)surface.normal.z);
   java.nio.FloatBuffer matrix=EMBEDDED_BASES[facing.getHorizontalIndex()];

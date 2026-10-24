@@ -11,12 +11,12 @@
   "variants": {
     "normal": [
       {
-        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj"
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj"
       }
     ],
     "inventory": [
       {
-        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
         "transform": "forge:default-block"
       }
     ],

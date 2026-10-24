@@ -35,6 +35,19 @@ public final class MovingDeviceConfiguration {
         return selected;
     }
     public static boolean nearOwnedPart(EntityPlayer player,TileEntity controller){
+        if(controller instanceof TileEntityConstructor){
+            TileEntityConstructor core=(TileEntityConstructor)controller;
+            if(!core.formed()||core.getWorld()!=player.world)return false;
+            com.vandorlabs.blocks.BlockConstructorCore block=core.core();
+            for(int y=0;y<block.height;y++)for(int x=0;x<block.width;x++)for(int z=0;z<block.depth;z++){
+                BlockPos at=core.cell(x,y,z);if(player.getDistanceSq(at)>64||!player.world.isBlockLoaded(at))continue;
+                TileEntity tile=player.world.getTileEntity(at);if(tile==core||tile instanceof TileEntityConstructorPart&&((TileEntityConstructorPart)tile).owner().equals(core.getPos()))return true;
+            }
+        }
+        if(controller instanceof TileEntityNavigationTable){
+            TileEntityNavigationTable root=(TileEntityNavigationTable)controller;
+            if(root.nearDisplayMember(player))return true;
+        }
         if(player.getHeldItemMainhand().getItem()!=ModItems.CONFIGURIZER)return false;
         if(controller instanceof TileEntityRampController)for(BlockPos part:((TileEntityRampController)controller).vehicleCells()){
             if(player.getDistanceSq(part)>64||!player.world.isBlockLoaded(part))continue;

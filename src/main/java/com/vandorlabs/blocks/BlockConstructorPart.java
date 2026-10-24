@@ -18,8 +18,10 @@ public final class BlockConstructorPart extends BlockVandor {
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
     private TileEntityConstructor controller(World world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof TileEntityConstructorPart))return null;BlockPos owner=((TileEntityConstructorPart)raw).owner();if(!world.isBlockLoaded(owner))return null;TileEntity tile=world.getTileEntity(owner);return tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).formed()?(TileEntityConstructor)tile:null;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,net.minecraft.entity.player.EntityPlayer player,net.minecraft.util.EnumHand hand,net.minecraft.util.EnumFacing side,float x,float y,float z){TileEntityConstructor root=controller(world,pos);return root!=null&&root.core().onBlockActivated(world,root.getPos(),world.getBlockState(root.getPos()),player,hand,side,x,y,z);}
-    @Override public boolean canProvidePower(IBlockState state){return true;}
-    @Override public int getWeakPower(IBlockState state,net.minecraft.world.IBlockAccess access,BlockPos pos,net.minecraft.util.EnumFacing side){if(!(access instanceof World))return 0;TileEntityConstructor root=controller((World)access,pos);return root==null?0:root.getOutputLevel();}
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){TileEntityConstructor root=controller(world,pos);if(root!=null)root.sampleInput(pos);}
+    @Override public int getStrongPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,net.minecraft.util.EnumFacing side){return 0;}
+    @Override public boolean canProvidePower(IBlockState state){return false;}
+    @Override public int getWeakPower(IBlockState state,net.minecraft.world.IBlockAccess access,BlockPos pos,net.minecraft.util.EnumFacing side){return 0;}
     @Override public boolean isFullCube(IBlockState state){return false;}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityConstructorPart();}
