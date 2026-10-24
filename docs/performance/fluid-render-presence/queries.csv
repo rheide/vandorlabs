@@ -1,0 +1,7 @@
+scenario,queries,reference_cpu_ns,cached_cpu_ns,reference_bytes,cached_bytes
+dry-door,5000,594816,123271,920000,0
+adjacent-water-door,5000,2567889,406713,3000000,280000
+dry-wall,5000,316273,84949,0,0
+stored-water-wall,5000,157987,97843,0,0
+dry-diagonal-wall,5000,314650,84569,0,0
+stored-water-diagonal-wall,5000,157696,98164,0,0

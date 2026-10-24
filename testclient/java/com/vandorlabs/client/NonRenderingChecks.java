@@ -38,6 +38,7 @@ public final class NonRenderingChecks {
         vehicleWorldCompatibility();
         if(args.length>0 && args[0].equals("diagonal-joins")){DiagonalJoinMatrixChecks.run();return;}
         if(args.length>0 && args[0].equals("load-safety")){LoadSafetyChecks.run();return;}
+        FluidPresenceChecks.run();
         DiagonalSurfaceChecks.run();
         placement();
         contiguous();

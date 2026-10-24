@@ -35,6 +35,7 @@ final class WaterloggedSurfaceChecks {
         FluidWaterlineChecks.run(mc,output);
         DoorFluidSurfaceChecks.run(mc,output);
         WaterloggedRenderChecks.run(mc,output);
+        FluidPresenceRuntimeChecks.run(mc,output);
         require(WaterloggedRenderer.sprite(new FluidStack(FluidRegistry.WATER,1000))==mc.getTextureMapBlocks().getAtlasSprite(FluidRegistry.WATER.getStill().toString()),"contained water must use still artwork on every face");
         DiagonalFluidJoinChecks.run(mc,output);
         NativeFluidContactChecks.run(mc,output);

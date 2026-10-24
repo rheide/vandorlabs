@@ -2,6 +2,8 @@
 
 ## 2.5
 
+- Cache native-water adjacency for door and trapdoor render hints, avoiding repeated neighbour scans during pass selection, batching and fluid drawing. Keep stored fluids live, invalidate on world/chunk updates, and share bounded neighbourhood invalidation with fluid surface meshes. Add legacy-parity matrices and actual-client CPU/allocation comparisons.
+
 - Join Flat Navigation Tables across opposing and mixed facings into one continuous screen, keeping exterior controls. Move the integrated Data Chip Mounts near the top of both navigation modules and use the standalone mount's exact size and proportions.
 - Add navigation display artwork selection from Programmable Block materials and Programmable Screen designs, with static/animated playback. Optional redstone and matching-chip security gates control visibility; navigation modules consume power and never emit physical or channel signals. Preserve settings, artwork orientation and the shared chip through resizing, reloads and vehicle rotation.
 

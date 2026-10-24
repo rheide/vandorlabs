@@ -19,7 +19,7 @@ import net.minecraft.world.World;
 /** Settings and pair links; event-driven power, no idle tile ticks. */
 public class TileEntityProgrammableTrapdoor extends TileEntity implements RedstoneChannelMember {
     public final com.vandorlabs.blocks.ContainedFluids fluids=new com.vandorlabs.blocks.ContainedFluids(this);
-    @Override public boolean shouldRenderInPass(int pass){return pass==0||pass==1&&world!=null&&com.vandorlabs.blocks.WaterloggedParts.wet(world,pos);}
+    @Override public boolean shouldRenderInPass(int pass){return pass==0||pass==1&&world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this);}
     private ChannelList channels=ChannelList.EMPTY;
     @Override public ChannelList getRedstoneChannels(){return channels;}
 

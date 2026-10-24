@@ -12,7 +12,7 @@ import net.minecraftforge.fluids.*;
 final class WaterloggedRenderer {
     static TextureAtlasSprite sprite(FluidStack stack){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(stack.getFluid().getStill(stack).toString());}
     static void render(TileEntity tile,double x,double y,double z){
-        ContainedFluids data=WaterloggedParts.data(tile);if(data==null||!WaterloggedParts.wet(tile.getWorld(),tile.getPos()))return;
+        ContainedFluids data=WaterloggedParts.data(tile);if(data==null||!RenderFluidPresence.wet(tile))return;
         WaterloggedSurfaceMesh.Entry entry=WaterloggedSurfaceMesh.entry(tile);
         java.util.List<WaterloggedSurfaceMesh.Surface> surfaces=entry.mesh;if(surfaces.isEmpty())return;
         net.minecraft.block.material.Material cameraMaterial=cameraMaterial();

@@ -268,10 +268,10 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     @Override
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public boolean hasFastRenderer() {
-        return !(world!=null&&com.vandorlabs.blocks.WaterloggedParts.wet(world,pos))&&com.vandorlabs.client.OpaqueDoorBatch.available(this);
+        return !(world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this))&&com.vandorlabs.client.OpaqueDoorBatch.available(this);
     }
     @Override public boolean shouldRenderInPass(int pass) {
-        return pass==1&&world!=null&&com.vandorlabs.blocks.WaterloggedParts.wet(world,pos)||isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
+        return pass==1&&world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this)||isLowerDoor() && (pass == 0 || pass == 1 && hasGlass());
     }
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
         return slideDirection==0?super.getRenderBoundingBox():
