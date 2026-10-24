@@ -47,39 +47,32 @@ public final class RedstoneScreenInteractions {
         }
         return false;
     }
-    public static boolean supports(net.minecraft.block.Block block){
-        return block==ModBlocks.ANIMATED_SCREEN_SELECTOR || block instanceof BlockProgrammableDiagonalScreen
-            || block instanceof BlockProgrammableConsole || block instanceof BlockProgrammableInput
-            || block instanceof BlockProgrammableHalfConsole || block instanceof BlockDiagonalHalfConsole;
+    public static com.vandorlabs.render.ScreenFamilyPolicy.Kind family(net.minecraft.block.Block block){
+        if(block instanceof BlockProgrammableInput)return block instanceof BlockProgrammableFullInput?com.vandorlabs.render.ScreenFamilyPolicy.Kind.FULL_INPUT:com.vandorlabs.render.ScreenFamilyPolicy.Kind.HALF_INPUT;
+        if(block instanceof BlockDiagonalHalfConsole)return com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL_HALF;
+        if(block instanceof BlockProgrammableConsole)return com.vandorlabs.render.ScreenFamilyPolicy.Kind.CONSOLE;
+        if(block instanceof BlockProgrammableHalfConsole)return com.vandorlabs.render.ScreenFamilyPolicy.Kind.HALF_CONSOLE;
+        if(block instanceof BlockProgrammableDiagonalScreen)return com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL;
+        return block==ModBlocks.ANIMATED_SCREEN_SELECTOR?com.vandorlabs.render.ScreenFamilyPolicy.Kind.FLAT:null;
     }
-    public static boolean supportsSlot(net.minecraft.block.Block block,int slot){
-        return supports(block) && (slot==0 || slot==1 && (block instanceof BlockProgrammableConsole || block instanceof BlockProgrammableHalfConsole));
-    }
-    public static boolean half(net.minecraft.block.Block block,int slot){
-        return block instanceof BlockProgrammableInput && !(block instanceof BlockProgrammableFullInput)
-            || block instanceof BlockDiagonalHalfConsole || block instanceof BlockProgrammableHalfConsole
-            || block instanceof BlockProgrammableConsole && slot==1;
-    }
-    public static int displayHeight(net.minecraft.block.Block block,int slot){return half(block,slot)?64:128;}
-    public static int rowTop(net.minecraft.block.Block block,int slot){return half(block,slot)?8:ROW_TOP;}
+    public static boolean supports(net.minecraft.block.Block block){return family(block)!=null;}
+    public static boolean supportsSlot(net.minecraft.block.Block block,int slot){return com.vandorlabs.render.ScreenFamilyPolicy.supportsSlot(family(block),slot);}
+    public static boolean half(net.minecraft.block.Block block,int slot){return com.vandorlabs.render.ScreenFamilyPolicy.half(family(block),slot);}
+    public static int displayHeight(net.minecraft.block.Block block,int slot){return com.vandorlabs.render.ScreenFamilyPolicy.displayHeight(family(block),slot);}
+    public static int rowTop(net.minecraft.block.Block block,int slot){return com.vandorlabs.render.ScreenFamilyPolicy.rowTop(family(block),slot);}
     public static ScreenSurface.Quad surface(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot){
-        net.minecraft.block.Block block=state.getBlock();
-        if(block instanceof BlockProgrammableInput){
-            boolean full=block instanceof BlockProgrammableFullInput;
-            boolean keyboard=state.getValue(BlockProgrammableInput.KEYBOARD),upper=state.getValue(BlockProgrammableInput.UPPER);
-            InputSurfaceLayout.Mounted layout=tile!=null && tile.isCeilingMounted()?InputSurfaceLayout.ceilingInput(full,!full && tile.isSmallInput(),tile.getCeilingPosition(full?1:2)):
-                full?InputSurfaceLayout.fullInput(keyboard,upper):InputSurfaceLayout.halfInput(keyboard,upper,tile==null?(upper?2:0):tile.getWallPosition(upper?2:0),tile!=null && tile.isSmallInput());
-            return ScreenSurface.input(layout.surface);
-        }
-        if(block instanceof BlockDiagonalHalfConsole)return ScreenSurface.halfDiagonal(state.getValue(BlockDiagonalHalfConsole.UPPER));
-        if(block instanceof BlockProgrammableConsole)return slot==1?ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()):ScreenSurface.quad(ScreenSurface.Kind.CONSOLE,false);
-        if(block instanceof BlockProgrammableHalfConsole)return ScreenSurface.input(slot==1?InputSurfaceLayout.halfConsoleRear():InputSurfaceLayout.halfConsoleFront());
-        return surface(state);
+        net.minecraft.block.Block block=state.getBlock();com.vandorlabs.render.ScreenFamilyPolicy.Kind kind=family(block);
+        boolean input=block instanceof BlockProgrammableInput,full=block instanceof BlockProgrammableFullInput;
+        boolean keyboard=input&&state.getValue(BlockProgrammableInput.KEYBOARD);
+        boolean upper=input?state.getValue(BlockProgrammableInput.UPPER):block instanceof BlockDiagonalHalfConsole&&state.getValue(BlockDiagonalHalfConsole.UPPER);
+        boolean inverted=block instanceof BlockProgrammableDiagonalScreen&&state.getValue(BlockProgrammableDiagonalScreen.INVERTED);
+        int wall=input?(tile==null?(upper?2:0):tile.getWallPosition(upper?2:0)):0;
+        int ceiling=input?(tile==null?(full?1:2):tile.getCeilingPosition(full?1:2)):0;
+        return com.vandorlabs.render.ScreenFamilyPolicy.surface(kind,slot,keyboard,upper,inverted,input&&tile!=null&&tile.isCeilingMounted(),wall,input&&tile!=null&&tile.isSmallInput(),ceiling);
     }
     public static ScreenSurface.Quad surface(IBlockState state){
         boolean diagonal=state.getBlock() instanceof BlockProgrammableDiagonalScreen;
-        return ScreenSurface.quad(diagonal?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT,
-                diagonal && state.getValue(BlockProgrammableDiagonalScreen.INVERTED));
+        return com.vandorlabs.render.ScreenFamilyPolicy.surface(diagonal?com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL:com.vandorlabs.render.ScreenFamilyPolicy.Kind.FLAT,0,false,false,diagonal&&state.getValue(BlockProgrammableDiagonalScreen.INVERTED),false,0,false,1);
     }
     public static EnumFacing facing(IBlockState state){return state.getValue(state.getBlock() instanceof BlockProgrammableDiagonalScreen?BlockProgrammableDiagonalScreen.FACING:state.getBlock() instanceof BlockProgrammableInput?BlockProgrammableInput.FACING:BlockAnimatedScreenSelector.FACING);}
     public static Vec3d local(Vec3d point,EnumFacing facing){

@@ -50,11 +50,10 @@ public class BlockProgrammableDiagonalScreen extends BlockAnimatedScreenSelector
     @Override
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        boolean inverted = side == EnumFacing.DOWN
-                || (side.getAxis().isHorizontal() && hitY > 0.5F);
-        return getDefaultState()
-                .withProperty(FACING, placementFacing(world, pos, side, placer))
-                .withProperty(INVERTED, inverted);
+        com.vandorlabs.render.ScreenFamilyPolicy.Placement placement=com.vandorlabs.render.ScreenFamilyPolicy.placement(
+                com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL,side.getIndex(),hitY,placer.isSneaking(),
+                placementFacing(world,pos,side,placer).getIndex(),null);
+        return getDefaultState().withProperty(FACING,EnumFacing.getFront(placement.facing)).withProperty(INVERTED,placement.inverted);
     }
 
     @Override

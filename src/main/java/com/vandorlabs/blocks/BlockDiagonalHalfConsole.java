@@ -21,10 +21,11 @@ public final class BlockDiagonalHalfConsole extends BlockAnimatedScreenSelector 
     }
     public int getMetaFromState(IBlockState s) { return s.getValue(FACING).getIndex() | (s.getValue(UPPER)?8:0); }
     public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase player) {
-        boolean upper=side==EnumFacing.DOWN || side.getAxis().isHorizontal() && y>.5F;
         Boolean slab=SlabPlacement.upperHalf(world.getBlockState(pos.offset(side.getOpposite())));
-        if (side.getAxis().isHorizontal() && slab!=null) upper=slab;
-        return getDefaultState().withProperty(FACING,side.getAxis().isHorizontal()?side:placementFacing(world,pos,side,player)).withProperty(UPPER,upper);
+        com.vandorlabs.render.ScreenFamilyPolicy.Placement placement=com.vandorlabs.render.ScreenFamilyPolicy.placement(
+                com.vandorlabs.render.ScreenFamilyPolicy.Kind.DIAGONAL_HALF,side.getIndex(),y,player.isSneaking(),
+                side.getAxis().isHorizontal()?side.getIndex():placementFacing(world,pos,side,player).getIndex(),slab);
+        return getDefaultState().withProperty(FACING,EnumFacing.getFront(placement.facing)).withProperty(UPPER,placement.upper);
     }
     public boolean isOpaqueCube(IBlockState s) { return false; }
     public boolean isFullCube(IBlockState s) { return false; }

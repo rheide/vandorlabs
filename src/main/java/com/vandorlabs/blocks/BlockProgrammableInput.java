@@ -57,7 +57,6 @@ public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
         boolean sideFace = side.getAxis().isHorizontal();
-        boolean keyboard = !sideFace || placer.isSneaking();
         // Wall panels still use the supporting face because it defines their
         // mount. Horizontal keyboard placement uses the same player-facing
         // convention as the rest of the programmable family.
@@ -69,13 +68,14 @@ public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
         // use. An underside
         // click selects the upper plane; top-face and sneak/lower clicks use
         // the mid-height shelf at the top of the lower half.
-        boolean upper = side == EnumFacing.DOWN || (sideFace && hitY > 0.5F);
         IBlockState support = world.getBlockState(pos.offset(side.getOpposite()));
         Boolean slabUpper = SlabPlacement.upperHalf(support);
-        if (sideFace && slabUpper != null) upper = slabUpper;
-        return getDefaultState().withProperty(FACING, facing)
-                .withProperty(KEYBOARD, keyboard)
-                .withProperty(UPPER, upper);
+        com.vandorlabs.render.ScreenFamilyPolicy.Placement placement=com.vandorlabs.render.ScreenFamilyPolicy.placement(
+                this instanceof BlockProgrammableFullInput?com.vandorlabs.render.ScreenFamilyPolicy.Kind.FULL_INPUT:com.vandorlabs.render.ScreenFamilyPolicy.Kind.HALF_INPUT,
+                side.getIndex(),hitY,placer.isSneaking(),facing.getIndex(),slabUpper);
+        return getDefaultState().withProperty(FACING,EnumFacing.getFront(placement.facing))
+                .withProperty(KEYBOARD,placement.keyboard)
+                .withProperty(UPPER,placement.upper);
     }
 
     @Override

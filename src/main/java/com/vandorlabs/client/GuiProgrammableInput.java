@@ -58,44 +58,26 @@ public class GuiProgrammableInput extends GuiContainer {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
-        buttonList.add(layout.tab(90,0,2,"Controls"));
-        buttonList.add(layout.tab(91,1,2,"Housing"));
         listX=layout.listX;listY=guiTop+54;
         screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0);
-        for(int i=0;i<3;i++) {
-            buttonList.add(layout.choice(1+i,i,3,38,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
-            buttonList.add(layout.choice(10+i,i,3,68,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
+        for(com.vandorlabs.ui.ScreenSelectorDialog.Control control:com.vandorlabs.ui.ScreenSelectorDialog.controls(layout,sharedDialogState(),profile(),key->I18n.format(key))){
+            com.vandorlabs.ui.ProgrammableDialogLayout.Button b=control.bounds;GuiButton button=new GuiButton(b.id,b.x,b.y,b.width,b.height,b.id>=90?fontRenderer.trimStringToWidth(b.label,b.width-4):b.label);button.enabled=control.enabled;buttonList.add(button);
         }
-        if(!(te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole)) {
-            buttonList.add(layout.choice(30,0,2,88,I18n.format("gui.vandorlabs.input.small")));
-            buttonList.add(layout.choice(31,1,2,88,I18n.format("gui.vandorlabs.selector.normal")));
-        }
-        buttonList.add(layout.control(4,108,""));
-        buttonList.add(layout.control(0,130,""));
-        buttonList.add(layout.control(32,152,sidesLabel()));
-        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+185,154,18);
+        com.vandorlabs.ui.ProgrammableDialogLayout.Button channels=com.vandorlabs.ui.ScreenSelectorDialog.channelBounds(layout,profile());
+        channelField=new GuiTextField(channels.id,fontRenderer,channels.x,channels.y,channels.width,channels.height);
         ChannelFields.configure(channelField);
 
         channelField.setText(te.getRedstoneChannels().toString());
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housingTexture)
                 .visibleRows(rows).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
-        buttonList.add(layout.done(20));refreshButtons();refreshTabs();
+        refreshButtons();refreshTabs();
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=91)b.enabled=b.id-90!=textureTab;}
 
     private String sidesLabel(){return "Wall texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
-    private void refreshButtons() {
-        for (GuiButton button : buttonList) {
-            if(button.id==4){button.displayString=(screenList.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab==0 && screenList.hasPair();}
-            if (button.id == 0) {
-                button.displayString = "Trigger: " + (!redstoneEnabled?"Disabled":redstoneInverted?"Redstone OFF":"Redstone ON");
-            }
-            if (button.id >= 1 && button.id <= 3) button.enabled = displayMode != button.id - 1;
-            if (button.id >= 10 && button.id <= 12) button.enabled = speedIndex != button.id - 10;
-            if (button.id == 30) button.enabled = !smallInput;
-            if (button.id == 31) button.enabled = smallInput;
-        }
-    }
+    private com.vandorlabs.ui.ScreenSelectorDialog.Profile profile(){return te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole?com.vandorlabs.ui.ScreenSelectorDialog.Profile.DIAGONAL_HALF:com.vandorlabs.ui.ScreenSelectorDialog.Profile.INPUT;}
+    private com.vandorlabs.ui.ScreenSelectorDialog.State sharedDialogState(){return new com.vandorlabs.ui.ScreenSelectorDialog.State(false,textureTab,displayMode,speedIndex,!redstoneEnabled?0:redstoneInverted?2:1,te.getSurfaceTextureLayout(),screenList.framed(),textureTab==0&&screenList.hasPair(),smallInput);}
+    private void refreshButtons(){for(com.vandorlabs.ui.ScreenSelectorDialog.Control control:com.vandorlabs.ui.ScreenSelectorDialog.controls(layout,sharedDialogState(),profile(),key->I18n.format(key)))for(GuiButton button:buttonList)if(button.id==control.bounds.id){button.enabled=control.enabled;if(button.id<90)button.displayString=control.bounds.label;}}
 
     private int maxScroll() {
         return Math.max(0, TileEntityAnimatedScreenSelector.INPUT_PANELS.length - ROWS);
@@ -175,26 +157,21 @@ public class GuiProgrammableInput extends GuiContainer {
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
             int thumbHeight, int maximum, int dragOffset) {
-        int travel = trackHeight - thumbHeight;
-        if (maximum <= 0 || travel <= 0) {
-            return 0;
-        }
-        int thumbTop = Math.max(0, Math.min(travel,
-                mouseY - trackTop - dragOffset));
-        return Math.round((float) thumbTop * maximum / travel);
+        return com.vandorlabs.ui.DialogInput.scrollForDrag(mouseY,trackTop,trackHeight,thumbHeight,maximum,dragOffset);
     }
 
     @Override
     protected void actionPerformed(GuiButton button) {
+        com.vandorlabs.ui.ScreenSelectorDialog.State next=sharedDialogState().action(button.id,GuiOptionCycle.direction());
         if(button.id>=90 && button.id<=91){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
         if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
-        if(button.id==4){if(!screenList.hasPair())return;screenList.setFramed(!screenList.framed());chooseArtwork(screenList);return;}
-        if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.getSurfaceTextureLayout()));return;}
-        if (button.id == 0) {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
-        else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
-        else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
-        else if (button.id == 30) smallInput = true;
-        else if (button.id == 31) smallInput = false;
+        if(button.id==4){if(!screenList.hasPair())return;screenList.setFramed(next.framed);chooseArtwork(screenList);return;}
+        if(button.id==32){te.setSurfaceTextureLayout(next.sides);button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.getSurfaceTextureLayout()));return;}
+        if (button.id == 0) {redstoneEnabled=next.redstoneEnabled();redstoneInverted=next.redstoneInverted();}
+        else if (button.id >= 1 && button.id <= 3) displayMode = next.mode;
+        else if (button.id >= 10 && button.id <= 12) speedIndex = next.speed;
+        else if (button.id == 30) smallInput = next.smallInput;
+        else if (button.id == 31) smallInput = next.smallInput;
         else return;
         refreshButtons();
         sendUpdate();

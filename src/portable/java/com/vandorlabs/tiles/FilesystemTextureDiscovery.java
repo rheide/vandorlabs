@@ -42,8 +42,9 @@ public final class FilesystemTextureDiscovery {
         CRC32 crc=new CRC32();crc.update(relative.getBytes(StandardCharsets.UTF_8));
         return MaterialChoicePolicy.FILESYSTEM_BASE|((int)crc.getValue()&0x3fffffff);
     }
+    public static Path root(Path defaultRoot){return Paths.get(System.getProperty("vandorlabs.textureDirectory",defaultRoot.toString())).toAbsolutePath().normalize();}
     public static Catalog discover(Path defaultRoot,Consumer<String> warning){
-        Path root=Paths.get(System.getProperty("vandorlabs.textureDirectory",defaultRoot.toString())).toAbsolutePath().normalize();
+        Path root=root(defaultRoot);
         List<Entry> entries=new ArrayList<>();
         try {
             Files.createDirectories(root);boolean categoryExists;

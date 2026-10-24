@@ -7,9 +7,8 @@ import net.minecraft.util.EnumFacing;
 final class DirectionalPlacement {
     private DirectionalPlacement() {}
     static EnumFacing alongPlayer(EntityLivingBase placer) { return placer.getHorizontalFacing(); }
-    static EnumFacing towardPlayer(EntityLivingBase placer) { return alongPlayer(placer).getOpposite(); }
+    static EnumFacing towardPlayer(EntityLivingBase placer) { return EnumFacing.getFront(com.vandorlabs.render.ScreenFamilyPolicy.towardPlayer(alongPlayer(placer).getIndex())); }
     static EnumFacing towardView(EntityLivingBase placer) {
-        return placer.rotationPitch > 45 ? EnumFacing.UP
-                : placer.rotationPitch < -45 ? EnumFacing.DOWN : towardPlayer(placer);
+        return EnumFacing.getFront(com.vandorlabs.render.ScreenFamilyPolicy.towardView(alongPlayer(placer).getIndex(),placer.rotationPitch));
     }
 }
