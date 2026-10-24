@@ -14,7 +14,7 @@ import net.minecraft.util.math.*;
 public final class TileEntityConstructor extends TileEntityTokenSlot {
     public TileEntityConstructor(){super(true);}
     @Override public boolean chip(){return true;}
-    @Override public boolean accepts(net.minecraft.item.ItemStack stack){return world!=null&&world.getBlockState(pos).getBlock() instanceof BlockConstructorCore&&core().specification().hasChip()&&super.accepts(stack);}
+    @Override public boolean accepts(net.minecraft.item.ItemStack stack){BlockConstructorCore core=core();return core!=null&&core.specification().hasChip()&&super.accepts(stack);}
     @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return formed()&&super.isItemValidForSlot(slot,stack);}
     private boolean changing;private IBlockState removedState;
     private int coreX,coreZ;
@@ -22,19 +22,25 @@ public final class TileEntityConstructor extends TileEntityTokenSlot {
     private String assemblyProblem="";
     /** Facing/formed changes belong to this assembly; replacing the tile loses its detected corner. */
     @Override public boolean shouldRefresh(net.minecraft.world.World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
-    public BlockConstructorCore core(){return (BlockConstructorCore)(removedState==null?getBlockType():removedState.getBlock());}
-    public EnumFacing facing(){return (removedState==null?world.getBlockState(pos):removedState).getValue(BlockVandorDirectional.FACING);}
-    public boolean formed(){return removedState!=null?removedState.getValue(BlockConstructorCore.FORMED):world!=null && world.getBlockState(pos).getBlock() instanceof BlockConstructorCore && world.getBlockState(pos).getValue(BlockConstructorCore.FORMED);}
-    private BlockPos rotated(int x,int y,int z,EnumFacing direction){return com.vandorlabs.vehicle.VehicleRotation.cell(new BlockPos(x,y,z),core().width,core().depth,(direction.getHorizontalIndex()+2)&3);}
+    /** Render lists and shadow passes may retain this tile after its block disappears. */
+    private IBlockState coreState(){
+        if(removedState!=null)return removedState.getBlock() instanceof BlockConstructorCore?removedState:null;
+        if(world==null||isInvalid()||!world.isBlockLoaded(pos))return null;
+        IBlockState state=world.getBlockState(pos);return state.getBlock() instanceof BlockConstructorCore?state:null;
+    }
+    public BlockConstructorCore core(){IBlockState state=coreState();return state==null?null:(BlockConstructorCore)state.getBlock();}
+    public EnumFacing facing(){IBlockState state=coreState();return state==null?EnumFacing.NORTH:state.getValue(BlockVandorDirectional.FACING);}
+    public boolean formed(){IBlockState state=coreState();return state!=null&&state.getValue(BlockConstructorCore.FORMED);}
+    private BlockPos rotated(int x,int y,int z,EnumFacing direction){BlockConstructorCore core=core();return core==null?BlockPos.ORIGIN:com.vandorlabs.vehicle.VehicleRotation.cell(new BlockPos(x,y,z),core.width,core.depth,(direction.getHorizontalIndex()+2)&3);}
     public int activity(){return activity;}
     public void cycleActivity(){activity=(activity+1)%3;markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
     public BlockPos pivot(){return rotated(coreX,0,coreZ,facing());}
     public BlockPos cell(int x,int y,int z){return pos.add(rotated(x,y,z,facing()).subtract(pivot()));}
     private BlockPos candidateCell(int x,int y,int z,EnumFacing direction,int cornerX,int cornerZ){return pos.add(rotated(x,y,z,direction).subtract(rotated(cornerX,0,cornerZ,direction)));}
     public String assemblyProblem(){return assemblyProblem;}
-    public boolean frame(int x,int y,int z){return y==0 || (x==0 || x==core().width-1) && (z==0 || z==core().depth-1) || y==core().height-1 && (x==0 || x==core().width-1 || z==0 || z==core().depth-1);}
+    public boolean frame(int x,int y,int z){if(core()==null)return false;return y==0 || (x==0 || x==core().width-1) && (z==0 || z==core().depth-1) || y==core().height-1 && (x==0 || x==core().width-1 || z==0 || z==core().depth-1);}
     public boolean assemble(){
-        if(world==null || world.isRemote || changing || formed())return false;
+        if(world==null || world.isRemote || changing || coreState()==null || formed())return false;
         Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
         EnumFacing selected=null;int selectedX=0,selectedZ=0,best=Integer.MAX_VALUE;
         EnumFacing preferred=facing();
@@ -95,9 +101,9 @@ public final class TileEntityConstructor extends TileEntityTokenSlot {
         }
     }
     @Override public boolean isUsableByPlayer(net.minecraft.entity.player.EntityPlayer player){return mount()!=null&&super.isUsableByPlayer(player);}
-    @Override public AxisAlignedBB getRenderBoundingBox(){BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin.getX(),origin.getY(),origin.getZ(),origin.getX()+(turn?core().depth:core().width),origin.getY()+core().height,origin.getZ()+(turn?core().width:core().depth));}
+    @Override public AxisAlignedBB getRenderBoundingBox(){if(!formed())return new AxisAlignedBB(pos);BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin.getX(),origin.getY(),origin.getZ(),origin.getX()+(turn?core().depth:core().width),origin.getY()+core().height,origin.getZ()+(turn?core().width:core().depth));}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
-    @Override public boolean hasFastRenderer(){return world==null||!core().specification().hasChip();}
+    @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip();}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity);return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):1;}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}

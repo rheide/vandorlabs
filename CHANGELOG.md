@@ -2,6 +2,8 @@
 
 ## 2.5
 
+- Prevent client crashes during rapid multiblock destruction: stale Core tiles now return safe local render bounds and emit no geometry after their block disappears, including during shader shadow passes. Guard detached, invalidated and replaced Core states through the same lifecycle checks.
+
 - Cache native-water adjacency for door and trapdoor render hints, avoiding repeated neighbour scans during pass selection, batching and fluid drawing. Keep stored fluids live, invalidate on world/chunk updates, and share bounded neighbourhood invalidation with fluid surface meshes. Add legacy-parity matrices and actual-client CPU/allocation comparisons.
 
 - Join Flat Navigation Tables across opposing and mixed facings into one continuous screen, keeping exterior controls. Move the integrated Data Chip Mounts near the top of both navigation modules and use the standalone mount's exact size and proportions.
