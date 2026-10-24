@@ -22,6 +22,7 @@ final class ModularGearRuntimeChecks {
         GearTileEntity tile=(GearTileEntity)world.getTileEntity(root);require(tile.rebuild(),"formation: "+tile.error());return tile.loadedController();
     }
     static void run(WorldServer world,EntityPlayerMP player)throws Exception{
+        VehicleWorldRuntimeChecks.run(world);
         BlockPos placement=new BlockPos(475,215,180);world.setBlockState(placement,GearRegistry.LANDING_PLATE.getDefaultState());
         require(GearRegistry.LANDING_PLATE.collisionRayTrace(world.getBlockState(placement),world,placement,new Vec3d(475.5,217,180.5),new Vec3d(475.5,214,180.5))!=null,"unformed plate can be selected");
         ItemStack held=player.getHeldItemMainhand();try{player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(GearRegistry.GEAR_EXTENDER));

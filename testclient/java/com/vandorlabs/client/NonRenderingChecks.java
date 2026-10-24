@@ -33,6 +33,9 @@ public final class NonRenderingChecks {
         ModBlocks.PROGRAMMABLE_SLAB = new BlockProgrammableSlab();
         ModBlocks.PROGRAMMABLE_DIAGONAL_WALL = new BlockProgrammableWall("programmable_diagonal_wall", BlockProgrammableWall.Shape.DIAGONAL);
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_glass"));
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(com.vandorlabs.gear.GearTileEntity.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_gear"));
+        if(args.length>0 && args[0].equals("vehicle-world")){vehicleWorldCompatibility();return;}
+        vehicleWorldCompatibility();
         if(args.length>0 && args[0].equals("diagonal-joins")){DiagonalJoinMatrixChecks.run();return;}
         if(args.length>0 && args[0].equals("load-safety")){LoadSafetyChecks.run();return;}
         DiagonalSurfaceChecks.run();
@@ -104,6 +107,18 @@ public final class NonRenderingChecks {
         TrapdoorSectionPresenceChecks.run();
         ScreenTextureLocationChecks.run();
         DiagonalChunkChecks.run();
+    }
+
+    private static void vehicleWorldCompatibility(){
+        com.vandorlabs.vehicle.VehicleWorldRuntimeChecks.run(new MemoryWorld(false));
+        MemoryWorld parent=new MemoryWorld(false);parent.chunkLimit=true;
+        BlockPos p=new BlockPos(15,8,15);parent.states.put(p,Blocks.STONE_SLAB.getDefaultState());
+        com.vandorlabs.vehicle.VehicleWorld view=new com.vandorlabs.vehicle.VehicleWorld(parent,
+                com.vandorlabs.vehicle.VehicleStructure.display(Collections.emptyList()));
+        // Native neighbor-brightness sampling would request the missing east/south chunks.
+        int expected=Math.max(parent.getLight(p.up(),false),Math.max(parent.getLight(p.west(),false),parent.getLight(p.north(),false)));
+        if(view.getLight(p,true)!=expected)throw new AssertionError("Vehicle light query crossed an unloaded chunk boundary");
+        System.out.println("Vehicle light boundary PASS neighbor brightness skips unloaded parent chunks");
     }
 
     private static void placement() {

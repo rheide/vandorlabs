@@ -15,6 +15,8 @@ def main():
     parser.add_argument('--forge', required=True, type=Path, help='Forge server JAR with its installed libraries')
     parser.add_argument('--jar', required=True, type=Path, help='Built standard Vandor Labs JAR')
     parser.add_argument('--java', default='java', help='Java 8 executable')
+    parser.add_argument('--mod', action='append', default=[], type=Path, help='Additional compatibility mod JAR (repeatable)')
+    parser.add_argument('--vehicle-world-checks', action='store_true', help='Run carried-tile chunk isolation checks on the physical server')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     output = Path(tempfile.mkdtemp(prefix='server-startup-', dir=root / 'build'))
@@ -24,6 +26,8 @@ def main():
     (output / 'mods').mkdir()
     artifact = args.jar.resolve()
     shutil.copyfile(artifact, output / 'mods' / artifact.name)
+    for mod in args.mod:
+        shutil.copyfile(mod, output / 'mods' / mod.name)
     (output / 'artifact.sha256').write_text(hashlib.sha256(artifact.read_bytes()).hexdigest() + '\n')
     (output / 'eula.txt').write_text('eula=true\n')
     (output / 'server.properties').write_text(
@@ -39,7 +43,8 @@ def main():
     for phase in ('prepare', 'place', 'reload'):
         path = output / (phase + '.log')
         with path.open('w') as log:
-            proc = subprocess.Popen([args.java, '-Xmx2G', '-jar', str(args.forge.resolve()), 'nogui'],
+            checks = ['-Dvandorlabs.vehicleWorldCompatibilityChecks=true'] if args.vehicle_world_checks else []
+            proc = subprocess.Popen([args.java, '-Xmx2G', *checks, '-jar', str(args.forge.resolve()), 'nogui'],
                                     cwd=output, stdin=subprocess.PIPE, stdout=log, stderr=subprocess.STDOUT, text=True)
             def wait_for(marker, timeout=150):
                 deadline = time.monotonic() + timeout
@@ -58,6 +63,8 @@ def main():
                 proc.stdin.flush()
             try:
                 wait_for('Done (')
+                if args.vehicle_world_checks:
+                    wait_for('vehicle-world-compatibility PASS')
                 if phase == 'prepare':
                     command('setworldspawn 4 12 4')
                     command('say VANDOR_SPAWN_PREPARED')

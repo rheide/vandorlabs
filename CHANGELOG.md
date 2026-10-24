@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.5
+
+- Fix dedicated-server crashes when modular landing gear retracts in Hover mode with Thaumic Augmentation installed. Carried tile changes now queue vehicle snapshot persistence without creating synthetic chunks or invoking chunk capability handlers.
+- Apply the same dirty-state handling to all carried tiles, ignore replaced tile instances, and isolate comparator callbacks from foreign blocks in the read-only vehicle world.
+- Keep loaded-chunk lookups non-allocating during global collision events, including canopy discovery reached by moving gear in existing saved vehicles.
+- Read support solidity and light opacity directly from the captured blocks. Route additional light and sky queries through loaded parent-world sampling so foreign block models do not create synthetic chunks.
+- Add shared headless/live regressions for gear input reversal, saved targets, generic carried tiles, stale instances, comparator isolation and chunk-free block queries. Extend the isolated dedicated-server check to accept compatibility mods and run the same regression.
+
 ## 2.4
 
 - Synchronize cockpit toggle and slider controls with regular redstone screens on shared channels, including partial channel banks, saved levels, pulses and carried controls. Persist pending control changes before rebuilding a carried ramp.

@@ -27,6 +27,30 @@ conversion or block removal is required for this error.
 
 ## Verification
 
+### Carried tile isolation in 2.5
+
+`VehicleWorld` deliberately has `isRemote=true` even on a physical server. It must
+not create normal chunks as a side effect of saving carried tiles or answering
+block-model queries: chunk construction posts capability events to every mod.
+Thaumic Augmentation 2.1.7 selects its client ward storage for such a world, which
+loads a client-only class and crashes a dedicated server.
+
+Carried `markDirty()` calls now queue the existing vehicle snapshot adapter and
+ignore stale tile instances. Comparator callbacks are suppressed in the read-only
+view. Support solidity and opacity read captured block states; light and sky
+queries reuse loaded parent-world sampling. The simulation keeps its existing
+remote semantics.
+Loaded-chunk lookups return only already cached chunks; global collision handlers
+must not create new capability-bearing chunks while inspecting the simulation.
+
+Run `testVehicleWorldCompatibility` for the shared regression. The same checks run
+with the live modular gear checks. The physical-server runner accepts
+`--vehicle-world-checks` and repeatable `--mod OPTIONAL_MOD_JAR` arguments, allowing
+the installed Thaumic Augmentation, Thaumcraft and Baubles builds to be tested in
+an isolated world. This checks the capability boundary with client classes absent.
+
+### Shared API linkage
+
 Run the bytecode check with Java 8:
 
 ```sh
@@ -88,7 +112,7 @@ For a physical-server smoke check, supply an installed Forge server JAR with its
 libraries, the Java 8 executable and the standard mod artifact:
 
 ```sh
-python3 testclient/test_server_startup.py --forge FORGE_SERVER_JAR --java JAVA8 --jar build/libs/vandorlabs-2.4.jar
+python3 testclient/test_server_startup.py --forge FORGE_SERVER_JAR --java JAVA8 --jar build/libs/vandorlabs-2.5.jar
 ```
 
 This creates an isolated world under `build/`, places four front-canopy facings,

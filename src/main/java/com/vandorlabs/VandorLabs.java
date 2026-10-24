@@ -22,9 +22,9 @@ public class VandorLabs {
 
     public static final String MODID = "vandorlabs";
     public static final String NAME = "Vandor Labs";
-    public static final String VERSION = "2.4";
+    public static final String VERSION = "2.5";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t231";
+    public static final String BUILD_ID = "t236";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -93,6 +93,12 @@ public class VandorLabs {
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         com.vandorlabs.compat.WorldEditRotationCompat.install();
+    }
+
+    @EventHandler
+    public void serverStarted(net.minecraftforge.fml.common.event.FMLServerStartedEvent event){
+        if(Boolean.getBoolean("vandorlabs.vehicleWorldCompatibilityChecks"))
+            com.vandorlabs.vehicle.VehicleWorldRuntimeChecks.run(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0));
     }
 
     @EventHandler

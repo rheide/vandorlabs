@@ -82,13 +82,16 @@ public final class VehicleWorld extends World {
     }
     @Override protected IChunkProvider createChunkProvider() {
         return new IChunkProvider() {
-            public Chunk getLoadedChunk(int x,int z){return provideChunk(x,z);}
-            public Chunk provideChunk(int x,int z){return chunks.computeIfAbsent(((long)x<<32)^(z&0xffffffffL),k->new Chunk(VehicleWorld.this,x,z));}
+            // Global collision handlers inspect loaded chunks. A lookup must
+            // never allocate a chunk or post capability events for this view.
+            public Chunk getLoadedChunk(int x,int z){return chunks.get(chunkKey(x,z));}
+            public Chunk provideChunk(int x,int z){return chunks.computeIfAbsent(chunkKey(x,z),k->new Chunk(VehicleWorld.this,x,z));}
             public boolean tick(){return false;}
             public String makeString(){return "Vehicle local storage";}
             public boolean isChunkGeneratedAt(int x,int z){return true;}
         };
     }
+    private static long chunkKey(int x,int z){return ((long)x<<32)^(z&0xffffffffL);}
     @Override protected boolean isChunkLoaded(int x,int z,boolean allowEmpty){return true;}
     @Override public boolean isBlockLoaded(BlockPos p){return true;}
     @Override public boolean isBlockLoaded(BlockPos p,boolean allowEmpty){return true;}
@@ -102,15 +105,53 @@ public final class VehicleWorld extends World {
     @Override public boolean setBlockState(BlockPos p,IBlockState state,int flags){return false;}
     @Override public void setTileEntity(BlockPos p,TileEntity tile){}
     @Override public void removeTileEntity(BlockPos p){}
-    @Override public void notifyBlockUpdate(BlockPos p,IBlockState before,IBlockState after,int flags){if(controlUpdates!=null)controlUpdates.accept(p);}
+    /** Carried tiles are saved by VehicleSignals, never by a synthetic chunk.
+     * Chunk construction posts global capability events; a remote view on a
+     * physical server must not send other mods down their client-world paths. */
+    @Override public void markChunkDirty(BlockPos p,TileEntity tile){
+        if(tile!=null && tiles.get(p)==tile)controlChanged(p);
+    }
+    // Only explicit vehicle adapters may update controls. Inherited comparator
+    // callbacks would run arbitrary neighbouring mod tiles in this read-only view.
+    @Override public void updateComparatorOutputLevel(BlockPos p,net.minecraft.block.Block block){}
+    @Override public boolean isSideSolid(BlockPos p,net.minecraft.util.EnumFacing side,boolean fallback){
+        return isValid(p)?getBlockState(p).isSideSolid(this,p,side):fallback;
+    }
+    @Override public int getBlockLightOpacity(BlockPos p){return getBlockState(p).getLightOpacity(this,p);}
+    private void controlChanged(BlockPos p){if(controlUpdates!=null)controlUpdates.accept(p.toImmutable());}
+    @Override public void notifyBlockUpdate(BlockPos p,IBlockState before,IBlockState after,int flags){controlChanged(p);}
     @Override public void markBlockRangeForRenderUpdate(BlockPos a,BlockPos b){}
     @Override public boolean checkLight(BlockPos p){return false;}
     @Override public boolean checkLightFor(EnumSkyBlock type,BlockPos p){return false;}
-    @Override public int getCombinedLight(BlockPos p,int minimum){
-        BlockPos absolute=origin.add(p);
-        return parent.isBlockLoaded(absolute)?parent.getCombinedLight(absolute,Math.max(minimum,getBlockState(p).getLightValue(this,p))):0;
+    @Override public void setLightFor(EnumSkyBlock type,BlockPos p,int value){}
+    /** Light readers used by foreign block models must not fall back to local chunks. */
+    @Override public int getLight(BlockPos p){return loadedParent(p,0,parent::getLight);}
+    @Override public int getLight(BlockPos p,boolean neighbors){
+        return neighbors?neighborLight(p,at->getLight(at,false)):loadedParent(p,0,absolute->parent.getLight(absolute,false));
     }
-    @Override public int getLightFor(EnumSkyBlock type,BlockPos p){BlockPos at=origin.add(p);return parent.isBlockLoaded(at)?parent.getLightFor(type,at):0;}
+    private int neighborLight(BlockPos p,java.util.function.ToIntFunction<BlockPos> read){
+        if(loadedParent(p,false,absolute->parent.getBlockState(absolute).useNeighborBrightness())){
+            int light=0;
+            for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.VALUES)if(face!=net.minecraft.util.EnumFacing.DOWN)
+                light=Math.max(light,read.applyAsInt(p.offset(face)));
+            return light;
+        }
+        return read.applyAsInt(p);
+    }
+    @Override public int getLightFromNeighborsFor(EnumSkyBlock type,BlockPos p){
+        // World.getLightFromNeighborsFor is client-only in 1.12; use the shared
+        // primitive so this override also works during physical-server checks.
+        return type==EnumSkyBlock.SKY&&!provider.hasSkyLight()?0:neighborLight(p,at->getLightFor(type,at));
+    }
+    @Override public boolean canSeeSky(BlockPos p){return loadedParent(p,false,parent::canSeeSky);}
+    private <T> T loadedParent(BlockPos p,T fallback,java.util.function.Function<BlockPos,T> read){
+        BlockPos absolute=origin.add(p);
+        return parent.isBlockLoaded(absolute)?read.apply(absolute):fallback;
+    }
+    @Override public int getCombinedLight(BlockPos p,int minimum){
+        return loadedParent(p,0,absolute->parent.getCombinedLight(absolute,Math.max(minimum,getBlockState(p).getLightValue(this,p))));
+    }
+    @Override public int getLightFor(EnumSkyBlock type,BlockPos p){return loadedParent(p,0,absolute->parent.getLightFor(type,absolute));}
     @Override public net.minecraft.world.biome.Biome getBiome(BlockPos p){return parent.getBiome(origin.add(p));}
     @Override public long getTotalWorldTime(){return parent.getTotalWorldTime();}
     @Override public long getWorldTime(){return parent.getWorldTime();}
