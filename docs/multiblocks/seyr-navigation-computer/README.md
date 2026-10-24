@@ -30,6 +30,8 @@ Right-click the Core to form the complete computer. The normal appearance is Idl
 
 The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
 
+Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional chip security.
+
 These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.
 
 [All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)

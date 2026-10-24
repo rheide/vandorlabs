@@ -26,17 +26,19 @@ Right-click the Core. The frame becomes the complete model, and its occupied cel
 
 ![Pinnacle Meridian Drive: assemble](step-4.png)
 
-## 5. Insert a Data Chip
+## 5. Enable Security and insert a Data Chip
 
-Right-click the modeled chip holder with a Data Chip. The holder uses the existing Data Chip Mount behavior: one physical chip, company filtering, channels and the four insertion/return modes. The active appearance follows the reader output. Use the Configurizer or sneak-right-click the holder to configure it.
+Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.
 
-![Pinnacle Meridian Drive: insert a data chip](step-5.png)
+![Pinnacle Meridian Drive: enable security and insert a data chip](step-5.png)
 
 ## Facing and removal
 
 The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
 
 A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.
+
+Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional chip security.
 
 These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.
 

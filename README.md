@@ -484,6 +484,8 @@ The hidden fixed-design Space Door blocks and the old rotating/sliding aliases a
 
 [Fluid render presence measurements](docs/performance/fluid-render-presence.md) document the door/trapdoor adjacency cache, before/after query CPU and allocations, and regression coverage.
 
+[Machine display settings](docs/machine-displays.md) cover independent screen/keyboard artwork, input-only activation and optional native chip mounts.
+
 ### Release verification
 
 Run `gradlew verifyRelease` with Java 8 before distributing or tagging a release. This builds the standard JAR and runs the non-rendering and diagonal geometry suites, live glass/frame contact checks, live stair/trapdoor dialog checks, live gameplay/fluid regressions, and the bridge-machine/navigation display suite against that artifact. The glass checks include dry and waterlogged half-width diagonal panels beside solid blocks and a floor. Publishing tasks depend on this gate; a failed or missing live check blocks publication. The Windows live-client launcher requires the local Minecraft/Forge test runtime described above.
