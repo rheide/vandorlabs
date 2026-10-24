@@ -211,6 +211,18 @@ limits and the selected state.
 
 ## Building
 
+Forge 1.12.2 remains the default development target. The experimental NeoForge
+1.21.1 adapter uses an independent Java 21 build and the same portable behavior
+sources. See the [multi-version architecture](docs/development/multiversion.md)
+and [feature coverage](docs/development/feature-coverage.md) for the supported
+workflows and remaining conversion work; the modern target is not yet a full
+replacement for the Forge mod.
+
+With both JDKs installed, `python tools/build_all.py` runs shared contracts on
+Java 8 and Java 21, builds both targets, and collects their standard JARs in
+`build/libs/`. Set `JAVA8_HOME` and `JAVA21_HOME` when automatic JDK discovery
+does not find them. The existing commands below continue to build Forge alone.
+
 Aster, Rivet Dynamics, Vektor, Kestrel and Hadron machinery and their unused runtime code have been removed. Canopies and the other programmable block families remain available.
 
 Requirements: a Java 8 JDK, Python 3 with Pillow, and the included Gradle wrapper (Gradle 4.9 +

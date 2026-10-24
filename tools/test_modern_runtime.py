@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""Run bounded disposable NeoForge smoke phases and require explicit runtime evidence."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import signal
+import subprocess
+import sys
+import time
+from build_all import ROOT, java_home
+
+PLATFORM=ROOT/'platforms/neoforge-1.21.1'
+MARKERS={
+    'write':['wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
+    'read':['wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
+    'client':['block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','client-smoke PASS'],
+}
+CLIENT_IMAGES=['modern-world.png','modern-programmable-block.png','modern-programmable-block-gui2.png',
+               'modern-screen-scale3.png','modern-screen-scale2.png','modern-screen-world-a.png','modern-screen-world-b.png',
+               'modern-redstone-overlay-on.png','modern-redstone-editor.png','modern-redstone-overlay-eight.png',
+               'modern-wireless-world.png','modern-wireless-receiver-dialog.png','modern-wireless-transmitter-dialog.png']
+FATAL=re.compile(r'\bFATAL\b|Encountered an unexpected exception|Exception in server tick loop|Failed to start the minecraft server|This crash report has been saved to|Preparing crash report|Caused by: java\.lang\.(?:AssertionError|IllegalStateException)|Modern client:|Modern runtime check:')
+
+
+def verify(text,phase):
+    missing=[marker for marker in MARKERS[phase] if '[vandorlabs][modern] '+marker not in text]
+    failures=[line.strip()[:300] for line in text.splitlines() if FATAL.search(line)]
+    if missing or failures:
+        raise RuntimeError('Missing runtime markers: '+', '.join(missing)+'; fatal evidence: '+' | '.join(failures[:4]))
+    if 'BUILD SUCCESSFUL' not in text:
+        raise RuntimeError('Gradle process completion marker missing')
+    ending='Stopping!' if phase=='client' else 'All dimensions are saved'
+    if ending not in text:
+        raise RuntimeError('Clean Minecraft shutdown marker missing: '+ending)
+    return MARKERS[phase]
+
+
+def descendants(parent):
+    if os.name=='nt':return []
+    result=subprocess.run(['ps','-eo','pid=,ppid='],capture_output=True,text=True,check=True)
+    relations=[tuple(map(int,line.split())) for line in result.stdout.splitlines() if line.strip()]
+    children=[];pending=[parent]
+    while pending:
+        owner=pending.pop()
+        found=[pid for pid,ppid in relations if ppid==owner]
+        children.extend(found);pending.extend(found)
+    return children
+
+
+def stop_owned(process):
+    if os.name=='nt':
+        subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],capture_output=True)
+        return
+    def identity(pid):
+        try:
+            fields=Path('/proc/%d/stat'%pid).read_text().rsplit(')',1)[1].split()
+            return None if fields[0]=='Z' else fields[19]
+        except (FileNotFoundError,ProcessLookupError):return None
+    owned=[(pid,identity(pid)) for pid in descendants(process.pid)+[process.pid]]
+    def send(sig):
+        for pid,started in owned:
+            if started is not None and identity(pid)==started:
+                try:os.kill(pid,sig)
+                except ProcessLookupError:pass
+    # Only the process tree and process identities created by this invocation
+    # are eligible for cleanup, including Gradle's single-use daemon children.
+    send(signal.SIGTERM)
+    deadline=time.monotonic()+10
+    while time.monotonic()<deadline and any(started is not None and identity(pid)==started for pid,started in owned):
+        time.sleep(.1)
+    send(signal.SIGKILL)
+    process.wait(timeout=5)
+
+
+
+def run(phase,args):
+    env=dict(os.environ,JAVA_HOME=java_home(21,'VANDOR_JAVA21_HOME'))
+    env['PATH']=str(Path(env['JAVA_HOME'])/'bin')+os.pathsep+env.get('PATH','')
+    wrapper=PLATFORM/('gradlew.bat' if os.name=='nt' else 'gradlew')
+    task='runClient' if phase=='client' else 'runServer'
+    command=[str(wrapper),task,'--no-daemon','-PpythonExecutable='+sys.executable]
+    command+=['-PmodernClientSmoke=true'] if phase=='client' else ['-PmodernSmoke='+phase]
+    if args.compiled:
+        for task_name in ('compileJava','processResources','generateModernResources'):command+=['-x',task_name]
+    if os.name=='nt':command=[os.environ.get('COMSPEC','cmd.exe'),'/d','/v:off','/s','/c','"'+' '.join('"'+item+'"' for item in command)+'"']
+    log=args.log_dir/f'{phase}.log';log.parent.mkdir(parents=True,exist_ok=True)
+    print(f'Running modern {phase}; timeout {args.timeout}s; log {log}',flush=True)
+    started_ns=time.time_ns()
+    with log.open('w') as stream:
+        process=subprocess.Popen(command,cwd=PLATFORM,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=os.name!='nt')
+        previous_handler=signal.getsignal(signal.SIGTERM)
+        def interrupted(signum,frame):raise KeyboardInterrupt()
+        signal.signal(signal.SIGTERM,interrupted)
+        try:
+            try:code=process.wait(timeout=args.timeout)
+            except subprocess.TimeoutExpired:
+                stop_owned(process)
+                raise RuntimeError(f'Modern {phase} exceeded {args.timeout}s; owned process tree stopped')
+            except KeyboardInterrupt:
+                stop_owned(process)
+                raise
+        finally:signal.signal(signal.SIGTERM,previous_handler)
+    if code!=0:raise RuntimeError(f'Modern {phase} process exit {code}; inspect {log}')
+    markers=verify(log.read_text(errors='replace'),phase)
+    images={}
+    if phase=='client':
+        from PIL import Image
+        for name in CLIENT_IMAGES:
+            image=PLATFORM/'run/client/screenshots'/name
+            if not image.is_file() or image.stat().st_mtime_ns<started_ns:
+                raise RuntimeError('Current-run screenshot missing or stale: '+name)
+            with Image.open(image) as png:png.verify()
+            images[name]=hashlib.sha256(image.read_bytes()).hexdigest()
+    print(f'Modern {phase} PASS: all {len(markers)} runtime markers and clean process completion',flush=True)
+    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images}
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--phase',choices=['write','read','both','client'],default='both')
+    parser.add_argument('--verify-log',type=Path,help='Check an already completed log instead of launching a process')
+    parser.add_argument('--compiled',action='store_true',help='Use the existing frozen classes/resources without recompilation')
+    parser.add_argument('--timeout',type=int,default=180)
+    parser.add_argument('--log-dir',type=Path,default=ROOT/'build/reports/modern-runtime')
+    args=parser.parse_args()
+    if args.timeout<=0:parser.error('--timeout must be positive')
+    if args.verify_log:
+        if args.phase=='both':parser.error('--verify-log requires one phase')
+        verify(args.verify_log.read_text(errors='replace'),args.phase)
+        print(f'Modern {args.phase} log PASS: complete runtime markers, no fatal evidence, clean process completion')
+        return
+    phases=['write','read'] if args.phase=='both' else [args.phase]
+    results=[run(phase,args) for phase in phases]
+    (args.log_dir/'result.json').write_text(json.dumps({'schema':1,'status':'PASS','phases':results},indent=2)+'\n')
+
+if __name__=='__main__':
+    try:main()
+    except KeyboardInterrupt:
+        print('Modern runtime interrupted; owned process tree stopped',file=sys.stderr);sys.exit(130)
+    except (RuntimeError,subprocess.SubprocessError) as error:
+        print('Modern runtime FAILED: '+str(error),file=sys.stderr);sys.exit(1)

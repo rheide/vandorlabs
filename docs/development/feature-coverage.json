@@ -1,0 +1,588 @@
+{
+  "schema": 1,
+  "default_target": "forge-1.12.2",
+  "additional_target": "neoforge-1.21.1",
+  "modern_release_ready": false,
+  "status_definitions": {
+    "reference": "Existing Forge implementation remains the behavioral reference; unchanged release gate applies.",
+    "partial": "Real native behavior exists, with explicit remaining work; this is not feature parity.",
+    "unimplemented": "No functional modern adapter; no placeholder registration is counted as support.",
+    "complete": "Reserved for a family with shared behavior and target/runtime/visual evidence; no family currently has this status."
+  },
+  "inventory_sources": [
+    "src/main/java/com/vandorlabs/blocks/ModBlocks.java",
+    "src/main/java/com/vandorlabs/items/ModItems.java",
+    "src/main/java/com/vandorlabs/gear/GearRegistry.java",
+    "src/main/java/com/vandorlabs/cockpit/CockpitData.java",
+    "src/main/resources/assets/vandorlabs/data/frame_machines.json",
+    "generated-resources/assets/vandorlabs/data/blocks.json"
+  ],
+  "inventory_scope": "All active generated-catalog registrations plus explicit manual block/item families. Programmable-only textures, internal model templates and retired entries are resources, not additional registered blocks. This is a source inventory, not a runtime registry dump.",
+  "canonical_registered_catalog_count": 57,
+  "families": [
+    {
+      "id": "programmable_cube",
+      "label": "Programmable cube and matter block",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "partial",
+      "legacy_block_ids": [
+        "programmable_block",
+        "programmable_matter_block"
+      ],
+      "modern_registered_block_ids": [
+        "programmable_block"
+      ],
+      "remaining": [
+        "joined multi-block Stretch/Fit faces",
+        "custom and filesystem materials",
+        "complete creative/search catalog configuration",
+        "rendered parity acceptance"
+      ]
+    },
+    {
+      "id": "slabs_stairs",
+      "label": "Slabs and stairs",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "programmable_slab",
+        "programmable_stairs"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native collision/models",
+        "shared settings and per-face material rendering",
+        "configured items and placement",
+        "live parity"
+      ]
+    },
+    {
+      "id": "walls_portholes_diagonals",
+      "label": "Walls, portholes and diagonals",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "programmable_diagonal_glass",
+        "programmable_diagonal_porthole",
+        "programmable_diagonal_wall",
+        "programmable_porthole_block",
+        "programmable_porthole_wall",
+        "programmable_wall"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "all native adapters",
+        "connected and filled geometry/contact matrices",
+        "custom materials and configuration",
+        "live parity"
+      ]
+    },
+    {
+      "id": "viewscreens",
+      "label": "Programmable viewscreens",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "partial",
+      "legacy_block_ids": [
+        "programmable_viewscreen"
+      ],
+      "modern_registered_block_ids": [
+        "programmable_viewscreen"
+      ],
+      "remaining": [
+        "custom and filesystem materials",
+        "redstone and vehicle overlay selections",
+        "complete original settings schema and modes",
+        "rendered geometry/animation parity acceptance"
+      ]
+    },
+    {
+      "id": "console_input_variants",
+      "label": "Console, input and diagonal screen variants",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "programmable_console",
+        "programmable_diagonal_half_console",
+        "programmable_diagonal_screen",
+        "programmable_half_console",
+        "programmable_half_input",
+        "programmable_input"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "all native block variants and surface mappings",
+        "shared dialog and input rows",
+        "light/fluid/controls",
+        "live parity"
+      ]
+    },
+    {
+      "id": "glass_canopies",
+      "label": "Glass, canopy and cockpit glass",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "angled_front_1x1",
+        "angled_front_1x2",
+        "canopy",
+        "clear_cockpit_glass",
+        "front_canopy_glass",
+        "large_front_canopy_glass",
+        "long_canopy",
+        "pale_cyan_cockpit_glass",
+        "programmable_glass",
+        "regular_canopy_glass",
+        "smoked_cockpit_glass",
+        "space_visor_2x1",
+        "space_visor_3x1",
+        "space_visor_5x1",
+        "space_visor_5x1_double_height"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native geometry/reservations",
+        "transparent and shader rendering",
+        "contact/collision and fluid behavior",
+        "live parity"
+      ]
+    },
+    {
+      "id": "doors",
+      "label": "Programmable and large doors",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "large_programmable_door",
+        "programmable_door"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native moving geometry",
+        "shared saved timeline/channel policy",
+        "collision/ray targets and reversal",
+        "all authored door models and live parity"
+      ]
+    },
+    {
+      "id": "trapdoors",
+      "label": "Trapdoors and diagonal trapdoors",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "programmable_diagonal_trapdoor",
+        "programmable_trapdoor"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native adapter and shared geometry",
+        "assembly/channel behavior",
+        "configuration/custom materials",
+        "live parity"
+      ]
+    },
+    {
+      "id": "lighting_propulsion",
+      "label": "Programmable lights and propulsion",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "antigravity_plate",
+        "impulse_engine",
+        "impulse_engine_hexagonal",
+        "impulse_engine_wedge",
+        "impulse_engine_wedge_bottom_right",
+        "impulse_engine_wedge_top_left",
+        "impulse_engine_wedge_top_right",
+        "ion_drive",
+        "ion_drive_hexagonal",
+        "ion_drive_wedge",
+        "ion_drive_wedge_bottom_right",
+        "ion_drive_wedge_top_left",
+        "ion_drive_wedge_top_right",
+        "plasma_vent",
+        "plasma_vent_hexagonal",
+        "plasma_vent_wedge",
+        "plasma_vent_wedge_bottom_right",
+        "plasma_vent_wedge_top_left",
+        "plasma_vent_wedge_top_right",
+        "programmable_light",
+        "programmable_light_frame",
+        "programmable_light_slab",
+        "repulsor_array",
+        "rocket_thruster",
+        "rocket_thruster_hexagonal",
+        "rocket_thruster_wedge",
+        "rocket_thruster_wedge_bottom_right",
+        "rocket_thruster_wedge_top_left",
+        "rocket_thruster_wedge_top_right",
+        "vertical_hover_thruster"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native shape/light adapters",
+        "joined light/channel policy",
+        "particle and propulsion behavior",
+        "live parity"
+      ]
+    },
+    {
+      "id": "seating",
+      "label": "Chairs and seats",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "luxury_seat",
+        "military_seat",
+        "pilot_seat",
+        "programmable_chair"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native shape/entity mounting",
+        "configured artwork",
+        "safe dismount and carried seats",
+        "live parity"
+      ],
+      "legacy_entity_ids": [
+        "chair_seat"
+      ],
+      "modern_registered_entity_ids": []
+    },
+    {
+      "id": "controls",
+      "label": "Triggers, buttons, rockers, levers and throttles",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "airliner_throttle",
+        "compact_power_lever",
+        "fighter_throttle",
+        "industrial_power_lever",
+        "large_power_lever",
+        "programmable_trigger_block",
+        "push_button",
+        "rocker_switch",
+        "small_power_lever",
+        "thruster_lever",
+        "wall_slider"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native control adapters",
+        "shared latch/pulse/slider policy",
+        "directional interaction and saved levels",
+        "live parity"
+      ]
+    },
+    {
+      "id": "wireless_redstone",
+      "label": "Wireless transmitter and receiver",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "partial",
+      "legacy_block_ids": [
+        "redstone_receiver",
+        "redstone_transmitter"
+      ],
+      "modern_registered_block_ids": [
+        "redstone_receiver",
+        "redstone_transmitter"
+      ],
+      "remaining": [
+        "rendered endpoint and dialog acceptance",
+        "configured endpoint item/drop parity",
+        "carried assembly interaction"
+      ]
+    },
+    {
+      "id": "security_tokens",
+      "label": "Token slots and design tokens",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "access_card_slot",
+        "data_chip_slot"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "slot inventories and native token components",
+        "authorization semantics",
+        "all token designs/models",
+        "live parity"
+      ],
+      "legacy_item_ids": [
+        "access_card",
+        "data_chip"
+      ]
+    },
+    {
+      "id": "storage",
+      "label": "Programmable storage",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "programmable_storage"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "inventory-preserving native menu/storage",
+        "face materials and storage model mapping",
+        "custom materials and configuration",
+        "live parity"
+      ]
+    },
+    {
+      "id": "machines",
+      "label": "Constructors, matter infuser, battery and tank",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "assembly_press_core",
+        "battery_block",
+        "constructor_part",
+        "enclosed_gantry_core",
+        "hexagonal_fuel_tank",
+        "longburn_drive_core",
+        "meridian_drive_core",
+        "paladyne_navigation_core",
+        "programmable_matter_infuser",
+        "seyr_navigation_core",
+        "synthesis_tower_core",
+        "vector_fold_array_core"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native multiblock assembly/inventory/fluid adapters",
+        "transaction and container semantics",
+        "all frame models and surface input",
+        "live parity"
+      ]
+    },
+    {
+      "id": "navigation",
+      "label": "Navigation tables",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "navigation_table_angled",
+        "navigation_table_flat"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native table rendering and input",
+        "shared navigation/display policy",
+        "custom display sources",
+        "live parity"
+      ]
+    },
+    {
+      "id": "ramps",
+      "label": "Ramp controllers and moving endpoints",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "controlled_ramp",
+        "programmable_ramp",
+        "programmable_ramp_slab"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native world snapshot/movement adapters",
+        "transactional recovery and data retention",
+        "all six scan faces and travel modes",
+        "dedicated and live collision parity"
+      ]
+    },
+    {
+      "id": "vehicles",
+      "label": "Vehicles and controller/navigation blocks",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "autopilot",
+        "vehicle_controller",
+        "waypoint"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native entity/world view and movement",
+        "shared transactional discovery/snapshot policy",
+        "parent-world carried controls",
+        "main-view/shader rendering and live parity"
+      ],
+      "legacy_entity_ids": [
+        "ground_vehicle"
+      ],
+      "modern_registered_entity_ids": []
+    },
+    {
+      "id": "cockpits",
+      "label": "Cockpits and peripherals",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "chair_siderests",
+        "cockpit",
+        "cockpit_part",
+        "yoke_screen"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native assembly/reservations and seating",
+        "six/three-row shared controls",
+        "square-pixel surface hit mapping",
+        "pause-aware motion and live parity"
+      ]
+    },
+    {
+      "id": "landing_gear_wheels",
+      "label": "Modular landing gear and wheels",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "angled_landing_strut",
+        "gear_extender",
+        "gear_mount",
+        "gear_swing_arm",
+        "landing_gear",
+        "landing_plate",
+        "landing_ski",
+        "landing_strut",
+        "landing_wheel",
+        "large_gear_extender",
+        "large_gear_mount",
+        "large_gear_swing_arm",
+        "large_landing_wheel",
+        "ski_landing_gear",
+        "wheel_large",
+        "wheel_medium",
+        "wheel_small"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native parts and collision/placement",
+        "shared gear policy and carried animation",
+        "all item models with padding",
+        "live parity"
+      ]
+    },
+    {
+      "id": "turntables",
+      "label": "Turntables",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "turntable_controller",
+        "turntable_surface"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native controller/surface/entity",
+        "transactional assembly/snapshot recovery",
+        "geometry/channel behavior",
+        "live parity"
+      ],
+      "legacy_entity_ids": [
+        "turntable_display"
+      ],
+      "modern_registered_entity_ids": []
+    },
+    {
+      "id": "furniture",
+      "label": "Industrial table",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [
+        "industrial_table"
+      ],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native geometry and interactions",
+        "configured items and persistence",
+        "live parity"
+      ]
+    },
+    {
+      "id": "tools_materials",
+      "label": "Configuration/copy tools and basic materials",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "partial",
+      "legacy_block_ids": [],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "full Configurizer dispatch to every family",
+        "Duplifier connected copy/application",
+        "matter production/core crafting chain",
+        "all target-specific resources and live parity"
+      ],
+      "legacy_item_ids": [
+        "programmable_matter_ingot",
+        "industrial_alloy_ingot",
+        "infuser_core",
+        "configurizer",
+        "duplifier"
+      ],
+      "modern_registered_item_ids": [
+        "programmable_matter_ingot",
+        "industrial_alloy_ingot",
+        "configurizer"
+      ]
+    },
+    {
+      "id": "armor",
+      "label": "Programmable armor",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native equipment/components/models",
+        "shared material configuration",
+        "slot synchronization and all armor variants",
+        "live parity"
+      ],
+      "legacy_item_ids": [
+        "programmable_helmet",
+        "programmable_chestplate",
+        "programmable_leggings",
+        "programmable_boots"
+      ]
+    },
+    {
+      "id": "material_workflows",
+      "label": "Filesystem and custom material workflows",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native resource discovery/reload",
+        "stable external material identities",
+        "shared metadata/picker policies",
+        "resource-pack parity and live reload"
+      ]
+    },
+    {
+      "id": "integrations",
+      "label": "Compatibility integrations",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "unimplemented",
+      "legacy_block_ids": [],
+      "modern_registered_block_ids": [],
+      "remaining": [
+        "native JEI creative/search enumeration",
+        "native WorldEdit rotation adapter",
+        "Dynmap or documented native replacement",
+        "shader format and main-view visibility acceptance"
+      ]
+    }
+  ],
+  "validation_requirements": [
+    "identical shared contracts under Java 8 and Java 21",
+    "Forge dedicated linkage and unchanged verifyRelease against exact standard artifact",
+    "NeoForge dedicated startup and subsequent-process save/reload",
+    "server-authoritative bounded codecs and exact menu/tile authorization",
+    "native client placement, rendering, dialog input and client/server round trips",
+    "visual acceptance of geometry, authored textures, icon padding and animation",
+    "explicit native integration status and unsupported cases"
+  ]
+}

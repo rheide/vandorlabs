@@ -1,5 +1,18 @@
 # Changelog
 
+## Multi-version development
+
+- Keep Forge 1.12.2 as the default target and add an independent, experimental
+  NeoForge 1.21.1 build. The modern adapter is under conversion; see the
+  [feature coverage](docs/development/feature-coverage.md) before using it.
+- Share channel-network behavior, saved settings, finish identifiers, dialog
+  layout and input rules across both targets. Run the same portable contracts
+  on Java 8 and Java 21, with platform dependencies excluded from shared code.
+- Share redstone screen rows, linked levels, pulse timing and overlay layout,
+  together with joined texture planes, filesystem texture discovery and atlas
+  padding. Forge uses these same implementations while retaining native world,
+  lifecycle and rendering adapters.
+
 ## 2.5
 
 - Share navigation-table activation with Core-based multiblocks: consume physical redstone or input channels, optionally require a matching Data Chip, and never emit physical or channel power from Cores or reserved cells.

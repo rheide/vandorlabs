@@ -1,0 +1,81 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+def pythonExecutable = project.findProperty('pythonExecutable') ?: (
+    System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+group = 'com.vandorlabs'
+version = (file('../../build.gradle').text =~ /(?m)^version\s*=\s*'([^']+)'/)[0][1]
+base { archivesName = 'vandorlabs-neoforge-1.21.1' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+sourceSets.main.java.srcDir('../../src/portable/java')
+sourceSets.main.resources.srcDir('build/generated/resources')
+neoForge {
+    version = '21.1.264'
+    runs {
+        client {
+            client(); gameDirectory = file('run/client')
+            if(project.hasProperty('modernClientSmoke')) {
+                systemProperty 'vandorlabs.modernClientSmoke', 'true'
+                programArguments.addAll '--quickPlayMultiplayer', '127.0.0.1:25570', '--width', '1280', '--height', '720'
+            }
+        }
+        server {
+            server(); programArgument '--nogui'; gameDirectory = file('run/server')
+            if(project.hasProperty('modernClientFixture')) systemProperty 'vandorlabs.modernClientFixture', 'true'
+            if (project.hasProperty('modernSmoke')) systemProperty 'vandorlabs.modernSmoke', project.property('modernSmoke')
+        }
+    }
+    mods { vandorlabs { sourceSet(sourceSets.main) } }
+}
+tasks.register('generateModernResources', Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, 'generate_resources.py'
+    inputs.dir('../../generated-resources')
+    inputs.dir('../../src/main/resources')
+    inputs.file('generate_resources.py')
+    inputs.file('../../tools/compact_runtime_assets.py')
+    inputs.file('generate_screen_resources.py')
+    inputs.file('../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')
+    inputs.dir('../../texture-packs/default')
+    inputs.dir('../../texture-packs/additional')
+    outputs.dir('build/generated/resources')
+}
+tasks.named('compileJava') { dependsOn 'generateModernResources' }
+tasks.named('processResources') {
+    dependsOn 'generateModernResources'
+    inputs.property('modVersion', project.version)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(modVersion: project.version) }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.register('validateModernResources', Exec) {
+    dependsOn tasks.named('jar')
+    inputs.file('validate_resources.py')
+    inputs.file(tasks.named('jar').flatMap { it.archiveFile })
+    commandLine pythonExecutable, 'validate_resources.py', tasks.named('jar').get().archiveFile.get().asFile.absolutePath
+}
+tasks.named('check') { dependsOn 'validateModernResources' }
+tasks.register('testPortableContracts', Exec) {
+    workingDir projectDir
+    inputs.dir('../../src/portable/java')
+    inputs.dir('../../src/portableTest/java')
+    inputs.files('../../tools/test_portable.py', '../../tools/check_portable_boundary.py')
+    outputs.file('build/reports/portable-java21.json')
+    commandLine pythonExecutable, '../../tools/test_portable.py', '--jdk', '21', '--report', file('build/reports/portable-java21.json').absolutePath
+}
+tasks.named('check') { dependsOn 'testPortableContracts' }
+// Later ASM artifacts omit the JPMS descriptor required by SecureJarHandler 3.
+// Pin the complete family to the verified modular release used by this runtime.
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'org.ow2.asm') details.useVersion('9.8')
+    }
+}
+neoForge.runs.configureEach {
+    jvmArgument "-Xmx${project.findProperty('modernRunHeap') ?: '4G'}"
+}
+
+tasks.named('jar') {
+    from('../../LICENSE') { into 'META-INF' }
+    from('../../THIRD_PARTY_NOTICES.md') { into 'META-INF' }
+}
