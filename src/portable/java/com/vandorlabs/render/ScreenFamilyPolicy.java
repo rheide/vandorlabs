@@ -28,6 +28,8 @@ public final class ScreenFamilyPolicy {
         if (kind == Kind.HALF_CONSOLE) return ScreenSurface.input(slot == 1 ? InputSurfaceLayout.halfConsoleRear() : InputSurfaceLayout.halfConsoleFront());
         return ScreenSurface.quad(kind == Kind.DIAGONAL ? ScreenSurface.Kind.DIAGONAL : ScreenSurface.Kind.FLAT, kind == Kind.DIAGONAL && inverted);
     }
+    public static int ceilingPosition(int facing,float hitX,float hitZ){float local=facing==3?1-hitZ:facing==5?1-hitX:facing==4?hitX:hitZ;return local<1F/3F?0:local<2F/3F?1:2;}
+    public static int wallPosition(float hitY){return hitY<1F/3F?0:hitY<2F/3F?1:2;}
     public static int opposite(int facing) {
         if (facing < 0 || facing > 5) throw new IllegalArgumentException("Facing index");
         return facing ^ 1;

@@ -114,7 +114,7 @@ public class BlockProgrammableInput extends BlockAnimatedScreenSelector {
 
     /** Maps a side-face click into equally sized bottom, middle and top slots. */
     public static int wallPositionForHit(float hitY) {
-        return hitY < 1.0F / 3.0F ? 0 : hitY < 2.0F / 3.0F ? 1 : 2;
+        return com.vandorlabs.render.ScreenFamilyPolicy.wallPosition(hitY);
     }
 
     protected static AxisAlignedBB rotateFromNorth(AxisAlignedBB box, EnumFacing facing) {
