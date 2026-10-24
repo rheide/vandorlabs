@@ -32,7 +32,7 @@ final class RedstoneScreenRuntimeChecks {
             if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
             if(stage==0){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
-                    EntityPlayerMP owner=owner(mc);owner.closeScreen();owner.capabilities.isCreativeMode=true;owner.capabilities.isFlying=true;owner.sendPlayerAbilities();
+                    EntityPlayerMP owner=owner(mc);owner.closeScreen();owner.capabilities.isCreativeMode=true;owner.capabilities.allowFlying=true;owner.capabilities.isFlying=true;owner.sendPlayerAbilities();
                     owner.inventory.clear();owner.inventory.setInventorySlotContents(0,new net.minecraft.item.ItemStack(ModBlocks.ANIMATED_SCREEN_SELECTOR));
                     owner.inventory.setInventorySlotContents(1,new net.minecraft.item.ItemStack(ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN));owner.inventory.currentItem=8;
                     owner.inventoryContainer.detectAndSendChanges();owner.connection.sendPacket(new net.minecraft.network.play.server.SPacketHeldItemChange(8));
@@ -46,7 +46,7 @@ final class RedstoneScreenRuntimeChecks {
                     aim(owner,state,0);
                 });next(20);return;
             }
-            if(stage==20 && ticks>25){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);p.openGui(VandorLabs.instance,GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,p.world,POS.getX(),POS.getY(),POS.getZ());});next(22);return;}
+            if(stage==20 && ticks>25){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);require(p.world.getTileEntity(POS) instanceof TileEntityAnimatedScreenSelector,"picker fixture tile missing");require(((TileEntityAnimatedScreenSelector)p.world.getTileEntity(POS)).isUsableByPlayer(p),"picker fixture actor left authorized reach: position="+p.getPositionVector()+", allowFlying="+p.capabilities.allowFlying+", flying="+p.capabilities.isFlying);p.openGui(VandorLabs.instance,GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,p.world,POS.getX(),POS.getY(),POS.getZ());require(p.openContainer instanceof com.vandorlabs.container.ContainerAnimatedScreenSelector,"picker fixture server container did not open");});next(22);return;}
             if(stage==22 && ticks>15 && mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainer){capture(mc,output,"picker");chooseRedstone(mc);next(21);return;}
             if(stage==21 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){((GuiRedstoneScreen)mc.currentScreen).actionPerformed(new GuiButton(4,0,0,"Done"));next(1);return;}
             if(stage==1 && ticks>25){capture(mc,output,"off");click(mc);next(2);return;}

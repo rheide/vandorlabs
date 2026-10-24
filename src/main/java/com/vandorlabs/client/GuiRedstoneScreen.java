@@ -26,6 +26,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     private String title;
     private final boolean header;
     private int rowListTop;
+    private com.vandorlabs.ui.RedstoneDialogLayout layout;
     private HousingTextureList housing;
     private int selected=-1,scroll,texture;
     private boolean materials;
@@ -42,22 +43,19 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }
     public void initGui(){
         if(labelField!=null)store();
-        xSize=Math.min(420,width-12);ySize=Math.min(300,height-12);super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        int cx=guiLeft+xSize-164;
-        rowListTop=header?82:54;
-        titleField=new GuiTextField(2,fontRenderer,guiLeft+78,guiTop+50,xSize-258,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
-        labelField=new GuiTextField(0,fontRenderer,cx,guiTop+105,148,18);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
-        channelField=new GuiTextField(1,fontRenderer,cx,guiTop+138,148,18);ChannelFields.configure(channelField);
+        layout=new com.vandorlabs.ui.RedstoneDialogLayout(width,height,header);xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        int cx=layout.controlsX;
+        rowListTop=layout.rowListTop;
+        com.vandorlabs.ui.ProgrammableDialogLayout.Button titleBounds=layout.title(),labelBounds=layout.label(),channelBounds=layout.channels();
+        titleField=new GuiTextField(titleBounds.id,fontRenderer,titleBounds.x,titleBounds.y,titleBounds.width,titleBounds.height);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
+        labelField=new GuiTextField(labelBounds.id,fontRenderer,labelBounds.x,labelBounds.y,labelBounds.width,labelBounds.height);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
+        channelField=new GuiTextField(channelBounds.id,fontRenderer,channelBounds.x,channelBounds.y,channelBounds.width,channelBounds.height);ChannelFields.configure(channelField);
         housing=new HousingTextureList(guiLeft+12,guiTop+54,xSize-188,texture).visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(value->{texture=value;});
-        buttonList.add(new GuiButton(0,guiLeft+12,guiTop+28,76,20,"Rows"));
-        buttonList.add(new GuiButton(1,guiLeft+92,guiTop+28,90,20,"Housing"));
-        buttonList.add(new GuiButton(2,cx,guiTop+54,70,18,"Add"));
-        buttonList.add(new GuiButton(3,cx+76,guiTop+54,72,18,"Remove"));
-        buttonList.add(new GuiButton(5,cx,guiTop+74,70,18,"Up"));
-        buttonList.add(new GuiButton(6,cx+76,guiTop+74,72,18,"Down"));
-        buttonList.add(new GuiButton(7,cx,guiTop+160,148,18,"Toggle"));
-        buttonList.add(new GuiButton(8,cx,guiTop+182,70,18,"Low: 5"));buttonList.add(new GuiButton(9,cx+76,guiTop+182,72,18,"High: 15"));
-        buttonList.add(new GuiButton(4,cx,guiTop+ySize-22,148,20,"Done"));load();refresh();
+        for(com.vandorlabs.ui.RedstoneDialogLayout.Control control:layout.controls(materials,selected,labels.size(),maxRows(),selected<0?0:pulses.get(selected)?2:sliders.get(selected)?1:0,selected<0?5:mins.get(selected),selected<0?15:maxs.get(selected))){
+            com.vandorlabs.ui.ProgrammableDialogLayout.Button bounds=control.bounds;
+            GuiButton button=new GuiButton(bounds.id,bounds.x,bounds.y,bounds.width,bounds.height,bounds.label);button.visible=control.visible;button.enabled=control.enabled;buttonList.add(button);
+        }
+        load();refresh();
     }
     private boolean store(){
         boolean headingValid=!header || RedstoneScreenContents.validTitle(titleField.getText()) && RedstoneScreenText.fits(fontRenderer,titleField.getText(),RedstoneScreenText.TITLE_WIDTH);
@@ -72,11 +70,9 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }
     private void load(){labelField.setText(selected<0?"":labels.get(selected));channelField.setText(selected<0?"0":channels.get(selected).toString());}
     private void refresh(){
-        for(GuiButton b:buttonList)if(b.id>=7 && b.id<=9){b.visible=!materials && selected>=0;if(selected>=0){b.enabled=b.id==7 || sliders.get(selected);b.displayString=b.id==7?(pulses.get(selected)?"Control: Pulse":sliders.get(selected)?"Control: Slider":"Control: Toggle"):b.id==8?"Low: "+mins.get(selected):"High: "+maxs.get(selected);}}
-
+        for(com.vandorlabs.ui.RedstoneDialogLayout.Control control:layout.controls(materials,selected,labels.size(),maxRows(),selected<0?0:pulses.get(selected)?2:sliders.get(selected)?1:0,selected<0?5:mins.get(selected),selected<0?15:maxs.get(selected)))for(GuiButton button:buttonList)if(button.id==control.bounds.id){button.visible=control.visible;button.enabled=control.enabled;button.displayString=control.bounds.label;}
         titleField.setVisible(header && !materials);
         labelField.setVisible(!materials && selected>=0);channelField.setVisible(!materials && selected>=0);
-        for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}if(b.id==5 || b.id==6){b.visible=!materials;b.enabled=selected>=0 && (b.id==5?selected>0:selected<labels.size()-1);}}
     }
     void checkLayout(){
         if(!materials && selected>=0){
@@ -97,12 +93,12 @@ public final class GuiRedstoneScreen extends GuiContainer {
     protected void actionPerformed(GuiButton b){
         if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);sliders.remove(selected);pulses.remove(selected);mins.remove(selected);maxs.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
         if(b.id==7 && selected>=0){
-            if(!store())return;int type=GuiOptionCycle.next(pulses.get(selected)?2:sliders.get(selected)?1:0,3);sliders.set(selected,type==1);pulses.set(selected,type==2);
-            if(sliders.get(selected)){String value=labels.get(selected);while(value.length()>RedstoneScreenContents.SLIDER_LABEL || fontRenderer.getStringWidth(value)>RedstoneScreenContents.SLIDER_LABEL_WIDTH)value=value.substring(0,value.length()-1);labels.set(selected,value);}
+            if(!store())return;int type=com.vandorlabs.ui.RedstoneDialogLayout.nextKind(pulses.get(selected)?2:sliders.get(selected)?1:0,GuiOptionCycle.direction());sliders.set(selected,type==1);pulses.set(selected,type==2);
+            if(sliders.get(selected)){labels.set(selected,com.vandorlabs.ui.RedstoneDialogLayout.sliderLabel(labels.get(selected),fontRenderer::getStringWidth));}
             load();refresh();return;
         }
-        if(b.id==8 && selected>=0){mins.set(selected,GuiOptionCycle.next(mins.get(selected),1,maxs.get(selected)-2));refresh();return;}
-        if(b.id==9 && selected>=0){maxs.set(selected,GuiOptionCycle.next(maxs.get(selected),mins.get(selected)+2,15));refresh();return;}
+        if(b.id==8 && selected>=0){mins.set(selected,com.vandorlabs.ui.RedstoneDialogLayout.nextLow(mins.get(selected),maxs.get(selected),GuiOptionCycle.direction()));refresh();return;}
+        if(b.id==9 && selected>=0){maxs.set(selected,com.vandorlabs.ui.RedstoneDialogLayout.nextHigh(mins.get(selected),maxs.get(selected),GuiOptionCycle.direction()));refresh();return;}
         if(!store())return;
         if(b.id<2){materials=b.id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
         else if(b.id==2 && labels.size()<maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);sliders.add(false);pulses.add(false);mins.add(5);maxs.add(15);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
@@ -117,12 +113,9 @@ public final class GuiRedstoneScreen extends GuiContainer {
         else if(b.id==4)send();
     }
     static int moveRow(List<String> labels,List<ChannelList> channels,int selected,int delta){
-        int next=selected+delta;
-        if(labels.size()!=channels.size() || selected<0 || selected>=labels.size()
-                || Math.abs(delta)!=1 || next<0 || next>=labels.size())return selected;
-        Collections.swap(labels,selected,next);Collections.swap(channels,selected,next);return next;
+        return com.vandorlabs.ui.RedstoneDialogLayout.moveRows(labels,channels,selected,delta);
     }
-    private int visibleRows(){return Math.max(1,(ySize-rowListTop-12)/20);}
+    private int visibleRows(){return layout.visibleRows();}
     protected void mouseClicked(int x,int y,int button)throws IOException{
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,7,8,9))return;
         super.mouseClicked(x,y,button);

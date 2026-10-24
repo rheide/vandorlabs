@@ -23,6 +23,10 @@ final class RedstoneScreenRenderer {
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();
         GlStateManager.bindTexture(0);Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.white());}
+    private static final java.util.Map<RedstoneScreenContents,com.vandorlabs.ui.RedstoneScreenOverlay.Cache> PLANS=new java.util.WeakHashMap<>();
+    private static final com.vandorlabs.ui.RedstoneScreenOverlay.RowAccess<RedstoneScreenContents.Row> ROWS=new com.vandorlabs.ui.RedstoneScreenOverlay.RowAccess<RedstoneScreenContents.Row>(){
+        public String label(RedstoneScreenContents.Row row){return row.label;}public boolean slider(RedstoneScreenContents.Row row){return row.slider;}public boolean pulse(RedstoneScreenContents.Row row){return row.pulse;}public boolean active(RedstoneScreenContents.Row row){return row.active();}public int segments(RedstoneScreenContents.Row row){return row.segments();}public int selected(RedstoneScreenContents.Row row){return row.selectedSegment();}
+    };
     private static final java.util.Map<ScreenSurface.Quad,FloatBuffer> MATRICES=new java.util.IdentityHashMap<>();
     private static FloatBuffer matrix(ScreenSurface.Quad q,int height){
         FloatBuffer b=BufferUtils.createFloatBuffer(16);
@@ -46,31 +50,12 @@ final class RedstoneScreenRenderer {
         bindWhite();
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
         buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        rect(buffer,0,0,128,height,0,0xFF0A141D);if(header)rect(buffer,3,3,125,20,.01,0xFF23465A);
-        for(int i=0;i<count;i++){
-            RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
-            rect(buffer,RedstoneScreenInteractions.ROW_LEFT,y,RedstoneScreenInteractions.ROW_RIGHT,y+10,.01,!row.slider && row.active()?0xFF174C3B:0xFF1C2B37);
-            if(row.slider){
-                for(int segment=0;segment<row.segments();segment++){
-                    int width=RedstoneScreenContents.SLIDER_RIGHT-RedstoneScreenContents.SLIDER_LEFT;
-                    int left=RedstoneScreenContents.SLIDER_LEFT+width*segment/row.segments(),right=RedstoneScreenContents.SLIDER_LEFT+width*(segment+1)/row.segments();
-                    rect(buffer,left,y,right,y+10,.02,0xFF91B5C8);
-                    rect(buffer,left+1,y+1,right-1,y+9,.03,row.selectedSegment()==segment?(segment==0?0xFFFFB33B:0xFF38DDE4):(segment==0?0xFF4D3820:0xFF183B46));
-                }
-            }else rect(buffer,98,y,120,y+10,.02,row.active()?0xFF30C58A:0xFF45576A);
-        }
+        com.vandorlabs.ui.RedstoneScreenOverlay.Cache cache=PLANS.computeIfAbsent(tile,ignored->new com.vandorlabs.ui.RedstoneScreenOverlay.Cache());
+        com.vandorlabs.ui.RedstoneScreenOverlay plan=cache.plan(com.vandorlabs.ui.RedstoneScreenLayout.of(!header),tile.title(),tile.rows(),ROWS);
+        for(int i=0;i<plan.solids.size();i++){com.vandorlabs.ui.RedstoneScreenOverlay.Rect r=plan.solids.get(i);rect(buffer,r.left,r.top,r.right,r.bottom,r.layer,r.color);}
         Tessellator.getInstance().draw();GlStateManager.enableTexture2D();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
-        if(header)text(font,font.trimStringToWidth(tile.title(),RedstoneScreenText.TITLE_WIDTH),8,8,0xC8EEFF);
-        if(tile.rows().isEmpty()){
-            text(font,"No controls",8,40,0xB8C8D0);
-            text(font,"Configure to add",8,54,0x748C9C);
-        }
-        for(int i=0;i<count;i++){
-            RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
-            text(font,font.trimStringToWidth(row.label,row.slider?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
-            if(!row.slider)text(font,row.active()?"ON":row.pulse?"GO":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
-        }
+        for(int i=0;i<plan.text.size();i++){com.vandorlabs.ui.RedstoneScreenOverlay.Text t=plan.text.get(i);text(font,t.maxWidth>0?font.trimStringToWidth(t.value,t.maxWidth):t.value,t.x,t.y,t.color);}
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
     }
     static void drawVehicle(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,IBlockState state,int slot){

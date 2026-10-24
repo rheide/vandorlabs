@@ -50,6 +50,11 @@ public final class DialogContractChecks {
         equal(ProgrammableBlockDialog.savedMainTexture(14,false),0,"legacy removed vent falls back");
         equal(ProgrammableBlockDialog.savedMainTexture(15,false),14,"legacy finish after removed vent");
         equal(ProgrammableBlockDialog.savedMainTexture(14,true),14,"versioned finish unchanged");
+        equal(ProgrammableBlockDialog.savedTextureLayout(2,true,false),2,"typed valid layout retained");
+        equal(ProgrammableBlockDialog.savedTextureLayout(0,false,false),0,"absent old layout uses Stretch");
+        equal(ProgrammableBlockDialog.savedTextureLayout(2,false,true),1,"noninteger layout uses legacy Tile flag");
+        equal(ProgrammableBlockDialog.savedTextureLayout(3,true,true),1,"invalid integer layout uses legacy Tile flag");
+        equal(ProgrammableBlockDialog.savedTextureLayout(-1,true,false),0,"invalid negative layout uses legacy Stretch flag");
         ProgrammableBlockDialog.State block=new ProgrammableBlockDialog.State(26,0,false,null,-1);
         List<ProgrammableBlockDialog.Control> blockControls=ProgrammableBlockDialog.controls(blockPanel,block);
         check(blockControls.stream().map(c->c.bounds.label).collect(java.util.stream.Collectors.toList()).equals(Arrays.asList("Face overrides: Off","Texture: Stretch","Done")),"plain block default labels and order");

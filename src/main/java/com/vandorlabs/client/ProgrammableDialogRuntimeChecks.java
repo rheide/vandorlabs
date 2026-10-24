@@ -65,8 +65,20 @@ final class ProgrammableDialogRuntimeChecks {
                     }
                 }
                 if(gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableTrapdoor) {
-                    int sizeId=gui instanceof GuiSpaceDoor?11:9;
-                    require(buttons.stream().noneMatch(b->b.id==sizeId),"obsolete texture size button");
+                    require(buttons.stream().noneMatch(b->b.displayString.matches("(?i).*(?:texture\\s*size|size\\s*:|texture\\s*:\\s*(?:small|medium|large|high|low)).*")),"obsolete texture size control label");
+                    Field detail=gui.getClass().getDeclaredField(gui instanceof GuiSpaceDoor?"detail":"doorDetail");detail.setAccessible(true);require(detail.getInt(gui)==0,"obsolete nondefault texture size state");
+                    if(gui instanceof GuiSpaceDoor)require(buttons.stream().noneMatch(b->b.id==11),"obsolete door texture size operation");
+                    else {
+                        Field owner=GuiProgrammableTrapdoor.class.getDeclaredField("tile");owner.setAccessible(true);
+                        boolean diagonal=owner.get(gui) instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor;
+                        java.util.List<GuiButton> rotation=new java.util.ArrayList<>();for(GuiButton button:buttons)if(button.id==9)rotation.add(button);
+                        require(rotation.size()==(diagonal?1:0),"diagonal rotation operation coverage");
+                        if(diagonal){
+                            Field reverse=GuiProgrammableTrapdoor.class.getDeclaredField("rotationFlipped"),sliding=GuiProgrammableTrapdoor.class.getDeclaredField("sliding");reverse.setAccessible(true);sliding.setAccessible(true);
+                            require(rotation.get(0).displayString.equals("Rotation: "+(reverse.getBoolean(gui)?"Reverse":"Normal")),"diagonal rotation label/state mismatch");
+                            require(rotation.get(0).enabled!=sliding.getBoolean(gui),"diagonal rotation must be available only for rotating motion");
+                        }
+                    }
                 }
                 // Exercise tabs through the actual mouse path, then restore the original tab.
                 Field tab=null;try{tab=gui.getClass().getDeclaredField("textureTab");tab.setAccessible(true);}catch(NoSuchFieldException ignored){}

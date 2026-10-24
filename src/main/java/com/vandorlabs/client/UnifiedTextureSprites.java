@@ -49,13 +49,9 @@ public final class UnifiedTextureSprites {
             try(java.io.InputStream stream=file?java.nio.file.Files.newInputStream(com.vandorlabs.tiles.FilesystemTextures.file(diskSource)):manager.getResource(source).getInputStream()) {
                 BufferedImage image=TextureUtil.readBufferedImage(stream);
                 if(image==null)throw new java.io.IOException("Invalid PNG");
-                int x0=crop?image.getWidth()/16:0,y0=crop?image.getHeight()/32:0;
-                int w=image.getWidth()-x0,h=image.getHeight()-2*y0;
-                if(half){h/=2;y0+=h;}
-                int canvas=1;while(canvas<Math.max(w,h))canvas<<=1;
-                setIconWidth(canvas);setIconHeight(canvas);usedU=(float)w/canvas;usedV=(float)h/canvas;
-                int[] pixels=new int[canvas*canvas];
-                for(int y=0;y<canvas;y++)for(int x=0;x<canvas;x++)pixels[y*canvas+x]=image.getRGB(x0+Math.min(x,w-1),y0+Math.min(y,h-1));
+                com.vandorlabs.render.TextureImagePadding.Result padded=com.vandorlabs.render.TextureImagePadding.pad(image,crop,half);
+                int canvas=padded.image.getWidth();setIconWidth(canvas);setIconHeight(canvas);usedU=padded.usedU;usedV=padded.usedV;
+                int[] pixels=padded.image.getRGB(0,0,canvas,canvas,null,0,canvas);
                 int[][] frame=new int[net.minecraft.client.Minecraft.getMinecraft().gameSettings.mipmapLevels+1][];frame[0]=pixels;
                 setFramesTextureData(new ArrayList<>(Collections.singletonList(frame)));return false;
             } catch(java.io.IOException e){

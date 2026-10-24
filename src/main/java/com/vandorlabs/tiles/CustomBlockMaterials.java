@@ -6,9 +6,9 @@ import java.util.zip.CRC32;
 
 /** Stable registry-name and metadata identities for copied block artwork. */
 public final class CustomBlockMaterials {
-    public static final int ID_BASE=0x20000000;
+    public static final int ID_BASE=MaterialChoicePolicy.CUSTOM_BASE;
     private CustomBlockMaterials(){ }
-    public static boolean isCustom(int id){return id>=ID_BASE && id<FilesystemTextures.ID_BASE;}
+    public static boolean isCustom(int id){return MaterialChoicePolicy.isCustom(id);}
     public static int identifier(Block block,int metadata) {
         CRC32 crc=new CRC32();try{crc.update((block.getRegistryName()+"@"+metadata).getBytes("UTF-8"));}catch(java.io.UnsupportedEncodingException e){throw new AssertionError(e);}
         return ID_BASE | ((int)crc.getValue() & 0x1fffffff);

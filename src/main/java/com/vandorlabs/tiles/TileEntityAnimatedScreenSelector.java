@@ -26,8 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
-    public static final int REDSTONE_SURFACE=-2;
-    public static final int VEHICLE_SURFACE=-3;
+    public static final int REDSTONE_SURFACE=com.vandorlabs.redstone.RedstoneScreenPolicy.REDSTONE_SURFACE;
+    public static final int VEHICLE_SURFACE=com.vandorlabs.redstone.RedstoneScreenPolicy.VEHICLE_SURFACE;
     public boolean hasVehicleStatus(int slot){return getSurfaceTexture(slot)==VEHICLE_SURFACE;}
     private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[2];
     private RedstoneScreenContents[] controls=NO_CONTROLS;
@@ -202,7 +202,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void setWaterlogged(boolean value){fluids.set(0,value?new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER,1000):null);if(!value)fluids.set(1,null);}
     private boolean slabTileSides;
     private int mainTextureLayout=-1,surfaceTextureLayout=-1,glassTextureLayout=-1;
-    public int getMainTextureLayout(){return mainTextureLayout<0?(slabTileSides?1:0):mainTextureLayout;}
+    public int getMainTextureLayout(){return com.vandorlabs.ui.ProgrammableBlockDialog.savedTextureLayout(mainTextureLayout,mainTextureLayout>=0,slabTileSides);}
     public int getSurfaceTextureLayout(){return surfaceTextureLayout<0?(surfaceTileSides?1:0):surfaceTextureLayout;}
     public int getGlassTextureLayout(){return glassTextureLayout<0?(glassStretch?0:1):glassTextureLayout;}
     public void setMainTextureLayout(int mode){checkLayout(mode);if(getMainTextureLayout()==mode)return;slabTileSides=mode==1;mainTextureLayout=mode;layoutChanged();}

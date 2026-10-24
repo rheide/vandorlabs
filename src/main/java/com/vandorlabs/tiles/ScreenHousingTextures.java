@@ -112,7 +112,7 @@ public final class ScreenHousingTextures {
 
     private ScreenHousingTextures() { }
 
-    public static boolean validChoice(int choice){return choice>=0 && (choice<BUILTIN_COUNT || choice>=CustomBlockMaterials.ID_BASE);}
+    public static boolean validChoice(int choice){return MaterialChoicePolicy.valid(choice,BUILTIN_COUNT);}
     public static int choiceAt(int index){com.google.gson.JsonObject e=entry(index);return e!=null && e.has("key")?e.get("key").getAsInt():index;}
     public static int localIndex(int choice){return CustomBlockMaterials.isCustom(choice)?0:choice>=FilesystemTextures.ID_BASE?FILE_CHOICES.getOrDefault(choice,0):choice>=0 && choice<IDS.length?choice:0;}
 

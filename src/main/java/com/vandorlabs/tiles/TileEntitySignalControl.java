@@ -35,18 +35,14 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     private void writeMount(NBTTagCompound tag){tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);}
     public int getLowLimit(){return low;}
     public int getHighLimit(){return high;}
-    public static boolean validLimits(int low,int high){return low>=1 && high<=15 && high-low>=2;}
-    public static int levelForStep(int value,int low,int high){return value==0?0:value==1?low:value==2?(low+high+1)/2:high;}
+    public static boolean validLimits(int low,int high){return com.vandorlabs.redstone.RedstoneScreenPolicy.validLimits(low,high);}
+    public static int levelForStep(int value,int low,int high){return com.vandorlabs.redstone.RedstoneScreenPolicy.levelForStep(value,low,high);}
     public int levelForStep(int value){return levelForStep(value,low,high);}
     public int getStep(){
         if(getRedstoneChannels().isEmpty())return step;
         return stepForLevel(getOutputLevel(),low,high);
     }
-    public static int stepForLevel(int level,int low,int high){
-        int nearest=0,distance=16;
-        for(int i=level>0?1:0;i<4;i++){int d=Math.abs(level-levelForStep(i,low,high));if(d<distance){nearest=i;distance=d;}}
-        return nearest;
-    }
+    public static int stepForLevel(int level,int low,int high){return com.vandorlabs.redstone.RedstoneScreenPolicy.stepForLevel(level,low,high);}
     @Override public int getOutputLevel(){return getRedstoneChannels().isEmpty()?levelForStep(step):super.getOutputLevel();}
     public void configureLimits(int low,int high){
         if(!validLimits(low,high))return;

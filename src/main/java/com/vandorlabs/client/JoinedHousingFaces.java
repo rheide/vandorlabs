@@ -12,7 +12,6 @@ import java.util.*;
 /** Bounded, loaded-only texture planes; queried at chunk rebuild, never each render frame. */
 @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid="vandorlabs",value=net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class JoinedHousingFaces {
-    private static final int LIMIT=256;
     private static final Map<World,Cache> CACHES=new WeakHashMap<>();
     private static final class Cache extends WorldRenderListener {
         final Map<BlockPos,HousingFaceLayouts.Plane[]> planes=new LinkedHashMap<BlockPos,HousingFaceLayouts.Plane[]>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,HousingFaceLayouts.Plane[]> e){return size()>8192;}};
@@ -28,7 +27,7 @@ public final class JoinedHousingFaces {
     }
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static synchronized void unload(net.minecraftforge.event.world.WorldEvent.Unload event){Cache cache=CACHES.remove(event.getWorld());if(cache!=null)event.getWorld().removeEventListener(cache);}
     public static synchronized HousingFaceLayouts sample(TileEntityAnimatedScreenSelector tile,int visible){
-        World world=tile.getWorld();if(world==null||!world.isRemote||tile.getMainTextureLayout()==1)return HousingFaceLayouts.NONE;
+        World world=tile.getWorld();if(world==null||!world.isRemote||!JoinedHousingPolicy.joined(tile.getMainTextureLayout()))return HousingFaceLayouts.NONE;
         Cache cache=CACHES.get(world);if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}
         int tileRevision=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision:-1;
         if(cache.revision!=GlassMaterials.revision()||cache.tileRevision!=tileRevision){cache.planes.clear();cache.revision=GlassMaterials.revision();cache.tileRevision=tileRevision;}
@@ -47,26 +46,24 @@ public final class JoinedHousingFaces {
     }
     private static boolean matches(World world,TileEntityAnimatedScreenSelector root,BlockPos at,EnumFacing face){
         if(!world.isBlockLoaded(at))return false;IBlockState state=world.getBlockState(at);
-        if(state.getBlock().getClass()!=BlockProgrammableBlock.class||state.getValue(BlockAnimatedScreenSelector.FACING)!=world.getBlockState(root.getPos()).getValue(BlockAnimatedScreenSelector.FACING))return false;
+        if(state.getBlock().getClass()!=BlockProgrammableBlock.class)return false;
+        EnumFacing facing=state.getValue(BlockAnimatedScreenSelector.FACING),rootFacing=world.getBlockState(root.getPos()).getValue(BlockAnimatedScreenSelector.FACING);
+        if(facing!=rootFacing)return false;
         TileEntity raw=world.getTileEntity(at);if(!(raw instanceof TileEntityAnimatedScreenSelector))return false;
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)raw;
         BlockPos neighbor=at.offset(face);if(world.isBlockLoaded(neighbor)&&world.getBlockState(neighbor).isOpaqueCube()&&world.getBlockState(neighbor).isFullCube())return false;
-        return tile.getMainTextureLayout()==root.getMainTextureLayout()&&material(tile,face)==material(root,face);
+        int layout=tile.getMainTextureLayout(),rootLayout=root.getMainTextureLayout();if(layout!=rootLayout)return false;
+        int selected=material(tile,face),rootMaterial=material(root,face);
+        return JoinedHousingPolicy.matches(rootFacing.getIndex(),rootLayout,rootMaterial,facing.getIndex(),layout,selected);
     }
     private static void discover(World world,TileEntityAnimatedScreenSelector root,EnumFacing face,Cache cache){
-        EnumFacing u=face.getAxis()==EnumFacing.Axis.X?EnumFacing.SOUTH:EnumFacing.EAST,v=face.getAxis()==EnumFacing.Axis.Y?EnumFacing.SOUTH:EnumFacing.UP;
-        Set<BlockPos> members=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(root.getPos());
-        while(!queue.isEmpty()&&members.size()<=LIMIT){BlockPos at=queue.removeFirst();
-            if(members.contains(at)||!matches(world,root,at,face))continue;
-            members.add(at);for(EnumFacing step:new EnumFacing[]{u,u.getOpposite(),v,v.getOpposite()})queue.add(at.offset(step));
-        }
-        if(members.size()>LIMIT){for(BlockPos at:members)cache.planes.computeIfAbsent(at,k->new HousingFaceLayouts.Plane[6])[face.getIndex()]=new HousingFaceLayouts.Plane(new int[3],new int[]{1,1,1});return;}
-        Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos at:members)cells.put(PortholeRectangles.cell(axis(at,u),axis(at,v)),at);
-        for(PortholeRectangles.Rect rect:PortholeRectangles.partition(cells.keySet()))for(int y=0;y<rect.height;y++)for(int x=0;x<rect.width;x++){
-            BlockPos at=cells.get(PortholeRectangles.cell(rect.x+x,rect.y+y));int col=x%16,row=y%16;int[] min={-u.getFrontOffsetX()*col-v.getFrontOffsetX()*row,-u.getFrontOffsetY()*col-v.getFrontOffsetY()*row,-u.getFrontOffsetZ()*col-v.getFrontOffsetZ()*row};
-            int[] size={1,1,1};size[u.getAxis().ordinal()]=Math.min(16,rect.width-x/16*16);size[v.getAxis().ordinal()]=Math.min(16,rect.height-y/16*16);
-            HousingFaceLayouts.Plane[] maps=cache.planes.computeIfAbsent(at,k->new HousingFaceLayouts.Plane[6]);maps[face.getIndex()]=new HousingFaceLayouts.Plane(min,size);
+        BlockPos origin=root.getPos();
+        JoinedHousingPolicy.Result<HousingFaceLayouts.Plane> result=JoinedHousingPolicy.discover(
+                new JoinedHousingPolicy.Cell(origin.getX(),origin.getY(),origin.getZ()),face.getIndex(),
+                cell->matches(world,root,new BlockPos(cell.x,cell.y,cell.z),face),HousingFaceLayouts.Plane::new);
+        for(Map.Entry<JoinedHousingPolicy.Cell,HousingFaceLayouts.Plane> entry:result.planes.entrySet()){
+            JoinedHousingPolicy.Cell cell=entry.getKey();BlockPos at=new BlockPos(cell.x,cell.y,cell.z);
+            cache.planes.computeIfAbsent(at,k->new HousingFaceLayouts.Plane[6])[face.getIndex()]=entry.getValue();
         }
     }
-    private static int axis(BlockPos pos,EnumFacing axis){return pos.getX()*axis.getFrontOffsetX()+pos.getY()*axis.getFrontOffsetY()+pos.getZ()*axis.getFrontOffsetZ();}
 }

@@ -11,6 +11,7 @@ public final class ProgrammableBlockDialog {
     private ProgrammableBlockDialog(){}
     /** The pre-versioned catalog contained a vent grille at index 14. */
     public static int savedMainTexture(int saved,boolean versioned){return versioned?saved:saved==14?0:saved>14?saved-1:saved;}
+    public static int savedTextureLayout(int value,boolean hasInteger,boolean tileSides){return hasInteger&&TextureLayoutMode.valid(value)?value:tileSides?TextureLayoutMode.TILE:TextureLayoutMode.STRETCH;}
     public static final class State {
         public final int mainTexture,layout,target;
         public final boolean facesEnabled;
