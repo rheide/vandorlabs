@@ -7,6 +7,14 @@ final class VehicleMovementChecks {
     private static void require(boolean value,String message){if(!value)throw new AssertionError(message);}
     static void run() {
         VehicleControls controls=new VehicleControls();
+        for(float steering:new float[]{-1,-.4F,.4F,1})for(boolean hover:new boolean[]{false,true}){
+            float forwardTurn=VehicleControls.yawChange(steering,.2,hover,false),reverseTurn=VehicleControls.yawChange(steering,-.2,hover,false);
+            require(forwardTurn==-reverseTurn,"reverse steering is the opposite yaw response in both modes");
+            require(Math.signum(forwardTurn)==Math.signum(steering),"forward steering retains its existing direction");
+        }
+        require(VehicleControls.yawChange(1,0,true,false)==1.7F,"stationary Hover yaw remains available");
+        require(VehicleControls.yawChange(1,0,false,false)==0,"stationary Taxi cannot yaw");
+        require(VehicleControls.yawChange(1,-.2,true,true)==0,"Autopilot retains its own Hover turns");
         for(int n=0;n<12;n++)require(controls.offer(n,(byte)1,(byte)-1,false),"batched commands accepted");
         require(controls.acknowledged()==-1,"receiving packets does not acknowledge unsimulated inputs");
         for(int n=0;n<12;n++) {

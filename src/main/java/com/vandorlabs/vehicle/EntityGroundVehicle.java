@@ -384,8 +384,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(boost?HOVER_SPRINT_SPEED:CRUISE_SPEED):0,brake||!active?.045:forward==0?.008:boost?.028:.018);
         steering=(float)approach(steering,active?strafe:0,.18);
         // Hover can yaw in place; the route controller owns its own turns.
-        // Taxi steering falls off with speed and reverses when backing up.
-        float change=hover?(autopilot.enabled()?0:steering*1.7F):(float)(steering*driveSpeed*11*(1-.45*Math.abs(driveSpeed)/.28));
+        // Both modes reverse steering while travelling backwards.
+        float change=VehicleControls.yawChange(steering,driveSpeed,hover,autopilot.enabled());
         float turned=collision.turn(world,this,posX,posY,posZ,rotationYaw,change);
         if(hover||!structure.hasSkisOnly||turned==rotationYaw||VehicleSkiTraction.onIce(this,posX,posY,posZ,turned))rotationYaw=turned;
         EnumFacing front=structure.facing;double angle=Math.toRadians(rotationYaw),c=Math.cos(angle),s=Math.sin(angle);

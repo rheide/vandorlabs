@@ -5,6 +5,11 @@ import java.util.ArrayDeque;
 /** One accepted command represents one controller step, not merely one received packet. */
 public final class VehicleControls {
     public static final int LIMIT=64;
+    /** Shared by authoritative movement and prediction; reverse follows actual travel. */
+    public static float yawChange(float steering,double speed,boolean hover,boolean autopilot){
+        if(hover)return autopilot?0:steering*1.7F*(speed<0?-1:1);
+        return (float)(steering*speed*11*(1-.45*Math.abs(speed)/.28));
+    }
     public static final class Command {
         public final int sequence;
         public final byte forward,strafe;
