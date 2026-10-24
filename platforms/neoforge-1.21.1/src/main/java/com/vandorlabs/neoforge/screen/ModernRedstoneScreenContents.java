@@ -36,7 +36,7 @@ public final class ModernRedstoneScreenContents {
     }
     public ProgrammableScreenEntity tile() { return owner; }
     public int slot() { return slot; }
-    public int maxRows() { return RedstoneScreenPolicy.MAX_ROWS; }
+    public int maxRows() { return owner.rowCapacity(slot); }
     public boolean enabled() { return model.enabled(); }
     public void setEnabled(boolean value) { model.setEnabled(value); }
     public String title() { return model.title(); }
@@ -99,7 +99,7 @@ public final class ModernRedstoneScreenContents {
         if (!validConfiguration(tag)) return false;
         ListTag list = tag.getList("Rows", 10); List<String> labels = new ArrayList<>(); List<ChannelList> channels = new ArrayList<>();
         for (int i = 0; i < Math.min(maxRows(), list.size()); i++) { CompoundTag row = list.getCompound(i); labels.add(row.getString("Label")); channels.add(channels(row, ChannelMembershipData.CHANNELS, ChannelList.EMPTY)); }
-        boolean result = model.configure(tag.getString("Title"), labels, channels, owner.getHousingTexture(), tag.getBoolean("Enabled") && slot == 0);
+        boolean result = model.configure(tag.getString("Title"), labels, channels, owner.getHousingTexture(), tag.getBoolean("Enabled") && owner.supportsSlot(slot));
         if (result) model.applyOptions(options(list)); return result;
     }
     public CompoundTag save(CompoundTag tag) {

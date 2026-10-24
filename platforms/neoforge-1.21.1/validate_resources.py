@@ -14,6 +14,14 @@ def validate(jar):
         assert 'META-INF/neoforge.mods.toml' in names
         assert 'mcmod.info' not in names
         assert not any('/recipes/' in name for name in names)
+        language=json.loads(archive.read('assets/vandorlabs/lang/en_us.json'))
+        root=Path(__file__).resolve().parents[2]
+        for line in (root/'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines():
+            if '=' not in line or line.startswith('#'):continue
+            key,value=line.split('=',1)
+            if key.startswith('tile.vandorlabs.'):key=key.replace('tile.vandorlabs.','block.vandorlabs.',1).removesuffix('.name')
+            elif key.startswith('item.vandorlabs.'):key=key.removesuffix('.name')
+            assert language.get(key)==value,('canonical language drift',key,value,language.get(key))
         catalog=json.loads(archive.read('assets/vandorlabs/data/housing_finishes.json'))
         assert len(catalog)>400 and len({e['id'] for e in catalog})==len(catalog)
         for i,entry in enumerate(catalog):

@@ -110,6 +110,11 @@ public final class RedstoneOverlayRuntimeChecks {
         a.toggleRow(0);
         CompoundTag saved = first.saveWithoutMetadata(level.registryAccess()); var restored = new ProgrammableScreenEntity(A, first.getBlockState()); restored.loadWithComponents(saved, level.registryAccess());
         require(restored.redstone().rows().get(1).latchedLevel(303) == 15 && restored.redstone().rows().get(1).latchedLevel(304) == 10 && restored.redstone().rows().get(1).level() == 15, "exact partial-bank NBT roundtrip");
+        first.onChunkUnloaded();
+        require(ModernRedstoneChannels.level(level, 301) == 0 && ModernRedstoneChannels.level(level, 303) == 0
+                && ModernRedstoneChannels.level(level, 304) == 10, "owner unload removes logical rows immediately while preserving other loaded sources");
+        first.channelLoaded();
+        require(ModernRedstoneChannels.level(level, 301) == 15 && ModernRedstoneChannels.level(level, 303) == 15, "deferred owner reload republishes saved logical row levels");
         System.out.println("[vandorlabs][modern] redstone-overlay-write PASS installed bidirectional/partial toggle and slider banks,20tick pulse independence/expiry,8rows/64channels codec=" + encodedBytes + "bytes, editing permissions, exact NBT and transient-free drops");
     }
     private static net.minecraft.world.phys.Vec3 aimPoint(BlockPos pos, double column, double pixelY) {

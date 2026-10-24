@@ -24,6 +24,8 @@ public final class WirelessClientChecks {
     private static int stage, started, expectedOn, expectedOff;
     private static String originalChannels;
     private static int originalOn, originalOff;
+    private static int glyphScale, glyphLevel;
+    private static final com.google.gson.JsonObject glyphMetadata = new com.google.gson.JsonObject();
     private WirelessClientChecks() { }
     private static void require(boolean value, String message) { if (!value) throw new IllegalStateException("Wireless client: " + message); }
     private static Object field(Object object, String name) {
@@ -39,6 +41,22 @@ public final class WirelessClientChecks {
         double x = slider.getX() + 4 + (slider.getWidth() - 8) * level / 15D, y = slider.getY() + 10;
         require(screen.mouseClicked(x, y, 0), "level slider click");
         screen.mouseDragged(x, y, 0, 0, 0); screen.mouseReleased(x, y, 0);
+    }
+    private static String glyphName(String mode) { return "modern-wireless-on" + glyphLevel + "-scale" + glyphScale + "-" + mode + ".png"; }
+    private static boolean captured(Minecraft mc, String mode) { return ModernClientRuntimeChecks.captured(glyphName(mode)); }
+    private static void glyphMetadata(Minecraft mc, WirelessScreen screen) {
+        AbstractSliderButton slider = sliders(screen).get(0); int textWidth = mc.font.width(slider.getMessage());
+        com.google.gson.JsonObject data = new com.google.gson.JsonObject();
+        data.addProperty("screen_width", screen.width); data.addProperty("screen_height", screen.height);
+        int labelX = slider.getX() + slider.getWidth() / 2 - textWidth / 2;
+        data.addProperty("label_x", labelX); data.addProperty("label_width", textWidth);
+        data.addProperty("glyph_x", labelX + mc.font.width("On level: "));
+        data.addProperty("glyph_y", slider.getY() + (slider.getHeight() - mc.font.lineHeight) / 2);
+        data.addProperty("glyph_width", mc.font.width(Integer.toString(glyphLevel))); data.addProperty("glyph_height", mc.font.lineHeight);
+        glyphMetadata.add("level" + glyphLevel + "-scale" + glyphScale, data);
+        try {
+            java.nio.file.Files.writeString(new java.io.File(mc.gameDirectory, "screenshots/modern-wireless-glyphs.json").toPath(), glyphMetadata.toString());
+        } catch (java.io.IOException error) { throw new IllegalStateException(error); }
     }
     private static void move(Minecraft mc, BlockPos pos) {
         mc.player.closeContainer(); mc.player.setShiftKeyDown(false);
@@ -76,9 +94,23 @@ public final class WirelessClientChecks {
         if (mc.player == null || mc.level == null || mc.gameMode == null) return false;
         require(tick - started < 400, "native menu roundtrip timed out at stage " + stage);
         if (stage == 0) {
-            move(mc, RX); geometry(mc, TX, "redstone_transmitter"); geometry(mc, RX, "redstone_receiver");
-            ModernClientRuntimeChecks.capture("modern-wireless-world.png"); stage = 1; started = tick; return false;
+            for (int level : new int[]{8, 9}) for (int scale : new int[]{2, 3}) for (String mode : new String[]{"actual", "reference", "negative", "vanilla"}) {
+                java.io.File previous = new java.io.File(mc.gameDirectory, "screenshots/modern-wireless-on" + level + "-scale" + scale + "-" + mode + ".png");
+                if (previous.exists()) require(previous.delete(), "remove owned stale glyph capture");
+            }
+            mc.player.closeContainer(); mc.player.setShiftKeyDown(false);
+            mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
+            mc.player.setPos(12.5, 80, -5.5); mc.player.setDeltaMovement(Vec3.ZERO); mc.player.setYRot(0); mc.player.setXRot(11);
+            mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(12.5, 80, -5.5, true));
+            geometry(mc, TX, "redstone_transmitter"); geometry(mc, RX, "redstone_receiver");
+            stage = 90; started = tick; return false;
         }
+        if (stage == 90) {
+            if (tick - started < 20) return false;
+            require(Math.abs(mc.player.getX() - 12.5) < .05 && Math.abs(mc.player.getZ() + 5.5) < .05, "wide endpoint capture camera position");
+            ModernClientRuntimeChecks.capture("modern-wireless-world.png"); stage = 91; started = tick; return false;
+        }
+        if (stage == 91) { if (tick - started < 10) return false; move(mc, RX); stage = 1; started = tick; return false; }
         if (stage == 1) { if (tick - started < 10) return false; open(mc, RX); stage = 2; started = tick; return false; }
         if (stage == 2) {
             if (!(mc.screen instanceof WirelessScreen screen)) return false;
@@ -116,7 +148,59 @@ public final class WirelessClientChecks {
         if (stage == 4) {
             WirelessBlockEntity tile = (WirelessBlockEntity) mc.level.getBlockEntity(RX);
             if (tile.onLevel() != originalOn || tile.offLevel() != originalOff || !tile.getRedstoneChannels().toString().equals(originalChannels)) return false;
-            ModernClientRuntimeChecks.capture("modern-wireless-receiver-dialog.png"); stage = 5; started = tick; return false;
+            ModernClientRuntimeChecks.capture("modern-wireless-receiver-dialog.png"); stage = 40; started = tick; return false;
+        }
+        if (stage == 40) {
+            if (tick - started < 15) return false;
+            glyphScale = 2; glyphLevel = 8; mc.options.guiScale().set(glyphScale); mc.resizeDisplay();
+            WirelessScreen screen = (WirelessScreen) mc.screen;
+            drag(screen, sliders(screen).get(0), glyphLevel); drag(screen, sliders(screen).get(1), 3);
+            ((EditBox) field(screen, "channels")).setFocused(false); screen.setFocused(null);
+            stage = 41; started = tick; return false;
+        }
+        if (stage == 41) {
+            WirelessBlockEntity tile = (WirelessBlockEntity) mc.level.getBlockEntity(RX);
+            if (tick - started < 5 || tile.onLevel() != glyphLevel || tile.offLevel() != 3) return false;
+            WirelessScreen screen = (WirelessScreen) mc.screen;
+            require(sliders(screen).get(0).getMessage().getString().equals("On level: " + glyphLevel), "normalized actual slider label");
+            WirelessScreen.glyphCaptureMode = 0; glyphMetadata(mc, screen); ModernClientRuntimeChecks.capture(glyphName("actual"));
+            stage = 42; started = tick; return false;
+        }
+        if (stage == 42) {
+            if (!captured(mc, "actual")) return false;
+            WirelessScreen.glyphCaptureMode = 1; ModernClientRuntimeChecks.capture(glyphName("reference")); stage = 43; started = tick; return false;
+        }
+        if (stage == 43) {
+            if (!captured(mc, "reference")) return false;
+            WirelessScreen.glyphCaptureMode = 2; ModernClientRuntimeChecks.capture(glyphName("negative")); stage = 44; started = tick; return false;
+        }
+        if (stage == 44) {
+            if (!captured(mc, "negative")) return false;
+            WirelessScreen.glyphCaptureMode = 3; ModernClientRuntimeChecks.capture(glyphName("vanilla")); stage = 46; started = tick; return false;
+        }
+        if (stage == 46) {
+            if (!captured(mc, "vanilla")) return false;
+            WirelessScreen.glyphCaptureMode = 0;
+            if (glyphScale == 2) {
+                glyphScale = 3; mc.options.guiScale().set(glyphScale); mc.resizeDisplay();
+                ((EditBox) field(mc.screen, "channels")).setFocused(false); mc.screen.setFocused(null);
+                stage = 41; started = tick; return false;
+            }
+            if (glyphLevel == 8) {
+                glyphLevel = 9; glyphScale = 2; mc.options.guiScale().set(glyphScale); mc.resizeDisplay();
+                WirelessScreen screen = (WirelessScreen) mc.screen; drag(screen, sliders(screen).get(0), glyphLevel);
+                ((EditBox) field(screen, "channels")).setFocused(false); screen.setFocused(null);
+                stage = 41; started = tick; return false;
+            }
+            WirelessScreen screen = (WirelessScreen) mc.screen;
+            drag(screen, sliders(screen).get(0), originalOn); drag(screen, sliders(screen).get(1), originalOff);
+            mc.options.guiScale().set(2); mc.resizeDisplay(); stage = 45; started = tick; return false;
+        }
+        if (stage == 45) {
+            WirelessBlockEntity tile = (WirelessBlockEntity) mc.level.getBlockEntity(RX);
+            if (tile.onLevel() != originalOn || tile.offLevel() != originalOff) return false;
+            System.out.println("[vandorlabs][modern] wireless-glyph-captures PASS normalized On 8/9 at GUI scales 2/3, displaced-thumb references and wrong-order negative controls");
+            stage = 5; started = tick; return false;
         }
         if (stage == 5) { if (tick - started < 15) return false; move(mc, TX); stage = 6; started = tick; return false; }
         if (stage == 6) { if (tick - started < 10) return false; open(mc, TX); stage = 7; started = tick; return false; }

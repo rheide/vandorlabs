@@ -99,9 +99,11 @@ def main():
     for line in (ROOT / 'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines():
         if '=' in line and not line.startswith('#'):
             key,value=line.split('=',1)
-            lang[key.replace('tile.vandorlabs.','block.vandorlabs.').removesuffix('.name')]=value
-    lang.update({'block.vandorlabs.programmable_block':'Programmable Block','itemGroup.vandorlabs':'Vandor Labs'})
-    lang['item.vandorlabs.configurizer'] = 'Configurizer'
+            if key.startswith('tile.vandorlabs.'):
+                key=key.replace('tile.vandorlabs.','block.vandorlabs.',1).removesuffix('.name')
+            elif key.startswith('item.vandorlabs.'):
+                key=key.removesuffix('.name')
+            lang[key]=value
     write(assets / 'lang/en_us.json', lang)
     (assets / 'textures/item').mkdir(parents=True,exist_ok=True)
     shutil.copy2(ROOT / 'texture-packs/default/assets/vandorlabs/textures/items/configurizer.png', assets / 'textures/item/configurizer.png')
@@ -120,7 +122,6 @@ def main():
         model=json.loads((ROOT / f'src/main/resources/assets/vandorlabs/models/item/{id}.json').read_text())
         model['textures']={key:value.replace(':items/',':item/') for key,value in model['textures'].items()}
         write(assets / f'models/item/{id}.json',model)
-        lang[f'item.vandorlabs.{id}']=id.replace('_',' ').title()
     write(assets / 'lang/en_us.json',lang)
     for id in ('programmable_block','programmable_viewscreen','configurizer','industrial_alloy_ingot'):
         recipe=json.loads((ROOT / f'src/main/resources/assets/vandorlabs/recipes/{id}.json').read_text())

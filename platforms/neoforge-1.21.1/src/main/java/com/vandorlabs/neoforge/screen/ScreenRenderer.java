@@ -32,6 +32,7 @@ public final class ScreenRenderer implements BlockEntityRenderer<ProgrammableScr
     private static final VisualClock CLOCK=new VisualClock();
     private static double visualTicks;
     private static final ResourceLocation BLACK=ResourceLocation.withDefaultNamespace("textures/block/black_concrete.png");
+    private static ResourceLocation texture(String atlasId){ResourceLocation id=ResourceLocation.parse(atlasId);return id.withPath("textures/"+id.getPath()+".png");}
     private static ResourceLocation resource(String path){return ResourceLocation.fromNamespaceAndPath("vandorlabs",path);}
     public static void tickClock(){visualTicks=CLOCK.sample(System.nanoTime(),Minecraft.getInstance().isPaused());}
     public static void clearResources(){for(Animation animation:CACHE.values())if(animation.texture.getPath().startsWith("dynamic/"))Minecraft.getInstance().getTextureManager().release(animation.texture);CACHE.clear();}
@@ -52,8 +53,8 @@ public final class ScreenRenderer implements BlockEntityRenderer<ProgrammableScr
     }
     @Override public void render(ProgrammableScreenEntity screen,float partial,PoseStack pose,MultiBufferSource buffers,int light,int overlay){
         if(!ModernFinishCatalog.validChoice(screen.data().housingTexture))return;
-        var housing=ModernFinishCatalog.ENTRIES.get(ModernFinishCatalog.clamp(screen.data().housingTexture));
-        ResourceLocation housingTexture=resource("textures/"+ResourceLocation.parse(housing.texture()).getPath()+".png");
+        var housing=ModernFinishCatalog.entry(screen.data().housingTexture);
+        ResourceLocation housingTexture=texture(housing.texture());
         Direction facing=screen.getBlockState().getValue(ProgrammableScreenBlock.FACING);
         pose.pushPose();pose.translate(.5,.5,.5);
         if(facing==Direction.UP){pose.mulPose(Axis.YP.rotationDegrees(180));pose.mulPose(Axis.XP.rotationDegrees(90));}
@@ -70,7 +71,7 @@ public final class ScreenRenderer implements BlockEntityRenderer<ProgrammableScr
         ResourceLocation texture;float v0=0,v1=1,u1=1;
         int mode=screen.effectiveMode();
         if(mode==ScreenBehavior.OFF)texture=BLACK;
-        else if(screen.surface()>=0&&ModernFinishCatalog.validChoice(screen.surface())){var material=ModernFinishCatalog.ENTRIES.get(ModernFinishCatalog.clamp(screen.surface()));texture=resource("textures/"+ResourceLocation.parse(material.texture()).getPath()+".png");u1=material.u();v1=material.v();}
+        else if(screen.surface()>=0&&ModernFinishCatalog.validChoice(screen.surface())){var material=ModernFinishCatalog.entry(screen.surface());texture=texture(material.texture());u1=material.u();v1=material.v();}
         else {
             String id=ScreenArtwork.find(screen.data().selectedScreen).texture(screen.data().framed);
             if(mode==ScreenBehavior.STATIC)texture=resource("textures/screens/"+id+"_static.png");

@@ -14,14 +14,15 @@ from build_all import ROOT, java_home
 
 PLATFORM=ROOT/'platforms/neoforge-1.21.1'
 MARKERS={
-    'write':['wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
-    'read':['wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
-    'client':['block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','client-smoke PASS'],
+    'write':['filesystem-write PASS','wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
+    'read':['filesystem-read PASS','wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
+    'client':['filesystem-client PASS','block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','wireless-glyph-captures PASS','client-smoke PASS'],
 }
-CLIENT_IMAGES=['modern-world.png','modern-programmable-block.png','modern-programmable-block-gui2.png',
+CLIENT_IMAGES=['modern-filesystem-world.png','modern-filesystem-picker-portrait.png','modern-filesystem-picker-missing.png','modern-filesystem-picker-wide.png','modern-world.png','modern-programmable-block.png','modern-programmable-block-gui2.png',
                'modern-screen-scale3.png','modern-screen-scale2.png','modern-screen-world-a.png','modern-screen-world-b.png',
-               'modern-redstone-overlay-on.png','modern-redstone-editor.png','modern-redstone-overlay-eight.png',
+               'modern-redstone-overlay-on.png','modern-redstone-editor.png','modern-redstone-editor-scale3.png','modern-redstone-editor-scale2.png','modern-redstone-overlay-eight.png',
                'modern-wireless-world.png','modern-wireless-receiver-dialog.png','modern-wireless-transmitter-dialog.png']
+CLIENT_IMAGES += [f'modern-wireless-on{level}-scale{scale}-{mode}.png' for level in (8,9) for scale in (2,3) for mode in ('actual','reference','negative','vanilla')]
 FATAL=re.compile(r'\bFATAL\b|Encountered an unexpected exception|Exception in server tick loop|Failed to start the minecraft server|This crash report has been saved to|Preparing crash report|Caused by: java\.lang\.(?:AssertionError|IllegalStateException)|Modern client:|Modern runtime check:')
 
 
@@ -114,8 +115,17 @@ def run(phase,args):
                 raise RuntimeError('Current-run screenshot missing or stale: '+name)
             with Image.open(image) as png:png.verify()
             images[name]=hashlib.sha256(image.read_bytes()).hexdigest()
+        metadata=PLATFORM/'run/client/screenshots/modern-wireless-glyphs.json'
+        if not metadata.is_file() or metadata.stat().st_mtime_ns<started_ns:
+            raise RuntimeError('Current-run wireless glyph metadata missing or stale')
+        json.loads(metadata.read_text())
+        images[metadata.name]=hashlib.sha256(metadata.read_bytes()).hexdigest()
+        subprocess.run([sys.executable,str(PLATFORM/'analyze_wireless_glyphs.py'),str(PLATFORM/'run/client/screenshots')],check=True)
+        subprocess.run([sys.executable,str(ROOT/'tools/test_modern_filesystem_images.py'),
+                        '--screenshots',str(PLATFORM/'run/client/screenshots'),
+                        '--output-dir',str(args.log_dir/'filesystem-pixels')],check=True)
     print(f'Modern {phase} PASS: all {len(markers)} runtime markers and clean process completion',flush=True)
-    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images}
+    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images,'visual_checks':{'filesystem':'PASS','wireless_glyphs':'PASS'} if phase=='client' else {}}
 
 
 def main():
@@ -133,8 +143,16 @@ def main():
         print(f'Modern {args.phase} log PASS: complete runtime markers, no fatal evidence, clean process completion')
         return
     phases=['write','read'] if args.phase=='both' else [args.phase]
-    results=[run(phase,args) for phase in phases]
-    (args.log_dir/'result.json').write_text(json.dumps({'schema':1,'status':'PASS','phases':results},indent=2)+'\n')
+    results=[];args.log_dir.mkdir(parents=True,exist_ok=True);report=args.log_dir/'result.json'
+    report.write_text(json.dumps({'schema':1,'status':'RUNNING','phases':results},indent=2)+'\n')
+    try:
+        for phase in phases:
+            results.append(run(phase,args))
+            report.write_text(json.dumps({'schema':1,'status':'RUNNING','phases':results},indent=2)+'\n')
+    except BaseException as error:
+        report.write_text(json.dumps({'schema':1,'status':'FAILED','phases':results,'error':str(error)},indent=2)+'\n')
+        raise
+    report.write_text(json.dumps({'schema':1,'status':'PASS','phases':results},indent=2)+'\n')
 
 if __name__=='__main__':
     try:main()

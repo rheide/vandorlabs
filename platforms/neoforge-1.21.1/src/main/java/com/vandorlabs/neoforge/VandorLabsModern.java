@@ -38,6 +38,7 @@ public final class VandorLabsModern {
             .displayItems((parameters, output) -> { output.accept(PROGRAMMABLE_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get());output.accept(ALLOY_INGOT.get());output.accept(com.vandorlabs.neoforge.screen.ScreenRegistration.ITEM.get());output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.TRANSMITTER_ITEM.get());output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.RECEIVER_ITEM.get()); }).build());
     }
     public VandorLabsModern(IEventBus bus) {
+        FilesystemMaterials.initialize();
         com.vandorlabs.neoforge.redstone.WirelessContent.initialize();
         bus.addListener(com.vandorlabs.neoforge.redstone.WirelessPayload::register);
         com.vandorlabs.neoforge.screen.ScreenRegistration.install(bus);

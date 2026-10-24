@@ -33,7 +33,14 @@ public final class NativeMaterialPicker {
         for(List<Integer> group:groups.values())group.sort((a,b)->TextureListLayout.compareOptions(this.entries.get(a).label,a,this.entries.get(b).label,b));
         categories=TextureListLayout.categories(groups.keySet());setSelected(selected);
     }
-    public static List<Entry> generalEntries(){List<Entry> entries=new ArrayList<>();for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++){var entry=ModernFinishCatalog.ENTRIES.get(i);if(entry.visible()&&entry.general()&&entry.canonical()==i)entries.add(new Entry(i,entry.label(),entry.category(),entry.texture(),entry.u(),entry.v()));}return entries;}
+    public static List<Entry> generalEntries(){
+        List<Entry> entries=new ArrayList<>();
+        for(var choice:ModernFinishCatalog.allChoices()){
+            var entry=choice.entry();
+            if(entry.visible()&&entry.general()&&entry.canonical()==choice.choice())entries.add(new Entry(choice.choice(),entry.label(),entry.category(),entry.texture(),entry.u(),entry.v()));
+        }
+        return entries;
+    }
     public NativeMaterialPicker special(int id,String label,Runnable action){special.put(id,new Special(label,action));rebuild();centerSelected();return this;}
     public void keepView(NativeMaterialPicker previous){if(previous!=null){expanded.addAll(previous.expanded);rebuild();scroll=Math.max(0,Math.min(maximum(),previous.scroll));}}
     private void rebuild(){int[] trailing=new int[special.size()];int i=0;for(int id:special.keySet())trailing[i++]=id;rows=TextureListLayout.rows(categories,groups,expanded,trailing);scroll=Math.max(0,Math.min(maximum(),scroll));}
@@ -65,8 +72,8 @@ public final class NativeMaterialPicker {
             if(selected||hover)graphics.fill(x,yy,x+width,yy+22,selected?0xFF2A4A6A:0xFF1A1A20);
             if(special.containsKey(id))graphics.drawString(font,font.plainSubstrByWidth(special.get(id).label,width-6),x+3,yy+7,selected?0xFFFFE08A:0xFFABCFE8);
             else if(id<0){String category=categories.get(-id-1);int indent=TextureListLayout.indent(category);String label=(expanded.contains(category)?"- ":"+ ")+category.substring(category.lastIndexOf('/')+1);graphics.drawString(font,font.plainSubstrByWidth(label,width-6-indent),x+3+indent,yy+7,0xFFABCFE8);}
-            else {Entry entry=entries.get(id);float aspect=entry.u/entry.v;int tw=16,th=16;if(aspect<1)tw=Math.max(1,Math.round(16*aspect));else th=Math.max(1,Math.round(16/aspect));
-                TextureAtlasSprite sprite=Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.parse(entry.texture));graphics.blit(x+3+(16-tw)/2,yy+3+(16-th)/2,0,tw,th,new CroppedSprite(sprite,entry.u,entry.v));
+            else {Entry entry=entries.get(id);var refreshed=com.vandorlabs.tiles.MaterialChoicePolicy.isExternal(id)?ModernFinishCatalog.entry(id):null;float usedU=refreshed==null?entry.u:refreshed.u(),usedV=refreshed==null?entry.v:refreshed.v();String texture=refreshed==null?entry.texture:refreshed.texture();float aspect=usedU/usedV;int tw=16,th=16;if(aspect<1)tw=Math.max(1,Math.round(16*aspect));else th=Math.max(1,Math.round(16/aspect));
+                TextureAtlasSprite sprite=Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.parse(texture));graphics.blit(x+3+(16-tw)/2,yy+3+(16-th)/2,0,tw,th,new CroppedSprite(sprite,usedU,usedV));
                 graphics.drawString(font,font.plainSubstrByWidth(entry.label,width-26),x+23,yy+7,selected?0xFFFFE08A:0xFFD8D8D8);
             }
         }

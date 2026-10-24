@@ -33,10 +33,17 @@
         "programmable_block"
       ],
       "remaining": [
+        "unregistered programmable_matter_block static adapter",
         "joined multi-block Stretch/Fit faces",
         "custom and filesystem materials",
         "complete creative/search catalog configuration",
         "rendered parity acceptance"
+      ],
+      "implemented": [
+        "canonical stable housing indices and legacy saved defaults",
+        "native per-face model data and configuration-preserving drops/picks",
+        "shared categorized thumbnail picker and exact controls at GUI scales 2 and 3",
+        "bounded server-owned settings and unresolved external-ID retention"
       ]
     },
     {
@@ -89,10 +96,18 @@
         "programmable_viewscreen"
       ],
       "remaining": [
-        "custom and filesystem materials",
-        "redstone and vehicle overlay selections",
-        "complete original settings schema and modes",
-        "rendered geometry/animation parity acceptance"
+        "custom/filesystem material adapters and reload acceptance",
+        "vehicle overlay selections",
+        "complete original settings schema and all family variants",
+        "full-family rendered acceptance"
+      ],
+      "implemented": [
+        "canonical static/animated artwork and shared pause-aware clock",
+        "native cube housing/surface geometry, dry full-cube collision and effective light",
+        "shared selector/tree/scrollbar at GUI scales 2 and 3",
+        "native toggle/slider/pulse overlay and eight-row editor",
+        "bidirectional partial-channel latch banks and subsequent-process persistence",
+        "bounded settings, real ray interaction and exact editing authorization"
       ]
     },
     {
@@ -288,9 +303,15 @@
         "redstone_transmitter"
       ],
       "remaining": [
-        "rendered endpoint and dialog acceptance",
-        "configured endpoint item/drop parity",
+        "plain-item drop/pick/placement parity acceptance",
         "carried assembly interaction"
+      ],
+      "implemented": [
+        "shared network/membership/signal/persistence policies",
+        "deferred loaded-world lifecycle and stale identity exclusion",
+        "directional analog/digital ports, partial overlaps and native world propagation",
+        "actual six-face models and reverse-cycling/slider dialog round trips",
+        "subsequent-process exact saved configuration recovery"
       ]
     },
     {

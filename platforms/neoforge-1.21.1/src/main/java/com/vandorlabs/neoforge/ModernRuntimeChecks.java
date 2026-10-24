@@ -48,6 +48,7 @@ public final class ModernRuntimeChecks {
             player.setGameMode(GameType.CREATIVE);player.setPos(200,81,200);require(!FinishPayload.apply(player,settings),"remote editor accepted");
             CompoundTag legacy=saved.copy();legacy.remove("HousingTextureVersion");legacy.putInt(ProgrammableBlockDialog.MAIN_TEXTURE_KEY,15);
             restored.loadWithComponents(legacy,level.registryAccess());require(restored.settings().mainTexture==14,"legacy removed finish migration mismatch");
+            FilesystemRuntimeChecks.run(level);
             com.vandorlabs.neoforge.redstone.WirelessRuntimeChecks.run(level);
             com.vandorlabs.neoforge.screen.ScreenRuntimeChecks.run(level);
             CompoundTag unresolved=saved.copy();unresolved.putInt(ProgrammableBlockDialog.MAIN_TEXTURE_KEY,0x23456789);unresolved.putIntArray(ProgrammableBlockDialog.FACES_KEY,new int[]{0x456789ab,-1,-1,-1,-1,-1});
@@ -73,6 +74,7 @@ public final class ModernRuntimeChecks {
         require(level.getBlockEntity(pos) instanceof ProgrammableBlockEntity,"saved programmable block missing");
         var tile=(ProgrammableBlockEntity)level.getBlockEntity(pos);
         require(tile.settings().mainTexture==3&&tile.settings().layout==2&&tile.settings().facesEnabled&&Arrays.equals(tile.settings().faces(),new int[]{0,1,2,3,-1,5}),"disk reload mismatch");
+        FilesystemRuntimeChecks.read(level);
         com.vandorlabs.neoforge.redstone.WirelessRuntimeChecks.read(level);
         com.vandorlabs.neoforge.screen.ScreenRuntimeChecks.read(level);
         System.out.println("[vandorlabs][modern] server-read PASS exact programmable settings recovered from disk after two real loaded-world ticks");

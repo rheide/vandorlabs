@@ -25,6 +25,8 @@ public final class ProgrammableScreenEntity extends BlockEntity implements Moder
     private final ModernRedstoneScreenContents redstone=new ModernRedstoneScreenContents(this,0);
     public ProgrammableScreenEntity(BlockPos pos,BlockState state){super(ScreenRegistration.TILE.get(),pos,state);}
     public ScreenData data(){return data;}
+    public boolean supportsSlot(int slot){return com.vandorlabs.render.ScreenFamilyPolicy.supportsSlot(com.vandorlabs.render.ScreenFamilyPolicy.Kind.FLAT,slot);}
+    public int rowCapacity(int slot){return com.vandorlabs.render.ScreenFamilyPolicy.maxRows(com.vandorlabs.render.ScreenFamilyPolicy.Kind.FLAT,slot);}
     public int surface(){return redstone.enabled()?com.vandorlabs.redstone.RedstoneScreenPolicy.REDSTONE_SURFACE:surface;}
     public ModernRedstoneScreenContents redstone(){return redstone;}
     int getHousingTexture(){return data.housingTexture;}

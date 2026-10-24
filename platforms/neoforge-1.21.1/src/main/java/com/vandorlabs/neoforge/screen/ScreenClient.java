@@ -63,7 +63,7 @@ public final class ScreenClient {
         }
         private int artworkChoice(){String id=ScreenArtwork.find(artwork).id();for(int i=0;i<ScreenArtwork.ENTRIES.size();i++)if(ScreenArtwork.ENTRIES.get(i).id().equals(id))return ARTWORK_BASE+i;return ARTWORK_BASE;}
         private void pick(int choice){
-            if(choice>=ARTWORK_BASE){var entry=ScreenArtwork.ENTRIES.get(choice-ARTWORK_BASE);artwork=entry.id();surface=-1;state=new ScreenSelectorDialog.State(false,state.tab,state.mode,state.speed,state.trigger,state.sides,state.framed,entry.paired());}
+            if(choice>=ARTWORK_BASE&&choice<ARTWORK_BASE+ScreenArtwork.ENTRIES.size()){var entry=ScreenArtwork.ENTRIES.get(choice-ARTWORK_BASE);artwork=entry.id();surface=-1;state=new ScreenSelectorDialog.State(false,state.tab,state.mode,state.speed,state.trigger,state.sides,state.framed,entry.paired());}
             else if(state.tab==0)surface=choice;else housing=choice;send();rebuild();
         }
         private void send(){if(ChannelList.parse(channelText)==null)return;PacketDistributor.sendToServer(new ScreenPayload(menu.containerId,menu.pos,artwork,state.mode,state.speed,state.trigger,state.sides,state.framed,channelText,housing,surface));}

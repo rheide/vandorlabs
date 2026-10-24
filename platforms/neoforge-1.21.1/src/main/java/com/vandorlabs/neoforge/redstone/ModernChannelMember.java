@@ -4,7 +4,11 @@ import com.vandorlabs.redstone.ChannelMember;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-/** A real installed block entity, or a logical control owned by that block entity. */
+/**
+ * A real installed block entity, or a logical control owned by that block entity.
+ * Owners unregister themselves and their logical controls from setRemoved and
+ * onChunkUnloaded; installed idle members never require a per-tick scan.
+ */
 public interface ModernChannelMember extends ChannelMember {
     BlockEntity channelBlockEntity();
     /** Runs after deferred registration while the installed identity is still active. */

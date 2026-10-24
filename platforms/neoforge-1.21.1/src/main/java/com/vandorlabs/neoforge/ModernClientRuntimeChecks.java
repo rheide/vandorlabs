@@ -22,16 +22,20 @@ import net.neoforged.neoforge.client.event.RenderFrameEvent;
 /** Opt-in native client rendering, menu input and network round-trip checks. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class ModernClientRuntimeChecks {
-    private static int ticks,totalTicks,stage,stageStart,screenTick,redstoneTick,wirelessTick;
+    private static int ticks,totalTicks,stage,stageStart,screenTick,redstoneTick,wirelessTick,filesystemTick;
     private static String screenshot;
+    private static long renderedFrames;
+    public static long renderedFrames(){return renderedFrames;}
     private static final Set<String> captured=java.util.concurrent.ConcurrentHashMap.newKeySet();
     private static void require(boolean value,String message) { if(!value)throw new IllegalStateException("Modern client: "+message); }
+    public static boolean captured(String name){return captured.contains(name);}
     public static void capture(String name) { screenshot=name; }
     @SubscribeEvent public static void clearOverlays(RenderFrameEvent.Pre event) {
         if(Boolean.getBoolean("vandorlabs.modernClientSmoke")) { Minecraft.getInstance().getToasts().clear();Minecraft.getInstance().gui.getChat().clearMessages(true); }
     }
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event) {
-        if(!Boolean.getBoolean("vandorlabs.modernClientSmoke")||screenshot==null)return;
+        if(!Boolean.getBoolean("vandorlabs.modernClientSmoke"))return;
+        renderedFrames++;if(screenshot==null)return;
         Minecraft mc=Minecraft.getInstance();String name=screenshot;screenshot=null;
         Screenshot.grab(mc.gameDirectory,name,mc.getMainRenderTarget(),component->{captured.add(name);System.out.println("[vandorlabs][modern] screenshot "+name+": "+component.getString());});
     }
@@ -74,14 +78,16 @@ public final class ModernClientRuntimeChecks {
             mc.options.guiScale().set(3);mc.resizeDisplay();ModernClient.smokeCenterSelection();capture("modern-programmable-block.png");stage=31;stageStart=ticks;
             System.out.println("[vandorlabs][modern] block-client PASS real world model/atlas quads, actual menu, left/right layout, wheel/drag and server roundtrip");
         } else if(stage==31&&ticks-stageStart>20) {
-            mc.options.guiScale().set(2);mc.resizeDisplay();mc.player.closeContainer();stage=4;screenTick=0;
+            mc.options.guiScale().set(2);mc.resizeDisplay();mc.player.closeContainer();stage=32;filesystemTick=0;
+        } else if(stage==32) {
+            if(com.vandorlabs.neoforge.client.FilesystemClientChecks.tick(mc,filesystemTick++)) {stage=4;screenTick=0;}
         } else if(stage==4) {
             if(com.vandorlabs.neoforge.screen.ScreenClientChecks.tick(mc,screenTick++)) { capture("modern-screen.png");stage=41;redstoneTick=0; }
         } else if(stage==41) {
             if(com.vandorlabs.neoforge.screen.RedstoneClientChecks.tick(mc,redstoneTick++)) { stage=40;wirelessTick=0; }
         } else if(stage==40) {
             if(com.vandorlabs.neoforge.redstone.WirelessClientChecks.tick(mc,wirelessTick++)) { stage=5;stageStart=ticks; }
-        } else if(stage==5&&ticks-stageStart>40&&captured.containsAll(Set.of("modern-world.png","modern-programmable-block.png","modern-programmable-block-gui2.png","modern-screen.png","modern-redstone-overlay-on.png","modern-redstone-editor.png","modern-redstone-overlay-eight.png","modern-wireless-world.png","modern-wireless-receiver-dialog.png","modern-wireless-transmitter-dialog.png"))) {
+        } else if(stage==5&&ticks-stageStart>40&&captured.containsAll(Set.of("modern-world.png","modern-programmable-block.png","modern-programmable-block-gui2.png","modern-screen.png","modern-filesystem-world.png","modern-filesystem-picker-portrait.png","modern-filesystem-picker-missing.png","modern-filesystem-picker-wide.png","modern-redstone-overlay-on.png","modern-redstone-editor.png","modern-redstone-editor-scale3.png","modern-redstone-editor-scale2.png","modern-redstone-overlay-eight.png","modern-wireless-world.png","modern-wireless-receiver-dialog.png","modern-wireless-transmitter-dialog.png"))) {
             System.out.println("[vandorlabs][modern] client-smoke PASS placed world, native dialogs and rendered screenshots");mc.stop();stage=6;
         }
     }

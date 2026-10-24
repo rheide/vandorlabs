@@ -23,10 +23,17 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
-    private final List<TextureAtlasSprite> sprites;
-    private ProgrammableModel(BakedModel model,List<TextureAtlasSprite> sprites) { super(model);this.sprites=sprites; }
+    private record MaterialSnapshot(TextureAtlasSprite sprite,float usedU,float usedV) {}
+    private final java.util.Map<Integer,MaterialSnapshot> sprites;
+    private ProgrammableModel(BakedModel model,java.util.Map<Integer,MaterialSnapshot> sprites) { super(model);this.sprites=sprites; }
     @SubscribeEvent public static void bake(ModelEvent.ModifyBakingResult event) {
-        List<TextureAtlasSprite> sprites=ModernFinishCatalog.ENTRIES.stream().map(entry -> event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse(entry.texture())))).toList();
+        java.util.Map<Integer,MaterialSnapshot> resolved=new java.util.HashMap<>();
+        for(var choice:ModernFinishCatalog.allChoices()) {
+            var entry=choice.entry();
+            var sprite=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse(entry.texture())));
+            resolved.put(choice.choice(),new MaterialSnapshot(sprite,entry.u(),entry.v()));
+        }
+        java.util.Map<Integer,MaterialSnapshot> sprites=java.util.Map.copyOf(resolved);
         event.getModels().replaceAll((id,model) -> id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"))&&!id.getVariant().equals("inventory")?new ProgrammableModel(model,sprites):model);
     }
     @Override public boolean useAmbientOcclusion() { return false; }
@@ -39,11 +46,11 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         for(BakedQuad quad:base) {
             int local=localFace(quad.getDirection(),state.getValue(ProgrammableBlock.FACING));
             int choice=settings.facesEnabled&&settings.face(local)>=0?settings.face(local):settings.mainTexture;
-            int index=ModernFinishCatalog.clamp(choice);
-            TextureAtlasSprite sprite=sprites.get(index);
-            ModernFinishCatalog.Entry entry=ModernFinishCatalog.ENTRIES.get(index);
-            float uScale=entry.u(),vScale=entry.v();
-            double aspect=entry.u()/entry.v();
+            int index=ModernFinishCatalog.renderChoice(choice);
+            MaterialSnapshot material=sprites.getOrDefault(index,sprites.get(0));
+            TextureAtlasSprite sprite=material.sprite();
+            float uScale=material.usedU(),vScale=material.usedV();
+            double aspect=material.usedU()/material.usedV();
             if(!TextureLayoutMode.fit(settings.layout,1,1,aspect)) {
                 uScale*=TextureLayoutMode.tileU(1,aspect);
                 vScale*=TextureLayoutMode.tileV(1,aspect);

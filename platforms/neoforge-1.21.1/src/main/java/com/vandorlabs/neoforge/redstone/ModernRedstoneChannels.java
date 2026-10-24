@@ -52,7 +52,6 @@ public final class ModernRedstoneChannels {
         ServerLevel level = level(member);
         if (level == null || !member.isChannelMemberActive()) return;
         State state = state(level);
-        state.members.add(member);
         state.network.register(member);
     }
 
@@ -118,17 +117,15 @@ public final class ModernRedstoneChannels {
         State state = LEVELS.get(level);
         if (state == null) return;
         // Recheck identity: a queued block may have been removed or replaced while its chunk loaded.
-        Set<ModernChannelMember> pending = identitySet();
-        pending.addAll(state.pending);
-        state.pending.clear();
-        for (ModernChannelMember member : pending) if (member.isChannelMemberActive()) {
-            state.members.add(member);
-            state.network.register(member);
-            if (member.isChannelMemberActive()) member.channelLoaded();
+        if (!state.pending.isEmpty()) {
+            Set<ModernChannelMember> pending = identitySet();
+            pending.addAll(state.pending); state.pending.clear();
+            for (ModernChannelMember member : pending) if (member.isChannelMemberActive()) {
+                state.network.register(member);
+                if (member.isChannelMemberActive()) member.channelLoaded();
+            }
         }
-        for (ModernChannelMember member : new ArrayList<>(state.members)) {
-            if (!member.isChannelMemberActive()) state.remove(member);
-        }
+        if (state.pulses.isEmpty()) return;
         for (Map.Entry<ModernChannelMember, Pulse> entry : new ArrayList<>(state.pulses.entrySet())) {
             Pulse pulse = entry.getValue();
             if (!pulse.isChannelMemberActive() || level.getGameTime() >= pulse.expires) {
@@ -146,12 +143,10 @@ public final class ModernRedstoneChannels {
 
     private static final class State {
         final ChannelNetwork network = new ChannelNetwork(ModernSignalBatch::apply);
-        final Set<ModernChannelMember> members = identitySet();
         final Set<ModernChannelMember> pending = identitySet();
         final Map<ModernChannelMember, Pulse> pulses = new IdentityHashMap<>();
         void remove(ModernChannelMember member) {
             pending.remove(member);
-            members.remove(member);
             network.unregister(member);
             Pulse pulse = pulses.remove(member);
             if (pulse != null) network.unregister(pulse);

@@ -1,13 +1,13 @@
 package com.vandorlabs.neoforge.redstone;
 
 import com.vandorlabs.redstone.ChannelList;
-import com.vandorlabs.ui.DialogInput;
+import com.vandorlabs.ui.WirelessDialogLayout;
+import com.vandorlabs.ui.ProgrammableDialogLayout;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.api.distmarker.Dist;
@@ -21,39 +21,66 @@ import net.neoforged.neoforge.network.PacketDistributor;
 @OnlyIn(Dist.CLIENT)
 @EventBusSubscriber(modid = "vandorlabs", bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class WirelessScreen extends AbstractContainerScreen<WirelessMenu> {
+    // Opt-in client checks compare real label pixels against a displaced-thumb
+    // reference and an intentionally wrong paint-order negative control.
+    static int glyphCaptureMode;
     private EditBox channels;
+    private WirelessDialogLayout layout;
     private Button signalButton, faceButton;
     private boolean analog, ready;
     private int on, off, face;
     public WirelessScreen(WirelessMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         analog = menu.tile.analog(); on = menu.tile.onLevel(); off = menu.tile.offLevel(); face = menu.tile.port().get3DDataValue();
-        imageWidth = 280; imageHeight = menu.tile.transmitter() ? 160 : 224;
+        imageWidth = WirelessDialogLayout.MAX_WIDTH; imageHeight = menu.tile.transmitter() ? WirelessDialogLayout.TRANSMITTER_HEIGHT : WirelessDialogLayout.RECEIVER_HEIGHT;
     }
     @SubscribeEvent public static void registerScreens(RegisterMenuScreensEvent event) { event.register(WirelessContent.MENU.get(), WirelessScreen::new); }
     @Override protected void init() {
         String text = channels == null ? menu.tile.getRedstoneChannels().toString() : channels.getValue();
-        imageWidth = Math.min(280, width - 12); super.init(); clearWidgets(); ready = false;
-        channels = new EditBox(font, leftPos + 12, topPos + 48, imageWidth - 24, 18, Component.literal("Channels"));
-        channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH); channels.setFilter(textValue -> textValue.matches("[0-9, ]*")); channels.setValue(text);
+        layout = new WirelessDialogLayout(width, height, menu.tile.transmitter()); imageWidth = layout.width; imageHeight = layout.height;
+        super.init(); clearWidgets(); ready = false;
+        ProgrammableDialogLayout.Button field = layout.channels();
+        channels = new EditBox(font, field.x, field.y, field.width, field.height, Component.literal("Channels"));
+        channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH); channels.setFilter(WirelessDialogLayout::validChannelCharacters); channels.setValue(text);
         channels.setResponder(ignored -> { if (ready) send(); }); addRenderableWidget(channels);
-        signalButton = addRenderableWidget(Button.builder(Component.literal("Signal: " + (analog ? "Analog" : "Digital")), ignored -> {
-            analog = !analog; send(); rebuild();
-        }).bounds(leftPos + 12, topPos + 76, imageWidth - 24, 20).build());
-        faceButton = addRenderableWidget(Button.builder(Component.literal((menu.tile.transmitter() ? "Input" : "Output") + " port: " + Direction.from3DDataValue(face).getName()), ignored -> cycleFace(1))
-                .bounds(leftPos + 12, topPos + 102, imageWidth - 24, 20).build());
-        if (!menu.tile.transmitter()) {
-            AbstractSliderButton onSlider = slider(topPos + 128, true); onSlider.active = !analog; addRenderableWidget(onSlider);
-            addRenderableWidget(slider(topPos + 154, false));
+        for (WirelessDialogLayout.Control control : layout.controls(analog, on, off, face)) {
+            ProgrammableDialogLayout.Button bounds = control.bounds;
+            if (control.slider) {
+                AbstractSliderButton slider = slider(bounds, bounds.id == WirelessDialogLayout.ON); slider.active = control.enabled; addRenderableWidget(slider);
+            } else {
+                Button button = Button.builder(Component.literal(bounds.label), ignored -> {
+                    if (bounds.id == WirelessDialogLayout.SIGNAL) { analog = !analog; send(); rebuild(); }
+                    else if (bounds.id == WirelessDialogLayout.PORT) cycleFace(1);
+                    else if (bounds.id == WirelessDialogLayout.DONE) { send(); onClose(); }
+                }).bounds(bounds.x, bounds.y, bounds.width, bounds.height).build();
+                button.active = control.enabled; addRenderableWidget(button);
+                if (bounds.id == WirelessDialogLayout.SIGNAL) signalButton = button;
+                if (bounds.id == WirelessDialogLayout.PORT) faceButton = button;
+            }
         }
-        addRenderableWidget(Button.builder(Component.literal("Done"), ignored -> { send(); onClose(); })
-                .bounds(leftPos + 12, topPos + imageHeight - 30, imageWidth - 24, 20).build());
         ready = true;
     }
-    private AbstractSliderButton slider(int y, boolean onSlider) {
-        return new AbstractSliderButton(leftPos + 12, y, imageWidth - 24, 20,
-                Component.literal((onSlider ? "On level: " : "Off level: ") + (onSlider ? on : off)), (onSlider ? on : off) / 15.0) {
-            @Override protected void updateMessage() { setMessage(Component.literal((onSlider ? "On level: " : "Off level: ") + Math.round(value * 15))); }
+    private AbstractSliderButton slider(ProgrammableDialogLayout.Button bounds, boolean onSlider) {
+        return new AbstractSliderButton(bounds.x, bounds.y, bounds.width, bounds.height,
+                Component.literal(bounds.label), (onSlider ? on : off) / 15.0) {
+            @Override public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+                double actual = value;
+                if (onSlider && glyphCaptureMode == 1) value = 0;
+                try { super.renderWidget(graphics, mouseX, mouseY, partialTick); }
+                finally { value = actual; }
+                if (onSlider && glyphCaptureMode == 2) {
+                    graphics.flush(); graphics.pose().pushPose(); graphics.pose().translate(0, 0, 2);
+                    graphics.blitSprite(getHandleSprite(), getX() + (int) (value * (width - 8)), getY(), 8, getHeight());
+                    graphics.flush(); graphics.pose().popPose();
+                }
+            }
+            @Override protected void renderScrollingString(GuiGraphics graphics, net.minecraft.client.gui.Font font, int padding, int color) {
+                if (glyphCaptureMode == 3) { super.renderScrollingString(graphics, font, padding, color); return; }
+                graphics.pose().pushPose(); graphics.pose().translate(0, 0, 1);
+                super.renderScrollingString(graphics, font, padding, color);
+                graphics.pose().popPose();
+            }
+            @Override protected void updateMessage() { setMessage(Component.literal(WirelessDialogLayout.levelLabel(onSlider, (int) Math.round(value * 15)))); }
             @Override protected void applyValue() {
                 int next = (int) Math.round(value * 15);
                 if (onSlider) on = next; else off = next;
@@ -62,7 +89,7 @@ public final class WirelessScreen extends AbstractContainerScreen<WirelessMenu> 
         };
     }
     private void rebuild() { init(); }
-    private void cycleFace(int direction) { face = DialogInput.cycle(face, 6, direction); send(); rebuild(); }
+    private void cycleFace(int direction) { face = WirelessDialogLayout.nextFace(face, direction); send(); rebuild(); }
     private void send() {
         ChannelList parsed = ChannelList.parse(channels.getValue());
         boolean valid = parsed != null;
@@ -76,13 +103,13 @@ public final class WirelessScreen extends AbstractContainerScreen<WirelessMenu> 
     }
     @Override public void onClose() { if (ready) send(); super.onClose(); }
     @Override protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        graphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, 0xff19232c);
-        graphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + 28, 0xff304858);
+        graphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, WirelessDialogLayout.PANEL_COLOR);
+        graphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + WirelessDialogLayout.HEADER_HEIGHT, WirelessDialogLayout.HEADER_COLOR);
     }
     @Override protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, menu.tile.transmitter() ? "Redstone Transmitter" : "Redstone Receiver", 12, 10, 0xffffff, false);
-        graphics.drawString(font, "Channels (0 = none)", 12, 34, 0xffffff, false);
-        if (!menu.tile.transmitter() && analog) graphics.drawString(font, "On level follows received signal", 12, 180, 0xc9d9e2, false);
+        graphics.drawString(font, layout.title(), WirelessDialogLayout.LABEL_X, WirelessDialogLayout.TITLE_Y, 0xffffff, false);
+        graphics.drawString(font, WirelessDialogLayout.CHANNEL_LABEL, WirelessDialogLayout.LABEL_X, WirelessDialogLayout.CHANNEL_LABEL_Y, 0xffffff, false);
+        if (!menu.tile.transmitter() && analog) graphics.drawString(font, WirelessDialogLayout.ANALOG_HELP, WirelessDialogLayout.LABEL_X, WirelessDialogLayout.HELP_Y, 0xc9d9e2, false);
     }
     @Override public boolean isPauseScreen() { return false; }
 }

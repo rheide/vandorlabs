@@ -27,7 +27,9 @@ NeoForge, ModDevGradle, the Gradle wrapper and its distribution checksum are pin
 
 The programmable cube uses a native block entity, server-owned editing menu, fixed-size settings payload and model data for per-face rendering. Settings retain the shared schema keys and legacy material migration. Unrecognized saved settings are retained for subsequent saves. Native item components preserve configured cube settings in drops. The viewscreen and wireless endpoint adapters use separate native menus and bounded payload codecs.
 
-Remaining limitations include other gameplay families, custom/filesystem materials, joined cube face layouts, and external integrations. The emitted adapter coverage report is a generated implementation inventory, not a declaration of release acceptance.
+Filesystem materials use the shared discovery and padding policies through a native resource pack. Cube settings retain their material IDs when files disappear or change dimensions; resource reloads update the existing picker and baked model UVs. Viewscreen filesystem rendering still needs separate acceptance.
+
+Remaining limitations include other gameplay families, custom block materials, joined cube face layouts, and external integrations. The emitted adapter coverage report is a generated implementation inventory, not a declaration of release acceptance.
 
 ## Disposable runtime checks
 

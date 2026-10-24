@@ -39,14 +39,35 @@ def generate(root, resources):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, indent=2) + '\n')
     write(assets / 'data/screen_artwork.json', result)
+    input_sources = json.loads((root / 'generated-resources/assets/vandorlabs/data/input_surfaces.json').read_text())
+    input_labels = {entry['source']: re.sub(r'\b(Bare|Framed)\s+', '', entry['label']) for entry in json.loads((root / 'generated-resources/assets/vandorlabs/data/unified_textures.json').read_text()) if entry.get('category') == 'Screens'}
+    input_bare, input_framed = {}, {}
+    for entry in input_sources:
+        name = entry['id']
+        key = re.sub(r'(^|_)(bare|framed)_', r'\1', name)
+        target = input_bare if '_bare_' in name or name.startswith('bare_') else input_framed if '_framed_' in name or name.startswith('framed_') else None
+        if target is None:
+            input_bare[key] = input_framed[key] = name
+        else:
+            target[key] = name
+        for suffix in ('_static.png', '_off.png', '_animated.anim'):
+            source = root / f'texture-packs/default/assets/vandorlabs/textures/blocks/console_inputs/{name}{suffix}'
+            if source.exists():
+                destination = assets / f'textures/screens/input/{name}{suffix}'
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+    inputs = []
+    for key in sorted(input_bare.keys() | input_framed.keys()):
+        first, second = input_bare.get(key, input_framed.get(key)), input_framed.get(key, input_bare.get(key))
+        label = input_labels[f'console_inputs/{first}_static']
+        inputs.append({'id': key, 'bare': first, 'framed': second, 'label': label})
+    write(assets / 'data/input_artwork.json', {'defaultInput': input_sources[0]['id'], 'entries': inputs, 'frames': {entry['id']: entry['frames'] if entry['animated'] else 1 for entry in input_sources}})
+    Image.new('RGB', (16, 16), (0, 0, 0)).save(assets / 'textures/screens/screen_off.png')
+    shutil.copy2(root / 'texture-packs/default/assets/vandorlabs/textures/blocks/sequence_border_off.png', assets / 'textures/screens/sequence_border_off.png')
+
     rotations = {'north': {}, 'east': {'y': 90}, 'south': {'y': 180}, 'west': {'y': 270}, 'up': {'x': 90}, 'down': {'x': 270}}
     write(assets / 'blockstates/programmable_viewscreen.json', {'variants': {f'facing={face}': dict(model='vandorlabs:block/programmable_viewscreen', **rotation) for face, rotation in rotations.items()}})
     write(assets / 'models/block/programmable_viewscreen.json', {'textures': {'particle': 'vandorlabs:housing/dark_wall_panel'}, 'elements': []})
     write(assets / 'models/item/programmable_viewscreen.json', {'parent': 'minecraft:block/cube_all', 'textures': {'all': 'vandorlabs:housing/dark_wall_panel'}, 'display': {'gui': {'rotation': [30, 225, 0], 'scale': [.58, .58, .58]}}})
     write(resources / 'data/vandorlabs/loot_table/blocks/programmable_viewscreen.json', {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': 'vandorlabs:programmable_viewscreen', 'functions': [{'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': ['minecraft:block_entity_data']}]}], 'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})
-    language = assets / 'lang/en_us.json'
-    if language.exists():
-        lang = json.loads(language.read_text())
-        lang['block.vandorlabs.programmable_viewscreen'] = 'Programmable Viewscreen'
-        write(language, lang)
     return len(result)

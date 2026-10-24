@@ -40,6 +40,8 @@ public final class WirelessRuntimeChecks {
         level.setBlock(TX, WirelessContent.TRANSMITTER.get().defaultBlockState().setValue(WirelessBlock.FACING, Direction.WEST), 3);
         level.setBlock(RX, WirelessContent.RECEIVER.get().defaultBlockState().setValue(WirelessBlock.FACING, Direction.UP), 3);
         WirelessBlockEntity transmitter = (WirelessBlockEntity) level.getBlockEntity(TX), receiver = (WirelessBlockEntity) level.getBlockEntity(RX);
+        require(WirelessContent.TRANSMITTER.get().getExplosionResistance() == 6 && WirelessContent.RECEIVER.get().getExplosionResistance() == 6,
+                "legacy effective explosion resistance (setter10 stores30 then exposes6)");
         transmitter.configure(ChannelList.of(101, 102), true, 15, 0, Direction.WEST);
         receiver.configure(ChannelList.of(102, 103), false, 9, 2, Direction.UP);
         level.setBlock(TX.west(), Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE.defaultBlockState().setValue(WeightedPressurePlateBlock.POWER, 7), 2);
@@ -48,6 +50,8 @@ public final class WirelessRuntimeChecks {
 
     public static void run(ServerLevel level) {
         resetFixture(level);
+        require(WirelessContent.TRANSMITTER.get().getExplosionResistance() == 6 && WirelessContent.RECEIVER.get().getExplosionResistance() == 6,
+                "legacy effective explosion resistance (setter10 stores30 then exposes6)");
         level.getChunkAt(TX); level.getChunkAt(RX);
         level.setBlock(TX, WirelessContent.TRANSMITTER.get().defaultBlockState().setValue(WirelessBlock.FACING, Direction.WEST), 3);
         level.setBlock(RX, WirelessContent.RECEIVER.get().defaultBlockState().setValue(WirelessBlock.FACING, Direction.EAST), 3);
@@ -91,6 +95,14 @@ public final class WirelessRuntimeChecks {
         require(!WirelessPayload.apply(player, valid), "missing settings session accepted"); player.containerMenu = menu;
         player.setPos(200, 81, 200); require(!WirelessPayload.apply(player, valid), "distance permission accepted"); player.setPos(14.5, 81, .5);
         player.setGameMode(GameType.ADVENTURE); require(!WirelessPayload.apply(player, valid), "adventure edit permission accepted"); player.setGameMode(GameType.CREATIVE);
+        net.minecraft.world.item.ItemStack held = player.getMainHandItem(); player.setGameMode(GameType.SURVIVAL);
+        for (BlockPos endpoint : new BlockPos[]{TX, RX}) {
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WOODEN_PICKAXE));
+            require(!player.hasCorrectToolForDrops(level.getBlockState(endpoint)), "wooden pickaxe must not harvest wireless endpoint");
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE_PICKAXE));
+            require(player.hasCorrectToolForDrops(level.getBlockState(endpoint)), "stone pickaxe must harvest wireless endpoint");
+        }
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, held); player.setGameMode(GameType.CREATIVE);
 
         RegistryFriendlyByteBuf bytes = new RegistryFriendlyByteBuf(Unpooled.buffer(), level.registryAccess());
         try {
@@ -125,6 +137,7 @@ public final class WirelessRuntimeChecks {
         require(ModernRedstoneChannels.level(level, 200) == 15, "stale identity fixture must first be a real powered source");
         ModernRedstoneChannels.queueRegistration(stale);
         level.setBlock(stalePos, Blocks.AIR.defaultBlockState(), 3);
+        require(ModernRedstoneChannels.level(level, 200) == 0, "block removal must clear powered membership without a global tick scan");
         ModernRedstoneChannels.queueRegistration(stale); settle(level);
         require(!stale.isChannelMemberActive() && ModernRedstoneChannels.level(level, 200) == 0, "queued replaced identity resurrected");
         level.setBlock(TX.west(), Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE.defaultBlockState().setValue(WeightedPressurePlateBlock.POWER, 7), 2);

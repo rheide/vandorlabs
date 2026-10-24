@@ -21,6 +21,7 @@ public final class ModernClientFixture {
         var screenPos=new BlockPos(4,80,0);level.setBlock(screenPos,com.vandorlabs.neoforge.screen.ScreenRegistration.BLOCK.get().defaultBlockState(),3);
         var screen=(com.vandorlabs.neoforge.screen.ProgrammableScreenEntity)level.getBlockEntity(screenPos);
         screen.configure("engineering_screen",new com.vandorlabs.ui.ScreenSelectorDialog.State(false,0,2,1,0,1,true,true),com.vandorlabs.redstone.ChannelList.parse("5, 9"),0,-1);
+        FilesystemRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.screen.RedstoneOverlayRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.redstone.WirelessRuntimeChecks.clientFixture(level);
         player.setGameMode(GameType.CREATIVE);player.teleportTo(2.5,80,-4);player.setYRot(0);player.setXRot(16);

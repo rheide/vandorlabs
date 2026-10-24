@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 /** Opt-in live overlay hits, linked banks, pulse timing and the actual bounded row editor. */
 public final class RedstoneClientChecks {
     private static final BlockPos POS=new BlockPos(6,80,0),LINKED=new BlockPos(8,80,0);
-    private static int stage,started;
+    private static int stage,started,editorCapture;
     private RedstoneClientChecks(){}
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException("Modern redstone client: "+message);}
     private static Object field(Object object,String name){try{Field field=object.getClass().getDeclaredField(name);field.setAccessible(true);return field.get(object);}catch(ReflectiveOperationException error){throw new IllegalStateException(error);}}
@@ -51,7 +51,15 @@ public final class RedstoneClientChecks {
         if(stage==8){
             if(!(mc.screen instanceof ScreenClient.Selector gui))return false;NativeMaterialPicker picker=(NativeMaterialPicker)field(gui,"picker");picker.setSelected(-100001);int row=picker.rows().indexOf(-100001)-picker.scroll();var panel=(com.vandorlabs.ui.ProgrammableDialogLayout)field(gui,"panel");require(row>=0&&row<panel.rows(true),"Redstone choice not visible after centering");gui.mouseClicked(panel.listX+20,panel.top+54+row*22+10,0);stage=9;started=tick;return false;
         }
-        if(stage==9){if(!(mc.screen instanceof RedstoneConfigurationScreen))return false;ModernClientRuntimeChecks.capture("modern-redstone-editor.png");stage=10;started=tick;return false;}
+        if(stage==9){
+            if(!(mc.screen instanceof RedstoneConfigurationScreen))return false;
+            if(editorCapture==0){mc.options.guiScale().set(3);mc.resizeDisplay();editorCapture=1;started=tick;return false;}
+            if(tick-started<10)return false;
+            if(editorCapture==1){ModernClientRuntimeChecks.capture("modern-redstone-editor-scale3.png");editorCapture=2;started=tick;return false;}
+            if(editorCapture==2){mc.options.guiScale().set(2);mc.resizeDisplay();editorCapture=3;started=tick;return false;}
+            if(editorCapture==3){ModernClientRuntimeChecks.capture("modern-redstone-editor-scale2.png");editorCapture=4;started=tick;return false;}
+            ModernClientRuntimeChecks.capture("modern-redstone-editor.png");stage=10;started=tick;return false;
+        }
         if(stage==10){
             if(tick-started<10)return false;var gui=(RedstoneConfigurationScreen)mc.screen;
             clickEditor(gui,7,1);require(((List<Integer>)field(gui,"kinds")).get(0)==2,"right editor click must select Pulse before Toggle");clickEditor(gui,7,0);require(((List<Integer>)field(gui,"kinds")).get(0)==0,"left/right control cycle mismatch");

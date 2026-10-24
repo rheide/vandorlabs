@@ -29,7 +29,7 @@ public final class RedstoneConfigurationScreen extends AbstractContainerScreen<S
     private List<RedstoneDialogLayout.Control> controls=List.of();
     private final Map<Integer,Button> buttons=new HashMap<>();
     public RedstoneConfigurationScreen(ScreenMenu menu,Inventory inventory,Component ignored){
-        super(menu,inventory,Component.literal("Programmable Viewscreen"));heading=menu.tile.redstone().title();texture=menu.tile.data().housingTexture;
+        super(menu,inventory,menu.tile.getBlockState().getBlock().getName());heading=menu.tile.redstone().title();texture=menu.tile.data().housingTexture;
         for(var row:menu.tile.redstone().rows()){labels.add(row.label);channels.add(row.channels);kinds.add(row.pulse?2:row.slider?1:0);mins.add(row.min);maxs.add(row.max);}if(!labels.isEmpty())selected=0;
     }
     private EditBox field(com.vandorlabs.ui.ProgrammableDialogLayout.Button bounds,int limit){var field=new EditBox(font,bounds.x,bounds.y,bounds.width,bounds.height,Component.empty());field.setMaxLength(limit);addRenderableWidget(field);return field;}
