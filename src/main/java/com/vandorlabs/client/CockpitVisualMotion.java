@@ -20,7 +20,7 @@ public final class CockpitVisualMotion {
     }
     private CockpitVisualMotion(){}
     private static double time(){return CLOCK.sample(System.nanoTime(),Minecraft.getMinecraft().isGamePaused());}
-    static long animationTick(TileEntityCockpit tile){return Boolean.TRUE.equals(AUTHORED.get())?tile.getWorld().getTotalWorldTime():(long)time();}
+    static long animationTick(net.minecraft.tileentity.TileEntity tile){return Boolean.TRUE.equals(AUTHORED.get())?tile.getWorld().getTotalWorldTime():(long)time();}
     public static double sample(TileEntityCockpit tile,boolean screens,float partial){
         if(Boolean.TRUE.equals(AUTHORED.get()))return (screens?tile.screenLift:tile.seatSlide).sample(tile.getWorld().getTotalWorldTime()+partial);
         double now=time();

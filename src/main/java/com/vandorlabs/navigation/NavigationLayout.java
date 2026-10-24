@@ -153,6 +153,23 @@ public final class NavigationLayout {
         }
     }
 
+    /** Cached per-module quad with UVs in the one assembly-wide image. */
+    public static final class DisplayPatch {
+        public final Vec3[] points;public final double[] u=new double[4],v=new double[4];public final Vec3 normal;
+        private DisplayPatch(Screen screen,Vec3[] points){
+            this.points=points;normal=screen.normal;
+            for(int i=0;i<4;i++){
+                Vec3 delta=points[i].minus(screen.bottomLeft);
+                u[i]=(delta.x*screen.basisU.x+delta.y*screen.basisU.y+delta.z*screen.basisU.z)/screen.widthBlocks;
+                v[i]=1-(delta.x*screen.basisV.x+delta.y*screen.basisV.y+delta.z*screen.basisV.z)/screen.heightBlocks;
+            }
+        }
+    }
+    public static DisplayPatch displayPatch(Kind kind,Facing moduleFacing,Cell cell,int mask,Facing displayFacing,Cell origin,int width,int depth){
+        Layout layout=new Layout(kind,displayFacing,width,depth,origin,origin,Collections.<Cell,Tile>emptyMap());
+        return new DisplayPatch(layout.screen(),surface(kind,moduleFacing,cell,mask));
+    }
+
     public static final class Layout {
         public final Kind kind;
         public final Facing facing;
@@ -203,17 +220,17 @@ public final class NavigationLayout {
         if(canonical==null){canonical=Facing.NORTH;for(Cell cell:members.keySet())if(first==null||cell.z<first.z||cell.z==first.z&&cell.x<first.x)first=cell;}
         Layout bounds=build(Kind.FLAT,canonical,members.keySet(),complete);
         Cell owner=null;long best=Long.MAX_VALUE;
-        for(Map.Entry<Cell,Facing> entry:members.entrySet()){
-            Cell cell=entry.getKey();Vec3 normal=entry.getValue().rotateDirection(new Vec3(0,0,-1));
+        for(Cell cell:bounds.tiles.keySet()){
+            Vec3 normal=members.get(cell).rotateDirection(new Vec3(0,0,-1));
             if(members.containsKey(new Cell(cell.x+(int)normal.x,cell.y,cell.z+(int)normal.z)))continue;
             Tile tile=bounds.tiles.get(cell);
-            long score=(entry.getValue()==canonical?0:1000000L)+tile.localZ*1000L+Math.abs(2*tile.localX-(bounds.width-1))*2L+tile.localX;
+            long score=(members.get(cell)==canonical?0:1000000L)+tile.localZ*1000L+Math.abs(2*tile.localX-(bounds.width-1))*2L+tile.localX;
             if(score<best){best=score;owner=cell;}
         }
         if(owner==null)owner=bounds.chipOwner;
         Map<Cell,Tile> tiles=new LinkedHashMap<>();
-        for(Map.Entry<Cell,Facing> entry:members.entrySet()){
-            Cell cell=entry.getKey();Facing facing=entry.getValue();int mask=0;
+        for(Cell cell:bounds.tiles.keySet()){
+            Facing facing=members.get(cell);int mask=0;
             for(int bit:new int[]{NORTH,EAST,SOUTH,WEST}){
                 Vec3 direction=facing.rotateDirection(new Vec3(bit==EAST?1:bit==WEST?-1:0,0,bit==SOUTH?1:bit==NORTH?-1:0));
                 if(members.containsKey(new Cell(cell.x+(int)direction.x,cell.y,cell.z+(int)direction.z)))mask|=bit;

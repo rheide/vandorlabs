@@ -38,6 +38,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     public boolean chip(){return world!=null&&world.getBlockState(pos).getBlock() instanceof BlockTokenSlot?((BlockTokenSlot)world.getBlockState(pos).getBlock()).chip:chip;}
     public boolean accepts(ItemStack stack){return !stack.isEmpty()&&stack.getItem()==(chip()?ModItems.DATA_CHIP:ModItems.ACCESS_CARD)&&stack.getMetadata()>=0&&stack.getMetadata()<7;}
     public boolean authorized(ItemStack stack){return accepts(stack)&&((effectiveAllowed()&1)!=0||(effectiveAllowed()&(1<<stack.getMetadata()))!=0);}
+    public boolean indicatorOn(){return getOutputLevel()>0;}
     public boolean matches(){return authorized(token);}
     public boolean rejected(){return world!=null&&world.getTotalWorldTime()<rejectedUntil;}
     public void reject(){if(world!=null&&!world.isRemote){rejectedUntil=world.getTotalWorldTime()+12;changed(false);}}

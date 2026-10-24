@@ -49,6 +49,37 @@ for kind in ['flat','angled']:
                 for variant in variants:
                     path=ASSETS/'models/block'/(variant['model'].split(':',1)[1]);assert path.is_file(),path
     models+=len(list((ASSETS/'models/block/navigation_table'/kind).glob('*.obj')))
+# Inspect emitted OBJ faces, not just layout metadata: joined edges reach the
+# cell border, while exposed edges retain the authored two-pixel frame.
+for kind in ['flat','angled']:
+    folder=ASSETS/'models/block/navigation_table'/kind
+    for path in folder.glob('mask_*.obj'):
+        if '_chip' in path.stem:continue
+        mask=int(path.stem.split('_')[1]);vertices=[];surface=[];group=''
+        for line in path.read_text().splitlines():
+            parts=line.split()
+            if not parts:continue
+            if parts[0]=='v':vertices.append(tuple(map(float,parts[1:4])))
+            elif parts[0]=='g':group=parts[1]
+            elif parts[0]=='f' and group.endswith('__display_surface'):
+                surface.extend(vertices[int(index.split('/')[0])-1] for index in parts[1:])
+        assert len(surface)==4,(path,'one screen quad')
+        assert abs(min(v[0] for v in surface)-(0 if mask&8 else .125))<1e-8,path
+        assert abs(max(v[0] for v in surface)-(1 if mask&2 else .875))<1e-8,path
+        assert abs(min(v[2] for v in surface)-(0 if kind=='flat' and mask&1 else .125))<1e-8,path
+        assert abs(max(v[2] for v in surface)-(1 if kind=='flat' and mask&4 else .875))<1e-8,path
+    native=json.loads((ASSETS/'models/block/token_slots/data_chip_slot_north_0.json').read_text())
+    for path in folder.glob('*_chip.obj'):
+        holder=path.read_text().split('# Native Data Chip Mount: 6 x 6 pixels')[1]
+        points=[tuple(map(float,line.split()[1:4])) for line in holder.splitlines() if line.startswith('v ')]
+        assert len(points)==len(native['elements'])*6*4,path
+        extents=[max(p[axis] for p in points)-min(p[axis] for p in points) for axis in range(3)]
+        expected=[(max(e['to'][axis] for e in native['elements'])-min(e['from'][axis] for e in native['elements']))/16 for axis in range(3)]
+        assert all(abs(a-b)<1e-8 for a,b in zip(extents,expected)),(path,extents,expected)
+        assert max(p[2] for p in points)<0,(path,'mount must clear the front casing')
+        top=(14 if kind=='flat' else 8)/16
+        assert abs(max(p[1] for p in points)-(top-.5/16))<1e-8,path
+print('Navigation emitted geometry PASS joined display edges and 12 native-scale mounts with top clearance')
 print(f'Bridge model assets PASS designs={len(specs)} OBJ states/variants={models} animated materials={animations} bounded geometry shared state topology complete navigation variants padded Core items')
 if len(sys.argv)>1:
     with ZipFile(sys.argv[1]) as archive:

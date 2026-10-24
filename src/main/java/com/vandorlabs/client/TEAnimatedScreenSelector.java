@@ -730,17 +730,20 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);return new double[]{sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};
     }
     static double[] bindCockpit(com.vandorlabs.tiles.TileEntityCockpit tile,com.vandorlabs.tiles.TileEntityCockpit.Display screen){
-        if(screen.texture<0 || !screen.active){Minecraft.getMinecraft().getTextureManager().bindTexture(ScreenTextureLocations.off(false));return new double[]{0,1,0,1};}
-        com.google.gson.JsonObject entry=ScreenHousingTextures.entry(screen.texture);
-        if(screen.animated && entry!=null && "Screens".equals(ScreenHousingTextures.category(screen.texture))){
+        return bindDisplay(tile,screen.texture,screen.active,screen.animated,screen.speed);
+    }
+    static double[] bindDisplay(net.minecraft.tileentity.TileEntity tile,int texture,boolean active,boolean animated,int speed){
+        if(texture<0 || !active){Minecraft.getMinecraft().getTextureManager().bindTexture(ScreenTextureLocations.off(false));return new double[]{0,1,0,1};}
+        com.google.gson.JsonObject entry=ScreenHousingTextures.entry(texture);
+        if(animated && entry!=null && "Screens".equals(ScreenHousingTextures.category(texture))){
             String source=entry.get("source").getAsString(),id=source.replaceFirst("^console_inputs/","").replaceFirst("_static$","");
             boolean input=source.startsWith("console_inputs/");
             if(input && TileEntityAnimatedScreenSelector.getInputFrameCount(id)>1 || !input && ModBlocks.DISPLAY_SCREEN_IDS.contains(id)){
-                AnimData data=input?inputAnimData(id):animData(id);int frame=AnimationFrames.frame(CockpitVisualMotion.animationTick(tile),com.vandorlabs.animation.ScreenBehavior.animationTicks(screen.speed),data.frameCount);
+                AnimData data=input?inputAnimData(id):animData(id);int frame=AnimationFrames.frame(CockpitVisualMotion.animationTick(tile),com.vandorlabs.animation.ScreenBehavior.animationTicks(speed),data.frameCount);
                 Minecraft.getMinecraft().getTextureManager().bindTexture(data.texture);return new double[]{AnimationFrames.top(frame,data.frameCount),AnimationFrames.bottom(frame,data.frameCount),0,1};
             }
         }
-        bindAtlas();TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(screen.texture));return new double[]{sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};
+        bindAtlas();TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(texture));return new double[]{sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};
     }
     private static double[] bindInput(TileEntityAnimatedScreenSelector te,String id){return bindInput(te,id,0);}
     private static double[] bindInput(TileEntityAnimatedScreenSelector te, String id,int slot) {

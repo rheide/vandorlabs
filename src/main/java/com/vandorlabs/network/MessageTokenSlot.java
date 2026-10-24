@@ -16,7 +16,10 @@ public final class MessageTokenSlot implements IMessage {
         public IMessage onMessage(MessageTokenSlot message,MessageContext context){net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;player.getServerWorld().addScheduledTask(()->{
             if(player.openContainer.windowId!=message.window||!(player.openContainer instanceof ContainerTokenSlot)||message.mode>3||message.mask!=0&&message.mask!=127&&(message.mask<2||message.mask>64||Integer.bitCount(message.mask)!=1)||message.channels.length()>256)return;
             ContainerTokenSlot container=(ContainerTokenSlot)player.openContainer;ChannelList channels=ChannelList.parse(message.channels);if(!container.canInteractWith(player)||channels==null)return;
-            container.tile.configure(message.any,message.mask,message.mode);container.tile.setRedstoneChannels(channels);
+            if(container.tile instanceof com.vandorlabs.tiles.TileEntityNavigationTable){
+                com.vandorlabs.tiles.TileEntityNavigationTable tile=(com.vandorlabs.tiles.TileEntityNavigationTable)container.tile;
+                tile.configureDisplay(tile.screenSettings(),message.any,message.mask,message.mode,channels);
+            }else{container.tile.configure(message.any,message.mask,message.mode);container.tile.setRedstoneChannels(channels);}
         });return null;}
     }
 }

@@ -5,3 +5,18 @@ Ks 0 0 0
 d 1
 illum 1
 map_Kd vandorlabs:blocks/navigation_table/navigation_tables
+# Native Data Chip Mount
+newmtl mount_metal
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/programmable_glass/door_side
+newmtl mount_dark
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd minecraft:blocks/concrete_black

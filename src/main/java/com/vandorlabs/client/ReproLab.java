@@ -583,6 +583,7 @@ public class ReproLab {
         if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.render(event);return;}
         if(event.phase==TickEvent.Phase.END && enabled)renderedFrames++;
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.machineBuildDocsOnly"))FrameMachineDocumentation.render(Minecraft.getMinecraft());
+        if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.bridgeMachineChecksOnly"))NavigationClientChecks.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END && enabled && state==300 && documentationCapture!=null)
             documentationCapture.render(Minecraft.getMinecraft());
     }

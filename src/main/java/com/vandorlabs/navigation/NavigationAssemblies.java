@@ -32,34 +32,42 @@ public final class NavigationAssemblies {
     public static void rebuild(World world,BlockPos pos){
         rebuildComponent(world,pos);
     }
+    private static int readerPriority(TileEntityNavigationTable tile){
+        NavigationScreenSettings settings=tile.screenSettings();
+        boolean configured=settings.texture!=-1||!settings.animated||settings.speed!=1||settings.redstone||settings.security||!tile.any||tile.behavior!=0||!tile.getRedstoneChannels().isEmpty();
+        return (tile.isEmpty()?0:1000000)+tile.assemblyWidth()*tile.assemblyDepth()*1024+(tile.formed()?512:0)+(configured?256:0);
+    }
     private static Set<BlockPos> rebuildComponent(World world,BlockPos pos){
         if(world.isRemote||!world.isBlockLoaded(pos))return Collections.emptySet();
         IBlockState state=world.getBlockState(pos);if(!(state.getBlock() instanceof BlockNavigationTable))return Collections.emptySet();
         BlockNavigationTable block=(BlockNavigationTable)state.getBlock();EnumFacing facing=state.getValue(BlockVandorDirectional.FACING);
         LoadedPlaneConnections.Scan scan=LoadedPlaneConnections.scan(pos,PanelPlane.of(EnumFacing.UP),world::isBlockLoaded,next->{
             IBlockState other=world.getBlockState(next);
-            return other.getBlock()==block&&other.getValue(BlockVandorDirectional.FACING)==facing
-                    &&(block.kind==NavigationLayout.Kind.FLAT||PanelPlane.axis(next,facing)==PanelPlane.axis(pos,facing));
+            return other.getBlock()==block&&(block.kind==NavigationLayout.Kind.FLAT
+                    ||other.getValue(BlockVandorDirectional.FACING)==facing&&PanelPlane.axis(next,facing)==PanelPlane.axis(pos,facing));
         },NavigationLayout.DEFAULT_MAX_CELLS+1);
-        List<NavigationLayout.Cell> cells=new ArrayList<>();List<TileEntityNavigationTable> tiles=new ArrayList<>();
-        for(BlockPos at:scan.members){cells.add(new NavigationLayout.Cell(at.getX(),at.getY(),at.getZ()));TileEntity tile=world.getTileEntity(at);if(tile instanceof TileEntityNavigationTable)tiles.add((TileEntityNavigationTable)tile);}
+        List<NavigationLayout.Cell> cells=new ArrayList<>();Map<NavigationLayout.Cell,NavigationLayout.Facing> facings=new LinkedHashMap<>();List<TileEntityNavigationTable> tiles=new ArrayList<>();
+        for(BlockPos at:scan.members){NavigationLayout.Cell cell=new NavigationLayout.Cell(at.getX(),at.getY(),at.getZ());cells.add(cell);facings.put(cell,NavigationLayout.Facing.valueOf(world.getBlockState(at).getValue(BlockVandorDirectional.FACING).name()));TileEntity tile=world.getTileEntity(at);if(tile instanceof TileEntityNavigationTable)tiles.add((TileEntityNavigationTable)tile);}
         NavigationLayout.Layout layout=null;
-        try{layout=NavigationLayout.build(block.kind,NavigationLayout.Facing.valueOf(facing.name()),cells,scan.complete&&tiles.size()==cells.size());}catch(IllegalArgumentException invalid){/* Remain unformed until the complete rectangle is available. */}
+        try{boolean complete=scan.complete&&tiles.size()==cells.size();layout=block.kind==NavigationLayout.Kind.FLAT?NavigationLayout.mixedFlat(facings,complete):NavigationLayout.build(block.kind,NavigationLayout.Facing.valueOf(facing.name()),cells,complete);}catch(IllegalArgumentException invalid){/* Remain unformed until the complete rectangle is available. */}
         if(layout!=null){
             BlockPos owner=new BlockPos(layout.chipOwner.x,layout.chipOwner.y,layout.chipOwner.z);
             TileEntityNavigationTable destination=(TileEntityNavigationTable)world.getTileEntity(owner);
             // Retain the configured reader when its selected physical module changes.
             TileEntityNavigationTable source=destination;
-            for(TileEntityNavigationTable tile:tiles)if(!tile.isEmpty()&&(source.isEmpty()||!source.hasMount()))source=tile;
-            if(source==destination&&destination.isEmpty())for(TileEntityNavigationTable tile:tiles)if(tile.hasMount()&&!tile.getPos().equals(owner)){source=tile;break;}
+            for(TileEntityNavigationTable tile:tiles){
+                int candidate=readerPriority(tile),selected=readerPriority(source);
+                if(candidate>selected)source=tile;
+            }
             if(source!=destination)source.moveReaderTo(destination);
             for(TileEntityNavigationTable tile:tiles){
                 NavigationLayout.Tile assignment=layout.tiles.get(new NavigationLayout.Cell(tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ()));
-                tile.layout(assignment.connections,owner,true);
+                tile.layout(assignment.connections,owner,true,new BlockPos(layout.originCell.x,layout.originCell.y,layout.originCell.z),layout.width,layout.depth,EnumFacing.valueOf(layout.facing.name()));
             }
             // Merging independently occupied tables preserves borrowed returns;
             // extra retained chips are released once, as when removing a mount.
             for(TileEntityNavigationTable tile:tiles)if(tile!=destination&&!tile.isEmpty()&&!tile.returning())TokenSlotInteractions.drop(world,tile.getPos());
+            destination.configureDisplay(destination.screenSettings(),destination.any,destination.allowed,destination.behavior,destination.getRedstoneChannels());
         }else for(TileEntityNavigationTable tile:tiles)tile.layout(0,tile.getPos(),false);
         return scan.members;
     }

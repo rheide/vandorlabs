@@ -80,7 +80,13 @@ public final class NavigationLayoutTest {
             int owners=0;double area=0;
             for(Tile tile:layout.tiles.values()){
                 if(tile.chip)owners++;
-                Vec3[] corners=NavigationLayout.surface(Kind.FLAT,input.get(tile.cell),tile.cell,tile.connections);
+                NavigationLayout.DisplayPatch patch=NavigationLayout.displayPatch(Kind.FLAT,input.get(tile.cell),tile.cell,tile.connections,layout.facing,layout.originCell,layout.width,layout.depth);
+                Vec3[] corners=patch.points;
+                for(int i=0;i<4;i++){
+                    Vec3 reconstructed=layout.screen().overlayPoint(patch.u[i],patch.v[i]);
+                    close(reconstructed.x,corners[i].x,"Continuous image U position");close(reconstructed.z,corners[i].z,"Continuous image V position");
+                    require(patch.u[i]>=-1e-9&&patch.u[i]<=1+1e-9&&patch.v[i]>=-1e-9&&patch.v[i]<=1+1e-9,"Image UV bounds");
+                }
                 double minX=Double.MAX_VALUE,maxX=-minX,minZ=minX,maxZ=-minX;
                 for(Vec3 p:corners){minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z);}
                 close(minX,tile.cell.x+(tile.cell.x==0?.125:0),"No internal X divider");
@@ -94,6 +100,16 @@ public final class NavigationLayoutTest {
             java.util.Map<Cell,Facing> reversed=new java.util.LinkedHashMap<>();for(Cell cell:reverse)reversed.put(cell,input.get(cell));
             Layout again=NavigationLayout.mixedFlat(reversed,true);
             require(layout.chipOwner.equals(again.chipOwner)&&layout.facing==again.facing,"Stable mixed owner/orientation");
+        }
+        java.util.Random random=new java.util.Random(62072);
+        for(int sample=0;sample<100;sample++){
+            java.util.Map<Cell,Facing> input=new java.util.LinkedHashMap<>();
+            for(int z=0;z<9;z++)for(int x=0;x<12;x++)input.put(new Cell(x,0,z),Facing.values()[random.nextInt(4)]);
+            Layout layout=NavigationLayout.mixedFlat(input,true);
+            java.util.List<Cell> order=new java.util.ArrayList<>(input.keySet());Collections.shuffle(order,random);
+            java.util.Map<Cell,Facing> shuffled=new java.util.LinkedHashMap<>();for(Cell cell:order)shuffled.put(cell,input.get(cell));
+            Layout again=NavigationLayout.mixedFlat(shuffled,true);
+            require(layout.chipOwner.equals(again.chipOwner)&&new java.util.ArrayList<>(layout.tiles.keySet()).equals(new java.util.ArrayList<>(again.tiles.keySet())),"Large mixed rectangle input order");
         }
         for(int bits=0;bits<16;bits++){
             boolean redstone=(bits&1)!=0,security=(bits&2)!=0,power=(bits&4)!=0,chip=(bits&8)!=0;
@@ -122,6 +138,6 @@ public final class NavigationLayoutTest {
         rejected(() -> NavigationLayout.build(Kind.FLAT, Facing.NORTH, levels, true), "mixed heights");
         rejected(() -> NavigationLayout.build(Kind.FLAT, Facing.NORTH,
                 rectangle(Facing.NORTH, 17, 16), true), "oversize component");
-        System.out.println("PASS: " + checks + " assertions; 320 uniform layouts, 256 mixed layouts and 16 display gate combinations.");
+        System.out.println("PASS: " + checks + " assertions; 320 uniform layouts, 256 exhaustive mixed layouts, 100 larger shuffled layouts and 16 display gate combinations.");
     }
 }

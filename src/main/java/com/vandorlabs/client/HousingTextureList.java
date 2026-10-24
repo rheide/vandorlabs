@@ -67,6 +67,15 @@ final class HousingTextureList {
         return !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
     }
     /** Native armor artwork is added locally, leaving every block/screen picker unchanged. */
+    static final int NAVIGATION_BLACK=0x0ffffffe;
+    static HousingTextureList forNavigation(int x,int y,int width,int selected,int rows){
+        List<Option> entries=new ArrayList<>();entries.add(new Option(NAVIGATION_BLACK,"Black","Display","minecraft:blocks/concrete_black"));
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++){
+            int choice=ScreenHousingTextures.choiceAt(i);
+            if(ScreenHousingTextures.visible(i)&&com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice))entries.add(new Option(choice,name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+        }
+        return new HousingTextureList(x,y,width,selected<0?NAVIGATION_BLACK:selected,rows,entries);
+    }
     static HousingTextureList forGlass(int detail,int x,int y,int width,int selected) {
         List<Option> entries=new ArrayList<>();
         for(int i=0;i<com.vandorlabs.tiles.GlassTextures.IDS.length;i++)entries.add(new Option(i,

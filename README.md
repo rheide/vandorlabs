@@ -343,7 +343,9 @@ The build checks shared bytecode for client-only API references with `testDedica
 For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder containing the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. It defaults to the standard `.minecraft/mods` folder. Run `bash testclient/test_viewscreen.sh --full` for complete coverage.
 
 Use `--focus bridge-machines` for the Core-frame matrix, integrated chip readers,
-navigation joining, item padding and reverse Hover steering. The separate
+navigation joining, display input/security gates, authorized dialog round trips,
+item padding and reverse Hover steering. This focus also runs in `verifyRelease`.
+The separate
 `--focus machine-build-docs` captures the asserted build stages used by the
 [multiblock guides](docs/multiblocks/README.md). `testDynmapRenderers` checks map
 geometry and material bounds; `python3 testclient/test_dynmap_render.py --help`

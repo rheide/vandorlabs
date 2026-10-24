@@ -28,7 +28,7 @@
     ],
     "chip=true,connections=0,facing=north": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_00_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_00.obj",
         "y": 0
       }
     ],
@@ -52,7 +52,7 @@
     ],
     "chip=true,connections=2,facing=north": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_02_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_02.obj",
         "y": 0
       }
     ],
@@ -76,7 +76,7 @@
     ],
     "chip=true,connections=4,facing=north": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_04_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_04.obj",
         "y": 0
       }
     ],
@@ -100,7 +100,7 @@
     ],
     "chip=true,connections=6,facing=north": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_06_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_06.obj",
         "y": 0
       }
     ],
@@ -124,7 +124,7 @@
     ],
     "chip=true,connections=8,facing=north": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_08_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_08.obj",
         "y": 0
       }
     ],
@@ -148,7 +148,7 @@
     ],
     "chip=true,connections=10,facing=north": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_10_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_10.obj",
         "y": 0
       }
     ],
@@ -172,7 +172,7 @@
     ],
     "chip=true,connections=12,facing=north": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_12_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_12.obj",
         "y": 0
       }
     ],
@@ -196,7 +196,7 @@
     ],
     "chip=true,connections=14,facing=north": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_14_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_14.obj",
         "y": 0
       }
     ],
@@ -220,7 +220,7 @@
     ],
     "chip=true,connections=0,facing=east": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_00_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_00.obj",
         "y": 90
       }
     ],
@@ -244,7 +244,7 @@
     ],
     "chip=true,connections=2,facing=east": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_02_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_02.obj",
         "y": 90
       }
     ],
@@ -268,7 +268,7 @@
     ],
     "chip=true,connections=4,facing=east": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_04_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_04.obj",
         "y": 90
       }
     ],
@@ -292,7 +292,7 @@
     ],
     "chip=true,connections=6,facing=east": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_06_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_06.obj",
         "y": 90
       }
     ],
@@ -316,7 +316,7 @@
     ],
     "chip=true,connections=8,facing=east": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_08_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_08.obj",
         "y": 90
       }
     ],
@@ -340,7 +340,7 @@
     ],
     "chip=true,connections=10,facing=east": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_10_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_10.obj",
         "y": 90
       }
     ],
@@ -364,7 +364,7 @@
     ],
     "chip=true,connections=12,facing=east": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_12_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_12.obj",
         "y": 90
       }
     ],
@@ -388,7 +388,7 @@
     ],
     "chip=true,connections=14,facing=east": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_14_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_14.obj",
         "y": 90
       }
     ],
@@ -412,7 +412,7 @@
     ],
     "chip=true,connections=0,facing=south": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_00_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_00.obj",
         "y": 180
       }
     ],
@@ -436,7 +436,7 @@
     ],
     "chip=true,connections=2,facing=south": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_02_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_02.obj",
         "y": 180
       }
     ],
@@ -460,7 +460,7 @@
     ],
     "chip=true,connections=4,facing=south": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_04_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_04.obj",
         "y": 180
       }
     ],
@@ -484,7 +484,7 @@
     ],
     "chip=true,connections=6,facing=south": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_06_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_06.obj",
         "y": 180
       }
     ],
@@ -508,7 +508,7 @@
     ],
     "chip=true,connections=8,facing=south": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_08_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_08.obj",
         "y": 180
       }
     ],
@@ -532,7 +532,7 @@
     ],
     "chip=true,connections=10,facing=south": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_10_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_10.obj",
         "y": 180
       }
     ],
@@ -556,7 +556,7 @@
     ],
     "chip=true,connections=12,facing=south": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_12_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_12.obj",
         "y": 180
       }
     ],
@@ -580,7 +580,7 @@
     ],
     "chip=true,connections=14,facing=south": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_14_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_14.obj",
         "y": 180
       }
     ],
@@ -604,7 +604,7 @@
     ],
     "chip=true,connections=0,facing=west": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_00_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_00.obj",
         "y": 270
       }
     ],
@@ -628,7 +628,7 @@
     ],
     "chip=true,connections=2,facing=west": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_02_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_02.obj",
         "y": 270
       }
     ],
@@ -652,7 +652,7 @@
     ],
     "chip=true,connections=4,facing=west": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_04_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_04.obj",
         "y": 270
       }
     ],
@@ -676,7 +676,7 @@
     ],
     "chip=true,connections=6,facing=west": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_06_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_06.obj",
         "y": 270
       }
     ],
@@ -700,7 +700,7 @@
     ],
     "chip=true,connections=8,facing=west": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_08_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_08.obj",
         "y": 270
       }
     ],
@@ -724,7 +724,7 @@
     ],
     "chip=true,connections=10,facing=west": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_10_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_10.obj",
         "y": 270
       }
     ],
@@ -748,7 +748,7 @@
     ],
     "chip=true,connections=12,facing=west": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_12_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_12.obj",
         "y": 270
       }
     ],
@@ -772,7 +772,7 @@
     ],
     "chip=true,connections=14,facing=west": [
       {
-        "model": "vandorlabs:navigation_table/flat/mask_14_chip.obj",
+        "model": "vandorlabs:navigation_table/flat/mask_14.obj",
         "y": 270
       }
     ],

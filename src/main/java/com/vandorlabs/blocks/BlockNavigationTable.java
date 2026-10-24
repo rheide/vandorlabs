@@ -24,11 +24,15 @@ public final class BlockNavigationTable extends BlockVandorDirectional {
     @Override public boolean isFullCube(IBlockState state){return false;}
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return new AxisAlignedBB(0,0,0,1,14D/16,1);}
     @Override public void onBlockAdded(World world,BlockPos pos,IBlockState state){NavigationAssemblies.around(world,pos);}
-    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){NavigationAssemblies.around(world,pos);}
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){
+        if(block instanceof BlockNavigationTable)NavigationAssemblies.around(world,pos);
+        else if(world.getTileEntity(pos) instanceof TileEntityNavigationTable)((TileEntityNavigationTable)world.getTileEntity(pos)).sampleInput();
+    }
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){TokenSlotInteractions.drop(world,pos);super.breakBlock(world,pos,state);NavigationAssemblies.around(world,pos);}
     @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){TokenSlotInteractions.tick(world,pos);}
-    @Override public boolean canProvidePower(IBlockState state){return true;}
-    @Override public int getWeakPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){TileEntity tile=world.getTileEntity(pos);return tile instanceof TileEntityNavigationTable?((TileEntityNavigationTable)tile).getOutputLevel():0;}
+    @Override public boolean canProvidePower(IBlockState state){return false;}
+    @Override public int getWeakPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return 0;}
+    @Override public int getStrongPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return 0;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         TileEntity tile=world.getTileEntity(pos);if(!(tile instanceof TileEntityNavigationTable))return false;
         TileEntityNavigationTable reader=((TileEntityNavigationTable)tile).reader();

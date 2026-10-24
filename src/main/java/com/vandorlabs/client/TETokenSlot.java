@@ -60,7 +60,7 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
     panel(overlays,basis,(pixel-.35)/16,(pixel+.35)/16,(pixel-.35)/16,(pixel+.35)/16,.026,0xffb340);
     if(pixel!=0)panel(overlays,basis,(pixel-.35)/16,(pixel+.35)/16,(-pixel-.35)/16,(-pixel+.35)/16,.026,0xffb340);
    }
-   panel(overlays,basis,.9/16,2.1/16,-h+.22/16,-h+.47/16,.098,tile.getOutputLevel()>0?0x5cffff:0x1c6876);
+   panel(overlays,basis,.9/16,2.1/16,-h+.22/16,-h+.47/16,.098,tile.indicatorOn()?0x5cffff:0x1c6876);
    panel(overlays,basis,-2.1/16,-.9/16,-h+.22/16,-h+.47/16,.098,0xc68a37);Tessellator.getInstance().draw();GlStateManager.enableTexture2D();
    OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
    if(!tile.isEmpty()){
@@ -71,12 +71,17 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
  }
  /** Render shared mount contents on an authored holder without drawing a duplicate frame. */
  public static void embedded(TileEntityTokenSlot tile,MachineMountSurface surface,double x,double y,double z,float partial){
+  embedded(tile,surface,x,y,z,partial,false);
+ }
+ /** Use the standalone reader's exact frame, dimensions and contents. */
+ static void nativeMount(TileEntityTokenSlot tile,MachineMountSurface surface,double x,double y,double z,float partial){embedded(tile,surface,x,y,z,partial,true);}
+ private static void embedded(TileEntityTokenSlot tile,MachineMountSurface surface,double x,double y,double z,float partial,boolean nativeFrame){
   EnumFacing facing=EnumFacing.getFacingFromVector((float)surface.normal.x,(float)surface.normal.y,(float)surface.normal.z);
   java.nio.FloatBuffer matrix=EMBEDDED_BASES[facing.getHorizontalIndex()];
-  GlStateManager.pushMatrix();try{
+  GlStateManager.pushMatrix();try(TurntableRenderState saved=new TurntableRenderState()){
    GlStateManager.translate(x+surface.center.x,y+surface.center.y,z+surface.center.z);GlStateManager.multMatrix(matrix);
-   double scale=Math.min(surface.width,surface.height)/(6D/16)*.92;GlStateManager.scale(scale,scale,scale);
-   GlStateManager.translate(-.5,-.5,-.975);contents(tile,EnumFacing.NORTH,0,partial);
+   double scale=nativeFrame?1:Math.min(surface.width,surface.height)/TokenSlotGeometry.CHIP_SIZE*.92;GlStateManager.scale(scale,scale,scale);
+   GlStateManager.translate(-.5,-.5,-.975);if(nativeFrame)frame(true,EnumFacing.NORTH);contents(tile,EnumFacing.NORTH,0,partial);
   }finally{GlStateManager.popMatrix();}
  }
  private static void logoVertex(BufferBuilder b,FaceBasis basis,double x,double y,float u,float v){basis.vertex(b,x,y,.025);b.tex(u,v).color(255,255,255,255).endVertex();}

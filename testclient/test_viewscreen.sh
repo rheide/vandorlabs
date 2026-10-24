@@ -122,6 +122,8 @@ if [ "$MODE" = focus ]; then
         grep -q 'bridge-machines PASS' "$RUN_OUT/client.log"
         grep -q 'integrated-chip-mounts PASS' "$RUN_OUT/client.log"
         grep -q 'navigation-tables PASS' "$RUN_OUT/client.log"
+        grep -q 'navigation-display-inputs PASS' "$RUN_OUT/client.log"
+        grep -q 'navigation-display-client PASS' "$RUN_OUT/client.log"
         grep -q 'reverse-hover-steering PASS' "$RUN_OUT/client.log"
         echo "Live bridge machine regressions passed: $RUN_OUT"
         exit 0

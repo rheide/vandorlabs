@@ -5,6 +5,7 @@ import net.minecraft.util.math.Vec3d;
 
 /** Local face coordinates shared by selection bounds and live slot contents. */
 public final class TokenSlotGeometry {
+    public static final double CHIP_SIZE=6D/16;
     private TokenSlotGeometry(){}
     public static Vec3d point(EnumFacing facing,int rotation,double x,double y,double depth){
         Vec3d normal=new Vec3d(facing.getDirectionVec()),u,v;

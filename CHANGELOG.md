@@ -2,6 +2,9 @@
 
 ## 2.5
 
+- Join Flat Navigation Tables across opposing and mixed facings into one continuous screen, keeping exterior controls. Move the integrated Data Chip Mounts near the top of both navigation modules and use the standalone mount's exact size and proportions.
+- Add navigation display artwork selection from Programmable Block materials and Programmable Screen designs, with static/animated playback. Optional redstone and matching-chip security gates control visibility; navigation modules consume power and never emit physical or channel signals. Preserve settings, artwork orientation and the shared chip through resizing, reloads and vehicle rotation.
+
 - Fix Dynmap's selected-material rendering for Programmable Blocks, Slabs, Stairs, Walls, Diagonal Walls and Trapdoors. Add the bundled catalog artwork that normally exists only as client-generated crops.
 - Render programmable door frames and leaves from the existing authored models, with saved facing, depth, motion and selected material. Preserve authored UVs through shared clipped-face rendering for doors, canopies and diagonal walls; retain inverted half-height fill limits. Correct canopy material counts so glazing and frame materials remain available.
 - Preserve Dynmap atlas subdivisions during runtime PNG deduplication, preventing a lever atlas error from aborting later texture definitions. Remove map records for unregistered model prototypes and material choices. Add packaged atlas checks, renderer matrices and an isolated real-Dynmap fixture.

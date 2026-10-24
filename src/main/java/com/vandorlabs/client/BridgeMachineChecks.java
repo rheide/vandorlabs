@@ -117,18 +117,22 @@ final class BridgeMachineChecks {
         }catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
         System.out.println("[vandorlabs] reverse-hover-steering PASS actual controller steps forward reverse left right");
     }
+    private static boolean runtimeDone;
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(++ticks<30)return false;
+        if(!runtimeDone){
         mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
             world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");world.setWorldTime(6000);
-            com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,player);TokenSlotRuntimeChecks.run(world);chipMachines(world,player);navigation(world);steering(world);
+            com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,player);TokenSlotRuntimeChecks.run(world);chipMachines(world,player);navigation(world);NavigationRuntimeChecks.run(world);steering(world);
         }).get();
         for(FrameMachineDesign spec:FrameMachineDesign.all()){
             String path=spec.state_models!=null?spec.state_models[1]:"complete.obj";
             require(com.vandorlabs.client.constructors.UniversalConstructorModelCache.get(spec.design,path).getQuadCount()>10,"actual baked OBJ is available for "+spec.design);
         }
-        UtilityItemRuntimeChecks.run(mc,output);
+        UtilityItemRuntimeChecks.run(mc,output);runtimeDone=true;
+        }
+        if(!NavigationClientChecks.tick(mc,output))return false;
         System.out.println("[vandorlabs] bridge-machines PASS assembly regressions embedded mount behavior joining models item padding reverse steering");return true;
     }
 }

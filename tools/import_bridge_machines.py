@@ -60,15 +60,10 @@ def main():
         write('models/block/'+block+'.json',{'parent':'block/cube_all','textures':{'all':'vandorlabs:blocks/matter/'+block}})
         write('models/item/'+block+'.json',{'parent':'vandorlabs:block/'+block,'display':{'gui':{'rotation':[30,225,0],'scale':[.5,.5,.5]}}})
         write('blockstates/'+block+'.json',{'variants':{'facing='+f+',formed='+str(formed).lower():{'model':'vandorlabs:'+('constructor_empty' if formed else block)} for f in ['north','east','south','west'] for formed in [False,True]}})
-    # Reuse the supplied deterministic, dependency-free layout implementation.
-    nav=next(p for p in args.archives if 'navigation_tables' in p.name)
-    with ZipFile(nav) as z:
-        for name in z.namelist():
-            if not name.endswith(('NavigationLayout.java','NavigationLayoutTest.java')):continue
-            test=name.endswith('Test.java')
-            p=ROOT/('src/portableTest/java' if test else 'src/main/java')/'com/vandorlabs/navigation'/Path(name).name
-            p.parent.mkdir(parents=True,exist_ok=True)
-            p.write_text(z.read(name).decode().replace('mctrek.integration.navigation','com.vandorlabs.navigation').replace('mctrek:', 'vandorlabs:'))
+    # Runtime layout and tests are maintained by the mod; never overwrite fixes
+    # with the original example source from an artwork archive.
+    from generate_navigation_mounts import generate
+    generate()
     print(f'Imported {len(specs)} frame machines and two modular navigation tables')
 
 
