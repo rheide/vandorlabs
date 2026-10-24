@@ -11,7 +11,7 @@ import java.util.*;
 
 /** One categorized, scrollable artwork picker with atlas thumbnails. */
 final class HousingTextureList {
-    static final int ROW_HEIGHT=22;
+    static final int ROW_HEIGHT=com.vandorlabs.ui.ProgrammableDialogLayout.ROW_HEIGHT;
     static final int CANOPY_GLASS_BASE=0x10000000;
     private static final int CUSTOM_ROW=-100000,REDSTONE_ROW=-100001,VEHICLE_ROW=-100002;
     private Runnable vehicleAction;
@@ -52,10 +52,8 @@ final class HousingTextureList {
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
         else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && include.test(i))options.put(i,new Option(i,label.apply(i),category.apply(i),ScreenHousingTextures.fullTexture(i)));
         for(Option option:options.values())groups.computeIfAbsent(option.category,key->new ArrayList<>()).add(option);
-        Set<String> paths=new HashSet<>(groups.keySet());
-        for(String path:new ArrayList<>(paths))while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));paths.add(path);}
-        categories.addAll(paths);categories.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
-        for(List<Option> group:groups.values())group.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
+        categories.addAll(com.vandorlabs.ui.TextureListLayout.categories(groups.keySet()));
+        for(List<Option> group:groups.values())group.sort((first,second)->com.vandorlabs.ui.TextureListLayout.compareOptions(first.label,first.choice,second.label,second.choice));
         setSelected(selected);
     }
     void thumbnail(int choice,String texture){Option option=options.get(choice);if(option!=null)option.texture=texture;}
@@ -174,35 +172,30 @@ final class HousingTextureList {
     }
     private void rebuild() {
         rows.clear();
-        for(int c=0;c<categories.size();c++) {
-            String category=categories.get(c);
-            if(!parentsExpanded(category))continue;
-            rows.add(-c-1);
-            if(expanded.contains(category)) {
-                for(Option option:groups.getOrDefault(category,Collections.emptyList()))rows.add(option.choice);
-            }
+        Map<String,List<Integer>> choices=new HashMap<>();
+        for(Map.Entry<String,List<Option>> group:groups.entrySet()){
+            List<Integer> values=new ArrayList<>();for(Option option:group.getValue())values.add(option.choice);
+            choices.put(group.getKey(),values);
         }
-        if(customConsumer!=null)rows.add(CUSTOM_ROW);
-        if(redstoneAction!=null)rows.add(REDSTONE_ROW);
-        if(vehicleAction!=null)rows.add(VEHICLE_ROW);
+        List<Integer> trailing=new ArrayList<>();
+        if(customConsumer!=null)trailing.add(CUSTOM_ROW);
+        if(redstoneAction!=null)trailing.add(REDSTONE_ROW);
+        if(vehicleAction!=null)trailing.add(VEHICLE_ROW);
+        int[] extra=new int[trailing.size()];for(int i=0;i<extra.length;i++)extra[i]=trailing.get(i);
+        rows.addAll(com.vandorlabs.ui.TextureListLayout.rows(categories,choices,expanded,extra));
         scroll=Math.min(scroll,maxScroll());
     }
-    private boolean parentsExpanded(String path){
-        while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));if(!expanded.contains(path))return false;}
-        return true;
-    }
-    private static int indent(String path){return Math.min(48,8*(path.length()-path.replace("/", "").length()));}
+    private static int indent(String path){return com.vandorlabs.ui.TextureListLayout.indent(path);}
     /** Pin the category of the first visible texture into the top row. */
     private int visibleChoice(int row) {
         int choice=rows.get(scroll+row);
-        if(row==0 && choice>=0)return -categories.indexOf(options.get(choice).category)-1;
-        return choice;
+        return com.vandorlabs.ui.TextureListLayout.pinnedChoice(row,choice,categories,choice>=0?options.get(choice).category:null);
     }
     int selected(){return selected==VEHICLE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
     private int height(){return ROW_HEIGHT*count;}
-    private int maxScroll(){return Math.max(0,rows.size()-count);}
-    private int thumbHeight(){return Math.max(8,height()*count/Math.max(count,rows.size()));}
-    private int thumbY(){return y+(height()-thumbHeight())*scroll/Math.max(1,maxScroll());}
+    private int maxScroll(){return com.vandorlabs.ui.DialogInput.maxScroll(rows.size(),count);}
+    private int thumbHeight(){return com.vandorlabs.ui.DialogInput.thumbHeight(height(),count,rows.size());}
+    private int thumbY(){return com.vandorlabs.ui.DialogInput.thumbY(y,height(),thumbHeight(),scroll,maxScroll());}
     boolean click(int mouseX,int mouseY,int button) {
         picked=false;
         if(button!=0 || mouseY<y || mouseY>=y+height())return false;
@@ -222,12 +215,12 @@ final class HousingTextureList {
     }
     boolean drag(int mouseY) {
         if(!dragging)return false;
-        scroll=GuiProgrammableWall.scrollForDrag(mouseY,y,height(),thumbHeight(),maxScroll(),dragOffset);return true;
+        scroll=com.vandorlabs.ui.DialogInput.scrollForDrag(mouseY,y,height(),thumbHeight(),maxScroll(),dragOffset);return true;
     }
     void release(){dragging=false;}
     boolean wheel(int mouseX,int mouseY,int delta) {
         if(delta==0 || mouseX<x || mouseX>=x+width+7 || mouseY<y || mouseY>=y+height())return false;
-        scroll=Math.max(0,Math.min(maxScroll(),scroll+(delta>0?-1:1)));return true;
+        scroll=com.vandorlabs.ui.DialogInput.wheel(scroll,maxScroll(),delta);return true;
     }
     static String name(int choice) {
         if(com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return CustomBlockTextures.label(choice);

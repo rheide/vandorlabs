@@ -105,15 +105,21 @@ final class CustomMaterialRuntimeChecks {
                 require(count.getInt(list)==expected,"light picker visible rows");
                 java.util.Map<?,?> entries=(java.util.Map<?,?>)options.get(list);
                 int on=0,off=0;
+                java.util.Set<String> observedOff=new java.util.LinkedHashSet<>();
                 for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
-                    if(ScreenHousingTextures.isLightOff(i)){off++;require(!entries.containsKey(i),"Off texture in light picker");}
+                    if(ScreenHousingTextures.isLightOff(i)){off++;require(observedOff.add(ScreenHousingTextures.IDS[i]),"duplicate OFF catalog ID: "+ScreenHousingTextures.IDS[i]);require(!entries.containsKey(i),"Off texture in light picker: "+ScreenHousingTextures.IDS[i]);}
                 }
                 for(int style=0;style<6;style++)if(entries.containsKey(ScreenHousingTextures.lightIndex(style)))on++;
                 int amber=ScreenHousingTextures.screenIndex("lights/amber_hex_on");
                 require(entries.containsKey(64) && entries.containsKey(amber),"hex light choices missing");
                 for(String artwork:new String[]{"bussard_classic","bussard_modern","deflector_amber","deflector_blue","nacelle_a","nacelle_d","nacelle_defiant","nacelle_intrepid"})
                     require(entries.containsKey(ScreenHousingTextures.screenIndex("lights/"+artwork+"_on")),"new light missing from picker: "+artwork);
-                require(on==6 && off==23,"light picker paired artwork coverage");
+                String[] expectedOff={"textures2_t3_r2_c2","textures2_t4_r2_c7","light_porthole_off","light_light_column_wall_off","light_slatted_lamp_off","light_window_lamp_off","light_lightbar_wall_off","light_logo_off","light_bussard_classic_off","light_bussard_modern_off","light_deflector_amber_off","light_deflector_blue_off","light_nacelle_a_off","light_nacelle_d_off","light_nacelle_defiant_off","light_nacelle_intrepid_off","light_amber_hex_off","corp_pinnacle_light_off","corp_ashiro_light_off","corp_paladyne_light_off","corp_vektor_light_off","corp_seyr_light_off","corp_vandor_light_off","ceiling_pale_grey_light_off","ceiling_industrial_grey_light_off","ceiling_dark_cyan_metallic_light_off"};
+                for(String id:expectedOff){int choice=java.util.Arrays.asList(ScreenHousingTextures.IDS).indexOf(id);require(choice>=0&&ScreenHousingTextures.isLightOff(choice),"paired OFF artwork missing: "+id);}
+                java.util.Set<String> expectedOffIds=new java.util.LinkedHashSet<>(java.util.Arrays.asList(expectedOff));
+                require(expectedOffIds.size()==expectedOff.length,"duplicate OFF IDs in coverage fixture");
+                require(observedOff.equals(expectedOffIds),"OFF catalog coverage differs: "+observedOff);
+                require(on==6 && off==expectedOff.length,"light picker paired artwork coverage: on="+on+", off="+off+", IDs="+observedOff);
                 for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.lightOnly(i))require(entries.containsKey(i)!=ScreenHousingTextures.isLightOff(i),"Corp light ON picker filter");
             }
             java.lang.reflect.Field offTab=GuiProgrammableLight.class.getDeclaredField("editingOff");offTab.setAccessible(true);offTab.setBoolean(gui,true);gui.initGui();

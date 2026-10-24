@@ -25,7 +25,7 @@ final class CockpitControlRuntimeChecks {
                     CockpitData.Surface surface=tile.data().surfaces.get(i);TileEntityCockpit.Display display=tile.display(surface.id);display.active=false;display.texture=-1;
                     Vec3d p=surface.point(.5,.5),start=CockpitData.rotate(p.add(surface.normal.scale(.1)),tile.facing()),end=CockpitData.rotate(p.subtract(surface.normal.scale(.02)),tile.facing());
                     require(tile.configurationPage(start,end)==base+i,"blank/inactive screen configuration target "+surface.id);
-                    CockpitScreenLayout layout=new CockpitScreenLayout(surface,3);
+                    CockpitScreenLayout layout=new CockpitScreenLayout(surface.u.lengthVector(),surface.v.lengthVector(),surface.role,3);
                     require(Math.abs((surface.u.lengthVector()/128)/(surface.v.lengthVector()/layout.height)-1)<.015,"square display pixels "+surface.id);
                     display.active=true;display.texture=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;
                     for(int row=0;row<3;row++){

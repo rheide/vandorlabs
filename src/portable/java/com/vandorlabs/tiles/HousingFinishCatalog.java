@@ -1,0 +1,102 @@
+package com.vandorlabs.tiles;
+
+/** Stable original housing finish order, shared by settings, generators and platform adapters. */
+public final class HousingFinishCatalog {
+    private static final class Finish {
+        final String id;
+        final String texture;
+        Finish(String id, String texture) { this.id = id; this.texture = texture; }
+    }
+
+    /** One ordered list keeps saved indices, menu names and atlas paths aligned. */
+    private static final Finish[] FINISHES = {
+            new Finish("dark_wall_panel", "dark_wall_panel"),
+            new Finish("light_wall_panel", "light_wall_panel"),
+            new Finish("light_alloy_hull", "light_alloy_hull"),
+            new Finish("metal_floor", "metal_floor"),
+            new Finish("dark_gunmetal_hull", "dark_gunmetal_hull"),
+            new Finish("midnight_matte_hull", "midnight_matte_hull"),
+            new Finish("dark_industrial_panel", "thrusters/dark_trim"),
+            new Finish("light_industrial_panel", "thrusters/trim"),
+            new Finish("ribbed_wall", "ribbed_wall"),
+            new Finish("industrial_block", "thrusters/side"),
+            new Finish("industrial_trim", "thrusters/top"),
+            new Finish("industrial_grate", "thrusters/rear"),
+            new Finish("wall_vent", "wall_vent"),
+            new Finish("bolted_wall_plate", "bolted_wall_plate"),
+            new Finish("burgundy", "burgundy_carpet"),
+            new Finish("bluegray", "bluegray_carpet"),
+            new Finish("matter", "matter"),
+            new Finish("matter_amber", "matter_amber"),
+            new Finish("matter_cyan", "matter_cyan"),
+            new Finish("matter_red", "matter_red"),
+            new Finish("wall_pipes", "wall_pipes"),
+            new Finish("framed_wall_pipes", "framed_wall_pipes"),
+            new Finish("midnight_satin_hull", "midnight_satin_hull"),
+            new Finish("seamed_padding", "seamed_padding"),
+            new Finish("ribbed_padding", "ribbed_padding"),
+            new Finish("stitched_padding", "stitched_padding"),
+            new Finish("glass_frame_inner", "programmable_glass/metal_side"),
+            new Finish("door_inner", "programmable_glass/door_side"),
+            new Finish("modular_polished_metal_floor_1", "modular_polished_metal_floor_1"),
+            new Finish("intricate_composite_wall_1", "intricate_composite_wall_1"),
+            new Finish("intricate_composite_wall_2", "intricate_composite_wall_2"),
+            new Finish("integrated_circuit_board_panel_1", "integrated_circuit_board_panel_1"),
+            new Finish("heavy_duty_bulkhead_1", "heavy_duty_bulkhead_1"),
+            new Finish("heavy_duty_bulkhead_2", "heavy_duty_bulkhead_2"),
+            new Finish("non_glowing_data_core_cluster_1", "non_glowing_data_core_cluster_1"),
+            new Finish("anti_gravity_control_panel_floor_1", "anti_gravity_control_panel_floor_1"),
+            new Finish("thermal_shielding_panel_1", "thermal_shielding_panel_1"),
+            new Finish("thermal_shielding_panel_2", "thermal_shielding_panel_2"),
+            new Finish("composite_nano_fiber_hull_1", "composite_nano_fiber_hull_1"),
+            new Finish("perforated_decking_1", "perforated_decking_1"),
+            new Finish("greebled_tech_panel_1", "greebled_tech_panel_1"),
+            new Finish("greebled_tech_panel_2", "greebled_tech_panel_2"),
+            new Finish("advanced_biomechanical_tech_block_1", "advanced_biomechanical_tech_block_1"),
+            new Finish("advanced_biomechanical_tech_block_2", "advanced_biomechanical_tech_block_2"),
+            new Finish("textures2_t1_r1_c7", "textures2_t1_r1_c7"),
+            new Finish("textures2_t1_r1_c8", "textures2_t1_r1_c8"),
+            new Finish("textures2_t1_r3_c8", "textures2_t1_r3_c8"),
+            new Finish("textures2_t1_r4_c1", "textures2_t1_r4_c1"),
+            new Finish("textures2_t1_r4_c7", "textures2_t1_r4_c7"),
+            new Finish("textures2_t1_r4_c8", "textures2_t1_r4_c8"),
+            new Finish("textures2_t2_r1_c3", "textures2_t2_r1_c3"),
+            new Finish("textures2_t2_r1_c4", "textures2_t2_r1_c4"),
+            new Finish("textures2_t2_r3_c1", "textures2_t2_r3_c1"),
+            new Finish("textures2_t2_r3_c2", "textures2_t2_r3_c2"),
+            new Finish("textures2_t2_r3_c7", "textures2_t2_r3_c7"),
+            new Finish("textures2_t2_r3_c8", "textures2_t2_r3_c8"),
+            new Finish("textures2_t2_r4_c5", "textures2_t2_r4_c5"),
+            new Finish("textures2_t3_r1_c7", "textures2_t3_r1_c7"),
+            new Finish("textures2_t3_r1_c8", "textures2_t3_r1_c8"),
+            new Finish("textures2_t3_r2_c2", "textures2_t3_r2_c2"),
+            new Finish("textures2_t3_r3_c3", "textures2_t3_r3_c3"),
+            new Finish("textures2_t3_r3_c5", "textures2_t3_r3_c5"),
+            new Finish("textures2_t3_r3_c6", "textures2_t3_r3_c6"),
+            new Finish("textures2_t4_r2_c7", "textures2_t4_r2_c7"),
+            new Finish("textures2_t4_r2_c8", "textures2_t4_r2_c8"),
+            new Finish("textures2_t4_r3_c5", "textures2_t4_r3_c5"),
+            new Finish("textures2_t4_r3_c6", "textures2_t4_r3_c6"),
+            new Finish("hull_plating_1", "hull_plating_1"),
+            new Finish("hull_plating_2", "hull_plating_2"),
+            new Finish("hull_plating_3", "hull_plating_3"),
+            new Finish("hull_plating_4", "hull_plating_4"),
+            new Finish("hull_plating_5", "hull_plating_5"),
+            new Finish("hull_plating_6", "hull_plating_6"),
+            new Finish("hull_plating_7", "hull_plating_7"),
+            new Finish("hull_plating_8", "hull_plating_8"),
+            new Finish("hull_plating_9", "hull_plating_9"),
+            new Finish("hull_plating_10", "hull_plating_10"),
+            new Finish("hull_plating_11", "hull_plating_11")
+    };
+
+    private HousingFinishCatalog() { }
+    public static int legacyCount() { return FINISHES.length; }
+    public static String id(int index) { return FINISHES[index].id; }
+    /** Relative path under the mod block texture root, preserving authored subdirectories. */
+    public static String texture(int index) { return FINISHES[index].texture; }
+    public static int index(String id) {
+        for (int i = 0; i < FINISHES.length; i++) if (FINISHES[i].id.equals(id)) return i;
+        return -1;
+    }
+}

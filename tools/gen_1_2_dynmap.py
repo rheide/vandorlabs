@@ -57,7 +57,7 @@ blocks.extend([
 ])
 finishes=[value for value in __import__('re').findall(
     r'new Finish\("[^"]+", "([^"]+)"\)',
-    (root/'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text())]
+    (root/'src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java').read_text())]
 assert len(finishes)>=28
 for finish in finishes:
     textures['v12_blocks_'+finish.replace('/','_')]='blocks/'+finish+'.png'

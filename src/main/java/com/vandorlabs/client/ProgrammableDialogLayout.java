@@ -2,22 +2,13 @@ package com.vandorlabs.client;
 
 import net.minecraft.client.gui.GuiButton;
 
-/** Shared dimensions for a tall texture list and a compact settings column. */
-final class ProgrammableDialogLayout {
-    static final int CONTROLS_WIDTH=154;
-    final int left,top,width,height,controlsX,listX,listWidth,doneY;
-    ProgrammableDialogLayout(int screenWidth,int screenHeight) {
-        this(screenWidth,screenHeight,460,332);
-    }
-    ProgrammableDialogLayout(int screenWidth,int screenHeight,int maxWidth,int maxHeight) {
-        width=Math.min(maxWidth,screenWidth-8);height=Math.min(maxHeight,screenHeight-8);
-        left=(screenWidth-width)/2;top=(screenHeight-height)/2;
-        controlsX=left+width-CONTROLS_WIDTH-12;listX=left+12;
-        listWidth=controlsX-listX-19;doneY=top+height-26;
-    }
-    int rows(boolean tabs){return Math.max(2,(height-(tabs?60:38))/HousingTextureList.ROW_HEIGHT);}
-    GuiButton control(int id,int y,String label){return new GuiButton(id,controlsX,top+y,CONTROLS_WIDTH,20,label);}
-    GuiButton done(int id){return new GuiButton(id,controlsX,doneY,CONTROLS_WIDTH,20,"Done");}
-    GuiButton tab(int id,int index,int count,String label){int w=(listWidth+2)/count;return new GuiButton(id,listX+index*w,top+30,w-2,18,net.minecraft.client.Minecraft.getMinecraft().fontRenderer.trimStringToWidth(label,w-6));}
-    GuiButton choice(int id,int index,int count,int y,String label){int w=(CONTROLS_WIDTH+2)/count;return new GuiButton(id,controlsX+index*w,top+y,w-2,18,label);}
+/** Forge widgets over the shared logical dialog layout. */
+final class ProgrammableDialogLayout extends com.vandorlabs.ui.ProgrammableDialogLayout {
+    ProgrammableDialogLayout(int screenWidth,int screenHeight){super(screenWidth,screenHeight);}
+    ProgrammableDialogLayout(int screenWidth,int screenHeight,int maxWidth,int maxHeight){super(screenWidth,screenHeight,maxWidth,maxHeight);}
+    private GuiButton widget(Button bounds){return new GuiButton(bounds.id,bounds.x,bounds.y,bounds.width,bounds.height,bounds.label);}
+    GuiButton control(int id,int y,String label){return widget(controlBounds(id,y,label));}
+    GuiButton done(int id){return widget(doneBounds(id));}
+    GuiButton tab(int id,int index,int count,String label){Button b=tabBounds(id,index,count,label);return new GuiButton(b.id,b.x,b.y,b.width,b.height,net.minecraft.client.Minecraft.getMinecraft().fontRenderer.trimStringToWidth(b.label,b.width-4));}
+    GuiButton choice(int id,int index,int count,int y,String label){return widget(choiceBounds(id,index,count,y,label));}
 }

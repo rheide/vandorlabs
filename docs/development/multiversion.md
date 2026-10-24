@@ -41,7 +41,7 @@ Preserve server-thread execution, loaded-chunk limits, container/permission chec
 5. Migrate moving assemblies, ramps, canopies, cockpits, vehicles and turntables with transactional snapshot/recovery and collision tests. These are high-risk API changes and require dedicated-server and live-client evidence.
 6. Run full Forge verification against the exact standard jar, modern dedicated-server startup and focused live parity checks for every migrated family. Inspect dialogs and rendered geometry; compilation and registration counts alone cannot establish parity. Keep unsupported integrations and outstanding families visible; do not label the NeoForge build complete until coverage and runtime evidence support that claim.
 
-Implementation can proceed in parallel across independent build/modern adapter work, shared core extraction, and shared dialog extraction. Coordinate file ownership; integrate and test each wave before expanding it. All agents use GPT-6.1 Sol at Medium reasoning. Production server/worlds are excluded from conversion tests and remain stopped after the requested backup.
+Implement independent builds, shared behavior, and dialog extraction separately; integrate and test each feature family before expanding coverage. Run conversion tests against disposable worlds.
 
 ## Validation and release policy
 

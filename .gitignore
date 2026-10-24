@@ -25,3 +25,9 @@ testclient/door-animation.*/
 
 # Local Forge installation helper.
 /copy-latest.sh
+
+# Isolated modern platform build and disposable development worlds.
+/platforms/*/.gradle/
+/platforms/*/build/
+/platforms/*/run/
+/platforms/*/runs/

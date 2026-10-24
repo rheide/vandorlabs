@@ -1,7 +1,7 @@
 package com.vandorlabs.redstone;
 
 /** A loaded, persistent control whose handle mirrors linked controls. */
-public interface RedstoneChannelLatch extends RedstoneChannelMember {
+public interface RedstoneChannelLatch extends RedstoneChannelMember, ChannelLatch {
     default int latchedLevel(int channel){return latchedChannels().contains(channel)?15:0;}
     default void applyLinkedLevels(java.util.Map<Integer,Integer> levels){
         int[] active=new int[levels.size()];int count=0;

@@ -12,6 +12,7 @@ public final class NbtPrimitiveData implements PrimitiveData {
     }
 
     @Override public boolean contains(String key) { return tag.hasKey(key); }
+    @Override public boolean containsInt(String key) { return tag.hasKey(key, 3); }
     @Override public String getString(String key) { return tag.getString(key); }
     @Override public int getInt(String key) { return tag.getInteger(key); }
     @Override public long getLong(String key) { return tag.getLong(key); }

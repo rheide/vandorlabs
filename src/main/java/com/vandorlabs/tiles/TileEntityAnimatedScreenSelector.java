@@ -614,12 +614,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         channels=ChannelData.read(compound,redstoneChannel);redstoneChannel=channels.first();
         channelSignal = data.channelSignal;
         channelLevel=compound.hasKey("ChannelLevel",3)?Math.max(0,Math.min(15,compound.getInteger("ChannelLevel"))):channelSignal?15:0;
-        int savedHousing = data.housingTexture;
-        if (!compound.hasKey("HousingTextureVersion", 3)) {
-            // The removed vent grille occupied index 14 in existing worlds.
-            if (savedHousing == 14) savedHousing = 0;
-            else if (savedHousing > 14) savedHousing--;
-        }
+        int savedHousing = com.vandorlabs.ui.ProgrammableBlockDialog.savedMainTexture(
+                data.housingTexture,compound.hasKey("HousingTextureVersion", 3));
         housingTexture = ScreenHousingTextures.clamp(savedHousing);
         sideTexture=compound.hasKey("SideTexture",3) && compound.getInteger("SideTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SideTexture")):-1;
         glassShade = compound.hasKey("GlassShade", 3)

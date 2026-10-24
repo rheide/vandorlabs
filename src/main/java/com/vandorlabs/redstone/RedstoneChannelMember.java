@@ -3,7 +3,7 @@ package com.vandorlabs.redstone;
 import net.minecraft.tileentity.TileEntity;
 
 /** A loaded tile that participates in its dimension's virtual redstone bus. */
-public interface RedstoneChannelMember {
+public interface RedstoneChannelMember extends ChannelMember {
     TileEntity channelTile();
     /** Logical adapters must override this with the identity of their live source. */
     default boolean isChannelMemberActive(){

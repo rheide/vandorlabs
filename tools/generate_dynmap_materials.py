@@ -21,10 +21,10 @@ BLOCKS={
 }
 
 def palette(full=False,check=False):
-    legacy=re.findall(r'new Finish\("[^"]+", "([^"]+)"\)',(ROOT/'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text())
+    legacy=re.findall(r'new Finish\("[^"]+", "([^"]+)"\)',(ROOT/'src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java').read_text())
     extras=json.loads((ROOT/'generated-resources/assets/vandorlabs/data/unified_textures.json').read_text())
     menu=json.loads((ASSETS/'data/texture_menu.json').read_text())
-    ids=re.findall(r'new Finish\("([^"]+)", "[^"]+"\)',(ROOT/'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text())
+    ids=re.findall(r'new Finish\("([^"]+)", "[^"]+"\)',(ROOT/'src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java').read_text())
     textures=[path if not menu.get(name,{}).get('hidden') else legacy[0] for name,path in zip(ids,legacy)]
     for entry in extras:
         # Redirected/retired choices never emit their original palette slot.
@@ -60,7 +60,7 @@ def generate(check=False):
     catalog=json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks.json').read_text())
     omitted={entry['id'] for entry in catalog if entry.get('internal_model')}
     registered={entry['id'] for entry in catalog if not entry.get('retired') and not entry.get('internal_model') and not entry.get('programmable_only')}
-    finishes=set(re.findall(r'new Finish\("([^"]+)",',(ROOT/'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text()))
+    finishes=set(re.findall(r'new Finish\("([^"]+)",',(ROOT/'src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java').read_text()))
     omitted.update(finishes-registered)
     for filename in ('dynmap-models.txt','dynmap-texture.txt'):
         path=ASSETS/filename

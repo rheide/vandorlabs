@@ -62,7 +62,7 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
         GlStateManager.pushMatrix();GlStateManager.multMatrix(matrix);RedstoneScreenRenderer.drawVehicleContents(tile.getWorld(),tile.getPos(),height,height==64?0:24);GlStateManager.popMatrix();
     }
     private static void rows(TileEntityCockpit tile,CockpitData.Surface plane){
-        com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(plane,tile.display(plane.id).rows);
+        com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(plane.u.lengthVector(),plane.v.lengthVector(),plane.role,tile.display(plane.id).rows);
         GlStateManager.pushMatrix();
         try{
             GlStateManager.multMatrix(matrix(plane,128,layout.height));GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);

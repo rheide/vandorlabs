@@ -48,6 +48,7 @@ public final class SaveSchemaTest {
         expect(SaveSchema.Redstone.class,
                 "RedstoneChannel", "ChannelSignal", "LocalOn", "ChannelInitialized",
                 "ManualOn", "ParticleStream", "LightInitialized", "MountRotation");
+        expect(SaveSchema.Wireless.class, "WirelessAnalog", "WirelessOn", "WirelessOff", "WirelessInput", "WirelessReceived");
         if (SaveSchema.Screen.VERSION != 2 || SaveSchema.Ramp.CONTROLLER_VERSION != 9
                 || SaveSchema.Ramp.CELL_VERSION != 7 || SaveSchema.Redstone.VERSION != 2) {
             throw new AssertionError("save schema version changed without updating its contract test");

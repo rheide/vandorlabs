@@ -274,16 +274,31 @@ task compilePortableTests(type: JavaCompile) {
                 include '**/*.java'
                 exclude '**/SignalUpdateBatchTest.java'
             })
-    source files('src/main/java/com/vandorlabs/client/PortholeHex.java',
-            'src/main/java/com/vandorlabs/navigation/NavigationLayout.java',
-            'src/main/java/com/vandorlabs/client/PortholeRectangles.java',
-            'src/main/java/com/vandorlabs/client/PortholeGeometryCache.java')
     classpath = files()
     destinationDir = file("$buildDir/portable-tests")
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
     options.compilerArgs += ['-Xlint:all', '-Werror']
 }
+
+task checkPortableBoundary(type: Exec) {
+    group = 'verification'
+    description = 'Compile shared behavior without Minecraft or loader dependencies'
+    commandLine pythonExecutable, 'tools/check_portable_boundary.py'
+}
+
+task testPortableParity(type: Exec) {
+    group = 'verification'
+    description = 'Run shared behavior contracts on Java 8 and Java 21 and compare results'
+    commandLine pythonExecutable, 'tools/test_portable.py'
+}
+
+task testPortableContracts(type: Exec) {
+    group = 'verification'
+    description = 'Run shared behavior contracts with the default Java 8 toolchain'
+    commandLine pythonExecutable, 'tools/test_portable.py', '--jdk', '8'
+}
+check.dependsOn testPortableContracts
 
 task testRamps(type: JavaExec) {
     dependsOn compilePortableTests

@@ -41,6 +41,8 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         return block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STORAGE
                 || block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK || slab;
     }
+    private boolean sharedBlockDialog(){return supportsFaces() && !slab;}
+    private com.vandorlabs.ui.ProgrammableBlockDialog.State sharedBlockState(){return new com.vandorlabs.ui.ProgrammableBlockDialog.State(tile.getHousingTexture(),textureLayout,tile.getFaceTextures().enabled,tile.getFaceTextures().choices(),faceTarget);}
     private boolean glassSurface(){return diagonalGlass || porthole && faceTarget==-3;}
     private int selectedTexture() {
         if(faceTarget==-3)return tile.getGlassMaterial()<0?HousingTextureList.CANOPY_GLASS_BASE+tile.getGlassShade():tile.getGlassMaterial();
@@ -102,6 +104,14 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         rows=Math.max(2,(ySize-(faceTabs || slab || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
         textureList=glassSurface()?HousingTextureList.forCanopy(listX,listY,controlsX-listX-19,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(rows).keepView(textureList)
                 :new HousingTextureList(listX,listY,controlsX-listX-19,selected).visibleRows(rows).custom(this::choose);
+        if(sharedBlockDialog()) {
+            com.vandorlabs.ui.ProgrammableBlockDialog.State state=sharedBlockState();
+            for(com.vandorlabs.ui.ProgrammableBlockDialog.Control control:com.vandorlabs.ui.ProgrammableBlockDialog.controls(layout,state,I18n.format("gui.done"))){
+                com.vandorlabs.ui.ProgrammableDialogLayout.Button bounds=control.bounds;
+                GuiButton button=new GuiButton(bounds.id,bounds.x,bounds.y,bounds.width,bounds.height,bounds.label);button.enabled=control.enabled;buttonList.add(button);
+            }
+            return;
+        }
         if(faceTabs || slab || porthole) {
             int count=faceTabs?(slab?8:7):porthole?3:2;
             int span=faceTabs?xSize-24:controlsX-listX-19;
@@ -193,11 +203,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
             int thumbHeight, int maximum, int dragOffset) {
-        int travel = trackHeight - thumbHeight;
-        if (maximum <= 0 || travel <= 0) return 0;
-        int thumbTop = Math.max(0, Math.min(travel,
-                mouseY - trackTop - dragOffset));
-        return Math.round((float) thumbTop * maximum / travel);
+        return com.vandorlabs.ui.DialogInput.scrollForDrag(mouseY,trackTop,trackHeight,thumbHeight,maximum,dragOffset);
     }
 
     void choose(int choice) {
@@ -210,7 +216,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             initGui();return;
         }
         if (supportsFaces() && tile.getFaceTextures().enabled && faceTarget >= 0) {
-            int[] choices = tile.getFaceTextures().choices();
+            int[] choices = sharedBlockDialog()?sharedBlockState().choose(choice).faces():tile.getFaceTextures().choices();
             choices[faceTarget] = choice;
             sendFaces(new com.vandorlabs.tiles.FaceTextures(true, choices));
             initGui();
@@ -233,6 +239,12 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(sharedBlockDialog() && button.id!=100){
+            com.vandorlabs.ui.ProgrammableBlockDialog.State state=sharedBlockState().action(button.id,GuiOptionCycle.direction());
+            if(button.id==103){textureLayout=state.layout;tile.setMainTextureLayout(textureLayout);button.displayString=slabSidesLabel();PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSlabSides(tile.getPos(),textureLayout));return;}
+            if(button.id==106 || button.id==108)sendFaces(new com.vandorlabs.tiles.FaceTextures(state.facesEnabled,state.faces()));
+            faceTarget=state.target;selected=state.selectedTexture();initGui();return;
+        }
         if(button.id==131){tile.setStairGeometry(tile.stairTread(),tile.stairRoll()==0?1:0);sendStairs();initGui();return;}
         if(button.id==129){faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}
         if(glassSurface() && (button.id==115 || button.id==116)){

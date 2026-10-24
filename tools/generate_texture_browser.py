@@ -7,11 +7,11 @@ ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'docs/texture-browser'
 
 def catalog():
-    source = (ROOT/'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text()
+    source = (ROOT/'src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java').read_text()
     menu = json.loads((ROOT/'src/main/resources/assets/vandorlabs/data/texture_menu.json').read_text())
     entries = [dict(id=identifier, source=texture, **menu.get(identifier, {})) for identifier, texture in re.findall(r'new Finish\("([^"]+)",\s*"([^"]+)"\)', source)]
     entries += json.loads((ROOT/'generated-resources/assets/vandorlabs/data/unified_textures.json').read_text())
-    glass = (ROOT/'src/main/java/com/vandorlabs/tiles/GlassTextures.java').read_text()
+    glass = (ROOT/'src/portable/java/com/vandorlabs/tiles/GlassTextures.java').read_text()
     arrays = [re.findall(r'"([^"]+)"', re.search(r'String\[\] '+name+r'=\{([^}]+)', glass)[1]) for name in ('IDS','LABELS')]
     entries += [dict(id='glass_'+identifier, source='programmable_glass/low/'+identifier, label=label, category='Glass') for identifier,label in zip(*arrays)]
     language = (ROOT/'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text(encoding='utf-8')

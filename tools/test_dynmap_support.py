@@ -78,7 +78,7 @@ def main():
                  model_path.read_text(), re.MULTILINE):
         raise AssertionError("propulsion emitter faces are too thin for Dynmap")
     finish_count = len(re.findall(r'new Finish\("[^"]+", "[^"]+"\)',
-                                  (ROOT / "src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java").read_text()))
+                                  (ROOT / "src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java").read_text()))
     if "block:id=%controlled_ramp,state=*,patch0=" not in texture_path.read_text() \
             or "patch%d=0:v12_source_stone" % finish_count not in texture_path.read_text():
         raise AssertionError("ramp source texture mapping is incomplete")

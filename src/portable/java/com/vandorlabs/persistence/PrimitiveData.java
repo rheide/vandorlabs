@@ -3,6 +3,8 @@ package com.vandorlabs.persistence;
 /** Small tag API implemented by each Minecraft version's NBT adapter. */
 public interface PrimitiveData {
     boolean contains(String key);
+    /** Saved schemas may distinguish an integer tag from a missing or mistyped value. */
+    default boolean containsInt(String key) { return contains(key); }
     String getString(String key);
     int getInt(String key);
     long getLong(String key);

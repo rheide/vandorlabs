@@ -1,19 +1,18 @@
 package com.vandorlabs.redstone;
 
 import io.netty.buffer.ByteBuf;
+import com.vandorlabs.persistence.ChannelMembershipData;
 import net.minecraft.nbt.NBTTagCompound;
 
 /** List storage retains the old scalar tag through each tile's existing codec. */
 public final class ChannelData {
-    public static final String CHANNELS="RedstoneChannels";
+    public static final String CHANNELS=ChannelMembershipData.CHANNELS;
     private ChannelData(){}
     public static ChannelList read(NBTTagCompound tag,int legacy) {
         return read(tag,CHANNELS,ChannelList.of(Math.max(0,legacy)));
     }
     public static ChannelList read(NBTTagCompound tag,String key,ChannelList fallback) {
-        if(!tag.hasKey(key,11))return fallback;
-        try{return ChannelList.of(tag.getIntArray(key));}
-        catch(IllegalArgumentException malformed){return fallback;}
+        return ChannelMembershipData.read(tag.hasKey(key,11)?tag.getIntArray(key):null,fallback);
     }
     public static void write(NBTTagCompound tag,ChannelList channels){tag.setIntArray(CHANNELS,channels.toArray());}
     public static void write(ByteBuf buffer,ChannelList channels) {

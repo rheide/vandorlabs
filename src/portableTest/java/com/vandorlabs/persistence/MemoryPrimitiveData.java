@@ -6,6 +6,7 @@ import java.util.Map;
 final class MemoryPrimitiveData implements PrimitiveData {
     private final Map<String,Object> values=new HashMap<>();
     @Override public boolean contains(String key) { return values.containsKey(key); }
+    @Override public boolean containsInt(String key) { return values.get(key) instanceof Integer; }
     @Override public String getString(String key) {
         Object value=values.get(key); return value instanceof String?(String)value:"";
     }

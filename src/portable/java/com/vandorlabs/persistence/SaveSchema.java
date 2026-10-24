@@ -61,4 +61,10 @@ public final class SaveSchema {
         public static final String LIGHT_INITIALIZED="LightInitialized";
         private Redstone() { }
     }
+
+    public static final class Wireless {
+        public static final String ANALOG="WirelessAnalog",ON="WirelessOn",OFF="WirelessOff";
+        public static final String INPUT="WirelessInput",RECEIVED="WirelessReceived";
+        private Wireless() { }
+    }
 }
