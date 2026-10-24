@@ -47,17 +47,18 @@ public final class UniversalConstructorModelCache {
         if (installed) return;
         installed = true;
         OBJLoader.INSTANCE.addDomain(DOMAIN);
-        for (String id : new String[] {"assembly_press", "synthesis_tower", "enclosed_gantry"}) {
-            register(id, "complete.obj");
+        for(com.vandorlabs.blocks.FrameMachineDesign spec:com.vandorlabs.blocks.FrameMachineDesign.all()){
+            String[] paths=spec.state_models!=null?spec.state_models:spec.hasChip()?new String[]{"complete.obj","active/complete.obj"}:new String[]{"complete.obj"};
+            for(String path:paths)register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
         }
         MinecraftForge.EVENT_BUS.register(EVENTS);
     }
 
     /** Example: register("assembly_press", "parts/press.obj"). */
     public static void register(String machineId, String relativeObjPath) {
-        LOCATIONS.put(key(machineId, relativeObjPath),
-            new ResourceLocation(DOMAIN, "block/universal_constructor/" + machineId + "/" + relativeObjPath));
+        register(machineId,relativeObjPath,new ResourceLocation(DOMAIN,"block/universal_constructor/"+machineId+"/"+relativeObjPath));
     }
+    public static void register(String id,String path,ResourceLocation resource){LOCATIONS.put(key(id,path),resource);}
 
     public static Mesh get(String machineId, String relativeObjPath) {
         Mesh mesh = meshes.get(key(machineId, relativeObjPath));

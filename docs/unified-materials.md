@@ -56,7 +56,7 @@ Transparent artwork does not generate holes in block geometry or collision. In p
 
 Generating a porthole-shaped block from an arbitrary alpha mask needs a defined alpha threshold, geometry extraction and simplification, matching collision/selection shapes, neighbor face-culling rules, render-layer handling and loaded-client/server agreement. That larger feature is deferred for a separate design decision. Use the existing programmable porthole shapes for actual openings. Importing transparent PNGs is allowed, but is not an alpha-derived geometry feature.
 
-Dynmap's existing material table covers the original finishes. New static catalog artwork, filesystem textures and Custom materials use its default panel fallback; client rendering remains independent.
+Dynmap reads the bundled material catalog for Programmable Blocks, Slabs, Stairs, Walls, Diagonal Walls, Trapdoors and programmable door leaves. Rectangular client sprites have matching map-readable crops. Filesystem textures and Custom materials retain the default panel fallback. Joined Fit/Stretch layouts and animated content remain in-game features. Rerender affected map tiles after upgrading.
 
 Screen, input and console configuration dialogs preview artwork in their categorized list thumbnails. Separate preview panels are removed, including both Half-Console input panels. Off/Static/Animated modes, frame and size controls, and animation speed retain their existing behavior.
 

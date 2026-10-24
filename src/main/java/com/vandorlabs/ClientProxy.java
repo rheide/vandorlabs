@@ -110,6 +110,7 @@ public class ClientProxy extends CommonProxy {
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityHexTank.class,new com.vandorlabs.client.TEHexTank());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityBattery.class,new com.vandorlabs.client.TEBattery());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityConstructor.class,new com.vandorlabs.client.constructors.TEConstructor());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityNavigationTable.class,new com.vandorlabs.client.TENavigationTable());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableTrigger.class,
                 new TEAnimatedScreenSelector());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableLight.class,

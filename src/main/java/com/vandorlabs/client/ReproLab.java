@@ -582,6 +582,7 @@ public class ReproLab {
     public void onDocumentationRender(TickEvent.RenderTickEvent event) {
         if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.render(event);return;}
         if(event.phase==TickEvent.Phase.END && enabled)renderedFrames++;
+        if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.machineBuildDocsOnly"))FrameMachineDocumentation.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END && enabled && state==300 && documentationCapture!=null)
             documentationCapture.render(Minecraft.getMinecraft());
     }
@@ -626,6 +627,8 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.bridgeMachineChecksOnly")){try{if(BridgeMachineChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Bridge machine regressions",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.machineBuildDocsOnly")){try{if(FrameMachineDocumentation.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Machine build documentation",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.existingVehicleHoverChecksOnly")){
             try{if(ExistingVehicleHoverChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Actual vehicle Hover checks",failure);}return;
         }
@@ -2168,7 +2171,7 @@ public class ReproLab {
                 ChairRuntimeChecks.run(world, serverPlayer);
                 MatterInfuserRuntimeChecks.run(world);
                 UtilityStorageRuntimeChecks.run(world);
-                ConstructorRuntimeChecks.run(world,serverPlayer);
+                com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,serverPlayer);
                 try{TurntableRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("turntable runtime",failure);}
                 try{ModularGearRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("modular gear runtime",failure);}
                 TextureLayoutRuntimeChecks.run(world,serverPlayer);

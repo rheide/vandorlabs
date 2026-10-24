@@ -20,24 +20,10 @@ public final class BlockTokenSlot extends BlockVandorSwitch {
     @Override public int getLightValue(IBlockState state,IBlockAccess world,BlockPos pos){return 0;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing facing,float x,float y,float z){
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof TileEntityTokenSlot))return false;TileEntityTokenSlot tile=(TileEntityTokenSlot)raw;
-        if(!tile.isUsableByPlayer(player))return false;
-        ItemStack held=player.getHeldItem(hand);
-        if(player.isSneaking()||held.getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER){if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_TOKEN_SLOT,world,pos.getX(),pos.getY(),pos.getZ());return true;}
-        if(held.isEmpty()){
-            if(tile.isEmpty()&&hand==EnumHand.MAIN_HAND&&tile.accepts(player.getHeldItemOffhand()))return false;
-            if(!world.isRemote&&tile.isEmpty())tile.cycleLogo();
-            else if(!world.isRemote){ItemStack removed=tile.removeStackFromSlot(0);if(!player.inventory.addItemStackToInventory(removed)&&!removed.isEmpty())player.dropItem(removed,false);}return true;
-        }
-        if(!tile.accepts(held))return false;
-        if(!tile.authorized(held)){tile.reject();return true;}
-        if(!tile.isEmpty())return true;
-        if(tile.behavior>=2){if(!world.isRemote)tile.insertToggle(player,held);return true;}
-        if(!world.isRemote){ItemStack inserted=held.copy();inserted.setCount(1);tile.setInventorySlotContents(0,inserted);if(!player.capabilities.isCreativeMode)held.shrink(1);}return true;
+        return TokenSlotInteractions.activate(tile,player,hand);
     }
-    @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityTokenSlot)((TileEntityTokenSlot)raw).scheduledTick();}
+    @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){TokenSlotInteractions.tick(world,pos);}
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
-        net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);
-        if(!world.isRemote&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)&&raw instanceof TileEntityTokenSlot){ItemStack stack=((TileEntityTokenSlot)raw).takeForDrop();if(!stack.isEmpty())net.minecraft.inventory.InventoryHelper.spawnItemStack(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,stack);}
-        super.breakBlock(world,pos,state);
+        TokenSlotInteractions.drop(world,pos);super.breakBlock(world,pos,state);
     }
 }

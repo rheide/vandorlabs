@@ -22,15 +22,10 @@ public abstract class UniversalConstructorFastTESR<T extends TileEntity> extends
 
     /** Unrotated dimensions. Override if the design dimensions are changed. */
     protected double width(T te) {
-        switch (machineId(te)) {
-            case "assembly_press": return 4;
-            case "synthesis_tower": return 3;
-            case "enclosed_gantry": return 5;
-            default: throw new IllegalArgumentException("Unknown constructor design " + machineId(te));
-        }
+        return com.vandorlabs.blocks.FrameMachineDesign.get(machineId(te)).width;
     }
 
-    protected double depth(T te) { return 3; }
+    protected double depth(T te) { return com.vandorlabs.blocks.FrameMachineDesign.get(machineId(te)).depth; }
 
     /**
      * Controller-relative location of the minimum X/Y/Z corner of the rotated

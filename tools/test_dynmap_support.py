@@ -27,6 +27,8 @@ def records(path, prefix):
 
 
 def main():
+    from generate_dynmap_materials import generate
+    generate(check=True)
     model_path = ASSETS / "dynmap-models.txt"
     texture_path = ASSETS / "dynmap-texture.txt"
     models = records(model_path, "modellist")

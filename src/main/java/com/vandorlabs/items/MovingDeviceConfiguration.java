@@ -12,6 +12,8 @@ public final class MovingDeviceConfiguration {
     private MovingDeviceConfiguration(){}
     public static BlockPos ownerAt(net.minecraft.world.World world,BlockPos at){
         TileEntity tile=world.getTileEntity(at);
+        if(tile instanceof TileEntityConstructorPart)return ((TileEntityConstructorPart)tile).owner();
+        if(tile instanceof TileEntityNavigationTable){TileEntityNavigationTable reader=((TileEntityNavigationTable)tile).reader();if(reader!=null)return reader.getPos();}
         if(tile instanceof TileEntityControlledRamp)return ((TileEntityControlledRamp)tile).controller;
         if(tile instanceof TileEntityTurntableSurface){TileEntityTurntableSurface surface=(TileEntityTurntableSurface)tile;if(surface.owner!=null&&world.isBlockLoaded(surface.owner)){TileEntity owner=world.getTileEntity(surface.owner);if(owner instanceof TileEntityTurntableController&&((TileEntityTurntableController)owner).key.equals(surface.ownerKey))return surface.owner;}}
         return at;

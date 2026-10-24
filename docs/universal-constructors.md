@@ -1,5 +1,7 @@
 # Universal Constructors
 
+See the [step-by-step multiblock guides](multiblocks/README.md) for screenshots of each construction stage, including the newer drive and navigation computer assemblies that use the same frame system.
+
 The Assembly Press, Synthesis Tower, and Enclosed Gantry are decorative multiblock assemblies. Their Core blocks are currently creative-only. They do not process recipes yet.
 
 | Core | Width x depth x total height | Matter Blocks + Core |

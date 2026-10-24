@@ -196,9 +196,9 @@ public class ModBlocks {
         add(new BlockNonWheeledLandingGear("ski_landing_gear",true,false).setCreativeTab(null));
         add(new BlockNonWheeledLandingGear("landing_strut",false,false).setCreativeTab(null));
         add(new BlockNonWheeledLandingGear("angled_landing_strut",false,true).setCreativeTab(null));
-        add(new BlockConstructorCore("assembly_press",4,3));
-        add(new BlockConstructorCore("synthesis_tower",3,5));
-        add(new BlockConstructorCore("enclosed_gantry",5,3));
+        for(FrameMachineDesign spec:FrameMachineDesign.all())add(new BlockConstructorCore(spec));
+        add(new BlockNavigationTable("navigation_table_flat",com.vandorlabs.navigation.NavigationLayout.Kind.FLAT));
+        add(new BlockNavigationTable("navigation_table_angled",com.vandorlabs.navigation.NavigationLayout.Kind.ANGLED));
         addNoItem(new BlockConstructorPart());
         add(new BlockBattery());
         add(new BlockHexTank());

@@ -11,6 +11,7 @@ import java.util.*;
 
 /** Closed overview meshes, clipped into each occupied voxel to avoid duplicated assemblies. */
 public final class CanopyRenderer extends CustomRenderer {
+    @Override protected int getMaximumTextureCount() { return 4 + 19 * 3; }
     @Override
     public String[] getTileEntityFieldsNeeded() {
         return new String[] {"Anchor", "Pair", "CanopyMask", "CanopyRoofMask", "CanopyWidth", "CenteredPlacement", "CanopyDepth", "CanopyScale", "CanopyShade", "CanopyTint", "CanopyMount", "CanopyAngle", "CanopyMotion"};
@@ -69,64 +70,18 @@ public final class CanopyRenderer extends CustomRenderer {
         int shade=savedShade instanceof Number?com.vandorlabs.tiles.GlassTextures.clamp(((Number)savedShade).intValue()):0;
         int tint=savedTint instanceof Number?com.vandorlabs.tiles.GlassTextures.clampTint(((Number)savedTint).intValue()):1;
         for (CanopyMesh.Face face : mesh) {
-            List<Vec3d> polygon = new ArrayList<>();
-            for (Vec3d v : face.vertices)
-                polygon.add(CanopyMesh.rotate(v, facing).addVector(ox, oy, oz));
-            for (int axis = 0; axis < 3; axis++) {
-                polygon = clip(polygon, axis, 0, true);
-                polygon = clip(polygon, axis, 1, false);
-            }
             int texture =
                     face.baseMaterial.equals("glass")
                             ? 4+shade*3+tint
                             : face.baseMaterial.equals("amber")
                                     ? 2
                                     : face.baseMaterial.equals("light") ? 3 : 0;
-            for (int i = 1; i < polygon.size() - 1; i++) {
-                Vec3d a = polygon.get(0), b = polygon.get(i), c = polygon.get(i + 1);
-                RenderPatch patch =
-                        context.getPatchFactory()
-                                .getPatch(
-                                        a.x,
-                                        a.y,
-                                        a.z,
-                                        b.x,
-                                        b.y,
-                                        b.z,
-                                        c.x,
-                                        c.y,
-                                        c.z,
-                                        1,
-                                        RenderPatchFactory.SideVisible.BOTH,
-                                        texture);
-                if (patch != null) result.add(patch);
-            }
+            List<MapSurface.Vertex> polygon=new ArrayList<>();
+            for(int i=0;i<face.vertices.length;i++)polygon.add(new MapSurface.Vertex(
+                    CanopyMesh.rotate(face.vertices[i],facing).addVector(ox,oy,oz),face.uv[i][0],1-face.uv[i][1]));
+            MapSurface.emit(context,result,polygon,texture);
         }
         return result.toArray(new RenderPatch[0]);
     }
 
-    private static double component(Vec3d v, int axis) {
-        return axis == 0 ? v.x : axis == 1 ? v.y : v.z;
-    }
-
-    private static List<Vec3d> clip(List<Vec3d> input, int axis, double plane, boolean lower) {
-        List<Vec3d> out = new ArrayList<>();
-        if (input.isEmpty()) return out;
-        Vec3d prev = input.get(input.size() - 1);
-        boolean inside = lower ? component(prev, axis) >= plane : component(prev, axis) <= plane;
-        for (Vec3d next : input) {
-            boolean nextInside =
-                    lower ? component(next, axis) >= plane : component(next, axis) <= plane;
-            if (inside != nextInside) {
-                double t =
-                        (plane - component(prev, axis))
-                                / (component(next, axis) - component(prev, axis));
-                out.add(prev.add(next.subtract(prev).scale(t)));
-            }
-            if (nextInside) out.add(next);
-            prev = next;
-            inside = nextInside;
-        }
-        return out;
-    }
 }

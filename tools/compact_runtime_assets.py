@@ -19,13 +19,20 @@ def resized(path,size):
 
 def standardize(textures,catalog):
     """Keep UV atlases/native pixel art; use 128px per authored block face."""
+    # OBJ materials address packed UV regions. Their atlas size is not a
+    # per-block artwork resolution, even when the filename omits "atlas".
+    obj_atlases=set()
+    for material in (textures.parent/'models').rglob('*.mtl'):
+        for line in material.read_text().splitlines():
+            if line.startswith('map_Kd vandorlabs:blocks/'):
+                obj_atlases.add(line.split('vandorlabs:blocks/',1)[1].strip()+'.png')
     doubles={e['source'] for e in catalog if e.get('category')=='Double Doors'}
     changed=0
     for path in (textures/'blocks').rglob('*.png'):
         rel=path.relative_to(textures/'blocks').as_posix()
         metadata=path.with_suffix('.png.mcmeta')
         animated=metadata.exists() and 'animation' in json.loads(metadata.read_text())
-        if 'atlas' in path.stem or rel.startswith(('canopy/','aircraft_throttles/','universal_constructor/','turntable/turntable_block_top')) or animated:continue
+        if rel in obj_atlases or 'atlas' in path.stem or rel.startswith(('canopy/','aircraft_throttles/','universal_constructor/','turntable/turntable_block_top')) or animated:continue
         with Image.open(path) as source:
             w,h=source.size
             # Tall doors cover two blocks; square double doors cover four.

@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "2.5";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t236";
+    public static final String BUILD_ID = "t246";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -84,6 +84,7 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityBattery.class,"vandorlabs:battery");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityHexTank.class,"vandorlabs:hex_tank");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityConstructor.class,"vandorlabs:constructor");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityNavigationTable.class,"vandorlabs:navigation_table");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityConstructorPart.class,"vandorlabs:constructor_part");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySkiLandingGear.class,"vandorlabs:ski_landing_gear");
         PacketHandler.register();
@@ -99,6 +100,11 @@ public class VandorLabs {
     public void serverStarted(net.minecraftforge.fml.common.event.FMLServerStartedEvent event){
         if(Boolean.getBoolean("vandorlabs.vehicleWorldCompatibilityChecks"))
             com.vandorlabs.vehicle.VehicleWorldRuntimeChecks.run(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0));
+        if(Boolean.getBoolean("vandorlabs.machineFrameChecks")){
+            net.minecraft.world.WorldServer world=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
+            net.minecraft.entity.player.EntityPlayerMP player=net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(world);player.capabilities.isCreativeMode=true;
+            com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,player);
+        }
     }
 
     @EventHandler

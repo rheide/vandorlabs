@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-Current development version: **2.5**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.5**. See the [2.5 vehicle compatibility fix](docs/versions/version-2.5.md), [2.4 stability and network changes](docs/versions/version-2.4.md), [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).
+Current development version: **2.5**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.5**. Development highlights: [bridge machines and illustrated build guides](docs/versions/version-2.5.md#bridge-machines-and-construction-guides). See the [2.5 vehicle compatibility fix](docs/versions/version-2.5.md), [2.4 stability and network changes](docs/versions/version-2.4.md), [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).
 
 **Vehicle systems:** [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
 
@@ -342,6 +342,13 @@ The build checks shared bytecode for client-only API references with `testDedica
 
 For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder containing the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. It defaults to the standard `.minecraft/mods` folder. Run `bash testclient/test_viewscreen.sh --full` for complete coverage.
 
+Use `--focus bridge-machines` for the Core-frame matrix, integrated chip readers,
+navigation joining, item padding and reverse Hover steering. The separate
+`--focus machine-build-docs` captures the asserted build stages used by the
+[multiblock guides](docs/multiblocks/README.md). `testDynmapRenderers` checks map
+geometry and material bounds; `python3 testclient/test_dynmap_render.py --help`
+describes the isolated real-Dynmap render fixture.
+
 Fluid lighting compares actual contained-water, connected-water and vanilla vertex output across all 256 combinations of sky light and block light. Fluid regressions include 132 water-mesh bounds checks and ten camera-frustum edge checks. The filled pool is viewed from 40 positions with actual tile frustum culling: close to each pool edge, above looking in, at the waterline looking level or slightly up, underwater looking out through glass and portholes, and outside looking in. Exterior views compare with an independent reference renderer; mixed chunk buffers are checked after sorting. A 780-case geometry matrix covers eleven waterloggable families, four facings, either or both wet compartments and solid contacts. Another 760 rendered views sweep small camera angles at submerged stone contacts and both closed-door sides, requiring opaque pixels to remain unchanged when water renders. Native-fluid contact checks also reject sheets over fully wet solid/pane footprints; the half-width top/near diagonal join rejects the former water strip while dry-gap probes remain required. Free water–air surfaces must remain visible from below and within, while panes must not acquire a false interior water film. They run in `verifyRelease` and `bash testclient/test_viewscreen.sh --focus fluids`. To repeat the focused run with OptiFine, set `VANDOR_LABS_TEST_OPTIFINE` to the OptiFine JAR; the harness copies it into the isolated test client. Compatibility captures use shaders off.
 
 
@@ -378,18 +385,25 @@ The normal Vandor Labs jar includes `assets/vandorlabs/dynmap-models.txt` and
 directly from the mod jar. Dynmap's API is a compile-only dependency; the mod
 continues to load when Dynmap is absent.
 
-The definitions cover 101 block types and more than 20,000 block states.
+The definitions cover more than 80 block types and 20,000 block states.
 Ordinary JSON models retain their scanned shape, orientation, texture,
 power state, and connected square-thruster variant. Dynmap 1.12 cannot parse
 Forge OBJ models or execute tile-entity renderers, so the bundled data supplies
 static Dynmap-native approximations for hexagonal and triangular thrusters,
 chairs, connected glass, and programmable input housings. Thruster controls
-include listed-state model defaults; configured detent limits remain in game. Programmable Slabs
-read their top or bottom block state. Programmable Doors read facing, open state,
-and the lower tile's motion and depth settings. Deployed `controlled_ramp` cells
+include listed-state model defaults; configured detent limits remain in game. Programmable Blocks,
+Slabs, Stairs, Walls, Diagonal Walls and Trapdoors read their selected bundled material.
+Slabs retain their top/bottom half, stairs use saved tread and roll settings, and diagonal
+walls use saved width, inversion and fill. Programmable Doors reuse the authored frame
+and leaf boxes with saved facing, open state, motion, depth and selected finish.
+Canopies expose their complete frame/glazing material palette. Deployed `controlled_ramp` cells
 read their saved clipped boxes and programmable main finish; sources from other
 mods use a stone texture fallback. Selected programmable-screen content,
 particles, and moving interpolation still do not appear on the map. After upgrading the mod on a server, rerender affected Dynmap tiles to apply the updated definitions.
+
+Bundled rectangular artwork is supplied as map-readable PNG crops. Filesystem and Custom
+materials retain the default finish on the map. Dynamic joined surface layouts and
+neighbor-dependent decorative joins remain approximations; the map is a static overview.
 
 To refresh the definitions after adding block models, run the matching
 DynmapBlockScan 3.7 tool once against a built jar in an isolated Forge 1.12.2

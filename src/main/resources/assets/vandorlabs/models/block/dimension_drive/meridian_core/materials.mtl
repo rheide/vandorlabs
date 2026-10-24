@@ -1,0 +1,8 @@
+# Opaque surface atlas, white material modulation.
+newmtl atlas
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/dimension_drive/meridian_core_idle

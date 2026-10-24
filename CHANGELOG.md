@@ -2,6 +2,16 @@
 
 ## 2.5
 
+- Fix Dynmap's selected-material rendering for Programmable Blocks, Slabs, Stairs, Walls, Diagonal Walls and Trapdoors. Add the bundled catalog artwork that normally exists only as client-generated crops.
+- Render programmable door frames and leaves from the existing authored models, with saved facing, depth, motion and selected material. Preserve authored UVs through shared clipped-face rendering for doors, canopies and diagonal walls; retain inverted half-height fill limits. Correct canopy material counts so glazing and frame materials remain available.
+- Preserve Dynmap atlas subdivisions during runtime PNG deduplication, preventing a lever atlas error from aborting later texture definitions. Remove map records for unregistered model prototypes and material choices. Add packaged atlas checks, renderer matrices and an isolated real-Dynmap fixture.
+- Add Pinnacle Meridian Drive, Pinnacle Vector Fold Array, Vektor Longburn Drive, and Paladyne/Seyr Navigation Computer Core assemblies. Reuse the existing Core-and-Programmable-Matter frame validation, corner detection, reservations and dismantling, with rectangular depths and narrow columns supported by the same placement path.
+- Add Flat Navigation Tables and Angled Navigation Consoles with cached joined layouts and one deterministic front-center chip holder. Preserve the reader and its chip when resizing moves its owning module.
+- Reuse Data Chip Mount insertion, filtering, channels, saved inventory and four retention/return modes in the modeled holders. Drive idle/active appearance follows the reader output; navigation computers offer Off, Idle and Computing appearances. These models do not yet implement navigation, propulsion or dimension transfer.
+- Add illustrated, step-by-step build guides for every Core assembly and both navigation layouts.
+- Reverse Hover steering while travelling backwards so left/right controls follow the reverse direction. Keep stationary Hover turning available.
+- Preserve packed OBJ texture atlases at their authored resolution, including matching static and animated navigation computer artwork. Validate packaged atlas pixels and all navigation layout variants automatically.
+
 - Fix dedicated-server crashes when modular landing gear retracts in Hover mode with Thaumic Augmentation installed. Carried tile changes now queue vehicle snapshot persistence without creating synthetic chunks or invoking chunk capability handlers.
 - Apply the same dirty-state handling to all carried tiles, ignore replaced tile instances, and isolate comparator callbacks from foreign blocks in the read-only vehicle world.
 - Keep loaded-chunk lookups non-allocating during global collision events, including canopy discovery reached by moving gear in existing saved vehicles.

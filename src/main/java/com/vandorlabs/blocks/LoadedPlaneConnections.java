@@ -14,7 +14,16 @@ public final class LoadedPlaneConnections {
 
     public static Set<BlockPos> collect(BlockPos start, PanelPlane plane,
             Predicate<BlockPos> loaded, Predicate<BlockPos> eligible) {
+        return scan(start,plane,loaded,eligible,LIMIT).members;
+    }
+    public static final class Scan {
+        public final Set<BlockPos> members;public final boolean complete;
+        private Scan(Set<BlockPos> members,boolean complete){this.members=members;this.complete=complete;}
+    }
+    /** Same traversal, additionally certifying the loaded boundary for single-owner layouts. */
+    public static Scan scan(BlockPos start,PanelPlane plane,Predicate<BlockPos> loaded,Predicate<BlockPos> eligible,int limit){
         Set<BlockPos> members = new LinkedHashSet<>();
+        boolean complete=true;
         Deque<BlockPos> queue = new ArrayDeque<>();
         members.add(start);
         queue.add(start);
@@ -22,12 +31,14 @@ public final class LoadedPlaneConnections {
             BlockPos current = queue.removeFirst();
             for (int i=0; i<4; i++) {
                 BlockPos next = current.offset(plane.neighbor(i));
-                if (members.contains(next) || !loaded.test(next) || !eligible.test(next)) continue;
+                if(members.contains(next))continue;
+                if(!loaded.test(next)){complete=false;continue;}
+                if(!eligible.test(next))continue;
                 members.add(next);
-                if (members.size() >= LIMIT) return members;
+                if (members.size() >= limit) return new Scan(members,false);
                 queue.addLast(next);
             }
         }
-        return members;
+        return new Scan(members,complete);
     }
 }

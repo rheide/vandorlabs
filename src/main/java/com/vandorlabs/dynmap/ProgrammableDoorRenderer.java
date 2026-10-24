@@ -1,50 +1,59 @@
 package com.vandorlabs.dynmap;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.dynmap.renderer.CustomRenderer;
-import org.dynmap.renderer.DynmapBlockState;
-import org.dynmap.renderer.MapDataContext;
-import org.dynmap.renderer.RenderPatch;
+import com.vandorlabs.persistence.SpaceDoorData;
+import com.vandorlabs.render.DoorLeafTransform;
+import com.vandorlabs.tiles.*;
+import net.minecraft.util.math.Vec3d;
+import org.dynmap.renderer.*;
+import java.util.*;
 
-/** Reads the lower half's facing and the saved leaf settings for both door cells. */
-public final class ProgrammableDoorRenderer extends CustomRenderer {
-    private static final int[] PANEL={0,0,0,0,0,0};
-    @Override public String[] getTileEntityFieldsNeeded() {
-        return new String[]{"SpaceDoorSliding","SpaceDoorPlacementDepth"};
+/** Native authored frame and leaf geometry, transformed exactly as the game's SOUTH-authored doors. */
+public final class ProgrammableDoorRenderer extends HousingRenderer {
+    static final String[] DOOR_FIELDS={"SpaceDesign","SpaceDetail","SpaceFramed","SpaceDoorSliding","SpaceSlideDirection","SpaceDoorPlacementDepth","SpaceDoorHinges","DoorFaceTexture","LargeDoorColumn","LargeDoorRow"};
+    @Override public String[] getTileEntityFieldsNeeded(){return DOOR_FIELDS.clone();}
+    @Override protected int getMaximumTextureCount(){return ScreenHousingTextures.BUILTIN_COUNT*2+3;}
+    static Object field(MapDataContext c,String key,int x,int y,int z){return x==0&&y==0&&z==0?c.getBlockTileEntityField(key):c.getBlockTileEntityFieldAt(key,x,y,z);}
+    static boolean setting(Object value,boolean fallback){return value==null?fallback:booleanValue(value);}
+    static int material(MapDataContext c,int x,int y,int z){
+        int choice=integer(field(c,"DoorFaceTexture",x,y,z),-1);
+        if(choice<0)choice=ScreenHousingTextures.doorIndex(integer(field(c,"SpaceDesign",x,y,z),2),integer(field(c,"SpaceDetail",x,y,z),1));
+        return ScreenHousingTextures.BUILTIN_COUNT+texture(choice);
     }
-    @Override public RenderPatch[] getRenderPatchList(MapDataContext context) {
-        DynmapBlockState state=context.getBlockType();
-        boolean upper=state.isStateMatch("half","upper");
+    static Vec3d orient(Vec3d p,DynmapBlockState state){
+        if(state.isStateMatch("facing","east"))return new Vec3d(p.z,p.y,1-p.x);
+        if(state.isStateMatch("facing","west"))return new Vec3d(1-p.z,p.y,p.x);
+        if(state.isStateMatch("facing","north"))return new Vec3d(1-p.x,p.y,1-p.z);
+        return p;
+    }
+    @Override public RenderPatch[] getRenderPatchList(MapDataContext context){
+        DynmapBlockState state=context.getBlockType();boolean upper=state.isStateMatch("half","upper");int row=upper?1:0;
         DynmapBlockState lower=upper?context.getBlockTypeAt(0,-1,0):state;
-        if (lower==null || !lower.matchingBaseState(state)) return new RenderPatch[0];
-        DynmapBlockState hinge=upper?state:context.getBlockTypeAt(0,1,0);
-        boolean right=hinge!=null && hinge.isStateMatch("hinge","right");
-        boolean open=lower.isStateMatch("open","true");
-        int facing=lower.isStateMatch("facing","east")?1
-                :lower.isStateMatch("facing","south")?2
-                :lower.isStateMatch("facing","west")?3:0;
-        int y=upper?-1:0;
-        Object slidingValue=context.getBlockTileEntityFieldAt("SpaceDoorSliding",0,y,0);
-        boolean sliding=Boolean.TRUE.equals(slidingValue)
-                || slidingValue instanceof Number && ((Number)slidingValue).intValue()!=0;
-        Object depthValue=context.getBlockTileEntityFieldAt("SpaceDoorPlacementDepth",0,y,0);
-        int depth=depthValue instanceof Number?((Number)depthValue).intValue():1;
-        double near=depth==0?7.5:depth==2?14:1;
-        List<RenderPatch> patches=new ArrayList<>();
-        if (open && sliding) return new RenderPatch[0];
-        if (open) {
-            boolean high=right == (facing==0 || facing==1);
-            double edge=high?15:0;
-            if ((facing&1)==0) addBox(context.getPatchFactory(),patches,edge/16,(edge+1)/16,0,1,0,1,PANEL);
-            else addBox(context.getPatchFactory(),patches,0,1,0,1,edge/16,(edge+1)/16,PANEL);
-        } else if ((facing&1)==0) {
-            double z=facing==0?near:15-near;
-            addBox(context.getPatchFactory(),patches,0,1,0,1,z/16,(z+1)/16,PANEL);
-        } else {
-            double x=facing==1?15-near:near;
-            addBox(context.getPatchFactory(),patches,x/16,(x+1)/16,0,1,0,1,PANEL);
+        if(lower==null||!lower.matchingBaseState(state))return new RenderPatch[0];
+        DynmapBlockState top=upper?state:context.getBlockTypeAt(0,1,0);
+        boolean right=top==null||!top.isStateMatch("hinge","right"),open=lower.isStateMatch("open","true");
+        boolean sliding=setting(field(context,"SpaceDoorSliding",0,-row,0),false),frame=setting(field(context,"SpaceFramed",0,-row,0),true),hinges=setting(field(context,"SpaceDoorHinges",0,-row,0),true);
+        int direction=Math.max(0,Math.min(2,integer(field(context,"SpaceSlideDirection",0,-row,0),0))),depth=integer(field(context,"SpaceDoorPlacementDepth",0,-row,0),1);
+        // TileEntitySpaceDoor.model() uses the Standard design for native motion geometry.
+        String base=TileEntitySpaceDoor.modelId(2,sliding,frame)+(lower.isStateMatch("paired","true")?"_paired":"")+(right?"_right":"_left");
+        double offset=SpaceDoorData.positionOffset(sliding,frame,hinges,depth);
+        DoorLeafTransform pose=DoorLeafTransform.calculate(sliding,right?15:-15,right?15:1,11.24,right?-90:90,open?1:0);
+        final DynmapBlockState facing=lower;final int cell=row;
+        List<RenderPatch> result=new ArrayList<>();int texture=material(context,0,-row,0),materials=ScreenHousingTextures.BUILTIN_COUNT*2;
+        for(boolean leaf:new boolean[]{false,true}){
+            final boolean moving=leaf;
+            DoorMapMesh.emit(context,result,base+(leaf?"_leaf":"_fixed")+(!sliding&&!hinges?"_no_hinges":""),p->{
+                double x=p.x,y=p.y,z=p.z;
+                if(moving){
+                    if(sliding&&direction!=0)y+=open?SpaceDoorData.verticalTravel(frame,direction):0;
+                    else{
+                        double a=Math.toRadians(pose.angleDegrees),dx=x-pose.pivotX,dz=z-pose.pivotZ;
+                        x=pose.pivotX+Math.cos(a)*dx+Math.sin(a)*dz+pose.translateX;
+                        z=pose.pivotZ-Math.sin(a)*dx+Math.cos(a)*dz;
+                    }
+                }
+                return orient(new Vec3d(x,y,z+offset),facing).addVector(0,-cell,0);
+            },texture,materials);
         }
-        return patches.toArray(new RenderPatch[0]);
+        return result.toArray(new RenderPatch[0]);
     }
 }

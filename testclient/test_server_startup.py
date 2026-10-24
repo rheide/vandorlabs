@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--java', default='java', help='Java 8 executable')
     parser.add_argument('--mod', action='append', default=[], type=Path, help='Additional compatibility mod JAR (repeatable)')
     parser.add_argument('--vehicle-world-checks', action='store_true', help='Run carried-tile chunk isolation checks on the physical server')
+    parser.add_argument('--machine-frames', action='store_true', help='Run the complete Core-frame matrix with client classes absent')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     output = Path(tempfile.mkdtemp(prefix='server-startup-', dir=root / 'build'))
@@ -44,6 +45,8 @@ def main():
         path = output / (phase + '.log')
         with path.open('w') as log:
             checks = ['-Dvandorlabs.vehicleWorldCompatibilityChecks=true'] if args.vehicle_world_checks else []
+            if args.machine_frames:
+                checks.append('-Dvandorlabs.machineFrameChecks=true')
             proc = subprocess.Popen([args.java, '-Xmx2G', *checks, '-jar', str(args.forge.resolve()), 'nogui'],
                                     cwd=output, stdin=subprocess.PIPE, stdout=log, stderr=subprocess.STDOUT, text=True)
             def wait_for(marker, timeout=150):
@@ -65,6 +68,8 @@ def main():
                 wait_for('Done (')
                 if args.vehicle_world_checks:
                     wait_for('vehicle-world-compatibility PASS')
+                if args.machine_frames:
+                    wait_for('constructors PASS ')
                 if phase == 'prepare':
                     command('setworldspawn 4 12 4')
                     command('say VANDOR_SPAWN_PREPARED')

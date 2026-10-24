@@ -3,10 +3,26 @@ import argparse,hashlib,json,re
 from collections import defaultdict
 from pathlib import Path
 
+def map_grids(texts):
+    grids=defaultdict(set)
+    for text in texts:
+        for line in text.splitlines():
+            if not line.startswith('texture:'):continue
+            values=dict(part.split('=',1) for part in line.split(',') if '=' in part)
+            name=values.get('filename','')
+            prefix='assets/vandorlabs/'
+            relative=name[len(prefix):] if name.startswith(prefix) else name if name.startswith('textures/') else 'textures/'+name
+            grids[relative].add((int(values.get('xcount',1)),int(values.get('ycount',1))))
+    return grids
+
 def stage(directory):
+    grids=map_grids(path.read_text() for path in directory.glob('dynmap*.txt'))
     groups=defaultdict(list)
     for path in sorted((directory/'textures').rglob('*.png')):
-        groups[hashlib.sha256(path.read_bytes()).digest()].append(path)
+        # Dynmap keys atlas subdivision by physical filename. Equal PNG bytes
+        # with different tile grids must retain separate entries in the JAR.
+        usage=tuple(sorted(grids.get(path.relative_to(directory).as_posix(),{(1,1)})))
+        groups[(hashlib.sha256(path.read_bytes()).digest(),usage)].append(path)
     aliases={};saved=0
     for paths in groups.values():
         if len(paths)<2:continue
@@ -36,10 +52,24 @@ def check_jar(path):
             assert alias.startswith('textures/') and target.startswith('textures/') and '..' not in alias and '..' not in target
             assert prefix+alias not in jar.namelist() and prefix+target in jar.namelist(),(alias,target)
         hashes={}
+        map_texts=[jar.read(name).decode() for name in jar.namelist() if name.startswith(prefix) and '/dynmap' in name and name.endswith('.txt')]
+        grids=map_grids(map_texts)
+        assert all(len(usage)==1 for usage in grids.values()),'One physical Dynmap PNG has conflicting tile grids'
+        definitions={}
+        for text in map_texts:
+            for line in text.splitlines():
+                if not line.startswith('texture:'):continue
+                values=dict(part.split('=',1) for part in line.split(',') if '=' in part)
+                definitions[values['texture:id']]=int(values.get('xcount',1))*int(values.get('ycount',1))
+        for text in map_texts:
+            for index,name in re.findall(r'patch\d+=(\d+):([^,\n]+)',text):
+                assert int(index)<definitions[name],('Dynmap texture index outside packaged atlas',name,index,definitions[name])
         for name in jar.namelist():
             if name.startswith(prefix+'textures/') and name.endswith('.png'):
-                digest=hashlib.sha256(jar.read(name)).digest();assert digest not in hashes,(name,hashes.get(digest));hashes[digest]=name
-    print(f'PASS: {len(aliases)} legacy texture paths resolve to unique packaged PNGs')
+                usage=tuple(sorted(grids.get(name[len(prefix):],{(1,1)})))
+                digest=(hashlib.sha256(jar.read(name)).digest(),usage)
+                assert digest not in hashes,(name,hashes.get(digest));hashes[digest]=name
+    print(f'PASS: {len(aliases)} legacy texture paths resolve to shared PNGs; Dynmap atlas grids and indices remain valid')
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--stage',type=Path);parser.add_argument('--check-jar',type=Path);args=parser.parse_args()

@@ -543,6 +543,13 @@ tile.vandorlabs.battery_block.name=Battery Block
 tile.vandorlabs.assembly_press_core.name=Assembly Press Core
 tile.vandorlabs.synthesis_tower_core.name=Synthesis Tower Core
 tile.vandorlabs.enclosed_gantry_core.name=Enclosed Gantry Core
+tile.vandorlabs.meridian_drive_core.name=Meridian Drive Core
+tile.vandorlabs.vector_fold_array_core.name=Vector Fold Array Core
+tile.vandorlabs.longburn_drive_core.name=Longburn Drive Core
+tile.vandorlabs.paladyne_navigation_core.name=Paladyne Navigation Computer Core
+tile.vandorlabs.seyr_navigation_core.name=Seyr Navigation Computer Core
+tile.vandorlabs.navigation_table_flat.name=Flat Navigation Table
+tile.vandorlabs.navigation_table_angled.name=Angled Navigation Console
 
 tile.vandorlabs.ski_landing_gear.name=Ski Landing Gear
 tile.vandorlabs.landing_strut.name=Landing Strut

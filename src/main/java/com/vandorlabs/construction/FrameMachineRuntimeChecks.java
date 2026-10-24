@@ -1,4 +1,4 @@
-package com.vandorlabs.client;
+package com.vandorlabs.construction;
 
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.tiles.*;
@@ -10,15 +10,15 @@ import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 
 /** Independent world-space frames: every core corner, frame axis and placed facing. */
-final class ConstructorRuntimeChecks {
+public final class FrameMachineRuntimeChecks {
     private static String scenario;
-    static void run(World world,net.minecraft.entity.player.EntityPlayer player){
+    public static void run(World world,net.minecraft.entity.player.EntityPlayer player){
         Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
         BlockPos minimum=new BlockPos(150,225,150);int count=0;
-        for(String id:new String[]{"assembly_press","synthesis_tower","enclosed_gantry"})for(boolean turned:new boolean[]{false,true})for(int corner=0;corner<4;corner++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
-            BlockConstructorCore block=(BlockConstructorCore)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id+"_core"));
+        for(FrameMachineDesign spec:FrameMachineDesign.all())for(boolean turned:new boolean[]{false,true})for(int corner=0;corner<4;corner++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            String id=spec.design;BlockConstructorCore block=(BlockConstructorCore)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+spec.block));
             scenario=id+" facing="+facing+" corner="+corner+" turned="+turned;
-            int width=turned?3:block.width,depth=turned?block.width:3;
+            int width=turned?block.depth:block.width,depth=turned?block.width:block.depth;
             BlockPos root=minimum.add((corner&1)==0?0:width-1,0,(corner&2)==0?0:depth-1);
             java.util.Map<BlockPos,Boolean> original=new java.util.HashMap<>();
             try{
@@ -29,10 +29,10 @@ final class ConstructorRuntimeChecks {
                     boolean frame=y==0 || (x==0 || x==width-1) && (z==0 || z==depth-1) || y==block.height-1 && (x==0 || x==width-1 || z==0 || z==depth-1);
                     original.put(p,frame);world.setBlockState(p,frame?matter.getDefaultState():Blocks.AIR.getDefaultState());
                 }
-                BlockPos middle=minimum.add(1,1,1);world.setBlockState(middle,Blocks.DIRT.getDefaultState());
+                if(width>2&&depth>2){BlockPos middle=minimum.add(1,1,1);world.setBlockState(middle,Blocks.DIRT.getDefaultState());
                 require(!tile.assemble(),"occupied interior rejects assembly "+id+facing);
-                require(tile.assemblyProblem().contains("Interior must be air"),"actionable obstruction diagnostic");world.setBlockToAir(middle);
-                BlockPos missing=minimum.add(1,0,0);world.setBlockToAir(missing);
+                require(tile.assemblyProblem().contains("Interior must be air"),"actionable obstruction diagnostic");world.setBlockToAir(middle);}
+                BlockPos missing=original.entrySet().stream().filter(e->e.getValue()).map(e->e.getKey()).findFirst().get();world.setBlockToAir(missing);
                 require(!tile.assemble(),"missing base rejects assembly");world.setBlockState(missing,matter.getDefaultState());
                 require(tile.assemble() && tile.formed(),"frame assembles "+id+facing+" corner="+corner+" turned="+turned);
                 net.minecraft.block.state.IBlockState formed=world.getBlockState(root);
@@ -42,7 +42,7 @@ final class ConstructorRuntimeChecks {
                 AxisAlignedBB bounds=tile.getRenderBoundingBox();require(bounds.minX==minimum.getX() && bounds.minZ==minimum.getZ() && bounds.maxX==minimum.getX()+width && bounds.maxZ==minimum.getZ()+depth,"render origin and rotated bounds");
                 TileEntityConstructor reloaded=new TileEntityConstructor();reloaded.setWorld(world);reloaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                 require(reloaded.pivot().equals(tile.pivot()) && reloaded.cell(0,0,0).equals(tile.cell(0,0,0)),"saved corner offset");
-                TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.onDataPacket(null,tile.getUpdatePacket());
+                TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.readFromNBT(tile.getUpdateTag());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
                 tile.dismantle();require(!tile.formed()&&world.getBlockState(root).isOpaqueCube(),"manual dismantling restores the solid core model");checkRestored(world,original,matter);
                 require(!((Object)tile instanceof ITickable),"constructors have no automatic tick callback");require(!tile.formed(),"dismantled frame never automatically reforms");

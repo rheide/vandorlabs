@@ -6,7 +6,7 @@ import org.dynmap.renderer.*;
 import java.util.*;
 
 /** Current finish and open endpoint, including horizontal sliding. */
-public final class ProgrammableTrapdoorRenderer extends CustomRenderer {
+public final class ProgrammableTrapdoorRenderer extends HousingRenderer {
     @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"housingTexture","TrapdoorPosition","TrapdoorSliding","TrapdoorCover","TrapdoorSlideOverSurface"};}
     private static int number(Object value,int fallback){return value instanceof Number?((Number)value).intValue():fallback;}
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context) {
@@ -21,8 +21,7 @@ public final class ProgrammableTrapdoorRenderer extends CustomRenderer {
                 TrapdoorGeometry.surfaceCorners(position,turns,context.getBlockType().isStateMatch("open","true")?1:0,TrapdoorGeometry.OPEN_HINGE,15/16D));
         Object cover=context.getBlockTileEntityField("TrapdoorCover");
         if(Boolean.TRUE.equals(cover)||number(cover,0)!=0)b=com.vandorlabs.render.DiagonalTrapdoorGeometry.bounds(TrapdoorGeometry.coverCorners(position,turns,context.getBlockType().isStateMatch("open","true")?1:0));
-        int texture=ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(number(context.getBlockTileEntityField("housingTexture"),0)));
-        if(texture>=ScreenHousingTextures.LEGACY_COUNT)texture=0;
+        int texture=texture(context.getBlockTileEntityField("housingTexture"));
         List<RenderPatch> patches=new ArrayList<>();
         addBox(context.getPatchFactory(),patches,b[0],b[3],b[1],b[4],b[2],b[5],new int[]{texture,texture,texture,texture,texture,texture});
         return patches.toArray(new RenderPatch[0]);

@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "facing=north,formed=false": {
+      "model": "vandorlabs:longburn_drive_core"
+    },
+    "facing=north,formed=true": {
+      "model": "vandorlabs:constructor_empty"
+    },
+    "facing=east,formed=false": {
+      "model": "vandorlabs:longburn_drive_core"
+    },
+    "facing=east,formed=true": {
+      "model": "vandorlabs:constructor_empty"
+    },
+    "facing=south,formed=false": {
+      "model": "vandorlabs:longburn_drive_core"
+    },
+    "facing=south,formed=true": {
+      "model": "vandorlabs:constructor_empty"
+    },
+    "facing=west,formed=false": {
+      "model": "vandorlabs:longburn_drive_core"
+    },
+    "facing=west,formed=true": {
+      "model": "vandorlabs:constructor_empty"
+    }
+  }
+}

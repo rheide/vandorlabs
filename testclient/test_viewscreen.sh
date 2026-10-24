@@ -3,6 +3,7 @@
 set -euo pipefail
 unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
+unset VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
@@ -12,7 +13,13 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = render-regressions ]; then
+        if [ "$TARGET" = bridge-machines ]; then
+            PREFIX=bridge_machine_
+            export VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY=true
+        elif [ "$TARGET" = machine-build-docs ]; then
+            PREFIX=machine_build_
+            export VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY=true
+        elif [ "$TARGET" = render-regressions ]; then
             PREFIX=regression_
             export VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY=true
         elif [ "$TARGET" = actual-plate-hover ]; then
@@ -111,6 +118,19 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = bridge-machines ]; then
+        grep -q 'bridge-machines PASS' "$RUN_OUT/client.log"
+        grep -q 'integrated-chip-mounts PASS' "$RUN_OUT/client.log"
+        grep -q 'navigation-tables PASS' "$RUN_OUT/client.log"
+        grep -q 'reverse-hover-steering PASS' "$RUN_OUT/client.log"
+        echo "Live bridge machine regressions passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = machine-build-docs ]; then
+        grep -q 'machine-build-docs PASS' "$RUN_OUT/client.log"
+        echo "Machine build documentation captured: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = render-regressions ]; then
         grep -q 'render-regressions PASS' "$RUN_OUT/client.log"
         grep -q 'vehicle-interior-visibility PASS' "$RUN_OUT/client.log"

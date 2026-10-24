@@ -170,15 +170,13 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
 
     @Override public void onLoad() {
         super.onLoad();
-        if (!world.isRemote && !initialized) {
-            IBlockState state = world.getBlockState(pos);
-            if (state.getBlock() instanceof BlockVandorSwitch) localOn = state.getValue(BlockVandorSwitch.ON);
-            if (state.getBlock() instanceof BlockIndustrialLever) localOn = state.getValue(BlockIndustrialLever.POWERED);
-            latched=localOn?channels:ChannelList.EMPTY;
-            initialized = true;
-            markDirty();
-        }
         DeferredTileLoad.schedule(this, () -> {
+            if (!initialized) {
+                IBlockState state=world.getBlockState(pos);
+                if(state.getBlock() instanceof BlockVandorSwitch)localOn=state.getValue(BlockVandorSwitch.ON);
+                if(state.getBlock() instanceof BlockIndustrialLever)localOn=state.getValue(BlockIndustrialLever.POWERED);
+                latched=localOn?channels:ChannelList.EMPTY;initialized=true;markDirty();
+            }
             RedstoneChannels.register(this);
             IBlockState state=world.getBlockState(pos);
             if(state.getBlock() instanceof BlockVandorSwitch

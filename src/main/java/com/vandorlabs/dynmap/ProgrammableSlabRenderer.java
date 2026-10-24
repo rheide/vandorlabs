@@ -7,12 +7,12 @@ import org.dynmap.renderer.MapDataContext;
 import org.dynmap.renderer.RenderPatch;
 
 /** Dynmap's block scan cannot see the slab's client-side baked housing. */
-public final class ProgrammableSlabRenderer extends CustomRenderer {
+public final class ProgrammableSlabRenderer extends HousingRenderer {
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context) {
         boolean top=context.getBlockType().isStateMatch("half","top");
         List<RenderPatch> patches=new ArrayList<>();
         addBox(context.getPatchFactory(),patches,0,1,top?.5:0,top?1:.5,0,1,
-                new int[]{0,0,0,0,0,0});
+                faces(context,true));
         return patches.toArray(new RenderPatch[0]);
     }
 }

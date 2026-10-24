@@ -1,0 +1,792 @@
+{
+  "forge_marker": 1,
+  "defaults": {
+    "custom": {
+      "flip-v": true
+    },
+    "textures": {
+      "particle": "vandorlabs:blocks/navigation_table/navigation_tables"
+    }
+  },
+  "variants": {
+    "normal": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj"
+      }
+    ],
+    "inventory": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "transform": "forge:default-block"
+      }
+    ],
+    "chip=false,connections=0,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=0,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=1,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=1,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=2,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=2,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=3,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=3,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=4,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=4,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=5,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=5,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=6,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=6,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=7,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=7,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=8,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=8,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=9,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=9,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=10,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=10,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=11,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=11,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=12,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=12,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=13,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=13,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=14,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=14,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=15,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 0
+      }
+    ],
+    "chip=true,connections=15,facing=north": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 0
+      }
+    ],
+    "chip=false,connections=0,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=0,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=1,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=1,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=2,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=2,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=3,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=3,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=4,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=4,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=5,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=5,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=6,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=6,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=7,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=7,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=8,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=8,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=9,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=9,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=10,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=10,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=11,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=11,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=12,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=12,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=13,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=13,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=14,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=14,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=15,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 90
+      }
+    ],
+    "chip=true,connections=15,facing=east": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 90
+      }
+    ],
+    "chip=false,connections=0,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=0,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=1,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=1,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=2,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=2,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=3,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=3,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=4,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=4,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=5,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=5,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=6,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=6,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=7,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=7,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=8,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=8,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=9,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=9,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=10,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=10,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=11,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=11,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=12,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=12,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=13,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=13,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=14,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=14,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=15,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 180
+      }
+    ],
+    "chip=true,connections=15,facing=south": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 180
+      }
+    ],
+    "chip=false,connections=0,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=0,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=1,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=1,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=2,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=2,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=3,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=3,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=4,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=4,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=5,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=5,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_00_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=6,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=6,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=7,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=7,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_02_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=8,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=8,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=9,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=9,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=10,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=10,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=11,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=11,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=12,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=12,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=13,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=13,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_08_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=14,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=14,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 270
+      }
+    ],
+    "chip=false,connections=15,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10.obj",
+        "y": 270
+      }
+    ],
+    "chip=true,connections=15,facing=west": [
+      {
+        "model": "vandorlabs:navigation_table/angled/mask_10_chip.obj",
+        "y": 270
+      }
+    ]
+  }
+}

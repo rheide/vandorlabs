@@ -1,0 +1,103 @@
+[
+  {
+    "design": "assembly_press",
+    "block": "assembly_press_core",
+    "width": 4,
+    "height": 3,
+    "depth": 3,
+    "model": "universal_constructor/assembly_press"
+  },
+  {
+    "design": "synthesis_tower",
+    "block": "synthesis_tower_core",
+    "width": 3,
+    "height": 5,
+    "depth": 3,
+    "model": "universal_constructor/synthesis_tower"
+  },
+  {
+    "design": "enclosed_gantry",
+    "block": "enclosed_gantry_core",
+    "width": 5,
+    "height": 3,
+    "depth": 3,
+    "model": "universal_constructor/enclosed_gantry"
+  },
+  {
+    "design": "longburn_drive",
+    "block": "longburn_drive_core",
+    "width": 3,
+    "height": 3,
+    "depth": 4,
+    "model": "longburn_drive/longburn_drive",
+    "chip_anchor": [
+      0.5625,
+      1.375,
+      0.686875
+    ],
+    "chip_size": [
+      8,
+      10
+    ]
+  },
+  {
+    "design": "meridian_core",
+    "block": "meridian_drive_core",
+    "width": 3,
+    "height": 3,
+    "depth": 3,
+    "model": "dimension_drive/meridian_core",
+    "chip_anchor": [
+      0.375,
+      0.625,
+      0.186875
+    ],
+    "chip_size": [
+      8,
+      10
+    ]
+  },
+  {
+    "design": "paladyne_navigation_computer",
+    "block": "paladyne_navigation_core",
+    "width": 1,
+    "height": 3,
+    "depth": 1,
+    "model": "navigation_computer_core/paladyne",
+    "state_models": [
+      "off/complete.obj",
+      "idle/complete.obj",
+      "computing/complete.obj"
+    ]
+  },
+  {
+    "design": "seyr_navigation_computer",
+    "block": "seyr_navigation_core",
+    "width": 1,
+    "height": 3,
+    "depth": 1,
+    "model": "navigation_computer_core/seyr",
+    "state_models": [
+      "off/complete.obj",
+      "idle/complete.obj",
+      "computing/complete.obj"
+    ]
+  },
+  {
+    "design": "vector_fold_array",
+    "block": "vector_fold_array_core",
+    "width": 3,
+    "height": 2,
+    "depth": 3,
+    "model": "dimension_drive/vector_fold_array",
+    "chip_anchor": [
+      0.4375,
+      0.8125,
+      0.186875
+    ],
+    "chip_size": [
+      8,
+      10
+    ]
+  }
+]

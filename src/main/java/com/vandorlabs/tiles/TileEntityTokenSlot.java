@@ -22,6 +22,8 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     private int logoDesign;
     private long rejectedUntil;
     private TileEntitySpaceDoor door;
+    private int publishedLevel=-1;
+    protected void outputChanged(){world.notifyNeighborsOfStateChange(pos,world.getBlockState(pos).getBlock(),false);}
     TileEntityTokenSlot forDoor(TileEntitySpaceDoor owner){door=owner;return this;}
     protected boolean installed(){return world!=null&&world.getTileEntity(pos)==(door==null?this:door);}
     protected int returnPulseTicks(){return door==null?20:100;}
@@ -61,6 +63,8 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
         if(world instanceof com.vandorlabs.vehicle.VehicleWorld)return;
         net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
         if(state.getBlock() instanceof BlockTokenSlot)((BlockTokenSlot)state.getBlock()).applyLinkedState(world,pos,state,powered);
+        else if(publishedLevel!=getOutputLevel())outputChanged();
+        publishedLevel=getOutputLevel();
     }
     public boolean expire(long now){
         boolean dirty=false;
@@ -109,8 +113,19 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
         this.any=any;this.allowed=allowed;this.behavior=behavior;changed(false);
     }
     @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,()->{pulseUntil=Math.min(pulseUntil,world.getTotalWorldTime()+20);scheduledTick();});}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("TokenLogo",logoDesign);tag.setLong("TokenRejectedUntil",rejectedUntil);tag.setBoolean("ChipSlot",chip());tag.setBoolean("AnyToken",any);tag.setInteger("AllowedTokens",allowed);tag.setInteger("TokenBehavior",behavior);tag.setLong("TokenPulseUntil",pulseUntil);tag.setBoolean("TokenToggled",toggled);tag.setBoolean("TokenToggleApplied",toggleApplied);tag.setLong("TokenInsertStarted",insertStarted);if(returnTo!=null)tag.setUniqueId("TokenReturnTo",returnTo);else{tag.removeTag("TokenReturnToMost");tag.removeTag("TokenReturnToLeast");}if(!token.isEmpty())tag.setTag("InsertedToken",token.writeToNBT(new NBTTagCompound()));else tag.removeTag("InsertedToken");return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);logoDesign=Math.max(0,Math.min(6,tag.getInteger("TokenLogo")));rejectedUntil=tag.getLong("TokenRejectedUntil");chip=tag.getBoolean("ChipSlot");any=!tag.hasKey("AnyToken")||tag.getBoolean("AnyToken");allowed=singleCompany(any?127:tag.hasKey("AllowedTokens")?tag.getInteger("AllowedTokens"):127);any=allowed==127;behavior=tag.getInteger("TokenBehavior");if(behavior<0||behavior>3)behavior=0;pulseUntil=tag.getLong("TokenPulseUntil");toggled=tag.getBoolean("TokenToggled");toggleApplied=tag.getBoolean("TokenToggleApplied");insertStarted=tag.getLong("TokenInsertStarted");returnTo=tag.hasUniqueId("TokenReturnTo")?tag.getUniqueId("TokenReturnTo"):null;token=tag.hasKey("InsertedToken",10)?new ItemStack(tag.getCompoundTag("InsertedToken")):ItemStack.EMPTY;if(!token.isEmpty())token.setCount(1);else returnTo=null;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);return writeReaderData(tag);}
+    private NBTTagCompound writeReaderData(NBTTagCompound tag){tag.setInteger("TokenLogo",logoDesign);tag.setLong("TokenRejectedUntil",rejectedUntil);tag.setBoolean("ChipSlot",chip());tag.setBoolean("AnyToken",any);tag.setInteger("AllowedTokens",allowed);tag.setInteger("TokenBehavior",behavior);tag.setLong("TokenPulseUntil",pulseUntil);tag.setBoolean("TokenToggled",toggled);tag.setBoolean("TokenToggleApplied",toggleApplied);tag.setLong("TokenInsertStarted",insertStarted);if(returnTo!=null)tag.setUniqueId("TokenReturnTo",returnTo);else{tag.removeTag("TokenReturnToMost");tag.removeTag("TokenReturnToLeast");}if(!token.isEmpty())tag.setTag("InsertedToken",token.writeToNBT(new NBTTagCompound()));else tag.removeTag("InsertedToken");return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);readReaderData(tag);}
+    private void readReaderData(NBTTagCompound tag){logoDesign=Math.max(0,Math.min(6,tag.getInteger("TokenLogo")));rejectedUntil=tag.getLong("TokenRejectedUntil");chip=tag.getBoolean("ChipSlot");any=!tag.hasKey("AnyToken")||tag.getBoolean("AnyToken");allowed=singleCompany(any?127:tag.hasKey("AllowedTokens")?tag.getInteger("AllowedTokens"):127);any=allowed==127;behavior=tag.getInteger("TokenBehavior");if(behavior<0||behavior>3)behavior=0;pulseUntil=tag.getLong("TokenPulseUntil");toggled=tag.getBoolean("TokenToggled");toggleApplied=tag.getBoolean("TokenToggleApplied");insertStarted=tag.getLong("TokenInsertStarted");returnTo=tag.hasUniqueId("TokenReturnTo")?tag.getUniqueId("TokenReturnTo"):null;token=tag.hasKey("InsertedToken",10)?new ItemStack(tag.getCompoundTag("InsertedToken")):ItemStack.EMPTY;if(!token.isEmpty())token.setCount(1);else returnTo=null;}
+    /** Move one physical mount when a joined assembly chooses a new owning module. */
+    public boolean moveReaderTo(TileEntityTokenSlot target){
+        if(target==this)return true;
+        if(world==null||world.isRemote||target.world!=world||!target.isEmpty())return false;
+        target.readReaderData(writeReaderData(new NBTTagCompound()));
+        target.setRedstoneChannels(getRedstoneChannels());
+        readReaderData(new NBTTagCompound());setRedstoneChannels(com.vandorlabs.redstone.ChannelList.EMPTY);
+        refresh();target.refresh();markDirty();target.markDirty();target.scheduledTick();return true;
+    }
     @Override public int getSizeInventory(){return 1;}
     @Override public boolean isEmpty(){return token.isEmpty();}
     @Override public ItemStack getStackInSlot(int slot){return slot==0?token:ItemStack.EMPTY;}

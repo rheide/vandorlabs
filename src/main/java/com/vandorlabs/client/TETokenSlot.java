@@ -16,7 +16,13 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
  private static final EnumFacing[] FACES=EnumFacing.values();
  // Immutable face bases and direct matrices are shared by all readers on the render thread.
  private static final FaceBasis[][] BASES=new FaceBasis[6][4];
+ private static final java.nio.FloatBuffer[] EMBEDDED_BASES=new java.nio.FloatBuffer[4];
  static {for(EnumFacing face:FACES)for(int rotation=0;rotation<4;rotation++)BASES[face.ordinal()][rotation]=new FaceBasis(face,rotation);}
+ static {for(EnumFacing facing:EnumFacing.HORIZONTALS){
+  Vec3d u=new Vec3d(facing.rotateY().getDirectionVec()),n=new Vec3d(facing.getOpposite().getDirectionVec());
+  java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);
+  matrix.put(new float[]{(float)u.x,0,(float)u.z,0,0,1,0,0,(float)n.x,0,(float)n.z,0,0,0,0,1}).flip();EMBEDDED_BASES[facing.getHorizontalIndex()]=matrix;
+ }}
  private static final class FaceBasis {
   final Vec3d origin,u,v,n;
   final java.nio.FloatBuffer itemMatrix=org.lwjgl.BufferUtils.createFloatBuffer(16);
@@ -62,6 +68,16 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
     double offset=.60*(1-slide);GlStateManager.multMatrix(basis.itemMatrix);GlStateManager.translate(0,offset,0);double scale=tile.chip()?.38:.5;GlStateManager.scale(scale,scale,1);GlStateManager.color(1,1,1,1);Minecraft.getMinecraft().getRenderItem().renderItem(tile.getStackInSlot(0),ItemCameraTransforms.TransformType.FIXED);
    }
   }finally{GlStateManager.enableTexture2D();GlStateManager.popMatrix();}
+ }
+ /** Render shared mount contents on an authored holder without drawing a duplicate frame. */
+ public static void embedded(TileEntityTokenSlot tile,MachineMountSurface surface,double x,double y,double z,float partial){
+  EnumFacing facing=EnumFacing.getFacingFromVector((float)surface.normal.x,(float)surface.normal.y,(float)surface.normal.z);
+  java.nio.FloatBuffer matrix=EMBEDDED_BASES[facing.getHorizontalIndex()];
+  GlStateManager.pushMatrix();try{
+   GlStateManager.translate(x+surface.center.x,y+surface.center.y,z+surface.center.z);GlStateManager.multMatrix(matrix);
+   double scale=Math.min(surface.width,surface.height)/(6D/16)*.92;GlStateManager.scale(scale,scale,scale);
+   GlStateManager.translate(-.5,-.5,-.975);contents(tile,EnumFacing.NORTH,0,partial);
+  }finally{GlStateManager.popMatrix();}
  }
  private static void logoVertex(BufferBuilder b,FaceBasis basis,double x,double y,float u,float v){basis.vertex(b,x,y,.025);b.tex(u,v).color(255,255,255,255).endVertex();}
  private static void panel(BufferBuilder b,FaceBasis basis,double left,double right,double bottom,double top,double depth,int color){

@@ -141,7 +141,7 @@ A magenta backing wall makes missing faces visible; the pixel check rejects any
 backing pixels between the jamb edges across every interior scanline (excluding
 two silhouette pixels for antialiasing), and checks the backing is present
 outside it. The catalog gallery checks rendering; the focused dialog suite also exercises GUI controls and server synchronization.
-Dynmap has static simplified door/glass fallbacks, not animated joined geometry.
+Dynmap reads the saved material and uses the authored Standard motion frame/leaf geometry for ordinary Programmable Doors, including facing, depth and open endpoints. Large Programmable Doors retain a clipped geometry overview with the selected finish. Moving interpolation and joined texture layouts remain in-game features. Rerender existing map tiles after upgrading.
 
 The supplied medium/high `double_frame_metal.png` has damaged opaque outer
 pixels, consistent with previously transparent RGB data exposed by an alpha

@@ -73,7 +73,7 @@ assemble.dependsOn testConsoleRectangles
 task compileNonRenderingChecks(type: JavaCompile) {
     dependsOn classes
     source = fileTree('testclient/java') { include '**/*.java' }
-    classpath = sourceSets.main.runtimeClasspath
+    classpath = sourceSets.main.runtimeClasspath + configurations.compileOnly
     destinationDir = file("$buildDir/non-rendering-checks/classes")
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
@@ -275,6 +275,7 @@ task compilePortableTests(type: JavaCompile) {
                 exclude '**/SignalUpdateBatchTest.java'
             })
     source files('src/main/java/com/vandorlabs/client/PortholeHex.java',
+            'src/main/java/com/vandorlabs/navigation/NavigationLayout.java',
             'src/main/java/com/vandorlabs/client/PortholeRectangles.java',
             'src/main/java/com/vandorlabs/client/PortholeGeometryCache.java')
     classpath = files()
@@ -361,6 +362,18 @@ task testDynmapSupport(type: Exec) {
     outputs.upToDateWhen { false }
 }
 check.dependsOn testDynmapSupport
+
+task testDynmapRenderers(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + configurations.compileOnly + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.dynmap.DynmapRendererChecks'
+}
+check.dependsOn testDynmapRenderers
+
+task testDynmapAtlasDedup(type: Exec) {
+    commandLine pythonExecutable, 'tools/test_dynmap_atlas_dedup.py'
+}
+check.dependsOn testDynmapAtlasDedup
 
 task testCanopyCatalog(type: Exec) {
     workingDir projectDir
@@ -789,6 +802,26 @@ task testModularGear(type: JavaExec) {
     main = 'com.vandorlabs.gear.core.GearCoreTests'
 }
 check.dependsOn testModularGear
+
+task testNavigationLayouts(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.navigation.NavigationLayoutTest'
+}
+check.dependsOn testNavigationLayouts
+
+task testNavigationBoundaries(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NavigationBoundaryChecks'
+}
+check.dependsOn testNavigationBoundaries
+
+task testBridgeModelAssets(type: Exec) {
+    dependsOn jar
+    doFirst { commandLine pythonExecutable, 'tools/test_bridge_models.py', jar.archivePath.absolutePath }
+}
+check.dependsOn testBridgeModelAssets
 
 // A release must validate the packaged JAR in a real client, including visible
 // diagonal frame rails; geometry-only tests cannot detect occluded artwork.
