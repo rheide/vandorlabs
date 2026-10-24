@@ -19,7 +19,7 @@ public final class GuiNavigationTable extends GuiMaterialPicker {
     @Override public void initGui(){
         String text=channels==null?tile.getRedstoneChannels().toString():channels.getText();panel=new ProgrammableDialogLayout(width,height);
         xSize=panel.width;ySize=panel.height;super.initGui();buttonList.clear();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
-        textures=HousingTextureList.forNavigation(panel.listX,panel.top+30,panel.listWidth,texture,(panel.height-42)/12).keepView(textures);
+        textures=HousingTextureList.forNavigation(panel.listX,panel.top+30,panel.listWidth,texture,(panel.height-42)/12).keepView(textures).custom(value->{texture=value;save();});
         for(int id=1;id<=5;id++){GuiButton button=panel.control(id,controlY(id),"");if(panel.height<280)button.height=18;buttonList.add(button);}
         channels=new GuiTextField(6,fontRenderer,panel.controlsX,panel.top+channelY(),ProgrammableDialogLayout.CONTROLS_WIDTH,18);ChannelFields.configure(channels);channels.setText(text);buttonList.add(panel.done(7));labels();
     }

@@ -53,7 +53,7 @@ final class NavigationClientChecks {
             if(!(mc.currentScreen instanceof GuiNavigationTable))return false;GuiNavigationTable gui=(GuiNavigationTable)mc.currentScreen;
             HousingTextureList picker=(HousingTextureList)field(gui,"textures");Map<?,?> options=(Map<?,?>)field(picker,"options");
             for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i)&&(HousingTextureList.generalTexture(i)||ScreenTextureList.artwork(i,false)))require(options.containsKey(ScreenHousingTextures.choiceAt(i)),"complete block/screen artwork catalog");
-            require(options.containsKey(HousingTextureList.NAVIGATION_BLACK),"black option");
+            require(options.containsKey(HousingTextureList.NAVIGATION_BLACK),"black option");require(field(picker,"customConsumer")!=null,"shared custom block material picker");
             ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");int before=(Integer)field(gui,"speed");require(panel.top+gui.filterY()+18<=panel.doneY-4,"company picker fits above Done at current GUI scale");
             gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(4)+6,1);require((Integer)field(gui,"speed")==Math.floorMod(before-1,3),"right-click previous speed");
             gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(4)+6,0);expectedSpeed=before;require((Integer)field(gui,"speed")==before,"left-click next speed");

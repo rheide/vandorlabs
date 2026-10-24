@@ -4,7 +4,7 @@
 
 ![Opposing flat-table rows and an angled console, with a standalone mount for comparison](multiblocks/navigation-opposing-rows.png)
 
-Use the Configurizer or sneak-right-click any module to edit the shared display. Choose a Programmable Block material or any Programmable Screen artwork. **Black** is the default. Animated artwork offers Static/Animated playback and Slow/Normal/Fast speed. The image spans the joined display; it does not repeat separately on each module.
+Use the Configurizer or sneak-right-click any module to edit the shared display. Choose a Programmable Block material or any Programmable Screen artwork. The shared **Custom...** picker also accepts sampled block materials. **Black** is the default. Animated artwork offers Static/Animated playback and Slow/Normal/Fast speed. The image spans the joined display; it does not repeat separately on each module.
 
 ![Navigation display dialog](multiblocks/navigation-display-dialog.png)
 
