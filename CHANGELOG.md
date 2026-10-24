@@ -1,6 +1,6 @@
 # Changelog
 
-## Multi-version development
+## 2.6 (in development)
 
 - Keep Forge 1.12.2 as the default target and add an independent, experimental
   NeoForge 1.21.1 build. The modern adapter is under conversion; see the
