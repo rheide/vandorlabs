@@ -13,6 +13,8 @@ public abstract class TileEntitySecuredDisplay extends TileEntityTokenSlot {
     protected TileEntitySecuredDisplay(){super(true);}
     @Override public boolean chip(){return true;}
     public abstract boolean formed();
+    protected abstract boolean displayBlock(net.minecraft.block.Block block);
+    public final boolean renderReady(){return world!=null&&!isInvalid()&&world.isBlockLoaded(pos)&&displayBlock(world.getBlockState(pos).getBlock())&&world.getTileEntity(pos)==this&&formed();}
     protected TileEntitySecuredDisplay displayOwner(){return this;}
     protected List<? extends TileEntitySecuredDisplay> members(){return Collections.singletonList(this);}
     public boolean supportsSecurity(){return true;}

@@ -26,6 +26,12 @@ final class ConstructorLifetimeChecks {
             TileEntityConstructor detached=new TileEntityConstructor();detached.setPos(pos);check(detached,pos);
             cases++;
         }
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityNavigationTable.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_navigation"));
+        for(com.vandorlabs.navigation.NavigationLayout.Kind kind:com.vandorlabs.navigation.NavigationLayout.Kind.values())for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(true);BlockNavigationTable block=new BlockNavigationTable("lifetime_"+kind.id,kind);world.setBlockState(pos,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing),2);
+            com.vandorlabs.tiles.TileEntityNavigationTable table=(com.vandorlabs.tiles.TileEntityNavigationTable)world.getTileEntity(pos);table.layout(0,pos,true);NBTTagCompound tag=table.writeToNBT(new NBTTagCompound());tag.setBoolean("NavigationSecurity",true);tag.setBoolean("NavigationScreenOn",true);table.readFromNBT(tag);if(table.mount()==null)throw new AssertionError("Live navigation mount");
+            world.states.put(pos,Blocks.AIR.getDefaultState());if(table.renderReady()||table.mount()!=null)throw new AssertionError("Stale navigation render/mount");table.invalidate();if(table.renderReady()||table.mount()!=null)throw new AssertionError("Invalidated navigation render/mount");
+        }
         System.out.println("Constructor lifetime PASS cases="+cases+" all designs facings primed/unprimed stale air/stone invalidated detached tiles safe bounds render path NBT");
     }
     private static void check(TileEntityConstructor tile,BlockPos pos){

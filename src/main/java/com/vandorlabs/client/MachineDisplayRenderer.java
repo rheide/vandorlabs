@@ -24,7 +24,7 @@ public final class MachineDisplayRenderer {
         boolean matches(TileEntityConstructor tile){return tile.core()!=null&&spec==tile.core().specification()&&facing==tile.facing()&&pivot.equals(tile.pivot());}
     }
     public static void render(TileEntityConstructor tile,double x,double y,double z){
-        if(!tile.formed()||tile.surfaceCount()==0)return;
+        if(!tile.renderReady()||tile.surfaceCount()==0)return;
         Planes planes=CACHE.get(tile);if(planes==null||!planes.matches(tile)){planes=new Planes(tile);CACHE.put(tile,planes);}
         GlStateManager.pushMatrix();try(TurntableRenderState saved=new TurntableRenderState()){
             GlStateManager.translate(x,y,z);GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.color(1,1,1,1);

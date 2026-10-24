@@ -9,7 +9,7 @@ import net.minecraft.util.math.BlockPos;
 
 public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityConstructor> {
     private final UniversalConstructorFastTESR<TileEntityConstructor> body=new UniversalConstructorFastTESR<TileEntityConstructor>(){
-        @Override protected boolean isController(TileEntityConstructor tile){return tile.formed();}
+        @Override protected boolean isController(TileEntityConstructor tile){return tile.renderReady();}
         @Override protected String machineId(TileEntityConstructor tile){return tile.core().design;}
         @Override protected EnumFacing facing(TileEntityConstructor tile){return tile.facing();}
         @Override protected BlockPos originOffset(TileEntityConstructor tile){return BlockPos.ORIGIN.subtract(tile.pivot());}
@@ -21,7 +21,7 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
     };
     @Override public void renderTileEntityFast(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha,BufferBuilder buffer){body.renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);}
     @Override public void render(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha){
-        if(!tile.formed())return;
+        if(!tile.renderReady())return;
         body.setRendererDispatcher(net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance);
         body.render(tile,x,y,z,partial,stage,alpha);
         com.vandorlabs.client.MachineDisplayRenderer.render(tile,x,y,z);

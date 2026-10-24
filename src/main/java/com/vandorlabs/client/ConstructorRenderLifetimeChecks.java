@@ -30,6 +30,11 @@ final class ConstructorRenderLifetimeChecks {
             }
             mc.world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);tile.getRenderBoundingBox();renderer.render(tile,0,0,0,0,-1,1);cases++;
         }}finally{mc.world.setBlockToAir(pos);}
-        System.out.println("[vandorlabs] constructor-render-lifetime PASS cases="+cases+" rapid teardown retained tiles main/shadow bounds no stale fast/regular geometry");
+        for(String kind:new String[]{"flat","angled"})for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            BlockNavigationTable block=(BlockNavigationTable)net.minecraft.block.Block.getBlockFromName("vandorlabs:navigation_table_"+kind);mc.world.setBlockState(pos,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing),2);
+            com.vandorlabs.tiles.TileEntityNavigationTable tile=(com.vandorlabs.tiles.TileEntityNavigationTable)mc.world.getTileEntity(pos);tile.layout(0,pos,true);net.minecraft.nbt.NBTTagCompound tag=tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());tag.setBoolean("NavigationSecurity",true);tag.setBoolean("NavigationScreenOn",true);tile.readFromNBT(tag);tile.getBlockType();
+            TENavigationTable renderer=(TENavigationTable)net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance.<com.vandorlabs.tiles.TileEntityNavigationTable>getRenderer(tile);mc.world.setBlockToAir(pos);if(tile.mount()!=null||tile.renderReady())throw new IllegalStateException("Removed navigation mount");renderer.render(tile,0,0,0,0,-1,1);
+        }
+        System.out.println("[vandorlabs] constructor-render-lifetime PASS cases="+cases+" rapid teardown retained tiles main/shadow bounds no stale fast/regular geometry plus eight navigation removal poses");
     }
 }

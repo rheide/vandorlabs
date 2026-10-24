@@ -15,6 +15,7 @@ public final class TileEntityNavigationTable extends TileEntitySecuredDisplay {
         LayoutState(int connections,BlockPos offset,boolean formed,BlockPos origin,int width,int depth,EnumFacing facing){this.connections=connections;this.offset=offset;this.formed=formed;this.origin=origin;this.width=width;this.depth=depth;this.facing=facing;}
     }
     private volatile LayoutState layout=new LayoutState(0,BlockPos.ORIGIN,false,BlockPos.ORIGIN,1,1,EnumFacing.NORTH);
+    @Override protected boolean displayBlock(net.minecraft.block.Block block){return block instanceof BlockNavigationTable;}
     @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return hasMount()&&super.isItemValidForSlot(slot,stack);}
     @Override protected TileEntitySecuredDisplay displayOwner(){return reader();}
     public net.minecraft.block.state.IBlockState renderState(net.minecraft.block.state.IBlockState state){LayoutState current=layout;return state.withProperty(BlockNavigationTable.CONNECTIONS,current.connections).withProperty(BlockNavigationTable.CHIP,current.formed&&current.offset.equals(BlockPos.ORIGIN)&&screenSettings().security);}
@@ -55,7 +56,7 @@ public final class TileEntityNavigationTable extends TileEntitySecuredDisplay {
         return false;
     }
     public MachineMountSurface mount(){
-        if(!hasMount())return null;EnumFacing facing=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
+        if(!renderReady()||!hasMount())return null;EnumFacing facing=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
         if((connections()&NavigationLayout.NORTH)!=0)facing=displayFacing();
         BlockNavigationTable block=(BlockNavigationTable)getBlockType();double height=block.kind==NavigationLayout.Kind.FLAT?14D/16:8D/16;
         Vec3d point=MachineMountSurface.rotate(new Vec3d(.5,height-TokenSlotGeometry.CHIP_SIZE/2-.5/16,-.02625),facing,1,1).add(new Vec3d(pos));

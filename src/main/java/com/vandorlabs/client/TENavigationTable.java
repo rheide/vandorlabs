@@ -20,7 +20,7 @@ public final class TENavigationTable extends TileEntitySpecialRenderer<TileEntit
         boolean matches(TileEntityNavigationTable tile,EnumFacing facing){return this.facing==facing&&display==tile.displayFacing()&&mask==tile.connections()&&width==tile.assemblyWidth()&&depth==tile.assemblyDepth()&&origin.equals(tile.origin());}
     }
     @Override public void render(TileEntityNavigationTable tile,double x,double y,double z,float partial,int stage,float alpha){
-        if(!(tile.getBlockType() instanceof BlockNavigationTable))return;
+        if(!tile.renderReady())return;
         TileEntityNavigationTable root=tile;
         if(root!=null&&root.screenOn()&&root.screenSettings().texture>=0&&tile.formed()){
             NavigationScreenSettings config=root.screenSettings();BlockNavigationTable block=(BlockNavigationTable)tile.getBlockType();

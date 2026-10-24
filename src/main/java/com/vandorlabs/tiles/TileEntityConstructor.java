@@ -14,6 +14,7 @@ import net.minecraft.util.math.*;
 public final class TileEntityConstructor extends TileEntitySecuredDisplay {
     public TileEntityConstructor(){super();}
     @Override public boolean chip(){return true;}
+    @Override protected boolean displayBlock(Block block){return block instanceof BlockConstructorCore;}
     @Override public boolean accepts(net.minecraft.item.ItemStack stack){BlockConstructorCore core=core();return core!=null&&core.specification().hasChip()&&super.accepts(stack);}
     @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return formed()&&super.isItemValidForSlot(slot,stack);}
     private int[] surfaceTextures=new int[0];
@@ -120,7 +121,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay {
     }
     @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,this::refreshInputs);}
     public com.vandorlabs.blocks.MachineMountSurface mount(){
-        if(!formed()||!screenSettings().security||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
+        if(!renderReady()||!screenSettings().security||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
         Vec3d local=new Vec3d(spec.chip_anchor[0],spec.chip_anchor[1],spec.chip_anchor[2]);
         Vec3d center=MachineMountSurface.rotate(local,facing(),core().width,core().depth).add(new Vec3d(pos.subtract(pivot())));
         return new MachineMountSurface(center,facing(),TokenSlotGeometry.CHIP_SIZE,TokenSlotGeometry.CHIP_SIZE);
