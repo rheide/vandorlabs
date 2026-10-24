@@ -18,4 +18,4 @@ Navigation displays join as ordinary placed modules:
 - [Flat Navigation Table](navigation-table-flat/README.md)
 - [Angled Navigation Console](navigation-table-angled/README.md)
 
-[Universal Constructor rules](../universal-constructors.md) · [Data Chip Mounts](../data-mounts.md)
+[Navigation display settings](../navigation-displays.md) · [Universal Constructor rules](../universal-constructors.md) · [Data Chip Mounts](../data-mounts.md)

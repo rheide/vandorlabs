@@ -53,11 +53,11 @@ final class FrameMachineDocumentation {
                 if(step<3){
                     int count=step==0?1:3;
                     for(int x=0;x<count;x++)world.setBlockState(ROOT.east(x),block.getDefaultState(),2);
-                    if(step==2&&depth==2)for(int x=0;x<3;x++)world.setBlockState(ROOT.east(x).south(),block.getDefaultState(),2);
+                    if(step==2&&depth==2)for(int x=0;x<3;x++)world.setBlockState(ROOT.east(x).south(),block.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.SOUTH),2);
                     if(step==1&&depth==1)world.setBlockToAir(ROOT.east(2));
                     NavigationAssemblies.rebuild(world,ROOT);
                 }else{
-                    TileEntityNavigationTable tile=((TileEntityNavigationTable)world.getTileEntity(ROOT)).reader();require(tile!=null,"joined table has its reader");tile.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,3));
+                    TileEntityNavigationTable tile=((TileEntityNavigationTable)world.getTileEntity(ROOT)).reader();require(tile!=null,"joined table has its reader");tile.configureDisplay(new com.vandorlabs.navigation.NavigationScreenSettings(NavigationRuntimeChecks.artwork(),true,1,false,true),false,127,0,com.vandorlabs.redstone.ChannelList.EMPTY);tile.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,3));
                 }
                 int mounts=0;for(BlockPos p:BlockPos.getAllInBox(ROOT,ROOT.add(3,0,2)))if(world.getTileEntity(p) instanceof TileEntityNavigationTable&&((TileEntityNavigationTable)world.getTileEntity(p)).hasMount())mounts++;
                 require(mounts==1,"exactly one reader in documented navigation assembly");

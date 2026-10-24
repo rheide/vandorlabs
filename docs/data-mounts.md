@@ -2,6 +2,8 @@
 
 The modeled holders on the [drive assemblies and joined navigation tables](multiblocks/README.md) use these same Data Chip Mount behaviors. A navigation assembly shares one holder on the front-center module; its chip and settings follow that holder when the layout changes.
 
+Navigation tables and consoles are display-only consumers. Their optional Security gate checks the inserted chip; they never emit a physical or channel redstone signal. See [Navigation display settings](navigation-displays.md).
+
 Place a mount against a solid face, including a floor or ceiling. It occupies a small area around the token rather than the entire block face. Right-click with a matching Access Card or Data Chip to insert one item. Click with an empty hand to remove it. The two mount types accept their corresponding unbranded and six company variants.
 
 Use the Configurizer or sneak-right-click to open the dialog. **Any card** or **Any chip** accepts every company in the corresponding family. The adjacent sample slot opens the same inventory picker as a Programmable Door: drag one company-specific credential into the sample slot to restrict the mount to that company. This copies the filter without consuming or moving inventory items. The selected company name replaces the wildcard label; click that label or right-click the sample slot to clear it. Unbranded samples also select Any. Insert physical items by using them on the block.
