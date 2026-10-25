@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def texture_aliases(catalog):
     aliases={'vandorlabs:blocks/unified/'+e['id']:'vandorlabs:blocks/unified/'+e['alias'] for e in catalog if e.get('alias')}
     for tier in ('low','medium'):
-        for suffix in ('_mild','_strong'):
+        for suffix in ('_mild',):
             aliases['vandorlabs:blocks/programmable_glass/'+tier+'/clear'+suffix]='vandorlabs:blocks/programmable_glass/'+tier+'/clear'
     return aliases
 
@@ -97,7 +97,7 @@ def stage(directory, models_staged=False):
     standardize(textures,catalog)
     aliases=texture_aliases(catalog)
     for tier in ('low','medium'):
-        for suffix in ('_mild','_strong'):
+        for suffix in ('_mild',):
             duplicate=textures/'blocks/programmable_glass'/tier/('clear'+suffix+'.png')
             if duplicate.exists():duplicate.unlink()
     removed=0

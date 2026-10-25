@@ -48,8 +48,16 @@ def check_jar(path):
         assert not unused(files),'unused artwork remains in JAR'
         constructor_models=[name for name in files if name.startswith('models/block/universal_constructor/') and name.endswith(('.obj','.mtl'))]
         assert len(constructor_models)==6 and all(name.count('/')==4 and name.endswith(('/complete.obj','/materials.mtl')) for name in constructor_models),'unused constructor model exports remain in JAR'
+        import io,json
+        from PIL import Image
+        aliases=json.loads(files['data/texture_aliases.json'])
         for tier in ('low','medium'):
-            for strength in ('_mild','_strong'):assert f'textures/blocks/programmable_glass/{tier}/clear{strength}.png' not in files
+            assert f'textures/blocks/programmable_glass/{tier}/clear_mild.png' not in files
+            strong=f'textures/blocks/programmable_glass/{tier}/clear_strong.png'
+            target=aliases.get(strong,strong)
+            assert target in files, 'Opaque Strong Clear artwork is missing'
+            with Image.open(io.BytesIO(jar.read(prefix+target))) as image:
+                assert image.convert('RGBA').getchannel('A').getextrema()==(255,255), 'Strong Clear must retain opaque pixels'
         for name,text in files.items():
             if name.startswith('dynmap'):
                 for filename in re.findall(r'filename=([^,\n]+)',text):
@@ -57,7 +65,7 @@ def check_jar(path):
                     if filename.startswith(prefix):filename=filename[len(prefix):]
                     elif not filename.startswith('textures/'):filename='textures/'+filename
                     assert filename in files,(name,filename)
-    print('PASS: no audited unused artwork or duplicate clear strengths; all Dynmap images resolve')
+    print('PASS: no audited unused artwork or duplicate Mild Clear; Strong Clear remains opaque; all Dynmap images resolve')
 
 if __name__=='__main__':
     import argparse

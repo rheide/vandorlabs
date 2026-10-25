@@ -26,6 +26,8 @@ import org.lwjgl.opengl.GL11;
 final class ShaderMaterialRuntimeChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Shader material: "+why);}
     static void run(Minecraft mc,File output)throws Exception{
+        // Validate the atlas after a real reload before opacity probes: Missingno is opaque too.
+        mc.refreshResources();strongAtlas(mc);
         tiledHousing(mc,output);extendedHousing(mc);int cases=0;
         for(boolean diagonal:new boolean[]{false,true})for(int material:new int[]{-1,0})for(int shade=0;shade<(material<0?GlassTextures.IDS.length:1);shade++){
             BlockPos pos=BlockPos.ORIGIN;net.minecraft.block.Block block=diagonal?ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS:net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass");
@@ -44,6 +46,21 @@ final class ShaderMaterialRuntimeChecks {
             cases++;
         }
         System.out.println("[vandorlabs][reprolab] shader-materials-live PASS opaque-background-pixel-cases="+cases+" Clear/all native Strong shades/replacement materials flat and diagonal, opaque-pass depth ownership; shader-pack hardware acceptance separate");
+    }
+    private static void strongAtlas(Minecraft mc){
+        net.minecraft.client.renderer.texture.TextureMap atlas=mc.getTextureMapBlocks();int sprites=0,pixels=0;
+        for(int shade=0;shade<GlassTextures.IDS.length;shade++){
+            String name=GlassTextures.texture(shade,1,2);TextureAtlasSprite sprite=atlas.getAtlasSprite(name);
+            require(sprite!=atlas.getMissingSprite()&&name.equals(sprite.getIconName()),"actual Strong atlas sprite exists after reload: "+name);
+            require(sprite.getIconWidth()>0&&sprite.getIconHeight()>0&&sprite.getFrameCount()>0,"actual Strong sprite has decoded pixels: "+name);
+            for(int frame=0;frame<sprite.getFrameCount();frame++){
+                int[][] mipmaps=sprite.getFrameTextureData(frame);require(mipmaps!=null&&mipmaps.length>0&&mipmaps[0]!=null&&mipmaps[0].length==sprite.getIconWidth()*sprite.getIconHeight(),"native Strong atlas frame is complete: "+name);
+                for(int color:mipmaps[0]){require((color>>>24)==255,"native Strong atlas pixel remains opaque after reload: "+name);pixels++;}
+            }
+            sprites++;
+        }
+        require(sprites==19,"all nineteen native Strong shades verified");
+        System.out.println("[vandorlabs][reprolab] strong-glass-atlas PASS post-reload native-sprites="+sprites+" alpha255-pixels="+pixels+" explicit missing-sprite rejection; actual background FBO checks follow");
     }
     private static BufferedImage capture(Minecraft mc,TileEntity tile,boolean red){
         Framebuffer frame=new Framebuffer(64,64,true);int oldPass=MinecraftForgeClient.getRenderPass();
