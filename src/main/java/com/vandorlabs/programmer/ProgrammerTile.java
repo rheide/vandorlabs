@@ -37,13 +37,24 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
         if(!stacks.get(2).isEmpty())return "Remove the output item first";
         int company=company();
         if(!stacks.get(0).isEmpty()&&company==0)return "Master needs a company card or Master Data Chip";
-        if(company>0&&input.getMetadata()!=0&&input.getMetadata()!=company)return "Input belongs to another company";
         if(input.getItem()==ModItems.ACCESS_CARD&&company==0&&input.getMetadata()==0)return "Insert a company master";
         if(input.getItem()==ModItems.DATA_CHIP&&!selectedJournal&&company==0&&input.getMetadata()==0)return "Master chips require a company master";
         return "";
     }
     public boolean canProgram(){return canProgram(journal);}
     public boolean canProgram(boolean selectedJournal){return problem(selectedJournal).isEmpty();}
+    public String copyProblem(){
+        ItemStack source=stacks.get(1),target=stacks.get(2);
+        if(source.isEmpty()||target.isEmpty())return "Insert both Input and Output items to copy";
+        if(!token(source)||!token(target)||source.getCount()!=1||target.getCount()!=1)return "Copy requires one valid item in each slot";
+        return source.getItem()==target.getItem()?"":"Copy needs two cards or two chips";
+    }
+    public boolean canCopy(){return copyProblem().isEmpty();}
+    /** Reuse the one output material item; copy actual saved source data, never pending editor fields. */
+    public boolean copyInput(){
+        if(world!=null&&world.isRemote||!canCopy())return false;
+        ItemStack result=stacks.get(1).copy();result.setCount(1);stacks.set(2,result);writing=20;complete=0;changed();return true;
+    }
     public boolean editableJournal(){return ChipJournal.isChip(stacks.get(1))&&journal;}
     public ProgrammerJournalView journalDisplay(){
         if(displayDirty){ProgrammerJournalView next=ProgrammerJournalView.from(this);String key=next==null?null:next.key;if(!java.util.Objects.equals(key,displayKey))displayPage=0;displayKey=key;display=next;displayDirty=false;}
