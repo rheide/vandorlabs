@@ -32,6 +32,7 @@ public final class FlatWallTopology {
             return Math.max(frontArm==null?0:frontArm+4,backArm==null?0:backArm+4);
         }
     }
+    public static boolean bar(Corner corner){return corner!=null&&corner.frontArm!=null&&corner.backArm!=null&&Math.abs(corner.frontArm-corner.backArm)<1E-7&&corner.straightLeft!=corner.straightRight;}
     private FlatWallTopology(){}
     public static int clockwise(int facing){return StairJoinPolicy.opposite(StairJoinPolicy.counterClockwise(facing));}
     private static Boolean armRight(int facing,Panel other){

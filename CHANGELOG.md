@@ -15,6 +15,11 @@
 - Share programmable-glass saved defaults, metadata-size migration and editor
   labels, bounds and option cycling. Retain its immediate settings submission
   and dormant custom-material layout while stock glass is selected.
+- Share flat wall and porthole surface generation, clipping, texture mapping and
+  grouping rules with the legacy renderer. Preserve collision, authored UVs,
+  connected apertures and independent housing/glass options.
+- Fit plain wall, porthole wall and full porthole item icons inside their slots
+  with visible padding, retaining configured artwork and saved item data.
 - Add native filesystem material reloads for programmable cubes, preserving
   saved identities and updating artwork dimensions in an open picker. Keep
   native channel membership event-driven with explicit removal and unload cleanup.

@@ -220,32 +220,7 @@ public final class PortholeHex {
         return t[0] <= t[1] + EPS;
     }
 
-    public static final class Slice {
-        public final List<double[]> polygon;
-        public final List<double[]> frameQuads;
-        public final List<double[]> hexEdges;
-        public final List<double[]> glassQuads;
-
-        Slice(List<double[]> polygon, List<double[]> frameQuads,
-                List<double[]> hexEdges, List<double[]> glassQuads) {
-            this.polygon = polygon;
-            this.frameQuads = frameQuads;
-            this.hexEdges = hexEdges;
-            this.glassQuads = glassQuads;
-        }
-
-        /** Interval occupied by glass where a pane crosses a block edge. */
-        public double[] edgeOpening(int axis, double boundary) {
-            double minimum = Double.POSITIVE_INFINITY;
-            double maximum = Double.NEGATIVE_INFINITY;
-            for (double[] point : polygon) {
-                if (Math.abs(point[axis] - boundary) < EPS) {
-                    double other = point[1 - axis];
-                    minimum = Math.min(minimum, other);
-                    maximum = Math.max(maximum, other);
-                }
-            }
-            return maximum - minimum > EPS ? new double[] {minimum, maximum} : null;
-        }
+    public static final class Slice extends com.vandorlabs.render.PortholeSlice {
+        Slice(List<double[]> polygon,List<double[]> frameQuads,List<double[]> hexEdges,List<double[]> glassQuads){super(polygon,frameQuads,hexEdges,glassQuads);}
     }
 }

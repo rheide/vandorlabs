@@ -14,8 +14,7 @@ public final class PanelJoins {
     public static BlockProgrammableWall.FlatCorner flatBar(IBlockState state,IBlockAccess world,BlockPos pos) {
         if(!cornerPanel(state))return null;
         BlockProgrammableWall.FlatCorner c=flatCorner(state,world,pos);
-        return c!=null && c.frontArm!=null && c.backArm!=null
-                && Math.abs(c.frontArm-c.backArm)<1E-7 && c.straightLeft!=c.straightRight?c:null;
+        return c!=null&&com.vandorlabs.render.FlatWallTopology.bar(c.portable())?c:null;
     }
     public static EnumFacing flatFacing(IBlockState state,IBlockAccess world,BlockPos pos) {
         EnumFacing canonical=facing(state);

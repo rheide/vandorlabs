@@ -11,12 +11,9 @@ import java.util.*;
 
 /** Loaded, coplanar material groups. Holes partition into complete rectangles. */
 final class GlassSurfaceGroups {
-    static final class Layout {
-        final int column,row,columns,rows;
-        final boolean flipU,flipV;
-        Layout(int column,int row,int columns,int rows){this(column,row,columns,rows,false,false);}
-        Layout(int column,int row,int columns,int rows,boolean flipU,boolean flipV){this.column=column;this.row=row;this.columns=columns;this.rows=rows;this.flipU=flipU;this.flipV=flipV;}
-        String key(){return column+":"+row+":"+columns+":"+rows+":"+flipU+":"+flipV;}
+    static final class Layout extends com.vandorlabs.render.PanelTextureMapping.Layout {
+        Layout(int column,int row,int columns,int rows){super(column,row,columns,rows);}
+        Layout(int column,int row,int columns,int rows,boolean flipU,boolean flipV){super(column,row,columns,rows,flipU,flipV);}
     }
     static final int MAX_LAYOUTS=8192;
     private static final class Cache extends WorldRenderListener {
@@ -51,11 +48,12 @@ final class GlassSurfaceGroups {
             for(BlockPos next:candidates){if(members.contains(next) || !world.isBlockLoaded(next) || !compatible(world.getTileEntity(current),next,main))continue;members.add(next);queue.add(next);if(members.size()>=LoadedPlaneConnections.LIMIT)break;}
         }
         BlockPos first=Collections.min(members);EnumFacing basis=PanelJoins.facing(world.getBlockState(first));right=basis.rotateY();up=diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()?basis.getOpposite():EnumFacing.UP;
-        Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos p:members)cells.put(PortholeRectangles.cell(PanelPlane.axis(p,right),PanelPlane.axis(p,up)),p);
-        if(members.size()>=LoadedPlaneConnections.LIMIT){for(BlockPos p:members)layouts.put(p,new Layout(0,0,1,1));}
-        else for(PortholeRectangles.Rect rect:PortholeRectangles.partition(cells.keySet()))for(int y=0;y<rect.height;y++)for(int x=0;x<rect.width;x++){
-            BlockPos p=cells.get(PortholeRectangles.cell(rect.x+x,rect.y+y));EnumFacing local=PanelJoins.facing(world.getBlockState(p));
-            layouts.put(p,new Layout(x,y,rect.width,rect.height,local.rotateY()!=right,diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight() && local.getOpposite()!=up));
+        final EnumFacing horizontal=right,vertical=up;
+        Map<BlockPos,com.vandorlabs.render.WallGroupPolicy.Layout> partition=com.vandorlabs.render.WallGroupPolicy.partition(members,p->PanelPlane.axis(p,horizontal),p->PanelPlane.axis(p,vertical),LoadedPlaneConnections.LIMIT);
+        for(Map.Entry<BlockPos,com.vandorlabs.render.WallGroupPolicy.Layout> entry:partition.entrySet()){
+            BlockPos p=entry.getKey();com.vandorlabs.render.WallGroupPolicy.Layout part=entry.getValue();EnumFacing local=PanelJoins.facing(world.getBlockState(p));
+            boolean capped=members.size()>=LoadedPlaneConnections.LIMIT;
+            layouts.put(p,new Layout(part.column,part.row,part.columns,part.rows,!capped&&local.rotateY()!=right,!capped&&diagonal&&((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()&&local.getOpposite()!=up));
         }
         return layouts.get(tile.getPos());
     }
@@ -66,13 +64,20 @@ final class GlassSurfaceGroups {
         if(root instanceof TileEntityProgrammableGlass){TileEntityProgrammableGlass x=(TileEntityProgrammableGlass)root,y=(TileEntityProgrammableGlass)other;
             return x.getMaterial()==y.getMaterial() && x.getTint()==y.getTint() && x.getTextureLayout()==y.getTextureLayout() && a.getValue(BlockGlassWall.ROTATED).equals(b.getValue(BlockGlassWall.ROTATED)) && a.getValue(BlockGlassWall.DEPTH).equals(b.getValue(BlockGlassWall.DEPTH));}
         TileEntityAnimatedScreenSelector x=(TileEntityAnimatedScreenSelector)root,y=(TileEntityAnimatedScreenSelector)other;
-        if(main){if(x.getHousingTexture()!=y.getHousingTexture() || x.getMainTextureLayout()!=y.getMainTextureLayout())return false;}
+        if(main){
+            if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return com.vandorlabs.render.WallGroupPolicy.main(flatSurface(a,x),flatSurface(b,y));
+            if(x.getHousingTexture()!=y.getHousingTexture() || x.getMainTextureLayout()!=y.getMainTextureLayout())return false;
+        }
         else if(x.getGlassMaterial()!=y.getGlassMaterial() || x.getGlassTint()!=y.getGlassTint() || x.getGlassTextureLayout()!=y.getGlassTextureLayout())return false;
         if(a.getValue(BlockProgrammableWall.FACING).getAxis()!=b.getValue(BlockProgrammableWall.FACING).getAxis())return false;
         if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return a.getValue(BlockProgrammableWall.FACING)==b.getValue(BlockProgrammableWall.FACING) && a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH));
         int mode=BlockProgrammableWall.geometry(world,root.getPos());
         return mode==BlockProgrammableWall.geometry(world,next) && x.getDiagonalFill()==y.getDiagonalFill()
                 && (DiagonalPanelGeometry.samePlane(root.getPos(),a,next,b,mode) || DiagonalPanelGeometry.rowsMeet(root.getPos(),a,next,b,mode));
+    }
+    static com.vandorlabs.render.WallGroupPolicy.Surface flatSurface(IBlockState state,TileEntityAnimatedScreenSelector tile){
+        BlockProgrammableWall block=(BlockProgrammableWall)state.getBlock();
+        return new com.vandorlabs.render.WallGroupPolicy.Surface(block,block.isPortholeShape(),tile.isJoinPortholes(),state.getValue(BlockProgrammableWall.FACING).getIndex(),state.getValue(BlockProgrammableWall.DEPTH),tile.getPortholeShape(),tile.getHousingTexture(),tile.getMainTextureLayout());
     }
     private GlassSurfaceGroups(){}
 }

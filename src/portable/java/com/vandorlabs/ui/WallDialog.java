@@ -36,6 +36,12 @@ public final class WallDialog {
         private Control(ProgrammableDialogLayout.Button bounds,boolean enabled){this.bounds=bounds;this.enabled=enabled;}
     }
     public static State snapshot(int main,int side,int layout,int target,int localShade,boolean localJoin,int localShape,WallAppearance live){return new State(main,side,layout,target,new WallAppearance(localShade,live.tint,live.material,live.framed,live.stretch,live.textureJoin,localJoin,localShape,live.layout));}
+    /** The legacy editor sends independent Main, Side, Layout and Appearance commands. */
+    public static State applyEffect(State current,State incoming,Effect effect){
+        WallAppearance a=current.appearance;
+        if(effect==Effect.APPEARANCE){WallAppearance next=incoming.appearance;a=next.withOptions(next.join,next.shape,next.tint,next.framed,next.textureLayout(),next.textureJoin);}
+        return new State(effect==Effect.MAIN?incoming.main:current.main,effect==Effect.SIDE?incoming.side:current.side,effect==Effect.LAYOUT?incoming.layout:current.layout,current.target,a);
+    }
     public static State fresh(Profile profile){return new State(0,-1,0,-1,WallAppearance.fresh(profile.porthole()));}
     private WallDialog(){}
     public static boolean handles(Profile p,State state,int id){return id==100||id==103||id==120||p.porthole()&&(id==102||id==104||id==127||id==128||id==129||state.target==-3&&(id==113||id==114||id==115||id==116));}

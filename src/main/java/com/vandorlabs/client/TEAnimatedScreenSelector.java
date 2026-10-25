@@ -959,16 +959,11 @@ public class TEAnimatedScreenSelector
                             state.getValue(BlockProgrammableWall.DEPTH)),
                     flat);
         } else {
-            if (porthole != null) {
-                for (double[] quad : porthole.frameQuads)
-                    panelQuad(buf, wall, mesh, quad[0], quad[1], quad[2], quad[3],
-                            quad[4], quad[5], quad[6], quad[7]);
-                for (double[] edge : porthole.hexEdges)
-                    rimSegment(buf, metal, mesh, edge[0], edge[1], edge[2], edge[3], rimDepthUv);
-            } else {
-                panelRect(buf, wall, mesh, 0, 0, 16, 16);
-            }
-            panelOuterRim(buf, metal, mesh, porthole, te, state, rimDepthUv);
+            EnumFacing right=state.getValue(BlockProgrammableWall.FACING).rotateY();
+            emitPanelMesh(buf,wall,metal,mesh,com.vandorlabs.render.FlatPanelMesh.opaque(porthole,rimDepthUv,
+                    porthole!=null&&adjacentPorthole(te,state,portholeRowDirection(te,state,false)),
+                    porthole!=null&&adjacentPorthole(te,state,portholeRowDirection(te,state,true)),
+                    porthole!=null&&adjacentPorthole(te,state,right.getOpposite()),porthole!=null&&adjacentPorthole(te,state,right)));
             if(mesh!=null && mesh.corner!=null) {
                 // Reuse the joined solid outline for the arms, but never overlay
                 // its solid center across the porthole aperture and pane.
@@ -982,11 +977,12 @@ public class TEAnimatedScreenSelector
 
     /** Straight local source for the center-owned bar of a T; the opening spans that whole bar. */
     static void drawFlatBar(BufferBuilder buf,TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice opening) {
-        if(opening==null) {renderFlatWall(buf,wall,metal,6,null);return;}
-        for(double[] q:opening.frameQuads)panelQuad(buf,wall,null,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
-        for(double[] edge:opening.hexEdges)rimSegment(buf,metal,null,edge[0],edge[1],edge[2],edge[3],4);
-        for(int y:new int[]{0,16})topRim(buf,metal,null,y,0,16,4);
-        for(int x:new int[]{0,16})sideRim(buf,metal,null,x,0,16,4);
+        emitPanelMesh(buf,wall,metal,null,com.vandorlabs.render.FlatPanelMesh.bar(opening));
+    }
+    private static void emitPanelMesh(BufferBuilder buf,TextureAtlasSprite wall,TextureAtlasSprite metal,DiagonalPortholeMesh mesh,
+            java.util.List<com.vandorlabs.render.FlatPanelMesh.Quad> quads){
+        for(com.vandorlabs.render.FlatPanelMesh.Quad quad:quads)
+            DiagonalPortholeMesh.quad(buf,quad.side?metal:wall,true,mesh,quad.reverse,quad.vertices);
     }
 
     /** Build only when this wall or its immediate neighbors change. */
@@ -1051,55 +1047,6 @@ public class TEAnimatedScreenSelector
                     .normal(fx,fy,fz).endVertex();
     }
 
-    private static void panelRect(BufferBuilder buf, TextureAtlasSprite sprite, DiagonalPortholeMesh mesh,
-            int x0, int y0, int x1, int y1) {
-        for (int z : new int[] {6, 10}) {
-            DiagonalPortholeMesh.quad(buf, sprite, true, mesh, z==6,
-                    new double[]{x0, y0, z, x0, 16 - y0},
-                    new double[]{x1, y0, z, x1, 16 - y0},
-                    new double[]{x1, y1, z, x1, 16 - y1},
-                    new double[]{x0, y1, z, x0, 16 - y1});
-        }
-    }
-
-    private static void panelQuad(BufferBuilder buf, TextureAtlasSprite sprite, DiagonalPortholeMesh mesh,
-            double x0, double y0, double x1, double y1, double x2, double y2,
-            double x3, double y3) {
-        for (int z : new int[] {6, 10}) {
-            DiagonalPortholeMesh.quad(buf, sprite, true, mesh, z==6,
-                    new double[]{x0, y0, z, x0, 16 - y0},
-                    new double[]{x1, y1, z, x1, 16 - y1},
-                    new double[]{x2, y2, z, x2, 16 - y2},
-                    new double[]{x3, y3, z, x3, 16 - y3});
-        }
-    }
-
-    private static void panelOuterRim(BufferBuilder buf, TextureAtlasSprite metal, DiagonalPortholeMesh mesh,
-            PortholeHex.Slice opening, TileEntityAnimatedScreenSelector tile,
-            IBlockState state, double depthUv) {
-        for (int y : new int[] {0, 16}) {
-            if (opening != null && adjacentPorthole(tile, state,
-                    portholeRowDirection(tile, state, y != 0))) continue;
-            double[] cut = opening == null ? null : opening.edgeOpening(1, y);
-            if (cut == null) topRim(buf, metal, mesh, y, 0, 16, depthUv);
-            else {
-                topRim(buf, metal, mesh, y, 0, cut[0], depthUv);
-                topRim(buf, metal, mesh, y, cut[1], 16, depthUv);
-            }
-        }
-        for (int x : new int[] {0, 16}) {
-            EnumFacing right = state.getValue(BlockProgrammableWall.FACING).rotateY();
-            if (opening != null && adjacentPorthole(tile, state,
-                    x == 0 ? right.getOpposite() : right)) continue;
-            double[] cut = opening == null ? null : opening.edgeOpening(0, x);
-            if (cut == null) sideRim(buf, metal, mesh, x, 0, 16, depthUv);
-            else {
-                sideRim(buf, metal, mesh, x, 0, cut[0], depthUv);
-                sideRim(buf, metal, mesh, x, cut[1], 16, depthUv);
-            }
-        }
-    }
-
     /** Compound crossing slopes need a solid center rather than an internal window. */
     static boolean solidDiagonalPortholeJunction(TileEntityAnimatedScreenSelector tile,IBlockState state) {
         if(!(state.getBlock() instanceof BlockProgrammableWall) || tile.getWorld()==null
@@ -1122,7 +1069,7 @@ public class TEAnimatedScreenSelector
         if(!at.isJoinPortholes()||!bt.isJoinPortholes()||at.getPortholeShape()!=bt.getPortholeShape())return false;
         if(solidDiagonalPortholeJunction(at,a) || solidDiagonalPortholeJunction(bt,b))return false;
         EnumFacing af=a.getValue(BlockProgrammableWall.FACING),bf=b.getValue(BlockProgrammableWall.FACING);
-        if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH));
+        if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return com.vandorlabs.render.WallGroupPolicy.aperture(GlassSurfaceGroups.flatSurface(a,at),GlassSurfaceGroups.flatSurface(b,bt));
         if(at.isDiagonalHalfHeight()!=bt.isDiagonalHalfHeight()||at.isDiagonalFullWidth()!=bt.isDiagonalFullWidth())return false;
         int mode=at.isDiagonalHalfHeight()?2:at.isDiagonalFullWidth()?1:0;
         return com.vandorlabs.blocks.DiagonalPanelGeometry.samePlane(root,a,next,b,mode)
@@ -1172,45 +1119,6 @@ public class TEAnimatedScreenSelector
         }
         BlockPos next = tile.getPos().offset(side);
         return compatiblePorthole(tile.getWorld(),tile.getPos(),next);
-    }
-
-    private static void topRim(BufferBuilder buf, TextureAtlasSprite metal, DiagonalPortholeMesh mesh,
-            double y, double x0, double x1, double depthUv) {
-        if (x1 - x0 < 1.0E-7) return;
-        DiagonalPortholeMesh.quad(buf, metal, true, mesh, y==16,
-                new double[]{x0, y, 6, x0, 0},
-                new double[]{x1, y, 6, x1, 0},
-                new double[]{x1, y, 10, x1, depthUv},
-                new double[]{x0, y, 10, x0, depthUv});
-    }
-
-    private static void sideRim(BufferBuilder buf, TextureAtlasSprite metal, DiagonalPortholeMesh mesh,
-            double x, double y0, double y1, double depthUv) {
-        if (y1 - y0 < 1.0E-7) return;
-        DiagonalPortholeMesh.quad(buf, metal, true, mesh, x==16,
-                new double[]{x, y0, 6, 0, 16 - y0},
-                new double[]{x, y0, 10, depthUv, 16 - y0},
-                new double[]{x, y1, 10, depthUv, 16 - y1},
-                new double[]{x, y1, 6, 0, 16 - y1});
-    }
-
-    private static void rimSegment(BufferBuilder buf, TextureAtlasSprite metal, DiagonalPortholeMesh mesh,
-            double x0, double y0, double x1, double y1, double depthUv) {
-        double length = Math.hypot(x1 - x0, y1 - y0);
-        // Atlas coordinates must stay inside this sprite, including diagonal
-        // edges longer than 16 pixels. Tile the metal along those edges.
-        for (double start = 0; start < length - 1.0E-7; start += 16) {
-            double end = Math.min(length, start + 16);
-            double ax = x0 + (x1 - x0) * start / length;
-            double ay = y0 + (y1 - y0) * start / length;
-            double bx = x0 + (x1 - x0) * end / length;
-            double by = y0 + (y1 - y0) * end / length;
-            DiagonalPortholeMesh.quad(buf, metal, true, mesh, true,
-                    new double[]{ax, ay, 6, 0, 0},
-                    new double[]{bx, by, 6, end - start, 0},
-                    new double[]{bx, by, 10, end - start, depthUv},
-                    new double[]{ax, ay, 10, 0, depthUv});
-        }
     }
 
     private static void renderDiagonalWall(BufferBuilder buf,
@@ -1343,11 +1251,8 @@ public class TEAnimatedScreenSelector
     }
 
     static void drawPortholeGlassGeometry(BufferBuilder buf,PortholeHex.Slice opening,DiagonalPortholeMesh mesh) {
-        for(int depth:new int[]{7,9})for(double[] quad:opening.glassQuads) {
-            double[][] vertices=new double[4][5];
-            for(int v=0;v<4;v++)vertices[v]=new double[]{quad[v*2],quad[v*2+1],depth,quad[v*2]/16,1-quad[v*2+1]/16};
-            DiagonalPortholeMesh.quad(buf,null,true,mesh,depth==7,vertices);
-        }
+        for(com.vandorlabs.render.FlatPanelMesh.Quad quad:com.vandorlabs.render.FlatPanelMesh.glass(opening))
+            DiagonalPortholeMesh.quad(buf,null,true,mesh,quad.reverse,quad.vertices);
     }
 
     private void renderPortholeGlass(TileEntityAnimatedScreenSelector tile,IBlockState state,StaticSurfaceMesh glass) {

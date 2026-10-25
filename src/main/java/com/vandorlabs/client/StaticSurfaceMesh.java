@@ -20,46 +20,26 @@ final class StaticSurfaceMesh {
     }
     int vertexCount() { return vertices.length/8; }
     StaticSurfaceMesh glassTexture(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,GlassSurfaceGroups.Layout layout,boolean raw,double borderX,double borderY){
-        float[] data=vertices.clone();double width=layout.columns-2*borderX,height=layout.rows-2*borderY;
+        float[] data=vertices.clone();
         for(int i=0;i<data.length;i+=8){
             double u=raw?data[i+3]:(data[i+3]-sprite.getMinU())/(sprite.getMaxU()-sprite.getMinU());
             double v=raw?data[i+4]:(data[i+4]-sprite.getMinV())/(sprite.getMaxV()-sprite.getMinV());
-            if(layout.flipU)u=1-u;if(layout.flipV)v=1-v;
-            u=(layout.column+u-borderX)/width;v=(layout.rows-1-layout.row+v-borderY)/height;
-            data[i+3]=sprite.getInterpolatedU(Math.max(0,Math.min(1,u))*16);data[i+4]=sprite.getInterpolatedV(Math.max(0,Math.min(1,v))*16);
+            data[i+3]=sprite.getInterpolatedU(com.vandorlabs.render.PanelTextureMapping.stretchU(u,layout,borderX)*16);
+            data[i+4]=sprite.getInterpolatedV(com.vandorlabs.render.PanelTextureMapping.stretchV(v,layout,borderY)*16);
         }
         return new StaticSurfaceMesh(data);
     }
     /** Subdivide at repeat boundaries so rectangular images never sample neighboring atlas slots. */
     StaticSurfaceMesh textureLayout(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,GlassSurfaceGroups.Layout layout,boolean raw,double borderX,double borderY,int mode){
-        Capture out=capture();double aspect=UnifiedTextureSprites.aspect(sprite);
+        Capture out=capture();double aspect=UnifiedTextureSprites.aspect(sprite);double[][] quad=new double[4][8];
         for(int q=0;q<vertices.length;q+=32){
-            java.util.List<double[]> polygon=new java.util.ArrayList<>();boolean selected=true;
-            double minU=Double.POSITIVE_INFINITY,maxU=Double.NEGATIVE_INFINITY,minV=minU,maxV=maxU,unitU=1,unitV=1;
             for(int i=0;i<4;i++){
-                double[] p=new double[8];for(int j=0;j<8;j++)p[j]=vertices[q+i*8+j];
+                double[] p=quad[i];for(int j=0;j<8;j++)p[j]=vertices[q+i*8+j];
                 p[3]=raw?p[3]:(p[3]-sprite.getMinU())/(sprite.getMaxU()-sprite.getMinU());p[4]=raw?p[4]:(p[4]-sprite.getMinV())/(sprite.getMaxV()-sprite.getMinV());
-                if(layout.flipU)p[3]=1-p[3];if(layout.flipV)p[4]=1-p[4];
-                selected &= p[3]>=-1e-4 && p[3]<=1.0001 && p[4]>=-1e-4 && p[4]<=1.0001;
-                minU=Math.min(minU,p[3]);maxU=Math.max(maxU,p[3]);minV=Math.min(minV,p[4]);maxV=Math.max(maxV,p[4]);polygon.add(p);
             }
-            if(!selected){for(int i=0;i<4;i++){int p=q+i*8;out.pos(vertices[p],vertices[p+1],vertices[p+2]).tex(vertices[p+3],vertices[p+4]).normal(vertices[p+5],vertices[p+6],vertices[p+7]).endVertex();}continue;}
-            for(double[] a:polygon)for(double[] b:polygon){double du=Math.abs(a[3]-b[3]),dv=Math.abs(a[4]-b[4]),length=Math.sqrt((a[0]-b[0])*(a[0]-b[0])+(a[1]-b[1])*(a[1]-b[1])+(a[2]-b[2])*(a[2]-b[2]))/16;
-                if(du>1e-6 && dv<1e-6)unitU=length/du;if(dv>1e-6 && du<1e-6)unitV=length/dv;
-            }
-            boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(mode,(layout.columns-2*borderX)*unitU,(layout.rows-2*borderY)*unitV,aspect);
-            minU=minV=Double.POSITIVE_INFINITY;maxU=maxV=Double.NEGATIVE_INFINITY;
-            for(double[] p:polygon){
-                p[3]=fit?(layout.column+p[3]-borderX)/(layout.columns-2*borderX):com.vandorlabs.render.TextureLayoutMode.tileU((layout.column+p[3])*unitU,aspect);
-                p[4]=fit?(layout.rows-1-layout.row+p[4]-borderY)/(layout.rows-2*borderY):com.vandorlabs.render.TextureLayoutMode.tileV((layout.rows-1-layout.row+p[4])*unitV,aspect);
-                if(fit){p[3]=Math.max(0,Math.min(1,p[3]));p[4]=Math.max(0,Math.min(1,p[4]));}
-                minU=Math.min(minU,p[3]);maxU=Math.max(maxU,p[3]);minV=Math.min(minV,p[4]);maxV=Math.max(maxV,p[4]);
-            }
-            int u0=fit?0:(int)Math.floor(minU),u1=fit?0:(int)Math.ceil(maxU-1e-8)-1,v0=fit?0:(int)Math.floor(minV),v1=fit?0:(int)Math.ceil(maxV-1e-8)-1;
-            for(int u=u0;u<=u1;u++)for(int v=v0;v<=v1;v++){
-                java.util.List<double[]> clipped=TrapdoorSurfaceMesh.clip(TrapdoorSurfaceMesh.clip(TrapdoorSurfaceMesh.clip(TrapdoorSurfaceMesh.clip(polygon,3,u,true),3,u+1,false),4,v,true),4,v+1,false);
-                for(int i=1;i+1<clipped.size();i++)for(double[] p:new double[][]{clipped.get(0),clipped.get(i),clipped.get(i+1),clipped.get(i+1)})out.pos(p[0],p[1],p[2]).tex(sprite.getInterpolatedU(Math.max(0,Math.min(1,p[3]-u))*16),sprite.getInterpolatedV(Math.max(0,Math.min(1,p[4]-v))*16)).normal((float)p[5],(float)p[6],(float)p[7]).endVertex();
-            }
+            java.util.List<double[][]> mapped=com.vandorlabs.render.PanelTextureMapping.map(quad,layout,borderX,borderY,mode,aspect);
+            if(mapped==null){for(int i=0;i<4;i++){int p=q+i*8;out.pos(vertices[p],vertices[p+1],vertices[p+2]).tex(vertices[p+3],vertices[p+4]).normal(vertices[p+5],vertices[p+6],vertices[p+7]).endVertex();}continue;}
+            for(double[][] triangle:mapped)for(double[] p:triangle)out.pos(p[0],p[1],p[2]).tex(sprite.getInterpolatedU(p[3]*16),sprite.getInterpolatedV(p[4]*16)).normal((float)p[5],(float)p[6],(float)p[7]).endVertex();
         }
         return out.finish();
     }
@@ -86,38 +66,13 @@ final class StaticSurfaceMesh {
 
     /** Rotate local panel coordinates and normals together; UVs retain donor orientation. */
     StaticSurfaceMesh panelTransform(int turns,double depth,double left,double width) {
-        float[] data=vertices.clone();
-        for(int i=0;i<data.length;i+=8) {
-            data[i]=(float)(left+data[i]*width);data[i+2]+=depth;
-            data[i+5]/=width;
-            double length=Math.sqrt(data[i+5]*data[i+5]+data[i+6]*data[i+6]+data[i+7]*data[i+7]);
-            if(length>1E-7)for(int axis=5;axis<8;axis++)data[i+axis]/=length;
-            for(int t=0;t<(turns&3);t++) {
-                float x=data[i],nx=data[i+5];data[i]=16-data[i+2];data[i+2]=x;
-                data[i+5]=-data[i+7];data[i+7]=nx;
-            }
-        }
-        return new StaticSurfaceMesh(data);
+        return new StaticSurfaceMesh(com.vandorlabs.render.PanelMeshTransform.transform(vertices,turns,depth,left,width));
     }
     /** Close the opaque stem at a material boundary, retaining porthole openings in its section. */
     StaticSurfaceMesh panelEnd(double cut,double near,net.minecraft.client.renderer.texture.TextureAtlasSprite metal,boolean right) {
-        Capture result=capture();
-        for(int q=0;q<vertices.length;q+=32) {
-            if(vertices[q+7]>-.5)continue;
-            java.util.List<Double> ys=new java.util.ArrayList<>();
-            for(int v=0;v<4;v++) {
-                int a=q+v*8,b=q+((v+1)&3)*8;double ax=vertices[a]-cut,bx=vertices[b]-cut;
-                if(Math.abs(ax)<1E-5)ys.add((double)vertices[a+1]);
-                if(ax*bx<0)ys.add(vertices[a+1]+(-ax)/(bx-ax)*(vertices[b+1]-vertices[a+1]));
-            }
-            if(ys.size()<2)continue;double low=java.util.Collections.min(ys),high=java.util.Collections.max(ys);
-            if(high-low<1E-5)continue;
-            double[][] points=right?new double[][]{{cut,low,near},{cut,high,near},{cut,high,near+4},{cut,low,near+4}}
-                    :new double[][]{{cut,low,near+4},{cut,high,near+4},{cut,high,near},{cut,low,near}};
-            for(int v=0;v<4;v++)result.pos(points[v][0],points[v][1],points[v][2]).color(255,255,255,255)
-                    .tex(metal.getInterpolatedU(v<2?0:4),metal.getInterpolatedV(16-points[v][1])).normal(right?1:-1,0,0).endVertex();
-        }
-        return result.finish();
+        float[] data=com.vandorlabs.render.PanelMeshTransform.end(vertices,cut,near,right);
+        for(int i=0;i<data.length;i+=8){data[i+3]=metal.getInterpolatedU(data[i+3]*16D);data[i+4]=metal.getInterpolatedV(data[i+4]*16D);}
+        return new StaticSurfaceMesh(data);
     }
     boolean hasPlaneFace(int axis,double plane,double normal) {
         for(int q=0;q<vertices.length;q+=32) {
@@ -134,40 +89,7 @@ final class StaticSurfaceMesh {
     }
     /** Clip original surfaces, interpolating atlas UVs at each new edge. No interior seam caps. */
     StaticSurfaceMesh box(double x0,double y0,double z0,double x1,double y1,double z1,boolean outside) {
-        Capture result=capture();double[] bounds={x0,x1,y0,y1,z0,z1};
-        for(int offset=0;offset<vertices.length;offset+=32) {
-            java.util.List<float[]> polygon=new java.util.ArrayList<>();
-            for(int v=0;v<4;v++)polygon.add(Arrays.copyOfRange(vertices,offset+v*8,offset+(v+1)*8));
-            for(int plane=0;plane<6 && !polygon.isEmpty();plane++) {
-                int axis=plane/2;boolean above=(plane&1)==0;
-                if(outside) {
-                    boolean extendsOutside=false;
-                    for(float[] point:polygon)extendsOutside|=(point[axis]-bounds[plane])*(above?1:-1)<-1E-6;
-                    if(extendsOutside)emitPolygon(result,clipPanel(polygon,axis,bounds[plane],!above));
-                }
-                polygon=clipPanel(polygon,axis,bounds[plane],above);
-            }
-            if(!outside)emitPolygon(result,polygon);
-        }
-        return result.finish();
-    }
-    private static java.util.List<float[]> clipPanel(java.util.List<float[]> polygon,int axis,double plane,boolean above) {
-        java.util.List<float[]> result=new java.util.ArrayList<>();if(polygon.isEmpty())return result;
-        float[] a=polygon.get(polygon.size()-1);double da=(a[axis]-plane)*(above?1:-1);
-        for(float[] b:polygon) {
-            double db=(b[axis]-plane)*(above?1:-1);boolean ia=da>=0,ib=db>=0;
-            if(ia!=ib) {float[] v=new float[8];double t=da/(da-db);for(int k=0;k<8;k++)v[k]=(float)(a[k]+t*(b[k]-a[k]));result.add(v);}
-            if(ib)result.add(b);a=b;da=db;
-        }
-        return result;
-    }
-    private static void emitPolygon(Capture result,java.util.List<float[]> polygon) {
-        for(int v=1;v+1<polygon.size();v++) {
-            float[] a=polygon.get(0),b=polygon.get(v),c=polygon.get(v+1);
-            double ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
-            if(Math.abs(uy*vz-uz*vy)+Math.abs(uz*vx-ux*vz)+Math.abs(ux*vy-uy*vx)<1E-7)continue;
-            emit(result,a);emit(result,b);emit(result,c);emit(result,c);
-        }
+        return new StaticSurfaceMesh(com.vandorlabs.render.PanelMeshTransform.box(vertices,x0,y0,z0,x1,y1,z1,outside));
     }
 
     /** Remove a shared cap once when caching joined transparent panel geometry. */

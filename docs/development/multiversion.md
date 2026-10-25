@@ -75,6 +75,21 @@ layout while stock glass is selected, and preserves the established detail-zero
 submission without changing the tile merely by opening its editor. Native glass
 must use these same contracts; extracting them does not establish native support.
 
+## Flat panel geometry
+
+Flat walls and portholes share `FlatWallTopology`, `FlatWallMesh` and
+`FlatPanelMesh`. `PanelMeshTransform` preserves the legacy float boundaries for
+rotated/clipped T junctions and end caps; `PanelTextureMapping` and `PolygonClip`
+retain material-relative UVs. Neutral `PortholeSlice` and `PanelRectangles` types
+allow authoritative geometry to avoid client renderer class descriptors.
+
+`WallGroupPolicy` keeps aperture grouping separate from housing artwork groups.
+Apertures require matching family, facing, depth, shape and enabled joining;
+housing artwork requires matching family, facing, depth, material and layout.
+Both use bounded loaded members and the same inclusive-cap rectangle fallback.
+Each target remains responsible for loaded-world access, atlas translation,
+lighting and render-thread publication.
+
 ## Platform references
 
 - [NeoForge 1.21.1 setup and Java 21](https://docs.neoforged.net/docs/1.21.1/gettingstarted/)

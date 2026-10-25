@@ -811,7 +811,11 @@ public class ModBlocks {
             String path=location.getResourcePath();
             if("vandorlabs".equals(location.getResourceDomain()) && "inventory".equals(location.getVariant()) && path.startsWith("configured/programmable_") && !path.startsWith("configured/programmable_chair")) {
                 net.minecraft.client.renderer.block.model.IBakedModel base=event.getModelRegistry().getObject(location);
-                if(base!=null)event.getModelRegistry().putObject(location,new com.vandorlabs.client.ConfiguredMaterialItemModel(base,path.startsWith("configured/programmable_light")));
+                if(base!=null){
+                    net.minecraft.client.renderer.block.model.IBakedModel itemModel=new com.vandorlabs.client.ConfiguredMaterialItemModel(base,path.startsWith("configured/programmable_light"));
+                    if(path.startsWith("configured/programmable_wall_") || path.startsWith("configured/programmable_porthole_wall_") || path.startsWith("configured/programmable_porthole_block_"))itemModel=new com.vandorlabs.client.PaddedItemModel(itemModel);
+                    event.getModelRegistry().putObject(location,itemModel);
+                }
             }
         }
         ModelResourceLocation diagonalScreenItem=new ModelResourceLocation("vandorlabs:programmable_diagonal_screen","inventory");
