@@ -43,8 +43,9 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
     }
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
         if(state!=null&&state.is(VandorLabsModern.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
-        return data;
+        return com.vandorlabs.neoforge.client.NativeHousingLighting.snapshot(level,pos,data);
     }
+    @Override public net.neoforged.neoforge.common.util.TriState useAmbientOcclusion(BlockState state,ModelData data,RenderType layer){return net.neoforged.neoforge.common.util.TriState.FALSE;}
     @Override public boolean useAmbientOcclusion() { return false; }
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType renderType) {
         List<BakedQuad> base=originalModel.getQuads(state,side,random,data,renderType);
@@ -74,6 +75,8 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
                 new com.vandorlabs.render.HousingFacePlane(new int[3],new int[]{1,1,1}),0,
                 sprite,uScale,vScale,margin));
         }
+        Integer light=data.get(com.vandorlabs.neoforge.client.NativeHousingLighting.LIGHT);
+        if(light!=null)for(int i=0;i<result.size();i++)result.set(i,com.vandorlabs.neoforge.client.NativeHousingLighting.apply(result.get(i),light));
         return result;
     }
     /** Configured trigger items always preview the stored OFF material, independently of live signals. */

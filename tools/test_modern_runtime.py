@@ -14,9 +14,9 @@ from build_all import ROOT, java_home
 
 PLATFORM=ROOT/'platforms/neoforge-1.21.1'
 MARKERS={
-    'write':['trigger-write PASS','joined-cube-write PASS','controls-write PASS','basic-housing-server PASS','screen-families-server PASS','filesystem-write PASS','wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
-    'read':['trigger-read PASS','joined-cube-read PASS','controls-read PASS','basic-housing-read PASS','screen-families-read PASS','filesystem-read PASS','wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
-    'client':['trigger-client PASS','joined-cube-client PASS','controls-client PASS','screen-filesystem-client PASS','screen-families-client PASS','filesystem-client PASS','block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','wireless-glyph-captures PASS','client-smoke PASS'],
+    'write':['shape-chunk-write PASS','shape-write PASS','contained-fluids-write PASS','trigger-write PASS','joined-cube-write PASS','controls-write PASS','basic-housing-server PASS','screen-families-server PASS','filesystem-write PASS','wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
+    'read':['shape-chunk-read PASS','shape-read PASS','contained-fluids-read PASS','trigger-read PASS','joined-cube-read PASS','controls-read PASS','basic-housing-read PASS','screen-families-read PASS','filesystem-read PASS','wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
+    'client':['shape-chunks-client PASS','shape-model-parity PASS','housing-lighting PASS','shape-client PASS','shape-items-model PASS','shape-items-client PASS','contained-fluids-models PASS','contained-fluid-neighbors PASS','contained-fluid-light PASS','contained-fluids-client PASS','trigger-client PASS','joined-cube-client PASS','controls-client PASS','screen-filesystem-client PASS','screen-families-client PASS','filesystem-client PASS','block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','wireless-glyph-captures PASS','client-smoke PASS'],
 }
 CLIENT_IMAGES=['modern-filesystem-world.png','modern-filesystem-picker-portrait.png','modern-filesystem-picker-missing.png','modern-filesystem-picker-wide.png','modern-world.png','modern-programmable-block.png','modern-programmable-block-gui2.png',
                'modern-screen-scale3.png','modern-screen-scale2.png','modern-screen-world-a.png','modern-screen-world-b.png',
@@ -29,6 +29,12 @@ CLIENT_IMAGES += [f'modern-screen-filesystem-{suffix}.png' for suffix in ('picke
 CLIENT_IMAGES += [f'modern-joined-{mode}.png' for mode in range(3)]
 CLIENT_IMAGES += [f'modern-controls-{suffix}.png' for suffix in ('button-on','button-off','rocker-on','dialog-scale3','dialog-scale2','dialog-edited','tilted','icons')]
 CLIENT_IMAGES += [f'modern-trigger-{suffix}.png' for suffix in ('gui3','gui2','bands-exact','band-0','band-3','band-7','band-13')]
+CLIENT_IMAGES += [f'modern-shape-{family}-{suffix}.png' for family in ('slab','stairs') for suffix in ('world','gui3','gui2','side','side-default','faces','dormant','restored','configured')]
+CLIENT_IMAGES += [f'modern-shape-stairs-{suffix}.png' for suffix in ('slider1','slider2','slider4','slider8','sideways','sideways-world')]
+CLIENT_IMAGES += ['modern-shape-items.png']
+CLIENT_IMAGES += [f'modern-contained-{suffix}.png' for suffix in ('water-joined-above','water-reference','water-inside','water-joined-below','water-air-exit','water-drained','water-refilled','lava-inside','stair-water')]
+CLIENT_IMAGES += [f'modern-shape-chunk-{index}-{phase}.png' for index in range(8) for phase in ('loaded','unloaded','forced-reference','reloaded')]
+CLIENT_IMAGES += ['modern-shape-chunk-negative-sky.png']
 FATAL=re.compile(r'\bFATAL\b|Encountered an unexpected exception|Exception in server tick loop|Failed to start the minecraft server|This crash report has been saved to|Preparing crash report|Caused by: java\.lang\.(?:AssertionError|IllegalStateException)|Modern client:|Modern runtime check:')
 
 
@@ -90,9 +96,11 @@ def run(phase,args):
     task='runClient' if phase=='client' else 'runServer'
     command=[str(wrapper),task,'--no-daemon','-PpythonExecutable='+sys.executable]
     command+=['-PmodernClientSmoke=true'] if phase=='client' else ['-PmodernSmoke='+phase]
+    if phase=='client':command+=['-PmodernClientPort='+str(args.port)]
     if args.compiled:
         for task_name in ('compileJava','processResources','generateModernResources'):command+=['-x',task_name]
     if os.name=='nt':command=[os.environ.get('COMSPEC','cmd.exe'),'/d','/v:off','/s','/c','"'+' '.join('"'+item+'"' for item in command)+'"']
+    if phase=='client' and args.xvfb and os.name!='nt':command=['xvfb-run','-a','-s','-screen 0 1280x720x24',*command]
     log=args.log_dir/f'{phase}.log';log.parent.mkdir(parents=True,exist_ok=True)
     print(f'Running modern {phase}; timeout {args.timeout}s; log {log}',flush=True)
     started_ns=time.time_ns()
@@ -121,11 +129,17 @@ def run(phase,args):
                 raise RuntimeError('Current-run screenshot missing or stale: '+name)
             with Image.open(image) as png:png.verify()
             images[name]=hashlib.sha256(image.read_bytes()).hexdigest()
-        metadata=PLATFORM/'run/client/screenshots/modern-wireless-glyphs.json'
-        if not metadata.is_file() or metadata.stat().st_mtime_ns<started_ns:
-            raise RuntimeError('Current-run wireless glyph metadata missing or stale')
-        json.loads(metadata.read_text())
-        images[metadata.name]=hashlib.sha256(metadata.read_bytes()).hexdigest()
+        for filename in ('modern-wireless-glyphs.json','modern-shape-model-parity.json','modern-shape-chunks.json'):
+            metadata=PLATFORM/'run/client/screenshots'/filename
+            if not metadata.is_file() or metadata.stat().st_mtime_ns<started_ns:
+                raise RuntimeError('Current-run model/glyph metadata missing or stale: '+filename)
+            json.loads(metadata.read_text())
+            images[metadata.name]=hashlib.sha256(metadata.read_bytes()).hexdigest()
+        if args.legacy_shape_reference:
+            subprocess.run([sys.executable,str(ROOT/'tools/compare_shape_model_parity.py'),
+                            '--legacy',str(args.legacy_shape_reference),
+                            '--modern',str(PLATFORM/'run/client/screenshots/modern-shape-model-parity.json'),
+                            '--report',str(args.log_dir/'shape-model-parity.json')],check=True)
         subprocess.run([sys.executable,str(PLATFORM/'analyze_wireless_glyphs.py'),str(PLATFORM/'run/client/screenshots')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_filesystem_images.py'),
                         '--screenshots',str(PLATFORM/'run/client/screenshots'),
@@ -139,15 +153,21 @@ def run(phase,args):
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_control_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'controls-pixels')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_joined_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'joined-pixels')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_trigger_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'trigger-pixels')],check=True)
+        subprocess.run([sys.executable,str(ROOT/'tools/test_modern_shape_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'shape-pixels')],check=True)
+        subprocess.run([sys.executable,str(ROOT/'tools/validate_shape_chunk_images.py'),str(PLATFORM/'run/client/screenshots'),'--report',str(args.log_dir/'shape-chunk-pixels.json')],check=True)
+        subprocess.run([sys.executable,str(ROOT/'tools/test_modern_fluid_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'fluid-pixels')],check=True)
     print(f'Modern {phase} PASS: all {len(markers)} runtime markers and clean process completion',flush=True)
-    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images,'visual_checks':{'filesystem':'PASS','wireless_glyphs':'PASS','screen_families':'PASS','screen_filesystem':'PASS','controls':'PASS','joined_cubes':'PASS','trigger':'PASS'} if phase=='client' else {}}
+    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images,'visual_checks':{'filesystem':'PASS','wireless_glyphs':'PASS','screen_families':'PASS','screen_filesystem':'PASS','controls':'PASS','joined_cubes':'PASS','trigger':'PASS','shapes':'PASS','shape_chunks':'PASS','contained_fluids':'PASS','cross_version_shape_models':'PASS' if args.legacy_shape_reference else 'not_requested'} if phase=='client' else {}}
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--phase',choices=['write','read','both','client'],default='both')
     parser.add_argument('--verify-log',type=Path,help='Check an already completed log instead of launching a process')
+    parser.add_argument('--legacy-shape-reference',type=Path,help='Compare fresh native slab/stair exports with an actual legacy model export')
     parser.add_argument('--compiled',action='store_true',help='Use the existing frozen classes/resources without recompilation')
+    parser.add_argument('--port',type=int,default=25570,help='Local fixture server port for rendered checks')
+    parser.add_argument('--xvfb',action='store_true',help='Run the rendered client in an isolated virtual display')
     parser.add_argument('--timeout',type=int,default=420)
     parser.add_argument('--log-dir',type=Path,default=ROOT/'build/reports/modern-runtime')
     args=parser.parse_args()

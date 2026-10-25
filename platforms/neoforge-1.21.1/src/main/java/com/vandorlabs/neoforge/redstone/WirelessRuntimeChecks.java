@@ -49,6 +49,7 @@ public final class WirelessRuntimeChecks {
     }
 
     public static void run(ServerLevel level) {
+        level.setBlock(RX.below(),Blocks.STONE.defaultBlockState(),3);
         resetFixture(level);
         require(WirelessContent.TRANSMITTER.get().getExplosionResistance() == 6 && WirelessContent.RECEIVER.get().getExplosionResistance() == 6,
                 "legacy effective explosion resistance (setter10 stores30 then exposes6)");

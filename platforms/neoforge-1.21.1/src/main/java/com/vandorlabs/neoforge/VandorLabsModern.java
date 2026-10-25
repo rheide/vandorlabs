@@ -39,10 +39,11 @@ public final class VandorLabsModern {
         TABS.register("vandorlabs", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.vandorlabs"))
             .icon(() -> PROGRAMMABLE_ITEM.get().getDefaultInstance())
-            .displayItems((parameters, output) -> { output.accept(com.vandorlabs.neoforge.trigger.TriggerRegistration.creativeItem());com.vandorlabs.neoforge.control.ControlRegistration.creativeItems().forEach(output::accept);output.accept(PROGRAMMABLE_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get());output.accept(MATTER_BLOCK_ITEM.get());output.accept(ALLOY_INGOT.get());com.vandorlabs.neoforge.screen.ScreenRegistration.creativeItems().forEach(output::accept);output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.TRANSMITTER_ITEM.get());output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.RECEIVER_ITEM.get()); }).build());
+            .displayItems((parameters, output) -> { com.vandorlabs.neoforge.shape.ShapeRegistration.creativeItems().forEach(output::accept);output.accept(com.vandorlabs.neoforge.trigger.TriggerRegistration.creativeItem());com.vandorlabs.neoforge.control.ControlRegistration.creativeItems().forEach(output::accept);output.accept(PROGRAMMABLE_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get());output.accept(MATTER_BLOCK_ITEM.get());output.accept(ALLOY_INGOT.get());com.vandorlabs.neoforge.screen.ScreenRegistration.creativeItems().forEach(output::accept);output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.TRANSMITTER_ITEM.get());output.accept(com.vandorlabs.neoforge.redstone.WirelessContent.RECEIVER_ITEM.get()); }).build());
     }
     public VandorLabsModern(IEventBus bus) {
         FilesystemMaterials.initialize();
+        com.vandorlabs.neoforge.shape.ShapeRegistration.initialize();
         com.vandorlabs.neoforge.trigger.TriggerRegistration.initialize();
         com.vandorlabs.neoforge.control.ControlRegistration.initialize();
         com.vandorlabs.neoforge.redstone.WirelessContent.initialize();

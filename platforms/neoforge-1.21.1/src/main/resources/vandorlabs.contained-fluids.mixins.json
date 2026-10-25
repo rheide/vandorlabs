@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.vandorlabs.neoforge.fluid.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["EntityContainedFluidMixin"],
+  "client": ["CameraContainedFluidMixin", "LiquidBlockRendererContainedMixin", "ClientFluidNeighborMixin"],
+  "injectors": {"defaultRequire": 1}
+}

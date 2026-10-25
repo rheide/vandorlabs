@@ -42,3 +42,13 @@ python ../../tools/test_modern_runtime.py --phase both
 The wrapper requires every phase-specific PASS marker, a clean Minecraft shutdown and process completion within the timeout. It rejects crash evidence even when Minecraft or Gradle returns zero. `--compiled` uses an already frozen classes/resource set.
 
 For rendered checks, configure the development server on localhost port 25570, then start it with `-PmodernClientFixture`. That opt-in fixture creates a test platform and blocks and positions each connecting player for the checks. Run the development client with `-PmodernClientSmoke`; it connects to that local server, checks emitted cube geometry and native menu input, exercises screen settings, captures screenshots in the target client run directory, and stops after success. Production worlds are outside this workflow.
+
+The complete rendered gate can also manage its own local fixture server:
+
+```sh
+python ../../tools/test_modern_client.py
+```
+
+Build the native target first. This command freezes the compiled classes and resources, starts a fresh temporary world on a separate localhost port, checks every required runtime marker and fresh capture, and stops only the processes it started. It discards the fixture world afterward and retains reports under `build/reports/modern-client`. It selects an isolated virtual display when no display is available; `--xvfb` also selects it explicitly. `--port` changes the local test port.
+
+For an independent slab/stair comparison, pass `--legacy-shape-reference` with the actual Forge model export produced by the focused fluid checks. The comparison checks emitted geometry, collision unions, material assignments, UVs, culling and shading. Without that argument, the gate records that the cross-version export comparison was not requested; native runtime and pixel checks still run.

@@ -58,6 +58,9 @@ public final class ModernRuntimeChecks {
             CompoundTag legacy=saved.copy();legacy.remove("HousingTextureVersion");legacy.putInt(ProgrammableBlockDialog.MAIN_TEXTURE_KEY,15);
             restored.loadWithComponents(legacy,level.registryAccess());require(restored.settings().mainTexture==14,"legacy removed finish migration mismatch");
             com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.run(level);
+            com.vandorlabs.neoforge.shape.ShapeRuntimeChecks.run(level);
+            com.vandorlabs.neoforge.shape.ShapeChunkRuntimeChecks.run(level);
+            com.vandorlabs.neoforge.fluid.NativeFluidRuntimeChecks.run(level);
             JoinedCubeRuntimeChecks.run(level);
             com.vandorlabs.neoforge.control.ControlRuntimeChecks.run(level);
             BasicHousingRuntimeChecks.run(level);
@@ -72,6 +75,9 @@ public final class ModernRuntimeChecks {
             System.out.println("[vandorlabs][modern] server-write PASS settings, fixed-size payload bounds, permissions, distance, unloaded target, NBT roundtrip, legacy migration, disk save");
         } else {
             com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.prepareRead(level);
+            com.vandorlabs.neoforge.shape.ShapeRuntimeChecks.prepareRead(level);
+            com.vandorlabs.neoforge.shape.ShapeChunkRuntimeChecks.prepareRead(level);
+            com.vandorlabs.neoforge.fluid.NativeFluidRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.control.ControlRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.screen.RedstoneOverlayRuntimeChecks.prepareRead(level);
             for(BlockPos at:java.util.List.of(pos,new BlockPos(4,80,0),new BlockPos(10,80,0),new BlockPos(14,80,0))) { level.getChunkAt(at);level.getBlockEntity(at); }
@@ -90,6 +96,9 @@ public final class ModernRuntimeChecks {
         var tile=(ProgrammableBlockEntity)level.getBlockEntity(pos);
         require(tile.settings().mainTexture==3&&tile.settings().layout==2&&tile.settings().facesEnabled&&Arrays.equals(tile.settings().faces(),new int[]{0,1,2,3,-1,5}),"disk reload mismatch");
         com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.read(level);
+            com.vandorlabs.neoforge.shape.ShapeRuntimeChecks.read(level);
+            com.vandorlabs.neoforge.shape.ShapeChunkRuntimeChecks.read(level);
+            com.vandorlabs.neoforge.fluid.NativeFluidRuntimeChecks.read(level);
         JoinedCubeRuntimeChecks.read(level);
         com.vandorlabs.neoforge.control.ControlRuntimeChecks.read(level);
         BasicHousingRuntimeChecks.read(level);

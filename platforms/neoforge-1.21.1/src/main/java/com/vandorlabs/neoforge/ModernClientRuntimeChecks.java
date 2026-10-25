@@ -22,8 +22,9 @@ import net.neoforged.neoforge.client.event.RenderFrameEvent;
 /** Opt-in native client rendering, menu input and network round-trip checks. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class ModernClientRuntimeChecks {
-    private static int ticks,totalTicks,stage,stageStart,screenTick,redstoneTick,wirelessTick,filesystemTick,familyTick,screenFilesystemTick,joinedTick,controlTick,triggerTick;
+    private static int ticks,totalTicks,stage,stageStart,screenTick,redstoneTick,wirelessTick,filesystemTick,familyTick,screenFilesystemTick,joinedTick,controlTick,triggerTick,shapeTick,shapeItemsTick,shapeChunkTick,containedFluidTick;
     private static String screenshot;
+    private static boolean shapeParityDone;
     private static long renderedFrames;
     public static long renderedFrames(){return renderedFrames;}
     private static final Set<String> captured=java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -43,12 +44,13 @@ public final class ModernClientRuntimeChecks {
         if(!Boolean.getBoolean("vandorlabs.modernClientSmoke"))return;
         Minecraft mc=Minecraft.getInstance();
         if(totalTicks==0)mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
-        require(++totalTicks<6000,"startup/login timed out before placed-world checks");
+        require(++totalTicks<18000,"startup/login timed out before placed-world checks");
         if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen onboarding) { onboarding.onClose();return; }
         if(mc.player==null||mc.level==null||mc.gameMode==null)return;
         ticks++;
-        require(ticks<6000,"smoke timed out at stage "+stage);
+        require(ticks<18000,"smoke timed out at stage "+stage);
         BlockPos pos=new BlockPos(0,80,0);
+        if(stage==0&&System.getProperty("vandorlabs.modernClientSuite","").equals("shapes")){if(ticks<60)return;stage=49;shapeTick=0;return;}
         if(stage==0&&System.getProperty("vandorlabs.modernClientSuite","").equals("trigger")){if(ticks<60)return;stage=46;triggerTick=0;return;}
         if(stage==0&&System.getProperty("vandorlabs.modernClientSuite","").equals("joined-controls")){if(ticks<60)return;stage=44;joinedTick=0;return;}
         if(stage==0) {
@@ -98,8 +100,17 @@ public final class ModernClientRuntimeChecks {
         } else if(stage==45) {
             if(com.vandorlabs.neoforge.control.ControlClientChecks.tick(mc,controlTick++)) {stage=46;triggerTick=0;}
         } else if(stage==46) {
-            if(com.vandorlabs.neoforge.trigger.TriggerClientChecks.tick(mc,triggerTick++)) {stage=5;stageStart=ticks;}
-        } else if(stage==5&&ticks-stageStart>40&&(System.getProperty("vandorlabs.modernClientSuite","").equals("trigger")||System.getProperty("vandorlabs.modernClientSuite","").equals("joined-controls")||captured.containsAll(Set.of("modern-world.png","modern-programmable-block.png","modern-programmable-block-gui2.png","modern-screen.png","modern-filesystem-world.png","modern-filesystem-picker-portrait.png","modern-filesystem-picker-missing.png","modern-filesystem-picker-wide.png","modern-redstone-overlay-on.png","modern-redstone-editor.png","modern-redstone-editor-scale3.png","modern-redstone-editor-scale2.png","modern-redstone-overlay-eight.png","modern-wireless-world.png","modern-wireless-receiver-dialog.png","modern-wireless-transmitter-dialog.png")))) {
+            if(com.vandorlabs.neoforge.trigger.TriggerClientChecks.tick(mc,triggerTick++)) {stage=49;shapeTick=0;}
+        } else if(stage==49) {
+            if(!shapeParityDone){com.vandorlabs.neoforge.shape.ShapeModelParityChecks.run(mc);shapeParityDone=true;}
+            if(com.vandorlabs.neoforge.shape.ShapeClientChecks.tick(mc,shapeTick++)) {stage=50;shapeItemsTick=0;}
+        } else if(stage==50) {
+            if(com.vandorlabs.neoforge.shape.ShapeClientModelChecks.tick(mc,shapeItemsTick++)) {stage=52;shapeChunkTick=0;}
+        } else if(stage==52) {
+            if(com.vandorlabs.neoforge.shape.ShapeChunkClientChecks.tick(mc,shapeChunkTick++)) {stage=51;containedFluidTick=0;}
+        } else if(stage==51) {
+            if(com.vandorlabs.neoforge.fluid.client.NativeFluidClientChecks.tick(mc,containedFluidTick++)) {stage=5;stageStart=ticks;}
+        } else if(stage==5&&ticks-stageStart>40&&(System.getProperty("vandorlabs.modernClientSuite","").equals("shapes")||System.getProperty("vandorlabs.modernClientSuite","").equals("trigger")||System.getProperty("vandorlabs.modernClientSuite","").equals("joined-controls")||captured.containsAll(Set.of("modern-world.png","modern-programmable-block.png","modern-programmable-block-gui2.png","modern-screen.png","modern-filesystem-world.png","modern-filesystem-picker-portrait.png","modern-filesystem-picker-missing.png","modern-filesystem-picker-wide.png","modern-redstone-overlay-on.png","modern-redstone-editor.png","modern-redstone-editor-scale3.png","modern-redstone-editor-scale2.png","modern-redstone-overlay-eight.png","modern-wireless-world.png","modern-wireless-receiver-dialog.png","modern-wireless-transmitter-dialog.png")))) {
             System.out.println("[vandorlabs][modern] client-smoke PASS placed world, native dialogs and rendered screenshots");mc.stop();stage=6;
         }
     }
