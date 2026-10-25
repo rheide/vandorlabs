@@ -44,7 +44,12 @@ final class CockpitCanopyInteractionChecks {
                 require(cockpit.toggleSeat(player),"seat extends beneath "+id+": "+cockpit.seatBlockReason);finish(cockpit);
                 require(CockpitAssembly.root(world,shared)==cockpit,"shared rear canopy resolves extended seat");require(!CockpitAssembly.boxes(world,shared).isEmpty(),"extended seat collision survives shared canopy");
                 cockpit.readFromNBT(cockpit.writeToNBT(new NBTTagCompound()));require(CockpitAssembly.root(world,shared)==cockpit,"shared rear survives saved seat state");
-                require(cockpit.toggleSeat(player),"seat returns beneath "+id);finish(cockpit);CockpitReservations.tick(cockpit);
+                require(cockpit.toggleSeat(player),"seat returns beneath "+id);finish(cockpit);
+                // Returned helpers no longer resolve active collision ownership. Cleanup
+                // must use their exact saved owner, and never clear a foreign helper.
+                TileEntityCockpitPart foreign=null;for(BlockPos cell:CockpitReservations.rear(cockpit,cockpit.facing()))if(world.getTileEntity(cell) instanceof TileEntityCockpitPart){foreign=(TileEntityCockpitPart)world.getTileEntity(cell);break;}
+                require(foreign!=null,"rear helper exists before returned-seat cleanup");BlockPos savedAnchor=foreign.anchor;foreign.anchor=cockpit.getPos().add(40,0,0);CockpitReservations.tick(cockpit);require(world.getTileEntity(foreign.getPos())==foreign,"returned-seat cleanup preserves a helper with another saved owner");foreign.anchor=savedAnchor;CockpitReservations.tick(cockpit);
+                for(BlockPos cell:CockpitReservations.rear(cockpit,cockpit.facing()))require(!(world.getTileEntity(cell) instanceof TileEntityCockpitPart),"all returned rear helpers released beneath "+id);
                 for(BlockPos cell:cells)require(world.getBlockState(cell).getBlock()==block,"return releases only seat helpers, never canopy");
                 world.destroyBlock(anchor,false);cockpit.readFromNBT(original);
             }

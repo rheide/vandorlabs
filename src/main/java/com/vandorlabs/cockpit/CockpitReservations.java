@@ -63,8 +63,8 @@ public final class CockpitReservations {
         }
     }
     public static void tick(TileEntityCockpit tile){
-        if(tile.seatSlide.target()||tile.seatSlide.moving(tile.getWorld().getTotalWorldTime())||tile.getWorld() instanceof VehicleWorld)return;
-        for(BlockPos p:rear(tile,tile.facing()))if(tile.getWorld().getTileEntity(p) instanceof TileEntityCockpitPart && CockpitAssembly.root(tile.getWorld(),p)==tile){
+        if(tile.seatSlide.target()||tile.seatSlide.moving(tile.getWorld().getTotalWorldTime())||tile.getWorld() instanceof VehicleWorld||tile.getWorld().getTileEntity(tile.getPos())!=tile)return;
+        for(BlockPos p:rear(tile,tile.facing()))if(tile.getWorld().getTileEntity(p) instanceof TileEntityCockpitPart && ((TileEntityCockpitPart)tile.getWorld().getTileEntity(p)).anchor.equals(tile.getPos())){
             tile.getWorld().removeTileEntity(p);tile.getWorld().setBlockState(p,net.minecraft.init.Blocks.AIR.getDefaultState(),3);
         }
     }
