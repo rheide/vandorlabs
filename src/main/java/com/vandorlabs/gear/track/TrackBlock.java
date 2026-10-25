@@ -77,6 +77,8 @@ public final class TrackBlock extends com.vandorlabs.gear.GearBlock {
 
     @Override
     public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
+        // Carried tracks use the live gear renderer so tread travel never rebuilds the hull VBO.
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld&&((com.vandorlabs.vehicle.VehicleWorld)world).craft!=null)state=state.withProperty(ASSEMBLED,true);
         return ((IExtendedBlockState) state).withProperty(TrackAppearance.PROPERTY, appearance(world, pos)).withProperty(TrackAppearance.STYLE,style(world,pos).ordinal());
     }
 
@@ -101,7 +103,13 @@ public final class TrackBlock extends com.vandorlabs.gear.GearBlock {
     public void breakBlock(World world, BlockPos pos, IBlockState state) {
         TileEntity tile = world.getTileEntity(pos);
         if(tile instanceof TrackTile)((TrackTile)tile).rememberStyle();
-        if (!world.isRemote && tile instanceof TrackTile) TrackWorld.releaseCachedGroup(world, (TrackTile) tile);
+        if (!world.isRemote && tile instanceof TrackTile) {
+            com.vandorlabs.gear.GearTileEntity root=((TrackTile)tile).loadedController();
+            TrackWorld.releaseCachedGroup(world,(TrackTile)tile);
+            // The world already contains the replacement state here. Rescan a
+            // stationary root before generic part removal can reset its pose.
+            if(root!=null&&root!=tile&&!root.isInvalid())root.rebuild();
+        }
         super.breakBlock(world, pos, state);
         TrackWorld.requestAround(world, pos);
     }

@@ -28,6 +28,12 @@ public final class GearCoreTests {
         topologySizesAndLimits();
         topologyShapesMasksAndIdentity();
         topologyMalformedInput();
+        List<Cell> offsetTrack=Collections.singletonList(new Cell(1,-2,0));
+        check(!GearTopology.validate(2,FootKind.TRACK,offsetTrack).isValid(),"Regular mounts still require directly anchored Track");
+        Result contacted=GearTopology.validateTrackContact(2,offsetTrack,new Cell(1,-2,0));
+        check(contacted.isValid()&&contacted.assembly().anchorFoot().equals(new Cell(1,-2,0)),"Large mounted Track retains proven offset contact");
+        check(!GearTopology.validateTrackContact(2,offsetTrack,new Cell(2,-2,0)).isValid(),"Large contact never reaches beyond adjacent footprint");
+        check(!GearTopology.validateTrackContact(2,offsetTrack,new Cell(1,-1,0)).isValid(),"Large contact stays on actual mounting plane");
         extensionEndpointsAndAttachments();
         cardinalRotationAndRigidity();
         levelFootRotationAndLowerHinge();

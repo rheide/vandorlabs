@@ -56,6 +56,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(payload!=null&&payload.hasOwnershipJournal()){lastError="Original attachment cells need recovery before this snapshot can move";return false;}
         if(failedPayload!=null){lastError="Attachment snapshot could not be loaded; original data retained";return false;}
         try{
+            refreshMaterializedPayload();
             if(payload==null){
                 BlockPos attachment=localCell(0,-assembly.columnHeight(),0);
                 if(!GearAssembly.loaded(world,attachment)){lastError="Load the attachment first";return false;}
@@ -67,6 +68,10 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             if(payload!=null&&payload.materialized()){if(!payload.matchesPlaced(this)){net.minecraft.entity.player.EntityPlayer actor=com.vandorlabs.tiles.WorldActionAuthorization.actor(this);payload=payload.refreshPlaced(this,actor instanceof net.minecraft.entity.player.EntityPlayerMP?(net.minecraft.entity.player.EntityPlayerMP)actor:null);}payload.detach(this);sync();}
             return true;
         }catch(RuntimeException | LinkageError denied){lastError=denied.getMessage();if(payload!=null&&payload.hasOwnershipJournal()){operational=false;sync();}return false;}
+    }
+    private void refreshMaterializedPayload(){
+        if(payload==null||!payload.materialized()||world==null||world.isRemote)return;
+        ArmPayload remaining=payload.pruneRemoved(this);if(remaining!=payload){payload=remaining;sync();GearGeometry.register(this);}
     }
     private void restorePayloadEndpoint(){try{if(payload!=null&&(progress==0||progress==1)&&!payload.materialized()&&payload.restore(this,progress))sync();}catch(RuntimeException | LinkageError failure){motionBlocked=true;lastError="Attachment snapshot retained: "+failure.getMessage();if(payload!=null&&payload.hasOwnershipJournal()){operational=false;sync();}else markDirty();}}
     private EnumFacing mountDirection=EnumFacing.DOWN;
@@ -84,7 +89,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public boolean rotatePayload(){return rotatePayload;}
     public double activeAngle(){return activeAngle;}
     public double minimumExtension(){return 1-(assembly==null?1:assembly.columnHeight());}
-    public double activeExtension(){return assembly!=null&&(assembly.kind()==GearTopology.FootKind.NONE||isExtendedTrackStroke())&&!isSwingArmController()&&!isFixedMount()?Math.max(minimumExtension(),activeExtension):activeExtension;}
+    public double activeExtension(){return assembly!=null&&(assembly.kind()==GearTopology.FootKind.NONE||isExtendedTrackStroke())&&!isSwingArmController()&&!isFixedMount()?assembly.columnHeight():activeExtension;}
 
     private GearMotion.Mode mode = GearMotion.Mode.EXTEND;
     private GearMotion.Direction direction = GearMotion.Direction.NORTH;
@@ -263,6 +268,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             if (isOperational()&&!motionBlocked) progress = GearMotion.advance(progress, deployedTarget, 1, ANIMATION_TICKS);
             return;
         }
+        refreshMaterializedPayload();
         if(payload!=null&&payload.hasOwnershipJournal()){
             net.minecraft.entity.player.EntityPlayer actor;try{actor=com.vandorlabs.tiles.WorldActionAuthorization.actor(this);}catch(IllegalArgumentException denied){lastError=denied.getMessage();return;}
             int before=payload.ownershipJournalSize();
@@ -385,7 +391,18 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         }
         boolean desiredTarget=deployedTarget;
         if(!unchanged){
-            if(formingActiveTrack&&(genericBefore||isExtendedTrackStroke())&&scan.assembly.kind()==GearTopology.FootKind.TRACK&&scan.columns.size()==1&&scan.columns.get(0).equals(pos)){assembly=null;GearGeometry.remove(this);members.clear();owner=null;}
+            boolean stationary=progress==0||progress==1;
+            boolean sameColumns=assembly!=null&&assembly.columnHeight()==scan.assembly.columnHeight()&&columns.equals(relativeColumns(scan.columns));
+            boolean footRemesh=sameColumns&&stationary&&payload==null&&failedPayload==null&&assembly.kind()==GearTopology.FootKind.TRACK
+                    &&(scan.assembly.kind()==GearTopology.FootKind.TRACK||trackExtensionStroke&&scan.assembly.kind()==GearTopology.FootKind.NONE);
+            if(footRemesh||formingActiveTrack&&(genericBefore||isExtendedTrackStroke())&&scan.assembly.kind()==GearTopology.FootKind.TRACK&&scan.columns.size()==1&&scan.columns.get(0).equals(pos)){
+                // Track editing changes the foot mesh, not the stationary column's pose.
+                // Release departed helpers before rebinding the surviving component.
+                for(BlockPos member:new ArrayList<>(members))if(!prospective.contains(member)&&GearAssembly.loaded(world,member)){
+                    TileEntity old=world.getTileEntity(member);if(old instanceof GearTileEntity&&pos.equals(((GearTileEntity)old).owner))((GearTileEntity)old).clearBinding();
+                }
+                assembly=null;GearGeometry.remove(this);members.clear();owner=null;
+            }
             else{
                 for(BlockPos column:scan.columns){TileEntity raw=world.getTileEntity(column);if(raw instanceof GearTileEntity&&((GearTileEntity)raw).assembly!=null&&!((GearTileEntity)raw).fullyDeployed()){lastError="Deploy the connected group before changing its topology";return false;}}
                 if(!releaseAssembly())return false;
@@ -501,8 +518,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         double extension=tag.hasKey("ActiveExtension",6)?tag.getDouble("ActiveExtension"):activeExtension;
         boolean rotate=tag.hasKey("RotatePayload",1)?tag.getBoolean("RotatePayload"):rotatePayload;
         if(!Double.isFinite(angle)||angle < -180||angle > 180||!Double.isFinite(extension)||extension < -8||extension > 8)throw new IllegalArgumentException("Arm stroke is out of range");
-        if(assembly!=null&&(assembly.kind()==GearTopology.FootKind.NONE||isExtendedTrackStroke())&&!isSwingArmController()&&!isFixedMount()&&extension<minimumExtension())throw new IllegalArgumentException("Leave at least one block of arm reach");
-        if((dir!=direction.ordinal()||angle!=activeAngle||extension!=activeExtension||rotate!=rotatePayload)&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");
+        if((dir!=direction.ordinal()||angle!=activeAngle||rotate!=rotatePayload)&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");
         if(tag.hasKey("TrackStyle",3)){if(assembly!=null&&!fullyDeployed()&&com.vandorlabs.gear.track.TrackStyles.style(this)!=tag.getInteger("TrackStyle"))throw new IllegalArgumentException("Deploy fully before changing track style");com.vandorlabs.gear.track.TrackStyles.apply(this,tag.getInteger("TrackStyle"));}
         if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}configured=true;rotatePayload=rotate;activeAngle=angle;activeExtension=extension;if(isSwingArmController())mode=rotate?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
     }
@@ -546,6 +562,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 feet.appendTag(new NBTTagIntArray(new int[] { foot.x, foot.y, foot.z }));
             }
             tag.setTag("GearFeet", feet);
+            GearTopology.Cell contact=assembly.anchorFoot();if(contact.x!=0||contact.z!=0)tag.setIntArray("GearTrackContact",new int[]{contact.x,contact.y,contact.z});else tag.removeTag("GearTrackContact");
         }
         return tag;
     }
@@ -584,7 +601,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 }
                 GearTopology.FootKind kind = parseEnum(GearTopology.FootKind.class,
                         tag.getString("GearKind"), GearTopology.FootKind.PLATE);
-                GearTopology.Result result = GearTopology.validate(tag.getInteger("GearHeight"), kind, feet);
+                int[] contact=tag.getIntArray("GearTrackContact");GearTopology.Result result=kind==GearTopology.FootKind.TRACK&&contact.length==3?GearTopology.validateTrackContact(tag.getInteger("GearHeight"),feet,new GearTopology.Cell(contact[0],contact[1],contact[2])):GearTopology.validate(tag.getInteger("GearHeight"),kind,feet);
                 if (result.isValid() && feet.size() == rawFeet.tagCount()) {
                     assembly = result.assembly();
                     owner = pos.toImmutable();
@@ -642,8 +659,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         double rx = Math.max(Math.abs(assembly.minX() - 0.5), Math.abs(assembly.maxX() + 0.5));
         double rz = Math.max(Math.abs(assembly.minZ() - 0.5), Math.abs(assembly.maxZ() + 0.5));
         double ry = assembly.columnHeight() + GearMotion.PIVOT_Y;
+        if((assembly.kind()==GearTopology.FootKind.NONE||isExtendedTrackStroke())&&!isSwingArmController()&&!isFixedMount())ry+=Math.max(0,activeExtension());
         double radius = Math.sqrt(rx * rx + ry * ry + rz * rz) + 1.0;
-        if(payload!=null){AxisAlignedBB b=payload.blocks.bounds;double px=Math.max(Math.abs(payload.offset.getX()-.5),Math.abs(payload.offset.getX()+b.maxX-.5)),py=Math.max(Math.abs(payload.offset.getY()-.5),Math.abs(payload.offset.getY()+b.maxY-.5)),pz=Math.max(Math.abs(payload.offset.getZ()-.5),Math.abs(payload.offset.getZ()+b.maxZ-.5));radius=Math.max(radius,Math.sqrt(px*px+py*py+pz*pz)+assembly.columnHeight()+Math.abs(activeExtension)+2);}
+        if(payload!=null){AxisAlignedBB b=payload.blocks.bounds;double px=Math.max(Math.abs(payload.offset.getX()-.5),Math.abs(payload.offset.getX()+b.maxX-.5)),py=Math.max(Math.abs(payload.offset.getY()-.5),Math.abs(payload.offset.getY()+b.maxY-.5)),pz=Math.max(Math.abs(payload.offset.getZ()-.5),Math.abs(payload.offset.getZ()+b.maxZ-.5));radius=Math.max(radius,Math.sqrt(px*px+py*py+pz*pz)+assembly.columnHeight()+Math.abs(activeExtension())+2);}
 
         AxisAlignedBB rigidBounds = new AxisAlignedBB(pos.getX() + 0.5 - radius, pos.getY() + GearMotion.PIVOT_Y - radius,
                 pos.getZ() + 0.5 - radius, pos.getX() + 0.5 + radius,

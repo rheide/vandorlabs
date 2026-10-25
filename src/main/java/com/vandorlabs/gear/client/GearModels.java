@@ -26,7 +26,7 @@ final class GearModels {
     private GearModels() { }
 
     static void reload() {
-        MESHES.clear();ArmPayloadRenderer.clear();
+        MESHES.clear();ArmPayloadRenderer.clear();TrackTreadMotion.clear();
         List<String> names = new ArrayList<String>();
         for (String name : new String[] { "mount", "fixed_mount","fixed_mount_compact", "sleeve", "rod", "socket", "extender",
                 "swing_linkage", "swivel", "swing_arm", "wheel", "wheel_large", "wheel_bracket", "wheel_tyre", "wheel_large_bracket", "wheel_large_tyre", "wheel_connector", "wheel_large_connector" }) names.add(name);
@@ -55,6 +55,10 @@ final class GearModels {
         if (mesh != null) mesh.draw(transform, x, y, z, light, buffer, cache);
     }
 
+    static void drawTrack(String name,GearRenderer.Affine transform,double x,double y,double z,int light,BufferBuilder buffer,double distance){
+        Mesh mesh=MESHES.get(name);if(mesh!=null)mesh.draw(transform,x,y,z,light,buffer,distance==0,distance);
+    }
+
     static long cachedVertexBytes(){long bytes=0;for(Mesh mesh:MESHES.values())for(double[] data:mesh.transformed.values())bytes+=data.length*8L;return bytes;}
 
     private static final class Mesh {
@@ -72,7 +76,8 @@ final class GearModels {
             }
         }
 
-        void draw(GearRenderer.Affine transform, double x, double y, double z, int light, BufferBuilder buffer,boolean cache) {
+        void draw(GearRenderer.Affine transform,double x,double y,double z,int light,BufferBuilder buffer,boolean cache){draw(transform,x,y,z,light,buffer,cache,0);}
+        void draw(GearRenderer.Affine transform, double x, double y, double z, int light, BufferBuilder buffer,boolean cache,double distance) {
             if(cache){
                 double[] data=transformed.get(transform);
                 if(data==null){data=transformedVertices(transform);transformed.put(transform,data);}
@@ -89,7 +94,7 @@ final class GearModels {
                 float shade = !quad.diffuse || normalLengthSquared < 1e-12 ? 1.0F
                         : (float) ((nx * nx * 0.6 + ny * ny * (ny > 0 ? 1.0 : 0.5) + nz * nz * 0.8)
                         / normalLengthSquared);
-                for (Vertex vertex : quad.vertices) {
+                for (Vertex vertex : animated(quad,distance)) {
                     buffer.pos(x + transform.xx * vertex.x + transform.xy * vertex.y + transform.xz * vertex.z + transform.tx,
                             y + transform.yx * vertex.x + transform.yy * vertex.y + transform.yz * vertex.z + transform.ty,
                             z + transform.zx * vertex.x + transform.zy * vertex.y + transform.zz * vertex.z + transform.tz)
@@ -118,8 +123,13 @@ final class GearModels {
         final Vertex[] vertices = new Vertex[4];
         final double nx, ny, nz;
         final boolean diffuse;
+        final net.minecraft.client.renderer.texture.TextureAtlasSprite sprite;
+        final boolean tread;
+        final List<Vertex> stationary;
+        double phase=Double.NaN;List<Vertex> scrolling;
 
         Quad(BakedQuad quad) {
+            sprite=quad.getSprite();String name=sprite.getIconName();tread=name.equals("vandorlabs:blocks/track/rubber")||name.equals("vandorlabs:blocks/track/steel_tread");
             int[] packed = quad.getVertexData();
             VertexFormat format = quad.getFormat();
             int stride = format.getIntegerSize();
@@ -149,9 +159,38 @@ final class GearModels {
             nx = length > 1e-9 ? crossX / length : quad.getFace().getFrontOffsetX();
             ny = length > 1e-9 ? crossY / length : quad.getFace().getFrontOffsetY();
             nz = length > 1e-9 ? crossZ / length : quad.getFace().getFrontOffsetZ();
-            diffuse = quad.shouldApplyDiffuseLighting();
+            diffuse = quad.shouldApplyDiffuseLighting();stationary=java.util.Arrays.asList(vertices);
         }
     }
+
+    /** Clip at every sprite V seam before wrapping; atlas neighbours are never sampled. */
+    private static List<Vertex> animated(Quad quad,double distance){
+        double phase=distance-Math.floor(distance);
+        if(!quad.tread||phase<1e-9)return quad.stationary;
+        // Upper/lower runs travel oppositely around the same belt.
+        if(quad.ny<-.5||quad.nz>.5)phase=1-phase;
+        if(phase==quad.phase&&quad.scrolling!=null)return quad.scrolling;
+        List<Vertex> polygon=new ArrayList<>();double low=Double.POSITIVE_INFINITY,high=Double.NEGATIVE_INFINITY;
+        for(Vertex v:quad.vertices){float vv=quad.sprite.getUnInterpolatedV(v.v)/16F+(float)phase;polygon.add(new Vertex(v.x,v.y,v.z,v.u,vv,v.r,v.g,v.b,v.a));low=Math.min(low,vv);high=Math.max(high,vv);}
+        List<Vertex> result=new ArrayList<>();
+        for(int band=(int)Math.floor(low);band<Math.ceil(high);band++){
+            List<Vertex> clipped=clip(clip(polygon,band,true),band+1,false);if(clipped.size()<3)continue;
+            if(clipped.size()==4){
+                // Native tread UVs form rectangles. Keep a four-vertex region
+                // instead of submitting two degenerate quads for its triangles.
+                for(Vertex v:clipped)result.add(wrapped(v,quad.sprite,band));
+            }else for(int i=1;i+1<clipped.size();i++){
+                result.add(wrapped(clipped.get(0),quad.sprite,band));result.add(wrapped(clipped.get(i),quad.sprite,band));Vertex end=wrapped(clipped.get(i+1),quad.sprite,band);result.add(end);result.add(end);
+            }
+        }
+        quad.phase=phase;quad.scrolling=result;return result;
+    }
+    private static Vertex wrapped(Vertex v,net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,int band){return new Vertex(v.x,v.y,v.z,v.u,sprite.getInterpolatedV(Math.max(0,Math.min(1,v.v-band))*16),v.r,v.g,v.b,v.a);}
+    private static List<Vertex> clip(List<Vertex> polygon,double boundary,boolean above){
+        List<Vertex> out=new ArrayList<>();if(polygon.isEmpty())return out;Vertex previous=polygon.get(polygon.size()-1);boolean before=above?previous.v>=boundary:previous.v<=boundary;
+        for(Vertex next:polygon){boolean inside=above?next.v>=boundary:next.v<=boundary;if(inside!=before){double t=(boundary-previous.v)/(next.v-previous.v);out.add(new Vertex(mix(previous.x,next.x,t),mix(previous.y,next.y,t),mix(previous.z,next.z,t),mix(previous.u,next.u,t),(float)boundary,mix(previous.r,next.r,t),mix(previous.g,next.g,t),mix(previous.b,next.b,t),mix(previous.a,next.a,t)));}if(inside)out.add(next);previous=next;before=inside;}return out;
+    }
+    private static float mix(float a,float b,double t){return (float)(a+(b-a)*t);}
 
     private static final class Vertex {
         final float x, y, z, u, v, r, g, b, a;

@@ -35,7 +35,17 @@ public final class TrackTile extends com.vandorlabs.gear.GearTileEntity {
     public List<BlockPos> trackMembers() { return members; }
     public boolean hasCompleteAssembly() { return complete; }
     public String lastError() { return error; }
-    @Override public String error(){String motion=super.error();return motion.isEmpty()?error:motion;}
+    @Override public String error(){
+        com.vandorlabs.gear.GearTileEntity controller=loadedController();
+        if(controller!=null&&controller!=this){String motion=controller.error();if(!motion.isEmpty())return motion;}
+        if(hasRetainedPayload()||motionBlocked()){String retained=super.error();if(!retained.isEmpty())return retained;}
+        return error;
+    }
+    public String status(){
+        if(loadedController()!=null)return "Mounted on an arm";
+        if(appearance.sideMask!=0||appearance.mount==TrackAppearance.Mount.TOP||appearance.mount==TrackAppearance.Mount.TOP_HIGH)return "Mounted Track ready";
+        return "Track ready";
+    }
 
     @Override public void onLoad() { super.onLoad();pending=true;rebuildAfter=0; }
 

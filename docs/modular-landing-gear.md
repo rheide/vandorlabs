@@ -26,8 +26,8 @@ direction. The arms hinge upward while the lower swivels keep the entire foot
 group horizontal. Straight Extenders retract the feet vertically. Fixed mounting
 caps and sleeves stay attached to the hull.
 
-Right click a strut or its visible foot with an empty hand to deploy or stow it. Use the Configurizer
-on a member to open the shared dialog. Select Manual, ON deploys or OFF deploys,
+Right click a strut or its visible landing foot with an empty hand to deploy or stow it. Use the Configurizer
+on an arm to open its motion dialog. Tracks open their own appearance dialog with either right click or the Configurizer. Select Manual, ON deploys or OFF deploys,
 and enter channels as comma-separated positive numbers. Zero uses local redstone;
 configured lists require all channels to be powered. Fold direction can be
 changed while fully deployed. Manual mode exposes a deployed/stowed target.
@@ -105,16 +105,13 @@ floor mounts point up, and wall mounts point outward. Additional matching arm
 sections inherit the existing column's mounting axis. Placing an arm against a
 landing foot points it toward that foot. Existing saved arms continue to point down.
 
-Use the Configurizer for the shared dialog. Its two columns show input/channel
-controls beside motion endpoints and appearance. A general Extender's **Active
-reach** is its total deployed length, from one block to eight blocks beyond the
-number of installed arm sections. The default adds one block of outward travel.
-Retraction always leaves at least one block of reach, keeping the payload outside
-the mounting base. A general Rotating Arm's active angle ranges from
--180 to +180 degrees. The Off state is the construction pose; the On state uses
-these configured endpoints. Redstone modes select ON activates or OFF activates.
+Use the Configurizer for the arm dialog. Its two columns show input/channel
+controls beside fold direction and payload orientation. Arm travel follows its stacked
+sections: each straight section adds one block of extra travel, so two sections
+extend by two blocks. The dialog has no Angle or Active Reach editors.
+The Off state is the construction pose; the On state extends the stacked column. Redstone modes select ON activates or OFF activates.
 The existing landing-foot deployment semantics remain available on landing assemblies.
-Change motion endpoints only at the construction pose.
+Edit the column at its construction pose; stationary Track feet can be removed and replaced without rebuilding the arm.
 
 At the construction pose, click the arm's outward tip to place a block directly
 against it. This works on floors, ceilings and walls, including stacked regular
@@ -153,6 +150,10 @@ rotates mounting axes, saved links, track connections and attachment snapshots t
 
 The Creative inventory and item browser contain one **Track** block. Right-click it,
 or use the Configurizer, to select **Compact**, **Armoured** or **Bogie** in its dialog.
+The Track dialog contains style, operating status and Done. Slab-mounted Tracks are
+ready without an arm assembly. Tracks on arms report that controller's deployment
+errors; style changes leave its input channels and motion settings intact. Fully deploy
+the arm before changing its Tracks' style.
 Style changes stay in the same blocks and tiles, preserving mechanism ownership and
 settings. Existing Armoured/Bogie registry IDs remain readable as hidden compatibility
 blocks; their old appearance becomes the default until a saved style is selected.
@@ -179,6 +180,8 @@ Matching styles and travel directions connect into continuous tread runs, includ
 unequal adjacent lanes. A group supports up to 64 track blocks within a 16×16
 footprint. Different styles or facings remain separate groups. Incomplete or
 unloaded groups show independent parts until their full topology is available.
+A Large arm can retain a connected Track that still overlaps its wider mounting footprint when the directly anchored Track is removed. Regular arms require a Track directly beneath their column. Removing and replacing stationary Track feet updates the existing assembly without resetting its pose.
+
 Tracks beneath a rotating arm use the arm's lower swivel instead of drawing a second
 overlapping socket. **Payload: rotates** rotates the complete tread group with the arm;
 **Payload: stays level** preserves its orientation. A blocked stroke shows an **ERROR**
@@ -187,8 +190,7 @@ bounds follow the native style, mounting brackets and mechanism pose.
 
 Two physical Track blocks provide enough supports for a vehicle, including two
 connected blocks beneath one arm. A single Track does not. Only ground-facing outer
-landing groups count toward this rule. Tracks support Taxi operation; the delivered
-tread models are static and vehicle motion does not animate individual tread links.
+landing groups count toward this rule. Tracks support Taxi operation. Their tread artwork moves with each track’s physical travel, including reverse travel and different left/right travel while turning. Treads stay still when the vehicle is idle or in Hover; housings, sockets and mounts remain fixed. This animation applies to all three styles, whether directly mounted or attached to an arm.
 
 ## Animated combinations
 

@@ -48,7 +48,7 @@ public final class ArmPayload {
         Iterator<Map.Entry<Integer,BlockPos>> entries=ownershipJournal.entrySet().iterator();
         while(entries.hasNext()){
             Map.Entry<Integer,BlockPos> entry=entries.next();BlockPos at=entry.getValue();
-            try{world.removeTileEntity(at);if(!world.setBlockState(at,Blocks.AIR.getDefaultState(),2)&&!world.isAirBlock(at))return false;entries.remove();}catch(RuntimeException | LinkageError failed){return false;}
+            try{retireTile(world,at);if(!world.setBlockState(at,Blocks.AIR.getDefaultState(),2)&&!world.isAirBlock(at))return false;entries.remove();}catch(RuntimeException | LinkageError failed){return false;}
         }
         materialized=false;return true;
     }
@@ -116,6 +116,14 @@ public final class ArmPayload {
         return new ArmPayload(VehicleStructure.display(refreshed),offset,true,placedOffset);
     }
     public boolean matchesPlaced(GearTileEntity arm){return materialized&&blocks.matches(arm.getWorld(),arm.getPos().add(placedOffset));}
+    /** Materialized cells belong to the world. Mining them must not leave a second retained owner. */
+    public ArmPayload pruneRemoved(GearTileEntity arm){
+        if(!materialized||hasOwnershipJournal())return this;World world=arm.getWorld();BlockPos origin=arm.getPos().add(placedOffset);
+        for(VehicleStructure.Cell cell:blocks.cells)if(!GearAssembly.loaded(world,origin.add(cell.pos)))return this;
+        List<VehicleStructure.Cell> retained=new ArrayList<>();for(VehicleStructure.Cell cell:blocks.cells)if(!world.isAirBlock(origin.add(cell.pos)))retained.add(cell);
+        if(retained.size()==blocks.cells.size())return this;
+        return retained.isEmpty()?null:new ArmPayload(VehicleStructure.display(retained),offset,true,placedOffset);
+    }
     public boolean detach(GearTileEntity arm){
         if(hasOwnershipJournal())return false;
         if(!materialized)return true;World world=arm.getWorld();BlockPos origin=arm.getPos().add(placedOffset);
@@ -125,7 +133,7 @@ public final class ArmPayload {
         List<VehicleStructure.Cell> removed=new ArrayList<>();
         try{
             for(VehicleStructure.Cell cell:blocks.cells){
-                removed.add(cell);BlockPos at=origin.add(cell.pos);world.removeTileEntity(at);
+                removed.add(cell);BlockPos at=origin.add(cell.pos);retireTile(world,at);
                 if(!world.setBlockState(at,Blocks.AIR.getDefaultState(),2)&&!world.isAirBlock(at))throw new IllegalArgumentException("Attachment source could not be cleared");failure("clear",at);
             }
             materialized=false;return true;
@@ -145,12 +153,13 @@ public final class ArmPayload {
         }
         return prepared;
     }
+    private static void retireTile(World world,BlockPos at){com.vandorlabs.vehicle.VehicleForeignCompat.clearDetachedInventory(world.getTileEntity(at));world.removeTileEntity(at);}
     private static void install(World world,BlockPos origin,VehicleStructure.Cell cell,TileEntity prepared){
         BlockPos at=origin.add(cell.pos);
         if(world.getBlockState(at)!=cell.state&&!world.setBlockState(at,cell.state,2))throw new IllegalArgumentException("Attachment target could not be installed");
         if(cell.hasTileData()){
             if(prepared==null)throw new IllegalArgumentException("Attachment tile was not prepared");
-            world.removeTileEntity(at);prepared.setWorld(world);prepared.validate();world.setTileEntity(at,prepared);
+            retireTile(world,at);prepared.setWorld(world);prepared.validate();world.setTileEntity(at,prepared);
             if(world.getTileEntity(at)!=prepared)throw new IllegalArgumentException("Attachment tile installation failed");
         }
         failure("install",at);
@@ -171,7 +180,7 @@ public final class ArmPayload {
         List<VehicleStructure.Cell> installed=new ArrayList<>();
         try{for(VehicleStructure.Cell cell:blocks.cells){installed.add(cell);install(world,origin,cell,prepared.get(cell));}}
         catch(RuntimeException | LinkageError failure){
-            for(VehicleStructure.Cell cell:installed)try{BlockPos at=origin.add(cell.pos);failure("restore-cleanup",at);world.removeTileEntity(at);if(!world.setBlockState(at,Blocks.AIR.getDefaultState(),2)&&!world.isAirBlock(at))failure.addSuppressed(new IllegalStateException("Attachment rollback blocked"));}catch(RuntimeException | LinkageError rollbackFailure){failure.addSuppressed(rollbackFailure);}
+            for(VehicleStructure.Cell cell:installed)try{BlockPos at=origin.add(cell.pos);failure("restore-cleanup",at);retireTile(world,at);if(!world.setBlockState(at,Blocks.AIR.getDefaultState(),2)&&!world.isAirBlock(at))failure.addSuppressed(new IllegalStateException("Attachment rollback blocked"));}catch(RuntimeException | LinkageError rollbackFailure){failure.addSuppressed(rollbackFailure);}
             journal(world,origin,installed);
             throw failure;
         }
@@ -185,6 +194,9 @@ public final class ArmPayload {
     }
     private static EnumFacing inverseFace(EnumFacing face){switch(face){case EAST:return EnumFacing.WEST;case WEST:return EnumFacing.EAST;case NORTH:return EnumFacing.SOUTH;case SOUTH:return EnumFacing.NORTH;default:return face;}}
     public List<AxisAlignedBB> boxes(GearTileEntity arm,double progress){
+        // At an installed endpoint vanilla owns these actual blocks, including
+        // their normal hit identity and immediate removal/collision lifecycle.
+        if(materialized)return Collections.emptyList();
         List<AxisAlignedBB> boxes=new ArrayList<>();VehicleWorld world=view(arm);
         for(VehicleStructure.Cell cell:blocks.cells){List<AxisAlignedBB> parts=new ArrayList<>();cell.state.addCollisionBoxToList(world,cell.pos,new AxisAlignedBB(cell.pos).grow(2),parts,null,false);
             for(AxisAlignedBB b:parts){double lx=Double.POSITIVE_INFINITY,ly=lx,lz=lx,hx=Double.NEGATIVE_INFINITY,hy=hx,hz=hx;for(int n=0;n<8;n++){Vec3d v=transform(arm,progress,(n&1)==0?b.minX:b.maxX,(n&2)==0?b.minY:b.maxY,(n&4)==0?b.minZ:b.maxZ);lx=Math.min(lx,v.x);ly=Math.min(ly,v.y);lz=Math.min(lz,v.z);hx=Math.max(hx,v.x);hy=Math.max(hy,v.y);hz=Math.max(hz,v.z);}boxes.add(new AxisAlignedBB(lx,ly,lz,hx,hy,hz).offset(arm.getPos()));}

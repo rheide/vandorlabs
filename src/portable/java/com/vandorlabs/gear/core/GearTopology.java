@@ -107,6 +107,7 @@ public final class GearTopology {
     /** Validated, immutable assembly; cells and returned collections are safe to share. */
     public static final class Assembly {
         private final int columnHeight;
+        private final Cell contact;
         private final FootKind kind;
         private final List<Cell> feet;
         private final Set<Cell> membership;
@@ -116,8 +117,8 @@ public final class GearTopology {
         private final int maxZ;
 
         private Assembly(int height, FootKind kind, Set<Cell> members,
-                         int minX, int maxX, int minZ, int maxZ) {
-            this.columnHeight = height;
+                         int minX, int maxX, int minZ, int maxZ,Cell contact) {
+            this.columnHeight = height;this.contact=contact;
             this.kind = kind;
             List<Cell> ordered = new ArrayList<Cell>(members);
             Collections.sort(ordered, new Comparator<Cell>() {
@@ -144,7 +145,7 @@ public final class GearTopology {
         public int maxZ() { return maxZ; }
         public int width() { return maxX - minX + 1; }
         public int depth() { return maxZ - minZ + 1; }
-        public Cell anchorFoot() { return new Cell(0, -columnHeight, 0); }
+        public Cell anchorFoot() { return contact; }
 
         /** N=-Z, E=+X, S=+Z, W=-X. A nonmember has mask zero. */
         public int connectionMask(Cell cell) {
@@ -182,8 +183,15 @@ public final class GearTopology {
      * Validate a complete, already homogeneous foot group.
      * Invalid input returns an error and no assembly, never a clipped subset.
      */
-    public static Result validate(int columnHeight, FootKind kind,
-                                  Collection<Cell> footOffsets) {
+    public static Result validate(int columnHeight,FootKind kind,Collection<Cell> footOffsets){
+        return validateContact(columnHeight,kind,footOffsets,new Cell(0,-columnHeight,0));
+    }
+    /** A world adapter must prove positive surface contact within a Large mount's footprint. */
+    public static Result validateTrackContact(int height,Collection<Cell> feet,Cell contact){
+        if(contact==null||contact.y!=-height||Math.abs((long)contact.x)>1||Math.abs((long)contact.z)>1)return invalid("Track contact is outside the bounded Large mounting footprint.");
+        return validateContact(height,FootKind.TRACK,feet,contact);
+    }
+    private static Result validateContact(int columnHeight,FootKind kind,Collection<Cell> footOffsets,Cell anchor) {
         if (columnHeight < 1 || columnHeight > MAX_COLUMN_HEIGHT) {
             return invalid("An extender column must contain between 1 and 8 blocks.");
         }
@@ -221,7 +229,6 @@ public final class GearTopology {
             }
         }
 
-        Cell anchor = new Cell(0, -columnHeight, 0);
         if (!members.contains(anchor)) {
             return invalid("A foot must sit directly beneath the fixed extender column.");
         }
@@ -241,7 +248,7 @@ public final class GearTopology {
             return invalid("Every foot must connect by a horizontal face to the same group.");
         }
         return new Result(new Assembly(columnHeight, kind, members,
-                minX, maxX, minZ, maxZ), "");
+                minX, maxX, minZ, maxZ,anchor), "");
     }
 
     private static void enqueue(Cell cell, Set<Cell> members, Set<Cell> visited,

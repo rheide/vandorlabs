@@ -52,7 +52,17 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
         cachePose=cache&&(tile.isFixedMount()||progress==0||progress==1)&&(!(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)||((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft==null);
 
         IBlockState state = tile.getWorld().getBlockState(tile.getPos());
-        if (!(state.getBlock() instanceof GearBlock) || !state.getValue(GearBlock.ASSEMBLED)&&((GearBlock)state.getBlock()).sizeClass()==1) return;
+        if (!(state.getBlock() instanceof GearBlock))return;
+        if(state.getBlock() instanceof com.vandorlabs.gear.track.TrackBlock&&tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld&&((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft!=null&&!tile.hasLoadedController()){
+            com.vandorlabs.vehicle.EntityGroundVehicle craft=((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft;
+            buffer.setTranslation(0,0,0);
+            EnumFacing facing=state.getValue(GearBlock.FACING);int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
+            double travel=TrackTreadMotion.sample(craft,tile.getPos(),facing,partialTicks);
+            for(com.vandorlabs.gear.track.TrackParts.Part piece:com.vandorlabs.gear.track.TrackParts.forCell(com.vandorlabs.gear.track.TrackBlock.style(tile.getWorld(),tile.getPos()),facing,com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),tile.getPos())))
+                GearModels.drawTrack("track/"+piece.model.getResourcePath().substring("block/track/".length()),Affine.quarterTurn(piece.quarterTurns),x,y,z,light,buffer,travel);
+            return;
+        }
+        if(!state.getValue(GearBlock.ASSEMBLED)&&((GearBlock)state.getBlock()).sizeClass()==1)return;
         GearBlock part=(GearBlock)state.getBlock();if(!part.componentRoot(tile.getPos(),state).equals(tile.getPos()))return;
         // Another mod's FastTESR can leave a buffer translation behind.
         // Coordinates below already include the camera-relative tile offset.
@@ -123,7 +133,9 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                     com.vandorlabs.gear.track.TrackBlock track=(com.vandorlabs.gear.track.TrackBlock)ts.getBlock();
                     com.vandorlabs.gear.track.TrackAppearance appearance=com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),source);
                     for(com.vandorlabs.gear.track.TrackParts.Part piece:com.vandorlabs.gear.track.TrackParts.forCell(com.vandorlabs.gear.track.TrackBlock.style(tile.getWorld(),source),tile.footFacing(),com.vandorlabs.gear.track.TrackGeometry.onArm(appearance))){
-                        draw("track/"+piece.model.getResourcePath().substring("block/track/".length()),feet.compose(Affine.translation(foot.x,foot.y,foot.z).compose(Affine.quarterTurn(piece.quarterTurns))),x,y,z,light,buffer);
+                        com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
+                        double travel=craft==null?0:TrackTreadMotion.sample(craft,source,tile.footFacing(),partialTicks);
+                        GearModels.drawTrack("track/"+piece.model.getResourcePath().substring("block/track/".length()),mounting.compose(feet.compose(Affine.translation(foot.x,foot.y,foot.z).compose(Affine.quarterTurn(piece.quarterTurns)))),x,y,z,light,buffer,travel);
                     }
                 }continue;
             }

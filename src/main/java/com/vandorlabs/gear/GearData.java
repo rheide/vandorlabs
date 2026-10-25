@@ -20,6 +20,7 @@ public final class GearData {
             for(int i=0;i<old.tagCount();i++){int[] xyz=old.getIntArrayAt(i);if(xyz.length!=3)throw new IllegalArgumentException("Invalid modular arm topology");BlockPos p=new BlockPos(xyz[0],xyz[1],xyz[2]);p=key.equals("GearFeet")?ArmOrientation.inverse(nextMount,vector(ArmOrientation.vector(mount,p),turns)):vector(p,turns);list.appendTag(new NBTTagIntArray(new int[]{p.getX(),p.getY(),p.getZ()}));}
             if(tag.hasKey(key,9))tag.setTag(key,list);
         }
+        if(tag.hasKey("GearTrackContact",11)){int[] xyz=tag.getIntArray("GearTrackContact");if(xyz.length!=3)throw new IllegalArgumentException("Invalid Track mounting contact");BlockPos contact=ArmOrientation.inverse(nextMount,vector(ArmOrientation.vector(mount,new BlockPos(xyz[0],xyz[1],xyz[2])),turns));tag.setIntArray("GearTrackContact",new int[]{contact.getX(),contact.getY(),contact.getZ()});}
         BlockPos north=ArmOrientation.inverse(nextMount,vector(ArmOrientation.vector(mount,new BlockPos(0,0,-1)),turns));int localTurns=north.getX()==1?1:north.getZ()==1?2:north.getX()==-1?3:0;
         if(tag.hasKey("ArmMountDirection",8))tag.setString("ArmMountDirection",nextMount.name());
         try{EnumFacing facing=EnumFacing.valueOf(tag.getString("GearDirection"));for(int i=0;i<localTurns;i++)facing=facing.rotateY();tag.setString("GearDirection",facing.name());}catch(IllegalArgumentException ignored){}

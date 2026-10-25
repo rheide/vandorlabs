@@ -99,6 +99,12 @@ public final class GearAssembly {
         }
         if(!loaded(world,first))return unavailable("Load the feet and their boundary first.");
         IBlockState footState=world.getBlockState(first);
+        if(!isFoot(footState)&&((GearBlock)topState.getBlock()).sizeClass()==2){
+            // Large housings span two blocks. A surviving native Track can still
+            // meet their mounting plane after the directly anchored cell is removed.
+            java.util.List<BlockPos> candidates=new java.util.ArrayList<>();for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)candidates.add(first.add(ArmOrientation.vector(mount,new BlockPos(x,0,z))));java.util.Collections.sort(candidates);
+            for(BlockPos candidate:candidates)if(trackContact(world,top,height,candidate)){first=candidate;footState=world.getBlockState(first);break;}
+        }
         if(!isFoot(footState)){
             // Arms are complete mechanisms even before a payload or landing foot is added.
             List<GearTopology.Cell> virtual=java.util.Collections.singletonList(new GearTopology.Cell(0,-height,0));
@@ -108,7 +114,7 @@ public final class GearAssembly {
         GearBlock footBlock=(GearBlock)footState.getBlock(),armBlock=(GearBlock)topState.getBlock();
         if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.sizeClass()!=armBlock.sizeClass())return fail("Wheel and mounting arm sizes must match.");
         EnumFacing facing=footState.getValue(GearBlock.FACING);
-        Set<BlockPos> feet=new HashSet<>(),columns=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(first);feet.add(first);
+        Set<BlockPos> feet=new HashSet<>(),columns=new HashSet<>();columns.add(top);ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(first);feet.add(first);
         while(!queue.isEmpty()){
             BlockPos foot=queue.removeFirst();
             if(!((GearBlock)footState.getBlock()).componentIntact(world,((GearBlock)footState.getBlock()).componentRoot(foot,world.getBlockState(foot))))return fail("Incomplete wheel footprint.");
@@ -138,8 +144,22 @@ public final class GearAssembly {
         }
         java.util.List<BlockPos> ordered=new java.util.ArrayList<>(columns);java.util.Collections.sort(ordered);BlockPos primary=ordered.get(0);
         java.util.List<GearTopology.Cell> offsets=new java.util.ArrayList<>();for(BlockPos foot:feet){BlockPos local=ArmOrientation.inverse(mount,foot.subtract(primary));offsets.add(new GearTopology.Cell(local.getX(),local.getY(),local.getZ()));}
-        GearTopology.Result result=GearTopology.validate(height,GearTopology.FootKind.valueOf(((GearBlock)footState.getBlock()).kind().name()),offsets);
+        GearTopology.Result result;
+        if(footBlock.kind()==GearBlock.Kind.TRACK&&((GearBlock)world.getBlockState(primary).getBlock()).sizeClass()==2){
+            java.util.List<BlockPos> contacts=new java.util.ArrayList<>(feet);java.util.Collections.sort(contacts);GearTopology.Cell contact=null;
+            for(BlockPos cell:contacts)if(trackContact(world,primary,height,cell)){BlockPos local=ArmOrientation.inverse(mount,cell.subtract(primary));contact=new GearTopology.Cell(local.getX(),local.getY(),local.getZ());break;}
+            result=GearTopology.validateTrackContact(height,offsets,contact);
+        }else result=GearTopology.validate(height,GearTopology.FootKind.valueOf(footBlock.kind().name()),offsets);
         return result.isValid()?new Scan(result.assembly(),facing,ordered):fail(result.error());
+    }
+
+    private static boolean trackContact(World world,BlockPos column,int height,BlockPos foot){
+        if(!loaded(world,foot)||!(world.getBlockState(foot).getBlock() instanceof com.vandorlabs.gear.track.TrackBlock))return false;
+        EnumFacing mount=mountDirection(world,column);BlockPos local=ArmOrientation.inverse(mount,foot.subtract(column));if(local.getY()!=-height||Math.abs(local.getX())>1||Math.abs(local.getZ())>1)return false;
+        net.minecraft.util.math.AxisAlignedBB track=com.vandorlabs.gear.track.TrackGeometry.bounds(com.vandorlabs.gear.track.TrackBlock.style(world,foot),world.getBlockState(foot).getValue(GearBlock.FACING),com.vandorlabs.gear.track.TrackGeometry.onArm(com.vandorlabs.gear.track.TrackAppearance.SINGLE));
+        // Positive overlap on both planar axes excludes corner-only contacts.
+        return Math.min(1.5,local.getX()+track.maxX)-Math.max(-.5,local.getX()+track.minX)>1e-6
+                &&Math.min(1.5,local.getZ()+track.maxZ)-Math.max(-.5,local.getZ()+track.minZ)>1e-6;
     }
 
     /**
