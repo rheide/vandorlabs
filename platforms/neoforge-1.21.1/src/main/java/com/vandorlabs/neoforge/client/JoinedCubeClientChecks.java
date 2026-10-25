@@ -70,6 +70,19 @@ public final class JoinedCubeClientChecks {
         if(layout==2){double aspect=plane.size(ua)/(double)plane.size(va);eu=.5+(eu-.5)/Math.min(1,1/aspect);ev=.5+(ev-.5)/Math.min(1,aspect);}
         require(Math.abs(eu-u)<.0002&&Math.abs(ev-v)<.0002,"legacy UV orientation differs "+face+facing+layout+" expected="+eu+","+ev+" actual="+u+","+v);
     }
+    private static final class WorkerRegion implements net.minecraft.world.level.BlockAndTintGetter {
+        private final net.minecraft.world.level.BlockAndTintGetter region;private final java.util.concurrent.atomic.AtomicInteger reads;
+        WorkerRegion(net.minecraft.world.level.BlockAndTintGetter region,java.util.concurrent.atomic.AtomicInteger reads){this.region=region;this.reads=reads;}
+        @Override public int getBrightness(net.minecraft.world.level.LightLayer layer,BlockPos pos){reads.incrementAndGet();return region.getBrightness(layer,pos);}
+        @Override public net.minecraft.world.level.block.state.BlockState getBlockState(BlockPos pos){return region.getBlockState(pos);}
+        @Override public net.minecraft.world.level.material.FluidState getFluidState(BlockPos pos){return region.getFluidState(pos);}
+        @Override public net.minecraft.world.level.block.entity.BlockEntity getBlockEntity(BlockPos pos){throw new AssertionError("Worker queried live block entity");}
+        @Override public net.minecraft.world.level.lighting.LevelLightEngine getLightEngine(){throw new AssertionError("Worker bypassed captured-region brightness");}
+        @Override public int getBlockTint(BlockPos pos,net.minecraft.world.level.ColorResolver color){return region.getBlockTint(pos,color);}
+        @Override public float getShade(Direction face,boolean shade){return region.getShade(face,shade);}
+        @Override public int getHeight(){return region.getHeight();}
+        @Override public int getMinBuildHeight(){return region.getMinBuildHeight();}
+    }
     public static boolean tick(Minecraft mc,int tick){
         if(stage==0){mc.player.closeContainer();mc.player.setShiftKeyDown(false);mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player,ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));mc.player.getAbilities().flying=false;mc.player.onUpdateAbilities();mc.options.guiScale().set(2);mc.resizeDisplay();started=tick;stage=-1;}
         require(tick-started<1800,"timed out stage "+stage+" matrix="+matrixIndex+" position="+mc.player.position());
@@ -77,7 +90,13 @@ public final class JoinedCubeClientChecks {
         if(stage==1){Vec3 target=new Vec3(80.5,80,40);Vec3 delta=target.subtract(mc.player.position());if(delta.length()>4){if(tick%5==0){var next=mc.player.position().add(delta.normalize().scale(4));move(mc,next.x,next.y,next.z);}return false;}move(mc,target.x,target.y,target.z);stage=2;started=tick;return false;}
         if(stage==2){if(tick-started<30)return false;for(int budget=0;budget<6&&matrixIndex<108;budget++,matrixIndex++){int index=matrixIndex,mode=index%3,dir=index/3%6,face=index/18;BlockPos at=JoinedCubeRuntimeChecks.matrix(index);for(int r=0;r<3;r++)for(int c=0;c<2;c++)if(tile(mc,JoinedCubeRuntimeChecks.cell(at,Direction.from3DDataValue(face),c,r))==null)return false;matrix(mc,Direction.from3DDataValue(face),Direction.from3DDataValue(dir),mode,at);}if(matrixIndex<108)return false;
             var probe=tile(mc,JoinedCubeRuntimeChecks.display(0));var probeState=probe.getBlockState();var probeModel=mc.getBlockRenderer().getBlockModel(probeState);var immutable=probe.getModelData();
-            java.util.concurrent.CompletableFuture.runAsync(()->{require(probeModel.getModelData(null,probe.getBlockPos(),probeState,immutable)==immutable,"worker changed supplied immutable snapshot");boolean rejected=false;try{JoinedCubeSnapshots.sample(mc.level,probe.getBlockPos());}catch(IllegalStateException expected){rejected=true;}require(rejected,"worker could enter world sampler");}).join();
+            var probePos=probe.getBlockPos();var region=new net.minecraft.client.renderer.chunk.RenderRegionCache().createRegion(mc.level,net.minecraft.core.SectionPos.of(probePos),false);require(region!=null,"captured worker region");
+            var reads=new java.util.concurrent.atomic.AtomicInteger();var guarded=new WorkerRegion(region,reads);
+            var originalSettings=immutable.get(ProgrammableBlockEntity.SETTINGS);var originalJoined=immutable.get(ProgrammableBlockEntity.JOINED);var originalLight=immutable.get(NativeHousingLighting.LIGHT);
+            java.util.concurrent.CompletableFuture.runAsync(()->{var mapped=probeModel.getModelData(guarded,probePos,probeState,immutable);
+                require(mapped.get(ProgrammableBlockEntity.SETTINGS)==originalSettings&&mapped.get(ProgrammableBlockEntity.JOINED)==originalJoined,"worker replaced immutable settings/joined data");
+                require(immutable.get(NativeHousingLighting.LIGHT)==originalLight,"worker mutated supplied model data");require(mapped.get(NativeHousingLighting.LIGHT)!=null&&reads.get()==12,"worker must derive bounded light from captured region");
+                boolean rejected=false;try{JoinedCubeSnapshots.sample(mc.level,probePos);}catch(IllegalStateException expected){rejected=true;}require(rejected,"worker could enter world sampler");}).join();
             var copied=probe.joinedFaces().copy();copied[2]=null;require(probe.joinedFaces().face(Direction.NORTH)!=null,"snapshot exposes mutable array");System.out.println("[vandorlabs][modern] joined-cube-matrix PASS 108 installed six-face/six-facing/layout UV, orientation and Fit-margin cases");stage=21;started=tick;return false;}
         if(stage==21){Vec3 target=new Vec3(96.5,80,40);Vec3 delta=target.subtract(mc.player.position());if(delta.length()>4){if(tick%5==0){var next=mc.player.position().add(delta.normalize().scale(4));move(mc,next.x,next.y,next.z);}return false;}move(mc,target.x,target.y,target.z);stage=22;started=tick;return false;}
         if(stage==22){Vec3 target=new Vec3(96.5,80,3);Vec3 delta=target.subtract(mc.player.position());if(delta.length()>4){if(tick%5==0){var next=mc.player.position().add(delta.normalize().scale(4));move(mc,next.x,next.y,next.z);}return false;}move(mc,target.x,target.y,target.z);stage=3;started=tick;return false;}
