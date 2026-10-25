@@ -1,19 +1,22 @@
 """Append the three ceiling finishes while preserving existing saved texture IDs."""
-import json
+import argparse, json
 from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 catalog = ROOT / 'generated-resources/assets/vandorlabs/data/unified_textures.json'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('source', type=Path, help='Extracted ceiling texture pack directory')
+args = parser.parse_args()
 entries = json.loads(catalog.read_text(encoding='utf-8'))
 for finish, label in [('pale_grey', 'Pale'), ('industrial_grey', 'Industrial'),
                       ('dark_cyan_metallic', 'Cyan')]:
     destination = ROOT / 'texture-packs/additional/assets/vandorlabs/textures/blocks/ceiling' / finish
     destination.mkdir(parents=True, exist_ok=True)
     for variant in ['plain', 'speaker', 'light_on', 'light_off']:
-        image = Image.open(ROOT / 'build/ceiling_tiles_128' / finish / f'ceiling_{variant}.png').convert('RGBA')
-        if image.size != (128, 128):
-            image = image.resize((128, 128), Image.Resampling.NEAREST)
+        image = Image.open(args.source / finish / f'ceiling_{variant}.png').convert('RGBA')
+        if image.size != (64, 64):
+            raise ValueError(f"Expected authored 64x64 ceiling artwork: {finish}/{variant}")
         image.save(destination / f'{variant}.png', optimize=True)
         identifier = f'ceiling_{finish}_{variant}'
         entry = dict(id=identifier, label=f'{label} '+('Speaker' if variant == 'speaker' else 'Ceiling'),
@@ -26,4 +29,4 @@ for finish, label in [('pale_grey', 'Pale'), ('industrial_grey', 'Industrial'),
         if not any(existing['id'] == identifier for existing in entries):
             entries.append(entry)
 catalog.write_text(json.dumps(entries, indent=2)+'\n', encoding='utf-8')
-print('Imported twelve 128px ceiling textures: six Panels and three paired Lights')
+print('Imported twelve 64px ceiling textures: six Panels and three paired Lights')

@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Use Door Interior (Dark) as the default housing for new programmable screens, inputs and consoles; preserve saved finishes. Replace the twelve ceiling panels with their authored 64×64 vanilla-style artwork.
+
 - Rename the stationary vehicle setting to Park Mode in cockpit dialogs, Autopilot dialogs and Vehicle Status screens. Saved vehicle modes remain compatible.
 
 ## 2.5

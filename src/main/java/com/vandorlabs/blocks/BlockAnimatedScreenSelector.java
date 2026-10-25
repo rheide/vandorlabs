@@ -72,7 +72,9 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
 
     @Override
     public TileEntity createNewTileEntity(World worldIn, int meta) {
-        return new TileEntityAnimatedScreenSelector();
+        TileEntityAnimatedScreenSelector tile = new TileEntityAnimatedScreenSelector();
+        tile.setHousingTexture(com.vandorlabs.tiles.ScreenHousingTextures.screenIndex("door_inner"));
+        return tile;
     }
 
     /**
