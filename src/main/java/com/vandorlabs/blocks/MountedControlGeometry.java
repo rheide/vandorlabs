@@ -36,18 +36,10 @@ public final class MountedControlGeometry {
         String[] parts=key.split("/",2);JsonObject variants=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants");JsonObject variant=variants.getAsJsonObject(parts[1]);
         if(variant==null)throw new IllegalStateException("Missing mounted pose "+key);
         String model=variant.get("model").getAsString();JsonArray elements=elements(model);List<List<Vec3d>> components=new ArrayList<>();List<AxisAlignedBB> supports=new ArrayList<>();
-        EnumFacing face=face(state);Vec3d normal=new Vec3d(face.getDirectionVec()),origin=new Vec3d(.5,.5,.5).subtract(normal.scale(.5));
-        for(JsonElement value:elements){JsonObject e=value.getAsJsonObject();Vec3d lo=vector(e.getAsJsonArray("from")),hi=vector(e.getAsJsonArray("to"));List<Vec3d> points=new ArrayList<>(),bottom=new ArrayList<>();
-            for(double x:new double[]{lo.x,hi.x})for(double y:new double[]{lo.y,hi.y})for(double z:new double[]{lo.z,hi.z}){
-                Vec3d p=new Vec3d(x,y,z);
-                if(e.has("rotation")){JsonObject r=e.getAsJsonObject("rotation");p=rotate(p,vector(r.getAsJsonArray("origin")),"xyz".indexOf(r.get("axis").getAsString()),r.get("angle").getAsDouble());}
-                if(variant.has("x"))p=rotate(p,new Vec3d(.5,.5,.5),0,-variant.get("x").getAsDouble());
-                if(variant.has("y"))p=rotate(p,new Vec3d(.5,.5,.5),1,-variant.get("y").getAsDouble());
-                points.add(p);if(Math.abs(p.subtract(origin).dotProduct(normal))<1e-6)bottom.add(p);
-            }
-            components.add(Collections.unmodifiableList(points));if(bottom.size()>=4)supports.add(SignalControlShape.hull(bottom));
-        }
-        if(supports.isEmpty())throw new IllegalStateException("Control has no support surface "+key);
+        List<com.vandorlabs.render.ControlPose.Element> definitions=new ArrayList<>();
+        for(JsonElement value:elements){JsonObject e=value.getAsJsonObject();Vec3d lo=vector(e.getAsJsonArray("from")),hi=vector(e.getAsJsonArray("to"));JsonObject r=e.has("rotation")?e.getAsJsonObject("rotation"):null;Vec3d center=r==null?null:vector(r.getAsJsonArray("origin"));definitions.add(new com.vandorlabs.render.ControlPose.Element(new com.vandorlabs.render.ControlMount.Box(lo.x,lo.y,lo.z,hi.x,hi.y,hi.z),center==null?null:new com.vandorlabs.render.ControlMount.Point(center.x,center.y,center.z),r==null?0:"xyz".indexOf(r.get("axis").getAsString()),r==null?0:r.get("angle").getAsDouble()));}
+        com.vandorlabs.render.ControlPose shared=new com.vandorlabs.render.ControlPose(definitions,face(state).getIndex(),variant.has("x")?variant.get("x").getAsDouble():0,variant.has("y")?variant.get("y").getAsDouble():0);
+        for(List<com.vandorlabs.render.ControlMount.Point> component:shared.components){List<Vec3d> points=new ArrayList<>();for(com.vandorlabs.render.ControlMount.Point p:component)points.add(new Vec3d(p.x,p.y,p.z));components.add(Collections.unmodifiableList(points));}for(com.vandorlabs.render.ControlMount.Box box:shared.supports)supports.add(new AxisAlignedBB(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ));
         return new Pose(components,supports);
     });}
     public static SignalControlMount transform(IBlockState state,int size,int mount){return new SignalControlMount(face(state),rotation(state),mount%4,mount/4%4,mount/16,nativePose(state,size).support);}
