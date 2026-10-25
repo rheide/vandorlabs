@@ -37,6 +37,8 @@ final class GlassAppearanceRuntimeChecks {
                 if(block==regular) {
                     TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)player.world.getTileEntity(pos);
                     tile.setShade(shade);tile.setAppearance(tint,frame);
+                    require(tile.shouldRenderInPass(tint==2?0:1),"regular pane pass follows opacity");
+                    if(tint==2)require(!tile.shouldRenderInPass(1),"opaque regular pane skips translucent pass");
                     TileEntityProgrammableGlass loaded=new TileEntityProgrammableGlass();loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                     require(loaded.getShade()==shade && loaded.getTint()==tint && loaded.isFramed()==frame,"regular NBT");
                     IBlockState actual=regular.getActualState(player.world.getBlockState(pos),player.world,pos);
@@ -44,6 +46,7 @@ final class GlassAppearanceRuntimeChecks {
                 } else {
                     TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player.world.getTileEntity(pos);
                     tile.setGlassShade(shade);tile.setGlassAppearance(tint,frame);
+                    require(tile.shouldRenderInPass(tint==2?0:1),"diagonal pane pass follows opacity");
                     TileEntityAnimatedScreenSelector loaded=new TileEntityAnimatedScreenSelector();loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                     require(loaded.getGlassShade()==shade && loaded.getGlassTint()==tint && loaded.isGlassFramed()==frame,"diagonal NBT");
                 }

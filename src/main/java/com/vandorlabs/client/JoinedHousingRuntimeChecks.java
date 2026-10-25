@@ -35,15 +35,15 @@ final class JoinedHousingRuntimeChecks {
                 com.vandorlabs.blocks.HousingFaceLayouts layout=((net.minecraftforge.common.property.IExtendedBlockState)extended).getValue(ProgrammableHousingState.JOINED);
                 if(mode!=1){HousingFaceLayouts.Plane plane=layout.face(face);require(plane!=null&&plane.size(0)*plane.size(1)*plane.size(2)==6,"two-by-three plane crosses chunk borders");}
                 for(BakedQuad quad:model.getQuads(extended,null,0)){
-                    int[] data=quad.getVertexData();int axis=face.getAxis().ordinal();boolean selected=true;
-                    for(int vertex=0;vertex<4;vertex++)selected&=Math.abs(Float.intBitsToFloat(data[vertex*7+axis])-(face.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1:0))<1e-6;
+                    int[] data=quad.getVertexData();int stride=data.length/4;int axis=face.getAxis().ordinal();boolean selected=true;
+                    for(int vertex=0;vertex<4;vertex++)selected&=Math.abs(Float.intBitsToFloat(data[vertex*stride+axis])-(face.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1:0))<1e-6;
                     if(!selected)continue;
-                    double[] a=new double[3],b=new double[3];for(int k=0;k<3;k++){a[k]=Float.intBitsToFloat(data[7+k])-Float.intBitsToFloat(data[k]);b[k]=Float.intBitsToFloat(data[21+k])-Float.intBitsToFloat(data[k]);}
+                    double[] a=new double[3],b=new double[3];for(int k=0;k<3;k++){a[k]=Float.intBitsToFloat(data[stride+k])-Float.intBitsToFloat(data[k]);b[k]=Float.intBitsToFloat(data[3*stride+k])-Float.intBitsToFloat(data[k]);}
                     double crossX=a[1]*b[2]-a[2]*b[1],crossY=a[2]*b[0]-a[0]*b[2],crossZ=a[0]*b[1]-a[1]*b[0];double area=Math.sqrt(crossX*crossX+crossY*crossY+crossZ*crossZ);totalArea+=area;
                     if(quad.getSprite().getIconName().equals("minecraft:blocks/concrete_black"))continue;
                     imageArea+=area;
                     for(int vertex=0;vertex<4;vertex++){
-                        int off=vertex*7;
+                        int off=vertex*stride;
                         for(int index=0;index<2;index++){int worldAxis=(index==0?u:v).getAxis().ordinal();double value=(worldAxis==0?cell.pos.getX():worldAxis==1?cell.pos.getY():cell.pos.getZ())+Float.intBitsToFloat(data[off+worldAxis]);imageMin[index]=Math.min(imageMin[index],value);imageMax[index]=Math.max(imageMax[index],value);}
                         String key=(cell.pos.getX()+Float.intBitsToFloat(data[off]))+":"+(cell.pos.getY()+Float.intBitsToFloat(data[off+1]))+":"+(cell.pos.getZ()+Float.intBitsToFloat(data[off+2]));
                         float uu=(Float.intBitsToFloat(data[off+4])-quad.getSprite().getMinU())/(quad.getSprite().getMaxU()-quad.getSprite().getMinU()),vv=(Float.intBitsToFloat(data[off+5])-quad.getSprite().getMinV())/(quad.getSprite().getMaxV()-quad.getSprite().getMinV());

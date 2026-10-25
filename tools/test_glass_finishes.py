@@ -20,9 +20,11 @@ for detail in ('low', 'medium'):
         means = [ImageStat.Stat(Image.open(TEXTURES / detail / (name + suffix + '.png')).getchannel('A')).mean[0]
                  for suffix in ('_mild','','_strong')]
         assert means[0] < means[1] < means[2], (name, means)
-    for suffix in ('_mild','_strong'):
+    for suffix in ('_mild',):
         assert Image.open(TEXTURES / detail / ('clear'+suffix+'.png')).tobytes() == clear.tobytes()
 
+    for file in (TEXTURES / detail).glob('*_strong.png'):
+        assert Image.open(file).getchannel('A').getextrema()==(255,255), file
 
 # Thickness caps sample the same fully opaque metal patch as regular glass.
 metal = Image.open(ROOT / 'texture-packs/space-doors/medium/double_frame_metal.png').convert('RGBA')

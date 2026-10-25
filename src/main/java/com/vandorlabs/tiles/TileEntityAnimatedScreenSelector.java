@@ -55,7 +55,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(fluids.any() && pass==1)return true;
         if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1;
         net.minecraft.block.Block block = getBlockType();
-        if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==1||pass==0&&(glassFramed||glassMaterial>=0&&com.vandorlabs.tiles.GlassMaterials.opacity(glassMaterial,glassTint)==1);
+        if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==1||pass==0&&(glassFramed||com.vandorlabs.tiles.GlassMaterials.opaque(glassMaterial,glassTint));
         if(world!=null && getMainTextureLayout()==0 && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs

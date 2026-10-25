@@ -55,6 +55,9 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
         if(FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
+        boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
+        int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
+        if(pass>=0&&pass!=(opaque?0:1))return;
         net.minecraft.client.renderer.texture.TextureAtlasSprite material=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
                 com.vandorlabs.tiles.GlassMaterials.texture(tile.getMaterial(),tile.getShade(),size,tile.getTint()));
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -70,13 +73,13 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         int depth = tile.getWorld().getBlockState(tile.getPos()).getValue(BlockGlassWall.DEPTH);
         GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(depth) / 16D);
         GlStateManager.disableLighting();
-        GlStateManager.enableBlend();
+        if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
         float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
-        GlStateManager.depthMask(tile.getMaterial()>=0 && opacity==1);
+        GlStateManager.depthMask(opaque);
         GlStateManager.disableCull();
         GlStateManager.color(1F, 1F, 1F, 1F);
         BufferBuilder b=Tessellator.getInstance().getBuffer();
@@ -114,17 +117,18 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.disableLighting();GlStateManager.disableCull();
         GlStateManager.enableTexture2D();GlStateManager.color(1,1,1,1);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
-        if(tile.isFramed() && corner!=null) {
-            // Tile pass one enters with translucent state; metal must own depth
-            // before the pane is blended over the surrounding clear area.
+        int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
+        boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
+        if(tile.isFramed() && corner!=null && pass!=1) {
+            // Opaque rails own depth before translucent panes and world water.
             GlStateManager.disableBlend();GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
             StaticSurfaceMesh frame=meshes.frame;
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());frame.draw(buffer,sky,block);Tessellator.getInstance().draw();
         }
-        GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
+        if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
-        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(tile.getMaterial()>=0 && opacity==1);
-        buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(buffer,sky,block,1,1,1,opacity);Tessellator.getInstance().draw();
+        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(opaque);
+        if(pass<0||pass==(opaque?0:1)){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(buffer,sky,block,1,1,1,opacity);Tessellator.getInstance().draw();}
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
     }
 

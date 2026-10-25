@@ -7,6 +7,7 @@
 - Add Compact, Armoured and Bogie Tracks with connected native models, slab-side brackets, retained style selection and landing-support behavior.
 - Add Square Couplers with channel and physical redstone inputs, inverted activation and six mounting directions. Vehicle discovery crosses an adjacent pair only when both halves are locked. Include nested landing groups down to their outer supports and treat downward propulsion blocks as discovery boundaries.
 - Support Immersive Engineering scaffolding in Ramp Controllers and extend explicit vehicle rotation adapters to inert IE structures and Mekanism storage and glow panels, preserving their inventories, energy and owner settings.
+- Make Strong glass opaque in every shade, with opaque-pass depth writes for programmable panes and shared glazing. Preserve active OptiFine vertex layouts, normals and extended records when building and mapping Programmable Block surfaces; invalidate cached meshes when the format changes.
 
 - Add Pinnacle Oculus Drive, Survey Dish, Sentinel Array, Standalone Dish and Standalone Antenna Core assemblies, with matching chips, configurable redstone activation, native holders and cached shutter/dish animations. Their controls use the existing Core and Programmable Matter construction workflow.
 - Rename Longburn Drive to Maxwell Drive and Pinnacle Meridian Drive to Seyr Meridian Drive. Replace the Meridian branding with one Seyr nameplate while retaining saved registry IDs and model dimensions.

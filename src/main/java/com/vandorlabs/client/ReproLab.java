@@ -635,7 +635,7 @@ public class ReproLab {
             try{if(ExistingVehicleHoverChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Actual vehicle Hover checks",failure);}return;
         }
         if(Boolean.getBoolean("vandorlabs.renderRegressionChecksOnly")){
-            if(++holdTicks==40)try{VehicleInteriorVisibilityChecks.run(mc,outDir);VehicleVertexFormatRuntimeChecks.run(mc,outDir);DiagonalFilledCapChecks.run(mc,outDir);RampActiveFaceChecks.run(mc);RampControllerSlabChecks.run(mc,outDir);VehicleStatusRenderChecks.run(mc,outDir);System.out.println("[vandorlabs][reprolab] render-regressions PASS");mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Render regressions",failure);}return;
+            if(++holdTicks==40)try{VehicleInteriorVisibilityChecks.run(mc,outDir);VehicleVertexFormatRuntimeChecks.run(mc,outDir);DiagonalFilledCapChecks.run(mc,outDir);RampActiveFaceChecks.run(mc);RampControllerSlabChecks.run(mc,outDir);VehicleStatusRenderChecks.run(mc,outDir);ShaderMaterialRuntimeChecks.run(mc,outDir);System.out.println("[vandorlabs][reprolab] render-regressions PASS");mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Render regressions",failure);}return;
         }
         if(Boolean.getBoolean("vandorlabs.creativeCatalogChecksOnly")) {
             if(++holdTicks==40){CreativeCatalogRuntimeChecks.run();mc.shutdown();}

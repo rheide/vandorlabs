@@ -866,7 +866,7 @@ public class TEAnimatedScreenSelector
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();
             int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
             float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(te.getGlassMaterial(),te.getGlassTint());
-            boolean opaque=te.getGlassMaterial()>=0&&opacity==1;
+            boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(te.getGlassMaterial(),te.getGlassTint());
             // Opaque rails belong before the world's translucent water, just like ordinary solids.
             if(te.isGlassFramed()&&pass!=1) {
                 GlStateManager.disableBlend();GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
@@ -876,6 +876,7 @@ public class TEAnimatedScreenSelector
             }
             if(pass==0&&!opaque||pass==1&&opaque){GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableLighting();endLocalTransform();return;}
             GlStateManager.depthMask(opaque);
+            if(opaque)GlStateManager.disableBlend();
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             StaticSurfaceMesh pane=DiagonalWallMeshCache.get(te,state,glass,glass);
             if(te.getGlassMaterial()>=0)pane=GlassSurfaceMapping.map(pane,glass,GlassSurfaceGroups.layout(te),false,0,0,te.getGlassTextureLayout());
@@ -893,8 +894,9 @@ public class TEAnimatedScreenSelector
                                 ? state.getValue(BlockProgrammableWall.FACING).getOpposite() : EnumFacing.UP) : null;
         // Draw glass after all opaque tile housings, so adjacent blocks cannot
         // overwrite an earlier tile's transparent surface at oblique angles.
-        if (net.minecraftforge.client.MinecraftForgeClient.getRenderPass() == 1) {
-            if (porthole != null) {
+        int panePass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
+        boolean solidPane=com.vandorlabs.tiles.GlassMaterials.opaque(te.getGlassMaterial(),te.getGlassTint());
+        if(porthole!=null && (panePass<0||panePass==(solidPane?0:1))) {
                 GlStateManager.pushMatrix();
                 if(flat!=null) {
                     GlStateManager.translate(flat.left(),0,com.vandorlabs.blocks.PanelDepth.offset(state.getValue(BlockProgrammableWall.DEPTH)));
@@ -902,10 +904,9 @@ public class TEAnimatedScreenSelector
                 }
                 renderPortholeGlass(te,state,DiagonalWallMeshCache.glass(te,state,wall,metal,porthole));
                 GlStateManager.popMatrix();
-            }
-            GlStateManager.enableLighting();
-            endLocalTransform();
-            return;
+        }
+        if(panePass==1){
+            GlStateManager.enableLighting();endLocalTransform();return;
         }
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
         boolean bentPorthole=flat!=null && wallBlock.isPortholeShape();
@@ -1400,11 +1401,12 @@ public class TEAnimatedScreenSelector
     private void renderPortholeGlass(TileEntityAnimatedScreenSelector tile,IBlockState state,StaticSurfaceMesh glass) {
         if(glass.vertexCount()==0)return;
         glass=PortholePane.mesh(tile,state,glass);bindAtlas();
-        GlStateManager.enableBlend();
+        boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getGlassMaterial(),tile.getGlassTint());
+        if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
                 GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getGlassMaterial(),tile.getGlassTint());
-        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(tile.getGlassMaterial()>=0 && opacity==1);
+        GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(opaque);
         GlStateManager.color(1,1,1,1);
         BufferBuilder buf=Tessellator.getInstance().getBuffer();
         int sky=(int)OpenGlHelper.lastBrightnessY,block=(int)OpenGlHelper.lastBrightnessX;

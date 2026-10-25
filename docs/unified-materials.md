@@ -38,6 +38,8 @@ Custom choices survive saves, configured items and Duplifier copies. A client mi
 
 To import PNG files instead, see [filesystem texture categories](filesystem-textures.md). Clients and servers may have different filesystem catalogs.
 
+Programmable Glass and Programmable Diagonal Glass use an opaque **Strong** finish for both native glass colors and replacement materials, including Clear. Mild and Normal keep their translucent appearance. Strong panes use the solid render pass so they occlude geometry consistently with shaders.
+
 ## Texture layouts
 
 Blocks, slabs, stairs, walls, glass, lights, doors, trapdoors, canopies and display housings offer three texture layouts:

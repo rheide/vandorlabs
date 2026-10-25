@@ -34,7 +34,7 @@ final class FlatPanelBarRenderer {
         if(tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)tile;
             TEProgrammableGlass.CornerMeshes m=TEProgrammableGlass.meshes(glass,state,PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos()));
-            Material result=new Material(glass.isFramed()?m.frame:null,glassMesh(glass,state,m.pane),0,0,1,null);result.opacity=GlassMaterials.opacity(glass.getMaterial(),glass.getTint());result.solidPane=glass.getMaterial()>=0 && result.opacity==1;return result;
+            Material result=new Material(glass.isFramed()?m.frame:null,glassMesh(glass,state,m.pane),0,0,1,null);result.opacity=GlassMaterials.opacity(glass.getMaterial(),glass.getTint());result.solidPane=GlassMaterials.opaque(glass.getMaterial(),glass.getTint());return result;
         }
         if(!(tile instanceof TileEntityAnimatedScreenSelector))return null;
         TileEntityAnimatedScreenSelector wall=(TileEntityAnimatedScreenSelector)tile;
@@ -49,7 +49,7 @@ final class FlatPanelBarRenderer {
         double depth=block.isPortholeShape() || corner==null?PanelDepth.offset(state.getValue(BlockProgrammableWall.DEPTH)):0;
         if(pane!=null)pane=PortholePane.mesh(wall,state,pane);
         Material result=new Material(opaque,pane,depth,block.isPortholeShape() && corner!=null?corner.left():0,block.isPortholeShape() && corner!=null?(corner.right()-corner.left())/16:1,rim);
-        result.opacity=GlassMaterials.opacity(wall.getGlassMaterial(),wall.getGlassTint());result.solidPane=wall.getGlassMaterial()>=0 && result.opacity==1;return result;
+        result.opacity=GlassMaterials.opacity(wall.getGlassMaterial(),wall.getGlassTint());result.solidPane=GlassMaterials.opaque(wall.getGlassMaterial(),wall.getGlassTint());return result;
     }
     private static StaticSurfaceMesh glassMesh(TileEntityProgrammableGlass tile,IBlockState state,StaticSurfaceMesh mesh){
         if(tile.getMaterial()<0)return mesh;
@@ -71,7 +71,7 @@ final class FlatPanelBarRenderer {
         if(root instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)root;
             TEProgrammableGlass.CornerMeshes m=TEProgrammableGlass.meshes(glass,state,null);
-            Material result=new Material(glass.isFramed()?m.frame:null,glassMesh(glass,state,m.pane),near-PanelJoins.flatNear(state,root.getWorld(),root.getPos()),0,1,null);result.opacity=GlassMaterials.opacity(glass.getMaterial(),glass.getTint());result.solidPane=glass.getMaterial()>=0 && result.opacity==1;return result;
+            Material result=new Material(glass.isFramed()?m.frame:null,glassMesh(glass,state,m.pane),near-PanelJoins.flatNear(state,root.getWorld(),root.getPos()),0,1,null);result.opacity=GlassMaterials.opacity(glass.getMaterial(),glass.getTint());result.solidPane=GlassMaterials.opaque(glass.getMaterial(),glass.getTint());return result;
         }
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)root;
         BlockProgrammableWall block=(BlockProgrammableWall)state.getBlock();
@@ -88,7 +88,7 @@ final class FlatPanelBarRenderer {
             meshes=new StaticSurfaceMesh[]{opaque,pane};BARS.put(key,meshes);
         }
         StaticSurfaceMesh pane=meshes[1]==null?null:PortholePane.mesh(tile,state,meshes[1]);
-        Material result=new Material(meshes[0],pane,near-6,0,1,metal);result.opacity=GlassMaterials.opacity(tile.getGlassMaterial(),tile.getGlassTint());result.solidPane=tile.getGlassMaterial()>=0 && result.opacity==1;return result;
+        Material result=new Material(meshes[0],pane,near-6,0,1,metal);result.opacity=GlassMaterials.opacity(tile.getGlassMaterial(),tile.getGlassTint());result.solidPane=GlassMaterials.opaque(tile.getGlassMaterial(),tile.getGlassTint());return result;
     }
     static StaticSurfaceMesh part(StaticSurfaceMesh source,int turns,int half,double near,double depth,double left,double width) {
         return part(source,turns,half,near,depth,left,width,0);
@@ -131,10 +131,14 @@ final class FlatPanelBarRenderer {
         } else {GlStateManager.disableBlend();GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);}
         for(int i=0;i<2;i++) {
             Material m=materials[i];StaticSurfaceMesh mesh=part(transparent?m.transparent:m.opaque,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width,!transparent && m.cap==null?.02:0);
-            if(mesh==null || mesh.vertexCount()==0)continue;
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-            if(transparent){GlStateManager.depthMask(m.solidPane);BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(buffer,sky,block,1,1,1,m.opacity);Tessellator.getInstance().draw();}else draw(mesh,sky,block);
-            if(!transparent && i==0) {
+            if(transparent){
+                if(!m.solidPane&&mesh!=null&&mesh.vertexCount()>0){GlStateManager.depthMask(false);drawPane(mesh,sky,block,m.opacity);}
+            }else{
+                if(mesh!=null&&mesh.vertexCount()>0)draw(mesh,sky,block);
+                if(m.solidPane){StaticSurfaceMesh pane=part(m.transparent,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width);if(pane!=null&&pane.vertexCount()>0)drawPane(pane,sky,block,m.opacity);}
+            }
+            if(!transparent && i==0 && m.opaque!=null) {
                 StaticSurfaceMesh cap=stemCap(m,bar.straightLeft?bar.frontArm:bar.frontArm+4,PanelJoins.flatNear(state,root.getWorld(),root.getPos()),bar.straightLeft);
                 if(cap!=null)draw(cap,sky,block);
             }
@@ -143,6 +147,9 @@ final class FlatPanelBarRenderer {
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         return true;
+    }
+    private static void drawPane(StaticSurfaceMesh mesh,int sky,int block,float opacity){
+        BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(b,sky,block,1,1,1,opacity);Tessellator.getInstance().draw();
     }
     private static void draw(StaticSurfaceMesh mesh,int sky,int block) {
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.draw(b,sky,block);Tessellator.getInstance().draw();

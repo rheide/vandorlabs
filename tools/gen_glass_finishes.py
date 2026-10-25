@@ -28,7 +28,7 @@ for detail in ('low', 'medium'):
                 combined = strength + alpha * (1 - strength)
                 color = tuple(round((c * strength + original * alpha * (1 - strength)) / combined)
                               if combined else original for c, original in zip(tint, (r, g, b)))
-                pixels.append((*color, round(combined * 255)))
+                pixels.append((*color, 255 if suffix=="_strong" else round(combined * 255)))
             image.putdata(pixels)
             (OUT / detail).mkdir(parents=True, exist_ok=True)
             image.save(OUT / detail / (name + suffix + '.png'))

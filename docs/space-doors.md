@@ -110,7 +110,7 @@ Observation metal and glass use separate opaque/cutout and translucent passes.
 
 Programmable Glass selects Small or Large detail, a glass finish, Mild / Normal / Strong tint, and Bare / Framed edges in its settings menu. Programmable Diagonal Glass exposes the same tint and frame choices alongside its diagonal geometry controls.
 
-Both glass blocks include the regular material catalog in the same list. For these materials, Mild and Normal Tint use 35% and 65% opacity; Strong is fully opaque. The original Glass category retains its existing translucent finishes.
+Both glass blocks include the regular material catalog in the same list. For these materials, Mild and Normal Tint use 35% and 65% opacity; Strong is fully opaque. Strong is also fully opaque for every finish in the Glass category, including Clear. Mild and Normal retain their translucent finishes. Opaque Strong panes render with solid geometry and write depth, including inside corners, joined T panels and porthole openings.
 
 Non-glass materials also offer Tile/Stretch across matching joined panels. Porthole Wall, Diagonal Porthole and Porthole Block expose the same glass/material catalog and tint controls in a separate Glass tab; their Main and Side textures remain independent. See the [building gallery](gallery/building.md#selected-close-ups-and-glass) for joined material examples and layout rules.
 The glass shade is selected independently for each size. The thick inside faces

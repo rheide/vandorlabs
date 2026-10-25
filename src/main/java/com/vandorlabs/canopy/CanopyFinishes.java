@@ -9,7 +9,7 @@ public final class CanopyFinishes {
     public static float opacity(CanopyMesh.Face face,int material,int tint){
         return face.glazing && face.baseMaterial.equals("panel")?com.vandorlabs.tiles.GlassMaterials.opacity(material,tint):1F;
     }
-    public static boolean translucent(CanopyMesh.Face face,int material,int tint){return face.baseMaterial.equals("glass") || opacity(face,material,tint)<1F;}
+    public static boolean translucent(CanopyMesh.Face face,int material,int tint){return face.baseMaterial.equals("glass")&&!com.vandorlabs.tiles.GlassMaterials.opaque(material,tint) || opacity(face,material,tint)<1F;}
     private static final class Key {
         final List<CanopyMesh.Face> source;final int shade,tint,material;final int layout;final double aspect;
         Key(List<CanopyMesh.Face> source,int shade,int tint,int material,int layout,double aspect){this.layout=layout;this.aspect=aspect;this.material=material;this.source=source;this.shade=shade;this.tint=tint;}

@@ -32,6 +32,8 @@ public final class ProgrammableHousingModel implements IBakedModel {
     private final boolean slab;
     private final boolean storage;
     private final java.util.function.Function<String,TextureAtlasSprite> sprites;
+    private final java.util.function.Supplier<net.minecraft.client.renderer.vertex.VertexFormat> formats;
+    private volatile net.minecraft.client.renderer.vertex.VertexFormat buildFormat;
     private final Map<Long, BakedQuad> variants = new ConcurrentHashMap<>();
     private final com.google.common.cache.Cache<String,List<BakedQuad>> joinedFaces=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(2048).build();
     static final int MAX_FACE_LISTS=1024;
@@ -48,7 +50,10 @@ public final class ProgrammableHousingModel implements IBakedModel {
     }
 
     ProgrammableHousingModel(IBakedModel delegate, boolean slab, boolean storage,java.util.function.Function<String,TextureAtlasSprite> sprites) {
-        this.sprites=sprites;
+        this(delegate,slab,storage,sprites,()->DefaultVertexFormats.BLOCK);
+    }
+    ProgrammableHousingModel(IBakedModel delegate,boolean slab,boolean storage,java.util.function.Function<String,TextureAtlasSprite> sprites,java.util.function.Supplier<net.minecraft.client.renderer.vertex.VertexFormat> formats){
+        this.formats=formats;this.sprites=sprites;
         this.storage = storage;
         this.delegate = delegate;
         this.slab = slab;
@@ -58,6 +63,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
             @Nullable EnumFacing side, long rand) {
         if (state == null) return delegate.getQuads(null, side, rand);
         if (side != null) return Collections.emptyList();
+        ensureFormat();
         int finish = 0, sideFinish=-1, visible = 63, tileSides = 0;
         com.vandorlabs.tiles.FaceTextures faces = com.vandorlabs.tiles.FaceTextures.DEFAULT;
         com.vandorlabs.blocks.HousingFaceLayouts joined=com.vandorlabs.blocks.HousingFaceLayouts.NONE;
@@ -105,24 +111,33 @@ public final class ProgrammableHousingModel implements IBakedModel {
         return result;
     }
 
+    /** OptiFine mutates the global format when shaders change, including without a resource reload. */
+    private void ensureFormat(){
+        net.minecraft.client.renderer.vertex.VertexFormat live=formats.get();
+        if(live.equals(buildFormat))return;
+        synchronized(this){if(live.equals(buildFormat))return;
+            buildFormat=new net.minecraft.client.renderer.vertex.VertexFormat(live);
+            variants.clear();joinedFaces.invalidateAll();faceLists.invalidateAll();
+        }
+    }
     /** Joined Fit contains the complete image; opaque margins keep the cube closed. */
     static List<BakedQuad> mapJoined(BakedQuad quad,com.vandorlabs.blocks.HousingFaceLayouts.Plane plane,int layout,TextureAtlasSprite margin){
-        int[] data=quad.getVertexData().clone();TextureAtlasSprite sprite=quad.getSprite();int[] axes=new int[2];double[] signs=new double[2];
+        int[] data=quad.getVertexData().clone();int stride=data.length/4;TextureAtlasSprite sprite=quad.getSprite();int[] axes=new int[2];double[] signs=new double[2];
         for(int uv=0;uv<2;uv++)for(int vertex=1;vertex<4;vertex++){
-            double delta=Float.intBitsToFloat(data[vertex*7+4+uv])-Float.intBitsToFloat(data[4+uv]);
-            double other=Float.intBitsToFloat(data[vertex*7+5-uv])-Float.intBitsToFloat(data[5-uv]);
+            double delta=Float.intBitsToFloat(data[vertex*stride+4+uv])-Float.intBitsToFloat(data[4+uv]);
+            double other=Float.intBitsToFloat(data[vertex*stride+5-uv])-Float.intBitsToFloat(data[5-uv]);
             if(Math.abs(delta)<1e-8||Math.abs(other)>1e-8)continue;
-            for(int axis=0;axis<3;axis++){double change=Float.intBitsToFloat(data[vertex*7+axis])-Float.intBitsToFloat(data[axis]);if(Math.abs(change)>.5){axes[uv]=axis;signs[uv]=delta/change;}}
+            for(int axis=0;axis<3;axis++){double change=Float.intBitsToFloat(data[vertex*stride+axis])-Float.intBitsToFloat(data[axis]);if(Math.abs(change)>.5){axes[uv]=axis;signs[uv]=delta/change;}}
         }
         double aspect=UnifiedTextureSprites.aspect(sprite),surface=plane.size(axes[0])/(double)plane.size(axes[1]);
         double[] slopes=new double[]{(signs[0]<0?-1:1)/(double)plane.size(axes[0]),(signs[1]<0?-1:1)/(double)plane.size(axes[1])};
         if(layout==2){slopes[0]/=Math.min(1,aspect/surface);slopes[1]/=Math.min(1,surface/aspect);}
         double[][] coordinates=new double[4][2];
         for(int vertex=0;vertex<4;vertex++)for(int uv=0;uv<2;uv++){
-            double value=(Float.intBitsToFloat(data[vertex*7+axes[uv]])-plane.min(axes[uv]))/plane.size(axes[uv]);if(signs[uv]<0)value=1-value;
+            double value=(Float.intBitsToFloat(data[vertex*stride+axes[uv]])-plane.min(axes[uv]))/plane.size(axes[uv]);if(signs[uv]<0)value=1-value;
             if(layout==2){double fraction=uv==0?Math.min(1,aspect/surface):Math.min(1,surface/aspect);value=.5+(value-.5)/fraction;}
             coordinates[vertex][uv]=value;
-            data[vertex*7+4+uv]=Float.floatToRawIntBits(uv==0?sprite.getInterpolatedU(value*16):sprite.getInterpolatedV(value*16));
+            data[vertex*stride+4+uv]=Float.floatToRawIntBits(uv==0?sprite.getInterpolatedU(value*16):sprite.getInterpolatedV(value*16));
         }
         if(layout!=2)return Collections.singletonList(new BakedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
         List<BakedQuad> result=new ArrayList<>(5);
@@ -138,12 +153,12 @@ public final class ProgrammableHousingModel implements IBakedModel {
         for(double[] p:uv){u0=Math.min(u0,p[0]);u1=Math.max(u1,p[0]);v0=Math.min(v0,p[1]);v1=Math.max(v1,p[1]);}
         u0=Math.max(u0,lowU);u1=Math.min(u1,highU);v0=Math.max(v0,lowV);v1=Math.min(v1,highV);
         if(u1-u0<1e-8||v1-v0<1e-8)return;
-        int[] data=source.getVertexData().clone();
+        int[] data=source.getVertexData().clone();int stride=data.length/4;
         for(int vertex=0;vertex<4;vertex++)for(int axis=0;axis<2;axis++){
             double value=Math.max(axis==0?u0:v0,Math.min(axis==0?u1:v1,uv[vertex][axis]));
-            int pos=vertex*7+axes[axis];data[pos]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(data[pos])+(value-uv[vertex][axis])/slopes[axis]));
+            int pos=vertex*stride+axes[axis];data[pos]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(data[pos])+(value-uv[vertex][axis])/slopes[axis]));
             double textureValue=margin?.5:Math.max(0,Math.min(1,value));
-            data[vertex*7+4+axis]=Float.floatToRawIntBits(axis==0?sprite.getInterpolatedU(textureValue*16):sprite.getInterpolatedV(textureValue*16));
+            data[vertex*stride+4+axis]=Float.floatToRawIntBits(axis==0?sprite.getInterpolatedU(textureValue*16):sprite.getInterpolatedV(textureValue*16));
         }
         result.add(new BakedQuad(data,source.getTintIndex(),source.getFace(),sprite,source.shouldApplyDiffuseLighting(),source.getFormat()));
     }
@@ -163,7 +178,11 @@ public final class ProgrammableHousingModel implements IBakedModel {
                 : ScreenHousingMesh.cube()).textureLayout(layout,UnifiedTextureSprites.aspect(sprite));
         int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;
 
-            int[] data = new int[28];
+            net.minecraft.client.renderer.vertex.VertexFormat format=buildFormat;
+            int stride=format.getIntegerSize(),color=format.getColorOffset()/4,uv=format.getUvOffsetById(0)/4;
+            int[] data = new int[4*stride];
+            EnumFacing normal=worldFace(FACE[i],facing);
+            int packedNormal=((normal.getFrontOffsetX()*127)&255)|(((normal.getFrontOffsetY()*127)&255)<<8)|(((normal.getFrontOffsetZ()*127)&255)<<16);
             ScreenHousingMesh.Vertex[] points = mesh.quads[i].vertices;
             for (int j = 0; j < 4; j++) {
                 ScreenHousingMesh.Vertex v = points[(4 - j) & 3];
@@ -175,14 +194,14 @@ public final class ProgrammableHousingModel implements IBakedModel {
                     case 3: x = 1 - c; z = a; break;
                     default: break;
                 }
-                int offset = j * 7;
+                int offset = j * stride;
                 data[offset] = Float.floatToRawIntBits((float)x);
                 data[offset + 1] = Float.floatToRawIntBits((float)b);
                 data[offset + 2] = Float.floatToRawIntBits((float)z);
-                data[offset + 3] = -1;
-                data[offset + 4] = Float.floatToRawIntBits(sprite.getInterpolatedU(v.u));
-                data[offset + 5] = Float.floatToRawIntBits(sprite.getInterpolatedV(v.v));
-                data[offset + 6] = 0;
+                data[offset + color] = -1;
+                data[offset + uv] = Float.floatToRawIntBits(sprite.getInterpolatedU(v.u));
+                data[offset + uv + 1] = Float.floatToRawIntBits(sprite.getInterpolatedV(v.v));
+                if(format.hasNormal())data[offset+format.getNormalOffset()/4]=packedNormal;
             }
             // Flat block lighting samples the declared face. Use a perpendicular
             // direction to sample the housing position, preserving the old
@@ -190,7 +209,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
             EnumFacing sampleFace = FACE[i].getAxis() == EnumFacing.Axis.Y
                     ? EnumFacing.NORTH : EnumFacing.UP;
             return new BakedQuad(data, -1, sampleFace,
-                    sprite, false, DefaultVertexFormats.BLOCK);
+                    sprite, false, format);
     }
 
     private static EnumFacing worldFace(EnumFacing face, EnumFacing facing) {
