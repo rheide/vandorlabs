@@ -163,7 +163,11 @@ public final class ScreenHousingTextures {
     public static String category(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && e.has("category")?e.get("category").getAsString():"Materials";}
     public static String label(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("label")?null:e.has("detail")?e.get("label").getAsString().replaceFirst(" (Small|Medium|Large)$",""):e.get("label").getAsString();}
     public static boolean visible(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("hidden") || !e.get("hidden").getAsBoolean();}
-    public static int screenIndex(String source){for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;return 0;}
+    public static int screenIndex(String source){
+        for(int i=0;i<FINISHES.length;i++)if(source.equals(FINISHES[i].id)||source.equals(FINISHES[i].texture))return i;
+        for(int i=0;i<EXTRAS.size();i++)if(source.equals(EXTRAS.get(i).get("source").getAsString()))return LEGACY_COUNT+i;
+        return 0;
+    }
     /** Storage sets use their front as the ordinary shared material thumbnail. */
     public static String storageTexture(int choice, net.minecraft.util.EnumFacing localFace) {
         if(localFace==net.minecraft.util.EnumFacing.NORTH)return texture(choice);

@@ -2,7 +2,7 @@
   "parent": "block/orientable",
   "textures": {
     "front": "vandorlabs:blocks/engineering_screen_static",
-    "side": "vandorlabs:blocks/dark_wall_panel",
-    "top": "vandorlabs:blocks/dark_wall_panel"
+    "side": "vandorlabs:blocks/programmable_glass/door_side",
+    "top": "vandorlabs:blocks/programmable_glass/door_side"
   }
 }

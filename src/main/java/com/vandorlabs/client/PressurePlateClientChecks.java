@@ -12,6 +12,8 @@ import java.io.File;
 public final class PressurePlateClientChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("Pressure plate client: "+message);}
     public static void run(Minecraft mc,File output)throws Exception{
+        CreativeCatalogRuntimeChecks.checkNames();
+        deviceItems(mc);
         PlateBlock block=(PlateBlock)Block.getBlockFromName("vandorlabs:programmable_pressure_plate");
         for(int power=0;power<16;power++)for(int choice:new int[]{ScreenHousingTextures.screenIndex("door_inner"),ScreenHousingTextures.DEFAULT_TRAPDOOR}){
             net.minecraft.block.state.IBlockState state=block.getDefaultState().withProperty(PlateBlock.POWER,power);IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(state);
@@ -34,6 +36,20 @@ public final class PressurePlateClientChecks {
             javax.imageio.ImageIO.write(DialogRenderCapture.image(mc,gui,size[0],size[1]),"png",new File(output,"shot_pressure_plate_dialog_"+size[0]+".png"));
         }}finally{mc.player.openContainer=previous;org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
         System.out.println("[vandorlabs][reprolab] pressure-plate-client PASS all16 analog-state geometry main+trapdoor quad sprites compact dialog Wood/Gold/Iron previous+next shared wheel/drag picker");
+    }
+    private static void deviceItems(Minecraft mc){
+        String dark=ScreenHousingTextures.texture(ScreenHousingTextures.screenIndex("door_inner"));
+        require(dark.equals("vandorlabs:blocks/programmable_glass/door_side"),"Door Interior Dark resolves independently verified native artwork");
+        for(String id:new String[]{"programmable_viewscreen","programmable_diagonal_screen","programmable_half_input","programmable_input","programmable_half_console","programmable_console","programmable_diagonal_half_console"}){
+            Block block=Block.getBlockFromName("vandorlabs:"+id);require(block!=null&&block!=net.minecraft.init.Blocks.AIR,"registered device "+id);
+            net.minecraft.util.NonNullList<net.minecraft.item.ItemStack> items=net.minecraft.util.NonNullList.create();net.minecraft.item.Item.getItemFromBlock(block).getSubItems(net.minecraft.creativetab.CreativeTabs.SEARCH,items);require(items.size()==1,"one fresh creative device "+id);
+            IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(items.get(0),mc.world,mc.player);int housing=0;
+            for(EnumFacing face:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(BakedQuad quad:model.getQuads(null,face,0)){
+                require(!quad.getSprite().getIconName().equals("vandorlabs:blocks/dark_wall_panel"),"creative device does not retain old wall material "+id);
+                if(quad.getSprite().getIconName().equals(dark))housing++;
+            }
+            require(housing>0,"creative device uses Door Interior Dark "+id);
+        }
     }
     private static java.awt.image.BufferedImage render(Minecraft mc,PlateBlock block,boolean pressed,int choice){
         net.minecraft.block.state.IBlockState listed=block.getDefaultState().withProperty(PlateBlock.POWER,pressed?15:0);IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(listed);net.minecraft.block.state.IBlockState state=((net.minecraftforge.common.property.IExtendedBlockState)listed).withProperty(ProgrammableHousingState.FINISH,choice);java.util.List<BakedQuad> quads=new java.util.ArrayList<>();for(EnumFacing side:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})quads.addAll(model.getQuads(state,side,0));

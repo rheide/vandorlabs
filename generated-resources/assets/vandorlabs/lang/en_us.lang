@@ -618,3 +618,5 @@ tile.vandorlabs.armoured_track.name=Armoured Track
 tile.vandorlabs.bogie_track.name=Bogie Track
 
 tile.vandorlabs.copy_controller.name=Copy Controller
+
+tile.vandorlabs.programmable_pressure_plate.name=Programmable Pressure Plate

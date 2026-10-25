@@ -180,7 +180,22 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state,
             EntityLivingBase placer, ItemStack stack) {
         super.onBlockPlacedBy(world, pos, state, placer, stack);
+        // Fresh and partially configured device items share the same default as
+        // the factory. Explicit mined/picked housing selections always win.
+        NBTTagCompound settings=stack.getSubCompound("BlockEntityTag");
+        if (usesDeviceHousing(this) && (settings==null || !settings.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,3))) {
+            TileEntity tile=world.getTileEntity(pos);
+            if(tile instanceof TileEntityAnimatedScreenSelector)
+                ((TileEntityAnimatedScreenSelector)tile).setHousingTexture(com.vandorlabs.tiles.ScreenHousingTextures.screenIndex("door_inner"));
+        }
         predictItemSettings(world,pos,stack);
+    }
+
+    public static boolean usesDeviceHousing(net.minecraft.block.Block block) {
+        return block.getClass()==BlockAnimatedScreenSelector.class
+                || block instanceof BlockProgrammableInput || block instanceof BlockProgrammableDiagonalScreen
+                || block instanceof BlockProgrammableConsole || block instanceof BlockProgrammableHalfConsole
+                || block instanceof BlockDiagonalHalfConsole;
     }
 
     public static void predictItemSettings(World world,BlockPos pos,ItemStack stack) {

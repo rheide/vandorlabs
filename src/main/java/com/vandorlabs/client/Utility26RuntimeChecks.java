@@ -48,17 +48,30 @@ final class Utility26RuntimeChecks {
             TileCoupler restored=new TileCoupler();restored.readFromNBT(first.writeToNBT(new NBTTagCompound()));require(restored.inverted()&&restored.getRedstoneChannels().size()==2,"saved gate configuration");
             io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();new MessageCoupler(9,"64123,64124",true).toBytes(bytes);new MessageCoupler().fromBytes(bytes);require(!bytes.isReadable(),"coupler packet round trip consumes exact payload");bytes.release();
             bytes=io.netty.buffer.Unpooled.buffer();bytes.writeInt(9);bytes.writeShort(257);bytes.writeZero(258);boolean refused=false;try{new MessageCoupler().fromBytes(bytes);}catch(IllegalArgumentException expected){refused=true;}finally{bytes.release();}require(refused,"oversized packet refused before allocation");
-            for(String id:new String[]{"programmable_half_input","programmable_full_input","programmable_half_console","programmable_console","animated_screen_selector"}){
-                Block block=Block.getBlockFromName("vandorlabs:"+id);if(block==null||block==Blocks.AIR)continue;
-                net.minecraft.tileentity.TileEntity tile=block.createTileEntity(world,block.getDefaultState());
-                require(tile instanceof TileEntityAnimatedScreenSelector&&((TileEntityAnimatedScreenSelector)tile).getHousingTexture()==ScreenHousingTextures.screenIndex("door_inner"),"new device default "+id);
-            }
+            devicePlacement(world,actor,base.add(16,3,0));
             carriedCoupler(world,base.west(3));
             scaffolds(world,actor,base.add(0,0,12));
             foreignRotations(world);
             nestedLanding(world,actor);
         }finally{for(BlockPos p:BlockPos.getAllInBox(base.add(-2,-2,-2),base.add(10,6,4)))world.setBlockToAir(p);}
         System.out.println("[vandorlabs][reprolab] utility26-boundaries PASS coupler-off-on-inverted saved-settings bounded-packet down-thrusters terrain-excluded device-defaults");
+    }
+    private static void devicePlacement(WorldServer world,net.minecraft.entity.player.EntityPlayerMP actor,BlockPos at){
+        world.getChunkFromBlockCoords(at);int dark=ScreenHousingTextures.screenIndex("door_inner");
+        require(dark>0&&ScreenHousingTextures.texture(dark).equals("vandorlabs:blocks/programmable_glass/door_side"),"Door Interior Dark resolves its actual native material rather than fallback zero");
+        for(String id:new String[]{"programmable_viewscreen","programmable_diagonal_screen","programmable_half_input","programmable_input","programmable_half_console","programmable_console","programmable_diagonal_half_console"}){
+            Block block=Block.getBlockFromName("vandorlabs:"+id);require(block instanceof BlockAnimatedScreenSelector,"registered device "+id);
+            net.minecraft.item.ItemBlock item=(net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(block);
+            for(int mode=0;mode<4;mode++)try{
+                net.minecraft.util.NonNullList<net.minecraft.item.ItemStack> creative=net.minecraft.util.NonNullList.create();item.getSubItems(com.vandorlabs.VandorLabs.VANDOR_LABS_TAB,creative);require(creative.size()==1,"creative placement stack "+id);net.minecraft.item.ItemStack stack=creative.get(0).copy();
+                if(mode>0){NBTTagCompound tag=new NBTTagCompound();tag.setBoolean("SmallInput",true);if(mode>1){tag.setInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,mode==2?0:ScreenHousingTextures.INDUSTRIAL_BLOCK);tag.setInteger("HousingTextureVersion",1);}stack.setTagInfo("BlockEntityTag",tag);}
+                net.minecraft.block.state.IBlockState state=block.getStateForPlacement(world,at,EnumFacing.UP,.5F,.5F,.5F,0,actor);
+                require(item.placeBlockAt(stack,actor,world,at,EnumFacing.UP,.5F,.5F,.5F,state),"actual fresh ItemBlock placement "+id);
+                TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(at);int expected=mode<2?dark:mode==2?0:ScreenHousingTextures.INDUSTRIAL_BLOCK;
+                require(tile.getHousingTexture()==expected,"placed device housing "+id+" mode="+mode);
+                TileEntityAnimatedScreenSelector loaded=(TileEntityAnimatedScreenSelector)net.minecraft.tileentity.TileEntity.create(world,tile.writeToNBT(new NBTTagCompound()));require(loaded!=null&&loaded.getHousingTexture()==expected,"saved device selection "+id);
+            }finally{world.setBlockToAir(at);}
+        }
     }
     private static void carriedCoupler(WorldServer world,BlockPos sourcePos){
         Block sourceBlock=null;for(Block block:Block.REGISTRY)if(block instanceof BlockIndustrialLever){sourceBlock=block;break;}

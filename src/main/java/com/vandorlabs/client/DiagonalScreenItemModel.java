@@ -22,7 +22,7 @@ public final class DiagonalScreenItemModel implements IBakedModel {
     }
     public DiagonalScreenItemModel(IBakedModel delegate,boolean redstone) {
         this.delegate=delegate;this.redstone=redstone;
-        TextureAtlasSprite wall=sprite("dark_wall_panel"),screen=redstone?atlas("minecraft:blocks/concrete_black"):sprite("engineering_screen_static");
+        TextureAtlasSprite wall=sprite("programmable_glass/door_side"),screen=redstone?atlas("minecraft:blocks/concrete_black"):sprite("engineering_screen_static");
         List<BakedQuad> built=new ArrayList<>();
         for(ScreenHousingMesh.Face face:ScreenHousingMesh.diagonal(false).quads) {
             double[][] points=new double[4][5];

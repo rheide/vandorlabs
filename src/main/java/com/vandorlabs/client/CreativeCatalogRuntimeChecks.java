@@ -11,6 +11,7 @@ final class CreativeCatalogRuntimeChecks {
     private static final String[] VISIBLE={"small_power_lever","industrial_power_lever","gear_mount","gear_extender","landing_ski","landing_wheel","landing_plate","compact_track","square_coupler","vehicle_coupler_slab","copy_controller","programmable_pressure_plate"};
     private static final String[] HIDDEN={"large_power_lever","compact_power_lever","landing_gear","ski_landing_gear","landing_strut","angled_landing_strut","armoured_track","bogie_track"};
     static void run(){
+        checkNames();
         java.util.Collection<?> ingredients=null;
         if(net.minecraftforge.fml.common.Loader.isModLoaded("jei")){
             try{
@@ -39,6 +40,15 @@ final class CreativeCatalogRuntimeChecks {
         }
         if(ingredients!=null)System.out.println("[vandorlabs][reprolab] creative-catalog-JEI-live PASS canonical levers and modular gear visible; legacy levers and integrated gear hidden");
         System.out.println("[vandorlabs][reprolab] creative-catalog PASS creative search browser-discovery legacy-items negative-controls");
+    }
+    static void checkNames(){
+        String[][] names={{"copy_controller","Copy Controller"},{"programmable_pressure_plate","Programmable Pressure Plate"},{"square_coupler","Vehicle Coupler"},{"vehicle_coupler_slab","Vehicle Coupler Slab"},{"turntable_surface","Programmable Surface"},{"compact_track","Track"}};
+        for(String[] entry:names){
+            Item item=Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:"+entry[0]));
+            NonNullList<ItemStack> menu=NonNullList.create();item.getSubItems(CreativeTabs.SEARCH,menu);
+            require(menu.size()==1,"named visible search item "+entry[0]);
+            require(entry[1].equals(menu.get(0).getDisplayName()),"localized creative display "+entry[0]+" = "+menu.get(0).getDisplayName());
+        }
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException("Creative catalog: "+message);}
 }
