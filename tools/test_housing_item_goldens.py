@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import shutil
 import socket
 import subprocess
 import sys
@@ -44,7 +45,7 @@ def main():
     if not before:
         raise RuntimeError('Build and prepare native runs before exporting')
     (args.log_dir/'outputs-before.json').write_text(json.dumps(before,indent=2)+'\n')
-    names=('ProgrammableModel.class','ProgrammableModel$UniformHousingItem.class','JoinedCubeQuads.class')
+    names=('ProgrammableModel.class','ProgrammableModel$UniformHousingItem.class','JoinedCubeQuads.class','shape/ShapeModel.class')
     parents={name: before['build/classes/java/main/com/vandorlabs/neoforge/'+name] for name in names}
     (args.log_dir/'parent-models-before.json').write_text(json.dumps(parents,indent=2)+'\n')
     env=dict(os.environ,JAVA_HOME=java_home(21,'VANDOR_JAVA21_HOME'))
@@ -101,17 +102,20 @@ def main():
                 if not path.is_file() or path.stat().st_mtime_ns<started:
                     raise RuntimeError('Missing or stale item artifact '+name)
                 files[name]=hashlib.sha256(path.read_bytes()).hexdigest()
+                shutil.copy2(path,args.log_dir/name)
             model=json.loads((PLATFORM/'run/client/screenshots/modern-housing-item-goldens.json').read_text())
-            if len(model['cases'])!=28:
+            if len(model['cases']) not in (28,64):
                 raise RuntimeError('Incomplete native baseline item export')
             if args.legacy_models is not None:
                 tools=Path(__file__).resolve().parent
                 for script,reference,current,output in (
                     ('compare_housing_item_goldens.py',args.legacy_models,'modern-housing-item-goldens.json','model-comparison.json'),
                     ('test_housing_item_images.py',args.legacy_image,'modern-housing-items.png','image-comparison.json')):
-                    subprocess.run([sys.executable,str(tools/script),'--legacy',str(reference.resolve()),
-                                    '--modern',str(PLATFORM/'run/client/screenshots'/current),
-                                    '--report',str(args.log_dir/output)],check=True)
+                    comparison=[sys.executable,str(tools/script),'--legacy',str(reference.resolve()),
+                                '--modern',str(PLATFORM/'run/client/screenshots'/current),
+                                '--report',str(args.log_dir/output)]
+                    if script=='test_housing_item_images.py':comparison+=['--cases',str(len(model['cases']))]
+                    subprocess.run(comparison,check=True)
             result={'status':'PASS','legacy_parity_checked':args.legacy_models is not None,'port':args.port,'parent_models':parents,'files':files,'markers':markers,'compiled_outputs':len(before)}
     except BaseException as error:
         report.write_text(json.dumps({'status':'FAILED','error':str(error)},indent=2)+'\n')
@@ -130,7 +134,7 @@ def main():
             raise RuntimeError('Compiled native outputs changed during baseline export')
     report.write_text(json.dumps(result,indent=2)+'\n')
     detail='legacy model and rendered-padding parity passed' if args.legacy_models else 'baseline exported without a legacy parity assertion'
-    print('Native housing items PASS:28 actual models/gallery; '+detail+'; owned fixture stopped/discarded and compiled outputs unchanged',flush=True)
+    print(f'Native housing items PASS:{len(model["cases"])} actual models/gallery; '+detail+'; owned fixture stopped/discarded and compiled outputs unchanged',flush=True)
 
 
 if __name__=='__main__':

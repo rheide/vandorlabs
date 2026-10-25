@@ -50,7 +50,7 @@
         "shared bounded joined-face discovery with immutable client-thread ModelData snapshots and no worker world reads",
         "108 native emitted-quad cases across six faces, six saved facings and three layouts; continuous authored UVs and opaque Fit margins",
         "actual menu material/layout edits split neighboring planes and rejoin; rendered Stretch/Fit artwork and repeated Tile images",
-        "28 actual legacy/native cube and trigger item cases match materials, content UVs, shading, transforms and rendered padding while retaining dormant settings"
+        "64 actual legacy/native cube, trigger, slab and stair item cases match materials, content UVs, shading, transforms and rendered padding while retaining saved settings"
       ]
     },
     {
@@ -65,6 +65,11 @@
       "modern_registered_block_ids": [
         "programmable_slab",
         "programmable_stairs"
+      ],
+      "implemented": [
+        "actual legacy/native item previews preserve raw unversioned material choices and original layout fallback",
+        "slab previews retain dormant face settings; stair previews apply saved side and per-face materials",
+        "64 cross-family actual item-renderer cases and raster padding checks include slab/stair side and legacy Fit/Tile settings"
       ],
       "remaining": [
         "custom block material definitions and sampling",

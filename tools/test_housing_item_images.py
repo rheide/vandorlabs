@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check actual 28-case housing item gallery padding against the legacy raster."""
+"""Check actual housing item gallery padding against the legacy raster."""
 import argparse
 from collections import Counter
 import json
@@ -10,21 +10,21 @@ from PIL import Image
 
 SCALE = 2
 COLUMNS = 7
-ROWS = 4
 CELL = 22 * SCALE
 SLOT = 16 * SCALE
 INSET = 3 * SCALE
 
 
-def gallery_cells(path):
+def gallery_cells(path, count):
+    rows = (count + COLUMNS - 1) // COLUMNS
     image = Image.open(path).convert('RGB')
     width, height = image.size
     assert (width, height) == (1280, 720), 'Expected actual GUI-scale-2 capture'
     left = ((width // SCALE - COLUMNS * 22) // 2) * SCALE
-    top = ((height // SCALE - ROWS * 22) // 2) * SCALE
+    top = ((height // SCALE - rows * 22) // 2) * SCALE
     return [image.crop((left + i % COLUMNS * CELL, top + i // COLUMNS * CELL,
                         left + (i % COLUMNS + 1) * CELL, top + (i // COLUMNS + 1) * CELL))
-            for i in range(COLUMNS * ROWS)]
+            for i in range(count)]
 
 
 def padding(cell):
@@ -64,9 +64,10 @@ def main():
     parser.add_argument('--legacy', type=Path, required=True)
     parser.add_argument('--modern', type=Path, required=True)
     parser.add_argument('--report', type=Path, required=True)
+    parser.add_argument('--cases', type=int, choices=(28,64), default=28)
     args = parser.parse_args()
-    legacy = gallery_cells(args.legacy)
-    modern = gallery_cells(args.modern)
+    legacy = gallery_cells(args.legacy, args.cases)
+    modern = gallery_cells(args.modern, args.cases)
     failures = []
     margins = []
     for index, (reference, actual) in enumerate(zip(legacy, modern)):
@@ -89,8 +90,8 @@ def main():
               'padding': margins, 'failures': failures,
               'negative_controls': ['blank', 'clipped', 'undersized']}
     args.report.write_text(json.dumps(result, indent=2) + '\n')
-    assert not failures, f'{len(failures)}/28 item raster padding contracts differ; see report'
-    print('PASS 28 actual item previews: legacy raster bounds, visible padding on all sides; three negatives rejected')
+    assert not failures, f'{len(failures)}/{args.cases} item raster padding contracts differ; see report'
+    print(f'PASS {args.cases} actual item previews: legacy raster bounds, visible padding on all sides; three negatives rejected')
 
 
 if __name__ == '__main__':

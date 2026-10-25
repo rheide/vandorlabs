@@ -31,18 +31,22 @@ public final class HousingItemGoldens {
         if(mc.getOverlay()!=null)return false;
         if(stage==0){if(tick<60)return false;export(mc);mc.options.guiScale().set(2);mc.resizeDisplay();mc.setScreen(new Gallery());started=tick;frame=ModernClientRuntimeChecks.renderedFrames();stage=1;return false;}
         if(stage==1){if(tick-started<20||ModernClientRuntimeChecks.renderedFrames()-frame<4)return false;ModernClientRuntimeChecks.capture("modern-housing-items.png");stage=2;return false;}
-        if(stage==2){if(!ModernClientRuntimeChecks.captured("modern-housing-items.png"))return false;mc.setScreen(null);System.out.println("[vandorlabs][modern] housing-items-client PASS28 actual ItemRenderer GUI previews, baseline exported without legacy-expectation assertions");stage=3;}return stage==3;
+        if(stage==2){if(!ModernClientRuntimeChecks.captured("modern-housing-items.png"))return false;mc.setScreen(null);System.out.println("[vandorlabs][modern] housing-items-client PASS64 actual ItemRenderer GUI previews, baseline exported without legacy-expectation assertions");stage=3;}return stage==3;
     }
     private static void export(Minecraft mc){
         int rectangle=-1;for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++)if("screen_console_inputs_analysis_framed_gas_giant_static".equals(ModernFinishCatalog.entry(i).id()))rectangle=i;
         need(rectangle>=0,"rectangular catalog choice");JsonArray cases=new JsonArray();ITEMS.clear();
-        for(boolean trigger:new boolean[]{false,true}){Item item=trigger?TriggerRegistration.BLOCK.get().asItem():VandorLabsModern.PROGRAMMABLE_BLOCK.get().asItem();String family=trigger?"trigger":"cube";
+        for(String family:new String[]{"cube","trigger","slab","stairs"}){Item item=family.equals("trigger")?TriggerRegistration.BLOCK.get().asItem():family.equals("slab")?com.vandorlabs.neoforge.shape.ShapeRegistration.SLAB.get().asItem():family.equals("stairs")?com.vandorlabs.neoforge.shape.ShapeRegistration.STAIRS.get().asItem():VandorLabsModern.PROGRAMMABLE_BLOCK.get().asItem();
             cases.add(record(mc,family+"/default",new ItemStack(item),0,-1,false,false));cases.add(record(mc,family+"/unversioned15",configured(item,15,1,false,false),15,1,false,false));
             for(int material:new int[]{1,rectangle})for(int layout=0;layout<3;layout++)for(boolean faces:new boolean[]{false,true})cases.add(record(mc,family+"/"+material+"/"+layout+"/"+(faces?1:0),configured(item,material,layout,faces,true),material,layout,faces,true));
+            if(family.equals("slab")||family.equals("stairs")){
+                for(boolean tiled:new boolean[]{false,true}){ItemStack stack=configured(item,rectangle,1,false,true);CompoundTag tag=stack.get(DataComponents.BLOCK_ENTITY_DATA).copyTag();tag.remove("MainTextureLayout");tag.putBoolean("SlabTileSides",tiled);stack.set(DataComponents.BLOCK_ENTITY_DATA,CustomData.of(tag));cases.add(record(mc,family+"/legacyTile/"+(tiled?1:0),stack,rectangle,tiled?1:0,false,true));}
+                for(boolean faces:new boolean[]{false,true}){ItemStack stack=configured(item,rectangle,1,faces,true);CompoundTag tag=stack.get(DataComponents.BLOCK_ENTITY_DATA).copyTag();tag.putInt("SideTexture",1);stack.set(DataComponents.BLOCK_ENTITY_DATA,CustomData.of(tag));cases.add(record(mc,family+"/side/"+(faces?1:0),stack,rectangle,1,faces,true));}
+            }
         }
-        need(cases.size()==28,"case coverage");JsonObject root=new JsonObject();root.addProperty("format",1);root.addProperty("rectangularChoice",rectangle);root.add("cases",cases);
+        need(cases.size()==64,"case coverage");JsonObject root=new JsonObject();root.addProperty("format",1);root.addProperty("rectangularChoice",rectangle);root.add("cases",cases);
         try{var path=mc.gameDirectory.toPath().resolve("screenshots/modern-housing-item-goldens.json");Files.createDirectories(path.getParent());Files.writeString(path,new Gson().toJson(root),StandardCharsets.UTF_8);}catch(Exception failure){throw new IllegalStateException("Housing item native export",failure);}
-        System.out.println("[vandorlabs][modern] housing-items-model PASS28 actual ItemRenderer override models, quads/UV/materials/transforms and unchanged payloads exported");
+        System.out.println("[vandorlabs][modern] housing-items-model PASS64 actual ItemRenderer override models, quads/UV/materials/transforms and unchanged payloads exported");
     }
     private static ItemStack configured(Item item,int main,int layout,boolean faces,boolean versioned){
         ItemStack stack=new ItemStack(item);CompoundTag tag=new CompoundTag();tag.putInt("housingTexture",main);if(versioned)tag.putInt("HousingTextureVersion",1);tag.putInt("MainTextureLayout",layout);tag.putBoolean("FaceTexturesEnabled",faces);tag.putIntArray("FaceTextures",new int[]{2,3,4,5,6,7});tag.putInt("TriggerOnTexture",19);tag.putInt("TriggerLowTexture",20);tag.putInt("TriggerMediumTexture",21);tag.putBoolean("TriggerLevelStates",true);tag.putInt("TriggerExactLevel",0);tag.putInt("ChannelSignal",15);tag.putString("OpaquePreviewMarker","retained");CompoundTag opaque=new CompoundTag();opaque.putInt("Nested",42);tag.put("OpaquePreviewData",opaque);stack.set(DataComponents.BLOCK_ENTITY_DATA,CustomData.of(tag));return stack;
@@ -60,9 +64,9 @@ public final class HousingItemGoldens {
     }
     private static void need(boolean value,String message){if(!value)throw new IllegalStateException("Housing item native: "+message);}
     private static final class Gallery extends Screen {
-        Gallery(){super(Component.literal("Configured cube and trigger items"));}
+        Gallery(){super(Component.literal("Configured housing items"));}
         @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){}
         @Override public boolean isPauseScreen(){return false;}
-        @Override public void render(GuiGraphics graphics,int x,int y,float partial){graphics.fill(0,0,width,height,0xFF101012);int left=(width-7*22)/2,top=(height-4*22)/2;graphics.drawCenteredString(font,title,width/2,top-16,0xFFFFFF);for(int i=0;i<ITEMS.size();i++){int cx=left+i%7*22,cy=top+i/7*22;graphics.fill(cx,cy,cx+22,cy+22,0xFF282C32);graphics.renderItem(ITEMS.get(i),cx+3,cy+3);}super.render(graphics,x,y,partial);}
+        @Override public void render(GuiGraphics graphics,int x,int y,float partial){graphics.fill(0,0,width,height,0xFF101012);int left=(width-7*22)/2,top=(height-((ITEMS.size()+6)/7)*22)/2;graphics.drawCenteredString(font,title,width/2,top-16,0xFFFFFF);for(int i=0;i<ITEMS.size();i++){int cx=left+i%7*22,cy=top+i/7*22;graphics.fill(cx,cy,cx+22,cy+22,0xFF282C32);graphics.renderItem(ITEMS.get(i),cx+3,cy+3);}super.render(graphics,x,y,partial);}
     }
 }

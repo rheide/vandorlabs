@@ -48,7 +48,7 @@ def main():
     assert old_data['format']==new_data['format']==1
     assert old_data['rectangularChoice']==new_data['rectangularChoice']
     old={row['key']:row for row in old_data['cases']};new={row['key']:row for row in new_data['cases']}
-    assert len(old)==len(new)==28 and old.keys()==new.keys(),'Expected all28actualItemRenderer cases'
+    assert len(old)==len(new) and len(old) in (28,64) and old.keys()==new.keys(),'Expected complete actual ItemRenderer cases'
     rows=[]
     for key in old:
         errors,metrics=compare(old[key],new[key]);rows.append({'key':key,'errors':errors,**metrics})
@@ -65,8 +65,8 @@ def main():
     if failures:
         for row in failures:
             print(f"FAIL {row['key']}: {','.join(row['errors'])}; UV={row['max_uv_error']:.8f}, GUI={row['max_gui_error']:.8f}")
-        raise SystemExit(f'FAIL {len(failures)}/28 actual housing item contracts')
-    print('PASS28 actual housing item contracts: geometry/cull/winding, materials/UV, shading, GUI transforms and retained payloads; three negatives rejected')
+        raise SystemExit(f'FAIL {len(failures)}/{len(old)} actual housing item contracts')
+    print(f'PASS {len(old)} actual housing item contracts: geometry/cull/winding, materials/UV, shading, GUI transforms and retained payloads; three negatives rejected')
 
 
 if __name__=='__main__':main()
