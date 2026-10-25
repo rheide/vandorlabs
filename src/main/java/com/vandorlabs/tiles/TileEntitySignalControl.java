@@ -32,7 +32,7 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}
     }
     public void readMount(NBTTagCompound tag){if(tag.hasKey("ControlType",3))configureType(tag.getInteger("ControlType"));configureMount(tag.getInteger("BaseHeight"),com.vandorlabs.blocks.SignalControlMount.readTilt(tag),tag.getInteger("TiltDirection"));}
-    private void writeMount(NBTTagCompound tag){tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);}
+    private void writeMount(NBTTagCompound tag){new com.vandorlabs.persistence.ControlSettings.Mount(baseHeight,baseTilt,tiltDirection).write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));}
     public int getLowLimit(){return low;}
     public int getHighLimit(){return high;}
     public static boolean validLimits(int low,int high){return com.vandorlabs.redstone.RedstoneScreenPolicy.validLimits(low,high);}
@@ -76,16 +76,14 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         else if(previous>0)RedstoneChannels.latchLevelChanged(this,previous);
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);tag.setInteger("ControlStep",step);return tag;
+        super.writeToNBT(tag);writeMount(tag);new com.vandorlabs.persistence.ControlSettings.Detents(low,high,step).write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);
-        int h=tag.getInteger("BaseHeight"),t=com.vandorlabs.blocks.SignalControlMount.readTilt(tag),d=tag.getInteger("TiltDirection");
-        baseHeight=baseTilt=tiltDirection=0;
-        if(com.vandorlabs.blocks.SignalControlMount.valid(h,t,d)){baseHeight=h;baseTilt=t;tiltDirection=d;}
-        int savedLow=tag.hasKey("LowLimit")?tag.getInteger("LowLimit"):5,savedHigh=tag.hasKey("HighLimit")?tag.getInteger("HighLimit"):15;
-        if(validLimits(savedLow,savedHigh)){low=savedLow;high=savedHigh;}
-        step=Math.max(0,Math.min(3,tag.getInteger("ControlStep")));
+        com.vandorlabs.persistence.NbtPrimitiveData saved=new com.vandorlabs.persistence.NbtPrimitiveData(tag);
+        com.vandorlabs.persistence.ControlSettings.Mount mount=com.vandorlabs.persistence.ControlSettings.Mount.read(saved,new com.vandorlabs.persistence.ControlSettings.Mount(0,0,0));
+        baseHeight=mount.height;baseTilt=mount.tilt;tiltDirection=mount.direction;
+        com.vandorlabs.persistence.ControlSettings.Detents detents=com.vandorlabs.persistence.ControlSettings.Detents.read(saved,low,high);low=detents.low;high=detents.high;step=detents.step;
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
     }
     public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).hasSelectableType())tag.setInteger("ControlType",getControlType());writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}

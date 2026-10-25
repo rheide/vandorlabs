@@ -58,11 +58,25 @@ def validate(jar):
             for filename in (f'assets/vandorlabs/blockstates/{id}.json',f'assets/vandorlabs/models/item/{id}.json',f'data/vandorlabs/loot_table/blocks/{id}.json'):
                 assert filename in names,filename
                 json.loads(archive.read(filename))
+        table_states=json.loads(archive.read('assets/vandorlabs/blockstates/industrial_table.json'))['variants']
+        legacy_assets=root/'src/main/resources/assets/vandorlabs'
+        legacy_states=json.loads((legacy_assets/'blockstates/industrial_table.json').read_text())['variants']
+        assert len(table_states)==32 and set(table_states)==set(legacy_states)
+        for state,value in legacy_states.items():
+            expected=dict(value);expected['model']=expected['model'].replace('vandorlabs:','vandorlabs:block/')
+            assert table_states[state]==expected,('table state drift',state)
+        for suffix in ('standalone','left_end','right_end','middle'):
+            name=f'models/block/industrial_table_{suffix}.json'
+            expected=json.loads((legacy_assets/name).read_text())
+            expected['textures']={key:value.replace(':blocks/',':block/') for key,value in expected['textures'].items()}
+            assert json.loads(archive.read('assets/vandorlabs/'+name))==expected,('table authored geometry/UV drift',suffix)
         screens=json.loads(archive.read('assets/vandorlabs/data/screen_artwork.json'))
         assert screens
         for entry in screens:
             for variant in ('bare','framed'):
                 assert f'assets/vandorlabs/textures/screens/{entry[variant]}_static.png' in names,entry
+        from validate_control_resources import validate as validate_controls
+        validate_controls(root, archive)
         print(f'Modern resource contracts PASS: {len(catalog)} stable housing choices, {len(screens)} paired screens; modern metadata, models, loot and sprites')
 
 if __name__=='__main__':

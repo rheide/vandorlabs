@@ -157,7 +157,9 @@ def main():
     generate_trigger(ROOT,resources)
     from generate_shape_resources import generate as generate_shape
     generate_shape(ROOT,resources)
-    native_blocks=['programmable_slab','programmable_stairs','programmable_trigger_block','push_button','rocker_switch','programmable_block','programmable_matter_block','programmable_viewscreen','programmable_console','programmable_half_console','programmable_input','programmable_half_input','programmable_diagonal_screen','programmable_diagonal_half_console','redstone_transmitter','redstone_receiver']
+    from generate_table_resources import generate as generate_table
+    generate_table(ROOT,resources)
+    native_blocks=['programmable_slab', 'programmable_stairs', 'programmable_trigger_block', 'push_button', 'rocker_switch', 'programmable_block', 'programmable_matter_block', 'programmable_viewscreen', 'programmable_console', 'programmable_half_console', 'programmable_input', 'programmable_half_input', 'programmable_diagonal_screen', 'programmable_diagonal_half_console', 'redstone_transmitter', 'redstone_receiver', 'industrial_table', 'industrial_power_lever', 'compact_power_lever', 'small_power_lever', 'large_power_lever', 'thruster_lever', 'airliner_throttle', 'fighter_throttle', 'wall_slider']
     write(OUT / 'adapter-coverage.json', {
         'registered_blocks':native_blocks,
         'registered_direct_items':['configurizer','programmable_matter_ingot','industrial_alloy_ingot'],

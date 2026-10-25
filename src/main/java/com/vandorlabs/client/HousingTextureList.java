@@ -12,7 +12,7 @@ import java.util.*;
 /** One categorized, scrollable artwork picker with atlas thumbnails. */
 final class HousingTextureList {
     static final int ROW_HEIGHT=com.vandorlabs.ui.ProgrammableDialogLayout.ROW_HEIGHT;
-    static final int CANOPY_GLASS_BASE=0x10000000;
+    static final int CANOPY_GLASS_BASE=com.vandorlabs.ui.WallDialog.GLASS_BASE;
     private static final int CUSTOM_ROW=-100000,REDSTONE_ROW=-100001,VEHICLE_ROW=-100002;
     private Runnable vehicleAction;
     HousingTextureList vehicle(Runnable action){vehicleAction=action;setSelected(selected());return this;}

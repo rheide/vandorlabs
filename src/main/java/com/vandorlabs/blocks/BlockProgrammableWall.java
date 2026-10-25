@@ -48,7 +48,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             World world, int meta) {
         com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
                 new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();
-        if (isPortholeShape()) tile.setJoinPortholes(true);
+        com.vandorlabs.ui.WallDialog.State defaults=com.vandorlabs.ui.WallDialog.fresh(this instanceof BlockProgrammablePortholeBlock?com.vandorlabs.ui.WallDialog.Profile.FULL_PORTHOLE:isPortholeShape()?com.vandorlabs.ui.WallDialog.Profile.PORTHOLE:com.vandorlabs.ui.WallDialog.Profile.PLAIN);
+        tile.setJoinPortholes(defaults.appearance.join);tile.setMainTextureLayout(defaults.layout);
         return tile;
     }
 
@@ -337,26 +338,11 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             this.straightLeft = straightLeft;
             this.straightRight = straightRight;
         }
-        public double left() {
-            // Two perpendicular arms already define both ends of this bridge.
-            // A free tail here turns a three-way meeting into a false cross.
-            if (!straightLeft && !straightRight
-                    && frontArm != null && backArm != null)
-                return Math.min(frontArm, backArm);
-            if (straightLeft || !straightRight && (Boolean.FALSE.equals(frontRight)
-                    || Boolean.FALSE.equals(backRight))) return 0;
-            return Math.min(frontArm == null ? 16 : frontArm,
-                    backArm == null ? 16 : backArm);
+        public com.vandorlabs.render.FlatWallTopology.Corner portable() {
+            return new com.vandorlabs.render.FlatWallTopology.Corner(frontArm,backArm,frontRight,backRight,straightLeft,straightRight);
         }
-        public double right() {
-            if (!straightLeft && !straightRight
-                    && frontArm != null && backArm != null)
-                return Math.max(frontArm, backArm) + 4;
-            if (straightRight || !straightLeft && (Boolean.TRUE.equals(frontRight)
-                    || Boolean.TRUE.equals(backRight))) return 16;
-            return Math.max(frontArm == null ? 0 : frontArm + 4,
-                    backArm == null ? 0 : backArm + 4);
-        }
+        public double left() { return portable().left(); }
+        public double right() { return portable().right(); }
     }
 
     @Nullable public FlatCorner flatCorner(IBlockState state, IBlockAccess world,
@@ -366,29 +352,13 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
 
     @Nullable static FlatCorner findFlatCorner(IBlockState state, IBlockAccess world, BlockPos pos) {
         if (!PanelJoins.cornerPanel(state) || !PanelJoins.flatEnabled(world,pos)) return null;
-        EnumFacing facing = PanelJoins.flatFacing(state,world,pos);
-        Double frontArm = null, backArm = null;
-        Boolean frontRight = null, backRight = null;
-        Double frontFlat=null,backFlat=null;
-        for (boolean front : new boolean[] {true, false}) {
-            BlockPos neighborPos = pos.offset(front ? facing : facing.getOpposite());
-            if (world instanceof World && !((World) world).isBlockLoaded(neighborPos))
-                continue;
-            IBlockState neighbor = world.getBlockState(neighborPos);
-            if (!PanelJoins.cornerPanel(neighbor) || !PanelJoins.flatEnabled(world,neighborPos)) continue;
-            EnumFacing neighborFacing = PanelJoins.flatFacing(neighbor,world,neighborPos);
-            Boolean right = neighborFacing == facing.rotateY() ? Boolean.TRUE
-                    : neighborFacing == facing.rotateYCCW() ? Boolean.FALSE : null;
-            if (right == null) continue;
-            double neighborNear = PanelJoins.flatNear(neighbor,world,neighborPos);
-            double arm = right ? 12 - neighborNear : neighborNear;
-            if (front) { frontArm = arm; frontRight = right; }
-            else { backArm = arm; backRight = right; }
-        }
-        if (frontArm == null && backArm == null) return null;
-        return new FlatCorner(frontArm, backArm, frontRight, backRight,
-                PanelJoins.connectsFlat(world,pos,state,pos.offset(facing.rotateYCCW())),
-                PanelJoins.connectsFlat(world,pos,state,pos.offset(facing.rotateY())));
+        com.vandorlabs.render.FlatWallTopology.Corner result=com.vandorlabs.render.FlatWallTopology.corner(
+                PanelJoins.flatSnapshot(state,world,pos),direction->{
+                    BlockPos next=pos.offset(EnumFacing.getFront(direction));
+                    if(world instanceof World&&!((World)world).isBlockLoaded(next))return null;
+                    return PanelJoins.flatSnapshot(world.getBlockState(next),world,next);
+                });
+        return result==null?null:new FlatCorner(result.frontArm,result.backArm,result.frontRight,result.backRight,result.straightLeft,result.straightRight);
     }
 
     @Nullable public Corner corner(IBlockState state, IBlockAccess world, BlockPos pos) {
@@ -477,14 +447,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
                 return;
             }
             double near = PanelDepth.start(state.getValue(DEPTH));
-            addFlatBox(pos, entityBox, boxes, state, flat.left(), flat.right(),
-                    near, near + 4);
-            if (flat.frontArm != null)
-                addFlatBox(pos, entityBox, boxes, state,
-                        flat.frontArm, flat.frontArm + 4, 0, near);
-            if (flat.backArm != null)
-                addFlatBox(pos, entityBox, boxes, state,
-                        flat.backArm, flat.backArm + 4, near + 4, 16);
+            for(double[] box:com.vandorlabs.render.FlatWallTopology.boxes(near,flat.portable()))
+                addFlatBox(pos,entityBox,boxes,state,box[0],box[2],box[1],box[3]);
             return;
         }
         int firstBox=boxes.size();

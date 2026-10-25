@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
-unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
+unset VANDOR_LABS_FLAT_WALL_DIALOG_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
@@ -34,6 +34,9 @@ case "${1:-}" in
         elif [ "$TARGET" = cockpit ]; then
             PREFIX=cockpit_
             export VANDOR_LABS_COCKPIT_CHECKS_ONLY=true
+        elif [ "$TARGET" = flat-wall-dialogs ]; then
+            PREFIX=flat_wall_
+            export VANDOR_LABS_FLAT_WALL_DIALOG_CHECKS_ONLY=true
         elif [ "$TARGET" = glass-appearance ]; then
             PREFIX=glass_
             export VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY=true
@@ -186,6 +189,14 @@ if [ "$MODE" = focus ]; then
         grep -q 'cockpit-wall-canopy PASS cases=6' "$RUN_OUT/client.log"
         grep -q 'cockpit-focused PASS' "$RUN_OUT/client.log"
         echo "Live cockpit checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = flat-wall-dialogs ]; then
+        grep -q "flat-wall-dialog-live PASS captures=8" "$RUN_OUT/client.log"
+        for scene in plain-main-scale3 plain-main-scale2 full-main-scale3 full-main-scale2 full-side-scale3 full-stock-glass-scale3 full-custom-glass-scale3 full-custom-glass-scale2; do
+            test -s "$RUN_OUT/flat-wall-$scene.png"
+        done
+        echo "Live flat wall dialog checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = glass-appearance ]; then

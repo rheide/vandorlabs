@@ -36,7 +36,18 @@
 - Add the native Programmable Trigger with shared exact-level/band settings and
   four independent texture lists. Reuse cube housing storage/rendering, preserve
   uniform live artwork and OFF item previews, and keep channel edits immediate.
-  Eight other control IDs and the larger outstanding families remain unported.
+  Larger outstanding families remain under conversion.
+
+- Add the remaining native power levers, throttles and wall slider with shared
+  saved settings, four-step levels, authored collision and draft/Done/Escape
+  dialogs. Preserve hidden compatibility IDs, canonical configured-item drops,
+  type/size changes and padded icons. Bound shape caching and avoid repeated
+  voxel-union optimization for complex tilted controls.
+
+- Add the native Industrial Table with canonical models and shared exact collision
+  geometry. Rebuild connected end modules from captured chunk data and refresh
+  loaded boundaries when neighbouring chunks arrive or leave. Preserve the
+  reference wall/floor support, inversion, plain item and tool requirements.
 
 ## 2.5
 

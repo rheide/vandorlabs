@@ -302,24 +302,35 @@
         "wall_slider"
       ],
       "modern_registered_block_ids": [
+        "airliner_throttle",
+        "compact_power_lever",
+        "fighter_throttle",
+        "industrial_power_lever",
+        "large_power_lever",
+        "programmable_trigger_block",
         "push_button",
         "rocker_switch",
-        "programmable_trigger_block"
+        "small_power_lever",
+        "thruster_lever",
+        "wall_slider"
       ],
       "remaining": [
-        "eight remaining control adapters: airliner_throttle, compact_power_lever, fighter_throttle, industrial_power_lever, large_power_lever, small_power_lever, thruster_lever, wall_slider",
-        "full mounted-world and shader render acceptance",
+        "expanded mounted-world interaction and shader render acceptance",
         "carried-assembly integration"
       ],
       "implemented": [
-        "native push_button, rocker_switch and programmable_trigger_block: three of the eleven legacy control IDs",
+        "native registrations for all eleven legacy control IDs, including hidden compatibility variants",
         "shared mount/settings/item-padding policies with native six-face support and directional power",
         "scheduled twenty-tick button pulse without retrigger extension; persistent rocker banks isolated from transient pulses",
         "native exact-session settings, reverse cycling, bounded channels and configured-item persistence",
         "subsequent-process state recovery, ordinary survival and Adventure permissions, actual UI clicks and 128 configured padded icons",
         "trigger analogue loaded-local/channel input, exact-level and four-band artwork with shared saved state/dialog policy",
         "trigger uniform visible world material and uniform OFF configured-item preview, retaining inherited face settings as data only",
-        "actual trigger four-list GUI, previous-value cycling, immediate channel edits and rendered levels 0/3/7/13"
+        "actual trigger four-list GUI, previous-value cycling, immediate channel edits and rendered levels 0/3/7/13",
+        "shared power/throttle settings migration, exact five-profile draft/Done/Escape dialog policy and authored detent collision geometry consumed by both targets",
+        "eight native power lever, throttle and wall-slider adapters with four detents, configurable sizes/types, exact channel levels and canonical configured-item drops/placement",
+        "subsequent-process settings and channel-bank recovery, 3584 actual emitted model cases, 768 configured item renders and exact GUI3/2 option cycling/maximum-channel round trips",
+        "bounded native shape cache with exact containment pruning and balanced voxel union; hidden variants retain authored models without new creative entries or recipes"
       ]
     },
     {
@@ -545,15 +556,26 @@
       "id": "furniture",
       "label": "Industrial table",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "unimplemented",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "industrial_table"
       ],
-      "modern_registered_block_ids": [],
+      "modern_registered_block_ids": [
+        "industrial_table"
+      ],
       "remaining": [
-        "native geometry and interactions",
-        "configured items and persistence",
-        "live parity"
+        "native carried-assembly integration when moving assemblies are introduced"
+      ],
+      "implemented": [
+        "shared exact authored collision plates, eight-strip struts and loaded matching policy with actual Forge delegation",
+        "all 32 native facing/inversion/end-module states, full-cell selection and tabletop-only support",
+        "immutable render-region model selection and bounded palette-filtered chunk availability invalidation without block entities",
+        "native iron properties, stone harvest boundary, plain loot/items, placement, rotation and saved-state roundtrips",
+        "32 rendered world poses with empty-scene negatives, 32 plain item icons and eight actual forget/chunk-with-light transitions",
+        "actual Forge and NeoForge baked positions/materials/authored UVs and collision-union comparison for all 32 states"
+      ],
+      "parity_notes": [
+        "Canonical hanging end models reflect the horizontal strut placement; legacy collision reflects only vertical coordinates. Both existing contracts are retained and compared separately."
       ]
     },
     {

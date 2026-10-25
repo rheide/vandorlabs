@@ -24,6 +24,7 @@ neoForge {
         server {
             server(); programArgument '--nogui'; gameDirectory = file(project.findProperty('modernServerRunDirectory') ?: 'run/server')
             if(project.hasProperty('modernClientFixture')) systemProperty 'vandorlabs.modernClientFixture', 'true'
+            if(project.hasProperty('modernClientSuite')) systemProperty 'vandorlabs.modernClientSuite',project.property('modernClientSuite')
             if (project.hasProperty('modernSmoke')) systemProperty 'vandorlabs.modernSmoke', project.property('modernSmoke')
         }
     }
@@ -41,6 +42,7 @@ tasks.register('generateModernResources', Exec) {
     inputs.file('generate_trigger_resources.py')
     inputs.file('generate_shape_resources.py')
     inputs.file('canonical_resources.py')
+    inputs.file('generate_table_resources.py')
     inputs.file('../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')
     inputs.dir('../../texture-packs/default')
     inputs.dir('../../texture-packs/additional')
@@ -56,6 +58,8 @@ tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 tasks.register('validateModernResources', Exec) {
     dependsOn tasks.named('jar')
     inputs.file('validate_resources.py')
+    inputs.file('validate_control_resources.py')
+    inputs.file('generate_control_resources.py')
     inputs.file('../../generated-resources/assets/vandorlabs/lang/en_us.lang')
     inputs.file(tasks.named('jar').flatMap { it.archiveFile })
     commandLine pythonExecutable, 'validate_resources.py', tasks.named('jar').get().archiveFile.get().asFile.absolutePath

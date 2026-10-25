@@ -1291,56 +1291,9 @@ public class TEAnimatedScreenSelector
     static void renderFlatWall(BufferBuilder buf,
             TextureAtlasSprite wall, TextureAtlasSprite metal, double near,
             BlockProgrammableWall.FlatCorner corner) {
-        double[][] outline = corner==null?new double[][]{{0,near},{16,near},{16,near+4},{0,near+4}}:flatOutline(near, corner);
-        for (int i = 0; i < outline.length; i++) {
-            double[] a = outline[i], b = outline[(i + 1) % outline.length];
-            if (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) < 1.0E-7) continue;
-            boolean endCap = Math.abs(a[0] - b[0]) < 1.0E-7
-                    && Math.abs(Math.abs(a[1] - b[1]) - 4) < 1.0E-7;
-            // Exposed ends of a connecting arm are also four-pixel metal caps.
-            endCap |= Math.abs(a[1] - b[1]) < 1.0E-7
-                    && Math.abs(Math.abs(a[0] - b[0]) - 4) < 1.0E-7
-                    && corner!=null && ((corner.frontArm != null && near > 0 && a[1] == 0)
-                    || (corner.backArm != null && near + 4 < 16 && a[1] == 16));
-            TextureAtlasSprite sprite = endCap ? metal : wall;
-            boolean acrossX = Math.abs(a[0] - b[0]) > Math.abs(a[1] - b[1]);
-            double u0 = acrossX ? a[0] : a[1];
-            double u1 = acrossX ? b[0] : b[1];
-            WorldSurface.quad(buf,sprite,true,
-                    new double[]{a[0],0,a[1],u0,16},new double[]{b[0],0,b[1],u1,16},
-                    new double[]{b[0],16,b[1],u1,0},new double[]{a[0],16,a[1],u0,0});
-        }
-        for (int y : new int[] {0, 16}) {
-            roofRect(buf, metal, y, corner==null?0:corner.left(), corner==null?16:corner.right(), near, near + 4);
-            if (corner!=null && corner.frontArm != null)
-                roofRect(buf, metal, y, corner.frontArm,
-                        corner.frontArm + 4, 0, near);
-            if (corner!=null && corner.backArm != null)
-                roofRect(buf, metal, y, corner.backArm,
-                        corner.backArm + 4, near + 4, 16);
-        }
-    }
-
-    private static double[][] flatOutline(double near,
-            BlockProgrammableWall.FlatCorner corner) {
-        java.util.List<double[]> points = new java.util.ArrayList<>();
-        points.add(new double[] {corner.left(), near});
-        if (corner.frontArm != null) {
-            points.add(new double[] {corner.frontArm, near});
-            points.add(new double[] {corner.frontArm, 0});
-            points.add(new double[] {corner.frontArm + 4, 0});
-            points.add(new double[] {corner.frontArm + 4, near});
-        }
-        points.add(new double[] {corner.right(), near});
-        points.add(new double[] {corner.right(), near + 4});
-        if (corner.backArm != null) {
-            points.add(new double[] {corner.backArm + 4, near + 4});
-            points.add(new double[] {corner.backArm + 4, 16});
-            points.add(new double[] {corner.backArm, 16});
-            points.add(new double[] {corner.backArm, near + 4});
-        }
-        points.add(new double[] {corner.left(), near + 4});
-        return points.toArray(new double[points.size()][]);
+        com.vandorlabs.render.FlatWallMesh mesh=com.vandorlabs.render.FlatWallMesh.build(near,corner==null?null:corner.portable());
+        for(com.vandorlabs.render.FlatWallMesh.Quad quad:mesh.quads)
+            WorldSurface.quad(buf,quad.metal?metal:wall,quad.reverse,quad.vertices[0],quad.vertices[1],quad.vertices[2],quad.vertices[3]);
     }
 
     private static double[][] filledDiagonalOutline(double near, BlockProgrammableWall.Corner corner,

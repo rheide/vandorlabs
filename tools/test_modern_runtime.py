@@ -14,9 +14,9 @@ from build_all import ROOT, java_home
 
 PLATFORM=ROOT/'platforms/neoforge-1.21.1'
 MARKERS={
-    'write':['shape-chunk-write PASS','shape-write PASS','contained-fluids-write PASS','trigger-write PASS','joined-cube-write PASS','controls-write PASS','basic-housing-server PASS','screen-families-server PASS','filesystem-write PASS','wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
-    'read':['shape-chunk-read PASS','shape-read PASS','contained-fluids-read PASS','trigger-read PASS','joined-cube-read PASS','controls-read PASS','basic-housing-read PASS','screen-families-read PASS','filesystem-read PASS','wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
-    'client':['shape-chunks-client PASS','shape-model-parity PASS','housing-lighting PASS','shape-client PASS','shape-items-model PASS','shape-items-client PASS','contained-fluids-models PASS','contained-fluid-neighbors PASS','contained-fluid-light PASS','contained-fluids-client PASS','trigger-client PASS','joined-cube-client PASS','controls-client PASS','screen-filesystem-client PASS','screen-families-client PASS','filesystem-client PASS','block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','wireless-glyph-captures PASS','client-smoke PASS'],
+    'write':['shape-chunk-write PASS', 'shape-write PASS', 'contained-fluids-write PASS', 'trigger-write PASS', 'joined-cube-write PASS', 'controls-write PASS', 'basic-housing-server PASS', 'screen-families-server PASS', 'filesystem-write PASS', 'wireless-write PASS', 'redstone-overlay-write PASS', 'screen-server PASS', 'server-write PASS', 'table-write PASS', 'expanded-controls-write PASS'],
+    'read':['shape-chunk-read PASS', 'shape-read PASS', 'contained-fluids-read PASS', 'trigger-read PASS', 'joined-cube-read PASS', 'controls-read PASS', 'basic-housing-read PASS', 'screen-families-read PASS', 'filesystem-read PASS', 'wireless-read PASS', 'redstone-overlay-read PASS', 'screen-read PASS', 'server-read PASS', 'table-read PASS', 'expanded-controls-read PASS'],
+    'client':['shape-chunks-client PASS', 'shape-model-parity PASS', 'housing-lighting PASS', 'shape-client PASS', 'shape-items-model PASS', 'shape-items-client PASS', 'contained-fluids-models PASS', 'contained-fluid-neighbors PASS', 'contained-fluid-light PASS', 'contained-fluids-client PASS', 'trigger-client PASS', 'joined-cube-client PASS', 'controls-client PASS', 'screen-filesystem-client PASS', 'screen-families-client PASS', 'filesystem-client PASS', 'block-client PASS', 'screen-client PASS', 'redstone-client PASS', 'wireless-client PASS', 'wireless-glyph-captures PASS', 'client-smoke PASS', 'expanded-controls-icons PASS', 'expanded-controls-models PASS', 'extended-controls-client PASS'],
 }
 CLIENT_IMAGES=['modern-filesystem-world.png','modern-filesystem-picker-portrait.png','modern-filesystem-picker-missing.png','modern-filesystem-picker-wide.png','modern-world.png','modern-programmable-block.png','modern-programmable-block-gui2.png',
                'modern-screen-scale3.png','modern-screen-scale2.png','modern-screen-world-a.png','modern-screen-world-b.png',
@@ -35,6 +35,9 @@ CLIENT_IMAGES += ['modern-shape-items.png']
 CLIENT_IMAGES += [f'modern-contained-{suffix}.png' for suffix in ('water-joined-above','water-reference','water-inside','water-joined-below','water-air-exit','water-drained','water-refilled','lava-inside','stair-water')]
 CLIENT_IMAGES += [f'modern-shape-chunk-{index}-{phase}.png' for index in range(8) for phase in ('loaded','unloaded','forced-reference','reloaded')]
 CLIENT_IMAGES += ['modern-shape-chunk-negative-sky.png']
+EXPANDED_CONTROL_IDS = ('industrial_power_lever','compact_power_lever','small_power_lever','large_power_lever','thruster_lever','airliner_throttle','fighter_throttle','wall_slider')
+CLIENT_IMAGES += [f'modern-control-{id}-{suffix}.png' for id in EXPANDED_CONTROL_IDS for suffix in ('world','active','gui3','gui2','edited','configured')]
+CLIENT_IMAGES += [f'modern-expanded-control-icons-{index}.png' for index in range(8)]
 FATAL=re.compile(r'\bFATAL\b|Encountered an unexpected exception|Exception in server tick loop|Failed to start the minecraft server|This crash report has been saved to|Preparing crash report|Caused by: java\.lang\.(?:AssertionError|IllegalStateException)|Modern client:|Modern runtime check:')
 
 
@@ -152,12 +155,13 @@ def run(phase,args):
                         '--output-dir',str(args.log_dir/'screen-family-pixels')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_control_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'controls-pixels')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_joined_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'joined-pixels')],check=True)
+        subprocess.run([sys.executable,str(ROOT/'tools/test_modern_expanded_control_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'expanded-controls-pixels')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_trigger_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'trigger-pixels')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_shape_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'shape-pixels')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/validate_shape_chunk_images.py'),str(PLATFORM/'run/client/screenshots'),'--report',str(args.log_dir/'shape-chunk-pixels.json')],check=True)
         subprocess.run([sys.executable,str(ROOT/'tools/test_modern_fluid_images.py'),'--screenshots',str(PLATFORM/'run/client/screenshots'),'--output-dir',str(args.log_dir/'fluid-pixels')],check=True)
     print(f'Modern {phase} PASS: all {len(markers)} runtime markers and clean process completion',flush=True)
-    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images,'visual_checks':{'filesystem':'PASS','wireless_glyphs':'PASS','screen_families':'PASS','screen_filesystem':'PASS','controls':'PASS','joined_cubes':'PASS','trigger':'PASS','shapes':'PASS','shape_chunks':'PASS','contained_fluids':'PASS','cross_version_shape_models':'PASS' if args.legacy_shape_reference else 'not_requested'} if phase=='client' else {}}
+    return {'phase':phase,'status':'PASS','markers':markers,'image_sha256':images,'visual_checks':{'filesystem':'PASS','wireless_glyphs':'PASS','screen_families':'PASS','screen_filesystem':'PASS','controls':'PASS','joined_cubes':'PASS','trigger':'PASS','expanded_controls':'PASS','shapes':'PASS','shape_chunks':'PASS','contained_fluids':'PASS','cross_version_shape_models':'PASS' if args.legacy_shape_reference else 'not_requested'} if phase=='client' else {}}
 
 
 def main():

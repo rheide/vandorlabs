@@ -43,10 +43,14 @@ public final class PanelJoins {
         double n=flatNear(state,world,pos);
         EnumFacing orientation=flatFacing(state,world,pos);
         java.util.List<net.minecraft.util.math.AxisAlignedBB> result=new java.util.ArrayList<>();
-        result.add(PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB((c==null?0:c.left())/16,0,n/16,(c==null?16:c.right())/16,1,(n+4)/16),orientation));
-        if(c!=null && c.frontArm!=null)result.add(PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB(c.frontArm/16,0,0,(c.frontArm+4)/16,1,n/16),orientation));
-        if(c!=null && c.backArm!=null)result.add(PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB(c.backArm/16,0,(n+4)/16,(c.backArm+4)/16,1,1),orientation));
+        for(double[] box:com.vandorlabs.render.FlatWallTopology.boxes(n,c==null?null:c.portable()))
+            result.add(PanelPlacement.rotateFromNorth(new net.minecraft.util.math.AxisAlignedBB(box[0]/16,0,box[1]/16,box[2]/16,1,box[3]/16),orientation));
         return result;
+    }
+    static com.vandorlabs.render.FlatWallTopology.Panel flatSnapshot(IBlockState state,IBlockAccess world,BlockPos pos) {
+        if(!flat(state))return null;
+        return new com.vandorlabs.render.FlatWallTopology.Panel(true,cornerPanel(state),enabled(world,pos),flatEnabled(world,pos),
+                facing(state).getIndex(),flatFacing(state,world,pos).getIndex(),near(state),flatNear(state,world,pos));
     }
     /** A placed regular panel anchors to the diagonal's actual end, avoiding a folded slope. */
     public static int placementDepth(IBlockAccess world,BlockPos support,IBlockState state,EnumFacing side){

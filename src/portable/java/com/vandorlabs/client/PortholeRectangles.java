@@ -3,11 +3,11 @@ package com.vandorlabs.client;
 import java.util.*;
 
 /** Deterministic largest-first rectangle partition of occupied wall cells. */
-final class PortholeRectangles {
-    static long cell(int x, int y) { return ((long) x << 32) | (y & 0xffffffffL); }
+public final class PortholeRectangles {
+    public static long cell(int x, int y) { return ((long) x << 32) | (y & 0xffffffffL); }
 
-    static final class Rect {
-        final int x, y, width, height;
+    public static final class Rect {
+        public final int x, y, width, height;
         Rect(int x, int y, int width, int height) {
             this.x = x; this.y = y; this.width = width; this.height = height;
         }
@@ -21,7 +21,7 @@ final class PortholeRectangles {
         }
     }
 
-    static List<Rect> partition(Set<Long> cells) {
+    public static List<Rect> partition(Set<Long> cells) {
         Set<Long> remaining = new HashSet<>(cells);
         List<Rect> result = new ArrayList<>();
         while (!remaining.isEmpty()) {

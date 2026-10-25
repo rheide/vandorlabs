@@ -5,7 +5,7 @@ import java.util.List;
 /** Geometry fingerprint captured from the original implementation before optimization. */
 public final class PortholeGeometryTest {
     private PortholeGeometryTest() { }
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         verify(false);
         verify(true);
         for (int i = 1; i <= 1500; i++) {
@@ -19,6 +19,30 @@ public final class PortholeGeometryTest {
         require(PortholeGeometryCache.retainedSlices() == 0
                 && PortholeGeometryCache.retainedCoordinates() == 0, "cache clear leaked geometry");
         verify(true);
+        concurrent();
+    }
+    private static void concurrent() throws Exception {
+        java.util.concurrent.ExecutorService workers=java.util.concurrent.Executors.newFixedThreadPool(4);
+        java.util.List<java.util.concurrent.Future<?>> tasks=new java.util.ArrayList<java.util.concurrent.Future<?>>();
+        try {
+            for(int worker=0;worker<4;worker++){
+                final int offset=worker;
+                tasks.add(workers.submit(()->{
+                    for(int i=0;i<256;i++){
+                        int columns=1+(i+offset)%12,rows=1+(i*3+offset)%4,shape=(i+offset)%4,border=i%2,x=i%columns,y=i%rows;
+                        PortholeHex hex=PortholeGeometryCache.outline(columns,rows,shape,border);
+                        PortholeHex.Slice actual=PortholeGeometryCache.slice(columns,rows,shape,border,x,y,hex);
+                        PortholeHex.Slice expected=new PortholeHex(columns,rows,shape,border).slice(x,y);
+                        require(hash(1,actual.frameQuads)==hash(1,expected.frameQuads)&&hash(1,actual.glassQuads)==hash(1,expected.glassQuads),"worker cache changed authored surface");
+                        if((i&31)==0)PortholeGeometryCache.clear();
+                    }
+                }));
+            }
+            for(java.util.concurrent.Future<?> task:tasks)task.get();
+        } finally {workers.shutdownNow();}
+        require(PortholeGeometryCache.retainedCoordinates()>=0&&PortholeGeometryCache.retainedCoordinates()<=65536,"parallel coordinate accounting escaped budget");
+        require(PortholeGeometryCache.retainedSlices()<=1024,"parallel entry budget exceeded");
+        System.out.println("Porthole worker cache PASS 1024 cached/uncached comparisons with concurrent eviction/reload");
     }
     private static void verify(boolean cached) {
         long hash = 1;

@@ -66,3 +66,19 @@ Run portable contracts under both Java 8 and Java 21, then validate the affected
 - [NeoForge 1.21.1 setup and Java 21](https://docs.neoforged.net/docs/1.21.1/gettingstarted/)
 - [NeoForge 1.21.1 screens](https://docs.neoforged.net/docs/1.21.1/gui/screens/)
 - [NeoForge 1.21.1 payload networking](https://docs.neoforged.net/docs/1.21.1/networking/)
+
+## Mounted control adapters
+
+Keep the existing eleven control registry IDs, including hidden legacy variants. Port power levers and four-step controls through the same channel membership, latch, mount transform and permission adapters used by buttons and rockers. Their differences belong in small profiles rather than independent implementations.
+
+| Profile | Authored states and saved settings | Dialog transaction |
+| --- | --- | --- |
+| Industrial/Compact and Small/Large power levers | Horizontal facing, wall/floor placement, powered state; selected size and shared mount settings | Draft channels, size and mount; commit on Done/Enter, discard on Escape |
+| Thruster Lever, Airliner Throttle and Fighter Throttle | Six mount faces, rotation, four detents; limits, selectable type and shared mount settings | Draft channels, limits, type and mount; commit on Done/Enter, discard on Escape |
+| Wall Slider | Six mount faces, rotation, four detents; limits and shared mount settings; fixed type | Draft channels, limits and mount; commit on Done/Enter, discard on Escape |
+
+Extract settings migration, profile labels, option IDs, cycling and layout into the Java 8 shared sources, and make the Forge implementation delegate to them before wiring the native UI. Preserve typed-key distinctions, old mount migration, canonical configured-item IDs and the current channel-bank behavior. Native storage and payloads translate this shared state; they must retain exact menu/tile identity, held-item Adventure permission, reach and loaded-chunk checks.
+
+Generate native resources by following the canonical blockstate and item-model dependency graph. Preserve all authored elements, UVs, rotations, item transforms and texture resolutions. Only model/texture path layout and native recipe result keys change. Hidden variants keep their registry IDs and models without acquiring recipes or creative entries that the reference version does not expose.
+
+Acceptance requires identical shared contracts under both JDKs, unchanged focused Forge dialog pixels and behavior, native detent/latch/configured-item save/reload checks, actual mounted models and padded item renders, and actual menu interactions at both GUI scales. Test invalid settings, reverse cycling, cancelled drafts, type/size changes and partial channel overlap. Moving-assembly and shader requirements remain separately visible in feature coverage.

@@ -87,6 +87,13 @@ public class GuiRedstoneChannel extends GuiContainer {
         ySize = thruster ? 190 : pilotSeat?(!inspectionStatus.isEmpty()?274:202):adjustableBase?baseControlsY()+102:104;
     }
 
+    private com.vandorlabs.ui.ControlDialog.Profile controlProfile(){
+        if(signalControl)return selectableType?com.vandorlabs.ui.ControlDialog.Profile.THROTTLE:com.vandorlabs.ui.ControlDialog.Profile.WALL_SLIDER;
+        if(powerLever)return member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever?com.vandorlabs.ui.ControlDialog.Profile.TWIN_POWER:com.vandorlabs.ui.ControlDialog.Profile.INDUSTRIAL_POWER;
+        return binaryMount()?com.vandorlabs.ui.ControlDialog.Profile.BINARY:null;
+    }
+    private com.vandorlabs.ui.ControlDialog.State controlDraft(){return new com.vandorlabs.ui.ControlDialog.State(lowLimit,highLimit,baseHeight,baseTilt,tiltDirection,controlType,powerLeverSize);}
+
     private boolean binaryMount(){return member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockMountedSwitch;}
 
     @Override public void initGui() {
@@ -107,14 +114,13 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (programmableThruster) buttonList.add(layout.control(4,88,shapeLabel()));
         refreshJoinButton();
         if(thruster){buttonList.add(layout.control(16,184,redstoneInverted?"Activate on: OFF":"Activate on: ON"));buttonList.add(layout.control(5,136,brightnessLabel()));buttonList.add(layout.control(6,160,thresholdLabel()));}
-        if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+66,102,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+124,guiTop+66,102,20,"High: "+highLimit));}
-        if(selectableType)buttonList.add(new GuiButton(13,guiLeft+14,guiTop+122,212,20,typeLabel()));
-        if(binaryMount()){com.vandorlabs.ui.MountedControlDialog shared=new com.vandorlabs.ui.MountedControlDialog(width,height);for(com.vandorlabs.ui.ProgrammableDialogLayout.Button b:shared.controls(new com.vandorlabs.ui.MountedControlDialog.State(baseHeight,baseTilt,tiltDirection)))buttonList.add(new GuiButton(b.id,b.x,b.y,b.width,b.height,b.label));}else if(adjustableBase){int y=guiTop+baseControlsY();buttonList.add(new GuiButton(9,guiLeft+14,y,212,20,heightLabel()));buttonList.add(new GuiButton(10,guiLeft+14,y+24,102,20,tiltLabel()));buttonList.add(new GuiButton(11,guiLeft+124,y+24,102,20,directionLabel()));}
-        if(powerLever)buttonList.add(new GuiButton(12,guiLeft+14,guiTop+66,212,20,sizeLabel()));
+        com.vandorlabs.ui.ControlDialog.Profile profile=controlProfile();
+        if(profile!=null){com.vandorlabs.ui.ControlDialog shared=new com.vandorlabs.ui.ControlDialog(profile,width,height);for(com.vandorlabs.ui.ProgrammableDialogLayout.Button b:shared.controls(controlDraft()))buttonList.add(new GuiButton(b.id,b.x,b.y,b.width,b.height,b.label));}
+        else if(adjustableBase){int y=guiTop+baseControlsY();buttonList.add(new GuiButton(9,guiLeft+14,y,212,20,heightLabel()));buttonList.add(new GuiButton(10,guiLeft+14,y+24,102,20,tiltLabel()));buttonList.add(new GuiButton(11,guiLeft+124,y+24,102,20,directionLabel()));}
         if(pilotSeat){buttonList.add(new GuiButton(21,guiLeft+148,guiTop+3,78,18,"Modes..."));buttonList.add(new GuiButton(15,guiLeft+14,guiTop+66,212,20,"Taxi Mode: "+(taxiMode?"ON":"OFF")));buttonList.add(new GuiButton(18,guiLeft+14,guiTop+90,212,20,pilotModeLabel()));buttonList.add(new GuiButton(19,guiLeft+14,guiTop+114,212,20,pilotHeightLabel()));}
         if(pilotSeat && !inspectionStatus.isEmpty()){GuiButton assemble=new GuiButton(20,guiLeft+14,guiTop+214,212,20,"Assemble (inspection required)");assemble.enabled=false;buttonList.add(assemble);}
         int doneWidth=200;
-        if(!binaryMount())buttonList.add(thruster?layout.done(1):new GuiButton(1, guiLeft + (xSize - doneWidth) / 2,
+        if(profile==null)buttonList.add(thruster?layout.done(1):new GuiButton(1, guiLeft + (xSize - doneWidth) / 2,
                 guiTop + (pilotSeat?(!inspectionStatus.isEmpty()?242:170):adjustableBase?baseControlsY()+74:72),
                 doneWidth, 20, pilotSeat?"Close":"Done"));
     }
@@ -140,18 +146,18 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(controlProfile()!=null && button.id>=7 && button.id<=13){
+            com.vandorlabs.ui.ControlDialog.State next=controlDraft().action(button.id,GuiOptionCycle.direction());lowLimit=next.low;highLimit=next.high;baseHeight=next.height;baseTilt=next.tilt;tiltDirection=next.direction;controlType=next.type;powerLeverSize=next.size;
+            com.vandorlabs.ui.ControlDialog shared=new com.vandorlabs.ui.ControlDialog(controlProfile(),width,height);for(com.vandorlabs.ui.ProgrammableDialogLayout.Button b:shared.controls(next))if(b.id==button.id)button.displayString=b.label;return;
+        }
         if(button.id==21){submit();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessagePilotModes(member.channelTile().getPos(),null));return;}
         if(button.id==18){pilotMode=GuiOptionCycle.next(pilotMode,3);button.displayString=pilotModeLabel();}
         if(button.id==19){pilotHeight=GuiOptionCycle.next(pilotHeight,4);button.displayString=pilotHeightLabel();com.vandorlabs.vehicle.VehicleNetwork.Packet setting=new com.vandorlabs.vehicle.VehicleNetwork.Packet(com.vandorlabs.vehicle.VehicleNetwork.HEIGHT);setting.entity=-1;setting.origin=member.channelTile().getPos();setting.strafe=(byte)pilotHeight;PacketHandler.INSTANCE.sendToServer(setting);}
         if(button.id==16){redstoneInverted=!redstoneInverted;button.displayString=redstoneInverted?"Activate on: OFF":"Activate on: ON";}
         if(button.id==15){taxiMode=!taxiMode;button.displayString="Taxi Mode: "+(taxiMode?"ON":"OFF");}
-        if(button.id==13){controlType=GuiOptionCycle.next(controlType,3);button.displayString=typeLabel();}
-        if(button.id==12){powerLeverSize=GuiOptionCycle.next(powerLeverSize,2);button.displayString=sizeLabel();}
         if(button.id==9){baseHeight=new com.vandorlabs.ui.MountedControlDialog.State(baseHeight,baseTilt,tiltDirection).action(9,GuiOptionCycle.direction()).height;button.displayString=heightLabel();}
         if(button.id==10){baseTilt=new com.vandorlabs.ui.MountedControlDialog.State(baseHeight,baseTilt,tiltDirection).action(10,GuiOptionCycle.direction()).tilt;button.displayString=tiltLabel();}
         if(button.id==11){tiltDirection=new com.vandorlabs.ui.MountedControlDialog.State(baseHeight,baseTilt,tiltDirection).action(11,GuiOptionCycle.direction()).direction;button.displayString=directionLabel();}
-        if(button.id==7){lowLimit=GuiOptionCycle.next(lowLimit,1,highLimit-2);button.displayString="Low: "+lowLimit;}
-        if(button.id==8){highLimit=GuiOptionCycle.next(highLimit,lowLimit+2,15);button.displayString="High: "+highLimit;}
         if(button.id==5){signalBrightness=!signalBrightness;button.displayString=brightnessLabel();}
         if(button.id==6){threshold=GuiOptionCycle.next(threshold,16);button.displayString=thresholdLabel();}
         if (button.id == 1) {
@@ -177,10 +183,8 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     private String pilotModeLabel(){return new String[]{"Trigger: Disabled","Trigger: Redstone ON","Trigger: Redstone OFF"}[pilotMode];}
     private String pilotHeightLabel(){return "Height: "+(pilotHeight==0?"Base":"+"+(pilotHeight*2)+" px");}
-    private int baseControlsY(){return signalControl?selectableType?146:122:powerLever?96:66;}
+    private int baseControlsY(){com.vandorlabs.ui.ControlDialog.Profile profile=controlProfile();return profile!=null?profile.mountY():66;}
     private String dialogTitle(){return pilotSeat?"Pilot Seat":thruster?"Programmable Thruster":"Redstone Channels";}
-    private String typeLabel(){return "Type: "+new String[]{"Standard","Twin","Grip"}[controlType];}
-    private String sizeLabel(){boolean twin=member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever;return "Size: "+(twin?(powerLeverSize==0?"Small":"Large"):(powerLeverSize==0?"Compact":"Industrial"));}
     private String heightLabel(){return com.vandorlabs.ui.MountedControlDialog.heightLabel(baseHeight);}
     private String tiltLabel(){return com.vandorlabs.ui.MountedControlDialog.tiltLabel(baseTilt);}
     private String directionLabel(){return com.vandorlabs.ui.MountedControlDialog.directionLabel(tiltDirection);}
@@ -242,7 +246,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         if(pilotSeat){fontRenderer.drawString(taxiMode?"Sit: assemble / Exit: park":"Manual Configurizer conversion",14,146,0xDAE8F0);}
         if(pilotSeat && !inspectionStatus.isEmpty()){java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(inspectionStatus,212);for(int i=0;i<Math.min(5,lines.size());i++)fontRenderer.drawString(i==4 && lines.size()>5?fontRenderer.trimStringToWidth(lines.get(i),198)+"...":lines.get(i),14,162+i*9,0xffbb88);if(mouseX-guiLeft>=14 && mouseX-guiLeft<=226 && mouseY-guiTop>=162 && mouseY-guiTop<=207)drawHoveringText(lines,mouseX-guiLeft,mouseY-guiTop);}
         if(thruster)fontRenderer.drawString("Wall texture",12,27,0xDAE8F0);
-        if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,94,0xDAE8F0);fontRenderer.drawString("Click to cycle four levels",14,108,0xDAE8F0);}
+        if(signalControl){fontRenderer.drawString(com.vandorlabs.ui.ControlDialog.detentLabel(lowLimit,highLimit),14,94,0xDAE8F0);fontRenderer.drawString("Click to cycle four levels",14,108,0xDAE8F0);}
     }
 
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {
