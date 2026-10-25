@@ -40,7 +40,9 @@ public final class VehicleForeignCompat {
         return result;
     }
     private static void check(World world,BlockPos pos,IBlockState state,String type,String key,int expected,Set<BlockPos> result){require(world.isBlockLoaded(pos,false),"Load the complete IE post");TileEntity tile=world.getTileEntity(pos);require(type(tile,type)&&world.getBlockState(pos)==state&&data(tile).getByte(key)==expected,"Include the complete IE post and its arms");result.add(pos.toImmutable());}
-    public static void validate(VehicleStructure snapshot,VehicleWorld view){for(VehicleStructure.Cell cell:snapshot.cells)for(BlockPos required:required(view,cell.pos))require(snapshot.at(required)!=null,"Moving/copy volume cuts an IE assembly; include every native part");}
+    public static void validate(VehicleStructure snapshot,VehicleWorld view){
+        Set<BlockPos> verified=new HashSet<>();for(VehicleStructure.Cell cell:snapshot.cells){if(verified.contains(cell.pos))continue;Set<BlockPos> members=required(view,cell.pos);for(BlockPos member:members)require(snapshot.at(member)!=null,"Moving/copy volume cuts an IE assembly; include every native part");verified.addAll(members);}
+    }
     public static void rotate(TileEntity original,NBTTagCompound tag,Rotation rotation){
         if(post(original)){int dummy=tag.getByte("dummy");if(dummy>3){require(dummy>=5&&dummy<=8,"Invalid IE post arm direction");tag.setByte("dummy",(byte)(3+rotation.rotate(EnumFacing.getFront(dummy-3)).getIndex()));}}
         if(watermill(original)){

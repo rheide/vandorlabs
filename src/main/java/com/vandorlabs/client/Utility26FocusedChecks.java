@@ -24,6 +24,9 @@ final class Utility26FocusedChecks {
             check(problems,"surface appearance",()->com.vandorlabs.surface.SurfaceRuntimeChecks.run(world,actor));
             check(problems,"moving block exact snapshots",()->com.vandorlabs.vehicle.MovingSupportRuntimeChecks.run(world));
             check(problems,"attachment scan",()->com.vandorlabs.vehicle.AttachmentScanRuntimeChecks.run(world));
+            check(problems,"stacked complete vehicles",()->com.vandorlabs.vehicle.VehicleStackChecks.run(world,actor));
+            check(problems,"decorative drive activation",()->com.vandorlabs.drives.DriveRuntimeChecks.run(world,actor));
+            check(problems,"copy player-relative placement",()->com.vandorlabs.copier.CopyPlacementChecks.run(world,actor));
             check(problems,"copy channel schemas",CopyChannelChecks::run);
             check(problems,"copy plan and materials",()->com.vandorlabs.copier.CopyPlanRuntimeChecks.run(world,actor));
             check(problems,"copy transactions and recovery",()->com.vandorlabs.copier.CopyRuntimeChecks.run(world,actor));
@@ -37,6 +40,7 @@ final class Utility26FocusedChecks {
             check(problems,"vehicle coupling recovery",()->com.vandorlabs.vehicle.VehicleCouplingTransferChecks.run(world,actor));
             return problems;
         }).get();
+        check(failures,"decorative drive rendering and dialog",()->DriveClientChecks.run(mc,output));
         check(failures,"programmer rendering and dialog",()->com.vandorlabs.programmer.client.ProgrammerClientChecks.run(mc,output));
         check(failures,"pressure plate rendering and dialog",()->PressurePlateClientChecks.run(mc,output));
         check(failures,"copy controller rendering and dialog",()->com.vandorlabs.copier.client.CopyClientChecks.run(mc,output));
@@ -44,6 +48,7 @@ final class Utility26FocusedChecks {
         check(failures,"legacy vanilla Fit appearance",()->JoinedFitAppearanceChecks.run(mc));
         check(failures,"vehicle coupler models and dialog",()->CouplerClientChecks.run(mc,output));
         check(failures,"Track appearance bounds and errors",()->TrackClientChecks.run(mc,output));
+        check(failures,"Track tread animation",()->com.vandorlabs.gear.client.TrackTreadChecks.run(mc,output));
         check(failures,"thruster joined hex rendering",()->ThrusterJoinClientChecks.run(mc,output));
         check(failures,"coupler models",()->Utility26RuntimeChecks.models(mc));
         check(failures,"arm and track rendering",()->com.vandorlabs.gear.client.Gear26ClientChecks.run(mc,output));
