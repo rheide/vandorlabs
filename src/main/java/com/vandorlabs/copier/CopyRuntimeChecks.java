@@ -26,13 +26,14 @@ public final class CopyRuntimeChecks {
     private static final class Fixture {
         final WorldServer world;final EntityPlayerMP actor;final BlockPos base;final EnumFacing front,right;final CopyControllerTile tile;
         Fixture(WorldServer world,EntityPlayerMP actor,BlockPos base,EnumFacing front,int size)throws Exception{
-            this.world=world;this.actor=actor;this.base=base;this.front=front;right=front.rotateY();
+            this.world=world;this.actor=actor;this.base=base;this.front=front;right=front.rotateYCCW();
             clear(world,base);for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)world.getChunkFromChunkCoords((base.getX()>>4)+x,(base.getZ()>>4)+z);
             actor.setPositionAndUpdate(base.getX()+front.getFrontOffsetX()*5+.5,base.getY()+2,base.getZ()+front.getFrontOffsetZ()*5+.5);
             world.setBlockState(base,block("copy_controller").getDefaultState().withProperty(BlockVandorDirectional.FACING,front),2);
             for(int i=0;i<size;i++)for(int j=0;j<size;j++)for(int side:new int[]{-1,1})world.setBlockState(base.offset(right,side*(i+1)).offset(front,j),block("turntable_surface").getDefaultState().withProperty(BlockTurntableSurface.FACING,EnumFacing.UP),2);
             DeferredTileLoad.flush(world);tile=(CopyControllerTile)world.getTileEntity(base);tile.actor=actor.getUniqueID();tile.settings(1,0,0,ChannelList.EMPTY);tile.refreshPads(actor);
             require(tile.input.size==size&&tile.output.size==size,"paired square claims "+front+size);
+            EnumFacing playerLook=front.getOpposite();require(tile.input.cells.contains(base.offset(playerLook.rotateYCCW()))&&tile.output.cells.contains(base.offset(playerLook.rotateY())),"input is on player left, output player right "+front);require(tile.chest().equals(base.offset(playerLook)),"chest is behind controller away from player "+front);
         }
         BlockPos source(){return tile.input.cell(0,0,1);}
         BlockPos target(){return tile.output.cell(0,0,1);}
@@ -42,7 +43,7 @@ public final class CopyRuntimeChecks {
         void finish()throws Exception{recover(world);require(!tile.busy()&&CopyTransactions.pendingCount(world)==0,"journal retired after verified recovery");}
     }
     public static void run(WorldServer world,EntityPlayerMP actor)throws Exception{
-        assertions=0;BlockPos base=new BlockPos(703,110,200);boolean creative=actor.capabilities.isCreativeMode,saving=world.disableLevelSaving;double x=actor.posX,y=actor.posY,z=actor.posZ;
+        assertions=0;BlockPos base=new BlockPos(704,110,200);boolean creative=actor.capabilities.isCreativeMode,saving=world.disableLevelSaving;double x=actor.posX,y=actor.posY,z=actor.posZ;
         try{
             actor.capabilities.isCreativeMode=true;
             for(EnumFacing facing:EnumFacing.HORIZONTALS){Fixture f=new Fixture(world,actor,base,facing,2);world.setBlockState(f.source(),Blocks.OAK_STAIRS.getDefaultState().withProperty(BlockStairs.FACING,facing).withProperty(BlockStairs.HALF,BlockStairs.EnumHalf.TOP),2);CopyPlan plan=f.plan();f.copy();require(plan.result.matches(world,plan.targetOrigin)&&plan.original.matches(world,plan.sourceOrigin),"actual Creative queued copy without material chest preserves state "+facing);}

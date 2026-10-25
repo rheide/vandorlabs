@@ -2,9 +2,9 @@
 
 The Copy Controller makes a complete block copy between two Programmable Surface pads. It preserves block states, orientation, settings, saved inventories and supported links. The input remains in place. Entities are not copied.
 
-Place the controller between two pads. Its front defines the forward direction: the input is on the left of that direction and the output is on the right. Put a material chest directly against its back. Both pads must be complete squares of the same size, face the same direction, and belong to this controller. Pads can be up to 16 × 16 blocks. Configure their artwork and Stretch, Tile or Fit independently through the Programmable Surface dialog; claiming a pad does not change its artwork.
+Place the controller between two pads. When placed, its front faces you: the cyan input is on your left and the amber output is on your right. Put the material chest directly behind the controller, away from you. Both pads must be complete squares of the same size, face the same direction, and belong to this controller. Pads can be up to 16 × 16 blocks. Configure their artwork and Stretch, Tile or Fit independently through the Programmable Surface dialog; claiming a pad does not change its artwork.
 
-Open the controller and choose **Check areas** after building or changing the pads. Set the scan height from 1 to 16 blocks. Scanning starts one block outward from each surface, follows its face normal, and includes the entire square at every depth. The output volume must be empty, including players and other entities. Keep complete doors, machines and other multiblock assemblies inside the input volume.
+Open the controller and choose **Check areas** after building or changing the pads. Use the **Height** slider, shared with the Turntable Controller, to set the scan height from 1 to 16 blocks. Scanning starts one block outward from each surface, follows its face normal, and includes the entire square at every depth. The output volume must be empty, including players and other entities. Keep complete doors, machines and other multiblock assemblies inside the input volume.
 
 Use **Copy** to start a manual operation. Redstone modes can instead trigger a copy on an active edge: powered or unpowered. An empty channel list uses adjacent physical redstone; a configured list requires all listed channels. The configuring player must remain online, alive and in the same dimension so the operation can recheck their building permissions. Loading a world with an already active signal does not trigger a copy.
 
@@ -20,7 +20,7 @@ Open unopened loot containers before copying them in Survival. Nonempty battery 
 
 ## Channels and supported blocks
 
-The signed **Channel increment** adjusts Vandor redstone channels in the result, including saved input/output lists, control rows and supported nested captured structures. Negative values subtract. Unlinked zero values stay unlinked. Every linked result must remain between 1 and 65535; overflow or underflow rejects the whole operation before withdrawal. Item contents and unrelated foreign data are preserved.
+The signed **Redstone Channel Increment On Copy** adjusts Vandor redstone channels in the result, including saved input/output lists, control rows and supported nested captured structures. Negative values subtract. Unlinked zero values stay unlinked. Every linked result must remain between 1 and 65535; overflow or underflow rejects the whole operation before withdrawal. Item contents and unrelated foreign data are preserved.
 
 Copying uses the same lossless block support policy as [Vehicle Mode](vehicle-compatibility.md) and [Turntables](turntables.md). Every block is checked; there is no fidelity setting or sampling. Unsupported blocks, incomplete assemblies, unavailable tile data and tiles that cannot round-trip exactly are refused. Finish motion, parking or recovery and release other controllers' claimed assemblies before copying them. Complete input/output regions and their boundaries must be loaded and inside the world border.
 

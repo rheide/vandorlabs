@@ -26,7 +26,7 @@ public final class CopyPlanRuntimeChecks {
     private static Block block(String id){return Block.getBlockFromName("vandorlabs:"+id);}
     private static final class Fixture{
         final WorldServer world;final EntityPlayerMP actor;final BlockPos base;final EnumFacing front,right;final CopyControllerTile owner;
-        Fixture(WorldServer world,EntityPlayerMP actor,BlockPos base,EnumFacing front,int size){this.world=world;this.actor=actor;this.base=base;this.front=front;right=front.rotateY();clear(world,base);
+        Fixture(WorldServer world,EntityPlayerMP actor,BlockPos base,EnumFacing front,int size){this.world=world;this.actor=actor;this.base=base;this.front=front;right=front.rotateYCCW();clear(world,base);
             world.setBlockState(base,block("copy_controller").getDefaultState().withProperty(BlockVandorDirectional.FACING,front),2);
             for(int side:new int[]{-1,1})for(int u=0;u<size;u++)for(int v=0;v<size;v++)world.setBlockState(base.offset(right,side*(u+1)).offset(front,v),block("turntable_surface").getDefaultState().withProperty(BlockTurntableSurface.FACING,EnumFacing.UP),2);
             DeferredTileLoad.flush(world);owner=(CopyControllerTile)world.getTileEntity(base);owner.settings(1,0,0,ChannelList.EMPTY);owner.refreshPads(actor);require(owner.input.size==size&&owner.output.size==size&&Collections.disjoint(owner.input.cells,owner.output.cells),"matching disjoint square claims "+front+size);

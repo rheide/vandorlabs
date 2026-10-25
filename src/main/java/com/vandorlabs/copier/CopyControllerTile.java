@@ -31,7 +31,7 @@ public final class CopyControllerTile extends TileEntity implements ITickable,Su
     public void status(String message){status=message;changed();}
     public void requestCopy(EntityPlayerMP player)throws Exception{if(busy())throw new IllegalArgumentException("A copy is already in progress");error="";com.vandorlabs.tiles.WorldActionAuthorization.authorize(this,player);actor=player.getUniqueID();refreshPads(player);CopyTransactions.submit(this,player);}
     public void refreshPads(EntityPlayerMP player){
-        if(busy())throw new IllegalArgumentException("Wait for the current copy to finish");EnumFacing right=front().rotateY();
+        if(busy())throw new IllegalArgumentException("Wait for the current copy to finish");EnumFacing right=front().rotateYCCW();
         java.util.function.Predicate<BlockPos> leftHalf=p->side(p,right)<0,rightHalf=p->side(p,right)>0;
         SquareLayout left=SquareLayout.scan(world,pos.offset(right.getOpposite()),leftHalf),target=SquareLayout.scan(world,pos.offset(right),rightHalf);
         if(left.size!=target.size)throw new IllegalArgumentException("Input and output surfaces must be square and the same size");
