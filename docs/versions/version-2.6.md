@@ -20,9 +20,9 @@ Vehicle Mode, Turntable Controller and Copy Controller use the same supported-bl
 
 The [Card / Chip Programmer](../card-chip-programmer.md) keeps a company Master, an Input item and an Output item in three physical sockets. Click a socket with a suitable held item to insert it, or use an empty hand to remove its item, without opening the dialog. Other console surfaces open the standard dark dialog. Its keyboard uses the established keyboard artwork. Its large display shows Journal Chip contents with clickable page buttons and stays black when no journal is present.
 
-Put a blank Access Card or Data Chip in Input and leave Output empty. **Program** consumes Input and moves the programmed result to Output, retaining the company Master. Existing Output items are never edited or overwritten. Move a result back to Input to program it again. Data Chip types include Master and Journal; Access Cards disable the Type selector.
+Put a blank Access Card or Data Chip in Input and leave Output empty. **Program** consumes Input and moves the programmed result to Output, retaining the company Master. Program requires an empty Output slot. With matching card/card or chip/chip items in both slots, **Copy** replaces the Output item’s data with an exact copy of Input while retaining Input and Master. Output items may belong to any company. A selected Master can also overwrite a foreign-company Input during Program. Move a result back to Input to program it again. Data Chip types include Master and Journal; Access Cards disable the Type selector.
 
-A Journal Chip in Input loads its title and eight text pages into the Journal view. Edit and paginate there, then Program to write the chip and move it to Output. The Journal button appears only for an Input Data Chip whose selected type is Journal. Pending input edits save automatically; **Done** closes either dialog page. Items stay in their sockets when the dialog closes.
+A Journal Chip in Input loads its title and eight text pages into the Journal view. Edit and paginate there, then Program to write the chip and move it to Output. The Journal button appears only for an Input Data Chip whose selected type is Journal. Pending input edits save automatically; Inventory and Journal navigation buttons sit beside **Done** at the bottom. **Done** closes either dialog page. Items stay in their sockets when the dialog closes.
 
 ![Card / Chip Programmer displaying a programmed Output journal and page controls](version-2.6-programmer.png)
 
@@ -35,6 +35,8 @@ Ordinary attachments become placed blocks again at exact whole-block translation
 One **Track** block offers Compact, Armoured and Bogie styles in its dialog. Place tracks against an arm tip, beside a slab or against another track; placement follows the clicked mounting direction. Two track blocks are enough for vehicle support. Native tread geometry supplies the selection and collision bounds. Track settings have their own dialog, and the belts animate with Taxi travel, reverse and steering while remaining still in Hover. Nested landing groups can include connecting blocks and lower landing assemblies; inspection uses the outer supports and excludes the ground beyond them.
 
 [Vehicle Couplers](../couplers.md) and their horizontal slab variant connect opposing sections. Both halves support channel inputs and inverted activation, with the same dialog for right-click and the Configurizer. In Taxi/Hover mode, enabled pairs can collect a parked section made of world blocks. Releasing a pair restores the detached section as blocks only when alignment, permissions, loaded chunks and clear space make parking safe. Otherwise it stays attached. This does not merge two moving vehicle entities.
+
+Taxi turning accounts for wheel type and wheelbase: smaller wheels turn tighter, longer wheelbases turn wider, and pure tracked vehicles can pivot while stationary on the ground. Mixed vehicles average their active physical wheels and tracks; higher carried landing gear is cargo and its wheels, deployment and automatic propulsion remain inactive. Same-level running gear attached through Vehicle Couplers stays active. Reverse steering stays consistent and Hover turning is unchanged.
 
 Right-click a carried vanilla chest to open its normal inventory dialog. Single and double chests retain their names, locks and item changes while the vehicle moves and when it saves or parks.
 
@@ -54,7 +56,7 @@ Each linked guide includes five construction stages: the base, pillars or middle
 
 ![Assembled Survey Dish](../multiblocks/survey-dish/step-4.png)
 
-Longburn Drive is now **Maxwell Drive**. Pinnacle Meridian Drive is now **Seyr Meridian Drive**, with one Seyr nameplate. Saved registry IDs remain unchanged. Maxwell, Seyr Meridian and Oculus Drives share the Rocket Thruster’s redstone activation, levels and particle settings. Maxwell emits warm yellow/white exhaust and Meridian pulses its cyan front lights. These decorative drives do not provide Vehicle, Taxi or Hover thrust.
+Longburn Drive is now **Maxwell Drive**. Pinnacle Meridian Drive is now **Seyr Meridian Drive**, with one Seyr nameplate. Saved registry IDs remain unchanged. Maxwell, Seyr Meridian and Oculus Drives share the Rocket Thruster’s redstone activation and levels. Only Maxwell offers particle settings and emits warm yellow/white exhaust, with matching warm artwork when Off. Meridian only pulses its cyan front lights, and Oculus retains its field and shutters; neither emits particles. These decorative drives do not provide Vehicle, Taxi or Hover thrust.
 
 ## Materials and vehicle compatibility
 
