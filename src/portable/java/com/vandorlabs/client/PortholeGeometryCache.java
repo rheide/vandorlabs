@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /** World-independent geometry only: no tiles, textures, lighting or GL resources. */
-final class PortholeGeometryCache {
+public final class PortholeGeometryCache {
     private static final int MAX_SHAPES = 32;
     private static final int MAX_SLICES = 1024;
     // Bound retained coordinate payload as well as entry count (512 KiB of doubles).
@@ -16,7 +16,7 @@ final class PortholeGeometryCache {
 
     private PortholeGeometryCache() { }
 
-    static PortholeHex outline(int columns, int rows, int shape, int border) {
+    public static synchronized PortholeHex outline(int columns, int rows, int shape, int border) {
         ShapeKey key = new ShapeKey(columns, rows, shape, border);
         PortholeHex hex = SHAPES.get(key);
         if (hex != null) return hex;
@@ -29,7 +29,7 @@ final class PortholeGeometryCache {
         return hex;
     }
 
-    static PortholeHex.Slice slice(int columns, int rows, int shape, int border,
+    public static synchronized PortholeHex.Slice slice(int columns, int rows, int shape, int border,
             int column, int row, PortholeHex outline) {
         SliceKey key = new SliceKey(columns, rows, shape, border, column, row);
         PortholeHex.Slice result = SLICES.get(key);
@@ -47,14 +47,14 @@ final class PortholeGeometryCache {
         return result;
     }
 
-    static void clear() {
+    public static synchronized void clear() {
         SHAPES.clear();
         SLICES.clear();
         coordinates = 0;
     }
 
-    static int retainedCoordinates() { return coordinates; }
-    static int retainedSlices() { return SLICES.size(); }
+    static synchronized int retainedCoordinates() { return coordinates; }
+    static synchronized int retainedSlices() { return SLICES.size(); }
 
     private static int weight(PortholeHex.Slice slice) {
         return weight(slice.polygon) + weight(slice.frameQuads)

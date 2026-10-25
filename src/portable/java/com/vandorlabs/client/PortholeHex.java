@@ -5,21 +5,21 @@ import java.util.Collections;
 import java.util.List;
 
 /** Pixel-space hexagon shared by a connected group of porthole blocks. */
-final class PortholeHex {
+public final class PortholeHex {
     private static final double EPS = 1.0E-7;
-    static final int HEXAGON = 0, OCTAGON = 1, SQUARE = 2, ROUND = 3;
-    static boolean validShape(int shape) { return shape >= HEXAGON && shape <= ROUND; }
-    final double[][] vertices;
+    public static final int HEXAGON = 0, OCTAGON = 1, SQUARE = 2, ROUND = 3;
+    public static boolean validShape(int shape) { return shape >= HEXAGON && shape <= ROUND; }
+    public final double[][] vertices;
 
     PortholeHex(double[][] vertices) { this.vertices = vertices; }
 
-    PortholeHex(int columns, int rows) { this(columns, rows, HEXAGON); }
+    public PortholeHex(int columns, int rows) { this(columns, rows, HEXAGON); }
 
-    PortholeHex(int columns, int rows, int shape) {
+    public PortholeHex(int columns, int rows, int shape) {
         this(columns, rows, shape, 0);
     }
 
-    PortholeHex(int columns, int rows, int shape, int extraBorder) {
+    public PortholeHex(int columns, int rows, int shape, int extraBorder) {
         if (columns < 1 || rows < 1) throw new IllegalArgumentException("empty porthole group");
         if (!validShape(shape)) throw new IllegalArgumentException("unknown porthole shape");
         if (extraBorder < 0 || extraBorder > 1)
@@ -90,7 +90,7 @@ final class PortholeHex {
         return outline.toArray(new double[outline.size()][]);
     }
 
-    Slice slice(int column, int row) {
+    public Slice slice(int column, int row) {
         double[][] local = new double[vertices.length][2];
         for (int i = 0; i < vertices.length; i++) {
             local[i][0] = vertices[i][0] - column * 16D;
@@ -220,11 +220,11 @@ final class PortholeHex {
         return t[0] <= t[1] + EPS;
     }
 
-    static final class Slice {
-        final List<double[]> polygon;
-        final List<double[]> frameQuads;
-        final List<double[]> hexEdges;
-        final List<double[]> glassQuads;
+    public static final class Slice {
+        public final List<double[]> polygon;
+        public final List<double[]> frameQuads;
+        public final List<double[]> hexEdges;
+        public final List<double[]> glassQuads;
 
         Slice(List<double[]> polygon, List<double[]> frameQuads,
                 List<double[]> hexEdges, List<double[]> glassQuads) {
@@ -235,7 +235,7 @@ final class PortholeHex {
         }
 
         /** Interval occupied by glass where a pane crosses a block edge. */
-        double[] edgeOpening(int axis, double boundary) {
+        public double[] edgeOpening(int axis, double boundary) {
             double minimum = Double.POSITIVE_INFINITY;
             double maximum = Double.NEGATIVE_INFINITY;
             for (double[] point : polygon) {
