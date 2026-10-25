@@ -37,4 +37,5 @@
 - Keep documentation technical and user-facing. Do not commit task logs, chat transcripts, authoring instructions, personal paths or machine-specific details.
 - Item icons must be slightly smaller than their inventory/hotbar slots, with visible padding on every side. Account for the GUI rotation and depth, and check every generated variant; fitting the unrotated model into 16×16 coordinates does not guarantee that its icon fits.
 
+- Before a release, review the complete change set for rendering and client/server costs, useful cache reuse, smooth animation under server lag, saved-data compatibility, dedicated-server linkage and failure recovery that could leave a world inconsistent. Check related past regressions; retain concrete evidence for performance claims.
 - Before tagging, publishing or handing off a release JAR, run `verifyRelease` with Java 8. It must pass the diagonal geometry checks, the live glass/contact frame regressions and the live gameplay/fluid suite against that exact JAR. A successful assemble alone is not release validation.
