@@ -200,7 +200,16 @@ final class CustomMaterialRuntimeChecks {
         }catch(ReflectiveOperationException e){throw new RuntimeException(e);}
         System.out.println("[vandorlabs][reprolab] industrial-category-runtime PASS Hull=21 Panels=19 Industrial=14 Tech=25; saved material opens new category");
         int amber=ScreenHousingTextures.screenIndex("lights/amber_hex_on");
-        for(String finish:new String[]{"pale_grey","industrial_grey","dark_cyan_metallic"})for(String variant:new String[]{"plain","speaker"}){int choice=ScreenHousingTextures.screenIndex("ceiling/"+finish+"/"+variant);require("Panels".equals(ScreenHousingTextures.category(choice)),"ceiling panel category");require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice)).getIconWidth()==128,"ceiling resolution");}
+        for(String finish:new String[]{"pale_grey","industrial_grey","dark_cyan_metallic"})for(String variant:new String[]{"plain","speaker","light_on","light_off"}){
+            String id="ceiling/"+finish+"/"+variant;int choice=ScreenHousingTextures.screenIndex(id);require(choice>=ScreenHousingTextures.LEGACY_COUNT,"retained ceiling choice "+id);
+            if(variant.equals("plain")||variant.equals("speaker"))require("Panels".equals(ScreenHousingTextures.category(choice)),"ceiling panel category");
+            String texture=ScreenHousingTextures.fullTexture(choice);net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(texture);
+            require(sprite!=mc.getTextureMapBlocks().getMissingSprite()&&sprite.getIconName().equals(texture)&&sprite.getIconWidth()==64&&sprite.getIconHeight()==64,"native64 ceiling atlas resolution "+id);
+            net.minecraft.util.ResourceLocation location=new net.minecraft.util.ResourceLocation(texture);
+            try(net.minecraft.client.resources.IResource resource=mc.getResourceManager().getResource(new net.minecraft.util.ResourceLocation(location.getResourceDomain(),"textures/"+location.getResourcePath()+".png"))){
+                java.awt.image.BufferedImage image=javax.imageio.ImageIO.read(resource.getInputStream());require(image!=null&&image.getWidth()==64&&image.getHeight()==64,"loaded ceiling PNG preserves native64 "+id);
+            }catch(java.io.IOException error){throw new IllegalStateException("Ceiling resource "+id,error);}
+        }
         for(int choice:new int[]{64,amber,ScreenHousingTextures.screenIndex("ceiling/pale_grey/light_on"),ScreenHousingTextures.screenIndex("ceiling/industrial_grey/light_on"),ScreenHousingTextures.screenIndex("ceiling/dark_cyan_metallic/light_on")}) {
             TileEntityProgrammableLight tile=new TileEntityProgrammableLight();tile.setFaceTexture(choice);
             for(boolean on:new boolean[]{false,true}) {

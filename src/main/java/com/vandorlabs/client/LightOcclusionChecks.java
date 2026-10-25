@@ -16,7 +16,9 @@ import java.util.*;
 final class LightOcclusionChecks {
     static void run(File output) {
         Minecraft mc=Minecraft.getMinecraft();
-        BlockPos origin=new BlockPos(40,240,40);
+        // Keep every panel orientation in the current loaded client chunk. Earlier
+        // runtime fixtures can leave the old fixed chunk outside the view distance.
+        BlockPos player=new BlockPos(mc.player);BlockPos origin=new BlockPos((player.getX()>>4)*16+8,240,(player.getZ()>>4)*16+8);
         Framebuffer target=new Framebuffer(256,256,true);
         List<BlockPos> positions=new ArrayList<>();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
@@ -28,9 +30,11 @@ final class LightOcclusionChecks {
                 PanelPlane plane=PanelPlane.of(facing);
                 for(int col=0;col<size;col++)for(int row=0;row<size;row++) {
                     BlockPos pos=origin.offset(plane.right,col).offset(plane.up,row);positions.add(pos);
-                    mc.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState()
-                            .withProperty(BlockAnimatedScreenSelector.FACING,facing),2);
-                    ((TileEntityProgrammableLight)mc.world.getTileEntity(pos)).configure(style,15,size==2,0,1+col+2*row);
+                    if(!mc.world.isBlockLoaded(pos))throw new IllegalStateException("Light occlusion requires loaded client fixture cell "+pos+" player="+player);
+                    if(!mc.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState()
+                            .withProperty(BlockAnimatedScreenSelector.FACING,facing),2))throw new IllegalStateException("Light occlusion fixture placement failed "+pos);
+                    net.minecraft.tileentity.TileEntity raw=mc.world.getTileEntity(pos);if(!(raw instanceof TileEntityProgrammableLight))throw new IllegalStateException("Light occlusion fixture missing light tile "+pos+" state="+mc.world.getBlockState(pos));
+                    ((TileEntityProgrammableLight)raw).configure(style,15,size==2,0,1+col+2*row);
                 }
                 double cx=0,cy=0,cz=0;
                 for(BlockPos pos:positions){cx+=pos.getX()+.5;cy+=pos.getY()+.5;cz+=pos.getZ()+.5;}
