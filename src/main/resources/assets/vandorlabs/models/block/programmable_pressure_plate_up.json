@@ -1,7 +1,7 @@
 {
   "textures": {
-    "all": "vandorlabs:blocks/door_inner",
-    "particle": "vandorlabs:blocks/door_inner"
+    "all": "vandorlabs:blocks/programmable_glass/door_side",
+    "particle": "vandorlabs:blocks/programmable_glass/door_side"
   },
   "elements": [
     {
