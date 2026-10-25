@@ -41,6 +41,7 @@ tasks.register('generateModernResources', Exec) {
     inputs.file('generate_control_resources.py')
     inputs.file('generate_trigger_resources.py')
     inputs.file('generate_shape_resources.py')
+    inputs.file('generate_wall_resources.py')
     inputs.file('canonical_resources.py')
     inputs.file('generate_table_resources.py')
     inputs.file('../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')

@@ -22,7 +22,7 @@ import net.neoforged.neoforge.client.event.RenderFrameEvent;
 /** Opt-in native client rendering, menu input and network round-trip checks. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class ModernClientRuntimeChecks {
-    private static int ticks,totalTicks,stage,stageStart,screenTick,redstoneTick,wirelessTick,filesystemTick,familyTick,screenFilesystemTick,joinedTick,controlTick,triggerTick,shapeTick,shapeItemsTick,shapeChunkTick,containedFluidTick,extendedControlTick,expandedIconTick;
+    private static int ticks,totalTicks,stage,stageStart,screenTick,redstoneTick,wirelessTick,filesystemTick,familyTick,screenFilesystemTick,joinedTick,controlTick,triggerTick,shapeTick,shapeItemsTick,shapeChunkTick,containedFluidTick,extendedControlTick,expandedIconTick,wallTick,wallGpuTick,wallItemTick;
     private static String screenshot;
     private static boolean shapeParityDone;
     private static long renderedFrames;
@@ -48,12 +48,14 @@ public final class ModernClientRuntimeChecks {
         if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen onboarding) { onboarding.onClose();return; }
         if(mc.player==null||mc.level==null||mc.gameMode==null)return;
         ticks++;
+        if(System.getProperty("vandorlabs.modernClientSuite","").equals("wall-items")){if(com.vandorlabs.neoforge.client.WallItemGoldens.tick(mc,ticks)){System.out.println("[vandorlabs][modern] client-smoke PASS isolated wall item golden export");mc.stop();}return;}
         if(System.getProperty("vandorlabs.modernClientSuite","").equals("housing-items")){if(com.vandorlabs.neoforge.client.HousingItemGoldens.tick(mc,ticks)){System.out.println("[vandorlabs][modern] client-smoke PASS isolated housing item golden export");mc.stop();}return;}
         if(System.getProperty("vandorlabs.modernClientSuite","").equals("table")){
             if(com.vandorlabs.neoforge.table.TableClientChecks.tick(mc,ticks)){System.out.println("[vandorlabs][modern] client-smoke PASS isolated Industrial Table suite");mc.stop();}return;
         }
         require(ticks<18000,"smoke timed out at stage "+stage);
         BlockPos pos=new BlockPos(0,80,0);
+        if(stage==0&&System.getProperty("vandorlabs.modernClientSuite","").equals("walls")){if(ticks<60)return;stage=53;wallTick=0;return;}
         if(stage==0&&System.getProperty("vandorlabs.modernClientSuite","").equals("shapes")){if(ticks<60)return;stage=49;shapeTick=0;return;}
         if(stage==0&&System.getProperty("vandorlabs.modernClientSuite","").equals("extended-controls")){if(ticks<60)return;stage=47;extendedControlTick=0;return;}
         if(stage==0&&System.getProperty("vandorlabs.modernClientSuite","").equals("trigger")){if(ticks<60)return;stage=46;triggerTick=0;return;}
@@ -118,8 +120,14 @@ public final class ModernClientRuntimeChecks {
         } else if(stage==52) {
             if(com.vandorlabs.neoforge.shape.ShapeChunkClientChecks.tick(mc,shapeChunkTick++)) {stage=51;containedFluidTick=0;}
         } else if(stage==51) {
-            if(com.vandorlabs.neoforge.fluid.client.NativeFluidClientChecks.tick(mc,containedFluidTick++)) {stage=5;stageStart=ticks;}
-        } else if(stage==5&&ticks-stageStart>40&&(System.getProperty("vandorlabs.modernClientSuite","").equals("shapes")||System.getProperty("vandorlabs.modernClientSuite","").equals("extended-controls")||System.getProperty("vandorlabs.modernClientSuite","").equals("trigger")||System.getProperty("vandorlabs.modernClientSuite","").equals("joined-controls")||captured.containsAll(Set.of("modern-world.png","modern-programmable-block.png","modern-programmable-block-gui2.png","modern-screen.png","modern-filesystem-world.png","modern-filesystem-picker-portrait.png","modern-filesystem-picker-missing.png","modern-filesystem-picker-wide.png","modern-redstone-overlay-on.png","modern-redstone-editor.png","modern-redstone-editor-scale3.png","modern-redstone-editor-scale2.png","modern-redstone-overlay-eight.png","modern-wireless-world.png","modern-wireless-receiver-dialog.png","modern-wireless-transmitter-dialog.png")))) {
+            if(com.vandorlabs.neoforge.fluid.client.NativeFluidClientChecks.tick(mc,containedFluidTick++)) {String suite=System.getProperty("vandorlabs.modernClientSuite","");if(suite.isEmpty()||suite.equals("full")){stage=53;wallTick=0;}else{stage=5;stageStart=ticks;}}
+        } else if(stage==53) {
+            if(com.vandorlabs.neoforge.wall.WallClientChecks.tick(mc,wallTick++)) {stage=54;wallGpuTick=0;}
+        } else if(stage==54) {
+            if(com.vandorlabs.neoforge.wall.WallPaneGpuChecks.tick(mc,wallGpuTick++)) {stage=55;wallItemTick=0;}
+        } else if(stage==55) {
+            if(com.vandorlabs.neoforge.client.WallItemGoldens.tick(mc,wallItemTick++)) {stage=5;stageStart=ticks;}
+        } else if(stage==5&&ticks-stageStart>40&&(System.getProperty("vandorlabs.modernClientSuite","").equals("walls")||System.getProperty("vandorlabs.modernClientSuite","").equals("shapes")||System.getProperty("vandorlabs.modernClientSuite","").equals("extended-controls")||System.getProperty("vandorlabs.modernClientSuite","").equals("trigger")||System.getProperty("vandorlabs.modernClientSuite","").equals("joined-controls")||captured.containsAll(Set.of("modern-world.png","modern-programmable-block.png","modern-programmable-block-gui2.png","modern-screen.png","modern-filesystem-world.png","modern-filesystem-picker-portrait.png","modern-filesystem-picker-missing.png","modern-filesystem-picker-wide.png","modern-redstone-overlay-on.png","modern-redstone-editor.png","modern-redstone-editor-scale3.png","modern-redstone-editor-scale2.png","modern-redstone-overlay-eight.png","modern-wireless-world.png","modern-wireless-receiver-dialog.png","modern-wireless-transmitter-dialog.png")))) {
             System.out.println("[vandorlabs][modern] client-smoke PASS placed world, native dialogs and rendered screenshots");mc.stop();stage=6;
         }
     }

@@ -28,13 +28,14 @@ class CanonicalResources:
         self.copy_model(path)
         return 'vandorlabs:' + path
 
-    def texture(self, value):
+    def texture(self, value, source_value=None):
         if not value.startswith('vandorlabs:blocks/'):
             return value
         relative = value.removeprefix('vandorlabs:blocks/')
-        candidates = [self.root / f'texture-packs/{pack}/assets/vandorlabs/textures/blocks/{relative}.png'
+        source_relative = (source_value or value).removeprefix('vandorlabs:blocks/')
+        candidates = [self.root / f'texture-packs/{pack}/assets/vandorlabs/textures/blocks/{source_relative}.png'
                       for pack in ('default', 'additional')]
-        candidates.append(self.source / f'textures/blocks/{relative}.png')
+        candidates.append(self.source / f'textures/blocks/{source_relative}.png')
         source = next((path for path in candidates if path.exists()), None)
         if source is None:
             raise FileNotFoundError(value)

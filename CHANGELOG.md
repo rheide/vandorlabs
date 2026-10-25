@@ -20,6 +20,11 @@
   connected apertures and independent housing/glass options.
 - Fit plain wall, porthole wall and full porthole item icons inside their slots
   with visible padding, retaining configured artwork and saved item data.
+- Add native plain walls and thin/full portholes with shared connected geometry,
+  independent main/side/glass settings and configured item previews. Validate
+  original renderer geometry, actual dialogs and Fancy/Fabulous pane blending
+  and depth writes over native water. Diagonal and carried variants remain under
+  conversion. Match stock glass artwork and transparent picker previews to Forge.
 - Add native filesystem material reloads for programmable cubes, preserving
   saved identities and updating artwork dimensions in an open picker. Keep
   native channel membership event-driven with explicit removal and unload cleanup.

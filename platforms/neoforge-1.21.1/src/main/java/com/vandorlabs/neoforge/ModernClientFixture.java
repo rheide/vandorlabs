@@ -15,6 +15,12 @@ public final class ModernClientFixture {
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if(!Boolean.getBoolean("vandorlabs.modernClientFixture")||!(event.getEntity() instanceof ServerPlayer player))return;
         var level=player.serverLevel();
+        if(System.getProperty("vandorlabs.modernClientSuite","").equals("walls")){
+            com.vandorlabs.neoforge.wall.WallRuntimeChecks.clientFixture(level);
+            level.setDayTime(6000);level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false,level.getServer());level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DOMOBSPAWNING).set(false,level.getServer());
+            player.setGameMode(GameType.CREATIVE);player.getAbilities().flying=false;player.onUpdateAbilities();player.teleportTo(320.5,80,5);player.setYRot(0);player.setXRot(16);
+            System.out.println("[vandorlabs][modern] client-fixture READY disposable flat walls and local edit permissions");return;
+        }
         if(System.getProperty("vandorlabs.modernClientSuite","").equals("table")){
             com.vandorlabs.neoforge.table.TableRuntimeChecks.clientFixture(level);player.setGameMode(GameType.CREATIVE);player.getAbilities().flying=false;player.onUpdateAbilities();player.teleportTo(2.5,79,-4);player.setYRot(0);player.setXRot(0);
             System.out.println("[vandorlabs][modern] client-fixture READY disposable table gallery and boundary pairs");return;
@@ -30,6 +36,7 @@ public final class ModernClientFixture {
         com.vandorlabs.neoforge.shape.ShapeRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.shape.ShapeChunkRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.fluid.NativeFluidRuntimeChecks.clientFixture(level);
+        com.vandorlabs.neoforge.wall.WallRuntimeChecks.clientFixture(level);
         FilesystemRuntimeChecks.clientFixture(level);
         JoinedCubeRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.control.ControlRuntimeChecks.clientFixture(level);

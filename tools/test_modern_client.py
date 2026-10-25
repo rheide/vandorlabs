@@ -33,6 +33,11 @@ def main():
     parser.add_argument('--timeout', type=int, default=900)
     parser.add_argument('--log-dir', type=Path, default=ROOT / 'build/reports/modern-client')
     parser.add_argument('--legacy-shape-reference', type=Path)
+    parser.add_argument('--suite', choices=['full','walls'], default='full')
+    parser.add_argument('--legacy-wall-profiles', type=Path)
+    parser.add_argument('--legacy-wall-reference', type=Path)
+    parser.add_argument('--legacy-wall-item-models',type=Path)
+    parser.add_argument('--legacy-wall-item-image',type=Path)
     parser.add_argument('--xvfb', action='store_true', help='Use an isolated virtual display, also selected automatically when DISPLAY is absent')
     args = parser.parse_args()
     if not 1024 <= args.port <= 65535 or args.timeout <= 0:
@@ -70,6 +75,7 @@ def main():
             command = [str(wrapper), 'runServer', '--no-daemon', '-PmodernClientFixture=true',
                        '-PmodernServerRunDirectory=' + str(fixture),
                        '-x', 'compileJava', '-x', 'processResources', '-x', 'generateModernResources']
+            if args.suite=='walls':command+=['-PmodernClientSuite=walls']
             if os.name == 'nt':
                 command = [os.environ.get('COMSPEC', 'cmd.exe'), '/d', '/v:off', '/s', '/c', subprocess.list2cmdline(command)]
             server_path = args.log_dir / 'fixture-server.log'
@@ -84,7 +90,7 @@ def main():
                         if time.monotonic() > deadline:
                             raise RuntimeError('Owned fixture startup exceeded 180 seconds')
                         time.sleep(.5)
-                    print('Owned disposable fixture ready; running complete native client gate', flush=True)
+                    print('Owned disposable fixture ready; running native client suite '+args.suite, flush=True)
                     result = run('client', args)
                 finally:
                     stop_owned(server)

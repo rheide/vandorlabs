@@ -61,6 +61,7 @@ public final class ModernRuntimeChecks {
             com.vandorlabs.neoforge.shape.ShapeRuntimeChecks.run(level);
             com.vandorlabs.neoforge.shape.ShapeChunkRuntimeChecks.run(level);
             com.vandorlabs.neoforge.fluid.NativeFluidRuntimeChecks.run(level);
+            com.vandorlabs.neoforge.wall.WallRuntimeChecks.run(level);
             com.vandorlabs.neoforge.table.TableRuntimeChecks.run(level);
             JoinedCubeRuntimeChecks.run(level);
             com.vandorlabs.neoforge.control.ControlRuntimeChecks.run(level);
@@ -80,6 +81,7 @@ public final class ModernRuntimeChecks {
             com.vandorlabs.neoforge.shape.ShapeRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.shape.ShapeChunkRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.fluid.NativeFluidRuntimeChecks.prepareRead(level);
+            com.vandorlabs.neoforge.wall.WallRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.table.TableRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.control.ControlRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.control.ExpandedControlRuntimeChecks.prepareRead(level);
@@ -103,6 +105,7 @@ public final class ModernRuntimeChecks {
             com.vandorlabs.neoforge.shape.ShapeRuntimeChecks.read(level);
             com.vandorlabs.neoforge.shape.ShapeChunkRuntimeChecks.read(level);
             com.vandorlabs.neoforge.fluid.NativeFluidRuntimeChecks.read(level);
+            com.vandorlabs.neoforge.wall.WallRuntimeChecks.read(level);
             com.vandorlabs.neoforge.table.TableRuntimeChecks.read(level);
         JoinedCubeRuntimeChecks.read(level);
         com.vandorlabs.neoforge.control.ControlRuntimeChecks.read(level);

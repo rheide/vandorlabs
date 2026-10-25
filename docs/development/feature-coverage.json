@@ -82,7 +82,7 @@
       "id": "walls_portholes_diagonals",
       "label": "Walls, portholes and diagonals",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "unimplemented",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_diagonal_glass",
         "programmable_diagonal_porthole",
@@ -91,12 +91,27 @@
         "programmable_porthole_wall",
         "programmable_wall"
       ],
-      "modern_registered_block_ids": [],
+      "modern_registered_block_ids": [
+        "programmable_porthole_block",
+        "programmable_porthole_wall",
+        "programmable_wall"
+      ],
       "remaining": [
-        "all native adapters",
-        "connected and filled geometry/contact matrices",
-        "custom materials and configuration",
-        "live parity"
+        "native diagonal wall, porthole and glass adapters and filled/contact matrices",
+        "actual disabled-join and wall-specific ordinary/unload/reload GPU matrices",
+        "external-material reload and custom block-material sampling",
+        "wall-specific bucket/body/eye/fluid interactions and glass-neighbor contacts",
+        "carried assemblies and hardware/shader-pack rendering acceptance"
+      ],
+      "implemented": [
+        "shared legacy/native flat wall topology, porthole meshes, clipping, material layout and bounded plane grouping",
+        "native plain/thin-porthole/full-porthole placement, collision, effect-scoped authorized menus and complete item snapshots",
+        "separate-process persistence, 36 installed poses and 4096 rotated L/bar/T/cross collision/free-volume samples",
+        "696 independent actual legacy/native renderer cases and 34536 emitted quads; content UV, color, depth and normalized normals within one byte quantum",
+        "26 real GUI/world captures with authoritative packet receipts and comparison to eight actual legacy GUI profiles",
+        "55 stock-glass textures and the canonical inventory pane match the packed legacy 128px RGBA artwork",
+        "eight actual Fancy/Fabulous stock/custom pane scenes with native-water background negatives, depth-mask and framebuffer restoration checks",
+        "36 actual legacy/native item models and padded raster bounds; intentional icon padding correction on both targets"
       ]
     },
     {

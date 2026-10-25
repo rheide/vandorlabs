@@ -73,7 +73,7 @@ public final class NativeMaterialPicker {
             if(special.containsKey(id))graphics.drawString(font,font.plainSubstrByWidth(special.get(id).label,width-6),x+3,yy+7,selected?0xFFFFE08A:0xFFABCFE8);
             else if(id<0){String category=categories.get(-id-1);int indent=TextureListLayout.indent(category);String label=(expanded.contains(category)?"- ":"+ ")+category.substring(category.lastIndexOf('/')+1);graphics.drawString(font,font.plainSubstrByWidth(label,width-6-indent),x+3+indent,yy+7,0xFFABCFE8);}
             else {Entry entry=entries.get(id);var refreshed=com.vandorlabs.tiles.MaterialChoicePolicy.isExternal(id)?ModernFinishCatalog.entry(id):null;float usedU=refreshed==null?entry.u:refreshed.u(),usedV=refreshed==null?entry.v:refreshed.v();String texture=refreshed==null?entry.texture:refreshed.texture();float aspect=usedU/usedV;int tw=16,th=16;if(aspect<1)tw=Math.max(1,Math.round(16*aspect));else th=Math.max(1,Math.round(16/aspect));
-                TextureAtlasSprite sprite=Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.parse(texture));graphics.blit(x+3+(16-tw)/2,yy+3+(16-th)/2,0,tw,th,new CroppedSprite(sprite,usedU,usedV));
+                TextureAtlasSprite sprite=Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.parse(texture));graphics.blit(x+3+(16-tw)/2,yy+3+(16-th)/2,0,tw,th,new CroppedSprite(sprite,usedU,usedV),1F,1F,1F,1F);
                 graphics.drawString(font,font.plainSubstrByWidth(entry.label,width-26),x+23,yy+7,selected?0xFFFFE08A:0xFFD8D8D8);
             }
         }

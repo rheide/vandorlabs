@@ -1,6 +1,6 @@
 # NeoForge 1.21.1 adapter
 
-This target is under conversion. Forge 1.12.2 remains the default and the behavioral reference. The NeoForge target includes programmable cube finishes and joined face layouts, viewscreen/console/input variants, wireless redstone endpoints, all eleven mounted control IDs, the Industrial Table, and programmable slabs/stairs with contained fluids. Registration and compilation do not establish complete feature parity; see the repository's [multiversion architecture](../../docs/development/multiversion.md) and [feature inventory](../../docs/development/feature-coverage.md) for the remaining families and validation requirements.
+This target is under conversion. Forge 1.12.2 remains the default and the behavioral reference. The NeoForge target includes programmable cube finishes and joined face layouts, viewscreen/console/input variants, wireless redstone endpoints, all eleven mounted control IDs, the Industrial Table, programmable slabs/stairs with contained fluids, and plain walls plus thin/full portholes. Registration and compilation do not establish complete feature parity; see the repository's [multiversion architecture](../../docs/development/multiversion.md) and [feature inventory](../../docs/development/feature-coverage.md) for the remaining families and validation requirements.
 
 ## Build
 
@@ -52,3 +52,9 @@ python ../../tools/test_modern_client.py
 Build the native target first. This command freezes the compiled classes and resources, starts a fresh temporary world on a separate localhost port, checks every required runtime marker and fresh capture, and stops only the processes it started. It discards the fixture world afterward and retains reports under `build/reports/modern-client`. It selects an isolated virtual display when no display is available; `--xvfb` also selects it explicitly. `--port` changes the local test port.
 
 For an independent slab/stair comparison, pass `--legacy-shape-reference` with the actual Forge model export produced by the focused fluid checks. The comparison checks emitted geometry, collision unions, material assignments, UVs, culling and shading. Without that argument, the gate records that the cross-version export comparison was not requested; native runtime and pixel checks still run.
+
+## Flat walls and portholes
+
+The three native flat profiles share topology, porthole surfaces, texture mapping and dialog rules with Forge. Dedicated save/restart and real menu permissions, picking/drops and rotated junction collision checks pass. Independent comparison with the original Forge renderer covers 696 cases and 34,536 quads. Focused client checks include 26 world/dialog captures, eight Fancy/Fabulous native-water/depth scenes and 36 configured item previews. The icon-padding correction applies to both targets. Normal comparisons allow one packed-byte quantum; hardware and shader-pack acceptance remains outstanding.
+
+Run the owned disposable focused fixture with `python3 tools/test_modern_client.py --suite walls --xvfb --log-dir <output>`. Optional `--legacy-wall-reference` and `--legacy-wall-profiles` arguments enable independent model and GUI comparisons. The original renderer exporter is retained under `tools/fixtures/legacy/`. Diagonal profiles, wall-specific unload/fluid matrices, external-material reload and carried integration remain under conversion.
