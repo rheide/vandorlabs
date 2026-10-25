@@ -545,15 +545,17 @@
       "id": "furniture",
       "label": "Industrial table",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "unimplemented",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "industrial_table"
       ],
-      "modern_registered_block_ids": [],
+      "modern_registered_block_ids": [
+        "industrial_table"
+      ],
       "remaining": [
-        "native geometry and interactions",
-        "configured items and persistence",
-        "live parity"
+        "chunk-boundary loaded-neighbor model refresh acceptance",
+        "rendered model/item parity for all facings, inversion and end modules",
+        "legacy live regression after shared geometry extraction"
       ]
     },
     {

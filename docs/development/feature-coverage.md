@@ -27,7 +27,7 @@ The [machine-readable inventory](feature-coverage.json) includes all 57 active g
 | Cockpits and peripherals | unimplemented | native assembly/reservations and seating; six/three-row shared controls; square-pixel surface hit mapping; pause-aware motion and live parity |
 | Modular landing gear and wheels | unimplemented | native parts and collision/placement; shared gear policy and carried animation; all item models with padding; live parity |
 | Turntables | unimplemented | native controller/surface/entity; transactional assembly/snapshot recovery; geometry/channel behavior; live parity |
-| Industrial table | unimplemented | native geometry and interactions; configured items and persistence; live parity |
+| Industrial table | partial | shared collision and native state/registration draft; loaded chunk-boundary model refresh and rendered world/item parity remain unaccepted |
 | Configuration/copy tools and basic materials | partial | full Configurizer dispatch to every family; Duplifier connected copy/application; matter production/core crafting chain; all target-specific resources and live parity |
 | Programmable armor | unimplemented | native equipment/components/models; shared material configuration; slot synchronization and all armor variants; live parity |
 | Filesystem and custom material workflows | partial | custom block sample definitions and native sampling/rendering; external materials across remaining block families; full resource-pack and shader acceptance |
