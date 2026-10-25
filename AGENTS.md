@@ -24,6 +24,7 @@
 
 - Configurizer interaction and ordinary right-click configuration must open the same dialog, with the same controls, authorization and behavior. Route both through one shared configuration path; never substitute the generic redstone dialog for a block's dedicated dialog.
 - Right-clicking a dialog option must select its previous value. Keep left-click and right-click cycling consistent across dialogs.
+- Before adding or changing a dialog, inspect the existing dialogs for the same kind of controls and reuse their layout, widgets and interaction style (for example, the Turntable Controller height slider).
 - Follow the existing screen, texture-list and door dialogs for layout and interaction conventions. Texture lists must support both wheel scrolling and dragging their scrollbar.
 - Match the mod's established texture resolutions; do not ship oversized textures. Turntable surface artwork may use a larger resolution because it can span multiple blocks.
 - When adding, removing or recategorizing selectable textures, regenerate the docs browser and category collages with `tools/generate_texture_browser.py`, then run it with `--check`. Keep `docs/texture-browser/` and `docs/texture-overview.md` synchronized with the in-game catalogs.
