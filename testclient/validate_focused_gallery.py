@@ -11,6 +11,8 @@ if target == 'utility22_card_mounts':
     selected=['utility22_card_mounts']
 if target == 'gallery_distant_geometry':
     selected=['gallery_distant_geometry']
+if target == 'gallery_display_table':
+    selected=['gallery_display_table']
 if target == 'dialogs':
     selected = ['screen_gui', 'console_gui', 'half_console_gui', 'input_gui', 'full_input_gui', 'programmable_wall_gui', 'programmable_diagonal_width_gui', 'programmable_block_gui', 'programmable_face_overrides_gui', 'space_door_gui', 'programmable_light_gui', 'programmable_trigger_gui', 'thruster_gui', 'diagonal_trapdoor_gui', 'trapdoor_gui', 'trapdoor_surface_gui']
 if target == 'door-selection':
@@ -35,6 +37,13 @@ log = (source / 'client.log').read_text()
 
 def require(marker):
     assert marker in log, 'Missing runtime result: ' + marker
+
+if target == 'gallery_display_table':
+    require('display-table-runtime PASS')
+    require('display-table-models PASS 32 actual canonical baked states and item geometry exported')
+    import json
+    table_models=json.loads((source/'industrial-table-models.json').read_text())
+    assert len(table_models['states'])==32 and len(table_models['item'])==24, 'Incomplete actual table model coverage'
 
 if target == 'utility22_card_mounts':
     for marker in ('waterlogged-surfaces PASS', 'waterlogged-render-performance PASS pixel-identical cases=145',

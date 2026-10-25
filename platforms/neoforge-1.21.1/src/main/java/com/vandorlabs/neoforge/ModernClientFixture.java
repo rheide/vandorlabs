@@ -15,6 +15,10 @@ public final class ModernClientFixture {
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if(!Boolean.getBoolean("vandorlabs.modernClientFixture")||!(event.getEntity() instanceof ServerPlayer player))return;
         var level=player.serverLevel();
+        if(System.getProperty("vandorlabs.modernClientSuite","").equals("table")){
+            com.vandorlabs.neoforge.table.TableRuntimeChecks.clientFixture(level);player.setGameMode(GameType.CREATIVE);player.getAbilities().flying=false;player.onUpdateAbilities();player.teleportTo(2.5,79,-4);player.setYRot(0);player.setXRot(0);
+            System.out.println("[vandorlabs][modern] client-fixture READY disposable table gallery and boundary pairs");return;
+        }
         for(int x=-3;x<68;x++)for(int z=-6;z<4;z++)level.setBlock(new BlockPos(x,79,z),Blocks.SMOOTH_STONE.defaultBlockState(),3);
         BlockPos cube=new BlockPos(0,80,0);level.setBlock(cube,VandorLabsModern.PROGRAMMABLE_BLOCK.get().defaultBlockState(),3);
         ((ProgrammableBlockEntity)level.getBlockEntity(cube)).apply(new ProgrammableBlockDialog.State(0,1,true,new int[]{0,1,2,3,-1,5},-1));

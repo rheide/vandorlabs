@@ -16,12 +16,14 @@ public final class TableBlock extends HorizontalDirectionalBlock {
     private static final MapCodec<TableBlock> CODEC=simpleCodec(TableBlock::new);
     public static final BooleanProperty LEFT=BooleanProperty.create("left"),RIGHT=BooleanProperty.create("right"),UPSIDE_DOWN=BooleanProperty.create("upside_down");
     private static final VoxelShape[] COLLISION=buildShapes();
-    private static VoxelShape[] buildShapes(){VoxelShape[] result=new VoxelShape[32];for(int face=2;face<=5;face++)for(int inverted=0;inverted<2;inverted++)for(int mask=0;mask<4;mask++){VoxelShape shape=Shapes.empty();for(var box:IndustrialTableGeometry.collision(face,inverted!=0,(mask&1)!=0,(mask&2)!=0))shape=Shapes.or(shape,Shapes.box(box.x0,box.y0,box.z0,box.x1,box.y1,box.z1));result[(face-2)*8+inverted*4+mask]=shape;}return result;}
+    private static VoxelShape[] buildShapes(){VoxelShape[] result=new VoxelShape[32];for(int face=2;face<=5;face++)for(int inverted=0;inverted<2;inverted++)for(int mask=0;mask<4;mask++){java.util.List<net.minecraft.world.phys.AABB> boxes=new java.util.ArrayList<>();for(var box:IndustrialTableGeometry.collision(face,inverted!=0,(mask&1)!=0,(mask&2)!=0))boxes.add(new net.minecraft.world.phys.AABB(box.x0,box.y0,box.z0,box.x1,box.y1,box.z1));result[(face-2)*8+inverted*4+mask]=com.vandorlabs.neoforge.geometry.ExactVoxelShapes.boxes(boxes);}return result;}
     public TableBlock(BlockBehaviour.Properties properties){super(properties);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(LEFT,false).setValue(RIGHT,false).setValue(UPSIDE_DOWN,false));}
     @Override protected MapCodec<? extends HorizontalDirectionalBlock> codec(){return CODEC;}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,LEFT,RIGHT,UPSIDE_DOWN);}
     private boolean matches(BlockGetter level,BlockPos pos,BlockState root){
-        if(level instanceof LevelReader reader&&!reader.hasChunkAt(pos))return false;BlockState neighbor=level.getBlockState(pos);boolean same=neighbor.is(this);
+        // ClientLevel.hasChunk() is deliberately unconditional; ask the actual cache instead.
+        if(level instanceof Level live&&!live.getChunkSource().hasChunk(pos.getX()>>4,pos.getZ()>>4))return false;
+        if(!(level instanceof Level)&&level instanceof LevelReader reader&&!reader.hasChunkAt(pos))return false;BlockState neighbor=level.getBlockState(pos);boolean same=neighbor.is(this);
         return IndustrialTableGeometry.matches(true,same,root.getValue(FACING).get3DDataValue(),root.getValue(UPSIDE_DOWN),same?neighbor.getValue(FACING).get3DDataValue():-1,same&&neighbor.getValue(UPSIDE_DOWN));
     }
     public BlockState actual(BlockState state,BlockGetter level,BlockPos pos){Direction face=state.getValue(FACING);return state.setValue(LEFT,matches(level,pos.relative(face.getCounterClockWise()),state)).setValue(RIGHT,matches(level,pos.relative(face.getClockWise()),state));}

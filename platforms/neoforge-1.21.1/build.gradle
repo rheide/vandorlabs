@@ -18,12 +18,13 @@ neoForge {
             if(project.hasProperty('modernClientSmoke')) {
                 systemProperty 'vandorlabs.modernClientSmoke', 'true'
                 if(project.hasProperty('modernClientSuite')) systemProperty 'vandorlabs.modernClientSuite',project.property('modernClientSuite')
-                programArguments.addAll '--quickPlayMultiplayer', '127.0.0.1:25570', '--width', '1280', '--height', '720'
+                programArguments.addAll '--quickPlayMultiplayer', '127.0.0.1:'+(project.findProperty('modernClientPort') ?: '25570'), '--width', '1280', '--height', '720'
             }
         }
         server {
             server(); programArgument '--nogui'; gameDirectory = file('run/server')
             if(project.hasProperty('modernClientFixture')) systemProperty 'vandorlabs.modernClientFixture', 'true'
+            if(project.hasProperty('modernClientSuite')) systemProperty 'vandorlabs.modernClientSuite',project.property('modernClientSuite')
             if (project.hasProperty('modernSmoke')) systemProperty 'vandorlabs.modernSmoke', project.property('modernSmoke')
         }
     }

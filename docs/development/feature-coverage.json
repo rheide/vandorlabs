@@ -553,9 +553,18 @@
         "industrial_table"
       ],
       "remaining": [
-        "chunk-boundary loaded-neighbor model refresh acceptance",
-        "rendered model/item parity for all facings, inversion and end modules",
-        "legacy live regression after shared geometry extraction"
+        "native carried-assembly integration when moving assemblies are introduced"
+      ],
+      "implemented": [
+        "shared exact authored collision plates, eight-strip struts and loaded matching policy with actual Forge delegation",
+        "all 32 native facing/inversion/end-module states, full-cell selection and tabletop-only support",
+        "immutable render-region model selection and bounded palette-filtered chunk availability invalidation without block entities",
+        "native iron properties, stone harvest boundary, plain loot/items, placement, rotation and saved-state roundtrips",
+        "32 rendered world poses with empty-scene negatives, 32 plain item icons and eight actual forget/chunk-with-light transitions",
+        "actual Forge and NeoForge baked positions/materials/authored UVs and collision-union comparison for all 32 states"
+      ],
+      "parity_notes": [
+        "Canonical hanging end models reflect the horizontal strut placement; legacy collision reflects only vertical coordinates. Both existing contracts are retained and compared separately."
       ]
     },
     {

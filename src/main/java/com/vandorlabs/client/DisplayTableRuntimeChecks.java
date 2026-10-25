@@ -63,7 +63,29 @@ public final class DisplayTableRuntimeChecks {
             for (int i = 0; i < positions.length; i++)
                 world.setBlockState(positions[i], original[i], 3);
         }
+        models(world,player,table);
         System.out.println("[vandorlabs][reprolab] display-table-runtime PASS");
+    }
+
+    private static java.util.List<Object> quads(net.minecraft.client.renderer.block.model.IBakedModel model,IBlockState state){
+        java.util.List<Object> result=new java.util.ArrayList<>();java.util.List<EnumFacing> sides=new java.util.ArrayList<>();sides.add(null);sides.addAll(java.util.Arrays.asList(EnumFacing.values()));
+        for(EnumFacing side:sides)for(net.minecraft.client.renderer.block.model.BakedQuad quad:model.getQuads(state,side,0)){
+            java.util.Map<String,Object> entry=new java.util.LinkedHashMap<>();entry.put("sprite",quad.getSprite().getIconName().replace(":blocks/",":block/"));java.util.List<Object> vertices=new java.util.ArrayList<>();int[] data=quad.getVertexData();int stride=data.length/4;
+            for(int i=0;i<4;i++){int at=i*stride;vertices.add(new double[]{Float.intBitsToFloat(data[at]),Float.intBitsToFloat(data[at+1]),Float.intBitsToFloat(data[at+2]),(Float.intBitsToFloat(data[at+4])-quad.getSprite().getMinU())/(quad.getSprite().getMaxU()-quad.getSprite().getMinU()),(Float.intBitsToFloat(data[at+5])-quad.getSprite().getMinV())/(quad.getSprite().getMaxV()-quad.getSprite().getMinV())});}entry.put("vertices",vertices);result.add(entry);
+        }return result;
+    }
+    private static void models(World world,EntityPlayer player,BlockIndustrialTable table){
+        BlockPos root=new BlockPos(-30,28,-30);java.util.Map<BlockPos,IBlockState> saved=new java.util.LinkedHashMap<>();saved.put(root,world.getBlockState(root));for(EnumFacing face:EnumFacing.Plane.HORIZONTAL)saved.put(root.offset(face),world.getBlockState(root.offset(face)));
+        java.util.List<Object> rows=new java.util.ArrayList<>();EnumFacing[] faces={EnumFacing.NORTH,EnumFacing.EAST,EnumFacing.SOUTH,EnumFacing.WEST};
+        try{for(int i=0;i<32;i++){
+            for(EnumFacing face:EnumFacing.Plane.HORIZONTAL)world.setBlockToAir(root.offset(face));EnumFacing face=faces[i/8];int mask=i%4;IBlockState state=table.getDefaultState().withProperty(BlockIndustrialTable.FACING,face).withProperty(BlockIndustrialTable.UPSIDE_DOWN,i%8>=4);world.setBlockState(root,state,3);
+            if((mask&1)!=0)world.setBlockState(root.offset(face.rotateYCCW()),state,3);if((mask&2)!=0)world.setBlockState(root.offset(face.rotateY()),state,3);IBlockState actual=table.getActualState(state,world,root);
+            java.util.List<Object> emitted=quads(Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(actual),actual);require(emitted.size()==24-6*Integer.bitCount(mask),"canonical model strut count "+i);java.util.Map<String,Object> row=new java.util.LinkedHashMap<>();row.put("index",i);row.put("quads",emitted);
+            java.util.List<net.minecraft.util.math.AxisAlignedBB> boxes=new java.util.ArrayList<>();table.addCollisionBoxToList(state,world,root,new net.minecraft.util.math.AxisAlignedBB(root.getX(),root.getY(),root.getZ(),root.getX()+1,root.getY()+1,root.getZ()+1),boxes,null,false);java.util.List<double[]> collision=new java.util.ArrayList<>();for(net.minecraft.util.math.AxisAlignedBB box:boxes)collision.add(new double[]{box.minX-root.getX(),box.minY-root.getY(),box.minZ-root.getZ(),box.maxX-root.getX(),box.maxY-root.getY(),box.maxZ-root.getZ()});row.put("collision",collision);rows.add(row);
+        }}finally{for(java.util.Map.Entry<BlockPos,IBlockState> entry:saved.entrySet())world.setBlockState(entry.getKey(),entry.getValue(),3);}
+        java.util.Map<String,Object> output=new java.util.LinkedHashMap<>();output.put("states",rows);output.put("item",quads(Minecraft.getMinecraft().getRenderItem().getItemModelWithOverrides(new ItemStack(table),world,player),null));
+        String folder=System.getenv("VANDOR_LABS_REPRO_OUT");require(folder!=null,"missing reproducible model output directory");try{java.nio.file.Files.write(java.nio.file.Paths.get(folder,"industrial-table-models.json"),new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(output).getBytes(java.nio.charset.StandardCharsets.UTF_8));}catch(java.io.IOException failure){throw new IllegalStateException(failure);}
+        System.out.println("[vandorlabs][reprolab] display-table-models PASS 32 actual canonical baked states and item geometry exported");
     }
 
     private static void check(BlockIndustrialTable table, World world, BlockPos pos,
