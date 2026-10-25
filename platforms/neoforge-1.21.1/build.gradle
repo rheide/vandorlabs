@@ -54,6 +54,8 @@ tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 tasks.register('validateModernResources', Exec) {
     dependsOn tasks.named('jar')
     inputs.file('validate_resources.py')
+    inputs.file('validate_control_resources.py')
+    inputs.file('generate_control_resources.py')
     inputs.file('../../generated-resources/assets/vandorlabs/lang/en_us.lang')
     inputs.file(tasks.named('jar').flatMap { it.archiveFile })
     commandLine pythonExecutable, 'validate_resources.py', tasks.named('jar').get().archiveFile.get().asFile.absolutePath

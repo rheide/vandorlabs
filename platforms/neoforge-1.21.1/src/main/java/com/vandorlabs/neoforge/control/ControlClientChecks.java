@@ -1,7 +1,7 @@
 package com.vandorlabs.neoforge.control;
 
 import com.vandorlabs.neoforge.ModernClientRuntimeChecks;
-import com.vandorlabs.ui.MountedControlDialog;
+import com.vandorlabs.ui.ControlDialog;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public final class ControlClientChecks {
     private static void crouch(Minecraft mc,boolean value){mc.player.setShiftKeyDown(value);mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player,value?ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY:ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));}
     private static void aim(Minecraft mc,BlockPos pos){var box=mc.level.getBlockState(pos).getShape(mc.level,pos).bounds();Vec3 target=new Vec3(pos.getX()+(box.minX+box.maxX)/2,pos.getY()+(box.minY+box.maxY)/2,pos.getZ()+(box.minZ+box.maxZ)/2);Vec3 delta=target.subtract(mc.player.getEyePosition());float yaw=(float)Math.toDegrees(Math.atan2(delta.z,delta.x))-90,pitch=(float)-Math.toDegrees(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)));mc.player.setYRot(yaw);mc.player.setXRot(pitch);mc.player.connection.send(new ServerboundMovePlayerPacket.PosRot(mc.player.getX(),mc.player.getY(),mc.player.getZ(),yaw,pitch,true));}
     private static void click(Minecraft mc,BlockPos pos){require(mc.hitResult instanceof BlockHitResult hit&&hit.getBlockPos().equals(pos),"actual crosshair did not select authored control");mc.gameMode.useItemOn(mc.player,InteractionHand.MAIN_HAND,(BlockHitResult)mc.hitResult);}
-    private static void option(ControlScreen gui,int id,int mouse){var layout=(MountedControlDialog)field(gui,"layout");var state=(MountedControlDialog.State)field(gui,"state");var b=layout.controls(state).stream().filter(button->button.id==id).findFirst().orElseThrow();gui.mouseClicked(b.x+b.width/2D,b.y+b.height/2D,mouse);}
+    private static void option(ControlScreen gui,int id,int mouse){var layout=(ControlDialog)field(gui,"layout");var state=(ControlDialog.State)field(gui,"state");var b=layout.controls(state).stream().filter(button->button.id==id).findFirst().orElseThrow();gui.mouseClicked(b.x+b.width/2D,b.y+b.height/2D,mouse);}
     public static boolean tick(Minecraft mc,int tick){
         if(mc.player==null||mc.level==null||mc.gameMode==null)return false;
         if(stage==0){mc.player.closeContainer();crouch(mc,false);Vec3 destination=new Vec3(100.5,80,5),delta=destination.subtract(mc.player.position());if(delta.length()>4){if(tick-started<5)return false;Vec3 next=mc.player.position().add(delta.normalize().scale(4));mc.player.setPos(next);mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(next.x,next.y,next.z,true));started=tick;return false;}mc.player.setPos(destination);mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(destination.x,destination.y,destination.z,true));int empty=-1;for(int i=0;i<9;i++)if(mc.player.getInventory().getItem(i).isEmpty()){empty=i;break;}require(empty>=0,"ordinary use needs an empty hand");mc.player.getInventory().selected=empty;mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(empty));stage=1;started=tick;return false;}
@@ -49,7 +49,7 @@ public final class ControlClientChecks {
         if(stage==10){if(tick-started<10)return false;capture("dialog-scale3");stage=11;return false;}
         if(stage==11){if(!captured("dialog-scale3"))return false;mc.options.guiScale().set(2);mc.resizeDisplay();stage=12;started=tick;return false;}
         if(stage==12){if(tick-started<10)return false;capture("dialog-scale2");stage=13;return false;}
-        if(stage==13){if(!captured("dialog-scale2"))return false;var gui=(ControlScreen)mc.screen;option(gui,9,1);option(gui,10,1);option(gui,11,1);var state=(MountedControlDialog.State)field(gui,"state");require(state.height==3&&state.tilt==3&&state.direction==3,"right click selects previous mount value");((EditBox)field(gui,"channels")).setValue("501, 502, 503");require(tile(mc,ROCKER).baseHeight()==0,"draft options must not autosubmit");capture("dialog-edited");stage=14;return false;}
+        if(stage==13){if(!captured("dialog-scale2"))return false;var gui=(ControlScreen)mc.screen;option(gui,9,1);option(gui,10,1);option(gui,11,1);var state=(ControlDialog.State)field(gui,"state");require(state.height==3&&state.tilt==3&&state.direction==3,"right click selects previous mount value");((EditBox)field(gui,"channels")).setValue("501, 502, 503");require(tile(mc,ROCKER).baseHeight()==0,"draft options must not autosubmit");capture("dialog-edited");stage=14;return false;}
         if(stage==14){if(!captured("dialog-edited"))return false;option((ControlScreen)mc.screen,1,0);crouch(mc,false);stage=15;started=tick;return false;}
         if(stage==15){if(tick-started<10||tile(mc,ROCKER).baseHeight()!=3||tile(mc,ROCKER).baseTilt()!=3||tile(mc,ROCKER).tiltDirection()!=3)return false;require(tile(mc,ROCKER).getRedstoneChannels().toString().equals("501, 502, 503"),"settings server roundtrip lost membership");aim(mc,ROCKER);stage=16;started=tick;return false;}
         if(stage==16){if(tick-started<10)return false;capture("tilted");stage=17;return false;}

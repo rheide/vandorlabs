@@ -26,6 +26,7 @@ public final class ModernClientFixture {
         FilesystemRuntimeChecks.clientFixture(level);
         JoinedCubeRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.control.ControlRuntimeChecks.clientFixture(level);
+        com.vandorlabs.neoforge.control.ExpandedControlRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.screen.ScreenFamilyRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.screen.RedstoneOverlayRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.redstone.WirelessRuntimeChecks.clientFixture(level);

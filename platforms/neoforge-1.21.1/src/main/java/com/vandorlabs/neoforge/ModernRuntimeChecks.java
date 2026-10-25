@@ -60,6 +60,7 @@ public final class ModernRuntimeChecks {
             com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.run(level);
             JoinedCubeRuntimeChecks.run(level);
             com.vandorlabs.neoforge.control.ControlRuntimeChecks.run(level);
+            com.vandorlabs.neoforge.control.ExpandedControlRuntimeChecks.run(level);
             BasicHousingRuntimeChecks.run(level);
             FilesystemRuntimeChecks.run(level);
             com.vandorlabs.neoforge.redstone.WirelessRuntimeChecks.run(level);
@@ -73,6 +74,7 @@ public final class ModernRuntimeChecks {
         } else {
             com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.control.ControlRuntimeChecks.prepareRead(level);
+            com.vandorlabs.neoforge.control.ExpandedControlRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.screen.RedstoneOverlayRuntimeChecks.prepareRead(level);
             for(BlockPos at:java.util.List.of(pos,new BlockPos(4,80,0),new BlockPos(10,80,0),new BlockPos(14,80,0))) { level.getChunkAt(at);level.getBlockEntity(at); }
             pendingRead=server;readTicks=0;readDeadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(30);
@@ -92,6 +94,7 @@ public final class ModernRuntimeChecks {
         com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.read(level);
         JoinedCubeRuntimeChecks.read(level);
         com.vandorlabs.neoforge.control.ControlRuntimeChecks.read(level);
+            com.vandorlabs.neoforge.control.ExpandedControlRuntimeChecks.read(level);
         BasicHousingRuntimeChecks.read(level);
         FilesystemRuntimeChecks.read(level);
         com.vandorlabs.neoforge.redstone.WirelessRuntimeChecks.read(level);

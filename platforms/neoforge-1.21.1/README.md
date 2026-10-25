@@ -1,6 +1,6 @@
 # NeoForge 1.21.1 adapter
 
-This target is under conversion. Forge 1.12.2 remains the default and the behavioral reference. The NeoForge target currently implements programmable cube finishes and face settings, programmable viewscreens, and wireless redstone endpoints. Registration and compilation do not establish complete feature parity; see the repository's [multiversion architecture](../../docs/development/multiversion.md) and [feature inventory](../../docs/development/feature-coverage.md) for the remaining families and validation requirements.
+This target is under conversion. Forge 1.12.2 remains the default and the behavioral reference. The NeoForge target includes programmable cube finishes and joined face layouts, viewscreen/console/input variants, wireless redstone endpoints, mounted buttons/rockers and the programmable trigger. Registration and compilation do not establish complete feature parity; see the repository's [multiversion architecture](../../docs/development/multiversion.md) and [feature inventory](../../docs/development/feature-coverage.md) for the remaining families and validation requirements.
 
 ## Build
 
@@ -27,9 +27,9 @@ NeoForge, ModDevGradle, the Gradle wrapper and its distribution checksum are pin
 
 The programmable cube uses a native block entity, server-owned editing menu, fixed-size settings payload and model data for per-face rendering. Settings retain the shared schema keys and legacy material migration. Unrecognized saved settings are retained for subsequent saves. Native item components preserve configured cube settings in drops. The viewscreen and wireless endpoint adapters use separate native menus and bounded payload codecs.
 
-Filesystem materials use the shared discovery and padding policies through a native resource pack. Cube settings retain their material IDs when files disappear or change dimensions; resource reloads update the existing picker and baked model UVs. Viewscreen filesystem rendering still needs separate acceptance.
+Filesystem materials use the shared discovery and padding policies through a native resource pack. Cube settings retain their material IDs when files disappear or change dimensions; resource reloads update the existing picker and baked model UVs. Full viewscreen housing and surface materials retain IDs and update in an already-open picker through missing-file and artwork-dimension reloads.
 
-Remaining limitations include other gameplay families, custom block materials, joined cube face layouts, and external integrations. The emitted adapter coverage report is a generated implementation inventory, not a declaration of release acceptance.
+Remaining limitations include other gameplay families, custom block materials, carried-assembly integration, shader acceptance and external integrations. The emitted adapter coverage report is a generated implementation inventory, not a declaration of release acceptance.
 
 ## Disposable runtime checks
 

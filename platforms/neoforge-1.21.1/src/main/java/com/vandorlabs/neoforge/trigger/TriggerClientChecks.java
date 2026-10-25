@@ -17,7 +17,8 @@ import net.minecraft.world.phys.Vec3;
 /** Real four-list selections, immediate settings/channel typing and server-driven visible bands. */
 public final class TriggerClientChecks {
     private static final BlockPos POS=new BlockPos(112,80,8);
-    private static int stage,started,band;
+    private static int stage,started,band,stableSince=-1;
+    private static long stableFrame;
     private static final int[] LEVELS={0,3,7,13},CHOICES={1,2,3,4};
     private TriggerClientChecks(){}
     private static void need(boolean value,String message){if(!value)throw new IllegalStateException("Native trigger client: "+message+" stage="+stage);}
@@ -45,8 +46,14 @@ public final class TriggerClientChecks {
         if(stage==8){if(!captured("bands-exact")||tile(mc).state().exact!=15||tile(mc).state().low!=2||tile(mc).state().medium!=3||tile(mc).state().on!=4||tile(mc).settings().mainTexture!=1)return false;var gui=(TriggerScreen)mc.screen;option(gui,102,0);option(gui,91,0);option(gui,101,1);need(((TriggerDialog.State)field(gui,"state")).tab==3,"disabled bands must fall back fromLow toHigh");option(gui,101,0);var channel=(EditBox)field(gui,"channels");channel.setValue("");gui.setFocused(channel);channel.setFocused(true);gui.charTyped('7',0);gui.charTyped('0',0);gui.charTyped('1',0);stage=9;started=tick;return false;}
         if(stage==9){if(!tile(mc).getRedstoneChannels().toString().equals("701")||!tile(mc).state().bands||tile(mc).state().exact!=-1)return false;var gui=(TriggerScreen)mc.screen;option(gui,90,0);var panel=(ProgrammableDialogLayout)field(gui,"panel");var picker=((NativeMaterialPicker[])field(gui,"pickers"))[0];int old=picker.scroll();gui.mouseScrolled(panel.listX+12,panel.top+65,0,-1);need(picker.scroll()>old,"wheel must scroll activeOff list");int scrolled=picker.scroll();option(gui,91,0);option(gui,90,0);need(((NativeMaterialPicker[])field(gui,"pickers"))[0].scroll()==scrolled,"four lists must retain independent scroll");int listHeight=panel.rows(true)*22;gui.mouseClicked(panel.listX+panel.listWidth+3,panel.top+54+listHeight-2,0);gui.mouseDragged(panel.listX+panel.listWidth+3,panel.top+54+listHeight+80,0,0,80);gui.mouseReleased(panel.listX+panel.listWidth+3,panel.top+54+listHeight+80,0);need(picker.scroll()>scrolled,"drag scrollbar must advance active list");option(gui,100,0);mc.player.setShiftKeyDown(false);mc.player.connection.send(new ServerboundPlayerCommandPacket(mc.player,ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));stage=10;started=tick;return false;}
         if(stage==10){if(tick-started<10)return false;aim(mc);stage=11;started=tick;return false;}
-        if(stage==11){if(tile(mc).signalLevel()!=LEVELS[band]||tile(mc).visibleFinish()!=CHOICES[band])return false;capture("band-"+LEVELS[band]);stage=12;return false;}
-        if(stage==12){if(!captured("band-"+LEVELS[band]))return false;band++;if(band<4){stage=11;started=tick;return false;}System.out.println("[vandorlabs][modern] trigger-client PASS exact fourlistGUI3/2, previous-cycle, autosend/channeltyping, independentwheel/drag andactual0/3/7/13 consumer artwork");stage=13;}
+        if(stage==11){
+            if(tile(mc).signalLevel()!=LEVELS[band]||tile(mc).visibleFinish()!=CHOICES[band]){stableSince=-1;return false;}
+            if(stableSince<0){stableSince=tick;stableFrame=ModernClientRuntimeChecks.renderedFrames();return false;}
+            // Entity packets precede asynchronous chunk mesh upload. Capture only a rendered, stable band.
+            if(tick-stableSince<10||ModernClientRuntimeChecks.renderedFrames()-stableFrame<3)return false;
+            capture("band-"+LEVELS[band]);stage=12;return false;
+        }
+        if(stage==12){if(!captured("band-"+LEVELS[band]))return false;band++;stableSince=-1;if(band<4){stage=11;started=tick;return false;}System.out.println("[vandorlabs][modern] trigger-client PASS exact fourlistGUI3/2, previous-cycle, autosend/channeltyping, independentwheel/drag andactual0/3/7/13 consumer artwork");stage=13;}
         return stage==13;
     }
 }

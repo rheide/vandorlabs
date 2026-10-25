@@ -63,6 +63,8 @@ def validate(jar):
         for entry in screens:
             for variant in ('bare','framed'):
                 assert f'assets/vandorlabs/textures/screens/{entry[variant]}_static.png' in names,entry
+        from validate_control_resources import validate as validate_controls
+        validate_controls(root, archive)
         print(f'Modern resource contracts PASS: {len(catalog)} stable housing choices, {len(screens)} paired screens; modern metadata, models, loot and sprites')
 
 if __name__=='__main__':
