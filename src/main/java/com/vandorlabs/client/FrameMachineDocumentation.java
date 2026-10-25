@@ -19,6 +19,7 @@ import java.util.*;
 /** Stateful build stages in a disposable world; separate from asserted release regressions. */
 final class FrameMachineDocumentation {
     private static final BlockPos ROOT=new BlockPos(24,80,24);
+    private static final Set<String> STAGED_TOP=new HashSet<>(Arrays.asList("oculus_drive","survey_dish","sentinel_array","standalone_dish","standalone_antenna"));
     private static final List<FrameMachineDesign> DESIGNS=new ArrayList<>(FrameMachineDesign.all());
     private static final List<Map<String,Object>> records=new ArrayList<>();
     private static int design,step,settle;
@@ -42,7 +43,15 @@ final class FrameMachineDocumentation {
                 for(BlockPos p:BlockPos.getAllInBox(ROOT.add(-8,-1,-8),ROOT.add(12,-1,12)))world.setBlockState(p,Blocks.STONE.getDefaultState(),2);
             }
             if(spec!=null){
-                if(step<3)BridgeMachineChecks.frame(world,ROOT,spec,step);
+                if(step<3){
+                    if(step==1&&STAGED_TOP.contains(spec.design)){Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");for(int y=1;y<spec.height-1;y++)for(int x=0;x<spec.width;x++)for(int z=0;z<spec.depth;z++)if((x==0||x==spec.width-1)&&(z==0||z==spec.depth-1))world.setBlockState(ROOT.add(x,y,z),matter.getDefaultState(),2);}
+                    else BridgeMachineChecks.frame(world,ROOT,spec,step);
+                    TileEntityConstructor core=(TileEntityConstructor)world.getTileEntity(ROOT);require(core!=null&&!core.formed(),"construction stage has its unformed Core");Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");
+                    for(int y=0;y<spec.height;y++)for(int x=0;x<spec.width;x++)for(int z=0;z<spec.depth;z++){
+                        boolean expected=step==0?y==0:spec.width==1&&spec.depth==1?y<=step:step==1?y==0||((x==0||x==spec.width-1)&&(z==0||z==spec.depth-1)&&(!STAGED_TOP.contains(spec.design)||y<spec.height-1)):core.frame(x,y,z);
+                        Block found=world.getBlockState(ROOT.add(x,y,z)).getBlock();require(x==0&&y==0&&z==0?found==core.core():expected?found==matter:world.isAirBlock(ROOT.add(x,y,z)),"exact construction layer "+spec.design+" stage="+(step+1)+" cell="+x+","+y+","+z);
+                    }
+                }
                 else{
                     TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(ROOT);
                     if(step==3){tile.core().onBlockActivated(world,ROOT,world.getBlockState(ROOT),player(mc),EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,0);require(tile.formed(),"Core right-click must form "+spec.design);}
@@ -91,7 +100,7 @@ final class FrameMachineDocumentation {
         if(pending==null)return;
         try{
             javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,pending));
-            Map<String,Object> row=new LinkedHashMap<>();row.put("design",id());row.put("step",step+1);row.put("image",pending);row.put("asserted",true);records.add(row);
+            Map<String,Object> row=new LinkedHashMap<>();row.put("design",id());row.put("step",step+1);row.put("image",pending);row.put("asserted",true);if(design<DESIGNS.size()){FrameMachineDesign spec=DESIGNS.get(design);int matter=-1;for(int y=0;y<spec.height;y++)for(int x=0;x<spec.width;x++)for(int z=0;z<spec.depth;z++)if(y==0||(x==0||x==spec.width-1)&&(z==0||z==spec.depth-1)||y==spec.height-1&&(x==0||x==spec.width-1||z==0||z==spec.depth-1))matter++;row.put("width",spec.width);row.put("depth",spec.depth);row.put("height",spec.height);row.put("matter",matter);row.put("core",spec.block);}records.add(row);
             System.out.println("[vandorlabs] machine-build-step "+id()+" "+(step+1)+" captured");pending=null;captured=true;
         }catch(IOException error){throw new IllegalStateException(error);}
     }

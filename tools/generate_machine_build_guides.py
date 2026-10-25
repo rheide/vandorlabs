@@ -16,6 +16,35 @@ def frame(spec,x,y,z):
     return y==0 or x in (0,w-1) and z in (0,d-1) or y==h-1 and (x in (0,w-1) or z in (0,d-1))
 
 
+NEW_GUIDES={'oculus_drive','survey_dish','sentinel_array','standalone_dish','standalone_antenna'}
+SECURITY_STEP=('Enable Security and insert a Data Chip','Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.')
+ACTIVITY={
+ 'oculus_drive':'The default activity is **Active**. Right-click away from the reader to cycle Standby → Charging → Active. The two shutters open or close over one second, travelling inside the reserved assembly; an interrupted stroke reverses from its current position. The energized field is fullbright, while the enclosure stays world-lit.',
+ 'survey_dish':'The default activity is **Scanning**. Right-click away from the reader to cycle Off → Idle → Scanning. The dish, feed and yoke sweep together through ±55° on an eight-second loop. Starting and stopping fades the sweep over half a second; the base stays fixed.',
+ 'standalone_dish':'The default activity is **Scanning**. Right-click away from the reader to cycle Off → Idle → Scanning. The dish, feed and yoke sweep together through ±55° on an eight-second loop. Starting and stopping fades the sweep over half a second; the base stays fixed.',
+ 'sentinel_array':'The default activity is **Scanning**. Right-click away from the reader to cycle Off → Idle → Scanning. The mast stays fixed while the cyan and amber indicators animate.',
+ 'standalone_antenna':'The default activity is **Scanning**. Right-click away from the reader to cycle Off → Idle → Scanning. The mast stays fixed while the cyan and amber indicators animate.'}
+
+def new_instructions(spec):
+    if spec['design'] not in NEW_GUIDES:return None
+    if spec['width']==2 and spec['depth']==2:
+        return [('Build the base','Place a solid **2 × 2** bottom layer: one matching Core in the front-left corner, facing you, and **three Programmable Matter Blocks**.'),
+                ('Add the two middle layers','Add **two solid 2 × 2 layers** of Programmable Matter Blocks above the base: **eight Matter Blocks** in total. The construction is now three blocks high; leave the fourth layer empty for the next step.'),
+                ('Complete the top layer','Add **four Matter Blocks** as the final 2 × 2 layer. The finished construction is **four blocks high**. Every position in each 2 × 2 layer is a frame corner, so this design has **no hollow interior or open roof center**.'),
+                ('Assemble','Right-click the Core to form the machine. Its occupied cells are reserved. If formation fails, correct the cell reported in chat and retry.')]
+    return [('Build the base','Place a solid **3 × 3** bottom layer: one matching Core in the front-left corner, facing you, and **eight Programmable Matter Blocks**.'),
+            ('Raise the corner pillars','Add one Matter Block above each of the **four corners**. This adds **four Matter Blocks** and makes each pillar two blocks high. Leave the other five positions in this middle layer empty.'),
+            ('Connect the top rim','Add a **3 × 3 perimeter** as the third and final layer: **eight Matter Blocks**, with the center left empty. The completed frame uses twenty Matter Blocks plus its Core. Keep the middle-layer interior and the roof center empty.'),
+            ('Assemble','Right-click the Core to form the machine. Its occupied cells are reserved. If formation fails, correct the cell reported in chat and retry.')]
+
+def activity_notes(spec):
+    if spec['design'] not in NEW_GUIDES:return ''
+    text='## Operation and activation\n\n'+ACTIVITY[spec['design']]+'\n\nUse the Configurizer on the Core or any reserved cell to open the shared machine dialog. Redstone and Security are independent input gates. Enable Redstone to require physical power or configured input channels; enable Security to require a matching inserted Data Chip. Both gates must pass when both are enabled.\n\n'
+    if not spec.get('surfaces'):text+='This standalone design has no operator screen or keyboard. Its optional native Data Chip Mount is fitted to the front of the compact base.\n\n'
+    else:text+='Select screen and keyboard artwork independently in the same dialog. Model artwork preserves the supplied design; Black and the standard material/screen catalog are also available.\n\n'
+    text+='The machine emits no physical or channel redstone power. These appearances do not perform propulsion, dimensional travel, radar detection or navigation calculations.\n\n'
+    return text
+
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('capture',type=Path);args=p.parse_args()
     records=json.loads((args.capture/'machine-build-steps.json').read_text())
@@ -27,6 +56,10 @@ def main():
         assert record['step'] not in steps;steps[record['step']]=record
     expected={s['design']:(5 if s.get('chip_anchor') else 4) for s in specs}
     expected.update(navigation_table_flat=4,navigation_table_angled=4)
+    for spec in specs:
+        matter=sum(frame(spec,x,y,z) for y in range(spec['height']) for x in range(spec['width']) for z in range(spec['depth']))-1
+        for record in by_design[spec['design']].values():
+            assert all(record.get(key)==value for key,value in dict(width=spec['width'],depth=spec['depth'],height=spec['height'],matter=matter,core=spec['block']).items()), 'Capture construction metadata mismatch: '+spec['design']
     assert set(by_design)==set(expected)
     for design,count in expected.items():assert set(by_design[design])==set(range(1,count+1)),design
     root=ROOT/'docs/multiblocks';root.mkdir(parents=True,exist_ok=True)
@@ -34,7 +67,8 @@ def main():
     for spec in specs:
         design=spec['design'];slug=design.replace('_','-');folder=root/slug;folder.mkdir(exist_ok=True)
         w,h,d=spec['width'],spec['height'],spec['depth'];matter=sum(frame(spec,x,y,z) for y in range(h) for x in range(w) for z in range(d))-1
-        core_name='Seyr Meridian Drive Core' if design=='meridian_core' else TITLES[design].replace('Pinnacle ','').replace('Vektor ','')+' Core'
+        language=dict(line.split('=',1) for line in (ROOT/'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines() if '=' in line and not line.startswith('#'))
+        core_name=language['tile.vandorlabs.'+spec['block']+'.name']
         text=f"# {TITLES[design]}\n\nBuild a **{w} wide × {d} deep × {h} high** assembly with **{matter} Programmable Matter Blocks** and **one {core_name}**. Core blocks are available in Creative, following the existing Universal Constructor system.\n\n"
         if w==1 and d==1:
             instructions=[('Place the Core','Place the matching Core on the ground, with its operating face toward you.'),
@@ -46,15 +80,16 @@ def main():
                           ('Raise the corner pillars',f'At each of the four corners, build up to a total height of {h} blocks, including the bottom layer. Leave the interior empty.'),
                           ('Connect the top rim','Connect the four pillar tops with a rectangular rim of Programmable Matter Blocks. Keep the middle of the roof open; do not fill the interior.'),
                           ('Assemble','Right-click the Core. The frame becomes the complete model, and its occupied cells are reserved. If formation fails, use the reported cell to check the frame and its empty interior.')]
-        if spec.get('chip_anchor'):
-            instructions.append(('Enable Security and insert a Data Chip','Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.'))
+        instructions=new_instructions(spec) or instructions
+        if spec.get('chip_anchor'):instructions.append(SECURITY_STEP)
         for index,(heading,body) in enumerate(instructions,1):
             image=f'step-{index}.png';shutil.copy2(args.capture/by_design[design][index]['image'],folder/image)
             text+=f'## {index}. {heading}\n\n{body}\n\n![{TITLES[design]}: {heading.lower()}]({image})\n\n'
+        text+=activity_notes(spec)
         text+='## Facing and removal\n\nThe same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.\n\n'
         if spec.get('chip_anchor'):text+='A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.\n\n'
-        if spec.get('surfaces'):text+='Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional chip security.\n\n'
-        text+='These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.\n\n[All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)\n'
+        if spec.get('surfaces') and design not in NEW_GUIDES:text+='Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional chip security.\n\n'
+        if design not in NEW_GUIDES:text+='These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.\n\n[All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)\n'
         (folder/'README.md').write_text(text)
         rows.append(f'| [{TITLES[design]}]({slug}/README.md) | {w} × {d} × {h} | {matter} + one Core |')
     for design in ['navigation_table_flat','navigation_table_angled']:

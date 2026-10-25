@@ -1,20 +1,51 @@
 # Pinnacle Oculus Drive
 
-Build a **3 wide × 3 deep × 3 high** assembly with **20 Programmable Matter Blocks** and **one Pinnacle Oculus Drive Core**, available in Creative.
+Build a **3 wide × 3 deep × 3 high** assembly with **20 Programmable Matter Blocks** and **one Pinnacle Oculus Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
-1. Lay out the solid bottom layer. Put the Core in one bottom corner facing the operating side and fill the other cells with Matter Blocks.
-2. Raise the four corner pillars to the full height.
-3. Join the tops with a Matter Block rim. Keep every remaining interior cell empty.
-4. Right-click the Core to assemble. If it fails, correct the reported cell and retry.
+## 1. Build the base
 
-The default activity is **Active**. The two shutters open or close over one second, travelling inside the reserved assembly. An interrupted stroke reverses from its current position. The energized field is fullbright; the enclosure stays world-lit.
+Place a solid **3 × 3** bottom layer: one matching Core in the front-left corner, facing you, and **eight Programmable Matter Blocks**.
 
-Use the **Configurizer** on the Core or a reserved cell to open the shared dialog. Enable Redstone to activate the animation from physical power or input channels. Enable Security to require a matching Data Chip and show the native Data Chip Mount. Both gates must pass when both are enabled. The machine emits no redstone or channel power.
+![Pinnacle Oculus Drive: build the base](step-1.png)
 
-Screen and keyboard artwork are configurable independently through the same dialog.
+## 2. Raise the corner pillars
 
-Right-click away from the reader to cycle Standby → Charging → Active. Sneak-right-click away from the reader to dismantle and recover the Matter frame. The frame can face any horizontal direction; the Core may occupy any bottom corner. A retained chip survives manual dismantling; breaking the Core releases it once.
+Add one Matter Block above each of the **four corners**. This adds **four Matter Blocks** and makes each pillar two blocks high. Leave the other five positions in this middle layer empty.
 
-These are animated machinery models with input and security controls. They do not perform dimensional travel or radar detection.
+![Pinnacle Oculus Drive: raise the corner pillars](step-2.png)
+
+## 3. Connect the top rim
+
+Add a **3 × 3 perimeter** as the third and final layer: **eight Matter Blocks**, with the center left empty. The completed frame uses twenty Matter Blocks plus its Core. Keep the middle-layer interior and the roof center empty.
+
+![Pinnacle Oculus Drive: connect the top rim](step-3.png)
+
+## 4. Assemble
+
+Right-click the Core to form the machine. Its occupied cells are reserved. If formation fails, correct the cell reported in chat and retry.
+
+![Pinnacle Oculus Drive: assemble](step-4.png)
+
+## 5. Enable Security and insert a Data Chip
+
+Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.
+
+![Pinnacle Oculus Drive: enable security and insert a data chip](step-5.png)
+
+## Operation and activation
+
+The default activity is **Active**. Right-click away from the reader to cycle Standby → Charging → Active. The two shutters open or close over one second, travelling inside the reserved assembly; an interrupted stroke reverses from its current position. The energized field is fullbright, while the enclosure stays world-lit.
+
+Use the Configurizer on the Core or any reserved cell to open the shared machine dialog. Redstone and Security are independent input gates. Enable Redstone to require physical power or configured input channels; enable Security to require a matching inserted Data Chip. Both gates must pass when both are enabled.
+
+Select screen and keyboard artwork independently in the same dialog. Model artwork preserves the supplied design; Black and the standard material/screen catalog are also available.
+
+The machine emits no physical or channel redstone power. These appearances do not perform propulsion, dimensional travel, radar detection or navigation calculations.
+
+## Facing and removal
+
+The frame works along either horizontal axis, with its Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click away from the chip holder to dismantle and recover the Matter frame. Mining a reserved part dismantles the machine and removes that cell; breaking the Core restores the remaining Matter Blocks.
+
+A retained chip stays in the Core during manual dismantling and is available after reassembly. Breaking the Core releases the chip once.
 
 [All multiblock guides](../README.md) · [Machine display settings](../../machine-displays.md) · [Data Chip Mounts](../../data-mounts.md)

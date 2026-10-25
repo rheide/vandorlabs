@@ -1,20 +1,51 @@
 # Sentinel Array
 
-Build a **2 wide × 2 deep × 4 high** assembly with **15 Programmable Matter Blocks** and **one Sentinel Array Core**, available in Creative.
+Build a **2 wide × 2 deep × 4 high** assembly with **15 Programmable Matter Blocks** and **one Sentinel Array Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
-1. Lay out the solid bottom layer. Put the Core in one bottom corner facing the operating side and fill the other cells with Matter Blocks.
-2. Raise the four corner pillars to the full height.
-3. Join the tops with a Matter Block rim. Keep every remaining interior cell empty.
-4. Right-click the Core to assemble. If it fails, correct the reported cell and retry.
+## 1. Build the base
 
-The default activity is **Scanning**. The mast stays fixed while the cyan and amber indicators animate.
+Place a solid **2 × 2** bottom layer: one matching Core in the front-left corner, facing you, and **three Programmable Matter Blocks**.
 
-Use the **Configurizer** on the Core or a reserved cell to open the shared dialog. Enable Redstone to activate the animation from physical power or input channels. Enable Security to require a matching Data Chip and show the native Data Chip Mount. Both gates must pass when both are enabled. The machine emits no redstone or channel power.
+![Sentinel Array: build the base](step-1.png)
 
-Screen and keyboard artwork are configurable independently through the same dialog.
+## 2. Add the two middle layers
 
-Right-click away from the reader to cycle Off → Idle → Scanning. Sneak-right-click away from the reader to dismantle and recover the Matter frame. The frame can face any horizontal direction; the Core may occupy any bottom corner. A retained chip survives manual dismantling; breaking the Core releases it once.
+Add **two solid 2 × 2 layers** of Programmable Matter Blocks above the base: **eight Matter Blocks** in total. The construction is now three blocks high; leave the fourth layer empty for the next step.
 
-These are animated machinery models with input and security controls. They do not perform dimensional travel or radar detection.
+![Sentinel Array: add the two middle layers](step-2.png)
+
+## 3. Complete the top layer
+
+Add **four Matter Blocks** as the final 2 × 2 layer. The finished construction is **four blocks high**. Every position in each 2 × 2 layer is a frame corner, so this design has **no hollow interior or open roof center**.
+
+![Sentinel Array: complete the top layer](step-3.png)
+
+## 4. Assemble
+
+Right-click the Core to form the machine. Its occupied cells are reserved. If formation fails, correct the cell reported in chat and retry.
+
+![Sentinel Array: assemble](step-4.png)
+
+## 5. Enable Security and insert a Data Chip
+
+Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.
+
+![Sentinel Array: enable security and insert a data chip](step-5.png)
+
+## Operation and activation
+
+The default activity is **Scanning**. Right-click away from the reader to cycle Off → Idle → Scanning. The mast stays fixed while the cyan and amber indicators animate.
+
+Use the Configurizer on the Core or any reserved cell to open the shared machine dialog. Redstone and Security are independent input gates. Enable Redstone to require physical power or configured input channels; enable Security to require a matching inserted Data Chip. Both gates must pass when both are enabled.
+
+Select screen and keyboard artwork independently in the same dialog. Model artwork preserves the supplied design; Black and the standard material/screen catalog are also available.
+
+The machine emits no physical or channel redstone power. These appearances do not perform propulsion, dimensional travel, radar detection or navigation calculations.
+
+## Facing and removal
+
+The frame works along either horizontal axis, with its Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click away from the chip holder to dismantle and recover the Matter frame. Mining a reserved part dismantles the machine and removes that cell; breaking the Core restores the remaining Matter Blocks.
+
+A retained chip stays in the Core during manual dismantling and is available after reassembly. Breaking the Core releases the chip once.
 
 [All multiblock guides](../README.md) · [Machine display settings](../../machine-displays.md) · [Data Chip Mounts](../../data-mounts.md)
