@@ -209,7 +209,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void setSurfaceTextureLayout(int mode){checkLayout(mode);if(getSurfaceTextureLayout()==mode)return;surfaceTileSides=mode==1;surfaceTextureLayout=mode;layoutChanged();}
     public void setGlassTextureLayout(int mode){checkLayout(mode);if(getGlassTextureLayout()==mode)return;glassStretch=mode!=1;glassTextureLayout=mode;layoutChanged();}
     private static void checkLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid texture layout");}
-    private static int layoutValue(net.minecraft.nbt.NBTTagCompound tag,String key){int value=tag.getInteger(key);return tag.hasKey(key,3) && com.vandorlabs.render.TextureLayoutMode.valid(value)?value:-1;}
+    private static int layoutValue(net.minecraft.nbt.NBTTagCompound tag,String key){return com.vandorlabs.persistence.WallAppearance.savedLayout(new NbtPrimitiveData(tag),key);}
     private void layoutChanged(){settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     private boolean surfaceTileSides=true;
     public boolean isSurfaceTileSides(){return surfaceTileSides;}
@@ -217,16 +217,17 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean diagonalFullWidth;
     private boolean diagonalHalfHeight;
     private int diagonalFill;
-    private int glassShade = 2;
-    private int glassTint = 1;
-    private int glassMaterial=-1;
-    private boolean glassStretch,glassTextureJoin=true;
+    private static final com.vandorlabs.persistence.WallAppearance DEFAULT_WALL_APPEARANCE=com.vandorlabs.persistence.WallAppearance.fresh(false);
+    private int glassShade = DEFAULT_WALL_APPEARANCE.shade;
+    private int glassTint = DEFAULT_WALL_APPEARANCE.tint;
+    private int glassMaterial=DEFAULT_WALL_APPEARANCE.material;
+    private boolean glassStretch=DEFAULT_WALL_APPEARANCE.stretch,glassTextureJoin=DEFAULT_WALL_APPEARANCE.textureJoin;
     public boolean isGlassStretch(){return glassStretch;}
     public boolean isGlassTextureJoin(){return glassTextureJoin;}
     public void setGlassLayout(boolean stretch,boolean join){if(glassStretch==stretch && glassTextureJoin==join)return;glassTextureLayout=-1;glassStretch=stretch;glassTextureJoin=join;settingsChanged();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public int getGlassMaterial(){return glassMaterial;}
     public void setGlassMaterial(int value){if(GlassMaterials.valid(value) && glassMaterial!=value){glassMaterial=value;settingsChanged();}}
-    private boolean glassFramed=true;
+    private boolean glassFramed=DEFAULT_WALL_APPEARANCE.framed;
     private boolean joinPortholes;
     private int portholeShape;
     private static long portholeRevision;
@@ -236,7 +237,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public boolean isJoinPortholes() { return joinPortholes; }
     public int getPortholeShape() { return portholeShape; }
     public void setPortholeShape(int shape) {
-        if (shape < 0 || shape > 3 || shape == portholeShape) return;
+        if (!com.vandorlabs.persistence.WallAppearance.validShape(shape) || shape == portholeShape) return;
         portholeShape = shape;
         portholeRevision++;
         settingsChanged();
@@ -252,6 +253,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 world.getBlockState(pos), 3);
     }
 
+    public com.vandorlabs.persistence.WallAppearance wallAppearance(){return new com.vandorlabs.persistence.WallAppearance(glassShade,glassTint,glassMaterial,glassFramed,glassStretch,glassTextureJoin,joinPortholes,portholeShape,glassTextureLayout);}
     public int getGlassTint() { return glassTint; }
     public boolean isGlassFramed() { return glassFramed; }
     public void setGlassAppearance(int tint,boolean framed) {
@@ -538,19 +540,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
                 smallInput, redstoneChannel, channelSignal, housingTexture)
                 .write(new NbtPrimitiveData(compound));
-        compound.setInteger("GlassShade", glassShade);
-        compound.setInteger("GlassTint",glassTint);
-        compound.setInteger("GlassMaterial",glassMaterial);
-        compound.setBoolean("GlassStretch",glassStretch);compound.setBoolean("GlassTextureJoin",glassTextureJoin);
-        compound.setBoolean("GlassFramed",glassFramed);
-        compound.setBoolean("JoinPortholes", joinPortholes);
-        compound.setInteger("PortholeShape", portholeShape);
+        wallAppearance().write(new NbtPrimitiveData(compound));
         compound.setBoolean("FaceTexturesEnabled", faceTextures.enabled);
         compound.setIntArray("FaceTextures", faceTextures.choices());
         compound.setInteger("SideTexture",sideTexture);
         fluids.write(compound);
         compound.setBoolean("SlabTileSides", slabTileSides);
-        compound.setInteger("MainTextureLayout",getMainTextureLayout());compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());compound.setInteger("GlassTextureLayout",getGlassTextureLayout());
+        compound.setInteger("MainTextureLayout",getMainTextureLayout());compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
         compound.setBoolean("DiagonalHalfHeight", diagonalHalfHeight);
@@ -617,15 +613,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 data.housingTexture,compound.hasKey("HousingTextureVersion", 3));
         housingTexture = ScreenHousingTextures.clamp(savedHousing);
         sideTexture=com.vandorlabs.persistence.HousingSideTexture.read(new com.vandorlabs.persistence.NbtPrimitiveData(compound),ScreenHousingTextures::clamp);
-        glassShade = compound.hasKey("GlassShade", 3)
-                ? GlassTextures.clamp(compound.getInteger("GlassShade")) : 2;
-        glassTint=compound.hasKey("GlassTint",3)?GlassTextures.clampTint(compound.getInteger("GlassTint")):1;
-        glassMaterial=compound.hasKey("GlassMaterial",3)?GlassMaterials.clamp(compound.getInteger("GlassMaterial")):-1;
-        glassStretch=compound.getBoolean("GlassStretch");glassTextureJoin=!compound.hasKey("GlassTextureJoin") || compound.getBoolean("GlassTextureJoin");
-        glassFramed=!compound.hasKey("GlassFramed")||compound.getBoolean("GlassFramed");
-        joinPortholes = compound.getBoolean("JoinPortholes");
-        portholeShape = compound.hasKey("PortholeShape",3)
-                ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
+        com.vandorlabs.persistence.WallAppearance appearance=com.vandorlabs.persistence.WallAppearance.read(new NbtPrimitiveData(compound),GlassMaterials::clamp);
+        glassShade=appearance.shade;glassTint=appearance.tint;glassMaterial=appearance.material;glassStretch=appearance.stretch;glassTextureJoin=appearance.textureJoin;glassFramed=appearance.framed;joinPortholes=appearance.join;portholeShape=appearance.shape;
         faceTextures = new FaceTextures(compound.getBoolean("FaceTexturesEnabled"),
                 compound.getIntArray("FaceTextures"));
         if (compound.hasKey("SlabTileSides", 1))

@@ -105,6 +105,7 @@ final class FlatPanelJoinRuntimeChecks {
                     require(bar!=null && bar.frontArm==6,"aligned opposing branches did not form T bar");
                     require(PanelJoins.flatBoxes(state,world,root).size()==3,"ownership changed physical T boxes");
                     net.minecraft.tileentity.TileEntity tile=world.getTileEntity(root);
+                    if(center==1)((TileEntityProgrammableGlass)tile).setShade(1); // Clear intentionally ignores tint; use a tint-sensitive pane.
                     FlatPanelBarRenderer.Material[] materials={FlatPanelBarRenderer.material(tile,state),FlatPanelBarRenderer.barMaterial(tile,state,bar.frontArm)};
                     for(int i=0;i<2;i++) {
                         FlatPanelBarRenderer.Material material=materials[i];

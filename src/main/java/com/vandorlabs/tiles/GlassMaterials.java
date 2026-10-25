@@ -5,9 +5,9 @@ public final class GlassMaterials {
     private static final java.util.concurrent.atomic.AtomicLong REVISION=new java.util.concurrent.atomic.AtomicLong();
     public static void changed(){REVISION.incrementAndGet();}
     public static long revision(){return REVISION.get();}
-    public static boolean valid(int material){return material==-1 || ScreenHousingTextures.validChoice(material);}
-    public static int clamp(int material){return valid(material)?material:-1;}
-    public static float opacity(int material,int tint){return material<0?1F:tint==0?.35F:tint==1?.65F:1F;}
+    public static boolean valid(int material){return com.vandorlabs.persistence.WallAppearance.validMaterial(material,ScreenHousingTextures::validChoice);}
+    public static int clamp(int material){return com.vandorlabs.persistence.WallAppearance.clampMaterial(material,ScreenHousingTextures::validChoice);}
+    public static float opacity(int material,int tint){return com.vandorlabs.persistence.WallAppearance.opacity(material,tint);}
     public static String texture(int material,int shade,int size,int tint){return material<0?GlassTextures.texture(shade,size,tint):ScreenHousingTextures.texture(material);}
     private GlassMaterials(){}
 }

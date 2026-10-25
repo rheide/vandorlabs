@@ -42,10 +42,16 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                 || block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK || slab;
     }
     private com.vandorlabs.ui.SlabStairDialog.State slabState(){return new com.vandorlabs.ui.SlabStairDialog.State(tile.getHousingTexture(),tile.getSideTexture(),textureLayout,tile.getFaceTextures().enabled,tile.getFaceTextures().choices(),faceTarget,new com.vandorlabs.persistence.StairState(tile.stairTread(),tile.stairRoll()));}
+    private com.vandorlabs.ui.WallDialog.Profile flatWallProfile(){
+        if(!(tile.getBlockType() instanceof BlockProgrammableWall)||((BlockProgrammableWall)tile.getBlockType()).isDiagonalShape())return null;
+        return tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammablePortholeBlock?com.vandorlabs.ui.WallDialog.Profile.FULL_PORTHOLE:porthole?com.vandorlabs.ui.WallDialog.Profile.PORTHOLE:com.vandorlabs.ui.WallDialog.Profile.PLAIN;
+    }
+    private com.vandorlabs.ui.WallDialog.State wallState(){com.vandorlabs.persistence.WallAppearance a=tile.wallAppearance();return new com.vandorlabs.ui.WallDialog.State(tile.getHousingTexture(),tile.getSideTexture(),textureLayout,faceTarget,new com.vandorlabs.persistence.WallAppearance(shade,a.tint,a.material,a.framed,a.stretch,a.textureJoin,join,shape,a.layout));}
     private boolean sharedBlockDialog(){return supportsFaces() && !slab;}
     private com.vandorlabs.ui.ProgrammableBlockDialog.State sharedBlockState(){return new com.vandorlabs.ui.ProgrammableBlockDialog.State(tile.getHousingTexture(),textureLayout,tile.getFaceTextures().enabled,tile.getFaceTextures().choices(),faceTarget);}
     private boolean glassSurface(){return diagonalGlass || porthole && faceTarget==-3;}
     private int selectedTexture() {
+        if(flatWallProfile()!=null)return wallState().selected(tile.getGlassShade());
         if(faceTarget==-3)return tile.getGlassMaterial()<0?HousingTextureList.CANOPY_GLASS_BASE+tile.getGlassShade():tile.getGlassMaterial();
         return faceTarget == -2 ? (tile.getSideTexture()>=0?tile.getSideTexture():porthole?26:tile.getHousingTexture())
                 : faceTarget < 0 ? tile.getHousingTexture()
@@ -101,10 +107,11 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         buttonList.clear();
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH, controlsX=layout.controlsX;
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
-        listX=guiLeft+12; listY=slab?com.vandorlabs.ui.SlabStairDialog.listY(layout):guiTop+(faceTabs || porthole?54:30);
-        rows=slab?com.vandorlabs.ui.SlabStairDialog.rows(layout):Math.max(2,(ySize-(faceTabs || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
+        listX=guiLeft+12; listY=flatWallProfile()!=null?com.vandorlabs.ui.WallDialog.listY(layout,flatWallProfile()):slab?com.vandorlabs.ui.SlabStairDialog.listY(layout):guiTop+(faceTabs || porthole?54:30);
+        rows=flatWallProfile()!=null?com.vandorlabs.ui.WallDialog.rows(layout,flatWallProfile()):slab?com.vandorlabs.ui.SlabStairDialog.rows(layout):Math.max(2,(ySize-(faceTabs || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
         textureList=glassSurface()?HousingTextureList.forCanopy(listX,listY,controlsX-listX-19,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(rows).keepView(textureList)
                 :new HousingTextureList(listX,listY,controlsX-listX-19,selected).visibleRows(rows).custom(this::choose);
+        if(flatWallProfile()!=null){for(com.vandorlabs.ui.WallDialog.Control c:com.vandorlabs.ui.WallDialog.controls(layout,flatWallProfile(),wallState(),I18n.format("gui.done"))){com.vandorlabs.ui.ProgrammableDialogLayout.Button b=c.bounds;GuiButton button=new GuiButton(b.id,b.x,b.y,b.width,b.height,b.label);button.enabled=c.enabled;buttonList.add(button);}return;}
         if(slab){
             for(com.vandorlabs.ui.SlabStairDialog.Control control:com.vandorlabs.ui.SlabStairDialog.controls(layout,slabState(),tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableStairs,I18n.format("gui.done"))){
                 com.vandorlabs.ui.ProgrammableDialogLayout.Button b=control.bounds;GuiButton button;
@@ -210,6 +217,12 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     void choose(int choice) {
         selected = choice;
+        if(flatWallProfile()!=null){
+            com.vandorlabs.ui.WallDialog.State state=wallState().choose(choice);
+            if(state.choiceEffect()==com.vandorlabs.ui.WallDialog.Effect.APPEARANCE){if(textureList!=null&&textureList.selected()!=choice)textureList.setSelected(choice);shade=state.appearance.shade;tile.setGlassShade(shade);tile.setGlassMaterial(state.appearance.material);sendPortholeSettings();initGui();return;}
+            if(state.choiceEffect()==com.vandorlabs.ui.WallDialog.Effect.SIDE){tile.setSideTexture(state.side);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),state.side));initGui();return;}
+            tile.setHousingTexture(state.main);PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(tile.getPos(),tile.getSelectedScreen(),tile.isRedstoneEnabled(),tile.getDisplayMode(),tile.isFramed(),tile.getAnimationSpeedIndex(),tile.getInputPanel(),tile.getSecondaryInputPanel(),tile.isSmallInput(),tile.getRedstoneChannel(),state.main).withChannels(tile.getRedstoneChannels()));return;
+        }
         if(slab){
             com.vandorlabs.ui.SlabStairDialog.State state=slabState().choose(choice);
             if(faceTarget==-2){tile.setSideTexture(state.side);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),state.side));initGui();return;}
@@ -247,6 +260,20 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(flatWallProfile()!=null&&com.vandorlabs.ui.WallDialog.handles(flatWallProfile(),wallState(),button.id)){
+            com.vandorlabs.ui.WallDialog.State state=wallState().action(button.id,GuiOptionCycle.direction());com.vandorlabs.ui.WallDialog.Effect effect=com.vandorlabs.ui.WallDialog.effect(button.id);
+            if(effect==com.vandorlabs.ui.WallDialog.Effect.CLOSE){mc.player.closeScreen();return;}
+            if(effect==com.vandorlabs.ui.WallDialog.Effect.LAYOUT){textureLayout=state.layout;tile.setMainTextureLayout(textureLayout);button.displayString=com.vandorlabs.ui.WallDialog.layoutLabel(textureLayout);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSlabSides(tile.getPos(),textureLayout));return;}
+            if(effect==com.vandorlabs.ui.WallDialog.Effect.SIDE){tile.setSideTexture(state.side);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),state.side));}
+            if(effect==com.vandorlabs.ui.WallDialog.Effect.APPEARANCE){
+                if(button.id==102){join=state.appearance.join;tile.setJoinPortholes(join);button.displayString=com.vandorlabs.ui.WallDialog.joinLabel(join);}
+                if(button.id==104){shape=state.appearance.shape;tile.setPortholeShape(shape);button.displayString=com.vandorlabs.ui.WallDialog.shapeLabel(shape);}
+                if(button.id==113||button.id==114)tile.setGlassAppearance(state.appearance.tint,state.appearance.framed);
+                if(button.id==115||button.id==116){tile.setGlassLayout(state.appearance.stretch,state.appearance.textureJoin);tile.setGlassTextureLayout(state.appearance.textureLayout());}
+                sendPortholeSettings();
+            }
+            if(com.vandorlabs.ui.WallDialog.rebuild(button.id)){faceTarget=state.target;selected=selectedTexture();if(com.vandorlabs.ui.WallDialog.resetView(button.id))textureList=null;initGui();}return;
+        }
         if(slab){
             if(button.id==com.vandorlabs.ui.SlabStairDialog.TREAD)return;
             com.vandorlabs.ui.SlabStairDialog.State state=slabState().action(button.id,GuiOptionCycle.direction());
