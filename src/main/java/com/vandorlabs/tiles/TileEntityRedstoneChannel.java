@@ -212,8 +212,8 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         int oldRotation = mountRotation;
         int oldSize=getPowerLeverSize();
         super.readFromNBT(tag);
-        int height=tag.getInteger("BaseHeight"),tilt=com.vandorlabs.blocks.SignalControlMount.readTilt(tag),direction=tag.getInteger("TiltDirection");
-        if(com.vandorlabs.blocks.SignalControlMount.valid(height,tilt,direction)){baseHeight=height;baseTilt=tilt;tiltDirection=direction;}
+        com.vandorlabs.persistence.ControlSettings.Mount mount=com.vandorlabs.persistence.ControlSettings.Mount.read(new NbtPrimitiveData(tag),new com.vandorlabs.persistence.ControlSettings.Mount(baseHeight,baseTilt,tiltDirection));
+        baseHeight=mount.height;baseTilt=mount.tilt;tiltDirection=mount.direction;
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
         RedstoneData.Source data=RedstoneData.Source.read(new NbtPrimitiveData(tag));
         channel=data.channel;
@@ -223,7 +223,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         levels.clear();int[] savedLevels=tag.getIntArray("LatchedLevels");for(int i=0;i<Math.min(savedLevels.length,channels.size());i++)levels.put(channels.get(i),Math.max(0,Math.min(15,savedLevels[i])));
         initialized=data.initialized;
         mountRotation=data.mountRotation;
-        powerLeverSize=tag.hasKey("PowerLeverSize",3)?Math.max(0,Math.min(1,tag.getInteger("PowerLeverSize"))):-1;
+        powerLeverSize=com.vandorlabs.persistence.ControlSettings.readSize(new NbtPrimitiveData(tag));
         if(world!=null && world.isRemote && oldSize!=getPowerLeverSize())world.markBlockRangeForRenderUpdate(pos,pos);
         if (world!=null && world.isRemote && oldRotation!=mountRotation)
             world.markBlockRangeForRenderUpdate(pos,pos);
