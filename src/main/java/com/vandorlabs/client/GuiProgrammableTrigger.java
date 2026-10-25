@@ -46,23 +46,17 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         onList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,on).visibleRows(layout.rows(true)).custom(value->{on=value;send();});
         lowList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,low).visibleRows(layout.rows(true)).custom(value->{low=value;send();});
         mediumList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,medium).visibleRows(layout.rows(true)).custom(value->{medium=value;send();});
-        String[] names={"Off","Low 1-5","Mid 6-10","High 11-15"};for(int i=0;i<4;i++)buttonList.add(layout.tab(90+i,i,4,names[i]));
-        buttonList.add(layout.control(101,76,statesLabel()));buttonList.add(layout.control(102,100,exactLabel()));
+        for(com.vandorlabs.ui.TriggerDialog.Control control:com.vandorlabs.ui.TriggerDialog.controls(layout,new com.vandorlabs.ui.TriggerDialog.State(textureTab,states,exact))){com.vandorlabs.ui.ProgrammableDialogLayout.Button b=control.bounds;buttonList.add(new GuiButton(b.id,b.x,b.y,b.width,b.height,b.label));}
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+42,154,18);
         ChannelFields.configure(channelField);
-        channelField.setText(tile.getRedstoneChannels().toString());buttonList.add(layout.done(100));refreshTabs();
+        channelField.setText(tile.getRedstoneChannels().toString());refreshTabs();
     }
     private void refreshTabs(){
-        String[] names={"Off","Low 1-5","Mid 6-10","High 11-15"};
-        for(GuiButton b:buttonList)if(b.id>=90 && b.id<=93){
-            int index=b.id-90;b.visible=states || index==0 || index==3;b.enabled=index!=textureTab;
-            GuiButton position=layout.tab(b.id,states?index:index==0?0:1,states?4:2,states?names[index]:index==0?"Redstone Off":"Redstone On");
-            b.x=position.x;b.width=position.width;b.displayString=position.displayString;
-        }
+        for(com.vandorlabs.ui.TriggerDialog.Control control:com.vandorlabs.ui.TriggerDialog.controls(layout,new com.vandorlabs.ui.TriggerDialog.State(textureTab,states,exact)))for(GuiButton button:buttonList)if(button.id==control.bounds.id){com.vandorlabs.ui.ProgrammableDialogLayout.Button bounds=control.bounds;button.x=bounds.x;button.y=bounds.y;button.width=bounds.width;button.height=bounds.height;button.visible=control.visible;button.enabled=control.enabled;button.displayString=bounds.id>=90&&bounds.id<=93?fontRenderer.trimStringToWidth(bounds.label,bounds.width-4):bounds.label;}
     }
 
-    private String statesLabel(){return states?"Artwork: Signal bands":"Artwork: Off / On";}
-    private String exactLabel(){return exact<0?"Trigger: Any signal":"Trigger: Exactly "+exact;}
+    private String statesLabel(){return com.vandorlabs.ui.TriggerDialog.bandsLabel(states);}
+    private String exactLabel(){return com.vandorlabs.ui.TriggerDialog.exactLabel(exact);}
     private int channel() {return ChannelFields.first(channelField);}
 
     private void send() {
@@ -102,9 +96,9 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if(button.id>=90 && button.id<=93){textureTab=button.id-90;refreshTabs();return;}
-        if(button.id==101){states=!states;if(!states && (textureTab==1 || textureTab==2))textureTab=3;refreshTabs();button.displayString=statesLabel();send();}
-        if(button.id==102){exact=GuiOptionCycle.next(exact,-1,15);button.displayString=exactLabel();send();}
+        if(button.id>=90 && button.id<=93){textureTab=new com.vandorlabs.ui.TriggerDialog.State(textureTab,states,exact).action(button.id,GuiOptionCycle.direction()).tab;refreshTabs();return;}
+        if(button.id==101){com.vandorlabs.ui.TriggerDialog.State next=new com.vandorlabs.ui.TriggerDialog.State(textureTab,states,exact).action(101,GuiOptionCycle.direction());states=next.bands;textureTab=next.tab;refreshTabs();button.displayString=statesLabel();send();}
+        if(button.id==102){exact=new com.vandorlabs.ui.TriggerDialog.State(textureTab,states,exact).action(102,GuiOptionCycle.direction()).exact;button.displayString=exactLabel();send();}
         if (button.id == 100 && channel()>=0) { send(); mc.player.closeScreen(); }
     }
 

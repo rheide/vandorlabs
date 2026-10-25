@@ -1612,6 +1612,7 @@ public class ReproLab {
                     World w=mc.getIntegratedServer().getWorld(0);
                     w.setBlockState(rampOptionPos,block("programmable_ramp").getDefaultState(),3);
                     EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+                    owner.capabilities.allowFlying=true;owner.capabilities.isFlying=true;owner.sendPlayerAbilities();
                     owner.setPositionAndUpdate(rampOptionPos.getX(),rampOptionPos.getY(),rampOptionPos.getZ()-2);
                     owner.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_RAMP_CONTROLLER,
                             w,rampOptionPos.getX(),rampOptionPos.getY(),rampOptionPos.getZ());
