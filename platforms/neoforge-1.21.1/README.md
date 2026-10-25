@@ -1,6 +1,6 @@
 # NeoForge 1.21.1 adapter
 
-This target is under conversion. Forge 1.12.2 remains the default and the behavioral reference. The NeoForge target includes programmable cube finishes and joined face layouts, viewscreen/console/input variants, wireless redstone endpoints, mounted buttons/rockers and the programmable trigger. Registration and compilation do not establish complete feature parity; see the repository's [multiversion architecture](../../docs/development/multiversion.md) and [feature inventory](../../docs/development/feature-coverage.md) for the remaining families and validation requirements.
+This target is under conversion. Forge 1.12.2 remains the default and the behavioral reference. The NeoForge target includes programmable cube finishes and joined face layouts, viewscreen/console/input variants, wireless redstone endpoints, all eleven mounted control IDs, the Industrial Table, and programmable slabs/stairs with contained fluids. Registration and compilation do not establish complete feature parity; see the repository's [multiversion architecture](../../docs/development/multiversion.md) and [feature inventory](../../docs/development/feature-coverage.md) for the remaining families and validation requirements.
 
 ## Build
 

@@ -49,6 +49,15 @@
   loaded boundaries when neighbouring chunks arrive or leave. Preserve the
   reference wall/floor support, inversion, plain item and tool requirements.
 
+- Add native Programmable Slabs and Stairs with shared exact geometry, material
+  dialogs, configured items and slab merging. Preserve dormant settings and
+  retained fluid data through placement, drops and restarts. Refresh connected
+  stair meshes and free volumes when neighbouring chunks arrive or leave.
+- Add native contained-water/lava gameplay and rendering over shared partial-cell
+  volumes, including bucket exchange, placement capture, eye/fog/light handling
+  and loaded neighbour invalidation. Keep unresolved fluid compounds occupied and
+  unchanged; third-party fluid and shader acceptance remains outstanding.
+
 ## 2.5
 
 - Share navigation-table activation with Core-based multiblocks: consume physical redstone or input channels, optionally require a matching Data Chip, and never emit physical or channel power from Cores or reserved cells.

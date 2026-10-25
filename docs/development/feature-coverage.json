@@ -36,7 +36,8 @@
       "remaining": [
         "custom block material definitions and sampling",
         "complete creative/search catalog configuration",
-        "carried-assembly joined faces and shader render acceptance"
+        "carried-assembly joined faces and shader render acceptance",
+        "complete configured cube and trigger inventory preview UV/layout and unversioned-material parity"
       ],
       "implemented": [
         "canonical stable housing indices and legacy saved defaults",
@@ -56,17 +57,20 @@
       "id": "slabs_stairs",
       "label": "Slabs and stairs",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "unimplemented",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_slab",
         "programmable_stairs"
       ],
-      "modern_registered_block_ids": [],
+      "modern_registered_block_ids": [
+        "programmable_slab",
+        "programmable_stairs"
+      ],
       "remaining": [
-        "native collision/models",
-        "shared settings and per-face material rendering",
-        "configured items and placement",
-        "live parity"
+        "custom block material definitions and sampling",
+        "external-material reload acceptance across shape and item variants",
+        "carried-assembly integration",
+        "installed third-party fluid and shader render acceptance"
       ]
     },
     {
