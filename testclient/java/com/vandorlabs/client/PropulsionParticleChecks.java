@@ -29,8 +29,13 @@ final class PropulsionParticleChecks {
                     TileEntityRedstoneLight restored=new TileEntityRedstoneLight();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));require(restored.getParticleLevel()==level,"particle level lost in NBT");
                 }
                 BlockPos target=pos.east(3);world.setBlockState(target,state,2);
-                com.vandorlabs.items.ProgrammableSettings.apply(world,target,com.vandorlabs.items.ProgrammableSettings.capture(world,pos));
+                tile.setRedstoneChannels(com.vandorlabs.redstone.ChannelList.of(37,401));
+                tile.setSideTexture(ScreenHousingTextures.INDUSTRIAL_BLOCK);
+                tile.setRedstoneInverted(true);tile.configureSignalBrightness(true,7);
+                NBTTagCompound sampled=com.vandorlabs.items.ProgrammableSettings.capture(world,pos);
+                require(com.vandorlabs.items.ProgrammableSettings.apply(world,target,sampled),"same-shape Duplifier settings copy rejected");
                 require(((TileEntityRedstoneLight)world.getTileEntity(target)).getParticleLevel()==3,"Duplifier lost Heavy");
+                require(sampled.equals(com.vandorlabs.items.ProgrammableSettings.capture(world,target)),"Duplifier lost sampled shape/channels/material/signal/manual/join settings");
                 world.setBlockState(pos,state.withProperty(BlockPropulsionLight.POWERED,false),2);capture.reset();tile.update();require(capture.count==0,"unpowered fixture emitted particles");
             }
             assemblies(capture);

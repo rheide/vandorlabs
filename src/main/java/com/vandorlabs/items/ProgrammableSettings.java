@@ -440,7 +440,9 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight) {
             BlockPropulsionLight fixture = (BlockPropulsionLight) block;
             if (world != null && values.hasKey(PROPULSION_SHAPE, 3) && !fixture.familyId().isEmpty()) {
-                if(!BlockPropulsionLight.configureShape(world,pos,values.getInteger(PROPULSION_SHAPE),player))return false;
+                // An unchanged shape is a settings copy, not a world-geometry transaction.
+                if(values.getInteger(PROPULSION_SHAPE)!=fixture.shape()
+                        && !BlockPropulsionLight.configureShape(world,pos,values.getInteger(PROPULSION_SHAPE),player))return false;
                 tile = world.getTileEntity(pos);
                 block = world.getBlockState(pos).getBlock();
                 applicable = true;
