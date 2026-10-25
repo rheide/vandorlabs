@@ -556,15 +556,26 @@
       "id": "furniture",
       "label": "Industrial table",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "unimplemented",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "industrial_table"
       ],
-      "modern_registered_block_ids": [],
+      "modern_registered_block_ids": [
+        "industrial_table"
+      ],
       "remaining": [
-        "native geometry and interactions",
-        "configured items and persistence",
-        "live parity"
+        "native carried-assembly integration when moving assemblies are introduced"
+      ],
+      "implemented": [
+        "shared exact authored collision plates, eight-strip struts and loaded matching policy with actual Forge delegation",
+        "all 32 native facing/inversion/end-module states, full-cell selection and tabletop-only support",
+        "immutable render-region model selection and bounded palette-filtered chunk availability invalidation without block entities",
+        "native iron properties, stone harvest boundary, plain loot/items, placement, rotation and saved-state roundtrips",
+        "32 rendered world poses with empty-scene negatives, 32 plain item icons and eight actual forget/chunk-with-light transitions",
+        "actual Forge and NeoForge baked positions/materials/authored UVs and collision-union comparison for all 32 states"
+      ],
+      "parity_notes": [
+        "Canonical hanging end models reflect the horizontal strut placement; legacy collision reflects only vertical coordinates. Both existing contracts are retained and compared separately."
       ]
     },
     {

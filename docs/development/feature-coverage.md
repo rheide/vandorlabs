@@ -27,7 +27,7 @@ The [machine-readable inventory](feature-coverage.json) includes all 57 active g
 | Cockpits and peripherals | unimplemented | native assembly/reservations and seating; six/three-row shared controls; square-pixel surface hit mapping; pause-aware motion and live parity |
 | Modular landing gear and wheels | unimplemented | native parts and collision/placement; shared gear policy and carried animation; all item models with padding; live parity |
 | Turntables | unimplemented | native controller/surface/entity; transactional assembly/snapshot recovery; geometry/channel behavior; live parity |
-| Industrial table | unimplemented | native geometry and interactions; configured items and persistence; live parity |
+| Industrial table | partial | placed table geometry, items and loaded chunk-boundary rendering accepted across all 32 states; carried-assembly integration remains |
 | Configuration/copy tools and basic materials | partial | full Configurizer dispatch to every family; Duplifier connected copy/application; matter production/core crafting chain; all target-specific resources and live parity |
 | Programmable armor | unimplemented | native equipment/components/models; shared material configuration; slot synchronization and all armor variants; live parity |
 | Filesystem and custom material workflows | partial | custom block sample definitions and native sampling/rendering; external materials across remaining block families; full resource-pack and shader acceptance |
@@ -48,3 +48,5 @@ All eleven legacy control IDs have native registrations, including the hidden co
 Every family needs the same shared behavior on both targets, native persistence and permissions, a subsequent-process save/reload, native client/server round trips, and inspected geometry/dialog/animation output. Broad moving-assembly families additionally require transactional failure recovery, original-snapshot retention, loaded-chunk bounds and dedicated-server checks. External integrations need native equivalents or explicit unsupported status.
 
 Run the root [build orchestrator](../../tools/build_all.py) for both independent Gradle builds and dual-JDK shared contracts. Preserve the existing Forge `verifyRelease` gate against the exact standard artifact. NeoForge startup, runtime, visual and full-family coverage checks remain distinct from compilation. The target is not release-ready while any required family remains partial or unimplemented.
+
+Industrial Table parity retains the canonical hanging end models and the legacy collision proxy separately: the authored end model reflects horizontal strut placement when hanging, while the collision proxy reflects only vertical coordinates. The native adapter matches both existing contracts.

@@ -14,8 +14,8 @@ from build_all import ROOT, java_home
 
 PLATFORM=ROOT/'platforms/neoforge-1.21.1'
 MARKERS={
-    'write':['expanded-controls-write PASS','trigger-write PASS','joined-cube-write PASS','controls-write PASS','basic-housing-server PASS','screen-families-server PASS','filesystem-write PASS','wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
-    'read':['expanded-controls-read PASS','trigger-read PASS','joined-cube-read PASS','controls-read PASS','basic-housing-read PASS','screen-families-read PASS','filesystem-read PASS','wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
+    'write':['table-write PASS','expanded-controls-write PASS','trigger-write PASS','joined-cube-write PASS','controls-write PASS','basic-housing-server PASS','screen-families-server PASS','filesystem-write PASS','wireless-write PASS','redstone-overlay-write PASS','screen-server PASS','server-write PASS'],
+    'read':['table-read PASS','expanded-controls-read PASS','trigger-read PASS','joined-cube-read PASS','controls-read PASS','basic-housing-read PASS','screen-families-read PASS','filesystem-read PASS','wireless-read PASS','redstone-overlay-read PASS','screen-read PASS','server-read PASS'],
     'client':['expanded-controls-icons PASS','expanded-controls-models PASS','extended-controls-client PASS','trigger-client PASS','joined-cube-client PASS','controls-client PASS','screen-filesystem-client PASS','screen-families-client PASS','filesystem-client PASS','block-client PASS','screen-client PASS','redstone-client PASS','wireless-client PASS','wireless-glyph-captures PASS','client-smoke PASS'],
 }
 CLIENT_IMAGES=['modern-filesystem-world.png','modern-filesystem-picker-portrait.png','modern-filesystem-picker-missing.png','modern-filesystem-picker-wide.png','modern-world.png','modern-programmable-block.png','modern-programmable-block-gui2.png',

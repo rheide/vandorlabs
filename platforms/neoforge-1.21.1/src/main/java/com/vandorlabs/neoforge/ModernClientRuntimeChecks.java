@@ -47,6 +47,9 @@ public final class ModernClientRuntimeChecks {
         if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen onboarding) { onboarding.onClose();return; }
         if(mc.player==null||mc.level==null||mc.gameMode==null)return;
         ticks++;
+        if(System.getProperty("vandorlabs.modernClientSuite","").equals("table")){
+            if(com.vandorlabs.neoforge.table.TableClientChecks.tick(mc,ticks)){System.out.println("[vandorlabs][modern] client-smoke PASS isolated Industrial Table suite");mc.stop();}return;
+        }
         require(ticks<6000,"smoke timed out at stage "+stage);
         BlockPos pos=new BlockPos(0,80,0);
         if(stage==0&&System.getProperty("vandorlabs.modernClientSuite","").equals("extended-controls")){if(ticks<60)return;stage=47;extendedControlTick=0;return;}

@@ -47,13 +47,12 @@ public final class BlockIndustrialTable extends BlockVandor {
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side,
             float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
         return getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite())
-                .withProperty(UPSIDE_DOWN, side == EnumFacing.DOWN);
+                .withProperty(UPSIDE_DOWN, com.vandorlabs.render.IndustrialTableGeometry.invertedPlacement(side.getIndex()));
     }
     private boolean connects(IBlockAccess world, BlockPos pos, EnumFacing front, boolean upsideDown) {
         if (world instanceof World && !((World) world).isBlockLoaded(pos)) return false;
         IBlockState neighbor = world.getBlockState(pos);
-        return neighbor.getBlock() == this && neighbor.getValue(FACING) == front
-                && neighbor.getValue(UPSIDE_DOWN) == upsideDown;
+        return com.vandorlabs.render.IndustrialTableGeometry.matches(true,neighbor.getBlock()==this,front.getIndex(),upsideDown,neighbor.getBlock()==this?neighbor.getValue(FACING).getIndex():-1,neighbor.getBlock()==this&&neighbor.getValue(UPSIDE_DOWN));
     }
     @Override public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
         EnumFacing front = state.getValue(FACING);
@@ -95,38 +94,12 @@ public final class BlockIndustrialTable extends BlockVandor {
         return side == (state.getValue(UPSIDE_DOWN) ? EnumFacing.DOWN : EnumFacing.UP);
     }
 
-    private AxisAlignedBB turn(AxisAlignedBB box, EnumFacing facing) {
-        int turns = facing == EnumFacing.EAST ? 1 : facing == EnumFacing.SOUTH ? 2 : facing == EnumFacing.WEST ? 3 : 0;
-        for (int i = 0; i < turns; ++i) {
-            box = new AxisAlignedBB(1 - box.maxZ, box.minY, box.minX,
-                    1 - box.minZ, box.maxY, box.maxX);
-        }
-        return box;
-    }
-    private void addBox(BlockPos pos, AxisAlignedBB query, List<AxisAlignedBB> out, EnumFacing facing,
-            boolean upsideDown, double x0, double y0, double z0, double x1, double y1, double z1) {
-        if (upsideDown) { double oldY0=y0; y0=16-y1; y1=16-oldY0; }
-        addCollisionBoxToList(pos, query, out, turn(new AxisAlignedBB(x0/16, y0/16, z0/16, x1/16, y1/16, z1/16), facing));
-    }
-    private void addStrut(BlockPos pos, AxisAlignedBB query, List<AxisAlignedBB> out, EnumFacing facing,
-            boolean upsideDown, double x0) {
-        // Eight small AABBs approximate a diagonal prism for collision only.
-        // Visual geometry is one straight rotated cuboid per side.
-        double start = 9 - 8 / Math.sqrt(2), end = 9 + 8 / Math.sqrt(2);
-        for (int i = 0; i < 8; ++i) {
-            double y0 = start + (end-start)*i/8, y1 = start + (end-start)*(i+1)/8;
-            addBox(pos, query, out, facing, upsideDown, x0, y0 - 0.707107, 17-y1-0.707107,
-                    x0+2, y1+0.707107, 17-y0+0.707107);
-        }
-    }
     @Override public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos,
             AxisAlignedBB query, List<AxisAlignedBB> boxes, Entity entity, boolean actualState) {
         IBlockState connected = getActualState(state, world, pos);
         EnumFacing facing = connected.getValue(FACING);
         boolean upsideDown = connected.getValue(UPSIDE_DOWN);
-        addBox(pos, query, boxes, facing, upsideDown, 0,14,0,16,16,16);
-        addBox(pos, query, boxes, facing, upsideDown, 0,0,14,16,14,16);
-        if (!connected.getValue(LEFT)) addStrut(pos, query, boxes, facing, upsideDown, 0.5);
-        if (!connected.getValue(RIGHT)) addStrut(pos, query, boxes, facing, upsideDown, 13.5);
+        for(com.vandorlabs.render.IndustrialTableGeometry.Box box:com.vandorlabs.render.IndustrialTableGeometry.collision(facing.getIndex(),upsideDown,connected.getValue(LEFT),connected.getValue(RIGHT)))
+            addCollisionBoxToList(pos,query,boxes,new AxisAlignedBB(box.x0,box.y0,box.z0,box.x1,box.y1,box.z1));
     }
 }

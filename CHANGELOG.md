@@ -44,6 +44,11 @@
   type/size changes and padded icons. Bound shape caching and avoid repeated
   voxel-union optimization for complex tilted controls.
 
+- Add the native Industrial Table with canonical models and shared exact collision
+  geometry. Rebuild connected end modules from captured chunk data and refresh
+  loaded boundaries when neighbouring chunks arrive or leave. Preserve the
+  reference wall/floor support, inversion, plain item and tool requirements.
+
 ## 2.5
 
 - Share navigation-table activation with Core-based multiblocks: consume physical redstone or input channels, optionally require a matching Data Chip, and never emit physical or channel power from Cores or reserved cells.
