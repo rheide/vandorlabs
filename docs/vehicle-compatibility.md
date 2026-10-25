@@ -40,6 +40,8 @@ Top slabs have an empty lower half. Vehicle discovery does not connect a top sla
 
 ## Copying and carried ramps
 
+Cockpit reservations save their controller relative to their own position. Structure editors can copy a complete cockpit by relocating the normal tile coordinates without linking the copied controls to the original. Older copies with absolute references resolve only to a nearby cockpit whose authored footprint contains that part; an unrelated distant cockpit cannot own it. Copy the complete footprint, including the seat movement reservation when extended.
+
 Ramp controllers and generated ramp cells save a journal origin. When a clipboard tool changes only the tile's `x`, `y`, `z`, loading translates the private source, controller, source-tile and occupied-cell journals by the same displacement. Internal vehicle translation and rotation update this origin too. This repairs new copies without altering the original ramp. Existing malformed copies made before the journal origin was saved may still require replacing or reconfiguring the copied controller; guessing its original source positions could damage unrelated blocks.
 
 Landing gear performs one deferred footprint check after loading. It recreates missing invisible reserved cells only in air and leaves occupied cells intact. Copy the entire assembly where possible, especially rotated large gear and its covers.

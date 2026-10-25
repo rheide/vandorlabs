@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Keep copied cockpits independent of their originals. Save relative reservation links and validate each part against the owning cockpit footprint, including local recovery for older clipboard copies.
+
 - Use Door Interior (Dark) as the default housing for new programmable screens, inputs and consoles; preserve saved finishes. Replace the twelve ceiling panels with their authored 64×64 vanilla-style artwork.
 
 - Rename the stationary vehicle setting to Park Mode in cockpit dialogs, Autopilot dialogs and Vehicle Status screens. Saved vehicle modes remain compatible.

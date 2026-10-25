@@ -20,6 +20,7 @@ final class CockpitRuntimeChecks {
     private static final BlockPos ROOT=new BlockPos(360,103,120);
     static void run(WorldServer world,EntityPlayerMP player)throws Exception{
         for(String id:CockpitData.IDS){Block block=Block.getBlockFromName("vandorlabs:"+id);NonNullList<ItemStack> catalog=NonNullList.create();block.getSubBlocks(com.vandorlabs.VandorLabs.VANDOR_LABS_TAB,catalog);require(block.getCreativeTabToDisplayOn()==com.vandorlabs.VandorLabs.VANDOR_LABS_TAB&&catalog.stream().anyMatch(s->s.getItem()==net.minecraft.item.Item.getItemFromBlock(block)),"creative cockpit entry "+id);}
+        CockpitCopyRuntimeChecks.run(world,player);
         Vec3d before=player.getPositionVector();int surfaces=0;
         try{
             player.setPositionAndUpdate(ROOT.getX()+.5,ROOT.getY()+1,ROOT.getZ()+3);

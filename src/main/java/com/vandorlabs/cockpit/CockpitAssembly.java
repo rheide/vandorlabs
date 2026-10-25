@@ -15,8 +15,31 @@ public final class CockpitAssembly {
     public static TileEntityCockpit root(IBlockAccess world,BlockPos pos){
         TileEntity t=world.getTileEntity(pos);
         if(t instanceof TileEntityCockpit)return (TileEntityCockpit)t;
-        if(t instanceof TileEntityCockpitPart){BlockPos owner=((TileEntityCockpitPart)t).anchor;if(world instanceof World && !((World)world).isBlockLoaded(owner))return null;TileEntity r=world.getTileEntity(owner);return r instanceof TileEntityCockpit?(TileEntityCockpit)r:null;}
+        if(t instanceof TileEntityCockpitPart){
+            BlockPos owner=((TileEntityCockpitPart)t).anchor;
+            TileEntityCockpit direct=ownerAt(world,owner,pos);
+            if(direct!=null)return direct;
+            // Older structure copies retain an absolute Anchor. Resolve only a local
+            // authored footprint, never the distant original's controller.
+            TileEntityCockpit found=null;
+            for(BlockPos candidate:BlockPos.getAllInBox(pos.add(-4,-3,-4),pos.add(4,0,4))){
+                TileEntityCockpit local=ownerAt(world,candidate,pos);
+                if(local!=null){if(found!=null&&found!=local)return null;found=local;}
+            }
+            return found;
+        }
         if(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockCanopy && ((com.vandorlabs.blocks.BlockCanopy)world.getBlockState(pos).getBlock()).supportsSeatBackrest())return below(world,pos);
+        return null;
+    }
+    private static TileEntityCockpit ownerAt(IBlockAccess world,BlockPos owner,BlockPos member){
+        if(world instanceof World&&!((World)world).isBlockLoaded(owner))return null;
+        TileEntity tile=world.getTileEntity(owner);
+        if(!(tile instanceof TileEntityCockpit))return null;
+        TileEntityCockpit root=(TileEntityCockpit)tile;
+        if(root.data().cells(owner,root.facing()).contains(member))return root;
+        if(root.design().equals("cockpit")&&root.getWorld()!=null
+                &&(root.seatSlide.target()||root.seatSlide.moving(root.getWorld().getTotalWorldTime()))
+                &&CockpitReservations.rear(root,root.facing()).contains(member))return root;
         return null;
     }
     /** Shared cells route to the visible surface before resolving any canopy owner. */
