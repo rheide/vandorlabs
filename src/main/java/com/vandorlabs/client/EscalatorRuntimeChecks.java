@@ -167,7 +167,7 @@ final class EscalatorRuntimeChecks {
                 player.setPosition(root.getX(),root.getY()+4,root.getZ());tile.refreshEscalatorActivity();
                 require(tile.isEscalatorRunning(),"near-player wake failed");
                 NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());double phase=tile.beltDistance(0);
-                tile.readFromNBT(saved);tile.resumeAfterLoad();tile.refreshEscalatorActivity();
+                ControllerRuntimeChecks.restoreState(tile,saved);tile.resumeAfterLoad();tile.refreshEscalatorActivity();
                 require(tile.escalator==mode && Math.abs(tile.beltDistance(0)-phase)<1e-7,"saved phase/mode changed");
                 require(tile.recover(false),"restoration failed");
                 for(int row=1;row<=4;row++)for(int width=0;width<2;width++)

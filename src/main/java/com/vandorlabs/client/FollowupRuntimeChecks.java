@@ -74,7 +74,8 @@ final class FollowupRuntimeChecks {
                     Block controller=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_ramp"));
                     world.setBlockState(p.north(),controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.SOUTH),3);
                     TileEntityRampController ramp=(TileEntityRampController)world.getTileEntity(p.north());
-                    require(ramp.request(true),"IE slab deploy: "+block.getRegistryName()+" type "+type);
+                    ramp.setOwner(player);
+                    require(ramp.request(true),"IE slab deploy: "+block.getRegistryName()+" type "+type+" status="+ramp.status);
                     require(ramp.recover(true),"IE ramp restore");
                     require(world.getTileEntity(p).writeToNBT(new NBTTagCompound()).getInteger("slabType")==type,"IE slab deployment changed half");
                     world.setBlockToAir(p.north());
@@ -216,11 +217,12 @@ final class FollowupRuntimeChecks {
             Block controller=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_ramp"));
             world.setBlockState(p.north(),controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.SOUTH),3);
             TileEntityRampController ramp=(TileEntityRampController)world.getTileEntity(p.north());
+            ramp.setOwner(player);
             require(ramp.matchTextures,"ramp texture matching default");
-            require(ramp.request(true)&&ramp.area()==1,"matching ramp included different finish");
+            require(ramp.request(true)&&ramp.area()==1,"matching ramp included different finish: "+ramp.status);
             require(ramp.recover(true),"matching ramp recovery");
             ramp.matchTextures=false;
-            require(ramp.request(true)&&ramp.area()==2,"optional matching did not include both finishes");
+            require(ramp.request(true)&&ramp.area()==2,"optional matching did not include both finishes: "+ramp.status);
             require(ramp.recover(true),"mixed finish ramp recovery");
             require(((TileEntityAnimatedScreenSelector)world.getTileEntity(p.east())).getHousingTexture()==4,
                     "mixed ramp lost a source finish");

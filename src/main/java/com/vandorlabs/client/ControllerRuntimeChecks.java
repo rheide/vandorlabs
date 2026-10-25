@@ -34,9 +34,9 @@ public final class ControllerRuntimeChecks {
     private static BlockRampController block() {
         return (BlockRampController)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_ramp"));
     }
-    private static TileEntityRampController place(World world,BlockPos p,EnumFacing face) {
+    private static TileEntityRampController place(World world,EntityPlayerMP player,BlockPos p,EnumFacing face) {
         world.setBlockState(p,block().getDefaultState().withProperty(BlockVandorDirectional.FACING,face),3);
-        return (TileEntityRampController)world.getTileEntity(p);
+        TileEntityRampController tile=(TileEntityRampController)world.getTileEntity(p);tile.setOwner(player);return tile;
     }
     /** Advance the actual persisted timeline without changing global world time. */
     public static void elapsed(TileEntityRampController controller,int elapsed) {
@@ -44,9 +44,7 @@ public final class ControllerRuntimeChecks {
         NBTTagCompound tag=controller.writeToNBT(new NBTTagCompound());
         tag.setLong("StartTick",world.getTotalWorldTime()-elapsed);
         tag.setLong("LastStepTick",world.getTotalWorldTime()-1);
-        // This is a synthetic clock edit, not a portable NBT paste. Retain its actual configured actor.
-        net.minecraft.entity.player.EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actorId(controller)==null?null:com.vandorlabs.tiles.WorldActionAuthorization.actor(controller);
-        controller.readFromNBT(tag);if(authorizer!=null)controller.setOwner(authorizer);
+        restoreState(controller,tag);
         // Retiming must cover the actual reservation journal. Rotating, sideways
         // and extended ramps also reserve cells outside their source columns.
         NBTTagList cells=tag.getTagList("Cells",10);
@@ -58,6 +56,11 @@ public final class ControllerRuntimeChecks {
                         tag.getDouble("StartPose"),tag.getLong("StartTick"),controller.durationTicks(),controller.isMoving());
         }
         controller.scheduledTick();
+    }
+    /** Synthetic fixture state edits retain only an already trusted live actor, never an incoming owner UUID. */
+    public static void restoreState(TileEntityRampController controller,NBTTagCompound tag){
+        net.minecraft.entity.player.EntityPlayerMP actor=com.vandorlabs.tiles.WorldActionAuthorization.actorId(controller)==null?null:com.vandorlabs.tiles.WorldActionAuthorization.actor(controller);
+        controller.readFromNBT(tag);if(actor!=null)controller.setOwner(actor);
     }
     /** Model the external chunk proof and unload/load boundary alongside the tile's saved NBT. */
     public static void reload(TileEntityRampController controller){
@@ -99,7 +102,7 @@ public final class ControllerRuntimeChecks {
         for (EnumFacing facing:EnumFacing.HORIZONTALS) for (boolean top:new boolean[]{true,false})
         for (boolean elevator:new boolean[]{false,true}) for (int kind=0;kind<3;kind++) {
             clear(world,pos);
-            TileEntityRampController controller=place(world,pos,facing);
+            TileEntityRampController controller=place(world,player,pos,facing);
             IBlockState material=kind==2?Blocks.PLANKS.getStateFromMeta(2):Blocks.STONE_SLAB.getStateFromMeta(kind==1?8:0);
             List<BlockPos> sources=platform(world,pos,facing,material);
             BlockPos seed=pos.offset(facing),power=pos.offset(facing.getOpposite());
@@ -159,7 +162,7 @@ public final class ControllerRuntimeChecks {
             cleanOriginals(world,sources,material,2);
         }
         clear(world,pos);
-        TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+        TileEntityRampController controller=place(world,player,pos,EnumFacing.SOUTH);
         List<BlockPos> sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         controller.setOwner(player);
         require(controller.request(true),"direct event adapter deployment");
@@ -168,18 +171,18 @@ public final class ControllerRuntimeChecks {
         require(world.getBlockState(pos.south().down()).getBlock()==Blocks.DIAMOND_BLOCK,"recovery never overwrites foreign blocks");
         cleanOriginals(world,sources,Blocks.STONE_SLAB.getDefaultState(),3);
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         FaultController fault=new FaultController();
-        world.setTileEntity(pos,fault);
-        require(!fault.request(true) && fault.error,"injected partial-install failure reported");
+        world.setTileEntity(pos,fault);fault.setOwner(player);
+        require(!fault.request(true) && fault.error&&fault.writes==fault.failAt,"injected partial-install failure reached exact mutation: writes="+fault.writes+" status="+fault.status);
         require(!fault.attached(),"failed install journal fully released");
         cleanOriginals(world,sources,Blocks.STONE_SLAB.getDefaultState(),3);
         clear(world,pos);
         // An interrupted save can leave loaded cells without their controller.
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
-        require(controller.request(true),"orphan fixture deploys");
+        require(controller.request(true),"orphan fixture deploys: "+controller.status);
         List<TileEntityControlledRamp> orphans=new ArrayList<>();
         for (BlockPos source:sources) for (int d=0;d<=3;d++)
             orphans.add((TileEntityControlledRamp)world.getTileEntity(source.down(d)));
@@ -188,14 +191,14 @@ public final class ControllerRuntimeChecks {
         for (TileEntityControlledRamp orphan:orphans) if (orphan!=null) orphan.recoverOnEvent();
         cleanOriginals(world,sources,Blocks.STONE_SLAB.getDefaultState(),3);
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         world.setBlockState(pos.south(),Blocks.FURNACE.getDefaultState(),3);
         require(!controller.request(true),"tile entities excluded");
         require(!controller.configure(player,17,2,true,true,false,false),"travel above sixteen rejected");
 
         // Real passenger motion in both directions, including collision at every intermediate tick.
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         world.setBlockState(pos.south(),Blocks.STONE_SLAB.getDefaultState(),3);
         require(controller.configure(player,2,2,false,true,false,true),"elevator config");
         EntityArmorStand rider=new EntityArmorStand(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+1.5);
@@ -319,7 +322,7 @@ public final class ControllerRuntimeChecks {
         require(controller.configure(player,1,8,true,true,true,false),"edit retries reset immediately after source cleared");
         require(!controller.attached() && controller.drop==1,"successful edit restores source without Apply");
         clear(world,pos);
-        place(world,pos,EnumFacing.SOUTH);
+        place(world,player,pos,EnumFacing.SOUTH);
         world.setBlockState(pos.south(),Blocks.STONE_SLAB.getDefaultState(),3);
         FaultController dynamicFault=new FaultController(2);
         world.setTileEntity(pos,dynamicFault);
@@ -328,14 +331,14 @@ public final class ControllerRuntimeChecks {
         for (int tick=0;tick<dynamicFault.durationTicks()+1 && dynamicFault.isMoving();tick++) {
             world.setTotalWorldTime(world.getTotalWorldTime()+1); dynamicFault.scheduledTick();
         }
-        require(dynamicFault.error && dynamicFault.attached(),"mid-animation install failure retains source journal");
+        require(dynamicFault.error && dynamicFault.attached()&&dynamicFault.writes==dynamicFault.failAt,"mid-animation injected mutation failure retains source journal: writes="+dynamicFault.writes+" status="+dynamicFault.status);
         require(world.isAirBlock(pos.south().up()),"failed newly installed cell rolled back");
         require(dynamicFault.recover(false),"dynamic install fault remains recoverable");
         cleanOriginals(world,java.util.Collections.singletonList(pos.south()),Blocks.STONE_SLAB.getDefaultState(),3);
         // The scan arrow and the slope direction are independent for every compass pairing.
         for (EnumFacing scan:EnumFacing.HORIZONTALS) for (EnumFacing slope:EnumFacing.HORIZONTALS) {
             clear(world,pos);
-            controller=place(world,pos,scan);
+            controller=place(world,player,pos,scan);
             sources=platform(world,pos,scan,Blocks.STONE_SLAB.getDefaultState());
             require(controller.configure(player,2,8,true,true,false,false,slope),"independent slope direction saves");
             require(world.getBlockState(pos).getValue(BlockVandorDirectional.FACING)==scan,"direction edit never rotates selection arrow");
@@ -357,7 +360,7 @@ public final class ControllerRuntimeChecks {
             cleanOriginals(world,sources,Blocks.STONE_SLAB.getDefaultState(),2);
         }
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         List<BlockPos> large=new ArrayList<>();
         for (int x=0;x<10;x++) for (int z=1;z<=18;z++) {
             BlockPos p=pos.add(x,0,z); world.setBlockState(p,Blocks.STONE_SLAB.getDefaultState(),3); large.add(p);
@@ -385,7 +388,7 @@ public final class ControllerRuntimeChecks {
         }
         for (boolean lift:new boolean[]{false,true}) {
             clear(world,pos);
-            controller=place(world,pos,EnumFacing.SOUTH);
+            controller=place(world,player,pos,EnumFacing.SOUTH);
             List<BlockPos> signedSources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
             EntityArmorStand signedRider=null;
             if (lift) {
@@ -420,7 +423,7 @@ public final class ControllerRuntimeChecks {
         }
         for (int pixels=1;pixels<=16;pixels*=2) {
             clear(world,pos);
-            controller=place(world,pos,EnumFacing.SOUTH);
+            controller=place(world,player,pos,EnumFacing.SOUTH);
             List<BlockPos> pixelSources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
             require(controller.configureTreads(player,2,-3,pixels,true,false,false,EnumFacing.SOUTH),"pixel tread config");
             require(!controller.configureTreads(player,2,-3,3,true,false,false,EnumFacing.SOUTH)
@@ -435,7 +438,7 @@ public final class ControllerRuntimeChecks {
             require(controller.recover(false),"pixel tread restoration");
             cleanOriginals(world,pixelSources,Blocks.STONE_SLAB.getDefaultState(),3);
         }
-        clear(world,pos); controller=place(world,pos,EnumFacing.SOUTH);
+        clear(world,pos); controller=place(world,player,pos,EnumFacing.SOUTH);
         world.setBlockState(pos.south(),Blocks.STONE_SLAB.getDefaultState(),3);
         require(controller.configureTreads(player,0,-3,16,true,false,false,EnumFacing.SOUTH),"single full-block tread config");
         require(controller.request(true),"single full-block tread deployment"); finish(controller);
@@ -444,7 +447,7 @@ public final class ControllerRuntimeChecks {
         for (int travel:new int[]{com.vandorlabs.ramp.RampGeometry.LEFT,com.vandorlabs.ramp.RampGeometry.RIGHT})
         for (boolean extend:new boolean[]{false,true}) {
             clear(world,pos);
-            controller=place(world,pos,EnumFacing.SOUTH);
+            controller=place(world,player,pos,EnumFacing.SOUTH);
             BlockPos source=pos.south();
             world.setBlockState(source,Blocks.STONE_SLAB.getDefaultState(),3);
             require(controller.configureTreads(player,0,2,16,true,false,true,EnumFacing.SOUTH,travel,extend),
@@ -473,7 +476,7 @@ public final class ControllerRuntimeChecks {
                 require(world.isAirBlock(source.offset(side,distance)),"side recovery clears reservations");
         }
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         require(controller.configureTreads(player,0,2,8,true,false,false,EnumFacing.SOUTH,
                 com.vandorlabs.ramp.RampGeometry.LEFT,true),"filled ramp config accepted");
@@ -496,7 +499,7 @@ public final class ControllerRuntimeChecks {
         }
         require(controller.recover(false),"whole platform extension recovers");
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         require(controller.configureTreads(player,0,-3,8,false,false,false,EnumFacing.SOUTH,
                 com.vandorlabs.ramp.RampGeometry.VERTICAL,true),"vertical filled ramp config accepted");
@@ -521,7 +524,7 @@ public final class ControllerRuntimeChecks {
         // Changing modes through the GUI while powered resets a deployed ramp and
         // immediately captures the same source platform for the new mode.
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         BlockPos powered=pos.north();
         world.setBlockState(powered,Blocks.REDSTONE_BLOCK.getDefaultState(),3);
@@ -547,7 +550,7 @@ public final class ControllerRuntimeChecks {
         require(controller.recover(false),"powered extend recovers");
         world.setBlockToAir(powered);
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         require(controller.configureTreads(player,0,-3,2,false,false,false,EnumFacing.SOUTH),
                 "unpowered ramp config: "+controller.status);
@@ -559,7 +562,7 @@ public final class ControllerRuntimeChecks {
         require(controller.isOpen() && !controller.error,"unpowered extend finishes");
         require(controller.recover(false),"unpowered extend recovers");
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         require(controller.configureTreads(player,0,2,8,true,false,true,EnumFacing.SOUTH,
                 com.vandorlabs.ramp.RampGeometry.RIGHT,false,0),"fast mode config accepted");
@@ -590,7 +593,7 @@ public final class ControllerRuntimeChecks {
         for (int travel:new int[]{com.vandorlabs.ramp.RampGeometry.VERTICAL,
                 com.vandorlabs.ramp.RampGeometry.RIGHT}) for (int end:new int[]{-2,2}) {
             clear(world,pos);
-            controller=place(world,pos,EnumFacing.SOUTH);
+            controller=place(world,player,pos,EnumFacing.SOUTH);
             sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
             require(controller.configureTreads(player,0,end,8,true,false,lift,EnumFacing.SOUTH,
                     travel,fill),"mode/axis/sign matrix config");
@@ -628,7 +631,7 @@ public final class ControllerRuntimeChecks {
                         net.minecraft.block.BlockSlab.EnumBlockHalf.TOP)};
         for (int i=0;i<materials.length;i++) {
             clear(world,pos);
-            TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+            TileEntityRampController controller=place(world,player,pos,EnumFacing.SOUTH);
             BlockPos source=pos.south();
             world.setBlockState(source,materials[i],3);
             com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile=
@@ -642,8 +645,8 @@ public final class ControllerRuntimeChecks {
             require(cell!=null && cell.sourceTileTags.containsKey(source),
                     "programmable source tile journal missing");
             NBTTagCompound saved=controller.writeToNBT(new NBTTagCompound());
-            controller.readFromNBT(saved);
-            require(controller.recover(true),"programmable source recovery");
+            restoreState(controller,saved);
+            require(controller.recover(true),"programmable source recovery: "+controller.status);
             require(world.getBlockState(source).equals(materials[i]),
                     "programmable source blockstate restored");
             com.vandorlabs.tiles.TileEntityAnimatedScreenSelector restored=
@@ -653,16 +656,16 @@ public final class ControllerRuntimeChecks {
                     "programmable source finish and slab side setting restored");
         }
         clear(world,pos);
-        TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+        TileEntityRampController controller=place(world,player,pos,EnumFacing.SOUTH);
         world.setBlockState(pos.south(),ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK.getDefaultState(),3);
         require(!controller.request(true),"trigger block must not be a ramp source");
         clear(world,pos);
-        controller=place(world,pos,EnumFacing.SOUTH);
+        controller=place(world,player,pos,EnumFacing.SOUTH);
         world.setBlockState(pos.south(),ModBlocks.PROGRAMMABLE_WALL.getDefaultState(),3);
         require(!controller.request(true),"wall block must not be a ramp source");
     }
     private static void checkCreativePick(World world, EntityPlayerMP player, BlockPos pos) {
-        TileEntityRampController source = place(world, pos, EnumFacing.NORTH);
+        TileEntityRampController source = place(world,player, pos, EnumFacing.NORTH);
         require(source.configureTreads(player, 0, -2, 8, true, false, false,
                         EnumFacing.WEST, 0, true, 1),
                 "ramp pick fixture could not save its settings");
@@ -692,7 +695,7 @@ public final class ControllerRuntimeChecks {
 
     private static void checkHalfOffsets(World world,EntityPlayerMP player,BlockPos pos) {
         clear(world,pos);
-        TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+        TileEntityRampController controller=place(world,player,pos,EnumFacing.SOUTH);
         platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
         require(controller.configureHalfOffsets(player,3,-5,8,true,false,true,
                 EnumFacing.SOUTH,0,false,1,true),"half-block endpoints configure");
@@ -727,7 +730,7 @@ public final class ControllerRuntimeChecks {
         player.connection.setPlayerLocation(pos.getX()-2.5,pos.getY()+1,pos.getZ()+.5,
                 player.rotationYaw,player.rotationPitch);
         try {
-            TileEntityRampController controller=place(world,pos,EnumFacing.SOUTH);
+            TileEntityRampController controller=place(world,player,pos,EnumFacing.SOUTH);
             List<BlockPos> sources=platform(world,pos,EnumFacing.SOUTH,Blocks.STONE_SLAB.getDefaultState());
             require(controller.configureHalfOffsets(player,-32,32,8,true,false,true,
                     EnumFacing.SOUTH,0,false,2,true),"sixteen-block endpoints configure");
@@ -792,7 +795,7 @@ public final class ControllerRuntimeChecks {
         for (int variant=0;variant<4;variant++) {
             BlockPos root=FIXTURE.add(variant*8,0,0);
             player.setPosition(root.getX(),root.getY()+1,root.getZ());
-            TileEntityRampController controller=place(world,root,EnumFacing.SOUTH);
+            TileEntityRampController controller=place(world,player,root,EnumFacing.SOUTH);
             for (int x=0;x<3;x++) for (int z=1;z<=4;z++) {
                 BlockPos p=root.add(x,0,z);
                 for (int y=-3;y<=3;y++) world.setBlockToAir(p.up(y));
@@ -809,7 +812,7 @@ public final class ControllerRuntimeChecks {
         double px=player.posX,py=player.posY,pz=player.posZ;
         player.setPosition(root.getX()+.5,root.getY()+1,root.getZ()+.5);
         clear(world,root);
-        TileEntityRampController controller=place(world,root,EnumFacing.SOUTH);
+        TileEntityRampController controller=place(world,player,root,EnumFacing.SOUTH);
         for (int row=1;row<=4;row++) for (int width=-1;width<=1;width++)
             world.setBlockState(root.south(row).west(width),
                     Blocks.STONE_SLAB.getDefaultState(),3);
@@ -832,7 +835,7 @@ public final class ControllerRuntimeChecks {
             for (BlockPos floor:BlockPos.getAllInBox(root.add(-5,-1,-5),
                     root.add(5,-1,5)))
                 world.setBlockState(floor,Blocks.STONEBRICK.getDefaultState(),2);
-            TileEntityRampController controller=place(world,root,EnumFacing.SOUTH);
+            TileEntityRampController controller=place(world,player,root,EnumFacing.SOUTH);
             for (int row=1;row<=4;row++) for (int width=-1;width<=1;width++)
                 world.setBlockState(root.south(row).west(width),
                         Blocks.STONE_SLAB.getDefaultState(),3);

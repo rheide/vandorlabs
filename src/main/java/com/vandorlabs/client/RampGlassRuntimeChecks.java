@@ -54,7 +54,7 @@ final class RampGlassRuntimeChecks {
                         require(copy.source.equals(material)&&sameGeometry(copy,part),"generated save preserves glass state and geometry");cells++;
                     }
                     require(cells>0,"generated glass cells exist");
-                    ramp.readFromNBT(ramp.writeToNBT(new NBTTagCompound()));
+                    ControllerRuntimeChecks.restoreState(ramp,ramp.writeToNBT(new NBTTagCompound()));
                     require(ramp.recover(false),"saved controller recovery");
                     for(int row=1;row<=2;row++)require(world.getBlockState(mode==2?root.south().up(row-1):root.south(row)).equals(material),"recovery restores exact color/material "+material);
                     for(BlockPos p:BlockPos.getAllInBox(root.add(-3,-3,-3),root.add(3,6,6)))require(world.getBlockState(p).getBlock()!=ModBlocks.CONTROLLED_RAMP,"recovery clears reservations");

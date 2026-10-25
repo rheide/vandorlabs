@@ -691,12 +691,14 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     @Override public void onLoad() {
         lifecycleDetached=false;super.onLoad();
         if (!world.isRemote && !vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld)) {
-            DeferredTileLoad.schedule(this, () -> RedstoneChannels.register(this));
-            if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
             needsLoadCheck=true;
-            if(waitingForCanopy){RampCanopyCoordination.waitingRamp(this,canopyBlockers);canopyRetry=true;}
-            RampCanopyCoordination.changed(world,pos);
-            schedule();
+            DeferredTileLoad.schedule(this, () -> {
+                RedstoneChannels.register(this);
+                if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
+                if(waitingForCanopy){RampCanopyCoordination.waitingRamp(this,canopyBlockers);canopyRetry=true;}
+                RampCanopyCoordination.changed(world,pos);
+                schedule();
+            });
         }
     }
     @Override public void invalidate() { WorldActionAuthorization.revoke(this); lifecycleDetached=true;com.vandorlabs.ramp.ControllerRecovery.controllerChanged(world,pos);RampCanopyCoordination.clearRampWait(this);RampCanopyCoordination.changed(world,pos); RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }

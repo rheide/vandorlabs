@@ -13,6 +13,7 @@ import java.util.Map;
 /** Runs tile load callbacks after Chunk.onLoad finishes iterating its tile map. */
 public final class DeferredTileLoad {
     private static final Map<World, Map<TileEntity, Runnable>> PENDING = new IdentityHashMap<>();
+    private static final Map<World, Map<TileEntity, Runnable>> PRIORITY = new IdentityHashMap<>();
 
     private DeferredTileLoad() { }
 
@@ -23,10 +24,19 @@ public final class DeferredTileLoad {
     }
 
     public static void schedule(TileEntity tile, Runnable action) {
+        enqueue(PENDING, tile, action);
+    }
+
+    /** Bind trusted load metadata globally before any tile can publish gameplay callbacks. */
+    public static void schedulePriority(TileEntity tile, Runnable action) {
+        enqueue(PRIORITY, tile, action);
+    }
+
+    private static void enqueue(Map<World, Map<TileEntity, Runnable>> queue, TileEntity tile, Runnable action) {
         World world = tile.getWorld();
         if (world == null || world.isRemote) return;
         synchronized (PENDING) {
-            Map<TileEntity, Runnable> actions = PENDING.computeIfAbsent(world,
+            Map<TileEntity, Runnable> actions = queue.computeIfAbsent(world,
                     unused -> new IdentityHashMap<>());
             Runnable previous = actions.get(tile);
             actions.put(tile, previous == null ? action : () -> {
@@ -44,6 +54,7 @@ public final class DeferredTileLoad {
     /** Same settlement boundary used by load lifecycle runtime checks. */
     public static void flush(World world) {
         if (world.isRemote) return;
+        flushPriority(world);
         Map<TileEntity, Runnable> ready;
         synchronized (PENDING) { ready = PENDING.remove(world); }
         if (ready == null) return;
@@ -57,9 +68,22 @@ public final class DeferredTileLoad {
         }
     }
 
+    private static void flushPriority(World world) {
+        Map<TileEntity, Runnable> ready;
+        synchronized (PENDING) { ready = PRIORITY.remove(world); }
+        if (ready == null) return;
+        for (Map.Entry<TileEntity, Runnable> entry : ready.entrySet()) {
+            TileEntity tile = entry.getKey();
+            if (!tile.isInvalid() && tile.getWorld() == world && tile.getPos() != null
+                    && world.isBlockLoaded(tile.getPos()) && world.getTileEntity(tile.getPos()) == tile)
+                entry.getValue().run();
+        }
+    }
+
     /** Transfer has installed every block; pending-aware identity is safe even inside a tile tick. */
     public static void flushInstalled(World world,Iterable<net.minecraft.util.math.BlockPos> positions){
         if(world.isRemote)return;
+        flushPriority(world);
         Map<TileEntity,Runnable> ready=new IdentityHashMap<>();
         synchronized(PENDING){
             Map<TileEntity,Runnable> actions=PENDING.get(world);if(actions==null)return;
@@ -75,6 +99,6 @@ public final class DeferredTileLoad {
     }
 
     @SubscribeEvent public void worldUnload(WorldEvent.Unload event) {
-        synchronized (PENDING) { PENDING.remove(event.getWorld()); }
+        synchronized (PENDING) { PENDING.remove(event.getWorld()); PRIORITY.remove(event.getWorld()); }
     }
 }

@@ -29,7 +29,7 @@ final class SharedCanopyRampRuntimeChecks {
         boolean high;public TileEntity channelTile(){return this;}public int getRedstoneChannel(){return 801;}public void setRedstoneChannel(int channel){}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean value){}
         void power(boolean value){high=value;RedstoneChannels.inputChanged(this);}
     }
-    private static void signal(TileEntityRampController ramp,TileEntityCanopy canopy,boolean high,int order,Source source){if(order==2){source.power(high);return;}if(order==0){ramp.setChannelSignal(high);canopy.setChannelSignal(high);}else{canopy.setChannelSignal(high);ramp.setChannelSignal(high);}}
+    private static void signal(TileEntityRampController ramp,TileEntityCanopy canopy,boolean high,int order,Source source){if(order==2){source.power(high);return;}source.high=high;if(order==0){ramp.setChannelSignal(high);canopy.setChannelSignal(high);}else{canopy.setChannelSignal(high);ramp.setChannelSignal(high);}RedstoneChannels.inputChanged(source);}
     static void run(World world,EntityPlayerMP actor){
         CanopyReservationRuntimeChecks.run(world,actor);
         Vec3d before=actor.getPositionVector();long time=world.getTotalWorldTime();
@@ -46,15 +46,17 @@ final class SharedCanopyRampRuntimeChecks {
             TileEntityRampController ramp=(TileEntityRampController)world.getTileEntity(RAMP);
             require(ramp.configureHalfOffsets(actor,0,0,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true),"configure exact two-high tower");ramp.setRedstoneChannels(ChannelList.of(801));
             actor.setPosition(RAMP.getX()-8,RAMP.getY()+8,RAMP.getZ()-6);CanopyPreparationRuntimeChecks.await(canopy);canopy.update();
+            loadOrder(world,actor,ramp,canopy,source,order);
             signal(ramp,canopy,true,order,source);signal(ramp,canopy,false,order,source);
             for(int tick=0;tick<32;tick++)advance(world,canopy,ramp,rampFirst);
             require(!ramp.attached()&&!ramp.isWaitingForCanopy()&&canopy.progress==0,"rapid on/off cancels pending deployment without consuming sources");
             signal(ramp,canopy,true,order,source);
             require(!ramp.attached()&&ramp.isWaitingForCanopy()&&world.getBlockState(RAMP.south()).getBlock()==Blocks.IRON_BLOCK,"opening request waits without consuming original tower");
             // A load between callbacks and the first clear pose must retain the requested edge.
+            System.out.println("[vandorlabs][reprolab] shared-canopy-load before order="+order+" actor="+WorldActionAuthorization.actorId(ramp)+" source="+source.high+" status="+ramp.status);
             ControllerRuntimeChecks.reload(ramp);
             for(int tick=0;tick<160&&!(canopy.progress==1&&ramp.isOpen()&&!ramp.isMoving()&&ramp.attached());tick++)advance(world,canopy,ramp,rampFirst);
-            require(canopy.progress==1&&ramp.isOpen()&&!ramp.isMoving()&&ramp.attached(),"both callback orders finish opening automatically: order="+rampFirst+" canopy="+canopy.progress+" ramp="+ramp.status);
+            require(canopy.progress==1&&ramp.isOpen()&&!ramp.isMoving()&&ramp.attached(),"both callback orders finish opening automatically: order="+rampFirst+" canopy="+canopy.progress+" ramp="+ramp.status+" actor="+WorldActionAuthorization.actorId(ramp)+" source="+source.high);
             require(world.getBlockState(SHARED).getBlock()!=block,"fully opened canopy releases empty helper cell");
             require(canopy.boxes().stream().noneMatch(box->box.intersects(new AxisAlignedBB(SHARED).shrink(.000001))),"released shared cell has no actual opened canopy shell");
             if(order==0)scanAndParking(world,actor,canopy);
@@ -81,6 +83,31 @@ final class SharedCanopyRampRuntimeChecks {
         }
         System.out.println("[vandorlabs][reprolab] shared-canopy-moat PASS exact-saved-cabin shared-channel real-bus-dispatch both-callback-orders rapid-cancellation release-empty-space wait-open retract-before-close source-NBT pending-reload foreign-obstacles safe-retry");
         }finally{RedstoneChannels.unregister(source);clear(world);world.setTotalWorldTime(time);actor.setPosition(before.x,before.y,before.z);}
+    }
+    /** Another tile can publish before this ramp's normal load entry, in either enqueue order. */
+    private static void loadOrder(World world,EntityPlayerMP actor,TileEntityRampController ramp,TileEntityCanopy canopy,Source source,int order){
+        DeferredTileLoad.flush(world);
+        NBTTagCompound saved=ramp.writeToNBT(new NBTTagCompound()),proof=new NBTTagCompound();
+        net.minecraft.world.chunk.Chunk chunk=world.getChunkFromBlockCoords(RAMP);
+        WorldActionAuthorization.saving(new net.minecraftforge.event.world.ChunkDataEvent.Save(chunk,proof));
+        ramp.onChunkUnload();ramp.readFromNBT(saved);RedstoneChannels.unregister(source);source.high=true;
+        Runnable publish=()->{
+            require(actor.getUniqueID().equals(WorldActionAuthorization.actorId(ramp)),"cross-tile channel source sees proven recipient before callback, order="+order);
+            RedstoneChannels.register(source);
+            require(ramp.isWaitingForCanopy(),"load-time real HIGH dispatch retains pending canopy command, order="+order+" status="+ramp.status);
+            source.power(false);
+        };
+        if(order==0)DeferredTileLoad.schedule(canopy,publish);
+        ramp.onLoad();
+        // Subscribe the actual recipient without delivering HIGH; the source remains unregistered.
+        RedstoneChannels.register(ramp);
+        DeferredTileLoad.schedule(ramp,()->require(actor.getUniqueID().equals(WorldActionAuthorization.actorId(ramp)),"same-tile gameplay follows proof binding"));
+        if(order!=0)DeferredTileLoad.schedule(canopy,publish);
+        WorldActionAuthorization.loaded(new net.minecraftforge.event.world.ChunkDataEvent.Load(chunk,proof));
+        if(order==2)DeferredTileLoad.flushInstalled(world,java.util.Collections.singleton(CANOPY));
+        DeferredTileLoad.flush(world);
+        for(int tick=0;tick<32;tick++)advance(world,canopy,ramp,order==0);
+        require(!ramp.attached()&&!ramp.isWaitingForCanopy()&&canopy.progress==0,"load-time source OFF settles exact original tower");
     }
     private static void scanAndParking(World world,EntityPlayerMP actor,TileEntityCanopy canopy){
         BlockPos seat=CANOPY.west(3);for(int dx=0;dx<3;dx++)for(int dz=0;dz<3;dz++)world.setBlockState(seat.add(dx,-1,dz),Blocks.STONE.getDefaultState(),3);

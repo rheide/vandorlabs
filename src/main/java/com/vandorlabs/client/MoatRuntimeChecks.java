@@ -45,14 +45,14 @@ final class MoatRuntimeChecks {
                 require(Math.abs(closed.maxY-(root.getY()+3))<1e-5,"three source levels retain their actual upright positions");
                 NBTTagCompound saved=ramp.writeToNBT(new NBTTagCompound());
                 require(saved.getInteger("MoatGeometryRevision")==2,"new settings select vertical tread-section revision");
-                ramp.readFromNBT(saved);require(ramp.moat&&!ramp.attached(),"inactive controller reload preserves editable source mode");
+                ControllerRuntimeChecks.restoreState(ramp,saved);require(ramp.moat&&!ramp.attached(),"inactive controller reload preserves editable source mode");
                 for(TileEntityControlledRamp part:parts(world,root)){
                     TileEntityControlledRamp copy=new TileEntityControlledRamp();copy.setWorld(world);copy.setPos(part.getPos());copy.readFromNBT(part.writeToNBT(new NBTTagCompound()));
                     require(copy.moat&&copy.verticalMoatSources&&copy.boxes(0).equals(part.boxes(0)),"saved generated cells retain vertical-source upright collision");
                     require(part.geometry(0)==part.geometry(.9),"settled upright geometry is cached");
                 }
                 ramp.setChannelSignal(true);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()/2);
-                require(ramp.isOpen()&&ramp.isMoving()&&ramp.pose(0)>.4&&ramp.pose(0)<.6,"channel edge rotates through midpoint");
+                require(ramp.isOpen()&&ramp.isMoving()&&ramp.pose(0)>.4&&ramp.pose(0)<.6,"channel edge rotates through midpoint: "+ramp.status);
                 bounds(world,root);
                 ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()*3/4);
                 for(TileEntityControlledRamp part:parts(world,root)){
@@ -122,7 +122,7 @@ final class MoatRuntimeChecks {
             // endpoint, so its journal/cells give the old save's native flat layout.
             require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,face,0,false,1,true,false,0,0,false),"legacy flat fixture configuration");
             require(ramp.request(true),"legacy flat fixture capture");ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
-            NBTTagCompound old=ramp.writeToNBT(new NBTTagCompound());old.setBoolean("MoatMode",true);old.removeTag("MoatVerticalSources");ramp.readFromNBT(old);
+            NBTTagCompound old=ramp.writeToNBT(new NBTTagCompound());old.setBoolean("MoatMode",true);old.removeTag("MoatVerticalSources");ControllerRuntimeChecks.restoreState(ramp,old);
             for(TileEntityControlledRamp part:parts(world,root)){
                 NBTTagCompound saved=part.writeToNBT(new NBTTagCompound());saved.setBoolean("MoatMode",true);saved.removeTag("MoatVerticalSources");part.readFromNBT(saved);
             }
@@ -131,7 +131,7 @@ final class MoatRuntimeChecks {
             require(ramp.attached()&&ramp.isMoving()&&ramp.pose(0)>0&&ramp.pose(0)<1,"legacy flat journal remains owned during closing motion");
             AxisAlignedBB closed=bounds(world,root);double fraction=ramp.pose(0),eased=fraction*fraction*(3-2*fraction),angle=(1-eased)*Math.PI/2;
             require(Math.abs(closed.minY-(root.getY()+1-Math.cos(angle)))<1e-5&&Math.abs(closed.maxY-(root.getY()+1+3*Math.sin(angle)))<1e-5,"legacy closing collision retains the exact saved near-top hinge and three-block flat source extent");
-            ramp.readFromNBT(ramp.writeToNBT(new NBTTagCompound()));
+            ControllerRuntimeChecks.restoreState(ramp,ramp.writeToNBT(new NBTTagCompound()));
             for(TileEntityControlledRamp part:parts(world,root)){
                 NBTTagCompound saved=part.writeToNBT(new NBTTagCompound());TileEntityControlledRamp loaded=new TileEntityControlledRamp();loaded.setWorld(world);loaded.setPos(part.getPos());loaded.readFromNBT(saved);
                 require(!loaded.verticalMoatSources&&loaded.boxes(0).equals(part.boxes(0)),"legacy cell reload keeps flat-source hinge/collision");
@@ -187,7 +187,7 @@ final class MoatRuntimeChecks {
                 require(contains(world,root,new Vec3d((middle.minX+middle.maxX)/2,(middle.minY+middle.maxY)/2,(middle.minZ+middle.maxZ)/2)),"actual mid-motion vertical section is collidable, tread="+pixels+" row="+row+" section="+index);
             }
             if(pixels==8){
-                NBTTagCompound prior=ramp.writeToNBT(new NBTTagCompound());prior.setInteger("MoatGeometryRevision",1);ramp.readFromNBT(prior);ramp.onLoad();ramp.scheduledTick();
+                NBTTagCompound prior=ramp.writeToNBT(new NBTTagCompound());prior.setInteger("MoatGeometryRevision",1);ControllerRuntimeChecks.restoreState(ramp,prior);ramp.onLoad();ramp.scheduledTick();
                 require(ramp.writeToNBT(new NBTTagCompound()).getInteger("MoatGeometryRevision")==2&&ramp.vehicleSources().size()==3,"previous active native-section save upgrades reservations in place without losing original journal");
                 for(TileEntityControlledRamp part:parts(world,root))require(part.moatGeometryRevision==2,"previous active save rebuilds every generated section revision");
             }
@@ -223,13 +223,13 @@ final class MoatRuntimeChecks {
     private static void rigidVerticalJournal(World world,EntityPlayerMP owner,BlockPos root){
         TileEntityRampController ramp=tower(world,owner,root);
         require(ramp.configureHalfOffsets(owner,0,0,8,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,true)&&ramp.request(true),"old rigid fixture captures tower");
-        NBTTagCompound old=ramp.writeToNBT(new NBTTagCompound());old.removeTag("MoatGeometryRevision");ramp.readFromNBT(old);
+        NBTTagCompound old=ramp.writeToNBT(new NBTTagCompound());old.removeTag("MoatGeometryRevision");ControllerRuntimeChecks.restoreState(ramp,old);
         for(TileEntityControlledRamp part:parts(world,root)){NBTTagCompound tag=part.writeToNBT(new NBTTagCompound());tag.removeTag("MoatGeometryRevision");part.readFromNBT(tag);}
         require(!ramp.usesNativeMoatGeometry()&&ramp.usesVerticalMoatSources(),"unversioned vertical save selects prior rigid format");
         ramp.setChannelSignal(true);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);AxisAlignedBB before=bounds(world,root);
         require(Math.abs(before.minY-root.getY()+1)<1e-6&&Math.abs(before.maxY-root.getY())<1e-6,"revision zero retains original downward-thickness deployed geometry");
         Set<BlockPos> positions=new HashSet<>();for(TileEntityControlledRamp part:parts(world,root))positions.add(part.getPos());
-        old=ramp.writeToNBT(new NBTTagCompound());old.removeTag("MoatGeometryRevision");ramp.readFromNBT(old);
+        old=ramp.writeToNBT(new NBTTagCompound());old.removeTag("MoatGeometryRevision");ControllerRuntimeChecks.restoreState(ramp,old);
         for(TileEntityControlledRamp part:parts(world,root)){NBTTagCompound tag=part.writeToNBT(new NBTTagCompound());tag.removeTag("MoatGeometryRevision");TileEntityControlledRamp loaded=new TileEntityControlledRamp();loaded.setWorld(world);loaded.setPos(part.getPos());loaded.readFromNBT(tag);require(loaded.moatGeometryRevision==0&&loaded.boxes(0).equals(part.boxes(0)),"unversioned rigid cell reload preserves collision");part.readFromNBT(tag);}
         ramp.onLoad();ramp.scheduledTick();AxisAlignedBB after=bounds(world,root);require(before.equals(after),"stationary rigid onLoad does not erase or move deployed bridge");
         Set<BlockPos> loadedPositions=new HashSet<>();for(TileEntityControlledRamp part:parts(world,root))loadedPositions.add(part.getPos());require(positions.equals(loadedPositions),"stationary rigid onLoad preserves every reservation");
