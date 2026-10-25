@@ -56,6 +56,7 @@ public final class UniversalConstructorModelCache {
                 for(String part:parts)register(spec.design,folder+part+".obj",new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+folder+part+".obj"));
             }
             if(spec.hasChip()&&spec.state_models==null)for(String path:new String[]{"static.obj","active/static.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
+            if(spec.design.equals("longburn_drive")||spec.design.equals("meridian_core"))for(String path:new String[]{"active/drive_body.obj","active/drive_lights.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
         }
         MinecraftForge.EVENT_BUS.register(EVENTS);
     }
@@ -167,12 +168,15 @@ public final class UniversalConstructorModelCache {
         public void emit(BufferBuilder buffer, double originX, double originY, double originZ,
                          EnumFacing facing, double width, double depth,
                          double offsetX, double offsetY, double offsetZ, int packedLight) {
+            emitTinted(buffer,originX,originY,originZ,facing,width,depth,offsetX,offsetY,offsetZ,packedLight,1);
+        }
+        public void emitTinted(BufferBuilder buffer,double originX,double originY,double originZ,EnumFacing facing,double width,double depth,double offsetX,double offsetY,double offsetZ,int packedLight,float brightness){
             if (facing.getAxis().isVertical()) throw new IllegalArgumentException("Horizontal facing required");
             if(offsetX!=0||offsetY!=0||offsetZ!=0){emitUncached(buffer,originX,originY,originZ,facing,width,depth,offsetX,offsetY,offsetZ,packedLight);return;}
             if(cachedWidth!=width||cachedDepth!=depth){java.util.Arrays.fill(oriented,null);cachedWidth=width;cachedDepth=depth;}
             int index=facing.getHorizontalIndex();double[] data=oriented[index];
             if(data==null){data=prepare(facing,width,depth);oriented[index]=data;}
-            for(int i=0;i<data.length;i+=9)buffer.pos(originX+data[i],originY+data[i+1],originZ+data[i+2]).color((float)data[i+3],(float)data[i+4],(float)data[i+5],(float)data[i+6]).tex(data[i+7],data[i+8]).lightmap(packedLight&65535,packedLight>>>16&65535).endVertex();
+            for(int i=0;i<data.length;i+=9)buffer.pos(originX+data[i],originY+data[i+1],originZ+data[i+2]).color((float)data[i+3]*brightness,(float)data[i+4]*brightness,(float)data[i+5]*brightness,(float)data[i+6]).tex(data[i+7],data[i+8]).lightmap(packedLight&65535,packedLight>>>16&65535).endVertex();
         }
 
         private double[] prepare(EnumFacing facing,double width,double depth){

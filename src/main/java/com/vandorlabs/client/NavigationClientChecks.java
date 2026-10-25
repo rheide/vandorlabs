@@ -54,17 +54,17 @@ final class NavigationClientChecks {
             HousingTextureList picker=(HousingTextureList)field(gui,"textures");Map<?,?> options=(Map<?,?>)field(picker,"options");
             for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i)&&(HousingTextureList.generalTexture(i)||ScreenTextureList.artwork(i,false)))require(options.containsKey(ScreenHousingTextures.choiceAt(i)),"complete block/screen artwork catalog");
             require(options.containsKey(HousingTextureList.NAVIGATION_BLACK),"black option");require(field(picker,"customConsumer")!=null,"shared custom block material picker");
-            ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");int before=(Integer)field(gui,"speed");require(panel.top+gui.filterY()+18<=panel.doneY-4,"company picker fits above Done at current GUI scale");
+            ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");int before=(Integer)field(gui,"speed");assertDataOnlyControls(gui);
             gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(4)+6,1);require((Integer)field(gui,"speed")==Math.floorMod(before-1,3),"right-click previous speed");
             gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(4)+6,0);expectedSpeed=before;require((Integer)field(gui,"speed")==before,"left-click next speed");
-            gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(1)+6,0);gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(2)+6,0);
+            gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(1)+6,0);
             // A selected native option must survive scrolling and scrollbar dragging.
             int choice=picker.selected();picker.wheel(panel.listX+2,panel.top+35,-120);picker.click(panel.listX+panel.listWidth+2,panel.top+36,0);require(picker.drag(panel.top+100),"shared scrollbar drag");picker.release();require(picker.selected()==choice,"scrolling preserves selection");
             stage=4;ticks=0;return false;
         }
         if(stage==4){
             if(ticks<15)return false;
-            mc.getIntegratedServer().addScheduledTask(()->{TileEntityNavigationTable tile=root(world(mc));NavigationScreenSettings s=tile.screenSettings();require(s.redstone&&s.security&&s.speed==expectedSpeed,"authorized dialog settings round trip");require(!tile.screenOn(),"dialog enables actual server gates");}).get();
+            mc.getIntegratedServer().addScheduledTask(()->{TileEntityNavigationTable tile=root(world(mc));NavigationScreenSettings s=tile.screenSettings();require(s.redstone&&!s.security&&s.speed==expectedSpeed,"authorized dialog settings round trip");require(!tile.screenOn(),"dialog enables actual server gates");}).get();
             pending="shot_navigation_display_dialog.png";captured=false;stage=5;return false;
         }
         if(stage==5&&captured){
@@ -81,15 +81,15 @@ final class NavigationClientChecks {
             if(!(mc.currentScreen instanceof GuiNavigationTable)||!(field(mc.currentScreen,"tile") instanceof TileEntityConstructor))return false;
             GuiNavigationTable gui=(GuiNavigationTable)mc.currentScreen;require(((int[])field(gui,"choices")).length==2,"screen and keyboard tabs");machineScreen=NavigationRuntimeChecks.artwork();machineKeyboard=-1;
             for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenTextureList.artwork(i,true)){machineKeyboard=ScreenHousingTextures.choiceAt(i);break;}require(machineKeyboard>=0,"keyboard artwork exists");
-            paint(gui,machineScreen);ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");gui.mouseClicked(panel.listX+panel.listWidth*3/4,panel.top+36,0);paint(gui,machineKeyboard);
-            gui.mouseClicked(panel.controlsX+6,panel.top+gui.controlY(1)+6,0);gui.mouseClicked(panel.controlsX+6,panel.top+gui.controlY(2)+6,0);stage=7;ticks=0;return false;
+            paint(gui,machineScreen);ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");GuiButton keyboard=button(gui,21);gui.mouseClicked(keyboard.x+keyboard.width/2,keyboard.y+keyboard.height/2,0);paint(gui,machineKeyboard);assertDataOnlyControls(gui);
+            gui.mouseClicked(panel.controlsX+6,panel.top+gui.controlY(1)+6,0);stage=7;ticks=0;return false;
         }
         if(stage==7){
             if(ticks<15)return false;
             mc.getIntegratedServer().addScheduledTask(()->{
-                TileEntityConstructor tile=(TileEntityConstructor)world(mc).getTileEntity(POS.east(9));require(tile.surfaceChoice(0)==machineScreen&&tile.surfaceChoice(1)==machineKeyboard,"independent surface packet round trips");require(tile.screenSettings().security&&tile.screenSettings().redstone&&tile.mount()!=null&&!tile.screenOn(),"machine dialog gates and visible mount");
+                TileEntityConstructor tile=(TileEntityConstructor)world(mc).getTileEntity(POS.east(9));require(tile.surfaceChoice(0)==machineScreen&&tile.surfaceChoice(1)==machineKeyboard,"independent surface packet round trips");require(!tile.screenSettings().security&&tile.screenSettings().redstone&&tile.mount()!=null&&!tile.screenOn(),"redstone-only machine gate and always-visible mount");
                 EntityPlayerMP p=player(mc);MachineMountSurface mount=tile.mount();Vec3d eye=mount.center.add(mount.normal.scale(2.5));Vec3d delta=mount.center.subtract(eye);p.capabilities.isCreativeMode=false;p.setSneaking(false);p.connection.setPlayerLocation(eye.x,eye.y-p.getEyeHeight(),eye.z,(float)Math.toDegrees(Math.atan2(-delta.x,delta.z)),0);p.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,2,4));
-                BlockPos clicked=new BlockPos(mount.center);net.minecraft.block.state.IBlockState state=world(mc).getBlockState(clicked);require(state.getBlock() instanceof BlockConstructorPart,"reader click reaches reserved module");require(state.getBlock().onBlockActivated(world(mc),clicked,state,p,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,0),"real multiblock reader activation");require(p.getHeldItemMainhand().getCount()==1&&!tile.isEmpty(),"real retained chip insertion consumes one item");world(mc).setBlockState(tile.getPos().down(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);require(tile.screenOn()&&tile.getOutputLevel()==0,"real redstone plus chip activates without output");
+                BlockPos clicked=new BlockPos(mount.center);net.minecraft.block.state.IBlockState state=world(mc).getBlockState(clicked);require(state.getBlock() instanceof BlockConstructorPart,"reader click reaches reserved module");require(state.getBlock().onBlockActivated(world(mc),clicked,state,p,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,0),"real multiblock reader activation");require(p.getHeldItemMainhand().getCount()==1&&!tile.isEmpty(),"real retained chip insertion consumes one item");world(mc).setBlockState(tile.getPos().down(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);require(tile.screenOn()&&tile.getOutputLevel()==0,"real redstone activates independently of retained chip without output");
             }).get();pending="shot_machine_display_dialog.png";captured=false;stage=8;ticks=0;return false;
         }
         if(stage==8&&captured&&ticks>=30){
@@ -97,6 +97,12 @@ final class NavigationClientChecks {
             mc.player.closeScreen();System.out.println("[vandorlabs] machine-display-client PASS independent screen/keyboard tabs complete artwork choices authorized packets reserved-part insertion retained chip redstone gates zero output");return true;
         }
         return false;
+    }
+    private static GuiButton button(GuiNavigationTable gui,int id){
+        java.util.List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton button:buttons)if(button.id==id)return button;throw new IllegalStateException("Missing display control "+id);
+    }
+    private static void assertDataOnlyControls(GuiNavigationTable gui){
+        java.util.List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton button:buttons)if(button.visible){String label=button.displayString.toLowerCase(java.util.Locale.ROOT);require(button.id!=2&&!label.contains("security")&&!label.contains("company")&&!label.contains("return after"),"integrated display has no Security/company/return controls");}
     }
     private static void paint(GuiNavigationTable gui,int choice)throws Exception{
         HousingTextureList picker=(HousingTextureList)field(gui,"textures");picker.setSelected(choice);java.util.List<?> rows=(java.util.List<?>)field(picker,"rows");int scroll=(Integer)field(picker,"scroll"),row=rows.indexOf(choice)-scroll;require(row>=0,"selected artwork is visible");ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");gui.mouseClicked(panel.listX+30,panel.top+52+row*HousingTextureList.ROW_HEIGHT+10,0);

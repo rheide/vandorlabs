@@ -11,7 +11,7 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 
 /** Validate first, then reserve a footprint; reconstruction restores the consumed frame. */
-public final class TileEntityConstructor extends TileEntitySecuredDisplay {
+public final class TileEntityConstructor extends TileEntitySecuredDisplay implements ITickable {
     public TileEntityConstructor(){super();}
     @Override public boolean chip(){return true;}
     @Override protected boolean displayBlock(Block block){return block instanceof BlockConstructorCore;}
@@ -24,10 +24,20 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay {
     @Override public int surfaceChoice(int slot){return slot<surfaceTextures.length?surfaceTextures[slot]:-2;}
     public static boolean validSurface(int choice){return choice==-2||com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice);}
     public void configureMachine(com.vandorlabs.navigation.NavigationScreenSettings config,int[] textures,boolean any,int allowed,int behavior,com.vandorlabs.redstone.ChannelList channels){
-        if(!authoritative()||textures.length!=surfaceCount()||textures.length>3||config.security&&!supportsSecurity())return;
+        if(!authoritative()||textures.length!=surfaceCount()||textures.length>3)return;
         for(int choice:textures)if(!validSurface(choice))return;
         surfaceTextures=textures.clone();configureDisplay(config,any,allowed,behavior,channels);publish();
     }
+    private com.vandorlabs.drives.DriveSettings drive=com.vandorlabs.drives.DriveSettings.DEFAULT;
+    private int driveChannelLevel,drivePhysicalLevel,driveLevel=15;private boolean driveConfigPresent;
+    private final java.util.Map<BlockPos,Integer> drivePhysicalInputs=new java.util.HashMap<>();
+    public boolean isDrive(){BlockConstructorCore block=core();return block!=null&&(block.design.equals("longburn_drive")||block.design.equals("meridian_core")||block.design.equals("oculus_drive"));}
+    public com.vandorlabs.drives.DriveSettings driveSettings(){return drive;}
+    public int driveLevel(){return driveLevel;}
+    public void configureDrive(com.vandorlabs.drives.DriveSettings settings){if(!authoritative()||!isDrive()||settings==null)return;drive=settings;driveConfigPresent=true;refreshInputs();publish();}
+    @Override protected boolean inputPowered(boolean aggregate){if(!isDrive())return aggregate;int next=drive.activation(screenSettings().redstone,Math.max(driveChannelLevel,drivePhysicalLevel)==0&&aggregate?15:Math.max(driveChannelLevel,drivePhysicalLevel));if(driveLevel!=next){driveLevel=next;publish();}return next>0;}
+    @Override public void setChannelLevel(int level){int next=com.vandorlabs.drives.DriveSettings.clamp(level);boolean changed=driveChannelLevel!=next;driveChannelLevel=next;setChannelSignal(next>0);if(isDrive()&&changed){refresh();publish();}}
+    @Override public void update(){if(world!=null&&world.isRemote&&isDrive()&&renderReady()&&screenOn()&&drive.plume(true,driveLevel))com.vandorlabs.drives.DriveParticles.emit(this);}
     private boolean changing;private IBlockState removedState;
     private int coreX,coreZ;
     private int activity=-1;
@@ -99,13 +109,13 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay {
             if(removedState==null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,false),3);markDirty();refresh();
         }finally{changing=false;}
     }
-    @Override public boolean supportsSecurity(){BlockConstructorCore core=core();return core!=null&&core.specification().hasChip();}
+    @Override public boolean supportsSecurity(){return false;}
     private final java.util.Set<BlockPos> poweredInputs=new java.util.HashSet<>();
     @Override protected boolean physicalPower(){
-        poweredInputs.clear();if(!formed())return false;
+        poweredInputs.clear();drivePhysicalInputs.clear();drivePhysicalLevel=0;if(!formed())return false;
         BlockConstructorCore core=core();
         for(int y=0;y<core.height;y++)for(int x=0;x<core.width;x++)for(int z=0;z<core.depth;z++){
-            BlockPos at=cell(x,y,z);if(world.isBlockLoaded(at)&&com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,at))poweredInputs.add(at);
+            BlockPos at=cell(x,y,z);if(world.isBlockLoaded(at)){int level=com.vandorlabs.redstone.LoadedRedstonePower.level(world,at);if(level>0)poweredInputs.add(at);if(isDrive()&&level>0){drivePhysicalInputs.put(at,level);drivePhysicalLevel=Math.max(drivePhysicalLevel,level);}}
         }
         return !poweredInputs.isEmpty();
     }
@@ -116,12 +126,13 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay {
         boolean member=at.equals(pos);net.minecraft.tileentity.TileEntity raw=world.getTileEntity(at);
         member|=raw instanceof TileEntityConstructorPart&&((TileEntityConstructorPart)raw).owner().equals(pos);
         if(!member)return;
-        if(com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,at))poweredInputs.add(at.toImmutable());else poweredInputs.remove(at);
-        physicalInput(!poweredInputs.isEmpty());
+        int level=com.vandorlabs.redstone.LoadedRedstonePower.level(world,at);if(level>0)poweredInputs.add(at.toImmutable());else poweredInputs.remove(at);
+        if(isDrive()){if(level>0)drivePhysicalInputs.put(at.toImmutable(),level);else drivePhysicalInputs.remove(at);drivePhysicalLevel=0;for(int input:drivePhysicalInputs.values())drivePhysicalLevel=Math.max(drivePhysicalLevel,input);}
+        physicalInput(!poweredInputs.isEmpty());if(isDrive())refresh();
     }
     @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,this::refreshInputs);}
     public com.vandorlabs.blocks.MachineMountSurface mount(){
-        if(!renderReady()||!screenSettings().security||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
+        if(!renderReady()||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
         Vec3d local=new Vec3d(spec.chip_anchor[0],spec.chip_anchor[1],spec.chip_anchor[2]);
         Vec3d center=MachineMountSurface.rotate(local,facing(),core().width,core().depth).add(new Vec3d(pos.subtract(pivot())));
         return new MachineMountSurface(center,facing(),TokenSlotGeometry.CHIP_SIZE,TokenSlotGeometry.CHIP_SIZE);
@@ -130,8 +141,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay {
     @Override public AxisAlignedBB getRenderBoundingBox(){if(!formed())return new AxisAlignedBB(pos);BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin.getX(),origin.getY(),origin.getZ(),origin.getX()+(turn?core().depth:core().width),origin.getY()+core().height,origin.getZ()+(turn?core().width:core().depth));}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip()&&surfaceCount()==0;}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){drive.write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}

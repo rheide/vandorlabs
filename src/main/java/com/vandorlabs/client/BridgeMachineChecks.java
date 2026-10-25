@@ -50,22 +50,24 @@ final class BridgeMachineChecks {
             require(mount.hit(player),"authored chip plane is reachable");
             for(int mode=0;mode<4;mode++){
                 tile.configure(false,1<<4,mode);ItemStack stack=new ItemStack(ModItems.DATA_CHIP,2,4);stack.setStackDisplayName("Integrated reader fixture");player.setHeldItem(EnumHand.MAIN_HAND,stack);
+                require(tile.any&&tile.allowed==127&&tile.behavior==0&&!tile.screenSettings().security,"direct legacy configure cannot enable filtering, return behavior or Security");
                 require(TokenSlotInteractions.activate(tile,player,EnumHand.MAIN_HAND),"same mount interaction accepts chip");
                 require(stack.getCount()==1&&!tile.isEmpty(),"one real item is consumed/borrowed");
-                if(mode>=2){tile.expire(world.getTotalWorldTime()+8);require(tile.screenOn()&&tile.getOutputLevel()==0,"borrowed credential authorizes without output");}
-                else require(tile.screenOn()&&tile.getOutputLevel()==0,"retained chip authorizes without output");
+                tile.expire(world.getTotalWorldTime()+8);require(tile.screenOn()&&tile.getOutputLevel()==0&&!tile.returning(),"new chips stay inserted and never gate activation or output");
                 require(RedstoneChannels.level(world,64123)==0,"embedded chip never publishes channel power");
-                NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityConstructor copy=new TileEntityConstructor();copy.readFromNBT(saved);copy.setWorld(world);
-                require(copy.getStackInSlot(0).getDisplayName().equals("Integrated reader fixture")&&copy.returning()==(mode>=2),"full item and pending return survive NBT");
-                if(mode>=2){tile.expire(world.getTotalWorldTime()+25);require(tile.isEmpty(),"borrowed chip returns to its player");}
+                NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());saved.setBoolean("NavigationSecurity",true);saved.setBoolean("AnyToken",false);saved.setInteger("AllowedTokens",16);saved.setInteger("TokenBehavior",mode);
+                if(mode>=2){saved.setUniqueId("TokenReturnTo",player.getUniqueID());saved.setLong("TokenInsertStarted",world.getTotalWorldTime());}
+                TileEntityConstructor copy=new TileEntityConstructor();copy.readFromNBT(saved);copy.setWorld(world);
+                require(copy.getStackInSlot(0).getDisplayName().equals("Integrated reader fixture")&&copy.returning()==(mode>=2)&&copy.any&&copy.allowed==127&&copy.behavior==0&&!copy.screenSettings().security,"full legacy item and pending return survive normalized policy");
+                if(mode>=2){tile.readFromNBT(saved);tile.expire(world.getTotalWorldTime()+25);require(tile.isEmpty()&&tile.screenOn(),"existing pending chip return settles without becoming an activation gate");}
                 else tile.takeForDrop();
                 tile.configure(true,127,0);require(tile.getOutputLevel()==0,"configuration resets output");cases++;
                 world.setTotalWorldTime(world.getTotalWorldTime()+30);
             }
-            tile.configure(false,1<<4,0);require(!tile.authorized(new ItemStack(ModItems.DATA_CHIP,1,3)),"company filter rejects other chips");
+            tile.configure(false,1<<4,0);for(int company=0;company<=6;company++)require(tile.authorized(new ItemStack(ModItems.DATA_CHIP,1,company)),"integrated holder accepts every Data Chip company");require(!tile.authorized(new ItemStack(ModItems.ACCESS_CARD,1,3)),"Data Chip holder still rejects Access Cards");
             tile.dismantle();require(tile.getOutputLevel()==0,"dismantled core cannot emit chip output");
         }}finally{clear(world,root);player.setHeldItem(EnumHand.MAIN_HAND,held);player.capabilities.isCreativeMode=creative;player.setPosition(before.x,before.y,before.z);player.rotationYaw=yaw;player.rotationPitch=pitch;}
-        System.out.println("[vandorlabs] integrated-chip-mounts PASS cases="+cases+" authored hits four behaviors channels full NBT returns filters dismantling");
+        System.out.println("[vandorlabs] integrated-chip-mounts PASS cases="+cases+" authored hits data-only retained chips all companies legacy flags ignored full NBT pending-return recovery zero output dismantling");
     }
     private static void navigation(WorldServer world){
         BlockPos base=new BlockPos(96,100,96);int cases=0;

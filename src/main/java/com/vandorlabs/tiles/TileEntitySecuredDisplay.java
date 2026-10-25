@@ -17,8 +17,12 @@ public abstract class TileEntitySecuredDisplay extends TileEntityTokenSlot {
     public final boolean renderReady(){return world!=null&&!isInvalid()&&world.isBlockLoaded(pos)&&displayBlock(world.getBlockState(pos).getBlock())&&world.getTileEntity(pos)==this&&formed();}
     protected TileEntitySecuredDisplay displayOwner(){return this;}
     protected List<? extends TileEntitySecuredDisplay> members(){return Collections.singletonList(this);}
-    public boolean supportsSecurity(){return true;}
-    @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return screenSettings().security&&super.isItemValidForSlot(slot,stack);}
+    public boolean supportsSecurity(){return false;}
+    @Override public void configure(boolean any,int allowed,int behavior){super.configure(true,127,0);}
+    @Override public boolean authorized(net.minecraft.item.ItemStack stack){return accepts(stack);}
+    @Override public int effectiveAllowed(){return 127;}
+    protected boolean inputPowered(boolean aggregate){return aggregate;}
+    @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return super.isItemValidForSlot(slot,stack);}
     public int surfaceCount(){return 1;}
     public String surfaceLabel(int slot){return "Screen";}
     public int surfaceChoice(int slot){return screenSettings().texture;}
@@ -29,10 +33,11 @@ public abstract class TileEntitySecuredDisplay extends TileEntityTokenSlot {
     public final boolean credentialPresent(){return !isEmpty()&&matches();}
     @Override public boolean indicatorOn(){return credentialPresent();}
     public void configureDisplay(NavigationScreenSettings next,boolean any,int allowed,int behavior,ChannelList channels){
-        if(!authoritative())return;TileEntitySecuredDisplay root=displayOwner();if(root==null||next.security&&!root.supportsSecurity())return;
+        if(!authoritative())return;TileEntitySecuredDisplay root=displayOwner();if(root==null)return;
+        next=new NavigationScreenSettings(next.texture,next.animated,next.speed,next.redstone,false);
         root.configuring=true;
         try{
-            root.settings=next;root.configure(any,allowed,behavior);root.setRedstoneChannels(channels);
+            root.settings=next;root.configure(true,127,0);root.setRedstoneChannels(channels);
             for(TileEntitySecuredDisplay tile:root.members()){
                 tile.settings=next;
                 if(tile!=root){tile.configure(root.any,root.allowed,root.behavior);tile.setRedstoneChannels(channels);}
@@ -60,10 +65,10 @@ public abstract class TileEntitySecuredDisplay extends TileEntityTokenSlot {
         List<? extends TileEntitySecuredDisplay> members=root.members();boolean powered=false;
         for(TileEntitySecuredDisplay tile:members)if(tile.physicalInput||tile.channelInput){powered=true;break;}
         NavigationScreenSettings config=root.settings;
-        boolean active=root.formed()&&NavigationScreenPolicy.visible(config.redstone,config.security,powered,root.credentialPresent());
+        boolean active=root.formed()&&NavigationScreenPolicy.visible(config.redstone,false,root.inputPowered(powered),false);
         for(TileEntitySecuredDisplay tile:members)if(tile.screenOn!=active){tile.screenOn=active;tile.publish();}
     }
     protected final void publish(){markDirty();if(world!=null&&!world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);settings.write(tag);tag.setBoolean("NavigationScreenOn",screenOn);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);settings=NavigationScreenSettings.read(tag);screenOn=tag.getBoolean("NavigationScreenOn");}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);NavigationScreenSettings saved=NavigationScreenSettings.read(tag);settings=new NavigationScreenSettings(saved.texture,saved.animated,saved.speed,saved.redstone,false);any=true;allowed=127;behavior=0;screenOn=tag.getBoolean("NavigationScreenOn");}
 }

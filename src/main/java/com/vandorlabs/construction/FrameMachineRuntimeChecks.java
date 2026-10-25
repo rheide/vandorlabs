@@ -45,15 +45,22 @@ public final class FrameMachineRuntimeChecks {
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.readFromNBT(tile.getUpdateTag());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
                 tile.dismantle();require(!tile.formed()&&world.getBlockState(root).isOpaqueCube(),"manual dismantling restores the solid core model");checkRestored(world,original,matter);
-                require(!((Object)tile instanceof ITickable),"constructors have no automatic tick callback");require(!tile.formed(),"dismantled frame never automatically reforms");
+                checkCosmeticTicks(tile,spec);require(!tile.formed(),"dismantled frame never automatically reforms");
                 require(tile.assemble(),"reassembly from non-default corner");require(world.getTileEntity(root)==tile,"core tile identity after reassembly");
-                net.minecraft.block.state.IBlockState selected=world.getBlockState(missing);selected.getBlock().removedByPlayer(selected,world,missing,player,false);require(world.isAirBlock(missing)&&!tile.formed(),"mining a reserved part dismantles and removes the clicked cell");require(!((Object)tile instanceof ITickable),"constructors have no automatic tick callback");require(world.isAirBlock(missing)&&!tile.formed(),"mined frame stays dismantled");
+                net.minecraft.block.state.IBlockState selected=world.getBlockState(missing);selected.getBlock().removedByPlayer(selected,world,missing,player,false);require(world.isAirBlock(missing)&&!tile.formed(),"mining a reserved part dismantles and removes the clicked cell");checkCosmeticTicks(tile,spec);require(world.isAirBlock(missing)&&!tile.formed(),"mined frame stays dismantled");
                 world.setBlockState(missing,matter.getDefaultState());require(tile.assemble(),"explicit repair and reassembly");world.setBlockToAir(root);checkRestored(world,original,matter);count++;
             }finally{
                 world.setBlockToAir(root);for(BlockPos p:original.keySet())world.setBlockToAir(p);
             }
         }
         System.out.println("[vandorlabs][reprolab] constructors PASS "+count+" independent frames all corners axes facings diagnostics persistence sync dismantling bounds");
+    }
+    private static void checkCosmeticTicks(TileEntityConstructor tile,FrameMachineDesign spec){
+        boolean drive=spec.design.equals("longburn_drive")||spec.design.equals("meridian_core")||spec.design.equals("oculus_drive");
+        require(tile.isDrive()==drive,"cosmetic drive classification remains limited to three drives");
+        NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());
+        for(int tick=0;tick<20;tick++)tile.update();
+        require(before.equals(tile.writeToNBT(new NBTTagCompound())),"constructor ticks never simulate server gameplay or alter dismantled snapshots "+spec.design);
     }
     private static void checkRestored(World world,java.util.Map<BlockPos,Boolean> original,Block matter){for(java.util.Map.Entry<BlockPos,Boolean> entry:original.entrySet())require(entry.getValue()?world.getBlockState(entry.getKey()).getBlock()==matter:world.isAirBlock(entry.getKey()),"restore "+scenario+" at "+entry.getKey()+" expected="+(entry.getValue()?"matter":"air")+" actual="+world.getBlockState(entry.getKey()));}
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException(message);}

@@ -18,10 +18,10 @@ public final class TileEntityNavigationTable extends TileEntitySecuredDisplay {
     @Override protected boolean displayBlock(net.minecraft.block.Block block){return block instanceof BlockNavigationTable;}
     @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return hasMount()&&super.isItemValidForSlot(slot,stack);}
     @Override protected TileEntitySecuredDisplay displayOwner(){return reader();}
-    public net.minecraft.block.state.IBlockState renderState(net.minecraft.block.state.IBlockState state){LayoutState current=layout;return state.withProperty(BlockNavigationTable.CONNECTIONS,current.connections).withProperty(BlockNavigationTable.CHIP,current.formed&&current.offset.equals(BlockPos.ORIGIN)&&screenSettings().security);}
+    public net.minecraft.block.state.IBlockState renderState(net.minecraft.block.state.IBlockState state){LayoutState current=layout;return state.withProperty(BlockNavigationTable.CONNECTIONS,current.connections).withProperty(BlockNavigationTable.CHIP,current.formed&&current.offset.equals(BlockPos.ORIGIN));}
     public int connections(){return layout.connections;}
     public boolean ownsReader(){LayoutState current=layout;return current.formed&&current.offset.equals(BlockPos.ORIGIN);}
-    public boolean hasMount(){return ownsReader()&&screenSettings().security;}
+    public boolean hasMount(){return ownsReader();}
     public boolean formed(){return layout.formed;}
     public BlockPos owner(){return pos.add(layout.offset);}
     public BlockPos origin(){return pos.add(layout.origin);}

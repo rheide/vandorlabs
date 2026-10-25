@@ -26,26 +26,24 @@ Right-click the Core to form the machine. Its occupied cells are reserved. If fo
 
 ![Standalone Dish: assemble](step-4.png)
 
-## 5. Enable Security and insert a Data Chip
+## 5. Insert a Data Chip
 
-Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.
+The native Data Chip Mount is always visible on this model. Right-click it with any Data Chip to insert one physical item; empty-hand right-click removes it. The chip stays inserted and does not gate activation. Redstone settings alone control optional power activation. The machine never emits a redstone signal.
 
-![Standalone Dish: enable security and insert a data chip](step-5.png)
+![Standalone Dish: insert a data chip](step-5.png)
 
 ## Operation and activation
 
 The default activity is **Scanning**. Right-click away from the reader to cycle Off → Idle → Scanning. The dish, feed and yoke sweep together through ±55° on an eight-second loop. Starting and stopping fades the sweep over half a second; the base stays fixed.
 
-Use the Configurizer on the Core or any reserved cell to open the shared machine dialog. Redstone and Security are independent input gates. Enable Redstone to require physical power or configured input channels; enable Security to require a matching inserted Data Chip. Both gates must pass when both are enabled.
+Use the Configurizer on the Core or any reserved cell to open the shared machine dialog. Enable Redstone to require physical power or configured input channels. Data Chips are optional retained data items and never gate activation; integrated mounts accept every Data Chip company.
 
-This standalone design has no operator screen or keyboard. Its optional native Data Chip Mount is fitted to the front of the compact base.
+This standalone design has no operator screen or keyboard. Its native Data Chip Mount is always visible on the front of the compact base; inserting a chip is optional.
 
 The machine emits no physical or channel redstone power. These appearances do not perform propulsion, dimensional travel, radar detection or navigation calculations.
 
 ## Facing and removal
 
-The frame works along either horizontal axis, with its Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click away from the chip holder to dismantle and recover the Matter frame. Mining a reserved part dismantles the machine and removes that cell; breaking the Core restores the remaining Matter Blocks.
+The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
 
-A retained chip stays in the Core during manual dismantling and is available after reassembly. Breaking the Core releases the chip once.
-
-[All multiblock guides](../README.md) · [Machine display settings](../../machine-displays.md) · [Data Chip Mounts](../../data-mounts.md)
+A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.

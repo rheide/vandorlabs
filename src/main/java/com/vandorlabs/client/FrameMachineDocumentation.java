@@ -55,7 +55,7 @@ final class FrameMachineDocumentation {
                 else{
                     TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(ROOT);
                     if(step==3){tile.core().onBlockActivated(world,ROOT,world.getBlockState(ROOT),player(mc),EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,0);require(tile.formed(),"Core right-click must form "+spec.design);}
-                    else{tile.configureDisplay(new com.vandorlabs.navigation.NavigationScreenSettings(-1,true,1,false,true),true,127,0,com.vandorlabs.redstone.ChannelList.EMPTY);tile.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,4));require(tile.screenOn(),"inserted chip activates "+spec.design);}
+                    else{tile.configureDisplay(new com.vandorlabs.navigation.NavigationScreenSettings(-1,true,1,false,false),true,127,0,com.vandorlabs.redstone.ChannelList.EMPTY);tile.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,4));require(tile.mount()!=null&&!tile.isEmpty()&&!tile.screenSettings().security&&tile.screenOn(),"optional chip retained with always-visible mount "+spec.design);}
                 }
             }else{
                 Block block=Block.getBlockFromName("vandorlabs:"+id());
@@ -66,7 +66,7 @@ final class FrameMachineDocumentation {
                     if(step==1&&depth==1)world.setBlockToAir(ROOT.east(2));
                     NavigationAssemblies.rebuild(world,ROOT);
                 }else{
-                    TileEntityNavigationTable tile=((TileEntityNavigationTable)world.getTileEntity(ROOT)).reader();require(tile!=null,"joined table has its reader");tile.configureDisplay(new com.vandorlabs.navigation.NavigationScreenSettings(NavigationRuntimeChecks.artwork(),true,1,false,true),false,127,0,com.vandorlabs.redstone.ChannelList.EMPTY);tile.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,3));
+                    TileEntityNavigationTable tile=((TileEntityNavigationTable)world.getTileEntity(ROOT)).reader();require(tile!=null,"joined table has its reader");tile.configureDisplay(new com.vandorlabs.navigation.NavigationScreenSettings(NavigationRuntimeChecks.artwork(),true,1,false,false),false,127,0,com.vandorlabs.redstone.ChannelList.EMPTY);tile.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,3));
                 }
                 int mounts=0;for(BlockPos p:BlockPos.getAllInBox(ROOT,ROOT.add(3,0,2)))if(world.getTileEntity(p) instanceof TileEntityNavigationTable&&((TileEntityNavigationTable)world.getTileEntity(p)).ownsReader())mounts++;
                 require(mounts==1,"exactly one reader in documented navigation assembly");

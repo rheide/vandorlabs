@@ -37,10 +37,10 @@ final class MachineDisplayVisualChecks {
                 }
                 require(differences(inserted,retained,0,SIZE)==0,"retained chip stays after animation "+spec.design+facing);
                 require(differences(inserted,reference,52,76)==0,"same native mount contents and proportions "+spec.design+facing);
-                tag.setBoolean("NavigationSecurity",false);tile.readFromNBT(tag);require(tile.mount()==null&&!tile.isEmpty(),"hidden slot retains chip");
-                BufferedImage hidden=reader(mc,tile,mount,40,false);require(differences(hidden,inserted,44,84)>50,"Security disabled removes holder "+spec.design+facing);
-                tag.setBoolean("NavigationSecurity",true);tile.readFromNBT(tag);require(differences(inserted,reader(mc,tile,mount,40,false),0,SIZE)==0,"reenabling restores retained chip");
-                if(facing==EnumFacing.NORTH){javax.imageio.ImageIO.write(inserted,"png",new File(output,"machine_reader_"+spec.design+".png"));javax.imageio.ImageIO.write(hidden,"png",new File(output,"machine_reader_hidden_"+spec.design+".png"));}readers++;
+                tag.setBoolean("NavigationSecurity",false);tile.readFromNBT(tag);require(tile.mount()!=null&&!tile.isEmpty()&&!tile.screenSettings().security,"legacy Security false leaves visible data holder and retained chip");
+                BufferedImage dataOnly=reader(mc,tile,mount,40,false);require(differences(dataOnly,inserted,0,SIZE)==0,"legacy Security false cannot hide or change native data holder "+spec.design+facing);
+                tag.setBoolean("NavigationSecurity",true);tile.readFromNBT(tag);require(differences(inserted,reader(mc,tile,mount,40,false),0,SIZE)==0,"legacy Security true is ignored without changing retained holder");
+                if(facing==EnumFacing.NORTH){javax.imageio.ImageIO.write(inserted,"png",new File(output,"machine_reader_"+spec.design+".png"));javax.imageio.ImageIO.write(dataOnly,"png",new File(output,"machine_reader_data_only_"+spec.design+".png"));}readers++;
             }
             int[] choices=new int[spec.surfaces.length];java.util.Arrays.fill(choices,-1);
             for(int slot=0;slot<choices.length;slot++){
@@ -50,7 +50,7 @@ final class MachineDisplayVisualChecks {
                 if(facing==EnumFacing.NORTH)javax.imageio.ImageIO.write(on,"png",new File(output,"machine_surface_"+spec.design+"_"+slot+".png"));choices[slot]=-1;surfaces++;
             }
         }}finally{mc.world.setBlockToAir(pos);}
-        System.out.println("[vandorlabs] machine-display-pixels PASS reader-poses="+readers+" surfaces="+surfaces+" native insertion retained chip hidden/restored security mount exact authored screen/keyboard planes four facings");
+        System.out.println("[vandorlabs] machine-display-pixels PASS reader-poses="+readers+" surfaces="+surfaces+" native insertion retained data chip always-visible mount legacy-security-ignored exact authored screen/keyboard planes four facings");
     }
     private static int differences(BufferedImage a,BufferedImage b,int min,int max){int count=0;for(int x=min;x<max;x++)for(int y=min;y<max;y++)if(a.getRGB(x,y)!=b.getRGB(x,y))count++;return count;}
     private static BufferedImage reader(Minecraft mc,TileEntityConstructor tile,MachineMountSurface mount,double age,boolean reference)throws Exception{

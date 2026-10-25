@@ -1,6 +1,6 @@
 # Multiblock build guides
 
-The guides describe the frame layers and activation settings. Illustrated guides also show successive stages captured in Minecraft. All frame machines reuse the same Core-and-Programmable-Matter assembly rules.
+Each guide shows successive stages captured in Minecraft. All frame machines reuse the same Core-and-Programmable-Matter assembly rules.
 
 | Assembly | Width × depth × height | Matter Blocks |
 | --- | --- | --- |

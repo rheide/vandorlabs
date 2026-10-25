@@ -26,11 +26,11 @@ Right-click the Core. The frame becomes the complete model, and its occupied cel
 
 ![Pinnacle Vector Fold Array: assemble](step-4.png)
 
-## 5. Enable Security and insert a Data Chip
+## 5. Insert a Data Chip
 
-Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.
+The native Data Chip Mount is always visible on this model. Right-click it with any Data Chip to insert one physical item; empty-hand right-click removes it. The chip stays inserted and does not gate activation. Redstone settings alone control optional power activation. The machine never emits a redstone signal.
 
-![Pinnacle Vector Fold Array: enable security and insert a data chip](step-5.png)
+![Pinnacle Vector Fold Array: insert a data chip](step-5.png)
 
 ## Facing and removal
 
@@ -38,7 +38,7 @@ The same frame works along either horizontal axis and with the Core in any botto
 
 A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.
 
-Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional chip security.
+Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional retained Data Chips.
 
 These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.
 

@@ -16,7 +16,12 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
         @Override protected void drawMachine(TileEntityConstructor tile,double x,double y,double z,float partial,BufferBuilder buffer){
             FrameMachineDesign spec=tile.core().specification();
             int state=tile.screenOn()?tile.activity():0;
-            if("shutters".equals(spec.motion)){
+            if(tile.isDrive()&&tile.screenOn()&&(spec.design.equals("longburn_drive")||spec.design.equals("meridian_core"))){
+                drawPart(tile,"active/drive_body.obj",buffer,x,y,z,0,0,0);
+                float brightness=tile.driveSettings().levels?tile.driveLevel()/15F:1;
+                if(spec.design.equals("meridian_core")){double now=MachineVisualMotion.sample(tile,true,10).now;brightness*=.55F+.45F*(float)(.5-.5*Math.cos(now*Math.PI/20));}
+                UniversalConstructorModelCache.get(spec.design,"active/drive_lights.obj").emitTinted(buffer,x,y,z,tile.facing(),spec.width,spec.depth,0,0,0,15728880,brightness);
+            }else if("shutters".equals(spec.motion)){
                 MachineVisualMotion.Pose pose=MachineVisualMotion.sample(tile,state==2,20);
                 int appearance=pose.progress>0&&pose.progress<1?1:state;
                 String folder=spec.state_models[appearance].split("/")[0]+"/parts/";
@@ -24,7 +29,7 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
                 double travel=.5125*MachineVisualMotion.eased(pose.progress);
                 drawPart(tile,folder+"shutter_upper.obj",buffer,x,y,z,0,travel,0);
                 drawPart(tile,folder+"shutter_lower.obj",buffer,x,y,z,0,-travel,0);
-                UniversalConstructorModelCache.get(spec.design,folder+"field.obj").emit(buffer,x,y,z,tile.facing(),spec.width,spec.depth,0,0,0,appearance==0?packedLight(tile):15728880);
+                UniversalConstructorModelCache.get(spec.design,folder+"field.obj").emitTinted(buffer,x,y,z,tile.facing(),spec.width,spec.depth,0,0,0,appearance==0?packedLight(tile):15728880,tile.isDrive()&&tile.driveSettings().levels?tile.driveLevel()/15F:1);
             }else if("dish".equals(spec.motion)){
                 MachineVisualMotion.Pose pose=MachineVisualMotion.sample(tile,state==2,10);
                 String folder=spec.state_models[state].split("/")[0]+"/parts/";

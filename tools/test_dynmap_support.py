@@ -29,6 +29,8 @@ def records(path, prefix):
 def main():
     from generate_dynmap_materials import generate
     generate(check=True)
+    from generate_drive_visuals import generate as drive_visuals
+    drive_visuals(check=True)
     from generate_frame_machine_dynmap import generate as frame_machines
     frame_machines(check=True)
     from generate_coupler_slab import generate as generate_coupler_models

@@ -35,44 +35,44 @@ final class NavigationRuntimeChecks {
             java.util.List<BlockPos> members=new java.util.ArrayList<>();for(BlockPos at:BlockPos.getAllInBox(base,base.add(1,0,1)))if(world.getTileEntity(at) instanceof TileEntityNavigationTable)members.add(at.toImmutable());
             BlockPos powered=members.get(members.size()-1);
             require(root.screenSettings().texture==-1,"new assembly defaults black");
-            require(root.mount()==null,"security-disabled mount hidden");root.configureDisplay(new NavigationScreenSettings(-1,true,1,false,true),true,127,0,ChannelList.EMPTY);
+            require(root.mount()!=null,"native mount visible by default without Security");root.configureDisplay(new NavigationScreenSettings(-1,true,1,false,true),true,127,0,ChannelList.EMPTY);
             MachineMountSurface mount=root.mount();require(Math.abs(mount.width-6D/16)<1e-9&&mount.width==mount.height,"standalone mount proportions");
             double top=kind.equals("flat")?14D/16:8D/16;
             require(Math.abs(mount.center.y-root.getPos().getY()+mount.height/2-(top-.5/16))<1e-9,"half-pixel clearance below front top");
             for(int bits=0;bits<16;bits++){
                 boolean r=(bits&1)!=0,s=(bits&2)!=0,p=(bits&4)!=0,c=(bits&8)!=0;
                 root.configureDisplay(new NavigationScreenSettings(texture,true,1,r,s),false,1<<4,0,ChannelList.of(64521));
-                root.setInventorySlotContents(0,c?new ItemStack(ModItems.DATA_CHIP,1,4):ItemStack.EMPTY);
+                root.setInventorySlotContents(0,c?new ItemStack(ModItems.DATA_CHIP,1,4):ItemStack.EMPTY);require(!root.screenSettings().security&&root.any&&root.allowed==127&&root.behavior==0,"forced data-only reader policy");
                 world.setBlockState(powered.down(),p?Blocks.REDSTONE_BLOCK.getDefaultState():Blocks.AIR.getDefaultState(),3);
-                require(root.screenOn()==NavigationScreenPolicy.visible(r,s,p,c),"physical power/chip truth table "+kind+facing+bits);
+                require(root.screenOn()==NavigationScreenPolicy.visible(r,false,p,false),"physical power independent of legacy Security/chip "+kind+facing+bits);
                 for(BlockPos at:members){TileEntityNavigationTable member=table(world,at);require(member.screenSettings().texture==texture&&member.reader()==root,"configuration and owner shared");
                     require(!block.canProvidePower(world.getBlockState(at))&&!member.hasLocalRedstoneSignal()&&member.localSignalLevel(64521)==0&&member.getOutputLevel()==0,"no virtual output");
                     for(EnumFacing side:EnumFacing.values())require(block.getWeakPower(world.getBlockState(at),world,at,side)==0&&block.getStrongPower(world.getBlockState(at),world,at,side)==0,"no physical output");
                 }
                 cases++;
             }
-            world.setBlockToAir(powered.down());root.refreshInputs();root.removeStackFromSlot(0);root.setInventorySlotContents(0,new ItemStack(ModItems.DATA_CHIP,1,3));root.configureDisplay(new NavigationScreenSettings(texture,false,2,false,true),false,1<<4,0,ChannelList.of(64521));require(!root.screenOn(),"wrong company remains dark");
-            root.setInventorySlotContents(0,new ItemStack(ModItems.DATA_CHIP,1,4));require(root.screenOn(),"matching chip reveals display without power");
+            world.setBlockToAir(powered.down());root.refreshInputs();root.removeStackFromSlot(0);root.setInventorySlotContents(0,new ItemStack(ModItems.DATA_CHIP,1,3));root.configureDisplay(new NavigationScreenSettings(texture,false,2,false,true),false,1<<4,0,ChannelList.of(64521));require(root.screenOn()&&root.authorized(new ItemStack(ModItems.DATA_CHIP,1,3)),"all Data Chip companies accepted and never gate display");
+            root.setInventorySlotContents(0,new ItemStack(ModItems.DATA_CHIP,1,4));require(root.screenOn(),"display remains visible with any chip without redstone gate");
             root.configureDisplay(new NavigationScreenSettings(texture,true,0,true,true),false,1<<4,0,ChannelList.of(64521));
-            BlockPos sourcePos=base.add(6,0,0);world.setBlockState(sourcePos.south(),Blocks.STONE.getDefaultState(),2);world.setBlockState(sourcePos,Block.getBlockFromName("vandorlabs:industrial_power_lever").getDefaultState(),2);TileEntityRedstoneChannel source=(TileEntityRedstoneChannel)world.getTileEntity(sourcePos);source.setRedstoneChannels(ChannelList.of(64521));RedstoneChannels.register(source);RedstoneChannels.register(root);source.setLocalOn(true);
-            require(root.screenOn(),"ordinary channel source powers secured display");source.setLocalOn(false);require(!root.screenOn(),"channel source off darkens display");world.setBlockToAir(sourcePos);
-            NBTTagCompound saved=root.writeToNBT(new NBTTagCompound());TileEntityNavigationTable restored=new TileEntityNavigationTable();restored.readFromNBT(saved);require(restored.screenSettings().texture==texture&&restored.screenSettings().redstone&&restored.screenSettings().security&&restored.screenSettings().speed==0&&!restored.isEmpty(),"settings and real chip persist");require(restored.getOutputLevel()==0,"legacy saved reader output suppressed");
+            BlockPos sourcePos=base.add(6,0,0);world.setBlockState(sourcePos.south(),Blocks.STONE.getDefaultState(),2);world.setBlockState(sourcePos,Block.getBlockFromName("vandorlabs:industrial_power_lever").getDefaultState(),2);DeferredTileLoad.flush(world);TileEntityRedstoneChannel source=(TileEntityRedstoneChannel)world.getTileEntity(sourcePos);source.setRedstoneChannels(ChannelList.of(64521));RedstoneChannels.register(source);RedstoneChannels.register(root);source.setLocalOn(true);require(!source.isInvalid()&&world.getBlockState(sourcePos).getValue(BlockIndustrialLever.POWERED)&&RedstoneChannels.level(world,64521)==15,"positive native channel producer registered and powered");
+            require(root.screenOn(),"ordinary channel source powers display independently of chip");source.setLocalOn(false);require(!root.screenOn(),"channel source off darkens display");world.setBlockToAir(sourcePos);
+            NBTTagCompound saved=root.writeToNBT(new NBTTagCompound());saved.setBoolean("NavigationSecurity",true);saved.setBoolean("AnyToken",false);saved.setInteger("AllowedTokens",16);saved.setInteger("TokenBehavior",3);TileEntityNavigationTable restored=new TileEntityNavigationTable();restored.readFromNBT(saved);require(restored.screenSettings().texture==texture&&restored.screenSettings().redstone&&!restored.screenSettings().security&&restored.screenSettings().speed==0&&!restored.isEmpty(),"settings and real chip persist");require(restored.getOutputLevel()==0&&restored.any&&restored.allowed==127&&restored.behavior==0,"legacy saved security/company/behavior ignored while real chip retained");
             carried(world,base,members);
-            root.configureDisplay(new NavigationScreenSettings(texture,false,2,false,true),false,1<<4,0,ChannelList.of(64521));root.removeStackFromSlot(0);require(!root.screenOn(),"removing chip closes secured display");
+            root.configureDisplay(new NavigationScreenSettings(texture,false,2,false,true),false,1<<4,0,ChannelList.of(64521));root.removeStackFromSlot(0);require(root.screenOn(),"removing optional chip does not deactivate display");
             BlockPos survivor=members.get(members.size()-1);for(BlockPos at:members)if(!at.equals(survivor))world.setBlockToAir(at);
             NavigationAssemblies.rebuild(world,survivor);TileEntityNavigationTable split=table(world,survivor);
-            require(split.hasMount()&&split.screenSettings().texture==texture&&split.screenSettings().security&&split.getRedstoneChannels().contains(64521)&&!split.screenOn(),"split retains artwork, security and channels without cloning a chip");
+            require(split.hasMount()&&split.screenSettings().texture==texture&&!split.screenSettings().security&&split.getRedstoneChannels().contains(64521)&&split.screenOn(),"split retains artwork and channels without cloning a chip or gating display");
             for(BlockPos at:BlockPos.getAllInBox(base.add(-1,-1,-1),base.add(7,1,3)))world.setBlockToAir(at);
         }
         resizeEmpty(world,base,texture);wire(texture);
-        System.out.println("[vandorlabs] navigation-display-inputs PASS cases="+cases+" mixed-facing native mount dimensions top clearance gates wrong/right chip physical/channel power zero outputs persistence bounded packets");
+        System.out.println("[vandorlabs] navigation-display-inputs PASS cases="+cases+" mixed-facing native mount dimensions top clearance legacy Security ignored all companies accepted chip-independent activation physical/channel power zero outputs persistence bounded packets");
     }
     private static void resizeEmpty(WorldServer world,BlockPos base,int texture){
         BlockNavigationTable block=(BlockNavigationTable)Block.getBlockFromName("vandorlabs:navigation_table_flat");
         world.setBlockState(base.east(),block.getDefaultState(),2);NavigationAssemblies.rebuild(world,base.east());
         TileEntityNavigationTable configured=table(world,base.east());configured.configureDisplay(new NavigationScreenSettings(texture,false,2,false,true),false,16,0,ChannelList.of(64521));
         world.setBlockState(base,block.getDefaultState(),2);NavigationAssemblies.rebuild(world,base);
-        TileEntityNavigationTable owner=table(world,base).reader();require(owner.getPos().equals(base)&&owner.screenSettings().texture==texture&&owner.screenSettings().security&&owner.getRedstoneChannels().contains(64521)&&owner.isEmpty(),"configured empty reader survives ownership change from one to two modules");
+        TileEntityNavigationTable owner=table(world,base).reader();require(owner.getPos().equals(base)&&owner.screenSettings().texture==texture&&!owner.screenSettings().security&&owner.getRedstoneChannels().contains(64521)&&owner.isEmpty(),"configured empty reader survives ownership change from one to two modules");
         world.setBlockToAir(base);world.setBlockToAir(base.east());
     }
     private static void carried(WorldServer world,BlockPos base,java.util.List<BlockPos> members){

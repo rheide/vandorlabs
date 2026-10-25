@@ -18,7 +18,8 @@ def generate(check=False):
   return textures.index(path)
  def obj(path):
   positions=[];uvs=[];faces=[];materials={};active=None
-  for line in (path.parent/'materials.mtl').read_text().splitlines():
+  material_file=next((line.split()[1] for line in path.read_text().splitlines() if line.startswith('mtllib ')),'materials.mtl')
+  for line in (path.parent/material_file).read_text().splitlines():
    parts=line.split()
    if not parts:continue
    if parts[0]=='newmtl':active=parts[1]
@@ -38,12 +39,16 @@ def generate(check=False):
     faces.append(dict(texture=materials[active],vertices=vertices))
   assert faces,path
   return faces
+ def state_obj(spec,path):
+  root=ASSETS/'models/block'/spec['model']
+  if spec['design'] in ('longburn_drive','meridian_core') and path=='active/static.obj':return obj(root/'active/drive_body.obj')+obj(root/'active/drive_lights.obj')
+  return obj(root/path)
  designs={}
  for spec in json.loads((ASSETS/'data/frame_machines.json').read_text()):
   paths=spec.get('state_models') or (['static.obj','active/static.obj'] if spec.get('chip_anchor') else ['complete.obj'])
   if spec.get('motion')=='shutters':paths=paths[:-1]+['active/complete_open.obj']
   designs[spec['block']]=dict(width=spec['width'],height=spec['height'],depth=spec['depth'],seed=texture('vandorlabs:blocks/matter/'+spec['block']),
-                            states=[obj(ASSETS/'models/block'/spec['model']/path) for path in paths])
+                            states=[state_obj(spec,path) for path in paths])
  data=dict(textures=textures,designs=designs)
  content=json.dumps(data,separators=(',',':'))+'\n';path=ASSETS/'data/dynmap_frame_models.json'
  if check:assert path.read_text()==content,'Stale Core map geometry'

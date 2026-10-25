@@ -8,20 +8,11 @@ Use the Configurizer or sneak-right-click any module to edit the shared display.
 
 ![Navigation display dialog](multiblocks/navigation-display-dialog.png)
 
-**Redstone** and **Security** are disabled by default. Enable either gate independently:
+**Redstone** is disabled by default. With it disabled, the selected artwork is visible without a chip. Enable Redstone to require physical power on any member or ordinary Vandor Labs input channels; `0` means disconnected. Without power an enabled display is black. Every navigation module has **zero physical and channel output**, including when a chip is inserted. These settings do not add navigation or propulsion gameplay.
 
-| Redstone | Security | Selected artwork is visible when |
-| --- | --- | --- |
-| Disabled | Disabled | Always |
-| Enabled | Disabled | The assembly receives power |
-| Disabled | Enabled | A matching Data Chip is inserted |
-| Enabled | Enabled | The assembly receives power and a matching Data Chip is inserted |
+Every valid assembly shares one always-visible Data Chip Mount. Any Data Chip company or type is accepted. Inserting or removing the chip never changes display activation. New chips stay inserted until removed with an empty hand. The integrated dialog has no Security, company filter or return-mode controls. Older saved Security/filter/behavior selections are ignored; an already pending return still completes to its original owner, preserving the actual item and animation state.
 
-Otherwise the screen is black. Physical redstone can power any member. Input channels accept ordinary Vandor Labs channel sources; `0` means disconnected. Every navigation module has **zero physical and channel output**, including when a chip is inserted. These settings do not add navigation or propulsion gameplay.
-
-Security uses the existing Data Chip company filter. An incorrect chip is rejected. With Security disabled, a chip is optional and does not control visibility. A returning chip only authorizes the display while it remains inserted; return modes never latch the screen on after removal. For a screen that stays visible with its chip, choose the retained insertion mode.
-
-With Security enabled, an assembly shares exactly one Data Chip Mount. Disabling Security removes the visible mount and its contents from the model. Any inserted chip remains safely stored and reappears when Security is re-enabled. Its frame and chip use the standalone mount's native size, with half a pixel of clearance below the top of the front panel. Resizing moves the mount, chip and settings together. Settings are saved on every member so a split retains its display configuration; the physical chip remains a single item on its owning component. Remove chips before merging occupied assemblies, since extra retained chips are dropped once.
+The frame and chip use the standalone mount's native size, with half a pixel of clearance below the top of the front panel. Resizing moves the mount, chip and settings together. Settings are saved on every member so a split retains its display configuration; the physical chip remains one item on its owning component. Remove chips before merging occupied assemblies, since extra retained chips are dropped once. Standalone Data Chip Mount and Access Card reader settings remain independent; see [Data Chip Mounts](data-mounts.md).
 
 Assemblies require a complete loaded rectangle of at most 256 modules. Holes, incomplete rows and unloaded boundaries do not create extra mount owners. Screens keep their configured orientation when carried structures rotate.
 
