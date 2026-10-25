@@ -5,3 +5,19 @@ Ks 0 0 0
 d 1
 illum 1
 map_Kd vandorlabs:blocks/data_chip_programmer/programmer_writing
+
+newmtl keyboard
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/data_chip_programmer/keyboard
+
+newmtl screen_black
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:models/cockpits/blank

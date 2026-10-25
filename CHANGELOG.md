@@ -2,7 +2,7 @@
 
 ## 2.6
 
-- Add a Card / Chip Programmer with three retained slots, company-master validation, blank destinations, Master Data Chips and titled eight-page journals. Edit journals through a compact Inventory/Journal dialog and render the actual inserted cards and chips in the supplied console sockets.
+- Add a Card / Chip Programmer with three retained slots, company-master validation, Master Data Chips and titled eight-page journals. Program the Input item into an empty Output slot, use direct in-world socket insertion/removal, and edit input journals through the standard dark Inventory/Journal dialog. Render the actual retained cards and chips, an unlit screen and the established keyboard artwork.
 - Generalize Extender, Rotating and Fixed Arms for unsupported columns, six mounting directions and ordinary block attachments. Configure the active extension/angle and level or rotating payloads; restore exact translation endpoints as placed blocks and retain other poses as bounded snapshots. Preserve attachment data through rollback, recovery and vehicle transport.
 - Add Compact, Armoured and Bogie Tracks with connected native models, slab-side brackets, retained style selection and landing-support behavior.
 - Add Square Couplers with channel and physical redstone inputs, inverted activation and six mounting directions. Vehicle discovery crosses an adjacent pair only when both halves are locked. Include nested landing groups down to their outer supports and treat downward propulsion blocks as discovery boundaries.

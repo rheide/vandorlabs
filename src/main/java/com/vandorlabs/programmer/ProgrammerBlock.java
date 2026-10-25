@@ -11,7 +11,7 @@ import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.*;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.*;
 import net.minecraft.world.*;
 
 /** Four reserved cells, with one inventory and one rendering owner. */
@@ -30,7 +30,16 @@ public final class ProgrammerBlock extends Block {
     public static BlockPos cell(BlockPos root,EnumFacing facing,int part){return root.offset(facing.rotateY(),part&1).up(part>>1);}
     public static BlockPos root(BlockPos pos,IBlockState state){int part=state.getValue(PART);return pos.offset(state.getValue(FACING).rotateY(),-(part&1)).down(part>>1);}
     public static ProgrammerTile at(World world,BlockPos pos){IBlockState state=world.getBlockState(pos);if(!(state.getBlock() instanceof ProgrammerBlock))return null;TileEntity tile=world.getTileEntity(root(pos,state));return tile instanceof ProgrammerTile?(ProgrammerTile)tile:null;}
-    @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){ProgrammerTile tile=at(world,pos);if(tile!=null&&!world.isRemote&&tile.usable(player))player.openGui(VandorLabs.instance,24,world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ());return true;}
+    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){
+        BlockPos root=root(pos,state);EnumFacing facing=state.getValue(FACING);BlockPos origin=facing==EnumFacing.SOUTH?root.west():facing==EnumFacing.WEST?root.north():root;
+        return ProgrammerGeometry.trace(pos,origin,facing,start,end);
+    }
+    @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
+        ProgrammerTile tile=at(world,pos);if(tile==null)return false;
+        Vec3d eyes=player.getPositionEyes(1),end=eyes.add(player.getLook(1).scale(6));RayTraceResult hit=collisionRayTrace(state,world,pos,eyes,end);
+        if(hit!=null&&hit.subHit>=0){if(!world.isRemote)tile.interactSocket(player,hand,hit.subHit);return true;}
+        if(!world.isRemote&&tile.usable(player))player.openGui(VandorLabs.instance,24,world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ());return true;
+    }
     @Override public int quantityDropped(IBlockState state,int fortune,java.util.Random random){return state.getValue(PART)==0?1:0;}
     @Override public int damageDropped(IBlockState state){return 0;}
     @Override public ItemStack getItem(World world,BlockPos pos,IBlockState state){return new ItemStack(this);}
