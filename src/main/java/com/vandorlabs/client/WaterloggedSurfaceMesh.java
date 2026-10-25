@@ -99,11 +99,7 @@ public final class WaterloggedSurfaceMesh {
     private static List<double[]> points(Vec3d[] vertices){List<double[]> out=new ArrayList<>();for(Vec3d v:vertices)out.add(new double[]{v.x,v.y,v.z});return out;}
     private static List<double[]> clip(List<double[]> polygon,double[] plane){return DiagonalMeshClip.plane(polygon,plane[0],plane[1],plane[2],plane[3]);}
     private static void subtract(List<double[]> polygon,Region region,EnumFacing offset,List<List<double[]>> out){
-        List<double[]> inside=polygon;
-        for(double[] plane:region.planes){double d=plane[3]+plane[0]*offset.getFrontOffsetX()+plane[1]*offset.getFrontOffsetY()+plane[2]*offset.getFrontOffsetZ();
-            List<double[]> outside=DiagonalMeshClip.plane(inside,-plane[0],-plane[1],-plane[2],-d-1e-8);if(area(outside)>1e-10)out.add(outside);
-            inside=DiagonalMeshClip.plane(inside,plane[0],plane[1],plane[2],d);if(area(inside)<1e-10)return;
-        }
+        com.vandorlabs.fluids.FluidSurfaceMesh.subtract(polygon,region.planes,offset.getFrontOffsetX(),offset.getFrontOffsetY(),offset.getFrontOffsetZ(),out);
     }
     /** Exact half-spaces avoid collision-slice seams on diagonal leaves. */
     private static void opening(Source source,World world,BlockPos pos){

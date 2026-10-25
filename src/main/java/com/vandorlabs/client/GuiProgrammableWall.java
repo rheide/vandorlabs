@@ -41,6 +41,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         return block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STORAGE
                 || block == com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK || slab;
     }
+    private com.vandorlabs.ui.SlabStairDialog.State slabState(){return new com.vandorlabs.ui.SlabStairDialog.State(tile.getHousingTexture(),tile.getSideTexture(),textureLayout,tile.getFaceTextures().enabled,tile.getFaceTextures().choices(),faceTarget,new com.vandorlabs.persistence.StairState(tile.stairTread(),tile.stairRoll()));}
     private boolean sharedBlockDialog(){return supportsFaces() && !slab;}
     private com.vandorlabs.ui.ProgrammableBlockDialog.State sharedBlockState(){return new com.vandorlabs.ui.ProgrammableBlockDialog.State(tile.getHousingTexture(),textureLayout,tile.getFaceTextures().enabled,tile.getFaceTextures().choices(),faceTarget);}
     private boolean glassSurface(){return diagonalGlass || porthole && faceTarget==-3;}
@@ -100,10 +101,18 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         buttonList.clear();
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH, controlsX=layout.controlsX;
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
-        listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);
-        rows=Math.max(2,(ySize-(faceTabs || slab || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
+        listX=guiLeft+12; listY=slab?com.vandorlabs.ui.SlabStairDialog.listY(layout):guiTop+(faceTabs || porthole?54:30);
+        rows=slab?com.vandorlabs.ui.SlabStairDialog.rows(layout):Math.max(2,(ySize-(faceTabs || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
         textureList=glassSurface()?HousingTextureList.forCanopy(listX,listY,controlsX-listX-19,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(rows).keepView(textureList)
                 :new HousingTextureList(listX,listY,controlsX-listX-19,selected).visibleRows(rows).custom(this::choose);
+        if(slab){
+            for(com.vandorlabs.ui.SlabStairDialog.Control control:com.vandorlabs.ui.SlabStairDialog.controls(layout,slabState(),tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableStairs,I18n.format("gui.done"))){
+                com.vandorlabs.ui.ProgrammableDialogLayout.Button b=control.bounds;GuiButton button;
+                if(control.slider)button=new net.minecraftforge.fml.client.config.GuiSlider(b.id,b.x,b.y,b.width,b.height,"Step size: "," px",0,3,slabState().stairs.sliderIndex(),false,true,slider->{com.vandorlabs.persistence.StairState next=slabState().slider(slider.getValueInt()).stairs;tile.setStairGeometry(next.tread,next.roll);slider.displayString=com.vandorlabs.ui.SlabStairDialog.stepLabel(next);sendStairs();});
+                else button=new GuiButton(b.id,b.x,b.y,b.width,b.height,b.label);
+                button.displayString=b.label;button.enabled=control.enabled;buttonList.add(button);
+            }return;
+        }
         if(sharedBlockDialog()) {
             com.vandorlabs.ui.ProgrammableBlockDialog.State state=sharedBlockState();
             for(com.vandorlabs.ui.ProgrammableBlockDialog.Control control:com.vandorlabs.ui.ProgrammableBlockDialog.controls(layout,state,I18n.format("gui.done"))){
@@ -167,13 +176,6 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                 if(diagonalGlass)buttonList.add(new GuiButton(116,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,"Join: "+(tile.isGlassTextureJoin()?"On":"Off")));y+=24;
             }
         }
-        if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableStairs){
-            int step=Math.min(3,Integer.numberOfTrailingZeros(tile.stairTread()));
-            buttonList.add(new net.minecraftforge.fml.client.config.GuiSlider(130,controlsX,y,controlsWidth,20,"Step size: "," px",0,3,step,false,true,slider->{
-                tile.setStairGeometry(1<<slider.getValueInt(),tile.stairRoll());slider.displayString="Step size: "+tile.stairTread()+" px";sendStairs();
-            }));buttonList.get(buttonList.size()-1).displayString="Step size: "+tile.stairTread()+" px";y+=24;
-            buttonList.add(new GuiButton(131,controlsX,y,controlsWidth,20,"Orientation: "+(tile.stairRoll()==0?"Normal":"Sideways")));
-        }
         buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
     }
 
@@ -208,6 +210,12 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     void choose(int choice) {
         selected = choice;
+        if(slab){
+            com.vandorlabs.ui.SlabStairDialog.State state=slabState().choose(choice);
+            if(faceTarget==-2){tile.setSideTexture(state.side);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),state.side));initGui();return;}
+            if(faceTarget>=0&&state.facesEnabled){sendFaces(new com.vandorlabs.tiles.FaceTextures(true,state.faces()));initGui();return;}
+            tile.setHousingTexture(state.main);PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(tile.getPos(),tile.getSelectedScreen(),tile.isRedstoneEnabled(),tile.getDisplayMode(),tile.isFramed(),tile.getAnimationSpeedIndex(),tile.getInputPanel(),tile.getSecondaryInputPanel(),tile.isSmallInput(),tile.getRedstoneChannel(),state.main).withChannels(tile.getRedstoneChannels()));return;
+        }
         if(glassSurface() && textureList!=null && textureList.selected()!=choice)textureList.setSelected(choice);
         if(glassSurface()){if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;tile.setGlassShade(shade);tile.setGlassMaterial(-1);}else tile.setGlassMaterial(choice);sendPortholeSettings();initGui();return;}
         if(faceTarget==-2) {
@@ -239,13 +247,22 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(slab){
+            if(button.id==com.vandorlabs.ui.SlabStairDialog.TREAD)return;
+            com.vandorlabs.ui.SlabStairDialog.State state=slabState().action(button.id,GuiOptionCycle.direction());
+            if(button.id==100){mc.player.closeScreen();return;}
+            if(button.id==131){tile.setStairGeometry(state.stairs.tread,state.stairs.roll);sendStairs();initGui();return;}
+            if(button.id==103){textureLayout=state.layout;tile.setMainTextureLayout(textureLayout);button.displayString=slabSidesLabel();PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSlabSides(tile.getPos(),textureLayout));return;}
+            if(button.id==106||button.id==108)sendFaces(new com.vandorlabs.tiles.FaceTextures(state.facesEnabled,state.faces()));
+            if(button.id==128){tile.setSideTexture(state.side);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),state.side));}
+            faceTarget=state.target;selected=state.selected();initGui();return;
+        }
         if(sharedBlockDialog() && button.id!=100){
             com.vandorlabs.ui.ProgrammableBlockDialog.State state=sharedBlockState().action(button.id,GuiOptionCycle.direction());
             if(button.id==103){textureLayout=state.layout;tile.setMainTextureLayout(textureLayout);button.displayString=slabSidesLabel();PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSlabSides(tile.getPos(),textureLayout));return;}
             if(button.id==106 || button.id==108)sendFaces(new com.vandorlabs.tiles.FaceTextures(state.facesEnabled,state.faces()));
             faceTarget=state.target;selected=state.selectedTexture();initGui();return;
         }
-        if(button.id==131){tile.setStairGeometry(tile.stairTread(),tile.stairRoll()==0?1:0);sendStairs();initGui();return;}
         if(button.id==129){faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}
         if(glassSurface() && (button.id==115 || button.id==116)){
             int mode=button.id==115?GuiOptionCycle.next(tile.getGlassTextureLayout(),3):tile.getGlassTextureLayout();tile.setGlassLayout(mode!=1,button.id==116?!tile.isGlassTextureJoin():tile.isGlassTextureJoin());tile.setGlassTextureLayout(mode);sendPortholeSettings();initGui();return;

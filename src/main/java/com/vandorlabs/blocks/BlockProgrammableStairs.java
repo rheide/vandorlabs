@@ -114,7 +114,13 @@ public final class BlockProgrammableStairs extends BlockStairs {
         return createConfiguredDrop(world.getTileEntity(pos));
     }
 
-    @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return ProgrammableStairGeometry.settings(world,pos)>>5!=0?state.withProperty(SHAPE,EnumShape.STRAIGHT):super.getActualState(state,world,pos);}
+    @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
+        if(ProgrammableStairGeometry.settings(world,pos)>>5!=0)return state.withProperty(SHAPE,EnumShape.STRAIGHT);
+        com.vandorlabs.render.StairGeometry.Shape shape=com.vandorlabs.render.StairJoinPolicy.shape(state.getValue(FACING).getIndex(),state.getValue(HALF)==EnumHalf.TOP,direction->{
+            IBlockState other=world.getBlockState(pos.offset(EnumFacing.getFront(direction)));boolean stairs=other.getBlock() instanceof BlockStairs;
+            return new com.vandorlabs.render.StairJoinPolicy.State(stairs,stairs?other.getValue(FACING).getIndex():2,stairs&&other.getValue(HALF)==EnumHalf.TOP);
+        });return state.withProperty(SHAPE,EnumShape.valueOf(shape.name()));
+    }
     @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> out,net.minecraft.entity.Entity entity,boolean actual){
         int settings=ProgrammableStairGeometry.settings(world,pos);
         if(settings==8){super.addCollisionBoxToList(state,world,pos,query,out,entity,actual);return;}

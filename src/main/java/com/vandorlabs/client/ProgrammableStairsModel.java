@@ -53,10 +53,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
         for(BakedQuad quad:source) {
             IBlockState orientation=state==null?com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STAIRS.getDefaultState().withProperty(BlockStairs.FACING,EnumFacing.EAST):state;
             EnumFacing textureFace=com.vandorlabs.blocks.ProgrammableStairGeometry.unrolledFace(orientation,stairGeometry>>5,quad.getFace());
-            EnumFacing local=textureFace;
-            // Front is the low riser facing the player, opposite the rise direction.
-            if(local.getAxis()!=EnumFacing.Axis.Y)
-                for(int i=0;i<((facing.getOpposite().getHorizontalIndex()+2)&3);i++)local=local.rotateYCCW();
+            EnumFacing local=EnumFacing.getFront(com.vandorlabs.render.StairTextureMapping.localFace(textureFace.getIndex(),facing.getIndex()));
             int texture=faces.texture(local.getIndex(),ScreenHousingTextures.clamp(local.getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish));
             final int key=texture*3+layout;final int mode=layout;
             result.add(cache.computeIfAbsent(quad,q->new java.util.concurrent.ConcurrentHashMap<>())
@@ -68,25 +65,14 @@ public final class ProgrammableStairsModel implements IBakedModel {
         TextureAtlasSprite old=quad.getSprite(),next=Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite(ScreenHousingTextures.texture(texture));
         int[] data=quad.getVertexData().clone();int stride=data.length/4;
-        float[] u=new float[4],v=new float[4];float lo=16,hi=0,ulo=16,uhi=0;
+        float[] u=new float[4],v=new float[4];
         for(int i=0;i<4;i++) {
             u[i]=(Float.intBitsToFloat(data[i*stride+4])-old.getMinU())/(old.getMaxU()-old.getMinU())*16;
             v[i]=(Float.intBitsToFloat(data[i*stride+5])-old.getMinV())/(old.getMaxV()-old.getMinV())*16;
-            lo=Math.min(lo,v[i]);hi=Math.max(hi,v[i]);ulo=Math.min(ulo,u[i]);uhi=Math.max(uhi,u[i]);
         }
-        double unitU=1D/16,unitV=1D/16,aspect=UnifiedTextureSprites.aspect(next);
-        for(int a=0;a<4;a++)for(int b=0;b<4;b++){
-            double length=0;for(int axis=0;axis<3;axis++){double delta=Float.intBitsToFloat(data[a*stride+axis])-Float.intBitsToFloat(data[b*stride+axis]);length+=delta*delta;}length=Math.sqrt(length);
-            if(Math.abs(u[a]-u[b])>1e-6 && Math.abs(v[a]-v[b])<1e-6)unitU=length/Math.abs(u[a]-u[b]);
-            if(Math.abs(v[a]-v[b])>1e-6 && Math.abs(u[a]-u[b])<1e-6)unitV=length/Math.abs(v[a]-v[b]);
-        }
-        boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,(uhi-ulo)*unitU,(hi-lo)*unitV,aspect);
-        for(int i=0;i<4;i++) {
-            double uu=layout==2 && fit && uhi>ulo?(u[i]-ulo)*16/(uhi-ulo):layout==0?u[i]:com.vandorlabs.render.TextureLayoutMode.tileU(u[i],aspect);
-            double vv=fit && hi>lo && (layout==2 || textureFace.getAxis()!=EnumFacing.Axis.Y)?(v[i]-lo)*16/(hi-lo):layout==0?v[i]:com.vandorlabs.render.TextureLayoutMode.tileV(v[i],aspect);
-            data[i*stride+4]=Float.floatToRawIntBits(next.getInterpolatedU(uu));
-            data[i*stride+5]=Float.floatToRawIntBits(next.getInterpolatedV(vv));
-        }
+        com.vandorlabs.render.ControlMount.Point[] positions=new com.vandorlabs.render.ControlMount.Point[4];for(int i=0;i<4;i++)positions[i]=new com.vandorlabs.render.ControlMount.Point(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2]));
+        double[][] mapped=com.vandorlabs.render.StairTextureMapping.map(positions,u,v,layout,UnifiedTextureSprites.aspect(next),textureFace.getIndex());
+        for(int i=0;i<4;i++){data[i*stride+4]=Float.floatToRawIntBits(next.getInterpolatedU(mapped[i][0]));data[i*stride+5]=Float.floatToRawIntBits(next.getInterpolatedV(mapped[i][1]));}
         return new BakedQuad(data,quad.getTintIndex(),quad.getFace(),next,quad.shouldApplyDiffuseLighting(),quad.getFormat());
     }
     public boolean isAmbientOcclusion(){return base.isAmbientOcclusion();}
@@ -100,8 +86,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
             if(tag==null)return original;
             ProgrammableStairsModel model=new ProgrammableStairsModel(base,tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE),
                     tag.hasKey("SideTexture",3)?tag.getInteger("SideTexture"):-1,new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),tag.hasKey("MainTextureLayout",3)?tag.getInteger("MainTextureLayout"):tag.getBoolean("SlabTileSides")?1:0);
-            int tread=tag.hasKey("StairTread",3)?tag.getInteger("StairTread"):8;
-            model.itemGeometry=(com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)?tread:8)|(Math.max(0,Math.min(2,tag.getInteger("StairRoll")))<<5);
+            model.itemGeometry=com.vandorlabs.persistence.StairState.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag)).packed();
             return model;
         }
     };}

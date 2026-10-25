@@ -19,20 +19,17 @@ final class ContainedFluidHeights {
         return state;
     }
     static double corner(net.minecraft.world.World world,BlockPos pos,Fluid fluid,int x,int z){
-        Material material=fluid.getBlock().getDefaultState().getMaterial();float depth=0;int count=0;
+        Material material=fluid.getBlock().getDefaultState().getMaterial();java.util.List<com.vandorlabs.fluids.FluidSurfaceMesh.Column> columns=new java.util.ArrayList<>();
         for(int dx=0;dx<2;dx++)for(int dz=0;dz<2;dz++){
-            BlockPos at=pos.add(x-dx,0,z-dz);
-            if(state(world,at.up(),fluid).getMaterial()==material)return 1;
-            IBlockState state=state(world,at,fluid);
-            if(state.getMaterial()==material&&state.getPropertyKeys().contains(BlockLiquid.LEVEL)){
-                int level=state.getValue(BlockLiquid.LEVEL);float d=BlockLiquid.getLiquidHeightPercent(level);
-                if(level>=8||level==0){depth+=d*10;count+=10;}depth+=d;count++;
-            }else if(!state.getMaterial().isSolid()){depth++;count++;}
+            BlockPos at=pos.add(x-dx,0,z-dz);if(state(world,at.up(),fluid).getMaterial()==material)return 1;IBlockState state=state(world,at,fluid);
+            boolean same=state.getMaterial()==material&&state.getPropertyKeys().contains(BlockLiquid.LEVEL);
+            columns.add(new com.vandorlabs.fluids.FluidSurfaceMesh.Column(false,same,same?state.getValue(BlockLiquid.LEVEL):0,state.getMaterial().isSolid()));
         }
-        return count==0?8D/9:1-depth/count;
+        return com.vandorlabs.fluids.FluidSurfaceMesh.cornerHeight(columns);
     }
+
     static double height(net.minecraft.world.World world,BlockPos pos,Fluid fluid,double x,double z){
         double a=corner(world,pos,fluid,0,0),b=corner(world,pos,fluid,0,1),c=corner(world,pos,fluid,1,1),d=corner(world,pos,fluid,1,0);
-        return (a*(1-x)+d*x)*(1-z)+(b*(1-x)+c*x)*z-.001;
+        return com.vandorlabs.fluids.FluidSurfaceMesh.height(a,b,c,d,x,z);
     }
 }
