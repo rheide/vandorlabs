@@ -26,6 +26,16 @@ public final class ItemDesignToken extends Item {
         int design=stack.getMetadata();
         return "item.vandorlabs."+kind+"."+DESIGNS[design>=0&&design<DESIGNS.length?design:0];
     }
+    @Override public String getItemStackDisplayName(ItemStack stack){
+        if(!kind.equals("data_chip"))return super.getItemStackDisplayName(stack);
+        if(com.vandorlabs.programmer.ChipJournal.journal(stack)){
+            String title=com.vandorlabs.programmer.ChipJournal.title(stack);
+            String company=stack.getMetadata()>0&&stack.getMetadata()<DESIGNS.length?DESIGNS[stack.getMetadata()]:"";
+            if(!company.isEmpty())company=Character.toUpperCase(company.charAt(0))+company.substring(1)+" ";
+            return company+"Journal Data Chip"+(title.isEmpty()?"":" - "+title);
+        }
+        return super.getItemStackDisplayName(stack);
+    }
     @Override public void getSubItems(CreativeTabs tab,NonNullList<ItemStack> items){
         if(isInCreativeTab(tab))for(int i=0;i<DESIGNS.length;i++)items.add(new ItemStack(this,1,i));
     }

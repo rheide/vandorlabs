@@ -106,7 +106,7 @@ public final class CockpitAssembly {
         active.add(root);
         try{
             for(BlockPos cell:com.vandorlabs.cockpit.CockpitReservations.allCells(tile,removedFacing==null?tile.facing():removedFacing))if(!cell.equals(root) && world.isBlockLoaded(cell)){
-                TileEntity t=world.getTileEntity(cell);if(t instanceof TileEntityCockpitPart && ((TileEntityCockpitPart)t).anchor.equals(root))world.setBlockToAir(cell);
+                TileEntity t=world.getTileEntity(cell);if(t instanceof TileEntityCockpitPart && root(world,cell)==tile)world.setBlockToAir(cell);
             }
         }finally{active.remove(root);if(active.isEmpty())REMOVING.remove(world);}
     }

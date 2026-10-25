@@ -1,0 +1,77 @@
+{
+  "credit": "MCTrek modular tracks \u2014 native model source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/track/steel",
+    "steel": "vandorlabs:blocks/track/steel",
+    "trim": "vandorlabs:blocks/track/trim",
+    "dark": "vandorlabs:blocks/track/dark",
+    "rubber": "vandorlabs:blocks/track/rubber",
+    "steel_tread": "vandorlabs:blocks/track/steel_tread",
+    "sole": "vandorlabs:blocks/track/sole",
+    "status": "vandorlabs:blocks/track/status",
+    "wheel": "vandorlabs:blocks/track/wheel"
+  },
+  "elements": [
+    {
+      "name": "uneven_run_bridge_left",
+      "from": [
+        0,
+        13,
+        6
+      ],
+      "to": [
+        1,
+        14,
+        10
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            6,
+            1,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "down": {
+          "uv": [
+            0,
+            6,
+            1,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#steel"
+        }
+      }
+    }
+  ]
+}

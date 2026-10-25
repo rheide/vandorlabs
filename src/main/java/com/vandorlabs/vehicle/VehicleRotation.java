@@ -64,13 +64,28 @@ public final class VehicleRotation {
             }
             return true;
         }
-        if(tile==null && !cell.hasTileData())return simpleState(cell.state);
-        if(domain.equals("immersiveengineering"))return name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLadder")
+        if(tile==null && !cell.hasTileData())return inertBuilding(cell.state)||simpleState(cell.state);
+        if(domain.equals("immersiveengineering"))return name.equals("blusunrize.immersiveengineering.common.blocks.TileEntityIESlab")
+                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLantern")
+                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityStructuralArm")
+                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLadder")
                 || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorLV")
                 || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorMV")
                 || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorHV");
-        if(domain.equals("mekanism"))return name.equals("mekanism.common.tile.TileEntityEnergyCube");
+        if(domain.equals("mekanism"))return name.equals("mekanism.common.tile.TileEntityEnergyCube")||name.equals("mekanism.common.tile.TileEntityGlowPanel")||name.equals("mekanism.common.tile.TileEntityFluidTank")||name.equals("mekanism.common.tile.TileEntityBin")||name.equals("mekanism.common.tile.TileEntityGasTank")||name.equals("mekanism.common.tile.TileEntityPersonalChest");
         return domain.equals("malisisdoors") && tile==null && upperDoor(cell.state);
+    }
+    /** These connection flags are derived from neighbours, not private orientation/network data. */
+    private static boolean inertBuilding(IBlockState state){
+        net.minecraft.block.Block block=state.getBlock();net.minecraft.util.ResourceLocation id=block.getRegistryName();
+        if(id==null||block.hasTileEntity(state))return false;
+        String type=block.getClass().getName();
+        if(id.getResourceDomain().equals("immersiveengineering")){
+            int meta=block.getMetaFromState(state);
+            return type.equals("blusunrize.immersiveengineering.common.blocks.metal.BlockMetalDecoration1")&&meta>=0&&meta<=7
+                    ||type.equals("blusunrize.immersiveengineering.common.blocks.wooden.BlockWoodenDecoration")&&meta>=0&&meta<=1;
+        }
+        return id.getResourceDomain().equals("mekanism")&&type.equals("mekanism.common.block.BlockPlasticFence");
     }
     /** Tile-free building materials need no private NBT or external network relocation.
      * Directional states must demonstrate the expected quarter-turn, rather than
@@ -124,6 +139,16 @@ public final class VehicleRotation {
                 EnumFacing facing=rotation.rotate((EnumFacing)source.getValue(property));
                 if(property.getAllowedValues().contains(facing))rotated=rotated.withProperty(property,facing);
             }
+        if(inertBuilding(source)){
+            for(IProperty property:source.getPropertyKeys()){
+                String key=property.getName();EnumFacing side=null;
+                for(EnumFacing direction:EnumFacing.HORIZONTALS)if(direction.getName().equals(key))side=direction;
+                if(side==null||!(source.getValue(property) instanceof Boolean))continue;
+                String target=rotation.rotate(side).getName();
+                for(IProperty destination:source.getPropertyKeys())if(destination.getName().equals(target)&&destination.getValueClass()==Boolean.class)
+                    rotated=rotated.withProperty(destination,source.getValue(property));
+            }
+        }
         if(source.getBlock() instanceof BlockGlassWall) {
             boolean turned=source.getValue(BlockGlassWall.ROTATED);int depth=source.getValue(BlockGlassWall.DEPTH);
             for(int n=0;n<rotation.ordinal();n++){if(turned)depth=depth==1?2:depth==2?1:0;turned=!turned;}
@@ -150,7 +175,7 @@ public final class VehicleRotation {
                 data.setInteger("x",pos.getX());data.setInteger("y",pos.getY());data.setInteger("z",pos.getZ());
                 String domain=before.state.getBlock().getRegistryName().getResourceDomain();
                 if(domain.equals("vandorlabs")) {
-                    if(data.getString("id").equals("vandorlabs:modular_gear"))com.vandorlabs.gear.GearData.rotate(data,turns);
+                    if(data.getString("id").equals("vandorlabs:modular_gear")||data.getString("id").equals("vandorlabs:track"))com.vandorlabs.gear.GearData.rotate(data,turns,view.parent);
                     for(String key:new String[]{"Anchor","Pair","TrapdoorPartner","TrapdoorSquare","RampJournalOrigin"})if(data.hasKey(key,4)) {
                         BlockPos link=BlockPos.fromLong(data.getLong(key));
                         if(key.equals("TrapdoorSquare") && !(view.getTileEntity(before.pos) instanceof TileEntityProgrammableDiagonalTrapdoor)) {
@@ -194,7 +219,10 @@ public final class VehicleRotation {
                     facing(data,"facing",rotation,false);
                     NBTTagCompound old=data.copy();
                     for(EnumFacing side:EnumFacing.values())if(old.hasKey("sideConfig_"+side.getIndex(),3))data.setInteger("sideConfig_"+rotation.rotate(side).getIndex(),old.getInteger("sideConfig_"+side.getIndex()));
-                } else if(domain.equals("mekanism"))facing(data,"facing",rotation,false);
+                } else if(domain.equals("mekanism")){
+                    facing(data,"facing",rotation,false);
+                    if(view.getTileEntity(before.pos)!=null&&view.getTileEntity(before.pos).getClass().getName().equals("mekanism.common.tile.TileEntityGlowPanel"))facing(data,"side",rotation,false);
+                }
             }
             try{cells.add(new VehicleStructure.Cell(pos,state(before.state,rotation),data));}
             catch(RuntimeException | LinkageError failure){throw new IllegalArgumentException("Cannot rotate "+before.state.getBlock().getRegistryName()+" safely. Rotate back to the original heading before parking.",failure);}

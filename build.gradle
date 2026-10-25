@@ -823,6 +823,17 @@ task testBridgeModelAssets(type: Exec) {
 }
 check.dependsOn testBridgeModelAssets
 
+task testOculusRadarAssets(type: Exec) {
+    commandLine pythonExecutable, 'tools/test_oculus_radar.py'
+}
+check.dependsOn testOculusRadarAssets
+
+task testUtility26Assets(type: Exec) {
+    dependsOn jar
+    doFirst { commandLine pythonExecutable, 'tools/test_utility26_assets.py', jar.archivePath.absolutePath }
+}
+check.dependsOn testUtility26Assets
+
 // A release must validate the packaged JAR in a real client, including visible
 // diagonal frame rails; geometry-only tests cannot detect occluded artwork.
 task verifyRelease {
@@ -839,12 +850,14 @@ task verifyRelease {
             exec { commandLine 'python', 'testclient/run_windows.py', '--shot-prefix', 'utility22_card_mounts', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'fluids', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'bridge-machines', '--timeout', '900' }
+            exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'utility26', '--timeout', '900' }
         } else {
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'render-regressions' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'glass-appearance' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility22_card_mounts' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'fluids' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'bridge-machines' }
+            exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility26' }
         }
         if (digest() != expectedDigest) throw new GradleException('Release JAR changed during live validation')
         logger.lifecycle('Release JAR verified SHA-256: ' + expectedDigest)

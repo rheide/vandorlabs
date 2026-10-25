@@ -30,7 +30,7 @@ import net.minecraft.world.World;
  * their static baked model; the controller's FastTESR renders the one group.
  */
 public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements ITileEntityProvider {
-    public enum Kind { EXTENDER, SWING_ARM, MOUNT, PLATE, SKI, WHEEL }
+    public enum Kind { EXTENDER, SWING_ARM, MOUNT, PLATE, SKI, WHEEL, TRACK }
 
     public static final PropertyDirection FACING = com.vandorlabs.blocks.BlockVandorDirectional.FACING;
     public static final PropertyBool ASSEMBLED = PropertyBool.create("assembled");
@@ -114,6 +114,10 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state,
                                 EntityLivingBase placer, ItemStack stack) {
         TileEntity raw=world.getTileEntity(pos);if(!world.isRemote&&raw instanceof GearTileEntity&&stack.hasTagCompound()&&stack.getTagCompound().hasKey("ModularGearSettings",10))((GearTileEntity)raw).configure(stack.getTagCompound().getCompoundTag("ModularGearSettings"));
+        if(!world.isRemote&&raw instanceof GearTileEntity)((GearTileEntity)raw).operator(placer instanceof EntityPlayer?(EntityPlayer)placer:null);
+        if(!world.isRemote&&raw instanceof GearTileEntity&&stack.hasTagCompound()&&stack.getTagCompound().hasKey("ArmRecovery",10)){
+            net.minecraft.nbt.NBTTagCompound saved=stack.getTagCompound().getCompoundTag("ArmRecovery").copy();saved.setInteger("x",pos.getX());saved.setInteger("y",pos.getY());saved.setInteger("z",pos.getZ());((GearTileEntity)raw).readFromNBT(saved);((GearTileEntity)raw).operator(placer instanceof EntityPlayer?(EntityPlayer)placer:null);
+        }
         GearTileEntity.requestNearbyRebuild(world, pos);
     }
 
@@ -126,7 +130,8 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     public void breakBlock(World world, BlockPos pos, IBlockState state) {
         TileEntity tile = world.getTileEntity(pos);
         if (!world.isRemote && tile instanceof GearTileEntity) {
-            ((GearTileEntity) tile).releaseAssembly();
+            GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()||gear.hasRetainedPayload())gear.recoverOnBreak(this);
+            gear.releaseAssembly();
         }
         super.breakBlock(world, pos, state);
     }
@@ -272,6 +277,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     public static java.util.List<AxisAlignedBB> movingArmParts(){return loadParts("block/gear/swing_linkage",8);}
     public static java.util.List<AxisAlignedBB> modelParts(String name){return loadParts("block/gear/"+name);}
     @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){
+        if(tile instanceof GearTileEntity&&((GearTileEntity)tile).recoveryDropped())return;
         net.minecraft.stats.StatBase stat=net.minecraft.stats.StatList.getBlockStats(this);if(stat!=null)player.addStat(stat);player.addExhaustion(.005F);
         ItemStack drop=new ItemStack(this);if(tile instanceof GearTileEntity)drop.setTagInfo("ModularGearSettings",((GearTileEntity)tile).settings());spawnAsEntity(world,pos,drop);
     }
@@ -281,6 +287,6 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     @Override public double vehicleBottomY(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;return root!=null&&root.assembly()!=null?root.getPos().getY()-root.assembly().columnHeight()-(root.armSize()==2 && root.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL?1:0):pos.getY()-(kind==Kind.WHEEL && width()==2?1:0);}
 
     @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult hit,World world,BlockPos pos,EntityPlayer player){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());return stack;}
-    @Override public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());drops.add(stack);}
+    @Override public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);if(raw instanceof GearTileEntity&&((GearTileEntity)raw).hasRetainedPayload())return;GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());drops.add(stack);}
 
 }

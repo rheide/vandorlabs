@@ -31,6 +31,10 @@ final class MachineDisplayVisualChecks {
                 BufferedImage inserting=reader(mc,tile,mount,0,false),inserted=reader(mc,tile,mount,8,false),retained=reader(mc,tile,mount,40,false),reference=reader(mc,tile,mount,40,true);
                 require(differences(inserting,inserted,0,SIZE)>100,"native insertion moves into holder "+spec.design+facing);
                 require(differences(empty,inserted,52,76)>30,"chip remains visible in holder "+spec.design+facing);
+                if(differences(inserted,retained,0,SIZE)!=0){
+                    javax.imageio.ImageIO.write(inserted,"png",new File(output,"reader-before-"+spec.design+"-"+facing+".png"));
+                    javax.imageio.ImageIO.write(retained,"png",new File(output,"reader-retained-"+spec.design+"-"+facing+".png"));
+                }
                 require(differences(inserted,retained,0,SIZE)==0,"retained chip stays after animation "+spec.design+facing);
                 require(differences(inserted,reference,52,76)==0,"same native mount contents and proportions "+spec.design+facing);
                 tag.setBoolean("NavigationSecurity",false);tile.readFromNBT(tag);require(tile.mount()==null&&!tile.isEmpty(),"hidden slot retains chip");
@@ -52,10 +56,10 @@ final class MachineDisplayVisualChecks {
     private static BufferedImage reader(Minecraft mc,TileEntityConstructor tile,MachineMountSurface mount,double age,boolean reference)throws Exception{
         Vec3d center=mount.center.subtract(new Vec3d(tile.getPos()));return capture(mc,.45,.45,()->{
             int turn=com.vandorlabs.navigation.NavigationLayout.Facing.valueOf(tile.facing().name()).modelYRotation;GlStateManager.rotate(180+turn,0,1,0);
-            TokenSlotVisualMotion.at(age,()->{
+            com.vandorlabs.client.constructors.MachineVisualMotion.at(0,()->TokenSlotVisualMotion.at(age,()->{
                 if(reference)TETokenSlot.nativeMount(tile,mount,-mount.center.x,-mount.center.y,-mount.center.z,0);
                 else{GlStateManager.translate(-center.x,-center.y,-center.z);TEConstructor renderer=(TEConstructor)net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance.<TileEntityConstructor>getRenderer(tile);renderer.render(tile,0,0,0,0,-1,1);}
-            });
+            }));
         });
     }
     private static BufferedImage surface(Minecraft mc,TileEntityConstructor tile,int slot)throws Exception{
@@ -63,11 +67,11 @@ final class MachineDisplayVisualChecks {
         for(int i=0;i<4;i++){double[] point=surface.corners[i];p[i]=MachineMountSurface.rotate(new Vec3d(point[0],point[1],point[2]),tile.facing(),spec.width,spec.depth).subtract(new Vec3d(tile.pivot()));}
         Vec3d center=p[0].add(p[2]).scale(.5),u=p[1].subtract(p[0]).normalize(),v=p[3].subtract(p[0]).normalize(),n=u.crossProduct(v).normalize();
         java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);matrix.put(new float[]{(float)u.x,(float)v.x,(float)n.x,0,(float)u.y,(float)v.y,(float)n.y,0,(float)u.z,(float)v.z,(float)n.z,0,0,0,0,1}).flip();
-        return capture(mc,p[1].distanceTo(p[0])*.6,p[3].distanceTo(p[0])*.6,()->{GlStateManager.multMatrix(matrix);GlStateManager.translate(-center.x,-center.y,-center.z);TEConstructor renderer=(TEConstructor)net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance.<TileEntityConstructor>getRenderer(tile);renderer.render(tile,0,0,0,0,-1,1);});
+        return capture(mc,p[1].distanceTo(p[0])*.6,p[3].distanceTo(p[0])*.6,()->{GlStateManager.multMatrix(matrix);GlStateManager.translate(-center.x,-center.y,-center.z);TEConstructor renderer=(TEConstructor)net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance.<TileEntityConstructor>getRenderer(tile);com.vandorlabs.client.constructors.MachineVisualMotion.at(0,()->renderer.render(tile,0,0,0,0,-1,1));});
     }
     private static BufferedImage capture(Minecraft mc,double halfWidth,double halfHeight,Runnable render)throws Exception{
-        Framebuffer frame=new Framebuffer(SIZE,SIZE,true);GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-halfWidth,halfWidth,-halfHeight,halfHeight,-16,16);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();GlStateManager.loadIdentity();
+        Framebuffer frame=new Framebuffer(SIZE,SIZE,true);TurntableRenderState saved=new TurntableRenderState();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-halfWidth,halfWidth,-halfHeight,halfHeight,-16,16);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();GlStateManager.loadIdentity();
         try{frame.bindFramebuffer(true);GlStateManager.clearColor(.12F,.16F,.2F,1);GlStateManager.depthMask(true);GlStateManager.clear(16640);GlStateManager.enableDepth();GlStateManager.disableFog();GlStateManager.disableLighting();render.run();return net.minecraft.util.ScreenShotHelper.createScreenshot(SIZE,SIZE,frame);}
-        finally{GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);GL11.glPopAttrib();frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.color(1,1,1,1);}
+        finally{GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);saved.close();frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.color(1,1,1,1);}
     }
 }

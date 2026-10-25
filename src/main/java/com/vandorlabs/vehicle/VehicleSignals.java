@@ -98,6 +98,13 @@ public final class VehicleSignals {
             dirty.add(source.channelTile().getPos());
         }
     }
+    public void couplerState(com.vandorlabs.coupler.TileCoupler tile,boolean locked){
+        if(craft.world.isRemote||craft.view==null||craft.view.getTileEntity(tile.getPos())!=tile)return;
+        IBlockState state=craft.view.getBlockState(tile.getPos());
+        if(!(state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))return;
+        if(state.getValue(com.vandorlabs.coupler.BlockCoupler.LOCKED)!=locked)replaceState(tile.getPos(),state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked));
+        dirty.add(tile.getPos());
+    }
     private void replaceState(BlockPos pos,IBlockState state){
         List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(cell.pos.equals(pos)?new VehicleStructure.Cell(pos,state,cell.tileData()):cell);
         boolean geometry=craft.structure.at(pos).state!=state;
@@ -123,7 +130,7 @@ public final class VehicleSignals {
             if(tile instanceof TileEntityRedstoneChannel && tile.getBlockType() instanceof BlockVandorSwitch && ((BlockVandorSwitch)tile.getBlockType()).isMomentary() && ((TileEntityRedstoneChannel)tile).isLocalOn() && !releases.containsKey(tile.getPos()))releases.put(tile.getPos(),craft.world.getTotalWorldTime()+20);
             if(tile instanceof TileEntityRampController || tile instanceof TileEntityAutopilot || tile instanceof TileEntityRedstoneChannel || tile instanceof TileEntityCanopy || tile instanceof TileEntitySlidingDoor || tile instanceof TileEntityProgrammableTrapdoor
                     || tile instanceof TileEntityLandingGear && ((TileEntityLandingGear)tile).isRoot()
-                    || tile instanceof TileEntityRedstoneLight
+                    || tile instanceof TileEntityRedstoneLight || tile instanceof com.vandorlabs.coupler.TileCoupler
                     || tile instanceof TileEntityAnimatedScreenSelector && tile.getBlockType() instanceof BlockProgrammableLight)
                 add(wanted,(RedstoneChannelMember)tile);
             if(tile instanceof TileEntityAnimatedScreenSelector && RedstoneScreenInteractions.supports(tile.getBlockType())){

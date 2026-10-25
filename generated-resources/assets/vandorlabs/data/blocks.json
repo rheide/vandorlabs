@@ -3637,5 +3637,14 @@
     "id": "space_visor_5x1_double_height",
     "type": "canopy",
     "class": "BlockCanopy"
+  },
+  {
+    "id": "square_coupler",
+    "type": "block",
+    "class": "BlockCoupler"
+  },
+  {
+    "id": "data_chip_programmer",
+    "class": "ProgrammerBlock"
   }
 ]

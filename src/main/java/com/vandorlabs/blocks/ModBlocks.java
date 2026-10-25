@@ -183,6 +183,7 @@ public class ModBlocks {
         // src/main/resources.
         add(new BlockTurntableController());
         add(new BlockTurntableSurface());
+        for(com.vandorlabs.gear.track.TrackBlock track:com.vandorlabs.gear.track.TrackRegistry.BLOCKS)add(track);
         add(com.vandorlabs.gear.GearRegistry.LANDING_PLATE);
         add(com.vandorlabs.gear.GearRegistry.LANDING_SKI);
         add(com.vandorlabs.gear.GearRegistry.GEAR_EXTENDER);
@@ -289,6 +290,8 @@ public class ModBlocks {
     private static Block create(String cls, JsonObject e, Map<String, Block> byId) {
         String id = e.get("id").getAsString();
         switch (cls) {
+            case "ProgrammerBlock": return new com.vandorlabs.programmer.ProgrammerBlock();
+            case "BlockCoupler": return new com.vandorlabs.coupler.BlockCoupler();
             case "BlockCanopy": return new BlockCanopy(id);
             case "BlockDiagonalPorthole": return new BlockProgrammableWall(id, BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE);
             case "BlockDiagonalHalfConsole": return new BlockDiagonalHalfConsole(id);
@@ -459,6 +462,7 @@ public class ModBlocks {
                 ItemBlock item = block == PROGRAMMABLE_INPUT || block == PROGRAMMABLE_FULL_INPUT
                         ? new ItemProgrammableInput((BlockProgrammableInput) block)
                         : block instanceof BlockCockpit || block instanceof BlockCockpitPeripheral ? new com.vandorlabs.items.ItemCockpit(block)
+                        : block instanceof com.vandorlabs.programmer.ProgrammerBlock ? new com.vandorlabs.programmer.ProgrammerBlock.BlockItem(block)
                         : block instanceof BlockCanopy ? new BlockCanopy.CanopyItem((BlockCanopy)block)
                         : block == PROGRAMMABLE_HALF_CONSOLE
                         ? new ItemProgrammableHalfConsole((BlockProgrammableHalfConsole) block)
@@ -468,7 +472,7 @@ public class ModBlocks {
                         : block == PROGRAMMABLE_STAIRS ? new com.vandorlabs.items.ItemProgrammableStairs((BlockProgrammableStairs)block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
-                        ? new ItemDiagonalWall((BlockProgrammableWall) block) : block instanceof com.vandorlabs.gear.LargeGearBlock ? new com.vandorlabs.gear.ItemLargeGear((com.vandorlabs.gear.LargeGearBlock)block) : new com.vandorlabs.items.ItemCatalogBlock(block);
+                        ? new ItemDiagonalWall((BlockProgrammableWall) block) : block instanceof com.vandorlabs.gear.LargeGearBlock ? new com.vandorlabs.gear.ItemLargeGear((com.vandorlabs.gear.LargeGearBlock)block) : block instanceof com.vandorlabs.gear.GearBlock ? new com.vandorlabs.gear.ItemArm(block) : new com.vandorlabs.items.ItemCatalogBlock(block);
                 event.getRegistry().register(item.setRegistryName(block.getRegistryName()));
             }
         }
@@ -505,6 +509,7 @@ public class ModBlocks {
         ModelLoader.setCustomStateMapper(PROGRAMMABLE_RAMP,new StateMap.Builder().ignore(BlockVandorDirectional.FACING).build());
         ModelLoader.setCustomStateMapper(PROGRAMMABLE_RAMP_SLAB,new StateMap.Builder().ignore(BlockVandorDirectional.FACING).build());
         for (Block block : BLOCKS) {
+            if(block instanceof com.vandorlabs.programmer.ProgrammerBlock)ModelLoader.setCustomStateMapper(block,new com.vandorlabs.programmer.client.ProgrammerStateMapper());
             if (!NO_ITEM.contains(block)) {
                 Item item = Item.getItemFromBlock(block);
                 if (block instanceof BlockTelescopicLandingGear) {

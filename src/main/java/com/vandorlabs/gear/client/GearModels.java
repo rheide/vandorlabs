@@ -26,7 +26,7 @@ final class GearModels {
     private GearModels() { }
 
     static void reload() {
-        MESHES.clear();
+        MESHES.clear();ArmPayloadRenderer.clear();
         List<String> names = new ArrayList<String>();
         for (String name : new String[] { "mount", "fixed_mount","fixed_mount_compact", "sleeve", "rod", "socket", "extender",
                 "swing_linkage", "swivel", "swing_arm", "wheel", "wheel_large", "wheel_bracket", "wheel_tyre", "wheel_large_bracket", "wheel_large_tyre", "wheel_connector", "wheel_large_connector" }) names.add(name);
@@ -34,8 +34,10 @@ final class GearModels {
             names.add("plate_" + mask);
             names.add("ski_" + mask);
         }
+        for(String style:new String[]{"compact","armoured","bogie"})for(int mask=0;mask<16;mask++)names.add("track/"+style+"_"+mask);
+        for(String name:new String[]{"socket","top_mount","top_mount_high","side_mount","side_mount_low","bridge_left","bridge_right"})names.add("track/"+name);
         for (String name : names) {
-            ResourceLocation location = new ResourceLocation(com.vandorlabs.VandorLabs.MODID, "block/gear/" + name);
+            ResourceLocation location = new ResourceLocation(com.vandorlabs.VandorLabs.MODID, name.startsWith("track/")?"block/"+name:"block/gear/" + name);
             try {
                 IModel unbaked = ModelLoaderRegistry.getModel(location);
                 IBakedModel baked = unbaked.bake(unbaked.getDefaultState(), DefaultVertexFormats.BLOCK,

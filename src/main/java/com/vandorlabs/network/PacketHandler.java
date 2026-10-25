@@ -57,5 +57,7 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageStairGeometry.Handler.class,MessageStairGeometry.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageNavigationTable.Handler.class,MessageNavigationTable.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageMachineDisplay.Handler.class,MessageMachineDisplay.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(com.vandorlabs.programmer.ProgrammerMessage.Handler.class,com.vandorlabs.programmer.ProgrammerMessage.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(com.vandorlabs.coupler.MessageCoupler.Handler.class,com.vandorlabs.coupler.MessageCoupler.class,id++,Side.SERVER);
     }
 }

@@ -47,6 +47,7 @@ public final class VehicleStatus {
             net.minecraft.block.state.IBlockState state=world.getBlockState(p);if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)controller=p;
             if(autopilot!=null&&controller!=null)break;
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockLandingGear)continue;
+            if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight&&state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING)==net.minecraft.util.EnumFacing.DOWN)continue;
             try{for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.values())if(VehicleScan.touches(world,p,state,face)){BlockPos next=p.offset(face);if(seen.add(next))queue.add(next);}}catch(RuntimeException|LinkageError unavailable){VehicleCompatibility.warn(state.getBlock(),"status connectivity",unavailable);}
         }
         if(entries.size()>256)entries.clear();Entry result=new Entry(world.getTotalWorldTime(),autopilot,controller);entries.put(screen.toImmutable(),result);return result;

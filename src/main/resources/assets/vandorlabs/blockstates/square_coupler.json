@@ -1,0 +1,76 @@
+{
+  "variants": {
+    "facing=north,locked=false": {
+      "model": "vandorlabs:square_coupler_released",
+      "x": 0,
+      "y": 0,
+      "uvlock": false
+    },
+    "facing=north,locked=true": {
+      "model": "vandorlabs:square_coupler_locked",
+      "x": 0,
+      "y": 0,
+      "uvlock": false
+    },
+    "facing=east,locked=false": {
+      "model": "vandorlabs:square_coupler_released",
+      "x": 0,
+      "y": 90,
+      "uvlock": false
+    },
+    "facing=east,locked=true": {
+      "model": "vandorlabs:square_coupler_locked",
+      "x": 0,
+      "y": 90,
+      "uvlock": false
+    },
+    "facing=south,locked=false": {
+      "model": "vandorlabs:square_coupler_released",
+      "x": 0,
+      "y": 180,
+      "uvlock": false
+    },
+    "facing=south,locked=true": {
+      "model": "vandorlabs:square_coupler_locked",
+      "x": 0,
+      "y": 180,
+      "uvlock": false
+    },
+    "facing=west,locked=false": {
+      "model": "vandorlabs:square_coupler_released",
+      "x": 0,
+      "y": 270,
+      "uvlock": false
+    },
+    "facing=west,locked=true": {
+      "model": "vandorlabs:square_coupler_locked",
+      "x": 0,
+      "y": 270,
+      "uvlock": false
+    },
+    "facing=down,locked=false": {
+      "model": "vandorlabs:square_coupler_released",
+      "x": 90,
+      "y": 0,
+      "uvlock": false
+    },
+    "facing=down,locked=true": {
+      "model": "vandorlabs:square_coupler_locked",
+      "x": 90,
+      "y": 0,
+      "uvlock": false
+    },
+    "facing=up,locked=false": {
+      "model": "vandorlabs:square_coupler_released",
+      "x": 270,
+      "y": 180,
+      "uvlock": false
+    },
+    "facing=up,locked=true": {
+      "model": "vandorlabs:square_coupler_locked",
+      "x": 270,
+      "y": 180,
+      "uvlock": false
+    }
+  }
+}

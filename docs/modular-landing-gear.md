@@ -1,21 +1,22 @@
 # Modular landing gear
 
-**Landing Gear Extender** and **Landing Gear Swing Arm** are mounting struts.
-**Landing Gear Mount** is the fixed alternative, available in standard and Large sizes.
-Attach a Plate, Ski or matching-size Wheel below it; it stays deployed under
-manual clicks and redstone. Fixed mounts remain valid Taxi/Hover supports.
+**Extender Arm**, **Rotating Arm** and **Fixed Arm** are general mounting mechanisms,
+available in standard and Large sizes. Their existing saved block and item IDs remain readable.
+Attach a Landing Gear Plate, Ski, Wheel or Track to use an arm as a vehicle support,
+or attach ordinary building blocks to move an independent structure.
 
 **Landing Gear Plate**, **Landing Gear Ski** and **Landing Gear Wheel** form their connected feet. These
 parts replace the integrated wheel gear for new construction. Saved integrated
 wheel gear can migrate to these parts; older skis and struts remain readable.
 
-Build a vertical column of one to eight Extenders beneath a block with a solid
-underside. Place a Plate, Ski or Wheel directly below the column, then connect more
+Build a column of one to eight matching arm sections. Arms join immediately, even
+without a mounting block or attached foot. For landing gear, place a Plate, Ski, Wheel
+or Track directly below the column, then connect more
 matching feet horizontally. A group can contain up to 64 feet within a 16×16
 footprint. Align all connected skis in the same direction.
 
 More columns can attach to the same foot group. They must use the same strut type
-and height, and every column needs its own mounting block. The entire connected
+and height. The entire connected
 group shares one controller, target and animation. Fully deploy it before
 changing its topology. Replacing the controlling mount during a valid rebuild
 retains the group's settings.
@@ -62,8 +63,7 @@ Extend a ski row by clicking an existing ski: the new ski inherits its facing,
 including when the clicked ski belongs to an assembled extender group.
 
 Large Mounts, Extenders and Swing Arms occupy one block per section, with a
-compact mounting cap and a heavier mechanism than standard arms. Attach each
-column below a solid underside. Existing four-cell arm sections automatically
+compact mounting cap and a heavier mechanism than standard arms. Mount each column on the desired face. Existing four-cell arm sections automatically
 release their old companion cells when loaded; independent neighboring arms
 remain in place. Large parts rotate with captured craft.
 
@@ -94,9 +94,67 @@ Large Extenders and Large Swing Arms each occupy one source block.
 The Large Wheel has the legacy Extra Large tyre diameter (1.75 blocks), reaches
 one block below its source cells, and requires a matching large Mount, Extender or Swing Arm. Standard
 wheels require standard arms. Click any quadrant of a large part to align a new
-large arm or wheel with its anchor and orientation. The arm mounting cap must touch a solid underside. Connected straight Large Extenders may face different ways.
+large arm or wheel with its anchor and orientation. Connected straight Large Extenders may face different ways.
 
 Right-click an option button to cycle to its previous value. Settings apply immediately.
+
+## General arm movement
+
+The clicked mounting face sets the arm's direction. Ceiling mounts point down,
+floor mounts point up, and wall mounts point outward. Additional matching arm
+sections inherit the existing column's mounting axis. Placing an arm against a
+landing foot points it toward that foot. Existing saved arms continue to point down.
+
+Use the Configurizer for the shared dialog. **Motion and appearance** opens the
+endpoint controls without crowding the input/channel page. A general Extender's
+active extension ranges from -8 to +8 blocks relative to its construction pose;
+positive values extend outward. A general Rotating Arm's active angle ranges from
+-180 to +180 degrees. The Off state is the construction pose; the On state uses
+these configured endpoints. Redstone modes select ON activates or OFF activates.
+The existing landing-foot deployment semantics remain available on landing assemblies.
+Change motion endpoints only at the construction pose.
+
+**Payload: stays level** keeps the attachment's original orientation as a Rotating
+Arm swings. **Payload: rotates with arm** makes the attachment turn with its linkage;
+this choice also works with landing plates, skis, wheels and tracks.
+
+An ordinary attachment may contain up to 64 connected blocks within a 16-block
+span along each axis. It must be separated from the arm's mounting structure.
+The complete component and its boundary must be loaded. Capture checks editing
+permissions and protection hooks, preserves block and tile data, and pauses
+captured machinery. Blocks cannot include liquids, unbreakable material or moving
+pistons. Slab empty-half contacts follow the vehicle discovery rules.
+
+Whole-block translation endpoints restore ordinary blocks in the world, including
+their saved tile contents. Fractional positions and rotated poses remain captured,
+rendered and collidable, and survive saves. Reversing returns the same attachment
+to its construction position. An obstruction pauses the stroke without deleting
+its snapshot. Clear the original position before dismantling an arm that still
+holds captured contents. Breaking its controller drops an arm item containing a
+recovery snapshot; placing that item retains the captured data. If a transfer and
+its rollback both fail, the snapshot stays inert and records the original copied
+cells. Recovery reconciles those exact loaded cells before allowing the snapshot
+to materialize elsewhere, preventing duplicate inventories.
+
+General arms remain usable inside Taxi and Hover craft. Their moving attachments
+use nested retained snapshots, with the same collision and loaded-world checks;
+only landing supports are locked against retraction in Taxi mode. Cardinal parking
+rotates mounting axes, saved links, track connections and attachment snapshots together.
+
+## Tracks
+
+Compact, Armoured and Bogie Tracks attach below arm columns or beside a slab.
+Matching styles and travel directions connect into continuous tread runs, including
+unequal adjacent lanes. A group supports up to 64 track blocks within a 16×16
+footprint. Different styles or facings remain separate groups. Incomplete or
+unloaded groups show independent parts until their full topology is available.
+
+Use the Configurizer or sneak-right-click a track to select its style. Tracks under
+one arm assembly change style together and retain their controller. Their native
+socket is higher than a plate socket; the arm's lower connection follows that height.
+Top and bottom slab side brackets use the corresponding half-height connection.
+Tracks count as vehicle boundaries and support Taxi operation. The delivered tread
+models are static; vehicle motion does not animate individual tread links.
 
 ## Animated combinations
 

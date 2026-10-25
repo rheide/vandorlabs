@@ -17,6 +17,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public final class GearRenderer extends net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer<GearTileEntity> {
     private boolean cachePose;
+    private Affine mounting=Affine.identity();
     public static long cachedVertexBytes(){return GearModels.cachedVertexBytes();}
     @Override public void render(GearTileEntity tile,double x,double y,double z,float partial,int stage,float alpha){
         if(!visible(tile))return;
@@ -24,7 +25,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
             net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableCull();
             BufferBuilder buffer=net.minecraft.client.renderer.Tessellator.getInstance().getBuffer();buffer.begin(7,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);
-            renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();
+            renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();try{ArmPayloadRenderer.render(tile,tile.renderProgress(partial),x,y,z,partial);}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();com.vandorlabs.VandorLabs.logger.warn("Arm attachment rendering unavailable; snapshot retained",failure);}
         }
     }
     /** Bound members are drawn by their operational controller, including compact parts. */
@@ -46,6 +47,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
     }
     private void emit(GearTileEntity tile,double x,double y,double z,float partialTicks,int destroyStage,float partial,BufferBuilder buffer,boolean cache){
         if (tile.getWorld() == null) return;
+        mounting=Affine.mount(tile.mountDirection());
         double progress=tile.renderProgress(partialTicks);
         cachePose=cache&&(tile.isFixedMount()||progress==0||progress==1)&&(!(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)||((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft==null);
 
@@ -87,7 +89,8 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             IBlockState columnState=tile.getWorld().getBlockState(tile.getPos().add(column));
             if(!(columnState.getBlock() instanceof GearBlock))continue;
             Affine columnFixed=Affine.quarterTurn(quarterTurns(columnState.getValue(GearBlock.FACING)));
-            Affine offset=Affine.translation(column.getX(),column.getY(),column.getZ());
+            net.minecraft.util.math.BlockPos canonical=com.vandorlabs.gear.ArmOrientation.inverse(tile.mountDirection(),column);
+            Affine offset=Affine.translation(canonical.getX(),canonical.getY(),canonical.getZ());
             Affine size=Affine.translation(-shift,0,-shift).compose(Affine.scaleXZ(width));
             Affine barSize=tile.isSwingArmController()?Affine.scaleXZ(tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1):Affine.scaleXZ(width);
             barSize=Affine.translation(.5,0,.5).compose(barSize.compose(Affine.translation(-.5,0,-.5)));
@@ -113,9 +116,19 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
         int turns = assembly.kind() != GearTopology.FootKind.PLATE ? quarterTurns(tile.footFacing()) : 0;
         Affine orientation = Affine.quarterTurn(turns);
         String prefix = assembly.kind() == GearTopology.FootKind.PLATE ? "plate_" : "ski_";
-        for (GearTopology.Cell foot : assembly.feet()) {
+        if(assembly.kind()!=GearTopology.FootKind.NONE)for (GearTopology.Cell foot : assembly.feet()) {
+            if(assembly.kind()==GearTopology.FootKind.TRACK){
+                net.minecraft.util.math.BlockPos source=tile.localCell(foot);IBlockState ts=tile.getWorld().getBlockState(source);
+                if(ts.getBlock() instanceof com.vandorlabs.gear.track.TrackBlock){
+                    com.vandorlabs.gear.track.TrackBlock track=(com.vandorlabs.gear.track.TrackBlock)ts.getBlock();
+                    com.vandorlabs.gear.track.TrackAppearance appearance=com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),source);
+                    for(com.vandorlabs.gear.track.TrackParts.Part piece:com.vandorlabs.gear.track.TrackParts.forCell(track.style(),tile.footFacing(),appearance)){
+                        draw("track/"+piece.model.getResourcePath().substring("block/track/".length()),feet.compose(Affine.translation(foot.x,foot.y,foot.z).compose(Affine.quarterTurn(piece.quarterTurns))),x,y,z,light,buffer);
+                    }
+                }continue;
+            }
             if(assembly.kind()==GearTopology.FootKind.WHEEL){
-                net.minecraft.util.math.BlockPos source=tile.getPos().add(foot.x,foot.y,foot.z);IBlockState ws=tile.getWorld().getBlockState(source);if(!(ws.getBlock() instanceof GearBlock)||((GearBlock)ws.getBlock()).kind()!=GearBlock.Kind.WHEEL)continue;GearBlock wheel=(GearBlock)ws.getBlock();if(!wheel.componentRoot(source,ws).equals(source))continue;
+                net.minecraft.util.math.BlockPos source=tile.localCell(foot);IBlockState ws=tile.getWorld().getBlockState(source);if(!(ws.getBlock() instanceof GearBlock)||((GearBlock)ws.getBlock()).kind()!=GearBlock.Kind.WHEEL)continue;GearBlock wheel=(GearBlock)ws.getBlock();if(!wheel.componentRoot(source,ws).equals(source))continue;
                 Affine transform=orientation;com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
                 Affine at=feet.compose(Affine.translation(foot.x,foot.y,foot.z));
                 if(craft!=null)transform=transform.compose(Affine.yaw(.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft)));
@@ -142,7 +155,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
     }
 
     private void draw(String name,Affine transform,double x,double y,double z,int light,BufferBuilder buffer){
-        GearModels.draw(name,transform,x,y,z,light,buffer,cachePose);
+        GearModels.draw(name,mounting.compose(transform),x,y,z,light,buffer,cachePose);
     }
 
     static int quarterTurns(EnumFacing facing) {
@@ -183,6 +196,10 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             return new Affine(1, 0, 0, 0, 1, 0, 0, 0, 1, x, y, z);
         }
 
+        static Affine mount(EnumFacing face){
+            net.minecraft.util.math.Vec3d o=com.vandorlabs.gear.ArmOrientation.point(face,0,0,0),a=com.vandorlabs.gear.ArmOrientation.vector(face,1,0,0),b=com.vandorlabs.gear.ArmOrientation.vector(face,0,1,0),c=com.vandorlabs.gear.ArmOrientation.vector(face,0,0,1);
+            return new Affine(a.x,b.x,c.x,a.y,b.y,c.y,a.z,b.z,c.z,o.x,o.y,o.z);
+        }
         static Affine scaleXZ(double scale){return scaleXZ(scale,scale);}
         static Affine scaleXZ(double sx,double sz){return new Affine(sx,0,0,0,1,0,0,0,sz,0,0,0);}
         static Affine aroundCenter(double width,Affine transform){double shift=(width-1)*.5;return translation(shift,0,shift).compose(transform.compose(translation(-shift,0,-shift)));}

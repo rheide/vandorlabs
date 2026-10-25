@@ -1,0 +1,434 @@
+{
+  "credit": "MCTrek modular tracks \u2014 native model source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/track/steel",
+    "steel": "vandorlabs:blocks/track/steel",
+    "trim": "vandorlabs:blocks/track/trim",
+    "dark": "vandorlabs:blocks/track/dark",
+    "rubber": "vandorlabs:blocks/track/rubber",
+    "steel_tread": "vandorlabs:blocks/track/steel_tread",
+    "sole": "vandorlabs:blocks/track/sole",
+    "status": "vandorlabs:blocks/track/status",
+    "wheel": "vandorlabs:blocks/track/wheel"
+  },
+  "elements": [
+    {
+      "name": "belt_lower",
+      "from": [
+        3,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        2,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            0,
+            16,
+            16
+          ],
+          "texture": "#steel_tread"
+        },
+        "down": {
+          "uv": [
+            3,
+            0,
+            16,
+            16
+          ],
+          "texture": "#steel_tread"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#steel_tread"
+        }
+      }
+    },
+    {
+      "name": "belt_upper",
+      "from": [
+        3,
+        10,
+        0
+      ],
+      "to": [
+        16,
+        12,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            0,
+            16,
+            16
+          ],
+          "texture": "#steel_tread"
+        },
+        "down": {
+          "uv": [
+            3,
+            0,
+            16,
+            16
+          ],
+          "texture": "#steel_tread"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ],
+          "texture": "#steel_tread"
+        }
+      }
+    },
+    {
+      "name": "chassis_crossmember",
+      "from": [
+        3,
+        13,
+        6
+      ],
+      "to": [
+        16,
+        14,
+        10
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            3,
+            6,
+            16,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "down": {
+          "uv": [
+            3,
+            6,
+            16,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            13,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            13,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#steel"
+        }
+      }
+    },
+    {
+      "name": "chassis_spine",
+      "from": [
+        6,
+        12.5,
+        0
+      ],
+      "to": [
+        10,
+        13.5,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            6,
+            0,
+            10,
+            16
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            6,
+            0,
+            10,
+            16
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.0
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.0
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "left_side_cover",
+      "from": [
+        1,
+        2,
+        0
+      ],
+      "to": [
+        3,
+        11,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            1,
+            0,
+            3,
+            16
+          ],
+          "texture": "#steel"
+        },
+        "down": {
+          "uv": [
+            1,
+            0,
+            3,
+            16
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            9
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            9
+          ],
+          "texture": "#steel"
+        }
+      }
+    },
+    {
+      "name": "left_wear_inset",
+      "from": [
+        0.99,
+        2.6,
+        0
+      ],
+      "to": [
+        1,
+        7.8,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0.99,
+            0,
+            1,
+            16
+          ],
+          "texture": "#dark"
+        },
+        "down": {
+          "uv": [
+            0.99,
+            0,
+            1,
+            16
+          ],
+          "texture": "#dark"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            5.199999999999999
+          ],
+          "texture": "#dark"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            5.199999999999999
+          ],
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "left_upper_rim",
+      "from": [
+        0.85,
+        10.7,
+        0
+      ],
+      "to": [
+        1.35,
+        11.7,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0.85,
+            0,
+            1.35,
+            16
+          ],
+          "texture": "#trim"
+        },
+        "down": {
+          "uv": [
+            0.85,
+            0,
+            1.35,
+            16
+          ],
+          "texture": "#trim"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.0
+          ],
+          "texture": "#trim"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            1.0
+          ],
+          "texture": "#trim"
+        }
+      }
+    },
+    {
+      "name": "left_frame_riser",
+      "from": [
+        1,
+        11,
+        6
+      ],
+      "to": [
+        3,
+        14,
+        10
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            1,
+            6,
+            3,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "down": {
+          "uv": [
+            1,
+            6,
+            3,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            2,
+            3
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            2,
+            3
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            4,
+            3
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            4,
+            3
+          ],
+          "texture": "#steel"
+        }
+      }
+    }
+  ]
+}

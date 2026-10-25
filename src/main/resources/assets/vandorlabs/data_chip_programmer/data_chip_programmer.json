@@ -1,0 +1,5519 @@
+{
+  "id": "data_chip_programmer",
+  "title": "Data Chip Programmer",
+  "family": "programmer",
+  "namespace": "vandorlabs",
+  "minecraft_version": "1.12.2",
+  "size_model_pixels": [
+    32,
+    32,
+    16
+  ],
+  "size_blocks": [
+    2.0,
+    2.0,
+    1.0
+  ],
+  "model_units_per_block": 16,
+  "texels_per_block": 16,
+  "front_face": "north",
+  "origin": "minimum XYZ of the oriented assembly envelope",
+  "frame_pixels": [
+    128,
+    128
+  ],
+  "shared_uv_layout": true,
+  "shared_texture_family": "programmer",
+  "texture_gutter_pixels": 2,
+  "source": "sources/data_chip_programmer.json",
+  "default_state": "ready",
+  "states": {
+    "ready": {
+      "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/ready/complete.obj",
+      "obj_showcase": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/ready/showcase.obj",
+      "obj_resource": "vandorlabs:block/data_chip_programmer/ready/complete.obj",
+      "parts": {
+        "sample_input": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/ready/parts/sample_input.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/ready/parts/sample_input.obj",
+          "optional_example_card": true
+        },
+        "sample_master": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/ready/parts/sample_master.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/ready/parts/sample_master.obj",
+          "optional_example_card": true
+        },
+        "sample_output": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/ready/parts/sample_output.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/ready/parts/sample_output.obj",
+          "optional_example_card": true
+        },
+        "screen": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/ready/parts/screen.obj",
+          "geometry": {
+            "quads": 1,
+            "triangle_equivalent": 2,
+            "face_vertices": 4,
+            "unique_positions": 4
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/ready/parts/screen.obj",
+          "optional_example_card": false
+        },
+        "static": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/ready/parts/static.obj",
+          "geometry": {
+            "quads": 107,
+            "triangle_equivalent": 214,
+            "face_vertices": 428,
+            "unique_positions": 152
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/ready/parts/static.obj",
+          "optional_example_card": false
+        }
+      },
+      "geometry": {
+        "quads": 108,
+        "triangle_equivalent": 216,
+        "face_vertices": 432,
+        "unique_positions": 152
+      },
+      "showcase_geometry": {
+        "quads": 126,
+        "triangle_equivalent": 252,
+        "face_vertices": 504,
+        "unique_positions": 176
+      },
+      "texture": "vandorlabs:blocks/data_chip_programmer/programmer_ready",
+      "texture_file": "src/main/resources/assets/mctrek/textures/blocks/data_chip_programmer/programmer_ready.png",
+      "frame_pixels": [
+        128,
+        128
+      ],
+      "texture_strip_pixels": [
+        128,
+        128
+      ],
+      "frame_count": 1,
+      "frame_ticks": 0,
+      "cycle_ticks": 0,
+      "editable_obj": "editable/data_chip_programmer/ready/complete.obj",
+      "editable_obj_showcase": "editable/data_chip_programmer/ready/showcase.obj",
+      "editable_texture": "editable/data_chip_programmer/ready/data_chip_programmer_ready.png",
+      "blockbench": "editable/data_chip_programmer/ready/data_chip_programmer.bbmodel",
+      "blockbench_empty": "editable/data_chip_programmer/ready/data_chip_programmer_empty.bbmodel",
+      "blockbench_includes_example_cards": true
+    },
+    "writing": {
+      "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/writing/complete.obj",
+      "obj_showcase": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/writing/showcase.obj",
+      "obj_resource": "vandorlabs:block/data_chip_programmer/writing/complete.obj",
+      "parts": {
+        "sample_input": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/writing/parts/sample_input.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/writing/parts/sample_input.obj",
+          "optional_example_card": true
+        },
+        "sample_master": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/writing/parts/sample_master.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/writing/parts/sample_master.obj",
+          "optional_example_card": true
+        },
+        "sample_output": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/writing/parts/sample_output.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/writing/parts/sample_output.obj",
+          "optional_example_card": true
+        },
+        "screen": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/writing/parts/screen.obj",
+          "geometry": {
+            "quads": 1,
+            "triangle_equivalent": 2,
+            "face_vertices": 4,
+            "unique_positions": 4
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/writing/parts/screen.obj",
+          "optional_example_card": false
+        },
+        "static": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/writing/parts/static.obj",
+          "geometry": {
+            "quads": 107,
+            "triangle_equivalent": 214,
+            "face_vertices": 428,
+            "unique_positions": 152
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/writing/parts/static.obj",
+          "optional_example_card": false
+        }
+      },
+      "geometry": {
+        "quads": 108,
+        "triangle_equivalent": 216,
+        "face_vertices": 432,
+        "unique_positions": 152
+      },
+      "showcase_geometry": {
+        "quads": 126,
+        "triangle_equivalent": 252,
+        "face_vertices": 504,
+        "unique_positions": 176
+      },
+      "texture": "vandorlabs:blocks/data_chip_programmer/programmer_writing",
+      "texture_file": "src/main/resources/assets/mctrek/textures/blocks/data_chip_programmer/programmer_writing.png",
+      "frame_pixels": [
+        128,
+        128
+      ],
+      "texture_strip_pixels": [
+        128,
+        2048
+      ],
+      "frame_count": 16,
+      "frame_ticks": 2,
+      "cycle_ticks": 32,
+      "editable_obj": "editable/data_chip_programmer/writing/complete.obj",
+      "editable_obj_showcase": "editable/data_chip_programmer/writing/showcase.obj",
+      "editable_texture": "editable/data_chip_programmer/writing/data_chip_programmer_writing.png",
+      "blockbench": "editable/data_chip_programmer/writing/data_chip_programmer.bbmodel",
+      "blockbench_empty": "editable/data_chip_programmer/writing/data_chip_programmer_empty.bbmodel",
+      "blockbench_includes_example_cards": true
+    },
+    "complete": {
+      "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/complete/complete.obj",
+      "obj_showcase": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/complete/showcase.obj",
+      "obj_resource": "vandorlabs:block/data_chip_programmer/complete/complete.obj",
+      "parts": {
+        "sample_input": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/complete/parts/sample_input.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/complete/parts/sample_input.obj",
+          "optional_example_card": true
+        },
+        "sample_master": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/complete/parts/sample_master.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/complete/parts/sample_master.obj",
+          "optional_example_card": true
+        },
+        "sample_output": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/complete/parts/sample_output.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/complete/parts/sample_output.obj",
+          "optional_example_card": true
+        },
+        "screen": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/complete/parts/screen.obj",
+          "geometry": {
+            "quads": 1,
+            "triangle_equivalent": 2,
+            "face_vertices": 4,
+            "unique_positions": 4
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/complete/parts/screen.obj",
+          "optional_example_card": false
+        },
+        "static": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/complete/parts/static.obj",
+          "geometry": {
+            "quads": 107,
+            "triangle_equivalent": 214,
+            "face_vertices": 428,
+            "unique_positions": 152
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/complete/parts/static.obj",
+          "optional_example_card": false
+        }
+      },
+      "geometry": {
+        "quads": 108,
+        "triangle_equivalent": 216,
+        "face_vertices": 432,
+        "unique_positions": 152
+      },
+      "showcase_geometry": {
+        "quads": 126,
+        "triangle_equivalent": 252,
+        "face_vertices": 504,
+        "unique_positions": 176
+      },
+      "texture": "vandorlabs:blocks/data_chip_programmer/programmer_complete",
+      "texture_file": "src/main/resources/assets/mctrek/textures/blocks/data_chip_programmer/programmer_complete.png",
+      "frame_pixels": [
+        128,
+        128
+      ],
+      "texture_strip_pixels": [
+        128,
+        128
+      ],
+      "frame_count": 1,
+      "frame_ticks": 0,
+      "cycle_ticks": 0,
+      "editable_obj": "editable/data_chip_programmer/complete/complete.obj",
+      "editable_obj_showcase": "editable/data_chip_programmer/complete/showcase.obj",
+      "editable_texture": "editable/data_chip_programmer/complete/data_chip_programmer_complete.png",
+      "blockbench": "editable/data_chip_programmer/complete/data_chip_programmer.bbmodel",
+      "blockbench_empty": "editable/data_chip_programmer/complete/data_chip_programmer_empty.bbmodel",
+      "blockbench_includes_example_cards": true
+    },
+    "blank": {
+      "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/blank/complete.obj",
+      "obj_showcase": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/blank/showcase.obj",
+      "obj_resource": "vandorlabs:block/data_chip_programmer/blank/complete.obj",
+      "parts": {
+        "sample_input": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/blank/parts/sample_input.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/blank/parts/sample_input.obj",
+          "optional_example_card": true
+        },
+        "sample_master": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/blank/parts/sample_master.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/blank/parts/sample_master.obj",
+          "optional_example_card": true
+        },
+        "sample_output": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/blank/parts/sample_output.obj",
+          "geometry": {
+            "quads": 6,
+            "triangle_equivalent": 12,
+            "face_vertices": 24,
+            "unique_positions": 8
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/blank/parts/sample_output.obj",
+          "optional_example_card": true
+        },
+        "screen": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/blank/parts/screen.obj",
+          "geometry": {
+            "quads": 1,
+            "triangle_equivalent": 2,
+            "face_vertices": 4,
+            "unique_positions": 4
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/blank/parts/screen.obj",
+          "optional_example_card": false
+        },
+        "static": {
+          "obj": "src/main/resources/assets/mctrek/models/block/data_chip_programmer/blank/parts/static.obj",
+          "geometry": {
+            "quads": 107,
+            "triangle_equivalent": 214,
+            "face_vertices": 428,
+            "unique_positions": 152
+          },
+          "obj_resource": "vandorlabs:block/data_chip_programmer/blank/parts/static.obj",
+          "optional_example_card": false
+        }
+      },
+      "geometry": {
+        "quads": 108,
+        "triangle_equivalent": 216,
+        "face_vertices": 432,
+        "unique_positions": 152
+      },
+      "showcase_geometry": {
+        "quads": 126,
+        "triangle_equivalent": 252,
+        "face_vertices": 504,
+        "unique_positions": 176
+      },
+      "texture": "vandorlabs:blocks/data_chip_programmer/programmer_blank",
+      "texture_file": "src/main/resources/assets/mctrek/textures/blocks/data_chip_programmer/programmer_blank.png",
+      "frame_pixels": [
+        128,
+        128
+      ],
+      "texture_strip_pixels": [
+        128,
+        128
+      ],
+      "frame_count": 1,
+      "frame_ticks": 0,
+      "cycle_ticks": 0,
+      "editable_obj": "editable/data_chip_programmer/blank/complete.obj",
+      "editable_obj_showcase": "editable/data_chip_programmer/blank/showcase.obj",
+      "editable_texture": "editable/data_chip_programmer/blank/data_chip_programmer_blank.png",
+      "blockbench": "editable/data_chip_programmer/blank/data_chip_programmer.bbmodel",
+      "blockbench_empty": "editable/data_chip_programmer/blank/data_chip_programmer_empty.bbmodel",
+      "blockbench_includes_example_cards": true
+    }
+  },
+  "interfaces": {
+    "screen": {
+      "element": "status_screen",
+      "quad": "status_screen_surface",
+      "material": "screen",
+      "group": "screen",
+      "center_model_pixels": [
+        16.0,
+        25.5,
+        12.692388155425117
+      ],
+      "normal": [
+        0.0,
+        0.3826834323650897,
+        -0.9238795325112867
+      ],
+      "basis_u": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "basis_v": [
+        0.0,
+        0.9238795325112867,
+        0.3826834323650897
+      ],
+      "size_model_pixels": [
+        28.0,
+        11.906314203216333
+      ],
+      "corners_model_pixels": [
+        [
+          30.0,
+          20.0,
+          10.414213562373096
+        ],
+        [
+          2.0,
+          20.0,
+          10.414213562373096
+        ],
+        [
+          2.0,
+          31.0,
+          14.970562748477139
+        ],
+        [
+          30.0,
+          31.0,
+          14.970562748477139
+        ]
+      ],
+      "corner_order": [
+        "bottom_left",
+        "bottom_right",
+        "top_right",
+        "top_left"
+      ],
+      "ui_uv": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "render_offset_model_pixels": 0.01,
+      "render_anchor_model_pixels": [
+        16.0,
+        25.5038268343,
+        12.6831493601
+      ],
+      "render_anchor_blocks": [
+        1.0,
+        1.59398917714375,
+        0.79269683500625
+      ],
+      "render_corners_model_pixels": [
+        [
+          30.0,
+          20.0038268343,
+          10.404974767
+        ],
+        [
+          2.0,
+          20.0038268343,
+          10.404974767
+        ],
+        [
+          2.0,
+          31.0038268343,
+          14.9613239532
+        ],
+        [
+          30.0,
+          31.0038268343,
+          14.9613239532
+        ]
+      ],
+      "render_corners_blocks": [
+        [
+          1.875,
+          1.25023917714375,
+          0.6503109229375
+        ],
+        [
+          0.125,
+          1.25023917714375,
+          0.6503109229375
+        ],
+        [
+          0.125,
+          1.93773917714375,
+          0.935082747075
+        ],
+        [
+          1.875,
+          1.93773917714375,
+          0.935082747075
+        ]
+      ],
+      "atlas_rect_pixels": [
+        80,
+        22,
+        28,
+        12
+      ],
+      "uv_pixels": [
+        [
+          108.0,
+          22.0
+        ],
+        [
+          80.0,
+          22.0
+        ],
+        [
+          80.0,
+          33.9063142032
+        ],
+        [
+          108.0,
+          33.9063142032
+        ]
+      ]
+    },
+    "keyboard": {
+      "element": "keyboard",
+      "quad": "keyboard_surface",
+      "material": "keyboard",
+      "group": "static",
+      "center_model_pixels": [
+        16.0,
+        16.43,
+        4.0
+      ],
+      "normal": [
+        0.0,
+        0.9950371902099892,
+        -0.09950371902099932
+      ],
+      "basis_u": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "basis_v": [
+        0.0,
+        0.09950371902099932,
+        0.9950371902099892
+      ],
+      "size_model_pixels": [
+        16.0,
+        7.034912934784624
+      ],
+      "corners_model_pixels": [
+        [
+          24.0,
+          16.08,
+          0.49999999999999956
+        ],
+        [
+          8.0,
+          16.08,
+          0.49999999999999956
+        ],
+        [
+          8.0,
+          16.78,
+          7.5
+        ],
+        [
+          24.0,
+          16.78,
+          7.5
+        ]
+      ],
+      "corner_order": [
+        "bottom_left",
+        "bottom_right",
+        "top_right",
+        "top_left"
+      ],
+      "ui_uv": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "render_offset_model_pixels": 0.01,
+      "render_anchor_model_pixels": [
+        16.0,
+        16.4399503719,
+        3.9990049628
+      ],
+      "render_anchor_blocks": [
+        1.0,
+        1.02749689824375,
+        0.249937810175
+      ],
+      "render_corners_model_pixels": [
+        [
+          24.0,
+          16.0899503719,
+          0.4990049628
+        ],
+        [
+          8.0,
+          16.0899503719,
+          0.4990049628
+        ],
+        [
+          8.0,
+          16.7899503719,
+          7.4990049628
+        ],
+        [
+          24.0,
+          16.7899503719,
+          7.4990049628
+        ]
+      ],
+      "render_corners_blocks": [
+        [
+          1.5,
+          1.00562189824375,
+          0.031187810175
+        ],
+        [
+          0.5,
+          1.00562189824375,
+          0.031187810175
+        ],
+        [
+          0.5,
+          1.04937189824375,
+          0.468687810175
+        ],
+        [
+          1.5,
+          1.04937189824375,
+          0.468687810175
+        ]
+      ],
+      "atlas_rect_pixels": [
+        13,
+        39,
+        16,
+        8
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          39.0
+        ],
+        [
+          13.0,
+          39.0
+        ],
+        [
+          13.0,
+          46.0349129348
+        ],
+        [
+          29.0,
+          46.0349129348
+        ]
+      ]
+    },
+    "master_pad": {
+      "element": "master_pad",
+      "quad": "master_pad_surface",
+      "material": "pad_master",
+      "group": "static",
+      "center_model_pixels": [
+        16.0,
+        16.02,
+        11.0
+      ],
+      "normal": [
+        -0.0,
+        1.0,
+        0.0
+      ],
+      "basis_u": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "basis_v": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "size_model_pixels": [
+        14.0,
+        6.0
+      ],
+      "corners_model_pixels": [
+        [
+          23.0,
+          16.02,
+          8.0
+        ],
+        [
+          9.0,
+          16.02,
+          8.0
+        ],
+        [
+          9.0,
+          16.02,
+          14.0
+        ],
+        [
+          23.0,
+          16.02,
+          14.0
+        ]
+      ],
+      "corner_order": [
+        "bottom_left",
+        "bottom_right",
+        "top_right",
+        "top_left"
+      ],
+      "ui_uv": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "render_offset_model_pixels": 0.01,
+      "render_anchor_model_pixels": [
+        16.0,
+        16.03,
+        11.0
+      ],
+      "render_anchor_blocks": [
+        1.0,
+        1.001875,
+        0.6875
+      ],
+      "render_corners_model_pixels": [
+        [
+          23.0,
+          16.03,
+          8.0
+        ],
+        [
+          9.0,
+          16.03,
+          8.0
+        ],
+        [
+          9.0,
+          16.03,
+          14.0
+        ],
+        [
+          23.0,
+          16.03,
+          14.0
+        ]
+      ],
+      "render_corners_blocks": [
+        [
+          1.4375,
+          1.001875,
+          0.5
+        ],
+        [
+          0.5625,
+          1.001875,
+          0.5
+        ],
+        [
+          0.5625,
+          1.001875,
+          0.875
+        ],
+        [
+          1.4375,
+          1.001875,
+          0.875
+        ]
+      ],
+      "atlas_rect_pixels": [
+        93,
+        39,
+        14,
+        6
+      ],
+      "uv_pixels": [
+        [
+          107.0,
+          39.0
+        ],
+        [
+          93.0,
+          39.0
+        ],
+        [
+          93.0,
+          45.0
+        ],
+        [
+          107.0,
+          45.0
+        ]
+      ]
+    },
+    "input_pad": {
+      "element": "input_pad",
+      "quad": "input_pad_surface",
+      "material": "pad_input",
+      "group": "static",
+      "center_model_pixels": [
+        28.0,
+        16.02,
+        7.5
+      ],
+      "normal": [
+        -0.0,
+        1.0,
+        0.0
+      ],
+      "basis_u": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "basis_v": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "size_model_pixels": [
+        6.0,
+        13.0
+      ],
+      "corners_model_pixels": [
+        [
+          31.0,
+          16.02,
+          1.0
+        ],
+        [
+          25.0,
+          16.02,
+          1.0
+        ],
+        [
+          25.0,
+          16.02,
+          14.0
+        ],
+        [
+          31.0,
+          16.02,
+          14.0
+        ]
+      ],
+      "corner_order": [
+        "bottom_left",
+        "bottom_right",
+        "top_right",
+        "top_left"
+      ],
+      "ui_uv": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "render_offset_model_pixels": 0.01,
+      "render_anchor_model_pixels": [
+        28.0,
+        16.03,
+        7.5
+      ],
+      "render_anchor_blocks": [
+        1.75,
+        1.001875,
+        0.46875
+      ],
+      "render_corners_model_pixels": [
+        [
+          31.0,
+          16.03,
+          1.0
+        ],
+        [
+          25.0,
+          16.03,
+          1.0
+        ],
+        [
+          25.0,
+          16.03,
+          14.0
+        ],
+        [
+          31.0,
+          16.03,
+          14.0
+        ]
+      ],
+      "render_corners_blocks": [
+        [
+          1.9375,
+          1.001875,
+          0.0625
+        ],
+        [
+          1.5625,
+          1.001875,
+          0.0625
+        ],
+        [
+          1.5625,
+          1.001875,
+          0.875
+        ],
+        [
+          1.9375,
+          1.001875,
+          0.875
+        ]
+      ],
+      "atlas_rect_pixels": [
+        110,
+        2,
+        6,
+        13
+      ],
+      "uv_pixels": [
+        [
+          116.0,
+          2.0
+        ],
+        [
+          110.0,
+          2.0
+        ],
+        [
+          110.0,
+          15.0
+        ],
+        [
+          116.0,
+          15.0
+        ]
+      ]
+    },
+    "output_pad": {
+      "element": "output_pad",
+      "quad": "output_pad_surface",
+      "material": "pad_output",
+      "group": "static",
+      "center_model_pixels": [
+        4.0,
+        16.02,
+        7.5
+      ],
+      "normal": [
+        -0.0,
+        1.0,
+        0.0
+      ],
+      "basis_u": [
+        -1.0,
+        0.0,
+        0.0
+      ],
+      "basis_v": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "size_model_pixels": [
+        6.0,
+        13.0
+      ],
+      "corners_model_pixels": [
+        [
+          7.0,
+          16.02,
+          1.0
+        ],
+        [
+          1.0,
+          16.02,
+          1.0
+        ],
+        [
+          1.0,
+          16.02,
+          14.0
+        ],
+        [
+          7.0,
+          16.02,
+          14.0
+        ]
+      ],
+      "corner_order": [
+        "bottom_left",
+        "bottom_right",
+        "top_right",
+        "top_left"
+      ],
+      "ui_uv": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "render_offset_model_pixels": 0.01,
+      "render_anchor_model_pixels": [
+        4.0,
+        16.03,
+        7.5
+      ],
+      "render_anchor_blocks": [
+        0.25,
+        1.001875,
+        0.46875
+      ],
+      "render_corners_model_pixels": [
+        [
+          7.0,
+          16.03,
+          1.0
+        ],
+        [
+          1.0,
+          16.03,
+          1.0
+        ],
+        [
+          1.0,
+          16.03,
+          14.0
+        ],
+        [
+          7.0,
+          16.03,
+          14.0
+        ]
+      ],
+      "render_corners_blocks": [
+        [
+          0.4375,
+          1.001875,
+          0.0625
+        ],
+        [
+          0.0625,
+          1.001875,
+          0.0625
+        ],
+        [
+          0.0625,
+          1.001875,
+          0.875
+        ],
+        [
+          0.4375,
+          1.001875,
+          0.875
+        ]
+      ],
+      "atlas_rect_pixels": [
+        2,
+        22,
+        6,
+        13
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          22.0
+        ],
+        [
+          2.0,
+          22.0
+        ],
+        [
+          2.0,
+          35.0
+        ],
+        [
+          8.0,
+          35.0
+        ]
+      ]
+    }
+  },
+  "docks": {
+    "input": {
+      "role": "input",
+      "viewer_side": "left",
+      "pad_quad": "input_pad_surface",
+      "pad_mesh": "input_pad",
+      "pad_bounds_model_pixels": [
+        [
+          25.0,
+          16.02,
+          1.0
+        ],
+        [
+          31.0,
+          16.02,
+          14.0
+        ]
+      ],
+      "insertion_vector": [
+        0,
+        0,
+        1
+      ],
+      "insertion_axis": "z",
+      "slot_mouth": {
+        "center_model_pixels": [
+          28.0,
+          16.435000000000002,
+          11.5
+        ],
+        "normal": [
+          0,
+          0,
+          -1
+        ],
+        "basis_u": [
+          -1,
+          0,
+          0
+        ],
+        "basis_v": [
+          0,
+          1,
+          0
+        ],
+        "size_model_pixels": [
+          4.400000000000003,
+          0.83
+        ],
+        "corners_model_pixels": [
+          [
+            30.200000000000003,
+            16.020000000000003,
+            11.5
+          ],
+          [
+            25.799999999999997,
+            16.020000000000003,
+            11.5
+          ],
+          [
+            25.799999999999997,
+            16.85,
+            11.5
+          ],
+          [
+            30.200000000000003,
+            16.85,
+            11.5
+          ]
+        ]
+      },
+      "cavity_bounds_model_pixels": [
+        [
+          25.799999999999997,
+          16.02,
+          11.5
+        ],
+        [
+          30.200000000000003,
+          16.85,
+          14.0
+        ]
+      ],
+      "sample_card_group": "sample_input",
+      "sample_card_inserted_bounds_model_pixels": [
+        [
+          26.0,
+          16.04,
+          5.5
+        ],
+        [
+          30.0,
+          16.49,
+          12.0
+        ]
+      ],
+      "withdrawn_offset_model_pixels": [
+        0,
+        0,
+        -2.0
+      ],
+      "insertion_travel_model_pixels": 2.0,
+      "inserted_overlap_model_pixels": 0.5,
+      "card_attachment": {
+        "center_model_pixels": [
+          28.0,
+          16.265,
+          8.75
+        ],
+        "top_center_model_pixels": [
+          28.0,
+          16.5,
+          8.75
+        ],
+        "normal": [
+          0,
+          1,
+          0
+        ],
+        "basis_u": [
+          -1,
+          0,
+          0
+        ],
+        "basis_v": [
+          0,
+          0,
+          1
+        ],
+        "card_size_model_pixels": [
+          4.0,
+          6.5
+        ],
+        "thickness_model_pixels": 0.4499999999999993,
+        "top_render_corners_model_pixels": [
+          [
+            30.0,
+            16.5,
+            5.5
+          ],
+          [
+            26.0,
+            16.5,
+            5.5
+          ],
+          [
+            26.0,
+            16.5,
+            12.0
+          ],
+          [
+            30.0,
+            16.5,
+            12.0
+          ]
+        ],
+        "corner_order": [
+          "bottom_left",
+          "bottom_right",
+          "top_right",
+          "top_left"
+        ],
+        "portrait_card_y_rotation_degrees": 0,
+        "units": "model_pixels",
+        "model_pixels_per_block": 16
+      },
+      "minimum_socket_side_clearance_model_pixels": 0.2,
+      "minimum_socket_roof_clearance_model_pixels": 0.36,
+      "minimum_socket_back_clearance_model_pixels": 2.0,
+      "minimum_pad_clearance_model_pixels": 0.02
+    },
+    "output": {
+      "role": "output",
+      "viewer_side": "right",
+      "pad_quad": "output_pad_surface",
+      "pad_mesh": "output_pad",
+      "pad_bounds_model_pixels": [
+        [
+          1.0,
+          16.02,
+          1.0
+        ],
+        [
+          7.0,
+          16.02,
+          14.0
+        ]
+      ],
+      "insertion_vector": [
+        0,
+        0,
+        1
+      ],
+      "insertion_axis": "z",
+      "slot_mouth": {
+        "center_model_pixels": [
+          4.0,
+          16.435000000000002,
+          11.5
+        ],
+        "normal": [
+          0,
+          0,
+          -1
+        ],
+        "basis_u": [
+          -1,
+          0,
+          0
+        ],
+        "basis_v": [
+          0,
+          1,
+          0
+        ],
+        "size_model_pixels": [
+          4.3999999999999995,
+          0.83
+        ],
+        "corners_model_pixels": [
+          [
+            6.199999999999999,
+            16.020000000000003,
+            11.5
+          ],
+          [
+            1.8000000000000003,
+            16.020000000000003,
+            11.5
+          ],
+          [
+            1.8000000000000003,
+            16.85,
+            11.5
+          ],
+          [
+            6.199999999999999,
+            16.85,
+            11.5
+          ]
+        ]
+      },
+      "cavity_bounds_model_pixels": [
+        [
+          1.7999999999999998,
+          16.02,
+          11.5
+        ],
+        [
+          6.199999999999999,
+          16.85,
+          14.0
+        ]
+      ],
+      "sample_card_group": "sample_output",
+      "sample_card_inserted_bounds_model_pixels": [
+        [
+          2.0,
+          16.04,
+          5.5
+        ],
+        [
+          6.0,
+          16.49,
+          12.0
+        ]
+      ],
+      "withdrawn_offset_model_pixels": [
+        0,
+        0,
+        -2.0
+      ],
+      "insertion_travel_model_pixels": 2.0,
+      "inserted_overlap_model_pixels": 0.5,
+      "card_attachment": {
+        "center_model_pixels": [
+          4.0,
+          16.265,
+          8.75
+        ],
+        "top_center_model_pixels": [
+          4.0,
+          16.5,
+          8.75
+        ],
+        "normal": [
+          0,
+          1,
+          0
+        ],
+        "basis_u": [
+          -1,
+          0,
+          0
+        ],
+        "basis_v": [
+          0,
+          0,
+          1
+        ],
+        "card_size_model_pixels": [
+          4.0,
+          6.5
+        ],
+        "thickness_model_pixels": 0.4499999999999993,
+        "top_render_corners_model_pixels": [
+          [
+            6.0,
+            16.5,
+            5.5
+          ],
+          [
+            2.0,
+            16.5,
+            5.5
+          ],
+          [
+            2.0,
+            16.5,
+            12.0
+          ],
+          [
+            6.0,
+            16.5,
+            12.0
+          ]
+        ],
+        "corner_order": [
+          "bottom_left",
+          "bottom_right",
+          "top_right",
+          "top_left"
+        ],
+        "portrait_card_y_rotation_degrees": 0,
+        "units": "model_pixels",
+        "model_pixels_per_block": 16
+      },
+      "minimum_socket_side_clearance_model_pixels": 0.2,
+      "minimum_socket_roof_clearance_model_pixels": 0.36,
+      "minimum_socket_back_clearance_model_pixels": 2.0,
+      "minimum_pad_clearance_model_pixels": 0.02
+    },
+    "master": {
+      "role": "master",
+      "viewer_side": "center_rear",
+      "pad_quad": "master_pad_surface",
+      "pad_mesh": "master_pad",
+      "pad_bounds_model_pixels": [
+        [
+          9.0,
+          16.02,
+          8.0
+        ],
+        [
+          23.0,
+          16.02,
+          14.0
+        ]
+      ],
+      "insertion_vector": [
+        -1,
+        0,
+        0
+      ],
+      "insertion_axis": "x",
+      "slot_mouth": {
+        "center_model_pixels": [
+          13.5,
+          16.435000000000002,
+          10.05
+        ],
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "basis_u": [
+          0,
+          0,
+          -1
+        ],
+        "basis_v": [
+          0,
+          1,
+          0
+        ],
+        "size_model_pixels": [
+          3.9,
+          0.83
+        ],
+        "corners_model_pixels": [
+          [
+            13.5,
+            16.020000000000003,
+            12.0
+          ],
+          [
+            13.5,
+            16.020000000000003,
+            8.100000000000001
+          ],
+          [
+            13.5,
+            16.85,
+            8.100000000000001
+          ],
+          [
+            13.5,
+            16.85,
+            12.0
+          ]
+        ]
+      },
+      "cavity_bounds_model_pixels": [
+        [
+          10.9,
+          16.02,
+          8.1
+        ],
+        [
+          13.5,
+          16.85,
+          12.0
+        ]
+      ],
+      "sample_card_group": "sample_master",
+      "sample_card_inserted_bounds_model_pixels": [
+        [
+          12.8,
+          16.04,
+          8.3
+        ],
+        [
+          19.8,
+          16.49,
+          11.8
+        ]
+      ],
+      "withdrawn_offset_model_pixels": [
+        1.7,
+        0,
+        0
+      ],
+      "insertion_travel_model_pixels": 1.7,
+      "inserted_overlap_model_pixels": 0.7,
+      "card_attachment": {
+        "center_model_pixels": [
+          16.3,
+          16.265,
+          10.05
+        ],
+        "top_center_model_pixels": [
+          16.3,
+          16.5,
+          10.05
+        ],
+        "normal": [
+          0,
+          1,
+          0
+        ],
+        "basis_u": [
+          0,
+          0,
+          -1
+        ],
+        "basis_v": [
+          -1,
+          0,
+          0
+        ],
+        "card_size_model_pixels": [
+          3.5,
+          7.0
+        ],
+        "thickness_model_pixels": 0.4499999999999993,
+        "top_render_corners_model_pixels": [
+          [
+            19.8,
+            16.5,
+            11.8
+          ],
+          [
+            19.8,
+            16.5,
+            8.3
+          ],
+          [
+            12.8,
+            16.5,
+            8.3
+          ],
+          [
+            12.8,
+            16.5,
+            11.8
+          ]
+        ],
+        "corner_order": [
+          "bottom_left",
+          "bottom_right",
+          "top_right",
+          "top_left"
+        ],
+        "portrait_card_y_rotation_degrees": -90,
+        "units": "model_pixels",
+        "model_pixels_per_block": 16
+      },
+      "minimum_socket_side_clearance_model_pixels": 0.2,
+      "minimum_socket_roof_clearance_model_pixels": 0.36,
+      "minimum_socket_back_clearance_model_pixels": 1.9,
+      "minimum_pad_clearance_model_pixels": 0.02,
+      "minimum_socket_to_keyboard_clearance_model_pixels": 0.2,
+      "visibility_adjustment_model_pixels": [
+        0,
+        0,
+        -0.7
+      ]
+    }
+  },
+  "lamps": [],
+  "lamp_count": 0,
+  "unique_texture_regions_in_family": 47,
+  "screen_content_included": true,
+  "blank_screen_state": "blank",
+  "example_cards_separate": true,
+  "main_mesh_includes_example_cards": false,
+  "screen_fullbright_when_active": true,
+  "emissive_shader_included": false,
+  "world_light_emission_included": false,
+  "texture_animation_phase": "Shared atlas phase; visual writing activity does not encode authoritative game progress",
+  "rendering": "Render main parts once at the controller; add individual example cards only for occupied host slots.",
+  "empty_blockstate": "data_chip_programmer",
+  "physical_bounds_model_pixels": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      32,
+      32,
+      16
+    ]
+  ],
+  "physical_dimensions_model_pixels": [
+    32,
+    32,
+    16
+  ],
+  "physical_dimensions_blocks": [
+    2.0,
+    2.0,
+    1.0
+  ],
+  "surface_regions": [
+    {
+      "element": "plinth",
+      "group": "static",
+      "face": "plinth_north",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        49,
+        63,
+        32,
+        2
+      ],
+      "uv_pixels": [
+        [
+          49.0,
+          63.0
+        ],
+        [
+          81.0,
+          63.0
+        ],
+        [
+          81.0,
+          65.0
+        ],
+        [
+          49.0,
+          65.0
+        ]
+      ]
+    },
+    {
+      "element": "plinth",
+      "group": "static",
+      "face": "plinth_south",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        49,
+        63,
+        32,
+        2
+      ],
+      "uv_pixels": [
+        [
+          49.0,
+          63.0
+        ],
+        [
+          81.0,
+          63.0
+        ],
+        [
+          81.0,
+          65.0
+        ],
+        [
+          49.0,
+          65.0
+        ]
+      ]
+    },
+    {
+      "element": "plinth",
+      "group": "static",
+      "face": "plinth_west",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        85,
+        63,
+        16,
+        2
+      ],
+      "uv_pixels": [
+        [
+          85.0,
+          63.0
+        ],
+        [
+          101.0,
+          63.0
+        ],
+        [
+          101.0,
+          65.0
+        ],
+        [
+          85.0,
+          65.0
+        ]
+      ]
+    },
+    {
+      "element": "plinth",
+      "group": "static",
+      "face": "plinth_east",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        85,
+        63,
+        16,
+        2
+      ],
+      "uv_pixels": [
+        [
+          85.0,
+          63.0
+        ],
+        [
+          101.0,
+          63.0
+        ],
+        [
+          101.0,
+          65.0
+        ],
+        [
+          85.0,
+          65.0
+        ]
+      ]
+    },
+    {
+      "element": "plinth",
+      "group": "static",
+      "face": "plinth_up",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        38,
+        2,
+        32,
+        16
+      ],
+      "uv_pixels": [
+        [
+          38.0,
+          2.0
+        ],
+        [
+          70.0,
+          2.0
+        ],
+        [
+          70.0,
+          18.0
+        ],
+        [
+          38.0,
+          18.0
+        ]
+      ]
+    },
+    {
+      "element": "plinth",
+      "group": "static",
+      "face": "plinth_down",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        2,
+        2,
+        32,
+        16
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          2.0
+        ],
+        [
+          34.0,
+          2.0
+        ],
+        [
+          34.0,
+          18.0
+        ],
+        [
+          2.0,
+          18.0
+        ]
+      ]
+    },
+    {
+      "element": "cabinet",
+      "group": "static",
+      "face": "cabinet_north",
+      "material": "panel",
+      "atlas_rect_pixels": [
+        12,
+        22,
+        30,
+        12
+      ],
+      "uv_pixels": [
+        [
+          12.0,
+          22.0
+        ],
+        [
+          42.0,
+          22.0
+        ],
+        [
+          42.0,
+          34.0
+        ],
+        [
+          12.0,
+          34.0
+        ]
+      ]
+    },
+    {
+      "element": "cabinet",
+      "group": "static",
+      "face": "cabinet_south",
+      "material": "service_panel",
+      "atlas_rect_pixels": [
+        46,
+        22,
+        30,
+        12
+      ],
+      "uv_pixels": [
+        [
+          46.0,
+          22.0
+        ],
+        [
+          76.0,
+          22.0
+        ],
+        [
+          76.0,
+          34.0
+        ],
+        [
+          46.0,
+          34.0
+        ]
+      ]
+    },
+    {
+      "element": "cabinet",
+      "group": "static",
+      "face": "cabinet_west",
+      "material": "vent",
+      "atlas_rect_pixels": [
+        112,
+        22,
+        14,
+        12
+      ],
+      "uv_pixels": [
+        [
+          112.0,
+          22.0
+        ],
+        [
+          126.0,
+          22.0
+        ],
+        [
+          126.0,
+          34.0
+        ],
+        [
+          112.0,
+          34.0
+        ]
+      ]
+    },
+    {
+      "element": "cabinet",
+      "group": "static",
+      "face": "cabinet_east",
+      "material": "vent",
+      "atlas_rect_pixels": [
+        112,
+        22,
+        14,
+        12
+      ],
+      "uv_pixels": [
+        [
+          112.0,
+          22.0
+        ],
+        [
+          126.0,
+          22.0
+        ],
+        [
+          126.0,
+          34.0
+        ],
+        [
+          112.0,
+          34.0
+        ]
+      ]
+    },
+    {
+      "element": "work_deck",
+      "group": "static",
+      "face": "work_deck_north",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        13,
+        63,
+        32,
+        2
+      ],
+      "uv_pixels": [
+        [
+          13.0,
+          63.0
+        ],
+        [
+          45.0,
+          63.0
+        ],
+        [
+          45.0,
+          65.0
+        ],
+        [
+          13.0,
+          65.0
+        ]
+      ]
+    },
+    {
+      "element": "work_deck",
+      "group": "static",
+      "face": "work_deck_south",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        13,
+        63,
+        32,
+        2
+      ],
+      "uv_pixels": [
+        [
+          13.0,
+          63.0
+        ],
+        [
+          45.0,
+          63.0
+        ],
+        [
+          45.0,
+          65.0
+        ],
+        [
+          13.0,
+          65.0
+        ]
+      ]
+    },
+    {
+      "element": "work_deck",
+      "group": "static",
+      "face": "work_deck_west",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        105,
+        63,
+        16,
+        2
+      ],
+      "uv_pixels": [
+        [
+          105.0,
+          63.0
+        ],
+        [
+          121.0,
+          63.0
+        ],
+        [
+          121.0,
+          65.0
+        ],
+        [
+          105.0,
+          65.0
+        ]
+      ]
+    },
+    {
+      "element": "work_deck",
+      "group": "static",
+      "face": "work_deck_east",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        105,
+        63,
+        16,
+        2
+      ],
+      "uv_pixels": [
+        [
+          105.0,
+          63.0
+        ],
+        [
+          121.0,
+          63.0
+        ],
+        [
+          121.0,
+          65.0
+        ],
+        [
+          105.0,
+          65.0
+        ]
+      ]
+    },
+    {
+      "element": "work_deck",
+      "group": "static",
+      "face": "work_deck_up",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        38,
+        2,
+        32,
+        16
+      ],
+      "uv_pixels": [
+        [
+          38.0,
+          2.0
+        ],
+        [
+          70.0,
+          2.0
+        ],
+        [
+          70.0,
+          18.0
+        ],
+        [
+          38.0,
+          18.0
+        ]
+      ]
+    },
+    {
+      "element": "rear_monitor_support",
+      "group": "static",
+      "face": "rear_monitor_support_north",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        29,
+        55,
+        30,
+        3
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          55.0
+        ],
+        [
+          59.0,
+          55.0
+        ],
+        [
+          59.0,
+          58.0
+        ],
+        [
+          29.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "rear_monitor_support",
+      "group": "static",
+      "face": "rear_monitor_support_south",
+      "material": "vent",
+      "atlas_rect_pixels": [
+        63,
+        55,
+        30,
+        3
+      ],
+      "uv_pixels": [
+        [
+          63.0,
+          55.0
+        ],
+        [
+          93.0,
+          55.0
+        ],
+        [
+          93.0,
+          58.0
+        ],
+        [
+          63.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "rear_monitor_support",
+      "group": "static",
+      "face": "rear_monitor_support_west",
+      "material": "panel",
+      "atlas_rect_pixels": [
+        2,
+        63,
+        2,
+        3
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          63.0
+        ],
+        [
+          3.2,
+          63.0
+        ],
+        [
+          3.2,
+          66.0
+        ],
+        [
+          2.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "element": "rear_monitor_support",
+      "group": "static",
+      "face": "rear_monitor_support_east",
+      "material": "panel",
+      "atlas_rect_pixels": [
+        2,
+        63,
+        2,
+        3
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          63.0
+        ],
+        [
+          3.2,
+          63.0
+        ],
+        [
+          3.2,
+          66.0
+        ],
+        [
+          2.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_cheek_west",
+      "group": "static",
+      "face": "monitor_cheek_west_north",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        8,
+        63,
+        1,
+        3
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          63.0
+        ],
+        [
+          9.0,
+          63.0
+        ],
+        [
+          9.0,
+          66.0
+        ],
+        [
+          8.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_cheek_west",
+      "group": "static",
+      "face": "monitor_cheek_west_south",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        8,
+        63,
+        1,
+        3
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          63.0
+        ],
+        [
+          9.0,
+          63.0
+        ],
+        [
+          9.0,
+          66.0
+        ],
+        [
+          8.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_cheek_west",
+      "group": "static",
+      "face": "monitor_cheek_west_west",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        97,
+        55,
+        7,
+        3
+      ],
+      "uv_pixels": [
+        [
+          97.0,
+          55.0
+        ],
+        [
+          103.5,
+          55.0
+        ],
+        [
+          103.5,
+          58.0
+        ],
+        [
+          97.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_cheek_west",
+      "group": "static",
+      "face": "monitor_cheek_west_east",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        97,
+        55,
+        7,
+        3
+      ],
+      "uv_pixels": [
+        [
+          97.0,
+          55.0
+        ],
+        [
+          103.5,
+          55.0
+        ],
+        [
+          103.5,
+          58.0
+        ],
+        [
+          97.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_cheek_east",
+      "group": "static",
+      "face": "monitor_cheek_east_north",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        8,
+        63,
+        1,
+        3
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          63.0
+        ],
+        [
+          9.0,
+          63.0
+        ],
+        [
+          9.0,
+          66.0
+        ],
+        [
+          8.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_cheek_east",
+      "group": "static",
+      "face": "monitor_cheek_east_south",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        8,
+        63,
+        1,
+        3
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          63.0
+        ],
+        [
+          9.0,
+          63.0
+        ],
+        [
+          9.0,
+          66.0
+        ],
+        [
+          8.0,
+          66.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_cheek_east",
+      "group": "static",
+      "face": "monitor_cheek_east_west",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        97,
+        55,
+        7,
+        3
+      ],
+      "uv_pixels": [
+        [
+          97.0,
+          55.0
+        ],
+        [
+          103.5,
+          55.0
+        ],
+        [
+          103.5,
+          58.0
+        ],
+        [
+          97.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_cheek_east",
+      "group": "static",
+      "face": "monitor_cheek_east_east",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        97,
+        55,
+        7,
+        3
+      ],
+      "uv_pixels": [
+        [
+          97.0,
+          55.0
+        ],
+        [
+          103.5,
+          55.0
+        ],
+        [
+          103.5,
+          58.0
+        ],
+        [
+          97.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_top",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        2,
+        70,
+        32,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          70.0
+        ],
+        [
+          34.0,
+          70.0
+        ],
+        [
+          34.0,
+          70.6152236891
+        ],
+        [
+          2.0,
+          70.6152236891
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_bottom",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        57,
+        39,
+        32,
+        6
+      ],
+      "uv_pixels": [
+        [
+          57.0,
+          39.0
+        ],
+        [
+          89.0,
+          39.0
+        ],
+        [
+          89.0,
+          45.0
+        ],
+        [
+          57.0,
+          45.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_back",
+      "material": "panel",
+      "atlas_rect_pixels": [
+        74,
+        2,
+        32,
+        13
+      ],
+      "uv_pixels": [
+        [
+          74.0,
+          2.0
+        ],
+        [
+          106.0,
+          2.0
+        ],
+        [
+          106.0,
+          15.0
+        ],
+        [
+          74.0,
+          15.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_west",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        120,
+        2,
+        6,
+        13
+      ],
+      "uv_pixels": [
+        [
+          120.0,
+          2.0
+        ],
+        [
+          120.6152236891,
+          2.0
+        ],
+        [
+          126.0,
+          15.0
+        ],
+        [
+          120.0,
+          15.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_east",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        120,
+        2,
+        6,
+        13
+      ],
+      "uv_pixels": [
+        [
+          125.3847763109,
+          2.0
+        ],
+        [
+          126.0,
+          2.0
+        ],
+        [
+          126.0,
+          15.0
+        ],
+        [
+          120.0,
+          15.0
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_bezel_lower",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        13,
+        63,
+        32,
+        2
+      ],
+      "uv_pixels": [
+        [
+          13.0,
+          63.0
+        ],
+        [
+          45.0,
+          63.0
+        ],
+        [
+          45.0,
+          64.0823922003
+        ],
+        [
+          13.0,
+          64.0823922003
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_bezel_upper",
+      "material": "armor",
+      "atlas_rect_pixels": [
+        13,
+        63,
+        32,
+        2
+      ],
+      "uv_pixels": [
+        [
+          13.0,
+          63.0
+        ],
+        [
+          45.0,
+          63.0
+        ],
+        [
+          45.0,
+          64.0823922003
+        ],
+        [
+          13.0,
+          64.0823922003
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_bezel_west",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        2,
+        39,
+        2,
+        12
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          39.0
+        ],
+        [
+          4.0,
+          39.0
+        ],
+        [
+          4.0,
+          50.9063142032
+        ],
+        [
+          2.0,
+          50.9063142032
+        ]
+      ]
+    },
+    {
+      "element": "monitor_housing",
+      "group": "static",
+      "face": "monitor_bezel_east",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        2,
+        39,
+        2,
+        12
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          39.0
+        ],
+        [
+          4.0,
+          39.0
+        ],
+        [
+          4.0,
+          50.9063142032
+        ],
+        [
+          2.0,
+          50.9063142032
+        ]
+      ]
+    },
+    {
+      "element": "status_screen",
+      "group": "screen",
+      "face": "status_screen_surface",
+      "material": "screen",
+      "atlas_rect_pixels": [
+        80,
+        22,
+        28,
+        12
+      ],
+      "uv_pixels": [
+        [
+          108.0,
+          22.0
+        ],
+        [
+          80.0,
+          22.0
+        ],
+        [
+          80.0,
+          33.9063142032
+        ],
+        [
+          108.0,
+          33.9063142032
+        ]
+      ]
+    },
+    {
+      "element": "keyboard",
+      "group": "static",
+      "face": "keyboard_surface",
+      "material": "keyboard",
+      "atlas_rect_pixels": [
+        13,
+        39,
+        16,
+        8
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          39.0
+        ],
+        [
+          13.0,
+          39.0
+        ],
+        [
+          13.0,
+          46.0349129348
+        ],
+        [
+          29.0,
+          46.0349129348
+        ]
+      ]
+    },
+    {
+      "element": "keyboard",
+      "group": "static",
+      "face": "keyboard_front",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        38,
+        70,
+        16,
+        1
+      ],
+      "uv_pixels": [
+        [
+          38.0,
+          70.0
+        ],
+        [
+          54.0,
+          70.0
+        ],
+        [
+          54.0,
+          70.055
+        ],
+        [
+          38.0,
+          70.055
+        ]
+      ]
+    },
+    {
+      "element": "keyboard",
+      "group": "static",
+      "face": "keyboard_rear",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        38,
+        70,
+        16,
+        1
+      ],
+      "uv_pixels": [
+        [
+          38.0,
+          70.0
+        ],
+        [
+          54.0,
+          70.0
+        ],
+        [
+          54.0,
+          70.755
+        ],
+        [
+          38.0,
+          70.755
+        ]
+      ]
+    },
+    {
+      "element": "keyboard",
+      "group": "static",
+      "face": "keyboard_west",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        72,
+        70,
+        8,
+        1
+      ],
+      "uv_pixels": [
+        [
+          72.0,
+          70.0
+        ],
+        [
+          79.0349129348,
+          70.0
+        ],
+        [
+          79.0403856393,
+          70.0547270455
+        ],
+        [
+          72.0751253079,
+          70.7512530786
+        ]
+      ]
+    },
+    {
+      "element": "keyboard",
+      "group": "static",
+      "face": "keyboard_east",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        72,
+        70,
+        8,
+        1
+      ],
+      "uv_pixels": [
+        [
+          72.0054727045,
+          70.0
+        ],
+        [
+          79.0403856393,
+          70.0
+        ],
+        [
+          78.9652603315,
+          70.7512530786
+        ],
+        [
+          72.0,
+          70.0547270455
+        ]
+      ]
+    },
+    {
+      "element": "input_pad",
+      "group": "static",
+      "face": "input_pad_surface",
+      "material": "pad_input",
+      "atlas_rect_pixels": [
+        110,
+        2,
+        6,
+        13
+      ],
+      "uv_pixels": [
+        [
+          116.0,
+          2.0
+        ],
+        [
+          110.0,
+          2.0
+        ],
+        [
+          110.0,
+          15.0
+        ],
+        [
+          116.0,
+          15.0
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_west",
+      "group": "static",
+      "face": "input_guide_west_north",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_west",
+      "group": "static",
+      "face": "input_guide_west_south",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_west",
+      "group": "static",
+      "face": "input_guide_west_west",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        58,
+        70,
+        10,
+        1
+      ],
+      "uv_pixels": [
+        [
+          58.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.82
+        ],
+        [
+          58.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_west",
+      "group": "static",
+      "face": "input_guide_west_east",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        58,
+        70,
+        10,
+        1
+      ],
+      "uv_pixels": [
+        [
+          58.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.82
+        ],
+        [
+          58.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_west",
+      "group": "static",
+      "face": "input_guide_west_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        8,
+        39,
+        1,
+        10
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          39.0
+        ],
+        [
+          8.4,
+          39.0
+        ],
+        [
+          8.4,
+          49.0
+        ],
+        [
+          8.0,
+          49.0
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_east",
+      "group": "static",
+      "face": "input_guide_east_north",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_east",
+      "group": "static",
+      "face": "input_guide_east_south",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_east",
+      "group": "static",
+      "face": "input_guide_east_west",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        58,
+        70,
+        10,
+        1
+      ],
+      "uv_pixels": [
+        [
+          58.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.82
+        ],
+        [
+          58.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_east",
+      "group": "static",
+      "face": "input_guide_east_east",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        58,
+        70,
+        10,
+        1
+      ],
+      "uv_pixels": [
+        [
+          58.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.82
+        ],
+        [
+          58.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "input_guide_east",
+      "group": "static",
+      "face": "input_guide_east_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        8,
+        39,
+        1,
+        10
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          39.0
+        ],
+        [
+          8.4,
+          39.0
+        ],
+        [
+          8.4,
+          49.0
+        ],
+        [
+          8.0,
+          49.0
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_rear",
+      "group": "static",
+      "face": "input_socket_rear_north",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        105,
+        70,
+        5,
+        1
+      ],
+      "uv_pixels": [
+        [
+          105.0,
+          70.0
+        ],
+        [
+          109.4,
+          70.0
+        ],
+        [
+          109.4,
+          70.82
+        ],
+        [
+          105.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_rear",
+      "group": "static",
+      "face": "input_socket_rear_south",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        105,
+        70,
+        5,
+        1
+      ],
+      "uv_pixels": [
+        [
+          105.0,
+          70.0
+        ],
+        [
+          109.4,
+          70.0
+        ],
+        [
+          109.4,
+          70.82
+        ],
+        [
+          105.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_rear",
+      "group": "static",
+      "face": "input_socket_rear_west",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        24,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          24.0,
+          75.0
+        ],
+        [
+          24.5,
+          75.0
+        ],
+        [
+          24.5,
+          75.82
+        ],
+        [
+          24.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_rear",
+      "group": "static",
+      "face": "input_socket_rear_east",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        24,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          24.0,
+          75.0
+        ],
+        [
+          24.5,
+          75.0
+        ],
+        [
+          24.5,
+          75.82
+        ],
+        [
+          24.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_rear",
+      "group": "static",
+      "face": "input_socket_rear_up",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        105,
+        70,
+        5,
+        1
+      ],
+      "uv_pixels": [
+        [
+          105.0,
+          70.0
+        ],
+        [
+          109.4,
+          70.0
+        ],
+        [
+          109.4,
+          70.5
+        ],
+        [
+          105.0,
+          70.5
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_roof",
+      "group": "static",
+      "face": "input_socket_roof_north",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        95,
+        70,
+        6,
+        1
+      ],
+      "uv_pixels": [
+        [
+          95.0,
+          70.0
+        ],
+        [
+          100.2,
+          70.0
+        ],
+        [
+          100.2,
+          70.55
+        ],
+        [
+          95.0,
+          70.55
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_roof",
+      "group": "static",
+      "face": "input_socket_roof_south",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        95,
+        70,
+        6,
+        1
+      ],
+      "uv_pixels": [
+        [
+          95.0,
+          70.0
+        ],
+        [
+          100.2,
+          70.0
+        ],
+        [
+          100.2,
+          70.55
+        ],
+        [
+          95.0,
+          70.55
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_roof",
+      "group": "static",
+      "face": "input_socket_roof_west",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        17,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          17.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.55
+        ],
+        [
+          17.0,
+          75.55
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_roof",
+      "group": "static",
+      "face": "input_socket_roof_east",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        17,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          17.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.55
+        ],
+        [
+          17.0,
+          75.55
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_roof",
+      "group": "static",
+      "face": "input_socket_roof_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        108,
+        55,
+        6,
+        3
+      ],
+      "uv_pixels": [
+        [
+          108.0,
+          55.0
+        ],
+        [
+          113.2,
+          55.0
+        ],
+        [
+          113.2,
+          58.0
+        ],
+        [
+          108.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "input_socket_roof",
+      "group": "static",
+      "face": "input_socket_roof_down",
+      "material": "slot",
+      "atlas_rect_pixels": [
+        118,
+        55,
+        6,
+        3
+      ],
+      "uv_pixels": [
+        [
+          118.0,
+          55.0
+        ],
+        [
+          123.2,
+          55.0
+        ],
+        [
+          123.2,
+          58.0
+        ],
+        [
+          118.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "input_sample_card",
+      "group": "sample_input",
+      "face": "input_sample_card_north",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        75,
+        4,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          75.0
+        ],
+        [
+          6.0,
+          75.0
+        ],
+        [
+          6.0,
+          75.45
+        ],
+        [
+          2.0,
+          75.45
+        ]
+      ]
+    },
+    {
+      "element": "input_sample_card",
+      "group": "sample_input",
+      "face": "input_sample_card_south",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        75,
+        4,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          75.0
+        ],
+        [
+          6.0,
+          75.0
+        ],
+        [
+          6.0,
+          75.45
+        ],
+        [
+          2.0,
+          75.45
+        ]
+      ]
+    },
+    {
+      "element": "input_sample_card",
+      "group": "sample_input",
+      "face": "input_sample_card_west",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        84,
+        70,
+        7,
+        1
+      ],
+      "uv_pixels": [
+        [
+          84.0,
+          70.0
+        ],
+        [
+          90.5,
+          70.0
+        ],
+        [
+          90.5,
+          70.45
+        ],
+        [
+          84.0,
+          70.45
+        ]
+      ]
+    },
+    {
+      "element": "input_sample_card",
+      "group": "sample_input",
+      "face": "input_sample_card_east",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        84,
+        70,
+        7,
+        1
+      ],
+      "uv_pixels": [
+        [
+          84.0,
+          70.0
+        ],
+        [
+          90.5,
+          70.0
+        ],
+        [
+          90.5,
+          70.45
+        ],
+        [
+          84.0,
+          70.45
+        ]
+      ]
+    },
+    {
+      "element": "input_sample_card",
+      "group": "sample_input",
+      "face": "input_sample_card_up",
+      "material": "card_input",
+      "atlas_rect_pixels": [
+        49,
+        39,
+        4,
+        7
+      ],
+      "uv_pixels": [
+        [
+          53.0,
+          39.0
+        ],
+        [
+          49.0,
+          39.0
+        ],
+        [
+          49.0,
+          45.5
+        ],
+        [
+          53.0,
+          45.5
+        ]
+      ]
+    },
+    {
+      "element": "input_sample_card",
+      "group": "sample_input",
+      "face": "input_sample_card_down",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        41,
+        39,
+        4,
+        7
+      ],
+      "uv_pixels": [
+        [
+          41.0,
+          39.0
+        ],
+        [
+          45.0,
+          39.0
+        ],
+        [
+          45.0,
+          45.5
+        ],
+        [
+          41.0,
+          45.5
+        ]
+      ]
+    },
+    {
+      "element": "output_pad",
+      "group": "static",
+      "face": "output_pad_surface",
+      "material": "pad_output",
+      "atlas_rect_pixels": [
+        2,
+        22,
+        6,
+        13
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          22.0
+        ],
+        [
+          2.0,
+          22.0
+        ],
+        [
+          2.0,
+          35.0
+        ],
+        [
+          8.0,
+          35.0
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_west",
+      "group": "static",
+      "face": "output_guide_west_north",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_west",
+      "group": "static",
+      "face": "output_guide_west_south",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_west",
+      "group": "static",
+      "face": "output_guide_west_west",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        58,
+        70,
+        10,
+        1
+      ],
+      "uv_pixels": [
+        [
+          58.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.82
+        ],
+        [
+          58.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_west",
+      "group": "static",
+      "face": "output_guide_west_east",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        58,
+        70,
+        10,
+        1
+      ],
+      "uv_pixels": [
+        [
+          58.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.82
+        ],
+        [
+          58.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_west",
+      "group": "static",
+      "face": "output_guide_west_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        8,
+        39,
+        1,
+        10
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          39.0
+        ],
+        [
+          8.4,
+          39.0
+        ],
+        [
+          8.4,
+          49.0
+        ],
+        [
+          8.0,
+          49.0
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_east",
+      "group": "static",
+      "face": "output_guide_east_north",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_east",
+      "group": "static",
+      "face": "output_guide_east_south",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_east",
+      "group": "static",
+      "face": "output_guide_east_west",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        58,
+        70,
+        10,
+        1
+      ],
+      "uv_pixels": [
+        [
+          58.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.82
+        ],
+        [
+          58.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_east",
+      "group": "static",
+      "face": "output_guide_east_east",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        58,
+        70,
+        10,
+        1
+      ],
+      "uv_pixels": [
+        [
+          58.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.0
+        ],
+        [
+          68.0,
+          70.82
+        ],
+        [
+          58.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "output_guide_east",
+      "group": "static",
+      "face": "output_guide_east_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        8,
+        39,
+        1,
+        10
+      ],
+      "uv_pixels": [
+        [
+          8.0,
+          39.0
+        ],
+        [
+          8.4,
+          39.0
+        ],
+        [
+          8.4,
+          49.0
+        ],
+        [
+          8.0,
+          49.0
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_rear",
+      "group": "static",
+      "face": "output_socket_rear_north",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        105,
+        70,
+        5,
+        1
+      ],
+      "uv_pixels": [
+        [
+          105.0,
+          70.0
+        ],
+        [
+          109.4,
+          70.0
+        ],
+        [
+          109.4,
+          70.82
+        ],
+        [
+          105.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_rear",
+      "group": "static",
+      "face": "output_socket_rear_south",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        105,
+        70,
+        5,
+        1
+      ],
+      "uv_pixels": [
+        [
+          105.0,
+          70.0
+        ],
+        [
+          109.4,
+          70.0
+        ],
+        [
+          109.4,
+          70.82
+        ],
+        [
+          105.0,
+          70.82
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_rear",
+      "group": "static",
+      "face": "output_socket_rear_west",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        24,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          24.0,
+          75.0
+        ],
+        [
+          24.5,
+          75.0
+        ],
+        [
+          24.5,
+          75.82
+        ],
+        [
+          24.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_rear",
+      "group": "static",
+      "face": "output_socket_rear_east",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        24,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          24.0,
+          75.0
+        ],
+        [
+          24.5,
+          75.0
+        ],
+        [
+          24.5,
+          75.82
+        ],
+        [
+          24.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_rear",
+      "group": "static",
+      "face": "output_socket_rear_up",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        105,
+        70,
+        5,
+        1
+      ],
+      "uv_pixels": [
+        [
+          105.0,
+          70.0
+        ],
+        [
+          109.4,
+          70.0
+        ],
+        [
+          109.4,
+          70.5
+        ],
+        [
+          105.0,
+          70.5
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_roof",
+      "group": "static",
+      "face": "output_socket_roof_north",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        95,
+        70,
+        6,
+        1
+      ],
+      "uv_pixels": [
+        [
+          95.0,
+          70.0
+        ],
+        [
+          100.2,
+          70.0
+        ],
+        [
+          100.2,
+          70.55
+        ],
+        [
+          95.0,
+          70.55
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_roof",
+      "group": "static",
+      "face": "output_socket_roof_south",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        95,
+        70,
+        6,
+        1
+      ],
+      "uv_pixels": [
+        [
+          95.0,
+          70.0
+        ],
+        [
+          100.2,
+          70.0
+        ],
+        [
+          100.2,
+          70.55
+        ],
+        [
+          95.0,
+          70.55
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_roof",
+      "group": "static",
+      "face": "output_socket_roof_west",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        17,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          17.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.55
+        ],
+        [
+          17.0,
+          75.55
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_roof",
+      "group": "static",
+      "face": "output_socket_roof_east",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        17,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          17.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.55
+        ],
+        [
+          17.0,
+          75.55
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_roof",
+      "group": "static",
+      "face": "output_socket_roof_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        108,
+        55,
+        6,
+        3
+      ],
+      "uv_pixels": [
+        [
+          108.0,
+          55.0
+        ],
+        [
+          113.2,
+          55.0
+        ],
+        [
+          113.2,
+          58.0
+        ],
+        [
+          108.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "output_socket_roof",
+      "group": "static",
+      "face": "output_socket_roof_down",
+      "material": "slot",
+      "atlas_rect_pixels": [
+        118,
+        55,
+        6,
+        3
+      ],
+      "uv_pixels": [
+        [
+          118.0,
+          55.0
+        ],
+        [
+          123.2,
+          55.0
+        ],
+        [
+          123.2,
+          58.0
+        ],
+        [
+          118.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "element": "output_sample_card",
+      "group": "sample_output",
+      "face": "output_sample_card_north",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        75,
+        4,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          75.0
+        ],
+        [
+          6.0,
+          75.0
+        ],
+        [
+          6.0,
+          75.45
+        ],
+        [
+          2.0,
+          75.45
+        ]
+      ]
+    },
+    {
+      "element": "output_sample_card",
+      "group": "sample_output",
+      "face": "output_sample_card_south",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        75,
+        4,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          75.0
+        ],
+        [
+          6.0,
+          75.0
+        ],
+        [
+          6.0,
+          75.45
+        ],
+        [
+          2.0,
+          75.45
+        ]
+      ]
+    },
+    {
+      "element": "output_sample_card",
+      "group": "sample_output",
+      "face": "output_sample_card_west",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        84,
+        70,
+        7,
+        1
+      ],
+      "uv_pixels": [
+        [
+          84.0,
+          70.0
+        ],
+        [
+          90.5,
+          70.0
+        ],
+        [
+          90.5,
+          70.45
+        ],
+        [
+          84.0,
+          70.45
+        ]
+      ]
+    },
+    {
+      "element": "output_sample_card",
+      "group": "sample_output",
+      "face": "output_sample_card_east",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        84,
+        70,
+        7,
+        1
+      ],
+      "uv_pixels": [
+        [
+          84.0,
+          70.0
+        ],
+        [
+          90.5,
+          70.0
+        ],
+        [
+          90.5,
+          70.45
+        ],
+        [
+          84.0,
+          70.45
+        ]
+      ]
+    },
+    {
+      "element": "output_sample_card",
+      "group": "sample_output",
+      "face": "output_sample_card_up",
+      "material": "card_output",
+      "atlas_rect_pixels": [
+        33,
+        39,
+        4,
+        7
+      ],
+      "uv_pixels": [
+        [
+          37.0,
+          39.0
+        ],
+        [
+          33.0,
+          39.0
+        ],
+        [
+          33.0,
+          45.5
+        ],
+        [
+          37.0,
+          45.5
+        ]
+      ]
+    },
+    {
+      "element": "output_sample_card",
+      "group": "sample_output",
+      "face": "output_sample_card_down",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        41,
+        39,
+        4,
+        7
+      ],
+      "uv_pixels": [
+        [
+          41.0,
+          39.0
+        ],
+        [
+          45.0,
+          39.0
+        ],
+        [
+          45.0,
+          45.5
+        ],
+        [
+          41.0,
+          45.5
+        ]
+      ]
+    },
+    {
+      "element": "master_pad",
+      "group": "static",
+      "face": "master_pad_surface",
+      "material": "pad_master",
+      "atlas_rect_pixels": [
+        93,
+        39,
+        14,
+        6
+      ],
+      "uv_pixels": [
+        [
+          107.0,
+          39.0
+        ],
+        [
+          93.0,
+          39.0
+        ],
+        [
+          93.0,
+          45.0
+        ],
+        [
+          107.0,
+          45.0
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_front_wall",
+      "group": "static",
+      "face": "master_socket_front_wall_north",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        10,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          10.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.82
+        ],
+        [
+          10.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_front_wall",
+      "group": "static",
+      "face": "master_socket_front_wall_south",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        10,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          10.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.82
+        ],
+        [
+          10.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_front_wall",
+      "group": "static",
+      "face": "master_socket_front_wall_west",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_front_wall",
+      "group": "static",
+      "face": "master_socket_front_wall_east",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_front_wall",
+      "group": "static",
+      "face": "master_socket_front_wall_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        10,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          10.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.4
+        ],
+        [
+          10.0,
+          75.4
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_back_wall",
+      "group": "static",
+      "face": "master_socket_back_wall_north",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        10,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          10.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.82
+        ],
+        [
+          10.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_back_wall",
+      "group": "static",
+      "face": "master_socket_back_wall_south",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        10,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          10.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.82
+        ],
+        [
+          10.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_back_wall",
+      "group": "static",
+      "face": "master_socket_back_wall_west",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_back_wall",
+      "group": "static",
+      "face": "master_socket_back_wall_east",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        29,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          29.0,
+          75.0
+        ],
+        [
+          29.4,
+          75.0
+        ],
+        [
+          29.4,
+          75.82
+        ],
+        [
+          29.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_back_wall",
+      "group": "static",
+      "face": "master_socket_back_wall_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        10,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          10.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.0
+        ],
+        [
+          13.0,
+          75.4
+        ],
+        [
+          10.0,
+          75.4
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_end_wall",
+      "group": "static",
+      "face": "master_socket_end_wall_north",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        24,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          24.0,
+          75.0
+        ],
+        [
+          24.4,
+          75.0
+        ],
+        [
+          24.4,
+          75.82
+        ],
+        [
+          24.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_end_wall",
+      "group": "static",
+      "face": "master_socket_end_wall_south",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        24,
+        75,
+        1,
+        1
+      ],
+      "uv_pixels": [
+        [
+          24.0,
+          75.0
+        ],
+        [
+          24.4,
+          75.0
+        ],
+        [
+          24.4,
+          75.82
+        ],
+        [
+          24.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_end_wall",
+      "group": "static",
+      "face": "master_socket_end_wall_west",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        75,
+        4,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          75.0
+        ],
+        [
+          5.9,
+          75.0
+        ],
+        [
+          5.9,
+          75.82
+        ],
+        [
+          2.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_end_wall",
+      "group": "static",
+      "face": "master_socket_end_wall_east",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        75,
+        4,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          75.0
+        ],
+        [
+          5.9,
+          75.0
+        ],
+        [
+          5.9,
+          75.82
+        ],
+        [
+          2.0,
+          75.82
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_end_wall",
+      "group": "static",
+      "face": "master_socket_end_wall_up",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        24,
+        55,
+        1,
+        4
+      ],
+      "uv_pixels": [
+        [
+          24.0,
+          55.0
+        ],
+        [
+          24.4,
+          55.0
+        ],
+        [
+          24.4,
+          58.9
+        ],
+        [
+          24.0,
+          58.9
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_roof",
+      "group": "static",
+      "face": "master_socket_roof_north",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        17,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          17.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.55
+        ],
+        [
+          17.0,
+          75.55
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_roof",
+      "group": "static",
+      "face": "master_socket_roof_south",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        17,
+        75,
+        3,
+        1
+      ],
+      "uv_pixels": [
+        [
+          17.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.0
+        ],
+        [
+          20.0,
+          75.55
+        ],
+        [
+          17.0,
+          75.55
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_roof",
+      "group": "static",
+      "face": "master_socket_roof_west",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        114,
+        70,
+        5,
+        1
+      ],
+      "uv_pixels": [
+        [
+          114.0,
+          70.0
+        ],
+        [
+          118.7,
+          70.0
+        ],
+        [
+          118.7,
+          70.55
+        ],
+        [
+          114.0,
+          70.55
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_roof",
+      "group": "static",
+      "face": "master_socket_roof_east",
+      "material": "frame",
+      "atlas_rect_pixels": [
+        114,
+        70,
+        5,
+        1
+      ],
+      "uv_pixels": [
+        [
+          114.0,
+          70.0
+        ],
+        [
+          118.7,
+          70.0
+        ],
+        [
+          118.7,
+          70.55
+        ],
+        [
+          114.0,
+          70.55
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_roof",
+      "group": "static",
+      "face": "master_socket_roof_up",
+      "material": "bezel",
+      "atlas_rect_pixels": [
+        118,
+        39,
+        3,
+        5
+      ],
+      "uv_pixels": [
+        [
+          118.0,
+          39.0
+        ],
+        [
+          121.0,
+          39.0
+        ],
+        [
+          121.0,
+          43.7
+        ],
+        [
+          118.0,
+          43.7
+        ]
+      ]
+    },
+    {
+      "element": "master_socket_roof",
+      "group": "static",
+      "face": "master_socket_roof_down",
+      "material": "slot",
+      "atlas_rect_pixels": [
+        111,
+        39,
+        3,
+        5
+      ],
+      "uv_pixels": [
+        [
+          111.0,
+          39.0
+        ],
+        [
+          114.0,
+          39.0
+        ],
+        [
+          114.0,
+          43.7
+        ],
+        [
+          111.0,
+          43.7
+        ]
+      ]
+    },
+    {
+      "element": "master_sample_card",
+      "group": "sample_master",
+      "face": "master_sample_card_north",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        84,
+        70,
+        7,
+        1
+      ],
+      "uv_pixels": [
+        [
+          84.0,
+          70.0
+        ],
+        [
+          91.0,
+          70.0
+        ],
+        [
+          91.0,
+          70.45
+        ],
+        [
+          84.0,
+          70.45
+        ]
+      ]
+    },
+    {
+      "element": "master_sample_card",
+      "group": "sample_master",
+      "face": "master_sample_card_south",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        84,
+        70,
+        7,
+        1
+      ],
+      "uv_pixels": [
+        [
+          84.0,
+          70.0
+        ],
+        [
+          91.0,
+          70.0
+        ],
+        [
+          91.0,
+          70.45
+        ],
+        [
+          84.0,
+          70.45
+        ]
+      ]
+    },
+    {
+      "element": "master_sample_card",
+      "group": "sample_master",
+      "face": "master_sample_card_west",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        75,
+        4,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          75.0
+        ],
+        [
+          5.5,
+          75.0
+        ],
+        [
+          5.5,
+          75.45
+        ],
+        [
+          2.0,
+          75.45
+        ]
+      ]
+    },
+    {
+      "element": "master_sample_card",
+      "group": "sample_master",
+      "face": "master_sample_card_east",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        75,
+        4,
+        1
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          75.0
+        ],
+        [
+          5.5,
+          75.0
+        ],
+        [
+          5.5,
+          75.45
+        ],
+        [
+          2.0,
+          75.45
+        ]
+      ]
+    },
+    {
+      "element": "master_sample_card",
+      "group": "sample_master",
+      "face": "master_sample_card_up",
+      "material": "card_master",
+      "atlas_rect_pixels": [
+        13,
+        55,
+        7,
+        4
+      ],
+      "uv_pixels": [
+        [
+          20.0,
+          55.0
+        ],
+        [
+          13.0,
+          55.0
+        ],
+        [
+          13.0,
+          58.5
+        ],
+        [
+          20.0,
+          58.5
+        ]
+      ]
+    },
+    {
+      "element": "master_sample_card",
+      "group": "sample_master",
+      "face": "master_sample_card_down",
+      "material": "dark",
+      "atlas_rect_pixels": [
+        2,
+        55,
+        7,
+        4
+      ],
+      "uv_pixels": [
+        [
+          2.0,
+          55.0
+        ],
+        [
+          9.0,
+          55.0
+        ],
+        [
+          9.0,
+          58.5
+        ],
+        [
+          2.0,
+          58.5
+        ]
+      ]
+    }
+  ]
+}

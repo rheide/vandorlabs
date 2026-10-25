@@ -8,7 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /** Validate the complete oriented footprint before changing any cell or consuming an item. */
-public final class ItemLargeGear extends ItemBlock {
+public final class ItemLargeGear extends ItemArm {
     public ItemLargeGear(LargeGearBlock block){super(block);}
     @Override public EnumActionResult onItemUse(EntityPlayer player,World world,BlockPos pos,EnumHand hand,EnumFacing side,float x,float y,float z){
         IBlockState clicked=world.getBlockState(pos);

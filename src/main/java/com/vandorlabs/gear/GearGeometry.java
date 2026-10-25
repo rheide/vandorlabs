@@ -65,20 +65,25 @@ public final class GearGeometry {
     static List<AxisAlignedBB> computeBoxes(GearTileEntity tile,double progress){
         if(tile.assembly()==null)return Collections.emptyList();GearTopology.Assembly group=tile.assembly();GearMotion.Pose pose=tile.pose(progress);List<AxisAlignedBB> out=new ArrayList<>();BlockPos root=tile.getPos();
         for(BlockPos column:tile.columns()){
-            BlockPos at=root.add(column);if(!(tile.getWorld().getBlockState(at).getBlock() instanceof GearBlock))continue;int width=tile.armSize();double shift=(width-1)*.5;
+            BlockPos sourceColumn=root.add(column);if(!(tile.getWorld().getBlockState(sourceColumn).getBlock() instanceof GearBlock))continue;BlockPos at=root.add(ArmOrientation.inverse(tile.mountDirection(),column));int width=tile.armSize();double shift=(width-1)*.5;
             out.add(new AxisAlignedBB(0,14/16D,0,1,1,1).offset(tile.armShiftX(column),0,tile.armShiftZ(column)).offset(at));out.add(new AxisAlignedBB(.5-5/16D*width,tile.isFixedMount()?0:6/16D,.5-5/16D*width,.5+5/16D*width,14/16D,.5+5/16D*width).offset(tile.armShiftX(column),0,tile.armShiftZ(column)).offset(at));
             if(tile.isSwingArmController())for(AxisAlignedBB arm:armParts())addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()-tile.footMountOffset()),pose,false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
             else addArm(out,new AxisAlignedBB(5/16D,pose.rodBottomY()+tile.footMountOffset(),5/16D,11/16D,pose.rodTopY(),11/16D),pose,false,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
             addArm(out,new AxisAlignedBB(.25,-group.columnHeight()+3/16D+tile.footMountOffset(),.3125,.75,-group.columnHeight()+7/16D+tile.footMountOffset(),.6875),pose,true,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
         }
         int turns=tile.footFacing()==EnumFacing.EAST?1:tile.footFacing()==EnumFacing.SOUTH?2:tile.footFacing()==EnumFacing.WEST?3:0;
-        for(GearTopology.Cell foot:group.feet()){
-            if(group.kind()==GearTopology.FootKind.WHEEL){BlockPos source=root.add(foot.x,foot.y,foot.z);net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(source);GearBlock block=state.getBlock() instanceof GearBlock?(GearBlock)state.getBlock():null;AxisAlignedBB wheel=block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(source,state).equals(source)?yaw(MODELS.computeIfAbsent(block.wheelModel(),GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns):new AxisAlignedBB(0,0,0,0,0,0);AxisAlignedBB posed=box(pose.transformFootBounds(bounds(wheel.offset(foot.x,foot.y,foot.z))));
+        if(group.kind()!=GearTopology.FootKind.NONE)for(GearTopology.Cell foot:group.feet()){
+            if(group.kind()==GearTopology.FootKind.WHEEL){BlockPos source=tile.localCell(foot);net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(source);GearBlock block=state.getBlock() instanceof GearBlock?(GearBlock)state.getBlock():null;AxisAlignedBB wheel=block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(source,state).equals(source)?yaw(MODELS.computeIfAbsent(block.wheelModel(),GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns):new AxisAlignedBB(0,0,0,0,0,0);AxisAlignedBB posed=box(pose.transformFootBounds(bounds(wheel.offset(foot.x,foot.y,foot.z))));
                 if(block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(source,state).equals(source)){AxisAlignedBB connector=yaw(MODELS.computeIfAbsent(block.wheelModel()+"_connector",GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns).offset(foot.x,foot.y,foot.z);posed=posed.union(box(pose.transformConnectorBounds(bounds(connector),(connector.minX+connector.maxX)/2,(connector.minY+connector.maxY)/2,(connector.minZ+connector.maxZ)/2)));}
                 out.add(posed.offset(root));}
+            else if(group.kind()==GearTopology.FootKind.TRACK)add(out,new AxisAlignedBB(0,0,0,1,1,1).offset(foot.x,foot.y,foot.z),pose,true,root);
             else if(group.kind()==GearTopology.FootKind.PLATE)add(out,new AxisAlignedBB(0,0,0,1,3/16D,1).offset(foot.x,foot.y,foot.z),pose,true,root);
             else{add(out,yaw(new AxisAlignedBB(.25,0,0,.75,5/16D,1),turns).offset(foot.x,foot.y,foot.z),pose,true,root);add(out,yaw(new AxisAlignedBB(0,3/16D,.375,1,5/16D,.625),turns).offset(foot.x,foot.y,foot.z),pose,true,root);}
         }
+        if(tile.mountDirection()!=EnumFacing.DOWN){
+            List<AxisAlignedBB> oriented=new ArrayList<>();for(AxisAlignedBB b:out)oriented.add(ArmOrientation.box(tile.mountDirection(),b.offset(-root.getX(),-root.getY(),-root.getZ())).offset(root));out=oriented;
+        }
+        if(tile.payload()!=null)try{out.addAll(tile.payload().boxes(tile,progress));}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();return Collections.emptyList();}
         return Collections.unmodifiableList(out);
     }
     private static List<AxisAlignedBB> armParts(){return MODELS.computeIfAbsent("swing_linkage_sliced",name->GearBlock.movingArmParts());}
@@ -120,13 +125,14 @@ public final class GearGeometry {
         }
     }
     public static AxisAlignedBB swept(GearTileEntity root,int index,AxisAlignedBB old,AxisAlignedBB next,double before,double after){
+        if(!root.isLandingAssembly()){double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());return old.union(next).grow((root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
         int pieces=root.isSwingArmController()?armParts().size()+3:4,feetStart=root.columns().size()*pieces;
         boolean translated=root.mode()==GearMotion.Mode.EXTEND||root.mode()==GearMotion.Mode.ROTATE_LEVEL&&(index>=feetStart||index%pieces==pieces-1);
-        double angle=Math.abs(GearMotion.pose(root.mode(),root.direction(),root.assembly().columnHeight(),after).angleDegrees()-GearMotion.pose(root.mode(),root.direction(),root.assembly().columnHeight(),before).angleDegrees());
+        double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());
         double padding=translated?0:(root.assembly().columnHeight()+2)*(1-Math.cos(Math.toRadians(angle/2)));
         AxisAlignedBB envelope=old.union(next);
         if(root.mode()==GearMotion.Mode.ROTATE_LEVEL&&root.assembly().kind()==GearTopology.FootKind.WHEEL&&index>=feetStart){
-            GearTopology.Cell foot=root.assembly().feet().get(index-feetStart);BlockPos source=root.getPos().add(foot.x,foot.y,foot.z);
+            GearTopology.Cell foot=root.assembly().feet().get(index-feetStart);BlockPos source=root.localCell(foot);
             net.minecraft.block.state.IBlockState state=root.getWorld().getBlockState(source);
             if(state.getBlock() instanceof GearBlock&&((GearBlock)state.getBlock()).componentRoot(source,state).equals(source)){
                 GearBlock wheel=(GearBlock)state.getBlock();int turns=GearCollision.quarterTurns(root.footFacing());
@@ -139,6 +145,6 @@ public final class GearGeometry {
         }
         // Level feet only translate monotonically along this quarter arc. Their
         // endpoint union is exact; rigid bars need curvature only in their plane.
-        return envelope.grow(root.direction().axisX()==0?padding:0,padding,root.direction().axisZ()==0?padding:0).shrink(.0001);
+        return (root.mountDirection()==EnumFacing.DOWN?envelope.grow(root.direction().axisX()==0?padding:0,padding,root.direction().axisZ()==0?padding:0):envelope.grow(padding)).shrink(.0001);
     }
 }

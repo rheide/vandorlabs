@@ -8,6 +8,6 @@ import net.minecraftforge.fml.relauncher.Side;
 
 @Mod.EventBusSubscriber(modid="vandorlabs",value=Side.CLIENT)
 public final class GearClientHooks {
-    @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event){for(String texture:new String[]{"steel","steel_top","housing","piston","sole","indicator"})event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/gear/"+texture));}
-    @SubscribeEvent public static void bake(ModelBakeEvent event){GearModels.reload();}
+    @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event){for(String texture:new String[]{"steel","steel_top","housing","piston","sole","indicator"})event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/gear/"+texture));for(String texture:new String[]{"steel","trim","dark","rubber","steel_tread","sole","status","wheel"})event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/track/"+texture));}
+    @SubscribeEvent public static void bake(ModelBakeEvent event){GearModels.reload();com.vandorlabs.gear.track.client.TrackModels.reload(event);}
 }

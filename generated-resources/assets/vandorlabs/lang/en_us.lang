@@ -566,14 +566,14 @@ tile.vandorlabs.landing_plate.name=Landing Gear Plate
 
 tile.vandorlabs.landing_ski.name=Landing Gear Ski
 
-tile.vandorlabs.gear_extender.name=Landing Gear Extender
+tile.vandorlabs.gear_extender.name=Extender Arm
 
-tile.vandorlabs.gear_swing_arm.name=Landing Gear Swing Arm
+tile.vandorlabs.gear_swing_arm.name=Rotating Arm
 
 tile.vandorlabs.landing_wheel.name=Landing Gear Wheel
 tile.vandorlabs.large_landing_wheel.name=Large Landing Gear Wheel
-tile.vandorlabs.large_gear_extender.name=Large Landing Gear Extender
-tile.vandorlabs.large_gear_swing_arm.name=Large Landing Gear Swing Arm
+tile.vandorlabs.large_gear_extender.name=Large Extender Arm
+tile.vandorlabs.large_gear_swing_arm.name=Large Rotating Arm
 
 item.vandorlabs.access_card.unbranded.name=Access Card
 item.vandorlabs.access_card.pinnacle.name=Pinnacle Access Card
@@ -582,16 +582,16 @@ item.vandorlabs.access_card.paladyne.name=Paladyne Access Card
 item.vandorlabs.access_card.vektor.name=Vektor Access Card
 item.vandorlabs.access_card.seyr.name=Seyr Access Card
 item.vandorlabs.access_card.vandor.name=Vandor Access Card
-item.vandorlabs.data_chip.unbranded.name=Data Chip
-item.vandorlabs.data_chip.pinnacle.name=Pinnacle Data Chip
-item.vandorlabs.data_chip.ashiro.name=Ashiro Data Chip
-item.vandorlabs.data_chip.paladyne.name=Paladyne Data Chip
-item.vandorlabs.data_chip.vektor.name=Vektor Data Chip
-item.vandorlabs.data_chip.seyr.name=Seyr Data Chip
-item.vandorlabs.data_chip.vandor.name=Vandor Data Chip
+item.vandorlabs.data_chip.unbranded.name=Blank Data Chip
+item.vandorlabs.data_chip.pinnacle.name=Pinnacle Master Data Chip
+item.vandorlabs.data_chip.ashiro.name=Ashiro Master Data Chip
+item.vandorlabs.data_chip.paladyne.name=Paladyne Master Data Chip
+item.vandorlabs.data_chip.vektor.name=Vektor Master Data Chip
+item.vandorlabs.data_chip.seyr.name=Seyr Master Data Chip
+item.vandorlabs.data_chip.vandor.name=Vandor Master Data Chip
 
-tile.vandorlabs.gear_mount.name=Landing Gear Mount
-tile.vandorlabs.large_gear_mount.name=Large Landing Gear Mount
+tile.vandorlabs.gear_mount.name=Fixed Arm
+tile.vandorlabs.large_gear_mount.name=Large Fixed Arm
 
 tile.vandorlabs.access_card_slot.name=Access Card Mount
 tile.vandorlabs.data_chip_slot.name=Data Chip Mount
@@ -599,8 +599,19 @@ tile.vandorlabs.data_chip_slot.name=Data Chip Mount
 tile.vandorlabs.redstone_transmitter.name=Redstone Transmitter
 tile.vandorlabs.redstone_receiver.name=Redstone Receiver
 tile.vandorlabs.programmable_ramp_slab.name=Ramp Controller Slab
+
 tile.vandorlabs.oculus_drive_core.name=Pinnacle Oculus Drive Core
 tile.vandorlabs.survey_dish_core.name=Survey Dish Core
 tile.vandorlabs.sentinel_array_core.name=Sentinel Array Core
 tile.vandorlabs.standalone_dish_core.name=Standalone Dish Core
 tile.vandorlabs.standalone_antenna_core.name=Standalone Antenna Core
+
+tile.vandorlabs.data_chip_programmer.name=Card / Chip Programmer
+
+tile.vandorlabs.square_coupler.name=Square Coupler
+
+tile.vandorlabs.compact_track.name=Compact Track
+
+tile.vandorlabs.armoured_track.name=Armoured Track
+
+tile.vandorlabs.bogie_track.name=Bogie Track

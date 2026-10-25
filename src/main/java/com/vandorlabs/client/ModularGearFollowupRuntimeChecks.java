@@ -39,7 +39,7 @@ final class ModularGearFollowupRuntimeChecks {
         if(!large)return ModularGearRuntimeChecks.build(world,at,true,swing,EnumFacing.NORTH,1,1,1);
         GearBlock arm=swing?GearRegistry.LARGE_GEAR_SWING_ARM:GearRegistry.LARGE_GEAR_EXTENDER;
         ItemBlock item=(ItemBlock)Item.getItemFromBlock(arm);
-        require(item.placeBlockAt(new ItemStack(arm),player,world,at,EnumFacing.UP,.5F,.5F,.5F,arm.getDefaultState()),"large ski mount placement");
+        require(item.placeBlockAt(new ItemStack(arm),player,world,at,EnumFacing.DOWN,.5F,.5F,.5F,arm.getDefaultState()),"large ski mount placement");
         for(BlockPos cell:arm.componentCells(world,at)){world.setBlockState(cell.down(),GearRegistry.LANDING_SKI.getDefaultState());world.setBlockState(cell.up(),Blocks.IRON_BLOCK.getDefaultState());}
         GearTileEntity root=(GearTileEntity)world.getTileEntity(at);require(root.rebuild(),"large ski formation "+root.error());return root;
     }

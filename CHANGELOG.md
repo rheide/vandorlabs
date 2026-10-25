@@ -2,6 +2,12 @@
 
 ## 2.6
 
+- Add a Card / Chip Programmer with three retained slots, company-master validation, blank destinations, Master Data Chips and titled eight-page journals. Edit journals through a compact Inventory/Journal dialog and render the actual inserted cards and chips in the supplied console sockets.
+- Generalize Extender, Rotating and Fixed Arms for unsupported columns, six mounting directions and ordinary block attachments. Configure the active extension/angle and level or rotating payloads; restore exact translation endpoints as placed blocks and retain other poses as bounded snapshots. Preserve attachment data through rollback, recovery and vehicle transport.
+- Add Compact, Armoured and Bogie Tracks with connected native models, slab-side brackets, retained style selection and landing-support behavior.
+- Add Square Couplers with channel and physical redstone inputs, inverted activation and six mounting directions. Vehicle discovery crosses an adjacent pair only when both halves are locked. Include nested landing groups down to their outer supports and treat downward propulsion blocks as discovery boundaries.
+- Support Immersive Engineering scaffolding in Ramp Controllers and extend explicit vehicle rotation adapters to inert IE structures and Mekanism storage and glow panels, preserving their inventories, energy and owner settings.
+
 - Add Pinnacle Oculus Drive, Survey Dish, Sentinel Array, Standalone Dish and Standalone Antenna Core assemblies, with matching chips, configurable redstone activation, native holders and cached shutter/dish animations. Their controls use the existing Core and Programmable Matter construction workflow.
 - Rename Longburn Drive to Maxwell Drive and Pinnacle Meridian Drive to Seyr Meridian Drive. Replace the Meridian branding with one Seyr nameplate while retaining saved registry IDs and model dimensions.
 

@@ -20,7 +20,7 @@ lines = p.read_text().splitlines() if p.exists() else []
 lines = [line for line in lines if not line.startswith(('soundCategory_master:', 'pauseOnLostFocus:'))]
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
-CAPTURE_JVM=()
+CAPTURE_JVM=("-Dvandorlabs.utility26ChecksOnly=${VANDOR_LABS_UTILITY26_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.bridgeMachineChecksOnly=${VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY:-false}" "-Dvandorlabs.machineBuildDocsOnly=${VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY:-false}")
 if [ "${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" = true ] || [ "${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" = true ]; then
   CAPTURE_JVM+=(-XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps "-Xloggc:$REPRO_OUT/gc.log")

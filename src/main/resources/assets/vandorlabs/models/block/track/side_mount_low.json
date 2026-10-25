@@ -1,0 +1,137 @@
+{
+  "credit": "MCTrek modular tracks \u2014 native model source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/track/steel",
+    "steel": "vandorlabs:blocks/track/steel",
+    "trim": "vandorlabs:blocks/track/trim",
+    "dark": "vandorlabs:blocks/track/dark",
+    "rubber": "vandorlabs:blocks/track/rubber",
+    "steel_tread": "vandorlabs:blocks/track/steel_tread",
+    "sole": "vandorlabs:blocks/track/sole",
+    "status": "vandorlabs:blocks/track/status",
+    "wheel": "vandorlabs:blocks/track/wheel"
+  },
+  "elements": [
+    {
+      "name": "top_slab_side_bracket",
+      "from": [
+        5,
+        5,
+        1
+      ],
+      "to": [
+        11,
+        7,
+        5
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            5,
+            1,
+            11,
+            5
+          ],
+          "texture": "#steel"
+        },
+        "down": {
+          "uv": [
+            5,
+            1,
+            11,
+            5
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            6,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#steel"
+        }
+      }
+    },
+    {
+      "name": "side_contact_trim",
+      "from": [
+        5,
+        5,
+        0
+      ],
+      "to": [
+        11,
+        7,
+        1
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            5,
+            0,
+            11,
+            1
+          ],
+          "texture": "#trim"
+        },
+        "down": {
+          "uv": [
+            5,
+            0,
+            11,
+            1
+          ],
+          "texture": "#trim"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            6,
+            2
+          ],
+          "texture": "#trim"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            1,
+            2
+          ],
+          "texture": "#trim"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            1,
+            2
+          ],
+          "texture": "#trim"
+        }
+      }
+    }
+  ]
+}

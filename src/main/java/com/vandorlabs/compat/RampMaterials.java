@@ -19,6 +19,14 @@ public final class RampMaterials {
         return tile!=null && tile.getClass().getName().equals(
                 "blusunrize.immersiveengineering.common.blocks.TileEntityIESlab");
     }
+    /** IE scaffold blocks are full-width inert structures despite reporting a non-full cube. */
+    public static boolean isScaffolding(net.minecraft.block.state.IBlockState state){
+        net.minecraft.util.ResourceLocation id=state.getBlock().getRegistryName();
+        if(id==null||!id.getResourceDomain().equals("immersiveengineering")||state.getBlock().hasTileEntity(state))return false;
+        int meta=state.getBlock().getMetaFromState(state);
+        if(id.getResourcePath().equals("wooden_decoration"))return meta==1;
+        return id.getResourcePath().equals("metal_decoration1")&&(meta>=1&&meta<=3||meta>=5&&meta<=7);
+    }
     public static boolean matches(World world, BlockPos seed, BlockPos candidate) {
         return matches(world, seed, candidate, true);
     }

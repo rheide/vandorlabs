@@ -3,7 +3,7 @@
 set -euo pipefail
 unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
-unset VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
+unset VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
@@ -13,7 +13,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = bridge-machines ]; then
+        if [ "$TARGET" = utility26 ]; then
+            PREFIX=utility26_
+            export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
+        elif [ "$TARGET" = bridge-machines ]; then
             PREFIX=bridge_machine_
             export VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY=true
         elif [ "$TARGET" = machine-build-docs ]; then
@@ -103,6 +106,10 @@ cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
 cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     "$TEST_RUNTIME_GAME/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"
 cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
+# Optional Mekanism fixtures for supported block rotation, enabled explicitly.
+if [ -n "${VANDOR_LABS_TEST_MEKANISM:-}" ]; then
+    cp "$VANDOR_LABS_TEST_MEKANISM" "$TEST_RUNTIME_GAME/mods/"
+fi
 # Optional renderer compatibility run, kept separate from the baseline client.
 if [ -n "${VANDOR_LABS_TEST_JEI:-}" ]; then
     cp "$VANDOR_LABS_TEST_JEI" "$TEST_RUNTIME_GAME/mods/"
@@ -118,6 +125,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = utility26 ]; then
+        grep -q "utility26-focused PASS" "$RUN_OUT/client.log"
+        echo "Live utility 2.6 checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = bridge-machines ]; then
         grep -q 'bridge-machines PASS' "$RUN_OUT/client.log"
         grep -q 'integrated-chip-mounts PASS' "$RUN_OUT/client.log"

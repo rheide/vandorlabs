@@ -71,9 +71,9 @@ public final class GearAssembly {
         BlockPos top = ((GearBlock)world.getBlockState(start).getBlock()).componentRoot(start,world.getBlockState(start));
         int count = 1;
         while (true) {
-            BlockPos above = top.up();
+            BlockPos above = top.offset(mountDirection(world,top).getOpposite());
             if (!loaded(world, above)) return null;
-            if (!isExtender(world.getBlockState(above))) return top;
+            if (!isExtender(world.getBlockState(above)) || mountDirection(world,above)!=mountDirection(world,top)) return top;
             if (++count > GearTopology.MAX_COLUMN_HEIGHT) return null;
             top = above;
         }
@@ -88,15 +88,23 @@ public final class GearAssembly {
         BlockPos top=topOfColumn(world,requested);
         if(top==null)return unavailable("Load the complete strut column first.");
         IBlockState topState=world.getBlockState(top);boolean swing=isSwingArm(topState);
+        EnumFacing mount=mountDirection(world,top);
         int height=0;BlockPos first=top;
-        while(loaded(world,first)&&isExtender(world.getBlockState(first))){
+        while(loaded(world,first)&&isExtender(world.getBlockState(first))&&mountDirection(world,first)==mount){
             if(world.getBlockState(first).getBlock()!=topState.getBlock())return fail("Do not mix straight extenders and swing arms in a column.");
+            if(!(world.getTileEntity(first) instanceof GearTileEntity))return unavailable("An arm tile is still loading.");
+            if(swing&&world.getBlockState(first).getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected rotating arms in the same direction.");
             if(++height>GearTopology.MAX_COLUMN_HEIGHT)return fail("A strut column may contain at most eight sections.");
-            first=first.down();
+            first=first.offset(mount);
         }
         if(!loaded(world,first))return unavailable("Load the feet and their boundary first.");
         IBlockState footState=world.getBlockState(first);
-        if(!isFoot(footState))return fail("Place a landing plate, ski or wheel beneath the strut.");
+        if(!isFoot(footState)){
+            // Arms are complete mechanisms even before a payload or landing foot is added.
+            List<GearTopology.Cell> virtual=java.util.Collections.singletonList(new GearTopology.Cell(0,-height,0));
+            GearTopology.Result free=GearTopology.validate(height,GearTopology.FootKind.NONE,virtual);
+            return new Scan(free.assembly(),EnumFacing.NORTH,java.util.Collections.singletonList(top));
+        }
         GearBlock footBlock=(GearBlock)footState.getBlock(),armBlock=(GearBlock)topState.getBlock();
         if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.sizeClass()!=armBlock.sizeClass())return fail("Wheel and mounting arm sizes must match.");
         EnumFacing facing=footState.getValue(GearBlock.FACING);
@@ -105,37 +113,31 @@ public final class GearAssembly {
             BlockPos foot=queue.removeFirst();
             if(!((GearBlock)footState.getBlock()).componentIntact(world,((GearBlock)footState.getBlock()).componentRoot(foot,world.getBlockState(foot))))return fail("Incomplete wheel footprint.");
             if(!(world.getTileEntity(foot) instanceof GearTileEntity))return unavailable("A foot tile is still loading.");
-            BlockPos above=foot.up();if(!loaded(world,above))return unavailable("Load every mounting column.");
+            BlockPos above=foot.offset(mount.getOpposite());if(!loaded(world,above))return unavailable("Load every mounting column.");
             if(isExtender(world.getBlockState(above))){
                 BlockPos column=topOfColumn(world,above);if(column==null)return unavailable("Load the complete connected strut group.");
-                if(column.getY()-foot.getY()!=height||world.getBlockState(column).getBlock()!=topState.getBlock())return fail("Connected struts must have the same type and height.");
+                if(!column.offset(mount,height).equals(foot)||world.getBlockState(column).getBlock()!=topState.getBlock()||mountDirection(world,column)!=mount)return fail("Connected struts must have the same type and height.");
                 for(int n=0;n<height;n++){
-                    BlockPos cell=column.down(n);IBlockState state=world.getBlockState(cell);
+                    BlockPos cell=column.offset(mount,n);IBlockState state=world.getBlockState(cell);
                     if(state.getBlock()!=topState.getBlock()||!(world.getTileEntity(cell) instanceof GearTileEntity))return fail("Incomplete or mixed strut column.");
                     if(!((GearBlock)state.getBlock()).componentIntact(world,cell))return fail("Incomplete arm footprint.");
                     if(swing&&state.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected swing arms in the same direction.");
                 }
                 if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.width()==2){
-                    BlockPos anchor=column.down(height);IBlockState wheel=world.getBlockState(anchor);
+                    BlockPos anchor=column.offset(mount,height);IBlockState wheel=world.getBlockState(anchor);
                     if(wheel.getBlock()!=footBlock || !footBlock.componentRoot(anchor,wheel).equals(anchor) || wheel.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))
                         return fail("Align the complete Large Wheel footprint beneath its Large arm.");
                 }
-                boolean supported=false;
-                for(BlockPos mountCell:((GearBlock)topState.getBlock()).componentCells(world,column)){
-                    BlockPos at=mountCell.up();if(!loaded(world,at))return unavailable("Load the mounting blocks.");
-                    IBlockState mount=world.getBlockState(at);
-                    supported|=!(mount.getBlock() instanceof GearBlock)&&mount.isSideSolid(world,at,EnumFacing.DOWN);
-                }
-                if(!supported)return fail("Attach the strut below a block with a solid underside.");
                 columns.add(column);
             }
-            for(EnumFacing side:HORIZONTAL){BlockPos next=foot.offset(side);if(!loaded(world,next))return unavailable("The entire foot group and boundary must be loaded.");IBlockState state=world.getBlockState(next);if(!isFoot(state))continue;
+            for(EnumFacing side:HORIZONTAL){BlockPos next=foot.add(ArmOrientation.vector(mount,new BlockPos(side.getDirectionVec())));if(!loaded(world,next))return unavailable("The entire foot group and boundary must be loaded.");IBlockState state=world.getBlockState(next);if(!isFoot(state))continue;
+                if(footBlock.kind()==GearBlock.Kind.TRACK&&state.getBlock() instanceof com.vandorlabs.gear.track.TrackBlock&&(state.getBlock()!=footState.getBlock()||state.getValue(GearBlock.FACING)!=facing))continue;
                 if(state.getBlock()!=footState.getBlock()||((GearBlock)footState.getBlock()).kind()!=GearBlock.Kind.PLATE&&state.getValue(GearBlock.FACING)!=facing)return fail("Use one foot type and align connected skis.");
                 if(feet.add(next)){if(feet.size()>GearTopology.MAX_FEET)return fail("A connected group can contain at most 64 feet.");queue.addLast(next);}
             }
         }
         java.util.List<BlockPos> ordered=new java.util.ArrayList<>(columns);java.util.Collections.sort(ordered);BlockPos primary=ordered.get(0);
-        java.util.List<GearTopology.Cell> offsets=new java.util.ArrayList<>();for(BlockPos foot:feet)offsets.add(new GearTopology.Cell(foot.getX()-primary.getX(),-height,foot.getZ()-primary.getZ()));
+        java.util.List<GearTopology.Cell> offsets=new java.util.ArrayList<>();for(BlockPos foot:feet){BlockPos local=ArmOrientation.inverse(mount,foot.subtract(primary));offsets.add(new GearTopology.Cell(local.getX(),local.getY(),local.getZ()));}
         GearTopology.Result result=GearTopology.validate(height,GearTopology.FootKind.valueOf(((GearBlock)footState.getBlock()).kind().name()),offsets);
         return result.isValid()?new Scan(result.assembly(),facing,ordered):fail(result.error());
     }
@@ -145,26 +147,22 @@ public final class GearAssembly {
      * following an unbounded floor. This only schedules work; scan() remains
      * responsible for rejecting an incomplete/oversized connected group.
      */
+    public static EnumFacing mountDirection(World world,BlockPos pos){
+        TileEntity tile=world.getTileEntity(pos);
+        return tile instanceof GearTileEntity?((GearTileEntity)tile).mountDirection():EnumFacing.DOWN;
+    }
+
     public static void requestControllersNearFoot(World world, BlockPos start) {
-        ArrayDeque<BlockPos> queue = new ArrayDeque<BlockPos>();
-        Set<BlockPos> visited = new HashSet<BlockPos>();
-        queue.add(start);
-        visited.add(start);
-        while (!queue.isEmpty() && visited.size() <= GearTopology.MAX_FEET + 1) {
-            BlockPos foot = queue.removeFirst();
-            BlockPos above = foot.up();
-            if (loaded(world, above) && isExtender(world.getBlockState(above))) {
-                BlockPos top = topOfColumn(world, above);
-                if (top != null) {
-                    TileEntity tile = world.getTileEntity(top);
-                    if (tile instanceof GearTileEntity) ((GearTileEntity) tile).scheduleRebuild();
-                }
-            }
-            for (EnumFacing side : HORIZONTAL) {
-                BlockPos next = foot.offset(side);
-                if (loaded(world, next) && isFoot(world.getBlockState(next)) && visited.add(next)) {
-                    queue.addLast(next);
-                }
+        ArrayDeque<BlockPos> queue=new ArrayDeque<>();Set<BlockPos> visited=new HashSet<>();queue.add(start);visited.add(start);
+        while(!queue.isEmpty()&&visited.size()<=GearTopology.MAX_FEET+1){
+            BlockPos foot=queue.removeFirst();
+            for(EnumFacing side:EnumFacing.values()){
+                BlockPos next=foot.offset(side);if(!loaded(world,next))continue;
+                IBlockState state=world.getBlockState(next);
+                if(isExtender(state)){
+                    BlockPos top=topOfColumn(world,next);TileEntity tile=top==null?null:world.getTileEntity(top);
+                    if(tile instanceof GearTileEntity)((GearTileEntity)tile).scheduleRebuild();
+                }else if(isFoot(state)&&visited.add(next))queue.addLast(next);
             }
         }
     }

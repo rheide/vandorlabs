@@ -1,0 +1,17 @@
+# Data Chip Programmer for Minecraft 1.12.2 Forge
+# Units: blocks. +X east, +Y up, +Z rear. Front north/-Z.
+# Conventional bottom-origin OBJ V; process flip-v=true in Forge.
+mtllib materials.mtl
+o data_chip_programmer_complete_screen
+v 0.1250000000 1.9375000000 0.9356601718
+v 1.8750000000 1.9375000000 0.9356601718
+v 1.8750000000 1.2500000000 0.6508883476
+v 0.1250000000 1.2500000000 0.6508883476
+vt 0.8437500000 0.8281250000
+vt 0.6250000000 0.8281250000
+vt 0.6250000000 0.7351069203
+vt 0.8437500000 0.7351069203
+vn 0.0000000000 0.3826834324 -0.9238795325
+g screen__status_screen__status_screen_surface
+usemtl atlas
+f 1/1/1 2/2/1 3/3/1 4/4/1

@@ -276,3 +276,5 @@ Ramp Controller. Reach is checked against the nearby platform component, so the
 controller can be farther away on a large assembly. Normal edit permissions still
 apply. Command removal of a controller wakes its surviving reservations and
 restores their original blocks and tile data; replacement terrain is preserved.
+
+Steel and aluminum full-height scaffolding from Immersive Engineering can also form ramp platforms, including all three patterns of each metal. Capture and recovery retain the original block variant. Fences and narrow posts are not full-width platforms.

@@ -1,5 +1,7 @@
 # Access Card and Data Chip Mounts
 
+Use the [Card / Chip Programmer](card-chip-programmer.md) to assign companies, duplicate credentials, and edit titled Journal Data Chips.
+
 The modeled holders on the [drive assemblies and joined navigation tables](multiblocks/README.md) use these same Data Chip Mount behaviors. A navigation assembly shares one holder on the front-center module; its chip and settings follow that holder when the layout changes.
 
 Core-based multiblocks, navigation tables and consoles are display-only consumers. Their optional Security gate checks the inserted chip; they never emit a physical or channel redstone signal. Their mount is visible only with Security enabled; hiding it retains any stored chip safely until re-enabled. See [Navigation display settings](navigation-displays.md) and [Machine display settings](machine-displays.md).

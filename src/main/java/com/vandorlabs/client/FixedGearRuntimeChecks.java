@@ -19,7 +19,7 @@ final class FixedGearRuntimeChecks {
         try{for(boolean large:new boolean[]{false,true})for(int foot=0;foot<3;foot++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
             clear(world,root);GearBlock mount=large?GearRegistry.LARGE_GEAR_MOUNT:GearRegistry.GEAR_MOUNT;
             ItemBlock item=(ItemBlock)Item.getItemFromBlock(mount);
-            require(item.placeBlockAt(new ItemStack(mount),player,world,root,EnumFacing.UP,.5F,.5F,.5F,mount.getDefaultState().withProperty(GearBlock.FACING,facing)),"mount placement");
+            require(item.placeBlockAt(new ItemStack(mount),player,world,root,EnumFacing.DOWN,.5F,.5F,.5F,mount.getDefaultState().withProperty(GearBlock.FACING,facing)),"mount placement");
             GearBlock base=foot==0?GearRegistry.LANDING_PLATE:foot==1?GearRegistry.LANDING_SKI:large?GearRegistry.LARGE_LANDING_WHEEL:GearRegistry.LANDING_WHEEL;
             if(foot==2){require(((ItemBlock)Item.getItemFromBlock(base)).placeBlockAt(new ItemStack(base),player,world,root.down(),EnumFacing.UP,.5F,.5F,.5F,base.getDefaultState().withProperty(GearBlock.FACING,facing)),"wheel placement");}
             else for(BlockPos at:mount.componentCells(world,root))world.setBlockState(at.down(),base.getDefaultState().withProperty(GearBlock.FACING,facing));
@@ -39,7 +39,7 @@ final class FixedGearRuntimeChecks {
         for(boolean large:new boolean[]{false,true})for(int foot=0;foot<3;foot++){
             BlockPos root=new BlockPos(470+foot*4,32,large?126:120);
             GearBlock mount=large?GearRegistry.LARGE_GEAR_MOUNT:GearRegistry.GEAR_MOUNT;
-            ((ItemBlock)Item.getItemFromBlock(mount)).placeBlockAt(new ItemStack(mount),player,world,root,EnumFacing.UP,.5F,.5F,.5F,mount.getDefaultState());
+            ((ItemBlock)Item.getItemFromBlock(mount)).placeBlockAt(new ItemStack(mount),player,world,root,EnumFacing.DOWN,.5F,.5F,.5F,mount.getDefaultState());
             GearBlock base=foot==0?GearRegistry.LANDING_PLATE:foot==1?GearRegistry.LANDING_SKI:large?GearRegistry.LARGE_LANDING_WHEEL:GearRegistry.LANDING_WHEEL;
             if(foot==2)((ItemBlock)Item.getItemFromBlock(base)).placeBlockAt(new ItemStack(base),player,world,root.down(),EnumFacing.UP,.5F,.5F,.5F,base.getDefaultState());
             else for(BlockPos at:mount.componentCells(world,root))world.setBlockState(at.down(),base.getDefaultState());

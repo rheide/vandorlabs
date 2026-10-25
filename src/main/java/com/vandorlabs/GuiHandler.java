@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
+    public static final int GUI_PROGRAMMER=24,GUI_COUPLER=25;
     public static final int GUI_WIRELESS_REDSTONE=23;
     public static final int GUI_TOKEN_SLOT=22;
     public static final int GUI_STORAGE_STATUS=21;
@@ -64,6 +65,8 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_PROGRAMMER){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.programmer.ProgrammerTile&&((com.vandorlabs.programmer.ProgrammerTile)tile).usable(player)?new com.vandorlabs.programmer.ProgrammerContainer(player.inventory,(com.vandorlabs.programmer.ProgrammerTile)tile):null;}
+        if(ID==GUI_COUPLER){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(!(tile instanceof com.vandorlabs.coupler.TileCoupler))return null;com.vandorlabs.coupler.ContainerCoupler container=new com.vandorlabs.coupler.ContainerCoupler((com.vandorlabs.coupler.TileCoupler)tile);return container.canInteractWith(player)?container:null;}
         if(ID==GUI_ANIMATED_SCREEN_SELECTOR&&world.getTileEntity(new BlockPos(x,y,z)) instanceof com.vandorlabs.tiles.TileEntityHexTank)ID=GUI_STORAGE_STATUS;
         if(ID==GUI_STORAGE_STATUS){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityBattery||tile instanceof com.vandorlabs.tiles.TileEntityHexTank?new com.vandorlabs.container.ContainerStorageStatus(tile):null;}
         if(ID==GUI_WIRELESS_REDSTONE){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).usable(player)?new com.vandorlabs.container.ContainerWirelessRedstone((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile):null;}
@@ -153,6 +156,8 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_PROGRAMMER){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.programmer.ProgrammerTile?new com.vandorlabs.programmer.client.GuiProgrammer(new com.vandorlabs.programmer.ProgrammerContainer(player.inventory,(com.vandorlabs.programmer.ProgrammerTile)tile)):null;}
+        if(ID==GUI_COUPLER){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.coupler.TileCoupler?new com.vandorlabs.client.GuiCoupler(new com.vandorlabs.coupler.ContainerCoupler((com.vandorlabs.coupler.TileCoupler)tile)):null;}
         if(ID==GUI_ANIMATED_SCREEN_SELECTOR&&world.getTileEntity(new BlockPos(x,y,z)) instanceof com.vandorlabs.tiles.TileEntityHexTank)ID=GUI_STORAGE_STATUS;
         if(ID==GUI_STORAGE_STATUS){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityBattery||tile instanceof com.vandorlabs.tiles.TileEntityHexTank?new com.vandorlabs.client.GuiStorageStatus(new com.vandorlabs.container.ContainerStorageStatus(tile)):null;}
         if(ID==GUI_WIRELESS_REDSTONE){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).usable(player)?new com.vandorlabs.client.GuiWirelessRedstone(new com.vandorlabs.container.ContainerWirelessRedstone((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile)):null;}

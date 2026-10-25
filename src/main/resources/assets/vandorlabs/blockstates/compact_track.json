@@ -1,0 +1,32 @@
+{
+  "variants": {
+    "assembled=false,facing=north": {
+      "model": "vandorlabs:compact_track",
+      "y": 0
+    },
+    "assembled=true,facing=north": {
+      "model": "vandorlabs:track/empty"
+    },
+    "assembled=false,facing=east": {
+      "model": "vandorlabs:compact_track",
+      "y": 90
+    },
+    "assembled=true,facing=east": {
+      "model": "vandorlabs:track/empty"
+    },
+    "assembled=false,facing=south": {
+      "model": "vandorlabs:compact_track",
+      "y": 180
+    },
+    "assembled=true,facing=south": {
+      "model": "vandorlabs:track/empty"
+    },
+    "assembled=false,facing=west": {
+      "model": "vandorlabs:compact_track",
+      "y": 270
+    },
+    "assembled=true,facing=west": {
+      "model": "vandorlabs:track/empty"
+    }
+  }
+}

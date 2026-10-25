@@ -409,7 +409,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if ((material.getBlock().hasTileEntity(material) && !programmable && !ieSlab)
                 || material.getBlockHardness(world,seed)<0
                 || (!programmable && !ieSlab && !(material.getBlock() instanceof BlockSlab)
-                        && !material.isFullCube() && !com.vandorlabs.compat.RampMaterials.isFullGlass(material) && !RampStairs.supported(material)))
+                        && !material.isFullCube() && !com.vandorlabs.compat.RampMaterials.isScaffolding(material) && !com.vandorlabs.compat.RampMaterials.isFullGlass(material) && !RampStairs.supported(material)))
             return fail("Front block must be stairs, a slab, full glass, Programmable Block, or an ordinary solid block");
         boolean[] loaded={true};
         Set<ControllerPlatform.Cell> platform=discoverPlatform(
@@ -533,7 +533,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             boolean programmable=material.getBlock()==ModBlocks.PROGRAMMABLE_BLOCK||material.getBlock()==ModBlocks.PROGRAMMABLE_SLAB||material.getBlock()==ModBlocks.PROGRAMMABLE_STAIRS;
             boolean ieSlab=com.vandorlabs.compat.RampMaterials.isIESlab(world,seed);
             if(material.getBlock()==Blocks.AIR || material.getBlockHardness(world,seed)<0 || material.getBlock().hasTileEntity(material)&&!programmable&&!ieSlab
-                    || !programmable&&!ieSlab&&!(material.getBlock() instanceof BlockSlab)&&!material.isFullCube()&&!com.vandorlabs.compat.RampMaterials.isFullGlass(material)&&!RampStairs.supported(material))throw new IllegalArgumentException("No supported ramp platform in front of controller");
+                    || !programmable&&!ieSlab&&!(material.getBlock() instanceof BlockSlab)&&!material.isFullCube()&&!com.vandorlabs.compat.RampMaterials.isScaffolding(material)&&!com.vandorlabs.compat.RampMaterials.isFullGlass(material)&&!RampStairs.supported(material))throw new IllegalArgumentException("No supported ramp platform in front of controller");
             Set<ControllerPlatform.Cell> platform=discoverPlatform(new ControllerPlatform.Cell(seed.getX(),seed.getY(),seed.getZ()),rampDirection(facing),c->com.vandorlabs.compat.RampMaterials.matches(world,seed,new BlockPos(c.x,c.y,c.z),matchTextures));
             if(platform.isEmpty())throw new IllegalArgumentException("No ramp platform found");
             int min=Integer.MAX_VALUE,max=Integer.MIN_VALUE;

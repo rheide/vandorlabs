@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "normal": {
+      "model": "vandorlabs:data_chip_programmer/controller_empty"
+    }
+  }
+}

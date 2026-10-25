@@ -128,7 +128,7 @@ final class ModularGearRuntimeChecks {
             world.setBlockState(root.down(height),GearRegistry.LANDING_PLATE.getDefaultState());
             for(int y=0;y<height;y++){
                 net.minecraft.block.state.IBlockState state=arm.getDefaultState().withProperty(GearBlock.FACING,facing);
-                require(((net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(arm)).placeBlockAt(new ItemStack(arm),player,world,root.down(y),EnumFacing.UP,.5F,.5F,.5F,state),"large plate arm placement");
+                require(((net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(arm)).placeBlockAt(new ItemStack(arm),player,world,root.down(y),EnumFacing.DOWN,.5F,.5F,.5F,state),"large plate arm placement");
             }
             world.setBlockState(root.up(),Blocks.IRON_BLOCK.getDefaultState());
             GearTileEntity single=(GearTileEntity)world.getTileEntity(root);require(single.rebuild(),"single Plate and one mounting support: "+single.error());
@@ -141,7 +141,7 @@ final class ModularGearRuntimeChecks {
             BlockPos at=column==0?root:root.add(3,0,1);EnumFacing facing=column==0?EnumFacing.NORTH:EnumFacing.SOUTH;
             for(int y=0;y<3;y++){
                 GearBlock arm=GearRegistry.LARGE_GEAR_EXTENDER;
-                require(((net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(arm)).placeBlockAt(new ItemStack(arm),player,world,at.down(y),EnumFacing.UP,.5F,.5F,.5F,arm.getDefaultState().withProperty(GearBlock.FACING,facing)),"mixed-facing large plate columns");
+                require(((net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(arm)).placeBlockAt(new ItemStack(arm),player,world,at.down(y),EnumFacing.DOWN,.5F,.5F,.5F,arm.getDefaultState().withProperty(GearBlock.FACING,facing)),"mixed-facing large plate columns");
             }
             world.setBlockState(at.up(),Blocks.IRON_BLOCK.getDefaultState());
         }

@@ -108,6 +108,7 @@ public final class ItemConfigurizer extends Item {
             return;
         }
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)com.vandorlabs.vehicle.VehicleService.previewController((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),pos);return;}
+        if(state.getBlock() instanceof com.vandorlabs.programmer.ProgrammerBlock){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);state.getBlock().onBlockActivated(world,pos,state,event.getEntityPlayer(),EnumHand.MAIN_HAND,event.getFace(),.5F,.5F,.5F);return;}
         TileEntity tile = world.getTileEntity(pos);
         int gui;
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear){pos=((com.vandorlabs.blocks.BlockNonWheeledLandingGear)state.getBlock()).connectedRoot(world,pos);tile=world.getTileEntity(pos);}

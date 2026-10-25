@@ -32,6 +32,7 @@ public class ClientProxy extends CommonProxy {
         com.vandorlabs.client.cockpits.CockpitModels.install();
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.CockpitItemModels());
         com.vandorlabs.client.constructors.UniversalConstructorModelCache.preInit();
+        com.vandorlabs.programmer.client.ProgrammerModelCache.INSTANCE.register();
         RenderingRegistry.registerEntityRenderingHandler(com.vandorlabs.vehicle.EntityGroundVehicle.class, com.vandorlabs.client.RenderGroundVehicle::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityChairSeat.class, RenderChairSeat::new);
         RenderingRegistry.registerEntityRenderingHandler(com.vandorlabs.turntable.EntityTurntable.class,com.vandorlabs.client.RenderTurntable::new);
@@ -85,6 +86,7 @@ public class ClientProxy extends CommonProxy {
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCockpit.class,new com.vandorlabs.client.TECockpit());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTurntableSurface.class,new com.vandorlabs.client.TETurntableSurface());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTokenSlot.class,new com.vandorlabs.client.TETokenSlot());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.programmer.ProgrammerTile.class,new com.vandorlabs.programmer.client.ProgrammerRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.gear.GearTileEntity.class,new com.vandorlabs.gear.client.GearRenderer());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.VehicleClient());
         ((net.minecraft.client.resources.IReloadableResourceManager)net.minecraft.client.Minecraft.getMinecraft().getResourceManager())

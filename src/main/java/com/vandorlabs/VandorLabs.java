@@ -47,7 +47,10 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableSurface.class,"vandorlabs:turntable_surface");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityWirelessRedstone.class,"vandorlabs:wireless_redstone");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTokenSlot.class,"vandorlabs:token_slot");
+        GameRegistry.registerTileEntity(com.vandorlabs.programmer.ProgrammerTile.class,"vandorlabs:data_chip_programmer");
+        GameRegistry.registerTileEntity(com.vandorlabs.coupler.TileCoupler.class,new net.minecraft.util.ResourceLocation(MODID,"square_coupler"));
         GameRegistry.registerTileEntity(com.vandorlabs.gear.GearTileEntity.class,"vandorlabs:modular_gear");
+        GameRegistry.registerTileEntity(com.vandorlabs.gear.track.TrackTile.class,"vandorlabs:track");
         EntityRegistry.registerModEntity(new ResourceLocation(MODID,"turntable_display"),com.vandorlabs.turntable.EntityTurntable.class,"turntable_display",3,instance,128,1,false);
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityAutopilot.class,"vandorlabs:autopilot");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityWaypoint.class,"vandorlabs:waypoint");

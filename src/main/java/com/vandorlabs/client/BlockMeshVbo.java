@@ -8,11 +8,11 @@ import org.lwjgl.opengl.GL20;
 import java.lang.reflect.Method;
 
 /** VBO records retain their build format; shader records include extra attributes. */
-final class BlockMeshVbo {
+public final class BlockMeshVbo {
     private static final ShaderHooks SHADERS=ShaderHooks.find();
     private static boolean warned;
     private static void unavailable(Throwable error){if(!warned){warned=true;com.vandorlabs.VandorLabs.logger.warn("Optional shader VBO integration unavailable; using standard vertex attributes",error);}}
-    static void draw(VertexBuffer buffer,VertexFormat format,BlockRenderLayer layer){
+    public static void draw(VertexBuffer buffer,VertexFormat format,BlockRenderLayer layer){
         boolean shaders=SHADERS!=null&&format.getNextOffset()==56&&SHADERS.active();
         boolean cull=GL11.glIsEnabled(GL11.GL_CULL_FACE);
         buffer.bindBuffer();
@@ -58,7 +58,7 @@ final class BlockMeshVbo {
         void end(BlockRenderLayer layer){try{end.invoke(null,layer);}catch(ReflectiveOperationException|LinkageError error){unavailable(error);}finally{GL20.glDisableVertexAttribArray(mid);GL20.glDisableVertexAttribArray(tangent);GL20.glDisableVertexAttribArray(entity);}}
     }
     /** Avoid OptiFine addVertexData rewriting each component's block/entity shader IDs. */
-    static void merge(BufferBuilder builder,java.util.List<int[]> components,VertexFormat format){
+    public static void merge(BufferBuilder builder,java.util.List<int[]> components,VertexFormat format){
         int size=0;for(int[] data:components)size=Math.addExact(size,data.length);
         int[] joined=new int[size];int offset=0;for(int[] data:components){System.arraycopy(data,0,joined,offset,data.length);offset+=data.length;}
         builder.setVertexState(builder.new State(joined,new VertexFormat(format)));

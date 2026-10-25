@@ -33,7 +33,7 @@ public final class GearTopology {
     public static final int SOUTH = 4;
     public static final int WEST = 8;
 
-    public enum FootKind { PLATE, SKI, WHEEL }
+    public enum FootKind { PLATE, SKI, WHEEL, TRACK, NONE }
 
     private GearTopology() { }
 

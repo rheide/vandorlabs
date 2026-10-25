@@ -34,7 +34,7 @@ final class CockpitCopyRuntimeChecks {
                 }
                 copy.setSideTexture(12);require(original.sideTexture()!=12,"copy shares settings");
                 CockpitAssembly.remove(world,source.add(delta));
-                for(BlockPos p:footprint)require(world.getTileEntity(p)!=null,"copied cockpit removal damaged original");
+                for(BlockPos p:footprint){require(world.getTileEntity(p)!=null,"copied cockpit removal damaged original");if(!p.equals(source))require(world.isAirBlock(p.add(delta)),"copied reservation left behind");}
                 cases++;
             }finally{
                 for(BlockPos p:footprint){world.setBlockToAir(p.add(delta));world.setBlockToAir(p);}

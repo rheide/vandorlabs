@@ -1,0 +1,86 @@
+{
+  "credit": "MCTrek modular tracks \u2014 native model source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/track/steel",
+    "steel": "vandorlabs:blocks/track/steel",
+    "trim": "vandorlabs:blocks/track/trim",
+    "dark": "vandorlabs:blocks/track/dark",
+    "rubber": "vandorlabs:blocks/track/rubber",
+    "steel_tread": "vandorlabs:blocks/track/steel_tread",
+    "sole": "vandorlabs:blocks/track/sole",
+    "status": "vandorlabs:blocks/track/status",
+    "wheel": "vandorlabs:blocks/track/wheel"
+  },
+  "elements": [
+    {
+      "name": "ceiling_saddle",
+      "from": [
+        4,
+        14,
+        4
+      ],
+      "to": [
+        12,
+        16,
+        12
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            8,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            8,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            2
+          ],
+          "texture": "#steel"
+        }
+      }
+    }
+  ]
+}
