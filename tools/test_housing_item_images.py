@@ -64,7 +64,7 @@ def main():
     parser.add_argument('--legacy', type=Path, required=True)
     parser.add_argument('--modern', type=Path, required=True)
     parser.add_argument('--report', type=Path, required=True)
-    parser.add_argument('--cases', type=int, choices=(28,64), default=28)
+    parser.add_argument('--cases', type=int, choices=(28,36,64), default=28)
     args = parser.parse_args()
     legacy = gallery_cells(args.legacy, args.cases)
     modern = gallery_cells(args.modern, args.cases)

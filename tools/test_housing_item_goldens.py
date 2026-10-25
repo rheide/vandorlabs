@@ -29,7 +29,9 @@ def main():
     parser.add_argument('--log-dir',type=Path,required=True)
     parser.add_argument('--legacy-models',type=Path)
     parser.add_argument('--legacy-image',type=Path)
+    parser.add_argument('--suite',choices=('housing-items','wall-items'),default='housing-items')
     args=parser.parse_args()
+    prefix='modern-wall' if args.suite=='wall-items' else 'modern-housing'
     if bool(args.legacy_models) != bool(args.legacy_image):
         parser.error('--legacy-models and --legacy-image must be supplied together')
     for reference in (args.legacy_models,args.legacy_image):
@@ -72,14 +74,14 @@ def main():
         (server_dir/'server.properties').write_text(f'server-ip=127.0.0.1\nserver-port={args.port}\nonline-mode=false\nlevel-name=fixture\nlevel-type=minecraft:flat\nspawn-protection=0\nview-distance=6\nsimulation-distance=6\nenable-rcon=false\n')
         server_log=args.log_dir/'server.log'
         with server_log.open('w') as stream:
-            server=subprocess.Popen(command('runServer',['-PmodernClientFixture=true','-PmodernClientSuite=housing-items','-PmodernServerRunDirectory='+str(server_dir)]),cwd=PLATFORM,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=os.name!='nt')
+            server=subprocess.Popen(command('runServer',['-PmodernClientFixture=true','-PmodernClientSuite='+args.suite,'-PmodernServerRunDirectory='+str(server_dir)]),cwd=PLATFORM,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=os.name!='nt')
             processes.append(server)
             deadline=time.monotonic()+180
             while 'Done (' not in server_log.read_text(errors='replace'):
                 if server.poll() is not None or time.monotonic()>deadline:
                     raise RuntimeError('Owned housing item server did not become ready')
                 time.sleep(.5)
-            client_command=command('runClient',['-PmodernClientSmoke=true','-PmodernClientSuite=housing-items','-PmodernClientPort='+str(args.port)])
+            client_command=command('runClient',['-PmodernClientSmoke=true','-PmodernClientSuite='+args.suite,'-PmodernClientPort='+str(args.port)])
             if os.name!='nt' and not os.environ.get('DISPLAY'):
                 client_command=['xvfb-run','-a','--server-args=-screen 0 1400x900x24 -ac +extension GLX +render -noreset',*client_command]
                 env['LIBGL_ALWAYS_SOFTWARE']='1'
@@ -93,24 +95,24 @@ def main():
                 except subprocess.TimeoutExpired:
                     raise RuntimeError('Owned housing item client exceeded timeout')
             text=client_log.read_text(errors='replace')
-            markers=['housing-items-model PASS','housing-items-client PASS','client-smoke PASS']
+            markers=[args.suite+'-model PASS',args.suite+'-client PASS','client-smoke PASS']
             if code or any('[vandorlabs][modern] '+marker not in text for marker in markers) or 'BUILD SUCCESSFUL' not in text or 'Stopping!' not in text:
                 raise RuntimeError('Native item runtime lacked explicit model/gallery/clean completion evidence')
             files={}
-            for name in ('modern-housing-item-goldens.json','modern-housing-items.png'):
+            for name in (prefix+'-item-goldens.json',prefix+'-items.png'):
                 path=PLATFORM/'run/client/screenshots'/name
                 if not path.is_file() or path.stat().st_mtime_ns<started:
                     raise RuntimeError('Missing or stale item artifact '+name)
                 files[name]=hashlib.sha256(path.read_bytes()).hexdigest()
                 shutil.copy2(path,args.log_dir/name)
-            model=json.loads((PLATFORM/'run/client/screenshots/modern-housing-item-goldens.json').read_text())
-            if len(model['cases']) not in (28,64):
+            model=json.loads((PLATFORM/'run/client/screenshots'/(prefix+'-item-goldens.json')).read_text())
+            if len(model['cases']) not in (28,36,64):
                 raise RuntimeError('Incomplete native baseline item export')
             if args.legacy_models is not None:
                 tools=Path(__file__).resolve().parent
                 for script,reference,current,output in (
-                    ('compare_housing_item_goldens.py',args.legacy_models,'modern-housing-item-goldens.json','model-comparison.json'),
-                    ('test_housing_item_images.py',args.legacy_image,'modern-housing-items.png','image-comparison.json')):
+                    ('compare_housing_item_goldens.py',args.legacy_models,prefix+'-item-goldens.json','model-comparison.json'),
+                    ('test_housing_item_images.py',args.legacy_image,prefix+'-items.png','image-comparison.json')):
                     comparison=[sys.executable,str(tools/script),'--legacy',str(reference.resolve()),
                                 '--modern',str(PLATFORM/'run/client/screenshots'/current),
                                 '--report',str(args.log_dir/output)]

@@ -24,18 +24,27 @@ def compare(old,new):
         errors.append('GUI transform')
     left=sorted(map(canonical,old['quads']),key=lambda value:value[0])
     right=sorted(map(canonical,new['quads']),key=lambda value:value[0])
-    uv=0
+    uv=0;aliases=0
     if [value[0] for value in left]!=[value[0] for value in right]:
         errors.append('geometry/winding/cull/face')
     else:
         for (_,a,qa),(_,b,qb) in zip(left,right):
             for field in ('material','shade','tint'):
-                if qa[field]!=qb[field] and field not in errors:
+                different=qa[field]!=qb[field]
+                if different and field=='material':
+                    # Canonical model components can share artwork with a catalog choice.
+                    # An exporter without that alias reports the literal sprite identity.
+                    # Accept only the SAME actual texture path, never a different named material.
+                    left_sprite=qa['sprite'].replace(':blocks/',':block/')
+                    right_sprite=qb['sprite'].replace(':blocks/',':block/')
+                    fallback=qb['material'] in (qb['sprite'],'unmapped:'+qb['sprite'])
+                    if fallback and left_sprite==right_sprite:different=False;aliases+=1
+                if different and field not in errors:
                     errors.append(field)
             uv=max(uv,*(abs(x-y) for p,q in zip(a,b) for x,y in zip(p[3:],q[3:])))
         if uv>4e-4:
             errors.append('UV')
-    return errors,{'max_uv_error':uv,'max_gui_error':gui}
+    return errors,{'max_uv_error':uv,'max_gui_error':gui,'texture_path_aliases':aliases}
 
 
 def main():
@@ -48,7 +57,7 @@ def main():
     assert old_data['format']==new_data['format']==1
     assert old_data['rectangularChoice']==new_data['rectangularChoice']
     old={row['key']:row for row in old_data['cases']};new={row['key']:row for row in new_data['cases']}
-    assert len(old)==len(new) and len(old) in (28,64) and old.keys()==new.keys(),'Expected complete actual ItemRenderer cases'
+    assert len(old)==len(new) and len(old) in (28,36,64) and old.keys()==new.keys(),'Expected complete actual ItemRenderer cases'
     rows=[]
     for key in old:
         errors,metrics=compare(old[key],new[key]);rows.append({'key':key,'errors':errors,**metrics})
@@ -57,16 +66,18 @@ def main():
     assert 'material' in compare(sample,wrong)[0],'Material negative accepted'
     wrong=copy.deepcopy(sample);wrong['quads'][0]['vertices'][0][3]+=.125
     assert 'UV' in compare(sample,wrong)[0],'UV negative accepted'
+    wrong=copy.deepcopy(sample);wrong['quads'][0]['sprite']='vandorlabs:block/wrong_artwork';wrong['quads'][0]['material']=wrong['quads'][0]['sprite']
+    assert 'material' in compare(sample,wrong)[0],'Different artwork alias negative accepted'
     wrong=copy.deepcopy(sample);wrong['payloadUnchanged']=False
     assert 'payloadUnchanged' in compare(sample,wrong)[0],'Payload mutation negative accepted'
     failures=[row for row in rows if row['errors']]
-    result={'cases':rows,'failed_cases':len(failures),'status':'FAIL' if failures else 'PASS','negative_controls':['material','UV','payload']}
+    result={'cases':rows,'failed_cases':len(failures),'status':'FAIL' if failures else 'PASS','negative_controls':['material','UV','payload','different artwork alias']}
     args.report.write_text(json.dumps(result,indent=2)+'\n')
     if failures:
         for row in failures:
             print(f"FAIL {row['key']}: {','.join(row['errors'])}; UV={row['max_uv_error']:.8f}, GUI={row['max_gui_error']:.8f}")
         raise SystemExit(f'FAIL {len(failures)}/{len(old)} actual housing item contracts')
-    print(f'PASS {len(old)} actual housing item contracts: geometry/cull/winding, materials/UV, shading, GUI transforms and retained payloads; three negatives rejected')
+    print(f'PASS {len(old)} actual housing item contracts: geometry/cull/winding, materials/UV, shading, GUI transforms and retained payloads; four negatives rejected')
 
 
 if __name__=='__main__':main()

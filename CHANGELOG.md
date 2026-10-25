@@ -53,6 +53,10 @@
   material choices, texture layouts, shading and padded transforms. Preserve
   raw item choices and dormant settings without applying world-save migrations.
 
+- Preserve configured flat-wall and porthole item artwork, frame materials and
+  dormant settings on the native target. Fit these three item profiles inside
+  their inventory slots on both targets using the existing projected padding.
+
 - Add native Programmable Slabs and Stairs with shared exact geometry, material
   dialogs, configured items and slab merging. Preserve dormant settings and
   retained fluid data through placement, drops and restarts. Refresh connected
