@@ -400,7 +400,7 @@ public final class VehicleTransfer {
         // Invalidation may inspect neighboring tile entities. Publish all final states
         // first, so an already removed tile cannot be recreated from its old block.
         // World.removeTileEntity also removes pending entries created during a tile tick.
-        for(BlockPos p:previous.keySet())world.removeTileEntity(p);
+        for(BlockPos p:previous.keySet()){TileEntity detached=world.getTileEntity(p);world.removeTileEntity(p);VehicleForeignCompat.clearDetachedInventory(detached);}
         if(place)for(VehicleStructure.Cell cell:structure.cells) if(cell.tileData()!=null) {
             BlockPos p=origin.add(cell.pos);NBTTagCompound restoredTag=VehicleEscalators.parked(VehicleTileData.translated(cell.tileData(),origin),world.getTotalWorldTime());
             TileEntity tile=TileEntity.create(world,restoredTag);

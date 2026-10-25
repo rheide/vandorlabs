@@ -36,6 +36,7 @@ public final class MovingBlockSupport {
             }
             return true;
         }
+        if(domain.equals("immersiveengineering")&&tile==null&&cell.state.getBlock().hasTileEntity(cell.state))return false;
         if(tile==null && !cell.hasTileData())return inertBuilding(cell.state)||simpleState(cell.state);
         if(domain.equals("immersiveengineering"))return name.equals("blusunrize.immersiveengineering.common.blocks.TileEntityIESlab")
                 || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLantern")
@@ -43,7 +44,12 @@ public final class MovingBlockSupport {
                 || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLadder")
                 || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorLV")
                 || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorMV")
-                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorHV");
+                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorHV")
+                ||name.equals("blusunrize.immersiveengineering.common.blocks.wooden.TileEntityWindmill")
+                ||name.equals("blusunrize.immersiveengineering.common.blocks.wooden.TileEntityWatermill")
+                ||name.equals("blusunrize.immersiveengineering.common.blocks.wooden.TileEntityWoodenPost")
+                ||name.equals("blusunrize.immersiveengineering.common.blocks.wooden.TileEntityWallmount")
+                ||name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityToolbox");
         if(domain.equals("mekanism"))return name.equals("mekanism.common.tile.TileEntityEnergyCube")||name.equals("mekanism.common.tile.TileEntityGlowPanel")||name.equals("mekanism.common.tile.TileEntityFluidTank")||name.equals("mekanism.common.tile.TileEntityBin")||name.equals("mekanism.common.tile.TileEntityGasTank")||name.equals("mekanism.common.tile.TileEntityPersonalChest");
         return domain.equals("malisisdoors") && tile==null && upperDoor(cell.state);
     }
@@ -54,7 +60,7 @@ public final class MovingBlockSupport {
         String type=block.getClass().getName();
         if(id.getResourceDomain().equals("immersiveengineering")){
             int meta=block.getMetaFromState(state);
-            return type.equals("blusunrize.immersiveengineering.common.blocks.metal.BlockMetalDecoration1")&&meta>=0&&meta<=7
+            return (type.equals("blusunrize.immersiveengineering.common.blocks.metal.BlockMetalDecoration1")||type.equals("blusunrize.immersiveengineering.common.blocks.metal.BlockMetalDecoration0"))&&meta>=0&&meta<=7
                     ||type.equals("blusunrize.immersiveengineering.common.blocks.wooden.BlockWoodenDecoration")&&meta>=0&&meta<=1;
         }
         return id.getResourceDomain().equals("mekanism")&&type.equals("mekanism.common.block.BlockPlasticFence");

@@ -245,6 +245,7 @@ public final class VehicleScan {
                         && (state.getBlockHardness(world,p)>=0 || block instanceof BlockControlledRamp), "Unsupported block: "+block.getLocalizedName());
                 TileEntity tile=world.getTileEntity(p);
                 attachmentComponents(p,state,tile);
+                for(BlockPos required:VehicleForeignCompat.required(world,p))enqueueMember(required);
                 if(tile instanceof TileEntityTurntableController)require(((TileEntityTurntableController)tile).captureId==null&&((TileEntityTurntableController)tile).layout==null,"Restore the turntable contents and detach its controller before vehicle assembly.");
                 if(tile instanceof TileEntityTurntableSurface)require(((TileEntityTurntableSurface)tile).owner==null,"Detach the turntable surface before vehicle assembly.");
                 require(block.getRegistryName()!=null, "Unregistered block at "+p);

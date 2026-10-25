@@ -45,7 +45,7 @@ public final class CopyMaterials {
     }
     private static void collect(VehicleStructure snapshot,VehicleWorld view,List<Need> needs,int depth){
         if(depth>=8)throw new IllegalArgumentException("Captured material nesting exceeds eight structures");
-        for(VehicleStructure.Cell cell:snapshot.cells){if(cell.tileData()!=null&&cell.tileData().hasKey("LootTable",8)&&!cell.tileData().getString("LootTable").isEmpty())throw new IllegalArgumentException("Open loot containers before Survival copying them");TileEntity tile=view.getTileEntity(cell.pos);ItemStack base=base(cell,view);boolean carrier=false;
+        for(VehicleStructure.Cell cell:snapshot.cells){if(cell.tileData()!=null&&cell.tileData().hasKey("LootTable",8)&&!cell.tileData().getString("LootTable").isEmpty())throw new IllegalArgumentException("Open loot containers before Survival copying them");TileEntity tile=view.getTileEntity(cell.pos);if(VehicleForeignCompat.toolbox(tile)){ItemStack carrier=VehicleForeignCompat.toolboxMaterial(tile,cell.state);add(needs,carrier,1);continue;}ItemStack base=base(cell,view);boolean carrier=false;
             if(storedResources(tile,cell.tileData())){
                 if(!base.isEmpty()&&(tile instanceof TileEntityBattery||tile instanceof TileEntityHexTank)){ItemStack pick=cell.state.getBlock().getPickBlock(cell.state,null,view,cell.pos,null);NBTTagCompound source=cell.tileData(),data=pick.getSubCompound("BlockEntityTag");if(data==null||!resourceData(source,data))throw new IllegalArgumentException("Stored resources have no lossless material item: "+cell.state.getBlock().getLocalizedName());base=pick;carrier=true;}
                 else throw new IllegalArgumentException("Empty stored energy, fluids or fuel before Survival copying "+cell.state.getBlock().getLocalizedName());
@@ -78,6 +78,7 @@ public final class CopyMaterials {
     private static void inventory(TileEntity tile,List<Need> needs){
         if(tile==null)return;
         if(tile.getClass().getName().equals("mekanism.common.tile.TileEntityBin"))try{long count=((Number)tile.getClass().getMethod("getItemCount").invoke(tile)).longValue();if(count<0)throw new IllegalArgumentException("Invalid stored bin count");ItemStack type=(ItemStack)tile.getClass().getField("itemType").get(tile);if(count>0&&type.isEmpty())throw new IllegalArgumentException("Stored bin items cannot be identified");add(needs,type,count);return;}catch(ReflectiveOperationException unsupported){throw new IllegalArgumentException("Cannot account for the bin inventory exactly");}
+        List<ItemStack> foreign=VehicleForeignCompat.inventory(tile);if(foreign!=null){for(ItemStack item:foreign)add(needs,item,item.getCount());return;}
         if(tile instanceof IInventory){IInventory inventory=(IInventory)tile;int slots=inventory.getSizeInventory();if(slots<0||slots>8192)throw new IllegalArgumentException("Inventory slot count exceeds the copy limit");for(int slot=0;slot<slots;slot++){ItemStack item=inventory.getStackInSlot(slot);add(needs,item,item.getCount());}}
         else{IItemHandler handler=tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,null);if(handler==null)for(EnumFacing side:EnumFacing.values()){handler=tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,side);if(handler!=null)break;}if(handler!=null){int slots=handler.getSlots();if(slots<0||slots>8192)throw new IllegalArgumentException("Inventory slot count exceeds the copy limit");for(int slot=0;slot<slots;slot++){ItemStack item=handler.getStackInSlot(slot);add(needs,item,item.getCount());}}}
         if(tile instanceof TileEntitySpaceDoor){TileEntitySpaceDoor door=(TileEntitySpaceDoor)tile;for(int side=0;side<2;side++){ItemStack token=door.keyReader(side).getStackInSlot(0);add(needs,token,token.getCount());}}
@@ -85,6 +86,7 @@ public final class CopyMaterials {
     }
     private static ItemStack base(VehicleStructure.Cell cell,VehicleWorld view){
         Block block=cell.state.getBlock();TileEntity tile=view.getTileEntity(cell.pos);
+        if(VehicleForeignCompat.materialDummy(tile))return ItemStack.EMPTY;
         if(block instanceof com.vandorlabs.programmer.ProgrammerBlock&&cell.state.getValue(com.vandorlabs.programmer.ProgrammerBlock.PART)!=0)return ItemStack.EMPTY;
         if(block instanceof BlockConstructorPart)return cell.tileData()!=null&&cell.tileData().getBoolean("ConstructorMatter")?new ItemStack(Block.getBlockFromName("vandorlabs:programmable_matter_block")):ItemStack.EMPTY;
         if(block instanceof BlockControlledRamp||block instanceof BlockPistonExtension||tile instanceof TileEntityCockpitPart)return ItemStack.EMPTY;

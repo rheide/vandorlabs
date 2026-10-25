@@ -48,6 +48,7 @@ public final class VehicleRotation {
     }
     /** Refuse unsupported private data before conversion; a craft must be parkable at every heading. */
     public static void validate(VehicleStructure source,VehicleWorld view){
+        VehicleForeignCompat.validate(source,view);
         for(VehicleStructure.Cell cell:source.cells){
             try{
                 if(!MovingBlockSupport.supported(cell,view.getTileEntity(cell.pos)))throw new IllegalArgumentException("No lossless block-data adapter for "+cell.state.getBlock().getRegistryName()+". Remove this block before moving or copying the structure.");
@@ -144,6 +145,7 @@ public final class VehicleRotation {
                         try{data.setString("rotation",Rotation.values()[(Rotation.valueOf(data.getString("rotation")).ordinal()+turns)&3].name());}catch(IllegalArgumentException ignored){}
                     }
                 } else if(domain.equals("immersiveengineering")) {
+                    VehicleForeignCompat.rotate(view.getTileEntity(before.pos),data,rotation);
                     facing(data,"facing",rotation,false);
                     NBTTagCompound old=data.copy();
                     for(EnumFacing side:EnumFacing.values())if(old.hasKey("sideConfig_"+side.getIndex(),3))data.setInteger("sideConfig_"+rotation.rotate(side).getIndex(),old.getInteger("sideConfig_"+side.getIndex()));

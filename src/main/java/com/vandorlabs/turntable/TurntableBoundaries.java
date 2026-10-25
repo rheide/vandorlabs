@@ -16,6 +16,7 @@ public final class TurntableBoundaries {
     public TurntableBoundaries(World world,BlockPos min,BlockPos max){this.world=world;this.min=min;this.max=max;}
     private void includes(BlockPos p){if(p.getX()<min.getX()||p.getY()<min.getY()||p.getZ()<min.getZ()||p.getX()>max.getX()||p.getY()>max.getY()||p.getZ()>max.getZ())throw new IllegalArgumentException("Scan volume cuts a multiblock at "+p+"; include its complete assembly");if(!world.isBlockLoaded(p))throw new IllegalArgumentException("Load all assembly cells first");}
     public void check(BlockPos p,IBlockState state,TileEntity tile){
+        for(BlockPos required:com.vandorlabs.vehicle.VehicleForeignCompat.required(world,p))includes(required);
         Block block=state.getBlock();
         boolean rampPart=block instanceof BlockControlledRamp&&tile instanceof TileEntityControlledRamp;
         if(state.getBlockHardness(world,p)<0&&!rampPart)throw new IllegalArgumentException("Cannot capture unbreakable "+block.getRegistryName()+" at "+p.getX()+", "+p.getY()+", "+p.getZ());
