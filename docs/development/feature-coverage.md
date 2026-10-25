@@ -6,7 +6,7 @@ The [machine-readable inventory](feature-coverage.json) includes all 57 active g
 
 | Family | NeoForge status | Remaining behavior and acceptance |
 | --- | --- | --- |
-| Programmable cube and matter block | partial | joined multi-block Stretch/Fit faces; custom block material definitions and sampling; complete creative/search catalog configuration; joined-face and shader render acceptance |
+| Programmable cube and matter block | partial | custom block material definitions and sampling; complete creative/search catalog configuration; carried-assembly joined faces and shader render acceptance |
 | Slabs and stairs | unimplemented | native collision/models; shared settings and per-face material rendering; configured items and placement; live parity |
 | Walls, portholes and diagonals | unimplemented | all native adapters; connected and filled geometry/contact matrices; custom materials and configuration; live parity |
 | Programmable viewscreens | partial | custom block material definitions and sampling; vehicle overlays and carried-assembly integration; full facing/mount and shader render acceptance |
@@ -16,7 +16,7 @@ The [machine-readable inventory](feature-coverage.json) includes all 57 active g
 | Trapdoors and diagonal trapdoors | unimplemented | native adapter and shared geometry; assembly/channel behavior; configuration/custom materials; live parity |
 | Programmable lights and propulsion | unimplemented | native shape/light adapters; joined light/channel policy; particle and propulsion behavior; live parity |
 | Chairs and seats | unimplemented | native shape/entity mounting; configured artwork; safe dismount and carried seats; live parity |
-| Triggers, buttons, rockers, levers and throttles | unimplemented | native control adapters; shared latch/pulse/slider policy; directional interaction and saved levels; live parity |
+| Triggers, buttons, rockers, levers and throttles | partial | nine remaining control adapters: airliner_throttle, compact_power_lever, fighter_throttle, industrial_power_lever, large_power_lever, programmable_trigger_block, small_power_lever, thruster_lever, wall_slider; full mounted-world and shader render acceptance; carried-assembly integration |
 | Wireless transmitter and receiver | partial | carried assembly interaction |
 | Token slots and design tokens | unimplemented | slot inventories and native token components; authorization semantics; all token designs/models; live parity |
 | Programmable storage | unimplemented | inventory-preserving native menu/storage; face materials and storage model mapping; custom materials and configuration; live parity |
@@ -35,11 +35,13 @@ The [machine-readable inventory](feature-coverage.json) includes all 57 active g
 
 ## Current native adapters
 
-The programmable cube has a native block entity, stable housing choices, per-face material selection, shared dialog controls, server-owned menu authorization, bounded settings transport, configuration-preserving drops and creative picks. Filesystem materials now retain stable IDs through missing-file fallback and update already-open thumbnails and immutable model UV snapshots when artwork dimensions change. Dedicated save/restart and live cube render/reload checks passed. Joined multi-block Stretch/Fit layouts and custom material definitions remain required.
+The programmable cube has a native block entity, stable housing choices, per-face material selection, shared dialog controls, server-owned menu authorization, bounded settings transport, configuration-preserving drops and creative picks. Filesystem materials now retain stable IDs through missing-file fallback and update already-open thumbnails and immutable model UV snapshots when artwork dimensions change. Dedicated save/restart and live cube render/reload checks passed. Joined Stretch/Fit now uses the shared bounded plane policy and immutable client-thread snapshots. Section workers enqueue positions and read only snapshot data. Native emitted geometry and actual menu edits cover six faces, all six saved facings, Fit margins, material/layout splits and rendered Stretch/Fit versus Tile artwork. Carried assemblies, shader acceptance and custom material definitions remain required.
 
 The programmable viewscreen and six console/input/diagonal variants use the shared saved schema, display policy, compact animation decoder, pause-aware clock, housing/surface meshes and dialog controls. Console surfaces retain independent settings and redstone rows. Full viewscreens also accept filesystem surface and housing choices through the actual selector, retain high saved IDs and update emitted UVs and open thumbnails through missing-file and dimension reloads. Native Redstone overlays and the eight-row editor use shared toggle/slider/pulse policy, partial-channel latch banks and native ray interaction. Native wireless endpoints use shared channel membership/network/signal policies, deferred loaded-world registration, directional analog/digital ports and exact editing sessions. Plain wireless items retain the original pick/drop and fresh-placement behavior. Native editing preserves the held-item Adventure support-block permission rule, alongside exact menu/tile, loaded-world and reach checks. Their remaining integration and rendering requirements are recorded above.
 
 The plain Programmable Matter block retains its authored artwork, padded item, nine-ingot recipe and plain loot. Basic matter/alloy ingots and the Configurizer item exist in the modern target. The full matter-production chain and every Configurizer target are separate unfinished work; these items do not imply those machines or workflows are available.
+
+The native Push Button and Rocker Switch are two of the eleven legacy control IDs. They retain scheduled twenty-tick pulse semantics, persistent bank isolation, mounted placement/support, directional power, saved/configured items and exact editing permissions. Actual dialog/press/retrigger checks and all 128 configured item renders passed, including pixel padding and comparison with the legacy dialog. Triggers, the remaining levers/throttles/sliders and carried integration remain under conversion.
 
 ## Acceptance gates
 

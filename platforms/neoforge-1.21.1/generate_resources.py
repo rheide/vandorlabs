@@ -151,6 +151,8 @@ def main():
         write(resources / f'data/vandorlabs/loot_table/blocks/{id}.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':f'vandorlabs:{id}'}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
     from generate_screen_resources import generate as generate_screen
     generate_screen(ROOT, resources)
+    from generate_control_resources import generate as generate_controls
+    generate_controls(ROOT,resources)
     native_blocks=['programmable_block','programmable_matter_block','programmable_viewscreen','programmable_console','programmable_half_console','programmable_input','programmable_half_input','programmable_diagonal_screen','programmable_diagonal_half_console','redstone_transmitter','redstone_receiver']
     write(OUT / 'adapter-coverage.json', {
         'registered_blocks':native_blocks,

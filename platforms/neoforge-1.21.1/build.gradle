@@ -17,6 +17,7 @@ neoForge {
             client(); gameDirectory = file('run/client')
             if(project.hasProperty('modernClientSmoke')) {
                 systemProperty 'vandorlabs.modernClientSmoke', 'true'
+                if(project.hasProperty('modernClientSuite')) systemProperty 'vandorlabs.modernClientSuite',project.property('modernClientSuite')
                 programArguments.addAll '--quickPlayMultiplayer', '127.0.0.1:25570', '--width', '1280', '--height', '720'
             }
         }
@@ -36,6 +37,7 @@ tasks.register('generateModernResources', Exec) {
     inputs.file('generate_resources.py')
     inputs.file('../../tools/compact_runtime_assets.py')
     inputs.file('generate_screen_resources.py')
+    inputs.file('generate_control_resources.py')
     inputs.file('../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')
     inputs.dir('../../texture-packs/default')
     inputs.dir('../../texture-packs/additional')

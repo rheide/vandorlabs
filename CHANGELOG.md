@@ -26,6 +26,13 @@
   These adapters remain experimental; vehicles, moving assemblies, custom block
   samples and the other outstanding families remain under conversion.
 
+- Join native Programmable Block Stretch/Fit faces with the same bounded plane
+  discovery as Forge. Publish immutable client-thread render snapshots, preserve
+  authored UV orientation and draw opaque Fit margins without worker world reads.
+- Add native Push Button and Rocker Switch adapters with shared mount/settings
+  policies, scheduled pulse expiry, persistent bank isolation, exact dialogs and
+  configured item padding. The other nine control IDs remain under conversion.
+
 ## 2.5
 
 - Share navigation-table activation with Core-based multiblocks: consume physical redstone or input channels, optionally require a matching Data Chip, and never emit physical or channel power from Cores or reserved cells.

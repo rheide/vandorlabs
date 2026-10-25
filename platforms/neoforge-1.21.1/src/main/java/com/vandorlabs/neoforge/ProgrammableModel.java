@@ -25,7 +25,8 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
     private record MaterialSnapshot(TextureAtlasSprite sprite,float usedU,float usedV) {}
     private final java.util.Map<Integer,MaterialSnapshot> sprites;
-    private ProgrammableModel(BakedModel model,java.util.Map<Integer,MaterialSnapshot> sprites) { super(model);this.sprites=sprites; }
+    private final TextureAtlasSprite margin;
+    private ProgrammableModel(BakedModel model,java.util.Map<Integer,MaterialSnapshot> sprites,TextureAtlasSprite margin) { super(model);this.sprites=sprites;this.margin=margin; }
     @SubscribeEvent public static void bake(ModelEvent.ModifyBakingResult event) {
         java.util.Map<Integer,MaterialSnapshot> resolved=new java.util.HashMap<>();
         for(var choice:ModernFinishCatalog.allChoices()) {
@@ -34,7 +35,12 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
             resolved.put(choice.choice(),new MaterialSnapshot(sprite,entry.u(),entry.v()));
         }
         java.util.Map<Integer,MaterialSnapshot> sprites=java.util.Map.copyOf(resolved);
-        event.getModels().replaceAll((id,model) -> id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"))&&!id.getVariant().equals("inventory")?new ProgrammableModel(model,sprites):model);
+        TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
+        event.getModels().replaceAll((id,model) -> id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"))&&!id.getVariant().equals("inventory")?new ProgrammableModel(model,sprites,margin):model);
+    }
+    @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
+        com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
+        return data;
     }
     @Override public boolean useAmbientOcclusion() { return false; }
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType renderType) {
@@ -49,26 +55,25 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
             int index=ModernFinishCatalog.renderChoice(choice);
             MaterialSnapshot material=sprites.getOrDefault(index,sprites.get(0));
             TextureAtlasSprite sprite=material.sprite();
+            JoinedCubeFaces joined=data.get(ProgrammableBlockEntity.JOINED);
+            var plane=joined==null?null:joined.face(quad.getDirection());
+            if(settings.layout!=1&&plane!=null){result.addAll(JoinedCubeQuads.map(quad,state.getValue(ProgrammableBlock.FACING),plane,settings.layout,sprite,material.usedU(),material.usedV(),margin));continue;}
             float uScale=material.usedU(),vScale=material.usedV();
             double aspect=material.usedU()/material.usedV();
             if(!TextureLayoutMode.fit(settings.layout,1,1,aspect)) {
                 uScale*=TextureLayoutMode.tileU(1,aspect);
                 vScale*=TextureLayoutMode.tileV(1,aspect);
             }
-            int[] vertices=quad.getVertices().clone();int stride=vertices.length/4;
-            TextureAtlasSprite old=quad.getSprite();
-            for(int vertex=0;vertex<4;vertex++) {
-                int offset=vertex*stride;
-                float u=old.getUOffset(Float.intBitsToFloat(vertices[offset+4]));
-                float v=old.getVOffset(Float.intBitsToFloat(vertices[offset+5]));
-                vertices[offset+4]=Float.floatToRawIntBits(sprite.getU(u*uScale));
-                vertices[offset+5]=Float.floatToRawIntBits(sprite.getV(v*vScale));
-            }
-            result.add(new BakedQuad(vertices,quad.getTintIndex(),quad.getDirection(),sprite,false,false));
+            // Vanilla FaceBakery shrinks UVs for its original sprite. Rebuild the
+            // authored unit orientation instead of carrying that unrelated inset
+            // into a different material or a joined image.
+            result.addAll(JoinedCubeQuads.map(quad,state.getValue(ProgrammableBlock.FACING),
+                new com.vandorlabs.render.HousingFacePlane(new int[3],new int[]{1,1,1}),0,
+                sprite,uScale,vScale,margin));
         }
         return result;
     }
-    private static int localFace(Direction world,Direction facing) {
+    public static int localFace(Direction world,Direction facing) {
         if(world==Direction.DOWN)return 0;if(world==Direction.UP)return 1;
         Direction local=switch(facing) { case EAST,UP,DOWN -> world.getCounterClockWise();case SOUTH -> world.getOpposite();case WEST -> world.getClockWise();default -> world; };
         return switch(local) { case NORTH -> 2;case SOUTH -> 3;case WEST -> 4;case EAST -> 5;default -> throw new IllegalArgumentException(); };

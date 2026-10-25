@@ -34,10 +34,9 @@
         "programmable_matter_block"
       ],
       "remaining": [
-        "joined multi-block Stretch/Fit faces",
         "custom block material definitions and sampling",
         "complete creative/search catalog configuration",
-        "joined-face and shader render acceptance"
+        "carried-assembly joined faces and shader render acceptance"
       ],
       "implemented": [
         "canonical stable housing indices and legacy saved defaults",
@@ -47,7 +46,10 @@
         "filesystem material discovery, stable external IDs, missing-file fallback and already-open picker dimension reload accepted in native client",
         "plain matter block with canonical artwork, padded item, nine-ingot recipe, loot and subsequent-process state recovery",
         "canonical metal hardness, blast resistance, map color, opacity and stone-tool harvest boundary",
-        "held-item Adventure support-block permission parity and exact editing sessions"
+        "held-item Adventure support-block permission parity and exact editing sessions",
+        "shared bounded joined-face discovery with immutable client-thread ModelData snapshots and no worker world reads",
+        "108 native emitted-quad cases across six faces, six saved facings and three layouts; continuous authored UVs and opaque Fit margins",
+        "actual menu material/layout edits split neighboring planes and rejoin; rendered Stretch/Fit artwork and repeated Tile images"
       ]
     },
     {
@@ -285,7 +287,7 @@
       "id": "controls",
       "label": "Triggers, buttons, rockers, levers and throttles",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "unimplemented",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "airliner_throttle",
         "compact_power_lever",
@@ -299,12 +301,21 @@
         "thruster_lever",
         "wall_slider"
       ],
-      "modern_registered_block_ids": [],
+      "modern_registered_block_ids": [
+        "push_button",
+        "rocker_switch"
+      ],
       "remaining": [
-        "native control adapters",
-        "shared latch/pulse/slider policy",
-        "directional interaction and saved levels",
-        "live parity"
+        "nine remaining control adapters: airliner_throttle, compact_power_lever, fighter_throttle, industrial_power_lever, large_power_lever, programmable_trigger_block, small_power_lever, thruster_lever, wall_slider",
+        "full mounted-world and shader render acceptance",
+        "carried-assembly integration"
+      ],
+      "implemented": [
+        "native push_button and rocker_switch only: two of the eleven legacy control IDs",
+        "shared mount/settings/item-padding policies with native six-face support and directional power",
+        "scheduled twenty-tick button pulse without retrigger extension; persistent rocker banks isolated from transient pulses",
+        "native exact-session settings, reverse cycling, bounded channels and configured-item persistence",
+        "subsequent-process state recovery, ordinary survival and Adventure permissions, actual UI clicks and 128 configured padded icons"
       ]
     },
     {

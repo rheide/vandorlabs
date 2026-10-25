@@ -14,14 +14,20 @@ import net.neoforged.neoforge.client.model.data.ModelProperty;
 public final class ProgrammableBlockEntity extends BlockEntity {
     public static final ModelProperty<ProgrammableBlockDialog.State> SETTINGS = new ModelProperty<>();
     private CompoundTag retainedSettings = new CompoundTag();
-    private ProgrammableBlockDialog.State settings = defaults();
+    private volatile JoinedCubeFaces joinedFaces=JoinedCubeFaces.NONE;
+    public static final ModelProperty<JoinedCubeFaces> JOINED=new ModelProperty<>();
+    public JoinedCubeFaces joinedFaces(){return joinedFaces;}
+    public boolean publishJoined(JoinedCubeFaces next){if(joinedFaces.equals(next))return false;joinedFaces=next;requestModelDataUpdate();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);return true;}
+    private volatile ProgrammableBlockDialog.State settings = defaults();
+    public static boolean sameSettings(ProgrammableBlockDialog.State a,ProgrammableBlockDialog.State b){if(a.mainTexture!=b.mainTexture||a.layout!=b.layout||a.facesEnabled!=b.facesEnabled)return false;for(int i=0;i<6;i++)if(a.face(i)!=b.face(i))return false;return true;}
+    private void installSettings(ProgrammableBlockDialog.State next){if(!sameSettings(settings,next))joinedFaces=JoinedCubeFaces.NONE;settings=next;}
     public static ProgrammableBlockDialog.State defaults() { return new ProgrammableBlockDialog.State(0,1,false,null,-1); }
     public ProgrammableBlockEntity(BlockPos pos, BlockState state) { super(VandorLabsModern.PROGRAMMABLE_ENTITY.get(), pos, state); }
     public ProgrammableBlockDialog.State settings() { return settings; }
     public void apply(ProgrammableBlockDialog.State next) {
         int[] faces = next.faces();
         for (int i=0;i<6;i++) faces[i] = faces[i] < 0 ? -1 : ModernFinishCatalog.storedChoice(faces[i]);
-        settings = new ProgrammableBlockDialog.State(ModernFinishCatalog.storedChoice(next.mainTexture),next.layout,next.facesEnabled,faces,-1);
+        installSettings(new ProgrammableBlockDialog.State(ModernFinishCatalog.storedChoice(next.mainTexture),next.layout,next.facesEnabled,faces,-1));
         setChanged();
         if (level != null) {
             requestModelDataUpdate();
@@ -38,7 +44,7 @@ public final class ProgrammableBlockEntity extends BlockEntity {
         if(faces.length!=6) { faces=new int[6];Arrays.fill(faces,-1); }
         for(int i=0;i<6;i++)faces[i]=faces[i]<0?-1:ModernFinishCatalog.storedChoice(faces[i]);
         int layout=ProgrammableBlockDialog.savedTextureLayout(tag.getInt(ProgrammableBlockDialog.LAYOUT_KEY),tag.contains(ProgrammableBlockDialog.LAYOUT_KEY,net.minecraft.nbt.Tag.TAG_INT),tag.getBoolean("SlabTileSides"));
-        settings=new ProgrammableBlockDialog.State(ModernFinishCatalog.storedChoice(main),layout,tag.getBoolean(ProgrammableBlockDialog.FACES_ENABLED_KEY),faces,-1);
+        installSettings(new ProgrammableBlockDialog.State(ModernFinishCatalog.storedChoice(main),layout,tag.getBoolean(ProgrammableBlockDialog.FACES_ENABLED_KEY),faces,-1));
         requestModelDataUpdate();
         if(level!=null&&level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);
     }
@@ -62,5 +68,5 @@ public final class ProgrammableBlockEntity extends BlockEntity {
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
-    @Override public ModelData getModelData() { return ModelData.builder().with(SETTINGS,settings).build(); }
+    @Override public ModelData getModelData() { return ModelData.builder().with(SETTINGS,settings).with(JOINED,joinedFaces).build(); }
 }
