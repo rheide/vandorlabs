@@ -22,6 +22,7 @@
 - Vehicle discovery must use only a slab's own empty half to reject vertical attachments. Do not require decorative neighbours' selection bounds to meet exactly: diagonal wall bounds can stop short of their cell and leave ceiling slabs behind. Check symmetric top-slab floor exclusion and bottom-slab ceiling capture.
 - A cockpit is not a substitute for a dedicated Vehicle Controller in new assembly or mode selection. Preserve legacy snapshot loading and safe parking recovery without a controller. Vehicle Status must report the missing controller before offering mode controls.
 
+- Configurizer interaction and ordinary right-click configuration must open the same dialog, with the same controls, authorization and behavior. Route both through one shared configuration path; never substitute the generic redstone dialog for a block's dedicated dialog.
 - Right-clicking a dialog option must select its previous value. Keep left-click and right-click cycling consistent across dialogs.
 - Follow the existing screen, texture-list and door dialogs for layout and interaction conventions. Texture lists must support both wheel scrolling and dragging their scrollbar.
 - Match the mod's established texture resolutions; do not ship oversized textures. Turntable surface artwork may use a larger resolution because it can span multiple blocks.
@@ -31,6 +32,7 @@
 - Keep finished build artifacts in `build/libs/`. Copy a build elsewhere only when the user explicitly requests a destination.
 - Use Java 8 for Gradle 4.9 builds. Run the live client suite for client-visible or gameplay changes.
 - Build only the standard mod JAR. Never produce original-textures JARs; the original texture directory is an archive and validation reference only.
+- Every new multiblock must have step-by-step building instructions under `docs/`, with construction-stage images following the existing multiblock guides. Update the changelog and the current version promotion page alongside the feature.
 - Keep documentation technical and user-facing. Do not commit task logs, chat transcripts, authoring instructions, personal paths or machine-specific details.
 - Item icons must be slightly smaller than their inventory/hotbar slots, with visible padding on every side. Account for the GUI rotation and depth, and check every generated variant; fitting the unrotated model into 16×16 coordinates does not guarantee that its icon fits.
 
