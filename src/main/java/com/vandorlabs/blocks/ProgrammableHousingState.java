@@ -90,15 +90,14 @@ public final class ProgrammableHousingState {
     }
 
     public static int neighborLight(IBlockAccess world, BlockPos pos) {
-        int sky = 0, block = 0;
+        int light = 0;
         BlockPos.MutableBlockPos next=new BlockPos.MutableBlockPos();
         for (EnumFacing side : DIRECTIONS) {
             next.setPos(pos.getX()+side.getFrontOffsetX(),pos.getY()+side.getFrontOffsetY(),pos.getZ()+side.getFrontOffsetZ());
             if (world instanceof World && !((World)world).isBlockLoaded(next)) continue;
             int combined = world.getCombinedLight(next, 0);
-            sky = Math.max(sky, combined >>> 16);
-            block = Math.max(block, combined & 65535);
+            light = com.vandorlabs.render.HousingLightPolicy.max(light,combined);
         }
-        return (sky << 16) | block;
+        return light;
     }
 }

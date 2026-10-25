@@ -13,7 +13,7 @@ final class FluidFocusedChecks {
             TokenSlotVisualChecks.build(world);player.connection.setPlayerLocation(326,34,142,0,0);
         }).get();
         if(ticks<200)return false;
-        if(!checked){WaterloggedSurfaceChecks.run(mc,output);checked=true;}
+        if(!checked){LegacyHousingLightingChecks.run();WaterloggedSurfaceChecks.run(mc,output);checked=true;}
         if(!StairDialogLiveChecks.tick(mc,output))return false;
         if(!DiagonalTrapdoorDirectionLiveChecks.tick(mc,output))return false;
         if(!MountFilterLiveChecks.tick(mc,output))return false;
