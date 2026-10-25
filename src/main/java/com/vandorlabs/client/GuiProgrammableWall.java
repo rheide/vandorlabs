@@ -46,7 +46,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         if(!(tile.getBlockType() instanceof BlockProgrammableWall)||((BlockProgrammableWall)tile.getBlockType()).isDiagonalShape())return null;
         return tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammablePortholeBlock?com.vandorlabs.ui.WallDialog.Profile.FULL_PORTHOLE:porthole?com.vandorlabs.ui.WallDialog.Profile.PORTHOLE:com.vandorlabs.ui.WallDialog.Profile.PLAIN;
     }
-    private com.vandorlabs.ui.WallDialog.State wallState(){com.vandorlabs.persistence.WallAppearance a=tile.wallAppearance();return new com.vandorlabs.ui.WallDialog.State(tile.getHousingTexture(),tile.getSideTexture(),textureLayout,faceTarget,new com.vandorlabs.persistence.WallAppearance(shade,a.tint,a.material,a.framed,a.stretch,a.textureJoin,join,shape,a.layout));}
+    private com.vandorlabs.ui.WallDialog.State wallState(){return com.vandorlabs.ui.WallDialog.snapshot(tile.getHousingTexture(),tile.getSideTexture(),textureLayout,faceTarget,shade,join,shape,tile.wallAppearance());}
     private boolean sharedBlockDialog(){return supportsFaces() && !slab;}
     private com.vandorlabs.ui.ProgrammableBlockDialog.State sharedBlockState(){return new com.vandorlabs.ui.ProgrammableBlockDialog.State(tile.getHousingTexture(),textureLayout,tile.getFaceTextures().enabled,tile.getFaceTextures().choices(),faceTarget);}
     private boolean glassSurface(){return diagonalGlass || porthole && faceTarget==-3;}

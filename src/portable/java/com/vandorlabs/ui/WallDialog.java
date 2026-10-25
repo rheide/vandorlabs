@@ -16,6 +16,8 @@ public final class WallDialog {
     public static final class State {
         public final int main,side,layout,target;public final WallAppearance appearance;
         public State(int main,int side,int layout,int target,WallAppearance appearance){this.main=main;this.side=side;this.layout=layout;this.target=target;this.appearance=appearance;}
+        /** Preserve local editor options while sampling independently synchronized tile fields. */
+        public State withLive(State live){return snapshot(live.main,live.side,layout,target,appearance.shade,appearance.join,appearance.shape,live.appearance);}
         public int selected(){return selected(appearance.shade);}
         /** Legacy labels use local options while the stock picker samples the latest synchronized shade. */
         public int selected(int displayedShade){return target==-3?(appearance.material<0?GLASS_BASE+displayedShade:appearance.material):target==-2?(side>=0?side:DEFAULT_SIDE):main;}
@@ -33,6 +35,8 @@ public final class WallDialog {
         public final ProgrammableDialogLayout.Button bounds;public final boolean enabled;
         private Control(ProgrammableDialogLayout.Button bounds,boolean enabled){this.bounds=bounds;this.enabled=enabled;}
     }
+    public static State snapshot(int main,int side,int layout,int target,int localShade,boolean localJoin,int localShape,WallAppearance live){return new State(main,side,layout,target,new WallAppearance(localShade,live.tint,live.material,live.framed,live.stretch,live.textureJoin,localJoin,localShape,live.layout));}
+    public static State fresh(Profile profile){return new State(0,-1,0,-1,WallAppearance.fresh(profile.porthole()));}
     private WallDialog(){}
     public static boolean handles(Profile p,State state,int id){return id==100||id==103||id==120||p.porthole()&&(id==102||id==104||id==127||id==128||id==129||state.target==-3&&(id==113||id==114||id==115||id==116));}
     public static boolean resetView(int id){return id==129;}

@@ -48,7 +48,8 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             World world, int meta) {
         com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
                 new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();
-        tile.setJoinPortholes(com.vandorlabs.persistence.WallAppearance.fresh(isPortholeShape()).join);
+        com.vandorlabs.ui.WallDialog.State defaults=com.vandorlabs.ui.WallDialog.fresh(this instanceof BlockProgrammablePortholeBlock?com.vandorlabs.ui.WallDialog.Profile.FULL_PORTHOLE:isPortholeShape()?com.vandorlabs.ui.WallDialog.Profile.PORTHOLE:com.vandorlabs.ui.WallDialog.Profile.PLAIN);
+        tile.setJoinPortholes(defaults.appearance.join);tile.setMainTextureLayout(defaults.layout);
         return tile;
     }
 
