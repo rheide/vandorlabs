@@ -30,6 +30,8 @@ public final class VehicleScan {
     private final Map<BlockPos,BlockPos> supportOwners=new HashMap<>();
     private final Map<BlockPos,Set<BlockPos>> contactLinks=new HashMap<>();
     private int contactChecks;
+    private boolean membershipOnly;
+    private Set<BlockPos> primaryPositions;
     private int minX, minY, minZ, maxX, maxY, maxZ, seats,autopilots,controllers;
     private BlockPos pilot;
     private Double gearBottomY;
@@ -98,19 +100,22 @@ public final class VehicleScan {
                 if(block instanceof BlockVehicleController){group.controllers++;group.controller=at;}
                 if(block instanceof BlockPilotSeat&&!cell.state.getValue(BlockPilotSeat.UPPER)){group.pilots++;if(group.pilot==null||at.equals(start))group.pilot=at;}
                 TileEntity tile=world.getTileEntity(at);if(tile instanceof TileEntityAutopilot&&!(tile instanceof TileEntityWaypoint))group.autopilots++;
-                Set<BlockPos> next=new LinkedHashSet<>();for(EnumFacing side:EnumFacing.values()){BlockPos other=at.offset(side);if(cells.containsKey(other)&&!supportCut(at,other)&&touches(world,at,cell.state,side))next.add(other);}next.addAll(contactLinks.getOrDefault(at,Collections.emptySet()));
+                Set<BlockPos> next=new LinkedHashSet<>();for(EnumFacing side:EnumFacing.values()){BlockPos other=at.offset(side);if(cells.containsKey(other)&&!supportCut(at,other)&&(touches(world,at,cell.state,side)||membershipOnly&&ownedCoupler(cell.state,cells.get(other).state,side)))next.add(other);}next.addAll(contactLinks.getOrDefault(at,Collections.emptySet()));
                 for(BlockPos other:next)if(cells.containsKey(other)&&!owners.containsKey(other)){owners.put(other,group);pending.add(other);}
             }
         }
         for(Map.Entry<BlockPos,Double> support:supportBottoms.entrySet()){RoleGroup group=owners.get(support.getKey());if(group!=null){group.feet++;group.bottom=Math.min(group.bottom,support.getValue());}}
         for(Map.Entry<BlockPos,Double> support:trackBottoms.entrySet()){RoleGroup group=owners.get(support.getKey());if(group!=null){group.tracks++;group.bottom=Math.min(group.bottom,support.getValue());}}
         RoleGroup primary=owners.get(start);require(primary!=null,"The selected vehicle component is unavailable.");
+        primaryPositions=Collections.unmodifiableSet(new HashSet<>(primary.positions));
+        if(!membershipOnly){
         require(primary.controllers<=1,"A craft can contain at most one Vehicle Controller.");require(primary.autopilots<=1,"A craft can contain at most one Autopilot block.");
         if(!attachment)require(primary.pilot!=null,"The selected vehicle needs its own Pilot Seat.");
         for(RoleGroup group:groups)if(group!=primary&&(group.controllers>0||group.pilots>0||group.autopilots>0)){
             require(primary.controller!=null,"The lower vehicle needs its own Vehicle Controller before carrying another complete vehicle.");
             require(group.controllers==1&&group.pilots>=1&&group.autopilots<=1,"Only a complete parked child vehicle may carry additional Pilot Seats or controllers.");
             require((group.feet>=3||group.tracks>=2)&&gearBottomY!=null&&group.bottom>gearBottomY+.001,"A parked child vehicle needs its own higher landing supports.");
+        }
         }
         if(primary.pilot!=null)pilot=primary.pilot;
         if(gearBottomY!=null){final double lowest=gearBottomY;gears.removeIf(at->supportBottoms.containsKey(at)&&Math.abs(supportBottoms.get(at)-lowest)>.001);trackSupports.removeIf(at->trackBottoms.containsKey(at)&&Math.abs(trackBottoms.get(at)-lowest)>.001);}
@@ -119,6 +124,37 @@ public final class VehicleScan {
         List<VehicleStructure.Cell> ordered=new ArrayList<>();List<RoleGroup> orderedGroups=new ArrayList<>();orderedGroups.add(primary);for(RoleGroup group:groups)if(group!=primary)orderedGroups.add(group);
         for(RoleGroup group:orderedGroups){if(group.controller!=null)ordered.add(cells.get(group.controller));for(VehicleStructure.Cell cell:group.cells)if(!cell.pos.equals(group.controller))ordered.add(cell);}
         return ordered;
+    }
+    /** Pure bounded ownership graph over a complete immutable snapshot; never captures or mutates. */
+    static Set<BlockPos> activeCells(VehicleWorld view){
+        VehicleStructure structure=view.structure;
+        VehicleScan graph=new VehicleScan(view,structure.seat,true,Collections.emptySet());graph.membershipOnly=true;
+        for(VehicleStructure.Cell cell:structure.cells)graph.cells.put(cell.pos,cell);
+        for(VehicleStructure.Cell cell:structure.cells){
+            TileEntity tile=view.getTileEntity(cell.pos);Block block=cell.state.getBlock();
+            if(tile instanceof com.vandorlabs.gear.GearTileEntity){
+                com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)tile).loadedController();
+                if(root!=null&&root.isLandingAssembly()&&root.mountDirection()==EnumFacing.DOWN)graph.supportCells(root.members(),root.getPos());
+                else if(block instanceof com.vandorlabs.gear.track.TrackBlock)graph.supportCells(Collections.singleton(cell.pos),cell.pos);
+            }else if(block instanceof BlockPropulsionLight&&cell.state.getValue(BlockPropulsionLight.FACING)==EnumFacing.DOWN){
+                graph.supportCells(Collections.singleton(cell.pos),cell.pos);
+            }else if(block instanceof BlockWheel){
+                BlockWheel wheel=(BlockWheel)block;BlockPos owner=wheel.root(cell.pos,cell.state);graph.supportCells(wheel.members(owner,cell.state),owner);
+            }else if(block instanceof BlockLandingGear){
+                BlockPos owner=tile instanceof TileEntityLandingGear?((TileEntityLandingGear)tile).owner():null;
+                graph.supportCells(Collections.singleton(cell.pos),owner==null?cell.pos:owner);
+            }
+            if(tile instanceof TileEntityCanopy){TileEntityCanopy canopy=((TileEntityCanopy)tile).constituent();if(canopy.draws())graph.geometryContacts(canopy.getPos(),canopy.boxes());}
+            if(block instanceof BlockProgrammableWall&&((BlockProgrammableWall)block).isDiagonalShape()){
+                List<net.minecraft.util.math.AxisAlignedBB> boxes=new ArrayList<>();cell.state.addCollisionBoxToList(view,cell.pos,new net.minecraft.util.math.AxisAlignedBB(cell.pos).grow(2),boxes,null,false);graph.geometryContacts(cell.pos,boxes);
+            }
+        }
+        graph.roles();return graph.primaryPositions;
+    }
+    private static boolean ownedCoupler(IBlockState a,IBlockState b,EnumFacing direction){
+        if(!(a.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)||!(b.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))return false;
+        EnumFacing first=a.getValue(com.vandorlabs.coupler.BlockCoupler.FACING),second=b.getValue(com.vandorlabs.coupler.BlockCoupler.FACING);
+        return first==direction&&second==direction.getOpposite()&&Math.abs(com.vandorlabs.coupler.BlockCoupler.couplingHeight(a)-com.vandorlabs.coupler.BlockCoupler.couplingHeight(b))<.001;
     }
     private void linked(BlockPos p, Block expected) {
         requiredMember(p);

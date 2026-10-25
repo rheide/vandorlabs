@@ -46,7 +46,42 @@ public final class VehicleStructure {
     public final List<Cell> liftCells,exhaustCells,gearCovers;
     public final boolean hasThruster,hasNonWheeledGear,hasSkisOnly;
     public final boolean displayOnly;
+    private VehicleWorld componentView;
+    private Set<BlockPos> activeCells;
+    private boolean derivingComponents;
+    private final boolean splitComponents;
+    void componentView(VehicleWorld view){if(componentView==null){componentView=view;activeFootKinds=-1;}}
+    void inheritComponents(VehicleStructure before){
+        if(before.activeCells==null||before.cells.size()!=cells.size())return;
+        for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state||cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&!old.sameGearConfiguration(cell))return;}
+        activeCells=before.activeCells;activeFootKinds=before.activeFootKinds;
+    }
+    public boolean isActive(BlockPos pos){
+        if(displayOnly||derivingComponents)return byPosition.containsKey(pos);
+        if(activeCells==null){
+            if(!splitComponents)return byPosition.containsKey(pos);
+            if(componentView==null)return false;
+            derivingComponents=true;try{activeCells=VehicleScan.activeCells(componentView.structure==this?componentView:new VehicleWorld(componentView.parent,this));}finally{derivingComponents=false;}
+        }
+        return activeCells.contains(pos);
+    }
 
+    private int activeFootKinds=-1;
+    private int activeFootKinds(){
+        if(!splitComponents)return (hasNonWheeledGear?1:0)|(hasSkisOnly?2:0);
+        if(activeFootKinds>=0)return activeFootKinds;
+        boolean non=false,ski=false,other=false;
+        for(Cell cell:cells)if(isActive(cell.pos)){
+            net.minecraft.block.Block block=cell.state.getBlock();
+            non|=com.vandorlabs.blocks.BlockNonWheeledLandingGear.forbidsTaxi(block);
+            if(block instanceof com.vandorlabs.gear.GearBlock){com.vandorlabs.gear.GearBlock.Kind kind=((com.vandorlabs.gear.GearBlock)block).kind();ski|=kind==com.vandorlabs.gear.GearBlock.Kind.SKI;other|=kind==com.vandorlabs.gear.GearBlock.Kind.WHEEL||kind==com.vandorlabs.gear.GearBlock.Kind.PLATE;}
+            else if(block instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear){boolean isSki=((com.vandorlabs.blocks.BlockNonWheeledLandingGear)block).ski;ski|=isSki;other|=!isSki;}
+            else if(block instanceof com.vandorlabs.blocks.BlockLandingGear||block instanceof com.vandorlabs.blocks.BlockWheel)other=true;
+        }
+        return activeFootKinds=(non?1:0)|(ski&&!other?2:0);
+    }
+    public boolean activeNonWheeledGear(){return (activeFootKinds()&1)!=0;}
+    public boolean activeSkisOnly(){return (activeFootKinds()&2)!=0;}
     public VehicleStructure(List<Cell> cells,BlockPos seat,EnumFacing facing,int gearCount) {
         this(cells,seat,facing,gearCount,false);
     }
@@ -80,6 +115,7 @@ public final class VehicleStructure {
         if(control==null)for(Cell cell:cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit){control=cell;break;}
         if(!displayOnly && (!positions.containsKey(seat)||!(positions.get(seat).state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat)))
             throw new IllegalArgumentException("Missing pilot seat");
+        this.splitComponents=cells.stream().filter(c->c.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController).limit(2).count()>1;
         this.cells=Collections.unmodifiableList(new ArrayList<>(cells));this.byPosition=Collections.unmodifiableMap(positions);
         this.pilotSeats=Collections.unmodifiableList(seats);this.passengerSeats=Collections.unmodifiableList(passengers);this.controller=control;this.gearCovers=Collections.unmodifiableList(covers);this.liftCells=Collections.unmodifiableList(lifts);this.exhaustCells=Collections.unmodifiableList(exhausts);this.hasThruster=thruster;this.hasNonWheeledGear=nonWheeled;this.hasSkisOnly=skis&&!otherFeet;
         this.seat=seat.toImmutable();this.facing=facing;this.gearCount=gearCount;this.bounds=new AxisAlignedBB(0,0,0,x,y,z);this.displayOnly=displayOnly;

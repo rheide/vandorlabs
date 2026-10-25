@@ -11,13 +11,14 @@ import net.minecraft.world.World;
 /** Ski-only craft may taxi while every runner remains above loaded ice. */
 public final class VehicleSkiTraction {
     private VehicleSkiTraction(){}
-    public static boolean allowed(EntityGroundVehicle craft){return !craft.structure.hasNonWheeledGear||craft.structure.hasSkisOnly&&onIce(craft,craft.posX,craft.posY,craft.posZ,craft.rotationYaw);}
-    public static boolean canStart(World world,VehicleStructure structure,BlockPos origin){return !structure.hasNonWheeledGear||structure.hasSkisOnly&&onIce(world,structure,origin.getX(),origin.getY(),origin.getZ(),0);}
+    public static boolean allowed(EntityGroundVehicle craft){return !craft.structure.activeNonWheeledGear()||craft.structure.activeSkisOnly()&&onIce(craft,craft.posX,craft.posY,craft.posZ,craft.rotationYaw);}
+    public static boolean canStart(World world,VehicleStructure structure,BlockPos origin){return !structure.activeNonWheeledGear()||structure.activeSkisOnly()&&onIce(world,structure,origin.getX(),origin.getY(),origin.getZ(),0);}
     public static boolean onIce(EntityGroundVehicle craft,double x,double y,double z,float yaw){return onIce(craft.world,craft.structure,x,y,z,yaw);}
     private static boolean onIce(World world,VehicleStructure structure,double x,double y,double z,float yaw){
-        if(!structure.hasSkisOnly)return false;
+        if(!structure.activeSkisOnly())return false;
         double c=Math.cos(Math.toRadians(yaw)),s=Math.sin(Math.toRadians(yaw)),px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2;boolean found=false;
         for(VehicleStructure.Cell cell:structure.cells){
+            if(!structure.isActive(cell.pos))continue;
             boolean modular=cell.state.getBlock() instanceof GearBlock&&((GearBlock)cell.state.getBlock()).kind()==GearBlock.Kind.SKI;
             boolean legacy=cell.state.getBlock() instanceof BlockNonWheeledLandingGear&&((BlockNonWheeledLandingGear)cell.state.getBlock()).ski&&!cell.state.getValue(BlockTelescopicLandingGear.LOWER);
             if(!modular&&!legacy)continue;found=true;

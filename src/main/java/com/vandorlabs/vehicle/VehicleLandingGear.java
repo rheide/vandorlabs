@@ -14,12 +14,12 @@ public final class VehicleLandingGear {
     public static boolean extended(EntityGroundVehicle craft){
         if(!ModularGearVehicles.extended(craft))return false;
         if(craft.view==null)return false;
-        for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear){TileEntityLandingGear tile=(TileEntityLandingGear)raw;
+        for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear&&craft.structure.isActive(raw.getPos())){TileEntityLandingGear tile=(TileEntityLandingGear)raw;
             if(tile.isRoot()&&(!craft.view.getBlockState(tile.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED)||Math.abs(tile.progress-tile.getExtensionPixels()/16F)>.0001F))return false;}
         return true;
     }
     public static boolean setExtended(EntityGroundVehicle craft,BlockPos pos,boolean extend){
-        if(craft.world.isRemote||craft.transferInProgress||craft.ownershipBlocked||!extend&&!craft.hover)return false;
+        if(!craft.structure.isActive(pos)||craft.world.isRemote||craft.transferInProgress||craft.ownershipBlocked||!extend&&!craft.hover)return false;
         net.minecraft.tileentity.TileEntity raw=craft.view.getTileEntity(pos);if(!(raw instanceof TileEntityLandingGear)||!((TileEntityLandingGear)raw).isRoot())return false;
         List<VehicleStructure.Cell> cells=new ArrayList<>();boolean changed=false;
         for(VehicleStructure.Cell cell:craft.structure.cells){if(cell.pos.equals(pos)&&cell.state.getValue(BlockTelescopicLandingGear.EXTENDED)!=extend){cells.add(new VehicleStructure.Cell(pos,cell.state.withProperty(BlockTelescopicLandingGear.EXTENDED,extend),((TileEntityLandingGear)raw).writeToNBT(new NBTTagCompound())));changed=true;}else cells.add(cell);}
@@ -28,7 +28,7 @@ public final class VehicleLandingGear {
     }
     public static void refreshSignals(EntityGroundVehicle craft){
         if(craft.world.isRemote||craft.view==null)return;
-        for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear){TileEntityLandingGear gear=(TileEntityLandingGear)raw;
+        for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear&&craft.structure.isActive(raw.getPos())){TileEntityLandingGear gear=(TileEntityLandingGear)raw;
             if(!gear.isRoot()||gear.getMode()==0||gear.getRedstoneChannels().isEmpty())continue;
             boolean powered=false;for(int i=0;i<gear.getRedstoneChannels().size();i++)powered|=com.vandorlabs.redstone.RedstoneChannels.level(craft.world,gear.getRedstoneChannels().get(i))>0;
             setExtended(craft,gear.getPos(),gear.getMode()==1?powered:!powered);
@@ -40,8 +40,8 @@ public final class VehicleLandingGear {
         VehicleGearCovers.tick(craft);
         if(craft.view==null||craft.ownershipBlocked||craft.transferInProgress)return;
         Map<BlockPos,Float> desired=new LinkedHashMap<>();
-        if(craft.world.isRemote){Map<BlockPos,Float> pending=corrections.get(craft);if(pending!=null)desired.putAll(pending);}
-        for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear){
+        if(craft.world.isRemote){Map<BlockPos,Float> pending=corrections.get(craft);if(pending!=null)for(Map.Entry<BlockPos,Float> entry:pending.entrySet())if(craft.structure.isActive(entry.getKey()))desired.put(entry.getKey(),entry.getValue());}
+        for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear&&craft.structure.isActive(raw.getPos())){
             TileEntityLandingGear tile=(TileEntityLandingGear)raw;if(!tile.isRoot())continue;tile.previous=tile.progress;
             if(craft.world.isRemote)continue;
             boolean extend=craft.view.getBlockState(tile.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED);

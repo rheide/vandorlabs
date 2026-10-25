@@ -22,6 +22,8 @@ public final class VehicleWheelMotion {
         }
         motion.previous=pose;return motion.distance;
     }
+    public static double sample(EntityGroundVehicle craft,net.minecraft.util.math.BlockPos pos,float partial){return craft.structure.isActive(pos)?sample(craft,partial):0;}
+    public static float steer(EntityGroundVehicle craft,net.minecraft.util.math.BlockPos pos){return craft.structure.isActive(pos)?steer(craft):0;}
     public static float roll(double distance,double radius,double alignment){return (float)(-distance*alignment/radius*180/Math.PI%360);}
     public static float steer(EntityGroundVehicle craft){return craft.hover?0:-18*Math.max(-1,Math.min(1,craft.steering));}
     public static int alignment(EnumFacing front,EnumFacing tangent){return front.getFrontOffsetX()*tangent.getFrontOffsetX()+front.getFrontOffsetZ()*tangent.getFrontOffsetZ();}

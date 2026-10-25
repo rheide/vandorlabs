@@ -31,6 +31,7 @@ public final class VehicleAutopilot {
     }
     private static final java.util.Map<TileEntityAutopilot,VehicleScan> departures=new java.util.WeakHashMap<>();
     public VehicleAutopilot(EntityGroundVehicle craft){this.craft=craft;}
+    static float yawLimit(EntityGroundVehicle craft){return VehicleControls.autopilotYawLimit(craft.hover?VehicleSteering.DEFAULT:craft.taxiSteeringProfile(),craft.hover);}
     public net.minecraft.nbt.NBTTagCompound write(){
         net.minecraft.nbt.NBTTagCompound n=new net.minecraft.nbt.NBTTagCompound();n.setInteger("Schema",1);n.setBoolean("Journey",journey);n.setLong("Arrived",arrived);n.setBoolean("DeparturePulsed",departurePulsed);
         if(previous!=null)n.setLong("Previous",previous.toLong());if(target!=null)n.setLong("Target",target.toLong());if(waiting!=null)n.setLong("Waiting",waiting.toLong());if(departed!=null)n.setLong("Departed",departed.toLong());if(direction!=null)n.setInteger("Direction",direction.getHorizontalIndex());return n;
@@ -121,7 +122,7 @@ public final class VehicleAutopilot {
         float desired=(float)Math.toDegrees(Math.atan2(headingZ,headingX)-Math.atan2(front.getFrontOffsetZ(),front.getFrontOffsetX()));
         craft.collision.begin(craft.world,craft);
         try{
-            float delta=MathHelper.clamp(MathHelper.wrapDegrees(desired-craft.rotationYaw),-3,3);
+            float limit=yawLimit(craft),delta=MathHelper.clamp(MathHelper.wrapDegrees(desired-craft.rotationYaw),-limit,limit);
             float yaw=craft.collision.turn(craft.world,craft,craft.posX,craft.posY,craft.posZ,craft.rotationYaw,delta);
             VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,yaw);Vec3d after=pose.world(local,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
             boolean turning=Math.abs(MathHelper.wrapDegrees(desired-craft.rotationYaw))>.1;

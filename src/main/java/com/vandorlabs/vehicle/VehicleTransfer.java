@@ -206,10 +206,11 @@ public final class VehicleTransfer {
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin,net.minecraft.entity.player.EntityPlayer actor)throws Exception {
         if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
         if(!structure.hasDedicatedController())throw new IllegalArgumentException("Vehicle Controller missing");
+        VehicleWorld validationView=new VehicleWorld(world,structure);
         VehicleFlight.requireThruster(structure);
-        boolean forceHover=structure.hasNonWheeledGear&&!VehicleSkiTraction.canStart(world,structure,origin);
+        boolean forceHover=structure.activeNonWheeledGear()&&!VehicleSkiTraction.canStart(world,structure,origin);
         if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice; other landing gear needs three lift blocks for Hover.");
-        VehicleRotation.validate(structure,new VehicleWorld(world,structure));
+        VehicleRotation.validate(structure,validationView);
         if(structure.gearCount<3){
             VehicleScan supports=VehicleScan.attachment(new VehicleWorld(world,structure),structure.seat,Collections.emptySet());
             while(!supports.step(256)){}
@@ -274,7 +275,7 @@ public final class VehicleTransfer {
         park(world,entity,origin,player,true);
     }
     public static void park(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated)throws Exception {
-        if(entity.hover && !((entity.structure.hasNonWheeledGear||!entity.structure.hasDedicatedController()) && VehicleLandingGear.extended(entity) && VehicleFlight.clearance(entity)<=3))throw new IOException(entity.structure.hasNonWheeledGear?"Extend the landing gear and descend near the ground before parking.":"Select Taxi mode before parking as blocks.");
+        if(entity.hover && !((entity.structure.activeNonWheeledGear()||!entity.structure.hasDedicatedController()) && VehicleLandingGear.extended(entity) && VehicleFlight.clearance(entity)<=3))throw new IOException(entity.structure.activeNonWheeledGear()?"Extend the landing gear and descend near the ground before parking.":"Select Taxi mode before parking as blocks.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         VehicleStructure placed=VehicleRotation.plan(entity).structure;
         // Include newly extended gear cells in the final check before journaling or writing.

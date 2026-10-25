@@ -13,10 +13,10 @@ public final class ModularGearVehicles {
     private static final class Correction {final double progress;final int revision;Correction(double p,int r){progress=p;revision=r;}}
     private static final Map<EntityGroundVehicle,Map<BlockPos,Correction>> corrections=new WeakHashMap<>();
     public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired){Map<BlockPos,Correction> pending=corrections.computeIfAbsent(craft,k->new LinkedHashMap<>());for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){TileEntity raw=craft.view.getTileEntity(entry.getKey());if(raw instanceof GearTileEntity)pending.put(entry.getKey(),new Correction(entry.getValue(),((GearTileEntity)raw).motionRevision()));}}
-    public static boolean extended(EntityGroundVehicle craft){if(craft.view==null)return false;for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&((GearTileEntity)tile).isController()&&((GearTileEntity)tile).isLandingAssembly()&&!((GearTileEntity)tile).landingDeployed())return false;return true;}
+    public static boolean extended(EntityGroundVehicle craft){if(craft.view==null)return false;for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())&&((GearTileEntity)tile).isController()&&((GearTileEntity)tile).isLandingAssembly()&&!((GearTileEntity)tile).landingDeployed())return false;return true;}
     /** Move ordinary craft cells into the arm's retained snapshot once, before its first animated step. */
     private static boolean captureAttachment(EntityGroundVehicle craft){
-        for(TileEntity raw:new ArrayList<TileEntity>(craft.view.tiles.values()))if(raw instanceof GearTileEntity){
+        for(TileEntity raw:new ArrayList<TileEntity>(craft.view.tiles.values()))if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){
             GearTileEntity arm=(GearTileEntity)raw;if(!arm.isOperational()||arm.isLandingAssembly()||arm.isFixedMount())continue;
             arm.input();if(GearMotion.advance(arm.progress(),arm.target(),1,GearTileEntity.ANIMATION_TICKS)==arm.progress())continue;
             com.vandorlabs.gear.ArmPayload payload=arm.payload();
@@ -40,7 +40,7 @@ public final class ModularGearVehicles {
         if(!craft.world.isRemote&&captureAttachment(craft))return;
         Map<BlockPos,Double> desired=new LinkedHashMap<>();Set<BlockPos> notify=new LinkedHashSet<>();VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
         Map<BlockPos,Correction> corrected=craft.world.isRemote?corrections.get(craft):null;
-        for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity){GearTileEntity gear=(GearTileEntity)raw;if(!gear.isOperational())continue;double before=gear.progress();
+        for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){GearTileEntity gear=(GearTileEntity)raw;if(!gear.isOperational())continue;double before=gear.progress();
             if(!craft.world.isRemote)gear.input();double next=GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
             if(craft.world.isRemote){Correction correction=corrected==null?null:corrected.get(gear.getPos());if(correction!=null&&correction.revision==gear.motionRevision())next=correction.progress;else if(gear.motionBlocked())next=before;}
             if(gear.isLandingAssembly()&&!craft.hover&&next<before)next=before;

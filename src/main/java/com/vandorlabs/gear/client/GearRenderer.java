@@ -143,13 +143,13 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                 net.minecraft.util.math.BlockPos source=tile.localCell(foot);IBlockState ws=tile.getWorld().getBlockState(source);if(!(ws.getBlock() instanceof GearBlock)||((GearBlock)ws.getBlock()).kind()!=GearBlock.Kind.WHEEL)continue;GearBlock wheel=(GearBlock)ws.getBlock();if(!wheel.componentRoot(source,ws).equals(source))continue;
                 Affine transform=orientation;com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
                 Affine at=feet.compose(Affine.translation(foot.x,foot.y,foot.z));
-                if(craft!=null)transform=transform.compose(Affine.yaw(.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft)));
+                if(craft!=null)transform=transform.compose(Affine.yaw(.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft,source)));
                 draw(wheel.wheelModel()+"_bracket",at.compose(transform),x,y,z,light,buffer);
                 double center=.5,connectorY=wheel.width()==2?13/16D:9.375/13D;
                 GearMotion.Vec pivot=orientationPoint(orientation,center,connectorY,center);
                 Affine connector=connectorPose(pose,foot.x+pivot.x,foot.y+pivot.y,foot.z+pivot.z);
                 draw(wheel.wheelModel()+"_connector",connector.compose(Affine.translation(foot.x,foot.y,foot.z).compose(transform)),x,y,z,light,buffer);
-                if(craft!=null){double distance=com.vandorlabs.client.VehicleWheelMotion.sample(craft,partialTicks);double angle=com.vandorlabs.client.VehicleWheelMotion.roll(distance,wheel.width()==2?14/16D:4.5/13,com.vandorlabs.client.VehicleWheelMotion.alignment(craft.structure.facing,tile.footFacing()));transform=transform.compose(Affine.roll(.5,wheel.width()==2?-2/16D:4.5/13,angle));}
+                if(craft!=null){double distance=com.vandorlabs.client.VehicleWheelMotion.sample(craft,source,partialTicks);double angle=com.vandorlabs.client.VehicleWheelMotion.roll(distance,wheel.width()==2?14/16D:4.5/13,com.vandorlabs.client.VehicleWheelMotion.alignment(craft.structure.facing,tile.footFacing()));transform=transform.compose(Affine.roll(.5,wheel.width()==2?-2/16D:4.5/13,angle));}
                 draw(wheel.wheelModel()+"_tyre",at.compose(transform),x,y,z,light,buffer);continue;
             }
             // Connectivity is measured in world directions. Convert that

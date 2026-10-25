@@ -45,12 +45,15 @@ public final class VehicleSignals {
         }
         return Collections.unmodifiableMap(result);
     }
+    private boolean vehicleAdapterActive(TileEntity tile){
+        return !(tile instanceof TileEntityLandingGear || tile instanceof com.vandorlabs.gear.GearTileEntity || tile.getBlockType() instanceof BlockPropulsionLight) || craft.structure.isActive(tile.getPos());
+    }
     private class Link implements RedstoneChannelMember {
         final RedstoneChannelMember source;final TileEntity anchor=new TileEntity(){};
         boolean registeredLatch;
         Link(RedstoneChannelMember source){this.source=source;anchor.setWorld(craft.world);registeredLatch=source instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)source).isChannelLatch();}
         public TileEntity channelTile(){return anchor;}
-        public boolean isChannelMemberActive(){return !detached&&!craft.isDead&&!craft.ownershipBlocked&&craft.view!=null&&craft.view.getTileEntity(source.channelTile().getPos())==source.channelTile();}
+        public boolean isChannelMemberActive(){return vehicleAdapterActive(source.channelTile())&&!detached&&!craft.isDead&&!craft.ownershipBlocked&&craft.view!=null&&craft.view.getTileEntity(source.channelTile().getPos())==source.channelTile();}
         public int getRedstoneChannel(){return source.getRedstoneChannel();}
         public ChannelList getRedstoneChannels(){return source.getRedstoneChannels();}
         public void setRedstoneChannel(int ignored){throw new UnsupportedOperationException();}
@@ -58,7 +61,7 @@ public final class VehicleSignals {
         public int localSignalLevel(int channel){return source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control?source.localSignalLevel(channel):0;}
         public void setChannelSignal(boolean on){setChannelLevel(on?15:0);}
         public void setChannelLevel(int level){
-            if(detached || craft.isDead || craft.ownershipBlocked)return;
+            if(detached || craft.isDead || craft.ownershipBlocked||!vehicleAdapterActive(source.channelTile()))return;
             if(craft.transferInProgress){deferredLevels.put(this,level);return;}
             TileEntity tile=source.channelTile();BlockPos pos=tile.getPos();
             if(tile instanceof TileEntityCanopy){TileEntityCanopy canopy=(TileEntityCanopy)tile;if(canopy.large.redstone && canopy.targetOpen!=((level>0)==canopy.large.activateOnPower))VehicleCanopies.toggle(craft,pos);}
@@ -141,6 +144,7 @@ public final class VehicleSignals {
         tokenSlots.clear();securityDoors.clear();wirelessPorts.clear();
         Set<RedstoneChannelMember> wanted=Collections.newSetFromMap(new IdentityHashMap<>());
         for(TileEntity tile:craft.view.tiles.values()){
+            if(!vehicleAdapterActive(tile))continue;
             if(tile instanceof TileEntityWirelessRedstone)wirelessPorts.add((TileEntityWirelessRedstone)tile);
             if(tile instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)tile).isSecurityRoot())securityDoors.add((TileEntitySpaceDoor)tile);
             if(tile instanceof TileEntityTokenSlot)tokenSlots.add((TileEntityTokenSlot)tile);

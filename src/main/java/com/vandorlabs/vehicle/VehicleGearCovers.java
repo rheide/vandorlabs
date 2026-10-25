@@ -16,6 +16,7 @@ public final class VehicleGearCovers {
         craft.signals.persist();if(LAST.get(craft)==craft.structure)return;LAST.put(craft,craft.structure);
         Map<BlockPos,Boolean> desired=new LinkedHashMap<>();
         for(VehicleStructure.Cell cell:craft.structure.gearCovers){
+            if(!craft.structure.isActive(cell.pos))continue;
             TileEntity raw=craft.view.getTileEntity(cell.pos);if(!(raw instanceof TileEntityProgrammableTrapdoor))continue;
             TileEntityProgrammableTrapdoor cover=(TileEntityProgrammableTrapdoor)raw;if(!cover.isCover())continue;
             boolean open=craft.view.getBlockState(cover.getPos()).getValue(BlockProgrammableTrapdoor.OPEN),next=open;

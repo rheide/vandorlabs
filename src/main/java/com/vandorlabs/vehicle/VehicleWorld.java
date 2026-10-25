@@ -42,6 +42,7 @@ public final class VehicleWorld extends World {
     public int propulsionBrightness(BlockPos pos,int configured) {
         VehicleStructure.Cell cell=structure.at(pos);
         if(cell==null || !(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight))return configured;
+        if(!structure.isActive(pos))return 0;
         if(VehicleFlight.lift(cell.state.getBlock()))return hover?15:0;
         if(channelPropulsion(pos)!=null)return propulsionLevel>0&&!VehicleFlight.opposes(cell.state,propulsionMotion)?0:configured;
         if(!VehicleFlight.opposes(cell.state,propulsionMotion))return 0;
@@ -53,7 +54,7 @@ public final class VehicleWorld extends World {
     }
     public VehicleWorld(World parent,VehicleStructure structure) {
         super(parent.getSaveHandler(),new WorldInfo(parent.getWorldInfo()),parent.provider,new net.minecraft.profiler.Profiler(),true);
-        this.parent=parent; this.structure=structure; this.chunkProvider=createChunkProvider();
+        this.parent=parent; this.structure=structure; structure.componentView(this); this.chunkProvider=createChunkProvider();
         for(VehicleStructure.Cell cell:structure.cells) if(cell.hasTileData()) {
             try {
                 TileEntity tile=TileEntity.create(null,cell.tileData());
@@ -65,7 +66,7 @@ public final class VehicleWorld extends World {
         }
     }
     public void update(VehicleStructure next) {
-        VehicleStructure before=structure;structure=next;
+        VehicleStructure before=structure;next.inheritComponents(before);structure=next;next.componentView(this);
         if(tiles.keySet().stream().anyMatch(pos->next.at(pos)==null || !next.at(pos).hasTileData()))tileRevision++;
         tiles.keySet().removeIf(pos->next.at(pos)==null || !next.at(pos).hasTileData());
         for(VehicleStructure.Cell cell:next.cells)if(cell.hasTileData()) {
@@ -97,6 +98,7 @@ public final class VehicleWorld extends World {
     @Override public boolean isBlockLoaded(BlockPos p,boolean allowEmpty){return true;}
     @Override public IBlockState getBlockState(BlockPos p){VehicleStructure.Cell c=structure.at(p);if(c==null)return Blocks.AIR.getDefaultState();
         if(!(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight))return c.state;
+        if(!structure.isActive(p))return c.state.withProperty(com.vandorlabs.blocks.BlockPropulsionLight.POWERED,false).withProperty(com.vandorlabs.blocks.BlockPropulsionLight.PARTICLES,false);
         com.vandorlabs.tiles.TileEntityRedstoneLight light=channelPropulsion(p);
         boolean powered=VehicleFlight.lift(c.state.getBlock())?hover:light==null?propulsionLevel>0:light.isSignalBrightness()?(light.isRedstoneInverted()?15-light.getChannelLevel():light.getChannelLevel())>0:(light.getChannelLevel()>0)!=light.isRedstoneInverted();
         if(!VehicleFlight.lift(c.state.getBlock())&&(light==null||propulsionLevel>0)&&!VehicleFlight.opposes(c.state,propulsionMotion))powered=false;

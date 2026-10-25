@@ -10,6 +10,14 @@ public final class VehicleControls {
         if(hover)return autopilot?0:steering*1.7F*(speed<0?-1:1);
         return (float)(steering*speed*11*(1-.45*Math.abs(speed)/.28));
     }
+    /** Radius is averaged before converting to angular travel; one bounded step still uses normal collision sweeps. */
+    public static float yawChange(float steering,double speed,boolean hover,boolean autopilot,VehicleSteering.Profile supports,boolean grounded){
+        if(hover)return yawChange(steering,speed,true,autopilot);
+        if(supports.tracksOnly()&&grounded&&Math.abs(speed)<.002)return steering*2.4F*(speed<0?-1:1);
+        double turn=yawChange(steering,speed,false,autopilot)/supports.radiusFactor;
+        return (float)Math.max(-8,Math.min(8,turn));
+    }
+    public static float autopilotYawLimit(VehicleSteering.Profile supports,boolean hover){return hover?3:(float)Math.min(8,3/supports.radiusFactor);}
     public static final class Command {
         public final int sequence;
         public final byte forward,strafe;

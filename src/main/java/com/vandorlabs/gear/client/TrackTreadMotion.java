@@ -13,6 +13,7 @@ public final class TrackTreadMotion {
     private static final Map<EntityGroundVehicle,Map<BlockPos,Motion>> MOTION=new WeakHashMap<>();
     public static double sample(EntityGroundVehicle craft,BlockPos track,EnumFacing facing,float partial){return samplePose(craft,track,facing,craft.visualPose(partial));}
     static double samplePose(EntityGroundVehicle craft,BlockPos track,EnumFacing facing,VehiclePose pose){
+        if(!craft.structure.isActive(track))return 0;
         Motion motion=MOTION.computeIfAbsent(craft,k->new HashMap<>()).computeIfAbsent(track.toImmutable(),k->new Motion());
         if(motion.previous!=null&&!craft.hover){
             double dx=pose.x-motion.previous.x,dz=pose.z-motion.previous.z;

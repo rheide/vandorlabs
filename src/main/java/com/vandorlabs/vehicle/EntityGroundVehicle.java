@@ -31,6 +31,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         dataManager.set(PILOT_SEATS,assignments);
     }
     public final VehicleDiagnostics diagnostics=new VehicleDiagnostics();
+    private final VehicleSteering taxiSteering=new VehicleSteering();
+    VehicleSteering.Profile taxiSteeringProfile(){return taxiSteering.profile(view);}
     public VehicleStructure structure;
     public VehicleWorld view;
     public VehicleCollision collision;
@@ -110,7 +112,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(getControllingPassenger()!=player || direction< -1 || direction>1 || autopilot.enabled())return;
         recordCurrentCouplingDriver();
         if(toggle&&!structure.hasDedicatedController()){VehicleNetwork.error(player,"Vehicle Controller missing");return;}
-        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.hasNonWheeledGear?"Taxi requires wheels, or only skis above ice; otherwise select Park near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
+        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.activeNonWheeledGear()?"Taxi requires wheels, or only skis above ice; otherwise select Park near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         vertical=direction;flightSprint=sprint;verticalAt=world.getTotalWorldTime();
     }
     public void autopilotControls(byte f,byte s,boolean b){forward=f;strafe=s;brake=b;}
@@ -377,6 +379,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         for(int checked=0;checked<cells.size()&&emitted<2;checked++){
             int cursor=lift?liftExhaustCursor++:exhaustCursor++;
             VehicleStructure.Cell cell=cells.get(Math.floorMod(cursor,cells.size()));
+            if(!structure.isActive(cell.pos))continue;
             if(!lift&&(VehicleFlight.lift(cell.state.getBlock())||!VehicleFlight.opposes(cell.state,direction)))continue;
             emitted++;
             EnumFacing face=cell.state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING);
@@ -399,9 +402,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         steering=(float)approach(steering,active?strafe:0,.18);
         // Hover can yaw in place; the route controller owns its own turns.
         // Both modes reverse steering while travelling backwards.
-        float change=VehicleControls.yawChange(steering,driveSpeed,hover,autopilot.enabled());
+        float change=VehicleControls.yawChange(steering,driveSpeed,hover,autopilot.enabled(),hover?VehicleSteering.DEFAULT:taxiSteeringProfile(),onGround);
         float turned=collision.turn(world,this,posX,posY,posZ,rotationYaw,change);
-        if(hover||!structure.hasSkisOnly||turned==rotationYaw||VehicleSkiTraction.onIce(this,posX,posY,posZ,turned))rotationYaw=turned;
+        if(hover||!structure.activeSkisOnly()||turned==rotationYaw||VehicleSkiTraction.onIce(this,posX,posY,posZ,turned))rotationYaw=turned;
         EnumFacing front=structure.facing;double angle=Math.toRadians(rotationYaw),c=Math.cos(angle),s=Math.sin(angle);
         motionX=(front.getFrontOffsetX()*c-front.getFrontOffsetZ()*s)*driveSpeed;
         motionZ=(front.getFrontOffsetX()*s+front.getFrontOffsetZ()*c)*driveSpeed;
@@ -425,7 +428,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
                 if(sx*sx+sz*sz>x*x+z*z && down> -up-.04) {x=sx;z=sz;y=up+down;}
             }
         }
-        if(!hover&&structure.hasSkisOnly&&(x!=0||z!=0)&&!VehicleSkiTraction.onIce(this,posX+x,posY+y,posZ+z,rotationYaw)){x=z=0;driveSpeed=0;}
+        if(!hover&&structure.activeSkisOnly()&&(x!=0||z!=0)&&!VehicleSkiTraction.onIce(this,posX+x,posY+y,posZ+z,rotationYaw)){x=z=0;driveSpeed=0;}
         if(x!=motionX || z!=motionZ)driveSpeed=0;
         if(x!=motionX)motionX=0;if(z!=motionZ)motionZ=0;if(y!=motionY)motionY=0;
         setPosition(posX+x,posY+y,posZ+z);view.origin=new BlockPos(posX,posY,posZ);

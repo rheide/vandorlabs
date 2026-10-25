@@ -64,8 +64,8 @@ public final class TELandingGear extends TileEntitySpecialRenderer<TileEntityLan
         else {
             int size=Math.min(3,tile.getSize());double center=WHEEL_CENTERS[size],radius=WHEEL_RADII[size];
             IBakedModel wheel=Minecraft.getMinecraft().getRenderItem().getItemModelMesher().getModelManager().getModel(WHEEL);
-            double distance=VehicleWheelMotion.sample(craft,partial);
-            GlStateManager.translate(.5,center,.5);GlStateManager.rotate(VehicleWheelMotion.steer(craft),0,1,0);GlStateManager.translate(-.5,-center,-.5);
+            double distance=VehicleWheelMotion.sample(craft,tile.getPos(),partial);
+            GlStateManager.translate(.5,center,.5);GlStateManager.rotate(VehicleWheelMotion.steer(craft,tile.getPos()),0,1,0);GlStateManager.translate(-.5,-center,-.5);
             draw(wheelPart(wheel,false));
             GlStateManager.translate(.5,center,.5);GlStateManager.rotate(VehicleWheelMotion.roll(distance,radius,VehicleWheelMotion.alignment(craft.structure.facing,state.getValue(BlockTelescopicLandingGear.FACING))),1,0,0);GlStateManager.translate(-.5,-center,-.5);
             draw(wheelPart(wheel,true));
