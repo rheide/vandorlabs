@@ -90,10 +90,11 @@ public final class TrackModels {
             // Native parts deliberately have no world cullface. Their topology masks
             // remove internal faces, while transformed host renderers retain visibility.
             if (side != null) return Collections.emptyList();
-            List<BakedQuad> cached = combinations.get(appearance.key());
+            Integer selected=((IExtendedBlockState)state).getValue(TrackAppearance.STYLE);TrackTopology.Style chosen=selected==null?style:TrackTopology.Style.values()[selected];int key=appearance.key()|chosen.ordinal()<<18;
+            List<BakedQuad> cached = combinations.get(key);
             if (cached != null) return cached;
             List<BakedQuad> quads = new ArrayList<BakedQuad>();
-            for (TrackParts.Part part : TrackParts.forCell(style, facing, appearance)) {
+            for (TrackParts.Part part : TrackParts.forCell(chosen, facing, appearance)) {
                 List<BakedQuad> nativeQuads = parts.get(part.model + "@" + part.quarterTurns);
                 if (nativeQuads == null) return fallback.getQuads(state, side, rand);
                 quads.addAll(nativeQuads);
@@ -101,7 +102,7 @@ public final class TrackModels {
             List<BakedQuad> result = Collections.unmodifiableList(quads);
             // Bound incidental support combinations without enumerating them as blockstates.
             if (combinations.size() >= 512) combinations.clear();
-            List<BakedQuad> previous = combinations.putIfAbsent(appearance.key(), result);
+            List<BakedQuad> previous = combinations.putIfAbsent(key, result);
             return previous == null ? result : previous;
         }
 

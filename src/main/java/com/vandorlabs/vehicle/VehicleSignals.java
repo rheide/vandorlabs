@@ -36,6 +36,15 @@ public final class VehicleSignals {
     }
     VehicleSignals(EntityGroundVehicle craft){this.craft=craft;}
     public void changed(BlockPos pos){if(!detached)dirty.add(pos.toImmutable());}
+    /** Only this craft's source levels; never sample unrelated members of the dimension bank. */
+    public Map<Integer,Integer> outputLevels(){
+        Map<Integer,Integer> result=new LinkedHashMap<>();
+        for(Link link:links.values())if(link.isChannelMemberActive())for(int channel:link.getRedstoneChannels().toArray()){
+            int level=link instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)link).isChannelLatch()?((RedstoneChannelLatch)link).latchedLevel(channel):link.localSignalLevel(channel);
+            if(level>0)result.merge(channel,Math.min(15,level),Math::max);
+        }
+        return Collections.unmodifiableMap(result);
+    }
     private class Link implements RedstoneChannelMember {
         final RedstoneChannelMember source;final TileEntity anchor=new TileEntity(){};
         boolean registeredLatch;
@@ -98,6 +107,15 @@ public final class VehicleSignals {
             dirty.add(source.channelTile().getPos());
         }
     }
+    public void pressurePlate(com.vandorlabs.plate.PlateTile tile,int level){
+        if(craft.world.isRemote||craft.view==null||craft.view.getTileEntity(tile.getPos())!=tile)return;
+        IBlockState state=craft.view.getBlockState(tile.getPos());if(!(state.getBlock() instanceof com.vandorlabs.plate.PlateBlock))return;
+        level=Math.max(0,Math.min(15,level));
+        int before=tile.getOutputLevel();boolean changed=state.getValue(com.vandorlabs.plate.PlateBlock.POWER)!=level;
+        tile.carriedPower(level);
+        if(changed)replaceState(tile.getPos(),state.withProperty(com.vandorlabs.plate.PlateBlock.POWER,level));
+        if(changed||before!=tile.getOutputLevel()){Link link=links.get(tile);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(tile.getPos());}
+    }
     public void couplerState(com.vandorlabs.coupler.TileCoupler tile,boolean locked){
         if(craft.world.isRemote||craft.view==null||craft.view.getTileEntity(tile.getPos())!=tile)return;
         IBlockState state=craft.view.getBlockState(tile.getPos());
@@ -145,6 +163,7 @@ public final class VehicleSignals {
             if(source instanceof RedstoneScreenContents.Row&&((RedstoneScreenContents.Row)source).pulseUntil()>0)screenPulses.add((RedstoneScreenContents.Row)source);
         }
         }
+        com.vandorlabs.plate.PlateVehicles.tick(craft);
         for(TileEntityWirelessRedstone port:wirelessPorts)if(port.transmitter())port.sampleInput();
         boolean cockpitGeometry=false;
         for(TileEntityCockpit cockpit:new ArrayList<>(cockpits)){cockpitGeometry|=cockpit.motionCompleted();

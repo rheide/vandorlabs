@@ -44,7 +44,9 @@ public final class ControllerRuntimeChecks {
         NBTTagCompound tag=controller.writeToNBT(new NBTTagCompound());
         tag.setLong("StartTick",world.getTotalWorldTime()-elapsed);
         tag.setLong("LastStepTick",world.getTotalWorldTime()-1);
-        controller.readFromNBT(tag);
+        // This is a synthetic clock edit, not a portable NBT paste. Retain its actual configured actor.
+        net.minecraft.entity.player.EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actorId(controller)==null?null:com.vandorlabs.tiles.WorldActionAuthorization.actor(controller);
+        controller.readFromNBT(tag);if(authorizer!=null)controller.setOwner(authorizer);
         // Retiming must cover the actual reservation journal. Rotating, sideways
         // and extended ramps also reserve cells outside their source columns.
         NBTTagList cells=tag.getTagList("Cells",10);
@@ -56,6 +58,14 @@ public final class ControllerRuntimeChecks {
                         tag.getDouble("StartPose"),tag.getLong("StartTick"),controller.durationTicks(),controller.isMoving());
         }
         controller.scheduledTick();
+    }
+    /** Model the external chunk proof and unload/load boundary alongside the tile's saved NBT. */
+    public static void reload(TileEntityRampController controller){
+        World world=controller.getWorld();NBTTagCompound saved=controller.writeToNBT(new NBTTagCompound()),proof=new NBTTagCompound();
+        com.vandorlabs.tiles.WorldActionAuthorization.saving(new net.minecraftforge.event.world.ChunkDataEvent.Save(world.getChunkFromBlockCoords(controller.getPos()),proof));
+        controller.onChunkUnload();controller.readFromNBT(saved);controller.onLoad();
+        com.vandorlabs.tiles.WorldActionAuthorization.loaded(new net.minecraftforge.event.world.ChunkDataEvent.Load(world.getChunkFromBlockCoords(controller.getPos()),proof));
+        com.vandorlabs.tiles.DeferredTileLoad.flush(world);
     }
     private static void finish(TileEntityRampController controller) { elapsed(controller,controller.durationTicks()+1); }
     private static void clear(World world,BlockPos pos) {

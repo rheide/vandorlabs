@@ -15,6 +15,7 @@ public final class BlockAutopilot extends BlockVandorDirectional {
     public BlockAutopilot(boolean waypoint){super(waypoint?"waypoint":"autopilot");this.waypoint=waypoint;}
     public boolean hasTileEntity(IBlockState state){return true;}
     public TileEntity createTileEntity(World world,IBlockState state){return waypoint?new TileEntityWaypoint():new TileEntityAutopilot();}
+    @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,net.minecraft.entity.EntityLivingBase placer,net.minecraft.item.ItemStack stack){super.onBlockPlacedBy(world,pos,state,placer,stack);if(placer instanceof EntityPlayer)WorldActionAuthorization.authorize(world.getTileEntity(pos),(EntityPlayer)placer);}
     public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         if(hand!=EnumHand.MAIN_HAND||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos))return false;
         if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_AUTOPILOT,world,pos.getX(),pos.getY(),pos.getZ());return true;

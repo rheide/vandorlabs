@@ -123,8 +123,7 @@ public final class VehicleService {
                 VandorLabs.logger.debug("Requested vehicle mode unavailable: check lift blocks or ground clearance.");
             return;
         }
-        if(seat.owner==null)return;
-        EntityPlayerMP player=world.getMinecraftServer().getPlayerList().getPlayerByUUID(seat.owner);
+        EntityPlayerMP player;try{player=signal.craft==null?com.vandorlabs.tiles.WorldActionAuthorization.actor(seat):VehicleCouplings.authorizer(signal.craft);}catch(IllegalArgumentException denied){VandorLabs.logger.debug(denied.getMessage());return;}
         if(player==null || player.world!=world)return;
         try {
             if(signal.craft!=null) {
@@ -142,6 +141,7 @@ public final class VehicleService {
     private static void assembleSignal(Job job) throws Exception {
         VehicleStructure structure=job.scan.result;WorldServer world=(WorldServer)job.world;BlockPos origin=job.scan.origin;
         if(job.screen){require(job.player.getDistanceSqToCenter(job.scan.startPosition())<=64,"Move closer to the screen.");permission(job.player,job.scan.startPosition());}
+        if(job.signal&&!job.screen)require(job.player.getUniqueID().equals(com.vandorlabs.tiles.WorldActionAuthorization.actorId(world.getTileEntity(job.scan.startPosition()))),"Reconfigure to authorize automation");
         require(structure.hasDedicatedController(),"Vehicle Controller missing");
         require(job.requestedMode!=1 || VehicleSkiTraction.canStart(world,structure,origin),"Taxi requires wheels, or only skis over ice.");
         require(!job.taxi || VehicleTaxiMode.enabled(structure,job.scan.startPosition().subtract(origin)),"Taxi Mode is disabled on the Pilot Seat.");
@@ -336,6 +336,7 @@ public final class VehicleService {
         require(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat,"Pilot Seat data missing.");return (com.vandorlabs.tiles.TileEntityPilotSeat)tile;
     }
     private static void changedSeat(EntityPlayerMP player,Preview previous,com.vandorlabs.tiles.TileEntityPilotSeat seat){
+        com.vandorlabs.tiles.WorldActionAuthorization.authorize(seat,player);if(previous.entity!=null)previous.entity.recordCouplingActor(player);
         if(previous.structure==null){Preview next=previous.changed(null);next.controlData=seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound());previews.put(player.getUniqueID(),next);previewSettingsAck(player,previous,next);return;}
         VehicleStructure changed=VehicleSeatSettings.replaceAt(previous.structure,previous.selected,seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),previous.entity==null?BlockPos.ORIGIN.subtract(previous.origin):BlockPos.ORIGIN);
         if(previous.entity!=null){EntityGroundVehicle craft=previous.entity;craft.updateSettings(changed);
@@ -372,6 +373,8 @@ public final class VehicleService {
         catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     public static void permission(EntityPlayerMP player,BlockPos p) {
+        require(!com.vandorlabs.copier.CopyTransactions.locked(player.world,p),"Wait for the copy area's save or recovery checkpoint.");
+        require(!VehicleCouplingTransfer.locked(player.world,p),"Wait for the vehicle coupling save or recovery checkpoint.");
         require(player.world.isBlockLoaded(p) && player.world.getWorldBorder().contains(p) && p.getY()>=0 && p.getY()<player.world.getHeight(),"A target cell is outside the loaded world.");
         require(player.world.isBlockModifiable(player,p) && player.canPlayerEdit(p,EnumFacing.UP,player.getHeldItemMainhand()),"You cannot modify a target block.");
     }

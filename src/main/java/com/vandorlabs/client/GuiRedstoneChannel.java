@@ -33,6 +33,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     private GuiButton joinButton;
     private final boolean programmableThruster;
     private int shape;
+    private boolean shapeSubmitted,otherEdited;
     private int sideTexture;
     private HousingTextureList housingList;
     private ProgrammableDialogLayout layout;
@@ -138,6 +139,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id!=1&&button.id!=4)otherEdited=true;
         if(button.id==21){submit();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessagePilotModes(member.channelTile().getPos(),null));return;}
         if(button.id==18){pilotMode=GuiOptionCycle.next(pilotMode,3);button.displayString=pilotModeLabel();}
         if(button.id==19){pilotHeight=GuiOptionCycle.next(pilotHeight,4);button.displayString=pilotHeightLabel();com.vandorlabs.vehicle.VehicleNetwork.Packet setting=new com.vandorlabs.vehicle.VehicleNetwork.Packet(com.vandorlabs.vehicle.VehicleNetwork.HEIGHT);setting.entity=-1;setting.origin=member.channelTile().getPos();setting.strafe=(byte)pilotHeight;PacketHandler.INSTANCE.sendToServer(setting);}
@@ -154,7 +156,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         if(button.id==6){threshold=GuiOptionCycle.next(threshold,16);button.displayString=thresholdLabel();}
         if (button.id == 1) {
             if(channel()<0)return;
-            submit();
+            if(!shapeSubmitted||otherEdited)submit();
             mc.player.closeScreen();
         }
         if (button.id == 2 && thruster) {
@@ -168,8 +170,9 @@ public class GuiRedstoneChannel extends GuiContainer {
         if (button.id == 4 && programmableThruster) {
             shape = GuiOptionCycle.next(shape,3);
             button.displayString = shapeLabel();
-            connected = shape == 0;
+            connected = shape != 2;
             refreshJoinButton();
+            submit();shapeSubmitted=true;
         }
     }
 
@@ -193,17 +196,17 @@ public class GuiRedstoneChannel extends GuiContainer {
     @Override protected void keyTyped(char typedChar, int keyCode) throws IOException {
         if (keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
             if(channel()<0)return;
-            submit();
+            if(!shapeSubmitted||otherEdited)submit();
             mc.player.closeScreen();
             return;
         }
-        if (!channelField.textboxKeyTyped(typedChar, keyCode)) super.keyTyped(typedChar, keyCode);
+        String previous=channelField.getText();if(!channelField.textboxKeyTyped(typedChar,keyCode))super.keyTyped(typedChar,keyCode);if(!previous.equals(channelField.getText()))otherEdited=true;
     }
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,5,6,7,8,9,10,11,12,13,15,16,18,19))return;
         if (housingList != null && housingList.click(x, y, button)) {
-            sideTexture = housingList.selected();
+            sideTexture = housingList.selected();otherEdited=true;
             return;
         }
         super.mouseClicked(x, y, button);

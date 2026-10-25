@@ -275,6 +275,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
         }
     }
     public static java.util.List<AxisAlignedBB> movingArmParts(){return loadParts("block/gear/swing_linkage",8);}
+    public static java.util.List<AxisAlignedBB> nativeModelParts(String path){return loadParts(path);}
     public static java.util.List<AxisAlignedBB> modelParts(String name){return loadParts("block/gear/"+name);}
     @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){
         if(tile instanceof GearTileEntity&&((GearTileEntity)tile).recoveryDropped())return;
@@ -284,7 +285,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     @Override public IBlockState withRotation(IBlockState state,net.minecraft.util.Rotation rotation){return state.withProperty(FACING,rotation.rotate(state.getValue(FACING)));}
     @Override public IBlockState withMirror(IBlockState state,net.minecraft.util.Mirror mirror){return state.withProperty(FACING,mirror.mirror(state.getValue(FACING)));}
 
-    @Override public double vehicleBottomY(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;return root!=null&&root.assembly()!=null?root.getPos().getY()-root.assembly().columnHeight()-(root.armSize()==2 && root.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL?1:0):pos.getY()-(kind==Kind.WHEEL && width()==2?1:0);}
+    @Override public double vehicleBottomY(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null&&root.isExtendedTrackStroke()&&root.landingDeployed()){double y=Double.POSITIVE_INFINITY;for(AxisAlignedBB box:root.collisionBoxes())y=Math.min(y,box.minY);if(Double.isFinite(y))return y;}return root!=null&&root.assembly()!=null?root.getPos().getY()-root.assembly().columnHeight()-(root.armSize()==2 && root.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL?1:0):pos.getY()-(kind==Kind.WHEEL && width()==2?1:0);}
 
     @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult hit,World world,BlockPos pos,EntityPlayer player){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());return stack;}
     @Override public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){ItemStack stack=new ItemStack(this);TileEntity raw=world.getTileEntity(pos);if(raw instanceof GearTileEntity&&((GearTileEntity)raw).hasRetainedPayload())return;GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root!=null)stack.setTagInfo("ModularGearSettings",root.settings());drops.add(stack);}

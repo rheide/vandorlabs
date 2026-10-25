@@ -32,15 +32,21 @@ public final class BlockTurntableSurface extends BlockVandor {
     @Override public net.minecraft.block.material.EnumPushReaction getMobilityFlag(IBlockState state){return net.minecraft.block.material.EnumPushReaction.BLOCK;}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){
         TileEntity raw=world.getTileEntity(pos);
-        if(raw instanceof TileEntityTurntableSurface){
-            com.vandorlabs.tiles.TileEntityTurntableController controller=((TileEntityTurntableSurface)raw).controller();
-            if(controller!=null && controller.layout!=null)return state.withProperty(FORMED,true).withProperty(FACING,controller.layout.normal);
-        }
+        if(raw instanceof TileEntityTurntableSurface){com.vandorlabs.surface.SquareLayout layout=((TileEntityTurntableSurface)raw).appearanceLayout();return state.withProperty(FORMED,true).withProperty(FACING,layout.normal);}
         return state.withProperty(FORMED,false);
     }
+    @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,net.minecraft.entity.player.EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
+        if(hand!=EnumHand.MAIN_HAND||!player.isSneaking()&&player.getHeldItemMainhand().getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER)return false;
+        if(!world.isRemote&&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos))player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_SURFACE,world,pos.getX(),pos.getY(),pos.getZ());return true;
+    }
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityTurntableSurface)((TileEntityTurntableSurface)raw).scheduleGroup();}
+    @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase placer,net.minecraft.item.ItemStack stack){
+        TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)raw;net.minecraft.nbt.NBTTagCompound settings=stack.getSubCompound("ProgrammableSurface");if(settings!=null){tile.surfaceOn=com.vandorlabs.turntable.TurntableTextures.normalize(settings.getString("SurfaceOn"),true);tile.surfaceOff=com.vandorlabs.turntable.TurntableTextures.normalize(settings.getString("SurfaceOff"),false);net.minecraft.nbt.NBTTagCompound saved=tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());saved.setString("SurfaceOn",tile.surfaceOn);saved.setString("SurfaceOff",tile.surfaceOff);saved.setInteger("SurfaceLayout",settings.getInteger("SurfaceLayout"));saved.setBoolean("SurfaceAppearanceConfigured",true);tile.readFromNBT(saved);}tile.scheduleGroup();}
+    }
+    @Override public net.minecraft.item.ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult hit,World world,BlockPos pos,net.minecraft.entity.player.EntityPlayer player){net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(this);TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)raw;net.minecraft.nbt.NBTTagCompound settings=new net.minecraft.nbt.NBTTagCompound();settings.setString("SurfaceOn",tile.surfaceOn);settings.setString("SurfaceOff",tile.surfaceOff);settings.setInteger("SurfaceLayout",tile.textureLayout);stack.setTagInfo("ProgrammableSurface",settings);}return stack;}
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
         TileEntity raw=world.getTileEntity(pos);
-        if(!world.isRemote && raw instanceof TileEntityTurntableSurface){com.vandorlabs.tiles.TileEntityTurntableController controller=((TileEntityTurntableSurface)raw).controller();if(controller!=null)controller.surfaceChanged();}
+        if(!world.isRemote && raw instanceof TileEntityTurntableSurface){com.vandorlabs.surface.SurfaceController controller=((TileEntityTurntableSurface)raw).claimedOwner();if(controller!=null)controller.surfaceChanged();}
         super.breakBlock(world,pos,state);
     }
     @Override public IBlockState withRotation(IBlockState state,Rotation rotation){return state.withProperty(FACING,rotation.rotate(state.getValue(FACING)));}

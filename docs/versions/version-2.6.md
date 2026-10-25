@@ -1,20 +1,42 @@
 # Vandor Labs 2.6
 
+Version 2.6 adds programmable copying, configurable surfaces and pressure plates, journal programming, reusable arm mechanisms and connected vehicle sections. See the [changelog](../../CHANGELOG.md) for the complete change list.
+
+## Copying and programmable surfaces
+
+The [Copy Controller](../copy-controller.md) duplicates a square input volume onto a matching square output surface. Place input surfaces on its left, output surfaces on its right and a material chest behind it. Configure scan height and an optional signed redstone-channel offset in the dialog. Creative copies require no materials; Survival copies consume matching building materials and the exact items stored inside copied inventories. Missing materials and incompatible areas appear in the dialog before copying.
+
+![Copy Controller casing and its directional input/output markings](version-2.6-copy-controller.png)
+
+[Programmable Surfaces](../turntables.md) replace Turntable Surfaces without changing their saved block ID. Select active and inactive materials and Fit/Tile mapping on the surfaces. The shared **Surfaces** texture category includes the existing turntable designs and eight new landing, docking, maintenance and copier designs. Turntable Controllers keep their existing motion and scan behavior.
+
+The [Programmable Pressure Plate](../programmable-pressure-plate.md) offers vanilla Wood, Gold and Iron sensitivity. Wood supplies full power when triggered; Gold reaches full power at 15 entities and Iron at 150. Its dialog selects a material, output channels and Pressed, Released or Disabled channel behavior. Pressed channels follow the measured signal level, while physical redstone remains independent of the channel mode.
+
+![Pressure plate texture, channel and sensitivity settings](version-2.6-pressure-plate.png)
+
+Vehicle Mode, Turntable Controller and Copy Controller use the same supported-block policy. Copies preserve complete block properties and persistent tile data; blocks whose data cannot survive an exact round trip are refused.
+
 ## Cards and journals
 
-The [Card / Chip Programmer](../card-chip-programmer.md) keeps three physical items inserted: an optional company master, an optional source, and a destination. Use a company Access Card or Master Data Chip to brand a blank destination. A source and destination must be the same kind of item.
+The [Card / Chip Programmer](../card-chip-programmer.md) keeps a company Master, an Input item and an Output item in three physical sockets. Click a socket with a suitable held item to insert it, or use an empty hand to remove its item, without opening the dialog. Other console surfaces open the standard dark dialog. Its large display stays black and its keyboard uses the established keyboard artwork.
 
-Data Chips support Master and Journal types. Journals have a short title and eight editable pages. Open the Journal page to read or edit text; use Inventory to insert and remove items. A journal in the destination slot can be edited without making another copy. Closing the dialog keeps the items in their sockets and retains the draft.
+Put a blank Access Card or Data Chip in Input and leave Output empty. **Program** consumes Input and moves the programmed result to Output, retaining the company Master. Existing Output items are never edited or overwritten. Move a result back to Input to program it again. Data Chip types include Master and Journal; Access Cards disable the Type selector.
+
+A Journal Chip in Input loads its title and eight text pages into the Journal view. Edit and paginate there, then Program to write the chip and move it to Output. Pending input edits save automatically; **Done** closes either dialog page. Items stay in their sockets when the dialog closes.
+
+![Card / Chip Programmer with retained cards, a black display and the standard keyboard](version-2.6-programmer.png)
 
 ## Arms, tracks and couplers
 
-[Extender, Rotating and Fixed Arms](../modular-landing-gear.md) can form mechanisms without a landing foot or hull above them. Place arms on floors, ceilings or walls to choose their motion axis. A generic mechanism's Off state is its construction pose; configure its active extension or rotation on the dialog's second page. The payload can stay level or rotate with the arm.
+[Extender, Rotating and Fixed Arms](../modular-landing-gear.md) can form mechanisms without a landing foot or hull above them. Place arms on floors, ceilings or walls to choose their motion axis. A generic mechanism's Off state is its construction pose; configure its active reach or rotation in the single two-column dialog. The payload can stay level or rotate with the arm. Ordinary clicks on the exposed tip place the next arm or payload outside the arm's occupied cell, and extenders retain at least one block of reach.
 
 Ordinary attachments become placed blocks again at exact whole-block translation endpoints. Fractional translations and rotations retain their block data in a moving snapshot. Captured machinery pauses while held, as it does in vehicle snapshots. Discovery and motion remain bounded and require loaded cells and permission to move the attachment.
 
-Compact, Armoured and Bogie Tracks use their supplied connected tread models. Mount them under an arm or beside a slab, then select their style with the Configurizer. Tracks count as vehicle boundaries. Nested landing groups can include connecting blocks and lower landing assemblies; inspection uses the outer supports and excludes the ground beyond them.
+One **Track** block offers Compact, Armoured and Bogie styles in its dialog. Place tracks against an arm tip, beside a slab or against another track; placement follows the clicked mounting direction. Two track blocks are enough for vehicle support. Native tread geometry supplies the selection and collision bounds. Nested landing groups can include connecting blocks and lower landing assemblies; inspection uses the outer supports and excludes the ground beyond them.
 
-[Square Couplers](../couplers.md) control discovery across an adjacent pair. Both halves must be locked to include the section beyond the pair. Each half supports input channels and inverted activation. Switching a carried coupler changes its state; it does not split or merge vehicles already assembled.
+[Vehicle Couplers](../couplers.md) and their horizontal slab variant connect opposing sections. Both halves support channel inputs and inverted activation, with the same dialog for right-click and the Configurizer. In Taxi/Hover mode, enabled pairs can collect a parked section made of world blocks. Releasing a pair restores the detached section as blocks only when alignment, permissions, loaded chunks and clear space make parking safe. Otherwise it stays attached. This does not merge two moving vehicle entities.
+
+Right-click a carried vanilla chest to open its normal inventory dialog. Single and double chests retain their names, locks and item changes while the vehicle moves and when it saves or parks.
 
 ## Core assemblies
 
@@ -26,7 +48,11 @@ Five new assemblies use the existing Core and Programmable Matter workflow:
 - [Standalone Dish](../multiblocks/standalone-dish/README.md).
 - [Standalone Antenna](../multiblocks/standalone-antenna/README.md).
 
-Each assembly provides configurable input channels, chip security and a native retained Data Chip holder. These models do not perform radar detection or dimensional travel.
+Each linked guide includes five construction stages: the base, pillars or middle layers, roof completion, assembly, and optional chip security. Each assembly provides configurable input channels, chip security and a native retained Data Chip holder. These models do not perform radar detection or dimensional travel.
+
+![Assembled Pinnacle Oculus Drive](../multiblocks/oculus-drive/step-4.png)
+
+![Assembled Survey Dish](../multiblocks/survey-dish/step-4.png)
 
 Longburn Drive is now **Maxwell Drive**. Pinnacle Meridian Drive is now **Seyr Meridian Drive**, with one Seyr nameplate. Saved registry IDs remain unchanged.
 
@@ -37,6 +63,8 @@ New programmable screens, inputs and consoles default to Door Interior (Dark). E
 Strong programmable glass is opaque, including Clear and replacement materials. Its renderer writes depth in the opaque pass. Programmable Block texture mapping preserves the active vertex record format used by OptiFine.
 
 Stationary vehicle controls now say **Park Mode**. Cockpit clipboard copies use relative reservation links and remain independent of their originals. Downward propulsion blocks terminate discovery alongside landing supports.
+
+[Joined 2×2 propulsion blocks](../propulsion-shapes.md) can switch between square and hexagonal shapes through their dialog. Two complete 2×2s also join independently when staggered by one row, preserving both groups despite their combined stepped outline.
 
 Ramp Controllers accept all steel and aluminum scaffolding patterns from Immersive Engineering. Additional explicit vehicle adapters cover inert IE structures and Mekanism storage and glow panels; see [the supported block list](../vehicle-compatibility.md) for their limits.
 

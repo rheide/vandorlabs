@@ -9,104 +9,465 @@
     }
   },
   "variants": {
-    "facing=north,particles=false,powered=false": {
+    "facing=north,part=single,particles=false,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj"
     },
-    "facing=north,particles=true,powered=false": {
+    "facing=north,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj"
+    },
+    "facing=north,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj"
+    },
+    "facing=north,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj"
+    },
+    "facing=north,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj"
+    },
+    "facing=north,part=single,particles=true,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj"
     },
-    "facing=north,particles=false,powered=true": {
+    "facing=north,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj"
+    },
+    "facing=north,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj"
+    },
+    "facing=north,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj"
+    },
+    "facing=north,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj"
+    },
+    "facing=north,part=single,particles=false,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_on.obj"
     },
-    "facing=north,particles=true,powered=true": {
+    "facing=north,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_left.obj"
+    },
+    "facing=north,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_right.obj"
+    },
+    "facing=north,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_left.obj"
+    },
+    "facing=north,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_right.obj"
+    },
+    "facing=north,part=single,particles=true,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_stream.obj"
     },
-    "facing=east,particles=false,powered=false": {
+    "facing=north,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_left.obj"
+    },
+    "facing=north,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_right.obj"
+    },
+    "facing=north,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_left.obj"
+    },
+    "facing=north,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_right.obj"
+    },
+    "facing=east,part=single,particles=false,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "y": 90
     },
-    "facing=east,particles=true,powered=false": {
+    "facing=east,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "y": 90
+    },
+    "facing=east,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "y": 90
+    },
+    "facing=east,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "y": 90
+    },
+    "facing=east,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "y": 90
+    },
+    "facing=east,part=single,particles=true,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "y": 90
     },
-    "facing=east,particles=false,powered=true": {
+    "facing=east,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "y": 90
+    },
+    "facing=east,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "y": 90
+    },
+    "facing=east,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "y": 90
+    },
+    "facing=east,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "y": 90
+    },
+    "facing=east,part=single,particles=false,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_on.obj",
       "y": 90
     },
-    "facing=east,particles=true,powered=true": {
+    "facing=east,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_left.obj",
+      "y": 90
+    },
+    "facing=east,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_right.obj",
+      "y": 90
+    },
+    "facing=east,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_left.obj",
+      "y": 90
+    },
+    "facing=east,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_right.obj",
+      "y": 90
+    },
+    "facing=east,part=single,particles=true,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_stream.obj",
       "y": 90
     },
-    "facing=south,particles=false,powered=false": {
+    "facing=east,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_left.obj",
+      "y": 90
+    },
+    "facing=east,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_right.obj",
+      "y": 90
+    },
+    "facing=east,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_left.obj",
+      "y": 90
+    },
+    "facing=east,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_right.obj",
+      "y": 90
+    },
+    "facing=south,part=single,particles=false,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "y": 180
     },
-    "facing=south,particles=true,powered=false": {
+    "facing=south,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "y": 180
+    },
+    "facing=south,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "y": 180
+    },
+    "facing=south,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "y": 180
+    },
+    "facing=south,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "y": 180
+    },
+    "facing=south,part=single,particles=true,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "y": 180
     },
-    "facing=south,particles=false,powered=true": {
+    "facing=south,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "y": 180
+    },
+    "facing=south,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "y": 180
+    },
+    "facing=south,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "y": 180
+    },
+    "facing=south,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "y": 180
+    },
+    "facing=south,part=single,particles=false,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_on.obj",
       "y": 180
     },
-    "facing=south,particles=true,powered=true": {
+    "facing=south,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_left.obj",
+      "y": 180
+    },
+    "facing=south,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_right.obj",
+      "y": 180
+    },
+    "facing=south,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_left.obj",
+      "y": 180
+    },
+    "facing=south,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_right.obj",
+      "y": 180
+    },
+    "facing=south,part=single,particles=true,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_stream.obj",
       "y": 180
     },
-    "facing=west,particles=false,powered=false": {
+    "facing=south,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_left.obj",
+      "y": 180
+    },
+    "facing=south,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_right.obj",
+      "y": 180
+    },
+    "facing=south,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_left.obj",
+      "y": 180
+    },
+    "facing=south,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_right.obj",
+      "y": 180
+    },
+    "facing=west,part=single,particles=false,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "y": 270
     },
-    "facing=west,particles=true,powered=false": {
+    "facing=west,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "y": 270
+    },
+    "facing=west,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "y": 270
+    },
+    "facing=west,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "y": 270
+    },
+    "facing=west,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "y": 270
+    },
+    "facing=west,part=single,particles=true,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "y": 270
     },
-    "facing=west,particles=false,powered=true": {
+    "facing=west,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "y": 270
+    },
+    "facing=west,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "y": 270
+    },
+    "facing=west,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "y": 270
+    },
+    "facing=west,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "y": 270
+    },
+    "facing=west,part=single,particles=false,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_on.obj",
       "y": 270
     },
-    "facing=west,particles=true,powered=true": {
+    "facing=west,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_left.obj",
+      "y": 270
+    },
+    "facing=west,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_right.obj",
+      "y": 270
+    },
+    "facing=west,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_left.obj",
+      "y": 270
+    },
+    "facing=west,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_right.obj",
+      "y": 270
+    },
+    "facing=west,part=single,particles=true,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_stream.obj",
       "y": 270
     },
-    "facing=up,particles=false,powered=false": {
+    "facing=west,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_left.obj",
+      "y": 270
+    },
+    "facing=west,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_right.obj",
+      "y": 270
+    },
+    "facing=west,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_left.obj",
+      "y": 270
+    },
+    "facing=west,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_right.obj",
+      "y": 270
+    },
+    "facing=up,part=single,particles=false,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "x": 270
     },
-    "facing=up,particles=true,powered=false": {
+    "facing=up,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "x": 270
+    },
+    "facing=up,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "x": 270
+    },
+    "facing=up,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "x": 270
+    },
+    "facing=up,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "x": 270
+    },
+    "facing=up,part=single,particles=true,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "x": 270
     },
-    "facing=up,particles=false,powered=true": {
+    "facing=up,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "x": 270
+    },
+    "facing=up,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "x": 270
+    },
+    "facing=up,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "x": 270
+    },
+    "facing=up,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "x": 270
+    },
+    "facing=up,part=single,particles=false,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_on.obj",
       "x": 270
     },
-    "facing=up,particles=true,powered=true": {
+    "facing=up,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_left.obj",
+      "x": 270
+    },
+    "facing=up,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_right.obj",
+      "x": 270
+    },
+    "facing=up,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_left.obj",
+      "x": 270
+    },
+    "facing=up,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_right.obj",
+      "x": 270
+    },
+    "facing=up,part=single,particles=true,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_stream.obj",
       "x": 270
     },
-    "facing=down,particles=false,powered=false": {
+    "facing=up,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_left.obj",
+      "x": 270
+    },
+    "facing=up,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_right.obj",
+      "x": 270
+    },
+    "facing=up,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_left.obj",
+      "x": 270
+    },
+    "facing=up,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_right.obj",
+      "x": 270
+    },
+    "facing=down,part=single,particles=false,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "x": 90
     },
-    "facing=down,particles=true,powered=false": {
+    "facing=down,part=bottom_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "x": 90
+    },
+    "facing=down,part=bottom_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "x": 90
+    },
+    "facing=down,part=top_left,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "x": 90
+    },
+    "facing=down,part=top_right,particles=false,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "x": 90
+    },
+    "facing=down,part=single,particles=true,powered=false": {
       "model": "vandorlabs:rocket_thruster_hexagonal_off.obj",
       "x": 90
     },
-    "facing=down,particles=false,powered=true": {
+    "facing=down,part=bottom_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_left.obj",
+      "x": 90
+    },
+    "facing=down,part=bottom_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_bottom_right.obj",
+      "x": 90
+    },
+    "facing=down,part=top_left,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_left.obj",
+      "x": 90
+    },
+    "facing=down,part=top_right,particles=true,powered=false": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_off_top_right.obj",
+      "x": 90
+    },
+    "facing=down,part=single,particles=false,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_on.obj",
       "x": 90
     },
-    "facing=down,particles=true,powered=true": {
+    "facing=down,part=bottom_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_left.obj",
+      "x": 90
+    },
+    "facing=down,part=bottom_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_bottom_right.obj",
+      "x": 90
+    },
+    "facing=down,part=top_left,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_left.obj",
+      "x": 90
+    },
+    "facing=down,part=top_right,particles=false,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_on_top_right.obj",
+      "x": 90
+    },
+    "facing=down,part=single,particles=true,powered=true": {
       "model": "vandorlabs:rocket_thruster_hexagonal_stream.obj",
       "x": 90
     },
-    "inventory": [
-      {
-        "model": "vandorlabs:rocket_thruster_hexagonal_inventory.obj",
-        "y": 0,
-        "transform": "forge:default-block"
-      }
-    ]
+    "facing=down,part=bottom_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_left.obj",
+      "x": 90
+    },
+    "facing=down,part=bottom_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_bottom_right.obj",
+      "x": 90
+    },
+    "facing=down,part=top_left,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_left.obj",
+      "x": 90
+    },
+    "facing=down,part=top_right,particles=true,powered=true": {
+      "model": "vandorlabs:rocket_thruster_hexagonal_stream_top_right.obj",
+      "x": 90
+    }
   }
 }

@@ -105,14 +105,22 @@ floor mounts point up, and wall mounts point outward. Additional matching arm
 sections inherit the existing column's mounting axis. Placing an arm against a
 landing foot points it toward that foot. Existing saved arms continue to point down.
 
-Use the Configurizer for the shared dialog. **Motion and appearance** opens the
-endpoint controls without crowding the input/channel page. A general Extender's
-active extension ranges from -8 to +8 blocks relative to its construction pose;
-positive values extend outward. A general Rotating Arm's active angle ranges from
+Use the Configurizer for the shared dialog. Its two columns show input/channel
+controls beside motion endpoints and appearance. A general Extender's **Active
+reach** is its total deployed length, from one block to eight blocks beyond the
+number of installed arm sections. The default adds one block of outward travel.
+Retraction always leaves at least one block of reach, keeping the payload outside
+the mounting base. A general Rotating Arm's active angle ranges from
 -180 to +180 degrees. The Off state is the construction pose; the On state uses
 these configured endpoints. Redstone modes select ON activates or OFF activates.
 The existing landing-foot deployment semantics remain available on landing assemblies.
 Change motion endpoints only at the construction pose.
+
+At the construction pose, click the arm's outward tip to place a block directly
+against it. This works on floors, ceilings and walls, including stacked regular
+or large arms. The attachment starts in the adjacent block cell; it does not need
+to be placed inside the arm. Matching arm sections placed at that tip lengthen
+the same mechanism before attaching the payload.
 
 **Payload: stays level** keeps the attachment's original orientation as a Rotating
 Arm swings. **Payload: rotates with arm** makes the attachment turn with its linkage;
@@ -143,18 +151,44 @@ rotates mounting axes, saved links, track connections and attachment snapshots t
 
 ## Tracks
 
-Compact, Armoured and Bogie Tracks attach below arm columns or beside a slab.
+The Creative inventory and item browser contain one **Track** block. Right-click it,
+or use the Configurizer, to select **Compact**, **Armoured** or **Bogie** in its dialog.
+Style changes stay in the same blocks and tiles, preserving mechanism ownership and
+settings. Existing Armoured/Bogie registry IDs remain readable as hidden compatibility
+blocks; their old appearance becomes the default until a saved style is selected.
+Picking or breaking those older blocks returns the canonical Track item with its
+selected style saved. Survival copying also uses the obtainable canonical Track material.
+
+Attach a Track by clicking the visible end of an arm in its **Off/rest** construction
+pose. This works at the last section of a stacked arm and on every mounting axis.
+The new Track inherits the arm's travel orientation and becomes its native foot,
+including the entire connected tread group. A stationary straight arm at an active,
+whole-block extension endpoint also accepts a Track on its visible outward tip.
+Additional Tracks can be attached by clicking an existing posed Track's side; they inherit its orientation and style.
+The Track is stored at the mechanism's logical rest cell and displayed at the clicked
+pose; the arm retains its extension stroke and does not jump or create a second
+world block. Both the visible placement area and rest cell must be clear and
+editable. Fractional endpoints, moving arms and active rotating poses show an
+explicit error and retain the held item. Return those arms to Off/rest before
+attaching the Track. Clicking another Track inherits that
+Track's facing, regardless of player direction. Clicking a slab side aligns the tread
+at ninety degrees to that mounting face. Top and bottom slab brackets follow their
+actual selected half.
+
 Matching styles and travel directions connect into continuous tread runs, including
 unequal adjacent lanes. A group supports up to 64 track blocks within a 16×16
 footprint. Different styles or facings remain separate groups. Incomplete or
 unloaded groups show independent parts until their full topology is available.
+Tracks beneath a rotating arm use the arm's lower swivel instead of drawing a second
+overlapping socket. **Payload: rotates** rotates the complete tread group with the arm;
+**Payload: stays level** preserves its orientation. A blocked stroke shows an **ERROR**
+in the dialog and resumes when the obstruction is cleared. Selection and collision
+bounds follow the native style, mounting brackets and mechanism pose.
 
-Use the Configurizer or sneak-right-click a track to select its style. Tracks under
-one arm assembly change style together and retain their controller. Their native
-socket is higher than a plate socket; the arm's lower connection follows that height.
-Top and bottom slab side brackets use the corresponding half-height connection.
-Tracks count as vehicle boundaries and support Taxi operation. The delivered tread
-models are static; vehicle motion does not animate individual tread links.
+Two physical Track blocks provide enough supports for a vehicle, including two
+connected blocks beneath one arm. A single Track does not. Only ground-facing outer
+landing groups count toward this rule. Tracks support Taxi operation; the delivered
+tread models are static and vehicle motion does not animate individual tread links.
 
 ## Animated combinations
 

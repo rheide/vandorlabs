@@ -93,6 +93,14 @@ public final class VehicleStructure {
     public Cell controller(){
         return controller;
     }
+    /** Raw ownership comparison for exact copies, without vehicle parking/legacy normalization. */
+    public boolean matchesExact(World world,BlockPos origin){
+        for(Cell cell:cells){BlockPos at=origin.add(cell.pos);if(!world.isBlockLoaded(at)||world.getBlockState(at)!=cell.state)return false;TileEntity tile=world.getTileEntity(at);
+            if(cell.tile==null){if(tile!=null)return false;}
+            else if(tile==null||!cell.tile.equals(VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin))))return false;
+        }
+        return true;
+    }
     public boolean matches(World world,BlockPos origin) {
         for(Cell cell:cells) {
             BlockPos p=origin.add(cell.pos);

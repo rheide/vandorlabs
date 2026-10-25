@@ -131,8 +131,8 @@ public final class GearAssembly {
                 columns.add(column);
             }
             for(EnumFacing side:HORIZONTAL){BlockPos next=foot.add(ArmOrientation.vector(mount,new BlockPos(side.getDirectionVec())));if(!loaded(world,next))return unavailable("The entire foot group and boundary must be loaded.");IBlockState state=world.getBlockState(next);if(!isFoot(state))continue;
-                if(footBlock.kind()==GearBlock.Kind.TRACK&&state.getBlock() instanceof com.vandorlabs.gear.track.TrackBlock&&(state.getBlock()!=footState.getBlock()||state.getValue(GearBlock.FACING)!=facing))continue;
-                if(state.getBlock()!=footState.getBlock()||((GearBlock)footState.getBlock()).kind()!=GearBlock.Kind.PLATE&&state.getValue(GearBlock.FACING)!=facing)return fail("Use one foot type and align connected skis.");
+                if(footBlock.kind()==GearBlock.Kind.TRACK&&state.getBlock() instanceof com.vandorlabs.gear.track.TrackBlock){if(com.vandorlabs.gear.track.TrackBlock.style(world,next)!=com.vandorlabs.gear.track.TrackBlock.style(world,first)||state.getValue(GearBlock.FACING)!=facing)continue;}
+                else if(state.getBlock()!=footState.getBlock()||((GearBlock)footState.getBlock()).kind()!=GearBlock.Kind.PLATE&&state.getValue(GearBlock.FACING)!=facing)return fail("Use one foot type and align connected skis.");
                 if(feet.add(next)){if(feet.size()>GearTopology.MAX_FEET)return fail("A connected group can contain at most 64 feet.");queue.addLast(next);}
             }
         }

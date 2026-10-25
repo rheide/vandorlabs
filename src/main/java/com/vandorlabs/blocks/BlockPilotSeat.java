@@ -68,7 +68,7 @@ public class BlockPilotSeat extends BlockVandorDirectional {
         if (!world.isRemote) {
             if(!canopyAbove(world,pos))world.setBlockState(pos.up(), state.withProperty(UPPER, true), 3);
             net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);
-            if(raw instanceof com.vandorlabs.tiles.TileEntityPilotSeat && placer instanceof EntityPlayer){((com.vandorlabs.tiles.TileEntityPilotSeat)raw).owner=placer.getUniqueID();raw.markDirty();}
+            if(raw instanceof com.vandorlabs.tiles.TileEntityPilotSeat && placer instanceof EntityPlayer){((com.vandorlabs.tiles.TileEntityPilotSeat)raw).owner=placer.getUniqueID();com.vandorlabs.tiles.WorldActionAuthorization.authorize(raw,(EntityPlayer)placer);raw.markDirty();}
         }
     }
 
@@ -103,7 +103,7 @@ public class BlockPilotSeat extends BlockVandorDirectional {
             BlockPos lower=state.getValue(UPPER)?pos.down():pos;
             if(!world.isRemote && !player.isSpectator() && world.isBlockModifiable(player,lower) && player.canPlayerEdit(lower,face,player.getHeldItem(hand))) {
                 com.vandorlabs.tiles.TileEntityPilotSeat tile=(com.vandorlabs.tiles.TileEntityPilotSeat)world.getTileEntity(lower);
-                if(tile!=null){tile.owner=player.getUniqueID();tile.markDirty();com.vandorlabs.vehicle.VehicleService.previewAssembly((net.minecraft.entity.player.EntityPlayerMP)player,lower);}
+                if(tile!=null){tile.owner=player.getUniqueID();com.vandorlabs.tiles.WorldActionAuthorization.authorize(tile,player);tile.markDirty();com.vandorlabs.vehicle.VehicleService.previewAssembly((net.minecraft.entity.player.EntityPlayerMP)player,lower);}
             }
             return true;
         }

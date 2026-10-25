@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [" I ", "RPR", " I "],
+  "key": {
+    "I": {"item": "minecraft:iron_ingot"},
+    "R": {"item": "minecraft:redstone"},
+    "P": {"item": "vandorlabs:programmable_block"}
+  },
+  "result": {"item": "vandorlabs:square_coupler"}
+}

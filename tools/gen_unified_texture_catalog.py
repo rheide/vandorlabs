@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Append shared artwork choices while preserving the 78 original housing indices."""
 import json
+import hashlib
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 assets=root/'texture-packs/default/assets/vandorlabs/textures/blocks'
@@ -63,6 +64,11 @@ out=root/'generated-resources/assets/vandorlabs/data/unified_textures.json'
 corp=root/'texture-packs/additional/corp-catalog.json'
 if corp.exists():entries.extend(json.loads(corp.read_text()))
 turntables=root/'texture-packs/additional/turntable-catalog.json'
-if turntables.exists():entries.extend(json.loads(turntables.read_text()))
+if turntables.exists():entries.extend(e for e in json.loads(turntables.read_text()) if not e['id'].startswith('surface_'))
+post=root/'texture-packs/additional/post-turntable-catalog.json'
+if post.exists():entries.extend(json.loads(post.read_text()))
+# The complete pre-surface catalog is a saved numeric API, including late imports.
+assert len(entries)==356 and hashlib.sha256('\n'.join(e['id'] for e in entries).encode()).hexdigest()=='445202a29c3e0f32155a2c582f3d8b7d81cbf1dfbf18c750adb2d91881e3a1c8', 'Existing saved texture IDs were removed or reordered'
+if turntables.exists():entries.extend(e for e in json.loads(turntables.read_text()) if e['id'].startswith('surface_'))
 out.write_text(json.dumps(entries,indent=2)+'\n')
 print('Generated',len(entries),'additional texture choices')

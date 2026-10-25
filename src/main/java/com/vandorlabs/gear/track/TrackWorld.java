@@ -73,7 +73,7 @@ public final class TrackWorld {
         IBlockState first = world.getBlockState(start);
         if (!(first.getBlock() instanceof TrackBlock)) return failed(visited, "No track at the requested position.");
         EnumFacing orientation = first.getValue(TrackBlock.FACING);
-        TrackTopology.Style style = ((TrackBlock) first.getBlock()).style();
+        TrackTopology.Style style = TrackBlock.style(world,start);
         ArrayDeque<BlockPos> queue = new ArrayDeque<BlockPos>();
         List<TrackTopology.Node> nodes = new ArrayList<TrackTopology.Node>();
         visited.add(start.toImmutable()); queue.add(start.toImmutable());
@@ -91,7 +91,7 @@ public final class TrackWorld {
                 }
                 IBlockState state = world.getBlockState(neighbor);
                 // Different styles, opposite facings and perpendicular facings are separate components.
-                if (state.getBlock() != first.getBlock() || state.getValue(TrackBlock.FACING) != orientation) continue;
+                if (!(state.getBlock() instanceof TrackBlock) || TrackBlock.style(world,neighbor)!=style || state.getValue(TrackBlock.FACING) != orientation) continue;
                 if (!visited.add(neighbor)) continue;
                 if (visited.size() > TrackTopology.MAX_TRACKS) return failed(visited, "More than 64 connected tracks; no partial assembly was accepted.");
                 minX = Math.min(minX, neighbor.getX()); maxX = Math.max(maxX, neighbor.getX());

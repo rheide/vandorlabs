@@ -82,7 +82,7 @@ final class TurntableRuntimeChecks {
         try{
             for(int x=0;x<2;x++)for(int z=0;z<3;z++)world.setBlockState(bad.add(x,0,z),surface.getDefaultState());
             world.setBlockState(badOwner,controller.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.EAST));
-            TileEntityTurntableController invalid=(TileEntityTurntableController)world.getTileEntity(badOwner);invalid.actor=player.getUniqueID();
+            controller.onBlockPlacedBy(world,badOwner,world.getBlockState(badOwner),player,new ItemStack(controller));TileEntityTurntableController invalid=(TileEntityTurntableController)world.getTileEntity(badOwner);
             world.setBlockState(badOwner.down(),Blocks.REDSTONE_BLOCK.getDefaultState());invalid.update();TurntableTransactions.drainForChecks(world);
             require(invalid.captureId==null&&invalid.lastError.contains("filled square"),"invalid automatic scan reports the actual shape error");
             for(int tick=0;tick<20;tick++)invalid.update();TurntableTransactions.drainForChecks(world);TileEntityTurntableController saved=new TileEntityTurntableController();saved.readFromNBT(invalid.writeToNBT(new NBTTagCompound()));

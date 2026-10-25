@@ -18,7 +18,7 @@ Use the **Configurizer** on a formed Core-based multiblock or one of its reserve
 
 Each surface keeps its own artwork selection. **Model artwork** preserves the supplied design. **Black** and the standard Programmable Block material and screen/panel catalogs are also available, including half-screen and keyboard designs. **Custom...** samples a block material. Static/Animated playback and Slow/Normal/Fast speed apply to the fitted displays.
 
-The original Constructor frames have no authored display surfaces or chip reader. The standalone radar models offer Security and redstone settings without display surfaces. Their surface and Security controls are unavailable.
+The original Constructor frames have no authored display surfaces or chip reader, so their surface and Security controls are unavailable. The standalone radar models offer Security and redstone settings without display surfaces.
 
 ## Activation
 
@@ -54,3 +54,7 @@ Return modes keep the normal borrowing/return animation, but integrated readers 
 Screen choices, gates, channels and the chip's full item data persist through saving and reloading. Manual dismantling retains a chip in its Core; reassembly restores access. Breaking the Core releases the held chip once. Mining a reserved cell dismantles the machine and removes the selected cell; rapid removal safely skips stale renderers.
 
 [Step-by-step multiblock build guides](multiblocks/README.md)
+
+## Dynmap
+
+Core seeds and formed machinery have native map geometry and artwork, including the Oculus Drive and all four radar variants. Reserved cells render their own clipped portion of the assembly, using the saved facing and detected Core corner. Maps show a static saved activity pose; the Oculus Active pose has open shutters, while scanning dishes use their resting heading. Selected screen artwork, inserted chip items and continuous mechanism animation remain in-game features.

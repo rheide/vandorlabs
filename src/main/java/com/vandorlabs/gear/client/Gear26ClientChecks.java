@@ -22,7 +22,9 @@ public final class Gear26ClientChecks {
             net.minecraft.client.renderer.block.model.IBakedModel baked=model.bake(model.getDefaultState(),net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK,t->mc.getTextureMapBlocks().getAtlasSprite(t.toString()));
             if(baked.getQuads(null,null,0).isEmpty())throw new IllegalStateException("gear26 empty native track "+style+" "+mask);
         }
+        GearSocketChecks.run(mc,output);
         payloadMesh(mc,output);
+        com.vandorlabs.client.GearDialogChecks.run(mc,output);
         GuiScreen old=mc.currentScreen;Icons icons=new Icons();
         try{
             mc.displayGuiScreen(icons);mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();icons.drawScreen(0,0,0);

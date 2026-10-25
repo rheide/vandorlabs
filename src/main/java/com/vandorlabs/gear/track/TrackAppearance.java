@@ -14,6 +14,9 @@ public final class TrackAppearance {
         @Override public String valueToString(TrackAppearance value) { return Integer.toHexString(value.key()); }
     };
 
+    public static final IUnlistedProperty<Integer> STYLE=new IUnlistedProperty<Integer>(){
+        @Override public String getName(){return "track_style";}@Override public boolean isValid(Integer value){return value!=null&&value>=0&&value<3;}@Override public Class<Integer> getType(){return Integer.class;}@Override public String valueToString(Integer value){return value.toString();}
+    };
     public final int beltMask;
     public final Mount mount;
     /** World N/E/S/W bits 1/2/4/8; independent of travel facing. */

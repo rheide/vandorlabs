@@ -18,8 +18,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source', type=Path)
     args = parser.parse_args()
-    entries = [dict(id='turntable_original_' + state, label='Original ' + state.title(),
-                    category='Turntable', source='turntable/turntable_block_top' + suffix)
+    entries = [dict(id='turntable_original_' + state, label='Dormant' if state=='off' else 'Active',
+                    category='Surfaces', source='turntable/turntable_block_top' + suffix)
                for state, suffix in [('off', ''), ('on', '_on')]]
     for filename, slug, label in DESIGNS:
         with Image.open(args.source / filename) as image:
@@ -28,9 +28,11 @@ def main():
             for size, suffix in [(512, ''), (64, '_low')]:
                 image.convert('RGBA').resize((size, size), Image.Resampling.LANCZOS).save(
                     ART / ('turntable_block_top_' + slug + suffix + '.png'))
-        entries.append(dict(id='turntable_' + slug, label=label, category='Turntable',
+        entries.append(dict(id='turntable_' + slug, label=label, category='Surfaces',
                             source='turntable/turntable_block_top_' + slug))
-    (ROOT / 'texture-packs/additional/turntable-catalog.json').write_text(
+    catalog=ROOT / 'texture-packs/additional/turntable-catalog.json'
+    if catalog.exists():entries.extend(entry for entry in json.loads(catalog.read_text()) if entry['id'].startswith('surface_'))
+    catalog.write_text(
         json.dumps(entries, indent=2) + '\n', encoding='utf-8')
 
 if __name__ == '__main__':

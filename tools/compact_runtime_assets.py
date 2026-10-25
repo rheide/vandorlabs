@@ -32,7 +32,8 @@ def standardize(textures,catalog):
         rel=path.relative_to(textures/'blocks').as_posix()
         metadata=path.with_suffix('.png.mcmeta')
         animated=metadata.exists() and 'animation' in json.loads(metadata.read_text())
-        if rel in obj_atlases or 'atlas' in path.stem or rel.startswith(('canopy/','aircraft_throttles/','universal_constructor/','turntable/turntable_block_top')) or animated:continue
+        # Programmable Surface masters span complete pads; their 64px local variants remain native too.
+        if rel in obj_atlases or 'atlas' in path.stem or rel.startswith(('canopy/','aircraft_throttles/','universal_constructor/','turntable/turntable_block_top','surface/')) or animated:continue
         with Image.open(path) as source:
             w,h=source.size
             # Tall doors cover two blocks; square double doors cover four.

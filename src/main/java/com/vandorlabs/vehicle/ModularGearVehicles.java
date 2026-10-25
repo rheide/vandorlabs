@@ -13,7 +13,7 @@ public final class ModularGearVehicles {
     private static final class Correction {final double progress;final int revision;Correction(double p,int r){progress=p;revision=r;}}
     private static final Map<EntityGroundVehicle,Map<BlockPos,Correction>> corrections=new WeakHashMap<>();
     public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired){Map<BlockPos,Correction> pending=corrections.computeIfAbsent(craft,k->new LinkedHashMap<>());for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){TileEntity raw=craft.view.getTileEntity(entry.getKey());if(raw instanceof GearTileEntity)pending.put(entry.getKey(),new Correction(entry.getValue(),((GearTileEntity)raw).motionRevision()));}}
-    public static boolean extended(EntityGroundVehicle craft){if(craft.view==null)return false;for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&((GearTileEntity)tile).isController()&&((GearTileEntity)tile).isLandingAssembly()&&!((GearTileEntity)tile).fullyDeployed())return false;return true;}
+    public static boolean extended(EntityGroundVehicle craft){if(craft.view==null)return false;for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&((GearTileEntity)tile).isController()&&((GearTileEntity)tile).isLandingAssembly()&&!((GearTileEntity)tile).landingDeployed())return false;return true;}
     /** Move ordinary craft cells into the arm's retained snapshot once, before its first animated step. */
     private static boolean captureAttachment(EntityGroundVehicle craft){
         for(TileEntity raw:new ArrayList<TileEntity>(craft.view.tiles.values()))if(raw instanceof GearTileEntity){

@@ -46,90 +46,18 @@ public final class VehicleRotation {
     private static BlockPos vector(BlockPos p,int turns) {
         switch(turns){case 1:return new BlockPos(-p.getZ(),p.getY(),p.getX());case 2:return new BlockPos(-p.getX(),p.getY(),-p.getZ());case 3:return new BlockPos(p.getZ(),p.getY(),-p.getX());default:return p;}
     }
-    private static boolean supported(VehicleStructure.Cell cell,TileEntity tile) {
-        if(cell.tileData()!=null && tile==null)return false;
-        String domain=cell.state.getBlock().getRegistryName().getResourceDomain();
-        String name=tile==null?"":tile.getClass().getName();
-        // Malisis may replace vanilla registry entries while keeping the minecraft namespace.
-        if((domain.equals("minecraft") || domain.equals("malisisdoors")) &&
-                (name.equals("net.malisis.doors.tileentity.DoorTileEntity") || name.equals("net.malisis.doors.tileentity.TrapDoorTileEntity")))return true;
-        if((domain.equals("minecraft")||domain.equals("malisisdoors"))&&tile==null&&upperDoor(cell.state)
-                &&cell.state.getBlock().getClass().getName().equals("net.malisis.doors.block.Door"))return true;
-        if(domain.equals("minecraft"))return cell.state.getBlock().getClass().getName().startsWith("net.minecraft.block.");
-        if(domain.equals("vandorlabs")) {
-            if(tile instanceof TileEntityRampController){
-                TileEntityRampController ramp=(TileEntityRampController)tile;
-                return !ramp.isMoving() && !cell.tileData().getBoolean("RecoveryPending")
-                        && (cell.tileData().getBoolean("VehicleRampFrozen") || !ramp.attached() && ramp.vehicleCells().isEmpty());
-            }
-            return true;
-        }
-        if(tile==null && !cell.hasTileData())return inertBuilding(cell.state)||simpleState(cell.state);
-        if(domain.equals("immersiveengineering"))return name.equals("blusunrize.immersiveengineering.common.blocks.TileEntityIESlab")
-                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLantern")
-                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityStructuralArm")
-                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityLadder")
-                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorLV")
-                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorMV")
-                || name.equals("blusunrize.immersiveengineering.common.blocks.metal.TileEntityCapacitorHV");
-        if(domain.equals("mekanism"))return name.equals("mekanism.common.tile.TileEntityEnergyCube")||name.equals("mekanism.common.tile.TileEntityGlowPanel")||name.equals("mekanism.common.tile.TileEntityFluidTank")||name.equals("mekanism.common.tile.TileEntityBin")||name.equals("mekanism.common.tile.TileEntityGasTank")||name.equals("mekanism.common.tile.TileEntityPersonalChest");
-        return domain.equals("malisisdoors") && tile==null && upperDoor(cell.state);
-    }
-    /** These connection flags are derived from neighbours, not private orientation/network data. */
-    private static boolean inertBuilding(IBlockState state){
-        net.minecraft.block.Block block=state.getBlock();net.minecraft.util.ResourceLocation id=block.getRegistryName();
-        if(id==null||block.hasTileEntity(state))return false;
-        String type=block.getClass().getName();
-        if(id.getResourceDomain().equals("immersiveengineering")){
-            int meta=block.getMetaFromState(state);
-            return type.equals("blusunrize.immersiveengineering.common.blocks.metal.BlockMetalDecoration1")&&meta>=0&&meta<=7
-                    ||type.equals("blusunrize.immersiveengineering.common.blocks.wooden.BlockWoodenDecoration")&&meta>=0&&meta<=1;
-        }
-        return id.getResourceDomain().equals("mekanism")&&type.equals("mekanism.common.block.BlockPlasticFence");
-    }
-    /** Tile-free building materials need no private NBT or external network relocation.
-     * Directional states must demonstrate the expected quarter-turn, rather than
-     * treating the default Block.withRotation no-op as a rotation implementation. */
-    private static boolean simpleState(IBlockState source){
-        boolean directional=false;
-        IBlockState turned=source.withRotation(Rotation.CLOCKWISE_90);
-        for(IProperty<?> property:source.getPropertyKeys()){
-            Comparable<?> value=source.getValue(property);
-            String name=property.getName();
-            if(value instanceof EnumFacing){
-                directional=true;
-                if(turned.getValue(property)!=Rotation.CLOCKWISE_90.rotate((EnumFacing)value))return false;
-            }else if(value instanceof EnumFacing.Axis){
-                directional=true;
-                EnumFacing.Axis axis=(EnumFacing.Axis)value;
-                EnumFacing.Axis expected=axis==EnumFacing.Axis.X?EnumFacing.Axis.Z:axis==EnumFacing.Axis.Z?EnumFacing.Axis.X:axis;
-                if(turned.getValue(property)!=expected)return false;
-            }else {
-                if(!Arrays.asList("variant","variation","type","color","half","shape","seamless","wet","snowy","decayable","check_decay").contains(name))return false;
-                // A custom enum can hide compass directions in an otherwise
-                // familiar property such as variant; do not mistake it for material data.
-                for(Object allowed:property.getAllowedValues())if(allowed.toString().toLowerCase(Locale.ROOT).matches(".*(?:^|_)(?:north|south|east|west|x|z)(?:_|$).*"))return false;
-            }
-        }
-        if(!directional&&!source.isFullCube()&&!(source.getBlock() instanceof net.minecraft.block.BlockSlab))return false;
-        IBlockState cycle=source;
-        for(int i=0;i<4;i++)cycle=cycle.withRotation(Rotation.CLOCKWISE_90);
-        return cycle==source;
-    }
     /** Refuse unsupported private data before conversion; a craft must be parkable at every heading. */
     public static void validate(VehicleStructure source,VehicleWorld view){
         for(VehicleStructure.Cell cell:source.cells){
             try{
-                if(!supported(cell,view.getTileEntity(cell.pos)))throw new IllegalArgumentException("No safe rotation/data adapter for "+cell.state.getBlock().getRegistryName()+". Remove this block before entering vehicle mode.");
+                if(!MovingBlockSupport.supported(cell,view.getTileEntity(cell.pos)))throw new IllegalArgumentException("No lossless block-data adapter for "+cell.state.getBlock().getRegistryName()+". Remove this block before moving or copying the structure.");
+                if(cell.state.getMaterial().isLiquid() || cell.state.getBlockHardness(view,cell.pos)<0&&!(cell.state.getBlock() instanceof BlockControlledRamp))throw new IllegalArgumentException("Unsupported moving block: "+cell.state.getBlock().getRegistryName());
+                MovingBlockSupport.requireExactTileData(cell,view.getTileEntity(cell.pos));
                 IBlockState cycle=cell.state;
                 for(int i=0;i<4;i++)cycle=state(cycle,Rotation.CLOCKWISE_90);
                 if(cycle!=cell.state)throw new IllegalArgumentException("Block rotation does not round-trip: "+cell.state.getBlock().getRegistryName());
             }catch(LinkageError error){throw new IllegalArgumentException("Cannot safely rotate "+cell.state.getBlock().getRegistryName(),error);}
         }
-    }
-    private static boolean upperDoor(IBlockState state) {
-        return state.getBlock() instanceof net.minecraft.block.BlockDoor
-                && state.getValue(net.minecraft.block.BlockDoor.HALF)==net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER;
     }
     @SuppressWarnings({"rawtypes","unchecked"}) private static IBlockState state(IBlockState source,Rotation rotation) {
         IBlockState rotated=source.withRotation(rotation);
@@ -139,7 +67,7 @@ public final class VehicleRotation {
                 EnumFacing facing=rotation.rotate((EnumFacing)source.getValue(property));
                 if(property.getAllowedValues().contains(facing))rotated=rotated.withProperty(property,facing);
             }
-        if(inertBuilding(source)){
+        if(MovingBlockSupport.inertBuilding(source)){
             for(IProperty property:source.getPropertyKeys()){
                 String key=property.getName();EnumFacing side=null;
                 for(EnumFacing direction:EnumFacing.HORIZONTALS)if(direction.getName().equals(key))side=direction;
@@ -169,7 +97,7 @@ public final class VehicleRotation {
         Rotation rotation=Rotation.values()[turns]; // NONE, CLOCKWISE_90, CLOCKWISE_180, COUNTERCLOCKWISE_90
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(VehicleStructure.Cell before:source.cells) {
-            if(!supported(before,view.getTileEntity(before.pos)))throw new IllegalArgumentException("Rotation is not supported for "+before.state.getBlock().getRegistryName()+". Rotate the craft back to its original heading before exiting Taxi Mode.");
+            if(!MovingBlockSupport.supported(before,view.getTileEntity(before.pos)))throw new IllegalArgumentException("Rotation is not supported for "+before.state.getBlock().getRegistryName()+". Rotate the craft back to its original heading before exiting Taxi Mode.");
             BlockPos pos=cell(before.pos,width,depth,turns);NBTTagCompound data=before.tileData();
             if(data!=null) {
                 data.setInteger("x",pos.getX());data.setInteger("y",pos.getY());data.setInteger("z",pos.getZ());

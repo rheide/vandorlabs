@@ -19,6 +19,7 @@ import java.util.*;
 /** Real block/tile and buffer code, with an in-memory world and no GL context. */
 public final class NonRenderingChecks {
     public static void main(String[] args) {
+        com.vandorlabs.render.ConnectedSquareChecks.run();
         net.minecraft.init.Bootstrap.register();
         BlockAvailabilityChecks.run();
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,

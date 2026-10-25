@@ -120,6 +120,7 @@ public final class ArmPayload {
         if(hasOwnershipJournal())return false;
         if(!materialized)return true;World world=arm.getWorld();BlockPos origin=arm.getPos().add(placedOffset);
         if(!matchesPlaced(arm))throw new IllegalArgumentException("The arm attachment changed; return to its construction pose before replacing it");
+        EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actor(arm);for(VehicleStructure.Cell cell:blocks.cells){BlockPos at=origin.add(cell.pos);VehicleService.permission(authorizer,at);if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,world.getBlockState(at),authorizer)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");}
         Map<VehicleStructure.Cell,TileEntity> rollback=prepareTiles(world,origin);
         List<VehicleStructure.Cell> removed=new ArrayList<>();
         try{
@@ -164,6 +165,8 @@ public final class ArmPayload {
         if(Math.abs(displacement.x-Math.rint(displacement.x))>1e-8||Math.abs(displacement.y-Math.rint(displacement.y))>1e-8||Math.abs(displacement.z-Math.rint(displacement.z))>1e-8)return false;
         BlockPos target=offset.add(Math.round(displacement.x),Math.round(displacement.y),Math.round(displacement.z));World world=arm.getWorld();BlockPos origin=arm.getPos().add(target);
         for(VehicleStructure.Cell cell:blocks.cells){BlockPos at=origin.add(cell.pos);if(!GearAssembly.loaded(world,at)||!world.getWorldBorder().contains(at)||!world.isAirBlock(at))return false;}
+        EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actor(arm);
+        for(VehicleStructure.Cell cell:blocks.cells)VehicleService.permission(authorizer,origin.add(cell.pos));
         Map<VehicleStructure.Cell,TileEntity> prepared=prepareTiles(world,origin);
         List<VehicleStructure.Cell> installed=new ArrayList<>();
         try{for(VehicleStructure.Cell cell:blocks.cells){installed.add(cell);install(world,origin,cell,prepared.get(cell));}}
@@ -172,6 +175,7 @@ public final class ArmPayload {
             journal(world,origin,installed);
             throw failure;
         }
+        if(world instanceof net.minecraft.world.WorldServer)com.vandorlabs.tiles.WorldActionAuthorization.installed((net.minecraft.world.WorldServer)world,blocks,origin,authorizer.getUniqueID());
         placedOffset=target;materialized=true;return true;
     }
     public Vec3d transform(GearTileEntity arm,double progress,double x,double y,double z){

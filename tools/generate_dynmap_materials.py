@@ -9,6 +9,10 @@ ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'src/main/resources/assets/vandorlabs'
 MARKER='# Generated tile-aware material palette\n'
 BLOCKS={
+    'turntable_surface':'ProgrammableSurfaceRenderer',
+    'turntable_controller':'SurfaceControllerRenderer',
+    'copy_controller':'SurfaceControllerRenderer',
+    'programmable_pressure_plate':'PressurePlateRenderer',
     'programmable_slab':'ProgrammableSlabRenderer',
     'programmable_stairs':'ProgrammableShapeRenderer',
     'programmable_block':'ProgrammableShapeRenderer',
@@ -56,7 +60,18 @@ def palette(full=False,check=False):
     return textures
 
 def generate(check=False):
-    paths=palette(check=check)+palette(True,check=check)+['space_doors/medium/double_frame_metal','space_doors/medium/hinge','programmable_glass/metal_side']
+    full=palette(True,check=check)
+    paths=palette(check=check)+full+['space_doors/medium/double_frame_metal','space_doors/medium/hinge','programmable_glass/metal_side','turntable/turntable_block_bottom','__minecraft_black__']+[f'copy_controller/{face}' for face in ('bottom','top','left','right','front','back')]+[f'turntable/turntable_controller_{face}' for face in ('bottom','top_off','top_on','left','right','back','front_cw_off','front_ccw_off','front_cw_on','front_ccw_on')]
+    aspects=[]
+    for texture in full:
+        relative=Path(texture+'.png')
+        source=next(folder/relative for folder in (ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks',ROOT/'texture-packs/default/assets/vandorlabs/textures/blocks') if (folder/relative).exists())
+        with Image.open(source) as image:aspects.append(image.width/image.height)
+    aspect_path=ASSETS/'data/dynmap_material_aspects.json'
+    aspect_content=json.dumps(aspects,separators=(',',':'))+'\n'
+    if check:
+        if aspect_path.read_text()!=aspect_content:raise AssertionError('Stale Dynmap material aspects')
+    else:aspect_path.write_text(aspect_content)
     catalog=json.loads((ROOT/'generated-resources/assets/vandorlabs/data/blocks.json').read_text())
     omitted={entry['id'] for entry in catalog if entry.get('internal_model')}
     registered={entry['id'] for entry in catalog if not entry.get('retired') and not entry.get('internal_model') and not entry.get('programmable_only')}
@@ -70,7 +85,7 @@ def generate(check=False):
         if filename=='dynmap-models.txt':
             new=[f'customblock:id=%{block},state=*,class=com.vandorlabs.dynmap.{renderer}' for block,renderer in BLOCKS.items()]
         else:
-            new=[f'texture:id=housing_{i},filename=assets/vandorlabs/textures/blocks/{texture}.png,xcount=1,ycount=1' for i,texture in enumerate(paths)]
+            new=[f'texture:id=housing_{i},filename='+('assets/minecraft/textures/blocks/concrete_black.png' if texture=='__minecraft_black__' else f'assets/vandorlabs/textures/blocks/{texture}.png')+',xcount=1,ycount=1' for i,texture in enumerate(paths)]
             mapping=''.join(f',patch{i}=0:housing_{i}' for i in range(len(paths)))
             new += [f'block:id=%{block},state=*'+mapping+',transparency=SEMITRANSPARENT' for block in BLOCKS]
         content='\n'.join(old).rstrip()+'\n\n'+MARKER+'\n'.join(new)+'\n'

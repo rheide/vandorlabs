@@ -24,6 +24,7 @@ public final class Gear26RuntimeChecks {
     public static void run(WorldServer world,EntityPlayerMP actor){
         BlockPos root=new BlockPos(620,170,260);checks=0;
         try{
+            placementAndClearance(world,actor,root);
             inputTransition(world,actor,root);
             for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.GEAR_SWING_ARM,GearRegistry.GEAR_MOUNT,GearRegistry.LARGE_GEAR_EXTENDER,GearRegistry.LARGE_GEAR_SWING_ARM})for(EnumFacing face:EnumFacing.values())for(int count:new int[]{1,2,8}){
                 clear(world,root);GearTileEntity tile=arm(world,actor,root,block,face,count);
@@ -65,6 +66,42 @@ public final class Gear26RuntimeChecks {
             clear(world,root);world.setBlockState(root,TrackRegistry.COMPACT.getDefaultState());world.setBlockState(root.east(),Blocks.STONE_SLAB.getDefaultState().withProperty(net.minecraft.block.BlockSlab.HALF,net.minecraft.block.BlockSlab.EnumBlockHalf.TOP));TrackTile track=(TrackTile)world.getTileEntity(root);TrackWorld.rebuild(track);require((track.appearance().sideMask&2)!=0,"top slab selects native side bracket");
         }finally{clear(world,root);}
         System.out.println("[vandorlabs][reprolab] gear26-runtime PASS checks="+checks+" six-axis unsupported columns integral/fractional payloads reversal snapshots tracks and side brackets");
+    }
+    private static void placementAndClearance(WorldServer world,EntityPlayerMP actor,BlockPos root){
+        ItemStack original=actor.getHeldItemMainhand();boolean creative=actor.capabilities.isCreativeMode;int cases=0;
+        try{
+            actor.capabilities.isCreativeMode=true;
+            for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.LARGE_GEAR_EXTENDER,GearRegistry.GEAR_SWING_ARM,GearRegistry.LARGE_GEAR_SWING_ARM,GearRegistry.GEAR_MOUNT,GearRegistry.LARGE_GEAR_MOUNT})for(EnumFacing face:EnumFacing.values()){
+                clear(world,root);world.setBlockState(root.offset(face.getOpposite()),Blocks.STONE.getDefaultState(),2);
+                actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(block,16));
+                require(Item.getItemFromBlock(block).onItemUse(actor,world,root.offset(face.getOpposite()),net.minecraft.util.EnumHand.MAIN_HAND,face,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"normal ItemBlock placement from mounting face "+block.getRegistryName()+face);
+                GearTileEntity tile=(GearTileEntity)world.getTileEntity(root);require(tile!=null&&tile.mountDirection()==face&&tile.rebuild(),"clicked mount creates correct six-axis mechanism");
+                int max=block.kind()==GearBlock.Kind.MOUNT?1:3;
+                for(int length=1;length<=max;length++){
+                    Vec3d tip=new Vec3d(root).addVector(.5,.5,.5).add(new Vec3d(face.getDirectionVec()).scale(length-.5));Vec3d start=tip.add(new Vec3d(face.getDirectionVec()).scale(2)),end=tip.subtract(new Vec3d(face.getDirectionVec()).scale(1.5));
+                    RayTraceResult hit=GearInteractions.trace(world,start,end);BlockPos last=root.offset(face,length-1);
+                    require(hit!=null&&hit.getBlockPos().equals(last)&&hit.sideHit==face&&hit.hitVec.squareDistanceTo(tip)<1e-12,"outward tip click selects actual final arm cell and exact adjacent boundary "+block.getRegistryName()+face+length+" hit="+hit);
+                    RayTraceResult vanilla=world.rayTraceBlocks(start,end,false,false,false);require(vanilla!=null&&vanilla.getBlockPos().equals(last)&&vanilla.sideHit==face,"normal player block ray sees actual outward arm face "+block.getRegistryName()+face+length+" hit="+vanilla);
+                    actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(Blocks.STONE,16));
+                    require(Item.getItemFromBlock(Blocks.STONE).onItemUse(actor,world,hit.getBlockPos(),net.minecraft.util.EnumHand.MAIN_HAND,hit.sideHit,(float)(hit.hitVec.x-last.getX()),(float)(hit.hitVec.y-last.getY()),(float)(hit.hitVec.z-last.getZ()))==net.minecraft.util.EnumActionResult.SUCCESS,"ordinary block places directly from tip click");
+                    BlockPos payload=root.offset(face,length);require(world.getBlockState(payload).getBlock()==Blocks.STONE,"placed payload is outside tip, never inside arm");
+                    require(tile.preparePayloadMotion()&&tile.payload()!=null,"adjacent ordinary block is discovered on every mounting axis");
+                    for(AxisAlignedBB box:tile.payload().boxes(tile,1))require(!box.intersects(new AxisAlignedBB(last).shrink(1e-6)),"construction payload geometry leaves final arm cell clear");
+                    require(tile.payload().restore(tile,1),"placement fixture restores attachment without loss");
+                    // A column extension changes the mechanism's topology, so discard the test
+                    // attachment only after it is safely materialized in its original cell.
+                    require(tile.releaseAssembly(),"release placed attachment before lengthening column");world.removeTileEntity(payload);world.setBlockToAir(payload);
+                    if(length<max){actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(block,16));require(Item.getItemFromBlock(block).onItemUse(actor,world,last,net.minecraft.util.EnumHand.MAIN_HAND,face,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"clicked tip stacks another matching arm section");require(tile.rebuild()&&tile.assembly().columnHeight()==length+1,"stacked sections extend one shared mechanism");}
+                    else require(tile.rebuild(),"re-form final column");
+                    cases++;
+                }
+                if(block.kind()==GearBlock.Kind.EXTENDER){
+                    NBTTagCompound settings=tile.settings();settings.setDouble("ActiveExtension",-tile.assembly().columnHeight());boolean denied=false;try{tile.configure(settings);}catch(IllegalArgumentException expected){denied=true;}require(denied,"server rejects zero remaining reach");
+                    BlockPos source=root.offset(face,max);world.setBlockState(source,Blocks.STONE.getDefaultState(),2);settings=tile.settings();settings.setDouble("ActiveExtension",tile.minimumExtension());settings.setBoolean("Deployed",false);tile.configure(settings);for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==0&&tile.payload()!=null,"minimum one-block reach completes motion "+face+tile.error());for(AxisAlignedBB box:tile.payload().boxes(tile,0))require(!box.intersects(new AxisAlignedBB(root).shrink(1e-6)),"minimum reach cannot bury payload inside mounting base");tile.target(true);for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==1&&world.getBlockState(source).getBlock()==Blocks.STONE,"minimum reach reverses and restores the adjacent payload");
+                }
+            }
+        }finally{actor.capabilities.isCreativeMode=creative;actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,original);clear(world,root);}
+        System.out.println("[vandorlabs][reprolab] arm-placement-clearance PASS cases="+cases+" actual ItemBlock mounting/clicked-tip payloads six axes regular/large stacked columns min-one-block reach");
     }
     private static void inputTransition(WorldServer world,EntityPlayerMP actor,BlockPos root){
         clear(world,root);world.setBlockState(root,GearRegistry.GEAR_EXTENDER.getDefaultState());GearTileEntity tile=(GearTileEntity)world.getTileEntity(root);tile.operator(actor);

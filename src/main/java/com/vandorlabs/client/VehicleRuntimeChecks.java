@@ -53,7 +53,7 @@ public final class VehicleRuntimeChecks {
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();world.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seat,state,player,new ItemStack(ModBlocks.PILOT_SEAT));
         ((TileEntityPilotSeat)world.getTileEntity(seat)).setTaxiMode(false);
         world.setBlockState(seat.east(),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
-        world.setBlockState(seat.east(2),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);
+        world.setBlockState(seat.east(2),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);Block.getBlockFromName("vandorlabs:vehicle_controller").onBlockPlacedBy(world,seat.east(2),world.getBlockState(seat.east(2)),player,new ItemStack(Block.getBlockFromName("vandorlabs:vehicle_controller")));
         SignalSource source=new SignalSource();source.setWorld(world);source.setPos(base.west(3));com.vandorlabs.redstone.RedstoneChannels.register(source);
         try {
             TileEntityVehicleController pilot=(TileEntityVehicleController)world.getTileEntity(seat.east(2));pilot.setTaxiMode(false);pilot.setRedstoneChannel(5317);pilot.owner=player.getUniqueID();

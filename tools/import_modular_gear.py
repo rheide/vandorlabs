@@ -44,6 +44,7 @@ def main():
                 if rel=='models/block/gear/socket.json':
                     # Keep the moving socket's side faces inside the sleeve collar.
                     for element in data['elements']:
+                        element['faces']['down']=copy.deepcopy(element['faces']['up'])
                         for axis in (0,2):
                             element['from'][axis] += .25
                             element['to'][axis] -= .25

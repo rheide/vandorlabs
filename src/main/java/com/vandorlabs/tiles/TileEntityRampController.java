@@ -189,7 +189,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 ?state.getValue(BlockVandorDirectional.FACING):facing;
     }
     public void setPlacementDirection(EnumFacing direction){if(direction!=null&&direction.getAxis().isHorizontal()&&configuredFacing==null){configuredFacing=direction;markDirty();}}
-    public void setOwner(EntityPlayer player) { owner=player.getUniqueID(); markDirty(); }
+    public void setOwner(EntityPlayer player) { owner=player.getUniqueID();WorldActionAuthorization.authorize(this,player); markDirty(); }
     public double pose(double partial) {
         return moving?ControllerPlatform.pose(startPose,open,world.getTotalWorldTime()-startTick+partial,duration):startPose;
     }
@@ -318,7 +318,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         beltDistance=0;beltRunning=false;beltRequested=false;
         if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
         configuredFacing=direction;
-        owner=player.getUniqueID();
+        owner=player.getUniqueID();WorldActionAuthorization.authorize(this,player);
         sync();
         return evaluateSignal(true);
     }
@@ -427,7 +427,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if(platform.size()!=(x1-x0+1)*(z1-z0+1) || span*16<=treadPixels)
                 return fail("Escalators need a rectangular platform with at least two treads");
         }
-        EntityPlayer actor=owner==null?null:world.getPlayerEntityByUUID(owner);
+        EntityPlayer actor=null;if(world instanceof net.minecraft.world.WorldServer)try{actor=WorldActionAuthorization.permissionActor(this);}catch(IllegalArgumentException denied){return fail(denied.getMessage());}
         int min=Integer.MAX_VALUE,max=Integer.MIN_VALUE;
         List<BlockPos> selected=new ArrayList<>();
         for (ControllerPlatform.Cell c:platform) {
@@ -619,7 +619,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private boolean reserveStep(double from,double to) {
         Set<BlockPos> needed=occupied(from,to);
         Set<BlockPos> canopyObstacles=new HashSet<>();
-        EntityPlayer actor=owner==null?null:world.getPlayerEntityByUUID(owner);
+        EntityPlayer actor=null;if(world instanceof net.minecraft.world.WorldServer)try{actor=WorldActionAuthorization.permissionActor(this);}catch(IllegalArgumentException denied){return fail(denied.getMessage());}
         for (BlockPos p:needed) {
             if (!world.isBlockLoaded(p)) return fail("Movement waits for platform chunks");
             if (cells.contains(p)) {
@@ -699,8 +699,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             schedule();
         }
     }
-    @Override public void invalidate() { lifecycleDetached=true;com.vandorlabs.ramp.ControllerRecovery.controllerChanged(world,pos);RampCanopyCoordination.clearRampWait(this);RampCanopyCoordination.changed(world,pos); RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
-    @Override public void onChunkUnload() {
+    @Override public void invalidate() { WorldActionAuthorization.revoke(this); lifecycleDetached=true;com.vandorlabs.ramp.ControllerRecovery.controllerChanged(world,pos);RampCanopyCoordination.clearRampWait(this);RampCanopyCoordination.changed(world,pos); RedstoneChannels.unregister(this); com.vandorlabs.ramp.EscalatorActivity.unregister(this); super.invalidate(); }
+    @Override public void onChunkUnload() { WorldActionAuthorization.unloaded(this);
         lifecycleDetached=true;RampCanopyCoordination.clearRampWait(this);
         if(world!=null && !world.isRemote && beltRunning){beltRunning=false;beltTick=world.getTotalWorldTime();syncParts();}
         RedstoneChannels.unregister(this);com.vandorlabs.ramp.EscalatorActivity.unregister(this);super.onChunkUnload();
@@ -1246,7 +1246,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         tag=com.vandorlabs.ramp.RampCopyData.relocated(tag);
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
-        super.readFromNBT(tag);
+        WorldActionAuthorization.revoke(this);super.readFromNBT(tag);
         RampCanopyCoordination.clearRampWait(this);waitingForCanopy=tag.getBoolean("RampCanopyWaiting");canopyCommand=tag.getBoolean("RampCanopyCommand");requestingDeploy=canopyCommand;canopyRetry=false;
         canopyBlockers.clear();NBTTagList blockers=tag.getTagList("RampCanopyBlockers",10);for(int i=0;i<Math.min(2176,blockers.tagCount());i++)canopyBlockers.add(readPosition(blockers.getCompoundTagAt(i)));
         moatGeometryRevision=Math.max(0,Math.min(2,tag.getInteger("MoatGeometryRevision")));verticalMoatSources=tag.getBoolean("MoatVerticalSources");vehicleFrozen=tag.getBoolean("VehicleRampFrozen");moat=tag.getBoolean("MoatMode");

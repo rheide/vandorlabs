@@ -29,6 +29,14 @@ def records(path, prefix):
 def main():
     from generate_dynmap_materials import generate
     generate(check=True)
+    from generate_frame_machine_dynmap import generate as frame_machines
+    frame_machines(check=True)
+    from generate_coupler_slab import generate as generate_coupler_models
+    generate_coupler_models(check=True)
+    from generate_utility_dynmap import generate as generate_utilities
+    generate_utilities(check=True)
+    from generate_hex_thruster_dynmap import generate as generate_hex
+    generate_hex(check=True)
     model_path = ASSETS / "dynmap-models.txt"
     texture_path = ASSETS / "dynmap-texture.txt"
     models = records(model_path, "modellist")
@@ -117,7 +125,10 @@ def main():
         "programmable_console", "programmable_diagonal_screen",
         "programmable_half_input", "programmable_half_console",
         "programmable_input", "programmable_ramp", "industrial_table",
+        "compact_track", "armoured_track", "bogie_track",
     })
+    expected.update(spec['block'] for spec in json.loads((ASSETS/'data/frame_machines.json').read_text()))
+    expected.add('constructor_part')
     present = set(re.findall(r"^block:id=%([^,]+)", texture_text,
                              re.MULTILINE))
     missing_blocks = sorted(expected - present)

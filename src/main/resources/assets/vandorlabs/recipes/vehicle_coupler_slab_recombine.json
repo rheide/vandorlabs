@@ -1,0 +1,5 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [{"item": "vandorlabs:vehicle_coupler_slab"}, {"item": "vandorlabs:vehicle_coupler_slab"}],
+  "result": {"item": "vandorlabs:square_coupler"}
+}

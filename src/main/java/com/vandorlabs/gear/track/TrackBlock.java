@@ -47,19 +47,27 @@ public final class TrackBlock extends com.vandorlabs.gear.GearBlock {
     public TrackTopology.Style style() { return style; }
 
     @Override protected BlockStateContainer createBlockState() {
-        return new ExtendedBlockState(this, new IProperty<?>[] { FACING, ASSEMBLED }, new IUnlistedProperty<?>[] { TrackAppearance.PROPERTY });
+        return new ExtendedBlockState(this, new IProperty<?>[] { FACING, ASSEMBLED }, new IUnlistedProperty<?>[] { TrackAppearance.PROPERTY,TrackAppearance.STYLE });
     }
 
     @Override public IBlockState getStateFromMeta(int meta) { return super.getStateFromMeta(meta); }
     @Override public int getMetaFromState(IBlockState state) { return super.getMetaFromState(state); }
+    @Override public net.minecraft.item.Item getItemDropped(IBlockState state,java.util.Random random,int fortune){return net.minecraft.item.Item.getItemFromBlock(TrackRegistry.COMPACT);}
+    @Override public ItemStack getItem(World world,BlockPos pos,IBlockState state){return new ItemStack(TrackRegistry.COMPACT);}
+    private ItemStack configuredItem(TileEntity raw){ItemStack stack=new ItemStack(TrackRegistry.COMPACT);if(raw instanceof TrackTile){TrackTile track=(TrackTile)raw;com.vandorlabs.gear.GearTileEntity root=track.loadedController();net.minecraft.nbt.NBTTagCompound settings=(root==null?track:root).settings();settings.setInteger("TrackStyle",track.style().ordinal());stack.setTagInfo("ModularGearSettings",settings);}return stack;}
+    @Override public ItemStack getPickBlock(IBlockState state,net.minecraft.util.math.RayTraceResult hit,World world,BlockPos pos,EntityPlayer actor){return configuredItem(world.getTileEntity(pos));}
+    @Override public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){TileEntity tile=world.getTileEntity(pos);if(tile instanceof TrackTile&&((TrackTile)tile).hasRetainedPayload())return;drops.add(configuredItem(tile));}
+    @Override public void harvestBlock(World world,EntityPlayer actor,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){if(tile instanceof TrackTile&&((TrackTile)tile).recoveryDropped())return;net.minecraft.stats.StatBase stat=net.minecraft.stats.StatList.getBlockStats(this);if(stat!=null)actor.addStat(stat);actor.addExhaustion(.005F);spawnAsEntity(world,pos,configuredItem(tile));}
     @Override public int damageDropped(IBlockState state) { return 0; }
 
     @Override
     public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing side, float hitX,
                                             float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
-        return getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
+        return getStateForPlacement(world,pos,side,hitX,hitY,hitZ,meta,placer);
     }
 
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer){IBlockState clicked=world.getBlockState(pos.offset(side.getOpposite()));EnumFacing facing=clicked.getBlock() instanceof TrackBlock||com.vandorlabs.gear.GearAssembly.isExtender(clicked)?clicked.getValue(FACING):side.getAxis().isHorizontal()?side.rotateY():placer.getHorizontalFacing().getOpposite();return getDefaultState().withProperty(FACING,facing);}
+    public static TrackTopology.Style style(IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);return raw instanceof TrackTile?((TrackTile)raw).style():world.getBlockState(pos).getBlock() instanceof TrackBlock?((TrackBlock)world.getBlockState(pos).getBlock()).style():TrackTopology.Style.COMPACT;}
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
     @Override public TileEntity createNewTileEntity(World world, int meta) { return new TrackTile(); }
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }
@@ -69,7 +77,7 @@ public final class TrackBlock extends com.vandorlabs.gear.GearBlock {
 
     @Override
     public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return ((IExtendedBlockState) state).withProperty(TrackAppearance.PROPERTY, appearance(world, pos));
+        return ((IExtendedBlockState) state).withProperty(TrackAppearance.PROPERTY, appearance(world, pos)).withProperty(TrackAppearance.STYLE,style(world,pos).ordinal());
     }
 
     public static TrackAppearance appearance(IBlockAccess world, BlockPos pos) {
@@ -79,7 +87,7 @@ public final class TrackBlock extends com.vandorlabs.gear.GearBlock {
 
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         if(hand!=EnumHand.MAIN_HAND)return false;
-        if(player.isSneaking()||player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER){
+        if(player.getHeldItem(hand).isEmpty()||player.isSneaking()||player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER){
             if(!world.isRemote&&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos))player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_MODULAR_GEAR,world,pos.getX(),pos.getY(),pos.getZ());return true;
         }
         return super.onBlockActivated(world,pos,state,player,hand,side,x,y,z);
@@ -92,6 +100,7 @@ public final class TrackBlock extends com.vandorlabs.gear.GearBlock {
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state) {
         TileEntity tile = world.getTileEntity(pos);
+        if(tile instanceof TrackTile)((TrackTile)tile).rememberStyle();
         if (!world.isRemote && tile instanceof TrackTile) TrackWorld.releaseCachedGroup(world, (TrackTile) tile);
         super.breakBlock(world, pos, state);
         TrackWorld.requestAround(world, pos);
@@ -99,29 +108,22 @@ public final class TrackBlock extends com.vandorlabs.gear.GearBlock {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
-        double height = appearance(world, pos).mount == TrackAppearance.Mount.TOP_HIGH ? 1.5 : 1;
-        return new AxisAlignedBB(0, 0, 0, 1, height, 1);
+        return TrackGeometry.bounds(style(world,pos),state.getValue(FACING),appearance(world,pos));
     }
 
     @Override @Nullable
     public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return getBoundingBox(state, world, pos);
+        TileEntity raw=world.getTileEntity(pos);com.vandorlabs.gear.GearTileEntity controller=raw instanceof TrackTile?((TrackTile)raw).loadedController():null;return controller!=null&&controller.isOperational()?NULL_AABB:getBoundingBox(state,world,pos);
     }
 
     @Override
     public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox,
                                      List<AxisAlignedBB> boxes, @Nullable Entity entity, boolean actualState) {
         if(com.vandorlabs.gear.GearAssembly.isFoot(state)){TileEntity tile=world.getTileEntity(pos);if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).hasLoadedController()){super.addCollisionBoxToList(state,world,pos,entityBox,boxes,entity,actualState);return;}}
-        // Static construction collision is intentionally conservative, not a wheel/triangle simulation.
-        addCollisionBoxToList(pos, entityBox, boxes, new AxisAlignedBB(0, 0, 0, 1, 14.0 / 16, 1));
-        TrackAppearance a = appearance(world, pos);
-        if (a.mount != TrackAppearance.Mount.NONE) {
-            addCollisionBoxToList(pos, entityBox, boxes, new AxisAlignedBB(4.0 / 16, 14.0 / 16, 4.0 / 16,
-                    12.0 / 16, a.mount == TrackAppearance.Mount.TOP_HIGH ? 1.5 : 1, 12.0 / 16));
-        }
-        if ((a.sideMask & 1) != 0) addCollisionBoxToList(pos, entityBox, boxes, new AxisAlignedBB(5.0 / 16, 13.0 / 16, 0, 11.0 / 16, 15.0 / 16, 0.5));
-        if ((a.sideMask & 2) != 0) addCollisionBoxToList(pos, entityBox, boxes, new AxisAlignedBB(0.5, 13.0 / 16, 5.0 / 16, 1, 15.0 / 16, 11.0 / 16));
-        if ((a.sideMask & 4) != 0) addCollisionBoxToList(pos, entityBox, boxes, new AxisAlignedBB(5.0 / 16, 13.0 / 16, 0.5, 11.0 / 16, 15.0 / 16, 1));
-        if ((a.sideMask & 8) != 0) addCollisionBoxToList(pos, entityBox, boxes, new AxisAlignedBB(0, 13.0 / 16, 5.0 / 16, 0.5, 15.0 / 16, 11.0 / 16));
+        for(AxisAlignedBB box:TrackGeometry.boxes(style(world,pos),state.getValue(FACING),appearance(world,pos)))addCollisionBoxToList(pos,entityBox,boxes,box);
+    }
+    @Override public net.minecraft.util.math.RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,net.minecraft.util.math.Vec3d start,net.minecraft.util.math.Vec3d end){
+        TileEntity raw=world.getTileEntity(pos);if(raw instanceof TrackTile&&((TrackTile)raw).hasLoadedController())return super.collisionRayTrace(state,world,pos,start,end);
+        net.minecraft.util.math.RayTraceResult nearest=null;for(AxisAlignedBB box:TrackGeometry.boxes(style(world,pos),state.getValue(FACING),appearance(world,pos))){net.minecraft.util.math.RayTraceResult hit=box.offset(pos).calculateIntercept(start,end);if(hit!=null&&(nearest==null||start.squareDistanceTo(hit.hitVec)<start.squareDistanceTo(nearest.hitVec)))nearest=new net.minecraft.util.math.RayTraceResult(hit.hitVec,hit.sideHit,pos);}return nearest;
     }
 }

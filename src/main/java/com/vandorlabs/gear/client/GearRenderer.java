@@ -101,7 +101,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             if(tile.isSwingArmController()){
                 Affine hingeYaw=Affine.quarterTurn(tile.direction().ordinal());
                 draw("swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw))),x,y,z,light,buffer);
-                draw("swivel",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0).compose(hingeYaw))),x,y,z,light,buffer);
+                draw("swivel",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset()-(assembly.kind()==GearTopology.FootKind.TRACK?1/64D:0),0).compose(hingeYaw))),x,y,z,light,buffer);
             }else{
                 // The Large fixed wheel socket starts exactly at the solid body's
                 // underside. Its fully buried rod would duplicate that visible face.
@@ -109,7 +109,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                     draw("rod",offset.compose(armPose.compose(Affine.scaleY(pose.rodTopY()-pose.rodBottomY()-tile.footMountOffset(),pose.rodBottomY()+tile.footMountOffset()))),x,y,z,light,buffer);
                 // Bury the caps slightly into the rod and foot instead of sharing
                 // their exact horizontal planes (notably the ski crossbeam).
-                draw("socket",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0).compose(Affine.scaleY(1.25,-1/16D)))),x,y,z,light,buffer);
+                if(tile.isLandingAssembly()||!tile.isFixedMount())draw("socket",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0).compose(tile.isLandingAssembly()?Affine.scaleY(1.25,-1/16D):Affine.identity()))),x,y,z,light,buffer);
             }
         }
 
@@ -122,7 +122,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                 if(ts.getBlock() instanceof com.vandorlabs.gear.track.TrackBlock){
                     com.vandorlabs.gear.track.TrackBlock track=(com.vandorlabs.gear.track.TrackBlock)ts.getBlock();
                     com.vandorlabs.gear.track.TrackAppearance appearance=com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),source);
-                    for(com.vandorlabs.gear.track.TrackParts.Part piece:com.vandorlabs.gear.track.TrackParts.forCell(track.style(),tile.footFacing(),appearance)){
+                    for(com.vandorlabs.gear.track.TrackParts.Part piece:com.vandorlabs.gear.track.TrackParts.forCell(com.vandorlabs.gear.track.TrackBlock.style(tile.getWorld(),source),tile.footFacing(),com.vandorlabs.gear.track.TrackGeometry.onArm(appearance))){
                         draw("track/"+piece.model.getResourcePath().substring("block/track/".length()),feet.compose(Affine.translation(foot.x,foot.y,foot.z).compose(Affine.quarterTurn(piece.quarterTurns))),x,y,z,light,buffer);
                     }
                 }continue;

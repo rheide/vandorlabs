@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-Current development version: **2.6**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables](docs/turntables.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.5**. Development highlights: [programmers, general arms, tracks, couplers and new Core assemblies](docs/versions/version-2.6.md). See the [2.5 vehicle compatibility fix](docs/versions/version-2.5.md), [2.4 stability and network changes](docs/versions/version-2.4.md), [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).
+Current development version: **2.6**. See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables and programmable surfaces](docs/turntables.md), [copying](docs/copy-controller.md), [pressure plates](docs/programmable-pressure-plate.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Latest release: **2.5**. Development highlights: [copying, programmable surfaces, pressure plates, programmers, arms, tracks and Core assemblies](docs/versions/version-2.6.md). See the [2.5 vehicle compatibility fix](docs/versions/version-2.5.md), [2.4 stability and network changes](docs/versions/version-2.4.md), [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).
 
 **Vehicle systems:** [Hover controls](docs/pilot-seat-taxi.md), [Autopilot and Waypoints](docs/vehicle-autopilot.md), [wheels and vehicle compatibility](docs/vehicle-compatibility.md), and [Long Canopies with nine-wide joins](docs/canopies.md). See [screen placement on partial blocks](docs/partial-block-placement.md) for supported slab mounting.
 
@@ -345,6 +345,8 @@ For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder c
 Use `--focus bridge-machines` for the Core-frame matrix, integrated chip readers,
 navigation joining, display input/security gates, authorized dialog round trips,
 item padding and reverse Hover steering. This focus also runs in `verifyRelease`.
+Use `--focus utility26` for copier material transactions and recovery, signed channel offsets, shared lossless block data, programmable surfaces, pressure-plate sensitivities, programmer inventories and dialogs, generic arm payloads, tracks, couplers and the optional-mod block adapters. It includes rendered material, dialog and item-padding checks and runs in `verifyRelease`.
+
 The separate
 `--focus machine-build-docs` captures the asserted build stages used by the
 [multiblock guides](docs/multiblocks/README.md). `testDynmapRenderers` checks map

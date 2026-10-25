@@ -12,7 +12,7 @@ public final class BlockVehicleController extends BlockVandorDirectional {
     public BlockVehicleController(){super("vehicle_controller");setHardness(5);setResistance(10);setHarvestLevel("pickaxe",1);}
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,net.minecraft.entity.EntityLivingBase placer,net.minecraft.item.ItemStack stack){
         super.onBlockPlacedBy(world,pos,state,placer,stack);
-        if(!world.isRemote && world.getTileEntity(pos) instanceof com.vandorlabs.tiles.TileEntityVehicleController){com.vandorlabs.tiles.TileEntityVehicleController tile=(com.vandorlabs.tiles.TileEntityVehicleController)world.getTileEntity(pos);tile.owner=placer.getUniqueID();tile.markDirty();}
+        if(!world.isRemote && world.getTileEntity(pos) instanceof com.vandorlabs.tiles.TileEntityVehicleController){com.vandorlabs.tiles.TileEntityVehicleController tile=(com.vandorlabs.tiles.TileEntityVehicleController)world.getTileEntity(pos);tile.owner=placer.getUniqueID();if(placer instanceof net.minecraft.entity.player.EntityPlayer)com.vandorlabs.tiles.WorldActionAuthorization.authorize(tile,(net.minecraft.entity.player.EntityPlayer)placer);tile.markDirty();}
     }
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new com.vandorlabs.tiles.TileEntityVehicleController();}

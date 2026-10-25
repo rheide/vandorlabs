@@ -139,36 +139,27 @@ public class BlockPropulsionLight extends BlockVandor {
         return block instanceof BlockPropulsionLight ? block : null;
     }
 
-    public static void configureShape(World world, BlockPos pos, int shape) {
-        if (shape < 0 || shape > 2 || !world.isBlockLoaded(pos)) return;
-        IBlockState before = world.getBlockState(pos);
-        if (!(before.getBlock() instanceof BlockPropulsionLight)) return;
-        BlockPropulsionLight current = (BlockPropulsionLight) before.getBlock();
-        if (current.familyId().isEmpty() || current.shape() == shape) return;
-        Block target = shapeBlock(current.familyId(), shape, before.getValue(FACING),
-                0.25F, 0.25F, 0.25F);
-        if (target == null) return;
-        TileEntity tile = world.getTileEntity(pos);
-        NBTTagCompound saved = tile instanceof TileEntityRedstoneLight
-                ? tile.writeToNBT(new NBTTagCompound()) : null;
-        IBlockState after = target.getDefaultState()
-                .withProperty(FACING, before.getValue(FACING))
-                .withProperty(POWERED, before.getValue(POWERED));
-        if (!world.setBlockState(pos, after, 3)) return;
-        TileEntity replacement = world.getTileEntity(pos);
-        if (saved != null && replacement != tile && replacement instanceof TileEntityRedstoneLight) {
-            replacement.readFromNBT(saved);
-            replacement.markDirty();
-        }
-        if (current instanceof BlockConnectedPropulsionLight)
-            ((BlockConnectedPropulsionLight) current).refreshConnectedModels(world, pos,
-                    before.getValue(FACING));
-        if (target instanceof BlockConnectedPropulsionLight)
-            ((BlockConnectedPropulsionLight) target).refreshConnectedModels(world, pos,
-                    before.getValue(FACING));
-        world.checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK, pos);
-        world.notifyBlockUpdate(pos, after, after, 3);
+    static java.util.function.BiConsumer<String,BlockPos> shapeFailure;
+    private static void shapeStage(String phase,BlockPos pos){if(shapeFailure!=null&&System.getProperty("vandorlabs.reprolab")!=null)shapeFailure.accept(phase,pos);}
+    public static void configureShape(World world,BlockPos pos,int shape){configureShape(world,pos,shape,null);}
+    /** Convert the selected complete assembly as one transaction, retaining each physical settings tile. */
+    public static boolean configureShape(World world,BlockPos pos,int shape,EntityPlayer actor){
+        if(world.isRemote||shape<0||shape>2||!world.isBlockLoaded(pos))return false;
+        IBlockState before=world.getBlockState(pos);if(!(before.getBlock() instanceof BlockPropulsionLight))return false;BlockPropulsionLight current=(BlockPropulsionLight)before.getBlock();if(current.familyId().isEmpty()||current.shape()==shape)return true;
+        Block target=shapeBlock(current.familyId(),shape,before.getValue(FACING),.25F,.25F,.25F);if(target==null)return false;
+        java.util.List<BlockPos> members=shape!=2&&current instanceof BlockConnectedPropulsionLight?((BlockConnectedPropulsionLight)current).assemblyPositions(world,pos):java.util.Collections.singletonList(pos);
+        java.util.Map<BlockPos,IBlockState> states=new java.util.LinkedHashMap<>();java.util.Map<BlockPos,TileEntity> tiles=new java.util.LinkedHashMap<>();java.util.Map<BlockPos,NBTTagCompound> data=new java.util.LinkedHashMap<>();
+        for(BlockPos at:members){if(!world.isBlockLoaded(at)||world.getBlockState(at).getBlock()!=current||!(world.getTileEntity(at) instanceof TileEntityRedstoneLight))return false;if(actor!=null&&(actor.world!=world||actor.isDead||actor.isSpectator()||!world.isBlockModifiable(actor,at)||!actor.canPlayerEdit(at,EnumFacing.UP,actor.getHeldItemMainhand())))return false;states.put(at,world.getBlockState(at));TileEntity tile=world.getTileEntity(at);tiles.put(at,tile);data.put(at,tile.writeToNBT(new NBTTagCompound()));}
+        java.util.List<BlockPos> touched=new java.util.ArrayList<>();boolean success=false;BlockConnectedPropulsionLight.SHAPE_BATCH.set(BlockConnectedPropulsionLight.SHAPE_BATCH.get()+1);
+        try{
+            for(BlockPos at:members){touched.add(at);shapeStage("before-write",at);IBlockState original=states.get(at),after=target.getDefaultState().withProperty(FACING,original.getValue(FACING)).withProperty(POWERED,original.getValue(POWERED));if(!world.setBlockState(at,after,0)&&world.getBlockState(at)!=after)throw new IllegalStateException("Shape placement rejected");shapeStage("after-write",at);restoreSettingsTile(world,at,tiles.get(at),data.get(at));}
+            success=true;
+        }catch(RuntimeException failure){
+            for(int i=touched.size()-1;i>=0;i--){BlockPos at=touched.get(i);IBlockState original=states.get(at);if(!world.setBlockState(at,original,0)&&world.getBlockState(at)!=original)throw new IllegalStateException("Thruster shape rollback rejected at "+at,failure);restoreSettingsTile(world,at,tiles.get(at),data.get(at));}
+        }finally{int depth=BlockConnectedPropulsionLight.SHAPE_BATCH.get()-1;if(depth==0)BlockConnectedPropulsionLight.SHAPE_BATCH.remove();else BlockConnectedPropulsionLight.SHAPE_BATCH.set(depth);for(BlockPos at:members){IBlockState state=world.getBlockState(at);world.checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK,at);world.notifyBlockUpdate(at,states.get(at),state,3);}if(current instanceof BlockConnectedPropulsionLight)((BlockConnectedPropulsionLight)current).refreshConnectedModels(world,pos,before.getValue(FACING));if(target instanceof BlockConnectedPropulsionLight)((BlockConnectedPropulsionLight)target).refreshConnectedModels(world,pos,before.getValue(FACING));}
+        return success;
     }
+    private static void restoreSettingsTile(World world,BlockPos pos,TileEntity original,NBTTagCompound data){if(world.getTileEntity(pos)!=original){world.removeTileEntity(pos);original.validate();original.setWorld(world);original.setPos(pos);world.setTileEntity(pos,original);}original.readFromNBT(data);original.updateContainingBlockInfo();original.markDirty();}
 
     @Override public Item getItemDropped(IBlockState state, java.util.Random random,
             int fortune) {

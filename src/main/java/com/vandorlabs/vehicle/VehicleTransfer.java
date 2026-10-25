@@ -156,6 +156,8 @@ public final class VehicleTransfer {
     }
     /** Prevent ramp neighbour callbacks from deploying outside an atomic transfer footprint. */
     public static boolean isMutating(net.minecraft.world.World world){return MUTATING.get()==world;}
+    /** Share the existing callback and neighbour barrier with another durable ownership transfer. */
+    public static AutoCloseable atomic(WorldServer world){return new Transaction(world);}
     /** Callback delivery resumes only after the complete nested conversion or rollback is installed. */
     private static final class Transaction implements AutoCloseable {
         private final WorldServer world,previous;
@@ -197,7 +199,7 @@ public final class VehicleTransfer {
         tag.setLong("Origin",origin.toLong());tag.setUniqueId("Entity",entity.getUniqueID());tag.setBoolean("Parking",park);
         tag.setTag("OccupiedPilotSeats",entity.occupiedSeatAssignments());if(entity.taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",entity.taxiReturnSeat.toLong());
         tag.setBoolean("TaxiReturnPending",entity.taxiReturnPending);if(entity.taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",entity.taxiReturnActor);
-        tag.setTag("AutopilotNavigation",entity.autopilot.write());
+        if(entity.couplingActor()!=null)tag.setUniqueId("CouplingActor",entity.couplingActor());tag.setTag("AutopilotNavigation",entity.autopilot.write());
         tag.setFloat("Yaw",entity.rotationYaw);tag.setDouble("X",entity.posX);tag.setDouble("Y",entity.posY);tag.setDouble("Z",entity.posZ);return tag;
     }
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin)throws Exception {return assemble(world,structure,origin,null);}
@@ -208,12 +210,16 @@ public final class VehicleTransfer {
         boolean forceHover=structure.hasNonWheeledGear&&!VehicleSkiTraction.canStart(world,structure,origin);
         if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice; other landing gear needs three lift blocks for Hover.");
         VehicleRotation.validate(structure,new VehicleWorld(world,structure));
-        if(structure.gearCount<3)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports.");
+        if(structure.gearCount<3){
+            VehicleScan supports=VehicleScan.attachment(new VehicleWorld(world,structure),structure.seat,Collections.emptySet());
+            while(!supports.step(256)){}
+            if(supports.error!=null||supports.trackSupportCount()<2)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports, or two track blocks.");
+        }
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         Work work=ACTIVE.get();EntityGroundVehicle entity;
         if(work!=null){if(work.assembled==null){VehicleCollision prepared=geometry(world,structure);work.assembled=new EntityGroundVehicle(world);work.assembled.install(structure,prepared);}entity=work.assembled;}
         else{entity=new EntityGroundVehicle(world);entity.install(structure);}
-        entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
+        entity.recordCouplingActor(actor);entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
         if(forceHover && !entity.setHover(true))throw new IllegalArgumentException("Unable to enter Hover for non-wheeled landing gear.");
         Map<net.minecraft.entity.Entity,BlockPos> seated=new LinkedHashMap<>();
         List<com.vandorlabs.entity.EntityChairSeat> oldSeats=new ArrayList<>();
@@ -286,7 +292,7 @@ public final class VehicleTransfer {
             if(work!=null)work.mutated=true;
             java.util.List<net.minecraftforge.common.util.BlockSnapshot> replaced=new ArrayList<>();
             for(VehicleStructure.Cell cell:placed.cells)replaced.add(net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(world,origin.add(cell.pos)));
-            blocks(world,placed,origin,true);
+            blocks(world,placed,origin,true);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,placed,origin,player!=null?player.getUniqueID():entity.couplingActor());
             if(player!=null && net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent(replaced,
                     world.getBlockState(origin.down()),player,net.minecraft.util.EnumHand.MAIN_HAND)))throw new IOException("A protection rule prevented parking.");
             VehicleOwnership.update(world,entity.getUniqueID(),entity.transferEpoch+1,false);
@@ -326,11 +332,11 @@ public final class VehicleTransfer {
             blocks(world,VehicleStructure.read(undo.getCompoundTag("ParkedCraft")),origin,false);
             entity.isDead=false;entity.install(work.beforeStructure,work.beforeCollision);
             entity.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));entity.taxiReturnPending=undo.getBoolean("TaxiReturnPending");entity.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;entity.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
-            entity.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));entity.rotationYaw=undo.getFloat("Yaw");entity.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));
+            entity.couplingActor=undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null;entity.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));entity.rotationYaw=undo.getFloat("Yaw");entity.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));
             if(!world.spawnEntity(entity))throw new IOException("Recovery vehicle spawn canceled; journal retained.");
         }else{
             if(work.assembled!=null)world.removeEntityDangerously(work.assembled);
-            blocks(world,VehicleStructure.read(undo.getCompoundTag(undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft")),undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);
+            blocks(world,VehicleStructure.read(undo.getCompoundTag(undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft")),undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,VehicleStructure.read(undo.getCompoundTag(undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft")),undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null);
         }
         work.rolledBack=true;work.rollbackNotice=true;work.committed=true;
     }
@@ -356,13 +362,13 @@ public final class VehicleTransfer {
             EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.setUniqueId(id);restored.install(structure);
             restored.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));restored.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;
             restored.taxiReturnPending=undo.getBoolean("TaxiReturnPending");restored.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
-            restored.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));
+            restored.couplingActor=undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null;restored.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));
             restored.transferEpoch=VehicleOwnership.update(world,id,1,true);
             restored.rotationYaw=undo.getFloat("Yaw");
             restored.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));
             if(!world.spawnEntity(restored))throw new IOException("Recovery vehicle spawn cancelled; journal retained.");
             restored.signals.tick();
-        }else {VehicleOwnership.update(world,id,1,false);blocks(world,undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure,undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);}
+        }else {VehicleOwnership.update(world,id,1,false);blocks(world,undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure,undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,restoreSource,restoreOrigin,undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null);}
         flush(world);Files.deleteIfExists(journal(world));
         }
     }

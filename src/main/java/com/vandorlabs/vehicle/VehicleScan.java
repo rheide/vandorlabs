@@ -16,10 +16,12 @@ import java.util.*;
 /** Bounded, server-thread flood fill. Gear cells terminate only their own branch. */
 public final class VehicleScan {
     private final World world;
+    private final boolean attachment;
+    private final Set<BlockPos> excluded;
     private final int maxBlocks=com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks();
     private final BlockPos start;
     private final ArrayDeque<BlockPos> queue = new ArrayDeque<>();
-    private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>();
+    private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>(), trackSupports=new HashSet<>();
     private final Map<BlockPos, VehicleStructure.Cell> cells = new LinkedHashMap<>();
     private final Set<BlockPos> rampSections=new HashSet<>(),overhangContacts=new HashSet<>(),gearAssemblies=new HashSet<>();
     private int contactChecks;
@@ -30,14 +32,29 @@ public final class VehicleScan {
     public VehicleStructure result;
     public final Set<BlockPos> airBoundary=new HashSet<>();
     public String error;
-    public VehicleScan(World world, BlockPos start) {
-        this.world=world; this.start=start.toImmutable(); enqueue(this.start);
-        minX=maxX=start.getX(); minY=maxY=start.getY(); minZ=maxZ=start.getZ();
+    public VehicleScan(World world, BlockPos start) {this(world,start,false,Collections.emptySet());}
+    /** Scan an exact world fragment using ordinary vehicle boundaries and complete-assembly checks.
+     * Excluded cells belong to the existing craft and may never be captured as part of this fragment. */
+    public static VehicleScan attachment(World world,BlockPos seed,Set<BlockPos> excluded){
+        if(excluded==null||excluded.size()>VehicleStructure.MAX_BLOCKS)throw new IllegalArgumentException("Invalid attachment exclusion set");
+        if(excluded.contains(seed))throw new IllegalArgumentException("The opposing coupler is inside the existing vehicle");
+        return new VehicleScan(world,seed,true,excluded);
     }
-    private void enqueue(BlockPos pos){BlockPos key=pos.toImmutable();if(scheduled.add(key))queue.add(key);}
+    private VehicleScan(World world,BlockPos start,boolean attachment,Set<BlockPos> excluded){
+        this.world=world;this.attachment=attachment;Set<BlockPos> immutable=new HashSet<>();for(BlockPos at:excluded)immutable.add(at.toImmutable());this.excluded=Collections.unmodifiableSet(immutable);
+        this.start=start.toImmutable();enqueue(this.start);
+        minX=maxX=start.getX();minY=maxY=start.getY();minZ=maxZ=start.getZ();
+    }
+    private void enqueue(BlockPos pos){BlockPos key=pos.toImmutable();if(!excluded.contains(key)&&scheduled.add(key))queue.add(key);}
+    private void requiredMember(BlockPos pos){require(!excluded.contains(pos),"Attachment cuts an existing vehicle assembly at "+pos);}
+    private void enqueueMember(BlockPos pos){requiredMember(pos);enqueue(pos);}
     public BlockPos startPosition(){return start;}
+    public int supportCount(){return Math.max(gears.size(),trackSupports.size());}
+    public int trackSupportCount(){return trackSupports.size();}
+    public boolean hasRequiredSupports(){return gears.size()>=3||trackSupports.size()>=2;}
     private void require(boolean test, String reason) { if(!test) throw new IllegalArgumentException(reason); }
     private void support(BlockLandingGear block,BlockPos root) {
+        if(attachment)return;
         double bottom=block.vehicleBottomY(world,root);
         require(Double.isFinite(bottom),"Cannot determine landing gear bottom.");
         require(gearBottomY==null || Math.abs(gearBottomY-bottom)<.001,
@@ -45,11 +62,43 @@ public final class VehicleScan {
         gearBottomY=bottom;
     }
     private void linked(BlockPos p, Block expected) {
+        requiredMember(p);
         require(world.isBlockLoaded(p), "A component crosses an unloaded chunk.");
         require(world.getBlockState(p).getBlock()==expected, "Incomplete "+expected.getLocalizedName()+": expected a matching part at "+p.getX()+", "+p.getY()+", "+p.getZ()+" but found "+world.getBlockState(p).getBlock().getLocalizedName()+". Replace or complete this component.");
         enqueue(p);
     }
-    private static boolean slab(Block block){return block instanceof net.minecraft.block.BlockSlab || block instanceof BlockProgrammableSlab || block instanceof BlockProgrammableLightSlab || block instanceof BlockRampControllerSlab;}
+    /** A fragment cannot borrow a reserved owner or an inventory from the excluded hull. */
+    private void attachmentComponents(BlockPos p,IBlockState state,TileEntity tile){
+        if(!attachment)return;
+        Block block=state.getBlock();
+        if(block instanceof net.minecraft.block.BlockChest)for(EnumFacing side:EnumFacing.HORIZONTALS){BlockPos next=p.offset(side);require(world.isBlockLoaded(next),"Chest attachment touches an unloaded chunk");if(world.getBlockState(next).getBlock()==block)linked(next,block);}
+        if(block instanceof net.minecraft.block.BlockBed)linked(p.offset(state.getValue(net.minecraft.block.BlockBed.PART)==net.minecraft.block.BlockBed.EnumPartType.FOOT?state.getValue(net.minecraft.block.BlockBed.FACING):state.getValue(net.minecraft.block.BlockBed.FACING).getOpposite()),block);
+        if(block instanceof net.minecraft.block.BlockDoublePlant)linked(state.getValue(net.minecraft.block.BlockDoublePlant.HALF)==net.minecraft.block.BlockDoublePlant.EnumBlockHalf.UPPER?p.down():p.up(),block);
+        if(block instanceof net.minecraft.block.BlockPistonBase&&state.getValue(net.minecraft.block.BlockPistonBase.EXTENDED))linked(p.offset(state.getValue(net.minecraft.block.BlockPistonBase.FACING)),net.minecraft.init.Blocks.PISTON_HEAD);
+        if(block instanceof net.minecraft.block.BlockPistonExtension){BlockPos owner=p.offset(state.getValue(net.minecraft.block.BlockPistonExtension.FACING).getOpposite());requiredMember(owner);require(world.isBlockLoaded(owner)&&world.getBlockState(owner).getBlock() instanceof net.minecraft.block.BlockPistonBase,"Incomplete piston attachment");enqueueMember(owner);}
+        if(state.getBlock() instanceof com.vandorlabs.programmer.ProgrammerBlock){
+            com.vandorlabs.programmer.ProgrammerTile root=com.vandorlabs.programmer.ProgrammerBlock.at(world,p);
+            require(root!=null,"Incomplete programmer in attached section");
+            for(int part=0;part<4;part++){
+                BlockPos member=com.vandorlabs.programmer.ProgrammerBlock.cell(root.getPos(),root.getProgrammerFacing(),part);requiredMember(member);
+                require(world.isBlockLoaded(member),"Programmer attachment touches an unloaded chunk");IBlockState other=world.getBlockState(member);
+                require(other.getBlock()==state.getBlock()&&other.getValue(com.vandorlabs.programmer.ProgrammerBlock.PART)==part&&other.getValue(com.vandorlabs.programmer.ProgrammerBlock.FACING)==root.getProgrammerFacing(),"Incomplete programmer in attached section");enqueueMember(member);
+            }
+        }
+        if(tile instanceof TileEntityConstructorPart){
+            BlockPos owner=((TileEntityConstructorPart)tile).owner();requiredMember(owner);require(world.isBlockLoaded(owner),"Core attachment touches an unloaded chunk");TileEntity raw=world.getTileEntity(owner);
+            require(raw instanceof TileEntityConstructor&&((TileEntityConstructor)raw).formed(),"Orphaned Core reservation in attached section");enqueueMember(owner);
+        }
+        if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).formed()){
+            TileEntityConstructor root=(TileEntityConstructor)tile;BlockConstructorCore core=root.core();
+            for(int x=0;x<core.width;x++)for(int y=0;y<core.height;y++)for(int z=0;z<core.depth;z++){
+                BlockPos member=root.cell(x,y,z);requiredMember(member);require(world.isBlockLoaded(member),"Core attachment touches an unloaded chunk");
+                if(!member.equals(p)){TileEntity raw=world.getTileEntity(member);require(raw instanceof TileEntityConstructorPart&&((TileEntityConstructorPart)raw).owner().equals(p),"Incomplete Core reservation in attached section");}
+                enqueueMember(member);
+            }
+        }
+    }
+    private static boolean slab(Block block){return block instanceof net.minecraft.block.BlockSlab || block instanceof BlockProgrammableSlab || block instanceof BlockProgrammableLightSlab || block instanceof BlockRampControllerSlab || block instanceof com.vandorlabs.coupler.BlockCouplerSlab;}
     /** Empty half-block faces do not bridge the craft to the hangar floor. */
     public static boolean touches(World world,BlockPos p,IBlockState state,EnumFacing face){
         BlockPos other=p.offset(face);if(!world.isBlockLoaded(other))return true;
@@ -82,7 +131,7 @@ public final class VehicleScan {
             require(Double.isFinite(contact.minX)&&Double.isFinite(contact.maxX)&&Double.isFinite(contact.minY)&&Double.isFinite(contact.maxY)&&Double.isFinite(contact.minZ)&&Double.isFinite(contact.maxZ)&&contact.maxX-contact.minX<=64&&contact.maxY-contact.minY<=64&&contact.maxZ-contact.minZ<=64,"Invalid attachment geometry.");
             for(BlockPos cursor:BlockPos.getAllInBox(new BlockPos(contact.minX,contact.minY,contact.minZ),new BlockPos(contact.maxX,contact.maxY,contact.maxZ))){
                 require(++contactChecks<=maxBlocks*128,"Attachment discovery limit exceeded.");
-                if(scheduled.contains(cursor))continue;
+                if(excluded.contains(cursor)||scheduled.contains(cursor))continue;
                 require(world.isBlockLoaded(cursor),"Overhanging geometry touches an unloaded chunk.");
                 IBlockState state=world.getBlockState(cursor);if(state.getBlock().isAir(state,world,cursor))continue;
                 BlockPos at=cursor.toImmutable();List<net.minecraft.util.math.AxisAlignedBB> boxes=shapes.get(at);
@@ -102,14 +151,14 @@ public final class VehicleScan {
         ArrayDeque<BlockPos> pending=new ArrayDeque<>();Map<BlockPos,BlockPos> previous=new HashMap<>();
         pending.add(first);previous.put(first,foot);
         while(!pending.isEmpty()&&previous.size()<=256){
-            BlockPos p=pending.removeFirst();if(!world.isBlockLoaded(p))continue;
+            BlockPos p=pending.removeFirst();if(excluded.contains(p)||!world.isBlockLoaded(p))continue;
             IBlockState state=world.getBlockState(p);Block block=state.getBlock();
             if(block.isAir(state,world,p)||state.getMaterial().isLiquid()||state.getBlockHardness(world,p)<0)continue;
             TileEntity raw=world.getTileEntity(p);
             if(raw instanceof com.vandorlabs.gear.GearTileEntity){
                 com.vandorlabs.gear.GearTileEntity lower=((com.vandorlabs.gear.GearTileEntity)raw).loadedController();
                 boolean terminal=raw instanceof com.vandorlabs.gear.track.TrackTile&&lower==null;
-                if(terminal||lower!=null&&lower!=upper&&lower.isOperational()&&lower.isLandingAssembly()&&lower.mountDirection()==EnumFacing.DOWN&&lower.fullyDeployed()){
+                if(terminal||lower!=null&&lower!=upper&&lower.isOperational()&&lower.isLandingAssembly()&&lower.mountDirection()==EnumFacing.DOWN&&lower.landingDeployed()){
                     List<BlockPos> path=new ArrayList<>();for(BlockPos at=p;!at.equals(foot);at=previous.get(at))path.add(at);return path;
                 }
                 if(lower==upper)continue;
@@ -117,7 +166,7 @@ public final class VehicleScan {
             for(EnumFacing side:EnumFacing.values()){
                 if(side==EnumFacing.UP)continue;
                 BlockPos next=p.offset(side);
-                if(next.getY()<foot.getY()-16||Math.abs(next.getX()-foot.getX())>8||Math.abs(next.getZ()-foot.getZ())>8||previous.containsKey(next))continue;
+                if(next.getY()<foot.getY()-16||Math.abs(next.getX()-foot.getX())>8||Math.abs(next.getZ()-foot.getZ())>8||previous.containsKey(next)||excluded.contains(next))continue;
                 if(touches(world,p,state,side)){previous.put(next,p);pending.add(next);}
             }
         }
@@ -136,6 +185,7 @@ public final class VehicleScan {
                 require(!state.getMaterial().isLiquid() && block!=net.minecraft.init.Blocks.BEDROCK
                         && (state.getBlockHardness(world,p)>=0 || block instanceof BlockControlledRamp), "Unsupported block: "+block.getLocalizedName());
                 TileEntity tile=world.getTileEntity(p);
+                attachmentComponents(p,state,tile);
                 if(tile instanceof TileEntityTurntableController)require(((TileEntityTurntableController)tile).captureId==null&&((TileEntityTurntableController)tile).layout==null,"Restore the turntable contents and detach its controller before vehicle assembly.");
                 if(tile instanceof TileEntityTurntableSurface)require(((TileEntityTurntableSurface)tile).owner==null,"Detach the turntable surface before vehicle assembly.");
                 if(block instanceof BlockVehicleController)require(++controllers<=1,"A craft can contain at most one Vehicle Controller.");
@@ -158,9 +208,9 @@ public final class VehicleScan {
                     TileEntityCockpit cockpit=(TileEntityCockpit)tile;
                     for(BlockPos member:cockpit.data().cells(p,cockpit.facing()))if(!member.equals(p)){
                         require(world.isBlockLoaded(member),"Cockpit touches an unloaded chunk.");TileEntity part=world.getTileEntity(member);
-                        require(part instanceof TileEntityCockpitPart && com.vandorlabs.cockpit.CockpitAssembly.root(world,member)==cockpit,"Incomplete cockpit reservation.");enqueue(member);
+                        require(part instanceof TileEntityCockpitPart && com.vandorlabs.cockpit.CockpitAssembly.root(world,member)==cockpit,"Incomplete cockpit reservation.");enqueueMember(member);
                     }
-                }else if(tile instanceof TileEntityCockpitPart){TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(world,p);require(cockpit!=null,"Orphaned cockpit reservation.");enqueue(cockpit.getPos());}
+                }else if(tile instanceof TileEntityCockpitPart){TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(world,p);require(cockpit!=null,"Orphaned cockpit reservation.");enqueueMember(cockpit.getPos());}
                 if(block instanceof BlockPilotSeat) {
                     boolean upper=state.getValue(BlockPilotSeat.UPPER);
                     if(!upper){seats++;if(pilot==null || p.equals(start))pilot=p;}
@@ -181,10 +231,12 @@ public final class VehicleScan {
                     require(!ramp.isMoving(),"Wait for the ramp to stop moving before assembly.");
                     {
                         for(BlockPos source:ramp.vehicleSources()){
+                            requiredMember(source);
                             require(world.isBlockLoaded(source),"Load all ramp source chunks before assembly.");
                             TileEntity part=world.getTileEntity(source);require(world.isAirBlock(source) || part instanceof TileEntityControlledRamp && ramp.owns((TileEntityControlledRamp)part),"Ramp source changed; inspect again.");
                         }
                         for(BlockPos section:ramp.vehicleCells()) {
+                            requiredMember(section);
                             require(world.isBlockLoaded(section),"Load all ramp section chunks before assembly.");
                             TileEntity part=world.getTileEntity(section);
                             require(part instanceof TileEntityControlledRamp && ramp.owns((TileEntityControlledRamp)part),"Ramp section changed; inspect again.");
@@ -211,7 +263,7 @@ public final class VehicleScan {
                 if(tile instanceof com.vandorlabs.gear.track.TrackTile&&((com.vandorlabs.gear.track.TrackTile)tile).loadedController()==null){
                     com.vandorlabs.gear.track.TrackTile track=(com.vandorlabs.gear.track.TrackTile)tile;
                     BlockPos leader=track.leader()==null?p:track.leader();
-                    if(gears.add(leader))support((BlockLandingGear)block,p);
+                    trackSupports.add(p);if(gears.add(p))support((BlockLandingGear)block,p);
                     if(world.isBlockLoaded(leader)&&world.getTileEntity(leader) instanceof com.vandorlabs.gear.track.TrackTile)
                         for(BlockPos member:((com.vandorlabs.gear.track.TrackTile)world.getTileEntity(leader)).trackMembers())linked(member,block);
                     // A side-mounted track may be connected only to a slab beside its bracket.
@@ -223,15 +275,17 @@ public final class VehicleScan {
                     require(gear!=null&&gear.isOperational(),"Complete the connected arm assembly before vehicle capture.");
                     if(!gearAssemblies.add(gear.getPos()))continue;
                     boolean landing=gear.isLandingAssembly()&&gear.mountDirection()==EnumFacing.DOWN;
-                    require(!landing||gear.fullyDeployed(),"Deploy the modular landing gear before assembly.");
+                    require(!landing||gear.landingDeployed(),"Deploy the modular landing gear before assembly.");
+                    boolean nestedTracks=false;
                     if(landing)for(BlockPos column:gear.columns()){
                         BlockPos at=gear.getPos().add(column),foot=at.down(gear.assembly().columnHeight());
                         List<BlockPos> lower=nestedLandingPath(gear,foot);
                         if(lower.isEmpty()){if(gears.add(at))support((BlockLandingGear)world.getBlockState(at).getBlock(),at);}
-                        else for(BlockPos next:lower)enqueue(next);
+                        else{nestedTracks=true;for(BlockPos next:lower)enqueue(next);}
                     }
+                    if(landing&&!nestedTracks)for(BlockPos member:gear.members())if(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.track.TrackBlock)trackSupports.add(member);
                     for(BlockPos member:gear.members()){
-                        require(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.GearBlock,"Incomplete modular arm.");enqueue(member);
+                        require(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.GearBlock,"Incomplete modular arm.");enqueueMember(member);
                         for(EnumFacing side:EnumFacing.values()){
                             BlockPos at=member.offset(side);if(!world.isBlockLoaded(at))continue;
                             TileEntity cover=world.getTileEntity(at);
@@ -291,15 +345,18 @@ public final class VehicleScan {
                 if(!(block instanceof BlockControlledRamp))for(EnumFacing face:EnumFacing.values())if(touches(world,p,state,face))enqueue(p.offset(face));
             }
             if(queue.isEmpty()) {
-                require(seats>=1, "A craft must contain at least one Pilot Seat.");
-                require(gears.size()>=3, "A craft needs at least three landing gear or wheel supports.");
+                require(!cells.isEmpty(),"The opposing coupler section contains no blocks.");
+                if(!attachment){require(seats>=1, "A craft must contain at least one Pilot Seat.");
+                    require(hasRequiredSupports(), "A craft needs at least three landing gear or wheel supports, or two track blocks.");}
                 origin=new BlockPos(minX,minY,minZ);
                 List<VehicleStructure.Cell> local=new ArrayList<>();
                 for(VehicleStructure.Cell cell:cells.values())local.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,
                         cell.tileData()==null?null:VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin))));
-                result=new VehicleStructure(local,pilot.subtract(origin),world.getBlockState(pilot).getValue(BlockPilotSeat.FACING),gears.size());
-                result=VehicleControlSettings.migratePlaced(world,origin,result);
-                VehicleRotation.validate(result,new VehicleWorld(world,result));
+                if(attachment)result=VehicleStructure.display(local);
+                else{result=new VehicleStructure(local,pilot.subtract(origin),world.getBlockState(pilot).getValue(BlockPilotSeat.FACING),supportCount());
+                    result=VehicleControlSettings.migratePlaced(world,origin,result);}
+                VehicleWorld view=new VehicleWorld(world,result);view.origin=origin;
+                MovingBlockSupport.validate(result,view);
                 result.encode(); // Enforce the byte limit before a preview or mutation.
             }
         } catch(Exception e) { result=null;error=e.getMessage()==null?"Cannot capture this structure.":e.getMessage(); }

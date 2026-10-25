@@ -1,6 +1,6 @@
 # Vehicle block compatibility
 
-Vehicle inspection checks rotation before it allows assembly. An unsupported block leaves the craft and its tile data in the world, and the error identifies its registry name. A mod is never approved wholesale: different blocks in the same mod can have different requirements.
+Vehicle Mode, Turntable Controller and [Copy Controller](copy-controller.md) share one supported-block policy. Each capture validates complete block properties and an exact persistent tile-data round trip; unsupported or lossy data is refused before changing the structure. Vehicle inspection also checks rotation before it allows assembly. An unsupported block leaves the craft and its tile data in the world, and the error identifies its registry name. A mod is never approved wholesale: different blocks in the same mod can have different requirements.
 
 The snapshot retains complete block properties and persistent tile NBT, including inventories, energy, owner information and saved configuration. Foreign machines do not run while carried. Restoring their saved data does not imply that a machine, cable, pipe or external network can function in a vehicle.
 
@@ -34,9 +34,13 @@ Autopilot uses a cyan navigation texture, Waypoint an amber route marker, and Ve
 
 `vandorlabs-blocks.cfg` has a `vehicles.maxBlocks` setting, default 4096 and range 1â€“32768. It limits new assemblies. Lowering it does not prevent existing vehicles from being restored. The 64-block limit on each axis, 4 MiB snapshot limit and collision-complexity limit still apply.
 
-Small and Medium Wheels occupy one block. Large Wheels reserve a 2Ã—2 vertical footprint. Place a wheel on a vertical side of a slab; the wheel faces outward from that side. Large wheels need free space above and to the right of the placement point when viewed from outside. Wheels count as landing supports, including mixed wheel/landing-gear craft when their actual bottom surfaces have the same height. At least three independent supports are required. Downward-facing propulsion blocks also terminate discovery and count as supports, so inspection does not follow their exhaust face into the ground. [Square Couplers](couplers.md) can delimit connected vehicle sections. Breaking any large-wheel part removes the whole wheel. In Taxi mode, wheels and landing-gear tyres roll with actual travel, reverse with the craft and swivel with steering. Stopping holds their rotation; Hover centers steering and stops rolling.
+Small and Medium Wheels occupy one block. Large Wheels reserve a 2Ã—2 vertical footprint. Place a wheel on a vertical side of a slab; the wheel faces outward from that side. Large wheels need free space above and to the right of the placement point when viewed from outside. Wheels count as landing supports, including mixed wheel/landing-gear craft when their actual bottom surfaces have the same height. At least three independent wheel/landing supports or two physical Track blocks are required. Connected tracks count individually. Downward-facing propulsion blocks also terminate discovery and count as supports, so inspection does not follow their exhaust face into the ground. [Vehicle Couplers](couplers.md) can delimit connected vehicle sections. Breaking any large-wheel part removes the whole wheel. In Taxi mode, wheels and landing-gear tyres roll with actual travel, reverse with the craft and swivel with steering. Stopping holds their rotation; Hover centers steering and stops rolling.
 
 Top slabs have an empty lower half. Vehicle discovery does not connect a top slab to a floor beneath that empty space. Slabs that physically touch another block still connect normally.
+
+## Carried chest inventories
+
+Right-click a vanilla chest while the craft is in Taxi or Hover mode to open the ordinary chest dialog. Double chests provide the normal 54 slots. Named inventories and vanilla chest locks are preserved. Pickup, insertion and shift-click update the vehicle snapshot, so the contents survive saving and parking. Access follows the actual chest position, and the window closes if the player moves out of reach, the chest is replaced, or an ownership transfer starts.
 
 ## Copying and carried ramps
 

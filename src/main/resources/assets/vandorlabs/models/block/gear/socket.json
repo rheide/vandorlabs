@@ -68,6 +68,15 @@
             13
           ],
           "texture": "#housing"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#housing"
         }
       }
     }

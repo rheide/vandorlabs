@@ -79,7 +79,7 @@ public final class TurntableTransfer {
         Map<UUID,Entity> live=entities(world);for(TurntableSnapshot.FrozenEntity frozen:snapshot.entities)if(live.containsKey(frozen.id))throw new IOException("A captured entity UUID is already present; contents retained");
         journal(world,entity,true,snapshot);
         try{
-            TurntableTransactions.mutated();VehicleTransfer.blocks(world,snapshot.blocks,snapshot.origin,true);
+            TurntableTransactions.mutated();VehicleTransfer.blocks(world,snapshot.blocks,snapshot.origin,true);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,snapshot.blocks,snapshot.origin,player.getUniqueID());
             if(!replaced.isEmpty()&&MinecraftForge.EVENT_BUS.post(new BlockEvent.MultiPlaceEvent(replaced,world.getBlockState(snapshot.origin.down()),player,net.minecraft.util.EnumHand.MAIN_HAND)))throw new IOException("A protection rule prevented restoring the contents");
             spawn(world,snapshot,prepared);world.removeEntityDangerously(entity);TileEntityTurntableController owner=entity.owner();if(owner!=null){owner.captureId=null;boolean legacy=owner.legacyCapture();owner.reverse=false;if(legacy||!owner.enabled)owner.release();else owner.restored(Math.round(entity.angle()/90)*90);owner.status("Restored at "+Math.floorMod((int)Math.round(entity.angle()/90)*90,360)+" degrees");owner.changed();}
             flush(world);TurntableTransactions.retiring(file(world,entity.getUniqueID()));
@@ -101,7 +101,7 @@ public final class TurntableTransfer {
         if(current!=null&&!(current instanceof EntityTurntable))throw new IOException("Recovery entity UUID conflict");
         if(captured&&TurntableTransactions.current()==null)for(TurntableSnapshot.FrozenEntity frozen:returned.entities){Entity existing=live.get(frozen.id);if(existing!=null&&!existing.writeToNBT(new NBTTagCompound()).equals(frozen.data()))throw new IOException("Recovery blocked by changed entity contents; journal retained");}
         if(captured){VehicleTransfer.blocks(world,returned.blocks,returned.origin,false);removeEntities(world,snapshot);if(current==null&&!world.spawnEntity(saved))throw new IOException("Recovery spawn denied");}
-        else{List<Entity> prepared=prepare(world,returned);VehicleTransfer.blocks(world,returned.blocks,returned.origin,true);if(current!=null)world.removeEntityDangerously(current);spawn(world,returned,prepared);}
+        else{List<Entity> prepared=prepare(world,returned);VehicleTransfer.blocks(world,returned.blocks,returned.origin,true);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,returned.blocks,returned.origin,saved.actor);if(current!=null)world.removeEntityDangerously(current);spawn(world,returned,prepared);}
         TileEntityTurntableController owner=saved.owner();if(owner!=null){owner.captureId=captured?saved.getUniqueID():null;if(captured){owner.layout=snapshot.layout;for(BlockPos cell:snapshot.layout.cells){net.minecraft.tileentity.TileEntity part=world.getTileEntity(cell);if(part instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)part).bind(owner);}}else owner.release();owner.changed();}
     }
     public static void recover(WorldServer world){

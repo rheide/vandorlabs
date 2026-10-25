@@ -8,8 +8,8 @@ import net.minecraft.util.NonNullList;
 
 /** Actual item registrations, creative search and optional JEI ingredient discovery. */
 final class CreativeCatalogRuntimeChecks {
-    private static final String[] VISIBLE={"small_power_lever","industrial_power_lever","gear_mount","gear_extender","landing_ski","landing_wheel","landing_plate"};
-    private static final String[] HIDDEN={"large_power_lever","compact_power_lever","landing_gear","ski_landing_gear","landing_strut","angled_landing_strut"};
+    private static final String[] VISIBLE={"small_power_lever","industrial_power_lever","gear_mount","gear_extender","landing_ski","landing_wheel","landing_plate","compact_track","square_coupler","vehicle_coupler_slab","copy_controller","programmable_pressure_plate"};
+    private static final String[] HIDDEN={"large_power_lever","compact_power_lever","landing_gear","ski_landing_gear","landing_strut","angled_landing_strut","armoured_track","bogie_track"};
     static void run(){
         java.util.Collection<?> ingredients=null;
         if(net.minecraftforge.fml.common.Loader.isModLoaded("jei")){
@@ -21,7 +21,7 @@ final class CreativeCatalogRuntimeChecks {
         for(boolean hidden:new boolean[]{false,true})for(String id:hidden?HIDDEN:VISIBLE){
             Block block=Block.getBlockFromName("vandorlabs:"+id);
             Item item=Item.getItemFromBlock(block);
-            require(item instanceof com.vandorlabs.items.ItemCatalogBlock,"catalog-aware registration "+id);
+            require(item instanceof com.vandorlabs.items.ItemCatalogBlock||block instanceof com.vandorlabs.gear.GearBlock&&item instanceof com.vandorlabs.gear.ItemArm,"catalog-aware default or arm-placement registration "+id);
             for(CreativeTabs tab:new CreativeTabs[]{VandorLabs.VANDOR_LABS_TAB,CreativeTabs.SEARCH}){
                 NonNullList<ItemStack> menu=NonNullList.create();item.getSubItems(tab,menu);
                 require(menu.size()==(hidden?0:1),"creative/search entry count "+id);

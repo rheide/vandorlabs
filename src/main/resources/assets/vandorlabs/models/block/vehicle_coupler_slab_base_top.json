@@ -1,0 +1,256 @@
+{
+  "credit": "MCTrek square-slider coupler; nine cuboids, one sliding group",
+  "parent": "block/block",
+  "ambientocclusion": true,
+  "textures": {
+    "material": "vandorlabs:blocks/square_coupler_materials",
+    "mount": "vandorlabs:blocks/square_coupler_mount",
+    "top": "vandorlabs:blocks/square_coupler_top",
+    "side": "vandorlabs:blocks/square_coupler_side_off",
+    "particle": "vandorlabs:blocks/square_coupler_mount"
+  },
+  "elements": [
+    {
+      "name": "mounting_plate",
+      "from": [
+        2,
+        9.0,
+        14
+      ],
+      "to": [
+        14,
+        15.0,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2,
+            5.0,
+            14,
+            11.0
+          ],
+          "texture": "#mount"
+        },
+        "east": {
+          "uv": [
+            0.25,
+            1.0,
+            0.75,
+            2.5
+          ],
+          "texture": "#material"
+        },
+        "south": {
+          "uv": [
+            2,
+            5.0,
+            14,
+            11.0
+          ],
+          "texture": "#mount"
+        },
+        "west": {
+          "uv": [
+            0.25,
+            1.0,
+            0.75,
+            2.5
+          ],
+          "texture": "#material"
+        },
+        "up": {
+          "uv": [
+            0.25,
+            0.25,
+            3.25,
+            0.75
+          ],
+          "texture": "#material"
+        },
+        "down": {
+          "uv": [
+            0.25,
+            0.25,
+            3.25,
+            0.75
+          ],
+          "texture": "#material"
+        }
+      }
+    },
+    {
+      "name": "fixed_guide",
+      "from": [
+        5,
+        10.5,
+        8
+      ],
+      "to": [
+        11,
+        13.5,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12.25,
+            0.625,
+            13.75,
+            1.375
+          ],
+          "texture": "#material"
+        },
+        "east": {
+          "uv": [
+            12.25,
+            0.625,
+            13.75,
+            1.375
+          ],
+          "texture": "#material"
+        },
+        "south": {
+          "uv": [
+            12.25,
+            0.625,
+            13.75,
+            1.375
+          ],
+          "texture": "#material"
+        },
+        "west": {
+          "uv": [
+            12.25,
+            0.625,
+            13.75,
+            1.375
+          ],
+          "texture": "#material"
+        },
+        "up": {
+          "uv": [
+            12.25,
+            0.25,
+            13.75,
+            1.75
+          ],
+          "texture": "#material"
+        },
+        "down": {
+          "uv": [
+            12.25,
+            0.25,
+            13.75,
+            1.75
+          ],
+          "texture": "#material"
+        }
+      }
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    },
+    "ground": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.45,
+        0.45,
+        0.45
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        75,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        2.5,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        45,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.65,
+        0.65,
+        0.65
+      ]
+    }
+  }
+}

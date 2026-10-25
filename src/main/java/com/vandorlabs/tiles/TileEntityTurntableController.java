@@ -15,13 +15,27 @@ import net.minecraft.world.*;
 import java.util.UUID;
 
 /** Server-owned settings and surface claims. Captured contents remain inert until restored. */
-public final class TileEntityTurntableController extends TileEntity implements ITickable {
+public final class TileEntityTurntableController extends TileEntity implements ITickable,com.vandorlabs.surface.SurfaceController {
     public UUID key=UUID.randomUUID(),captureId,actor;
     public TurntableSurfaceLayout layout;
     public int height=4,scanMode,rotationMode=1,axis;
     public double rpm=1,autoSnapTolerance;
     public String surfaceOn=TurntableTextures.IDS[1],surfaceOff=TurntableTextures.IDS[0];
-    private boolean clientRunning;
+    private boolean clientRunning,legacySurfaceAppearance;
+    public java.util.UUID surfaceKey(){return key;}
+    public boolean ownsSurface(BlockPos cell){return layout!=null&&layout.cells.contains(cell);}
+    public com.vandorlabs.surface.SquareLayout surfaceLayout(BlockPos cell){return ownsSurface(cell)?layout:null;}
+    public boolean surfaceActive(BlockPos cell){return ownsSurface(cell)&&running();}
+    public boolean surfaceLocked(){return captureId!=null||TurntableTransactions.busy(this);}
+    public boolean hasLegacySurfaceAppearance(){return legacySurfaceAppearance;}
+    private void migrateSurfaceAppearance(){
+        if(!legacySurfaceAppearance||world==null||world.isRemote||layout==null||!layout.loaded(world))return;
+        for(BlockPos cell:layout.cells){TileEntity raw=world.getTileEntity(cell);if(!(raw instanceof TileEntityTurntableSurface))return;((TileEntityTurntableSurface)raw).migrateLegacy(surfaceOn,surfaceOff);}
+        legacySurfaceAppearance=false;changed();
+    }
+    @Override public void onChunkUnload(){com.vandorlabs.tiles.WorldActionAuthorization.unloaded(this);super.onChunkUnload();}
+    @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,this::migrateSurfaceAppearance);}
+
     public boolean clockwise=true,reverse,enabled=true;
     public ChannelList scanChannels=ChannelList.EMPTY,rotationChannels=ChannelList.EMPTY,directionChannels=ChannelList.EMPTY,restoreChannels=ChannelList.EMPTY;
     public String lastError="";
@@ -30,7 +44,7 @@ public final class TileEntityTurntableController extends TileEntity implements I
     private int ticks;
     private double angle,previous;
     public EntityTurntable display(){if(world==null||captureId==null)return null;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(entity instanceof EntityTurntable && captureId.equals(entity.getUniqueID())&&!entity.isDead)return (EntityTurntable)entity;return null;}
-    @Override public void invalidate(){if(world!=null&&!world.isRemote&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)){EntityTurntable entity=display();if(entity!=null)com.vandorlabs.turntable.TurntableEvents.restoreAfterTick(entity);}super.invalidate();}
+    @Override public void invalidate(){com.vandorlabs.tiles.WorldActionAuthorization.revoke(this);if(world!=null&&!world.isRemote&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)){EntityTurntable entity=display();if(entity!=null)com.vandorlabs.turntable.TurntableEvents.restoreAfterTick(entity);}super.invalidate();}
     private boolean signal(ChannelList channels){return channels.isEmpty()?world.isBlockPowered(pos):RedstoneChannels.allPowered(world,channels);}
     private boolean matches(int mode,ChannelList channels){return mode!=0 && (mode==1)==signal(channels);}
     public boolean legacyCapture(){return layout!=null&&world!=null&&world.isBlockLoaded(layout.root)&&world.getBlockState(layout.root).getBlock() instanceof BlockTurntableSurface&&world.getBlockState(layout.root).getValue(BlockTurntableSurface.FACING)!=layout.normal;}
@@ -47,13 +61,13 @@ public final class TileEntityTurntableController extends TileEntity implements I
         axis=0; // Surface normals determine the axis.
         if(reverse)throw new IllegalArgumentException("Restore the old opposite-face capture first; new scans use the textured Surface face");
         for(BlockPos cell:found.cells){TileEntity raw=world.getTileEntity(cell);if(!(raw instanceof TileEntityTurntableSurface))throw new IllegalArgumentException("Missing surface data");TileEntityTurntableSurface surface=(TileEntityTurntableSurface)raw;
-            if(surface.owner!=null && (!pos.equals(surface.owner)||!key.equals(surface.ownerKey)))throw new IllegalArgumentException("Surface is claimed by another controller; remove that controller first");
+            if(!surface.canClaim(pos,key))throw new IllegalArgumentException("Surface is claimed by another controller; remove that controller first");
             com.vandorlabs.vehicle.VehicleService.permission(player,cell);
         }
         TurntableSnapshot snapshot=TurntableSnapshot.capture((WorldServer)world,found,height,player);
-        actor=player.getUniqueID();release();layout=found;enabled=true;angle=previous=0;
-        for(BlockPos cell:layout.cells)((TileEntityTurntableSurface)world.getTileEntity(cell)).bind(this);
-        return snapshot;
+        actor=player.getUniqueID();com.vandorlabs.tiles.WorldActionAuthorization.authorize(this,player);release();layout=found;enabled=true;angle=previous=0;
+        for(BlockPos cell:layout.cells){TileEntityTurntableSurface surface=(TileEntityTurntableSurface)world.getTileEntity(cell);surface.bind(this);surface.setGroup(layout);}
+        migrateSurfaceAppearance();return snapshot;
     }
     public void scan(EntityPlayerMP player)throws Exception {
         TurntableSnapshot snapshot=prepareCapture(player);
@@ -115,8 +129,6 @@ public final class TileEntityTurntableController extends TileEntity implements I
         if((captureId!=null||TurntableTransactions.busy(this))&&h!=height)throw new IllegalArgumentException("Finish the transfer and restore before changing the scan height");
         if(!directionChannels.equals(direction)){directionKnown=false;directionChannels=direction;}
         if(!restoreChannels.equals(restore)){restoreKnown=false;restoreChannels=restore;}
-        if(tag.hasKey("SurfaceOn"))surfaceOn=TurntableTextures.normalize(tag.getString("SurfaceOn"),true);
-        if(tag.hasKey("SurfaceOff"))surfaceOff=TurntableTextures.normalize(tag.getString("SurfaceOff"),false);
         height=h;scanMode=sm;rotationMode=rm;axis=0;rpm=speed;autoSnapTolerance=tolerance;scanChannels=scan;rotationChannels=rotate;clockwise=tag.getBoolean("Clockwise");reverse=false;changed();
     }
     @Override public void update(){
@@ -129,30 +141,31 @@ public final class TileEntityTurntableController extends TileEntity implements I
         if(!restoreKnown||restoreHigh!=restorePower)markDirty();
         restoreHigh=restorePower;restoreKnown=true;
         ticks++;boolean next=matches(scanMode,scanChannels),scanStarted=false;
-        if(next&&!trigger&&captureId==null&&actor!=null)try{requestScan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));scanStarted=true;}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
+        if(next&&!trigger&&captureId==null&&actor!=null)try{requestScan(com.vandorlabs.tiles.WorldActionAuthorization.permissionActor(this));scanStarted=true;}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         trigger=next;boolean rotation=matches(Math.max(1,rotationMode),rotationChannels);
-        if(rotation&&!rotationTrigger&&!scanStarted&&actor!=null&&enabled)try{requestRescan(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")));}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
+        if(rotation&&!rotationTrigger&&!scanStarted&&actor!=null&&enabled)try{requestRescan(com.vandorlabs.tiles.WorldActionAuthorization.permissionActor(this));}catch(Exception failure){failure(failure.getMessage()==null?"Scan failed":failure.getMessage());}
         if(!rotation&&rotationTrigger&&actor!=null&&enabled){
             EntityTurntable stopped=display();
-            if(stopped==null&&TurntableTransactions.busy(this)){queuedIntent=1;queuedFailurePrefix="Automatic restore failed: ";queuedActor=net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable"));}
+            if(stopped==null&&TurntableTransactions.busy(this)){queuedIntent=1;queuedFailurePrefix="Automatic restore failed: ";try{queuedActor=com.vandorlabs.tiles.WorldActionAuthorization.permissionActor(this);}catch(IllegalArgumentException denied){failure(denied.getMessage());queuedIntent=0;}}
             if(stopped!=null){
                 if(TurntableGeometry.canAutoSnap(stopped.angle(),autoSnapTolerance))try{
-                    clearError();requestRestore(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")),"Automatic restore failed: ");
+                    clearError();requestRestore(com.vandorlabs.tiles.WorldActionAuthorization.permissionActor(this),"Automatic restore failed: ");
                 }catch(Exception failure){failure("Automatic restore failed: "+(failure.getMessage()==null?"contents retained":failure.getMessage()));}
             }
         }
         if(restorePulse&&actor!=null&&(captureId!=null||TurntableTransactions.busy(this)))try{
-            clearError();requestRestore(net.minecraftforge.common.util.FakePlayerFactory.get((WorldServer)world,new com.mojang.authlib.GameProfile(actor,"Turntable")),"Restore pulse failed: ");
+            clearError();requestRestore(com.vandorlabs.tiles.WorldActionAuthorization.permissionActor(this),"Restore pulse failed: ");
         }catch(Exception failure){failure("Restore pulse failed: "+(failure.getMessage()==null?"contents retained":failure.getMessage()));}
         rotationTrigger=rotation;
+        if(ticks%20==0&&legacySurfaceAppearance)DeferredTileLoad.schedule(this,this::migrateSurfaceAppearance);
         if(ticks%20==0&&enabled&&layout!=null&&layout.loaded(world))for(BlockPos cell:layout.cells){TileEntity tile=world.getTileEntity(cell);if(!(tile instanceof TileEntityTurntableSurface)){surfaceChanged();break;}TileEntityTurntableSurface surface=(TileEntityTurntableSurface)tile;if(surface.owner==null)surface.bind(this);else if(!pos.equals(surface.owner)||!key.equals(surface.ownerKey)){surfaceChanged();break;}}
         EntityTurntable entity=display();if(entity!=null)angle=entity.angle();
         boolean active=running();if(active!=clientRunning){clientRunning=active;changed();}else if(ticks%10==0&&layout!=null)changed();
     }
     public void changed(){markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}}
     @Override public boolean shouldRefresh(World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setString("SurfaceOn",surfaceOn);tag.setString("SurfaceOff",surfaceOff);tag.setUniqueId("Key",key);if(captureId!=null)tag.setUniqueId("Capture",captureId);if(actor!=null)tag.setUniqueId("Actor",actor);if(layout!=null)tag.setTag("Surface",layout.write());tag.setInteger("Height",height);tag.setInteger("ScanMode",scanMode);tag.setInteger("RotationMode",rotationMode);tag.setInteger("Axis",axis);tag.setDouble("RPM",rpm);tag.setDouble("AutoSnapTolerance",autoSnapTolerance);tag.setBoolean("Running",world!=null&&running());tag.setBoolean("Clockwise",clockwise);tag.setBoolean("Reverse",reverse);tag.setBoolean("Enabled",enabled);tag.setString("ScanChannels",scanChannels.toString());tag.setString("RotationChannels",rotationChannels.toString());tag.setString("DirectionChannels",directionChannels.toString());tag.setString("RestoreChannels",restoreChannels.toString());tag.setBoolean("RestoreHigh",restoreHigh);tag.setBoolean("RestoreKnown",restoreKnown);tag.setBoolean("DirectionHigh",directionHigh);tag.setBoolean("DirectionKnown",directionKnown);tag.setString("Status",message);tag.setString("Error",lastError);tag.setDouble("Angle",angle);tag.setBoolean("Trigger",trigger);tag.setBoolean("RotationTrigger",rotationTrigger);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);surfaceOn=TurntableTextures.normalize(tag.getString("SurfaceOn"),true);surfaceOff=TurntableTextures.normalize(tag.getString("SurfaceOff"),false);key=tag.hasUniqueId("Key")?tag.getUniqueId("Key"):UUID.randomUUID();captureId=tag.hasUniqueId("Capture")?tag.getUniqueId("Capture"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;layout=tag.hasKey("Surface",10)?TurntableSurfaceLayout.read(tag.getCompoundTag("Surface")):null;height=Math.max(1,Math.min(16,tag.getInteger("Height")));scanMode=Math.max(0,Math.min(2,tag.getInteger("ScanMode")));rotationMode=Math.max(1,Math.min(2,tag.getInteger("RotationMode")));axis=Math.max(0,Math.min(3,tag.getInteger("Axis")));clientRunning=tag.getBoolean("Running");double tolerance=tag.getDouble("AutoSnapTolerance");autoSnapTolerance=Double.isFinite(tolerance)?Math.max(0,Math.min(5,tolerance)):0;double saved=tag.getDouble("RPM");rpm=Double.isFinite(saved)?Math.max(.5,Math.min(10,Math.round(saved*2)/2D)):1;clockwise=tag.getBoolean("Clockwise");reverse=tag.getBoolean("Reverse");enabled=tag.getBoolean("Enabled");ChannelList s=ChannelList.parse(tag.getString("ScanChannels")),r=ChannelList.parse(tag.getString("RotationChannels"));scanChannels=s==null?ChannelList.EMPTY:s;rotationChannels=r==null?ChannelList.EMPTY:r;ChannelList d=ChannelList.parse(tag.getString("DirectionChannels"));directionChannels=d==null?ChannelList.EMPTY:d;directionHigh=tag.getBoolean("DirectionHigh");directionKnown=tag.getBoolean("DirectionKnown");ChannelList restore=ChannelList.parse(tag.getString("RestoreChannels"));restoreChannels=restore==null?ChannelList.EMPTY:restore;restoreHigh=tag.getBoolean("RestoreHigh");restoreKnown=tag.getBoolean("RestoreKnown");message=tag.getString("Status");lastError=tag.getString("Error");double savedAngle=tag.getDouble("Angle");angle=previous=Double.isFinite(savedAngle)?TurntableGeometry.wrap(savedAngle):0;trigger=tag.getBoolean("Trigger");rotationTrigger=tag.getBoolean("RotationTrigger");}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setString("SurfaceOn",surfaceOn);tag.setString("SurfaceOff",surfaceOff);tag.setBoolean("SurfaceAppearanceMigrated",!legacySurfaceAppearance);tag.setUniqueId("Key",key);if(captureId!=null)tag.setUniqueId("Capture",captureId);if(actor!=null)tag.setUniqueId("Actor",actor);if(layout!=null)tag.setTag("Surface",layout.write());tag.setInteger("Height",height);tag.setInteger("ScanMode",scanMode);tag.setInteger("RotationMode",rotationMode);tag.setInteger("Axis",axis);tag.setDouble("RPM",rpm);tag.setDouble("AutoSnapTolerance",autoSnapTolerance);tag.setBoolean("Running",world!=null&&running());tag.setBoolean("Clockwise",clockwise);tag.setBoolean("Reverse",reverse);tag.setBoolean("Enabled",enabled);tag.setString("ScanChannels",scanChannels.toString());tag.setString("RotationChannels",rotationChannels.toString());tag.setString("DirectionChannels",directionChannels.toString());tag.setString("RestoreChannels",restoreChannels.toString());tag.setBoolean("RestoreHigh",restoreHigh);tag.setBoolean("RestoreKnown",restoreKnown);tag.setBoolean("DirectionHigh",directionHigh);tag.setBoolean("DirectionKnown",directionKnown);tag.setString("Status",message);tag.setString("Error",lastError);tag.setDouble("Angle",angle);tag.setBoolean("Trigger",trigger);tag.setBoolean("RotationTrigger",rotationTrigger);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){com.vandorlabs.tiles.WorldActionAuthorization.revoke(this);super.readFromNBT(tag);legacySurfaceAppearance=!tag.getBoolean("SurfaceAppearanceMigrated")&&(tag.hasKey("SurfaceOn")||tag.hasKey("SurfaceOff"));surfaceOn=TurntableTextures.normalize(tag.getString("SurfaceOn"),true);surfaceOff=TurntableTextures.normalize(tag.getString("SurfaceOff"),false);key=tag.hasUniqueId("Key")?tag.getUniqueId("Key"):UUID.randomUUID();captureId=tag.hasUniqueId("Capture")?tag.getUniqueId("Capture"):null;actor=tag.hasUniqueId("Actor")?tag.getUniqueId("Actor"):null;layout=tag.hasKey("Surface",10)?TurntableSurfaceLayout.read(tag.getCompoundTag("Surface")):null;height=Math.max(1,Math.min(16,tag.getInteger("Height")));scanMode=Math.max(0,Math.min(2,tag.getInteger("ScanMode")));rotationMode=Math.max(1,Math.min(2,tag.getInteger("RotationMode")));axis=Math.max(0,Math.min(3,tag.getInteger("Axis")));clientRunning=tag.getBoolean("Running");double tolerance=tag.getDouble("AutoSnapTolerance");autoSnapTolerance=Double.isFinite(tolerance)?Math.max(0,Math.min(5,tolerance)):0;double saved=tag.getDouble("RPM");rpm=Double.isFinite(saved)?Math.max(.5,Math.min(10,Math.round(saved*2)/2D)):1;clockwise=tag.getBoolean("Clockwise");reverse=tag.getBoolean("Reverse");enabled=tag.getBoolean("Enabled");ChannelList s=ChannelList.parse(tag.getString("ScanChannels")),r=ChannelList.parse(tag.getString("RotationChannels"));scanChannels=s==null?ChannelList.EMPTY:s;rotationChannels=r==null?ChannelList.EMPTY:r;ChannelList d=ChannelList.parse(tag.getString("DirectionChannels"));directionChannels=d==null?ChannelList.EMPTY:d;directionHigh=tag.getBoolean("DirectionHigh");directionKnown=tag.getBoolean("DirectionKnown");ChannelList restore=ChannelList.parse(tag.getString("RestoreChannels"));restoreChannels=restore==null?ChannelList.EMPTY:restore;restoreHigh=tag.getBoolean("RestoreHigh");restoreKnown=tag.getBoolean("RestoreKnown");message=tag.getString("Status");lastError=tag.getString("Error");double savedAngle=tag.getDouble("Angle");angle=previous=Double.isFinite(savedAngle)?TurntableGeometry.wrap(savedAngle):0;trigger=tag.getBoolean("Trigger");rotationTrigger=tag.getBoolean("RotationTrigger");}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,1,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}

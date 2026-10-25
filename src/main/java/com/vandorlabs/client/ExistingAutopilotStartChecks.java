@@ -23,7 +23,7 @@ final class ExistingAutopilotStartChecks {
                 WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
                 actor.dismountRidingEntity();
                 for(BlockPos pos:new BlockPos[]{PILOT,PILOT.west()}){TileEntity tile=world.getTileEntity(pos);require(tile instanceof TileEntityPilotSeat,"saved seat/controller exists");((TileEntityPilotSeat)tile).owner=actor.getUniqueID();tile.markDirty();}
-                TileEntityAutopilot tile=(TileEntityAutopilot)world.getTileEntity(COMPUTER);tile.setEnabled(false);tile.pulseDeparture();
+                TileEntityAutopilot tile=(TileEntityAutopilot)world.getTileEntity(COMPUTER);WorldActionAuthorization.authorize(tile,actor);tile.setEnabled(false);tile.pulseDeparture();
             });return false;
         }
         if(stage==1&&++frames>=40){

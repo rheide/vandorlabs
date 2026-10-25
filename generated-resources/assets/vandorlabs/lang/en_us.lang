@@ -560,7 +560,7 @@ tile.vandorlabs.chair_siderests.name=Advanced Pilot Chair
 tile.vandorlabs.yoke_screen.name=Yoke and Screen
 
 tile.vandorlabs.turntable_controller.name=Turntable Controller
-tile.vandorlabs.turntable_surface.name=Turntable Surface
+tile.vandorlabs.turntable_surface.name=Programmable Surface
 
 tile.vandorlabs.landing_plate.name=Landing Gear Plate
 
@@ -608,10 +608,13 @@ tile.vandorlabs.standalone_antenna_core.name=Standalone Antenna Core
 
 tile.vandorlabs.data_chip_programmer.name=Card / Chip Programmer
 
-tile.vandorlabs.square_coupler.name=Square Coupler
+tile.vandorlabs.square_coupler.name=Vehicle Coupler
+tile.vandorlabs.vehicle_coupler_slab.name=Vehicle Coupler Slab
 
-tile.vandorlabs.compact_track.name=Compact Track
+tile.vandorlabs.compact_track.name=Track
 
 tile.vandorlabs.armoured_track.name=Armoured Track
 
 tile.vandorlabs.bogie_track.name=Bogie Track
+
+tile.vandorlabs.copy_controller.name=Copy Controller

@@ -46,13 +46,13 @@ public final class TurntableSnapshot {
             if(MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(world,pos,world.getBlockState(pos),actor)))throw new IllegalArgumentException("A protection rule prevented scanning at "+pos);
             TileEntity tile=world.getTileEntity(pos);
             boundaries.check(pos,world.getBlockState(pos),tile);
-            if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableController || tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)
-                throw new IllegalArgumentException("Keep other turntable assemblies outside the scan volume");
             NBTTagCompound saved=tile==null?null:tile.writeToNBT(new NBTTagCompound());
             if(tile instanceof com.vandorlabs.tiles.TileEntityRampController||tile instanceof com.vandorlabs.tiles.TileEntityControlledRamp)saved=VehicleEscalators.paused(saved);
             NBTTagCompound data=saved==null?null:VehicleTileData.translated(saved,new BlockPos(-min.getX(),-min.getY(),-min.getZ()));
             cells.add(new VehicleStructure.Cell(pos.subtract(min),world.getBlockState(pos),data));
         }
+        VehicleStructure capturedBlocks=VehicleStructure.display(cells);
+        MovingBlockSupport.validate(capturedBlocks,new VehicleWorld(world,capturedBlocks));
         AxisAlignedBB volume=new AxisAlignedBB(min,max.add(1,1,1));
         List<Entity> selected=new ArrayList<>();Set<UUID> ids=new HashSet<>();
         for(Entity entity:world.getEntitiesWithinAABBExcludingEntity(null,volume)){
@@ -69,7 +69,7 @@ public final class TurntableSnapshot {
             NBTTagCompound tag=entity.writeToNBT(new NBTTagCompound());tag.setString("id",type.toString());
             tag.removeTag("Passengers");tag.removeTag("Riding");frozen.add(new FrozenEntity(entity.getUniqueID(),parent==null?null:parent.getUniqueID(),tag));
         }
-        TurntableSnapshot snapshot=new TurntableSnapshot(layout,min,VehicleStructure.display(cells),frozen,height);snapshot.encode();return snapshot;
+        TurntableSnapshot snapshot=new TurntableSnapshot(layout,min,capturedBlocks,frozen,height);snapshot.encode();return snapshot;
     }
     /** Block mode uses the nearest representable quarter turn, as vehicle parking does. */
     public TurntableSnapshot rotated(double angle,VehicleWorld view){

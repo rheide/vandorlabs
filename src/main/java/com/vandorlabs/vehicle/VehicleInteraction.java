@@ -42,6 +42,8 @@ public final class VehicleInteraction {
     }
     public static boolean supported(EntityPlayer player,Target target) {
         return target!=null && (player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER
+                || target.hit.action==VehicleSelection.Action.CHEST
+                || target.hit.action==VehicleSelection.Action.COUPLER
                 || target.hit.action==VehicleSelection.Action.CANOPY
                 || target.hit.action==VehicleSelection.Action.DOOR
                 || target.hit.action==VehicleSelection.Action.SCREEN && !player.isSneaking() && VehicleSignals.supports(target.craft.view,target.hit.cell.pos)
@@ -66,9 +68,11 @@ public final class VehicleInteraction {
     public static boolean activate(EntityPlayer player,Target target) {
         if(player.isDead || player.isSpectator() || !supported(player,target))return false;
         EntityGroundVehicle craft=target.craft;
-        if(craft.isDead || craft.world!=player.world || craft.structure==null || craft.ownershipBlocked)return false;
+        if(craft.isDead || craft.world!=player.world || craft.structure==null || craft.ownershipBlocked || craft.transferInProgress)return false;
         if(player.world.isRemote)return true;
         EntityPlayerMP server=(EntityPlayerMP)player;
+        if(target.hit.action==VehicleSelection.Action.CHEST)return VehicleChests.open(server,craft,target.hit.cell.pos);
+        if(target.hit.action==VehicleSelection.Action.COUPLER){com.vandorlabs.coupler.ContainerCoupler.open(player,craft.view,target.hit.cell.pos);return true;}
         if(target.hit.action==VehicleSelection.Action.COCKPIT){
             com.vandorlabs.tiles.TileEntityCockpit tile=com.vandorlabs.cockpit.CockpitAssembly.root(craft.view,target.hit.cell.pos);if(tile==null)return false;
             if(player.isSneaking() || player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER){com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;}

@@ -181,6 +181,7 @@ public class ModBlocks {
         }
         // Hand-maintained custom blocks with bespoke assets in
         // src/main/resources.
+        add(new com.vandorlabs.copier.CopyControllerBlock());
         add(new BlockTurntableController());
         add(new BlockTurntableSurface());
         for(com.vandorlabs.gear.track.TrackBlock track:com.vandorlabs.gear.track.TrackRegistry.BLOCKS)add(track);
@@ -291,7 +292,9 @@ public class ModBlocks {
         String id = e.get("id").getAsString();
         switch (cls) {
             case "ProgrammerBlock": return new com.vandorlabs.programmer.ProgrammerBlock();
+            case "PlateBlock": return new com.vandorlabs.plate.PlateBlock();
             case "BlockCoupler": return new com.vandorlabs.coupler.BlockCoupler();
+            case "BlockCouplerSlab": return new com.vandorlabs.coupler.BlockCouplerSlab();
             case "BlockCanopy": return new BlockCanopy(id);
             case "BlockDiagonalPorthole": return new BlockProgrammableWall(id, BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE);
             case "BlockDiagonalHalfConsole": return new BlockDiagonalHalfConsole(id);
@@ -366,6 +369,7 @@ public class ModBlocks {
             case "BlockLamp":
                 return new BlockLamp(id);
             case "BlockPropulsionLight":
+                if(java.util.Arrays.asList("rocket_thruster_hexagonal","ion_drive_hexagonal","plasma_vent_hexagonal","impulse_engine_hexagonal").contains(id))return new BlockConnectedHexagonalPropulsionLight(id,e.has("depth")?e.get("depth").getAsFloat():1F);
                 return new BlockPropulsionLight(id,
                         e.has("points_up") && e.get("points_up").getAsBoolean(),
                         e.has("depth") ? e.get("depth").getAsFloat() : 1.0F);
@@ -552,6 +556,7 @@ public class ModBlocks {
                     continue;
                 }
                 if (block instanceof BlockConnectedPropulsionLight
+                        && ((BlockPropulsionLight)block).shape()==0
                         && !((BlockConnectedPropulsionLight) block).familyId().isEmpty()) {
                     String family = ((BlockConnectedPropulsionLight) block).familyId();
                     ResourceLocation[] shapes = {

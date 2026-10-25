@@ -1,6 +1,6 @@
 # Turntables
 
-Place **Turntable Surface** blocks as a filled square, from 1×1 to 16×16. The face
+Place **Programmable Surface** blocks as a filled square, from 1×1 to 16×16. The face
 you click when placing each block becomes its active face. Every connected
 surface must face the same way. Place a **Turntable Controller** against an edge,
 by clicking a Surface block at its edge; the controller automatically points back toward it. Open the controller by right
@@ -45,9 +45,13 @@ quarter turn, using the same permissions and obstruction checks as the Restore
 button. Release the signal before sending another pulse. Holding a signal,
 including across save/load, does not keep restoring subsequent captures.
 
-The square shares one surface image. Its circular plate rotates with the captured
-contents, surrounded by a fixed square housing. Joined surfaces use the supplied
-512px artwork, while standalone and inventory surfaces use a smaller version.
+Configure artwork on the **Programmable Surface blocks**, using the Configurizer or sneak-right-click. The Turntable Controller dialog contains motion and channel settings. Surface **Active** and **Inactive** artwork are independent; the active texture follows the controller's rotation input. Both choices remain saved on the surface blocks after detaching or replacing a controller.
+
+The picker uses the main material catalog, including the **Surfaces** category (formerly Turntable). It retains Dormant, Active, Iron, Rotary, Basalt and Ivory, and adds Landing, Landing Grey, Maintenance, Maintenance Grey, Docking, Docking Grey, Copier Input and Copier Output. Custom block samples use the same picker convention as other programmable materials.
+
+**Stretch** maps one complete image across the connected square. **Tile** repeats at block scale, preserving the image's aspect ratio. **Fit (aspect)** keeps the complete image and uses opaque margins where needed. Editing a member updates its complete pad. An unclaimed square works as a decorative programmable pad; the same blocks can be claimed by a Turntable Controller or a Copy Controller, with overlapping claims refused.
+
+The circular plate rotates with captured turntable contents, surrounded by a fixed square housing. Surface masters use the existing 512px resolution for joined pads and a 64px local variant; ordinary selected materials retain their normal resolutions. Existing saves migrate both controller-owned choices to unconfigured surface tiles after loading completes, preserving their full-square layout. Already configured surface choices are retained.
 The controller front shows the chosen direction; illuminated artwork indicates
 the enabled input state. Obstructions can stop movement while the input stays on.
 
@@ -149,3 +153,5 @@ The 2.3 native-client comparison used 64 opaque programmable walls, identical ca
 An isolated server fixture with 128 captured walls above 256 floor blocks measured 488 microseconds median, 539 microseconds p95 and 701 microseconds maximum per movement update. This is a current-build measurement, not a before/after comparison or a substitute for profiling a populated world.
 
 Rigid opaque wall artwork now compiles within the shared mesh budget; translucent and interactive surfaces continue to render live. The renderer sorts only surfaces needing the translucent pass, and platform bounds reuse a precomputed extent. Smooth interpolation remains enabled: lowering its visual rate would leave server obstacle queries and collision work unchanged. For a remaining slowdown, first compare the diagnostic sections in the affected save; consider spatial collision indexing or batching remaining live renderers when measurements identify either as the dominant cost.
+
+Automation authorization is stored separately at the controller’s world position. Configure or manually operate the controller to authorize it. Copying its complete configuration preserves the saved settings and operator fields, while the copied controller receives the actual copying player’s authorization. Pasting tile NBT or replacing the controller requires configuration again; portable operator UUIDs do not grant permissions.

@@ -57,6 +57,8 @@ public final class DynmapRendererChecks {
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();
         surfaces();
+        FrameMachineMapChecks.run();
+        UtilityMapChecks.run();SurfaceMapChecks.run();HexThrusterMapChecks.run();
         ProgrammableSlabRenderer slab=new ProgrammableSlabRenderer();
         for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)for(String half:new String[]{"bottom","top"}){
             Context c=new Context("vandorlabs:programmable_slab","facing=north,half="+half);c.data.put("housingTexture",choice);

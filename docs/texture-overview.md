@@ -48,6 +48,10 @@ These collages cover the built-in texture picker, including both light states an
 
 ![Storage textures](texture-browser/collages/storage.png)
 
+## Surfaces
+
+![Surfaces textures](texture-browser/collages/surfaces.png)
+
 ## Tech
 
 ![Tech textures](texture-browser/collages/tech.png)
@@ -55,10 +59,6 @@ These collages cover the built-in texture picker, including both light states an
 ## Trapdoors
 
 ![Trapdoors textures](texture-browser/collages/trapdoors.png)
-
-## Turntable
-
-![Turntable textures](texture-browser/collages/turntable.png)
 
 ## Windows
 

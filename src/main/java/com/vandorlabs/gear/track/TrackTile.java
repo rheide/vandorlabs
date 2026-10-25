@@ -17,6 +17,10 @@ import net.minecraft.world.World;
 
 /** Cached topology/support appearance. Native chunk rendering never scans an assembly. */
 public final class TrackTile extends com.vandorlabs.gear.GearTileEntity {
+    private int savedStyle=-1;
+    public TrackTopology.Style style(){return savedStyle>=0?TrackTopology.Style.values()[savedStyle]:getBlockType() instanceof TrackBlock?((TrackBlock)getBlockType()).style():TrackTopology.Style.COMPACT;}
+    public void rememberStyle(){if(savedStyle<0)savedStyle=style().ordinal();}
+    public void style(int value){if(value<0||value>=3)throw new IllegalArgumentException("Invalid track style");savedStyle=value;markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);TrackWorld.requestAround(world,pos);}}
     private volatile TrackAppearance appearance = TrackAppearance.SINGLE;
     private BlockPos leader;
     private List<BlockPos> members = Collections.emptyList();
@@ -31,6 +35,7 @@ public final class TrackTile extends com.vandorlabs.gear.GearTileEntity {
     public List<BlockPos> trackMembers() { return members; }
     public boolean hasCompleteAssembly() { return complete; }
     public String lastError() { return error; }
+    @Override public String error(){String motion=super.error();return motion.isEmpty()?error:motion;}
 
     @Override public void onLoad() { super.onLoad();pending=true;rebuildAfter=0; }
 
@@ -89,7 +94,7 @@ public final class TrackTile extends com.vandorlabs.gear.GearTileEntity {
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+        super.writeToNBT(tag);tag.setInteger("TrackStyle",style().ordinal());tag.setString("TrackError",error);
         tag.setTag("Appearance", appearance.write());
         if (leader != null) tag.setLong("TrackLeaderOffset", leader.subtract(pos).toLong());
         tag.setBoolean("Complete", complete);
@@ -103,7 +108,7 @@ public final class TrackTile extends com.vandorlabs.gear.GearTileEntity {
 
     @Override
     public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+        super.readFromNBT(tag);error=tag.getString("TrackError");if(error.length()>512)error=error.substring(0,512);savedStyle=tag.hasKey("TrackStyle",3)?Math.max(0,Math.min(2,tag.getInteger("TrackStyle"))):-1;
         appearance = tag.hasKey("Appearance", 10) ? TrackAppearance.read(tag.getCompoundTag("Appearance")) : TrackAppearance.SINGLE;
         leader = tag.hasKey("TrackLeaderOffset", 4) ? pos.add(BlockPos.fromLong(tag.getLong("TrackLeaderOffset"))) : null;
         complete = tag.getBoolean("Complete");

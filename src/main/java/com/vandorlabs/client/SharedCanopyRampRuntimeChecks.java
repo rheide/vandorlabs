@@ -52,7 +52,7 @@ final class SharedCanopyRampRuntimeChecks {
             signal(ramp,canopy,true,order,source);
             require(!ramp.attached()&&ramp.isWaitingForCanopy()&&world.getBlockState(RAMP.south()).getBlock()==Blocks.IRON_BLOCK,"opening request waits without consuming original tower");
             // A load between callbacks and the first clear pose must retain the requested edge.
-            ramp.readFromNBT(ramp.writeToNBT(new NBTTagCompound()));ramp.onLoad();
+            ControllerRuntimeChecks.reload(ramp);
             for(int tick=0;tick<160&&!(canopy.progress==1&&ramp.isOpen()&&!ramp.isMoving()&&ramp.attached());tick++)advance(world,canopy,ramp,rampFirst);
             require(canopy.progress==1&&ramp.isOpen()&&!ramp.isMoving()&&ramp.attached(),"both callback orders finish opening automatically: order="+rampFirst+" canopy="+canopy.progress+" ramp="+ramp.status);
             require(world.getBlockState(SHARED).getBlock()!=block,"fully opened canopy releases empty helper cell");

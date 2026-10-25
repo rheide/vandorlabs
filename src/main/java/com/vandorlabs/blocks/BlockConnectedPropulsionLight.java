@@ -31,6 +31,7 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     public static final int MAX_CONNECTED_SIZE = 8;
     public static final PropertyConnectedPart PART = PropertyConnectedPart.create("part");
     private final int maxConnectedSize;
+    static final ThreadLocal<Integer> SHAPE_BATCH=ThreadLocal.withInitial(()->0);
 
     public static final class ConnectedPart
             implements Comparable<ConnectedPart>, IStringSerializable {
@@ -165,8 +166,10 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
         EnumFacing up = localUp(facing);
         int mode = renderMode(source, pos);
         final IBlockState expected=state;
-        ConnectedSquare.Part part=ConnectedSquare.find(maxConnectedSize,(x,y)->
-                matches(source,move(move(pos,right,x),up,y),expected,mode));
+        boolean[] unavailable={false};
+        ConnectedSquare.Part part=ConnectedSquare.findPartitioned(maxConnectedSize,(x,y)->
+                {BlockPos at=move(move(pos,right,x),up,y);if(source instanceof World&&!((World)source).isBlockLoaded(at)){unavailable[0]=true;return false;}return matches(source,at,expected,mode);});
+        if(unavailable[0])part=ConnectedSquare.Part.SINGLE;
         return state.withProperty(partProperty(),ConnectedPart.at(part.size,part.x,part.y));
     }
 
@@ -241,6 +244,8 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
         }
         return result;
     }
+
+    public List<BlockPos> assemblyPositions(World world,BlockPos pos){List<BlockPos> positions=new ArrayList<>();for(TileEntityRedstoneLight tile:assemblyTiles(world,pos,world.getBlockState(pos)))positions.add(tile.getPos());return positions;}
 
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
             EntityPlayer player, EnumHand hand, EnumFacing facing,
@@ -320,6 +325,7 @@ public class BlockConnectedPropulsionLight extends BlockPropulsionLight {
     }
 
     public void refreshConnectedModels(World world, BlockPos center, EnumFacing facing) {
+        if(SHAPE_BATCH.get()>0)return;
         EnumFacing right = localRight(facing);
         EnumFacing up = localUp(facing);
         BlockPos first = move(move(center, right, -maxConnectedSize), up,

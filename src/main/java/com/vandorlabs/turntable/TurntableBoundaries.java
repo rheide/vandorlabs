@@ -11,11 +11,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /** Native reserved cells must move together; a prism never silently crops an assembly. */
-final class TurntableBoundaries {
+public final class TurntableBoundaries {
     private final World world;private final BlockPos min,max;
-    TurntableBoundaries(World world,BlockPos min,BlockPos max){this.world=world;this.min=min;this.max=max;}
+    public TurntableBoundaries(World world,BlockPos min,BlockPos max){this.world=world;this.min=min;this.max=max;}
     private void includes(BlockPos p){if(p.getX()<min.getX()||p.getY()<min.getY()||p.getZ()<min.getZ()||p.getX()>max.getX()||p.getY()>max.getY()||p.getZ()>max.getZ())throw new IllegalArgumentException("Scan volume cuts a multiblock at "+p+"; include its complete assembly");if(!world.isBlockLoaded(p))throw new IllegalArgumentException("Load all assembly cells first");}
-    void check(BlockPos p,IBlockState state,TileEntity tile){
+    public void check(BlockPos p,IBlockState state,TileEntity tile){
         Block block=state.getBlock();
         boolean rampPart=block instanceof BlockControlledRamp&&tile instanceof TileEntityControlledRamp;
         if(state.getBlockHardness(world,p)<0&&!rampPart)throw new IllegalArgumentException("Cannot capture unbreakable "+block.getRegistryName()+" at "+p.getX()+", "+p.getY()+", "+p.getZ());
@@ -27,18 +27,22 @@ final class TurntableBoundaries {
             for(BlockPos cell:ramp.vehicleCells())includes(cell);for(BlockPos cell:ramp.vehicleSources())includes(cell);
         }
         if(tile instanceof net.minecraft.tileentity.TileEntityPiston)throw new IllegalArgumentException("Wait for pistons to stop before scanning");
-        if(block instanceof BlockChest)for(EnumFacing side:EnumFacing.HORIZONTALS)if(world.getBlockState(p.offset(side)).getBlock()==block)includes(p.offset(side));
+        if(block instanceof BlockChest)for(EnumFacing side:EnumFacing.HORIZONTALS){BlockPos adjacent=p.offset(side);if(!world.isBlockLoaded(adjacent))throw new IllegalArgumentException("Load chest neighbours before scanning");if(world.getBlockState(adjacent).getBlock()==block)includes(adjacent);}
         if(block instanceof BlockBed)includes(p.offset(state.getValue(BlockBed.PART)==BlockBed.EnumPartType.FOOT?state.getValue(BlockBed.FACING):state.getValue(BlockBed.FACING).getOpposite()));
         if(block instanceof BlockDoublePlant)includes(state.getValue(BlockDoublePlant.HALF)==BlockDoublePlant.EnumBlockHalf.UPPER?p.down():p.up());
         if(block instanceof BlockPistonBase&&state.getValue(BlockPistonBase.EXTENDED))includes(p.offset(state.getValue(BlockPistonBase.FACING)));
         if(block instanceof BlockPistonExtension)includes(p.offset(state.getValue(BlockPistonExtension.FACING).getOpposite()));
         if(block.hasTileEntity(state)&&tile==null)throw new IllegalArgumentException("Missing block data at "+p);
-        if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)tile).loadedController();if(root==null)throw new IllegalArgumentException("Complete the modular landing gear before scanning");for(BlockPos cell:root.members())includes(cell);}
+        if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)tile).loadedController();if(root==null){
+            if(tile instanceof com.vandorlabs.gear.track.TrackTile){com.vandorlabs.gear.track.TrackTile track=(com.vandorlabs.gear.track.TrackTile)tile;BlockPos leader=track.leader();if(leader!=null){includes(leader);TileEntity raw=world.getTileEntity(leader);if(raw instanceof com.vandorlabs.gear.track.TrackTile)for(BlockPos member:((com.vandorlabs.gear.track.TrackTile)raw).trackMembers())includes(member);}}
+            else throw new IllegalArgumentException("Complete the modular arm before scanning");
+        }else for(BlockPos cell:root.members())includes(cell);}
         if(tile instanceof TileEntityCockpit){TileEntityCockpit c=(TileEntityCockpit)tile;for(BlockPos cell:c.data().cells(p,c.facing()))includes(cell);}
-        if(tile instanceof TileEntityCockpitPart)includes(((TileEntityCockpitPart)tile).anchor);
+        if(tile instanceof TileEntityCockpitPart){TileEntityCockpit root=com.vandorlabs.cockpit.CockpitAssembly.root(world,p);if(root==null)throw new IllegalArgumentException("Incomplete cockpit");includes(root.getPos());}
+        if(block instanceof com.vandorlabs.programmer.ProgrammerBlock){com.vandorlabs.programmer.ProgrammerTile root=com.vandorlabs.programmer.ProgrammerBlock.at(world,p);if(root==null)throw new IllegalArgumentException("Incomplete programmer");for(int part=0;part<4;part++)includes(com.vandorlabs.programmer.ProgrammerBlock.cell(root.getPos(),root.getProgrammerFacing(),part));}
         if(tile instanceof TileEntityCanopy){TileEntityCanopy c=((TileEntityCanopy)tile).constituent();for(BlockPos cell:c.reservedCells())includes(cell);if(c.pair!=null)includes(c.pair);}
         if(tile instanceof TileEntityConstructorPart)includes(((TileEntityConstructorPart)tile).owner());
-        if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).formed()){BlockConstructorCore core=(BlockConstructorCore)block;for(int x=0;x<core.width;x++)for(int y=0;y<core.height;y++)for(int z=0;z<3;z++)includes(((TileEntityConstructor)tile).cell(x,y,z));}
+        if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).formed()){BlockConstructorCore core=(BlockConstructorCore)block;for(int x=0;x<core.width;x++)for(int y=0;y<core.height;y++)for(int z=0;z<core.depth;z++)includes(((TileEntityConstructor)tile).cell(x,y,z));}
         if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;if(ramp.isMoving())throw new IllegalArgumentException("Stop the ramp before scanning");for(BlockPos cell:ramp.vehicleCells())includes(cell);for(BlockPos cell:ramp.vehicleSources())includes(cell);}
         if(tile instanceof TileEntityControlledRamp)includes(((TileEntityControlledRamp)tile).controller);
         if(tile instanceof TileEntityLandingGear){TileEntityLandingGear gear=(TileEntityLandingGear)tile;if(gear.owner()!=null)includes(gear.owner());else{int radius=gear.getSize()>=3?1:0,count=(int)Math.ceil(Math.max(gear.progress,gear.getExtensionPixels()/16F))+(radius>0?1:0);for(int y=0;y<=count;y++)for(int x=gear.getSize()==4?0:-radius;x<=radius;x++)for(int z=gear.getSize()==4?0:-radius;z<=radius;z++)includes(p.add(x,-y,z));}}

@@ -3644,7 +3644,16 @@
     "class": "BlockCoupler"
   },
   {
+    "id": "vehicle_coupler_slab",
+    "type": "block",
+    "class": "BlockCouplerSlab"
+  },
+  {
     "id": "data_chip_programmer",
     "class": "ProgrammerBlock"
+  },
+  {
+    "id": "programmable_pressure_plate",
+    "class": "PlateBlock"
   }
 ]

@@ -86,7 +86,7 @@ Toggle opens until the next accepted scan. Pulse provides a five-second opening 
 
 Turntable surfaces can use the general material catalog as well as their own designs, with independent On and Off selections. Non-stateful artwork works in either slot. The **Turntable** material category makes both states available to other programmable blocks too.
 
-![Turntable material choices](../texture-browser/collages/turntable.png)
+![Turntable material choices, now listed under Surfaces](../texture-browser/collages/surfaces.png)
 
 Capture and restoration share a transfer coordinator with vehicles. Journal work runs in the background, while lighting, neighbor updates, incoming snapshots and mesh preparation use bounded work budgets. Inventory changes made while a transfer prepares are revalidated. Durability checks inspect affected chunk markers before completing the transfer.
 

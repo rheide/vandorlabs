@@ -16,7 +16,7 @@ public final class MessageCoupler implements IMessage {
             if(!(actor.openContainer instanceof ContainerCoupler)||actor.openContainer.windowId!=message.window)return;
             ContainerCoupler container=(ContainerCoupler)actor.openContainer;
             com.vandorlabs.redstone.ChannelList list=com.vandorlabs.redstone.ChannelList.parse(message.channels);
-            if(list!=null&&container.canInteractWith(actor))container.tile.configure(list,message.inverted);
+            if(list!=null&&container.canInteractWith(actor)){if(container.tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.EntityGroundVehicle craft=((com.vandorlabs.vehicle.VehicleWorld)container.tile.getWorld()).craft;if(craft==null)return;craft.authorizeCouplingGui(actor,container.tile);}container.tile.authorize(actor);container.tile.configure(list,message.inverted);}
         });return null;}
     }
 }

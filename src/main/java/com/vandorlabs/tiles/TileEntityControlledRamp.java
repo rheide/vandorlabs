@@ -407,7 +407,9 @@ public class TileEntityControlledRamp extends TileEntity {
         tag.setBoolean(SaveSchema.Ramp.EXTEND_SEGMENTS,extendSegments);
         tag.setInteger(SaveSchema.Ramp.SPEED_MODE,speed);
         NBTTagList originList=new NBTTagList();
-        for (BlockPos origin:origins) {
+        // Match the reader/recovery fallback without changing live unformed geometry.
+        List<BlockPos> savedOrigins=origins.isEmpty()?java.util.Collections.singletonList(new BlockPos(pos.getX(),sourceY,pos.getZ())):origins;
+        for (BlockPos origin:savedOrigins) {
             NBTTagCompound entry=new NBTTagCompound();
             entry.setInteger("X",origin.getX()); entry.setInteger("Y",origin.getY()); entry.setInteger("Z",origin.getZ());
             originList.appendTag(entry);

@@ -1,0 +1,100 @@
+{
+  "variants": {
+    "facing=north,half=bottom,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_bottom",
+      "y": 0
+    },
+    "facing=north,half=bottom,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_bottom",
+      "y": 0
+    },
+    "facing=north,half=top,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_top",
+      "y": 0
+    },
+    "facing=north,half=top,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_top",
+      "y": 0
+    },
+    "facing=east,half=bottom,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_bottom",
+      "y": 90
+    },
+    "facing=east,half=bottom,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_bottom",
+      "y": 90
+    },
+    "facing=east,half=top,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_top",
+      "y": 90
+    },
+    "facing=east,half=top,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_top",
+      "y": 90
+    },
+    "facing=south,half=bottom,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_bottom",
+      "y": 180
+    },
+    "facing=south,half=bottom,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_bottom",
+      "y": 180
+    },
+    "facing=south,half=top,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_top",
+      "y": 180
+    },
+    "facing=south,half=top,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_top",
+      "y": 180
+    },
+    "facing=west,half=bottom,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_bottom",
+      "y": 270
+    },
+    "facing=west,half=bottom,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_bottom",
+      "y": 270
+    },
+    "facing=west,half=top,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_top",
+      "y": 270
+    },
+    "facing=west,half=top,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_top",
+      "y": 270
+    },
+    "facing=up,half=bottom,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_bottom",
+      "y": 0
+    },
+    "facing=up,half=bottom,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_bottom",
+      "y": 0
+    },
+    "facing=up,half=top,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_top",
+      "y": 0
+    },
+    "facing=up,half=top,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_top",
+      "y": 0
+    },
+    "facing=down,half=bottom,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_bottom",
+      "y": 0
+    },
+    "facing=down,half=bottom,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_bottom",
+      "y": 0
+    },
+    "facing=down,half=top,locked=false": {
+      "model": "vandorlabs:vehicle_coupler_slab_released_top",
+      "y": 0
+    },
+    "facing=down,half=top,locked=true": {
+      "model": "vandorlabs:vehicle_coupler_slab_locked_top",
+      "y": 0
+    }
+  }
+}

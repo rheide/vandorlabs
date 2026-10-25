@@ -18,6 +18,7 @@ public class ItemArm extends net.minecraft.item.ItemBlock {
         if(raw instanceof GearTileEntity){
             GearTileEntity tile=(GearTileEntity)raw;
             net.minecraft.tileentity.TileEntity clicked=world.getTileEntity(pos.offset(side.getOpposite()));
+            if(raw instanceof com.vandorlabs.gear.track.TrackTile&&clicked instanceof com.vandorlabs.gear.track.TrackTile&&!(stack.hasTagCompound()&&stack.getTagCompound().getCompoundTag("ModularGearSettings").hasKey("TrackStyle",3)))((com.vandorlabs.gear.track.TrackTile)raw).style(((com.vandorlabs.gear.track.TrackTile)clicked).style().ordinal());
             // Chained arms inherit their column's axis rather than the clicked side edge.
             EnumFacing mounting=clicked instanceof GearTileEntity&&GearAssembly.isExtender(world.getBlockState(pos.offset(side.getOpposite())))?((GearTileEntity)clicked).mountDirection():GearAssembly.isFoot(world.getBlockState(pos.offset(side.getOpposite())))?side.getOpposite():side;
             if(GearAssembly.isExtender(state)&&!(stack.hasTagCompound()&&stack.getTagCompound().hasKey("ArmRecovery",10)))tile.setMountDirection(mounting);

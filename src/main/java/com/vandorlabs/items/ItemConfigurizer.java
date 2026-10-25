@@ -90,6 +90,7 @@ public final class ItemConfigurizer extends Item {
         if (event.getHand() != EnumHand.MAIN_HAND
                 || event.getItemStack().getItem() != ModItems.CONFIGURIZER) return;
         World world = event.getWorld();
+        if(world.getBlockState(event.getPos()).getBlock() instanceof com.vandorlabs.coupler.BlockCoupler){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);world.getBlockState(event.getPos()).getBlock().onBlockActivated(world,event.getPos(),world.getBlockState(event.getPos()),event.getEntityPlayer(),EnumHand.MAIN_HAND,event.getFace(),.5F,.5F,.5F);return;}
         if(MovingDeviceConfiguration.openTurntable(event.getEntityPlayer(),MovingDeviceConfiguration.pointedTurntable(event.getEntityPlayer()))){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);return;}
         com.vandorlabs.vehicle.EntityGroundVehicle craft=event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.vehicle.EntityGroundVehicle?(com.vandorlabs.vehicle.EntityGroundVehicle)event.getEntityPlayer().getRidingEntity():com.vandorlabs.vehicle.VehicleLookup.pointed(event.getEntityPlayer());
         if(craft!=null){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)configureCraft((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),craft);return;}
@@ -108,6 +109,7 @@ public final class ItemConfigurizer extends Item {
             return;
         }
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);if(!world.isRemote)com.vandorlabs.vehicle.VehicleService.previewController((net.minecraft.entity.player.EntityPlayerMP)event.getEntityPlayer(),pos);return;}
+        if(state.getBlock() instanceof com.vandorlabs.plate.PlateBlock){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);state.getBlock().onBlockActivated(world,pos,state,event.getEntityPlayer(),EnumHand.MAIN_HAND,event.getFace(),.5F,.5F,.5F);return;}
         if(state.getBlock() instanceof com.vandorlabs.programmer.ProgrammerBlock){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);state.getBlock().onBlockActivated(world,pos,state,event.getEntityPlayer(),EnumHand.MAIN_HAND,event.getFace(),.5F,.5F,.5F);return;}
         TileEntity tile = world.getTileEntity(pos);
         int gui;
@@ -115,7 +117,9 @@ public final class ItemConfigurizer extends Item {
         if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && ((com.vandorlabs.tiles.TileEntityCanopy)tile).owner().configurable()){tile=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();pos=tile.getPos();gui=GuiHandler.GUI_LARGE_CANOPY;}
         else if(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone)gui=GuiHandler.GUI_WIRELESS_REDSTONE;
         else if(tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot) gui=GuiHandler.GUI_TOKEN_SLOT;
+        else if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface) gui=GuiHandler.GUI_SURFACE;
         else if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableController) gui=GuiHandler.GUI_TURNTABLE;
+        else if(tile instanceof com.vandorlabs.gear.track.TrackTile)gui=GuiHandler.GUI_MODULAR_GEAR;
         else if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)tile).loadedController();if(root==null)return;gui=GuiHandler.GUI_MODULAR_GEAR;}
         else if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableTrapdoor) gui = GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR;
         else if (tile instanceof TileEntitySpaceDoor) gui = GuiHandler.GUI_SPACE_DOOR;

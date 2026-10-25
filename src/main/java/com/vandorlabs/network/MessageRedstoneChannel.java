@@ -128,7 +128,10 @@ public class MessageRedstoneChannel implements IMessage {
     public static class Handler implements IMessageHandler<MessageRedstoneChannel, IMessage> {
         @Override public IMessage onMessage(MessageRedstoneChannel message, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
-            player.getServerWorld().addScheduledTask(() -> {
+            player.getServerWorld().addScheduledTask(()->apply(player,message));return null;
+        }
+        /** Shared authoritative operation, also exercised by focused real-container regressions. */
+        public static void apply(EntityPlayerMP player,MessageRedstoneChannel message){
                 if (message.pos == null || message.getRedstoneChannels()==null || message.channel < 0 || !player.world.isBlockLoaded(message.pos)
                         || (message.updateSide && (message.sideTexture < 0
                         || !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(message.sideTexture)))
@@ -142,6 +145,9 @@ public class MessageRedstoneChannel implements IMessage {
                 if (container.member != tile || !container.canInteractWith(player)) return;
                 net.minecraft.block.Block block = player.world.getBlockState(message.pos)
                         .getBlock();
+                if(message.updateShape&&block instanceof BlockPropulsionLight&&message.shape!=((BlockPropulsionLight)block).shape()){
+                    if(!BlockPropulsionLight.configureShape(player.world,message.pos,message.shape,player))player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("The thruster group could not change shape; check its complete footprint and permissions"),true);return;
+                }
                 if (block instanceof BlockConnectedPropulsionLight) {
                     ((BlockConnectedPropulsionLight)block).configureInversionAssembly(player.world,message.pos,message.redstoneInverted);
                     ((BlockConnectedPropulsionLight)block).configureSignalAssembly(player.world,message.pos,message.signalBrightness,message.threshold);
@@ -167,16 +173,13 @@ public class MessageRedstoneChannel implements IMessage {
                 if(tile instanceof TileEntityRedstoneLight && block instanceof BlockPropulsionLight){((TileEntityRedstoneLight)tile).setRedstoneInverted(message.redstoneInverted);((TileEntityRedstoneLight)tile).configureSignalBrightness(message.signalBrightness,message.threshold);}
                 if (message.updateShape && block instanceof BlockPropulsionLight
                         && !((BlockPropulsionLight) block).familyId().isEmpty()) {
-                    BlockPropulsionLight.configureShape(player.world, message.pos,
-                            message.shape);
-                    if (message.updateJoin && message.shape == 0) {
+                    if(!BlockPropulsionLight.configureShape(player.world,message.pos,message.shape,player)){player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("The thruster group could not change shape; check its complete footprint and permissions"),true);return;}
+                    if (message.updateJoin && message.shape != 2) {
                         TileEntity changed = player.world.getTileEntity(message.pos);
                         if (changed instanceof TileEntityRedstoneLight)
                             ((TileEntityRedstoneLight) changed).setJoin(message.join);
                     }
                 }
-            });
-            return null;
         }
     }
 }
