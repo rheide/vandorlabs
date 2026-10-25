@@ -6,6 +6,7 @@ final class FluidFocusedChecks {
     private static int ticks;private static boolean checked;
     static boolean tick(Minecraft mc,java.io.File output)throws Exception{
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=6;}
+        if(Boolean.getBoolean("vandorlabs.housingItemGoldensOnly")){if(ticks<40)return false;return LegacyHousingItemGoldens.tick(mc,output);}
         if(ticks==80)mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);

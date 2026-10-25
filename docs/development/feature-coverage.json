@@ -36,8 +36,7 @@
       "remaining": [
         "custom block material definitions and sampling",
         "complete creative/search catalog configuration",
-        "carried-assembly joined faces and shader render acceptance",
-        "complete configured cube and trigger inventory preview UV/layout and unversioned-material parity"
+        "carried-assembly joined faces and shader render acceptance"
       ],
       "implemented": [
         "canonical stable housing indices and legacy saved defaults",
@@ -50,7 +49,8 @@
         "held-item Adventure support-block permission parity and exact editing sessions",
         "shared bounded joined-face discovery with immutable client-thread ModelData snapshots and no worker world reads",
         "108 native emitted-quad cases across six faces, six saved facings and three layouts; continuous authored UVs and opaque Fit margins",
-        "actual menu material/layout edits split neighboring planes and rejoin; rendered Stretch/Fit artwork and repeated Tile images"
+        "actual menu material/layout edits split neighboring planes and rejoin; rendered Stretch/Fit artwork and repeated Tile images",
+        "28 actual legacy/native cube and trigger item cases match materials, content UVs, shading, transforms and rendered padding while retaining dormant settings"
       ]
     },
     {

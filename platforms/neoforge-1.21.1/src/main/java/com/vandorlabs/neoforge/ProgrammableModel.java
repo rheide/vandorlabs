@@ -37,7 +37,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         java.util.Map<Integer,MaterialSnapshot> sprites=java.util.Map.copyOf(resolved);
         TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
         event.getModels().replaceAll((id,model) -> {
-            if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_trigger_block"))&&id.getVariant().equals("inventory"))return new UniformHousingItem(model,sprites,margin,null);
+            if(java.util.Set.of(ResourceLocation.parse("vandorlabs:programmable_block"),ResourceLocation.parse("vandorlabs:programmable_trigger_block")).contains(id.id())&&id.getVariant().equals("inventory"))return new UniformHousingItem(model,sprites,margin,null);
             return java.util.Set.of(ResourceLocation.parse("vandorlabs:programmable_block"),ResourceLocation.parse("vandorlabs:programmable_trigger_block")).contains(id.id())&&!id.getVariant().equals("inventory")?new ProgrammableModel(model,sprites,margin):model;
         });
     }
@@ -79,7 +79,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         if(light!=null)for(int i=0;i<result.size();i++)result.set(i,com.vandorlabs.neoforge.client.NativeHousingLighting.apply(result.get(i),light));
         return result;
     }
-    /** Configured trigger items always preview the stored OFF material, independently of live signals. */
+    /** Item previews retain raw stored materials and dormant faces, independently of world migration or signals. */
     private static final class UniformHousingItem extends BakedModelWrapper<BakedModel> {
         private final java.util.Map<Integer,MaterialSnapshot> materials;
         private final TextureAtlasSprite margin;
@@ -87,7 +87,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         private final ProgrammableModel renderer;
         private final ModelData itemData;
         private final java.util.Map<Long,BakedModel> resolved=new java.util.HashMap<>();
-        UniformHousingItem(BakedModel original,java.util.Map<Integer,MaterialSnapshot> materials,TextureAtlasSprite margin,ProgrammableBlockDialog.State settings){super(original);this.materials=materials;this.margin=margin;this.settings=settings;this.renderer=new ProgrammableModel(original,materials,margin);this.itemData=settings==null?ModelData.EMPTY:ModelData.builder().with(ProgrammableBlockEntity.SETTINGS,settings).build();}
+        UniformHousingItem(BakedModel original,java.util.Map<Integer,MaterialSnapshot> materials,TextureAtlasSprite margin,ProgrammableBlockDialog.State settings){super(com.vandorlabs.neoforge.client.NativeLegacyUvs.wrap(original));this.materials=materials;this.margin=margin;this.settings=settings;this.renderer=new ProgrammableModel(originalModel,materials,margin);this.itemData=settings==null?ModelData.EMPTY:ModelData.builder().with(ProgrammableBlockEntity.SETTINGS,settings).build();}
         @Override public net.minecraft.client.renderer.block.model.ItemOverrides getOverrides(){
             return new net.minecraft.client.renderer.block.model.ItemOverrides(){
                 @Override public BakedModel resolve(BakedModel original,net.minecraft.world.item.ItemStack stack,net.minecraft.client.multiplayer.ClientLevel world,net.minecraft.world.entity.LivingEntity entity,int seed){
@@ -95,7 +95,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
                     if(data==null)data=stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
                     if(data==null)return UniformHousingItem.this;
                     var tag=data.copyTag();if(tag.contains("BlockEntityTag",10))tag=tag.getCompound("BlockEntityTag");
-                    int choice=ProgrammableBlockDialog.savedMainTexture(tag.getInt(ProgrammableBlockDialog.MAIN_TEXTURE_KEY),tag.contains("HousingTextureVersion",3));
+                    int choice=tag.getInt(ProgrammableBlockDialog.MAIN_TEXTURE_KEY);
                     int index=ModernFinishCatalog.renderChoice(choice);
                     int layout=ProgrammableBlockDialog.savedTextureLayout(tag.getInt(ProgrammableBlockDialog.LAYOUT_KEY),tag.contains(ProgrammableBlockDialog.LAYOUT_KEY,3),!tag.contains("SlabTileSides",1)||tag.getBoolean("SlabTileSides"));
                     long key=((long)index<<2)|layout;
@@ -105,7 +105,14 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         }
         @Override public List<BakedQuad> getQuads(BlockState state,Direction face,RandomSource random){
             if(settings==null)return originalModel.getQuads(state,face,random);
-            return renderer.getQuads(VandorLabsModern.PROGRAMMABLE_BLOCK.get().defaultBlockState(),face,random,itemData,null);
+            List<BakedQuad> canonical=originalModel.getQuads(state,face,random);
+            List<BakedQuad> mapped=renderer.getQuads(VandorLabsModern.PROGRAMMABLE_BLOCK.get().defaultBlockState(),face,random,itemData,null);
+            List<BakedQuad> result=new ArrayList<>(mapped.size());
+            for(BakedQuad quad:mapped){
+                BakedQuad source=canonical.stream().filter(value->value.getDirection()==quad.getDirection()).findFirst().orElseThrow();
+                result.add(new BakedQuad(quad.getVertices(),quad.getTintIndex(),quad.getDirection(),quad.getSprite(),source.isShade(),source.hasAmbientOcclusion()));
+            }
+            return List.copyOf(result);
         }
         @Override public List<BakedQuad> getQuads(BlockState state,Direction face,RandomSource random,ModelData data,RenderType layer){return getQuads(state,face,random);}
         @Override public List<BakedModel> getRenderPasses(net.minecraft.world.item.ItemStack stack,boolean fabulous){return List.of(this);}

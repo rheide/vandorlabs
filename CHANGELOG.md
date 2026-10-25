@@ -49,6 +49,10 @@
   loaded boundaries when neighbouring chunks arrive or leave. Preserve the
   reference wall/floor support, inversion, plain item and tool requirements.
 
+- Match configured native cube and Trigger inventory previews to the reference
+  material choices, texture layouts, shading and padded transforms. Preserve
+  raw item choices and dormant settings without applying world-save migrations.
+
 - Add native Programmable Slabs and Stairs with shared exact geometry, material
   dialogs, configured items and slab merging. Preserve dormant settings and
   retained fluid data through placement, drops and restarts. Refresh connected

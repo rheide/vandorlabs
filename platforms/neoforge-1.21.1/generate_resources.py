@@ -94,7 +94,7 @@ def main():
     variants.update({f'facing={facing}':{'model':'vandorlabs:block/programmable_block','y':90} for facing in ('up','down')})
     write(assets / 'blockstates/programmable_block.json', {'variants':variants})
     write(assets / 'models/block/programmable_block.json', {'parent':'minecraft:block/cube_all','textures':{'all':'vandorlabs:housing/dark_wall_panel'}})
-    write(assets / 'models/item/programmable_block.json', {'parent':'vandorlabs:block/programmable_block','display':{'gui':{'rotation':[30,225,0],'translation':[0,0,0],'scale':[.58,.58,.58]}}})
+    write(assets / 'models/item/programmable_block.json', {'parent':'vandorlabs:block/programmable_block'})
     lang = {}
     for line in (ROOT / 'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines():
         if '=' in line and not line.startswith('#'):
