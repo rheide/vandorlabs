@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 
-public final class ProgrammableBlockEntity extends BlockEntity {
+public class ProgrammableBlockEntity extends BlockEntity {
     public static final ModelProperty<ProgrammableBlockDialog.State> SETTINGS = new ModelProperty<>();
     private CompoundTag retainedSettings = new CompoundTag();
     private volatile JoinedCubeFaces joinedFaces=JoinedCubeFaces.NONE;
@@ -22,7 +22,10 @@ public final class ProgrammableBlockEntity extends BlockEntity {
     public static boolean sameSettings(ProgrammableBlockDialog.State a,ProgrammableBlockDialog.State b){if(a.mainTexture!=b.mainTexture||a.layout!=b.layout||a.facesEnabled!=b.facesEnabled)return false;for(int i=0;i<6;i++)if(a.face(i)!=b.face(i))return false;return true;}
     private void installSettings(ProgrammableBlockDialog.State next){if(!sameSettings(settings,next))joinedFaces=JoinedCubeFaces.NONE;settings=next;}
     public static ProgrammableBlockDialog.State defaults() { return new ProgrammableBlockDialog.State(0,1,false,null,-1); }
-    public ProgrammableBlockEntity(BlockPos pos, BlockState state) { super(VandorLabsModern.PROGRAMMABLE_ENTITY.get(), pos, state); }
+    public ProgrammableBlockEntity(BlockPos pos, BlockState state) { this(VandorLabsModern.PROGRAMMABLE_ENTITY.get(),pos,state); }
+    protected ProgrammableBlockEntity(net.minecraft.world.level.block.entity.BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);}
+    /** Derived visual state can change without overwriting the persisted housing settings. */
+    protected ProgrammableBlockDialog.State modelSettings(){return settings;}
     public ProgrammableBlockDialog.State settings() { return settings; }
     public void apply(ProgrammableBlockDialog.State next) {
         int[] faces = next.faces();
@@ -62,11 +65,11 @@ public final class ProgrammableBlockEntity extends BlockEntity {
         super.collectImplicitComponents(components);
         if(level!=null) {
             CompoundTag configuration=saveWithId(level.registryAccess());
-            for(String key:java.util.List.of("x","y","z","ChannelLevel","channelSignal","JoinedSignalLevel","LightGroupPowered"))configuration.remove(key);
+            for(String key:java.util.List.of("x","y","z","ChannelLevel","ChannelSignal","channelSignal","JoinedSignalLevel","LightGroupPowered"))configuration.remove(key);
             components.set(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA,net.minecraft.world.item.component.CustomData.of(configuration));
         }
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries); }
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this); }
-    @Override public ModelData getModelData() { return ModelData.builder().with(SETTINGS,settings).with(JOINED,joinedFaces).build(); }
+    @Override public ModelData getModelData() { return ModelData.builder().with(SETTINGS,modelSettings()).with(JOINED,joinedFaces).build(); }
 }

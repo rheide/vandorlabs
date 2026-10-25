@@ -44,7 +44,7 @@ public final class JoinedCubeSnapshots {
     private static int material(ProgrammableBlockEntity tile,Direction face){var s=tile.settings();int local=ProgrammableModel.localFace(face,tile.getBlockState().getValue(ProgrammableBlock.FACING));return s.facesEnabled&&s.face(local)>=0?s.face(local):s.mainTexture;}
     private static JoinedHousingPolicy.Surface surface(ClientLevel world,BlockPos pos,Direction face){
         if(!world.hasChunkAt(pos)||!(world.getBlockEntity(pos) instanceof ProgrammableBlockEntity tile))return null;
-        var state=world.getBlockState(pos);if(!(state.getBlock() instanceof ProgrammableBlock))return null;
+        var state=world.getBlockState(pos);if(!state.is(com.vandorlabs.neoforge.VandorLabsModern.PROGRAMMABLE_BLOCK.get()))return null;
         BlockPos neighbor=pos.relative(face);
         boolean exposed=!world.hasChunkAt(neighbor)||!world.getBlockState(neighbor).isSolidRender(world,neighbor)||!world.getBlockState(neighbor).isCollisionShapeFullBlock(world,neighbor);
         return new JoinedHousingPolicy.Surface(true,exposed,state.getValue(ProgrammableBlock.FACING).get3DDataValue(),tile.settings().layout,material(tile,face));
@@ -52,7 +52,7 @@ public final class JoinedCubeSnapshots {
     /** Main-thread entry also used by opt-in real-world renderer contracts. */
     public static void sample(ClientLevel world,BlockPos pos){
         if(!Minecraft.getInstance().isSameThread())throw new IllegalStateException("Joined snapshot world read on worker");
-        if(!world.hasChunkAt(pos)||!(world.getBlockEntity(pos) instanceof ProgrammableBlockEntity root))return;
+        if(!world.hasChunkAt(pos)||!world.getBlockState(pos).is(com.vandorlabs.neoforge.VandorLabsModern.PROGRAMMABLE_BLOCK.get())||!(world.getBlockEntity(pos) instanceof ProgrammableBlockEntity root))return;
         int visible=0;for(Direction face:Direction.values()){var sampled=surface(world,pos,face);if(sampled!=null&&sampled.exposed)visible|=1<<face.get3DDataValue();}
         var s=root.settings();Signature signature=new Signature(s.mainTexture,s.layout,s.facesEnabled,s.face(0),s.face(1),s.face(2),s.face(3),s.face(4),s.face(5),root.getBlockState().getValue(ProgrammableBlock.FACING),visible);
         Signature before=SEEN.put(root,signature);

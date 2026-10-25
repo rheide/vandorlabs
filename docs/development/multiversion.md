@@ -47,6 +47,20 @@ Implement independent builds, shared behavior, and dialog extraction separately;
 
 Run shared fixtures on Java 8 and 21, the existing Forge dedicated-server linkage check, non-rendering matrices and relevant live client checks. Preserve `verifyRelease` before handing off a release jar. For NeoForge, use disposable worlds, startup and save/reload checks, GUI click/scroll tests, client/server round trips and geometry comparison. Require explicit per-family parity status; scaffolding is not full support. External integrations need native modern equivalents or documented unsupported status and must not silently alter core behavior.
 
+## Adding a programmable family
+
+Reuse the existing housing adapter when a family shares programmable cube storage and material rendering. `ProgrammableBlockEntity` exposes a protected constructor accepting the native block-entity type, position and state. Subclasses retain its settings codec, migrations, configured item components and model-data keys. `ProgrammableBlock` supplies facing, placement inheritance, rotation, mirroring and configured picking. Override only the family's entity factory, codec, interaction and world callbacks that differ.
+
+Keep persistent configuration separate from its visual projection. `settings()` represents saved housing settings; the protected `modelSettings()` hook supplies an immutable rendering snapshot. A signal-driven family may select a different visible finish without replacing the saved off finish. Sample world inputs on the server and synchronize primitive signal state; constructing model data must not read neighbouring blocks from a rendering worker.
+
+The programmable trigger demonstrates why family boundaries matter. Its default texture layout is zero, while the plain programmable cube defaults to one. Trigger world rendering uses its selected signal finish uniformly on every face. Face override settings remain in saved data and configured items, but do not affect trigger rendering. Trigger items show the uniform off finish, including when an exact-zero trigger would show its on finish in the world. Preserve these distinctions in the common renderer's family adapter. Joined-face discovery accepts only the plain programmable block registration; extending the housing entity class does not make a new family eligible for joining.
+
+Extract actual legacy behavior before implementing its native adapter. `TriggerState` owns the stable trigger fields, typed missing-field defaults and exact-level/band selection; the legacy tile delegates to it. Shared dialog contracts likewise drive legacy and native option labels, IDs, cycling and layout. Preserve the original submission behavior: trigger edits send immediately, whereas mounted binary-control drafts submit on confirmation.
+
+Keep `onLoad()` local and queue membership through the platform's deferred loader. Recheck installed identity before registration, and unregister on removal and chunk unload. Server payloads must validate the exact entity and menu session, loaded position, reach and applicable player permissions. Preserve each family's authorization policy, including held-item Adventure permissions; binary-control editing and trigger editing have different configurizer requirements. Bound decoded lengths before allocation.
+
+Run portable contracts under both Java 8 and Java 21, then validate the affected legacy paths and dedicated-server linkage. Native acceptance requires save/reload across separate processes and focused world, dialog, item and interaction checks against immutable compiled outputs. Include negative controls for rendering or interaction claims; compilation alone cannot establish family parity.
+
 ## Platform references
 
 - [NeoForge 1.21.1 setup and Java 21](https://docs.neoforged.net/docs/1.21.1/gettingstarted/)

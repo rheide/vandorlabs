@@ -19,7 +19,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.api.distmarker.Dist;
 
 /** Initial finish-selection vertical slice; additional legacy settings remain under conversion. */
-public final class ProgrammableBlock extends DirectionalBlock implements net.minecraft.world.level.block.EntityBlock {
+public class ProgrammableBlock extends DirectionalBlock implements net.minecraft.world.level.block.EntityBlock {
     public static final MapCodec<ProgrammableBlock> CODEC = simpleCodec(ProgrammableBlock::new);
     public ProgrammableBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -35,7 +35,7 @@ public final class ProgrammableBlock extends DirectionalBlock implements net.min
     @Override protected BlockState rotate(BlockState state, Rotation rotation) { return state.setValue(FACING, rotation.rotate(state.getValue(FACING))); }
     @Override protected BlockState mirror(BlockState state, Mirror mirror) { return rotate(state, mirror.getRotation(state.getValue(FACING))); }
     @Override public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state,net.minecraft.world.phys.HitResult target,net.minecraft.world.level.LevelReader level,BlockPos pos,Player player) {
-        var stack=new net.minecraft.world.item.ItemStack(VandorLabsModern.PROGRAMMABLE_ITEM.get());
+        var stack=new net.minecraft.world.item.ItemStack(this);
         if(level.getBlockEntity(pos) instanceof ProgrammableBlockEntity tile)tile.saveToItem(stack,level.registryAccess());
         return stack;
     }

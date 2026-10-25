@@ -36,10 +36,13 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         }
         java.util.Map<Integer,MaterialSnapshot> sprites=java.util.Map.copyOf(resolved);
         TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
-        event.getModels().replaceAll((id,model) -> id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"))&&!id.getVariant().equals("inventory")?new ProgrammableModel(model,sprites,margin):model);
+        event.getModels().replaceAll((id,model) -> {
+            if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_trigger_block"))&&id.getVariant().equals("inventory"))return new UniformHousingItem(model,sprites,margin,null);
+            return java.util.Set.of(ResourceLocation.parse("vandorlabs:programmable_block"),ResourceLocation.parse("vandorlabs:programmable_trigger_block")).contains(id.id())&&!id.getVariant().equals("inventory")?new ProgrammableModel(model,sprites,margin):model;
+        });
     }
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
-        com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
+        if(state!=null&&state.is(VandorLabsModern.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
         return data;
     }
     @Override public boolean useAmbientOcclusion() { return false; }
@@ -72,6 +75,38 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
                 sprite,uScale,vScale,margin));
         }
         return result;
+    }
+    /** Configured trigger items always preview the stored OFF material, independently of live signals. */
+    private static final class UniformHousingItem extends BakedModelWrapper<BakedModel> {
+        private final java.util.Map<Integer,MaterialSnapshot> materials;
+        private final TextureAtlasSprite margin;
+        private final ProgrammableBlockDialog.State settings;
+        private final ProgrammableModel renderer;
+        private final ModelData itemData;
+        private final java.util.Map<Long,BakedModel> resolved=new java.util.HashMap<>();
+        UniformHousingItem(BakedModel original,java.util.Map<Integer,MaterialSnapshot> materials,TextureAtlasSprite margin,ProgrammableBlockDialog.State settings){super(original);this.materials=materials;this.margin=margin;this.settings=settings;this.renderer=new ProgrammableModel(original,materials,margin);this.itemData=settings==null?ModelData.EMPTY:ModelData.builder().with(ProgrammableBlockEntity.SETTINGS,settings).build();}
+        @Override public net.minecraft.client.renderer.block.model.ItemOverrides getOverrides(){
+            return new net.minecraft.client.renderer.block.model.ItemOverrides(){
+                @Override public BakedModel resolve(BakedModel original,net.minecraft.world.item.ItemStack stack,net.minecraft.client.multiplayer.ClientLevel world,net.minecraft.world.entity.LivingEntity entity,int seed){
+                    var data=stack.get(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA);
+                    if(data==null)data=stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+                    if(data==null)return UniformHousingItem.this;
+                    var tag=data.copyTag();if(tag.contains("BlockEntityTag",10))tag=tag.getCompound("BlockEntityTag");
+                    int choice=ProgrammableBlockDialog.savedMainTexture(tag.getInt(ProgrammableBlockDialog.MAIN_TEXTURE_KEY),tag.contains("HousingTextureVersion",3));
+                    int index=ModernFinishCatalog.renderChoice(choice);
+                    int layout=ProgrammableBlockDialog.savedTextureLayout(tag.getInt(ProgrammableBlockDialog.LAYOUT_KEY),tag.contains(ProgrammableBlockDialog.LAYOUT_KEY,3),!tag.contains("SlabTileSides",1)||tag.getBoolean("SlabTileSides"));
+                    long key=((long)index<<2)|layout;
+                    var result=resolved.get(key);if(result==null){result=new UniformHousingItem(originalModel,materials,margin,new ProgrammableBlockDialog.State(index,layout,false,null,-1));resolved.put(key,result);}return result;
+                }
+            };
+        }
+        @Override public List<BakedQuad> getQuads(BlockState state,Direction face,RandomSource random){
+            if(settings==null)return originalModel.getQuads(state,face,random);
+            return renderer.getQuads(VandorLabsModern.PROGRAMMABLE_BLOCK.get().defaultBlockState(),face,random,itemData,null);
+        }
+        @Override public List<BakedQuad> getQuads(BlockState state,Direction face,RandomSource random,ModelData data,RenderType layer){return getQuads(state,face,random);}
+        @Override public List<BakedModel> getRenderPasses(net.minecraft.world.item.ItemStack stack,boolean fabulous){return List.of(this);}
+        @Override public BakedModel applyTransform(net.minecraft.world.item.ItemDisplayContext context,com.mojang.blaze3d.vertex.PoseStack pose,boolean left){getTransforms().getTransform(context).apply(left,pose);return this;}
     }
     public static int localFace(Direction world,Direction facing) {
         if(world==Direction.DOWN)return 0;if(world==Direction.UP)return 1;

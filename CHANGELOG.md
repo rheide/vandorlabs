@@ -31,7 +31,12 @@
   authored UV orientation and draw opaque Fit margins without worker world reads.
 - Add native Push Button and Rocker Switch adapters with shared mount/settings
   policies, scheduled pulse expiry, persistent bank isolation, exact dialogs and
-  configured item padding. The other nine control IDs remain under conversion.
+  configured item padding.
+
+- Add the native Programmable Trigger with shared exact-level/band settings and
+  four independent texture lists. Reuse cube housing storage/rendering, preserve
+  uniform live artwork and OFF item previews, and keep channel edits immediate.
+  Eight other control IDs and the larger outstanding families remain unported.
 
 ## 2.5
 

@@ -57,6 +57,7 @@ public final class ModernRuntimeChecks {
             player.setGameMode(GameType.CREATIVE);player.setPos(200,81,200);require(!FinishPayload.apply(player,settings),"remote editor accepted");
             CompoundTag legacy=saved.copy();legacy.remove("HousingTextureVersion");legacy.putInt(ProgrammableBlockDialog.MAIN_TEXTURE_KEY,15);
             restored.loadWithComponents(legacy,level.registryAccess());require(restored.settings().mainTexture==14,"legacy removed finish migration mismatch");
+            com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.run(level);
             JoinedCubeRuntimeChecks.run(level);
             com.vandorlabs.neoforge.control.ControlRuntimeChecks.run(level);
             BasicHousingRuntimeChecks.run(level);
@@ -70,6 +71,7 @@ public final class ModernRuntimeChecks {
             server.saveEverything(true,true,true);
             System.out.println("[vandorlabs][modern] server-write PASS settings, fixed-size payload bounds, permissions, distance, unloaded target, NBT roundtrip, legacy migration, disk save");
         } else {
+            com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.control.ControlRuntimeChecks.prepareRead(level);
             com.vandorlabs.neoforge.screen.RedstoneOverlayRuntimeChecks.prepareRead(level);
             for(BlockPos at:java.util.List.of(pos,new BlockPos(4,80,0),new BlockPos(10,80,0),new BlockPos(14,80,0))) { level.getChunkAt(at);level.getBlockEntity(at); }
@@ -87,6 +89,7 @@ public final class ModernRuntimeChecks {
         require(level.getBlockEntity(pos) instanceof ProgrammableBlockEntity,"saved programmable block missing");
         var tile=(ProgrammableBlockEntity)level.getBlockEntity(pos);
         require(tile.settings().mainTexture==3&&tile.settings().layout==2&&tile.settings().facesEnabled&&Arrays.equals(tile.settings().faces(),new int[]{0,1,2,3,-1,5}),"disk reload mismatch");
+        com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.read(level);
         JoinedCubeRuntimeChecks.read(level);
         com.vandorlabs.neoforge.control.ControlRuntimeChecks.read(level);
         BasicHousingRuntimeChecks.read(level);

@@ -22,6 +22,7 @@ public final class ModernClientFixture {
         var screen=(com.vandorlabs.neoforge.screen.ProgrammableScreenEntity)level.getBlockEntity(screenPos);
         screen.configure("engineering_screen",new com.vandorlabs.ui.ScreenSelectorDialog.State(false,0,2,1,0,1,true,true),com.vandorlabs.redstone.ChannelList.parse("5, 9"),0,-1);
         level.setBlock(BasicHousingRuntimeChecks.MATTER_POS,VandorLabsModern.MATTER_BLOCK.get().defaultBlockState(),3);
+        com.vandorlabs.neoforge.trigger.TriggerRuntimeChecks.clientFixture(level);
         FilesystemRuntimeChecks.clientFixture(level);
         JoinedCubeRuntimeChecks.clientFixture(level);
         com.vandorlabs.neoforge.control.ControlRuntimeChecks.clientFixture(level);

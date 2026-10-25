@@ -38,6 +38,7 @@ tasks.register('generateModernResources', Exec) {
     inputs.file('../../tools/compact_runtime_assets.py')
     inputs.file('generate_screen_resources.py')
     inputs.file('generate_control_resources.py')
+    inputs.file('generate_trigger_resources.py')
     inputs.file('../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')
     inputs.dir('../../texture-packs/default')
     inputs.dir('../../texture-packs/additional')

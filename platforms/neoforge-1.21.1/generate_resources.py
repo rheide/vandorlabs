@@ -153,7 +153,9 @@ def main():
     generate_screen(ROOT, resources)
     from generate_control_resources import generate as generate_controls
     generate_controls(ROOT,resources)
-    native_blocks=['programmable_block','programmable_matter_block','programmable_viewscreen','programmable_console','programmable_half_console','programmable_input','programmable_half_input','programmable_diagonal_screen','programmable_diagonal_half_console','redstone_transmitter','redstone_receiver']
+    from generate_trigger_resources import generate as generate_trigger
+    generate_trigger(ROOT,resources)
+    native_blocks=['programmable_trigger_block','push_button','rocker_switch','programmable_block','programmable_matter_block','programmable_viewscreen','programmable_console','programmable_half_console','programmable_input','programmable_half_input','programmable_diagonal_screen','programmable_diagonal_half_console','redstone_transmitter','redstone_receiver']
     write(OUT / 'adapter-coverage.json', {
         'registered_blocks':native_blocks,
         'registered_direct_items':['configurizer','programmable_matter_ingot','industrial_alloy_ingot'],
@@ -162,6 +164,6 @@ def main():
         'complete_families':[],
         'coverage_inventory':'docs/development/feature-coverage.json',
         'programmable_block':{
-            'implemented':['shared finish catalog','shared dialog controls','per-face settings','layout settings','NBT settings persistence','server-authoritative editing','filesystem material discovery and resource reload'],
-            'pending':['custom material definitions','joined multi-block face layouts','shader format interoperability','full family parity']}})
+            'implemented':['shared finish catalog','shared dialog controls','per-face settings','layout settings','NBT settings persistence','server-authoritative editing','filesystem material discovery and resource reload','bounded client-thread joined face snapshots and authored Stretch/Fit geometry'],
+            'pending':['custom material definitions','carried assembly joins','shader format interoperability','full family parity']}})
 if __name__ == '__main__': main()

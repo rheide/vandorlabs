@@ -303,19 +303,23 @@
       ],
       "modern_registered_block_ids": [
         "push_button",
-        "rocker_switch"
+        "rocker_switch",
+        "programmable_trigger_block"
       ],
       "remaining": [
-        "nine remaining control adapters: airliner_throttle, compact_power_lever, fighter_throttle, industrial_power_lever, large_power_lever, programmable_trigger_block, small_power_lever, thruster_lever, wall_slider",
+        "eight remaining control adapters: airliner_throttle, compact_power_lever, fighter_throttle, industrial_power_lever, large_power_lever, small_power_lever, thruster_lever, wall_slider",
         "full mounted-world and shader render acceptance",
         "carried-assembly integration"
       ],
       "implemented": [
-        "native push_button and rocker_switch only: two of the eleven legacy control IDs",
+        "native push_button, rocker_switch and programmable_trigger_block: three of the eleven legacy control IDs",
         "shared mount/settings/item-padding policies with native six-face support and directional power",
         "scheduled twenty-tick button pulse without retrigger extension; persistent rocker banks isolated from transient pulses",
         "native exact-session settings, reverse cycling, bounded channels and configured-item persistence",
-        "subsequent-process state recovery, ordinary survival and Adventure permissions, actual UI clicks and 128 configured padded icons"
+        "subsequent-process state recovery, ordinary survival and Adventure permissions, actual UI clicks and 128 configured padded icons",
+        "trigger analogue loaded-local/channel input, exact-level and four-band artwork with shared saved state/dialog policy",
+        "trigger uniform visible world material and uniform OFF configured-item preview, retaining inherited face settings as data only",
+        "actual trigger four-list GUI, previous-value cycling, immediate channel edits and rendered levels 0/3/7/13"
       ]
     },
     {
