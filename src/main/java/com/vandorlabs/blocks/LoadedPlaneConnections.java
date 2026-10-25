@@ -1,9 +1,6 @@
 package com.vandorlabs.blocks;
 
 import net.minecraft.util.math.BlockPos;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -22,23 +19,8 @@ public final class LoadedPlaneConnections {
     }
     /** Same traversal, additionally certifying the loaded boundary for single-owner layouts. */
     public static Scan scan(BlockPos start,PanelPlane plane,Predicate<BlockPos> loaded,Predicate<BlockPos> eligible,int limit){
-        Set<BlockPos> members = new LinkedHashSet<>();
-        boolean complete=true;
-        Deque<BlockPos> queue = new ArrayDeque<>();
-        members.add(start);
-        queue.add(start);
-        while (!queue.isEmpty()) {
-            BlockPos current = queue.removeFirst();
-            for (int i=0; i<4; i++) {
-                BlockPos next = current.offset(plane.neighbor(i));
-                if(members.contains(next))continue;
-                if(!loaded.test(next)){complete=false;continue;}
-                if(!eligible.test(next))continue;
-                members.add(next);
-                if (members.size() >= limit) return new Scan(members,false);
-                queue.addLast(next);
-            }
-        }
-        return new Scan(members,complete);
+        com.vandorlabs.render.LoadedPlaneTraversal.Scan<BlockPos> result=com.vandorlabs.render.LoadedPlaneTraversal.scan(
+                start,(current,direction)->current.offset(plane.neighbor(direction)),loaded,eligible,limit);
+        return new Scan(result.members,result.complete);
     }
 }
