@@ -91,7 +91,7 @@ The top-level **Corp** category contains logos, backgrounds and murals for Pinna
 Programmable Blocks with the same block facing, visible-face material and layout
 join their coplanar faces automatically. **Stretch** maps one complete image over
 each rectangular group, including groups crossing a chunk border. **Fit (aspect)**
-preserves the image proportions and contains the complete image inside that rectangle, centered with opaque dark margins. A square image on a 2x3 panel occupies 2x2 blocks, leaving half a block of margin above and below.
+preserves the image proportions while filling the entire rectangle with a centered crop. A square image on a 2x3 panel fills all six blocks and crops the left and right edges; it adds no dark bars. This block behavior is independent of Programmable Surface artwork layout.
 **Tile** repeats independently on each block. Different materials, facings or
 layouts start a new group; irregular areas split into filled rectangles. Joined
 scans are limited to 256 cells and rectangles of at most 16 blocks per side.

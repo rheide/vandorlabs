@@ -120,7 +120,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
             variants.clear();joinedFaces.invalidateAll();faceLists.invalidateAll();
         }
     }
-    /** Joined Fit contains the complete image; opaque margins keep the cube closed. */
+    /** Fit preserves the released centered crop and covers the entire joined face. */
     static List<BakedQuad> mapJoined(BakedQuad quad,com.vandorlabs.blocks.HousingFaceLayouts.Plane plane,int layout,TextureAtlasSprite margin){
         int[] data=quad.getVertexData().clone();int stride=data.length/4;TextureAtlasSprite sprite=quad.getSprite();int[] axes=new int[2];double[] signs=new double[2];
         for(int uv=0;uv<2;uv++)for(int vertex=1;vertex<4;vertex++){
@@ -130,37 +130,12 @@ public final class ProgrammableHousingModel implements IBakedModel {
             for(int axis=0;axis<3;axis++){double change=Float.intBitsToFloat(data[vertex*stride+axis])-Float.intBitsToFloat(data[axis]);if(Math.abs(change)>.5){axes[uv]=axis;signs[uv]=delta/change;}}
         }
         double aspect=UnifiedTextureSprites.aspect(sprite),surface=plane.size(axes[0])/(double)plane.size(axes[1]);
-        double[] slopes=new double[]{(signs[0]<0?-1:1)/(double)plane.size(axes[0]),(signs[1]<0?-1:1)/(double)plane.size(axes[1])};
-        if(layout==2){slopes[0]/=Math.min(1,aspect/surface);slopes[1]/=Math.min(1,surface/aspect);}
-        double[][] coordinates=new double[4][2];
         for(int vertex=0;vertex<4;vertex++)for(int uv=0;uv<2;uv++){
             double value=(Float.intBitsToFloat(data[vertex*stride+axes[uv]])-plane.min(axes[uv]))/plane.size(axes[uv]);if(signs[uv]<0)value=1-value;
-            if(layout==2){double fraction=uv==0?Math.min(1,aspect/surface):Math.min(1,surface/aspect);value=.5+(value-.5)/fraction;}
-            coordinates[vertex][uv]=value;
+            if(layout==2){double fraction=uv==0?Math.min(1,surface/aspect):Math.min(1,aspect/surface);value=.5+(value-.5)*fraction;}
             data[vertex*stride+4+uv]=Float.floatToRawIntBits(uv==0?sprite.getInterpolatedU(value*16):sprite.getInterpolatedV(value*16));
         }
-        if(layout!=2)return Collections.singletonList(new BakedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
-        List<BakedQuad> result=new ArrayList<>(5);
-        addRegion(result,quad,coordinates,axes,slopes,0,1,0,1,sprite,false);
-        addRegion(result,quad,coordinates,axes,slopes,-Double.MAX_VALUE,0,-Double.MAX_VALUE,Double.MAX_VALUE,margin,true);
-        addRegion(result,quad,coordinates,axes,slopes,1,Double.MAX_VALUE,-Double.MAX_VALUE,Double.MAX_VALUE,margin,true);
-        addRegion(result,quad,coordinates,axes,slopes,0,1,-Double.MAX_VALUE,0,margin,true);
-        addRegion(result,quad,coordinates,axes,slopes,0,1,1,Double.MAX_VALUE,margin,true);
-        return Collections.unmodifiableList(result);
-    }
-    private static void addRegion(List<BakedQuad> result,BakedQuad source,double[][] uv,int[] axes,double[] slopes,double lowU,double highU,double lowV,double highV,TextureAtlasSprite sprite,boolean margin){
-        double u0=Double.POSITIVE_INFINITY,v0=u0,u1=Double.NEGATIVE_INFINITY,v1=u1;
-        for(double[] p:uv){u0=Math.min(u0,p[0]);u1=Math.max(u1,p[0]);v0=Math.min(v0,p[1]);v1=Math.max(v1,p[1]);}
-        u0=Math.max(u0,lowU);u1=Math.min(u1,highU);v0=Math.max(v0,lowV);v1=Math.min(v1,highV);
-        if(u1-u0<1e-8||v1-v0<1e-8)return;
-        int[] data=source.getVertexData().clone();int stride=data.length/4;
-        for(int vertex=0;vertex<4;vertex++)for(int axis=0;axis<2;axis++){
-            double value=Math.max(axis==0?u0:v0,Math.min(axis==0?u1:v1,uv[vertex][axis]));
-            int pos=vertex*stride+axes[axis];data[pos]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(data[pos])+(value-uv[vertex][axis])/slopes[axis]));
-            double textureValue=margin?.5:Math.max(0,Math.min(1,value));
-            data[vertex*stride+4+axis]=Float.floatToRawIntBits(axis==0?sprite.getInterpolatedU(textureValue*16):sprite.getInterpolatedV(textureValue*16));
-        }
-        result.add(new BakedQuad(data,source.getTintIndex(),source.getFace(),sprite,source.shouldApplyDiffuseLighting(),source.getFormat()));
+        return Collections.singletonList(new BakedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
     }
 
     private BakedQuad face(int texture,EnumFacing facing,boolean upper,int layout,int local,boolean storageSet) {

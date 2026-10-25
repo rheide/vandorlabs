@@ -17,6 +17,7 @@
 - Keep generic arm tips outside their adjacent payload cells, support ordinary placement and stacked arms on all six axes, restore extender underside artwork and prevent zero-length retraction. Show motion and appearance controls together in a two-column dialog and display deployment errors.
 - Support Immersive Engineering scaffolding in Ramp Controllers and extend explicit vehicle rotation adapters to inert IE structures and Mekanism storage and glow panels, preserving their inventories, energy and owner settings.
 - Make Strong glass opaque in every shade, with opaque-pass depth writes for programmable panes and shared glazing. Preserve active OptiFine vertex layouts, normals and extended records when building and mapping Programmable Block surfaces; invalidate cached meshes when the format changes.
+- Restore face-filling Fit mapping for Programmable Blocks without black margins. Compare vanilla rendered Panels against the previous crop behavior independently of shader-format checks.
 - Convert joined 2×2 propulsion blocks between square and hexagonal shapes as one group, preserving their settings. Keep two staggered 2×2 groups joined when their touching outline is not a rectangle.
 
 - Add Pinnacle Oculus Drive, Survey Dish, Sentinel Array, Standalone Dish and Standalone Antenna Core assemblies, with matching chips, configurable redstone activation, native holders and cached shutter/dish animations. Their controls use the existing Core and Programmable Matter construction workflow, with illustrated step-by-step building guides.

@@ -14,6 +14,7 @@ import java.util.*;
 /** UV seams on real chunk-model quads for every face, facing and layout. */
 final class JoinedHousingRuntimeChecks {
     static void run(Minecraft mc){
+        try{JoinedFitAppearanceChecks.run(mc);}catch(Exception failure){throw new IllegalStateException("Joined Fit vanilla appearance",failure);}
         int count=0;BlockPos base=new BlockPos(15,10,15);
         int texture=ScreenHousingTextures.screenIndex("corp/ashiro_logo");
         require(texture>0,"company logo fixture");
@@ -54,11 +55,11 @@ final class JoinedHousingRuntimeChecks {
             }
             if(mode==0)require(Math.abs(minU)<1e-4&&Math.abs(minV)<1e-4&&Math.abs(maxU-1)<1e-4&&Math.abs(maxV-1)<1e-4,"Stretch maps one complete image over the group");
             if(mode==2){
-                require(Math.abs(minU)<1e-4&&Math.abs(minV)<1e-4&&Math.abs(maxU-1)<1e-4&&Math.abs(maxV-1)<1e-4,"Fit retains the complete image");
-                require(Math.abs(imageArea-4)<1e-4&&Math.abs(totalArea-6)<1e-4,"Fit covers 2x2 with opaque margins filling the 2x3 face");
-                require(Math.abs(imageMax[0]-imageMin[0]-2)<1e-4&&Math.abs(imageMax[1]-imageMin[1]-2)<1e-4,"square texture has square physical dimensions");
-                double groupU=base.getX()*u.getFrontOffsetX()+base.getY()*u.getFrontOffsetY()+base.getZ()*u.getFrontOffsetZ(),groupV=base.getX()*v.getFrontOffsetX()+base.getY()*v.getFrontOffsetY()+base.getZ()*v.getFrontOffsetZ();
-                require(Math.abs(imageMin[0]-groupU)<1e-4&&Math.abs(imageMin[1]-groupV-.5)<1e-4,"Fit centers the image without cropping");
+                require(Math.abs(minU+maxU-1)<1e-4&&Math.abs(minV+maxV-1)<1e-4,"Fit centers the released image crop");
+                double du=maxU-minU,dv=maxV-minV;
+                require(Math.abs(Math.max(du,dv)-1)<1e-4&&Math.abs(Math.min(du,dv)-2/3D)<1e-4,"square artwork keeps its aspect through the legacy centered crop");
+                require(Math.abs(imageArea-6)<1e-4&&Math.abs(totalArea-6)<1e-4,"Fit covers the entire joined face without added margins");
+                require(Math.abs(imageMax[0]-imageMin[0]-2)<1e-4&&Math.abs(imageMax[1]-imageMin[1]-3)<1e-4,"Fit leaves full physical face geometry unchanged");
             }
             if(mode!=1){TileEntityAnimatedScreenSelector changed=(TileEntityAnimatedScreenSelector)world.getTileEntity(base);changed.setHousingTexture(texture==8?9:8);HousingFaceLayouts split=JoinedHousingFaces.sample(changed,63);HousingFaceLayouts.Plane plane=split.face(face);require(plane==null||plane.size(0)*plane.size(1)*plane.size(2)==1,"different face materials split the shared image");}
             count++;

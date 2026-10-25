@@ -41,6 +41,7 @@ final class Utility26FocusedChecks {
         check(failures,"pressure plate rendering and dialog",()->PressurePlateClientChecks.run(mc,output));
         check(failures,"copy controller rendering and dialog",()->com.vandorlabs.copier.client.CopyClientChecks.run(mc,output));
         check(failures,"surface rendering and dialog",()->SurfaceClientChecks.run(mc,output));
+        check(failures,"legacy vanilla Fit appearance",()->JoinedFitAppearanceChecks.run(mc));
         check(failures,"vehicle coupler models and dialog",()->CouplerClientChecks.run(mc,output));
         check(failures,"Track appearance bounds and errors",()->TrackClientChecks.run(mc,output));
         check(failures,"thruster joined hex rendering",()->ThrusterJoinClientChecks.run(mc,output));
