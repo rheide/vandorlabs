@@ -16,11 +16,11 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
         @Override protected void drawMachine(TileEntityConstructor tile,double x,double y,double z,float partial,BufferBuilder buffer){
             FrameMachineDesign spec=tile.core().specification();
             int state=tile.screenOn()?tile.activity():0;
-            if(tile.isDrive()&&tile.screenOn()&&(spec.design.equals("longburn_drive")||spec.design.equals("meridian_core"))){
-                drawPart(tile,"active/drive_body.obj",buffer,x,y,z,0,0,0);
-                float brightness=tile.driveSettings().levels?tile.driveLevel()/15F:1;
+            if(tile.isDrive()&&(spec.design.equals("longburn_drive")||tile.screenOn()&&spec.design.equals("meridian_core"))){
+                String driveFolder=tile.screenOn()?"active/":"";drawPart(tile,driveFolder+"drive_body.obj",buffer,x,y,z,0,0,0);
+                float brightness=tile.screenOn()?(tile.driveSettings().levels?tile.driveLevel()/15F:1):.35F;
                 if(spec.design.equals("meridian_core")){double now=MachineVisualMotion.sample(tile,true,10).now;brightness*=.55F+.45F*(float)(.5-.5*Math.cos(now*Math.PI/20));}
-                UniversalConstructorModelCache.get(spec.design,"active/drive_lights.obj").emitTinted(buffer,x,y,z,tile.facing(),spec.width,spec.depth,0,0,0,15728880,brightness);
+                UniversalConstructorModelCache.get(spec.design,driveFolder+"drive_lights.obj").emitTinted(buffer,x,y,z,tile.facing(),spec.width,spec.depth,0,0,0,15728880,brightness);
             }else if("shutters".equals(spec.motion)){
                 MachineVisualMotion.Pose pose=MachineVisualMotion.sample(tile,state==2,20);
                 int appearance=pose.progress>0&&pose.progress<1?1:state;

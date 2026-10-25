@@ -49,7 +49,7 @@ Existing inserted items retain their full data when old Security settings are re
 
 ## Drive Engine controls
 
-Maxwell Drive, Seyr Meridian Drive and Pinnacle Oculus Drive have an **Engine** tab alongside their surface tabs.
+Maxwell Drive, Seyr Meridian Drive and Pinnacle Oculus Drive have an **Engine** tab alongside their surface tabs. Particle intensity and threshold controls apply only to Maxwell. **Seyr Meridian and Pinnacle Oculus have no particles**, including with legacy saved particle settings.
 
 | Control | Behavior |
 | --- | --- |
@@ -60,11 +60,11 @@ Maxwell Drive, Seyr Meridian Drive and Pinnacle Oculus Drive have an **Engine** 
 | Particles: Off / Light / Medium / Heavy | Selects exhaust intensity independently of brightness; Off disables particles. |
 | Particles at level: 0–15 | In Signal mode, exhaust starts at or above this resulting level while the drive is active. On/Off brightness ignores this threshold. |
 
-Defaults are Redstone Disabled, Activate on ON, On/Off brightness, Light particles and threshold 8. Right-click any cycling option to select its previous value.
+Defaults are Redstone Disabled, Activate on ON and On/Off brightness. Maxwell additionally defaults to Light particles and threshold 8. Right-click any cycling option to select its previous value.
 
 Maxwell has yellow/white exhaust. Seyr Meridian’s active front cyan lights pulse using a pause-aware cosmetic clock. Oculus retains its native colors, energized field and shutter movement. Signal brightness scales these active visual effects. An activity selected by ordinary right-click remains subject to the drive’s power controls.
 
-Placed and carried drives emit cosmetic particles at their authored outlet, following the machine’s facing and the vehicle’s pose. These machines provide **no vehicle thrust** and do not qualify a vehicle for Taxi or Hover. Engine settings, channels and retained chip data survive saving and movement.
+Placed and carried Maxwell drives emit cosmetic particles at their authored outlet, following the machine’s facing and the vehicle’s pose. These machines provide **no vehicle thrust** and do not qualify a vehicle for Taxi or Hover. Engine settings, channels and retained chip data survive saving and movement.
 
 Screen choices, redstone activation, channels and the chip's full item data persist through saving and reloading. Manual dismantling retains a chip in its Core; reassembly restores access. Breaking the Core releases the held chip once. Mining a reserved cell dismantles the machine and removes the selected cell; rapid removal safely skips stale renderers.
 

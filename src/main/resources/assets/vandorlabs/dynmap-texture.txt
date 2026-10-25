@@ -21424,8 +21424,8 @@ texture:id=frame_machine_4,filename=assets/vandorlabs/textures/blocks/matter/enc
 texture:id=frame_machine_5,filename=assets/vandorlabs/textures/blocks/universal_constructor/enclosed_gantry.png,xcount=1,ycount=1
 texture:id=frame_machine_6,filename=assets/vandorlabs/textures/blocks/matter/longburn_drive_core.png,xcount=1,ycount=1
 texture:id=frame_machine_7,filename=assets/vandorlabs/textures/blocks/longburn_drive/longburn_drive_idle.png,xcount=1,ycount=1
-texture:id=frame_machine_8,filename=assets/vandorlabs/textures/blocks/longburn_drive/longburn_drive_active.png,xcount=1,ycount=1
-texture:id=frame_machine_9,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_stream.png,xcount=1,ycount=1
+texture:id=frame_machine_8,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_stream.png,xcount=1,ycount=1
+texture:id=frame_machine_9,filename=assets/vandorlabs/textures/blocks/longburn_drive/longburn_drive_active.png,xcount=1,ycount=1
 texture:id=frame_machine_10,filename=assets/vandorlabs/textures/blocks/matter/meridian_drive_core.png,xcount=1,ycount=1
 texture:id=frame_machine_11,filename=assets/vandorlabs/textures/blocks/dimension_drive/meridian_core_idle.png,xcount=1,ycount=1
 texture:id=frame_machine_12,filename=assets/vandorlabs/textures/blocks/dimension_drive/meridian_core_active.png,xcount=1,ycount=1

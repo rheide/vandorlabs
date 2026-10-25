@@ -36,11 +36,9 @@ The native Data Chip Mount is always visible on this model. Right-click it with 
 
 The default activity is **Active**. Right-click away from the reader to cycle Standby → Charging → Active. The two shutters open or close over one second, travelling inside the reserved assembly; an interrupted stroke reverses from its current position. The energized field is fullbright, while the enclosure stays world-lit.
 
-Open the **Engine** tab with the Configurizer. **Redstone: Disabled** keeps the drive powered at level 15. With **Redstone: Enabled**, the strongest physical input anywhere on the assembly or configured input channel supplies a level from 0 to 15. **Activate on: ON** uses that level; **Activate on: OFF** uses 15 minus that level. A resulting level of zero switches the drive off. Input channel 0 means no channel.
+Open the **Engine** tab with the Configurizer. Redstone Disabled keeps the drive powered at level 15. With Redstone Enabled, the strongest physical or configured channel input supplies a level from 0 to 15; channel 0 means disconnected. Activate on ON uses this level; OFF uses 15 minus this level. Zero switches the drive off. Brightness On/Off gives the active lighting full brightness; Signal scales it by the resulting level divided by 15. Defaults are Redstone Disabled, Activate on ON and On/Off brightness. Right-click an option to select its previous value.
 
-**Brightness: On/Off** gives active effects full brightness; **Brightness: Signal** scales their brightness by the resulting level divided by 15. **Particles** selects Off, Light, Medium or Heavy. **Particles at level** sets a 0–15 threshold: in Signal mode, exhaust starts at or above this level, while the drive is active. On/Off brightness ignores the threshold. Particle intensity is selected separately from brightness. Defaults are Redstone Disabled, Activate on ON, On/Off brightness, Light particles and threshold 8. Right-click an option to select its previous value.
-
-These effects work on placed machinery and aboard vehicles, following the drive’s facing and the vehicle’s pose. The drive supplies **no vehicle thrust** and does not qualify a craft for Taxi or Hover. Data Chips are optional retained data, accept every company and never authorize or gate operation; there are no integrated Security settings.
+This drive has **no particles**, including with legacy particle settings, and offers no particle controls. It supplies no vehicle thrust and does not qualify a craft for Taxi or Hover. Data Chips are optional retained data from every company, with no Security or activation gate.
 
 Select screen and keyboard artwork independently in their surface tabs. Model artwork preserves the supplied design.
 

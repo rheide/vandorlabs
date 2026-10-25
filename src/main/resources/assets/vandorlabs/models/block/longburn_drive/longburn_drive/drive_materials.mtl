@@ -1,0 +1,15 @@
+# Opaque surface atlas, white material modulation.
+newmtl atlas
+Ka 1 1 1
+Kd 1 1 1
+Ks 0 0 0
+d 1
+illum 1
+map_Kd vandorlabs:blocks/longburn_drive/longburn_drive_idle
+
+newmtl drive_emitter
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/thrusters/rocket_stream

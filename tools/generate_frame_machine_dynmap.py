@@ -41,6 +41,7 @@ def generate(check=False):
   return faces
  def state_obj(spec,path):
   root=ASSETS/'models/block'/spec['model']
+  if spec['design']=='longburn_drive' and path=='static.obj':return obj(root/'drive_body.obj')+obj(root/'drive_lights.obj')
   if spec['design'] in ('longburn_drive','meridian_core') and path=='active/static.obj':return obj(root/'active/drive_body.obj')+obj(root/'active/drive_lights.obj')
   return obj(root/path)
  designs={}

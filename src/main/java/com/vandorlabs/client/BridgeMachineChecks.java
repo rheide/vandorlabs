@@ -20,7 +20,7 @@ import java.util.*;
 
 /** Assert assembly and inventory behavior independently from documentation capture. */
 final class BridgeMachineChecks {
-    private static int ticks;
+    private static int ticks;private static String mountScenario="";
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("bridge machines: "+why);}
     static void frame(WorldServer world,BlockPos root,FrameMachineDesign spec,int stage){
         BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+spec.block);
@@ -38,6 +38,28 @@ final class BridgeMachineChecks {
         // Remove controllers first so normal dismantling restores the reservations.
         for(BlockPos p:BlockPos.getAllInBox(root.add(-1,-1,-1),root.add(8,8,8)))if(world.getTileEntity(p) instanceof TileEntityConstructor)world.setBlockToAir(p);
         for(BlockPos p:BlockPos.getAllInBox(root.add(-1,0,-1),root.add(8,8,8)))world.setBlockToAir(p);
+    }
+    private static void aimedClick(WorldServer world,EntityPlayerMP player,Vec3d target){
+        Vec3d delta=target.subtract(player.getPositionEyes(1));player.rotationYaw=player.prevRotationYaw=(float)Math.toDegrees(Math.atan2(-delta.x,delta.z));player.rotationPitch=player.prevRotationPitch=(float)-Math.toDegrees(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)));
+        player.rotationYawHead=player.prevRotationYawHead=player.rotationYaw;Vec3d start=player.getPositionEyes(1);RayTraceResult hit=world.rayTraceBlocks(start,start.add(player.getLook(1).scale(5)),false,false,false);
+        require(hit!=null&&hit.typeOfHit==RayTraceResult.Type.BLOCK,"standing player ray reaches actual assembly reservation "+mountScenario+" eye="+start+" target="+target+" look="+player.getLook(1)+" hit="+hit);BlockPos cell=hit.getBlockPos();net.minecraft.block.state.IBlockState state=world.getBlockState(cell);
+        require(state.getBlock().onBlockActivated(world,cell,state,player,EnumHand.MAIN_HAND,hit.sideHit,(float)(hit.hitVec.x-cell.getX()),(float)(hit.hitVec.y-cell.getY()),(float)(hit.hitVec.z-cell.getZ())),"real clicked block handles mount interaction");
+    }
+    private static void placedMounts(WorldServer world,EntityPlayerMP player){
+        BlockPos root=new BlockPos(80,100,80);net.minecraft.nbt.NBTTagList inventory=player.inventory.writeToNBT(new net.minecraft.nbt.NBTTagList());Vec3d old=player.getPositionVector();float yaw=player.rotationYaw,pitch=player.rotationPitch,head=player.rotationYawHead,previousHead=player.prevRotationYawHead;boolean creative=player.capabilities.isCreativeMode;int cases=0;
+        try{player.capabilities.isCreativeMode=false;for(FrameMachineDesign spec:FrameMachineDesign.all())for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            mountScenario=spec.design+" facing="+facing;clear(world,root);world.setBlockState(root.down(),Blocks.STONE.getDefaultState(),2);BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+spec.block);player.rotationYaw=facing.getOpposite().getHorizontalAngle();player.rotationPitch=0;player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(block));
+            require(player.getHeldItemMainhand().onItemUse(player,world,root.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"actual Core ItemBlock placement "+spec.design+facing);require(world.getBlockState(root).getValue(BlockVandorDirectional.FACING)==facing,"placed facing retained");frame(world,root,spec,2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);require(tile.assemble(),"item-placed Core forms "+spec.design+facing);
+            if(!spec.hasChip()){require(tile.mount()==null&&!tile.accepts(new ItemStack(ModItems.DATA_CHIP)),"unmounted Core never invents chip storage");continue;}
+            MachineMountSurface mount=tile.mount();player.setPosition(mount.center.x+mount.normal.x*2.5,root.getY(),mount.center.z+mount.normal.z*2.5);int activity=tile.activity();net.minecraft.inventory.Container container=player.openContainer;
+            ItemStack chip=new ItemStack(ModItems.DATA_CHIP,2,4);chip.setStackDisplayName("Placed mount real ray");player.setHeldItem(EnumHand.MAIN_HAND,chip);aimedClick(world,player,mount.center);
+            require(!tile.isEmpty()&&chip.getCount()==1&&tile.activity()==activity&&player.openContainer==container,"real standing ray inserts without activity/GUI change "+spec.design+facing);
+            player.rotationYawHead=player.rotationYaw+90;require(mount.hit(player),"mount follows authoritative yaw even before server head synchronization "+mountScenario);player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);aimedClick(world,player,mount.center);require(tile.isEmpty()&&tile.activity()==activity&&player.openContainer==container,"empty-hand socket ray removes without toggling "+spec.design+facing);
+            player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CHIP));aimedClick(world,player,mount.center.addVector(0,.4,0));require(!tile.isEmpty()&&tile.activity()==activity,"held chip on assembly cannot cycle activity when precise socket ray misses "+spec.design+facing);tile.takeForDrop();cases++;
+        }
+        for(String kind:new String[]{"flat","angled"})for(EnumFacing facing:EnumFacing.HORIZONTALS){mountScenario="navigation_"+kind+" facing="+facing;clear(world,root);world.setBlockState(root.down(),Blocks.STONE.getDefaultState(),2);BlockNavigationTable block=(BlockNavigationTable)Block.getBlockFromName("vandorlabs:navigation_table_"+kind);player.rotationYaw=facing.getOpposite().getHorizontalAngle();player.rotationPitch=0;player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(block));require(player.getHeldItemMainhand().onItemUse(player,world,root.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"actual navigation ItemBlock placement");DeferredTileLoad.flush(world);NavigationAssemblies.around(world,root);TileEntityNavigationTable tile=(TileEntityNavigationTable)world.getTileEntity(root);MachineMountSurface mount=tile.mount();require(mount!=null,"single placed navigation module owns holder");player.setPosition(mount.center.x+mount.normal.x*2.5,root.getY(),mount.center.z+mount.normal.z*2.5);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CHIP));aimedClick(world,player,mount.center);require(!tile.isEmpty(),"navigation actual ray inserts "+kind+facing);player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);aimedClick(world,player,mount.center);require(tile.isEmpty(),"navigation actual ray removes "+kind+facing);cases++;}
+        }finally{clear(world,root);world.setBlockToAir(root.down());player.inventory.readFromNBT(inventory);player.capabilities.isCreativeMode=creative;player.setPosition(old.x,old.y,old.z);player.rotationYaw=yaw;player.rotationPitch=pitch;player.rotationYawHead=head;player.prevRotationYawHead=previousHead;}
+        System.out.println("[vandorlabs] placed-machine-mounts PASS cases="+cases+" actual ItemBlock placement standing eye world ray clicked reservations insert/remove no activity or GUI changes");
     }
     private static void chipMachines(WorldServer world,EntityPlayerMP player){
         BlockPos root=new BlockPos(80,100,80);int cases=0;ItemStack held=player.getHeldItemMainhand();boolean creative=player.capabilities.isCreativeMode;
@@ -127,7 +149,7 @@ final class BridgeMachineChecks {
         mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
             world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");world.setWorldTime(6000);
-            com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,player);TokenSlotRuntimeChecks.run(world);chipMachines(world,player);navigation(world);NavigationRuntimeChecks.run(world);MachineDisplayRuntimeChecks.run(world,player);steering(world);
+            com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,player);TokenSlotRuntimeChecks.run(world);chipMachines(world,player);placedMounts(world,player);navigation(world);NavigationRuntimeChecks.run(world);MachineDisplayRuntimeChecks.run(world,player);steering(world);
         }).get();
         for(FrameMachineDesign spec:FrameMachineDesign.all()){
             String path=spec.state_models!=null?spec.state_models[1]:"complete.obj";

@@ -14,7 +14,7 @@ public final class MachineMountSurface {
     }
     public boolean hit(EntityPlayer player){
         double reach=player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue();
-        Vec3d start=player.getPositionEyes(1),delta=player.getLook(1).scale(reach);
+        Vec3d start=player.getPositionEyes(1),delta=Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach);
         double divisor=delta.dotProduct(normal);if(divisor>=-1e-8)return false;
         double t=center.subtract(start).dotProduct(normal)/divisor;if(t<0||t>1)return false;
         Vec3d local=start.add(delta.scale(t)).subtract(center);

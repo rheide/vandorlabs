@@ -56,6 +56,7 @@ public final class UniversalConstructorModelCache {
                 for(String part:parts)register(spec.design,folder+part+".obj",new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+folder+part+".obj"));
             }
             if(spec.hasChip()&&spec.state_models==null)for(String path:new String[]{"static.obj","active/static.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
+            if(spec.design.equals("longburn_drive"))for(String path:new String[]{"drive_body.obj","drive_lights.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
             if(spec.design.equals("longburn_drive")||spec.design.equals("meridian_core"))for(String path:new String[]{"active/drive_body.obj","active/drive_lights.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
         }
         MinecraftForge.EVENT_BUS.register(EVENTS);

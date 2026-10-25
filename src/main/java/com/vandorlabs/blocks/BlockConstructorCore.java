@@ -27,7 +27,7 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
     @Override public int getLightOpacity(IBlockState state){return state.getValue(FORMED)?0:super.getLightOpacity(state);}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         if(!world.isRemote){TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(pos);
-            if(state.getValue(FORMED) && tile.mount()!=null && tile.mount().hit(player))return TokenSlotInteractions.activate(tile,player,hand);
+            if(state.getValue(FORMED) && tile.mount()!=null && (tile.mount().hit(player)||tile.accepts(player.getHeldItem(hand))))return TokenSlotInteractions.activate(tile,player,hand);
             if(state.getValue(FORMED) && player.isSneaking())tile.dismantle();else if(!state.getValue(FORMED) && !tile.assemble())player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(width+" x "+depth+" x "+height+" frame: "+tile.assemblyProblem()),true);
             else if(state.getValue(FORMED)&&specification().state_models!=null){tile.cycleActivity();player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Activity: "+specification().stateLabel(tile.activity())),true);}
         }return true;

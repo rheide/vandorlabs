@@ -36,6 +36,6 @@ public final class BlockNavigationTable extends BlockVandorDirectional {
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         TileEntity tile=world.getTileEntity(pos);if(!(tile instanceof TileEntityNavigationTable))return false;
         TileEntityNavigationTable reader=((TileEntityNavigationTable)tile).reader();
-        return reader!=null&&(player.isSneaking()||player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER||reader.mount()!=null&&reader.mount().hit(player))&&TokenSlotInteractions.activate(reader,player,hand);
+        return reader!=null&&(player.isSneaking()||player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER||reader.mount()!=null&&(reader.mount().hit(player)||reader.accepts(player.getHeldItem(hand))))&&TokenSlotInteractions.activate(reader,player,hand);
     }
 }
