@@ -4,8 +4,10 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 TITLES={'assembly_press':'Assembly Press','synthesis_tower':'Synthesis Tower','enclosed_gantry':'Enclosed Gantry',
-        'meridian_core':'Pinnacle Meridian Drive','vector_fold_array':'Pinnacle Vector Fold Array','longburn_drive':'Vektor Longburn Drive',
+        'meridian_core':'Seyr Meridian Drive','vector_fold_array':'Pinnacle Vector Fold Array','longburn_drive':'Maxwell Drive',
         'paladyne_navigation_computer':'Paladyne Navigation Computer','seyr_navigation_computer':'Seyr Navigation Computer',
+        'oculus_drive':'Pinnacle Oculus Drive','survey_dish':'Survey Dish','sentinel_array':'Sentinel Array',
+        'standalone_dish':'Standalone Dish','standalone_antenna':'Standalone Antenna',
         'navigation_table_flat':'Flat Navigation Table','navigation_table_angled':'Angled Navigation Console'}
 
 
@@ -32,7 +34,7 @@ def main():
     for spec in specs:
         design=spec['design'];slug=design.replace('_','-');folder=root/slug;folder.mkdir(exist_ok=True)
         w,h,d=spec['width'],spec['height'],spec['depth'];matter=sum(frame(spec,x,y,z) for y in range(h) for x in range(w) for z in range(d))-1
-        core_name='Meridian Drive Core' if design=='meridian_core' else TITLES[design].replace('Pinnacle ','').replace('Vektor ','')+' Core'
+        core_name='Seyr Meridian Drive Core' if design=='meridian_core' else TITLES[design].replace('Pinnacle ','').replace('Vektor ','')+' Core'
         text=f"# {TITLES[design]}\n\nBuild a **{w} wide × {d} deep × {h} high** assembly with **{matter} Programmable Matter Blocks** and **one {core_name}**. Core blocks are available in Creative, following the existing Universal Constructor system.\n\n"
         if w==1 and d==1:
             instructions=[('Place the Core','Place the matching Core on the ground, with its operating face toward you.'),

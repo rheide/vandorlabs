@@ -1,4 +1,4 @@
-# Pinnacle Meridian Drive
+# Seyr Meridian Drive
 
 Build a **3 wide × 3 deep × 3 high** assembly with **20 Programmable Matter Blocks** and **one Meridian Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
@@ -6,31 +6,31 @@ Build a **3 wide × 3 deep × 3 high** assembly with **20 Programmable Matter Bl
 
 Lay out a solid 3 × 3 bottom layer. Put the matching Core in the front-left corner, facing you, and fill every other cell with Programmable Matter Blocks.
 
-![Pinnacle Meridian Drive: build the base](step-1.png)
+![Seyr Meridian Drive: build the base](step-1.png)
 
 ## 2. Raise the corner pillars
 
 At each of the four corners, build up to a total height of 3 blocks, including the bottom layer. Leave the interior empty.
 
-![Pinnacle Meridian Drive: raise the corner pillars](step-2.png)
+![Seyr Meridian Drive: raise the corner pillars](step-2.png)
 
 ## 3. Connect the top rim
 
 Connect the four pillar tops with a rectangular rim of Programmable Matter Blocks. Keep the middle of the roof open; do not fill the interior.
 
-![Pinnacle Meridian Drive: connect the top rim](step-3.png)
+![Seyr Meridian Drive: connect the top rim](step-3.png)
 
 ## 4. Assemble
 
 Right-click the Core. The frame becomes the complete model, and its occupied cells are reserved. If formation fails, use the reported cell to check the frame and its empty interior.
 
-![Pinnacle Meridian Drive: assemble](step-4.png)
+![Seyr Meridian Drive: assemble](step-4.png)
 
 ## 5. Enable Security and insert a Data Chip
 
 Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.
 
-![Pinnacle Meridian Drive: enable security and insert a data chip](step-5.png)
+![Seyr Meridian Drive: enable security and insert a data chip](step-5.png)
 
 ## Facing and removal
 

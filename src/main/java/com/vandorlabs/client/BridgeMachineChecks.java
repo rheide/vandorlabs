@@ -131,7 +131,7 @@ final class BridgeMachineChecks {
             String path=spec.state_models!=null?spec.state_models[1]:"complete.obj";
             require(com.vandorlabs.client.constructors.UniversalConstructorModelCache.get(spec.design,path).getQuadCount()>10,"actual baked OBJ is available for "+spec.design);
         }
-        UtilityItemRuntimeChecks.run(mc,output);ConstructorRenderLifetimeChecks.run(mc);MachineDisplayVisualChecks.run(mc,output);runtimeDone=true;
+        com.vandorlabs.client.constructors.MachineMotionChecks.run(mc);UtilityItemRuntimeChecks.run(mc,output);ConstructorRenderLifetimeChecks.run(mc);MachineDisplayVisualChecks.run(mc,output);runtimeDone=true;
         }
         if(!NavigationClientChecks.tick(mc,output))return false;
         System.out.println("[vandorlabs] bridge-machines PASS assembly regressions embedded mount behavior joining models item padding reverse steering");return true;

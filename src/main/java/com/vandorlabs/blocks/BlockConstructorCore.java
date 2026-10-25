@@ -29,7 +29,7 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
         if(!world.isRemote){TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(pos);
             if(state.getValue(FORMED) && tile.mount()!=null && tile.mount().hit(player))return TokenSlotInteractions.activate(tile,player,hand);
             if(state.getValue(FORMED) && player.isSneaking())tile.dismantle();else if(!state.getValue(FORMED) && !tile.assemble())player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(width+" x "+depth+" x "+height+" frame: "+tile.assemblyProblem()),true);
-            else if(state.getValue(FORMED)&&specification().state_models!=null){tile.cycleActivity();player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Activity: "+new String[]{"Off","Idle","Computing"}[tile.activity()]),true);}
+            else if(state.getValue(FORMED)&&specification().state_models!=null){tile.cycleActivity();player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Activity: "+specification().stateLabel(tile.activity())),true);}
         }return true;
     }
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileEntityConstructor)((TileEntityConstructor)tile).dismantle(state);TokenSlotInteractions.drop(world,pos);super.breakBlock(world,pos,state);}

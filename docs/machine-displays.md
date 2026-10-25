@@ -4,17 +4,21 @@ Use the **Configurizer** on a formed Core-based multiblock or one of its reserve
 
 | Model | Surface tabs | Optional Data Chip Mount |
 | --- | --- | --- |
-| Pinnacle Meridian Drive | Half Screen, Keyboard | Yes |
+| Seyr Meridian Drive | Half Screen, Keyboard | Yes |
 | Pinnacle Vector Fold Array | Half Screen, Keyboard | Yes |
-| Vektor Longburn Drive | Screen, Keyboard | Yes |
+| Maxwell Drive | Screen, Keyboard | Yes |
 | Paladyne Navigation Computer | Half Screen | No |
 | Seyr Navigation Computer | Half Screen | No |
+| Pinnacle Oculus Drive | Half Screen, Keyboard | Yes |
+| Survey Dish | Half Screen, Keyboard | Yes |
+| Sentinel Array | Half Screen, Keyboard | Yes |
+| Standalone Dish / Antenna | No display | Yes |
 
 ![Machine display dialog with independent screen and keyboard tabs](multiblocks/machine-display-dialog.png)
 
 Each surface keeps its own artwork selection. **Model artwork** preserves the supplied design. **Black** and the standard Programmable Block material and screen/panel catalogs are also available, including half-screen and keyboard designs. **Custom...** samples a block material. Static/Animated playback and Slow/Normal/Fast speed apply to the fitted displays.
 
-The original Constructor frames have no authored display surfaces or chip reader. Their surface and Security controls are unavailable.
+The original Constructor frames have no authored display surfaces or chip reader. The standalone radar models offer Security and redstone settings without display surfaces. Their surface and Security controls are unavailable.
 
 ## Activation
 
@@ -30,6 +34,8 @@ Redstone and Security are disabled by default. Their independent gates match [na
 | Enabled | Enabled | Active while powered and a matching chip is inserted |
 
 Inactive screens and keyboards are black. Drives use their idle casing artwork while inactive. Navigation computers use their Off appearance; when activated, their saved Off/Idle/Computing appearance remains available through ordinary right-click cycling.
+
+Oculus shutters use a one-second stroke with continuous reversals. Dish models sweep through ±55° every eight seconds, fading movement when Scanning starts or stops. Oculus/radar assemblies default to Active/Scanning; ordinary right-click cycles their three appearances. Their chip readers, input gates and channels use the same dialog and persistence as the existing drives.
 
 These settings control appearances; they do not add propulsion, dimension travel, crafting or navigation calculations.
 

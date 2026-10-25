@@ -15,8 +15,26 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
         @Override protected BlockPos originOffset(TileEntityConstructor tile){return BlockPos.ORIGIN.subtract(tile.pivot());}
         @Override protected void drawMachine(TileEntityConstructor tile,double x,double y,double z,float partial,BufferBuilder buffer){
             FrameMachineDesign spec=tile.core().specification();
-            String path=spec.state_models!=null?spec.state_models[tile.screenOn()?tile.activity():0]:spec.hasChip()?(tile.screenOn()?"active/static.obj":"static.obj"):"complete.obj";
-            drawPart(tile,path,buffer,x,y,z,0,0,0);
+            int state=tile.screenOn()?tile.activity():0;
+            if("shutters".equals(spec.motion)){
+                MachineVisualMotion.Pose pose=MachineVisualMotion.sample(tile,state==2,20);
+                int appearance=pose.progress>0&&pose.progress<1?1:state;
+                String folder=spec.state_models[appearance].split("/")[0]+"/parts/";
+                drawPart(tile,folder+"static.obj",buffer,x,y,z,0,0,0);
+                double travel=.5125*MachineVisualMotion.eased(pose.progress);
+                drawPart(tile,folder+"shutter_upper.obj",buffer,x,y,z,0,travel,0);
+                drawPart(tile,folder+"shutter_lower.obj",buffer,x,y,z,0,-travel,0);
+                UniversalConstructorModelCache.get(spec.design,folder+"field.obj").emit(buffer,x,y,z,tile.facing(),spec.width,spec.depth,0,0,0,appearance==0?packedLight(tile):15728880);
+            }else if("dish".equals(spec.motion)){
+                MachineVisualMotion.Pose pose=MachineVisualMotion.sample(tile,state==2,10);
+                String folder=spec.state_models[state].split("/")[0]+"/parts/";
+                drawPart(tile,folder+"static.obj",buffer,x,y,z,0,0,0);
+                double yaw=Math.toRadians(55)*Math.sin((pose.now-pose.phase)*Math.PI/80)*MachineVisualMotion.eased(pose.progress);
+                UniversalConstructorModelCache.get(spec.design,folder+"rotor.obj").emitTransformed(buffer,x,y,z,tile.facing(),spec.width,spec.depth,0,0,0,packedLight(tile),yaw,spec.motion_pivot[0],spec.motion_pivot[2]);
+            }else{
+                String path=spec.state_models!=null?spec.state_models[state]:spec.hasChip()?(tile.screenOn()?"active/static.obj":"static.obj"):"complete.obj";
+                drawPart(tile,path,buffer,x,y,z,0,0,0);
+            }
         }
     };
     @Override public void renderTileEntityFast(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha,BufferBuilder buffer){body.renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);}

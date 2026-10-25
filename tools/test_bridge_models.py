@@ -89,7 +89,7 @@ for spec in specs:
         for point in points:
             assert len(point)==3 and all(math.isfinite(v) and -.001<=v<=limit+.001 for v,limit in zip(point,[spec['width'],spec['height'],spec['depth']])),(spec['design'],point)
             assert abs(sum((point[i]-points[0][i])*normal[i] for i in range(3)))<1e-6,spec['design']
-    if spec.get('chip_anchor'):
+    if spec.get('chip_anchor') and not spec.get('state_models'):
         for path in ['static.obj','active/static.obj']:
             text=(ASSETS/'models/block'/spec['model']/path).read_text();assert 'g card_holder' not in text,(spec['design'],path)
 print('Machine display metadata PASS authored finite coplanar planes and holder-free body meshes')
@@ -98,7 +98,7 @@ if len(sys.argv)>1:
     with ZipFile(sys.argv[1]) as archive:
         prefix='assets/vandorlabs/';aliases=json.loads(archive.read(prefix+'data/texture_aliases.json'))
         checked=0
-        for family in ['dimension_drive','longburn_drive','navigation_table','navigation_computer_core']:
+        for family in ['dimension_drive','longburn_drive','navigation_table','navigation_computer_core','oculus_drive','radar']:
             for source in (TEX/'blocks'/family).glob('*.png'):
                 relative='textures/'+source.relative_to(TEX).as_posix()
                 with Image.open(source) as before,Image.open(io.BytesIO(archive.read(prefix+aliases.get(relative,relative)))) as after:

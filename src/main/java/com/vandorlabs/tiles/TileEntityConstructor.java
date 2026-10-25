@@ -30,7 +30,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay {
     }
     private boolean changing;private IBlockState removedState;
     private int coreX,coreZ;
-    private int activity=1;
+    private int activity=-1;
     private String assemblyProblem="";
     /** Facing/formed changes belong to this assembly; replacing the tile loses its detected corner. */
     @Override public boolean shouldRefresh(net.minecraft.world.World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
@@ -44,8 +44,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay {
     public EnumFacing facing(){IBlockState state=coreState();return state==null?EnumFacing.NORTH:state.getValue(BlockVandorDirectional.FACING);}
     public boolean formed(){IBlockState state=coreState();return state!=null&&state.getValue(BlockConstructorCore.FORMED);}
     private BlockPos rotated(int x,int y,int z,EnumFacing direction){BlockConstructorCore core=core();return core==null?BlockPos.ORIGIN:com.vandorlabs.vehicle.VehicleRotation.cell(new BlockPos(x,y,z),core.width,core.depth,(direction.getHorizontalIndex()+2)&3);}
-    public int activity(){return activity;}
-    public void cycleActivity(){activity=(activity+1)%3;markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
+    public int activity(){BlockConstructorCore core=core();return activity>=0?activity:core!=null&&core.specification().state_labels!=null?2:1;}
+    public void cycleActivity(){activity=(activity()+1)%3;markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
     public BlockPos pivot(){return rotated(coreX,0,coreZ,facing());}
     public BlockPos cell(int x,int y,int z){return pos.add(rotated(x,y,z,facing()).subtract(pivot()));}
     private BlockPos candidateCell(int x,int y,int z,EnumFacing direction,int cornerX,int cornerZ){return pos.add(rotated(x,y,z,direction).subtract(rotated(cornerX,0,cornerZ,direction)));}
@@ -130,8 +130,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay {
     @Override public AxisAlignedBB getRenderBoundingBox(){if(!formed())return new AxisAlignedBB(pos);BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin.getX(),origin.getY(),origin.getZ(),origin.getX()+(turn?core().depth:core().width),origin.getY()+core().height,origin.getZ()+(turn?core().width:core().depth));}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip()&&surfaceCount()==0;}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity);tag.setIntArray("MachineSurfaceTextures",surfaceTextures);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):1;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}

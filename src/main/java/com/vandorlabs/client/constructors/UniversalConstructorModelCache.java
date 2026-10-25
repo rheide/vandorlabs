@@ -50,7 +50,12 @@ public final class UniversalConstructorModelCache {
         for(com.vandorlabs.blocks.FrameMachineDesign spec:com.vandorlabs.blocks.FrameMachineDesign.all()){
             String[] paths=spec.state_models!=null?spec.state_models:spec.hasChip()?new String[]{"complete.obj","active/complete.obj"}:new String[]{"complete.obj"};
             for(String path:paths)register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
-            if(spec.hasChip())for(String path:new String[]{"static.obj","active/static.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
+            if(spec.motion!=null)for(String state:spec.state_models){
+                String folder=state.substring(0,state.lastIndexOf('/')+1)+"parts/";
+                String[] parts="shutters".equals(spec.motion)?new String[]{"static","shutter_upper","shutter_lower","field"}:new String[]{"static","rotor"};
+                for(String part:parts)register(spec.design,folder+part+".obj",new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+folder+part+".obj"));
+            }
+            if(spec.hasChip()&&spec.state_models==null)for(String path:new String[]{"static.obj","active/static.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
         }
         MinecraftForge.EVENT_BUS.register(EVENTS);
     }
@@ -183,7 +188,11 @@ public final class UniversalConstructorModelCache {
 
         /** Baseline path also handles optional animated part offsets. */
         public void emitUncached(BufferBuilder buffer,double originX,double originY,double originZ,EnumFacing facing,double width,double depth,double offsetX,double offsetY,double offsetZ,int packedLight){
+            emitTransformed(buffer,originX,originY,originZ,facing,width,depth,offsetX,offsetY,offsetZ,packedLight,0,0,0);
+        }
+        public void emitTransformed(BufferBuilder buffer,double originX,double originY,double originZ,EnumFacing facing,double width,double depth,double offsetX,double offsetY,double offsetZ,int packedLight,double yaw,double pivotX,double pivotZ){
             if (facing.getAxis().isVertical()) throw new IllegalArgumentException("Horizontal facing required");
+            double cosine=Math.cos(yaw),sine=Math.sin(yaw);
             int blockLight = packedLight & 0xFFFF;
             int skyLight = (packedLight >>> 16) & 0xFFFF;
             for (Face face : faces) {
@@ -191,9 +200,10 @@ public final class UniversalConstructorModelCache {
                 float shade = face.diffuse ? LightUtil.diffuseLight(litSide) : 1.0F;
                 for (int v = 0; v < 4; v++) {
                     int i = v * 9;
-                    double px = face.data[i] + offsetX;
+                    double localX=face.data[i]-pivotX,localZ=face.data[i+2]-pivotZ;
+                    double px = pivotX+localX*cosine+localZ*sine+offsetX;
                     double py = face.data[i + 1] + offsetY;
-                    double pz = face.data[i + 2] + offsetZ;
+                    double pz = pivotZ-localX*sine+localZ*cosine+offsetZ;
                     double rx, rz;
                     switch (facing) {
                         case EAST: rx = depth - pz; rz = px; break;

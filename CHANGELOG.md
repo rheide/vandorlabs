@@ -2,6 +2,9 @@
 
 ## 2.6
 
+- Add Pinnacle Oculus Drive, Survey Dish, Sentinel Array, Standalone Dish and Standalone Antenna Core assemblies, with matching chips, configurable redstone activation, native holders and cached shutter/dish animations. Their controls use the existing Core and Programmable Matter construction workflow.
+- Rename Longburn Drive to Maxwell Drive and Pinnacle Meridian Drive to Seyr Meridian Drive. Replace the Meridian branding with one Seyr nameplate while retaining saved registry IDs and model dimensions.
+
 - Keep copied cockpits independent of their originals. Save relative reservation links and validate each part against the owning cockpit footprint, including local recovery for older clipboard copies.
 
 - Use Door Interior (Dark) as the default housing for new programmable screens, inputs and consoles; preserve saved finishes. Replace the twelve ceiling panels with their authored 64×64 vanilla-style artwork.

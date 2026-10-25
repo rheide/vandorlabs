@@ -10,7 +10,10 @@ public final class FrameMachineDesign {
     public String design,block,model;
     public int width,height,depth;
     public double[] chip_anchor,chip_size;
-    public String[] state_models;
+    public String[] state_models,state_labels;
+    public String motion;
+    public double[] motion_pivot;
+    public String stateLabel(int state){return state_labels==null?new String[]{"Off","Idle","Computing"}[state]:state_labels[state];}
     public Surface[] surfaces=new Surface[0];
     public static final class Surface {public String id,label;public double[][] corners;public double[] normal;}
     private static final Map<String,FrameMachineDesign> DESIGNS=load();

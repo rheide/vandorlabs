@@ -357,5 +357,347 @@
         ]
       }
     ]
+  },
+  {
+    "design": "oculus_drive",
+    "block": "oculus_drive_core",
+    "width": 3,
+    "height": 3,
+    "depth": 3,
+    "model": "oculus_drive/oculus_drive",
+    "state_models": [
+      "standby/complete.obj",
+      "charging/complete.obj",
+      "active/complete.obj"
+    ],
+    "state_labels": [
+      "Standby",
+      "Charging",
+      "Active"
+    ],
+    "surfaces": [
+      {
+        "id": "screen",
+        "label": "Half Screen",
+        "corners": [
+          [
+            2.375,
+            0.5625,
+            0.374375
+          ],
+          [
+            1.125,
+            0.5625,
+            0.374375
+          ],
+          [
+            1.125,
+            1.0625,
+            0.374375
+          ],
+          [
+            2.375,
+            1.0625,
+            0.374375
+          ]
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "id": "keyboard",
+        "label": "Keyboard",
+        "corners": [
+          [
+            2.375,
+            0.25055901699375,
+            -0.0002795085
+          ],
+          [
+            1.125,
+            0.25055901699375,
+            -0.0002795085
+          ],
+          [
+            1.125,
+            0.43805901699375,
+            0.3747204915
+          ],
+          [
+            2.375,
+            0.43805901699375,
+            0.3747204915
+          ]
+        ],
+        "normal": [
+          0.0,
+          0.894427190999916,
+          -0.447213595499958
+        ]
+      }
+    ],
+    "chip_anchor": [
+      0.8125,
+      0.65625,
+      0.364375
+    ],
+    "chip_size": [
+      6,
+      6
+    ],
+    "motion": "shutters"
+  },
+  {
+    "design": "sentinel_array",
+    "block": "sentinel_array_core",
+    "width": 2,
+    "height": 4,
+    "depth": 2,
+    "model": "radar/sentinel_array",
+    "state_models": [
+      "off/complete.obj",
+      "idle/complete.obj",
+      "scanning/complete.obj"
+    ],
+    "state_labels": [
+      "Off",
+      "Idle",
+      "Scanning"
+    ],
+    "surfaces": [
+      {
+        "id": "screen",
+        "label": "Half Screen",
+        "corners": [
+          [
+            1.625,
+            0.5625,
+            0.374375
+          ],
+          [
+            0.75,
+            0.5625,
+            0.374375
+          ],
+          [
+            0.75,
+            1.0,
+            0.374375
+          ],
+          [
+            1.625,
+            1.0,
+            0.374375
+          ]
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "id": "keyboard",
+        "label": "Keyboard",
+        "corners": [
+          [
+            1.625,
+            0.25055901699375,
+            -0.0002795085
+          ],
+          [
+            0.75,
+            0.25055901699375,
+            -0.0002795085
+          ],
+          [
+            0.75,
+            0.43805901699375,
+            0.3747204915
+          ],
+          [
+            1.625,
+            0.43805901699375,
+            0.3747204915
+          ]
+        ],
+        "normal": [
+          0.0,
+          0.8944271909999159,
+          -0.4472135954999579
+        ]
+      }
+    ],
+    "chip_anchor": [
+      0.53125,
+      0.59375,
+      0.364375
+    ],
+    "chip_size": [
+      6,
+      6
+    ]
+  },
+  {
+    "design": "standalone_antenna",
+    "block": "standalone_antenna_core",
+    "width": 2,
+    "height": 4,
+    "depth": 2,
+    "model": "radar/standalone_antenna",
+    "state_models": [
+      "off/complete.obj",
+      "idle/complete.obj",
+      "scanning/complete.obj"
+    ],
+    "state_labels": [
+      "Off",
+      "Idle",
+      "Scanning"
+    ],
+    "surfaces": [],
+    "chip_anchor": [
+      1.0,
+      0.3125,
+      0.615
+    ],
+    "chip_size": [
+      6,
+      6
+    ]
+  },
+  {
+    "design": "standalone_dish",
+    "block": "standalone_dish_core",
+    "width": 3,
+    "height": 3,
+    "depth": 3,
+    "model": "radar/standalone_dish",
+    "state_models": [
+      "off/complete.obj",
+      "idle/complete.obj",
+      "scanning/complete.obj"
+    ],
+    "state_labels": [
+      "Off",
+      "Idle",
+      "Scanning"
+    ],
+    "surfaces": [],
+    "chip_anchor": [
+      1.5,
+      0.3125,
+      0.6775
+    ],
+    "chip_size": [
+      6,
+      6
+    ],
+    "motion": "dish",
+    "motion_pivot": [
+      1.5,
+      0.125,
+      1.5
+    ]
+  },
+  {
+    "design": "survey_dish",
+    "block": "survey_dish_core",
+    "width": 3,
+    "height": 3,
+    "depth": 3,
+    "model": "radar/survey_dish",
+    "state_models": [
+      "off/complete.obj",
+      "idle/complete.obj",
+      "scanning/complete.obj"
+    ],
+    "state_labels": [
+      "Off",
+      "Idle",
+      "Scanning"
+    ],
+    "surfaces": [
+      {
+        "id": "screen",
+        "label": "Half Screen",
+        "corners": [
+          [
+            2.375,
+            0.5625,
+            0.374375
+          ],
+          [
+            1.125,
+            0.5625,
+            0.374375
+          ],
+          [
+            1.125,
+            1.0625,
+            0.374375
+          ],
+          [
+            2.375,
+            1.0625,
+            0.374375
+          ]
+        ],
+        "normal": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "id": "keyboard",
+        "label": "Keyboard",
+        "corners": [
+          [
+            2.375,
+            0.25055901699375,
+            -0.0002795085
+          ],
+          [
+            1.125,
+            0.25055901699375,
+            -0.0002795085
+          ],
+          [
+            1.125,
+            0.43805901699375,
+            0.3747204915
+          ],
+          [
+            2.375,
+            0.43805901699375,
+            0.3747204915
+          ]
+        ],
+        "normal": [
+          0.0,
+          0.894427190999916,
+          -0.447213595499958
+        ]
+      }
+    ],
+    "chip_anchor": [
+      0.8125,
+      0.6875,
+      0.364375
+    ],
+    "chip_size": [
+      6,
+      6
+    ],
+    "motion": "dish",
+    "motion_pivot": [
+      1.5,
+      0.875,
+      1.5
+    ]
   }
 ]

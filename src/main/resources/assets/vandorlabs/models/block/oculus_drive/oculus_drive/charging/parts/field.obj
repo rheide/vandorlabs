@@ -1,0 +1,17 @@
+# Pinnacle Oculus Drive for Minecraft 1.12.2 Forge
+# Units: blocks. +X east, +Y up, +Z rear. Front north/-Z.
+# Conventional bottom-origin OBJ V; process flip-v=true in Forge.
+mtllib materials.mtl
+o oculus_drive_charging_field
+v 1.2500000000 2.0625000000 1.6243750000
+v 1.7500000000 2.0625000000 1.6243750000
+v 1.7500000000 1.6875000000 1.6243750000
+v 1.2500000000 1.6875000000 1.6243750000
+vt 0.3320312500 0.6445312500
+vt 0.3632812500 0.6445312500
+vt 0.3632812500 0.6210937500
+vt 0.3320312500 0.6210937500
+vn 0.0000000000 0.0000000000 -1.0000000000
+g field__field_surface__field_surface
+usemtl atlas
+f 1/1/1 2/2/1 3/3/1 4/4/1

@@ -1,36 +1,36 @@
-# Vektor Longburn Drive
+# Maxwell Drive
 
-Build a **3 wide × 4 deep × 3 high** assembly with **25 Programmable Matter Blocks** and **one Longburn Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
+Build a **3 wide × 4 deep × 3 high** assembly with **25 Programmable Matter Blocks** and **one Maxwell Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
 ## 1. Build the base
 
 Lay out a solid 3 × 4 bottom layer. Put the matching Core in the front-left corner, facing you, and fill every other cell with Programmable Matter Blocks.
 
-![Vektor Longburn Drive: build the base](step-1.png)
+![Maxwell Drive: build the base](step-1.png)
 
 ## 2. Raise the corner pillars
 
 At each of the four corners, build up to a total height of 3 blocks, including the bottom layer. Leave the interior empty.
 
-![Vektor Longburn Drive: raise the corner pillars](step-2.png)
+![Maxwell Drive: raise the corner pillars](step-2.png)
 
 ## 3. Connect the top rim
 
 Connect the four pillar tops with a rectangular rim of Programmable Matter Blocks. Keep the middle of the roof open; do not fill the interior.
 
-![Vektor Longburn Drive: connect the top rim](step-3.png)
+![Maxwell Drive: connect the top rim](step-3.png)
 
 ## 4. Assemble
 
 Right-click the Core. The frame becomes the complete model, and its occupied cells are reserved. If formation fails, use the reported cell to check the frame and its empty interior.
 
-![Vektor Longburn Drive: assemble](step-4.png)
+![Maxwell Drive: assemble](step-4.png)
 
 ## 5. Enable Security and insert a Data Chip
 
 Use the Configurizer on the formed machine, enable Security, and choose the accepted company. The native Data Chip Mount now appears. Right-click it with a matching Data Chip; Stay Inserted keeps the chip visible after insertion. This example leaves Redstone disabled, so the chip authorizes the active appearance. The machine never emits a redstone signal.
 
-![Vektor Longburn Drive: enable security and insert a data chip](step-5.png)
+![Maxwell Drive: enable security and insert a data chip](step-5.png)
 
 ## Facing and removal
 
