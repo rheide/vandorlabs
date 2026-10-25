@@ -6,6 +6,10 @@ from zipfile import ZipFile
 with ZipFile(sys.argv[1]) as jar:
     names = set(jar.namelist())
     aliases = json.loads(jar.read('assets/vandorlabs/data/texture_aliases.json'))
+    surface_display=json.loads(jar.read('assets/vandorlabs/models/item/turntable_surface.json'))['display']
+    assert surface_display['gui']['scale']==[.5,.5,.5], 'Surface inventory padding changed'
+    for view,scale in [('firstperson_righthand',.4),('firstperson_lefthand',.4),('thirdperson_righthand',.375),('thirdperson_lefthand',.375),('ground',.25),('fixed',.5)]:
+        assert surface_display[view]['scale']==[scale]*3, 'Surface lacks native cube camera scale: '+view
     def resource_path(name):
         relative = name.removeprefix('assets/vandorlabs/')
         return 'assets/vandorlabs/' + aliases.get(relative, relative)

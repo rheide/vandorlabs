@@ -8,6 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'src/main/resources/assets/vandorlabs'
 ART = ROOT / 'texture-packs/additional/assets/vandorlabs/textures/blocks/turntable'
 DISPLAY = {'gui': {'rotation': [30, 225, 0], 'translation': [0, 0, 0], 'scale': [.5, .5, .5]}}
+# Native Minecraft cube camera transforms, with the existing padded inventory view.
+SURFACE_DISPLAY = {'gui': {'rotation': [30, 225, 0], 'translation': [0, 0, 0], 'scale': [0.5, 0.5, 0.5]}, 'ground': {'rotation': [0, 0, 0], 'translation': [0, 3, 0], 'scale': [0.25, 0.25, 0.25]}, 'fixed': {'rotation': [0, 0, 0], 'translation': [0, 0, 0], 'scale': [0.5, 0.5, 0.5]}, 'thirdperson_righthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 0], 'scale': [0.375, 0.375, 0.375]}, 'firstperson_righthand': {'rotation': [0, 45, 0], 'translation': [0, 0, 0], 'scale': [0.4, 0.4, 0.4]}, 'firstperson_lefthand': {'rotation': [0, 225, 0], 'translation': [0, 0, 0], 'scale': [0.4, 0.4, 0.4]}, 'thirdperson_lefthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 0], 'scale': [0.375, 0.375, 0.375]}}
 
 def write(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -63,7 +65,7 @@ def main():
             variants[f'facing={facing},formed={str(formed).lower()}'] = {'model': 'vandorlabs:' + name, 'x': rotation[0], 'y': rotation[1]}
     write(ASSETS / 'blockstates/turntable_surface.json', {'variants': variants})
     for name, parent in [('turntable_controller', 'turntable_controller_cw_off'), ('turntable_surface', 'turntable_surface')]:
-        write(ASSETS / f'models/item/{name}.json', {'parent': 'vandorlabs:block/' + parent, 'display': DISPLAY})
+        write(ASSETS / f'models/item/{name}.json', {'parent': 'vandorlabs:block/' + parent, 'display': SURFACE_DISPLAY if name=='turntable_surface' else DISPLAY})
         write(ASSETS / f'recipes/{name}.json', {
             'type': 'minecraft:crafting_shaped',
             'pattern': ['MMM', 'MRM', 'MMM'] if name.endswith('controller') else ['MM', 'MM'],

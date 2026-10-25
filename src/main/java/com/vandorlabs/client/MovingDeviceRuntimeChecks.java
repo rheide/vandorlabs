@@ -36,7 +36,10 @@ final class MovingDeviceRuntimeChecks {
                 require(MovingDeviceConfiguration.pointedTurntable(player)==table,"rotated captured block targets its controller");
                 require(player.getDistanceSq(owner)>64&&MovingDeviceConfiguration.openTurntable(player,table),"far-side turntable Configurizer reach");
                 require(player.openContainer instanceof com.vandorlabs.container.ContainerTurntable&&player.openContainer.canInteractWith(player),"turntable dialog remains usable through captured content");player.closeScreen();
-                require(ProgrammableTarget.settingsPos(world,root).equals(owner),"surface Configurizer resolves owner");
+                require(ProgrammableTarget.settingsPos(world,root).equals(root),"claimed Surface keeps its own texture target");
+                player.connection.setPlayerLocation(root.getX()+.5,root.getY()+1,root.getZ()+.5,0,90);
+                net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock surfaceClick=new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock(player,EnumHand.MAIN_HAND,root,EnumFacing.UP,new Vec3d(root).addVector(.5,1,.5));
+                ItemConfigurizer.onRightClickBlock(surfaceClick);require(surfaceClick.isCanceled()&&player.openContainer instanceof com.vandorlabs.container.ContainerSurface&&player.openContainer.canInteractWith(player),"actual Configurizer event opens claimed Surface texture dialog instead of Turntable motion");player.closeScreen();
                 if(blocked)world.setBlockState(destination,Blocks.STONE.getDefaultState());
                 fill(world,player,owner,"minecraft:stone");TurntableEvents.finishTransfers(world);
                 require(display.isDead&&world.getBlockState(owner).getBlock()==Blocks.STONE,"fill removes orphan display and preserves replacement block");
