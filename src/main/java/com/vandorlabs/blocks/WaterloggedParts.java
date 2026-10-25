@@ -61,19 +61,12 @@ public final class WaterloggedParts {
         List<AxisAlignedBB> local=new ArrayList<>();for(AxisAlignedBB box:solid)if(box.intersects(new AxisAlignedBB(pos)))local.add(box.offset(-pos.getX(),-pos.getY(),-pos.getZ()).intersect(new AxisAlignedBB(0,0,0,1,1,1)));
         // Include the side mapping in the cache even when two poses share collision bounds.
         if(cached&&data!=null&&data.geometry!=null&&data.geometry.solid.equals(local)&&data.geometryState==state&&data.geometryMapping==mapping&&pos.equals(data.geometryPos)){data.geometryTick=tick;return data.geometry;}
-        Volume result=new Volume(local);double[][] cuts=new double[3][];
-        for(int axis=0;axis<3;axis++){TreeSet<Double> points=new TreeSet<>();points.add(0D);points.add(1D);if(OpeningFluids.supports(state)){points.add(.5);double[] plane=OpeningFluids.plane(world,pos);if(Math.abs(plane[axis])>.999)for(int end=3;end<5;end++){double cut=plane[end]/plane[axis];if(cut>0&&cut<1)points.add(cut);}}for(AxisAlignedBB b:local){points.add(axis==0?b.minX:axis==1?b.minY:b.minZ);points.add(axis==0?b.maxX:axis==1?b.maxY:b.maxZ);}cuts[axis]=points.stream().mapToDouble(Double::doubleValue).toArray();}
-        int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;int[][][] owners=new int[nx][ny][nz];
-        for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++){
-            AxisAlignedBB box=new AxisAlignedBB(cuts[0][x],cuts[1][y],cuts[2][z],cuts[0][x+1],cuts[1][y+1],cuts[2][z+1]);Vec3d center=new Vec3d((box.minX+box.maxX)*.5,(box.minY+box.maxY)*.5,(box.minZ+box.maxZ)*.5);int side=side(world,pos,center);for(AxisAlignedBB b:local)if(b.contains(center)){side=-1;break;}owners[x][y][z]=side;if(side>=0)result.cells.add(new Cell(box,side));
-        }
-        for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++)if(owners[x][y][z]>=0){
-            int side=owners[x][y][z];double a=cuts[0][x],b=cuts[0][x+1],c=cuts[1][y],d=cuts[1][y+1],e=cuts[2][z],f=cuts[2][z+1];
-            for(EnumFacing face:EnumFacing.values()){int xx=x+face.getFrontOffsetX(),yy=y+face.getFrontOffsetY(),zz=z+face.getFrontOffsetZ();if(xx>=0&&xx<nx&&yy>=0&&yy<ny&&zz>=0&&zz<nz&&owners[xx][yy][zz]==side)continue;
-                Vec3d[] vertices;switch(face){case DOWN:vertices=new Vec3d[]{new Vec3d(a,c,e),new Vec3d(b,c,e),new Vec3d(b,c,f),new Vec3d(a,c,f)};break;case UP:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(a,d,f),new Vec3d(b,d,f),new Vec3d(b,d,e)};break;case WEST:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(a,c,e),new Vec3d(a,c,f),new Vec3d(a,d,f)};break;case EAST:vertices=new Vec3d[]{new Vec3d(b,d,e),new Vec3d(b,d,f),new Vec3d(b,c,f),new Vec3d(b,c,e)};break;case NORTH:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(b,d,e),new Vec3d(b,c,e),new Vec3d(a,c,e)};break;default:vertices=new Vec3d[]{new Vec3d(a,d,f),new Vec3d(a,c,f),new Vec3d(b,c,f),new Vec3d(b,d,f)};}
-                result.faces.add(new Face(vertices,side,face.getAxis()==EnumFacing.Axis.X?0:face.getAxis()==EnumFacing.Axis.Y?1:2));
-            }
-        }
+        java.util.List<com.vandorlabs.fluids.FluidVolume.Box> solids=new ArrayList<>();for(AxisAlignedBB box:local)solids.add(new com.vandorlabs.fluids.FluidVolume.Box(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ));
+        double[][] extra=new double[3][];
+        if(OpeningFluids.supports(state)){double[] plane=OpeningFluids.plane(world,pos);for(int axis=0;axis<3;axis++)extra[axis]=Math.abs(plane[axis])>.999?new double[]{.5,plane[3]/plane[axis],plane[4]/plane[axis]}:new double[]{.5};}
+        com.vandorlabs.fluids.FluidVolume shared=com.vandorlabs.fluids.FluidVolume.build(solids,extra,(x,y,z)->side(world,pos,new Vec3d(x,y,z)));
+        Volume result=new Volume(local);for(com.vandorlabs.fluids.FluidVolume.Cell cell:shared.cells){com.vandorlabs.fluids.FluidVolume.Box box=cell.box;result.cells.add(new Cell(new AxisAlignedBB(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ),cell.side));}
+        for(com.vandorlabs.fluids.FluidVolume.Face face:shared.faces){Vec3d[] vertices=new Vec3d[4];for(int i=0;i<4;i++)vertices[i]=new Vec3d(face.vertices[i].x,face.vertices[i].y,face.vertices[i].z);result.faces.add(new Face(vertices,face.side,face.axis));}
         if(cached&&data!=null){data.geometry=result;data.geometryPos=pos.toImmutable();data.geometryTick=tick;data.geometryState=state;data.geometryMapping=mapping;}return result;
     }
     public static List<AxisAlignedBB> gaps(IBlockAccess access,BlockPos pos){if(!(access instanceof World))return Collections.emptyList();List<AxisAlignedBB> boxes=new ArrayList<>();for(Cell cell:volume((World)access,pos).cells)boxes.add(cell.box.offset(pos));return boxes;}
@@ -148,7 +141,7 @@ public final class WaterloggedParts {
         Vec3d hit=event.getHitVec()==null?player.getPositionEyes(1):event.getHitVec();int side=side(world,pos,hit.subtract(new Vec3d(pos)).add(new Vec3d(event.getFace().getDirectionVec()).scale(.001)));
         FluidStack incoming=container.drain(1000,false),stored=data.get(side);boolean fill=incoming!=null;
         event.setCanceled(true);event.setCancellationResult(EnumActionResult.FAIL);
-        if(fill){if(incoming.amount!=1000||incoming.getFluid().isGaseous(incoming)||data.occupied(side)||!OpeningFluids.supports(world.getBlockState(pos))&&!volume(world,pos).hasSide(side))return;}
+        if(fill){if(incoming.amount!=1000)return;if(!com.vandorlabs.fluids.FluidVolume.canFill(incoming.amount,incoming.getFluid().isGaseous(incoming),data.occupied(side),()->OpeningFluids.supports(world.getBlockState(pos))||volume(world,pos).hasSide(side)))return;}
         else if(stored==null||container.fill(stored,false)!=1000)return;
         event.setCancellationResult(EnumActionResult.SUCCESS);if(world.isRemote)return;
         if(fill)container.drain(1000,true);else container.fill(stored,true);

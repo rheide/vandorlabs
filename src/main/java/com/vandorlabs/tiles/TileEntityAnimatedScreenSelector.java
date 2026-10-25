@@ -176,7 +176,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             redstoneScreen(slot).setEnabled(true);return;
         }
         if(controls[slot]!=null)controls[slot].setEnabled(false);
-        int next=choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
+        int next=com.vandorlabs.persistence.HousingSideTexture.selected(choice,ScreenHousingTextures::clamp);
         if(getSurfaceTexture(slot)==next)return;
         if(slot==1)secondarySurface=next;else primarySurface=next;
         settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
@@ -287,7 +287,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int stairRoll(){return stairRoll;}
     public int stairGeometry(){return stairTread|(stairRoll<<5);}
     public void setStairGeometry(int tread,int roll){
-        if(!com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)||roll<0||roll>2)return;
+        if(!com.vandorlabs.persistence.StairState.valid(tread,roll))return;
         if(stairTread==tread&&stairRoll==roll)return;
         stairTread=tread;stairRoll=roll;fluids.invalidateGeometry();settingsChanged();
         if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}
@@ -301,7 +301,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 && ((com.vandorlabs.blocks.BlockProgrammableWall)block).isPortholeShape();
     }
     public void setSideTexture(int choice) {
-        int next=choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
+        int next=com.vandorlabs.persistence.HousingSideTexture.selected(choice,ScreenHousingTextures::clamp);
         if(sideTexture==next)return;
         sideTexture=next;settingsChanged();
         if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);if(world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);}
@@ -529,7 +529,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
+        new com.vandorlabs.persistence.StairState(stairTread,stairRoll).write(new com.vandorlabs.persistence.NbtPrimitiveData(compound));
         super.writeToNBT(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
@@ -564,9 +564,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public void readFromNBT(NBTTagCompound compound) {
         int previousStair=stairGeometry();
-        int tread=compound.hasKey("StairTread",3)?compound.getInteger("StairTread"):8;
-        stairTread=com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)?tread:8;
-        stairRoll=Math.max(0,Math.min(2,compound.getInteger("StairRoll")));if(previousStair!=stairGeometry())fluids.invalidateGeometry();
+        com.vandorlabs.persistence.StairState stair=com.vandorlabs.persistence.StairState.read(new com.vandorlabs.persistence.NbtPrimitiveData(compound));
+        stairTread=stair.tread;stairRoll=stair.roll;if(previousStair!=stairGeometry())fluids.invalidateGeometry();
         ChannelList previousChannels=channels;
         FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
@@ -617,7 +616,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         int savedHousing = com.vandorlabs.ui.ProgrammableBlockDialog.savedMainTexture(
                 data.housingTexture,compound.hasKey("HousingTextureVersion", 3));
         housingTexture = ScreenHousingTextures.clamp(savedHousing);
-        sideTexture=compound.hasKey("SideTexture",3) && compound.getInteger("SideTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SideTexture")):-1;
+        sideTexture=com.vandorlabs.persistence.HousingSideTexture.read(new com.vandorlabs.persistence.NbtPrimitiveData(compound),ScreenHousingTextures::clamp);
         glassShade = compound.hasKey("GlassShade", 3)
                 ? GlassTextures.clamp(compound.getInteger("GlassShade")) : 2;
         glassTint=compound.hasKey("GlassTint",3)?GlassTextures.clampTint(compound.getInteger("GlassTint")):1;
