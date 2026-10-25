@@ -24,6 +24,7 @@ public final class Gear26RuntimeChecks {
     public static void run(WorldServer world,EntityPlayerMP actor){
         BlockPos root=new BlockPos(620,170,260);checks=0;
         try{
+            inputTransition(world,actor,root);
             for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.GEAR_SWING_ARM,GearRegistry.GEAR_MOUNT,GearRegistry.LARGE_GEAR_EXTENDER,GearRegistry.LARGE_GEAR_SWING_ARM})for(EnumFacing face:EnumFacing.values())for(int count:new int[]{1,2,8}){
                 clear(world,root);GearTileEntity tile=arm(world,actor,root,block,face,count);
                 require(tile.mountDirection()==face&&tile.assembly().columnHeight()==count&&!tile.isLandingAssembly(),"complete unsupported column has its own axis and no false landing support");
@@ -64,6 +65,12 @@ public final class Gear26RuntimeChecks {
             clear(world,root);world.setBlockState(root,TrackRegistry.COMPACT.getDefaultState());world.setBlockState(root.east(),Blocks.STONE_SLAB.getDefaultState().withProperty(net.minecraft.block.BlockSlab.HALF,net.minecraft.block.BlockSlab.EnumBlockHalf.TOP));TrackTile track=(TrackTile)world.getTileEntity(root);TrackWorld.rebuild(track);require((track.appearance().sideMask&2)!=0,"top slab selects native side bracket");
         }finally{clear(world,root);}
         System.out.println("[vandorlabs][reprolab] gear26-runtime PASS checks="+checks+" six-axis unsupported columns integral/fractional payloads reversal snapshots tracks and side brackets");
+    }
+    private static void inputTransition(WorldServer world,EntityPlayerMP actor,BlockPos root){
+        clear(world,root);world.setBlockState(root,GearRegistry.GEAR_EXTENDER.getDefaultState());GearTileEntity tile=(GearTileEntity)world.getTileEntity(root);tile.operator(actor);
+        NBTTagCompound settings=tile.settings();settings.setInteger("Trigger",1);tile.configure(settings);require(!tile.target(),"unformed tile retains legacy unpowered deployment input");require(tile.rebuild(),"configured bare arm forms");tile.update();require(tile.target()&&tile.progress()==1,"forming generic topology resamples its construction-pose input");
+        world.setBlockState(root.down(),GearRegistry.LANDING_PLATE.getDefaultState());require(tile.rebuild(),"generic arm becomes landing support");tile.update();require(!tile.target(),"landing topology resamples legacy deployment input after generic operation");
+        System.out.println("[vandorlabs][reprolab] gear26-input-transition PASS legacy-unformed generic-construction-pose landing-deployment edge-resampling");
     }
     private static void topologyRecovery(WorldServer world,EntityPlayerMP actor,BlockPos root){
         clear(world,root);GearTileEntity tile=arm(world,actor,root,GearRegistry.GEAR_EXTENDER,EnumFacing.DOWN,2);world.setBlockState(root.down(2),Blocks.CHEST.getDefaultState());((net.minecraft.tileentity.TileEntityChest)world.getTileEntity(root.down(2))).setInventorySlotContents(0,new ItemStack(net.minecraft.init.Items.GOLD_INGOT,6));

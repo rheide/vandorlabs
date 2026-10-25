@@ -54,6 +54,12 @@ public final class VehicleWorldRuntimeChecks {
             NBTTagCompound saved=gear.writeToNBT(new NBTTagCompound());
             GearTileEntity restored=new GearTileEntity();restored.readFromNBT(saved);
             require(!restored.target(),"Retracted target did not survive NBT round trip");
+            // Only an explicitly formed generic arm reverses the legacy deployment input.
+            NBTTagCompound genericData=data.copy();genericData.setBoolean("GearController",true);genericData.setInteger("GearHeight",1);genericData.setString("GearKind","NONE");genericData.setBoolean("GearTargetDeployed",false);
+            net.minecraft.nbt.NBTTagList feet=new net.minecraft.nbt.NBTTagList();feet.appendTag(new net.minecraft.nbt.NBTTagIntArray(new int[]{0,-1,0}));genericData.setTag("GearFeet",feet);
+            GearTileEntity generic=new GearTileEntity();generic.readFromNBT(genericData);generic.setWorld(view);view.tiles.put(p,generic);changed.clear();generic.input();
+            require(generic.target()&&changed.contains(p),"Unpowered generic arm did not select and persist its construction pose");
+            view.tiles.put(p,gear);
             changed.clear();gear.target(true);require(gear.target()&&changed.contains(p),"Reverse input was not persisted");
             // All carried tile subclasses share this inherited dirty path.
             TileEntity replacement=new TileEntity(){};replacement.setWorld(view);replacement.setPos(p);

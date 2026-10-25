@@ -154,7 +154,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public void input(){if(triggerMode!=0&&world!=null){
         net.minecraft.world.World bus=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;
         boolean powered;if(legacyAnyChannels){powered=localPower();for(int i=0;i<channels.size();i++)powered|=com.vandorlabs.redstone.RedstoneChannels.level(bus,channels.get(i))>0;}else powered=channels.isEmpty()?localPower():com.vandorlabs.redstone.RedstoneChannels.allPowered(bus,channels);
-        if(!signalKnown||powered!=lastSignal){signalKnown=true;lastSignal=powered;boolean on=triggerMode==1?powered:!powered;target(isLandingAssembly()?on:!on);}
+        if(!signalKnown||powered!=lastSignal){signalKnown=true;lastSignal=powered;boolean on=triggerMode==1?powered:!powered;/* Unformed legacy tiles retain deployment input semantics until topology explicitly selects a generic arm. */target(assembly!=null&&assembly.kind()==GearTopology.FootKind.NONE?!on:on);}
     }}
 
     private String lastError = "The gear has not been assembled yet.";
@@ -354,6 +354,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(scan.assembly.kind()!=GearTopology.FootKind.NONE)for(GearTopology.Cell foot:scan.assembly.feet())prospective.add(localCell(foot));
         for(BlockPos member:prospective){TileEntity raw=world.getTileEntity(member);if(!(raw instanceof GearTileEntity))continue;GearTileEntity former=((GearTileEntity)raw).loadedController();if(former!=null&&former!=this&&former.hasRetainedPayload()&&(!former.fullyDeployed()||!former.releaseAssembly())){lastError="Restore the existing arm attachment before merging its controller";return false;}}
         if(assembly==null)for(GearTopology.Cell foot:scan.assembly.feet()){TileEntity raw=world.getTileEntity(localCell(foot));GearTileEntity former=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(former!=null&&former!=this){if(!former.fullyDeployed()){lastError="Deploy the connected group before changing its controller";return false;}configure(former.settings());break;}}
+        boolean genericBefore=assembly!=null&&assembly.kind()==GearTopology.FootKind.NONE;
         GearMotion.Mode previousMode = mode;
         if (isSwingArmController()) {
             if (mode != GearMotion.Mode.ROTATE_LEVEL&&!configured) {
@@ -386,6 +387,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         for(BlockPos column:scan.columns){TileEntity raw=world.getTileEntity(column);if(raw instanceof GearTileEntity&&raw!=this&&((GearTileEntity)raw).assembly!=null&&!((GearTileEntity)raw).releaseAssembly())return false;}
         if(isFixedMount()){deployedTarget=true;progress=previousProgress=1;}
         assembly = scan.assembly;
+        if(genericBefore!=(assembly.kind()==GearTopology.FootKind.NONE))signalKnown=false;
         columns.clear();columns.addAll(relativeColumns(scan.columns));
         operational = true;
         footFacing = scan.footFacing;
