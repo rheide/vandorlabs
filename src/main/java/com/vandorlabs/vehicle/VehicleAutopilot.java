@@ -12,6 +12,7 @@ import net.minecraft.util.math.*;
 public final class VehicleAutopilot {
     private final EntityGroundVehicle craft;
     private TileEntityAutopilot controller;
+    private VehicleStructure controlStructure;
     private int revision=-1;
     private BlockPos previous,target,waiting,departed;
     private long arrived;
@@ -42,7 +43,14 @@ public final class VehicleAutopilot {
     }
     public TileEntityAutopilot controller(){
         if(craft.view==null)return null;
-        if(revision!=craft.view.tileRevision){revision=craft.view.tileRevision;controller=null;for(TileEntity tile:craft.view.tiles.values())if(tile instanceof TileEntityAutopilot && !(tile instanceof TileEntityWaypoint)){controller=(TileEntityAutopilot)tile;break;}}
+        if(revision!=craft.view.tileRevision||controlStructure!=craft.structure){
+            revision=craft.view.tileRevision;controlStructure=craft.structure;controller=null;boolean primaryController=false;
+            for(VehicleStructure.Cell cell:craft.structure.cells){
+                if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController){if(primaryController)break;primaryController=true;}
+                TileEntity tile=craft.view.getTileEntity(cell.pos);
+                if(tile instanceof TileEntityAutopilot&&!(tile instanceof TileEntityWaypoint)){controller=(TileEntityAutopilot)tile;break;}
+            }
+        }
         return controller;
     }
     public boolean enabled(){TileEntityAutopilot tile=controller();return tile!=null&&tile.enabled();}

@@ -1,5 +1,7 @@
 # Autopilot and waypoints
 
+When carrying a complete parked vehicle, only the outer vehicle's Autopilot navigates. A child's Autopilot and saved settings travel with its blocks; they do not take over if the outer vehicle has no Autopilot.
+
 Mount one Autopilot on the bottom of a vehicle. Navigation uses the same forward direction as manual driving, determined by the Pilot Seat used to assemble the craft. Rotating the Autopilot block does not reverse the craft. Right-click it or use the Configurizer to configure it. Choose the route block from the inventory sample picker; the selected block variant is retained. The default marker is white concrete.
 
 Build a continuous line of face-adjacent marker blocks on the ground, replacing selected markers with Waypoint Blocks. Routes support horizontal corners. Branches and gaps stop and disable the autopilot; it never guesses a branch. The first solid ground block below the controller must be a route marker or waypoint, with no more than 16 empty blocks between controller and ground. Unloaded terrain is not loaded by navigation. Starting travel prefers a marker ahead of the Pilot Seat. If none is ahead, it can follow one unambiguous side continuation at a corner; equally plausible choices stop instead of guessing. It does not reverse automatically at an endpoint.
