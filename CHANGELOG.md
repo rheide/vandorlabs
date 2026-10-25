@@ -12,6 +12,9 @@
   together with joined texture planes, filesystem texture discovery and atlas
   padding. Forge uses these same implementations while retaining native world,
   lifecycle and rendering adapters.
+- Share programmable-glass saved defaults, metadata-size migration and editor
+  labels, bounds and option cycling. Retain its immediate settings submission
+  and dormant custom-material layout while stock glass is selected.
 - Add native filesystem material reloads for programmable cubes, preserving
   saved identities and updating artwork dimensions in an open picker. Keep
   native channel membership event-driven with explicit removal and unload cleanup.

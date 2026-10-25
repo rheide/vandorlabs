@@ -6,37 +6,30 @@ import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntityProgrammableGlass;
 import net.minecraft.client.gui.GuiButton;
 import java.io.IOException;
+import com.vandorlabs.ui.GlassDialog;
 
 /** Glass finishes use the same scrollable thumbnail picker as programmable walls. */
 public final class GuiProgrammableGlass extends GuiMaterialPicker {
     private final TileEntityProgrammableGlass tile;
-    private int size,shade,tint,material,textureLayout;
-    private boolean join,framed,stretch;
+    private GlassDialog.State settings;
     private HousingTextureList textures;
     public GuiProgrammableGlass(TileEntityProgrammableGlass tile) {
         super(new ContainerProgrammableGlass(tile));this.tile=tile;
-        textureLayout=tile.getTextureLayout();size=0;shade=tile.getShade();join=tile.isJoin();tint=tile.getTint();framed=tile.isFramed();material=tile.getMaterial();stretch=tile.isStretch();
+        settings=GlassDialog.State.edit(tile.settings());
     }
     @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui() {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
         xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();
-        textures=HousingTextureList.forGlassMaterials(size,guiLeft+12,guiTop+30,layout.controlsX-guiLeft-31,shade,material)
-                .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).keepView(textures);
-        buttonList.add(new GuiButton(3,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Join: "+(join?"On":"Off")));
-        buttonList.add(new GuiButton(4,layout.controlsX,guiTop+78,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(tint)));
-        buttonList.add(new GuiButton(5,layout.controlsX,guiTop+102,ProgrammableDialogLayout.CONTROLS_WIDTH,20,framed?"Framed":"Bare"));
-        if(material>=0)buttonList.add(new GuiButton(6,layout.controlsX,guiTop+126,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout)));
-        buttonList.add(new GuiButton(2,layout.controlsX,guiTop+ySize-26,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Done"));
+        textures=HousingTextureList.forGlassMaterials(settings.size,layout.listX,GlassDialog.listY(layout),layout.listWidth,settings.shade,settings.material)
+                .visibleRows(GlassDialog.rows(layout)).keepView(textures);
+        for(ProgrammableDialogLayout.Button button:GlassDialog.controls(layout,settings))buttonList.add(new GuiButton(button.id,button.x,button.y,button.width,button.height,button.label));
     }
-    void choose(int choice){if(textures!=null && textures.selected()!=choice)textures.setSelected(choice);if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}else material=choice;send();initGui();}
-    private void send(){tile.setSize(size);tile.setShade(shade);tile.setMaterial(material);tile.setTextureLayout(textureLayout);tile.setJoin(join);tile.setAppearance(tint,framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join).withAppearance(tint,framed).withMaterial(material).withTextureLayout(textureLayout));}
+    void choose(int choice){if(textures!=null&&textures.selected()!=choice)textures.setSelected(choice);settings=settings.choose(choice);send();initGui();}
+    private void send(){tile.setSize(settings.size);tile.setShade(settings.shade);tile.setMaterial(settings.material);tile.setTextureLayout(settings.layout);tile.setJoin(settings.join);tile.setAppearance(settings.tint,settings.framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),settings.size,settings.shade,settings.join).withAppearance(settings.tint,settings.framed).withMaterial(settings.material).withTextureLayout(settings.layout));}
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==2){mc.player.closeScreen();return;}
-        if(button.id==3)join=!join;
-        if(button.id==4)tint=GuiOptionCycle.next(tint,3);
-        if(button.id==5)framed=!framed;
-        if(button.id==6){textureLayout=GuiOptionCycle.next(textureLayout,3);stretch=textureLayout!=1;}
+        settings=settings.action(button.id,GuiOptionCycle.direction());
         send();initGui();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
@@ -49,7 +42,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     @Override public void drawScreen(int x,int y,float partial){
         drawDefaultBackground();drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF101012);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+18,0xFF202028);
-        fontRenderer.drawString("Programmable Glass",guiLeft+8,guiTop+5,0xFFFFFFFF);
+        fontRenderer.drawString(GlassDialog.TITLE,guiLeft+8,guiTop+5,0xFFFFFFFF);
         textures.draw(fontRenderer,x,y);super.drawScreen(x,y,partial);
     }
     @Override public boolean doesGuiPauseGame(){return false;}

@@ -10,6 +10,7 @@ import net.minecraft.world.World;
 
 /** Glass tint is synchronized independently of the baked frame geometry. */
 public final class TileEntityProgrammableGlass extends TileEntity {
+    public TileEntityProgrammableGlass(){applySaved(com.vandorlabs.persistence.ProgrammableGlassSettings.fresh());}
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox(){
         net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
         return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
@@ -17,9 +18,9 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     @Override public void markDirty(){super.markDirty();GlassMaterials.changed();}
     public final com.vandorlabs.blocks.ContainedFluids fluids=new com.vandorlabs.blocks.ContainedFluids(this);
     private int shade;
-    private int material=-1;
+    private int material;
     private boolean stretch;
-    private int textureLayout=-1;
+    private int textureLayout;
     public int getTextureLayout(){return textureLayout<0?(stretch?0:1):textureLayout;}
     public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid glass texture layout");if(getTextureLayout()==mode)return;stretch=mode!=1;textureLayout=mode;markDirty();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
     public boolean isStretch(){return stretch;}
@@ -30,11 +31,11 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         material=value;markDirty();
         if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}
     }
-    private int tint = 1;
-    private boolean framed = true;
-    private int size = 1;
-    private boolean join = true;
-    private int panelFacing = -1;
+    private int tint;
+    private boolean framed;
+    private int size;
+    private boolean join;
+    private int panelFacing;
     public net.minecraft.util.EnumFacing getPanelFacing(net.minecraft.util.EnumFacing fallback) {
         net.minecraft.util.EnumFacing facing=panelFacing<0?fallback:net.minecraft.util.EnumFacing.getHorizontal(panelFacing);
         return facing.getAxis()==fallback.getAxis()?facing:fallback;
@@ -89,32 +90,18 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
     }
+    private void applySaved(com.vandorlabs.persistence.ProgrammableGlassSettings saved){material=saved.material;stretch=saved.stretch;textureLayout=saved.layout;tint=saved.tint;framed=saved.framed;shade=saved.shade;legacySize=saved.legacySize;size=saved.size;join=saved.join;panelFacing=saved.panelFacing;}
+    public com.vandorlabs.persistence.ProgrammableGlassSettings settings(){return new com.vandorlabs.persistence.ProgrammableGlassSettings(shade,material,textureLayout,stretch,tint,framed,size,join,panelFacing,legacySize);}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);fluids.write(tag);
-        tag.setInteger("GlassShade", shade);
-        tag.setInteger("GlassMaterial",material);
-        tag.setBoolean("GlassStretch",stretch);
-        tag.setInteger("GlassTextureLayout",getTextureLayout());
-        tag.setInteger("GlassTint", tint);
-        tag.setBoolean("GlassFramed", framed);
-        tag.setInteger("GlassSize", size);
-        tag.setBoolean("GlassJoin", join);
-        if(panelFacing>=0)tag.setInteger("GlassPanelFacing",panelFacing);
+        settings().write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);fluids.read(tag);
         restored = true;
-        material=tag.hasKey("GlassMaterial",3)?GlassMaterials.clamp(tag.getInteger("GlassMaterial")):-1;
-        stretch=tag.getBoolean("GlassStretch");
-        textureLayout=tag.hasKey("GlassTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("GlassTextureLayout"))?tag.getInteger("GlassTextureLayout"):-1;
-        tint=tag.hasKey("GlassTint",3)?GlassTextures.clampTint(tag.getInteger("GlassTint")):1;
-        framed=!tag.hasKey("GlassFramed") || tag.getBoolean("GlassFramed");
-        shade = GlassTextures.clamp(tag.getInteger("GlassShade"));
-        legacySize = !tag.hasKey("GlassSize");
-        size = legacySize ? 1 : Math.max(0, Math.min(1, tag.getInteger("GlassSize")));
-        join = !tag.hasKey("GlassJoin") || tag.getBoolean("GlassJoin");
-        panelFacing=tag.hasKey("GlassPanelFacing",3)?Math.floorMod(tag.getInteger("GlassPanelFacing"),4):-1;
+        com.vandorlabs.persistence.ProgrammableGlassSettings saved=com.vandorlabs.persistence.ProgrammableGlassSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag),GlassMaterials::clamp);
+        applySaved(saved);
     }
     @Override public void onLoad() {
         super.onLoad();
