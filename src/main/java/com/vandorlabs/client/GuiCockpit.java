@@ -34,7 +34,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
             buttonList.add(new CockpitButton(11,x+w/2+2,guiTop+30,w/2-2,20,"Trigger: "+new String[]{"Disabled","ON","OFF"}[tile.getRedstoneMode()]));
             text(0,x,guiTop+72,w,tile.getRedstoneChannels().toString());
             for(int i=0;i<3;i++)text(i+1,x,guiTop+102+i*28,w,tile.modeChannels(i).toString());
-            for(int i=0;i<3;i++)buttonList.add(new CockpitButton(20+i,x+i*w/3,guiTop+ySize-50,w/3-2,20,new String[]{"Block mode","Taxi mode","Hover mode"}[i]));
+            for(int i=0;i<3;i++)buttonList.add(new CockpitButton(20+i,x+i*w/3,guiTop+ySize-50,w/3-2,20,new String[]{"Park mode","Taxi mode","Hover mode"}[i]));
         }else if(sidePage()){
             int top=tile.design().equals("chair_siderests")||tile.design().equals("cockpit")?60:34;
             if(tile.design().equals("cockpit"))buttonList.add(new CockpitButton(13,x,guiTop+34,w,20,"Throttles: "+(tile.throttleCount()==1?"Single":"Twin")));

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.6
+
+- Rename the stationary vehicle setting to Park Mode in cockpit dialogs, Autopilot dialogs and Vehicle Status screens. Saved vehicle modes remain compatible.
+
 ## 2.5
 
 - Share navigation-table activation with Core-based multiblocks: consume physical redstone or input channels, optionally require a matching Data Chip, and never emit physical or channel power from Cores or reserved cells.

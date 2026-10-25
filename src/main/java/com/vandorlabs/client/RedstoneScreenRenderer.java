@@ -101,7 +101,7 @@ final class RedstoneScreenRenderer {
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
         if(height>64)text(font,"VEHICLE STATUS",8,8,0xE1EEFF);
         if(autopilot!=null)text(font,on?"AUTOPILOT ON":"Autopilot OFF",8,top+1,on?0x072D24:0xFFFFFF);
-        String[] modes={"Block","Taxi","Hover"};for(int i=0;i<3;i++)text(font,modes[i],8+i*39,top+13,i==mode?0x072D24:0xFFFFFF);
+        String[] modes={"Park","Taxi","Hover"};for(int i=0;i<3;i++)text(font,modes[i],8+i*39,top+13,i==mode?0x072D24:0xFFFFFF);
         if(autopilot!=null)text(font,font.trimStringToWidth(autopilot.status,114),8,top+25,0xCEE9ED);
         if(autopilot!=null)text(font,"Next >",8,top+37,0xFFFFFF);
         if(hover){double clearance=craft.groundClearance();text(font,Double.isFinite(clearance)?String.format(java.util.Locale.ROOT,"Height: %.1f blocks",clearance):"Height: 32+ blocks",8,top+47,0xC1E8FF);}

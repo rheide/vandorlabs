@@ -20,7 +20,7 @@ public final class GuiAutopilot extends GuiContainer {
     private int trigger,stop,depart;
     private boolean auto,direct;
     private GuiSlider height;
-    private static final String[] MODES={"Block","Taxi","Hover"},TRIGGERS={"Disabled","On","Off"};
+    private static final String[] MODES={"Park","Taxi","Hover"},TRIGGERS={"Disabled","On","Off"};
     public GuiAutopilot(TileEntityAutopilot tile){super(new ContainerRedstoneChannel(tile));this.tile=tile;markerId=tile.marker;markerMeta=tile.markerMeta;waypoint=tile instanceof TileEntityWaypoint;trigger=tile.trigger;xSize=300;ySize=waypoint?270:205;if(waypoint){TileEntityWaypoint w=(TileEntityWaypoint)tile;stop=w.stopMode;depart=w.departMode;auto=w.autoDepart;direct=w.directSignal;}}
     public void initGui(){super.initGui();buttonList.clear();picking=false;String channelDraft=channels==null?tile.getRedstoneChannels().toString():channels.getText();channels=new GuiTextField(1,fontRenderer,guiLeft+130,guiTop+32,154,18);ChannelFields.configure(channels);channels.setText(channelDraft);
         if(!waypoint){buttonList.add(new GuiButton(0,guiLeft+14,guiTop+58,270,20,"Redstone: "+TRIGGERS[trigger]));buttonList.add(new GuiButton(2,guiLeft+14,guiTop+128,270,20,"Choose route block from inventory..."));}
