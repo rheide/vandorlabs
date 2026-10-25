@@ -434,12 +434,24 @@ public class TileEntityControlledRamp extends TileEntity {
         // Dynmap reads tile NBT but cannot run this cell's animated Minecraft renderer.
         // Give it the clipped cell geometry and the saved programmable finish.
         StringBuilder mapBoxes=new StringBuilder();
-        if (world!=null) for (RampGeometry.Box box:geometry(0)) {
+        List<RampGeometry.Box> mapGeometry=java.util.Collections.emptyList();
+        if(world!=null){
+            if(world.getBlockState(pos).getBlock() instanceof BlockControlledRamp)mapGeometry=geometry(0);
+            else if(world instanceof com.vandorlabs.vehicle.VehicleWorld){
+                // Endpoint parts are serialized before their new states enter the staging view.
+                // Derive their saved map geometry from the same configured controller facing.
+                TileEntity owner=world.getTileEntity(controller);
+                if(owner instanceof TileEntityRampController)mapGeometry=geometryUncached(((TileEntityRampController)owner).rampDirection(),pose(0));
+            }
+        }
+        for (RampGeometry.Box box:mapGeometry) {
             if (mapBoxes.length()>0) mapBoxes.append(';');
             double[] coords={box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ};
             for (int i=0;i<coords.length;i++) {
                 if (i>0) mapBoxes.append(',');
-                mapBoxes.append(Math.max(0,Math.min(1,coords[i])));
+                // Map metadata uses block-local micro-units. Absolute-world subtraction
+                // otherwise changes the last double digits when a snapshot is rebased.
+                mapBoxes.append(Math.round(Math.max(0,Math.min(1,coords[i]))*1000000D)/1000000D);
             }
         }
         tag.setString("DynmapBoxes",mapBoxes.toString());

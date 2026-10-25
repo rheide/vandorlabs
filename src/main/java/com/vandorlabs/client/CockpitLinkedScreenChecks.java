@@ -29,6 +29,21 @@ final class CockpitLinkedScreenChecks {
         Vec3d eye=new Vec3d(tile.seatLocation().x,tile.data().riderY+player.getEyeHeight(),tile.seatLocation().z),at=plane.point(109/128D,1-(row+.5)/6D),end=eye.add(at.subtract(eye).normalize().scale(8));
         require(tile.use(CockpitData.rotate(eye,tile.facing()),CockpitData.rotate(end,tile.facing()),player),"seated right-screen ray row "+row);
     }
+    private static void endpointRoundTrips(WorldServer world,VehicleStructure source,BlockPos controller){
+        int checked=0;
+        for(boolean deployed:new boolean[]{false,true}){
+            VehicleWorld staging=new VehicleWorld(world,source);TileEntityRampController ramp=(TileEntityRampController)staging.getTileEntity(controller);
+            for(VehicleStructure.Cell part:ramp.vehicleEndpoint(deployed)){
+                NBTTagCompound saved=VehicleTileData.translated(part.tileData(),BlockPos.ORIGIN.subtract(part.pos));
+                VehicleWorld installed=new VehicleWorld(world,VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,part.state,saved))));
+                NBTTagCompound restored=installed.getTileEntity(BlockPos.ORIGIN).writeToNBT(new NBTTagCompound());
+                require(saved.equals(restored),"configured endpoint part exact NBT roundtrip deploy="+deployed+" cell="+part.pos+" changed="+changedKeys(saved,restored)+" mapBefore="+saved.getString("DynmapBoxes")+" mapAfter="+restored.getString("DynmapBoxes"));checked++;
+            }
+        }
+        require(checked>0,"actual configured ramp generates endpoint serialization cases");
+        System.out.println("[vandorlabs][reprolab] controlled-ramp-endpoint-nbt PASS exact-configured-parts="+checked+" before/after state installation including native map geometry");
+    }
+    private static String changedKeys(NBTTagCompound before,NBTTagCompound after){java.util.Set<String> keys=new java.util.TreeSet<>(before.getKeySet());keys.addAll(after.getKeySet());keys.removeIf(key->java.util.Objects.equals(before.getTag(key),after.getTag(key)));return keys.toString();}
     static void run(WorldServer world,EntityPlayerMP player)throws Exception{
         EntityGroundVehicle craft=null;RedstoneScreenContents regular=null;Vec3d before=player.getPositionVector();
         try{
@@ -52,10 +67,11 @@ final class CockpitLinkedScreenChecks {
             click(tile,player,4);require(RedstoneChannels.level(world,FIRST+4)==15,"cockpit pulse starts");tile.expire(world.getTotalWorldTime()+21);require(RedstoneChannels.level(world,FIRST+4)==0,"pulse releases without latching");
             for(int row:new int[]{0,1,2,3,5})RedstoneChannels.latchLevelChanged(regular.rows().get(row),0);ramp.recover(true);
             BlockPos origin=BASE.add(-2,-1,-3);List<VehicleStructure.Cell> cells=new ArrayList<>();List<BlockPos> source=new ArrayList<>();for(BlockPos at:BlockPos.getAllInBox(origin,BASE.add(9,3,4)))if(!world.isAirBlock(at)){TileEntity part=world.getTileEntity(at);cells.add(new VehicleStructure.Cell(at.subtract(origin),world.getBlockState(at),part==null?null:VehicleTileData.translated(part.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin))));source.add(at.toImmutable());}
+            endpointRoundTrips(world,VehicleStructure.display(cells),RAMP.subtract(origin));
             craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(cells,BASE.subtract(origin),EnumFacing.NORTH,3));craft.hover=true;craft.setPosition(origin.getX()+30,origin.getY()+8,origin.getZ());require(world.spawnEntity(craft),"carried fixture spawn");for(BlockPos at:source)world.setBlockToAir(at);craft.signals.tick();
             for(int row=0;row<2;row++){
                 regular.toggleRow(row);craft.signals.tick();require(cockpit(craft).control("screen_right/"+row).level==15,"regular ON mirrors carried cockpit");click(cockpit(craft),player,row);craft.signals.tick();require(RedstoneChannels.level(world,FIRST+row)==0,"carried cockpit OFF clears regular ON row="+row+" level="+RedstoneChannels.level(world,FIRST+row)+" local="+cockpit(craft).control("screen_right/"+row).level+" viewRemote="+craft.view.isRemote);
-                click(cockpit(craft),player,row);craft.signals.tick();require(row==0?door(craft):ramp(craft).isOpen(),"carried cockpit operates real door/ramp");regular.toggleRow(row);craft.signals.tick();require(cockpit(craft).control("screen_right/"+row).level==0,"regular OFF clears carried cockpit ON");
+                click(cockpit(craft),player,row);craft.signals.tick();require(row==0?door(craft):ramp(craft).isOpen(),"carried cockpit operates real door/ramp row="+row+" channel="+RedstoneChannels.level(world,FIRST+row)+" local="+cockpit(craft).control("screen_right/"+row).level+" door="+door(craft)+" rampOpen="+ramp(craft).isOpen()+" rampStatus="+ramp(craft).status+" rampError="+ramp(craft).error+" transfer="+craft.transferInProgress+" ownershipBlocked="+craft.ownershipBlocked);regular.toggleRow(row);craft.signals.tick();require(cockpit(craft).control("screen_right/"+row).level==0,"regular OFF clears carried cockpit ON");
             }
             for(int step=0;step<4;step++){regular.selectSegment(3,step);craft.signals.tick();require(cockpit(craft).control("screen_right/3").level==TileEntitySignalControl.levelForStep(step,5,15),"regular slider mirrors carried cockpit");cockpit(craft).control("screen_right/3").activate((3-step)/3D);craft.signals.tick();require(RedstoneChannels.level(world,FIRST+3)==TileEntitySignalControl.levelForStep(3-step,5,15),"carried slider updates shared level");}
             click(cockpit(craft),player,4);craft.signals.tick();require(RedstoneChannels.level(world,FIRST+4)==15,"carried pulse starts");cockpit(craft).expire(world.getTotalWorldTime()+21);craft.signals.cockpitChanged(cockpit(craft));require(RedstoneChannels.level(world,FIRST+4)==0,"carried pulse expires");
