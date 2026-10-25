@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clip the existing native hexagonal OBJ engines into seamless 2x2 assembly cells."""
+"""Clip the existing native hexagonal OBJ engines into seamless 2x2 and 3x3 assembly cells."""
 import json
 import math
 from pathlib import Path
@@ -10,9 +10,11 @@ ASSETS=ROOT/'generated-resources/assets/vandorlabs'
 MODELS=ASSETS/'models/block'
 FAMILIES=('rocket_thruster','ion_drive','plasma_vent','impulse_engine')
 PARTS=((0,0,'bottom_left'),(1,0,'bottom_right'),(0,1,'top_left'),(1,1,'top_right'))
+SIZES=(2,3)
+def parts(size):return PARTS if size==2 else tuple((x,y,f's{size}_x{x}_y{y}') for y in range(size) for x in range(size))
 ROTATIONS={'north':{},'east':{'y':90},'south':{'y':180},'west':{'y':270},'up':{'x':270},'down':{'x':90}}
 
-def read_faces(path):
+def read_faces(path,size=2):
     vertices=[];uvs=[];normals=[];faces=[];material=''
     for line in path.read_text().splitlines():
         bits=line.split()
@@ -25,7 +27,7 @@ def read_faces(path):
             polygon=[]
             for token in bits[1:]:
                 v,t,n=map(int,token.split('/'));x,y,z=vertices[v-1];u,w=uvs[t-1];nx,ny,nz=normals[n-1]
-                polygon.append((x*2,y*2,z,u,w,nx/2,ny/2,nz))
+                polygon.append((x*size,y*size,z,u,w,nx/size,ny/size,nz))
             faces.append((material,polygon))
     return faces
 
@@ -68,22 +70,29 @@ def generate(check=False):
     outputs={}
     for name in FAMILIES:
         for mode in ('off','on','stream'):
-            faces=read_faces(MODELS/f'{name}_hexagonal_{mode}.obj');native=sum(area(face) for _,face in faces);covered=0
-            for x,y,part in PARTS:
-                content,amount=clipped(faces,x,y,name,mode);covered+=amount;outputs[MODELS/f'{name}_hexagonal_{mode}_{part}.obj']=content
-            if abs(native-covered)>native*1e-7:raise AssertionError(f'{name}/{mode}: clipped surface area {covered} != native {native}')
+            for size in SIZES:
+                faces=read_faces(MODELS/f'{name}_hexagonal_{mode}.obj',size);native=sum(area(face) for _,face in faces);covered=0
+                for x,y,part in parts(size):
+                    content,amount=clipped(faces,x,y,name,mode);covered+=amount;outputs[MODELS/f'{name}_hexagonal_{mode}_{part}.obj']=content
+                if abs(native-covered)>native*1e-7:raise AssertionError(f'{name}/{mode}/{size}: clipped surface area {covered} != native {native}')
         variants={}
         for facing,rotation in ROTATIONS.items():
             for powered in (False,True):
                 for particles in (False,True):
                     mode='stream' if powered and particles else 'on' if powered else 'off'
-                    for part in ('single',)+tuple(part for _,_,part in PARTS):
+                    for part in ('single',)+tuple(part for size in SIZES for _,_,part in parts(size)):
                         suffix='' if part=='single' else '_'+part
                         variants[f'facing={facing},part={part},particles={str(particles).lower()},powered={str(powered).lower()}']={'model':f'vandorlabs:{name}_hexagonal_{mode}{suffix}.obj',**rotation}
+        # Configured picks use this exact single-engine inventory mesh, never a joined quadrant.
+        inventory=MODELS/f'{name}_hexagonal_inventory.obj'
+        assert inventory.is_file(),f'Missing original single-engine inventory OBJ: {inventory}'
+        inventory_faces=read_faces(inventory,1)
+        assert inventory_faces and all(0<v[axis]<1 for _,face in inventory_faces for v in face for axis in range(3)),f'Original inventory OBJ must remain padded: {inventory}'
+        variants['inventory']=[{'model':f'vandorlabs:{name}_hexagonal_inventory.obj','y':0,'transform':'forge:default-block'}]
         outputs[ASSETS/'blockstates'/f'{name}_hexagonal.json']=json.dumps({'forge_marker':1,'defaults':{'textures':{'particle':'vandorlabs:blocks/thrusters/side'},'custom':{'flip-v':True}},'variants':variants},indent=2)+'\n'
     for path,content in outputs.items():
         if check:
             if not path.exists() or path.read_text()!=content:raise AssertionError(f'Stale connected hexagonal asset: {path.relative_to(ROOT)}')
         else:path.write_text(content)
-    print('Connected hexagonal thrusters PASS: 48 native clipped OBJ cells, four family blockstates, exact surface-area conservation')
+    print('Connected hexagonal thrusters PASS: 156 native clipped OBJ cells (2x2+3x3), original solo inventory entries, four family blockstates, exact surface-area conservation')
 if __name__=='__main__':generate('--check' in sys.argv)

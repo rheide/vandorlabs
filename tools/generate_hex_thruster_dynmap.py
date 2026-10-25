@@ -8,7 +8,7 @@ ASSETS=ROOT/'src/main/resources/assets/vandorlabs'
 MODELS=ROOT/'generated-resources/assets/vandorlabs/models/block'
 FAMILIES=('rocket_thruster','ion_drive','plasma_vent','impulse_engine')
 IDS=tuple(f+'_hexagonal' for f in FAMILIES)
-PARTS=('single','bottom_left','bottom_right','top_left','top_right')
+PARTS=('single','bottom_left','bottom_right','top_left','top_right')+tuple(f's3_x{x}_y{y}' for y in range(3) for x in range(3))
 ROTATIONS={'north':(0,0),'east':(0,90),'south':(0,180),'west':(0,270),'up':(270,0),'down':(90,0)}
 BEGIN='# Generated joined hexagonal propulsion models\n';END='# End joined hexagonal propulsion models\n'
 
@@ -60,6 +60,6 @@ def generate(check=False):
         text=before.rstrip()+'\n\n'+BEGIN+'\n'.join(lines)+'\n'+END+'\n'+marker+after
         if check:assert path.read_text()==text,'Stale hexagonal map definitions '+filename
         else:path.write_text(text)
-    print(f'Hexagonal Dynmap native meshes PASS states={len(states)} textures={len(textures)} solo + four joined parts, six facings, three modes')
+    print(f'Hexagonal Dynmap native meshes PASS states={len(states)} textures={len(textures)} solo + 2x2/3x3 native parts, six facings, three modes')
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true');generate(parser.parse_args().check)

@@ -169,7 +169,15 @@ public class BlockPropulsionLight extends BlockVandor {
 
     @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,
             World world, BlockPos pos, EntityPlayer player) {
-        return configuredStack();
+        ItemStack stack=configuredStack();
+        TileEntity tile=world.getTileEntity(pos);
+        if(tile instanceof TileEntityRedstoneLight){
+            NBTTagCompound source=tile.writeToNBT(new NBTTagCompound()),settings=stack.getSubCompound("BlockEntityTag");
+            if(settings==null){settings=new NBTTagCompound();stack.setTagInfo("BlockEntityTag",settings);}
+            // Pick one engine with its chosen settings, independent of the joined render quadrant.
+            for(String key:new String[]{"RedstoneChannel","RedstoneChannels","ManualOn","ParticleLevel","ParticleStream","SignalBrightness","ParticleThreshold","RedstoneInverted","PropulsionJoin","PropulsionSideTexture"})if(source.hasKey(key))settings.setTag(key,source.getTag(key).copy());
+        }
+        return stack;
     }
 
     @Override public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world,

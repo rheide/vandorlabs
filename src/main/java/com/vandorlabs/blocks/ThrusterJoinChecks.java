@@ -31,8 +31,20 @@ public final class ThrusterJoinChecks {
                     cases++;
                 }finally{BlockPropulsionLight.shapeFailure=null;for(BlockPos at:footprint(root,facing,mirror))world.setBlockToAir(at);}
             }
+            threeByThree(world,actor,root);
         }finally{BlockPropulsionLight.shapeFailure=null;actor.openContainer=container;actor.capabilities.isCreativeMode=creative;actor.setPosition(px,py,pz);}
         System.out.println("[vandorlabs][reprolab] thruster-joined-shape PASS cases="+cases+" four families sixaxes mirrored staggered2x2 actual authorized Shape packet exactpermemberNBT/containeridentity group-only conversion/back and secondcell rollback");
+    }
+    private static void threeByThree(WorldServer world,EntityPlayerMP actor,BlockPos root){int cases=0;
+        for(String family:new String[]{"rocket_thruster","ion_drive","plasma_vent","impulse_engine"})for(EnumFacing facing:EnumFacing.values())for(int mode=0;mode<3;mode++){
+            BlockConnectedPropulsionLight block=(BlockConnectedPropulsionLight)Block.getBlockFromName("vandorlabs:"+family+"_hexagonal");List<BlockPos> cells=new ArrayList<>();
+            try{for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos at=point(root,facing,x,y);cells.add(at);world.setBlockState(at,block.getDefaultState().withProperty(BlockPropulsionLight.FACING,facing),2);}DeferredTileLoad.flush(world);for(BlockPos at:cells)((TileEntityRedstoneLight)world.getTileEntity(at)).setManualMode(mode,false);
+                for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos at=point(root,facing,x,y);BlockConnectedPropulsionLight.ConnectedPart part=block.getActualState(world.getBlockState(at),world,at).getValue(block.partProperty());require(part.size==3&&part.x==x&&part.y==y,"actual complete native3x3 joins all nine cells "+family+facing+mode);}
+                BlockPos center=point(root,facing,1,1);TileEntityRedstoneLight mid=(TileEntityRedstoneLight)world.getTileEntity(center);mid.setJoin(false);for(BlockPos at:cells)require(block.getActualState(world.getBlockState(at),world,at).getValue(block.partProperty()).size==1,"Join OFF center prevents broken3x3 group");mid.setJoin(true);
+                Map<BlockPos,NBTTagCompound> before=new LinkedHashMap<>();for(BlockPos at:cells)before.put(at,world.getTileEntity(at).writeToNBT(new NBTTagCompound()));require(BlockPropulsionLight.configureShape(world,root,0,actor)&&BlockPropulsionLight.configureShape(world,root,1,actor),"whole3x3 converts square and back through authorized common path");for(BlockPos at:cells)require(world.getBlockState(at).getBlock()==block&&before.get(at).equals(world.getTileEntity(at).writeToNBT(new NBTTagCompound())),"3x3 conversion preserves exact member settings");cases++;
+            }finally{for(BlockPos at:cells)world.setBlockToAir(at);}
+        }
+        System.out.println("[vandorlabs][reprolab] thruster-hex3x3 PASS actual-world-cases="+cases+" fourfamilies sixfaces three modes nine-part topology JoinOFF and whole-group exact conversion");
     }
     private static List<BlockPos> footprint(BlockPos root,EnumFacing facing,int mirror){List<BlockPos> result=new ArrayList<>();for(int square=0;square<2;square++)for(int x=0;x<2;x++)for(int y=0;y<2;y++)result.add(point(root,facing,(x+square*2)*mirror,y+square));return result;}
     private ThrusterJoinChecks(){}
