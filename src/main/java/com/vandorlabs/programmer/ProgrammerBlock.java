@@ -36,8 +36,15 @@ public final class ProgrammerBlock extends Block {
     }
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         ProgrammerTile tile=at(world,pos);if(tile==null)return false;
-        Vec3d eyes=player.getPositionEyes(1),end=eyes.add(player.getLook(1).scale(6));RayTraceResult hit=collisionRayTrace(state,world,pos,eyes,end);
-        if(hit!=null&&hit.subHit>=0){if(!world.isRemote)tile.interactSocket(player,hand,hit.subHit);return true;}
+        double reach=Math.min(8,player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue());Vec3d eyes=player.getPositionEyes(1),end=eyes.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));RayTraceResult hit=collisionRayTrace(state,world,pos,eyes,end);
+        if(hit!=null&&hit.subHit>=0&&hit.subHit<3){if(!world.isRemote)tile.interactSocket(player,hand,hit.subHit);return true;}
+        if(hit!=null&&hit.subHit==3&&tile.journalDisplay()!=null){
+            if(!world.isRemote&&hand==EnumHand.MAIN_HAND&&tile.usable(player)){
+                RayTraceResult first=world.rayTraceBlocks(eyes,end,false,false,true);
+                if(first!=null&&first.typeOfHit==RayTraceResult.Type.BLOCK&&ProgrammerBlock.at(world,first.getBlockPos())==tile&&first.subHit==3){double[] uv=ProgrammerJournalSurface.hit(tile.getProgrammerOrigin(),tile.getProgrammerFacing(),eyes,end);if(uv!=null){int action=ProgrammerJournalSurface.action(uv[0],uv[1]);if(action!=0)tile.turnJournalPage(player,action);}}
+            }
+            return true;
+        }
         if(!world.isRemote&&tile.usable(player))player.openGui(VandorLabs.instance,24,world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ());return true;
     }
     @Override public int quantityDropped(IBlockState state,int fortune,java.util.Random random){return state.getValue(PART)==0?1:0;}

@@ -49,6 +49,7 @@ public final class ProgrammerRuntimeChecks {
             for(int part=0;part<4;part++){BlockPos member=ProgrammerBlock.cell(p,facing,part);require(ProgrammerBlock.at(world,member)==live,"shared inventory member "+part+" "+facing);require(block.getMetaFromState(block.getStateFromMeta(block.getMetaFromState(world.getBlockState(member))))==block.getMetaFromState(world.getBlockState(member)),"metadata round trip");}
             world.setBlockToAir(ProgrammerBlock.cell(p,facing,3));for(int part=0;part<4;part++)require(world.isAirBlock(ProgrammerBlock.cell(p,facing,part)),"whole footprint dismantled "+facing);
         }
+        ProgrammerJournalChecks.run(world,origin);
         System.out.println("[vandorlabs][reprolab] programmer PASS assertions="+checks+" input-consume/output-immutable company matrices cards chips journal input pages exact inventory reload bounded network and native sockets in four facings");
     }
     private ProgrammerRuntimeChecks(){}

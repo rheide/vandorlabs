@@ -42,6 +42,8 @@ public class GuiProgrammer extends GuiContainer {
         if(lastSentDraft==null)lastSentDraft=observedDraft=draftKey();
     }
     private void refresh(){
+        boolean journalInput=journal&&ChipJournal.isChip(container.tile.getStackInSlot(1));
+        journalTab.visible=journalInput;if(!journalInput)journalPage=false;
         type.displayString="Type: "+(journal?"Journal":"Master");type.enabled=ChipJournal.isChip(container.tile.getStackInSlot(1));program.enabled=container.tile.canProgram(journal);previous.visible=next.visible=journalPage;
         previous.enabled=page>0;next.enabled=page<pages.length-1;title.setEnabled(journal&&ChipJournal.isChip(container.tile.getStackInSlot(1)));title.setVisible(journalPage);
         inventoryTab.enabled=journalPage;journalTab.enabled=!journalPage;
@@ -156,13 +158,13 @@ public class GuiProgrammer extends GuiContainer {
                 gui.selectedAll=true;gui.insert("Pasted text\nSecond line");if(!gui.pages[0].equals("Pasted text\nSecond line"))throw new IllegalStateException("Programmer editor replace selection/paste");
                 gui.mouseClicked(gui.next.x+4,gui.next.y+4,0);gui.mouseClicked(gui.guiLeft+25,gui.guiTop+PAPER_TOP+10,0);gui.insert("Page two");gui.mouseClicked(gui.previous.x+4,gui.previous.y+4,0);
                 if(!gui.pages[0].startsWith("Pasted")||!gui.pages[1].equals("Page two"))throw new IllegalStateException("Programmer editor page retention");
-                gui.mouseClicked(gui.type.x+2,gui.type.y+2,1);if(gui.journal)throw new IllegalStateException("Programmer right-click type cycling");gui.mouseClicked(gui.type.x+2,gui.type.y+2,1);
+                gui.mouseClicked(gui.type.x+2,gui.type.y+2,1);if(gui.journal||gui.journalTab.visible||gui.journalPage)throw new IllegalStateException("Master Input hides Journal and exits editor");gui.mouseClicked(gui.type.x+2,gui.type.y+2,1);if(!gui.journalTab.visible)throw new IllegalStateException("Journal type enables Journal tab");gui.mouseClicked(gui.journalTab.x+4,gui.journalTab.y+4,0);
                 captureDialog(mc,output,gui,size,"journal");
                 gui.mouseClicked(gui.inventoryTab.x+4,gui.inventoryTab.y+4,0);if(gui.journalPage||!gui.pages[0].startsWith("Pasted"))throw new IllegalStateException("Programmer inventory tab preserves editor");checkLayout(gui,size);
                 if(!gui.done.displayString.equals("Done"))throw new IllegalStateException("Programmer standard Done button");for(GuiButton button:gui.buttonList)if(button.displayString.toLowerCase(java.util.Locale.ROOT).contains("save draft"))throw new IllegalStateException("Programmer obsolete save button");
-                ItemStack inputJournal=tile.removeStackFromSlot(1);tile.setInventorySlotContents(2,inputJournal);gui.updateScreen();if(gui.program.enabled||gui.type.enabled)throw new IllegalStateException("Output-only journal must never enable programming/type/title edits");gui.mouseClicked(gui.journalTab.x+4,gui.journalTab.y+4,0);gui.mouseClicked(gui.guiLeft+25,gui.guiTop+PAPER_TOP+10,0);if(gui.editing)throw new IllegalStateException("Output-only journal cannot edit pages");
+                ItemStack inputJournal=tile.removeStackFromSlot(1);tile.setInventorySlotContents(2,inputJournal);gui.updateScreen();if(gui.program.enabled||gui.type.enabled||gui.journalTab.visible||gui.journalPage)throw new IllegalStateException("Output-only journal hides Journal and never enables programming/type/title edits");gui.mouseClicked(gui.journalTab.x+4,gui.journalTab.y+4,0);gui.mouseClicked(gui.guiLeft+25,gui.guiTop+PAPER_TOP+10,0);if(gui.editing)throw new IllegalStateException("Output-only journal cannot edit pages");
                 tile.setInventorySlotContents(1,tile.removeStackFromSlot(2));gui.updateScreen();if(!gui.program.enabled||!gui.type.enabled||!gui.pages[0].isEmpty())throw new IllegalStateException("Moving physical journal Output to Input re-enables Program and loads its actual pages");
-                tile.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,1));tile.setInventorySlotContents(1,new ItemStack(com.vandorlabs.items.ModItems.ACCESS_CARD));gui.updateScreen();if(gui.type.enabled||gui.journal||!gui.program.enabled)throw new IllegalStateException("Access Card Input disables Type and allows company-master programming");
+                tile.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,1));tile.setInventorySlotContents(1,new ItemStack(com.vandorlabs.items.ModItems.ACCESS_CARD));gui.updateScreen();if(gui.type.enabled||gui.journal||!gui.program.enabled||gui.journalTab.visible)throw new IllegalStateException("Access Card Input hides Journal, disables Type and allows company-master programming");
             }finally{Keyboard.enableRepeatEvents(false);}
         }
         checkDraftDispatch(mc);

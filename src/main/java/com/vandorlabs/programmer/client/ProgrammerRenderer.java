@@ -32,6 +32,7 @@ public final class ProgrammerRenderer extends TileEntitySpecialRenderer<Programm
                     double scale=chip?.29:.45;GlStateManager.scale(scale,scale,.45);mc.getRenderItem().renderItem(item,ItemCameraTransforms.TransformType.FIXED);
                 }finally{GlStateManager.popMatrix();}
             }
+            com.vandorlabs.client.ProgrammerJournalRenderer.draw(tile,x,y,z);
         }finally{GlStateManager.popMatrix();}
     }
 }

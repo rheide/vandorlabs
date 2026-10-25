@@ -24,8 +24,29 @@ public final class ProgrammerClientChecks {
         }require(blackScreens==1&&keyboards==1,"actual model uses one black screen and existing keyboard sprite");
         GuiProgrammer.checkEditor(mc,output);
         retainedTokens(mc,output);
+        worldJournal(mc,output);
         inventoryIcon(mc,output,stack);
         System.out.println("[vandorlabs][reprolab] programmer-client PASS four cached statuses authored inventory padding retained-token models and editor input");
+    }
+    private static void worldJournal(Minecraft mc,File output)throws Exception{
+        net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromName("vandorlabs:data_chip_programmer");net.minecraft.util.math.BlockPos root=new net.minecraft.util.math.BlockPos(2,0,2);String[] entries={"Journal display first page\nAll output text is read only.\nPress Next on the physical screen.","Second page\nArrival code: 4271.\nEvery facing uses the same buttons."};int cases=0;
+        for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> cells=new java.util.ArrayList<>();ProgrammerTile source=new ProgrammerTile();source.setPos(root);
+            for(int part=0;part<4;part++)cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(ProgrammerBlock.cell(root,facing,part),block.getDefaultState().withProperty(ProgrammerBlock.FACING,facing).withProperty(ProgrammerBlock.PART,part),part==0?source.writeToNBT(new net.minecraft.nbt.NBTTagCompound()):null));
+            com.vandorlabs.vehicle.VehicleWorld world=new com.vandorlabs.vehicle.VehicleWorld(mc.world,com.vandorlabs.vehicle.VehicleStructure.display(cells));ProgrammerTile tile=(ProgrammerTile)world.getTileEntity(root);ItemStack journal=new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,1);ChipJournal.write(journal,true,"Expedition Journal",entries);tile.setInventorySlotContents(1,journal);tile.configure(false,"",new String[0]);java.awt.image.BufferedImage blank=console(mc,tile);tile.configure(true,"Expedition Journal",entries);java.awt.image.BufferedImage first=console(mc,tile);
+            java.awt.Rectangle bounds=screenBounds(tile);int changed=0,outside=0,glyphs=0;
+            for(int y=0;y<HEIGHT;y++)for(int x=0;x<WIDTH;x++){int rgb=first.getRGB(x,y)&0xffffff;if(rgb!=(blank.getRGB(x,y)&0xffffff)){if(bounds.contains(x,y))changed++;else outside++;}if(bounds.contains(x,y)&&(rgb>>16&255)>170&&(rgb>>8&255)>170&&(rgb&255)>170)glyphs++;}
+            require(changed>500&&glyphs>100&&outside<5,"actual Journal glyphs/buttons stay on native screen "+facing+" changed="+changed+" glyphs="+glyphs+" outside="+outside);
+            net.minecraft.nbt.NBTTagCompound update=tile.getUpdateTag();update.setInteger("JournalDisplayPage",1);tile.readFromNBT(update);require(tile.journalDisplayPage()==1,"actual update selects physical next page");java.awt.image.BufferedImage second=console(mc,tile);int difference=0;for(int y=bounds.y;y<bounds.y+bounds.height;y++)for(int x=bounds.x;x<bounds.x+bounds.width;x++)if(first.getRGB(x,y)!=second.getRGB(x,y))difference++;require(difference>100,"actual second Journal page visibly changes physical glyphs "+facing);
+            tile.removeStackFromSlot(1);tile.setInventorySlotContents(2,journal.copy());require(tile.journalDisplay()!=null&&tile.journalDisplay().source.equals("Output")&&tile.journalDisplayPage()==0,"programmed Output is physically readable");java.awt.image.BufferedImage result=console(mc,tile);glyphs=0;for(int y=bounds.y;y<bounds.y+bounds.height;y++)for(int x=bounds.x;x<bounds.x+bounds.width;x++){int rgb=result.getRGB(x,y)&0xffffff;if((rgb>>16&255)>170&&(rgb>>8&255)>170&&(rgb&255)>170)glyphs++;}require(glyphs>100,"read-only Output Journal text is rendered "+facing);
+            if(facing==EnumFacing.NORTH){javax.imageio.ImageIO.write(first,"png",new File(output,"shot_programmer_journal_input.png"));javax.imageio.ImageIO.write(second,"png",new File(output,"shot_programmer_journal_next.png"));javax.imageio.ImageIO.write(result,"png",new File(output,"shot_programmer_journal_output.png"));}
+            require(Math.abs(Math.sqrt(ProgrammerJournalSurface.ACROSS.lengthSquared())/320/(Math.sqrt(ProgrammerJournalSurface.DOWN.lengthSquared())/136)-1)<.005,"native screen uses square-pixel journal aspect");cases++;
+        }
+        System.out.println("[vandorlabs][reprolab] programmer-world-journal-render PASS native-four-facings="+cases+" actual glyphs/buttons screen-only bounds next-page FBO difference input and read-onlyOutput square-pixelaspect");
+    }
+    private static java.awt.Rectangle screenBounds(ProgrammerTile tile){
+        double minX=Double.POSITIVE_INFINITY,minY=minX,maxX=-minX,maxY=-minX;for(double u:new double[]{0,320})for(double v:new double[]{0,136}){net.minecraft.util.math.Vec3d at=ProgrammerJournalSurface.world(tile,u,v);double[] p=project(tile,at.x,at.y,at.z);minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);}
+        return new java.awt.Rectangle((int)Math.floor(minX)-3,(int)Math.floor(minY)-3,(int)Math.ceil(maxX-minX)+7,(int)Math.ceil(maxY-minY)+7);
     }
     /** Render each real slot separately so another occupied pad cannot conceal a missing token. */
     private static void retainedTokens(Minecraft mc,File output)throws Exception{

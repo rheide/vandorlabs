@@ -8,7 +8,7 @@ import net.minecraft.util.math.*;
 
 /** Shared cached authored planes: client selection and server socket clicks use identical rays. */
 public final class ProgrammerGeometry {
-    private static final class Face {final Vec3d[] points;final int slot;final String group;Face(Vec3d[] points,String group){this.points=points;this.group=group;slot=group.contains("__input_pad__")||group.contains("__input_socket_")?1:group.contains("__output_pad__")||group.contains("__output_socket_")?2:group.contains("__master_pad__")||group.contains("__master_socket_")?0:-1;}}
+    private static final class Face {final Vec3d[] points;final int slot;final String group;Face(Vec3d[] points,String group){this.points=points;this.group=group;slot=group.contains("__input_pad__")||group.contains("__input_socket_")?1:group.contains("__output_pad__")||group.contains("__output_socket_")?2:group.contains("__master_pad__")||group.contains("__master_socket_")?0:group.contains("__status_screen_surface")?3:-1;}}
     private static final List<Face> FACES=load();
     private static List<Face> load(){
         List<Face> result=new ArrayList<>();
@@ -19,7 +19,8 @@ public final class ProgrammerGeometry {
         return Collections.unmodifiableList(result);
     }
     public static ProgrammerTransform.Affine transform(EnumFacing facing){return ProgrammerTransform.of(ProgrammerTransform.Facing.valueOf(facing.name()),2,1);}
-    private static Vec3d local(Vec3d point,BlockPos origin,ProgrammerTransform.Affine a){double x=point.x-origin.getX()-a.offsetX,z=point.z-origin.getZ()-a.offsetZ;return new Vec3d(a.xx*x+a.zx*z,point.y-origin.getY(),a.xz*x+a.zz*z);}
+    public static Vec3d local(Vec3d point,BlockPos origin,ProgrammerTransform.Affine a){double x=point.x-origin.getX()-a.offsetX,z=point.z-origin.getZ()-a.offsetZ;return new Vec3d(a.xx*x+a.zx*z,point.y-origin.getY(),a.xz*x+a.zz*z);}
+    public static Vec3d[] screen(){for(Face face:FACES)if(face.slot==3)return face.points.clone();throw new IllegalStateException("Programmer screen plane missing");}
     private static Vec3d triangle(Vec3d from,Vec3d ray,Vec3d a,Vec3d b,Vec3d c){Vec3d edge=b.subtract(a),other=c.subtract(a),p=ray.crossProduct(other);double determinant=edge.dotProduct(p);if(Math.abs(determinant)<1e-10)return null;double inv=1/determinant;Vec3d t=from.subtract(a);double u=t.dotProduct(p)*inv;if(u< -1e-7||u>1+1e-7)return null;Vec3d q=t.crossProduct(edge);double v=ray.dotProduct(q)*inv;if(v< -1e-7||u+v>1+1e-7)return null;double distance=other.dotProduct(q)*inv;return distance>=0&&distance<=1?from.add(ray.scale(distance)):null;}
     public static RayTraceResult trace(BlockPos cell,BlockPos origin,EnumFacing facing,Vec3d start,Vec3d end){
         ProgrammerTransform.Affine a=transform(facing);Vec3d from=local(start,origin,a),to=local(end,origin,a),ray=to.subtract(from);RayTraceResult closest=null;double distance=Double.POSITIVE_INFINITY;
