@@ -70,7 +70,10 @@ final class TurntableRuntimeChecks {
                 for(int tick=0;tick<40;tick++)tile.update();TurntableTransactions.drainForChecks(world);
                 for(BlockPos cell:found.cells)if(!cell.equals(removed)){
                     TileEntityTurntableSurface remaining=(TileEntityTurntableSurface)world.getTileEntity(cell);
-                    require(remaining.locked()&&remaining.controller()==null&&!surface.getActualState(world.getBlockState(cell),world,cell).getValue(BlockTurntableSurface.FORMED),"forced root/member removal retains protection and opaque standalone surface models "+normal);
+                    require(remaining.locked()&&remaining.controller()==null,"forced root/member removal retains protection without an active controller "+normal);
+                    net.minecraft.block.state.IBlockState visible=surface.getActualState(world.getBlockState(cell),world,cell);
+                    require(visible.getValue(BlockTurntableSurface.FORMED)&&remaining.shouldRenderInPass(0)&&remaining.appearanceLayout().normal==normal&&remaining.appearanceLayout().size==1&&remaining.appearanceLayout().root.equals(cell),"damaged surface retains opaque backing and programmable face rendering "+normal);
+                    require(!surface.removedByPlayer(world.getBlockState(cell),world,cell,player,false),"damaged retained surface still rejects actual mining "+normal);
                 }
                 retained.setAngle(0);TurntableTransactionsChecks.restore(tile,player);require(tile.layout==null&&tile.captureId==null,"damaged platform still restores captured contents");
                 world.setBlockState(removed,surface.getDefaultState().withProperty(BlockTurntableSurface.FACING,normal));

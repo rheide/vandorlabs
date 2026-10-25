@@ -108,12 +108,17 @@ public final class TileEntityTurntableController extends TileEntity implements I
     public void restored(double heading){angle=previous=TurntableGeometry.wrap(heading);changed();}
     public void surfaceChanged(){
         enabled=false;
-        // Keep the capture layout for recovery, but return every remaining face
-        // to its ordinary block model if the shared renderer loses a member.
-        // Retain capture claims until Restore, so damaged platforms remain protected.
-        if(captureId==null&&layout!=null&&world!=null)for(BlockPos cell:layout.cells)if(world.isBlockLoaded(cell)){
+        // Recovery ownership stays intact; each surviving face renders independently
+        // because the original shared renderer's root may have been removed.
+        if(layout!=null&&world!=null)for(BlockPos cell:layout.cells)if(world.isBlockLoaded(cell)){
             TileEntity raw=world.getTileEntity(cell);
-            if(raw instanceof TileEntityTurntableSurface&&pos.equals(((TileEntityTurntableSurface)raw).owner)&&key.equals(((TileEntityTurntableSurface)raw).ownerKey))((TileEntityTurntableSurface)raw).release();
+            if(raw instanceof TileEntityTurntableSurface&&pos.equals(((TileEntityTurntableSurface)raw).owner)&&key.equals(((TileEntityTurntableSurface)raw).ownerKey)){
+                net.minecraft.block.state.IBlockState state=world.getBlockState(cell);
+                if(!(state.getBlock() instanceof BlockTurntableSurface))continue;
+                TileEntityTurntableSurface surface=(TileEntityTurntableSurface)raw;
+                surface.setGroup(com.vandorlabs.surface.SquareLayout.single(cell,state.getValue(BlockTurntableSurface.FACING)));
+                if(captureId==null)surface.release();
+            }
         }
         status("Surface changed; rotation stopped. Restore contents before rebuilding");changed();
     }

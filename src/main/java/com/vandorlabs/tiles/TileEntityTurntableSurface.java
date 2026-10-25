@@ -44,7 +44,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     public String selectedTexture(){return active()?surfaceOn:surfaceOff;}
     private EnumFacing normal(){return world!=null&&world.isBlockLoaded(pos)&&world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface?world.getBlockState(pos).getValue(BlockTurntableSurface.FACING):EnumFacing.UP;}
     public SquareLayout appearanceLayout(){
-        SurfaceController controller=claimedOwner();SquareLayout claimed=controller==null?null:controller.surfaceLayout(pos);if(claimed!=null)return claimed;
+        SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled)return SquareLayout.single(pos,normal());SquareLayout claimed=controller==null?null:controller.surfaceLayout(pos);if(claimed!=null)return claimed;
         if(cachedGroup==null){
             EnumFacing face=EnumFacing.getFront(groupNormal);if(face!=normal())return SquareLayout.single(pos,normal());
             com.vandorlabs.turntable.TurntableGeometry.Face basis=com.vandorlabs.turntable.TurntableGeometry.Face.valueOf(face.name());BlockPos origin=pos.add(groupOffset);Set<BlockPos> cells=new HashSet<>();
@@ -60,7 +60,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     public void scheduleGroup(){DeferredTileLoad.schedule(this,this::refreshGroup);}
     public void refreshGroup(){
         if(world==null||world.isRemote||!world.isBlockLoaded(pos)||!(world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface))return;
-        SurfaceController controller=claimedOwner();if(controller!=null){SquareLayout layout=controller.surfaceLayout(pos);if(layout!=null)setGroup(layout);return;}
+        SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled){setGroup(SquareLayout.single(pos,normal()));return;}if(controller!=null){SquareLayout layout=controller.surfaceLayout(pos);if(layout!=null)setGroup(layout);return;}
         Set<BlockPos> members;
         try{members=SquareLayout.connected(world,pos,p->{if(!world.isBlockLoaded(p))return true;TileEntity raw=world.getTileEntity(p);return !(raw instanceof TileEntityTurntableSurface)||((TileEntityTurntableSurface)raw).claimedOwner()==null;});}catch(IllegalArgumentException unloaded){return;}
         SquareLayout layout=null;try{layout=SquareLayout.of(members,normal());}catch(IllegalArgumentException irregular){}

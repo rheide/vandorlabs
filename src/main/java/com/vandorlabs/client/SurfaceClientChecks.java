@@ -17,7 +17,7 @@ import net.minecraft.util.math.BlockPos;
 final class SurfaceClientChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("Surface client: "+message);}
     static void run(Minecraft mc,File output)throws Exception{
-        SurfaceRenderChecks.run(mc);java.util.Set<Integer> signatures=new java.util.HashSet<>();
+        SurfaceRenderChecks.run(mc);damagedPads(mc,output);java.util.Set<Integer> signatures=new java.util.HashSet<>();
         for(int i=6;i<TurntableTextures.IDS.length;i++)for(int mode:new int[]{1,2}){
             BufferedImage image=render(mc,TurntableTextures.IDS[i],mode,false);if(i==6&&mode==1){BufferedImage dirty=render(mc,TurntableTextures.IDS[i],mode,true);require(java.util.Arrays.equals(image.getRGB(0,0,256,256,null,0,256),dirty.getRGB(0,0,256,256,null,0,256)),"actual TESR pixels survive incoming alpha/depth/texture/translation contamination");}javax.imageio.ImageIO.write(image,"png",new File(output,"shot_surface_"+TurntableTextures.IDS[i]+"_"+(mode==1?"tile":"fit")+".png"));
             int count=0,hash=1;for(int y=0;y<256;y++)for(int x=0;x<256;x++){int rgb=image.getRGB(x,y)&0xffffff;if(rgb!=0x203040)count++;hash=31*hash+rgb;}
@@ -33,6 +33,25 @@ final class SurfaceClientChecks {
             javax.imageio.ImageIO.write(DialogRenderCapture.image(mc,gui,size[0],size[1]),"png",new File(output,"shot_surface_dialog_"+size[0]+".png"));
         }}finally{mc.player.openContainer=previous;org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
         System.out.println("[vandorlabs][reprolab] surface-client PASS 16 actual native-artwork multi-cell Tile/Fit FBO frames compact GUI320/460 wheel/drag previous/next independent state selection");
+    }
+    private static void damagedPads(Minecraft mc,File output)throws Exception{
+        int cases=0;net.minecraft.block.Block surface=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface"),control=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_controller");
+        for(net.minecraft.util.EnumFacing normal:net.minecraft.util.EnumFacing.values())for(boolean removeRoot:new boolean[]{false,true}){
+            com.vandorlabs.turntable.TurntableGeometry.Face basis=com.vandorlabs.turntable.TurntableGeometry.Face.valueOf(normal.name());BlockPos seed=new BlockPos(3,3,3),owner=seed.offset(normal.getOpposite(),2);java.util.List<BlockPos> cells=new java.util.ArrayList<>();for(int u=0;u<2;u++)for(int v=0;v<2;v++){double[] delta=basis.point(u,v,0);cells.add(seed.add(delta[0],delta[1],delta[2]));}
+            com.vandorlabs.surface.SquareLayout area=com.vandorlabs.surface.SquareLayout.of(cells,normal);BlockPos removed=removeRoot?area.root:cells.stream().filter(p->!p.equals(area.root)).findFirst().get();
+            TileEntityTurntableController controller=new TileEntityTurntableController();controller.setPos(owner);controller.enabled=false;controller.captureId=java.util.UUID.randomUUID();controller.layout=com.vandorlabs.turntable.TurntableSurfaceLayout.read(area.write());java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> snapshot=new java.util.ArrayList<>();snapshot.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(owner,control.getDefaultState(),controller.writeToNBT(new NBTTagCompound())));
+            for(BlockPos cell:cells)if(!cell.equals(removed)){TileEntityTurntableSurface tile=new TileEntityTurntableSurface();tile.setPos(cell);tile.owner=owner;tile.ownerKey=controller.key;tile.surfaceOff="landing";tile.setGroup(area);snapshot.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(cell,surface.getDefaultState().withProperty(com.vandorlabs.blocks.BlockTurntableSurface.FACING,normal),tile.writeToNBT(new NBTTagCompound())));}
+            com.vandorlabs.vehicle.VehicleWorld view=new com.vandorlabs.vehicle.VehicleWorld(mc.world,com.vandorlabs.vehicle.VehicleStructure.display(snapshot));
+            for(BlockPos cell:cells)if(!cell.equals(removed)){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)view.getTileEntity(cell);require(tile.locked()&&tile.controller()==null&&tile.appearanceLayout().size==1&&tile.appearanceLayout().root.equals(cell),"damaged recovery claim keeps each remaining cell protected and self-rendered "+normal+removeRoot);BufferedImage frame=damagedFace(mc,tile,normal);int visible=0;for(int color:frame.getRGB(0,0,64,64,null,0,64))if((color&0xffffff)!=0x203040)visible++;require(visible>1800,"actual damaged pad TESR remains opaque and visible after "+(removeRoot?"root":"member")+" removal "+normal+" pixels="+visible);cases++;if(removeRoot&&cell.equals(cells.stream().filter(p->!p.equals(removed)).findFirst().get()))javax.imageio.ImageIO.write(frame,"png",new File(output,"shot_surface_damaged_"+normal.getName()+".png"));}
+        }
+        System.out.println("[vandorlabs][reprolab] surface-damaged-client PASS actual-TESR-FBO-cases="+cases+" six normals root/member removal retained protection self-root opaque faces");
+    }
+    private static BufferedImage damagedFace(Minecraft mc,TileEntityTurntableSurface tile,net.minecraft.util.EnumFacing normal){
+        Framebuffer frame=new Framebuffer(64,64,true);GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-.6,.6,-.6,.6,-4,4);GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();
+        try(TurntableRenderState saved=new TurntableRenderState()){
+            frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.depthMask(true);GlStateManager.clearColor(32/255F,48/255F,64/255F,1);GlStateManager.clear(16640);mc.entityRenderer.disableLightmap();if(normal.getAxis()==net.minecraft.util.EnumFacing.Axis.Y)GlStateManager.rotate(90,1,0,0);else if(normal.getAxis()==net.minecraft.util.EnumFacing.Axis.X)GlStateManager.rotate(90,0,1,0);
+            TETurntableSurface renderer=new TETurntableSurface();renderer.setRendererDispatcher(TileEntityRendererDispatcher.instance);renderer.render(tile,-.5,-.5,-.5,0,-1,1);return net.minecraft.util.ScreenShotHelper.createScreenshot(64,64,frame);
+        }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
     }
     private static BufferedImage render(Minecraft mc,String texture,int mode,boolean dirty){
         TileEntityTurntableSurface tile=new TileEntityTurntableSurface();tile.setWorld(mc.world);tile.setPos(new BlockPos(540,110,180));NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());tag.setString("SurfaceOff",texture);tag.setInteger("SurfaceLayout",mode);tag.setInteger("SurfaceGroupSize",4);tile.readFromNBT(tag);require(tile.appearanceLayout().size==4&&tile.appearanceLayout().root.equals(tile.getPos()),"FBO fixture invokes actual grouped root renderer");
