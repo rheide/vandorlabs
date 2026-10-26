@@ -74,6 +74,10 @@ public final class ArmPayload {
         World world=arm.getWorld();BlockPos start=arm.localCell(0,-arm.assembly().columnHeight(),0);
         Set<BlockPos> platform=arm.joinEnabled()&&arm.columns().size()>1?JoinedArms.platform(arm):null;
         JoinedArms.Volume volume=platform==null?null:new JoinedArms.Volume(arm,platform);
+        // An unjoined Extender selects its tip block. Face contact with a wall or
+        // floor does not opt the surrounding structure into the moving payload.
+        boolean tipOnly=platform==null&&!arm.isLandingAssembly()&&!arm.isExtendedTrackStroke()
+                &&arm.getBlockType() instanceof GearBlock&&((GearBlock)arm.getBlockType()).kind()==GearBlock.Kind.EXTENDER;
         if(platform!=null){for(BlockPos member:arm.members())VehicleService.permission(actor,member);if(arm.carryLoad()&&!arm.canCarryLoad())throw new IllegalArgumentException("Carry load requires vertical movement");}
         if(world.isAirBlock(start))return null;
         ArrayDeque<BlockPos> pending=new ArrayDeque<>();Set<BlockPos> visited=new LinkedHashSet<>();pending.add(start);
@@ -98,6 +102,7 @@ public final class ArmPayload {
             int limit=platform==null?64:MAX_BLOCKS,span=platform==null?16:MAX_SPAN;
             if(captured.size()>=limit||maxX-minX>=span||maxY-minY>=span||maxZ-minZ>=span)throw new IllegalArgumentException("Arm attachment exceeds "+limit+" blocks or a "+span+"-block span");
             captured.add(new VehicleStructure.Cell(at,state,tile==null?null:tile.writeToNBT(new NBTTagCompound())));
+            if(tipOnly)continue;
             // A landing foot terminates its own outward branch, allowing nested gear above it.
             boolean foot=GearAssembly.isFoot(state);
             for(EnumFacing side:EnumFacing.values()){

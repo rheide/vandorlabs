@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Keep unjoined Extender payloads limited to the tip block so touching surroundings do not cause a mounting-structure refusal. Put arm and joined-platform controls together on one page, including range and load-height sliders.
+
 - Add opt-in joined arm platforms with a 1–32 block neighbour range. Extenders support connected rectangles with air holes and intermediate supports, including six-arm 2×3 layouts; Rotating Arms join along a common hinge axis. Vertically moving Extenders offer an optional 1–32 block load height.
 - Preserve controller authorization through unload-before-save and reconnect, including Copy Controllers. Keep rotating level payloads attached to their sockets and restore replaced rotating payloads at valid endpoints without false collision stalls.
 - Give captured payload blocks their own mining target, retaining the supporting arm and journaling inventory drops through restart recovery.

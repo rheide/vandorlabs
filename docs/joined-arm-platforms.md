@@ -1,6 +1,7 @@
 # Joined arm platforms
 
-Extender Arms and Large Extender Arms can share a platform. Rotating Arms and
+An unjoined Extender Arm moves only the block at its tip; touching walls, floors
+and other surrounding blocks stay in place. Extender Arms and Large Extender Arms can share a platform. Rotating Arms and
 Large Rotating Arms can share a platform along their hinge axis.
 
 ## Build an Extender platform
@@ -20,7 +21,7 @@ Large Rotating Arms can share a platform along their hinge axis.
    ![A connected platform with an open centre](images/joined-arms/platform.png)
 
 3. With the arms fully extended, open each arm's dialog using the Configurizer.
-   Select **Platform options**, enable **Join neighbouring arms**, and set
+   Enable **Join arms** in the same dialog and set
    **Range** from 1 to 32 blocks. Range is the distance to a neighbouring arm,
    so intermediate arms can connect a longer platform. Every participating arm
    must opt in, and both neighbours must have sufficient range.

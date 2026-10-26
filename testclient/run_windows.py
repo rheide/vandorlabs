@@ -208,6 +208,7 @@ def main():
     if args.focus == 'arm-mining':
         properties.append('-Dvandorlabs.armMiningOnly=true')
     if args.focus == 'arm-live':
+        properties.append('-Dvandorlabs.armLiveStart='+os.environ.get('VANDOR_LABS_ARM_LIVE_START','0'))
         properties.append('-Dvandorlabs.armSecondFixture='+str(root/'testclient/fixtures/arm-rotating-replacement-2.6.nbt'))
         properties.append('-Dvandorlabs.armSavedFixture='+str(root/'testclient/fixtures/arm-pending-detach-2.6.nbt'))
     if args.focus == 'ramps':

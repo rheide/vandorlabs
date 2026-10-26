@@ -26,15 +26,23 @@ public final class GearDialogChecks {
         try{for(GearBlock block:blocks)for(int[] size:new int[][]{{320,240},{460,340},{1280,720}}){
             GearTileEntity tile=fixture(mc,block);boolean track=tile instanceof com.vandorlabs.gear.track.TrackTile;net.minecraft.client.gui.inventory.GuiContainer gui=track?new GuiTrack(new ContainerModularGear(tile)):new GuiModularGear(new ContainerModularGear(tile));gui.inventorySlots.windowId=-94;mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
             List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");List<Rectangle> occupied=new ArrayList<>();boolean rotation=false,done=false;
-            for(GuiButton button:buttons){require(button.id!=6&&!button.displayString.equals("Back"),"legacy page-navigation controls remain absent");if(!button.visible)continue;require(mc.fontRenderer.getStringWidth(button.displayString)<=button.width-4,"button text fits "+button.displayString);add(occupied,new Rectangle(button.x,button.y,button.width,button.height),size);if(!track&&button.id!=4&&button.id!=8)require(button.x==gui.getGuiLeft()+12&&button.width==gui.getXSize()-24,"arm controls share one full-width column");if(button.id==7)rotation=true;if(button.id==4)done="Done".equals(button.displayString);}
+            for(GuiButton button:buttons){require(button.id!=6&&button.id!=8&&!button.displayString.equals("Back"),"no page-navigation controls");if(!button.visible)continue;require(mc.fontRenderer.getStringWidth(button.displayString)<=button.width-4,"button text fits "+button.displayString);add(occupied,new Rectangle(button.x,button.y,button.width,button.height),size);if(button.id==7)rotation=true;if(button.id==4)done="Done".equals(button.displayString);}
             require(done&&(track?!rotation:rotation),"separate Track appearance and arm motion controls");if(track){require(buttons.size()==2,"Track shows only style and Done");require(((com.vandorlabs.gear.track.TrackTile)tile).error().isEmpty(),"standalone mounted Track has no generic arm assembly error");}else for(Field field:fields){GuiTextField text=(GuiTextField)field.get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);}
             if(!track){
-
-                GuiButton page=buttons.stream().filter(b->b.id==8).findFirst().get();
-                if(page.enabled){((GuiModularGear)gui).mouseClicked(page.x+5,page.y+5,0);require("Arm controls".equals(page.displayString),"platform page opens through mouse input");occupied.clear();for(GuiButton b:buttons)if(b.visible){require(mc.fontRenderer.getStringWidth(b.displayString)<=b.width-4,"platform label fits "+b.displayString);add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);}require(!((GuiTextField)fields[0].get(gui)).getVisible(),"channel editor hidden on platform page");((GuiModularGear)gui).mouseClicked(page.x+5,page.y+5,0);require("Platform options".equals(page.displayString),"arm controls return through mouse input");}
+                GuiModularGear armGui=(GuiModularGear)gui;
+                GuiButton join=buttons.stream().filter(b->b.id==9).findFirst().get(),load=buttons.stream().filter(b->b.id==11).findFirst().get();
+                require(join.visible&&load.visible&&((GuiTextField)fields[0].get(gui)).getVisible(),"arm, channel and platform controls share one page");
+                if(join.enabled){
+                    armGui.mouseClicked(join.x+5,join.y+5,0);require(join.displayString.endsWith("On"),"left click enables joining");
+                    armGui.mouseClicked(join.x+5,join.y+5,1);require(join.displayString.endsWith("Off"),"right click disables joining");
+                    armGui.mouseClicked(join.x+5,join.y+5,0);
+                    sliderEndpoints(mc,armGui,buttons,10);
+                    if(load.enabled){armGui.mouseClicked(load.x+5,load.y+5,1);require(load.displayString.endsWith("On"),"right click enables load");sliderEndpoints(mc,armGui,buttons,12);}
+                }
+                occupied.clear();for(GuiButton b:buttons)if(b.visible){require(mc.fontRenderer.getStringWidth(b.displayString)<=b.width-4,"one-page label fits "+b.displayString);add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);}GuiTextField text=(GuiTextField)fields[0].get(gui);add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
             }
             GuiOptionCycleRuntimeChecks.check(mc);
-            GuiButton doneButton=buttons.stream().filter(b->b.id==4).findFirst().get();require(doneButton.width==(track?200:(gui.getXSize()-30)/2),"Done fits beside platform navigation");
+            GuiButton doneButton=buttons.stream().filter(b->b.id==4).findFirst().get();require(doneButton.width==200,"native Done remains 200 pixels on the single page");
             Framebuffer frame=new Framebuffer(size[0],size[1],true);GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,size[0],size[1],0,-1000,1000);GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();
             try(TurntableRenderState saved=new TurntableRenderState()){
                 frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.depthMask(true);GlStateManager.clearColor(32/255F,48/255F,64/255F,1);GlStateManager.clear(16640);GlStateManager.disableDepth();GlStateManager.enableTexture2D();GlStateManager.disableLighting();gui.drawScreen(-1,-1,0);org.lwjgl.opengl.GL11.glFinish();java.awt.image.BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(size[0],size[1],frame);javax.imageio.ImageIO.write(image,"png",new File(output,"shot_arm_dialog_"+block.getRegistryName().getResourcePath()+"_"+size[0]+".png"));int left=0,right=0;for(int y=gui.getGuiTop()+24;y<gui.getGuiTop()+178;y++)for(int x=gui.getGuiLeft()+12;x<gui.getGuiLeft()+gui.getXSize()-12;x++){int rgb=image.getRGB(x,y)&0xffffff;if(rgb==0xffffff||rgb==0xcdd7e4){if(x<size[0]/2)left++;else right++;}}require(left+right>80,"actual dialog controls contain rendered glyphs");
@@ -42,6 +50,10 @@ public final class GearDialogChecks {
             }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}cases++;
         }}finally{mc.displayGuiScreen(previous);mc.player.openContainer=container;org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
         System.out.println("[vandorlabs][reprolab] arm-platform-dialog PASS cases="+cases+" compact320/460/1280 separate Track/Arm controls no Angle/Active Reach fields native Done normal/hover pixels reverse/forward mouse paths");
+    }
+    private static void sliderEndpoints(Minecraft mc,GuiModularGear gui,List<GuiButton> buttons,int id)throws Exception{
+        net.minecraftforge.fml.client.config.GuiSlider slider=(net.minecraftforge.fml.client.config.GuiSlider)buttons.stream().filter(b->b.id==id).findFirst().get();require(slider.visible&&slider.enabled,"enabled slider shares the page");
+        for(int value:new int[]{32,1}){int x=value==32?slider.x+slider.width-1:slider.x+1;gui.mouseClicked(x,slider.y+10,0);slider.mouseReleased(x,slider.y+10);require(slider.getValueInt()==value,"slider selects endpoint "+value);}
     }
     private static void buttonPixels(Minecraft mc,net.minecraft.client.gui.inventory.GuiContainer gui,GuiButton done,Framebuffer frame,int[] size,File output,boolean capture)throws Exception{
         java.awt.image.BufferedImage previous=null;

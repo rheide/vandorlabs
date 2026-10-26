@@ -193,6 +193,7 @@ public final class Gear26RuntimeChecks {
     private static void payloadBounds(WorldServer world,EntityPlayerMP actor,BlockPos root){
         clear(world,root);GearTileEntity tile=arm(world,actor,root,GearRegistry.GEAR_EXTENDER,EnumFacing.DOWN,2);
         for(int x=0;x<16;x++)world.setBlockState(root.add(x,-2,0),Blocks.STONE.getDefaultState());
+        NBTTagCompound legacy=tile.writeToNBT(new NBTTagCompound());legacy.setTag("ArmPayload",savedAttachment(world,root,root.down(2),16).write());tile.readFromNBT(legacy);tile.operator(actor);
         NBTTagCompound values=tile.settings();values.setDouble("ActiveExtension",.5);values.setBoolean("Deployed",false);tile.configure(values);retainMidStroke(tile);
         require(tile.progress()>0&&tile.progress()<1&&tile.payload()!=null,"wide attachment retained in mid-stroke");
         for(double progress:new double[]{0,.25,.5,.75,1})for(AxisAlignedBB box:tile.payload().boxes(tile,progress))require(tile.getRenderBoundingBox().grow(1e-6).contains(new Vec3d(box.minX,box.minY,box.minZ))&&tile.getRenderBoundingBox().grow(1e-6).contains(new Vec3d(box.maxX,box.maxY,box.maxZ)),"render and spatial bounds contain entire payload stroke");
@@ -218,11 +219,17 @@ public final class Gear26RuntimeChecks {
         }finally{craft.signals.close();craft.setDead();clear(world,root);}
         System.out.println("[vandorlabs][reprolab] gear26-carried PASS Taxi-animation atomic-nested-capture changed-inventory retained-snapshot four-parking-headings");
     }
+    /** A persisted pre-tip-only payload must retain its entire authorized footprint. */
+    private static ArmPayload savedAttachment(WorldServer world,BlockPos root,BlockPos source,int count){
+        java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> cells=new java.util.ArrayList<>();
+        for(int x=0;x<count;x++){BlockPos at=source.east(x);TileEntity raw=world.getTileEntity(at);NBTTagCompound data=raw==null?null:com.vandorlabs.vehicle.VehicleTileData.translated(raw.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(source));cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(new BlockPos(x,0,0),world.getBlockState(at),data));}
+        NBTTagCompound saved=new NBTTagCompound();saved.setTag("Blocks",com.vandorlabs.vehicle.VehicleStructure.display(cells).write());saved.setLong("Offset",source.subtract(root).toLong());saved.setLong("PlacedOffset",source.subtract(root).toLong());saved.setBoolean("Materialized",true);return ArmPayload.read(saved);
+    }
     private static void transactions(WorldServer world,EntityPlayerMP actor,BlockPos root){
         clear(world,root);GearTileEntity tile=arm(world,actor,root,GearRegistry.GEAR_EXTENDER,EnumFacing.DOWN,2);BlockPos source=root.down(2);
         world.setBlockState(source,Blocks.CHEST.getDefaultState());world.setBlockState(source.east(),Blocks.STONE.getDefaultState());world.setBlockState(source.east(2),Blocks.DROPPER.getDefaultState());((net.minecraft.tileentity.TileEntityDropper)world.getTileEntity(source.east(2))).setInventorySlotContents(0,new ItemStack(net.minecraft.init.Items.IRON_INGOT,11));
         net.minecraft.tileentity.TileEntityChest chest=(net.minecraft.tileentity.TileEntityChest)world.getTileEntity(source);chest.setInventorySlotContents(0,new ItemStack(net.minecraft.init.Items.DIAMOND,3));
-        ArmPayload payload=ArmPayload.discover(tile,actor);NBTTagCompound original=payload.write();final int[] count={0};
+        ArmPayload payload=savedAttachment(world,root,source,3);NBTTagCompound original=payload.write();final int[] count={0};
         ArmPayload.failureInjector=(stage,at)->{if(stage.equals("clear")&&++count[0]==2){ArmPayload.failureInjector=null;throw new IllegalStateException("injected clear failure");}};
         boolean rejected=false;try{payload.detach(tile);}catch(IllegalStateException expected){rejected=true;}finally{ArmPayload.failureInjector=null;}
         require(rejected&&payload.materialized()&&payload.matchesPlaced(tile),"second-cell clear failure restores every current cell and tile");require(original.equals(payload.write()),"detach rollback retains exact snapshot and materialization state");

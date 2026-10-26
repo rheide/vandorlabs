@@ -16,12 +16,12 @@ public final class JoinedArmDocumentation {
     private static final BlockPos ROOT=new BlockPos(32,80,32);
     private static int stage=-1,settle;
     private static String pending;
-    private static boolean captured,done,tab;
+    private static boolean captured,done;
     private static File directory;
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("joined-arm documentation: "+why);}
     public static boolean tick(Minecraft mc,File output)throws Exception{
         directory=output;if(done)return true;
-        if(stage<0||captured){stage++;captured=false;settle=0;tab=false;
+        if(stage<0||captured){stage++;captured=false;settle=0;
             if(stage==6){done=true;System.out.println("[vandorlabs] joined-arm-docs PASS six construction configuration and level-contact captures");return true;}
             mc.getIntegratedServer().callFromMainThread(()->{
                 WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");world.setWorldTime(6000);world.getWorldInfo().setRaining(false);
@@ -41,7 +41,7 @@ public final class JoinedArmDocumentation {
         GearTileEntity tile=(GearTileEntity)mc.world.getTileEntity(ROOT);if(tile==null||tile.loadedController()==null)return false;tile=tile.loadedController();
         if(stage==3||stage==5){if(tile.progress()!=0||tile.payload()==null)return false;}
         if(stage==2)require(tile.columns().size()==4,"documented four-corner group");
-        if(stage==4){if(!tile.fullyDeployed())return false;if(!(mc.currentScreen instanceof GuiModularGear)){mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock(ROOT,EnumFacing.UP,EnumHand.MAIN_HAND,.5F,.5F,.5F));return false;}GuiModularGear gui=(GuiModularGear)mc.currentScreen;if(!tab){gui.mouseClicked((gui.width-252)/2+180,(gui.height-228)/2+182,0);tab=true;settle=30;return false;}}
+        if(stage==4){if(!tile.fullyDeployed())return false;if(!(mc.currentScreen instanceof GuiModularGear)){mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock(ROOT,EnumFacing.UP,EnumHand.MAIN_HAND,.5F,.5F,.5F));return false;}}
         if(pending==null)pending="shot_joined_arm_"+(stage+1)+".png";return false;
     }
     public static void render(Minecraft mc){if(pending==null)return;try{javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(directory,pending));System.out.println("[vandorlabs] joined-arm-doc-stage "+(stage+1)+" captured");pending=null;captured=true;}catch(java.io.IOException failure){throw new IllegalStateException(failure);}}

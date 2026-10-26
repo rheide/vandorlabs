@@ -28,6 +28,7 @@ CAPTURE_JVM+=("-Dvandorlabs.armRiderOnly=${VANDOR_LABS_ARM_RIDER_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armJoinedOnly=${VANDOR_LABS_ARM_JOINED_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armMiningOnly=${VANDOR_LABS_ARM_MINING_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armLiveChecks=${VANDOR_LABS_ARM_LIVE_CHECKS:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.armLiveStart=${VANDOR_LABS_ARM_LIVE_START:-0}")
 CAPTURE_JVM+=("-Dvandorlabs.armRecoveryPhase=${VANDOR_LABS_ARM_RECOVERY_PHASE:-}")
 CAPTURE_JVM+=("-Dvandorlabs.bridgeMachineChecksOnly=${VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY:-false}" "-Dvandorlabs.machineBuildDocsOnly=${VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY:-false}")
 if [ "${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" = true ] || [ "${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" = true ]; then
