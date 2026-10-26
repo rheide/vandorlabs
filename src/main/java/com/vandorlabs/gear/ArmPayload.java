@@ -74,10 +74,10 @@ public final class ArmPayload {
         World world=arm.getWorld();BlockPos start=arm.localCell(0,-arm.assembly().columnHeight(),0);
         Set<BlockPos> platform=arm.joinEnabled()&&arm.columns().size()>1?JoinedArms.platform(arm):null;
         JoinedArms.Volume volume=platform==null?null:new JoinedArms.Volume(arm,platform);
-        // An unjoined Extender selects its tip block. Face contact with a wall or
+        // An unjoined arm selects its tip block. Face contact with a wall or
         // floor does not opt the surrounding structure into the moving payload.
         boolean tipOnly=platform==null&&!arm.isLandingAssembly()&&!arm.isExtendedTrackStroke()
-                &&arm.getBlockType() instanceof GearBlock&&((GearBlock)arm.getBlockType()).kind()==GearBlock.Kind.EXTENDER;
+                &&arm.getBlockType() instanceof GearBlock&&GearAssembly.isExtender(world.getBlockState(arm.getPos()));
         if(platform!=null){for(BlockPos member:arm.members())VehicleService.permission(actor,member);if(arm.carryLoad()&&!arm.canCarryLoad())throw new IllegalArgumentException("Carry load requires vertical movement");}
         if(world.isAirBlock(start))return null;
         ArrayDeque<BlockPos> pending=new ArrayDeque<>();Set<BlockPos> visited=new LinkedHashSet<>();pending.add(start);

@@ -103,6 +103,10 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public boolean isLandingAssembly(){return assembly!=null&&assembly.kind()!=GearTopology.FootKind.NONE;}
     public boolean rotatePayload(){return rotatePayload;}
     public double activeAngle(){return activeAngle;}
+    boolean sameJoinConfiguration(GearTileEntity other){return triggerMode==other.triggerMode&&direction==other.direction
+            &&rotatePayload==other.rotatePayload&&activeAngle==other.activeAngle&&activeExtension==other.activeExtension
+            &&joinEnabled==other.joinEnabled&&joinRange==other.joinRange&&carryLoad==other.carryLoad&&loadHeight==other.loadHeight
+            &&legacyAnyChannels==other.legacyAnyChannels&&channels.equals(other.channels);}
     public double minimumExtension(){return assembly==null||assembly.columnHeight()==1?-.5:1-assembly.columnHeight();}
     public double activeExtension(){if(assembly!=null&&!isSwingArmController()&&!isFixedMount()){if(isExtendedTrackStroke()&&!trackRetractingStroke)return assembly.columnHeight();if(assembly.kind()==GearTopology.FootKind.NONE)return progress==1||armRetractingStroke?minimumExtension():assembly.columnHeight();if(isExtendedTrackStroke())return minimumExtension();}return activeExtension;}
 

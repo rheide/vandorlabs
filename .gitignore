@@ -14,6 +14,7 @@ __pycache__/
 /testclient/runtime/
 /testclient/render-run.*/
 /testclient/arm-restart.*/
+/testclient/mekanism-restart.*/
 /testclient/gallery-run.*/
 /testclient/console-run.*/
 /testclient/shots/

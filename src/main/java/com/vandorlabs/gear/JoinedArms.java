@@ -26,9 +26,11 @@ final class JoinedArms {
                     if(!(world.getTileEntity(at) instanceof GearTileEntity))continue;GearTileEntity partner=(GearTileEntity)world.getTileEntity(at);
                     GearTileEntity control=partner.loadedController();if(control==null)control=partner;
                     if(!partner.joinEnabled()||distance>partner.joinRange()||partner.mountDirection()!=first.mountDirection()||!at.equals(GearAssembly.topOfColumn(world,at)))continue;
-                    if(first.isSwingArmController()&&(control.direction()!=first.direction()||control.rotatePayload()!=first.rotatePayload()||control.activeAngle()!=first.activeAngle()))throw new IllegalArgumentException("Align joined rotating arms and payload modes");
-                    for(int n=0;n<height;n++){BlockPos part=at.offset(first.mountDirection(),n);if(!GearAssembly.loaded(world,part)||world.getBlockState(part).getBlock()!=state.getBlock()||GearAssembly.mountDirection(world,part)!=first.mountDirection())throw new IllegalArgumentException("Joined arms must have matching lengths");}
-                    BlockPos tip=at.offset(first.mountDirection(),height);if(!GearAssembly.loaded(world,tip))throw new IllegalArgumentException("Load every joined arm tip");if(GearAssembly.isFoot(world.getBlockState(tip)))throw new IllegalArgumentException("Joined platforms cannot include landing feet");if(GearAssembly.isExtender(world.getBlockState(tip))&&GearAssembly.mountDirection(world,tip)==first.mountDirection())throw new IllegalArgumentException("Joined arms must have matching lengths");
+                    GearTileEntity firstControl=first.loadedController();if(firstControl==null)firstControl=first;
+                    if(!matchingSettings(firstControl,control))continue;
+                    boolean lengthMatches=true;for(int n=0;n<height;n++){BlockPos part=at.offset(first.mountDirection(),n);if(!GearAssembly.loaded(world,part)||world.getBlockState(part).getBlock()!=state.getBlock()||GearAssembly.mountDirection(world,part)!=first.mountDirection()){lengthMatches=false;break;}}
+                    if(!lengthMatches)continue;
+                    BlockPos tip=at.offset(first.mountDirection(),height);if(!GearAssembly.loaded(world,tip)||GearAssembly.isFoot(world.getBlockState(tip)))continue;if(GearAssembly.isExtender(world.getBlockState(tip))&&GearAssembly.mountDirection(world,tip)==first.mountDirection())continue;
                     if(seen.add(at)){if(seen.size()>64)throw new IllegalArgumentException("Join at most 64 arms");pending.addLast(at);}
                     break;
                 }
@@ -38,6 +40,10 @@ final class JoinedArms {
         for(BlockPos at:result){BlockPos local=ArmOrientation.inverse(first.mountDirection(),at.subtract(root));minX=Math.min(minX,local.getX());maxX=Math.max(maxX,local.getX());minZ=Math.min(minZ,local.getZ());maxZ=Math.max(maxZ,local.getZ());}
         if((long)maxX-minX>JoinedPlatform.MAX_SPAN||(long)maxZ-minZ>JoinedPlatform.MAX_SPAN)throw new IllegalArgumentException("A joined platform may span at most 64 blocks per axis");
         return result;
+    }
+    private static boolean matchingSettings(GearTileEntity first,GearTileEntity candidate){
+        // The current target is runtime state; all authored configuration must agree.
+        return first.sameJoinConfiguration(candidate);
     }
     static Set<BlockPos> platform(GearTileEntity arm){
         if(arm.columns().size()<2)throw new IllegalArgumentException("Enable a compatible neighbouring arm first");

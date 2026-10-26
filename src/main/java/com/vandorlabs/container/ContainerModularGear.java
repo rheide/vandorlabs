@@ -8,13 +8,22 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public final class ContainerModularGear extends Container {
-    public final GearTileEntity tile;
+    public GearTileEntity tile;
     public final com.vandorlabs.gear.track.TrackTile track;
     private final BlockPos access;
+    private final GearTileEntity accessTile;
+    private final World world;
     public ContainerModularGear(GearTileEntity tile){this(tile,tile.getPos(),tile instanceof com.vandorlabs.gear.track.TrackTile?(com.vandorlabs.gear.track.TrackTile)tile:null);}
-    private ContainerModularGear(GearTileEntity tile,BlockPos access,com.vandorlabs.gear.track.TrackTile track){this.tile=tile;this.access=access.toImmutable();this.track=track;}
+    private ContainerModularGear(GearTileEntity tile,BlockPos access,com.vandorlabs.gear.track.TrackTile track){this.tile=tile;this.access=access.toImmutable();this.track=track;this.world=tile.getWorld();net.minecraft.tileentity.TileEntity raw=world.getTileEntity(access);this.accessTile=raw instanceof GearTileEntity?(GearTileEntity)raw:tile;}
     public static ContainerModularGear resolve(EntityPlayer player,World world,int x,int y,int z){BlockPos pos=new BlockPos(x,y,z);if(!world.isBlockLoaded(pos))return null;net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof GearTileEntity))return null;GearTileEntity root=((GearTileEntity)raw).loadedController();if(root==null&&raw instanceof com.vandorlabs.gear.track.TrackTile)root=(GearTileEntity)raw;if(root==null)return null;ContainerModularGear result=new ContainerModularGear(root,pos,raw instanceof com.vandorlabs.gear.track.TrackTile?(com.vandorlabs.gear.track.TrackTile)raw:null);if(!result.canInteractWith(player))return null;root.operator(player);return result;}
-    @Override public boolean canInteractWith(EntityPlayer player){net.minecraft.tileentity.TileEntity at=tile.getWorld().isBlockLoaded(access)?tile.getWorld().getTileEntity(access):null;return (track==null||at==track)&&!tile.isInvalid()&&(tile.isController()||tile instanceof com.vandorlabs.gear.track.TrackTile)&&tile.getWorld().getTileEntity(tile.getPos())==tile&&at instanceof GearTileEntity&&(at==tile||((GearTileEntity)at).loadedController()==tile)&&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,tile.getWorld(),access);}
+    /** A joined group may choose a new root without replacing the block that was opened. */
+    public GearTileEntity currentTile(){
+        if(!world.isBlockLoaded(access)||accessTile.isInvalid()||world.getTileEntity(access)!=accessTile)return null;
+        GearTileEntity root=accessTile.loadedController();if(root==null&&accessTile instanceof com.vandorlabs.gear.track.TrackTile)root=accessTile;
+        if(root==null||root.isInvalid()||!world.isBlockLoaded(root.getPos())||world.getTileEntity(root.getPos())!=root)return null;
+        tile=root;return root;
+    }
+    @Override public boolean canInteractWith(EntityPlayer player){return currentTile()!=null&&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,access);}
     public void update(EntityPlayerMP player,NBTTagCompound settings){if(canInteractWith(player)){
         if(track!=null){
             if(settings.getKeySet().size()!=1||!settings.hasKey("TrackStyle",3))throw new IllegalArgumentException("Track dialog accepts only track style");

@@ -32,6 +32,8 @@ public final class ArmLiveRuntimeChecks {
     private static void surroundingsIntact(WorldServer world){for(BlockPos at:surroundings())require(world.getBlockState(at).getBlock()==Blocks.COBBLESTONE&&!ArmTransactions.locked(world,at),"surrounding structure stays in place and unlocked at "+at);}
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("arm-live fixture="+fixture+" face="+face()+" stage="+stage+" tick="+ticks+": "+why);}
     public static boolean tick(Minecraft mc)throws Exception{
+        if(Boolean.getBoolean("vandorlabs.mekanismTankOnly"))return com.vandorlabs.vehicle.MekanismTankLiveChecks.tick(mc);
+        if(Boolean.getBoolean("vandorlabs.armPlacementOnly"))return com.vandorlabs.client.ArmPlacementLiveChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.armRiderOnly"))return ArmRiderRuntimeChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.armJoinedOnly"))return JoinedArmRuntimeChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.armMiningOnly"))return ArmPayloadMiningRuntimeChecks.tick(mc);

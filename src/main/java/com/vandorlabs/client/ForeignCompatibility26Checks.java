@@ -27,9 +27,9 @@ public final class ForeignCompatibility26Checks {
             IE+"wooden.TileEntityWindmill",IE+"wooden.TileEntityWallmount",IE+"metal.TileEntityToolbox",
             IE+"metal.TileEntityCapacitorLV",IE+"metal.TileEntityCapacitorMV",IE+"metal.TileEntityCapacitorHV",
             "mekanism.common.tile.TileEntityEnergyCube","mekanism.common.tile.TileEntityGlowPanel","mekanism.common.tile.TileEntityFluidTank",
-            "mekanism.common.tile.TileEntityBin","mekanism.common.tile.TileEntityGasTank","mekanism.common.tile.TileEntityPersonalChest"));
+            "mekanism.common.tile.TileEntityBin","mekanism.common.tile.TileEntityGasTank","mekanism.common.tile.TileEntityPersonalChest","mekanism.common.tile.TileEntityStructuralGlass"));
     private static final Set<String> REJECTED=new LinkedHashSet<>(Arrays.asList(IE+"wooden.TileEntityWoodenPost",IE+"metal.TileEntityRazorWire",IE+"metal.TileEntityElectricLantern",
-            "mekanism.common.tile.TileEntityCardboardBox","mekanism.common.tile.TileEntityDigitalMiner","mekanism.common.tile.TileEntityStructuralGlass"));
+            "mekanism.common.tile.TileEntityCardboardBox","mekanism.common.tile.TileEntityDigitalMiner"));
     private static final class Fixture {
         final IBlockState state;final TileEntity tile;
         Fixture(IBlockState state,TileEntity tile){this.state=state;this.tile=tile;}

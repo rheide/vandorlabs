@@ -620,6 +620,7 @@ public class ReproLab {
                 String saveName = "repro-" + outDir.getName().replaceAll(
                         "[^A-Za-z0-9._-]", "_");
                 if(!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty())saveName="arm-recovery";
+                if(!System.getProperty("vandorlabs.mekanismTankRestart","").isEmpty())saveName="mekanism-tank-restart";
                 mc.launchIntegratedServer(saveName, "Vandor Labs render test", settings);
                 mc.setIngameFocus();
                 System.out.println("[vandorlabs][reprolab] launching integrated world");

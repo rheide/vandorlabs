@@ -17,6 +17,12 @@ case "${1:-}" in
         if [ "$TARGET" = arm-docs ]; then
             PREFIX=joined_arm_
             export VANDOR_LABS_JOINED_ARM_DOCS=true
+        elif [ "$TARGET" = mekanism-tanks ]; then
+            PREFIX=mekanism_tank_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_MEKANISM_TANK_ONLY=true
+        elif [ "$TARGET" = arm-placement ]; then
+            PREFIX=arm_placement_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_PLACEMENT_ONLY=true
         elif [ "$TARGET" = arm-riders ]; then
             PREFIX=arm_riders_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_RIDER_ONLY=true
@@ -148,6 +154,16 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-docs ]; then
         grep -q "joined-arm-docs PASS" "$RUN_OUT/client.log"
         echo "Joined arm documentation captured: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = mekanism-tanks ]; then
+        if [ "${VANDOR_LABS_MEKANISM_TANK_RESTART:-}" = save ]; then grep -q "mekanism-tank-save PASS" "$RUN_OUT/client.log"; else grep -q "mekanism-tank PASS" "$RUN_OUT/client.log"; fi
+        echo "Native Mekanism tank vehicle checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-placement ]; then
+        grep -q "arm-placement PASS" "$RUN_OUT/client.log"
+        echo "Arm placement and joining checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-riders ]; then

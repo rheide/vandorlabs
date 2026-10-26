@@ -1,6 +1,6 @@
 # Joined arm platforms
 
-An unjoined Extender Arm moves only the block at its tip; touching walls, floors
+An unjoined Extender or Rotating Arm moves only the block at its tip; touching walls, floors
 and other surrounding blocks stay in place. Extender Arms and Large Extender Arms can share a platform. Rotating Arms and
 Large Rotating Arms can share a platform along their hinge axis.
 
@@ -24,7 +24,9 @@ Large Rotating Arms can share a platform along their hinge axis.
    Enable **Join arms** in the same dialog and set
    **Range** from 1 to 32 blocks. Range is the distance to a neighbouring arm,
    so intermediate arms can connect a longer platform. Every participating arm
-   must opt in, and both neighbours must have sufficient range.
+   must opt in and use identical configuration and section counts. Differently
+   configured or shorter/longer neighbouring arms are ignored. Both neighbours
+   must have sufficient range.
 
    ![Joined platform controls](images/joined-arms/options.png)
 
@@ -43,7 +45,9 @@ The group is bounded to 64 arms, a 64-block span per platform axis, and 32,768
 captured blocks. Saved-data and network size limits also apply: data-heavy loads
 may reach those limits before the block-count limit. Unsupported or oversized
 loads are refused as a whole. Keep all platform chunks loaded while moving.
-Extend fully before changing the group or its load settings.
+Extend fully before changing the group or its load settings. The dialog stays
+open when joining selects a different controller. Large arms need enough room
+for their wider moving parts; use a joined group to move a continuous platform.
 
 ## Joined Rotating Arms
 

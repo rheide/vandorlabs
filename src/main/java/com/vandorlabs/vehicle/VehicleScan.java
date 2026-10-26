@@ -25,7 +25,7 @@ public final class VehicleScan {
     private final Map<BlockPos, VehicleStructure.Cell> cells = new LinkedHashMap<>();
     private final Set<BlockPos> rampSections=new HashSet<>(),overhangContacts=new HashSet<>(),gearAssemblies=new HashSet<>();
     private final Map<BlockPos,Double> supportBottoms=new HashMap<>(),trackBottoms=new HashMap<>();
-    private final Set<BlockPos> supportCells=new HashSet<>();
+    private final Set<BlockPos> supportCells=new HashSet<>(),nativeAssemblies=new HashSet<>();
     private final Set<BlockPos> expandedHigherSupports=new HashSet<>();
     private final Map<BlockPos,BlockPos> supportOwners=new HashMap<>();
     private final Map<BlockPos,Set<BlockPos>> contactLinks=new HashMap<>();
@@ -281,7 +281,7 @@ public final class VehicleScan {
                         && (state.getBlockHardness(world,p)>=0 || block instanceof BlockControlledRamp), "Unsupported block: "+block.getLocalizedName());
                 TileEntity tile=world.getTileEntity(p);
                 attachmentComponents(p,state,tile);
-                for(BlockPos required:VehicleForeignCompat.required(world,p))enqueueMember(required);
+                if(!nativeAssemblies.contains(p)){Set<BlockPos> required=VehicleForeignCompat.required(world,p);nativeAssemblies.addAll(required);for(BlockPos member:required)enqueueMember(member);}
                 if(tile instanceof TileEntityTurntableController)require(((TileEntityTurntableController)tile).captureId==null&&((TileEntityTurntableController)tile).layout==null,"Restore the turntable contents and detach its controller before vehicle assembly.");
                 if(tile instanceof TileEntityTurntableSurface)require(((TileEntityTurntableSurface)tile).owner==null,"Detach the turntable surface before vehicle assembly.");
                 require(block.getRegistryName()!=null, "Unregistered block at "+p);

@@ -10,7 +10,7 @@ import java.io.IOException;
 
 /** Primary controls and motion/appearance settings share one compact page. */
 public final class GuiModularGear extends GuiContainer {
-    private final GearTileEntity tile;
+    private GearTileEntity tile;
     private int trigger,direction;
     private boolean deployed,rotate,join,load;
     private int range,heightLimit;
@@ -66,7 +66,7 @@ public final class GuiModularGear extends GuiContainer {
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
     @Override protected void mouseClicked(int x,int y,int b)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,b,this::actionPerformed,0,1,2,7,9,11))return;super.mouseClicked(x,y,b);channels.mouseClicked(x,y,b);}
     @Override protected void keyTyped(char c,int key)throws IOException{if(channels.textboxKeyTyped(c,key))submit();else super.keyTyped(c,key);}
-    @Override public void updateScreen(){super.updateScreen();channels.updateCursorCounter();labels();}
+    @Override public void updateScreen(){super.updateScreen();GearTileEntity current=((ContainerModularGear)inventorySlots).currentTile();if(current!=null)tile=current;channels.updateCursorCounter();labels();}
     @Override public void onGuiClosed(){super.onGuiClosed();org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

@@ -2,6 +2,9 @@
 
 ## 2.6
 
+- Keep unjoined Rotating Arm payloads separate from touching support frames, ignore mismatched neighbouring arm columns, retain configuration dialogs when a joined controller changes, and restore the ordinary selection outline for inert arms. Exercise native middle-click placement, adjacent rotating frames and dismantling.
+- Support complete Mekanism Dynamic Tanks, Dynamic Valves and Structural Glass in vehicle transport. Preserve shared fluid tags and inventory through conversion, rotation, cold vehicle reload and native tank reformation; reject partial shells and copying of shared tank inventories.
+
 - Keep unjoined Extender payloads limited to the tip block so touching surroundings do not cause a mounting-structure refusal. Put arm and joined-platform controls together on one page, including range and load-height sliders.
 
 - Add opt-in joined arm platforms with a 1–32 block neighbour range. Extenders support connected rectangles with air holes and intermediate supports, including six-arm 2×3 layouts; Rotating Arms join along a common hinge axis. Vertically moving Extenders offer an optional 1–32 block load height.
