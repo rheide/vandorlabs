@@ -373,6 +373,7 @@ public final class VehicleService {
         catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     public static void permission(EntityPlayerMP player,BlockPos p) {
+        require(!com.vandorlabs.gear.ArmTransactions.locked(player.world,p),"Wait for the arm attachment save or recovery checkpoint.");
         require(!com.vandorlabs.copier.CopyTransactions.locked(player.world,p),"Wait for the copy area's save or recovery checkpoint.");
         require(!VehicleCouplingTransfer.locked(player.world,p),"Wait for the vehicle coupling save or recovery checkpoint.");
         require(player.world.isBlockLoaded(p) && player.world.getWorldBorder().contains(p) && p.getY()>=0 && p.getY()<player.world.getHeight(),"A target cell is outside the loaded world.");

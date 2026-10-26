@@ -5,7 +5,6 @@ import com.vandorlabs.tiles.*;
 import com.vandorlabs.vehicle.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
@@ -76,8 +75,9 @@ final class ShaderMaterialRuntimeChecks {
         }finally{ForgeHooksClient.setRenderPass(oldPass);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);GL11.glPopAttrib();frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.color(1,1,1,1);}
     }
     private static int[] raw(BakedQuad quad)throws Exception{
-        for(Field field:BakedQuad.class.getDeclaredFields())if(field.getType()==int[].class){field.setAccessible(true);int[] value=(int[])field.get(quad);if(value!=null&&value.length>=28)return value;}
-        throw new IllegalStateException("Baked quad payload unavailable");
+        int[] data=quad.getVertexData();
+        require(data!=null&&data.length==4*quad.getFormat().getIntegerSize(),"emitted quad data matches its retained format");
+        return data;
     }
     private static BakedQuad supplied(BakedQuad source,int[] data,VertexFormat format){
         return new BakedQuad(data,source.getTintIndex(),source.getFace(),source.getSprite(),source.shouldApplyDiffuseLighting(),format){@Override public int[] getVertexData(){return data;}};

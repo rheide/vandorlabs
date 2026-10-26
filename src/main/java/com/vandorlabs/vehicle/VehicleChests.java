@@ -38,7 +38,7 @@ public final class VehicleChests {
         return inventory;
     }
     public static void close(EntityGroundVehicle craft){for(EntityPlayer player:craft.world.playerEntities)if(player.openContainer instanceof ChestContainer&&((ChestContainer)player.openContainer).inventory.craft==craft)player.closeScreen();}
-    private static boolean fits(EntityGroundVehicle craft,Map<BlockPos,NBTTagCompound> data){try{List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(data.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,data.get(cell.pos)):cell);new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount).encode();return true;}catch(Exception rejected){return false;}}
+    private static boolean fits(EntityGroundVehicle craft,Map<BlockPos,NBTTagCompound> data){try{return craft.structure.lengthWithTiles(data)<=VehicleStructure.MAX_NBT_BYTES;}catch(Exception rejected){return false;}}
     static final class Inventory implements ILockableContainer {
         final EntityGroundVehicle craft;final VehicleWorld view;final ILockableContainer delegate;final List<TileEntityChest> tiles;
         Inventory(EntityGroundVehicle craft,ILockableContainer delegate,List<TileEntityChest> tiles){this.craft=craft;view=craft.view;this.delegate=delegate;this.tiles=Collections.unmodifiableList(new ArrayList<>(tiles));}

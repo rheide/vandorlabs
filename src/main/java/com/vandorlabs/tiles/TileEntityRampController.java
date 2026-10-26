@@ -1242,7 +1242,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         NBTTagList reservations=new NBTTagList();
         for (BlockPos p:cells) reservations.appendTag(writePosition(p));
         tag.setTag(SaveSchema.Ramp.CELLS,reservations);
-        return tag;
+        return com.vandorlabs.ramp.RampCopyData.canonicalizeSets(tag);
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         tag=com.vandorlabs.ramp.RampCopyData.relocated(tag);

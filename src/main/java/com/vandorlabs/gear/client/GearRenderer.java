@@ -25,7 +25,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
             net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableCull();
             BufferBuilder buffer=net.minecraft.client.renderer.Tessellator.getInstance().getBuffer();buffer.begin(7,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);
-            renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();try{ArmPayloadRenderer.render(tile,tile.renderProgress(partial),x,y,z,partial);}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();com.vandorlabs.VandorLabs.logger.warn("Arm attachment rendering unavailable; snapshot retained",failure);}
+            renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();try{ArmPayloadRenderer.render(tile,GearVisualMotion.sample(tile,partial),x,y,z,partial);}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();com.vandorlabs.VandorLabs.logger.warn("Arm attachment rendering unavailable; snapshot retained",failure);}
         }
     }
     /** Bound members are drawn by their operational controller, including compact parts. */
@@ -48,7 +48,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
     private void emit(GearTileEntity tile,double x,double y,double z,float partialTicks,int destroyStage,float partial,BufferBuilder buffer,boolean cache){
         if (tile.getWorld() == null) return;
         mounting=Affine.mount(tile.mountDirection());
-        double progress=tile.renderProgress(partialTicks);
+        double progress=GearVisualMotion.sample(tile,partialTicks);
         cachePose=cache&&(tile.isFixedMount()||progress==0||progress==1)&&(!(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)||((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft==null);
 
         IBlockState state = tile.getWorld().getBlockState(tile.getPos());
@@ -89,7 +89,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             return;
         }
 
-        GearMotion.Pose pose = tile.pose(tile.renderProgress(partialTicks));
+        GearMotion.Pose pose = tile.pose(GearVisualMotion.sample(tile,partialTicks));
         Affine fixed = Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING)));
         Affine moving = Affine.fromPose(pose, false);
         Affine feet = Affine.fromPose(pose, true);

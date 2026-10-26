@@ -42,6 +42,6 @@ public final class VehicleTileData {
                 result.setInteger("MinAlong",result.getInteger("MinAlong")+offset.getX()*direction.getFrontOffsetX()+offset.getZ()*direction.getFrontOffsetZ());
             }
         }
-        return result;
+        return com.vandorlabs.ramp.RampCopyData.canonicalizeSets(result);
     }
 }

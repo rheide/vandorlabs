@@ -8,7 +8,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.nbt.NBTTagCompound;
 import java.io.IOException;
 
-/** Primary controls and motion/appearance settings share one compact two-column page. */
+/** Primary controls and motion/appearance settings share one compact single-column page. */
 public final class GuiModularGear extends GuiContainer {
     private final GearTileEntity tile;
     private int trigger,direction;
@@ -16,14 +16,12 @@ public final class GuiModularGear extends GuiContainer {
     private GuiTextField channels;
     private String error="";
     public GuiModularGear(ContainerModularGear container){
-        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();rotate=tile.rotatePayload();xSize=300;ySize=228;
+        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();rotate=tile.rotatePayload();xSize=252;ySize=228;
     }
-    private int columnWidth(){return (xSize-34)/2;}
-    private int secondColumn(){return guiLeft+22+columnWidth();}
     @Override public void initGui(){
-        xSize=Math.min(460,width-12);ySize=228;super.initGui();buttonList.clear();int col=columnWidth(),right=secondColumn();
-        channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+88,col,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(tile.getRedstoneChannels().toString());
-        add(0,guiLeft+12,46,col);add(1,guiLeft+12,114,col);add(2,guiLeft+12,140,col);add(7,right,46,col);add(4,guiLeft+(xSize-200)/2,200,200);
+        xSize=Math.min(252,width-12);ySize=228;super.initGui();buttonList.clear();int col=xSize-24;
+        channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+70,col,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(tile.getRedstoneChannels().toString());
+        add(0,guiLeft+12,30,col);add(1,guiLeft+12,94,col);add(2,guiLeft+12,120,col);add(7,guiLeft+12,146,col);add(4,guiLeft+(xSize-200)/2,200,200);
         labels();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
     }
     private void add(int id,int x,int y,int width){buttonList.add(new GuiButton(id,x,guiTop+y,width,20,""));}
@@ -52,9 +50,7 @@ public final class GuiModularGear extends GuiContainer {
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString("Arms and Landing Gear",12,12,0xffffff);
-        int right=secondColumn()-guiLeft;
-        fontRenderer.drawString("Controls",12,29,0xffffff);fontRenderer.drawString("Motion & appearance",right,29,0xffffff);
-        fontRenderer.drawString(tile.usesLegacyInput()?"Channels (any + local)":"Channels (0 = local)",12,75,0xcdd7e4);
+        fontRenderer.drawString(tile.usesLegacyInput()?"Channels (any + local)":"Channels (0 = local)",12,57,0xcdd7e4);
         String failure=error.isEmpty()?tile.error():error;String status=failure.isEmpty()?(tile.isController()?tile.columns().size()+" arms / "+(tile.isLandingAssembly()?tile.assembly().feet().size():0)+" feet":"Track appearance"):"ERROR: "+failure;
         java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,180+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
     }

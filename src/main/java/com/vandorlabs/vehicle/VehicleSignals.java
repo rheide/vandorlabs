@@ -252,7 +252,9 @@ public final class VehicleSignals {
         if(!saved.isEmpty()){
             List<VehicleStructure.Cell> cells=new ArrayList<>();
             for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(saved.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,saved.get(cell.pos)):cell);
-            craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),false);
+            VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
+            next.inheritEncodedLength(craft.structure);
+            craft.updateCanopies(next,false);
         }
         dirty.clear();
     }
@@ -260,6 +262,7 @@ public final class VehicleSignals {
         List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(cell.pos.equals(pos)?new VehicleStructure.Cell(pos,state,data):cell);
         boolean geometry=craft.structure.at(pos).state!=state || craft.view.getTileEntity(pos) instanceof TileEntityLandingGear||craft.view.getTileEntity(pos) instanceof com.vandorlabs.gear.GearTileEntity;
         VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
+        next.inheritEncodedLength(craft.structure);
         if(craft.view.getTileEntity(pos) instanceof TileEntityPilotSeat)craft.updateSettings(next);else craft.updateCanopies(next,geometry);
     }
     public static void apply(EntityGroundVehicle craft,VehicleNetwork.Packet packet){

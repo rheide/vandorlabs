@@ -618,6 +618,7 @@ public class ReproLab {
                 // intermittently fail.
                 String saveName = "repro-" + outDir.getName().replaceAll(
                         "[^A-Za-z0-9._-]", "_");
+                if(!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty())saveName="arm-recovery";
                 mc.launchIntegratedServer(saveName, "Vandor Labs render test", settings);
                 mc.setIngameFocus();
                 System.out.println("[vandorlabs][reprolab] launching integrated world");
@@ -628,6 +629,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty()){try{if(com.vandorlabs.gear.ArmRecoveryRuntimeChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Arm durable recovery",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.utility26ChecksOnly")){try{if(Utility26FocusedChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Utility 2.6 regressions",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.bridgeMachineChecksOnly")){try{if(BridgeMachineChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Bridge machine regressions",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.machineBuildDocsOnly")){try{if(FrameMachineDocumentation.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Machine build documentation",failure);}return;}

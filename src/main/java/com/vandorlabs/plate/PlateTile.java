@@ -30,6 +30,7 @@ public final class PlateTile extends TileEntityRedstoneChannel {
     public void sample(){if(world!=null&&!world.isRemote&&world.getTileEntity(pos)==this)publish(physicalPower());}
     public void carriedPower(int power){publish(power);}
     /** Native plates sense collisions immediately while raised, then poll only while depressed. */
+    public boolean carriedSampleDue(long tick){return physicalPower()==0||tick>=nextCarriedSample;}
     public int carriedMeasurement(int measured,long tick){
         int current=physicalPower();if(current>0&&tick<nextCarriedSample)return current;
         if(measured>0)nextCarriedSample=tick+(sensitivity==0?20:10);else nextCarriedSample=Long.MIN_VALUE;

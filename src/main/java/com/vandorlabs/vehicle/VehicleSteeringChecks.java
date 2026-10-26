@@ -42,8 +42,23 @@ public final class VehicleSteeringChecks {
             List<VehicleStructure.Cell> withWheel=new ArrayList<>(tracks);addWheel(withWheel,medium,new BlockPos(10,4,4));p=profile(world,withWheel,EnumFacing.NORTH);require(p.wheels==1&&p.tracks==3&&!p.tracksOnly(),"mixed wheel and connected Track count each physical contact");near(p.meanKindRadius,(.65+3*.08)/4,"mixed physical radius mean");near(VehicleControls.yawChange(1,0,false,false,p,true),0,"mixed wheeled craft still need travel");
         }
         for(int length:new int[]{1,2,4,12,40}){List<VehicleStructure.Cell> cells=new ArrayList<>();addWheel(cells,large,new BlockPos(4,4,4));addWheel(cells,large,new BlockPos(4,4,4+length));p=profile(world,cells,EnumFacing.NORTH);near(p.radiusFactor,length/4D,"longitudinal wheelbase changes actual radius proportionally");}
-        legacy(world);modular(world,false);modular(world,true);sweptTrackTurn(world);actualController(world,large);
+        slowTurns();legacy(world);modular(world,false);modular(world,true);sweptTrackTurn(world);actualController(world,large);
         System.out.println("[vandorlabs][reprolab] taxi-steering PASS checks="+checks+" native wheel/regular-Large modular/three Track styles physical counts radius mean wheelbase reverse stationary ground-only tank pivot unchangedHover bounded swept-collision");
+    }
+    private static void slowTurns(){
+        for(boolean tracks:new boolean[]{false,true})for(double span:new double[]{1,4,16}){
+            VehicleSteering.Profile p=new VehicleSteering.Profile(tracks?0:3,tracks?2:0,tracks?.08:.45,span);
+            float previous=VehicleControls.yawChange(1,0,false,false,p,true);
+            if(tracks)near(previous,.6F,"gentle stationary tracked pivot");
+            for(int n=1;n<=120;n++){
+                double speed=n*.001;float next=VehicleControls.yawChange(1,speed,false,false,p,true);
+                require(next>=previous-1e-6&&next-previous<.15,"continuous crawl-to-roll steering without threshold jump");
+                near(VehicleControls.yawChange(1,-speed,false,false,p,true),-next,"slow reverse steering mirrors forward");
+                near(VehicleControls.yawChange(-1,speed,false,false,p,true),-next,"slow left and right steering symmetric");
+                if(p.radiusFactor<1&&speed<=.02)require(next<=1.15,"tight running gear never snaps into high-speed yaw while creeping");
+                previous=next;
+            }
+        }
     }
     private static BlockWheel wheel(String name){return (BlockWheel)Block.getBlockFromName("vandorlabs:"+name);}
     private static void addWheel(List<VehicleStructure.Cell> cells,BlockWheel wheel,BlockPos at){IBlockState state=wheel.getDefaultState();List<BlockPos> members=wheel.members(at,state);for(int n=0;n<members.size();n++)cells.add(new VehicleStructure.Cell(members.get(n),state.withProperty(BlockWheel.PART,n),null));}
@@ -74,7 +89,7 @@ public final class VehicleSteeringChecks {
                 List<VehicleStructure.Cell> cells=new ArrayList<>();if(kind!=1){addTrack(cells,new BlockPos(4,4,4),0);addTrack(cells,new BlockPos(8,4,8),0);}if(kind!=0)addWheel(cells,large,new BlockPos(12,4,12));
                 EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(structure(cells,EnumFacing.NORTH));craft.setPosition(1500,180,1050);craft.hover=hovering;craft.hoverTarget=180;craft.onGround=true;craft.steering=1;strafe.setByte(craft,(byte)1);
                 try{
-                    VehicleSteering.Profile profile=new VehicleSteering().profile(craft.view);float expected=hovering?1.7F:kind==0?2.4F:0;
+                    VehicleSteering.Profile profile=new VehicleSteering().profile(craft.view);float expected=hovering?1.7F:kind==0?.6F:0;
                     AxisAlignedBB bounds=craft.collision.bounds(0).union(craft.collision.bounds(8)).union(craft.collision.bounds(-8)).offset(craft.posX,craft.posY,craft.posZ).grow(1);
                     for(int x=net.minecraft.util.math.MathHelper.floor(bounds.minX)>>4;x<=net.minecraft.util.math.MathHelper.floor(bounds.maxX)>>4;x++)for(int z=net.minecraft.util.math.MathHelper.floor(bounds.minZ)>>4;z<=net.minecraft.util.math.MathHelper.floor(bounds.maxZ)>>4;z++)world.getChunkFromChunkCoords(x,z);
                     boolean loaded=craft.collision.loaded(world,craft.posX,craft.posY,craft.posZ,0,0,0,expected);float swept=craft.collision.turn(world,craft,craft.posX,craft.posY,craft.posZ,0,expected);

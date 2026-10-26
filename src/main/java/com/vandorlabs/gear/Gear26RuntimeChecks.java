@@ -21,12 +21,14 @@ public final class Gear26RuntimeChecks {
         for(int n=0;n<length;n++){BlockPos at=root.offset(face,n);require(((ItemBlock)Item.getItemFromBlock(block)).placeBlockAt(new ItemStack(block),actor,world,at,face,.5F,.5F,.5F,block.getDefaultState()),"item placement on "+face);}
         GearTileEntity tile=(GearTileEntity)world.getTileEntity(root);require(tile.rebuild(),"bare arm forms "+tile.error());return tile;
     }
-    public static void run(WorldServer world,EntityPlayerMP actor){
+    public static void run(WorldServer world,EntityPlayerMP actor){try(AutoCloseable matrix=ArmTransactions.matrix()){runMatrices(world,actor);}catch(RuntimeException failure){throw failure;}catch(Exception failure){throw new IllegalStateException(failure);}}
+    private static void runMatrices(WorldServer world,EntityPlayerMP actor){
         BlockPos root=new BlockPos(620,170,260);checks=0;
         try{
             ArmPayloadSelectionChecks.run(world,actor);
             TrackLifecycleRuntimeChecks.run(world,actor,root);
             placementAndClearance(world,actor,root);
+            standaloneEndpoints(world,actor,root);
             inputTransition(world,actor,root);
             for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.GEAR_SWING_ARM,GearRegistry.GEAR_MOUNT,GearRegistry.LARGE_GEAR_EXTENDER,GearRegistry.LARGE_GEAR_SWING_ARM})for(EnumFacing face:EnumFacing.values())for(int count:new int[]{1,2,8}){
                 clear(world,root);GearTileEntity tile=arm(world,actor,root,block,face,count);
@@ -40,8 +42,8 @@ public final class Gear26RuntimeChecks {
                 clear(world,root);GearTileEntity tile=arm(world,actor,root,GearRegistry.GEAR_EXTENDER,face,2);BlockPos source=root.offset(face,2);world.setBlockState(source,Blocks.STONE.getDefaultState());
                 NBTTagCompound settings=tile.settings();settings.setDouble("ActiveExtension",1);settings.setBoolean("Deployed",false);tile.configure(settings);
                 for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==0,"attachment extends through full stroke "+face+" "+tile.error());
-                require(world.isAirBlock(source)&&world.getBlockState(source.offset(face,2)).getBlock()==Blocks.STONE,"integral endpoint restores actual block "+face);
-                tile.target(true);for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==1&&world.getBlockState(source).getBlock()==Blocks.STONE&&world.isAirBlock(source.offset(face,2)),"reverse restores construction block without duplication "+face);
+                require(world.isAirBlock(source)&&tile.payload()!=null&&!tile.payload().materialized(),"integral retracted endpoint retains payload over reserved arm cell "+face);
+                tile.target(true);for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==1&&world.getBlockState(source).getBlock()==Blocks.STONE&&(tile.payload()==null||tile.payload().materialized()),"reverse restores construction block without duplication "+face);
                 settings=tile.settings();settings.setDouble("ActiveExtension",.5);settings.setBoolean("Deployed",false);tile.configure(settings);retainMidStroke(tile);
                 require(tile.progress()>0&&tile.progress()<1&&tile.payload()!=null&&!tile.payload().materialized()&&world.isAirBlock(source),"mid-stroke retains captured attachment "+face);
                 NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());GearTileEntity copy=(GearTileEntity)TileEntity.create(world,saved);require(copy.payload()!=null&&copy.payload().blocks.cells.size()==1,"mid-stroke attachment survives save "+face);
@@ -68,6 +70,24 @@ public final class Gear26RuntimeChecks {
             clear(world,root);world.setBlockState(root,TrackRegistry.COMPACT.getDefaultState());world.setBlockState(root.east(),Blocks.STONE_SLAB.getDefaultState().withProperty(net.minecraft.block.BlockSlab.HALF,net.minecraft.block.BlockSlab.EnumBlockHalf.TOP));TrackTile track=(TrackTile)world.getTileEntity(root);TrackWorld.rebuild(track);require((track.appearance().sideMask&2)!=0,"top slab selects native side bracket");
         }finally{clear(world,root);}
         System.out.println("[vandorlabs][reprolab] gear26-runtime PASS checks="+checks+" six-axis unsupported columns integral/mid-stroke payloads reversal snapshots tracks and side brackets");
+    }
+    private static void standaloneEndpoints(WorldServer world,EntityPlayerMP actor,BlockPos root){
+        int cases=0;
+        for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.LARGE_GEAR_EXTENDER})for(EnumFacing face:EnumFacing.values())for(int length:new int[]{1,2,3,8}){
+            clear(world,root);GearTileEntity tile=arm(world,actor,root,block,face,length);BlockPos source=root.offset(face,length);world.setBlockState(source,Blocks.STONE.getDefaultState(),2);
+            require(tile.preparePayloadMotion()&&tile.payload()!=null,"retraction fixture captures payload");double stroke=length==1?.5:length-1;
+            Vec3d start=tile.payload().transform(tile,1,0,0,0),end=tile.payload().transform(tile,0,0,0,0);Vec3d expected=new Vec3d(face.getDirectionVec()).scale(-stroke);
+            require(end.subtract(start).squareDistanceTo(expected)<1e-12,"exact retraction endpoint "+block.getRegistryName()+face+length);
+            for(int n=0;n<=24;n++){Vec3d moved=tile.payload().transform(tile,n/24D,0,0,0).subtract(start);double travel=moved.dotProduct(new Vec3d(face.getDirectionVec()));require(travel<=1e-8&&travel>=-stroke-1e-8,"never exceeds placed maximum");}
+            require(tile.payload().restore(tile,1),"retraction fixture returns construction block");cases++;
+        }
+        for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_SWING_ARM,GearRegistry.LARGE_GEAR_SWING_ARM})for(EnumFacing face:EnumFacing.values())for(int direction=0;direction<4;direction++)for(boolean rotate:new boolean[]{false,true}){
+            clear(world,root);GearTileEntity tile=arm(world,actor,root,block,face,3);NBTTagCompound settings=tile.settings();settings.setInteger("Direction",direction);settings.setBoolean("RotatePayload",rotate);tile.configure(settings);world.setBlockState(root.offset(face,3),Blocks.STONE.getDefaultState(),2);require(tile.preparePayloadMotion()&&tile.payload()!=null,"rotating alignment captures payload");
+            for(int corner=0;corner<8;corner++){Vec3d v=tile.payload().transform(tile,0,corner&1,(corner>>1)&1,(corner>>2)&1);require(Math.abs(v.x-Math.rint(v.x))+Math.abs(v.y-Math.rint(v.y))+Math.abs(v.z-Math.rint(v.z))<1e-8,"quarter-turn cube corners align to world grid "+face+direction+rotate);}
+            {require(tile.payload().restore(tile,0),"quarter-turn payload becomes a regular world block");ArmPayload loaded=ArmPayload.read(tile.payload().write());require(loaded.matchesPlaced(tile)&&loaded.detach(tile)&&loaded.restore(tile,1),"rotated endpoint reload and reverse restore exactly once");}
+            cases++;
+        }
+        System.out.println("[vandorlabs] arm-standalone-endpoints PASS cases="+cases+" regular/Large six axes bounded half/integral retraction quarter-turn grid corners level payload materialization/reload/reversal");
     }
     private static void placementAndClearance(WorldServer world,EntityPlayerMP actor,BlockPos root){
         ItemStack original=actor.getHeldItemMainhand();boolean creative=actor.capabilities.isCreativeMode;int cases=0;
@@ -98,7 +118,7 @@ public final class Gear26RuntimeChecks {
                     cases++;
                 }
                 if(block.kind()==GearBlock.Kind.EXTENDER){
-                    NBTTagCompound settings=tile.settings();settings.setDouble("ActiveExtension",-tile.assembly().columnHeight());tile.configure(settings);require(tile.activeExtension()==tile.assembly().columnHeight(),"automatic stack reach ignores legacy zero-collapse setting");
+                    NBTTagCompound settings=tile.settings();settings.setDouble("ActiveExtension",-tile.assembly().columnHeight());tile.configure(settings);require(tile.activeExtension()==tile.minimumExtension(),"stack retraction ignores legacy extension settings");
                     BlockPos source=root.offset(face,max);world.setBlockState(source,Blocks.STONE.getDefaultState(),2);settings=tile.settings();settings.setDouble("ActiveExtension",tile.minimumExtension());settings.setBoolean("Deployed",false);tile.configure(settings);for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==0&&tile.payload()!=null,"automatic stack reach completes motion "+face+tile.error());for(AxisAlignedBB box:tile.payload().boxes(tile,0))require(!box.intersects(new AxisAlignedBB(root).shrink(1e-6)),"automatic reach cannot bury payload inside mounting base");tile.target(true);for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==1&&world.getBlockState(source).getBlock()==Blocks.STONE,"automatic reach reverses and restores the adjacent payload");
                 }
             }

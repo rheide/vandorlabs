@@ -19,8 +19,8 @@ final class TrackLifecycleRuntimeChecks {
             for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.LARGE_GEAR_EXTENDER})for(int style=0;style<3;style++)for(boolean active:new boolean[]{false,true}){
                 clear(world,root);world.setBlockState(root.up(),Blocks.IRON_BLOCK.getDefaultState(),2);
                 for(int n=0;n<2;n++){actor.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(block,4));BlockPos support=root.up().down(n);require(Item.getItemFromBlock(block).onItemUse(actor,world,support,EnumHand.MAIN_HAND,EnumFacing.DOWN,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"actual arm item hangs from previous section "+block.getRegistryName());}
-                GearTileEntity arm=(GearTileEntity)world.getTileEntity(root);pump(world,root);require(arm.isOperational()&&arm.assembly().columnHeight()==2&&arm.activeExtension()==2,"two stacked sections infer two blocks of extra travel");
-                NBTTagCompound settings=arm.settings();settings.setDouble("ActiveExtension",-2);settings.setBoolean("Deployed",!active);arm.configure(settings);require(arm.activeExtension()==2,"legacy configured reach cannot collapse automatic stack");pump(world,root);
+                GearTileEntity arm=(GearTileEntity)world.getTileEntity(root);pump(world,root);require(arm.isOperational()&&arm.assembly().columnHeight()==2&&arm.activeExtension()==-1,"two stacked sections infer one block of retraction");
+                NBTTagCompound settings=arm.settings();settings.setDouble("ActiveExtension",-2);settings.setBoolean("Deployed",!active);arm.configure(settings);require(arm.activeExtension()==-1,"legacy configured reach cannot collapse automatic stack");pump(world,root);
                 BlockPos foot=root.down(2);place(world,actor,arm,foot,style,active,false);place(world,actor,arm,foot.east(),style,active,true);pump(world,root);
                 require(arm.assembly().kind()==GearTopology.FootKind.TRACK&&arm.assembly().feet().size()==2,"initial two-Track group forms");double pose=arm.progress();boolean target=arm.target();require(pose==(active?0:1),"initial endpoint follows physical placement");
                 if(block.sizeClass()==2){
@@ -41,7 +41,7 @@ final class TrackLifecycleRuntimeChecks {
     }
     private static void place(WorldServer world,EntityPlayerMP actor,GearTileEntity arm,BlockPos at,int style,boolean active,boolean append){
         ItemStack stack=new ItemStack(TrackRegistry.COMPACT,4);NBTTagCompound settings=new NBTTagCompound();settings.setInteger("TrackStyle",style);stack.setTagInfo("ModularGearSettings",settings);actor.setHeldItem(EnumHand.MAIN_HAND,stack);
-        if(active){BlockPos clicked=append?at.west():arm.getPos();Vec3d point=append?new Vec3d(at.west().down(2)).addVector(1,.5,.5):new Vec3d(arm.getPos()).addVector(.5,-3,.5);require(GearInteractions.attachTrack(actor,arm,new RayTraceResult(point,append?EnumFacing.EAST:EnumFacing.DOWN,clicked)),"ordinary held Track attaches to active endpoint");}
+        if(active){BlockPos clicked=append?at.west():arm.getPos();Vec3d point=append?new Vec3d(at.west().up()).addVector(1,.5,.5):new Vec3d(arm.getPos()).addVector(.5,0,.5);require(GearInteractions.attachTrack(actor,arm,new RayTraceResult(point,append?EnumFacing.EAST:EnumFacing.DOWN,clicked)),"ordinary held Track attaches to active endpoint");}
         else placeRest(world,actor,at,style);
     }
     private static void placeRest(WorldServer world,EntityPlayerMP actor,BlockPos at,int style){ItemStack stack=new ItemStack(TrackRegistry.COMPACT,4);NBTTagCompound settings=new NBTTagCompound();settings.setInteger("TrackStyle",style);stack.setTagInfo("ModularGearSettings",settings);actor.setHeldItem(EnumHand.MAIN_HAND,stack);require(((ItemBlock)Item.getItemFromBlock(TrackRegistry.COMPACT)).placeBlockAt(stack,actor,world,at,EnumFacing.DOWN,.5F,.5F,.5F,TrackRegistry.COMPACT.getDefaultState()),"actual Track item placement at logical attachment cell");}

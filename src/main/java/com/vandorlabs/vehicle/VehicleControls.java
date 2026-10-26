@@ -13,9 +13,17 @@ public final class VehicleControls {
     /** Radius is averaged before converting to angular travel; one bounded step still uses normal collision sweeps. */
     public static float yawChange(float steering,double speed,boolean hover,boolean autopilot,VehicleSteering.Profile supports,boolean grounded){
         if(hover)return yawChange(steering,speed,true,autopilot);
-        if(supports.tracksOnly()&&grounded&&Math.abs(speed)<.002)return steering*2.4F*(speed<0?-1:1);
-        double turn=yawChange(steering,speed,false,autopilot)/supports.radiusFactor;
-        return (float)Math.max(-8,Math.min(8,turn));
+        double travel=Math.abs(speed);
+        double turn=Math.abs(yawChange(1,speed,false,autopilot)/supports.radiusFactor);
+        if(supports.radiusFactor<1){
+            // Tight-radius running gear should ease into a turn while creeping.
+            // Keep the existing cruising radius once travel reaches .12 blocks/tick.
+            double blend=Math.min(1,travel/.12);blend=blend*blend*(3-2*blend);
+            turn=Math.min(turn*(.35+.65*blend),.6+7.4*blend);
+        }
+        // One continuous curve replaces the old 2.4-degree pivot / rolling threshold.
+        if(supports.tracksOnly()&&grounded)turn=Math.max(.6,turn);
+        return (float)(steering*(speed<0?-1:1)*Math.min(8,turn));
     }
     public static float autopilotYawLimit(VehicleSteering.Profile supports,boolean hover){return hover?3:(float)Math.min(8,3/supports.radiusFactor);}
     public static final class Command {

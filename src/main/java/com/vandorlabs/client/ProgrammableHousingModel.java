@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.property.IExtendedBlockState;
 
@@ -135,7 +136,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
             if(layout==2){double fraction=uv==0?Math.min(1,surface/aspect):Math.min(1,aspect/surface);value=.5+(value-.5)*fraction;}
             data[vertex*stride+4+uv]=Float.floatToRawIntBits(uv==0?sprite.getInterpolatedU(value*16):sprite.getInterpolatedV(value*16));
         }
-        return Collections.singletonList(new BakedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
+        return Collections.singletonList(retainedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
     }
 
     private BakedQuad face(int texture,EnumFacing facing,boolean upper,int layout,int local,boolean storageSet) {
@@ -183,10 +184,16 @@ public final class ProgrammableHousingModel implements IBakedModel {
             // maximum-neighbor light rule for every face.
             EnumFacing sampleFace = FACE[i].getAxis() == EnumFacing.Axis.Y
                     ? EnumFacing.NORTH : EnumFacing.UP;
-            return new BakedQuad(data, -1, sampleFace,
+            return retainedQuad(data, -1, sampleFace,
                     sprite, false, format);
     }
 
+    /** OptiFine may normalize BakedQuad's internal array from a global shader flag. */
+    private static BakedQuad retainedQuad(int[] data,int tint,EnumFacing face,TextureAtlasSprite sprite,boolean diffuse,VertexFormat format){
+        if(data.length!=4*format.getIntegerSize())throw new IllegalArgumentException("Housing quad format and record width differ");
+        final int[] records=data.clone();
+        return new BakedQuad(records,tint,face,sprite,diffuse,format){@Override public int[] getVertexData(){return records;}};
+    }
     private static EnumFacing worldFace(EnumFacing face, EnumFacing facing) {
         int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;
         if (face.getAxis() == EnumFacing.Axis.Y) return face;

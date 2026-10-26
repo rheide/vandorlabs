@@ -10,10 +10,16 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import java.util.*;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.event.world.WorldEvent;
 
 /** Complete snapshots install without break callbacks, drops, or lossy parking-time substitutions. */
+@Mod.EventBusSubscriber(modid="vandorlabs")
 public final class CopyWorld {
     private CopyWorld(){}
+    private static final Map<WorldServer,LinkedHashSet<BlockPos>> NOTIFICATIONS=new IdentityHashMap<>();
     public static boolean frozen(WorldServer world,BlockPos at){return world.getTileEntity(at) instanceof CopyFrozenTile;}
     public static Map<BlockPos,TileEntity> prepare(WorldServer world,VehicleStructure snapshot,BlockPos origin){Map<BlockPos,TileEntity> result=new LinkedHashMap<>();VehicleWorld view=new VehicleWorld(world,snapshot);view.origin=origin;MovingBlockSupport.validate(snapshot,view);for(VehicleStructure.Cell cell:snapshot.cells)if(cell.hasTileData()){NBTTagCompound data=VehicleTileData.translated(cell.tileData(),origin);TileEntity tile=TileEntity.create(null,data);if(tile==null)throw new IllegalArgumentException("A copied block's data cannot be created");result.put(origin.add(cell.pos),tile);}return result;}
     public static void install(WorldServer world,VehicleStructure snapshot,BlockPos origin,Map<BlockPos,TileEntity> prepared){install(world,snapshot,origin,prepared,false);}
@@ -30,5 +36,17 @@ public final class CopyWorld {
     private static void rebuildColumns(WorldServer world,VehicleStructure snapshot,BlockPos origin){Set<Chunk> chunks=new LinkedHashSet<>();for(VehicleStructure.Cell cell:snapshot.cells)chunks.add(world.getChunkFromBlockCoords(origin.add(cell.pos)));for(Chunk chunk:chunks){chunk.generateSkylightMap();chunk.markDirty();}}
     public static boolean clearOrMatches(WorldServer world,VehicleStructure snapshot,BlockPos origin,boolean internal){for(VehicleStructure.Cell cell:snapshot.cells){BlockPos at=origin.add(cell.pos);if(!world.isBlockLoaded(at,false))return false;IBlockState state=world.getBlockState(at);if(world.isAirBlock(at)){if(world.getTileEntity(at)!=null)return false;continue;}if(state!=cell.state)return false;TileEntity tile=world.getTileEntity(at);if(cell.hasTileData()){if(tile==null&&internal)continue;if(tile==null||!VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin)).equals(cell.tileData()))return false;}else if(tile!=null)return false;}return true;}
     public static boolean empty(WorldServer world,VehicleStructure snapshot,BlockPos origin){for(VehicleStructure.Cell cell:snapshot.cells){BlockPos at=origin.add(cell.pos);if(!world.isBlockLoaded(at,false)||!world.isAirBlock(at)||world.getTileEntity(at)!=null)return false;}return true;}
-    public static void notify(WorldServer world,VehicleStructure snapshot,BlockPos origin){for(VehicleStructure.Cell cell:snapshot.cells){BlockPos at=origin.add(cell.pos);world.checkLight(at);IBlockState state=world.getBlockState(at);world.notifyBlockUpdate(at,Blocks.AIR.getDefaultState(),state,3);world.notifyNeighborsOfStateChange(at,state.getBlock(),false);}}
+    /** Ownership and chunk saves finish first; lighting and neighbors consume a small tick budget. */
+    public static void notify(WorldServer world,VehicleStructure snapshot,BlockPos origin){LinkedHashSet<BlockPos> pending=NOTIFICATIONS.computeIfAbsent(world,w->new LinkedHashSet<>());for(VehicleStructure.Cell cell:snapshot.cells)pending.add(origin.add(cell.pos).toImmutable());}
+    @SubscribeEvent public static void tick(TickEvent.WorldTickEvent event){
+        if(event.phase!=TickEvent.Phase.END||!(event.world instanceof WorldServer))return;
+        WorldServer world=(WorldServer)event.world;LinkedHashSet<BlockPos> pending=NOTIFICATIONS.get(world);if(pending==null)return;
+        long deadline=System.nanoTime()+2_000_000L;
+        while(!pending.isEmpty()){Iterator<BlockPos> cursor=pending.iterator();BlockPos at=cursor.next();cursor.remove();
+            if(world.isBlockLoaded(at,false))try{world.checkLight(at);IBlockState state=world.getBlockState(at);world.notifyBlockUpdate(at,Blocks.AIR.getDefaultState(),state,3);world.notifyNeighborsOfStateChange(at,state.getBlock(),false);}catch(RuntimeException failure){com.vandorlabs.VandorLabs.logger.error("Copy/coupling block notification failed at {}",at,failure);}
+            if(System.nanoTime()>=deadline)break;
+        }
+        if(pending.isEmpty())NOTIFICATIONS.remove(world);
+    }
+    @SubscribeEvent public static void unload(WorldEvent.Unload event){NOTIFICATIONS.remove(event.getWorld());}
 }

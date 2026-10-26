@@ -13,7 +13,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = utility26 ]; then
+        if [ "$TARGET" = arm-recovery ]; then
+            PREFIX=arm_recovery_
+            : "${VANDOR_LABS_ARM_RECOVERY_PHASE:?Set the isolated arm recovery phase}"
+        elif [ "$TARGET" = utility26 ]; then
             PREFIX=utility26_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
         elif [ "$TARGET" = bridge-machines ]; then
@@ -125,6 +128,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = arm-recovery ]; then
+        grep -q "arm-durable-recovery PASS" "$RUN_OUT/client.log"
+        echo "Arm restart recovery passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = utility26 ]; then
         grep -q "utility26-focused PASS" "$RUN_OUT/client.log"
         echo "Live utility 2.6 checks passed: $RUN_OUT"

@@ -16,6 +16,7 @@ public final class Gear26ClientChecks {
     private static final int BACK=0x203040;
     private Gear26ClientChecks(){}
     public static void run(Minecraft mc,File output)throws Exception{
+        GearVisualMotion.check();
         for(GearBlock block:PARTS){ItemStack item=new ItemStack(block);if(mc.getRenderItem().getItemModelWithOverrides(item,mc.world,mc.player)==mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel())throw new IllegalStateException("gear26 missing item "+block.getRegistryName());}
         for(String style:new String[]{"compact","armoured","bogie"})for(int mask=0;mask<16;mask++){
             net.minecraftforge.client.model.IModel model=net.minecraftforge.client.model.ModelLoaderRegistry.getModel(new net.minecraft.util.ResourceLocation("vandorlabs:block/track/"+style+"_"+mask));

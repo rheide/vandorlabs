@@ -39,7 +39,7 @@ public final class VehicleCouplings {
     private static void start(EntityGroundVehicle craft){
         if(craft.structure==null||craft.view==null||craft.isDead||craft.ownershipBlocked||craft.transferInProgress||VehicleCouplingTransfer.busy(craft))return;
         BlockPos release=null;List<BlockPos> candidates=new ArrayList<>();
-        for(VehicleStructure.Cell cell:craft.structure.cells)if(cell.state.getBlock() instanceof BlockCoupler){TileCoupler tile=tile(craft,cell.pos);if(tile==null)continue;tile.sample();
+        for(VehicleStructure.Cell cell:craft.structure.couplers){TileCoupler tile=tile(craft,cell.pos);if(tile==null)continue;tile.sample();
             if(hasPair(craft,cell.pos)){TileCoupler other=tile(craft,cell.pos.offset(cell.state.getValue(BlockCoupler.FACING)));if(other!=null&&(!tile.requested()||!other.requested()))release=cell.pos;}
             else if(tile.requested())candidates.add(cell.pos);
         }
@@ -49,10 +49,26 @@ public final class VehicleCouplings {
             VehicleStructure proposed=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);VehicleWorld view=new VehicleWorld(craft.world,proposed);view.hover=craft.hover;BlockPos controller=craft.structure.controller()==null?craft.structure.seat:craft.structure.controller().pos;
             JOBS.put(craft,new Job(craft,actor,release,proposed,VehicleScan.attachment(view,controller,Collections.emptySet()),false));
         }catch(Exception failure){status(craft,release,failure.getMessage());}return;}
+        if(candidates.isEmpty())return;
+        int turns;BlockPos origin;
+        try{
+            turns=VehicleRotation.turns(craft.rotationYaw);
+            VehicleStructure source=craft.structure;
+            int width=(int)source.bounds.maxX,depth=(int)source.bounds.maxZ;
+            int turnedWidth=(turns&1)==0?width:depth,turnedDepth=(turns&1)==0?depth:width;
+            origin=new BlockPos(Math.round(craft.posX+width/2D-turnedWidth/2D),Math.round(craft.posY),Math.round(craft.posZ+depth/2D-turnedDepth/2D));
+        }catch(Exception unavailable){for(BlockPos at:candidates)status(craft,at,unavailable.getMessage());return;}
         for(BlockPos at:candidates)try{
-            TileCoupler source=tile(craft,at);EntityPlayerMP actor=actor(craft,source);craft.signals.persist();VehicleCouplingPlan.Alignment alignment=new VehicleCouplingPlan.Alignment(craft,craft.structure);
-            BlockPos local=VehicleRotation.cell(at,(int)craft.structure.bounds.maxX,(int)craft.structure.bounds.maxZ,alignment.turns);IBlockState state=alignment.placed.at(local).state;EnumFacing face=state.getValue(BlockCoupler.FACING);BlockPos neighbor=alignment.origin.add(local).offset(face);WorldServer world=(WorldServer)craft.world;
+            VehicleStructure source=craft.structure;VehicleStructure.Cell candidate=source.at(at);
+            if(candidate==null||!(candidate.state.getBlock() instanceof BlockCoupler))continue;
+            BlockPos local=VehicleRotation.cell(at,(int)source.bounds.maxX,(int)source.bounds.maxZ,turns);
+            IBlockState probe=candidate.state.withProperty(BlockCoupler.FACING,net.minecraft.util.Rotation.values()[turns].rotate(candidate.state.getValue(BlockCoupler.FACING)));
+            BlockPos neighbor=origin.add(local).offset(probe.getValue(BlockCoupler.FACING));WorldServer world=(WorldServer)craft.world;
             VehicleCouplingPlan.require(world.isBlockLoaded(neighbor,false),"Load the opposing coupler and world section");IBlockState other=world.getBlockState(neighbor);if(!(other.getBlock() instanceof BlockCoupler)){status(craft,at,"Waiting for an opposing world-block coupler");continue;}
+            if(!matching(probe,other)){status(craft,at,"Align opposing coupler faces and slab heights");continue;}
+            TileCoupler sourceTile=tile(craft,at);EntityPlayerMP actor=actor(craft,sourceTile);craft.signals.persist();VehicleCouplingPlan.Alignment alignment=new VehicleCouplingPlan.Alignment(craft,craft.structure);
+            IBlockState state=alignment.placed.at(local).state;neighbor=alignment.origin.add(local).offset(state.getValue(BlockCoupler.FACING));
+            VehicleCouplingPlan.require(world.isBlockLoaded(neighbor,false),"Load the opposing coupler and world section");other=world.getBlockState(neighbor);
             VehicleCouplingPlan.require(matching(state,other),"Align opposing coupler faces and slab heights");TileEntity raw=world.getTileEntity(neighbor);VehicleCouplingPlan.require(raw instanceof TileCoupler,"Opposing coupler data is unavailable");((TileCoupler)raw).sample();VehicleCouplingPlan.require(((TileCoupler)raw).requested(),"Activate both opposing couplers before joining");
             status(craft,at,"Scanning the opposing world section");craft.signals.persist();Set<BlockPos> excluded=new HashSet<>();for(VehicleStructure.Cell cell:craft.structure.cells)excluded.add(alignment.worldCell(craft.structure,cell.pos));
             JOBS.put(craft,new Job(craft,actor,at,null,VehicleScan.attachment(world,neighbor,excluded),true));return;

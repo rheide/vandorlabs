@@ -13,6 +13,7 @@ __pycache__/
 # screenshot/log output from individual runs are local test artifacts.
 /testclient/runtime/
 /testclient/render-run.*/
+/testclient/arm-restart.*/
 /testclient/gallery-run.*/
 /testclient/console-run.*/
 /testclient/shots/

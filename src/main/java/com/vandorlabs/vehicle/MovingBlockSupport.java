@@ -63,7 +63,9 @@ public final class MovingBlockSupport {
             return (type.equals("blusunrize.immersiveengineering.common.blocks.metal.BlockMetalDecoration1")||type.equals("blusunrize.immersiveengineering.common.blocks.metal.BlockMetalDecoration0"))&&meta>=0&&meta<=7
                     ||type.equals("blusunrize.immersiveengineering.common.blocks.wooden.BlockWoodenDecoration")&&meta>=0&&meta<=1;
         }
-        return id.getResourceDomain().equals("mekanism")&&type.equals("mekanism.common.block.BlockPlasticFence");
+        return id.getResourceDomain().equals("mekanism")&&(type.equals("mekanism.common.block.BlockPlasticFence")
+                || block.getClass().getSuperclass().getName().equals("mekanism.common.block.BlockBasic")
+                && (id.getResourcePath().equals("basicblock")||id.getResourcePath().equals("basicblock2")));
     }
     /** Tile-free building materials need no private NBT or external network relocation.
      * Directional states must demonstrate the expected quarter-turn, rather than
@@ -103,6 +105,6 @@ public final class MovingBlockSupport {
         if(before==null)return;
         if(tile==null)throw new IllegalArgumentException("Missing block data for "+cell.state.getBlock().getRegistryName());
         NBTTagCompound after=tile.writeToNBT(new NBTTagCompound());
-        if(!before.equals(after))throw new IllegalArgumentException("Block data cannot be copied without changes: "+cell.state.getBlock().getRegistryName());
+        if(!before.equals(after))throw new IllegalArgumentException("Cannot preserve all block data for "+cell.state.getBlock().getRegistryName()+"; operation cancelled before changing the structure");
     }
 }

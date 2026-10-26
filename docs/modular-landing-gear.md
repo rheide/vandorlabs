@@ -105,11 +105,14 @@ floor mounts point up, and wall mounts point outward. Additional matching arm
 sections inherit the existing column's mounting axis. Placing an arm against a
 landing foot points it toward that foot. Existing saved arms continue to point down.
 
-Use the Configurizer for the arm dialog. Its two columns show input/channel
-controls beside fold direction and payload orientation. Arm travel follows its stacked
-sections: each straight section adds one block of extra travel, so two sections
-extend by two blocks. The dialog has no Angle or Active Reach editors.
-The Off state is the construction pose; the On state extends the stacked column. Redstone modes select ON activates or OFF activates.
+Use the Configurizer for the arm dialog. Input, channels, fold direction and
+payload orientation share one column. The dialog has no Angle or Active Reach editors.
+For standalone regular and Large Extender Arms, Off is the fully extended construction
+pose. On retracts a single section by half a block, leaving clearance for its base.
+Two sections retract by one block; longer stacks retract by one fewer block than
+their section count. Arms never extend beyond their placed length. Redstone modes
+select ON activates or OFF activates. Previously saved mechanisms already moving
+through an older extension stroke retain that stroke until they return to Off.
 The existing landing-foot deployment semantics remain available on landing assemblies.
 Edit the column at its construction pose; stationary Track feet can be removed and replaced without rebuilding the arm.
 
@@ -131,15 +134,21 @@ captured machinery. Blocks cannot include liquids, unbreakable material or movin
 pistons. Slab empty-half contacts follow the vehicle discovery rules.
 
 Whole-block translation endpoints restore ordinary blocks in the world, including
-their saved tile contents. Fractional positions and rotated poses remain captured,
-rendered and collidable, and survive saves. Reversing returns the same attachment
+their saved tile contents. New rotating attachments align to the block grid at
+quarter-turn endpoints. Full blocks with safely representable rotated states can
+materialize there; unsupported rotations and fractional positions remain captured,
+rendered and collidable, and survive saves. Existing snapshots preserve their alignment. Reversing returns the same attachment
 to its construction position. An obstruction pauses the stroke without deleting
 its snapshot. Clear the original position before dismantling an arm that still
 holds captured contents. Breaking its controller drops an arm item containing a
 recovery snapshot; placing that item retains the captured data. If a transfer and
 its rollback both fail, the snapshot stays inert and records the original copied
 cells. Recovery reconciles those exact loaded cells before allowing the snapshot
-to materialize elsewhere, preventing duplicate inventories.
+to materialize elsewhere, preventing duplicate inventories. World transfers write a
+recovery journal before changing blocks. Affected inventories stay locked until
+the changed chunks are durably saved, and interrupted transfers recover on restart.
+Cosmetic animation uses a pause-aware client clock while collision and saved
+motion remain authoritative on the server.
 
 General arms remain usable inside Taxi and Hover craft. Their moving attachments
 use nested retained snapshots, with the same collision and loaded-world checks;
@@ -164,10 +173,10 @@ Attach a Track by clicking the visible end of an arm in its **Off/rest** constru
 pose. This works at the last section of a stacked arm and on every mounting axis.
 The new Track inherits the arm's travel orientation and becomes its native foot,
 including the entire connected tread group. A stationary straight arm at an active,
-whole-block extension endpoint also accepts a Track on its visible outward tip.
+whole-block active endpoint also accepts a Track on its visible outward tip.
 Additional Tracks can be attached by clicking an existing posed Track's side; they inherit its orientation and style.
 The Track is stored at the mechanism's logical rest cell and displayed at the clicked
-pose; the arm retains its extension stroke and does not jump or create a second
+pose; the arm retains its current stroke and does not jump or create a second
 world block. Both the visible placement area and rest cell must be clear and
 editable. Fractional endpoints, moving arms and active rotating poses show an
 explicit error and retain the held item. Return those arms to Off/rest before

@@ -44,11 +44,14 @@ final class BridgeMachineChecks {
         Vec3d delta=target.subtract(player.getPositionEyes(1));player.rotationYaw=player.prevRotationYaw=(float)Math.toDegrees(Math.atan2(-delta.x,delta.z));player.rotationPitch=player.prevRotationPitch=(float)-Math.toDegrees(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)));
         player.rotationYawHead=player.prevRotationYawHead=player.rotationYaw;Vec3d start=player.getPositionEyes(1);RayTraceResult hit=world.rayTraceBlocks(start,start.add(player.getLook(1).scale(5)),false,false,false);
         require(hit!=null&&hit.typeOfHit==RayTraceResult.Type.BLOCK,"standing player ray reaches actual assembly reservation "+mountScenario+" eye="+start+" target="+target+" look="+player.getLook(1)+" hit="+hit);BlockPos cell=hit.getBlockPos();net.minecraft.block.state.IBlockState state=world.getBlockState(cell);if(staleHead)player.rotationYawHead=player.rotationYaw+90;
-        require(state.getBlock().onBlockActivated(world,cell,state,player,EnumHand.MAIN_HAND,hit.sideHit,(float)(hit.hitVec.x-cell.getX()),(float)(hit.hitVec.y-cell.getY()),(float)(hit.hitVec.z-cell.getZ())),"real clicked block handles mount interaction");
+        ItemStack used=player.getHeldItemMainhand();EnumActionResult result=player.interactionManager.processRightClickBlock(player,world,used,EnumHand.MAIN_HAND,cell,hit.sideHit,(float)(hit.hitVec.x-cell.getX()),(float)(hit.hitVec.y-cell.getY()),(float)(hit.hitVec.z-cell.getZ()));
+        // Forge 1.12 returns PASS after successful activation when the supplied stack is empty.
+        require(result==EnumActionResult.SUCCESS||result==EnumActionResult.PASS&&used.isEmpty(),"normal server interaction dispatch handles mount interaction "+mountScenario+" mode="+player.interactionManager.getGameType()+" sneaking="+player.isSneaking()+" held="+player.getHeldItemMainhand());
     }
     private static void placedMounts(WorldServer world,EntityPlayerMP player){
         BlockPos root=new BlockPos(80,100,80);net.minecraft.nbt.NBTTagList inventory=player.inventory.writeToNBT(new net.minecraft.nbt.NBTTagList());Vec3d old=player.getPositionVector();float yaw=player.rotationYaw,pitch=player.rotationPitch,head=player.rotationYawHead,previousHead=player.prevRotationYawHead;boolean creative=player.capabilities.isCreativeMode;int cases=0;
-        try{player.capabilities.isCreativeMode=false;for(FrameMachineDesign spec:FrameMachineDesign.all())for(EnumFacing facing:EnumFacing.HORIZONTALS){
+        net.minecraft.world.GameType oldMode=player.interactionManager.getGameType();boolean oldSneaking=player.isSneaking();
+        try{player.interactionManager.setGameType(net.minecraft.world.GameType.SURVIVAL);player.setSneaking(false);player.capabilities.isCreativeMode=false;for(FrameMachineDesign spec:FrameMachineDesign.all())for(EnumFacing facing:EnumFacing.HORIZONTALS){
             mountScenario=spec.design+" facing="+facing;clear(world,root);world.setBlockState(root.down(),Blocks.STONE.getDefaultState(),2);BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+spec.block);player.rotationYaw=facing.getOpposite().getHorizontalAngle();player.rotationPitch=0;player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(block));
             require(player.getHeldItemMainhand().onItemUse(player,world,root.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"actual Core ItemBlock placement "+spec.design+facing);require(world.getBlockState(root).getValue(BlockVandorDirectional.FACING)==facing,"placed facing retained");frame(world,root,spec,2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);require(tile.assemble(),"item-placed Core forms "+spec.design+facing);
             if(!spec.hasChip()){require(tile.mount()==null&&!tile.accepts(new ItemStack(ModItems.DATA_CHIP)),"unmounted Core never invents chip storage");continue;}
@@ -59,7 +62,7 @@ final class BridgeMachineChecks {
             player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CHIP));aimedClick(world,player,mount.center.addVector(0,.4,0));require(!tile.isEmpty()&&tile.activity()==activity,"held chip on assembly cannot cycle activity when precise socket ray misses "+spec.design+facing);tile.takeForDrop();cases++;
         }
         for(String kind:new String[]{"flat","angled"})for(EnumFacing facing:EnumFacing.HORIZONTALS){mountScenario="navigation_"+kind+" facing="+facing;clear(world,root);world.setBlockState(root.down(),Blocks.STONE.getDefaultState(),2);BlockNavigationTable block=(BlockNavigationTable)Block.getBlockFromName("vandorlabs:navigation_table_"+kind);player.rotationYaw=facing.getOpposite().getHorizontalAngle();player.rotationPitch=0;player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(block));require(player.getHeldItemMainhand().onItemUse(player,world,root.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"actual navigation ItemBlock placement");DeferredTileLoad.flush(world);NavigationAssemblies.around(world,root);TileEntityNavigationTable tile=(TileEntityNavigationTable)world.getTileEntity(root);MachineMountSurface mount=tile.mount();require(mount!=null,"single placed navigation module owns holder");player.setPosition(mount.center.x+mount.normal.x*2.5,root.getY(),mount.center.z+mount.normal.z*2.5);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CHIP));aimedClick(world,player,mount.center);require(!tile.isEmpty(),"navigation actual ray inserts "+kind+facing);player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);aimedClick(world,player,mount.center);require(tile.isEmpty(),"navigation actual ray removes "+kind+facing);cases++;}
-        }finally{clear(world,root);world.setBlockToAir(root.down());player.inventory.readFromNBT(inventory);player.capabilities.isCreativeMode=creative;player.setPosition(old.x,old.y,old.z);player.rotationYaw=yaw;player.rotationPitch=pitch;player.rotationYawHead=head;player.prevRotationYawHead=previousHead;}
+        }finally{player.interactionManager.setGameType(oldMode);player.setSneaking(oldSneaking);clear(world,root);world.setBlockToAir(root.down());player.inventory.readFromNBT(inventory);player.capabilities.isCreativeMode=creative;player.setPosition(old.x,old.y,old.z);player.rotationYaw=yaw;player.rotationPitch=pitch;player.rotationYawHead=head;player.prevRotationYawHead=previousHead;}
         System.out.println("[vandorlabs] placed-machine-mounts PASS cases="+cases+" actual ItemBlock placement standing eye world ray clicked reservations insert/remove no activity or GUI changes");
     }
     private static void chipMachines(WorldServer world,EntityPlayerMP player){
@@ -88,7 +91,7 @@ final class BridgeMachineChecks {
                 world.setTotalWorldTime(world.getTotalWorldTime()+30);
             }
             tile.configure(false,1<<4,0);for(int company=0;company<=6;company++)require(tile.authorized(new ItemStack(ModItems.DATA_CHIP,1,company)),"integrated holder accepts every Data Chip company");require(!tile.authorized(new ItemStack(ModItems.ACCESS_CARD,1,3)),"Data Chip holder still rejects Access Cards");
-            tile.dismantle();require(tile.getOutputLevel()==0,"dismantled core cannot emit chip output");
+            ItemStack eject=new ItemStack(ModItems.DATA_CHIP,1,4);eject.setStackDisplayName("Dismantled "+spec.design);tile.setInventorySlotContents(0,eject);tile.dismantle();tile.dismantle();require(tile.isEmpty()&&tile.getOutputLevel()==0,"dismantled core ejects its chip and cannot emit output");int drops=0;for(net.minecraft.entity.item.EntityItem item:world.getEntitiesWithinAABB(net.minecraft.entity.item.EntityItem.class,new AxisAlignedBB(root).grow(2)))if(item.getItem().getDisplayName().equals(eject.getDisplayName())){drops+=item.getItem().getCount();item.setDead();}require(drops==1,"dismantling emits one complete chip without duplication");
         }}finally{clear(world,root);player.setHeldItem(EnumHand.MAIN_HAND,held);player.capabilities.isCreativeMode=creative;player.setPosition(before.x,before.y,before.z);player.rotationYaw=yaw;player.rotationPitch=pitch;}
         System.out.println("[vandorlabs] integrated-chip-mounts PASS cases="+cases+" authored hits data-only retained chips all companies legacy flags ignored full NBT pending-return recovery zero output dismantling");
     }
@@ -142,7 +145,7 @@ final class BridgeMachineChecks {
         }catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
         System.out.println("[vandorlabs] reverse-hover-steering PASS actual controller steps forward reverse left right");
     }
-    private static boolean runtimeDone;
+    private static boolean runtimeDone,navigationDone;
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(++ticks==1){mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);mc.getToastGui().clear();}
         if(ticks<30)return false;
@@ -158,7 +161,8 @@ final class BridgeMachineChecks {
         }
         com.vandorlabs.client.constructors.MachineMotionChecks.run(mc);UtilityItemRuntimeChecks.run(mc,output);ConstructorRenderLifetimeChecks.run(mc);MachineDisplayVisualChecks.run(mc,output);runtimeDone=true;
         }
-        if(!NavigationClientChecks.tick(mc,output))return false;
+        if(!navigationDone){if(!NavigationClientChecks.tick(mc,output))return false;navigationDone=true;}
+        if(!MachineMountClientChecks.tick(mc))return false;
         System.out.println("[vandorlabs] bridge-machines PASS assembly regressions embedded mount behavior joining models item padding reverse steering");return true;
     }
 }

@@ -64,7 +64,7 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
     /** World-screen navigation changes only transient viewing state, never either retained item. */
     public boolean turnJournalPage(EntityPlayer player,int direction){
         if(world==null||world.isRemote||!usable(player)||direction!=1&&direction!=-1)return false;ProgrammerJournalView view=journalDisplay();if(view==null)return false;
-        int next=Math.max(0,Math.min(journalDisplayPage()+direction,view.pages.size()-1));if(next==displayPage)return true;displayPage=next;changed();return true;
+        int next=Math.max(0,Math.min(journalDisplayPage()+direction,view.pages.size()-1));if(next==displayPage)return true;displayPage=next;visualChanged();return true;
     }
     public boolean program(){
         if(world!=null&&world.isRemote||!canProgram())return false;
@@ -75,7 +75,7 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
     }
     public void configure(boolean type,String text,String[] contents){
         ItemStack input=stacks.get(1);if(!ChipJournal.isChip(input))return;
-        journal=type;title=ChipJournal.bounded(text,ChipJournal.TITLE_LIMIT);for(int i=0;i<pages.length;i++)pages[i]=ChipJournal.bounded(i<contents.length?contents[i]:"",ChipJournal.PAGE_LIMIT);changed();
+        String nextTitle=ChipJournal.bounded(text,ChipJournal.TITLE_LIMIT);boolean different=journal!=type||!title.equals(nextTitle);journal=type;title=nextTitle;for(int i=0;i<pages.length;i++){String next=ChipJournal.bounded(i<contents.length?contents[i]:"",ChipJournal.PAGE_LIMIT);different|=!pages[i].equals(next);pages[i]=next;}if(different)changed();
     }
     private void readDraft(ItemStack input){journal=ChipJournal.isChip(input)&&ChipJournal.journal(input);title=ChipJournal.title(input);for(int i=0;i<pages.length;i++)pages[i]=ChipJournal.page(input,i);}
     /** A socket click exchanges one actual physical token without opening a dialog. */
@@ -87,8 +87,10 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
         player.inventory.markDirty();return true;
     }
     @Override public void markDirty(){displayDirty=true;super.markDirty();}
-    public void changed(){markDirty();journalDisplay();if(world!=null&&!world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
-    @Override public void update(){if(world==null||world.isRemote)return;if(writing>0&&--writing==0){complete=60;changed();}else if(complete>0&&--complete==0)changed();}
+    private boolean fullUpdate;
+    private void visualChanged(){super.markDirty();if(world!=null&&!world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
+    public void changed(){fullUpdate=true;markDirty();journalDisplay();if(world!=null&&!world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
+    @Override public void update(){if(world==null||world.isRemote)return;if(writing>0&&--writing==0){complete=60;visualChanged();}else if(complete>0&&--complete==0)visualChanged();}
     @Override public boolean isProgrammerController(){return world!=null&&!isInvalid()&&world.getTileEntity(pos)==this&&world.getBlockState(pos).getBlock() instanceof ProgrammerBlock&&world.getBlockState(pos).getValue(ProgrammerBlock.PART)==0;}
     @Override public ProgrammerStatus getProgrammerStatus(){return writing>0?ProgrammerStatus.WRITING:complete>0?ProgrammerStatus.COMPLETE:ProgrammerStatus.READY;}
     @Override public EnumFacing getProgrammerFacing(){return world!=null&&world.getBlockState(pos).getBlock() instanceof ProgrammerBlock?world.getBlockState(pos).getValue(ProgrammerBlock.FACING):EnumFacing.NORTH;}
@@ -97,8 +99,9 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ItemStackHelper.saveAllItems(tag,stacks);tag.setBoolean("Journal",journal);tag.setString("Title",title);NBTTagList list=new NBTTagList();for(String page:pages)list.appendTag(new NBTTagString(page));tag.setTag("Pages",list);tag.setInteger("Writing",writing);tag.setInteger("Complete",complete);return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);stacks.clear();ItemStackHelper.loadAllItems(tag,stacks);journal=ChipJournal.isChip(stacks.get(1))&&tag.getBoolean("Journal");title=ChipJournal.bounded(tag.getString("Title"),ChipJournal.TITLE_LIMIT);NBTTagList list=tag.getTagList("Pages",8);for(int i=0;i<pages.length;i++)pages[i]=ChipJournal.bounded(i<list.tagCount()?list.getStringTagAt(i):"",ChipJournal.PAGE_LIMIT);writing=Math.max(0,Math.min(20,tag.getInteger("Writing")));complete=Math.max(0,Math.min(60,tag.getInteger("Complete")));displayDirty=true;displayKey=null;journalDisplay();displayPage=display==null?0:Math.max(0,Math.min(tag.getInteger("JournalDisplayPage"),display.pages.size()-1));}
     @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.setInteger("JournalDisplayPage",journalDisplayPage());return tag;}
-    @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
-    @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}
+    @Override public SPacketUpdateTileEntity getUpdatePacket(){NBTTagCompound tag;if(fullUpdate){tag=getUpdateTag();fullUpdate=false;}else{tag=new NBTTagCompound();tag.setBoolean("VisualOnly",true);tag.setInteger("Writing",writing);tag.setInteger("Complete",complete);tag.setInteger("JournalDisplayPage",journalDisplayPage());}return new SPacketUpdateTileEntity(pos,0,tag);}
+    @Override @SideOnly(Side.CLIENT) public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){applyUpdateTag(packet.getNbtCompound());}
+    void applyUpdateTag(NBTTagCompound tag){if(tag.getBoolean("VisualOnly")){writing=Math.max(0,Math.min(20,tag.getInteger("Writing")));complete=Math.max(0,Math.min(60,tag.getInteger("Complete")));ProgrammerJournalView view=journalDisplay();displayPage=view==null?0:Math.max(0,Math.min(tag.getInteger("JournalDisplayPage"),view.pages.size()-1));}else readFromNBT(tag);}
     @Override public int getSizeInventory(){return 3;}
     @Override public boolean isEmpty(){for(ItemStack s:stacks)if(!s.isEmpty())return false;return true;}
     @Override public ItemStack getStackInSlot(int slot){return stacks.get(slot);}

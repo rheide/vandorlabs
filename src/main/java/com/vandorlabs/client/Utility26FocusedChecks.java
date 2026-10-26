@@ -23,6 +23,7 @@ final class Utility26FocusedChecks {
             check(problems,"arms and tracks",()->com.vandorlabs.gear.Gear26RuntimeChecks.run(world,actor));
             check(problems,"surface appearance",()->com.vandorlabs.surface.SurfaceRuntimeChecks.run(world,actor));
             check(problems,"moving block exact snapshots",()->com.vandorlabs.vehicle.MovingSupportRuntimeChecks.run(world));
+            check(problems,"previous-release vehicle snapshots",()->com.vandorlabs.vehicle.VehicleUpgradeChecks.run(world));
             check(problems,"attachment scan",()->com.vandorlabs.vehicle.AttachmentScanRuntimeChecks.run(world));
             check(problems,"Taxi support radius and wheelbase",()->com.vandorlabs.vehicle.VehicleSteeringChecks.run(world));
             check(problems,"stacked complete vehicles",()->com.vandorlabs.vehicle.VehicleStackChecks.run(world,actor));

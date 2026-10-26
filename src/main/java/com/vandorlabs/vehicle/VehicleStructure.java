@@ -19,7 +19,7 @@ public final class VehicleStructure {
         public final IBlockState state;
         private final NBTTagCompound tile;
         public Cell(BlockPos pos,IBlockState state,NBTTagCompound tile) {
-            this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:tile.copy();
+            this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:com.vandorlabs.ramp.RampCopyData.canonicalizeSets(tile.copy());
         }
         public NBTTagCompound tileData(){return tile==null?null:tile.copy();}
         public boolean hasTileData(){return tile!=null;}
@@ -43,13 +43,39 @@ public final class VehicleStructure {
     private final List<BlockPos> pilotSeats;
     private final List<BlockPos> passengerSeats;
     private final Cell controller;
-    public final List<Cell> liftCells,exhaustCells,gearCovers;
+    public final List<Cell> liftCells,exhaustCells,gearCovers,couplers;
     public final boolean hasThruster,hasNonWheeledGear,hasSkisOnly;
     public final boolean displayOnly;
     private VehicleWorld componentView;
     private Set<BlockPos> activeCells;
     private boolean derivingComponents;
     private final boolean splitComponents;
+    private int encodedLength=-1;
+    private static int tileLength(NBTTagCompound tile) throws IOException {
+        NBTTagCompound wrapper=new NBTTagCompound();
+        if(tile!=null)wrapper.setTag("Tile",tile);
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();
+        CompressedStreamTools.write(wrapper,new DataOutputStream(bytes));
+        return bytes.size();
+    }
+    /** NBT palette and block headers are identical when only tile contents change. */
+    public int lengthWithTiles(Map<BlockPos,NBTTagCompound> changed) throws IOException {
+        if(encodedLength<0)encode();
+        long length=encodedLength;
+        for(Map.Entry<BlockPos,NBTTagCompound> entry:changed.entrySet()){
+            Cell old=at(entry.getKey());
+            if(old==null)throw new IOException("Unknown vehicle cell");
+            length+=(long)tileLength(entry.getValue())-tileLength(old.tile);
+        }
+        if(length<0||length>Integer.MAX_VALUE)throw new IOException("Invalid vehicle data length");
+        return (int)length;
+    }
+    void inheritEncodedLength(VehicleStructure before) {
+        if(before.encodedLength<0||before.cells.size()!=cells.size()||before.gearCount!=gearCount||before.facing!=facing||!before.seat.equals(seat)||before.displayOnly!=displayOnly)return;
+        Map<BlockPos,NBTTagCompound> changed=new LinkedHashMap<>();
+        for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state)return;if(!cell.sameTileData(old))changed.put(cell.pos,cell.tile);}
+        try{encodedLength=before.lengthWithTiles(changed);}catch(IOException invalid){encodedLength=-1;}
+    }
     void componentView(VehicleWorld view){if(componentView==null){componentView=view;activeFootKinds=-1;}}
     void inheritComponents(VehicleStructure before){
         if(before.activeCells==null||before.cells.size()!=cells.size())return;
@@ -91,7 +117,7 @@ public final class VehicleStructure {
         if(cells.isEmpty()&&!displayOnly||cells.size()>MAX_BLOCKS||!facing.getAxis().isHorizontal()||gearCount<1&&!displayOnly)
             throw new IllegalArgumentException("Invalid vehicle structure");
         Map<BlockPos,Cell> positions=new LinkedHashMap<>();
-        List<BlockPos> seats=new ArrayList<>(),passengers=new ArrayList<>();List<Cell> lifts=new ArrayList<>(),exhausts=new ArrayList<>(),covers=new ArrayList<>();boolean thruster=false,nonWheeled=false,skis=false,otherFeet=false;Cell control=null;
+        List<BlockPos> seats=new ArrayList<>(),passengers=new ArrayList<>();List<Cell> lifts=new ArrayList<>(),exhausts=new ArrayList<>(),covers=new ArrayList<>(),couplerCells=new ArrayList<>();boolean thruster=false,nonWheeled=false,skis=false,otherFeet=false;Cell control=null;
         int x=0,y=0,z=0;
         for(Cell cell:cells) {
             if(cell.pos.getX()<0||cell.pos.getY()<0||cell.pos.getZ()<0
@@ -108,6 +134,7 @@ public final class VehicleStructure {
             else if(gear instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear){if(((com.vandorlabs.blocks.BlockNonWheeledLandingGear)gear).ski)skis=true;else otherFeet=true;}
             else if(gear instanceof com.vandorlabs.blocks.BlockLandingGear||gear instanceof com.vandorlabs.blocks.BlockWheel)otherFeet=true;
             if(gear instanceof com.vandorlabs.blocks.BlockProgrammableTrapdoor&&cell.tile!=null&&cell.tile.getBoolean("TrapdoorCover"))covers.add(cell);
+            if(gear instanceof com.vandorlabs.coupler.BlockCoupler)couplerCells.add(cell);
             if(VehicleFlight.exhaust(cell.state.getBlock()))exhausts.add(cell);
             if(VehicleFlight.lift(cell.state.getBlock()))lifts.add(cell);
             else if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight)thruster=true;
@@ -117,7 +144,7 @@ public final class VehicleStructure {
             throw new IllegalArgumentException("Missing pilot seat");
         this.splitComponents=cells.stream().filter(c->c.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController).limit(2).count()>1;
         this.cells=Collections.unmodifiableList(new ArrayList<>(cells));this.byPosition=Collections.unmodifiableMap(positions);
-        this.pilotSeats=Collections.unmodifiableList(seats);this.passengerSeats=Collections.unmodifiableList(passengers);this.controller=control;this.gearCovers=Collections.unmodifiableList(covers);this.liftCells=Collections.unmodifiableList(lifts);this.exhaustCells=Collections.unmodifiableList(exhausts);this.hasThruster=thruster;this.hasNonWheeledGear=nonWheeled;this.hasSkisOnly=skis&&!otherFeet;
+        this.pilotSeats=Collections.unmodifiableList(seats);this.passengerSeats=Collections.unmodifiableList(passengers);this.controller=control;this.gearCovers=Collections.unmodifiableList(covers);this.couplers=Collections.unmodifiableList(couplerCells);this.liftCells=Collections.unmodifiableList(lifts);this.exhaustCells=Collections.unmodifiableList(exhausts);this.hasThruster=thruster;this.hasNonWheeledGear=nonWheeled;this.hasSkisOnly=skis&&!otherFeet;
         this.seat=seat.toImmutable();this.facing=facing;this.gearCount=gearCount;this.bounds=new AxisAlignedBB(0,0,0,x,y,z);this.displayOnly=displayOnly;
     }
     public Cell at(BlockPos pos){return byPosition.get(pos);}
@@ -205,6 +232,13 @@ public final class VehicleStructure {
             if("vandorlabs:programmable_ramp".equals(saved.getString("Name")) && !saved.getCompoundTag("Properties").hasKey("mode")){
                 saved=saved.copy();NBTTagCompound properties=saved.getCompoundTag("Properties");properties.setString("mode","0");saved.setTag("Properties",properties);
             }
+            // 2.5 hexagonal engines had no listed connected-part property. Ordinary
+            // chunk metadata already defaults to SINGLE; saved vehicle/turntable palettes need it too.
+            if(Arrays.asList("vandorlabs:rocket_thruster_hexagonal","vandorlabs:ion_drive_hexagonal",
+                    "vandorlabs:plasma_vent_hexagonal","vandorlabs:impulse_engine_hexagonal").contains(saved.getString("Name"))
+                    && !saved.getCompoundTag("Properties").hasKey("part")){
+                saved=saved.copy();NBTTagCompound properties=saved.getCompoundTag("Properties");properties.setString("part","single");saved.setTag("Properties",properties);
+            }
             net.minecraft.util.ResourceLocation name=new net.minecraft.util.ResourceLocation(saved.getString("Name"));
             if(!net.minecraft.block.Block.REGISTRY.containsKey(name))throw new IllegalArgumentException("Missing vehicle block "+name);
             IBlockState parsed=NBTUtil.readBlockState(saved);
@@ -222,7 +256,7 @@ public final class VehicleStructure {
             @Override public void write(int value)throws IOException{if(++size>MAX_NBT_BYTES)throw new IOException("Vehicle data exceeds 4 MiB");out.write(value);}
             @Override public void write(byte[] b,int off,int len)throws IOException{size+=len;if(size>MAX_NBT_BYTES)throw new IOException("Vehicle data exceeds 4 MiB");out.write(b,off,len);}
         });
-        CompressedStreamTools.write(write(),output);output.flush();return bytes.toByteArray();
+        CompressedStreamTools.write(write(),output);output.flush();encodedLength=bytes.size();return bytes.toByteArray();
     }
     public static VehicleStructure decode(byte[] bytes)throws IOException {
         if(bytes.length>MAX_NBT_BYTES)throw new IOException("Oversize vehicle snapshot");

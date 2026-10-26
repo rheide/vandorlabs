@@ -31,6 +31,9 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
             GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.enableTexture2D();GlStateManager.enableAlpha();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.depthFunc(GL11.GL_LEQUAL);
             bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.disableCull();GlStateManager.disableLighting();GlStateManager.enableDepth();GlStateManager.depthMask(true);GlStateManager.disableBlend();GlStateManager.color(1,1,1,1);
             GlStateManager.translate(x-tile.getPos().getX()+layout.pivot.x,y-tile.getPos().getY()+layout.pivot.y,z-tile.getPos().getZ()+layout.pivot.z);
+            // Bias each decal layer in depth-buffer units: tiny world-space gaps
+            // collapse at distance and at grazing angles. TurntableRenderState restores GL state.
+            GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             draw(sprite,layout,false,.002,light,tile.textureLayout);
             if(controller!=null){GlStateManager.rotate((float)-controller.angle(partial),face.x,face.y,face.z);draw(sprite,layout,true,.003,light,tile.textureLayout);}
         }finally{GlStateManager.popMatrix();}
@@ -39,7 +42,9 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.setTranslation(0,0,0);
         // A real opaque atlas sprite supplies Fit margins and backs material cutouts, including with shaders.
         TextureAtlasSprite black=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("minecraft:blocks/concrete_black");
+        GL11.glPolygonOffset(disc?-3F:-1F,disc?-3F:-1F);
         buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());SurfaceTextureMesh.get(black,layout.size,0,disc).draw(buffer,layout.basis,black,depth-.0001,light);Tessellator.getInstance().draw();
+        GL11.glPolygonOffset(disc?-4F:-2F,disc?-4F:-2F);
         buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());SurfaceTextureMesh.get(sprite,layout.size,mode,disc).draw(buffer,layout.basis,sprite,depth,light);Tessellator.getInstance().draw();
     }
 }

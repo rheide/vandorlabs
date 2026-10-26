@@ -45,7 +45,7 @@ public final class ForeignCompatibility26Checks {
                 if(!block.hasTileEntity(state)){
                     if(RampMaterials.isScaffolding(state))scaffolds++;
                     String type=block.getClass().getName();
-                    if(type.equals(IE+"metal.BlockMetalDecoration0")||type.equals(IE+"metal.BlockMetalDecoration1")||type.equals(IE+"wooden.BlockWoodenDecoration")||type.equals("mekanism.common.block.BlockPlasticFence"))building.add(state);
+                    if(type.equals(IE+"metal.BlockMetalDecoration0")||type.equals(IE+"metal.BlockMetalDecoration1")||type.equals(IE+"wooden.BlockWoodenDecoration")||type.equals("mekanism.common.block.BlockPlasticFence")||block.getClass().getSuperclass().getName().equals("mekanism.common.block.BlockBasic"))building.add(state);
                     continue;
                 }
                 TileEntity tile=block.createTileEntity(world,state);if(tile==null)continue;

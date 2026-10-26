@@ -54,23 +54,25 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
         }
         return cachedGroup;
     }
+    private boolean groupPending;
     public void setGroup(SquareLayout layout){
-        groupOffset=layout.cell(0,0,0).subtract(pos);groupSize=layout.size;groupNormal=layout.normal.getIndex();cachedGroup=layout;changed();
+        BlockPos next=layout.cell(0,0,0).subtract(pos);boolean different=!next.equals(groupOffset)||groupSize!=layout.size||groupNormal!=layout.normal.getIndex();
+        groupOffset=next;groupSize=layout.size;groupNormal=layout.normal.getIndex();cachedGroup=layout;if(different)changed();
     }
-    public void scheduleGroup(){DeferredTileLoad.schedule(this,this::refreshGroup);}
+    public void scheduleGroup(){groupPending=true;DeferredTileLoad.schedule(this,()->{if(groupPending){groupPending=false;refreshGroup();}});}
     public void refreshGroup(){
         if(world==null||world.isRemote||!world.isBlockLoaded(pos)||!(world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface))return;
         SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled){setGroup(SquareLayout.single(pos,normal()));return;}if(controller!=null){SquareLayout layout=controller.surfaceLayout(pos);if(layout!=null)setGroup(layout);return;}
         Set<BlockPos> members;
         try{members=SquareLayout.connected(world,pos,p->{if(!world.isBlockLoaded(p))return true;TileEntity raw=world.getTileEntity(p);return !(raw instanceof TileEntityTurntableSurface)||((TileEntityTurntableSurface)raw).claimedOwner()==null;});}catch(IllegalArgumentException unloaded){return;}
         SquareLayout layout=null;try{layout=SquareLayout.of(members,normal());}catch(IllegalArgumentException irregular){}
-        for(BlockPos cell:members){TileEntity raw=world.getTileEntity(cell);if(raw instanceof TileEntityTurntableSurface)((TileEntityTurntableSurface)raw).setGroup(layout==null?SquareLayout.single(cell,normal()):layout);}
+        for(BlockPos cell:members){TileEntity raw=world.getTileEntity(cell);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface surface=(TileEntityTurntableSurface)raw;surface.groupPending=false;surface.setGroup(layout==null?SquareLayout.single(cell,normal()):layout);}}
     }
     public void configure(String on,String off,int mode,net.minecraft.entity.player.EntityPlayerMP actor){
         if(world==null||world.isRemote||mode<0||mode>2||!TurntableTextures.valid(on)||!TurntableTextures.valid(off))throw new IllegalArgumentException("Invalid surface appearance");
         SquareLayout layout=appearanceLayout();List<TileEntityTurntableSurface> surfaces=new ArrayList<>();
         for(BlockPos cell:layout.cells){if(!world.isBlockLoaded(cell))throw new IllegalArgumentException("Load the complete surface before configuring it");com.vandorlabs.vehicle.VehicleService.permission(actor,cell);TileEntity raw=world.getTileEntity(cell);if(!(raw instanceof TileEntityTurntableSurface))throw new IllegalArgumentException("Surface layout changed");surfaces.add((TileEntityTurntableSurface)raw);}
-        for(TileEntityTurntableSurface surface:surfaces){surface.surfaceOn=on;surface.surfaceOff=off;surface.textureLayout=mode;surface.configured=true;surface.setGroup(layout);}
+        for(TileEntityTurntableSurface surface:surfaces){surface.surfaceOn=on;surface.surfaceOff=off;surface.textureLayout=mode;surface.configured=true;surface.setGroup(layout);surface.changed();}
     }
     private void changed(){markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}}
     @Override public void onLoad(){super.onLoad();cachedGroup=null;scheduleGroup();}

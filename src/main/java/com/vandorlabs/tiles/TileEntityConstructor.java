@@ -102,6 +102,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(world==null || world.isRemote || changing || !formed())return;
         changing=true;
         try{
+            TokenSlotInteractions.drop(world,pos);
             Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
             for(int y=0;y<core().height;y++)for(int x=0;x<core().width;x++)for(int z=0;z<core().depth;z++){
                 BlockPos p=cell(x,y,z);if(p.equals(pos) || !world.isBlockLoaded(p))continue;TileEntity part=world.getTileEntity(p);

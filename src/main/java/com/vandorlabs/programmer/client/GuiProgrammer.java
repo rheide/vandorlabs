@@ -13,7 +13,7 @@ import java.util.List;
 
 /** Compact inventory and journal pages share the same three physical machine slots. */
 public class GuiProgrammer extends GuiContainer {
-    private static final int PAPER_TOP=113,PAPER_BOTTOM=161;
+    private static final int PAPER_TOP=126,PAPER_BOTTOM=164;
     private final ProgrammerContainer container;
     private GuiTextField title;
     private final String[] pages=new String[ChipJournal.MAX_PAGES];
@@ -31,15 +31,15 @@ public class GuiProgrammer extends GuiContainer {
     }
     @Override public void initGui(){
         String oldTitle=title==null?container.tile.title:title.getText();super.initGui();Keyboard.enableRepeatEvents(true);
-        title=new GuiTextField(0,fontRenderer,guiLeft+49,guiTop+82,188,18);title.setMaxStringLength(ChipJournal.TITLE_LIMIT);title.setText(oldTitle);
-        buttonList.add(inventoryTab=new GuiButton(5,guiLeft+15,guiTop+207,72,20,"Inventory"));
-        buttonList.add(journalTab=new GuiButton(6,guiLeft+90,guiTop+207,72,20,"Journal"));
+        title=new GuiTextField(0,fontRenderer,guiLeft+49,guiTop+104,188,18);title.setMaxStringLength(ChipJournal.TITLE_LIMIT);title.setText(oldTitle);
+        buttonList.add(inventoryTab=new GuiButton(5,guiLeft+15,guiTop+80,72,18,"Inventory"));
+        buttonList.add(journalTab=new GuiButton(6,guiLeft+90,guiTop+80,72,18,"Journal"));
         buttonList.add(type=new GuiButton(0,guiLeft+76,guiTop+57,160,20,""));
-        buttonList.add(previous=new GuiButton(1,guiLeft+15,guiTop+165,24,18,"<"));
-        buttonList.add(next=new GuiButton(2,guiLeft+213,guiTop+165,24,18,">"));
-        buttonList.add(done=new GuiButton(7,guiLeft+165,guiTop+207,72,20,"Done"));
-        buttonList.add(program=new GuiButton(4,guiLeft+15,guiTop+185,105,20,"Program"));
-        buttonList.add(copy=new GuiButton(8,guiLeft+130,guiTop+185,107,20,"Copy"));refresh();
+        buttonList.add(previous=new GuiButton(1,guiLeft+15,guiTop+166,24,18,"<"));
+        buttonList.add(next=new GuiButton(2,guiLeft+213,guiTop+166,24,18,">"));
+        buttonList.add(done=new GuiButton(7,guiLeft+165,guiTop+205,72,20,"Done"));
+        buttonList.add(program=new GuiButton(4,guiLeft+15,guiTop+205,72,20,"Program"));
+        buttonList.add(copy=new GuiButton(8,guiLeft+90,guiTop+205,72,20,"Copy"));refresh();
         if(lastSentDraft==null)lastSentDraft=observedDraft=draftKey();
     }
     private void refresh(){
@@ -52,7 +52,7 @@ public class GuiProgrammer extends GuiContainer {
         for(int i=0;i<inventorySlots.inventorySlots.size();i++){
             Slot slot=inventorySlots.inventorySlots.get(i);
             if(i<3){slot.xPos=18+i*90;slot.yPos=38;}
-            else {int j=i-3;slot.xPos=journalPage?-10000:44+(j%9)*18;slot.yPos=j<27?106+(j/9)*18:164;}
+            else {int j=i-3;slot.xPos=journalPage?-10000:44+(j%9)*18;slot.yPos=j<27?104+(j/9)*18:166;}
         }
         if(!journalPage||!journal||!ChipJournal.isChip(container.tile.getStackInSlot(1))){editing=false;title.setFocused(false);}
     }
@@ -79,11 +79,13 @@ public class GuiProgrammer extends GuiContainer {
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{
         if(button==1&&type.enabled&&x>=type.x&&x<type.x+type.width&&y>=type.y&&y<type.y+type.height){journal=!journal;refresh();return;}
+        selectInventoryForSlot(x,y);
         if(journalPage)title.mouseClicked(x,y,button);
         editing=journalPage&&ChipJournal.isChip(container.tile.getStackInSlot(1))&&journal&&x>=guiLeft+15&&x<guiLeft+237&&y>=guiTop+PAPER_TOP&&y<guiTop+PAPER_BOTTOM;
         if(editing){title.setFocused(false);cursor=pages[page].length();selectedAll=false;return;}
         super.mouseClicked(x,y,button);
     }
+    private void selectInventoryForSlot(int x,int y){if(journalPage)for(int i=0;i<3;i++){Slot slot=inventorySlots.inventorySlots.get(i);if(x>=guiLeft+slot.xPos-1&&x<guiLeft+slot.xPos+17&&y>=guiTop+slot.yPos-1&&y<guiTop+slot.yPos+17){journalPage=false;refresh();break;}}}
     private void insert(String value){
         if(selectedAll){pages[page]="";cursor=0;selectedAll=false;}
         String text=pages[page];int room=ChipJournal.PAGE_LIMIT-text.length();String add=ChipJournal.bounded(value,Math.max(0,room));pages[page]=text.substring(0,cursor)+add+text.substring(cursor);cursor+=add.length();
@@ -125,6 +127,10 @@ public class GuiProgrammer extends GuiContainer {
     }
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY){
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xff304858);
+        drawRect(guiLeft+13,guiTop+99,guiLeft+239,guiTop+100,0xff506878);
+        drawRect(guiLeft+13,guiTop+100,guiLeft+14,guiTop+185,0xff506878);
+        drawRect(guiLeft+238,guiTop+100,guiLeft+239,guiTop+185,0xff506878);
+        drawRect(guiLeft+13,guiTop+184,guiLeft+239,guiTop+185,0xff506878);
         if(journalPage){drawRect(guiLeft+14,guiTop+PAPER_TOP-1,guiLeft+238,guiTop+PAPER_BOTTOM+1,editing?0xff506070:0xff777777);drawRect(guiLeft+15,guiTop+PAPER_TOP,guiLeft+237,guiTop+PAPER_BOTTOM,selectedAll?0xff385570:0xff101820);}
         for(int i=0;i<inventorySlots.inventorySlots.size();i++)if(i<3||!journalPage){Slot slot=inventorySlots.inventorySlots.get(i);int x=guiLeft+slot.xPos,y=guiTop+slot.yPos;drawRect(x-1,y-1,x+17,y+17,0xff555555);drawRect(x,y,x+16,y+16,0xff8b8b8b);}
     }
@@ -132,15 +138,15 @@ public class GuiProgrammer extends GuiContainer {
         fontRenderer.drawString("Card / Chip Programmer",15,8,0xffffff);
         fontRenderer.drawString("Master",15,26,0xcdd7e4);fontRenderer.drawString("Input",105,26,0xcdd7e4);fontRenderer.drawString("Output",195,26,0xcdd7e4);fontRenderer.drawString("Chip:",15,63,0xcdd7e4);
         if(journalPage){
-            fontRenderer.drawString("Title:",15,87,0xcdd7e4);String text=ChipJournal.isChip(container.tile.getStackInSlot(1))?(journal?pages[page]:"Master chips authorize company readers."):"Insert a Journal Chip in Input to view or edit its pages.";
+            fontRenderer.drawString("Title:",15,109,0xcdd7e4);String text=ChipJournal.isChip(container.tile.getStackInSlot(1))?(journal?pages[page]:"Master chips authorize company readers."):"Insert a Journal Chip in Input to view or edit its pages.";
             List<String> lines=fontRenderer.listFormattedStringToWidth(text,212),cursorLines=fontRenderer.listFormattedStringToWidth(pages[page].substring(0,cursor)+"_",212);
-            if(editing){if(cursorLines.size()-1<scroll)scroll=Math.max(0,cursorLines.size()-1);if(cursorLines.size()>scroll+5)scroll=cursorLines.size()-5;}
-            scroll=Math.max(0,Math.min(scroll,Math.max(0,lines.size()-5)));int row=0;
-            for(int i=scroll;i<lines.size()&&row<5;i++)fontRenderer.drawString(lines.get(i),20,PAPER_TOP+2+row++*9,0xffffff);
-            if(journal&&editing&&cursorLines.size()>scroll&&cursorLines.size()<=scroll+5){String last=cursorLines.get(cursorLines.size()-1);int width=fontRenderer.getStringWidth(last)-fontRenderer.getStringWidth("_");fontRenderer.drawString("_",20+width,PAPER_TOP+2+(cursorLines.size()-1-scroll)*9,0xa0d8ff);}
+            if(editing){if(cursorLines.size()-1<scroll)scroll=Math.max(0,cursorLines.size()-1);if(cursorLines.size()>scroll+4)scroll=cursorLines.size()-4;}
+            scroll=Math.max(0,Math.min(scroll,Math.max(0,lines.size()-4)));int row=0;
+            for(int i=scroll;i<lines.size()&&row<4;i++)fontRenderer.drawString(lines.get(i),20,PAPER_TOP+2+row++*9,0xffffff);
+            if(journal&&editing&&cursorLines.size()>scroll&&cursorLines.size()<=scroll+4){String last=cursorLines.get(cursorLines.size()-1);int width=fontRenderer.getStringWidth(last)-fontRenderer.getStringWidth("_");fontRenderer.drawString("_",20+width,PAPER_TOP+2+(cursorLines.size()-1-scroll)*9,0xa0d8ff);}
             fontRenderer.drawString("Page "+(page+1)+" / "+pages.length,49,170,0xcdd7e4);
         }
-        String problem=container.tile.getStackInSlot(2).isEmpty()?container.tile.problem(journal):container.tile.copyProblem();fontRenderer.drawString(fontRenderer.trimStringToWidth(problem.isEmpty()?(copy.enabled?"Ready to copy saved Input data":"Ready to program Input"):problem,222),15,journalPage?103:90,problem.isEmpty()?0xa8dbb0:0xff9999);
+        String problem=container.tile.getStackInSlot(2).isEmpty()?container.tile.problem(journal):container.tile.copyProblem();fontRenderer.drawString(fontRenderer.trimStringToWidth(problem.isEmpty()?(copy.enabled?"Ready to copy saved Input data":"Ready to program Input"):problem,222),15,190,problem.isEmpty()?0xa8dbb0:0xff9999);
     }
 
     public static void checkEditor(net.minecraft.client.Minecraft mc,File output)throws Exception{
@@ -152,6 +158,7 @@ public class GuiProgrammer extends GuiContainer {
                 checkLayout(gui,size);
                 for(Slot slot:gui.inventorySlots.inventorySlots){gui.drawScreen(gui.guiLeft+slot.xPos+8,gui.guiTop+slot.yPos+8,0);if(gui.getSlotUnderMouse()!=slot)throw new IllegalStateException("Programmer inventory slot hit "+slot.slotNumber);}
                 captureDialog(mc,output,gui,size,"inventory");
+                for(int i=0;i<3;i++){gui.journalPage=true;gui.refresh();Slot selected=gui.inventorySlots.inventorySlots.get(i);gui.selectInventoryForSlot(gui.guiLeft+selected.xPos+8,gui.guiTop+selected.yPos+8);if(gui.journalPage)throw new IllegalStateException("Blank/populated physical slot selects Inventory "+i);}
                 gui.mouseClicked(gui.journalTab.x+4,gui.journalTab.y+4,0);if(!gui.journalPage)throw new IllegalStateException("Programmer journal tab hit");checkLayout(gui,size);
                 gui.drawScreen(gui.guiLeft+25,gui.guiTop+PAPER_TOP+10,0);if(gui.getSlotUnderMouse()!=null)throw new IllegalStateException("Journal paper overlaps an inventory hit region");
                 gui.mouseClicked(gui.guiLeft+25,gui.guiTop+PAPER_TOP+10,0);gui.keyTyped('A',0);gui.keyTyped('\u03a9',0);gui.keyTyped('\n',Keyboard.KEY_RETURN);gui.keyTyped('B',0);gui.keyTyped('\b',Keyboard.KEY_BACK);
@@ -173,7 +180,7 @@ public class GuiProgrammer extends GuiContainer {
         }
         checkDraftDispatch(mc);
         }finally{mc.player.openContainer=previousContainer;}
-        System.out.println("[vandorlabs][reprolab] programmer-dialog PASS dark bottom Inventory/Journal/Done compact320/ordinary slot/page hits input-only editor Copy-op2 matching-kind committeddata draft-preserved Program/Copy footer autosave");
+        System.out.println("[vandorlabs][reprolab] programmer-dialog PASS separate Inventory/Journal tab row and footer compact320/ordinary slot/page hits input-only editor Copy-op2 matching-kind committeddata draft-preserved Program/Copy footer autosave");
     }
     private static void checkDraftDispatch(net.minecraft.client.Minecraft mc)throws Exception{
         java.util.List<String> events=new java.util.ArrayList<>();ProgrammerTile tile=new ProgrammerTile();ItemStack fixture=new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP);ChipJournal.write(fixture,true,"Fixture",new String[0]);tile.setInventorySlotContents(1,fixture);
@@ -194,7 +201,7 @@ public class GuiProgrammer extends GuiContainer {
     }
     private static void checkLayout(GuiProgrammer gui,int[] size){
         if(gui.guiLeft<0||gui.guiTop<0||gui.guiLeft+gui.xSize>size[0]||gui.guiTop+gui.ySize>size[1])throw new IllegalStateException("Programmer dialog clipped "+size[0]+"x"+size[1]);
-        if(gui.inventoryTab.y!=gui.guiTop+207||gui.journalTab.y!=gui.inventoryTab.y||gui.done.y!=gui.inventoryTab.y||gui.program.y!=gui.guiTop+185||gui.copy.y!=gui.program.y)throw new IllegalStateException("Program/Copy action row and separate bottom navigation row");
+        if(gui.inventoryTab.y!=gui.guiTop+80||gui.journalTab.y!=gui.inventoryTab.y||gui.done.y!=gui.guiTop+205||gui.program.y!=gui.done.y||gui.copy.y!=gui.program.y)throw new IllegalStateException("Tabs below Type and separate footer action row");
         java.util.List<java.awt.Rectangle> regions=new java.util.ArrayList<>();
         for(GuiButton b:gui.buttonList)if(b.visible){if(b.width>200||gui.fontRenderer.getStringWidth(b.displayString)>b.width-4)throw new IllegalStateException("Native programmer button label/width "+b.displayString);regions.add(new java.awt.Rectangle(b.x,b.y,b.width,b.height));}
         for(int i=0;i<gui.inventorySlots.inventorySlots.size();i++)if(i<3||!gui.journalPage){Slot s=gui.inventorySlots.inventorySlots.get(i);regions.add(new java.awt.Rectangle(gui.guiLeft+s.xPos-1,gui.guiTop+s.yPos-1,18,18));}
