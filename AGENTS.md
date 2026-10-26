@@ -29,6 +29,7 @@
 - Follow the existing screen, texture-list and door dialogs for layout and interaction conventions. Texture lists must support both wheel scrolling and dragging their scrollbar.
 - Match the mod's established texture resolutions; do not ship oversized textures. Turntable surface artwork may use a larger resolution because it can span multiple blocks.
 - When adding, removing or recategorizing selectable textures, regenerate the docs browser and category collages with `tools/generate_texture_browser.py`, then run it with `--check`. Keep `docs/texture-browser/` and `docs/texture-overview.md` synchronized with the in-game catalogs.
+- A texture category can also control runtime artwork selection, including turntable low-resolution sprites and Dynmap catalog lookup. Search all consumers of the old category string and run `testDynmapRenderers` plus the focused live picker check before the full release gate.
 - Host the texture browser through this repository's GitHub Pages site, using `master` and `/docs` as recorded in `tools/texture_browser_hosting.json`. Commit regenerated browser assets with texture changes so Pages publishes the same catalog; no separate hosting checkout or upload is needed.
 
 - Keep finished build artifacts in `build/libs/`. Copy a build elsewhere only when the user explicitly requests a destination.

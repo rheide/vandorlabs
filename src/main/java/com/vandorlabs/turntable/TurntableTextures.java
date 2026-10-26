@@ -16,7 +16,7 @@ public final class TurntableTextures {
     public static String normalize(String id,boolean on){return index(id)<0&&material(id)<0?IDS[on?1:0]:id;}
     public static String texture(String id,boolean high){
         int material=material(id);
-        if(material>=0){int choice=material>=com.vandorlabs.tiles.ScreenHousingTextures.IDS.length?material:com.vandorlabs.tiles.ScreenHousingTextures.choiceAt(material);String texture=com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(choice);return !high&&"Surfaces".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice))?texture+"_low":texture;}
+        if(material>=0){int choice=material>=com.vandorlabs.tiles.ScreenHousingTextures.IDS.length?material:com.vandorlabs.tiles.ScreenHousingTextures.choiceAt(material);String texture=com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(choice);return !high&&"Surface".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice))?texture+"_low":texture;}
         int index=index(id);return "vandorlabs:blocks/"+FILES[index<0?0:index]+(high?"":"_low");
     }
     public static String label(String id){int material=material(id);if(material>=0){String label=com.vandorlabs.tiles.ScreenHousingTextures.label(material>=com.vandorlabs.tiles.ScreenHousingTextures.IDS.length?material:com.vandorlabs.tiles.ScreenHousingTextures.choiceAt(material));return label==null?(material>=com.vandorlabs.tiles.ScreenHousingTextures.IDS.length?"Custom":com.vandorlabs.tiles.ScreenHousingTextures.IDS[material].replace('_',' ')):label;}int i=index(id);return LABELS[i<0?0:i];}
