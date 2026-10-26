@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Recapture Rotating Arm platforms at either native endpoint, including folded joined rows. Include replacement blocks in the next stroke, preserve their orientation and contents, and leave mined blocks removed. Keep real obstructions outside the platform blocking movement.
+
 - Keep Rotating Arm sweep clearance within the rotation plane, so touching blocks beside the hinge axis do not falsely block wall-mounted arms. Preserve collision checks against real obstructions.
 
 - Synchronize restored Extender sections after the ownership journal completes, preventing extra standalone arm models after editing a retracted platform on any mounting face. Rebuild surviving joined columns after a distant arm section is removed.

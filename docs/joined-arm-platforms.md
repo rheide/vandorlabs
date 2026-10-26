@@ -104,6 +104,11 @@ corners of its resulting rectangle to be supported and connected.
 
 **Payload: stays level** keeps the platform attached to the swivelling tips
 throughout the stroke. **Payload: rotates** turns it with the arms. At a
-representable endpoint, supported payloads return to ordinary block mode.
+representable endpoint, supported payloads return to ordinary block mode. You can
+remove or replace those blocks while folded as well as extended. The next move
+checks the current platform between the tips: replacements travel with it, removed
+blocks stay removed, and the remaining platform must still connect every support.
+Removing the whole platform leaves empty arms that keep their original length.
+Blocks outside that platform remain in place and can still obstruct the stroke.
 
 ![A level payload attached to its rotating arm](images/joined-arms/level-contact.png)

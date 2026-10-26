@@ -46,13 +46,14 @@ final class JoinedArms {
         return first.sameJoinConfiguration(candidate);
     }
     static Set<BlockPos> platform(GearTileEntity arm){return platform(arm,BlockPos.ORIGIN);}
-    static Set<BlockPos> platform(GearTileEntity arm,BlockPos shift){
+    static Set<BlockPos> platform(GearTileEntity arm,BlockPos shift){return platform(arm,at->at.add(shift));}
+    static Set<BlockPos> platform(GearTileEntity arm,java.util.function.Function<BlockPos,BlockPos> position){
         if(arm.columns().size()<2)throw new IllegalArgumentException("Enable a compatible neighbouring arm first");
         List<JoinedPlatform.Cell> supports=new ArrayList<>();int minX=Integer.MAX_VALUE,minZ=minX,maxX=Integer.MIN_VALUE,maxZ=maxX;
         for(BlockPos column:arm.columns()){BlockPos local=ArmOrientation.inverse(arm.mountDirection(),column);supports.add(new JoinedPlatform.Cell(local.getX(),local.getZ()));minX=Math.min(minX,local.getX());maxX=Math.max(maxX,local.getX());minZ=Math.min(minZ,local.getZ());maxZ=Math.max(maxZ,local.getZ());}
         Set<JoinedPlatform.Cell> occupied=new LinkedHashSet<>();int y=-arm.assembly().columnHeight();
-        for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++){BlockPos at=arm.localCell(x,y,z).add(shift);if(!GearAssembly.loaded(arm.getWorld(),at))throw new IllegalArgumentException("Load the entire joined platform");if(!arm.getWorld().isAirBlock(at)&&(!arm.members().contains(at)||arm.storedSections!=null&&arm.storedSections.at(at.subtract(arm.getPos()))!=null))occupied.add(new JoinedPlatform.Cell(x,z));}
-        Set<BlockPos> result=new LinkedHashSet<>();if(occupied.isEmpty())return result;for(JoinedPlatform.Cell cell:JoinedPlatform.connected(supports,occupied))result.add(arm.localCell(cell.u,y,cell.v).add(shift));return result;
+        for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++){BlockPos at=position.apply(arm.localCell(x,y,z));if(!GearAssembly.loaded(arm.getWorld(),at))throw new IllegalArgumentException("Load the entire joined platform");if(!arm.getWorld().isAirBlock(at)&&(!arm.members().contains(at)||arm.storedSections!=null&&arm.storedSections.at(at.subtract(arm.getPos()))!=null))occupied.add(new JoinedPlatform.Cell(x,z));}
+        Set<BlockPos> result=new LinkedHashSet<>();if(occupied.isEmpty())return result;for(JoinedPlatform.Cell cell:JoinedPlatform.connected(supports,occupied))result.add(position.apply(arm.localCell(cell.u,y,cell.v)));return result;
     }
     static final class Volume {
         final Set<BlockPos> platform;final boolean carry;final int floor,height;int minX=Integer.MAX_VALUE,minZ=minX,maxX=Integer.MIN_VALUE,maxZ=maxX;

@@ -60,3 +60,5 @@
 - Restored arm sections need client tile data after journal proxies are published, even if their block state is unchanged. Endpoint tests must compare client mounting direction and controller ownership and assert only one assembly renderer after partial and complete native-payload mining; server-only block checks miss duplicate standalone models.
 
 - Rotating-arm swept bounds must not grow along the world-space hinge axis. Face contact beside that axis is not an obstruction. Keep the saved wall-mounted pair in the `arm-wall` focus, and verify actual obstructions still refuse safely and permit retry.
+
+- Arm regression coverage must include joined and independent assemblies, regular and Large sizes, all mounting faces and both rotating payload modes. Exercise edits at every materialized endpoint, then reversal and complete payload removal; a successful independent-arm stroke does not establish joined behavior. Keep exact saved-world reproductions in the shared Linux/Windows live focus.

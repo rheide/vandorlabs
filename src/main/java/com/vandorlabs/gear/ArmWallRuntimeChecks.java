@@ -20,7 +20,8 @@ public final class ArmWallRuntimeChecks {
     private static BlockPos root(){return new BlockPos(-75,83+fixture*2,160);}
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("arm-wall fixture="+fixture+" stage="+stage+": "+why);}
     public static boolean tick(Minecraft mc)throws Exception{
-        if(fixture>=2)return true;
+        if(Boolean.getBoolean("vandorlabs.armJoinedWallOnly"))return ArmJoinedWallRuntimeChecks.tick(mc);
+        if(fixture>=2)return ArmJoinedWallRuntimeChecks.tick(mc);
         mc.displayGuiScreen(null);
         if(stage==1&&ticks>20&&!clicked&&mc.playerController.getCurrentGameType()==GameType.CREATIVE&&mc.player.inventory.currentItem==0&&mc.player.getHeldItemMainhand().isEmpty()
                 &&mc.player.getDistanceSq(-71.5,84,157.5)<1&&mc.world.getTileEntity(root()) instanceof GearTileEntity){
@@ -64,7 +65,7 @@ public final class ArmWallRuntimeChecks {
         require(world.getBlockState(root().east(2)).getBlock()==net.minecraft.init.Blocks.STONE,"payload restored exactly once");
         System.out.println("[vandorlabs] arm-wall case PASS "+fixture);
         if(++fixture<2){stage=1;ticks=0;clicked=false;negative=false;return false;}
-        System.out.println("[vandorlabs] arm-wall PASS exact saved pair activation reversal fixed wall touching middle block real obstruction refusal recovery retry");return true;
+        System.out.println("[vandorlabs] arm-wall independent PASS exact saved pair activation reversal fixed wall touching middle block real obstruction refusal recovery retry");return false;
     }
     private static void sweepChecks(WorldServer world,NBTTagCompound saved){
         BlockPos pos=new BlockPos(-60,100,160);int cases=0;

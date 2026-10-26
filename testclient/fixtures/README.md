@@ -52,3 +52,15 @@ checks cover both sizes, six mounts, four fold directions and both payload
 modes, retaining the intermediate stroke while excluding inflation along the
 hinge axis. Run `test_viewscreen.sh --focus arm-wall` on Linux or
 `run_windows.py --focus arm-wall` on Windows.
+
+The same focus imports `arm-wall-joined-2.6.nbt`, retaining the folded joined
+Large Rotating Arms and their two-cell saved payload beside a three-cell native
+platform. Operator identifiers are removed. The check must include the current
+third block, extend and reverse the whole row, refuse a separate obstacle without
+capturing it, and retry after it is removed.
+
+It also exercises 48 live placement combinations: regular/Large Rotating Arms,
+all six mounts, independent/joined columns, and rotating/level payloads. Each
+combination edits the payload at a native endpoint, reverses, mines the whole
+platform, and moves the empty arms without resurrecting blocks. Level-mode cases
+replace a block with a chest and assert preservation of its 37 diamonds.

@@ -80,7 +80,11 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                     if(payload==null){if(!ArmStoredSections.restoreEmpty(this)){payloadPreparationPending=true;return false;}return true;}}
             }
             if(payload==null&&storedSections!=null){if(!ArmStoredSections.restoreEmpty(this)){payloadPreparationPending=true;return false;}}
-            if(mode!=GearMotion.Mode.EXTEND&&progress==1&&joinEnabled&&columns.size()>1&&!ArmTransactions.locked(world,pos)&&(payload==null||payload.materialized())){payload=ArmPayload.discover(this,com.vandorlabs.tiles.WorldActionAuthorization.actor(this));sync();}
+            if(isSwingArmController()&&(progress==0||progress==1)&&!ArmTransactions.locked(world,pos)
+                    &&(payload==null||payload.materialized()&&(joinEnabled&&columns.size()>1||payload.blocks.cells.size()==1))){
+                ArmPayload.Endpoint endpoint=ArmPayload.endpoint(this,progress);
+                if(endpoint!=null){payload=endpoint.capture(com.vandorlabs.tiles.WorldActionAuthorization.actor(this));sync();if(payload==null)return true;}
+            }
             if(payload==null){
                 BlockPos attachment=localCell(0,-assembly.columnHeight(),0);
                 if(!GearAssembly.loaded(world,attachment)){lastError="Load the attachment first";return false;}

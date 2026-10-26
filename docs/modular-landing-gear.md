@@ -160,7 +160,10 @@ cannot be carried. Keep the complete platform and its boundary loaded.
 Whole-block translation endpoints restore ordinary blocks in the world, including
 their saved tile contents. New rotating attachments align to the block grid at
 quarter-turn endpoints. Full blocks with safely representable rotated states can
-materialize there; unsupported rotations and fractional positions remain captured,
+materialize there. At either native endpoint, an independent arm rechecks its tip
+block and joined arms recheck the connected platform between their tips before
+moving. Removed blocks stay removed and replacement blocks travel with the arms;
+unsupported rotations and fractional positions remain captured,
 rendered and collidable, and survive saves. Existing snapshots preserve their alignment. Reversing returns the same attachment
 to its construction position. An obstruction pauses the stroke without deleting
 its snapshot. Clear the original position before dismantling an arm that still
