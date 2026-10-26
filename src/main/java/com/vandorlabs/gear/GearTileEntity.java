@@ -536,7 +536,11 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             TileEntity raw = world.getTileEntity(member);
             if (!(raw instanceof GearTileEntity)) continue;
             GearTileEntity tile = (GearTileEntity) raw;
-            if (pos.equals(tile.owner)){tile.configure(retainedSettings);tile.clearBinding();}
+            if (pos.equals(tile.owner)){tile.configure(retainedSettings);tile.clearBinding();
+                // Distant joined columns receive no neighbour event when a
+                // section is removed. Re-form them after the removal settles.
+                tile.scheduleRebuild();
+            }
         }
         owner = null;
         sync();

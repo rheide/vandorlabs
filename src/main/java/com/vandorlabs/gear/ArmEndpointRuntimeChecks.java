@@ -17,6 +17,7 @@ public final class ArmEndpointRuntimeChecks {
     private static final int START=fixture;
     private static String clientState="initializing";
     private static boolean clicked;
+    private static String clientSections;
     private static final BlockPos BASE=new BlockPos(1807,110,0);
     private static EnumFacing face(){return EnumFacing.values()[fixture%6];}
     private static Vec3d playerPosition(){return new Vec3d(at(-2,0,-2)).addVector(.5,.5,.5);}
@@ -33,8 +34,23 @@ public final class ArmEndpointRuntimeChecks {
         if(stage==1&&ticks>=15&&!clicked&&mc.playerController.getCurrentGameType()==GameType.CREATIVE&&mc.player.inventory.currentItem==0&&mc.player.getHeldItemMainhand().isEmpty()&&mc.player.getDistanceSq(playerPosition().x,playerPosition().y,playerPosition().z)<1&&mc.world.getBlockState(BASE).getBlock()==block()){
             mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock(BASE,face(),EnumHand.MAIN_HAND,.5F,.5F,.5F));clicked=true;
         }
+        clientSections=clientSections(mc);
         clientState="mode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" position="+mc.player.getPosition()+" clicked="+clicked;
         return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
+    }
+    private static String clientSections(Minecraft mc){
+        net.minecraft.tileentity.TileEntity raw=mc.world.getTileEntity(BASE);
+        GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;
+        if(root==null||!root.isOperational())return "client controller unavailable";
+        int visible=0;
+        for(int x:new int[]{0,2})for(int z:new int[]{0,3})for(int n=0;n<2;n++){
+            BlockPos pos=at(x,-n,z);raw=mc.world.getTileEntity(pos);
+            if(!(raw instanceof GearTileEntity))return "missing client section "+pos;
+            GearTileEntity tile=(GearTileEntity)raw;
+            if(tile.mountDirection()!=face()||tile.loadedController()!=root)return "client section "+pos+" mount="+tile.mountDirection()+" owner="+tile.owner()+" expected mount="+face()+" root="+root.getPos();
+            if(com.vandorlabs.gear.client.GearRenderer.visible(tile))visible++;
+        }
+        return visible==1?null:"client draws "+visible+" arm assembly models";
     }
     private static boolean run(WorldServer world,EntityPlayerMP player){
         if(++ticks%100==0){net.minecraft.tileentity.TileEntity raw=world.getTileEntity(BASE);GearTileEntity control=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;System.out.println("[vandorlabs] arm-endpoint progress fixture="+fixture+" stage="+stage+" tick="+ticks+" root="+(control==null?"none":control.getPos()+" progress="+control.progress()+" operational="+control.isOperational()+" target="+control.target()+" stored="+control.hasStoredSections()+" payload="+(control.payload()==null?"none":control.payload().materialized())+" locked="+ArmTransactions.locked(world,control.getPos())+" error="+control.error()));}
@@ -64,7 +80,8 @@ public final class ArmEndpointRuntimeChecks {
         }
         if(stage==3){if(ticks<25)return false;require(arm.isOperational()&&arm.progress()==0&&arm.assembly().columnHeight()==2,"reload preserves retracted two-section columns");require(!player.interactionManager.tryHarvestBlock(BASE)&&world.getTileEntity(BASE)!=null,"retracted arm sections stay protected while platform cells remain editable");require(player.interactionManager.tryHarvestBlock(at(1,-1,2)),"mine ordinary interior platform cell");stage=4;ticks=0;return false;}
         if(stage==4){if(ticks<5)return false;arm.target(true);stage=5;ticks=0;return false;}
-        if(stage==5){if(arm.progress()!=1||arm.payload()==null||!arm.payload().materialized())return false;require(world.isAirBlock(at(1,-2,2)),"mined block is not recreated");for(int x:new int[]{0,2})for(int z:new int[]{0,3})require(world.getBlockState(at(x,-1,z)).getBlock()==block(),"stored arm sections return on extension");require(((net.minecraft.inventory.IInventory)world.getTileEntity(at(1,-2,1))).getStackInSlot(0).getCount()==37,"chest inventory preserved on reverse");arm.target(false);stage=6;ticks=0;return false;}
+        if(stage==5){if(arm.progress()!=1||arm.payload()==null||!arm.payload().materialized())return false;require(world.isAirBlock(at(1,-2,2)),"mined block is not recreated");for(int x:new int[]{0,2})for(int z:new int[]{0,3})require(world.getBlockState(at(x,-1,z)).getBlock()==block(),"stored arm sections return on extension");require(((net.minecraft.inventory.IInventory)world.getTileEntity(at(1,-2,1))).getStackInSlot(0).getCount()==37,"chest inventory preserved on reverse");stage=18;ticks=0;return false;}
+        if(stage==18){if(ticks<20)return false;require(clientSections==null,"restored sections after partial mining: "+clientSections);arm.target(false);stage=6;ticks=0;return false;}
         if(stage==6){if(arm.progress()!=0||arm.payload()==null||!arm.payload().materialized())return false;
             place(world,player,at(1,-1,2),Blocks.GOLD_BLOCK);require(player.interactionManager.tryHarvestBlock(at(1,-1,0))&&player.interactionManager.tryHarvestBlock(at(0,-1,1)),"disconnect one corner");stage=9;ticks=0;return false;}
         if(stage==9){if(ticks<5)return false;arm.target(true);stage=10;ticks=0;return false;}
@@ -77,7 +94,7 @@ public final class ArmEndpointRuntimeChecks {
         if(stage==15){if(ticks<25)return false;require(arm.columns().size()==4,"rebuilt matching corner rejoins automatically");arm.target(false);stage=16;ticks=0;return false;}
         if(stage==16){if(arm.progress()!=0||arm.payload()==null||!arm.payload().materialized())return false;arm.target(true);stage=17;ticks=0;return false;}
         if(stage==17){if(arm.progress()!=1||arm.payload()==null||!arm.payload().materialized())return false;return next();}
-        if(arm.progress()!=1)return false;require(arm.payload()==null&&arm.assembly().columnHeight()==2,"empty arms extend at original length");for(int x=0;x<3;x++)for(int z=0;z<4;z++)require(world.isAirBlock(at(x,-2,z)),"empty extension creates no payload");
+        if(arm.progress()!=1)return false;if(stage==8){stage=19;ticks=0;return false;}if(ticks<20)return false;require(clientSections==null,"restored sections after complete mining: "+clientSections);require(arm.payload()==null&&arm.assembly().columnHeight()==2,"empty arms extend at original length");for(int x=0;x<3;x++)for(int z=0;z<4;z++)require(world.isAirBlock(at(x,-2,z)),"empty extension creates no payload");
         if(fixture%6==0){require(player.interactionManager.tryHarvestBlock(at(2,-1,3)),"remove an extended corner section");stage=13;ticks=0;return false;}return next();
     }
     private static boolean next(){

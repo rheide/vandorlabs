@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Synchronize restored Extender sections after the ownership journal completes, preventing extra standalone arm models after editing a retracted platform on any mounting face. Rebuild surviving joined columns after a distant arm section is removed.
+
 - Restore grid-aligned retracted Extender platforms as normal blocks on every mounting face, preserving displaced arm sections separately. Recheck edited platforms before movement; mined blocks stay removed, new platform blocks travel, and empty arms retain their length.
 
 - Keep unjoined Rotating Arm payloads separate from touching support frames, ignore mismatched neighbouring arm columns, retain configuration dialogs when a joined controller changes, and restore the ordinary selection outline for inert arms. Exercise native middle-click placement, adjacent rotating frames and dismantling.

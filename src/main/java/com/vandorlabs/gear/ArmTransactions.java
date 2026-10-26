@@ -53,7 +53,7 @@ public final class ArmTransactions {
     private static boolean rejectPreparation(Hold hold,Exception failure){
         Throwable cause=failure instanceof ExecutionException?failure.getCause():failure;if(!(cause instanceof PreparationRejected)||hold.durable||hold.applied||hold.recovering)return false;
         Map<BlockPos,Hold> holds=HOLDS.get(hold.world);if(holds!=null)holds.remove(hold.root,hold);
-        for(BlockPos at:hold.cells)if(!at.equals(hold.root))CopyWorld.publish(hold.world,at);
+        for(BlockPos at:hold.cells)if(!at.equals(hold.root))publish(hold,at);
         TileEntity tile=hold.world.getTileEntity(hold.root);if(tile instanceof GearTileEntity)((GearTileEntity)tile).preparationRejected(cause.getMessage());
         return true;
     }
@@ -116,8 +116,18 @@ public final class ArmTransactions {
         if(hold.record.hasUniqueId("AuthorizationActor"))com.vandorlabs.tiles.WorldActionAuthorization.grant(hold.world.getTileEntity(hold.root),hold.record.getUniqueId("AuthorizationActor"));
         hold.applied=true;hold.recovering=false;
     }
+    private static void publish(Hold hold,BlockPos pos){
+        if(!CopyWorld.frozen(hold.world,pos))return;
+        CopyWorld.publish(hold.world,pos);
+        // The earlier block update can be sent while a frozen journal proxy
+        // owns this cell. It has no tile update packet, so the client may have
+        // only a default arm tile (no owner, DOWN mount). Publish the restored
+        // tile's data after durable completion, even when its state is unchanged.
+        IBlockState state=hold.world.getBlockState(pos);
+        hold.world.notifyBlockUpdate(pos,state,state,2);
+    }
     private static void step(Hold hold)throws Exception{
-        if(hold.error!=null)return;if(!hold.harvestPublished)ArmPayloadHarvest.hold(hold.world,hold.record);for(BlockPos pos:hold.cells)if(!pos.equals(hold.root)&&hold.world.isBlockLoaded(pos,false))freeze(hold,pos);if(!hold.loaded())return;if(hold.io!=null){if(!hold.io.isDone())return;try{hold.io.get();}catch(Exception failure){if(rejectPreparation(hold,failure))return;throw failure;}hold.io=null;hold.durable=true;if(hold.retiring){for(BlockPos pos:hold.cells)if(!pos.equals(hold.root))CopyWorld.publish(hold.world,pos);HOLDS.get(hold.world).remove(hold.root);return;}}
+        if(hold.error!=null)return;if(!hold.harvestPublished)ArmPayloadHarvest.hold(hold.world,hold.record);for(BlockPos pos:hold.cells)if(!pos.equals(hold.root)&&hold.world.isBlockLoaded(pos,false))freeze(hold,pos);if(!hold.loaded())return;if(hold.io!=null){if(!hold.io.isDone())return;try{hold.io.get();}catch(Exception failure){if(rejectPreparation(hold,failure))return;throw failure;}hold.io=null;hold.durable=true;if(hold.retiring){for(BlockPos pos:hold.cells)if(!pos.equals(hold.root))publish(hold,pos);HOLDS.get(hold.world).remove(hold.root);return;}}
         if(!hold.applied&&!hold.recovering&&hold.durable&&hold.record.getString("Operation").equals("harvest")){try{fault("harvest-prepared");ArmPayloadHarvest.apply(hold.world,hold.root,hold.record);hold.applied=true;fault("harvest");}catch(Exception denied){hold.recovering=true;}}
         if(!hold.applied&&!hold.recovering&&hold.durable&&++hold.preparedTicks>=200)hold.recovering=true;
         if(hold.recovering)recover(hold);if(!hold.applied)return;
