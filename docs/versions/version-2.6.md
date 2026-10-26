@@ -1,6 +1,6 @@
 # Vandor Labs 2.6
 
-Version 2.6 adds programmable copying, configurable surfaces and pressure plates, journal programming, reusable arm mechanisms and connected vehicle sections. See the [changelog](../../CHANGELOG.md) for the complete change list.
+Version 2.6 adds programmable copying, configurable surfaces and pressure plates, journal programming, joined arm platforms, reusable arm mechanisms and connected vehicle sections. See the [changelog](../../CHANGELOG.md) for the complete change list.
 
 Arm attachments, Copy Controllers and Vehicle Couplers support Windows and Linux journal handling. An arm keeps its requested motion while the attachment is saved for recovery; a single right-click retracts a stacked Extender Arm with its payload. Pending arm journals recover on world load, restoring access to the affected blocks.
 
@@ -33,6 +33,23 @@ A Journal Chip in Input loads its title and eight text pages into the Journal vi
 ## Arms, tracks and couplers
 
 [Joined arm platforms](../joined-arm-platforms.md) connect matching Extenders across a rectangle, including hollow frames and intermediate supports such as a six-arm 2×3 layout. Enable joining on every arm and choose a neighbour range from 1 to 32 blocks. Rotating Arms join along their common hinge axis and must agree on rotation direction. Vertically moving Extenders can also carry a connected load above the platform, with a separate height setting from 1 to 32 blocks. Vehicles and their inventories can ride within that rectangle and height limit. Joined groups pause when a required member chunk unloads and resume after it returns. Arms and ramps share standing-player transport; arm collision and rider corrections stay synchronized when server ticks are delayed.
+
+| Joined Extenders | Joined Large Rotating Arms |
+| --- | --- |
+| ![Four Extenders moving a hollow platform and chest together](../images/joined-arms/extender-platform.gif) | ![Three Large Rotating Arms folding together with a level platform](../images/joined-arms/rotating-platform.gif) |
+
+Wall mounts use the same joining rules on the two axes perpendicular to travel.
+This sideways frame retracts toward its wall and extends back to its construction
+position. All six mounting faces are supported.
+
+![A joined wall-mounted Extender platform retracting and extending](../images/joined-arms/sideways-extender-platform.gif)
+
+Use one arm type and size per group, with matching lengths and settings. Air holes
+are allowed while the remaining platform connects every supported corner. Editing
+blocks at an aligned retracted endpoint updates the next move: removed blocks stay
+removed, new platform blocks are included, and empty arms keep their original
+length. Extend fully before changing arm sections or joining settings. See the
+[joined-platform building guide](../joined-arm-platforms.md) for the steps and controls.
 
 Unjoined Rotating Arms, like Extenders, select only their tip block. Joined discovery ignores neighbouring arms with different configuration or section counts. The arm dialog stays open when a joined group changes its controller. Inert arms retain their ordinary selection outline.
 
@@ -80,6 +97,6 @@ Vehicles built in 2.5 can still enter Taxi Mode when their Vehicle Controller si
 
 [Joined 2×2 propulsion blocks](../propulsion-shapes.md) can switch between square and hexagonal shapes through their dialog. Two complete 2×2s also join independently when staggered by one row, preserving both groups despite their combined stepped outline. Complete 3×3 hexagonal groups also join, and middle-clicking picks the ordinary single propulsion block.
 
-Ramp Controllers accept all steel and aluminum scaffolding patterns from Immersive Engineering. Additional explicit vehicle adapters cover complete IE posts and watermills, windmills, wallmounts, decorative metal blocks and Toolboxes, as well as Mekanism storage and glow panels. Complete Dynamic Tanks, Dynamic Valves and Structural Glass now support vehicle transport with their shared fluid and inventory, including save/reload and native reformation after parking; see [the supported block list](../vehicle-compatibility.md) for their limits.
+Ramp Controllers accept all steel and aluminum scaffolding patterns from Immersive Engineering. Additional explicit vehicle adapters cover complete IE posts and watermills, windmills, wallmounts, decorative metal blocks and Toolboxes, as well as Mekanism storage and glow panels. Complete Dynamic Tanks, Dynamic Valves and Structural Glass now support vehicle transport with their shared fluid and inventory, including save/reload and native reformation after parking. Unlinked Structural Glass also works as ordinary vehicle building material without a completed tank; see [the supported block list](../vehicle-compatibility.md) for their limits.
 
 [All version guides](README.md) · [Changelog](../../CHANGELOG.md)

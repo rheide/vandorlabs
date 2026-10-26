@@ -32,7 +32,9 @@ and enter channels as comma-separated positive numbers. Zero uses local redstone
 configured lists require all channels to be powered. Fold direction can be
 changed while fully deployed. Manual mode exposes a deployed/stowed target.
 
-Source part blocks remain at their construction positions during animation.
+Landing-foot source blocks remain at their construction positions during animation.
+General Extenders save displaced arm sections separately when an aligned retracted
+payload becomes ordinary world blocks.
 Collision follows the moving feet and linkages, including beyond those cells.
 Movement pauses at a block obstruction or unloaded boundary and resumes when the path
 clears. Contacted entities move with the mechanism instead of stopping it; they can
@@ -106,7 +108,8 @@ sections inherit the existing column's mounting axis. Placing an arm against a
 landing foot points it toward that foot. Existing saved arms continue to point down.
 
 Use the Configurizer for the arm dialog. Input, channels, fold direction and
-payload orientation share one column. The dialog has no Angle or Active Reach editors.
+payload orientation use the same single-page dialog as joining and load settings.
+The dialog has no Angle or Active Reach editors.
 For standalone regular and Large Extender Arms, Off is the fully extended construction
 pose. On retracts a single section by half a block, leaving clearance for its base.
 Two sections retract by one block; longer stacks retract by one fewer block than
@@ -126,12 +129,33 @@ the same mechanism before attaching the payload.
 Arm swings. **Payload: rotates with arm** makes the attachment turn with its linkage;
 this choice also works with landing plates, skis, wheels and tracks.
 
-An ordinary attachment may contain up to 64 connected blocks within a 16-block
-span along each axis. It must be separated from the arm's mounting structure.
-The complete component and its boundary must be loaded. Capture checks editing
-permissions and protection hooks, preserves block and tile data, and pauses
-captured machinery. Blocks cannot include liquids, unbreakable material or moving
-pistons. Slab empty-half contacts follow the vehicle discovery rules.
+An unjoined Extender or Rotating Arm selects its single tip block, leaving
+contacting walls, floors and surrounding blocks in place. Enable **Join Arms**
+on compatible neighbouring columns to move a connected platform instead.
+[Build a joined platform](joined-arm-platforms.md) for the complete construction
+steps, matching settings, range and optional load-height controls. Earlier saved
+multi-block attachments keep their authorized footprint.
+
+| Joined Extenders | Joined Large Rotating Arms |
+| --- | --- |
+| ![Joined Extenders lowering and raising a hollow platform](images/joined-arms/extender-platform.gif) | ![Three joined Large Rotating Arms folding with a level platform](images/joined-arms/rotating-platform.gif) |
+
+Joined Extenders work on floors, ceilings and walls. A rectangle may contain air
+holes, provided its blocks connect every supported corner. Matching intermediate
+arms are allowed, including six-arm 2×3 layouts. Rotating Arms join along their
+hinge axis and share a fold direction. Different arm types, sizes, lengths or
+settings stay independent.
+
+![A joined sideways Extender platform moving away from and back toward its wall](images/joined-arms/sideways-extender-platform.gif)
+
+Retracted Extender platforms at whole-block positions are normal world blocks.
+Mine or replace them there; the next move checks the current connections and
+includes new blocks within the supported rectangle. Removed blocks stay removed.
+An entirely removed platform leaves empty arms with their original section
+counts. Extend fully before removing arm sections or changing the joined group.
+Capture checks editing permissions and protection hooks, preserves tile data,
+and pauses captured machinery. Liquids, unbreakable blocks and moving pistons
+cannot be carried. Keep the complete platform and its boundary loaded.
 
 Whole-block translation endpoints restore ordinary blocks in the world, including
 their saved tile contents. New rotating attachments align to the block grid at

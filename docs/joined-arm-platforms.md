@@ -1,8 +1,27 @@
 # Joined arm platforms
 
 An unjoined Extender or Rotating Arm moves only the block at its tip; touching walls, floors
-and other surrounding blocks stay in place. Extender Arms and Large Extender Arms can share a platform. Rotating Arms and
-Large Rotating Arms can share a platform along their hinge axis.
+and other surrounding blocks stay in place. Both regular and Large Extenders support
+joined platforms across two axes; Rotating Arms join along their hinge axis. Use
+one arm type and size within each group, with matching section counts and settings.
+
+## Joined motion in game
+
+Four Extenders move this hollow 3×4 frame together. The chest rides within the
+selected load height. At each aligned endpoint the platform becomes ordinary
+blocks again, including while retracted.
+
+![Four joined Extenders lowering and raising a hollow platform and chest](images/joined-arms/extender-platform.gif)
+
+A sideways mount uses the same platform layer and joins across the two axes
+perpendicular to travel. Carry load is unavailable for sideways movement.
+
+![Four wall-mounted Extenders retracting and extending a vertical frame](images/joined-arms/sideways-extender-platform.gif)
+
+Three matching Large Rotating Arms share one hinge axis. Their **stays level**
+payload moves with the swivelling tips throughout the fold and return.
+
+![Three joined Large Rotating Arms folding and returning with a level platform](images/joined-arms/rotating-platform.gif)
 
 ## Build an Extender platform
 
@@ -72,10 +91,16 @@ corners of its resulting rectangle to be supported and connected.
 
 ## Joined Rotating Arms
 
-Place matching Rotating Arms in a row along their hinge axis, with the same
-mounting face, section count, fold direction and payload mode. Enable joining
-on every arm. A row can contain three or more arms; Rotating Arms do not join
-across a second platform axis. Connect their tips with one continuous layer.
+1. Place two or more matching Rotating Arm columns in a straight row along
+   their hinge axis. Keep the mounting blocks in place. Use the same arm size,
+   mounting face, section count, fold direction and payload mode.
+2. Connect their extended tips with one face-connected layer of blocks. A row
+   can contain three or more arms, as shown in the animation above.
+3. Enable **Join Arms** on every column and give each the same neighbour range,
+   large enough to reach the next arm (1–32 blocks). Keep their other settings
+   identical too. Rotating Arms join along one axis only.
+4. Close the dialog and activate an arm to fold the whole joined row. Extend
+   fully before changing arm sections or joining settings.
 
 **Payload: stays level** keeps the platform attached to the swivelling tips
 throughout the stroke. **Payload: rotates** turns it with the arms. At a

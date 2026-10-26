@@ -20,9 +20,10 @@ public final class JoinedArmDocumentation {
     private static File directory;
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("joined-arm documentation: "+why);}
     public static boolean tick(Minecraft mc,File output)throws Exception{
-        directory=output;if(done)return true;
+        if(stage<0){mc.gameSettings.renderDistanceChunks=3;mc.gameSettings.clouds=0;mc.gameSettings.enableVsync=false;mc.gameSettings.limitFramerate=60;mc.gameSettings.fancyGraphics=false;}
+        directory=output;if(stage>=6)return JoinedArmAnimationDocumentation.tick(mc,output);if(done)return true;
         if(stage<0||captured){stage++;captured=false;settle=0;
-            if(stage==6){done=true;System.out.println("[vandorlabs] joined-arm-docs PASS six construction configuration and level-contact captures");return true;}
+            if(stage==6)return JoinedArmAnimationDocumentation.tick(mc,output);
             mc.getIntegratedServer().callFromMainThread(()->{
                 WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);world.getGameRules().setOrCreateGameRule("doDaylightCycle","false");world.setWorldTime(6000);world.getWorldInfo().setRaining(false);
                 if(stage==0||stage==5){for(BlockPos at:BlockPos.getAllInBox(ROOT.add(-8,-1,-8),ROOT.add(12,8,12)))world.setBlockState(at,at.getY()==79?Blocks.STONE.getDefaultState():Blocks.AIR.getDefaultState(),2);}
@@ -44,6 +45,6 @@ public final class JoinedArmDocumentation {
         if(stage==4){if(!tile.fullyDeployed())return false;if(!(mc.currentScreen instanceof GuiModularGear)){mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock(ROOT,EnumFacing.UP,EnumHand.MAIN_HAND,.5F,.5F,.5F));return false;}}
         if(pending==null)pending="shot_joined_arm_"+(stage+1)+".png";return false;
     }
-    public static void render(Minecraft mc){if(pending==null)return;try{javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(directory,pending));System.out.println("[vandorlabs] joined-arm-doc-stage "+(stage+1)+" captured");pending=null;captured=true;}catch(java.io.IOException failure){throw new IllegalStateException(failure);}}
+    public static void render(Minecraft mc){if(stage>=6){JoinedArmAnimationDocumentation.render(mc);return;}if(pending==null)return;try{javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(directory,pending));System.out.println("[vandorlabs] joined-arm-doc-stage "+(stage+1)+" captured");pending=null;captured=true;}catch(java.io.IOException failure){throw new IllegalStateException(failure);}}
     private JoinedArmDocumentation(){}
 }
