@@ -310,9 +310,19 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             if(progress==1&&!deployedTarget&&assembly.kind()==GearTopology.FootKind.NONE&&!armRetractingStroke){armRetractingStroke=true;sync();}
             double before = progress;
             double next=GearMotion.advance(progress,deployedTarget,1,ANIMATION_TICKS);
-            boolean blocked=next!=before&&(!preparePayloadMotion()||!GearGeometry.canMove(this,before,next));
+            boolean hadPayload=payload!=null,wasMaterialized=hadPayload&&payload.materialized();
+            boolean prepared=next==before||preparePayloadMotion();
+            boolean blocked=next!=before&&(!prepared||!GearGeometry.canMove(this,before,next));
+            if(blocked&&(before==0||before==1)){
+                String reason=lastError;
+                boolean restored=payload==null||payload.materialized()||before==0&&hadPayload&&!wasMaterialized;
+                if(!restored&&payload!=null&&!payload.hasOwnershipJournal())try{restored=payload.restore(this,before);}catch(RuntimeException | LinkageError failure){lastError="Attachment restore blocked; original snapshot retained";}
+                deployedTarget=before==1;
+                if(restored){motionBlocked=false;lastError=prepared?"Motion blocked; returned to the previous position":reason;sync();com.vandorlabs.network.MessageGearMotion.send(this);return;}
+                motionBlocked=true;lastError="Motion blocked; attachment snapshot retained for recovery";sync();com.vandorlabs.network.MessageGearMotion.send(this);return;
+            }
             if(blocked!=motionBlocked){motionBlocked=blocked;sync();com.vandorlabs.network.MessageGearMotion.send(this);}
-            if(!blocked&&next!=before){GearGeometry.pushEntities(world,GearGeometry.boxes(this,before),GearGeometry.boxes(this,next),null);progress=next;boxesAt=Double.NaN;markDirty();if(progress==0||progress==1){restorePayloadEndpoint();com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(world.getTotalWorldTime()%3==0)com.vandorlabs.network.MessageGearMotion.send(this);}
+            if(!blocked&&next!=before){lastError="";GearGeometry.pushEntities(world,GearGeometry.boxes(this,before),GearGeometry.boxes(this,next),null);progress=next;boxesAt=Double.NaN;markDirty();if(progress==0||progress==1){restorePayloadEndpoint();com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(world.getTotalWorldTime()%3==0)com.vandorlabs.network.MessageGearMotion.send(this);}
         }
     }
 

@@ -32,7 +32,12 @@ public class BlockCoupler extends BlockVandor {
     @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){RayTraceResult closest=null;double distance=Double.POSITIVE_INFINITY;for(AxisAlignedBB box:collisionBoxes(state)){RayTraceResult hit=box.offset(pos).calculateIntercept(start,end);if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);closest=new RayTraceResult(hit.hitVec,hit.sideHit,pos);}}return closest;}
     public static double couplingHeight(IBlockState state){return state.getBlock() instanceof BlockCouplerSlab?(state.getValue(BlockCouplerSlab.HALF)==BlockSlab.EnumBlockHalf.TOP?.75:.25):.5;}
     @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileCoupler)((TileCoupler)tile).sample();}
-    @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,net.minecraft.entity.player.EntityPlayer actor,EnumHand hand,EnumFacing side,float x,float y,float z){if(hand!=EnumHand.MAIN_HAND)return false;ContainerCoupler.open(actor,world,pos);return true;}
+    @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,net.minecraft.entity.player.EntityPlayer actor,EnumHand hand,EnumFacing side,float x,float y,float z){
+        if(hand!=EnumHand.MAIN_HAND)return false;
+        if(actor.isSneaking()||actor.getHeldItemMainhand().getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER)ContainerCoupler.open(actor,world,pos);
+        else if(!world.isRemote&&ContainerCoupler.resolve(actor,world,pos)!=null){net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileCoupler)((TileCoupler)tile).toggleManual(actor);}
+        return true;
+    }
     /** The pair is a boundary if either independent half is released. */
     public static boolean separates(IBlockState a,IBlockState b){return a.getBlock() instanceof BlockCoupler&&b.getBlock() instanceof BlockCoupler&&(!a.getValue(LOCKED)||!b.getValue(LOCKED));}
 }

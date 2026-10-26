@@ -4,12 +4,13 @@
 
 - Restore pre-2.6 Taxi conversion for vehicles whose controller, Pilot Seat, programmable blocks and supported vanilla tiles carry external capability data; keep that opaque data in the saved snapshot while checking each block's own tile settings. Expose all fourteen turntable and surface designs in the Surface category of the shared block texture picker.
 - Preserve pre-2.6 vehicle ramp data by comparing unordered reservation sets consistently; restore older hexagonal propulsion snapshots that predate the connected-part property. Report preservation failures without copier-specific wording.
-- Ease low-speed steering for tracks and small wheels, including slower stationary tracked pivots.
+- Ease low-speed steering for tracks and small wheels, including slower stationary tracked pivots and a gentler crawl-to-roll turn rate.
 - Synchronize frame-machine reservation ownership to clients so clicks on embedded chip holders reach their controller. Eject retained chips once when a frame assembly is dismantled.
-- Separate Programmer Inventory/Journal tabs from actions, put status below the content area, and select Inventory when an item slot is clicked.
+- Toggle Vehicle Couplers with ordinary right-click, while sneak-right-click and the Configurizer open their settings; manual state yields to the next redstone input change.
+- Separate Programmer Inventory/Journal tabs from actions, put status below the content area, and select Inventory when an item slot is clicked. Show eight Journal lines on taller screens and add a draggable page scrollbar.
 - Bias Programmable Surface artwork layers in the depth buffer to prevent distant backing/artwork overlap.
 - Support Mekanism tile-free Basic Block building variants through the shared vehicle, turntable and copier policy; retain restrictions on unsupported connected-machine tiles.
-- Use a single-column arm dialog. Standalone regular/Large Extender Arms retract from their placed maximum: half a block for one section, or whole blocks for longer stacks. Retain older in-flight strokes until they return to their construction pose.
+- Use a single-column arm dialog. Standalone regular/Large Extender Arms retract from their placed maximum: half a block for one section, or whole blocks for longer stacks. Retain older in-flight strokes until they return to their construction pose. Restore the attached block at its previous endpoint when a new stroke is blocked, and keep blocked arm source blocks selectable.
 - Write initial copy and coupling recovery records and copy completion records on a bounded disk worker, rechecking live inputs before transfer. Budget block lighting and neighbor updates after durable publication; inspect only coupler cells when looking for vehicle joins and reuse exact serialized-size accounting for carried chest edits.
 - Preserve housing quad records at the format's declared width under OptiFine and across shader-format changes.
 

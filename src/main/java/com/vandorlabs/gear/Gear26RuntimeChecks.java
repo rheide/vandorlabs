@@ -21,6 +21,14 @@ public final class Gear26RuntimeChecks {
         for(int n=0;n<length;n++){BlockPos at=root.offset(face,n);require(((ItemBlock)Item.getItemFromBlock(block)).placeBlockAt(new ItemStack(block),actor,world,at,face,.5F,.5F,.5F,block.getDefaultState()),"item placement on "+face);}
         GearTileEntity tile=(GearTileEntity)world.getTileEntity(root);require(tile.rebuild(),"bare arm forms "+tile.error());return tile;
     }
+    private static final class MotionObstacle {
+        final WorldServer world;final AxisAlignedBB box;
+        MotionObstacle(WorldServer world,BlockPos at){this.world=world;box=new AxisAlignedBB(at);}
+        @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public void collide(net.minecraftforge.event.world.GetCollisionBoxesEvent event){if(event.getWorld()==world&&event.getAabb().intersects(box))event.getCollisionBoxesList().add(box);}
+    }
+    private static void tickMountedStack(WorldServer world,BlockPos root,int count){
+        for(int tick=0;tick<count;tick++)for(BlockPos at:new BlockPos[]{root,root.up()}){TileEntity raw=world.getTileEntity(at);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
+    }
     public static void run(WorldServer world,EntityPlayerMP actor){try(AutoCloseable matrix=ArmTransactions.matrix()){runMatrices(world,actor);}catch(RuntimeException failure){throw failure;}catch(Exception failure){throw new IllegalStateException(failure);}}
     private static void runMatrices(WorldServer world,EntityPlayerMP actor){
         BlockPos root=new BlockPos(620,170,260);checks=0;
@@ -28,6 +36,7 @@ public final class Gear26RuntimeChecks {
             ArmPayloadSelectionChecks.run(world,actor);
             TrackLifecycleRuntimeChecks.run(world,actor,root);
             placementAndClearance(world,actor,root);
+            mountedUpwardStack(world,actor,root);
             standaloneEndpoints(world,actor,root);
             inputTransition(world,actor,root);
             for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.GEAR_SWING_ARM,GearRegistry.GEAR_MOUNT,GearRegistry.LARGE_GEAR_EXTENDER,GearRegistry.LARGE_GEAR_SWING_ARM})for(EnumFacing face:EnumFacing.values())for(int count:new int[]{1,2,8}){
@@ -70,6 +79,35 @@ public final class Gear26RuntimeChecks {
             clear(world,root);world.setBlockState(root,TrackRegistry.COMPACT.getDefaultState());world.setBlockState(root.east(),Blocks.STONE_SLAB.getDefaultState().withProperty(net.minecraft.block.BlockSlab.HALF,net.minecraft.block.BlockSlab.EnumBlockHalf.TOP));TrackTile track=(TrackTile)world.getTileEntity(root);TrackWorld.rebuild(track);require((track.appearance().sideMask&2)!=0,"top slab selects native side bracket");
         }finally{clear(world,root);}
         System.out.println("[vandorlabs][reprolab] gear26-runtime PASS checks="+checks+" six-axis unsupported columns integral/mid-stroke payloads reversal snapshots tracks and side brackets");
+    }
+    private static void mountedUpwardStack(WorldServer world,EntityPlayerMP actor,BlockPos root){
+        ItemStack held=actor.getHeldItemMainhand();boolean creative=actor.capabilities.isCreativeMode;double x=actor.posX,y=actor.posY,z=actor.posZ;
+        try{actor.capabilities.isCreativeMode=true;actor.setPosition(root.getX()+2,root.getY()+1,root.getZ()+2);
+            for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.LARGE_GEAR_EXTENDER})for(int click=0;click<2;click++){
+                clear(world,root);for(int dx=-2;dx<=2;dx++)for(int dz=-2;dz<=2;dz++)world.setBlockState(root.down().add(dx,0,dz),Blocks.STONE.getDefaultState(),2);
+                actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(block,4));
+                require(Item.getItemFromBlock(block).onItemUse(actor,world,root.down(),net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"place first upward arm on ground");
+                require(Item.getItemFromBlock(block).onItemUse(actor,world,root,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"stack second upward arm");
+                actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(Blocks.STONE,4));
+                require(Item.getItemFromBlock(Blocks.STONE).onItemUse(actor,world,root.up(),net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"place ordinary block on upward arm");
+                GearTileEntity part=(GearTileEntity)world.getTileEntity(root);require(part!=null,"first upward arm retains its tile");
+                actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,ItemStack.EMPTY);
+                BlockPos clicked=root.up(click);require(block.onBlockActivated(world,clicked,world.getBlockState(clicked),actor,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F),"right-click upward arm section "+click);
+                GearTileEntity tile=part.loadedController();
+                require(tile!=null&&tile.assembly().columnHeight()==2&&!tile.target(),"normal placement and right-click form and retract two-section upward arm: root="+part.getPos()+" owner="+part.owner()+" controller="+(tile==null?"null":tile.getPos()+" "+tile.error()+" height="+(tile.assembly()==null?"none":tile.assembly().columnHeight())));
+                BlockPos tip=root.up(2);tickMountedStack(world,root,50);
+                require(tile.progress()==0&&tile.payload()!=null&&!tile.payload().materialized()&&world.isAirBlock(tip),"ground-mounted upward two-section arm retracts its attached block: "+block.getRegistryName()+" "+tile.error());
+                tile.target(true);tickMountedStack(world,root,50);
+                require(tile.progress()==1&&world.getBlockState(tip).getBlock()==Blocks.STONE,"ground-mounted arm restores construction pose and payload: "+block.getRegistryName()+" "+tile.error());
+                MotionObstacle obstacle=new MotionObstacle(world,tip);net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(obstacle);
+                try{tile.target(false);tickMountedStack(world,root,1);}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(obstacle);}
+                require(tile.progress()==1&&tile.target()&&world.getBlockState(tip).getBlock()==Blocks.STONE&&tile.payload()!=null&&tile.payload().materialized()&&!tile.motionBlocked(),"blocked first step restores prior endpoint and its ordinary block: "+block.getRegistryName()+" "+tile.error());
+                RayTraceResult hit=world.rayTraceBlocks(new Vec3d(tip).addVector(.5,2,.5),new Vec3d(tip).addVector(.5,.5,.5),false,false,false);require(hit!=null&&hit.getBlockPos().equals(tip),"restored payload remains selectable after blocked stroke");
+                tile.captureBlocked(true);Vec3d armCenter=new Vec3d(root).addVector(.5,.5,.5);RayTraceResult armHit=world.rayTraceBlocks(armCenter.addVector(2,0,0),armCenter,false,false,false);require(armHit!=null&&armHit.getBlockPos().equals(root),"blocked arm source remains normally selectable");tile.captureBlocked(false);
+                require(block.onBlockActivated(world,root,world.getBlockState(root),actor,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)&&!tile.target(),"right-click retries after blocked stroke");tickMountedStack(world,root,50);require(tile.progress()==0&&world.isAirBlock(tip),"arm retries normally after obstacle clears");tile.target(true);tickMountedStack(world,root,50);require(world.getBlockState(tip).getBlock()==Blocks.STONE,"retry still restores one ordinary block");
+                NBTTagCompound dialog=tile.settings();dialog.setBoolean("Deployed",false);tile.configure(dialog);tickMountedStack(world,root,50);require(tile.progress()==0&&world.isAirBlock(tip),"dialog target retracts the same placed arm stack");tile.target(true);tickMountedStack(world,root,50);require(world.getBlockState(tip).getBlock()==Blocks.STONE,"dialog reversal restores its ordinary block");
+            }
+        }finally{actor.capabilities.isCreativeMode=creative;actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,held);actor.setPosition(x,y,z);clear(world,root);}
     }
     private static void standaloneEndpoints(WorldServer world,EntityPlayerMP actor,BlockPos root){
         int cases=0;

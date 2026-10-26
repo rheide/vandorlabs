@@ -50,12 +50,13 @@ public final class VehicleSteeringChecks {
             VehicleSteering.Profile p=new VehicleSteering.Profile(tracks?0:3,tracks?2:0,tracks?.08:.45,span);
             float previous=VehicleControls.yawChange(1,0,false,false,p,true);
             if(tracks)near(previous,.6F,"gentle stationary tracked pivot");
-            for(int n=1;n<=120;n++){
+            for(int n=1;n<=240;n++){
                 double speed=n*.001;float next=VehicleControls.yawChange(1,speed,false,false,p,true);
                 require(next>=previous-1e-6&&next-previous<.15,"continuous crawl-to-roll steering without threshold jump");
                 near(VehicleControls.yawChange(1,-speed,false,false,p,true),-next,"slow reverse steering mirrors forward");
                 near(VehicleControls.yawChange(-1,speed,false,false,p,true),-next,"slow left and right steering symmetric");
                 if(p.radiusFactor<1&&speed<=.02)require(next<=1.15,"tight running gear never snaps into high-speed yaw while creeping");
+                if(p.radiusFactor<1)require(next<=3.2+1e-6,"tight running gear stays at a controlled crawl-to-roll turn rate");
                 previous=next;
             }
         }

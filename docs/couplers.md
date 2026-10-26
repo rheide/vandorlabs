@@ -2,7 +2,7 @@
 
 Vehicle Couplers join sections through opposing coupling heads. The full block retains its original `square_coupler` identifier and saved settings. It supports all six mounting directions. Each half has its own channel list and **Lock when: On / Off** setting; physical redstone and the configured channel bank control the connection. Couplers consume signals and emit no redstone or channel power.
 
-Ordinary right-click and the Configurizer open the same authorized Vehicle Coupler dialog. Use **Done** to close it. Right-click the behavior option to select its previous value. The status line explains pending connection work or an unsuccessful operation.
+Ordinary right-click toggles coupling without opening a dialog. Sneak-right-click or use the Configurizer to open the authorized Vehicle Coupler dialog, then use **Done** to close it. Right-click the behavior option to select its previous value. A manual choice persists until the redstone input changes or the settings are changed. The status line explains pending connection work or an unsuccessful operation.
 
 **Vehicle Coupler Slab** uses the same settings in half the height. Click a wall below its midpoint for the bottom half or above the midpoint for the top half. Clicking a floor places the bottom half; clicking a ceiling places the top half. Floor and ceiling placement keep the head horizontal, oriented from the player's facing. Its native panels retain the original artwork proportions by cropping vertical UV regions instead of stretching the textures. Collision, selection and the two connection endpoints follow the same flattened geometry.
 

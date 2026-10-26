@@ -193,9 +193,7 @@ A Large arm can retain a connected Track that still overlaps its wider mounting 
 
 Tracks beneath a rotating arm use the arm's lower swivel instead of drawing a second
 overlapping socket. **Payload: rotates** rotates the complete tread group with the arm;
-**Payload: stays level** preserves its orientation. A blocked stroke shows an **ERROR**
-in the dialog and resumes when the obstruction is cleared. Selection and collision
-bounds follow the native style, mounting brackets and mechanism pose.
+**Payload: stays level** preserves its orientation. A blocked first step of a standalone arm returns its attachment to the previous endpoint and resets its target; clear the obstruction and activate it again. If restoration itself fails, the original attachment snapshot remains available for recovery. A blocked stroke shows an **ERROR** in the dialog. Selection and collision bounds follow the native style, mounting brackets and mechanism pose.
 
 Two physical Track blocks provide enough supports for a vehicle, including two
 connected blocks beneath one arm. A single Track does not. Only ground-facing outer

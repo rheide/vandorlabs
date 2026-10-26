@@ -15,7 +15,7 @@ public final class GearInteractions {
                 RayTraceResult hit=box.calculateIntercept(start,end);
                 if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){nearest=new RayTraceResult(hit.hitVec,hit.sideHit,root.getPos());distance=start.squareDistanceTo(hit.hitVec);}
             }
-            if(root.isInvalid()||!root.isOperational()||!world.isBlockLoaded(root.getPos())||world.getTileEntity(root.getPos())!=root)continue;
+            if(root.isInvalid()||!root.isOperational()||root.motionBlocked()||!world.isBlockLoaded(root.getPos())||world.getTileEntity(root.getPos())!=root)continue;
             if(!root.getRenderBoundingBox().intersects(new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z).grow(.001)))continue;
             java.util.List<AxisAlignedBB> boxes=root.collisionBoxes();int perFoot=root.assembly().kind()==GearTopology.FootKind.SKI?2:1,feetStart=root.isLandingAssembly()?boxes.size()-root.assembly().feet().size()*perFoot:boxes.size();
             for(int i=0;i<boxes.size();i++){

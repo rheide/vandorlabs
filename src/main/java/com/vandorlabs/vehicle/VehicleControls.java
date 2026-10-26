@@ -16,10 +16,9 @@ public final class VehicleControls {
         double travel=Math.abs(speed);
         double turn=Math.abs(yawChange(1,speed,false,autopilot)/supports.radiusFactor);
         if(supports.radiusFactor<1){
-            // Tight-radius running gear should ease into a turn while creeping.
-            // Keep the existing cruising radius once travel reaches .12 blocks/tick.
-            double blend=Math.min(1,travel/.12);blend=blend*blend*(3-2*blend);
-            turn=Math.min(turn*(.35+.65*blend),.6+7.4*blend);
+            // Let tight-radius running gear build yaw gradually through its crawl range.
+            double blend=Math.min(1,travel/.24);blend=blend*blend*(3-2*blend);
+            turn=Math.min(turn*(.35+.65*blend),.6+2.6*blend);
         }
         // One continuous curve replaces the old 2.4-degree pivot / rolling threshold.
         if(supports.tracksOnly()&&grounded)turn=Math.max(.6,turn);

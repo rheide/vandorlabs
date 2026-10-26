@@ -72,7 +72,12 @@ public final class VehicleInteraction {
         if(player.world.isRemote)return true;
         EntityPlayerMP server=(EntityPlayerMP)player;
         if(target.hit.action==VehicleSelection.Action.CHEST)return VehicleChests.open(server,craft,target.hit.cell.pos);
-        if(target.hit.action==VehicleSelection.Action.COUPLER){com.vandorlabs.coupler.ContainerCoupler.open(player,craft.view,target.hit.cell.pos);return true;}
+        if(target.hit.action==VehicleSelection.Action.COUPLER){
+            BlockPos at=target.hit.cell.pos;
+            if(player.isSneaking()||player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER)com.vandorlabs.coupler.ContainerCoupler.open(player,craft.view,at);
+            else if(com.vandorlabs.coupler.ContainerCoupler.resolve(player,craft.view,at)!=null){net.minecraft.tileentity.TileEntity tile=craft.view.getTileEntity(at);if(tile instanceof com.vandorlabs.coupler.TileCoupler)((com.vandorlabs.coupler.TileCoupler)tile).toggleManual(player);}
+            return true;
+        }
         if(target.hit.action==VehicleSelection.Action.COCKPIT){
             com.vandorlabs.tiles.TileEntityCockpit tile=com.vandorlabs.cockpit.CockpitAssembly.root(craft.view,target.hit.cell.pos);if(tile==null)return false;
             if(player.isSneaking() || player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER){com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;}

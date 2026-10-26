@@ -10,7 +10,7 @@ import net.minecraft.util.math.BlockPos;
 /** Input-only coupling gate; each half must be enabled to join two structures. */
 public final class TileCoupler extends TileEntity implements RedstoneChannelMember {
     private ChannelList channels=ChannelList.EMPTY;
-    private boolean inverted,received,requested;
+    private boolean inverted,received,requested,manualOverride,manualRequested,sampledPower,sampleKnown;
     private java.util.UUID operator;
     private String couplingStatus="Ready";
     public java.util.UUID operator(){return operator;}
@@ -27,15 +27,24 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
     @Override public void setRedstoneChannels(ChannelList value){if(channels.equals(value))return;ChannelList old=channels;channels=value;RedstoneChannels.channelChanged(this,old);sample();}
     @Override public boolean hasLocalRedstoneSignal(){return false;}
     @Override public void setChannelSignal(boolean powered){received=powered;sample();}
-    public void configure(ChannelList value,boolean invert){inverted=invert;setRedstoneChannels(value);sample();sync();}
+    public void configure(ChannelList value,boolean invert){manualOverride=false;inverted=invert;setRedstoneChannels(value);sample();sync();}
+    /** Manual choice lasts until a real redstone input change or a new configuration. */
+    public void toggleManual(net.minecraft.entity.player.EntityPlayer actor){
+        net.minecraft.world.World parent=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;
+        if(parent==null||parent.isRemote||world.getTileEntity(pos)!=this)return;
+        authorize(actor);manualOverride=true;manualRequested=!requested;sample();
+    }
     public void sample(){
         boolean carried=world instanceof com.vandorlabs.vehicle.VehicleWorld;
         net.minecraft.world.World parent=carried?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;
         if(parent==null||parent.isRemote||world.getTileEntity(pos)!=this)return;
         boolean powered=received;
         for(EnumFacing side:EnumFacing.values()){BlockPos p=pos.offset(side);if(world.isBlockLoaded(p))powered|=world.getRedstonePower(p,side)>0;}
+        if(sampleKnown&&powered!=sampledPower)manualOverride=false;
+        sampleKnown=true;sampledPower=powered;
+        boolean desired=manualOverride?manualRequested:powered!=inverted;
         net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
-        boolean changed=requested!=(powered!=inverted);requested=powered!=inverted;
+        boolean changed=requested!=desired;requested=desired;
         if(changed&&carried)com.vandorlabs.vehicle.VehicleCouplings.wake(((com.vandorlabs.vehicle.VehicleWorld)world).craft);
         if(carried&&com.vandorlabs.vehicle.VehicleCouplings.hasPair(((com.vandorlabs.vehicle.VehicleWorld)world).craft,pos)){
             // Re-latching two heads already owned by this entity is immediate.
@@ -43,9 +52,9 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
             if(requested&&!state.getValue(BlockCoupler.LOCKED))((com.vandorlabs.vehicle.VehicleWorld)world).craft.signals.couplerState(this,true);
             if(changed)sync();return;
         }
-        if(state.getBlock() instanceof BlockCoupler&&state.getValue(BlockCoupler.LOCKED)!=(powered!=inverted)){
-            if(carried){com.vandorlabs.vehicle.EntityGroundVehicle craft=((com.vandorlabs.vehicle.VehicleWorld)world).craft;if(craft!=null)craft.signals.couplerState(this,powered!=inverted);}
-            else world.setBlockState(pos,state.withProperty(BlockCoupler.LOCKED,powered!=inverted),2);
+        if(state.getBlock() instanceof BlockCoupler&&state.getValue(BlockCoupler.LOCKED)!=desired){
+            if(carried){com.vandorlabs.vehicle.EntityGroundVehicle craft=((com.vandorlabs.vehicle.VehicleWorld)world).craft;if(craft!=null)craft.signals.couplerState(this,desired);}
+            else world.setBlockState(pos,state.withProperty(BlockCoupler.LOCKED,desired),2);
             sync();
         }
         else if(changed)sync();
@@ -55,8 +64,8 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
     @Override public void invalidate(){RedstoneChannels.unregister(this);super.invalidate();}
     @Override public void onChunkUnload(){RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override public boolean shouldRefresh(net.minecraft.world.World w,BlockPos p,net.minecraft.block.state.IBlockState old,net.minecraft.block.state.IBlockState next){return old.getBlock()!=next.getBlock();}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ChannelData.write(tag,channels);tag.setBoolean("CouplerInverted",inverted);tag.setBoolean("CouplerReceived",received);tag.setBoolean("CouplerRequested",requested);if(operator!=null)tag.setUniqueId("CouplerActor",operator);tag.setString("CouplerStatus",couplingStatus);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);channels=ChannelData.read(tag,0);inverted=tag.getBoolean("CouplerInverted");received=tag.getBoolean("CouplerReceived");requested=tag.hasKey("CouplerRequested",1)?tag.getBoolean("CouplerRequested"):received!=inverted;operator=tag.hasUniqueId("CouplerActor")?tag.getUniqueId("CouplerActor"):null;couplingStatus=tag.hasKey("CouplerStatus",8)?tag.getString("CouplerStatus"):"Ready";}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ChannelData.write(tag,channels);tag.setBoolean("CouplerInverted",inverted);tag.setBoolean("CouplerReceived",received);tag.setBoolean("CouplerRequested",requested);if(manualOverride){tag.setBoolean("CouplerManualOverride",true);tag.setBoolean("CouplerManualRequested",manualRequested);}if(operator!=null)tag.setUniqueId("CouplerActor",operator);tag.setString("CouplerStatus",couplingStatus);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);channels=ChannelData.read(tag,0);inverted=tag.getBoolean("CouplerInverted");received=tag.getBoolean("CouplerReceived");requested=tag.hasKey("CouplerRequested",1)?tag.getBoolean("CouplerRequested"):received!=inverted;manualOverride=tag.getBoolean("CouplerManualOverride");manualRequested=tag.getBoolean("CouplerManualRequested");sampleKnown=false;operator=tag.hasUniqueId("CouplerActor")?tag.getUniqueId("CouplerActor"):null;couplingStatus=tag.hasKey("CouplerStatus",8)?tag.getString("CouplerStatus"):"Ready";}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public net.minecraft.network.play.server.SPacketUpdateTileEntity getUpdatePacket(){return new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(net.minecraft.network.NetworkManager manager,net.minecraft.network.play.server.SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());world.markBlockRangeForRenderUpdate(pos,pos);}

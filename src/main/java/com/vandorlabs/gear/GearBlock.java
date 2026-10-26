@@ -167,6 +167,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
         // The legacy superclass has an empty model-parts list for modular gear.
         // Trace the modular pose instead, clipped to this reserved source cell.
         TileEntity raw=world.getTileEntity(pos);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;
+        if(root!=null&&root.motionBlocked())return rayTrace(pos,start,end,getBoundingBox(state,world,pos));
         if(root!=null&&root.isOperational()){
             net.minecraft.util.math.RayTraceResult nearest=null;AxisAlignedBB cell=new AxisAlignedBB(pos);
             for(AxisAlignedBB box:root.collisionBoxes())if(box.intersects(cell)){
