@@ -2575,37 +2575,37 @@
   {
     "id": "turntable_original_off",
     "label": "Dormant",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "turntable/turntable_block_top"
   },
   {
     "id": "turntable_original_on",
     "label": "Active",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "turntable/turntable_block_top_on"
   },
   {
     "id": "turntable_stone_iron",
     "label": "Iron",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "turntable/turntable_block_top_stone_iron"
   },
   {
     "id": "turntable_rotary_deck",
     "label": "Rotary",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "turntable/turntable_block_top_rotary_deck"
   },
   {
     "id": "turntable_basalt",
     "label": "Basalt",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "turntable/turntable_block_top_basalt"
   },
   {
     "id": "turntable_graphite_ivory",
     "label": "Ivory",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "turntable/turntable_block_top_graphite_ivory"
   },
   {
@@ -2737,49 +2737,49 @@
   {
     "id": "surface_landing",
     "label": "Landing",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "surface/landing"
   },
   {
     "id": "surface_landing_grey",
     "label": "Landing Grey",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "surface/landing-grey"
   },
   {
     "id": "surface_maintenance",
     "label": "Maintenance",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "surface/maintenance"
   },
   {
     "id": "surface_maintenance_grey",
     "label": "Maintenance Grey",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "surface/maintenance-grey"
   },
   {
     "id": "surface_docking",
     "label": "Docking",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "surface/docking"
   },
   {
     "id": "surface_docking_grey",
     "label": "Docking Grey",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "surface/docking-grey"
   },
   {
     "id": "surface_copier_input",
     "label": "Copier Input",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "surface/copier-input"
   },
   {
     "id": "surface_copier_output",
     "label": "Copier Output",
-    "category": "Surfaces",
+    "category": "Surface",
     "source": "surface/copier-output"
   }
 ]

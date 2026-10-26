@@ -21,6 +21,7 @@ final class CustomMaterialRuntimeChecks {
         }
         require(imported==41 && categories.equals(new java.util.HashSet<>(java.util.Arrays.asList("Tech","Hull","Trapdoors","Windows"))),"imported category/texture coverage");
         checkMenu(mc);
+        checkTurntableGeneral(mc);
         checkCorp(mc);
         JoinedHousingRuntimeChecks.run(mc);
         int hatchNames=0;
@@ -225,6 +226,22 @@ final class CustomMaterialRuntimeChecks {
             tile.setChannelSignal(true);require(tile.isOn(),"powered hex light off");
         }
         System.out.println("[vandorlabs][reprolab] texture-menu-runtime PASS saved hidden choices, categories, paired hex light state and persistence");
+    }
+    private static void checkTurntableGeneral(Minecraft mc) {
+        try {
+            java.lang.reflect.Field field=HousingTextureList.class.getDeclaredField("options");field.setAccessible(true);
+            HousingTextureList[] lists={new HousingTextureList(0,0,180,0),HousingTextureList.forDoors(0,0,0,180,0),
+                    HousingTextureList.forGlassMaterials(1,0,0,180,0,-1),HousingTextureList.forCategory("Trapdoors",0,0,180,0),
+                    HousingTextureList.forDisplay(0,0,180,0,8,true)};
+            for(String id:com.vandorlabs.turntable.TurntableTextures.IDS){
+                int choice=com.vandorlabs.turntable.TurntableTextures.materialChoice(id);
+                require(ScreenHousingTextures.validChoice(choice) && "Surface".equals(ScreenHousingTextures.category(choice)),"Surface material catalog "+id);
+                require(HousingTextureList.generalTexture(choice),"Turntable artwork excluded from general picker "+id);
+                for(HousingTextureList list:lists)require(((java.util.Map<?,?>)field.get(list)).containsKey(choice),"Turntable artwork missing from a shared block picker "+id);
+                require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice))!=mc.getTextureMapBlocks().getMissingSprite(),"Turntable artwork missing from atlas "+id);
+            }
+            System.out.println("[vandorlabs][reprolab] turntable-general-textures PASS 14 designs five shared block pickers and stitched sprites");
+        }catch(ReflectiveOperationException error){throw new IllegalStateException("Turntable shared picker inspection",error);}
     }
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException("Custom material: "+message);}
 }

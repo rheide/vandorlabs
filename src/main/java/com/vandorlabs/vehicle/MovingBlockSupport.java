@@ -104,7 +104,24 @@ public final class MovingBlockSupport {
         NBTTagCompound before=cell.tileData();
         if(before==null)return;
         if(tile==null)throw new IllegalArgumentException("Missing block data for "+cell.state.getBlock().getRegistryName());
-        NBTTagCompound after=tile.writeToNBT(new NBTTagCompound());
+        boolean carriedCapability=tile.getWorld() instanceof VehicleWorld
+                && cell.state.getBlock().getRegistryName().getResourceDomain().equals("vandorlabs")
+                && before.hasKey("ForgeCaps",10);
+        NBTTagCompound after;
+        try{after=tile.writeToNBT(new NBTTagCompound());}
+        catch(LinkageError capabilityFailure){
+            boolean serializingCapabilities=false;
+            for(StackTraceElement frame:capabilityFailure.getStackTrace())
+                if(frame.getClassName().equals("net.minecraftforge.common.capabilities.CapabilityDispatcher")
+                        && frame.getMethodName().equals("serializeNBT"))serializingCapabilities=true;
+            if(!carriedCapability||!serializingCapabilities)throw capabilityFailure;
+            // The real tile already loaded this data. Keep its original opaque
+            // capability tag in the immutable snapshot instead of requiring an
+            // unrelated mod to serialize it inside the synthetic vehicle world.
+            VehicleCompatibility.warn(cell.state.getBlock(),"synthetic capability check",capabilityFailure);
+            return;
+        }
+        if(carriedCapability){before.removeTag("ForgeCaps");after.removeTag("ForgeCaps");}
         if(!before.equals(after))throw new IllegalArgumentException("Cannot preserve all block data for "+cell.state.getBlock().getRegistryName()+"; operation cancelled before changing the structure");
     }
 }

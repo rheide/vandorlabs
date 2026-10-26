@@ -48,9 +48,9 @@ These collages cover the built-in texture picker, including both light states an
 
 ![Storage textures](texture-browser/collages/storage.png)
 
-## Surfaces
+## Surface
 
-![Surfaces textures](texture-browser/collages/surfaces.png)
+![Surface textures](texture-browser/collages/surface.png)
 
 ## Tech
 

@@ -2,6 +2,7 @@
 
 ## 2.6
 
+- Restore pre-2.6 Taxi conversion for vehicles whose controller, Pilot Seat and programmable blocks carry external capability data; keep that opaque data in the saved snapshot while checking the mod's own tile settings. Expose all fourteen turntable and surface designs in the Surface category of the shared block texture picker.
 - Preserve pre-2.6 vehicle ramp data by comparing unordered reservation sets consistently; restore older hexagonal propulsion snapshots that predate the connected-part property. Report preservation failures without copier-specific wording.
 - Ease low-speed steering for tracks and small wheels, including slower stationary tracked pivots.
 - Synchronize frame-machine reservation ownership to clients so clicks on embedded chip holders reach their controller. Eject retained chips once when a frame assembly is dismantled.
@@ -17,7 +18,7 @@
 - Keep cosmetic arm motion smooth through delayed updates with a pause-aware client clock. Bound the attachment mesh cache, reuse render buffers, coalesce surface-group refreshes and cache carried pressure-plate positions. Send compact Programmer updates for page and activity changes.
 
 - Add a Copy Controller with matching square input/output surfaces, configurable scan height, exact block and inventory copies, signed redstone-channel offsets and recoverable material transactions. Creative copies require no supply chest; Survival copies require matching blocks and stored items and report the first missing material.
-- Rename Turntable Surface to Programmable Surface while preserving its saved registry ID. Configure active/inactive materials with the standard Active/Inactive texture tabs and Fit/Tile mapping on the surface itself; default new surfaces to Fit, share surfaces between turntables and copiers, and add eight supplied landing, docking, maintenance and copier designs to the Surfaces category.
+- Rename Turntable Surface to Programmable Surface while preserving its saved registry ID. Configure active/inactive materials with the standard Active/Inactive texture tabs and Fit/Tile mapping on the surface itself; default new surfaces to Fit, share surfaces between turntables and copiers, and add eight supplied landing, docking, maintenance and copier designs to the shared texture catalog.
 - Match Copy Controller scan directions to its front-facing placement: cyan input on the player’s left, amber output on the right, supply chest behind. Reuse the Turntable height slider and label the signed copy setting Redstone Channel Increment On Copy.
 - Add a Programmable Pressure Plate with selectable vanilla Wood, Gold and Iron sensitivity and physical redstone levels, configurable channel behavior and the shared material catalog including trapdoor designs.
 - Share one lossless block-support policy between Vehicle Mode, Turntable Controller and Copy Controller. Refuse tile data that cannot survive an exact saved-data round trip.

@@ -49,7 +49,7 @@ including across save/load, does not keep restoring subsequent captures.
 
 Configure artwork on the **Programmable Surface blocks**, using the Configurizer or sneak-right-click. The Turntable Controller dialog contains motion and channel settings. Surface **Active** and **Inactive** artwork are independent; the active texture follows the controller's rotation input. Both choices remain saved on the surface blocks after detaching or replacing a controller.
 
-The picker uses the main material catalog, including the **Surfaces** category (formerly Turntable). It retains Dormant, Active, Iron, Rotary, Basalt and Ivory, and adds Landing, Landing Grey, Maintenance, Maintenance Grey, Docking, Docking Grey, Copier Input and Copier Output. Custom block samples use the same picker convention as other programmable materials.
+The picker uses the main material catalog. The **Surface** category is also available in the general material picker for programmable blocks. It includes Dormant, Active, Iron, Rotary, Basalt, Ivory, Landing, Landing Grey, Maintenance, Maintenance Grey, Docking, Docking Grey, Copier Input and Copier Output. Custom block samples use the same picker convention as other programmable materials.
 
 **Stretch** maps one complete image across the connected square. **Tile** repeats at block scale, preserving the image's aspect ratio. **Fit (aspect)** keeps the complete image and uses opaque margins where needed. Editing a member updates its complete pad. An unclaimed square works as a decorative programmable pad; the same blocks can be claimed by a Turntable Controller or a Copy Controller, with overlapping claims refused.
 

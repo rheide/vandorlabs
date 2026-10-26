@@ -57,7 +57,7 @@ public final class VehicleRotation {
                 IBlockState cycle=cell.state;
                 for(int i=0;i<4;i++)cycle=state(cycle,Rotation.CLOCKWISE_90);
                 if(cycle!=cell.state)throw new IllegalArgumentException("Block rotation does not round-trip: "+cell.state.getBlock().getRegistryName());
-            }catch(LinkageError error){throw new IllegalArgumentException("Cannot safely rotate "+cell.state.getBlock().getRegistryName(),error);}
+            }catch(LinkageError error){VehicleCompatibility.warn(cell.state.getBlock(),"rotation preflight",error);throw new IllegalArgumentException("Cannot safely rotate "+cell.state.getBlock().getRegistryName(),error);}
         }
     }
     @SuppressWarnings({"rawtypes","unchecked"}) private static IBlockState state(IBlockState source,Rotation rotation) {

@@ -10,7 +10,7 @@ Copying and vehicle coupling prepare recovery records in the background, then ch
 
 ![Copy Controller casing and its directional input/output markings](version-2.6-copy-controller.png)
 
-[Programmable Surfaces](../turntables.md) replace Turntable Surfaces without changing their saved block ID. Select active and inactive materials through the standard texture tabs and Fit/Tile mapping on the surfaces. New surfaces default to Fit; the Configurizer opens their appearance settings even when claimed by a controller. The shared **Surfaces** texture category includes the existing turntable designs and eight new landing, docking, maintenance and copier designs. Turntable Controllers keep their existing motion and scan behavior.
+[Programmable Surfaces](../turntables.md) replace Turntable Surfaces without changing their saved block ID. Select active and inactive materials through the standard texture tabs and Fit/Tile mapping on the surfaces. New surfaces default to Fit; the Configurizer opens their appearance settings even when claimed by a controller. The shared **Surface** texture category includes all fourteen turntable, landing, docking, maintenance and copier designs and is available in the general material picker for programmable blocks. Turntable Controllers keep their existing motion and scan behavior.
 
 The [Programmable Pressure Plate](../programmable-pressure-plate.md) offers vanilla Wood, Gold and Iron sensitivity. Wood supplies full power when triggered; Gold reaches full power at 15 entities and Iron at 150. Its dialog selects a material, output channels and Pressed, Released or Disabled channel behavior. Pressed channels follow the measured signal level, while physical redstone remains independent of the channel mode.
 
@@ -67,6 +67,8 @@ New programmable screens, inputs and consoles default to Door Interior (Dark). E
 Strong programmable glass is opaque, including Clear and replacement materials. Its renderer writes depth in the opaque pass. Programmable Block texture mapping preserves the active vertex record format used by OptiFine.
 
 Stationary vehicle controls now say **Park Mode**. Cockpit clipboard copies use relative reservation links and remain independent of their originals. Downward propulsion blocks terminate discovery alongside landing supports.
+
+Vehicles built in 2.5 can still enter Taxi Mode when their Vehicle Controller sits between a Pilot Seat and programmable blocks. Conversion retains external capability data saved on those tiles through rotation and parking.
 
 [Joined 2×2 propulsion blocks](../propulsion-shapes.md) can switch between square and hexagonal shapes through their dialog. Two complete 2×2s also join independently when staggered by one row, preserving both groups despite their combined stepped outline. Complete 3×3 hexagonal groups also join, and middle-clicking picks the ordinary single propulsion block.
 
