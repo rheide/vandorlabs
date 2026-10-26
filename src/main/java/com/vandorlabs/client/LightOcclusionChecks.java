@@ -30,10 +30,15 @@ final class LightOcclusionChecks {
                 PanelPlane plane=PanelPlane.of(facing);
                 for(int col=0;col<size;col++)for(int row=0;row<size;row++) {
                     BlockPos pos=origin.offset(plane.right,col).offset(plane.up,row);positions.add(pos);
-                    if(!mc.world.isBlockLoaded(pos))throw new IllegalStateException("Light occlusion requires loaded client fixture cell "+pos+" player="+player);
-                    if(!mc.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState()
-                            .withProperty(BlockAnimatedScreenSelector.FACING,facing),2))throw new IllegalStateException("Light occlusion fixture placement failed "+pos);
-                    net.minecraft.tileentity.TileEntity raw=mc.world.getTileEntity(pos);if(!(raw instanceof TileEntityProgrammableLight))throw new IllegalStateException("Light occlusion fixture missing light tile "+pos+" state="+mc.world.getBlockState(pos));
+                    net.minecraft.tileentity.TileEntity raw=null;
+                    for(int attempt=0;attempt<3&&!(raw instanceof TileEntityProgrammableLight);attempt++) {
+                        if(!mc.world.isBlockLoaded(pos))throw new IllegalStateException("Light occlusion requires loaded client fixture cell "+pos+" player="+player);
+                        mc.world.setBlockToAir(pos);
+                        if(!mc.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState()
+                                .withProperty(BlockAnimatedScreenSelector.FACING,facing),2))throw new IllegalStateException("Light occlusion fixture placement failed "+pos);
+                        raw=mc.world.getTileEntity(pos);
+                    }
+                    if(!(raw instanceof TileEntityProgrammableLight))throw new IllegalStateException("Light occlusion fixture missing light tile "+pos+" state="+mc.world.getBlockState(pos)+" player="+player);
                     ((TileEntityProgrammableLight)raw).configure(style,15,size==2,0,1+col+2*row);
                 }
                 double cx=0,cy=0,cz=0;
