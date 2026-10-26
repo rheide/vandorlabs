@@ -68,7 +68,7 @@ Strong programmable glass is opaque, including Clear and replacement materials. 
 
 Stationary vehicle controls now say **Park Mode**. Cockpit clipboard copies use relative reservation links and remain independent of their originals. Downward propulsion blocks terminate discovery alongside landing supports.
 
-Vehicles built in 2.5 can still enter Taxi Mode when their Vehicle Controller sits between a Pilot Seat and programmable blocks. Conversion retains external capability data saved on those tiles through rotation and parking.
+Vehicles built in 2.5 can still enter Taxi Mode when their Vehicle Controller sits between a Pilot Seat and programmable blocks. Conversion retains external capability data saved on those blocks and supported vanilla tiles, including signs, through rotation and parking.
 
 [Joined 2×2 propulsion blocks](../propulsion-shapes.md) can switch between square and hexagonal shapes through their dialog. Two complete 2×2s also join independently when staggered by one row, preserving both groups despite their combined stepped outline. Complete 3×3 hexagonal groups also join, and middle-clicking picks the ordinary single propulsion block.
 

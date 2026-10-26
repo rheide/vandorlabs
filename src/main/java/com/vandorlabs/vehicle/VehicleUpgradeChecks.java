@@ -56,10 +56,10 @@ public final class VehicleUpgradeChecks {
                 require(rejected,"unknown hex properties remain rejected");cases++;
             }
         }
-        System.out.println("[vandorlabs][reprolab] vehicle-upgrade26 PASS cases="+cases+" legacy Taxi controller/Pilot Seat/programmable blocks with opaque capabilities four-turn preservation and unknown-data refusal; unordered ramp reservations rebase inverse data-loss negatives; four hex families six faces vehicle/display palettes original NBT preserved");
+        System.out.println("[vandorlabs][reprolab] vehicle-upgrade26 PASS cases="+cases+" legacy Taxi controller/Pilot Seat/programmable block/sign with opaque capabilities four-turn preservation and unknown-data refusal; unordered ramp reservations rebase inverse data-loss negatives; four hex families six faces vehicle/display palettes original NBT preserved");
     }
     private static int legacyTaxiController(World parent){
-        BlockPos seat=new BlockPos(0,0,0),controller=seat.east(),wall=controller.east();
+        BlockPos seat=new BlockPos(0,0,0),controller=seat.east(),wall=controller.east(),sign=wall.east();
         TileEntityPilotSeat pilot=new TileEntityPilotSeat();pilot.setPos(seat);pilot.setWorld(parent);
         NBTTagCompound seatSaved=pilot.writeToNBT(new NBTTagCompound());
         TileEntityVehicleController tile=new TileEntityVehicleController();tile.setPos(controller);tile.setWorld(parent);
@@ -67,19 +67,23 @@ public final class VehicleUpgradeChecks {
         NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());
         TileEntity block=ModBlocks.PROGRAMMABLE_BLOCK.createTileEntity(parent,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState());
         block.setPos(wall);block.setWorld(parent);NBTTagCompound wallSaved=block.writeToNBT(new NBTTagCompound());
+        net.minecraft.tileentity.TileEntitySign signTile=new net.minecraft.tileentity.TileEntitySign();signTile.setPos(sign);signTile.setWorld(parent);
+        signTile.signText[0]=new net.minecraft.util.text.TextComponentString("Taxi");
+        NBTTagCompound signSaved=signTile.writeToNBT(new NBTTagCompound());
         NBTTagCompound radiation=new NBTTagCompound();radiation.setDouble("radiationResistance",0);
         NBTTagCompound caps=new NBTTagCompound();caps.setTag("nuclearcraft:capability_default_radiation_resistance",radiation);
-        seatSaved.setTag("ForgeCaps",caps.copy());saved.setTag("ForgeCaps",caps.copy());wallSaved.setTag("ForgeCaps",caps.copy());
+        seatSaved.setTag("ForgeCaps",caps.copy());saved.setTag("ForgeCaps",caps.copy());wallSaved.setTag("ForgeCaps",caps.copy());signSaved.setTag("ForgeCaps",caps.copy());
         List<VehicleStructure.Cell> cells=Arrays.asList(
                 new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),seatSaved),
                 new VehicleStructure.Cell(controller,ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),saved),
-                new VehicleStructure.Cell(wall,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),wallSaved));
+                new VehicleStructure.Cell(wall,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),wallSaved),
+                new VehicleStructure.Cell(sign,net.minecraft.init.Blocks.WALL_SIGN.getDefaultState(),signSaved));
         VehicleStructure source=new VehicleStructure(cells,seat,EnumFacing.NORTH,3);
         NBTTagCompound old=source.write();VehicleStructure loaded=VehicleStructure.read(old);
         VehicleRotation.validate(loaded,new VehicleWorld(parent,loaded));
         require(VehicleTaxiMode.enabled(loaded),"2.5 controller and pilot seat retain Taxi Mode");
         VehicleStructure turned=loaded;for(int i=0;i<4;i++)turned=VehicleRotation.rotate(turned,new VehicleWorld(parent,turned),1);
-        require(turned.write().equals(old),"2.5 Taxi controller, seat and programmable block survive four turns with opaque capability data");
+        require(turned.write().equals(old),"2.5 Taxi controller, seat, programmable block and sign survive four turns with opaque capability data");
         NBTTagCompound unknown=saved.copy();unknown.setInteger("UnknownImportantData",42);
         VehicleStructure.Cell unknownCell=new VehicleStructure.Cell(controller,ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),unknown);
         boolean rejected=false;try{MovingBlockSupport.requireExactTileData(unknownCell,new VehicleWorld(parent,loaded).getTileEntity(controller));}catch(IllegalArgumentException expected){rejected=true;}

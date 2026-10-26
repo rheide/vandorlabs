@@ -2,7 +2,7 @@
 
 ## 2.6
 
-- Restore pre-2.6 Taxi conversion for vehicles whose controller, Pilot Seat and programmable blocks carry external capability data; keep that opaque data in the saved snapshot while checking the mod's own tile settings. Expose all fourteen turntable and surface designs in the Surface category of the shared block texture picker.
+- Restore pre-2.6 Taxi conversion for vehicles whose controller, Pilot Seat, programmable blocks and supported vanilla tiles carry external capability data; keep that opaque data in the saved snapshot while checking each block's own tile settings. Expose all fourteen turntable and surface designs in the Surface category of the shared block texture picker.
 - Preserve pre-2.6 vehicle ramp data by comparing unordered reservation sets consistently; restore older hexagonal propulsion snapshots that predate the connected-part property. Report preservation failures without copier-specific wording.
 - Ease low-speed steering for tracks and small wheels, including slower stationary tracked pivots.
 - Synchronize frame-machine reservation ownership to clients so clicks on embedded chip holders reach their controller. Eject retained chips once when a frame assembly is dismantled.

@@ -105,8 +105,7 @@ public final class MovingBlockSupport {
         if(before==null)return;
         if(tile==null)throw new IllegalArgumentException("Missing block data for "+cell.state.getBlock().getRegistryName());
         boolean carriedCapability=tile.getWorld() instanceof VehicleWorld
-                && cell.state.getBlock().getRegistryName().getResourceDomain().equals("vandorlabs")
-                && before.hasKey("ForgeCaps",10);
+                && before.hasKey("ForgeCaps",10) && supported(cell,tile);
         NBTTagCompound after;
         try{after=tile.writeToNBT(new NBTTagCompound());}
         catch(LinkageError capabilityFailure){
