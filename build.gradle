@@ -851,6 +851,8 @@ task verifyRelease {
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'fluids', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'bridge-machines', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'utility26', '--timeout', '900' }
+            exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'arm-live', '--timeout', '900' }
+            for (focus in ['arm-joined','arm-riders']) exec { commandLine 'python', 'testclient/run_windows.py', '--focus', focus, '--timeout', '900' }
         } else {
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'render-regressions' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'glass-appearance' }
@@ -858,9 +860,43 @@ task verifyRelease {
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'fluids' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'bridge-machines' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility26' }
+            exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'arm-live' }
+            for (focus in ['arm-joined','arm-riders']) exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', focus }
         }
         if (digest() != expectedDigest) throw new GradleException('Release JAR changed during live validation')
         logger.lifecycle('Release JAR verified SHA-256: ' + expectedDigest)
     }
 }
 tasks.matching { it.name == 'publish' || it.name == 'publishToMavenLocal' || it.name.startsWith('publishMaven') }.all { dependsOn verifyRelease }
+
+task testJournalFiles(type: JavaExec) {
+    group = 'verification'
+    description = 'Check Windows and Linux journal directory handling without hiding I/O errors'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.persistence.JournalFilesChecks'
+}
+check.dependsOn testJournalFiles
+
+task testJoinedPlatform(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = "com.vandorlabs.gear.core.JoinedPlatformTests"
+}
+check.dependsOn testJoinedPlatform
+
+task testPlatformSmoothing(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = "com.vandorlabs.animation.PlatformMotionSmoothingTests"
+}
+check.dependsOn testPlatformSmoothing
+
+task testArmJournalLimits(type: JavaExec) {
+    group = 'verification'
+    description = 'Reject arm journals that cannot be read safely after restart'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.gear.ArmJournalLimitsChecks'
+}
+check.dependsOn testArmJournalLimits

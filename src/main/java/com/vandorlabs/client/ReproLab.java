@@ -582,6 +582,7 @@ public class ReproLab {
     public void onDocumentationRender(TickEvent.RenderTickEvent event) {
         if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.render(event);return;}
         if(event.phase==TickEvent.Phase.END && enabled)renderedFrames++;
+        if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.joinedArmDocs"))JoinedArmDocumentation.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.machineBuildDocsOnly"))FrameMachineDocumentation.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.bridgeMachineChecksOnly"))NavigationClientChecks.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END && enabled && state==300 && documentationCapture!=null)
@@ -630,6 +631,8 @@ public class ReproLab {
             return;
         }
         if(!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty()){try{if(com.vandorlabs.gear.ArmRecoveryRuntimeChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Arm durable recovery",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.joinedArmDocs")){try{if(JoinedArmDocumentation.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Joined arm documentation",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.armLiveChecks")){try{if(com.vandorlabs.gear.ArmLiveRuntimeChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Arm live regressions",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.utility26ChecksOnly")){try{if(Utility26FocusedChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Utility 2.6 regressions",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.bridgeMachineChecksOnly")){try{if(BridgeMachineChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Bridge machine regressions",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.machineBuildDocsOnly")){try{if(FrameMachineDocumentation.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Machine build documentation",failure);}return;}

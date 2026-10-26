@@ -425,7 +425,7 @@ public final class VehicleService {
         if(event.getWorld() instanceof VehicleWorld)return;
         for(EntityGroundVehicle craft:VehicleLookup.near(event.getWorld(),event.getAabb())) {
             if(!craft.getEntityBoundingBox().intersects(event.getAabb()))continue;
-            if(craft==event.getEntity() || craft.collision==null || craft.isPassenger(event.getEntity()))continue;
+            if(com.vandorlabs.motion.PlatformRiders.coMoving(craft)||craft==event.getEntity() || craft.collision==null || craft.isPassenger(event.getEntity()))continue;
             for(VehicleCollision.OrientedBox box:craft.collision.pose(craft.rotationYaw)) {
                 AxisAlignedBB at=box.broad.offset(craft.posX,craft.posY,craft.posZ);
                 if(at.intersects(event.getAabb()))event.getCollisionBoxesList().add(at);

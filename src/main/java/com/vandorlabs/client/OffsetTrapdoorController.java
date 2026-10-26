@@ -15,6 +15,16 @@ final class OffsetTrapdoorController extends PlayerControllerMP {
             }
         } catch(ReflectiveOperationException e){throw new IllegalStateException("Cannot preserve client controller state",e);}
     }
+    private com.vandorlabs.gear.ArmPayloadHarvest.Target miningPayload;
+    private boolean minePayload(){
+        net.minecraft.util.math.RayTraceResult hit=Minecraft.getMinecraft().objectMouseOver;
+        if(hit==null||!(hit.hitInfo instanceof com.vandorlabs.gear.ArmPayloadHarvest.Target))return false;
+        miningPayload=(com.vandorlabs.gear.ArmPayloadHarvest.Target)hit.hitInfo;
+        com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageArmPayloadDig(miningPayload.root,miningPayload.cell,false));return true;
+    }
+    @Override public boolean clickBlock(net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing face){return minePayload()||super.clickBlock(pos,face);}
+    @Override public boolean onPlayerDamageBlock(net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing face){return minePayload()||super.onPlayerDamageBlock(pos,face);}
+    @Override public void resetBlockRemoving(){if(miningPayload!=null){com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageArmPayloadDig(miningPayload.root,miningPayload.cell,true));miningPayload=null;}super.resetBlockRemoving();}
     @Override public void updateController() {
         super.updateController();OffsetTrapdoorSelection.updateTarget(1);
     }

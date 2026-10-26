@@ -64,17 +64,8 @@ public class BlockControlledRamp extends BlockVandorDirectional {
             // A rising surface can advance into a rider between their movement packets.
             // Resolve only the shallow top overlap, so walking does not hit every cell as a wall.
             // Stationary platforms, foreign blocks, and the sides/underside retain normal collision.
-            if ((entity instanceof EntityPlayer || entity instanceof net.minecraft.entity.item.EntityItem) && te instanceof TileEntityControlledRamp
-                    && ((TileEntityControlledRamp)te).isMoving() && entity.motionY<=.1
-                    && (!(entity instanceof EntityPlayer) || !((EntityPlayer)entity).capabilities.isFlying)) {
-                double feet=entity.getEntityBoundingBox().minY-pos.getY();
-                if (box.maxY>feet && box.maxY-feet<=.5) {
-                    // The surface can straddle a block boundary: the new cell's entire
-                    // slice may be above the old feet, not just its top edge.
-                    if (box.minY>=feet) continue;
-                    box=new AxisAlignedBB(box.minX,box.minY,box.minZ,box.maxX,feet,box.maxZ);
-                }
-            }
+            AxisAlignedBB supported=com.vandorlabs.motion.PlatformRiders.supportCollision(box.offset(pos),entity,te instanceof TileEntityControlledRamp&&((TileEntityControlledRamp)te).isMoving());
+            if(supported==null)continue;box=supported.offset(-pos.getX(),-pos.getY(),-pos.getZ());
             addCollisionBoxToList(pos,entityBox,colliding,box);
         }
     }

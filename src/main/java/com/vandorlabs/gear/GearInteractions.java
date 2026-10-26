@@ -15,10 +15,10 @@ public final class GearInteractions {
                 RayTraceResult hit=box.calculateIntercept(start,end);
                 if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){nearest=new RayTraceResult(hit.hitVec,hit.sideHit,root.getPos());distance=start.squareDistanceTo(hit.hitVec);}
             }
-            if(root.isInvalid()||!root.isOperational()||root.motionBlocked()||!world.isBlockLoaded(root.getPos())||world.getTileEntity(root.getPos())!=root)continue;
+            if(root.isInvalid()||!root.isOperational()||!world.isBlockLoaded(root.getPos())||world.getTileEntity(root.getPos())!=root)continue;
             if(!root.getRenderBoundingBox().intersects(new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z).grow(.001)))continue;
-            java.util.List<AxisAlignedBB> boxes=root.collisionBoxes();int perFoot=root.assembly().kind()==GearTopology.FootKind.SKI?2:1,feetStart=root.isLandingAssembly()?boxes.size()-root.assembly().feet().size()*perFoot:boxes.size();
-            for(int i=0;i<boxes.size();i++){
+            java.util.List<AxisAlignedBB> boxes=root.collisionBoxes();int nativeCount=boxes.size()-(root.payload()==null?0:root.payload().collisionBoxCount(root));int perFoot=root.assembly().kind()==GearTopology.FootKind.SKI?2:1,feetStart=root.isLandingAssembly()?boxes.size()-root.assembly().feet().size()*perFoot:boxes.size();
+            for(int i=0;i<nativeCount;i++){
                 if(boxes.get(i).getAverageEdgeLength()==0)continue;RayTraceResult hit=boxes.get(i).calculateIntercept(start,end);if(hit==null||start.squareDistanceTo(hit.hitVec)>distance)continue;
                 BlockPos source=root.getPos();if(i>=feetStart){GearTopology.Cell foot=root.assembly().feet().get((i-feetStart)/perFoot);source=root.localCell(foot);}
                 else if(root.fullyDeployed()){
@@ -29,6 +29,7 @@ public final class GearInteractions {
                 }
                 nearest=new RayTraceResult(hit.hitVec,hit.sideHit,source);distance=start.squareDistanceTo(hit.hitVec);
             }
+            RayTraceResult payload=ArmPayloadHarvest.trace(root,start,end);if(payload!=null&&start.squareDistanceTo(payload.hitVec)<=distance){nearest=payload;distance=start.squareDistanceTo(payload.hitVec);}
         }
         RayTraceResult block=world.rayTraceBlocks(start,end,false,true,false);
         return nearest!=null&&(block==null||start.squareDistanceTo(block.hitVec)+.00001>=distance)?nearest:null;
@@ -69,6 +70,6 @@ public final class GearInteractions {
         for(BlockPos member:root.members())com.vandorlabs.vehicle.VehicleService.permission(player,member);
         if(player.getHeldItemMainhand().getItem() instanceof net.minecraft.item.ItemBlock&&((net.minecraft.item.ItemBlock)player.getHeldItemMainhand().getItem()).getBlock() instanceof com.vandorlabs.gear.track.TrackBlock){attachTrack(player,root,hit);return;}
         if(player.getHeldItemMainhand().getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_MODULAR_GEAR,player.world,root.getPos().getX(),root.getPos().getY(),root.getPos().getZ());
-        else if(player.getHeldItemMainhand().isEmpty())root.target(!root.target());
+        else if(player.getHeldItemMainhand().isEmpty()){root.operator(player);root.target(!root.target());}
     }
 }

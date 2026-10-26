@@ -121,7 +121,7 @@ public final class VehicleStructure {
         int x=0,y=0,z=0;
         for(Cell cell:cells) {
             if(cell.pos.getX()<0||cell.pos.getY()<0||cell.pos.getZ()<0
-                    ||cell.pos.getX()>=MAX_AXIS||cell.pos.getY()>=MAX_AXIS||cell.pos.getZ()>=MAX_AXIS
+                    ||cell.pos.getX()>=(displayOnly?128:MAX_AXIS)||cell.pos.getY()>=(displayOnly?128:MAX_AXIS)||cell.pos.getZ()>=(displayOnly?128:MAX_AXIS)
                     ||positions.put(cell.pos,cell)!=null)throw new IllegalArgumentException("Invalid vehicle cell");
             x=Math.max(x,cell.pos.getX()+1);y=Math.max(y,cell.pos.getY()+1);z=Math.max(z,cell.pos.getZ()+1);
             if(VehicleSeats.supports(cell.state)&&VehicleSeats.lower(cell.state,cell.pos).equals(cell.pos))passengers.add(cell.pos);

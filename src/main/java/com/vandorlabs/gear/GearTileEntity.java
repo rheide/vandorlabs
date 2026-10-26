@@ -37,6 +37,17 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private final Set<BlockPos> members = new HashSet<BlockPos>();
     private EnumFacing footFacing = EnumFacing.NORTH;
     private ArmPayload payload;
+    private boolean payloadPreparationPending,clientGeometryPending;
+    GearGeometry.MovePlan riderPlan;
+    private boolean joinEnabled,carryLoad,joinedSettingsPresent;
+    private int joinRange=32,loadHeight=1;
+    public boolean joinEnabled(){return joinEnabled;}
+    public int joinRange(){return joinRange;}
+    public boolean carryLoad(){return carryLoad;}
+    public int loadHeight(){return loadHeight;}
+    public boolean canCarryLoad(){return !isSwingArmController()&&!isFixedMount()&&mountDirection.getAxis()==EnumFacing.Axis.Y;}
+    void awaitPayloadJournal(){payloadPreparationPending=true;}
+    void preparationRejected(String reason){payloadPreparationPending=false;if(progress==0||progress==1)deployedTarget=progress==1;motionBlocked=false;lastError=reason;sync();}
     private NBTTagCompound failedPayload;
     private java.util.UUID operator;
     private boolean recoveryDropped;
@@ -50,13 +61,16 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     }
     public void quarantinePayload(){if(payload!=null){failedPayload=payload.write();payload=null;}operational=false;motionBlocked=true;lastError="Attachment unavailable; original snapshot retained";sync();}
     public ArmPayload payload(){return payload;}
+    void removePayloadCell(BlockPos cell){if(payload==null||payload.materialized())throw new IllegalArgumentException("Payload is no longer captured");payload=payload.without(cell);sync();GearGeometry.register(this);}
     public void operator(net.minecraft.entity.player.EntityPlayer player){if(player!=null){operator=player.getUniqueID();com.vandorlabs.tiles.WorldActionAuthorization.authorize(this,player);markDirty();}}
     public boolean preparePayloadMotion(){
+        payloadPreparationPending=false;
         if(assembly==null||assembly.kind()!=GearTopology.FootKind.NONE)return true;
         if(payload!=null&&payload.hasOwnershipJournal()){lastError="Original attachment cells need recovery before this snapshot can move";return false;}
         if(failedPayload!=null){lastError="Attachment snapshot could not be loaded; original data retained";return false;}
         try{
             refreshMaterializedPayload();
+            if(progress==1&&joinEnabled&&columns.size()>1&&!ArmTransactions.locked(world,pos)&&(payload==null||payload.materialized())){payload=ArmPayload.discover(this,com.vandorlabs.tiles.WorldActionAuthorization.actor(this));sync();}
             if(payload==null){
                 BlockPos attachment=localCell(0,-assembly.columnHeight(),0);
                 if(!GearAssembly.loaded(world,attachment)){lastError="Load the attachment first";return false;}
@@ -66,14 +80,15 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 payload=ArmPayload.discover(this,(net.minecraft.entity.player.EntityPlayerMP)actor);sync();
             }
             if(payload!=null&&payload.materialized()){if(!payload.matchesPlaced(this)){net.minecraft.entity.player.EntityPlayer actor=com.vandorlabs.tiles.WorldActionAuthorization.actor(this);payload=payload.refreshPlaced(this,actor instanceof net.minecraft.entity.player.EntityPlayerMP?(net.minecraft.entity.player.EntityPlayerMP)actor:null);}if(!payload.detach(this))return false;sync();}
+            if(ArmTransactions.blocked(this)){payloadPreparationPending=true;return false;}
             return true;
-        }catch(RuntimeException | LinkageError denied){lastError=denied.getMessage();if(payload!=null&&payload.hasOwnershipJournal()){operational=false;sync();}return false;}
+        }catch(RuntimeException | LinkageError denied){if(denied instanceof com.vandorlabs.tiles.WorldActionAuthorization.AwaitingPlayer)payloadPreparationPending=true;lastError=denied.getMessage();if(payload!=null&&payload.hasOwnershipJournal()){operational=false;sync();}return false;}
     }
     private void refreshMaterializedPayload(){
         if(payload==null||!payload.materialized()||world==null||world.isRemote)return;
         ArmPayload remaining=payload.pruneRemoved(this);if(remaining!=payload){payload=remaining;sync();GearGeometry.register(this);}
     }
-    private void restorePayloadEndpoint(){try{if(payload!=null&&(progress==0||progress==1)&&!payload.materialized()&&payload.restore(this,progress))sync();}catch(RuntimeException | LinkageError failure){motionBlocked=true;lastError="Attachment snapshot retained: "+failure.getMessage();if(payload!=null&&payload.hasOwnershipJournal()){operational=false;sync();}else markDirty();}}
+    private void restorePayloadEndpoint(){if(progress!=(deployedTarget?1:0))return;try{if(payload!=null&&(progress==0||progress==1)&&!payload.materialized()&&payload.restore(this,progress))sync();}catch(RuntimeException | LinkageError failure){motionBlocked=true;lastError="Attachment snapshot retained: "+failure.getMessage();if(payload!=null&&payload.hasOwnershipJournal()){operational=false;sync();}else markDirty();}}
     private EnumFacing mountDirection=EnumFacing.DOWN;
     private boolean rotatePayload,trackExtensionStroke,trackRetractingStroke,armRetractingStroke,formingActiveTrack;
     public boolean isExtendedTrackStroke(){return trackExtensionStroke&&assembly!=null&&assembly.kind()==GearTopology.FootKind.TRACK;}
@@ -221,7 +236,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override public void setWorld(World world){super.setWorld(world);rebuildMemberCache();clearPoses();}
 
     @Override
-    public void onLoad() { firstServerTick = true;rebuildMemberCache();GearGeometry.register(this); }
+    public void onLoad() {com.vandorlabs.tiles.WorldActionAuthorization.resumed(this); firstServerTick=true;if(world!=null&&!world.isRemote)com.vandorlabs.tiles.DeferredTileLoad.schedule(this,()->{rebuildMemberCache();GearGeometry.register(this);});else clientGeometryPending=true; }
     @Override public void invalidate(){com.vandorlabs.tiles.WorldActionAuthorization.revoke(this);GearGeometry.remove(this);super.invalidate();}
     @Override public void onChunkUnload(){com.vandorlabs.tiles.WorldActionAuthorization.unloaded(this);GearGeometry.remove(this);super.onChunkUnload();}
 
@@ -262,11 +277,13 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override
     public void update() {
         if (world == null) return;
+        if(clientGeometryPending&&world.isRemote&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this){clientGeometryPending=false;rebuildMemberCache();GearGeometry.register(this);}
         if(isFixedMount()){deployedTarget=true;progress=1;}
-        if(ArmRecoveryRuntimeChecks.paused(this)||ArmTransactions.blocked(this))return;
+        if(ArmRecoveryRuntimeChecks.paused(this)||ArmTransactions.blocked(this)||com.vandorlabs.tiles.WorldActionAuthorization.awaitingLoad(this))return;
         previousProgress = progress;
         if (world.isRemote) {
-            if (isOperational()&&!motionBlocked) progress = GearMotion.advance(progress, deployedTarget, 1, ANIMATION_TICKS);
+            // Collision follows received authority. Cosmetic interpolation belongs to
+            // GearVisualMotion; predicting physics here makes riders fall ahead of a slow server.
             return;
         }
         refreshMaterializedPayload();
@@ -304,6 +321,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         }
 
         if (isOperational()) {
+            if(joinEnabled&&columns.size()>1){for(BlockPos member:members)if(!GearAssembly.loaded(world,member)){operational=false;retryUnavailable=true;lastError="Load every joined arm to resume";sync();return;}}
             restorePayloadEndpoint();
             input();
             // Older in-flight snapshots finish their original stroke before adopting retraction.
@@ -312,8 +330,11 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             double next=GearMotion.advance(progress,deployedTarget,1,ANIMATION_TICKS);
             boolean hadPayload=payload!=null,wasMaterialized=hadPayload&&payload.materialized();
             boolean prepared=next==before||preparePayloadMotion();
+            // Leave the requested target intact while the ownership record reaches disk.
+            // Treating this as an obstruction reverses the request before detach can run.
+            if(!prepared&&payloadPreparationPending)return;
             boolean blocked=next!=before&&(!prepared||!GearGeometry.canMove(this,before,next));
-            if(blocked&&(before==0||before==1)){
+            if(blocked&&(before==0||before==1)&&assembly.kind()==GearTopology.FootKind.NONE){
                 String reason=lastError;
                 boolean restored=payload==null||payload.materialized()||before==0&&hadPayload&&!wasMaterialized;
                 if(!restored&&payload!=null&&!payload.hasOwnershipJournal())try{restored=payload.restore(this,before);}catch(RuntimeException | LinkageError failure){lastError="Attachment restore blocked; original snapshot retained";}
@@ -322,7 +343,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 motionBlocked=true;lastError="Motion blocked; attachment snapshot retained for recovery";sync();com.vandorlabs.network.MessageGearMotion.send(this);return;
             }
             if(blocked!=motionBlocked){motionBlocked=blocked;sync();com.vandorlabs.network.MessageGearMotion.send(this);}
-            if(!blocked&&next!=before){lastError="";GearGeometry.pushEntities(world,GearGeometry.boxes(this,before),GearGeometry.boxes(this,next),null);progress=next;boxesAt=Double.NaN;markDirty();if(progress==0||progress==1){restorePayloadEndpoint();com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(world.getTotalWorldTime()%3==0)com.vandorlabs.network.MessageGearMotion.send(this);}
+            if(!blocked&&next!=before){lastError="";boolean riders=riderPlan!=null&&!riderPlan.riders.isEmpty();progress=next;boxesAt=Double.NaN;if(riders)com.vandorlabs.network.MessageGearMotion.send(this);GearGeometry.pushEntities(this);markDirty();if(progress==0||progress==1){restorePayloadEndpoint();com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(!riders&&(before==0||before==1||world.getTotalWorldTime()%3==0))com.vandorlabs.network.MessageGearMotion.send(this);}
         }
     }
 
@@ -436,7 +457,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             GearTileEntity tile = (GearTileEntity) world.getTileEntity(member);
             tile.owner = pos.toImmutable();
             if (tile != this) {
-                tile.assembly = null;GearGeometry.remove(tile);
+                tile.direction=direction;tile.rotatePayload=rotatePayload;tile.activeAngle=activeAngle;tile.assembly = null;GearGeometry.remove(tile);
                 tile.members.clear();
                 tile.rebuildDelay = -1;
                 tile.retryUnavailable = false;
@@ -523,7 +544,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         }
     }
 
-    public NBTTagCompound settings(){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",triggerMode);tag.setInteger("Direction",direction.ordinal());tag.setBoolean("Deployed",deployedTarget);tag.setString("Channels",channels.toString());tag.setBoolean("LegacyAnyChannels",legacyAnyChannels);tag.setBoolean("RotatePayload",rotatePayload);tag.setDouble("ActiveAngle",activeAngle);tag.setDouble("ActiveExtension",activeExtension);int trackStyle=com.vandorlabs.gear.track.TrackStyles.style(this);if(trackStyle>=0)tag.setInteger("TrackStyle",trackStyle);return tag;}
+    public NBTTagCompound settings(){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",triggerMode);tag.setInteger("Direction",direction.ordinal());tag.setBoolean("Deployed",deployedTarget);tag.setString("Channels",channels.toString());tag.setBoolean("LegacyAnyChannels",legacyAnyChannels);tag.setBoolean("RotatePayload",rotatePayload);tag.setBoolean("JoinArms",joinEnabled);tag.setInteger("JoinRange",joinRange);tag.setBoolean("CarryLoad",carryLoad);tag.setInteger("LoadHeight",loadHeight);tag.setDouble("ActiveAngle",activeAngle);tag.setDouble("ActiveExtension",activeExtension);int trackStyle=com.vandorlabs.gear.track.TrackStyles.style(this);if(trackStyle>=0)tag.setInteger("TrackStyle",trackStyle);return tag;}
     public void configure(NBTTagCompound tag){
         int trigger=tag.getInteger("Trigger"),dir=tag.getInteger("Direction");
         com.vandorlabs.redstone.ChannelList values=com.vandorlabs.redstone.ChannelList.parse(tag.getString("Channels"));
@@ -531,10 +552,17 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         double angle=tag.hasKey("ActiveAngle",6)?tag.getDouble("ActiveAngle"):activeAngle;
         double extension=tag.hasKey("ActiveExtension",6)?tag.getDouble("ActiveExtension"):activeExtension;
         boolean rotate=tag.hasKey("RotatePayload",1)?tag.getBoolean("RotatePayload"):rotatePayload;
+        boolean join=tag.hasKey("JoinArms",1)?tag.getBoolean("JoinArms"):joinEnabled,load=tag.hasKey("CarryLoad",1)?tag.getBoolean("CarryLoad"):carryLoad;
+        int range=tag.hasKey("JoinRange",3)?tag.getInteger("JoinRange"):joinRange,height=tag.hasKey("LoadHeight",3)?tag.getInteger("LoadHeight"):loadHeight;
+        if(range<1||range>32||height<1||height>32)throw new IllegalArgumentException("Platform ranges must be from 1 to 32 blocks");
+        if(load&&!canCarryLoad())throw new IllegalArgumentException("Carry load requires a vertically moving Extender Arm");
+        boolean groupChanged=join!=joinEnabled||range!=joinRange||load!=carryLoad||height!=loadHeight;
+        if(groupChanged&&!fullyDeployed())throw new IllegalArgumentException("Extend fully before changing joined platform settings");
         if(!Double.isFinite(angle)||angle < -180||angle > 180||!Double.isFinite(extension)||extension < -8||extension > 8)throw new IllegalArgumentException("Arm stroke is out of range");
         if((dir!=direction.ordinal()||angle!=activeAngle||rotate!=rotatePayload)&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");
         if(tag.hasKey("TrackStyle",3)){if(assembly!=null&&!fullyDeployed()&&com.vandorlabs.gear.track.TrackStyles.style(this)!=tag.getInteger("TrackStyle"))throw new IllegalArgumentException("Deploy fully before changing track style");com.vandorlabs.gear.track.TrackStyles.apply(this,tag.getInteger("TrackStyle"));}
-        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}configured=true;rotatePayload=rotate;activeAngle=angle;activeExtension=extension;if(isSwingArmController())mode=rotate?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
+        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}configured=true;joinEnabled=join;joinRange=range;carryLoad=load;loadHeight=height;rotatePayload=rotate;activeAngle=angle;activeExtension=extension;if(isSwingArmController())mode=rotate?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
+        if(groupChanged&&world!=null&&!world.isRemote){for(BlockPos column:new ArrayList<>(columns)){TileEntity raw=world.getTileEntity(pos.add(column));if(raw instanceof GearTileEntity&&raw!=this){GearTileEntity member=(GearTileEntity)raw;member.joinEnabled=join;member.joinRange=range;member.carryLoad=load;member.loadHeight=height;member.direction=direction;member.rotatePayload=rotatePayload;member.activeAngle=activeAngle;member.activeExtension=activeExtension;member.mode=mode;member.sync();}}scheduleRebuild();}
     }
 
     public void sync() {
@@ -553,6 +581,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(operator!=null)tag.setUniqueId("ArmOperator",operator);
         if(failedPayload!=null)tag.setTag("ArmPayload",failedPayload.copy());else if(payload!=null)tag.setTag("ArmPayload",payload.write());
         tag.setInteger("GearRevision",motionRevision);
+        if(joinedSettingsPresent||joinEnabled||carryLoad||joinRange!=32||loadHeight!=1){tag.setBoolean("ArmJoinEnabled",joinEnabled);tag.setInteger("ArmJoinRange",joinRange);tag.setBoolean("ArmCarryLoad",carryLoad);tag.setInteger("ArmLoadHeight",loadHeight);}
         tag.setBoolean("TrackExtensionStroke",trackExtensionStroke);if(trackRetractingStroke)tag.setBoolean("TrackRetractingStroke",true);if(armRetractingStroke)tag.setBoolean("ArmRetractingStroke",true);tag.setString("ArmMountDirection",mountDirection.name());tag.setBoolean("ArmRotatePayload",rotatePayload);tag.setDouble("ArmActiveAngle",activeAngle);tag.setDouble("ArmActiveExtension",activeExtension);
         if (owner != null) tag.setLong("GearOwnerOffset", owner.subtract(pos).toLong());
         tag.setInteger("GearTrigger",triggerMode);tag.setString("GearChannels",channels.toString());
@@ -583,20 +612,22 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
 
     @Override
     public void readFromNBT(NBTTagCompound tag) {
-        com.vandorlabs.tiles.WorldActionAuthorization.revoke(this);super.readFromNBT(tag);
+        com.vandorlabs.tiles.WorldActionAuthorization.reading(this);super.readFromNBT(tag);
         clearPoses();
         operator=tag.hasUniqueId("ArmOperator")?tag.getUniqueId("ArmOperator"):null;
         payload=null;failedPayload=null;
         if(tag.hasKey("ArmPayload",10))try{payload=ArmPayload.read(tag.getCompoundTag("ArmPayload"));}catch(RuntimeException | LinkageError failure){failedPayload=tag.getCompoundTag("ArmPayload").copy();}
         motionRevision=tag.getInteger("GearRevision");lastMotionTick=Long.MIN_VALUE;
         mountDirection=parseEnum(EnumFacing.class,tag.getString("ArmMountDirection"),EnumFacing.DOWN);
+        joinedSettingsPresent=tag.hasKey("ArmJoinEnabled")||tag.hasKey("ArmJoinRange")||tag.hasKey("ArmCarryLoad")||tag.hasKey("ArmLoadHeight");
+        joinEnabled=tag.getBoolean("ArmJoinEnabled");joinRange=tag.hasKey("ArmJoinRange",3)?Math.max(1,Math.min(32,tag.getInteger("ArmJoinRange"))):32;carryLoad=tag.getBoolean("ArmCarryLoad");loadHeight=tag.hasKey("ArmLoadHeight",3)?Math.max(1,Math.min(32,tag.getInteger("ArmLoadHeight"))):1;
         rotatePayload=tag.getBoolean("ArmRotatePayload");trackExtensionStroke=tag.getBoolean("TrackExtensionStroke");trackRetractingStroke=tag.getBoolean("TrackRetractingStroke");armRetractingStroke=tag.getBoolean("ArmRetractingStroke");
         activeAngle=tag.hasKey("ArmActiveAngle",6)&&Double.isFinite(tag.getDouble("ArmActiveAngle"))?Math.max(-180,Math.min(180,tag.getDouble("ArmActiveAngle"))):90;
         activeExtension=tag.hasKey("ArmActiveExtension",6)&&Double.isFinite(tag.getDouble("ArmActiveExtension"))?Math.max(-8,Math.min(8,tag.getDouble("ArmActiveExtension"))):1;
         configured=tag.getBoolean("GearConfigured");motionBlocked=tag.getBoolean("GearBlocked");lastError=tag.getString("GearError");if(lastError.length()>512)lastError=lastError.substring(0,512);boxesAt=Double.NaN;
         owner=tag.hasKey("GearOwnerOffset",4)?pos.add(BlockPos.fromLong(tag.getLong("GearOwnerOffset"))):null;
         triggerMode=Math.max(0,Math.min(2,tag.getInteger("GearTrigger")));com.vandorlabs.redstone.ChannelList read=com.vandorlabs.redstone.ChannelList.parse(tag.getString("GearChannels"));channels=read==null?com.vandorlabs.redstone.ChannelList.EMPTY:read;
-        columns.clear();NBTTagList columnList=tag.getTagList("GearColumns",11);if(columnList.tagCount()<=64)for(int i=0;i<columnList.tagCount();i++){int[] xyz=columnList.getIntArrayAt(i);if(xyz.length==3&&Math.abs((long)xyz[0])<16&&Math.abs((long)xyz[1])<16&&Math.abs((long)xyz[2])<16)columns.add(new BlockPos(xyz[0],xyz[1],xyz[2]));}
+        columns.clear();NBTTagList columnList=tag.getTagList("GearColumns",11);if(columnList.tagCount()<=64)for(int i=0;i<columnList.tagCount();i++){int[] xyz=columnList.getIntArrayAt(i);if(xyz.length==3&&Math.abs((long)xyz[0])<=64&&Math.abs((long)xyz[1])<=64&&Math.abs((long)xyz[2])<=64)columns.add(new BlockPos(xyz[0],xyz[1],xyz[2]));}
         if(columns.isEmpty())columns.add(BlockPos.ORIGIN);
         mode = parseEnum(GearMotion.Mode.class, tag.getString("GearMode"), GearMotion.Mode.EXTEND);
         direction = parseEnum(GearMotion.Direction.class, tag.getString("GearDirection"), GearMotion.Direction.NORTH);

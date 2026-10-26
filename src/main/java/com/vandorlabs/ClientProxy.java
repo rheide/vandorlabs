@@ -76,7 +76,7 @@ public class ClientProxy extends CommonProxy {
 
     @Override public void platformMotion(com.vandorlabs.network.MessagePlatformMotion message) {
         net.minecraft.client.Minecraft client=net.minecraft.client.Minecraft.getMinecraft();
-        client.addScheduledTask(()->message.apply(client.player));
+        client.addScheduledTask(()->com.vandorlabs.client.PlatformRiderVisuals.receive(message));
     }
 
     @Override

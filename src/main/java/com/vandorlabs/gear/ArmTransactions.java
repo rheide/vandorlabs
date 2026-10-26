@@ -34,23 +34,35 @@ public final class ArmTransactions {
     static Scope authorizing(GearTileEntity arm){return new Scope(arm);}
     private static final class Hold {
         final WorldServer world;final Path file;final NBTTagCompound record;final BlockPos root;final List<BlockPos> cells=new ArrayList<>();
-        Future<?> io;TransferCheckpoint checkpoint;boolean durable,applied,recovering,retiring;int preparedTicks;String error;
+        Future<?> io;TransferCheckpoint checkpoint;boolean durable,applied,recovering,retiring,harvestPublished;int preparedTicks;String error;
         Hold(WorldServer world,Path file,NBTTagCompound record,boolean recovering){this.world=world;this.file=file;this.record=record;this.recovering=recovering;
             if(record.getInteger("Schema")!=1)throw new IllegalArgumentException("Unknown arm journal schema");root=BlockPos.fromLong(record.getLong("Root"));NBTTagList list=record.getTagList("Before",10);
             if(list.tagCount()<1||list.tagCount()>ArmPayload.MAX_BLOCKS+1)throw new IllegalArgumentException("Invalid arm journal size");Set<BlockPos> unique=new HashSet<>();
-            for(int n=0;n<list.tagCount();n++){BlockPos pos=BlockPos.fromLong(list.getCompoundTagAt(n).getLong("Pos"));if(!unique.add(pos)||Math.abs((long)pos.getX()-root.getX())>64||Math.abs((long)pos.getY()-root.getY())>64||Math.abs((long)pos.getZ()-root.getZ())>64)throw new IllegalArgumentException("Invalid arm journal cells");cells.add(pos);}
+            for(int n=0;n<list.tagCount();n++){BlockPos pos=BlockPos.fromLong(list.getCompoundTagAt(n).getLong("Pos"));if(!unique.add(pos)||Math.abs((long)pos.getX()-root.getX())>128||Math.abs((long)pos.getY()-root.getY())>128||Math.abs((long)pos.getZ()-root.getZ())>128)throw new IllegalArgumentException("Invalid arm journal cells");cells.add(pos);}
             if(!unique.contains(root))throw new IllegalArgumentException("Arm journal has no controller");
         }
-        boolean loaded(){for(BlockPos pos:cells)if(!world.isBlockLoaded(pos,false))return false;return true;}
-        Set<Chunk> chunks(){Set<Chunk> chunks=new LinkedHashSet<>();for(BlockPos pos:cells)chunks.add(world.getChunkFromBlockCoords(pos));return chunks;}
+        boolean loaded(){for(NBTTagCompound item:ArmPayloadHarvest.items(record)){NBTTagList p=item.getTagList("Pos",6);if(!world.isBlockLoaded(new BlockPos(p.getDoubleAt(0),p.getDoubleAt(1),p.getDoubleAt(2)),false))return false;}for(BlockPos pos:cells)if(!world.isBlockLoaded(pos,false))return false;return true;}
+        Set<Chunk> chunks(){Set<Chunk> chunks=new LinkedHashSet<>();for(BlockPos pos:cells)chunks.add(world.getChunkFromBlockCoords(pos));for(NBTTagCompound item:ArmPayloadHarvest.items(record)){NBTTagList p=item.getTagList("Pos",6);chunks.add(world.getChunkFromBlockCoords(new BlockPos(p.getDoubleAt(0),p.getDoubleAt(1),p.getDoubleAt(2))));}return chunks;}
     }
     private static Path directory(WorldServer world){return world.getSaveHandler().getWorldDirectory().toPath().resolve("data/vandorlabs-arms-"+world.provider.getDimension());}
+    private static final class PreparationRejected extends IOException {PreparationRejected(Throwable cause){super("Attachment recovery data is too large; source retained",cause);}}
+    static byte[] encodeForRecovery(NBTTagCompound record)throws IOException{
+        try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();CompressedStreamTools.writeCompressed(record,bytes);if(bytes.size()>8*1024*1024)throw new IOException("Compressed journal limit");byte[] encoded=bytes.toByteArray();try(DataInputStream input=new DataInputStream(new java.util.zip.GZIPInputStream(new ByteArrayInputStream(encoded)))){long budget=16L*1024*1024;if("harvest".equals(record.getString("Operation"))&&!record.getBoolean("HarvestCommitted"))budget-=1024;CompressedStreamTools.read(input,new NBTSizeTracker(budget));}return encoded;}
+        catch(IOException|RuntimeException rejected){throw new PreparationRejected(rejected);}
+    }
+    private static boolean rejectPreparation(Hold hold,Exception failure){
+        Throwable cause=failure instanceof ExecutionException?failure.getCause():failure;if(!(cause instanceof PreparationRejected)||hold.durable||hold.applied||hold.recovering)return false;
+        Map<BlockPos,Hold> holds=HOLDS.get(hold.world);if(holds!=null)holds.remove(hold.root,hold);
+        for(BlockPos at:hold.cells)if(!at.equals(hold.root))CopyWorld.publish(hold.world,at);
+        TileEntity tile=hold.world.getTileEntity(hold.root);if(tile instanceof GearTileEntity)((GearTileEntity)tile).preparationRejected(cause.getMessage());
+        return true;
+    }
     private static void write(Path file,NBTTagCompound record)throws IOException{
+        byte[] encoded=encodeForRecovery(record);
         Files.createDirectories(file.getParent());Path temp=file.resolveSibling(file.getFileName()+".tmp");
-        ByteArrayOutputStream bytes=new ByteArrayOutputStream();CompressedStreamTools.writeCompressed(record,bytes);if(bytes.size()>8*1024*1024)throw new IOException("Arm journal exceeds 8 MiB");
-        try(FileOutputStream output=new FileOutputStream(temp.toFile())){output.write(bytes.toByteArray());output.getFD().sync();}
+        try(FileOutputStream output=new FileOutputStream(temp.toFile())){output.write(encoded);output.getFD().sync();}
         Files.move(temp,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
-        try(java.nio.channels.FileChannel dir=java.nio.channels.FileChannel.open(file.getParent(),StandardOpenOption.READ)){dir.force(true);}
+        com.vandorlabs.persistence.JournalFiles.syncDirectory(file.getParent());
     }
     private static void beginLoad(WorldServer world){
         if(LOADED.contains(world)||LOADING.containsKey(world))return;
@@ -67,35 +79,43 @@ public final class ArmTransactions {
         GearTileEntity actor=ACTOR.get();Map<BlockPos,Hold> holds=HOLDS.get(server);if(holds!=null)for(Hold hold:holds.values())if(hold.cells.contains(pos)&&(actor==null||actor.getWorld()!=world||!actor.getPos().equals(hold.root)))return true;return false;
     }
     /** Matrix fixtures exercise mutation/rollback separately from real disk/restart checks. */
-    static boolean ready(GearTileEntity arm,String operation,Collection<BlockPos> changed){
+    static void prepareHarvest(GearTileEntity arm,NBTTagCompound extra){try(Scope scope=authorizing(arm)){ready(arm,"harvest",Collections.emptyList(),extra);}}
+    static boolean ready(GearTileEntity arm,String operation,Collection<BlockPos> changed){return ready(arm,operation,changed,null);}
+    private static boolean ready(GearTileEntity arm,String operation,Collection<BlockPos> changed,NBTTagCompound extra){
         if(MATRIX.get()||!(arm.getWorld() instanceof WorldServer))return true;WorldServer world=(WorldServer)arm.getWorld();
         if(world.disableLevelSaving)throw new IllegalArgumentException("Enable world saving before moving an arm attachment");if(!load(world))return false;
         Map<BlockPos,Hold> holds=HOLDS.computeIfAbsent(world,w->new LinkedHashMap<>());Hold hold=holds.get(arm.getPos());
-        if(hold!=null){if(hold.recovering||hold.applied||!hold.record.getString("Operation").equals(operation))return false;if(hold.error!=null)throw new IllegalArgumentException(hold.error);if(hold.durable){fault("prepared");return true;}if(hold.io==null||!hold.io.isDone())return false;try{hold.io.get();hold.io=null;hold.durable=true;fault("prepared");return true;}catch(Exception failure){hold.error="Arm journal could not be saved; source retained";throw new IllegalArgumentException(hold.error,failure);}}
+        if(hold!=null){if(hold.recovering||hold.applied||!hold.record.getString("Operation").equals(operation))return false;if(hold.error!=null)throw new IllegalArgumentException(hold.error);if(hold.durable){fault("prepared");return true;}if(hold.io==null||!hold.io.isDone())return false;try{hold.io.get();hold.io=null;hold.durable=true;fault("prepared");return true;}catch(Exception failure){if(rejectPreparation(hold,failure))throw new IllegalArgumentException("Attachment recovery data is too large; source retained",failure);hold.error="Arm journal could not be saved; source retained";throw new IllegalArgumentException(hold.error,failure);}}
         if(holds.size()>=8)return false;
         Set<BlockPos> positions=new LinkedHashSet<>(changed);positions.add(arm.getPos());NBTTagList before=new NBTTagList();
         for(BlockPos pos:positions){if(!world.isBlockLoaded(pos,false)||locked(world,pos))throw new IllegalArgumentException("Arm transfer cells are unavailable");NBTTagCompound cell=new NBTTagCompound();cell.setLong("Pos",pos.toLong());cell.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),world.getBlockState(pos)));TileEntity tile=world.getTileEntity(pos);if(tile!=null)cell.setTag("Tile",tile.writeToNBT(new NBTTagCompound()));before.appendTag(cell);}
-        NBTTagCompound record=new NBTTagCompound();record.setInteger("Schema",1);record.setLong("Root",arm.getPos().toLong());record.setString("Operation",operation);record.setTag("Before",before);
+        NBTTagCompound record=new NBTTagCompound();record.setInteger("Schema",1);record.setLong("Root",arm.getPos().toLong());record.setString("Operation",operation);java.util.UUID authorized=com.vandorlabs.tiles.WorldActionAuthorization.actorId(arm);if(authorized!=null)record.setUniqueId("AuthorizationActor",authorized);record.setTag("Before",before);if(extra!=null)record.merge(extra);
         Hold created=new Hold(world,directory(world).resolve(UUID.randomUUID()+".nbt"),record,false);
         try{created.io=IO.submit(()->{write(created.file,record);return null;});holds.put(created.root,created);for(BlockPos pos:created.cells)if(!pos.equals(created.root))CopyWorld.freeze(world,pos);}catch(RejectedExecutionException busy){return false;}return false;
     }
     static void applied(GearTileEntity arm){if(MATRIX.get()||!(arm.getWorld() instanceof WorldServer))return;Map<BlockPos,Hold> holds=HOLDS.get(arm.getWorld());Hold hold=holds==null?null:holds.get(arm.getPos());if(hold!=null){hold.applied=true;for(BlockPos pos:hold.cells)if(!pos.equals(hold.root))CopyWorld.freeze(hold.world,pos);fault(hold.record.getString("Operation"));}}
     static void failed(GearTileEntity arm){if(MATRIX.get())return;Map<BlockPos,Hold> holds=HOLDS.get(arm.getWorld());Hold hold=holds==null?null:holds.get(arm.getPos());if(hold!=null){hold.recovering=true;hold.applied=false;}}
-    public static boolean blocked(GearTileEntity arm){if(MATRIX.get()||!(arm.getWorld() instanceof WorldServer))return false;WorldServer world=(WorldServer)arm.getWorld();if(!load(world))return true;Map<BlockPos,Hold> holds=HOLDS.get(world);Hold hold=holds==null?null:holds.get(arm.getPos());return hold!=null&&(hold.applied||hold.recovering||hold.retiring);}
+    public static boolean blocked(GearTileEntity arm){if(MATRIX.get()||!(arm.getWorld() instanceof WorldServer))return false;WorldServer world=(WorldServer)arm.getWorld();if(!load(world))return true;Map<BlockPos,Hold> holds=HOLDS.get(world);Hold hold=holds==null?null:holds.get(arm.getPos());return hold!=null&&(hold.applied||hold.recovering||hold.retiring||hold.record.getString("Operation").equals("harvest"));}
     private static void recover(Hold hold)throws Exception{
+        if(hold.record.getBoolean("HarvestCommitted")){hold.applied=true;hold.recovering=false;return;}
+        ArmPayloadHarvest.rollback(hold.world,hold.record);
         NBTTagList before=hold.record.getTagList("Before",10);List<TileEntity> prepared=new ArrayList<>();List<IBlockState> states=new ArrayList<>();
         for(int n=0;n<before.tagCount();n++){NBTTagCompound cell=before.getCompoundTagAt(n);IBlockState state=NBTUtil.readBlockState(cell.getCompoundTag("State"));if(!NBTUtil.writeBlockState(new NBTTagCompound(),state).equals(cell.getCompoundTag("State")))throw new IllegalArgumentException("Recovery block is unavailable");states.add(state);TileEntity tile=cell.hasKey("Tile",10)?TileEntity.create(null,cell.getCompoundTag("Tile")):null;if(cell.hasKey("Tile",10)&&(tile==null||!tile.writeToNBT(new NBTTagCompound()).equals(cell.getCompoundTag("Tile"))))throw new IllegalArgumentException("Recovery tile cannot round-trip");prepared.add(tile);}
         try(AutoCloseable atomic=com.vandorlabs.vehicle.VehicleTransfer.atomic(hold.world)){
             for(int n=0;n<before.tagCount();n++){BlockPos pos=hold.cells.get(n);hold.world.removeTileEntity(pos);if(!hold.world.setBlockState(pos,states.get(n),2)&&hold.world.getBlockState(pos)!=states.get(n))throw new IllegalStateException("Arm recovery block refused");TileEntity tile=prepared.get(n);if(tile!=null){hold.world.removeTileEntity(pos);tile.setWorld(hold.world);tile.setPos(pos);tile.validate();hold.world.setTileEntity(pos,tile);tile.markDirty();}if(!pos.equals(hold.root))CopyWorld.freeze(hold.world,pos);}
         }
+        if(hold.record.hasUniqueId("AuthorizationActor"))com.vandorlabs.tiles.WorldActionAuthorization.grant(hold.world.getTileEntity(hold.root),hold.record.getUniqueId("AuthorizationActor"));
         hold.applied=true;hold.recovering=false;
     }
     private static void step(Hold hold)throws Exception{
-        if(hold.error!=null)return;for(BlockPos pos:hold.cells)if(!pos.equals(hold.root)&&hold.world.isBlockLoaded(pos,false))CopyWorld.freeze(hold.world,pos);if(!hold.loaded())return;if(hold.io!=null){if(!hold.io.isDone())return;hold.io.get();hold.io=null;hold.durable=true;if(hold.retiring){for(BlockPos pos:hold.cells)if(!pos.equals(hold.root))CopyWorld.publish(hold.world,pos);HOLDS.get(hold.world).remove(hold.root);return;}}
+        if(hold.error!=null)return;if(!hold.harvestPublished)ArmPayloadHarvest.hold(hold.world,hold.record);for(BlockPos pos:hold.cells)if(!pos.equals(hold.root)&&hold.world.isBlockLoaded(pos,false))CopyWorld.freeze(hold.world,pos);if(!hold.loaded())return;if(hold.io!=null){if(!hold.io.isDone())return;try{hold.io.get();}catch(Exception failure){if(rejectPreparation(hold,failure))return;throw failure;}hold.io=null;hold.durable=true;if(hold.retiring){for(BlockPos pos:hold.cells)if(!pos.equals(hold.root))CopyWorld.publish(hold.world,pos);HOLDS.get(hold.world).remove(hold.root);return;}}
+        if(!hold.applied&&!hold.recovering&&hold.durable&&hold.record.getString("Operation").equals("harvest")){try{fault("harvest-prepared");ArmPayloadHarvest.apply(hold.world,hold.root,hold.record);hold.applied=true;fault("harvest");}catch(Exception denied){hold.recovering=true;}}
         if(!hold.applied&&!hold.recovering&&hold.durable&&++hold.preparedTicks>=200)hold.recovering=true;
         if(hold.recovering)recover(hold);if(!hold.applied)return;
+        if(hold.record.getBoolean("HarvestCommitted")&&!hold.harvestPublished){fault("harvest-committed");ArmPayloadHarvest.publish(hold.world,hold.record);hold.harvestPublished=true;}
         if(hold.checkpoint==null)hold.checkpoint=new TransferCheckpoint(hold.world,hold.chunks());if(!hold.checkpoint.step())return;hold.checkpoint=null;
-        try{hold.io=IO.submit(()->{Files.deleteIfExists(hold.file);try(java.nio.channels.FileChannel dir=java.nio.channels.FileChannel.open(hold.file.getParent(),StandardOpenOption.READ)){dir.force(true);}return null;});hold.retiring=true;}catch(RejectedExecutionException busy){/* Keep locked until journal retirement can be scheduled. */}
+        if(hold.record.getString("Operation").equals("harvest")&&!hold.record.getBoolean("HarvestCommitted")){hold.record.setBoolean("HarvestCommitted",true);NBTTagCompound stable=hold.record.copy();hold.io=IO.submit(()->{write(hold.file,stable);return null;});return;}
+        try{hold.io=IO.submit(()->{Files.deleteIfExists(hold.file);com.vandorlabs.persistence.JournalFiles.syncDirectory(hold.file.getParent());return null;});hold.retiring=true;}catch(RejectedExecutionException busy){/* Keep locked until journal retirement can be scheduled. */}
     }
     @SubscribeEvent public static void tick(TickEvent.WorldTickEvent event){if(event.phase!=TickEvent.Phase.START||!(event.world instanceof WorldServer)||MATRIX.get())return;WorldServer world=(WorldServer)event.world;if(!load(world))return;Map<BlockPos,Hold> holds=HOLDS.get(world);if(holds!=null)for(Hold hold:new ArrayList<>(holds.values()))try{step(hold);}catch(Exception|LinkageError failure){hold.error="Arm recovery retained: "+failure.getMessage();com.vandorlabs.VandorLabs.logger.error(hold.error,failure);}}
     @SubscribeEvent public static void loaded(WorldEvent.Load event){if(event.getWorld() instanceof WorldServer){WorldServer world=(WorldServer)event.getWorld();beginLoad(world);try{Future<List<Hold>> future=LOADING.get(world);if(future!=null)future.get();load(world);}catch(Exception failure){com.vandorlabs.VandorLabs.logger.error("Arm recovery journals unavailable; transfers remain locked",failure);}}}

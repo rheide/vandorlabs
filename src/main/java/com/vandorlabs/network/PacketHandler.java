@@ -62,5 +62,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(com.vandorlabs.copier.CopyMessage.Handler.class,com.vandorlabs.copier.CopyMessage.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageProgrammableSurface.Handler.class,MessageProgrammableSurface.class,id++,Side.SERVER);
         INSTANCE.registerMessage(com.vandorlabs.plate.PlateMessage.Handler.class,com.vandorlabs.plate.PlateMessage.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageArmPayloadDig.Handler.class,MessageArmPayloadDig.class,id++,Side.SERVER);
     }
 }

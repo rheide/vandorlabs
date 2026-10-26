@@ -149,7 +149,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
                 if(root==null){BlockPos top=GearAssembly.topOfColumn(world,pos);TileEntity candidate=top==null?null:world.getTileEntity(top);if(candidate instanceof GearTileEntity){((GearTileEntity)candidate).rebuild();root=((GearTileEntity)candidate).loadedController();}}
                 if(root==null)player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Complete the mounting struts and connected feet first"),true);
                 else if(configure){BlockPos at=pos;player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_MODULAR_GEAR,world,at.getX(),at.getY(),at.getZ());}
-                else if(com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos))root.target(!root.target());
+                else if(com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos)){root.operator(player);root.target(!root.target());}
             }
         }
         return true;
@@ -170,10 +170,12 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
         if(root!=null&&root.motionBlocked())return rayTrace(pos,start,end,getBoundingBox(state,world,pos));
         if(root!=null&&root.isOperational()){
             net.minecraft.util.math.RayTraceResult nearest=null;AxisAlignedBB cell=new AxisAlignedBB(pos);
-            for(AxisAlignedBB box:root.collisionBoxes())if(box.intersects(cell)){
+            java.util.List<AxisAlignedBB> boxes=root.collisionBoxes();int nativeCount=boxes.size()-(root.payload()==null?0:root.payload().collisionBoxCount(root));
+            for(int index=0;index<nativeCount;index++){AxisAlignedBB box=boxes.get(index);if(!box.intersects(cell))continue;
                 net.minecraft.util.math.RayTraceResult hit=box.intersect(cell).calculateIntercept(start,end);
                 if(hit!=null&&(nearest==null||start.squareDistanceTo(hit.hitVec)<start.squareDistanceTo(nearest.hitVec)))nearest=new net.minecraft.util.math.RayTraceResult(hit.hitVec,hit.sideHit,pos);
             }
+            net.minecraft.util.math.RayTraceResult payload=ArmPayloadHarvest.trace(root,start,end);if(payload!=null&&(nearest==null||start.squareDistanceTo(payload.hitVec)<=start.squareDistanceTo(nearest.hitVec)))nearest=payload;
             return nearest;
         }
         return rayTrace(pos,start,end,getBoundingBox(state,world,pos));

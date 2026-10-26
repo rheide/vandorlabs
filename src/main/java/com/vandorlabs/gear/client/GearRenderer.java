@@ -16,6 +16,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  */
 @SideOnly(Side.CLIENT)
 public final class GearRenderer extends net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer<GearTileEntity> {
+    public static double renderedProgress(GearTileEntity tile,float partial){return GearVisualMotion.sample(tile,partial);}
+
     private boolean cachePose;
     private Affine mounting=Affine.identity();
     public static long cachedVertexBytes(){return GearModels.cachedVertexBytes();}
@@ -89,7 +91,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             return;
         }
 
-        GearMotion.Pose pose = tile.pose(GearVisualMotion.sample(tile,partialTicks));
+        GearMotion.Pose pose = tile.pose(progress);
         Affine fixed = Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING)));
         Affine moving = Affine.fromPose(pose, false);
         Affine feet = Affine.fromPose(pose, true);

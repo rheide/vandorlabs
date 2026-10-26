@@ -10,30 +10,36 @@ import java.util.*;
 /** Cosmetic motion only; authoritative collision and serialized timelines remain on the tile. */
 final class GearVisualMotion {
     private static final VisualClock CLOCK=new VisualClock();
+    private static double frameTime=Double.NaN;
+    static void beginFrame(){frameTime=CLOCK.sample(System.nanoTime(),Minecraft.getMinecraft().isGamePaused());}
     private static final Map<World,LinkedHashMap<String,Pose>> WORLDS=new WeakHashMap<>();
-    static final class Pose {double progress,last;boolean initialized;}
-    static double advance(Pose pose,double authoritative,boolean target,boolean running,double now){
-        if(!pose.initialized){pose.progress=authoritative;pose.last=now;pose.initialized=true;}
-        double step=Math.max(0,now-pose.last)/GearTileEntity.ANIMATION_TICKS;pose.last=now;
-        double goal=running?(target?1:0):authoritative;
-        pose.progress=goal>pose.progress?Math.min(goal,pose.progress+step):Math.max(goal,pose.progress-step);
+    static final class Pose {double progress,authority;boolean initialized;final com.vandorlabs.animation.PlatformMotionSmoothing motion=new com.vandorlabs.animation.PlatformMotionSmoothing(12);}
+    static double advance(Pose pose,double authoritative,double now){
+        if(!pose.initialized){pose.authority=authoritative;pose.initialized=true;}
+        if(authoritative!=pose.authority){pose.motion.accept(authoritative-pose.authority,0,0,now);pose.authority=authoritative;}
+        pose.progress=Math.max(0,Math.min(1,authoritative+pose.motion.x(now)));
         return pose.progress;
     }
     static double sample(GearTileEntity tile,float partial){
         World world=tile.getWorld();String key=Long.toString(tile.getPos().toLong());
-        if(world instanceof VehicleWorld){VehicleWorld view=(VehicleWorld)world;if(view.craft!=null)key=view.craft.getUniqueID()+":"+key;world=view.parent;}
+        if(world instanceof VehicleWorld){VehicleWorld view=(VehicleWorld)world;if(view.craft==null)return tile.renderProgress(partial);key=view.craft.getUniqueID()+":"+key;world=view.parent;}
         LinkedHashMap<String,Pose> cache=WORLDS.computeIfAbsent(world,w->new LinkedHashMap<>(16,.75F,true));Pose pose=cache.get(key);
         if(pose==null){pose=new Pose();cache.put(key,pose);if(cache.size()>2048)cache.remove(cache.keySet().iterator().next());}
-        return advance(pose,tile.renderProgress(partial),tile.target(),tile.isOperational()&&!tile.motionBlocked(),CLOCK.sample(System.nanoTime(),Minecraft.getMinecraft().isGamePaused()));
+        if(Double.isNaN(frameTime))beginFrame();return advance(pose,tile.progress(),frameTime);
     }
     static void clear(){WORLDS.clear();}
     static void check(){
-        Pose pose=new Pose();double previous=1;
-        for(int frame=0;frame<=120;frame++){double now=frame/3D,server=Math.max(0,1-(frame/18)*3/24D);double actual=advance(pose,server,false,true,now);if(actual>previous+1e-9)throw new IllegalStateException("Lag correction reversed arm visuals");previous=actual;}
-        if(previous!=0)throw new IllegalStateException("Arm visual reaches endpoint under delayed authority");
-        double paused=advance(pose,.2,true,true,40);if(paused!=0)throw new IllegalStateException("Repeated paused clock advanced arm");
-        double reversed=advance(pose,0,true,true,46);if(Math.abs(reversed-.25)>1e-9)throw new IllegalStateException("Arm reversal must start at current visual pose");
-        if(advance(pose,.1,true,false,49)>=reversed)throw new IllegalStateException("Blocked arm must settle toward authoritative position");
-        System.out.println("[vandorlabs] arm-visual-clock PASS delayed repeated corrections monotonic progress pause reversal blocked settling");
+        for(double interval:new double[]{1,3,4,12}){
+            Pose pose=new Pose();double previous=1;
+            for(int frame=0;frame<=25*interval*8;frame++){
+                double now=frame/8D,authority=Math.max(0,1-Math.floor(now/interval)/24D),actual=advance(pose,authority,now);
+                if(actual>previous+1e-9||actual<authority-1e-9)throw new IllegalStateException("Arm visuals must remain between received poses under lag");previous=actual;
+            }
+            if(previous!=0)throw new IllegalStateException("Arm visuals settle at received endpoint");
+            double now=25*interval;if(advance(pose,0,now)!=0)throw new IllegalStateException("Repeated paused clock advanced arm");
+            if(advance(pose,.25,now+1)!=0)throw new IllegalStateException("Correction or reversal must retain visual continuity");
+            if(Math.abs(advance(pose,.25,now+20)-.25)>1e-9)throw new IllegalStateException("Blocked or reversed pose settles at authority");
+        }
+        System.out.println("[vandorlabs] arm-visual-clock PASS 20/5TPS one/three-tick packets no prediction beyond support repeated pause reversal blocked settling");
     }
 }

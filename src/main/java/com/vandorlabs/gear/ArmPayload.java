@@ -6,6 +6,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.*;
@@ -13,12 +15,15 @@ import net.minecraft.world.World;
 
 /** Bounded inert attachment snapshot. World cells are restored at integral translation endpoints. */
 public final class ArmPayload {
-    public static final int MAX_BLOCKS=64,MAX_SPAN=16;
+    public static final int MAX_BLOCKS=32768,MAX_SPAN=80;
     private static final ThreadLocal<Integer> READ_DEPTH=ThreadLocal.withInitial(()->0);
     public final VehicleStructure blocks;
     /** Construction origin relative to the arm; cell positions are normalized. */
     public final BlockPos offset;
     private VehicleWorld view;
+    private List<AxisAlignedBB> localCollision;
+    public int collisionBoxCount(GearTileEntity arm){return materialized?0:localCollision(arm).size();}
+    private List<AxisAlignedBB> localCollision(GearTileEntity arm){if(localCollision==null){List<AxisAlignedBB> result=new ArrayList<>();VehicleWorld view=view(arm);for(VehicleStructure.Cell cell:blocks.cells)cell.state.addCollisionBoxToList(view,cell.pos,new AxisAlignedBB(cell.pos).grow(2),result,null,false);localCollision=Collections.unmodifiableList(result);}return localCollision;}
     private boolean materialized;
     private boolean gridAligned=true;
     private BlockPos placedOffset;
@@ -57,11 +62,19 @@ public final class ArmPayload {
     }
 
     private ArmPayload(VehicleStructure blocks,BlockPos offset,boolean materialized,BlockPos placed){this.blocks=blocks;this.offset=offset;this.materialized=materialized;this.placedOffset=placed;}
+    ArmPayload without(BlockPos removed){List<VehicleStructure.Cell> remaining=new ArrayList<>(),placedRemaining=new ArrayList<>();for(int i=0;i<blocks.cells.size();i++)if(!blocks.cells.get(i).pos.equals(removed)){remaining.add(blocks.cells.get(i));if(placedBlocks!=null)placedRemaining.add(placedBlocks.cells.get(i));}if(remaining.isEmpty())return null;ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(remaining),offset,false,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(placedRemaining);return next;}
     private ArmPayload preserveAlignment(ArmPayload next){next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;return next;}
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.origin=arm.getPos().add(offset);}return view;}
     public boolean materialized(){return materialized;}
+    static void validateSyncBudget(byte[] encoded)throws java.io.IOException{
+        try(java.io.DataInputStream input=new java.io.DataInputStream(new java.io.ByteArrayInputStream(encoded))){CompressedStreamTools.read(input,new NBTSizeTracker(2L*1024*1024-65536));}
+        catch(RuntimeException tooLarge){throw new java.io.IOException("Attachment exceeds tile-update capacity",tooLarge);}
+    }
     public static ArmPayload discover(GearTileEntity arm,EntityPlayerMP actor){
         World world=arm.getWorld();BlockPos start=arm.localCell(0,-arm.assembly().columnHeight(),0);
+        Set<BlockPos> platform=arm.joinEnabled()&&arm.columns().size()>1?JoinedArms.platform(arm):null;
+        JoinedArms.Volume volume=platform==null?null:new JoinedArms.Volume(arm,platform);
+        if(platform!=null){for(BlockPos member:arm.members())VehicleService.permission(actor,member);if(arm.carryLoad()&&!arm.canCarryLoad())throw new IllegalArgumentException("Carry load requires vertical movement");}
         if(world.isAirBlock(start))return null;
         ArrayDeque<BlockPos> pending=new ArrayDeque<>();Set<BlockPos> visited=new LinkedHashSet<>();pending.add(start);
         int minX=start.getX(),minY=start.getY(),minZ=start.getZ(),maxX=minX,maxY=minY,maxZ=minZ;
@@ -71,7 +84,7 @@ public final class ArmPayload {
             if(!GearAssembly.loaded(world,at))throw new IllegalArgumentException("Load the complete arm attachment first");
             IBlockState state=world.getBlockState(at);if(state.getBlock().isAir(state,world,at)||arm.members().contains(at))continue;
             BlockPos canonical=ArmOrientation.inverse(arm.mountDirection(),at.subtract(arm.getPos()));
-            if(canonical.getY()>-arm.assembly().columnHeight())throw new IllegalArgumentException("Separate the attachment from the arm's mounting structure");
+            if(platform==null&&canonical.getY()>-arm.assembly().columnHeight())throw new IllegalArgumentException("Separate the attachment from the arm's mounting structure");
             if(state.getMaterial().isLiquid()||state.getBlockHardness(world,at)<0)throw new IllegalArgumentException("Unsupported arm attachment: "+state.getBlock().getLocalizedName());
             if(!(world instanceof VehicleWorld)){
                 if(actor==null)throw new IllegalArgumentException("Use the Configurizer before moving the attachment");
@@ -82,20 +95,23 @@ public final class ArmPayload {
             if(tile instanceof net.minecraft.tileentity.TileEntityPiston)throw new IllegalArgumentException("Wait for the piston to stop before moving it");
             if(state.getBlock().hasTileEntity(state)&&tile==null)throw new IllegalArgumentException("Attachment block data is still loading");
             minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());maxX=Math.max(maxX,at.getX());maxY=Math.max(maxY,at.getY());maxZ=Math.max(maxZ,at.getZ());
-            if(captured.size()>=MAX_BLOCKS||maxX-minX>=MAX_SPAN||maxY-minY>=MAX_SPAN||maxZ-minZ>=MAX_SPAN)throw new IllegalArgumentException("Arm attachment exceeds 64 blocks or a 16-block span");
+            int limit=platform==null?64:MAX_BLOCKS,span=platform==null?16:MAX_SPAN;
+            if(captured.size()>=limit||maxX-minX>=span||maxY-minY>=span||maxZ-minZ>=span)throw new IllegalArgumentException("Arm attachment exceeds "+limit+" blocks or a "+span+"-block span");
             captured.add(new VehicleStructure.Cell(at,state,tile==null?null:tile.writeToNBT(new NBTTagCompound())));
             // A landing foot terminates its own outward branch, allowing nested gear above it.
             boolean foot=GearAssembly.isFoot(state);
             for(EnumFacing side:EnumFacing.values()){
                 if(foot&&side==arm.mountDirection())continue;
                 BlockPos next=at.offset(side);if(arm.members().contains(next))continue;
+                if(platform!=null&&!volume.contains(next)){if(arm.carryLoad()&&!platform.contains(at)&&GearAssembly.loaded(world,next)&&!world.isAirBlock(next)&&VehicleScan.touches(world,at,state,side))throw new IllegalArgumentException("Load extends beyond the selected platform or height");continue;}
                 if(VehicleScan.touches(world,at,state,side))pending.add(next);
             }
         }
+        if(platform!=null){Set<BlockPos> capturedPositions=new HashSet<>();for(VehicleStructure.Cell cell:captured)capturedPositions.add(cell.pos);if(!capturedPositions.containsAll(platform))throw new IllegalArgumentException("Every corner needs a connected platform surface");}
         if(captured.isEmpty())return null;
         BlockPos origin=new BlockPos(minX,minY,minZ);List<VehicleStructure.Cell> normalized=new ArrayList<>();
         for(VehicleStructure.Cell cell:captured)normalized.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin)):null));
-        VehicleStructure snapshot=VehicleStructure.display(normalized);try{snapshot.encode();}catch(java.io.IOException tooLarge){throw new IllegalArgumentException("Arm attachment exceeds the saved-data limit",tooLarge);}
+        VehicleStructure snapshot=VehicleStructure.display(normalized);try{validateSyncBudget(snapshot.encode());}catch(java.io.IOException tooLarge){throw new IllegalArgumentException("Attachment too large; reduce platform or load height",tooLarge);}
         return new ArmPayload(snapshot,origin.subtract(arm.getPos()),true,origin.subtract(arm.getPos()));
     }
     /** Captured vehicle cells have already passed assembly authorization. */
@@ -137,7 +153,7 @@ public final class ArmPayload {
         EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actor(arm);for(VehicleStructure.Cell cell:placed().cells){BlockPos at=origin.add(cell.pos);VehicleService.permission(authorizer,at);if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,world.getBlockState(at),authorizer)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");}
         Map<VehicleStructure.Cell,TileEntity> rollback=prepareTiles(world,origin,placed());
         MovingBlockSupport.validate(blocks,view(arm));
-        if(!ArmTransactions.ready(arm,"detach",placedCells(arm)))return false;
+        if(!ArmTransactions.ready(arm,"detach",placedCells(arm))){arm.awaitPayloadJournal();return false;}
         List<VehicleStructure.Cell> removed=new ArrayList<>();
         try{
             for(VehicleStructure.Cell cell:placed().cells){
@@ -227,7 +243,7 @@ public final class ArmPayload {
     }
     public Vec3d transform(GearTileEntity arm,double progress,double x,double y,double z){
         Vec3d result=rawTransform(arm,progress,x,y,z);
-        if(gridAligned&&arm.isSwingArmController()&&Math.abs(arm.activeAngle()/90-Math.rint(arm.activeAngle()/90))<1e-8){
+        if(gridAligned&&arm.mode()!=com.vandorlabs.gear.core.GearMotion.Mode.ROTATE_LEVEL&&arm.isSwingArmController()&&Math.abs(arm.activeAngle()/90-Math.rint(arm.activeAngle()/90))<1e-8){
             Vec3d endpoint=rawTransform(arm,0,0,0,0);double blend=1-progress;blend=blend*blend*(3-2*blend);
             result=result.addVector((Math.rint(endpoint.x)-endpoint.x)*blend,(Math.rint(endpoint.y)-endpoint.y)*blend,(Math.rint(endpoint.z)-endpoint.z)*blend);
         }
@@ -243,10 +259,31 @@ public final class ArmPayload {
         // At an installed endpoint vanilla owns these actual blocks, including
         // their normal hit identity and immediate removal/collision lifecycle.
         if(materialized)return Collections.emptyList();
-        List<AxisAlignedBB> boxes=new ArrayList<>();VehicleWorld world=view(arm);
-        for(VehicleStructure.Cell cell:blocks.cells){List<AxisAlignedBB> parts=new ArrayList<>();cell.state.addCollisionBoxToList(world,cell.pos,new AxisAlignedBB(cell.pos).grow(2),parts,null,false);
-            for(AxisAlignedBB b:parts){double lx=Double.POSITIVE_INFINITY,ly=lx,lz=lx,hx=Double.NEGATIVE_INFINITY,hy=hx,hz=hx;for(int n=0;n<8;n++){Vec3d v=transform(arm,progress,(n&1)==0?b.minX:b.maxX,(n&2)==0?b.minY:b.maxY,(n&4)==0?b.minZ:b.maxZ);lx=Math.min(lx,v.x);ly=Math.min(ly,v.y);lz=Math.min(lz,v.z);hx=Math.max(hx,v.x);hy=Math.max(hy,v.y);hz=Math.max(hz,v.z);}boxes.add(new AxisAlignedBB(lx,ly,lz,hx,hy,hz).offset(arm.getPos()));}
-        }return boxes;
+        List<AxisAlignedBB> boxes=new ArrayList<>();
+        for(AxisAlignedBB b:localCollision(arm)){double lx=Double.POSITIVE_INFINITY,ly=lx,lz=lx,hx=Double.NEGATIVE_INFINITY,hy=hx,hz=hx;for(int n=0;n<8;n++){Vec3d v=transform(arm,progress,(n&1)==0?b.minX:b.maxX,(n&2)==0?b.minY:b.maxY,(n&4)==0?b.minZ:b.maxZ);lx=Math.min(lx,v.x);ly=Math.min(ly,v.y);lz=Math.min(lz,v.z);hx=Math.max(hx,v.x);hy=Math.max(hy,v.y);hz=Math.max(hz,v.z);}boxes.add(new AxisAlignedBB(lx,ly,lz,hx,hy,hz).offset(arm.getPos()));}
+        return boxes;
+    }
+    private Vec3d atAngle(GearTileEntity arm,double angle,double x,double y,double z){
+        Vec3d local=ArmOrientation.vector(inverseFace(arm.mountDirection()),x+offset.getX()-.5,y+offset.getY()-.5,z+offset.getZ()-.5).addVector(.5,.5,.5);
+        com.vandorlabs.gear.core.GearMotion.Pose pose=com.vandorlabs.gear.core.GearMotion.pose(arm.mode(),arm.direction(),arm.assembly().columnHeight(),0,0,0,arm.footMountOffset(),angle);
+        com.vandorlabs.gear.core.GearMotion.Vec moved=pose.transformFootVertex(local.x,local.y,local.z);return ArmOrientation.point(arm.mountDirection(),moved.x,moved.y,moved.z);
+    }
+    /** Exact coordinate extrema of each rotating corner, including the grid-alignment translation. */
+    public AxisAlignedBB sweptBox(GearTileEntity arm,int index,double before,double after){
+        AxisAlignedBB box=localCollision(arm).get(index);double lo=Math.toRadians(Math.min(arm.pose(before).angleDegrees(),arm.pose(after).angleDegrees())),hi=Math.toRadians(Math.max(arm.pose(before).angleDegrees(),arm.pose(after).angleDegrees()));
+        Vec3d rawEnd=rawTransform(arm,0,0,0,0),end=transform(arm,0,0,0,0);double angle=Math.toRadians(arm.activeAngle());Vec3d slope=angle==0?Vec3d.ZERO:end.subtract(rawEnd).scale(1/angle);
+        double[] min={Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY},max={Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};
+        for(int corner=0;corner<8;corner++){
+            double x=(corner&1)==0?box.minX:box.maxX,y=(corner&2)==0?box.minY:box.maxY,z=(corner&4)==0?box.minZ:box.maxZ;
+            Vec3d f0=atAngle(arm,0,x,y,z),f90=atAngle(arm,90,x,y,z),f180=atAngle(arm,180,x,y,z);
+            double[] zero={f0.x,f0.y,f0.z},quarter={f90.x,f90.y,f90.z},half={f180.x,f180.y,f180.z},linear={slope.x,slope.y,slope.z};
+            for(int axis=0;axis<3;axis++){
+                double d=(zero[axis]+half[axis])/2,a=(zero[axis]-half[axis])/2,b=quarter[axis]-d,c=linear[axis];
+                for(double t:new double[]{lo,hi}){double value=a*Math.cos(t)+b*Math.sin(t)+c*t+d;min[axis]=Math.min(min[axis],value);max[axis]=Math.max(max[axis],value);}
+                double radius=Math.hypot(a,b);if(radius>1e-12&&Math.abs(c)<=radius){double phase=Math.atan2(a,b),turn=Math.acos(-c/radius);for(int sign:new int[]{-1,1})for(int k=-2;k<=2;k++){double t=sign*turn-phase+k*2*Math.PI;if(t>lo&&t<hi){double value=a*Math.cos(t)+b*Math.sin(t)+c*t+d;min[axis]=Math.min(min[axis],value);max[axis]=Math.max(max[axis],value);}}}
+            }
+        }
+        return new AxisAlignedBB(min[0],min[1],min[2],max[0],max[1],max[2]).offset(arm.getPos()).shrink(.0001);
     }
     private static BlockPos yaw(BlockPos p,int turns){switch(Math.floorMod(turns,4)){case 1:return new BlockPos(-p.getZ(),p.getY(),p.getX());case 2:return new BlockPos(-p.getX(),p.getY(),-p.getZ());case 3:return new BlockPos(p.getZ(),p.getY(),-p.getX());default:return p;}}
     public static NBTTagCompound rotate(NBTTagCompound tag,int turns,World parent){
@@ -265,7 +302,7 @@ public final class ArmPayload {
         VehicleStructure structure=VehicleStructure.readDisplay(tag.getCompoundTag("Blocks"));if(structure.cells.isEmpty()||structure.cells.size()>MAX_BLOCKS)throw new IllegalArgumentException("Oversized arm payload");
         for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&TileEntity.create(null,cell.tileData())==null)throw new IllegalArgumentException("Attachment tile cannot be loaded; original snapshot retained");
         BlockPos offset=BlockPos.fromLong(tag.getLong("Offset")),placed=BlockPos.fromLong(tag.getLong("PlacedOffset"));
-        for(BlockPos p:new BlockPos[]{offset,placed})if(Math.abs((long)p.getX())>32||Math.abs((long)p.getY())>32||Math.abs((long)p.getZ())>32)throw new IllegalArgumentException("Arm payload is too far from its controller");
+        for(BlockPos p:new BlockPos[]{offset,placed})if(Math.abs((long)p.getX())>80||Math.abs((long)p.getY())>80||Math.abs((long)p.getZ())>80)throw new IllegalArgumentException("Arm payload is too far from its controller");
         ArmPayload payload=new ArmPayload(structure,offset,tag.getBoolean("Materialized"),placed);
         net.minecraft.nbt.NBTTagList journal=tag.getTagList("OwnershipJournal",10);if(journal.tagCount()>structure.cells.size())throw new IllegalArgumentException("Invalid attachment ownership journal");
         payload.journalDimension=tag.getInteger("OwnershipDimension");

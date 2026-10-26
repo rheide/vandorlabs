@@ -688,7 +688,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         }
     }
     private void schedule() { if(!vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld))world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),1); }
-    @Override public void onLoad() {
+    @Override public void onLoad() {com.vandorlabs.tiles.WorldActionAuthorization.resumed(this);
         lifecycleDetached=false;super.onLoad();
         if (!world.isRemote && !vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld)) {
             needsLoadCheck=true;
@@ -804,11 +804,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         }
         for(Map.Entry<Entity,Double> entry:targets.entrySet()) {
             Entity entity=entry.getKey();double before=entity.getEntityBoundingBox().minY;
-            entity.setPosition(entity.posX,entity.posY+entry.getValue()-before,entity.posZ);
-            entity.onGround=true;entity.motionY=0;entity.fallDistance=0;
-            if(entity instanceof net.minecraft.entity.player.EntityPlayerMP)
-                com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(new com.vandorlabs.network.MessagePlatformMotion((EntityPlayer)entity,before,entry.getValue()),
-                        (net.minecraft.entity.player.EntityPlayerMP)entity);
+            com.vandorlabs.motion.PlatformRiders.move(entity,0,entry.getValue()-before,0);
         }
         return true;
     }
@@ -923,10 +919,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         for(Map.Entry<Entity,double[]> entry:moves.entrySet()) {
             Entity entity=entry.getKey();double[] d=entry.getValue();
             double feet=entity.getEntityBoundingBox().minY;
-            com.vandorlabs.network.MessagePlatformMotion packet=entity instanceof net.minecraft.entity.player.EntityPlayerMP
-                    ?new com.vandorlabs.network.MessagePlatformMotion((EntityPlayer)entity,feet,feet+d[1]).withHorizontal(d[0],d[2]):null;
-            entity.setPosition(entity.posX+d[0],entity.posY+d[1],entity.posZ+d[2]);
-            entity.onGround=true;entity.fallDistance=0;entity.motionY=0;
+            com.vandorlabs.motion.PlatformRiders.move(entity,d[0],d[1],d[2]);
             beltRiderPositions.put(entity.getUniqueID(),entity.getPositionVector());
             if(entity instanceof net.minecraft.entity.item.EntityItem) {
                 // Item push-out impulses and its slow normal tracking interval
@@ -936,7 +929,6 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                         new net.minecraft.network.play.server.SPacketEntityTeleport(entity));
                 entity.velocityChanged=true;
             }
-            if(packet!=null)com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(packet,(net.minecraft.entity.player.EntityPlayerMP)entity);
         }
         beltDistance=com.vandorlabs.ramp.EscalatorGeometry.phase(next,length*16);
         beltTick=now;lastStepTick=now;markDirty();schedule();
@@ -990,13 +982,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         for (Map.Entry<Entity,Double> entry:targets.entrySet()) {
                 Entity entity=entry.getKey();
                 double before=entity.getEntityBoundingBox().minY;
-                entity.setPosition(entity.posX,entity.posY+entry.getValue()-entity.getEntityBoundingBox().minY,entity.posZ);
-                entity.onGround=true; entity.fallDistance=0; entity.motionY=0;
-                if (entity instanceof net.minecraft.entity.player.EntityPlayerMP) {
-                    net.minecraft.entity.player.EntityPlayerMP rider=(net.minecraft.entity.player.EntityPlayerMP)entity;
-                    com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(
-                            new com.vandorlabs.network.MessagePlatformMotion(rider,before,entry.getValue()),rider);
-                }
+                com.vandorlabs.motion.PlatformRiders.move(entity,0,entry.getValue()-before,0);
         }
         return true;
     }
@@ -1035,8 +1021,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         }
         for(Map.Entry<Entity,net.minecraft.util.math.Vec3d> entry:targets.entrySet()){
             Entity e=entry.getKey();net.minecraft.util.math.Vec3d d=entry.getValue();double feet=e.getEntityBoundingBox().minY;
-            e.setPosition(e.posX+d.x,e.posY+d.y,e.posZ+d.z);e.onGround=true;e.fallDistance=0;e.motionY=0;
-            if(e instanceof net.minecraft.entity.player.EntityPlayerMP)com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(new com.vandorlabs.network.MessagePlatformMotion((EntityPlayer)e,feet,feet+d.y).withHorizontal(d.x,d.z),(net.minecraft.entity.player.EntityPlayerMP)e);
+            com.vandorlabs.motion.PlatformRiders.move(e,d.x,d.y,d.z);
         }
         return true;
     }
@@ -1070,7 +1055,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             for(AxisAlignedBB obstacle:com.vandorlabs.blocks.BlockControlledRamp.riderObstacles(world,pos,entity,body.expand(delta.x,delta.y,delta.z).grow(1e-7))){double y=obstacle.calculateYOffset(body,delta.y);AxisAlignedBB moved=body.offset(0,y,0);double x=obstacle.calculateXOffset(moved,delta.x);moved=moved.offset(x,0,0);double z=obstacle.calculateZOffset(moved,delta.z);if(Math.abs(x-delta.x)>1e-6||Math.abs(y-delta.y)>1e-6||Math.abs(z-delta.z)>1e-6)return false;}
             AxisAlignedBB destination=body.offset(delta.x,delta.y,delta.z).grow(-1e-5);for(AxisAlignedBB box:after)if(box.intersects(destination))return false;targets.put(entity,delta);
         }
-        for(Map.Entry<Entity,net.minecraft.util.math.Vec3d> entry:targets.entrySet()){Entity e=entry.getKey();net.minecraft.util.math.Vec3d d=entry.getValue();if(e instanceof net.minecraft.entity.player.EntityPlayerMP)((net.minecraft.entity.player.EntityPlayerMP)e).connection.setPlayerLocation(e.posX+d.x,e.posY+d.y,e.posZ+d.z,e.rotationYaw,e.rotationPitch);else e.setPosition(e.posX+d.x,e.posY+d.y,e.posZ+d.z);}
+        for(Map.Entry<Entity,net.minecraft.util.math.Vec3d> entry:targets.entrySet()){Entity e=entry.getKey();net.minecraft.util.math.Vec3d d=entry.getValue();com.vandorlabs.motion.PlatformRiders.move(e,d.x,d.y,d.z);}
         return true;
     }
     private boolean carryMoat(double previous,double current,boolean fromOriginal,boolean toOriginal){
@@ -1106,7 +1091,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             AxisAlignedBB destination=body.offset(delta.x,delta.y,delta.z).grow(-1e-5);for(AxisAlignedBB candidateBox:after)if(candidateBox.intersects(destination))return false;
             targets.put(entity,delta);
         }
-        for(Map.Entry<Entity,net.minecraft.util.math.Vec3d> entry:targets.entrySet()){Entity e=entry.getKey();net.minecraft.util.math.Vec3d d=entry.getValue();if(e instanceof net.minecraft.entity.player.EntityPlayerMP)((net.minecraft.entity.player.EntityPlayerMP)e).connection.setPlayerLocation(e.posX+d.x,e.posY+d.y,e.posZ+d.z,e.rotationYaw,e.rotationPitch);else e.setPosition(e.posX+d.x,e.posY+d.y,e.posZ+d.z);}
+        for(Map.Entry<Entity,net.minecraft.util.math.Vec3d> entry:targets.entrySet()){Entity e=entry.getKey();net.minecraft.util.math.Vec3d d=entry.getValue();com.vandorlabs.motion.PlatformRiders.move(e,d.x,d.y,d.z);}
         return true;
     }
     private boolean carrySideways(double previous,double current) {
@@ -1144,11 +1129,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             Entity entity=entry.getKey();
             double x=entity.posX+side.getFrontOffsetX()*entry.getValue();
             double z=entity.posZ+side.getFrontOffsetZ()*entry.getValue();
-            if (entity instanceof net.minecraft.entity.player.EntityPlayerMP)
-                ((net.minecraft.entity.player.EntityPlayerMP)entity).connection.setPlayerLocation(
-                        x,entity.posY,z,entity.rotationYaw,entity.rotationPitch);
-            else entity.setPosition(x,entity.posY,z);
-            entity.onGround=true; entity.fallDistance=0;
+            com.vandorlabs.motion.PlatformRiders.move(entity,x-entity.posX,0,z-entity.posZ);
         }
         return true;
     }
@@ -1248,7 +1229,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         tag=com.vandorlabs.ramp.RampCopyData.relocated(tag);
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;
-        WorldActionAuthorization.revoke(this);super.readFromNBT(tag);
+        WorldActionAuthorization.reading(this);super.readFromNBT(tag);
         RampCanopyCoordination.clearRampWait(this);waitingForCanopy=tag.getBoolean("RampCanopyWaiting");canopyCommand=tag.getBoolean("RampCanopyCommand");requestingDeploy=canopyCommand;canopyRetry=false;
         canopyBlockers.clear();NBTTagList blockers=tag.getTagList("RampCanopyBlockers",10);for(int i=0;i<Math.min(2176,blockers.tagCount());i++)canopyBlockers.add(readPosition(blockers.getCompoundTagAt(i)));
         moatGeometryRevision=Math.max(0,Math.min(2,tag.getInteger("MoatGeometryRevision")));verticalMoatSources=tag.getBoolean("MoatVerticalSources");vehicleFrozen=tag.getBoolean("VehicleRampFrozen");moat=tag.getBoolean("MoatMode");

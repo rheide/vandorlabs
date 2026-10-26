@@ -3,6 +3,7 @@
 set -euo pipefail
 unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
+unset VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
@@ -13,7 +14,22 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = arm-recovery ]; then
+        if [ "$TARGET" = arm-docs ]; then
+            PREFIX=joined_arm_
+            export VANDOR_LABS_JOINED_ARM_DOCS=true
+        elif [ "$TARGET" = arm-riders ]; then
+            PREFIX=arm_riders_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_RIDER_ONLY=true
+        elif [ "$TARGET" = arm-joined ]; then
+            PREFIX=arm_joined_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_JOINED_ONLY=true
+        elif [ "$TARGET" = arm-mining ]; then
+            PREFIX=arm_mining_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_MINING_ONLY=true
+        elif [ "$TARGET" = arm-live ]; then
+            PREFIX=arm_live_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true
+        elif [ "$TARGET" = arm-recovery ]; then
             PREFIX=arm_recovery_
             : "${VANDOR_LABS_ARM_RECOVERY_PHASE:?Set the isolated arm recovery phase}"
         elif [ "$TARGET" = utility26 ]; then
@@ -88,6 +104,7 @@ JAVA8=/usr/lib/jvm/java-8-openjdk-amd64
 RUN_OUT=$(mktemp -d "$ROOT/testclient/render-run.XXXXXX")
 
 cd "$ROOT"
+if [ "${TARGET:-}" = arm-live ]; then export VANDOR_LABS_ARM_SECOND_FIXTURE=${VANDOR_LABS_ARM_SECOND_FIXTURE:-"$ROOT/testclient/fixtures/arm-rotating-replacement-2.6.nbt"}; export VANDOR_LABS_ARM_SAVED_FIXTURE=${VANDOR_LABS_ARM_SAVED_FIXTURE:-"$ROOT/testclient/fixtures/arm-pending-detach-2.6.nbt"}; fi
 BUILD_ARGS=(build --no-daemon)
 if [ "${VANDOR_LABS_TEST_OFFLINE:-false}" = true ]; then BUILD_ARGS+=(--offline); fi
 if [ "${VANDOR_LABS_TEST_SKIP_BUILD:-false}" != true ]; then
@@ -128,6 +145,34 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = arm-docs ]; then
+        grep -q "joined-arm-docs PASS" "$RUN_OUT/client.log"
+        echo "Joined arm documentation captured: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-riders ]; then
+        grep -q "arm-rider PASS" "$RUN_OUT/client.log"
+        echo "Arm rider checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-joined ]; then
+        grep -q "joined-arm PASS" "$RUN_OUT/client.log"
+        echo "Joined arm checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-mining ]; then
+        grep -q "arm-payload-mining PASS" "$RUN_OUT/client.log"
+        echo "Arm payload mining passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-live ]; then
+        grep -q "arm-live PASS" "$RUN_OUT/client.log"
+        grep -q "arm-saved PASS" "$RUN_OUT/client.log"
+        grep -q "arm-replacement PASS" "$RUN_OUT/client.log"
+        grep -q "arm-payload-mining PASS" "$RUN_OUT/client.log"
+        echo "Live arm checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = arm-recovery ]; then
         grep -q "arm-durable-recovery PASS" "$RUN_OUT/client.log"
         echo "Arm restart recovery passed: $RUN_OUT"

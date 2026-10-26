@@ -85,6 +85,12 @@ public final class GearAssembly {
      * scan before any world state or ownership is changed.
      */
     public static Scan scan(World world, BlockPos requested) {
+        TileEntity raw=loaded(world,requested)?world.getTileEntity(requested):null;
+        if(raw instanceof GearTileEntity){GearTileEntity member=(GearTileEntity)raw;
+            if(member.owner()!=null&&!loaded(world,member.owner()))return unavailable("Load the joined controller first");
+            GearTileEntity control=member.loadedController();if(control!=null&&control.joinEnabled()&&control.columns().size()>1)
+                for(BlockPos at:control.members())if(!loaded(world,at))return unavailable("Load every joined arm before rebuilding");
+        }
         BlockPos top=topOfColumn(world,requested);
         if(top==null)return unavailable("Load the complete strut column first.");
         IBlockState topState=world.getBlockState(top);boolean swing=isSwingArm(topState);
@@ -109,7 +115,7 @@ public final class GearAssembly {
             // Arms are complete mechanisms even before a payload or landing foot is added.
             List<GearTopology.Cell> virtual=java.util.Collections.singletonList(new GearTopology.Cell(0,-height,0));
             GearTopology.Result free=GearTopology.validate(height,GearTopology.FootKind.NONE,virtual);
-            return new Scan(free.assembly(),EnumFacing.NORTH,java.util.Collections.singletonList(top));
+            try{return new Scan(free.assembly(),EnumFacing.NORTH,JoinedArms.columns(world,top,height));}catch(IllegalArgumentException denied){return fail(denied.getMessage());}
         }
         GearBlock footBlock=(GearBlock)footState.getBlock(),armBlock=(GearBlock)topState.getBlock();
         if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.sizeClass()!=armBlock.sizeClass())return fail("Wheel and mounting arm sizes must match.");

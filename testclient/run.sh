@@ -21,6 +21,13 @@ lines = [line for line in lines if not line.startswith(('soundCategory_master:',
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
 CAPTURE_JVM=("-Dvandorlabs.utility26ChecksOnly=${VANDOR_LABS_UTILITY26_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.armSecondFixture=${VANDOR_LABS_ARM_SECOND_FIXTURE:-}")
+CAPTURE_JVM+=("-Dvandorlabs.armSavedFixture=${VANDOR_LABS_ARM_SAVED_FIXTURE:-}")
+CAPTURE_JVM+=("-Dvandorlabs.joinedArmDocs=${VANDOR_LABS_JOINED_ARM_DOCS:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.armRiderOnly=${VANDOR_LABS_ARM_RIDER_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.armJoinedOnly=${VANDOR_LABS_ARM_JOINED_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.armMiningOnly=${VANDOR_LABS_ARM_MINING_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.armLiveChecks=${VANDOR_LABS_ARM_LIVE_CHECKS:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armRecoveryPhase=${VANDOR_LABS_ARM_RECOVERY_PHASE:-}")
 CAPTURE_JVM+=("-Dvandorlabs.bridgeMachineChecksOnly=${VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY:-false}" "-Dvandorlabs.machineBuildDocsOnly=${VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY:-false}")
 if [ "${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" = true ] || [ "${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" = true ]; then

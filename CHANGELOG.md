@@ -2,6 +2,13 @@
 
 ## 2.6
 
+- Add opt-in joined arm platforms with a 1–32 block neighbour range. Extenders support connected rectangles with air holes and intermediate supports, including six-arm 2×3 layouts; Rotating Arms join along a common hinge axis. Vertically moving Extenders offer an optional 1–32 block load height.
+- Preserve controller authorization through unload-before-save and reconnect, including Copy Controllers. Keep rotating level payloads attached to their sockets and restore replaced rotating payloads at valid endpoints without false collision stalls.
+- Give captured payload blocks their own mining target, retaining the supporting arm and journaling inventory drops through restart recovery.
+- Share rider transport and smoothing between arms and ramps. Keep player movement synchronized with platform collision under delayed server ticks, and preserve joined groups while member chunks are unloaded. Carry supported vehicles and their inventories within the configured platform footprint and load height.
+
+- Keep arm retraction requests active while attachment journals reach disk, so one click moves the stacked arms and payload together. Fix Windows journal handling for arms, Copy Controllers and Vehicle Couplers; recover pending arm transfers without leaving blocks locked. Add live six-axis arm regressions covering real journal processing, reversal, configuration and dismantling.
+
 - Restore pre-2.6 Taxi conversion for vehicles whose controller, Pilot Seat, programmable blocks and supported vanilla tiles carry external capability data; keep that opaque data in the saved snapshot while checking each block's own tile settings. Expose all fourteen turntable and surface designs in the Surface category of the shared block texture picker.
 - Preserve pre-2.6 vehicle ramp data by comparing unordered reservation sets consistently; restore older hexagonal propulsion snapshots that predate the connected-part property. Report preservation failures without copier-specific wording.
 - Ease low-speed steering for tracks and small wheels, including slower stationary tracked pivots and a gentler crawl-to-roll turn rate.
@@ -14,7 +21,7 @@
 - Write initial copy and coupling recovery records and copy completion records on a bounded disk worker, rechecking live inputs before transfer. Budget block lighting and neighbor updates after durable publication; inspect only coupler cells when looking for vehicle joins and reuse exact serialized-size accounting for carried chest edits.
 - Preserve housing quad records at the format's declared width under OptiFine and across shader-format changes.
 
-- Align new rotating-arm attachments with the block grid at quarter-turn endpoints; materialize safely representable full blocks and retain unsupported rotated states as snapshots. Preserve existing saved attachment alignment.
+- Align rotating-mode attachments with the block grid at quarter-turn endpoints; keep level-mode attachments connected to their swivels; materialize safely representable full blocks and retain unsupported rotated states as snapshots. Preserve existing saved attachment alignment.
 - Journal arm ownership changes before removing or placing blocks, recover interrupted transfers on restart, and keep affected inventories locked until their chunks are durably saved.
 - Keep cosmetic arm motion smooth through delayed updates with a pause-aware client clock. Bound the attachment mesh cache, reuse render buffers, coalesce surface-group refreshes and cache carried pressure-plate positions. Send compact Programmer updates for page and activity changes.
 

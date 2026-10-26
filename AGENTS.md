@@ -1,5 +1,7 @@
 # Vandor Labs project guidance
 
+- The mod must work on both Windows and Linux with Java 8. Keep journal file sync and atomic publication on both platforms, but route directory sync through `JournalFiles`: Windows NIO cannot open directory channels. Do not swallow genuine Linux permission/I/O failures. Exercise real asynchronous journal preparation, completion and recovery in live tests; a pending disk operation is not a rejected gameplay action, and matrix fixtures that bypass journaling cannot establish this behavior.
+
 - Shared gameplay code must not call `@SideOnly(Side.CLIENT)` APIs. In Minecraft 1.12.2, `AxisAlignedBB(Vec3d, Vec3d)` and `AxisAlignedBB.getCenter()` are client-only; use six coordinates and explicit midpoints. Run `testDedicatedServerLinkage`; integrated-server tests cannot establish dedicated-server API availability.
 - Keep tile `onLoad()` local-only. Queue channel registration, neighbor reads, gameplay updates and reservation repair through `DeferredTileLoad`, which rechecks tile identity after chunk loading finishes.
 - Failed vehicle or turntable deserialization must leave the entity inert and retain its original snapshot NBT for the next save. Do not keep a partially installed live snapshot after an installation failure.

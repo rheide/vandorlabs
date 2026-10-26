@@ -12,16 +12,21 @@ import java.io.IOException;
 public final class GuiModularGear extends GuiContainer {
     private final GearTileEntity tile;
     private int trigger,direction;
-    private boolean deployed,rotate;
+    private boolean deployed,rotate,platformPage,join,load;
+    private int range,heightLimit;
+    private net.minecraftforge.fml.client.config.GuiSlider rangeSlider,loadSlider;
     private GuiTextField channels;
     private String error="";
     public GuiModularGear(ContainerModularGear container){
-        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();rotate=tile.rotatePayload();xSize=252;ySize=228;
+        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();rotate=tile.rotatePayload();join=tile.joinEnabled();load=tile.carryLoad()&&tile.canCarryLoad();range=tile.joinRange();heightLimit=tile.loadHeight();xSize=252;ySize=228;
     }
     @Override public void initGui(){
         xSize=Math.min(252,width-12);ySize=228;super.initGui();buttonList.clear();int col=xSize-24;
         channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+70,col,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(tile.getRedstoneChannels().toString());
-        add(0,guiLeft+12,30,col);add(1,guiLeft+12,94,col);add(2,guiLeft+12,120,col);add(7,guiLeft+12,146,col);add(4,guiLeft+(xSize-200)/2,200,200);
+        add(0,guiLeft+12,30,col);add(1,guiLeft+12,94,col);add(2,guiLeft+12,120,col);add(7,guiLeft+12,146,col);add(4,guiLeft+12,172,(col-6)/2);add(8,guiLeft+18+(col-6)/2,172,(col-6)/2);
+        add(9,guiLeft+12,30,col);add(11,guiLeft+12,94,col);
+        rangeSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,guiLeft+12,guiTop+56,col,20,"Range: "," blocks",1,32,range,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=range){range=value;submit();}});buttonList.add(rangeSlider);
+        loadSlider=new net.minecraftforge.fml.client.config.GuiSlider(12,guiLeft+12,guiTop+120,col,20,"Load height: "," blocks",1,32,heightLimit,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=heightLimit){heightLimit=value;submit();}});buttonList.add(loadSlider);
         labels();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
     }
     private void add(int id,int x,int y,int width){buttonList.add(new GuiButton(id,x,guiTop+y,width,20,""));}
@@ -29,6 +34,11 @@ public final class GuiModularGear extends GuiContainer {
     private void labels(){
 
         boolean rest=tile.fullyDeployed();
+        for(int id:new int[]{0,1,2,7})button(id).visible=!platformPage;channels.setVisible(!platformPage);
+        button(9).visible=button(11).visible=platformPage;rangeSlider.visible=platformPage&&join;loadSlider.visible=platformPage&&join&&load&&tile.canCarryLoad();
+        button(9).displayString="Join neighbouring arms: "+(join?"On":"Off");button(9).enabled=rest&&!tile.isLandingAssembly()&&!tile.isFixedMount();rangeSlider.enabled=rest;
+        button(11).displayString="Carry load: "+(load?"On":"Off");button(11).enabled=rest&&join&&tile.canCarryLoad();loadSlider.enabled=rest;
+        button(8).displayString=platformPage?"Arm controls":"Platform options";button(8).enabled=!tile.isLandingAssembly()&&!tile.isFixedMount();
         button(0).displayString="Input: "+(tile.isLandingAssembly()&&!tile.isExtendedTrackStroke()?new String[]{"Manual","ON deploys","OFF deploys"}:new String[]{"Manual","ON activates","OFF activates"})[trigger];
         net.minecraft.util.math.BlockPos fold=com.vandorlabs.gear.ArmOrientation.vector(tile.mountDirection(),new net.minecraft.util.math.BlockPos(net.minecraft.util.EnumFacing.valueOf(new String[]{"NORTH","EAST","SOUTH","WEST"}[direction]).getDirectionVec()));
         button(1).displayString="Fold: "+net.minecraft.util.EnumFacing.getFacingFromVector(fold.getX(),fold.getY(),fold.getZ()).getName();button(1).enabled=tile.isSwingArmController()&&rest&&deployed;
@@ -39,23 +49,25 @@ public final class GuiModularGear extends GuiContainer {
     }
     private void submit(){
         if(com.vandorlabs.redstone.ChannelList.parse(channels.getText())==null){error="Invalid channel list";return;}
-        NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",trigger);tag.setInteger("Direction",direction);tag.setBoolean("Deployed",deployed);tag.setString("Channels",channels.getText());tag.setBoolean("RotatePayload",rotate);
+        NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",trigger);tag.setInteger("Direction",direction);tag.setBoolean("Deployed",deployed);tag.setString("Channels",channels.getText());tag.setBoolean("RotatePayload",rotate);tag.setBoolean("JoinArms",join);tag.setInteger("JoinRange",range);tag.setBoolean("CarryLoad",load);tag.setInteger("LoadHeight",heightLimit);
         error="";PacketHandler.INSTANCE.sendToServer(new MessageModularGear(inventorySlots.windowId,tag));
     }
     @Override protected void actionPerformed(GuiButton b){
         if(b.id==4){mc.player.closeScreen();return;}
-        if(b.id==0)trigger=GuiOptionCycle.next(trigger,3);else if(b.id==1)direction=GuiOptionCycle.next(direction,4);else if(b.id==2)deployed=!deployed;else if(b.id==7)rotate=!rotate;else return;
+        if(b.id==8){platformPage=!platformPage;labels();return;}
+        if(b.id==0)trigger=GuiOptionCycle.next(trigger,3);else if(b.id==1)direction=GuiOptionCycle.next(direction,4);else if(b.id==2)deployed=!deployed;else if(b.id==7)rotate=!rotate;else if(b.id==9){join=!join;if(!join)load=false;}else if(b.id==11)load=!load;else return;
         submit();labels();
     }
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
-        fontRenderer.drawString("Arms and Landing Gear",12,12,0xffffff);
-        fontRenderer.drawString(tile.usesLegacyInput()?"Channels (any + local)":"Channels (0 = local)",12,57,0xcdd7e4);
+        fontRenderer.drawString(platformPage?"Joined arm platform":"Arms and Landing Gear",12,12,0xffffff);
+        if(!platformPage)fontRenderer.drawString(tile.usesLegacyInput()?"Channels (any + local)":"Channels (0 = local)",12,57,0xcdd7e4);
         String failure=error.isEmpty()?tile.error():error;String status=failure.isEmpty()?(tile.isController()?tile.columns().size()+" arms / "+(tile.isLandingAssembly()?tile.assembly().feet().size():0)+" feet":"Track appearance"):"ERROR: "+failure;
-        java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,180+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
+        if(platformPage)fontRenderer.drawSplitString(tile.canCarryLoad()?"Load height is measured above the platform.":"Platform only for sideways or rotating arms.",12,146,xSize-24,0xcdd7e4);
+        java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,200+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
-    @Override protected void mouseClicked(int x,int y,int b)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,b,this::actionPerformed,0,1,2,7))return;super.mouseClicked(x,y,b);channels.mouseClicked(x,y,b);}
+    @Override protected void mouseClicked(int x,int y,int b)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,b,this::actionPerformed,0,1,2,7,9,11))return;super.mouseClicked(x,y,b);channels.mouseClicked(x,y,b);}
     @Override protected void keyTyped(char c,int key)throws IOException{if(channels.textboxKeyTyped(c,key))submit();else super.keyTyped(c,key);}
     @Override public void updateScreen(){super.updateScreen();channels.updateCursorCounter();labels();}
     @Override public void onGuiClosed(){super.onGuiClosed();org.lwjgl.input.Keyboard.enableRepeatEvents(false);}

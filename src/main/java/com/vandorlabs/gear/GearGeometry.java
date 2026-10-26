@@ -34,7 +34,7 @@ public final class GearGeometry {
     private static final ThreadLocal<GearTileEntity> EXCLUDED=new ThreadLocal<>();
     public static boolean excluded(GearTileEntity root){return EXCLUDED.get()==root;}
     public static List<AxisAlignedBB> foreign(World world,GearTileEntity root,AxisAlignedBB box){EXCLUDED.set(root);try{return world.getCollisionBoxes(null,box);}finally{EXCLUDED.remove();}}
-    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld)return;Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){roots.add(tile);index.put(tile);}else{roots.remove(tile);index.remove(tile);}}
+    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld||!world.isBlockLoaded(tile.getPos(),false))return;Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){roots.add(tile);index.put(tile);}else{roots.remove(tile);index.remove(tile);}}
     public static void remove(GearTileEntity tile){Set<GearTileEntity> roots=ROOTS.get(tile.getWorld());if(roots!=null)roots.remove(tile);SpatialIndex index=INDICES.get(tile.getWorld());if(index!=null)index.remove(tile);}
     @SubscribeEvent public static void unload(WorldEvent.Unload event){ROOTS.remove(event.getWorld());INDICES.remove(event.getWorld());}
     public static java.util.List<GearTileEntity> roots(World world){Set<GearTileEntity> found=ROOTS.get(world);return found==null?Collections.emptyList():new ArrayList<>(found);}
@@ -53,7 +53,7 @@ public final class GearGeometry {
     @SubscribeEvent public static void collisions(GetCollisionBoxesEvent event){if(event.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)return;SpatialIndex index=INDICES.get(event.getWorld());if(index==null)return;Set<GearTileEntity> roots=index.near(event.getAabb());
         for(GearTileEntity root:roots)if(!root.isInvalid()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root)
             for(AxisAlignedBB box:looseWheelBoxes(root))if(box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);
-        for(GearTileEntity root:roots)if(root!=EXCLUDED.get()&&!root.isInvalid()&&root.isOperational()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root&&root.getRenderBoundingBox().intersects(event.getAabb()))for(AxisAlignedBB box:root.collisionBoxes())if(box.getAverageEdgeLength()>0&&box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);
+        for(GearTileEntity root:roots)if(root!=EXCLUDED.get()&&!root.isInvalid()&&root.isOperational()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root&&root.getRenderBoundingBox().intersects(event.getAabb()))for(AxisAlignedBB original:root.collisionBoxes()){AxisAlignedBB box=com.vandorlabs.motion.PlatformRiders.supportCollision(original,event.getEntity(),root.progress()>0&&root.progress()<1);if(box!=null&&box.getAverageEdgeLength()>0&&box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);}
     }
     private static GearMotion.Bounds bounds(AxisAlignedBB box){return new GearMotion.Bounds(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ);}
     private static AxisAlignedBB box(GearMotion.Bounds b){return new AxisAlignedBB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);}
@@ -92,40 +92,58 @@ public final class GearGeometry {
     private static void addArm(List<AxisAlignedBB> out,AxisAlignedBB local,GearMotion.Pose pose,boolean foot,BlockPos at,int scaleX,int scaleZ,double shiftX,double shiftZ){AxisAlignedBB scaled=new AxisAlignedBB(.5+(local.minX-.5)*scaleX,local.minY,.5+(local.minZ-.5)*scaleZ,.5+(local.maxX-.5)*scaleX,local.maxY,.5+(local.maxZ-.5)*scaleZ);List<AxisAlignedBB> one=new ArrayList<>();add(one,scaled,pose,foot,at);out.add(one.get(0).offset(shiftX,0,shiftZ));}
     public static boolean canMove(GearTileEntity root,double before,double next){
         World world=root.getWorld();List<AxisAlignedBB> old=boxes(root,before),after=boxes(root,next);if(old.size()!=after.size())return false;
+        MovePlan riders=plan(world,old,after,null);
+        for(Entity rider:riders.riders)if(com.vandorlabs.motion.PlatformRiders.vehicle(rider)&&!JoinedArms.acceptsVehicle(root,rider,before))return false;
         EXCLUDED.set(root);
-        try{for(int i=0;i<after.size();i++){
+        try(com.vandorlabs.motion.PlatformRiders.CollisionScope scope=new com.vandorlabs.motion.PlatformRiders.CollisionScope(riders.riders)){for(int i=0;i<after.size();i++){
             AxisAlignedBB swept=swept(root,i,old.get(i),after.get(i),before,next);
             if(old.get(i).equals(after.get(i))||after.get(i).getAverageEdgeLength()==0)continue;
             if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false)||!world.getCollisionBoxes(null,swept).isEmpty())return false;
-        }return true;}finally{EXCLUDED.remove();}
+        }for(Entity rider:riders.riders){Vec3d move=riders.moves.get(rider);if(!com.vandorlabs.motion.PlatformRiders.clear(rider,move,world.getCollisionBoxes(rider,rider.getEntityBoundingBox().expand(move.x,move.y,move.z).grow(1e-7))))return false;}root.riderPlan=riders;return true;}finally{EXCLUDED.remove();}
     }
-    /** Move each contacted entity once; terrain does not cancel the mechanism's stroke. */
-    public static void pushEntities(World world,List<AxisAlignedBB> before,List<AxisAlignedBB> after,Entity vehicle){
-        if(world.isRemote)return;Map<Entity,net.minecraft.util.math.Vec3d> moves=new IdentityHashMap<>();
+    static final class MovePlan {
+        final Map<Entity,Vec3d> moves=new IdentityHashMap<>();
+        final Set<Entity> riders=Collections.newSetFromMap(new IdentityHashMap<>());
+        void apply(){for(Map.Entry<Entity,Vec3d> entry:moves.entrySet()){
+            Entity entity=entry.getKey();Vec3d move=entry.getValue();if(entity.isDead)continue;
+            if(riders.contains(entity)){com.vandorlabs.motion.PlatformRiders.move(entity,move.x,move.y,move.z);continue;}
+            if(entity instanceof net.minecraft.entity.player.EntityPlayerMP)((net.minecraft.entity.player.EntityPlayerMP)entity).connection.setPlayerLocation(entity.posX+move.x,entity.posY+move.y,entity.posZ+move.z,entity.rotationYaw,entity.rotationPitch);
+            else entity.setPositionAndUpdate(entity.posX+move.x,entity.posY+move.y,entity.posZ+move.z);
+            entity.fallDistance=0;entity.velocityChanged=true;
+        }}
+    }
+    /** One entity query per stroke step, independent of platform block count. */
+    private static MovePlan plan(World world,List<AxisAlignedBB> before,List<AxisAlignedBB> after,Entity vehicle){
+        MovePlan result=new MovePlan();if(world.isRemote||after.isEmpty())return result;
+        AxisAlignedBB area=before.get(0).union(after.get(0));for(int i=1;i<after.size();i++)area=area.union(before.get(i)).union(after.get(i));
+        List<Entity> candidates=world.getEntitiesWithinAABBExcludingEntity(vehicle,area.grow(.001,.5,.001));
+        Map<Entity,Double> highest=new IdentityHashMap<>();
         for(int i=0;i<after.size();i++){
             AxisAlignedBB old=before.get(i),next=after.get(i);if(old.equals(next)||next.getAverageEdgeLength()==0)continue;
-            for(Entity entity:world.getEntitiesWithinAABBExcludingEntity(vehicle,old.union(next).grow(.001,.13,.001))){
+            for(Entity entity:candidates){
                 if(entity.isDead||entity.noClip||vehicle!=null&&entity.getLowestRidingEntity()==vehicle)continue;
-                AxisAlignedBB body=entity.getEntityBoundingBox();boolean standing=Math.abs(body.minY-old.maxY)<.12&&body.maxX>old.minX&&body.minX<old.maxX&&body.maxZ>old.minZ&&body.minZ<old.maxZ;
-                if(!standing&&!body.intersects(old.union(next)))continue;
-                double dx=(next.minX+next.maxX-old.minX-old.maxX)/2,dy=standing?next.maxY-old.maxY:(next.minY+next.maxY-old.minY-old.maxY)/2,dz=(next.minZ+next.maxZ-old.minZ-old.maxZ)/2;
-                AxisAlignedBB shifted=body.offset(dx,dy,dz);
-                if(!standing&&shifted.intersects(next)){
+                AxisAlignedBB body=entity.getEntityBoundingBox();boolean standing=Math.abs(body.minY-old.maxY)<(entity instanceof net.minecraft.entity.player.EntityPlayer?.5:.15)&&body.maxX>old.minX&&body.minX<old.maxX&&body.maxZ>old.minZ&&body.minZ<old.maxZ;
+                double dx=(next.minX+next.maxX-old.minX-old.maxX)/2,dz=(next.minZ+next.maxZ-old.minZ-old.maxZ)/2;
+                if(standing){if(!com.vandorlabs.motion.PlatformRiders.eligible(entity))continue;Double prior=highest.get(entity);if(prior!=null&&prior>=old.maxY)continue;highest.put(entity,old.maxY);result.riders.add(entity);result.moves.put(entity,new Vec3d(dx,next.maxY-body.minY,dz));continue;}
+                if(result.riders.contains(entity)||!body.intersects(old.union(next)))continue;
+                double dy=(next.minY+next.maxY-old.minY-old.maxY)/2;AxisAlignedBB shifted=body.offset(dx,dy,dz);
+                if(shifted.intersects(next)){
                     if(Math.abs(dy)>=Math.abs(dx)&&Math.abs(dy)>=Math.abs(dz))dy+=dy>=0?next.maxY-shifted.minY+.001:next.minY-shifted.maxY-.001;
                     else if(Math.abs(dx)>=Math.abs(dz))dx+=dx>=0?next.maxX-shifted.minX+.001:next.minX-shifted.maxX-.001;
                     else dz+=dz>=0?next.maxZ-shifted.minZ+.001:next.minZ-shifted.maxZ-.001;
                 }
-                net.minecraft.util.math.Vec3d move=new net.minecraft.util.math.Vec3d(dx,dy,dz),previous=moves.get(entity);if(previous==null||move.lengthSquared()>previous.lengthSquared())moves.put(entity,move);
+                Vec3d move=new Vec3d(dx,dy,dz),previous=result.moves.get(entity);if(previous==null||move.lengthSquared()>previous.lengthSquared())result.moves.put(entity,move);
             }
         }
-        for(Map.Entry<Entity,net.minecraft.util.math.Vec3d> entry:moves.entrySet()){
-            Entity entity=entry.getKey();net.minecraft.util.math.Vec3d move=entry.getValue();
-            if(entity instanceof net.minecraft.entity.player.EntityPlayerMP)((net.minecraft.entity.player.EntityPlayerMP)entity).connection.setPlayerLocation(entity.posX+move.x,entity.posY+move.y,entity.posZ+move.z,entity.rotationYaw,entity.rotationPitch);
-            else entity.setPositionAndUpdate(entity.posX+move.x,entity.posY+move.y,entity.posZ+move.z);
-            entity.fallDistance=0;entity.velocityChanged=true;
-        }
+        return result;
     }
+    public static void pushEntities(World world,List<AxisAlignedBB> before,List<AxisAlignedBB> after,Entity vehicle){plan(world,before,after,vehicle).apply();}
+    static void pushEntities(GearTileEntity arm){MovePlan ready=arm.riderPlan;arm.riderPlan=null;if(ready!=null)ready.apply();}
     public static AxisAlignedBB swept(GearTileEntity root,int index,AxisAlignedBB old,AxisAlignedBB next,double before,double after){
+        if(root.payload()!=null&&!root.payload().materialized()&&root.isSwingArmController()){
+            int start=boxes(root,before).size()-root.payload().collisionBoxCount(root);
+            if(index>=start)return root.payload().sweptBox(root,index-start,before,after);
+        }
         if(!root.isLandingAssembly()){double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());return old.union(next).grow((root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
         int pieces=root.isSwingArmController()?armParts().size()+3:4,feetStart=root.columns().size()*pieces;
         boolean translated=root.mode()==GearMotion.Mode.EXTEND||root.mode()==GearMotion.Mode.ROTATE_LEVEL&&(index>=feetStart||index%pieces==pieces-1);
