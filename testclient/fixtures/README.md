@@ -40,3 +40,15 @@ Additional focused checks:
 
 `arm-docs` captures construction stages separately from the asserted movement
 regressions.
+
+
+The `arm-wall` focus imports `arm-wall-rotating-2.6.nbt`: two independent,
+two-section Large Rotating Arms mounted eastward against a wall, carrying the
+outer blocks of a three-block granite strip. It preserves the reported saved
+error state with operator identifiers removed. Real clicks must move each
+payload without moving the middle block or wall, reverse, refuse a real
+obstruction without losing the payload, and retry after clearing it. Geometry
+checks cover both sizes, six mounts, four fold directions and both payload
+modes, retaining the intermediate stroke while excluding inflation along the
+hinge axis. Run `test_viewscreen.sh --focus arm-wall` on Linux or
+`run_windows.py --focus arm-wall` on Windows.

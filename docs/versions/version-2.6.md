@@ -51,7 +51,7 @@ removed, new platform blocks are included, and empty arms keep their original
 length. Extend fully before changing arm sections or joining settings. See the
 [joined-platform building guide](../joined-arm-platforms.md) for the steps and controls.
 
-Unjoined Rotating Arms, like Extenders, select only their tip block. Joined discovery ignores neighbouring arms with different configuration or section counts. The arm dialog stays open when a joined group changes its controller. Inert arms retain their ordinary selection outline.
+Unjoined Rotating Arms, like Extenders, select only their tip block. Joined discovery ignores neighbouring arms with different configuration or section counts. The arm dialog stays open when a joined group changes its controller. Inert arms retain their ordinary selection outline. Rotating Arms can slide past face-touching blocks beside their hinge axis; blocks inside the actual swept path still stop movement.
 
 Controller authorization survives reconnecting. Captured payload blocks can be mined without removing their supporting arm; inventory drops use the same durable ownership rules as arm transfers.
 

@@ -58,3 +58,5 @@
 - Grid-aligned retracted Extender payloads must be native world blocks on all six mounting faces. Preserve displaced arm sections separately from payload ownership; never encode the former reserved-cell limitation as an expected test result. Run `arm-endpoints` for regular/Large joined platforms, edits, disconnected corners, reload and empty extension, and the endpoint partial-save phases of `test_arm_recovery.sh` when changing that handoff. Fractional endpoints still require captured-payload mining coverage.
 
 - Restored arm sections need client tile data after journal proxies are published, even if their block state is unchanged. Endpoint tests must compare client mounting direction and controller ownership and assert only one assembly renderer after partial and complete native-payload mining; server-only block checks miss duplicate standalone models.
+
+- Rotating-arm swept bounds must not grow along the world-space hinge axis. Face contact beside that axis is not an obstruction. Keep the saved wall-mounted pair in the `arm-wall` focus, and verify actual obstructions still refuse safely and permit retry.

@@ -144,7 +144,7 @@ public final class GearGeometry {
             int start=boxes(root,before).size()-root.payload().collisionBoxCount(root);
             if(index>=start)return root.payload().sweptBox(root,index-start,before,after);
         }
-        if(!root.isLandingAssembly()){double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());return old.union(next).grow((root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
+        if(!root.isLandingAssembly()){double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());return rotationEnvelope(root,old.union(next),(root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
         int pieces=root.isSwingArmController()?armParts().size()+3:4,feetStart=root.columns().size()*pieces;
         boolean translated=root.mode()==GearMotion.Mode.EXTEND||root.mode()==GearMotion.Mode.ROTATE_LEVEL&&(index>=feetStart||index%pieces==pieces-1);
         double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());
@@ -164,6 +164,13 @@ public final class GearGeometry {
         }
         // Level feet only translate monotonically along this quarter arc. Their
         // endpoint union is exact; rigid bars need curvature only in their plane.
-        return (root.mountDirection()==EnumFacing.DOWN?envelope.grow(root.direction().axisX()==0?padding:0,padding,root.direction().axisZ()==0?padding:0):envelope.grow(padding)).shrink(.0001);
+        return rotationEnvelope(root,envelope,padding).shrink(.0001);
     }
+    private static AxisAlignedBB rotationEnvelope(GearTileEntity root,AxisAlignedBB envelope,double padding){
+        // Rotation never changes coordinates along the hinge axis. Inflating
+        // that axis turns face contact with neighbouring blocks into a collision.
+        Vec3d axis=ArmOrientation.vector(root.mountDirection(),root.direction().axisX(),0,root.direction().axisZ());
+        return envelope.grow(axis.x==0?padding:0,axis.y==0?padding:0,axis.z==0?padding:0);
+    }
+
 }

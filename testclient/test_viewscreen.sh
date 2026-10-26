@@ -20,6 +20,9 @@ case "${1:-}" in
         elif [ "$TARGET" = mekanism-tanks ]; then
             PREFIX=mekanism_tank_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_MEKANISM_TANK_ONLY=true
+        elif [ "$TARGET" = arm-wall ]; then
+            PREFIX=arm_wall_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_WALL_ONLY=true
         elif [ "$TARGET" = arm-placement ]; then
             PREFIX=arm_placement_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_PLACEMENT_ONLY=true
@@ -162,6 +165,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = mekanism-tanks ]; then
         if [ "${VANDOR_LABS_MEKANISM_TANK_RESTART:-}" = save ]; then grep -q "mekanism-tank-save PASS" "$RUN_OUT/client.log"; else grep -q "mekanism-tank PASS" "$RUN_OUT/client.log"; fi
         echo "Native Mekanism tank vehicle checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-wall ]; then
+        grep -q "arm-wall PASS" "$RUN_OUT/client.log"
+        echo "Saved wall arm checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-placement ]; then
