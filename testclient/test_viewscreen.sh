@@ -26,6 +26,9 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-riders ]; then
             PREFIX=arm_riders_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_RIDER_ONLY=true
+        elif [ "$TARGET" = arm-endpoints ]; then
+            PREFIX=arm_endpoint_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_JOINED_ONLY=true VANDOR_LABS_ARM_ENDPOINT_ONLY=true
         elif [ "$TARGET" = arm-joined ]; then
             PREFIX=arm_joined_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_JOINED_ONLY=true
@@ -169,6 +172,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-riders ]; then
         grep -q "arm-rider PASS" "$RUN_OUT/client.log"
         echo "Arm rider checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-endpoints ]; then
+        grep -q "joined-arm PASS arm-endpoint" "$RUN_OUT/client.log"
+        echo "Arm endpoint checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-joined ]; then

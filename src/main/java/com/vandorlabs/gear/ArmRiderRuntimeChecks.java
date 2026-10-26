@@ -59,7 +59,7 @@ public final class ArmRiderRuntimeChecks {
                 Vec3d top=arm.payload().transform(arm,arm.progress(),.5,1,.5).add(new Vec3d(ROOT));
                 require(Math.abs(rider.getEntityBoundingBox().minY-top.y)<.55,"rider remains on support feet="+rider.getEntityBoundingBox().minY+" top="+top.y+" progress="+arm.progress());
             }
-            if(stage==1&&arm.progress()<.5){arm.target(true);stage=2;}
+            if(stage==1&&(fixture%4<2?arm.progress()==0&&arm.payload()!=null&&arm.payload().materialized()&&!ArmTransactions.locked(world,ROOT):arm.progress()<.5)){arm.target(true);stage=2;}
             if(stage==2&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){require(world.getBlockState(ROOT.up(3)).getBlock()==Blocks.STONE,"platform restores under rider");done=true;}
         }catch(Throwable problem){failure=problem;}
     }

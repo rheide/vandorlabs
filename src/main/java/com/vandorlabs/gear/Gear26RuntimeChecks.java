@@ -51,7 +51,7 @@ public final class Gear26RuntimeChecks {
                 clear(world,root);GearTileEntity tile=arm(world,actor,root,GearRegistry.GEAR_EXTENDER,face,2);BlockPos source=root.offset(face,2);world.setBlockState(source,Blocks.STONE.getDefaultState());
                 NBTTagCompound settings=tile.settings();settings.setDouble("ActiveExtension",1);settings.setBoolean("Deployed",false);tile.configure(settings);
                 for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==0,"attachment extends through full stroke "+face+" "+tile.error());
-                require(world.isAirBlock(source)&&tile.payload()!=null&&!tile.payload().materialized(),"integral retracted endpoint retains payload over reserved arm cell "+face);
+                require(world.isAirBlock(source)&&tile.payload()!=null&&tile.payload().materialized(),"integral retracted endpoint restores native blocks while storing arm sections "+face);
                 tile.target(true);for(int tick=0;tick<50;tick++)tile.update();require(tile.progress()==1&&world.getBlockState(source).getBlock()==Blocks.STONE&&(tile.payload()==null||tile.payload().materialized()),"reverse restores construction block without duplication "+face);
                 settings=tile.settings();settings.setDouble("ActiveExtension",.5);settings.setBoolean("Deployed",false);tile.configure(settings);retainMidStroke(tile);
                 require(tile.progress()>0&&tile.progress()<1&&tile.payload()!=null&&!tile.payload().materialized()&&world.isAirBlock(source),"mid-stroke retains captured attachment "+face);
@@ -96,7 +96,7 @@ public final class Gear26RuntimeChecks {
                 GearTileEntity tile=part.loadedController();
                 require(tile!=null&&tile.assembly().columnHeight()==2&&!tile.target(),"normal placement and right-click form and retract two-section upward arm: root="+part.getPos()+" owner="+part.owner()+" controller="+(tile==null?"null":tile.getPos()+" "+tile.error()+" height="+(tile.assembly()==null?"none":tile.assembly().columnHeight())));
                 BlockPos tip=root.up(2);tickMountedStack(world,root,50);
-                require(tile.progress()==0&&tile.payload()!=null&&!tile.payload().materialized()&&world.isAirBlock(tip),"ground-mounted upward two-section arm retracts its attached block: "+block.getRegistryName()+" "+tile.error());
+                require(tile.progress()==0&&tile.payload()!=null&&tile.payload().materialized()&&world.isAirBlock(tip),"ground-mounted upward two-section arm retracts its attached block: "+block.getRegistryName()+" "+tile.error());
                 tile.target(true);tickMountedStack(world,root,50);
                 require(tile.progress()==1&&world.getBlockState(tip).getBlock()==Blocks.STONE,"ground-mounted arm restores construction pose and payload: "+block.getRegistryName()+" "+tile.error());
                 MotionObstacle obstacle=new MotionObstacle(world,tip);net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(obstacle);
@@ -201,23 +201,26 @@ public final class Gear26RuntimeChecks {
         tile.target(true);for(int tick=0;tick<50;tick++)tile.update();for(int x=0;x<16;x++)world.setBlockToAir(root.add(x,-2,0));
         System.out.println("[vandorlabs][reprolab] gear26-payload-bounds PASS 16-block-wide sweep render-culling spatial-index cross-chunk-collision");
     }
-    private static void carried(WorldServer world,EntityPlayerMP actor,BlockPos root){
+    private static void carried(WorldServer world,EntityPlayerMP actor,BlockPos root){for(int phase=0;phase<3;phase++)carried(world,actor,root,phase);}
+    private static void carried(WorldServer world,EntityPlayerMP actor,BlockPos root,int phase){
+        boolean retracted=phase>0,empty=phase==2;
         clear(world,root);GearTileEntity source=arm(world,actor,root,GearRegistry.GEAR_EXTENDER,EnumFacing.DOWN,2);BlockPos chestPos=root.down(2);world.setBlockState(chestPos,Blocks.CHEST.getDefaultState());
         ((net.minecraft.tileentity.TileEntityChest)world.getTileEntity(chestPos)).setInventorySlotContents(0,new ItemStack(net.minecraft.init.Items.EMERALD,7));ArmPayload payload=ArmPayload.discover(source,actor);
-        BlockPos local=new BlockPos(3,3,3),shift=local.subtract(root),attachment=local.down(2);java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> cells=new java.util.ArrayList<>();
+        if(retracted){source.target(false);for(int tick=0;tick<50;tick++)source.update();require(source.progress()==0&&source.hasStoredSections()&&source.payload().materialized(),"carried regression starts with native retracted chest and separately stored arm section");if(empty){world.setBlockToAir(root.down());source.update();require(source.payload()==null,"native chest removal leaves only stored arm sections");}payload=source.payload();}
+        BlockPos local=new BlockPos(3,3,3),shift=local.subtract(root),attachment=local.down(retracted?1:2);java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> cells=new java.util.ArrayList<>();
         cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(BlockPos.ORIGIN,com.vandorlabs.blocks.ModBlocks.PILOT_SEAT.getDefaultState(),null));cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(new BlockPos(0,0,1),com.vandorlabs.blocks.ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null));
-        for(BlockPos cell:new BlockPos[]{root,root.down(),chestPos}){TileEntity tile=world.getTileEntity(cell);NBTTagCompound tag=tile==null?null:tile.writeToNBT(new NBTTagCompound());if(cell.equals(root))tag.setTag("ArmPayload",payload.write());cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(cell.add(shift),world.getBlockState(cell),tag==null?null:com.vandorlabs.vehicle.VehicleTileData.translated(tag,shift)));}
+        for(BlockPos cell:new BlockPos[]{root,root.down(),chestPos}){if(world.isAirBlock(cell))continue;TileEntity tile=world.getTileEntity(cell);NBTTagCompound tag=tile==null?null:tile.writeToNBT(new NBTTagCompound());if(cell.equals(root)&&payload!=null)tag.setTag("ArmPayload",payload.write());cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(cell.add(shift),world.getBlockState(cell),tag==null?null:com.vandorlabs.vehicle.VehicleTileData.translated(tag,shift)));}
         com.vandorlabs.vehicle.EntityGroundVehicle craft=new com.vandorlabs.vehicle.EntityGroundVehicle(world);
         try{
             craft.install(new com.vandorlabs.vehicle.VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,3));craft.setPosition(root.getX()-3,root.getY()+12,root.getZ()-3);craft.signals.open();
-            ((net.minecraft.tileentity.TileEntityChest)craft.view.getTileEntity(attachment)).setInventorySlotContents(0,new ItemStack(net.minecraft.init.Items.DIAMOND,9));
-            GearTileEntity arm=(GearTileEntity)craft.view.getTileEntity(local);NBTTagCompound values=arm.settings();values.setDouble("ActiveExtension",1);values.setBoolean("Deployed",false);arm.configure(values);
-            for(int tick=0;tick<250;tick++){com.vandorlabs.vehicle.ModularGearVehicles.tick(craft);arm=(GearTileEntity)craft.view.getTileEntity(local);if(arm!=null&&arm.progress()==0)break;try{Thread.sleep(1);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IllegalStateException(interrupted);}}
-            arm=(GearTileEntity)craft.view.getTileEntity(local);require(arm!=null&&arm.progress()==0&&!craft.hover,"generic payload remains operable in Taxi");require(craft.structure.at(attachment)==null&&arm.payload()!=null&&!arm.payload().materialized(),"ordinary carried cells become one nested snapshot before movement");
-            net.minecraft.tileentity.TileEntityChest nested=(net.minecraft.tileentity.TileEntityChest)arm.payload().view(arm).tiles.get(BlockPos.ORIGIN);require(nested!=null&&nested.getStackInSlot(0).getItem()==net.minecraft.init.Items.DIAMOND&&nested.getStackInSlot(0).getCount()==9,"carried capture adopts edited materialized inventory instead of stale snapshot");
+            if(!empty)((net.minecraft.tileentity.TileEntityChest)craft.view.getTileEntity(attachment)).setInventorySlotContents(0,new ItemStack(net.minecraft.init.Items.DIAMOND,9));
+            GearTileEntity arm=(GearTileEntity)craft.view.getTileEntity(local);NBTTagCompound values=arm.settings();values.setDouble("ActiveExtension",1);values.setBoolean("Deployed",retracted);arm.configure(values);
+            for(int tick=0;tick<250;tick++){com.vandorlabs.vehicle.ModularGearVehicles.tick(craft);arm=(GearTileEntity)craft.view.getTileEntity(local);if(arm!=null&&arm.progress()==(retracted?1:0))break;try{Thread.sleep(1);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IllegalStateException(interrupted);}}
+            arm=(GearTileEntity)craft.view.getTileEntity(local);require(arm!=null&&arm.progress()==(retracted?1:0)&&!craft.hover,"generic payload remains operable in Taxi");require((retracted?craft.structure.at(attachment)!=null&&craft.structure.at(attachment).state.getBlock()==GearRegistry.GEAR_EXTENDER:craft.structure.at(attachment)==null)&&!arm.hasStoredSections(),"carried native endpoint restores stored arm sections exactly once");require(empty?arm.payload()==null:arm.payload()!=null&&!arm.payload().materialized(),"ordinary carried cells become one nested snapshot before movement");
+            if(!empty){net.minecraft.tileentity.TileEntityChest nested=(net.minecraft.tileentity.TileEntityChest)arm.payload().view(arm).tiles.get(BlockPos.ORIGIN);require(nested!=null&&nested.getStackInSlot(0).getItem()==net.minecraft.init.Items.DIAMOND&&nested.getStackInSlot(0).getCount()==9,"carried capture adopts edited materialized inventory instead of stale snapshot");}
             NBTTagCompound original=arm.writeToNBT(new NBTTagCompound()),rotated=original.copy();for(int t=0;t<4;t++)GearData.rotate(rotated,1,world);require(original.equals(rotated),"nested payload and six-axis basis rotate through four parking headings without loss");
         }finally{craft.signals.close();craft.setDead();clear(world,root);}
-        System.out.println("[vandorlabs][reprolab] gear26-carried PASS Taxi-animation atomic-nested-capture changed-inventory retained-snapshot four-parking-headings");
+        System.out.println("[vandorlabs][reprolab] gear26-carried PASS phase="+phase+" Taxi-animation atomic-nested-capture changed-inventory retained-snapshot four-parking-headings");
     }
     /** A persisted pre-tip-only payload must retain its entire authorized footprint. */
     private static ArmPayload savedAttachment(WorldServer world,BlockPos root,BlockPos source,int count){

@@ -67,12 +67,14 @@ public final class ArmLiveRuntimeChecks {
             WorldServer w=mc.getIntegratedServer().getWorld(0);GearTileEntity arm=(GearTileEntity)w.getTileEntity(root);EntityPlayerMP p=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
             require(arm!=null,"root survives");
             if(stage==2){if(ticks-started<10)return false;require(!arm.target(),"single click must retain retract request while journal is pending; progress="+arm.progress()+" error="+arm.error());
-                require(ticks-started<240,"retraction completes: "+arm.error());if(arm.progress()!=0||ArmTransactions.locked(w,root))return false;
+                require(ticks-started<240,"retraction completes: "+arm.error());if(arm.progress()!=0||ArmTransactions.locked(w,root)||block().kind()==GearBlock.Kind.EXTENDER&&(arm.payload()==null||!arm.payload().materialized()))return false;
                 require(w.isAirBlock(source)&&arm.payload()!=null,"payload travels with arm exactly once");
                 if(fixture>=26){require(arm.payload().blocks.cells.size()==1,"unjoined extender captures only its tip block");surroundingsIntact(w);net.minecraft.nbt.NBTTagCompound persisted=arm.writeToNBT(new net.minecraft.nbt.NBTTagCompound());arm.readFromNBT(persisted);arm.operator(p);arm.onLoad();require(arm.payload()!=null&&arm.payload().blocks.cells.size()==1,"saved retracted payload survives tile reload");}
-                if(block().kind()==GearBlock.Kind.EXTENDER)require(!arm.payload().materialized(),"retracted payload retained in occupied arm cell");
+                if(block().kind()==GearBlock.Kind.EXTENDER)require(arm.payload().materialized(),"aligned retracted payload becomes a normal block");
                 AxisAlignedBB box=arm.collisionBoxes().get(0);Vec3d aim=new Vec3d((box.minX+box.maxX)/2,(box.minY+box.maxY)/2,(box.minZ+box.maxZ)/2);
-                require(GearInteractions.trace(w,aim.add(new Vec3d(face().getDirectionVec()).scale(4)),aim)!=null,"retracted mechanism remains ray selectable");
+                Vec3d endOn=aim.add(new Vec3d(face().getDirectionVec()).scale(4));RayTraceResult nativeHit=w.rayTraceBlocks(endOn,aim,false,true,false);
+                require(GearInteractions.trace(w,endOn,aim)!=null||arm.payload().materialized()&&nativeHit!=null&&arm.payload().placedCells(arm).contains(nativeHit.getBlockPos()),"end-on ray selects the arm or its nearer native payload");
+                require(GearInteractions.trace(w,aim.add(ArmOrientation.vector(face(),-4,0,0)),aim)!=null,"exposed side of retracted arm remains selectable");
                 if(fixture==24||fixture==25){net.minecraft.inventory.IInventory inventory=(net.minecraft.inventory.IInventory)arm.payload().view(arm).getTileEntity(BlockPos.ORIGIN);require(inventory.getStackInSlot(0).getCount()==37,"captured chest retains 37 diamonds");}
                 stage=6;started=ticks;return false;}
             if(stage==3){require(ticks-started<240,"reverse and journal retirement complete: "+arm.error());if(arm.progress()!=1||ArmTransactions.locked(w,root)||ArmTransactions.locked(w,source))return false;

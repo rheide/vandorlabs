@@ -45,17 +45,18 @@ final class JoinedArms {
         // The current target is runtime state; all authored configuration must agree.
         return first.sameJoinConfiguration(candidate);
     }
-    static Set<BlockPos> platform(GearTileEntity arm){
+    static Set<BlockPos> platform(GearTileEntity arm){return platform(arm,BlockPos.ORIGIN);}
+    static Set<BlockPos> platform(GearTileEntity arm,BlockPos shift){
         if(arm.columns().size()<2)throw new IllegalArgumentException("Enable a compatible neighbouring arm first");
         List<JoinedPlatform.Cell> supports=new ArrayList<>();int minX=Integer.MAX_VALUE,minZ=minX,maxX=Integer.MIN_VALUE,maxZ=maxX;
         for(BlockPos column:arm.columns()){BlockPos local=ArmOrientation.inverse(arm.mountDirection(),column);supports.add(new JoinedPlatform.Cell(local.getX(),local.getZ()));minX=Math.min(minX,local.getX());maxX=Math.max(maxX,local.getX());minZ=Math.min(minZ,local.getZ());maxZ=Math.max(maxZ,local.getZ());}
         Set<JoinedPlatform.Cell> occupied=new LinkedHashSet<>();int y=-arm.assembly().columnHeight();
-        for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++){BlockPos at=arm.localCell(x,y,z);if(!GearAssembly.loaded(arm.getWorld(),at))throw new IllegalArgumentException("Load the entire joined platform");if(!arm.getWorld().isAirBlock(at))occupied.add(new JoinedPlatform.Cell(x,z));}
-        Set<BlockPos> result=new LinkedHashSet<>();for(JoinedPlatform.Cell cell:JoinedPlatform.connected(supports,occupied))result.add(arm.localCell(cell.u,y,cell.v));return result;
+        for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++){BlockPos at=arm.localCell(x,y,z).add(shift);if(!GearAssembly.loaded(arm.getWorld(),at))throw new IllegalArgumentException("Load the entire joined platform");if(!arm.getWorld().isAirBlock(at)&&(!arm.members().contains(at)||arm.storedSections!=null&&arm.storedSections.at(at.subtract(arm.getPos()))!=null))occupied.add(new JoinedPlatform.Cell(x,z));}
+        Set<BlockPos> result=new LinkedHashSet<>();if(occupied.isEmpty())return result;for(JoinedPlatform.Cell cell:JoinedPlatform.connected(supports,occupied))result.add(arm.localCell(cell.u,y,cell.v).add(shift));return result;
     }
     static final class Volume {
         final Set<BlockPos> platform;final boolean carry;final int floor,height;int minX=Integer.MAX_VALUE,minZ=minX,maxX=Integer.MIN_VALUE,maxZ=maxX;
-        Volume(GearTileEntity arm,Set<BlockPos> platform){this.platform=platform;carry=arm.carryLoad()&&arm.canCarryLoad();floor=platform.iterator().next().getY();height=arm.loadHeight();for(BlockPos column:arm.columns()){int x=arm.getPos().getX()+column.getX(),z=arm.getPos().getZ()+column.getZ();minX=Math.min(minX,x);maxX=Math.max(maxX,x);minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);}}
+        Volume(GearTileEntity arm,Set<BlockPos> platform,BlockPos shift){this.platform=platform;carry=arm.carryLoad()&&arm.canCarryLoad();floor=platform.iterator().next().getY();height=arm.loadHeight();for(BlockPos column:arm.columns()){int x=arm.getPos().getX()+column.getX()+shift.getX(),z=arm.getPos().getZ()+column.getZ()+shift.getZ();minX=Math.min(minX,x);maxX=Math.max(maxX,x);minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);}}
         boolean contains(BlockPos at){return platform.contains(at)||carry&&at.getY()>floor&&at.getY()<=floor+height&&at.getX()>=minX&&at.getX()<=maxX&&at.getZ()>=minZ&&at.getZ()<=maxZ;}
     }
     static boolean acceptsVehicle(GearTileEntity arm,net.minecraft.entity.Entity vehicle,double progress){

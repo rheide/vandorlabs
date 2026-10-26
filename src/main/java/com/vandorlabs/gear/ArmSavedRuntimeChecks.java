@@ -35,7 +35,7 @@ final class ArmSavedRuntimeChecks {
         if(ArmTransactions.locked(world,ROOT)||ArmTransactions.locked(world,ROOT.up(2)))return false;
         if(stage==1){require(world.getBlockState(ROOT.up(2)).getBlock()==Blocks.STONE&&arm.payload()!=null&&arm.payload().materialized(),"journal restores one world-owned payload");
             arm.operator(actor);arm.target(false);stage=2;return false;}
-        if(stage==2){if(arm.progress()!=0)return false;require(world.isAirBlock(ROOT.up(2))&&arm.payload()!=null&&!arm.payload().materialized(),"recovered saved stack retracts its payload");arm.target(true);stage=3;return false;}
+        if(stage==2){if(arm.progress()!=0||arm.payload()!=null&&!arm.payload().materialized())return false;require(world.isAirBlock(ROOT.up(2))&&arm.payload()!=null&&arm.payload().materialized(),"recovered saved stack retracts to native payload blocks");arm.target(true);stage=3;return false;}
         if(arm.progress()!=1||!arm.payload().materialized())return false;
         require(world.getBlockState(ROOT.up(2)).getBlock()==Blocks.STONE,"saved payload restored once after reversal");
         require(actor.interactionManager.tryHarvestBlock(ROOT.up(2)),"saved payload unlocks for mining");require(actor.interactionManager.tryHarvestBlock(ROOT),"saved arm unlocks for dismantling");

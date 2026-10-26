@@ -35,8 +35,8 @@ public final class ArmRecoveryRuntimeChecks {
                 require(world.isAirBlock(PAYLOAD),"harvest has no restored world duplicate");if(committed)require(arm.payload()==null&&diamonds==37&&chests==1,"committed harvest owns drops once");else{require(arm.payload()!=null&&!arm.payload().materialized()&&diamonds==0&&chests==0,"uncommitted harvest rolls back all drops");require(((IInventory)arm.payload().view(arm).getTileEntity(BlockPos.ORIGIN)).getStackInSlot(0).getCount()==37,"retained chest contents");}
                 System.out.println("[vandorlabs] arm-durable-recovery PASS "+phase+" mined chest payload or drops exactly one owner 37 diamonds");return true;
             }
-            if(restoring){require(world.isAirBlock(PAYLOAD)&&!arm.payload().materialized(),"partial target save is rolled back before publication");TileEntity retained=arm.payload().view(arm).getTileEntity(BlockPos.ORIGIN);require(retained instanceof IInventory&&((IInventory)retained).getStackInSlot(0).getCount()==37,"captured inventory retained exactly once");}
-            else{TileEntity tile=world.getTileEntity(PAYLOAD);require(tile instanceof IInventory&&((IInventory)tile).getStackInSlot(0).getItem()==Items.DIAMOND&&((IInventory)tile).getStackInSlot(0).getCount()==37,"removed source inventory recovered exactly once");require(arm.payload().materialized()&&arm.payload().matchesPlaced(arm),"snapshot records world ownership, not a second usable inventory");}
+            if(restoring){if(phase.contains("endpoint"))require(!arm.hasStoredSections()&&world.getBlockState(ROOT.east()).getBlock()==GearRegistry.GEAR_EXTENDER,"endpoint rollback restores the displaced arm section exactly once");require(world.isAirBlock(PAYLOAD)&&!arm.payload().materialized(),"partial target save is rolled back before publication");TileEntity retained=arm.payload().view(arm).getTileEntity(BlockPos.ORIGIN);require(retained instanceof IInventory&&((IInventory)retained).getStackInSlot(0).getCount()==37,"captured inventory retained exactly once");}
+            else{TileEntity tile=world.getTileEntity(phase.contains("endpoint")?ROOT.east():PAYLOAD);require(tile instanceof IInventory&&((IInventory)tile).getStackInSlot(0).getItem()==Items.DIAMOND&&((IInventory)tile).getStackInSlot(0).getCount()==37,"removed source inventory recovered exactly once");require(arm.payload().materialized()&&arm.payload().matchesPlaced(arm),"snapshot records world ownership, not a second usable inventory");}
             System.out.println("[vandorlabs] arm-durable-recovery PASS "+phase+" real process halt cold restart cross-chunk ownership 37 diamonds exact verified disk checkpoint");return true;
         }
         if(stage==0){
@@ -45,6 +45,11 @@ public final class ArmRecoveryRuntimeChecks {
             GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);require(arm.rebuild(),"two-section cross-chunk fixture");world.setBlockState(PAYLOAD,Blocks.CHEST.getDefaultState(),2);((IInventory)world.getTileEntity(PAYLOAD)).setInventorySlotContents(0,new ItemStack(Items.DIAMOND,37));
             if(phase.startsWith("restore")||phase.startsWith("harvest")){try(AutoCloseable matrix=ArmTransactions.matrix()){require(arm.preparePayloadMotion(),"prepare captured baseline");}arm.captureProgress(phase.startsWith("harvest")?0:.5);arm.target(true);if(phase.startsWith("harvest")){actor.setGameType(net.minecraft.world.GameType.SURVIVAL);actor.capabilities.allowFlying=true;actor.capabilities.isFlying=true;actor.sendPlayerAbilities();actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(Items.DIAMOND_AXE));net.minecraft.util.math.Vec3d center=arm.payload().transform(arm,0,.5,.5,.5).add(new net.minecraft.util.math.Vec3d(ROOT));actor.connection.setPlayerLocation(center.x,center.y-actor.getEyeHeight(),center.z+3,180,0);}}
             else{world.disableLevelSaving=true;require(!arm.preparePayloadMotion()&&!world.isAirBlock(PAYLOAD),"disabled saving refuses source mutation");world.disableLevelSaving=false;}
+            if(phase.contains("endpoint")){
+                if(!phase.startsWith("restore"))try(AutoCloseable matrix=ArmTransactions.matrix()){require(arm.preparePayloadMotion(),"capture endpoint baseline");}
+                NBTTagCompound saved=arm.writeToNBT(new NBTTagCompound());saved.setBoolean("ArmRetractingStroke",true);arm.readFromNBT(saved);arm.captureProgress(0);arm.operator(actor);
+                if(!phase.startsWith("restore"))try(AutoCloseable matrix=ArmTransactions.matrix()){require(arm.payload().restore(arm,0)&&arm.hasStoredSections(),"native endpoint baseline stores displaced arm");}
+            }
             arm.markDirty();checkpoint=new TransferCheckpoint(world,Arrays.asList(world.getChunkFromBlockCoords(ROOT),world.getChunkFromBlockCoords(PAYLOAD)));stage=1;return false;
         }
         if(stage==1){if(!checkpoint.step())return false;checkpoint=null;ArmTransactions.testFault=point->{
@@ -54,7 +59,7 @@ public final class ArmRecoveryRuntimeChecks {
                 }catch(Exception failure){throw new IllegalStateException(failure);}
             };stage=2;}
         GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);
-        if(phase.startsWith("harvest"))ArmPayloadHarvest.dig(actor,ROOT,BlockPos.ORIGIN,false);else if(phase.startsWith("restore"))arm.payload().restore(arm,1);else arm.preparePayloadMotion();return false;
+        if(phase.startsWith("harvest"))ArmPayloadHarvest.dig(actor,ROOT,BlockPos.ORIGIN,false);else if(phase.startsWith("restore"))arm.payload().restore(arm,phase.contains("endpoint")?0:1);else arm.preparePayloadMotion();return false;
     }
     private ArmRecoveryRuntimeChecks(){}
 }

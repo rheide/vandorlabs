@@ -49,6 +49,27 @@ Extend fully before changing the group or its load settings. The dialog stays
 open when joining selects a different controller. Large arms need enough room
 for their wider moving parts; use a joined group to move a continuous platform.
 
+## Editing an Extender platform
+
+At whole-block endpoints the platform becomes ordinary world blocks, including
+when retracted. This works on floors, ceilings and all wall faces. The controller
+stores the displaced arm sections separately, preserving each column's length.
+One-section Extenders stop halfway between blocks and keep a captured payload.
+
+You can mine or replace platform blocks while retracted. On the next move, arms
+capture the current connected platform, including newly added blocks inside the
+supported rectangle. Removed blocks stay removed. Air holes are allowed, but a
+remaining platform must still connect every corner with face-adjacent blocks.
+A disconnected platform stays in place with an error. Removing the entire
+platform lets the empty arms extend normally.
+
+Extend fully before removing arm sections or changing joining/load settings.
+Matching neighbours are reconsidered at the extended position; newly placed
+arms stay independent until they can join a compatible extended group. An arm
+with a different section count or configuration is ignored. Removing an extended
+arm changes the available supports; the next platform move still requires all
+corners of its resulting rectangle to be supported and connected.
+
 ## Joined Rotating Arms
 
 Place matching Rotating Arms in a row along their hinge axis, with the same

@@ -25,6 +25,7 @@ CAPTURE_JVM+=("-Dvandorlabs.armSecondFixture=${VANDOR_LABS_ARM_SECOND_FIXTURE:-}
 CAPTURE_JVM+=("-Dvandorlabs.armSavedFixture=${VANDOR_LABS_ARM_SAVED_FIXTURE:-}")
 CAPTURE_JVM+=("-Dvandorlabs.joinedArmDocs=${VANDOR_LABS_JOINED_ARM_DOCS:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armRiderOnly=${VANDOR_LABS_ARM_RIDER_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.armEndpointOnly=${VANDOR_LABS_ARM_ENDPOINT_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armJoinedOnly=${VANDOR_LABS_ARM_JOINED_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armMiningOnly=${VANDOR_LABS_ARM_MINING_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armLiveChecks=${VANDOR_LABS_ARM_LIVE_CHECKS:-false}")

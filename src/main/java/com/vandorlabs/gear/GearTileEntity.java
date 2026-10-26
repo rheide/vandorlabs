@@ -48,16 +48,19 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public boolean canCarryLoad(){return !isSwingArmController()&&!isFixedMount()&&mountDirection.getAxis()==EnumFacing.Axis.Y;}
     void awaitPayloadJournal(){payloadPreparationPending=true;}
     void preparationRejected(String reason){payloadPreparationPending=false;if(progress==0||progress==1)deployedTarget=progress==1;motionBlocked=false;lastError=reason;sync();}
-    private NBTTagCompound failedPayload;
+    private NBTTagCompound failedPayload,failedStoredSections;
+    ArmStoredSections storedSections;
+    public boolean hasStoredSections(){return storedSections!=null||failedStoredSections!=null;}
+    public java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> storedSectionCells(){return storedSections==null?java.util.Collections.emptyList():storedSections.cells;}
     private java.util.UUID operator;
     private boolean recoveryDropped;
-    public boolean hasRetainedPayload(){return failedPayload!=null||payload!=null&&!payload.materialized();}
+    public boolean hasRetainedPayload(){return hasStoredSections()||failedPayload!=null||payload!=null&&!payload.materialized();}
     public boolean recoveryDropped(){return recoveryDropped;}
     public void recoverOnBreak(net.minecraft.block.Block block){
         if(world==null||world.isRemote||!hasRetainedPayload()||recoveryDropped)return;
         if(block instanceof com.vandorlabs.gear.track.TrackBlock)block=com.vandorlabs.gear.track.TrackRegistry.COMPACT;
-        net.minecraft.item.ItemStack item=new net.minecraft.item.ItemStack(block);item.setTagInfo("ArmRecovery",writeToNBT(new NBTTagCompound()));
-        net.minecraft.block.Block.spawnAsEntity(world,pos,item);recoveryDropped=true;payload=null;failedPayload=null;
+        net.minecraft.item.ItemStack item=new net.minecraft.item.ItemStack(block);NBTTagCompound recovery=writeToNBT(new NBTTagCompound());if(payload!=null&&payload.materialized())recovery.removeTag("ArmPayload");item.setTagInfo("ArmRecovery",recovery);
+        net.minecraft.block.Block.spawnAsEntity(world,pos,item);recoveryDropped=true;payload=null;failedPayload=null;storedSections=null;failedStoredSections=null;
     }
     public void quarantinePayload(){if(payload!=null){failedPayload=payload.write();payload=null;}operational=false;motionBlocked=true;lastError="Attachment unavailable; original snapshot retained";sync();}
     public ArmPayload payload(){return payload;}
@@ -70,7 +73,14 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(failedPayload!=null){lastError="Attachment snapshot could not be loaded; original data retained";return false;}
         try{
             refreshMaterializedPayload();
-            if(progress==1&&joinEnabled&&columns.size()>1&&!ArmTransactions.locked(world,pos)&&(payload==null||payload.materialized())){payload=ArmPayload.discover(this,com.vandorlabs.tiles.WorldActionAuthorization.actor(this));sync();}
+            if(failedStoredSections!=null)throw new IllegalArgumentException("Stored arm sections are unavailable; recovery retained");
+            if(mode==GearMotion.Mode.EXTEND&&(progress==0||progress==1)&&(payload==null||joinEnabled&&columns.size()>1&&payload.materialized())&&!ArmTransactions.locked(world,pos)){
+                net.minecraft.util.math.Vec3d shift=ArmOrientation.vector(mountDirection,0,pose(progress).footOffsetY(),0);
+                if(Math.abs(shift.x-Math.rint(shift.x))+Math.abs(shift.y-Math.rint(shift.y))+Math.abs(shift.z-Math.rint(shift.z))<1e-8){payload=ArmPayload.discover(this,com.vandorlabs.tiles.WorldActionAuthorization.actor(this),new BlockPos(Math.rint(shift.x),Math.rint(shift.y),Math.rint(shift.z)));sync();
+                    if(payload==null){if(!ArmStoredSections.restoreEmpty(this)){payloadPreparationPending=true;return false;}return true;}}
+            }
+            if(payload==null&&storedSections!=null){if(!ArmStoredSections.restoreEmpty(this)){payloadPreparationPending=true;return false;}}
+            if(mode!=GearMotion.Mode.EXTEND&&progress==1&&joinEnabled&&columns.size()>1&&!ArmTransactions.locked(world,pos)&&(payload==null||payload.materialized())){payload=ArmPayload.discover(this,com.vandorlabs.tiles.WorldActionAuthorization.actor(this));sync();}
             if(payload==null){
                 BlockPos attachment=localCell(0,-assembly.columnHeight(),0);
                 if(!GearAssembly.loaded(world,attachment)){lastError="Load the attachment first";return false;}
@@ -283,6 +293,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if (world == null) return;
         if(clientGeometryPending&&world.isRemote&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this){clientGeometryPending=false;rebuildMemberCache();GearGeometry.register(this);}
         if(isFixedMount()){deployedTarget=true;progress=1;}
+        if(failedStoredSections!=null)return;
         if(ArmRecoveryRuntimeChecks.paused(this)||ArmTransactions.blocked(this)||com.vandorlabs.tiles.WorldActionAuthorization.awaitingLoad(this))return;
         previousProgress = progress;
         if (world.isRemote) {
@@ -347,7 +358,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 motionBlocked=true;lastError="Motion blocked; attachment snapshot retained for recovery";sync();com.vandorlabs.network.MessageGearMotion.send(this);return;
             }
             if(blocked!=motionBlocked){motionBlocked=blocked;sync();com.vandorlabs.network.MessageGearMotion.send(this);}
-            if(!blocked&&next!=before){lastError="";boolean riders=riderPlan!=null&&!riderPlan.riders.isEmpty();progress=next;boxesAt=Double.NaN;if(riders)com.vandorlabs.network.MessageGearMotion.send(this);GearGeometry.pushEntities(this);markDirty();if(progress==0||progress==1){restorePayloadEndpoint();com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(!riders&&(before==0||before==1||world.getTotalWorldTime()%3==0))com.vandorlabs.network.MessageGearMotion.send(this);}
+            if(!blocked&&next!=before){lastError="";boolean riders=riderPlan!=null&&!riderPlan.riders.isEmpty();progress=next;boxesAt=Double.NaN;if(riders)com.vandorlabs.network.MessageGearMotion.send(this);GearGeometry.pushEntities(this);markDirty();if(progress==0||progress==1){if(progress==1)scheduleRebuild();restorePayloadEndpoint();com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(!riders&&(before==0||before==1||world.getTotalWorldTime()%3==0))com.vandorlabs.network.MessageGearMotion.send(this);}
         }
     }
 
@@ -356,6 +367,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         IBlockState rootState = world.getBlockState(pos);
         for (BlockPos member : members) {
             if (!GearAssembly.loaded(world, member)) return false;
+            if(storedSections!=null&&storedSections.at(member.subtract(pos))!=null)continue;
             IBlockState state = world.getBlockState(member);
             if(GearAssembly.isExtender(state)){
                 if(state.getBlock()!=rootState.getBlock())return false;
@@ -378,6 +390,13 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if (world == null || world.isRemote || releasing || ArmTransactions.blocked(this)) return false;
         if(failedPayload!=null||payload!=null&&payload.hasOwnershipJournal()){operational=false;lastError="Attachment snapshot unavailable; original data retained";return false;}
         rebuildDelay = -1;
+        GearTileEntity existing=loadedController();
+        if(existing!=null&&existing.hasStoredSections()){
+            if(existing!=this)return existing.rebuild();
+            operational=failedStoredSections==null&&cachedMembersIntact();retryUnavailable=!operational;
+            if(!operational)lastError="Load every joined arm before extending";
+            return operational;
+        }
         if (!GearAssembly.loaded(world, pos) || !GearAssembly.isExtender(world.getBlockState(pos))) return false;
         GearAssembly.Scan scan = GearAssembly.scan(world, pos);
         if (!scan.valid()) {
@@ -495,6 +514,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if (root != null && root != this) {
             return root.releaseAssembly();
         }
+        if(hasStoredSections()){lastError="Extend the arms before changing their sections or joining";return false;}
         if (assembly == null) {
             if(hasRetainedPayload())return false;
             if (owner != null) clearBinding();
@@ -583,6 +603,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
         if(operator!=null)tag.setUniqueId("ArmOperator",operator);
+        if(failedStoredSections!=null)tag.setTag("ArmStoredSections",failedStoredSections.copy());else if(storedSections!=null)tag.setTag("ArmStoredSections",storedSections.write());
         if(failedPayload!=null)tag.setTag("ArmPayload",failedPayload.copy());else if(payload!=null)tag.setTag("ArmPayload",payload.write());
         tag.setInteger("GearRevision",motionRevision);
         if(joinedSettingsPresent||joinEnabled||carryLoad||joinRange!=32||loadHeight!=1){tag.setBoolean("ArmJoinEnabled",joinEnabled);tag.setInteger("ArmJoinRange",joinRange);tag.setBoolean("ArmCarryLoad",carryLoad);tag.setInteger("ArmLoadHeight",loadHeight);}
@@ -617,6 +638,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override
     public void readFromNBT(NBTTagCompound tag) {
         com.vandorlabs.tiles.WorldActionAuthorization.reading(this);super.readFromNBT(tag);
+        storedSections=null;failedStoredSections=null;if(tag.hasKey("ArmStoredSections",10))try{storedSections=ArmStoredSections.read(tag.getCompoundTag("ArmStoredSections"));}catch(RuntimeException|LinkageError invalid){failedStoredSections=tag.getCompoundTag("ArmStoredSections").copy();}
         clearPoses();
         operator=tag.hasUniqueId("ArmOperator")?tag.getUniqueId("ArmOperator"):null;
         payload=null;failedPayload=null;
@@ -658,7 +680,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 }
             }
         }
-        if(failedPayload!=null||payload!=null&&payload.hasOwnershipJournal())operational=false;
+        if(failedStoredSections!=null||failedPayload!=null||payload!=null&&payload.hasOwnershipJournal())operational=false;
         rebuildMemberCache();GearGeometry.register(this);
     }
 

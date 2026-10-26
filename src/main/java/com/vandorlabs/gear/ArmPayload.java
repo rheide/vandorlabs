@@ -71,9 +71,13 @@ public final class ArmPayload {
         catch(RuntimeException tooLarge){throw new java.io.IOException("Attachment exceeds tile-update capacity",tooLarge);}
     }
     public static ArmPayload discover(GearTileEntity arm,EntityPlayerMP actor){
-        World world=arm.getWorld();BlockPos start=arm.localCell(0,-arm.assembly().columnHeight(),0);
-        Set<BlockPos> platform=arm.joinEnabled()&&arm.columns().size()>1?JoinedArms.platform(arm):null;
-        JoinedArms.Volume volume=platform==null?null:new JoinedArms.Volume(arm,platform);
+        return discover(arm,actor,BlockPos.ORIGIN);
+    }
+    static ArmPayload discover(GearTileEntity arm,EntityPlayerMP actor,BlockPos shift){
+        World world=arm.getWorld();BlockPos start=arm.localCell(0,-arm.assembly().columnHeight(),0).add(shift);
+        Set<BlockPos> platform=arm.joinEnabled()&&arm.columns().size()>1?JoinedArms.platform(arm,shift):null;
+        if(platform!=null&&platform.isEmpty())return null;
+        JoinedArms.Volume volume=platform==null?null:new JoinedArms.Volume(arm,platform,shift);
         // An unjoined arm selects its tip block. Face contact with a wall or
         // floor does not opt the surrounding structure into the moving payload.
         boolean tipOnly=platform==null&&!arm.isLandingAssembly()&&!arm.isExtendedTrackStroke()
@@ -86,8 +90,8 @@ public final class ArmPayload {
         while(!pending.isEmpty()){
             BlockPos at=pending.removeFirst();if(!visited.add(at))continue;
             if(!GearAssembly.loaded(world,at))throw new IllegalArgumentException("Load the complete arm attachment first");
-            IBlockState state=world.getBlockState(at);if(state.getBlock().isAir(state,world,at)||arm.members().contains(at))continue;
-            BlockPos canonical=ArmOrientation.inverse(arm.mountDirection(),at.subtract(arm.getPos()));
+            IBlockState state=world.getBlockState(at);if(state.getBlock().isAir(state,world,at)||physicalMember(arm,at))continue;
+            BlockPos canonical=ArmOrientation.inverse(arm.mountDirection(),at.subtract(arm.getPos()).subtract(shift));
             if(platform==null&&canonical.getY()>-arm.assembly().columnHeight())throw new IllegalArgumentException("Separate the attachment from the arm's mounting structure");
             if(state.getMaterial().isLiquid()||state.getBlockHardness(world,at)<0)throw new IllegalArgumentException("Unsupported arm attachment: "+state.getBlock().getLocalizedName());
             if(!(world instanceof VehicleWorld)){
@@ -107,7 +111,7 @@ public final class ArmPayload {
             boolean foot=GearAssembly.isFoot(state);
             for(EnumFacing side:EnumFacing.values()){
                 if(foot&&side==arm.mountDirection())continue;
-                BlockPos next=at.offset(side);if(arm.members().contains(next))continue;
+                BlockPos next=at.offset(side);if(physicalMember(arm,next))continue;
                 if(platform!=null&&!volume.contains(next)){if(arm.carryLoad()&&!platform.contains(at)&&GearAssembly.loaded(world,next)&&!world.isAirBlock(next)&&VehicleScan.touches(world,at,state,side))throw new IllegalArgumentException("Load extends beyond the selected platform or height");continue;}
                 if(VehicleScan.touches(world,at,state,side))pending.add(next);
             }
@@ -117,8 +121,9 @@ public final class ArmPayload {
         BlockPos origin=new BlockPos(minX,minY,minZ);List<VehicleStructure.Cell> normalized=new ArrayList<>();
         for(VehicleStructure.Cell cell:captured)normalized.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin)):null));
         VehicleStructure snapshot=VehicleStructure.display(normalized);try{validateSyncBudget(snapshot.encode());}catch(java.io.IOException tooLarge){throw new IllegalArgumentException("Attachment too large; reduce platform or load height",tooLarge);}
-        return new ArmPayload(snapshot,origin.subtract(arm.getPos()),true,origin.subtract(arm.getPos()));
+        return new ArmPayload(snapshot,origin.subtract(arm.getPos()).subtract(shift),true,origin.subtract(arm.getPos()));
     }
+    private static boolean physicalMember(GearTileEntity arm,BlockPos at){return arm.members().contains(at)&&(arm.storedSections==null||arm.storedSections.at(at.subtract(arm.getPos()))==null);}
     /** Captured vehicle cells have already passed assembly authorization. */
     public Set<BlockPos> placedCells(GearTileEntity arm){Set<BlockPos> result=new HashSet<>();for(VehicleStructure.Cell cell:placed().cells)result.add(arm.getPos().add(placedOffset).add(cell.pos));return result;}
     public ArmPayload capturedCopy(){if(hasOwnershipJournal())throw new IllegalArgumentException("Reconcile original attachment cells before moving this snapshot");return preserveAlignment(new ArmPayload(blocks,offset,false,placedOffset));}
@@ -158,17 +163,22 @@ public final class ArmPayload {
         EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actor(arm);for(VehicleStructure.Cell cell:placed().cells){BlockPos at=origin.add(cell.pos);VehicleService.permission(authorizer,at);if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,world.getBlockState(at),authorizer)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");}
         Map<VehicleStructure.Cell,TileEntity> rollback=prepareTiles(world,origin,placed());
         MovingBlockSupport.validate(blocks,view(arm));
-        if(!ArmTransactions.ready(arm,"detach",placedCells(arm))){arm.awaitPayloadJournal();return false;}
+        ArmStoredSections stored=arm.storedSections;
+        Map<BlockPos,TileEntity> sections=ArmStoredSections.prepare(arm,placedCells(arm));
+        Set<BlockPos> changed=placedCells(arm);changed.addAll(sections.keySet());
+        if(!ArmTransactions.ready(arm,"detach",changed)){arm.awaitPayloadJournal();return false;}
         List<VehicleStructure.Cell> removed=new ArrayList<>();
         try{
             for(VehicleStructure.Cell cell:placed().cells){
                 removed.add(cell);BlockPos at=origin.add(cell.pos);retireTile(world,at);
                 if(!world.setBlockState(at,Blocks.AIR.getDefaultState(),2)&&!world.isAirBlock(at))throw new IllegalArgumentException("Attachment source could not be cleared");failure("clear",at);
             }
+            ArmStoredSections.install(arm,stored,sections);arm.storedSections=null;
             materialized=false;ArmTransactions.applied(arm);return true;
         }catch(RuntimeException | LinkageError failure){
             ArmTransactions.failed(arm);
-            materialized=false;boolean restored=true;
+            materialized=false;boolean restored=true;arm.storedSections=stored;
+            for(BlockPos at:sections.keySet())try{retireTile(world,at);world.setBlockState(at,Blocks.AIR.getDefaultState(),2);}catch(RuntimeException|LinkageError rollbackFailure){restored=false;failure.addSuppressed(rollbackFailure);}
             for(VehicleStructure.Cell cell:removed)try{install(world,origin,cell,rollback.get(cell));}catch(RuntimeException | LinkageError rollbackFailure){restored=false;failure.addSuppressed(rollbackFailure);}
             if(restored)materialized=true;else journal(world,origin,placed().cells);
             throw failure;
@@ -209,17 +219,23 @@ public final class ArmPayload {
             target=offset.add(Math.round(displacement.x),Math.round(displacement.y),Math.round(displacement.z));
         }
         World world=arm.getWorld();BlockPos origin=arm.getPos().add(target);
-        for(VehicleStructure.Cell cell:destination.cells){BlockPos at=origin.add(cell.pos);if(!GearAssembly.loaded(world,at)||!world.getWorldBorder().contains(at)||!world.isAirBlock(at))return false;}
+        List<BlockPos> displaced=new ArrayList<>();
+        for(VehicleStructure.Cell cell:destination.cells){BlockPos at=origin.add(cell.pos);if(!GearAssembly.loaded(world,at)||!world.getWorldBorder().contains(at))return false;
+            if(!world.isAirBlock(at)){if(arm.storedSections==null&&ArmStoredSections.canStore(arm,at))displaced.add(at);else return false;}}
+        ArmStoredSections stored=ArmStoredSections.capture(arm,displaced);
+        Map<BlockPos,TileEntity> originalSections=new LinkedHashMap<>();for(BlockPos at:displaced)originalSections.put(at,world.getTileEntity(at));
         EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actor(arm);
         for(VehicleStructure.Cell cell:destination.cells)VehicleService.permission(authorizer,origin.add(cell.pos));
         Map<VehicleStructure.Cell,TileEntity> prepared=prepareTiles(world,origin,destination);
         MovingBlockSupport.validate(blocks,view(arm));java.util.List<BlockPos> targets=new java.util.ArrayList<>();for(VehicleStructure.Cell cell:destination.cells)targets.add(origin.add(cell.pos));if(!ArmTransactions.ready(arm,"restore",targets))return false;
         placedBlocks=destination==blocks?null:destination;
+        arm.storedSections=stored;
         List<VehicleStructure.Cell> installed=new ArrayList<>();
-        try{for(VehicleStructure.Cell cell:destination.cells){installed.add(cell);install(world,origin,cell,prepared.get(cell));}}
+        try{for(VehicleStructure.Cell cell:destination.cells){installed.add(cell);BlockPos at=origin.add(cell.pos);if(originalSections.containsKey(at))retireTile(world,at);install(world,origin,cell,prepared.get(cell));}}
         catch(RuntimeException | LinkageError failure){
             ArmTransactions.failed(arm);
             for(VehicleStructure.Cell cell:installed)try{BlockPos at=origin.add(cell.pos);failure("restore-cleanup",at);retireTile(world,at);if(!world.setBlockState(at,Blocks.AIR.getDefaultState(),2)&&!world.isAirBlock(at))failure.addSuppressed(new IllegalStateException("Attachment rollback blocked"));}catch(RuntimeException | LinkageError rollbackFailure){failure.addSuppressed(rollbackFailure);}
+            try{ArmStoredSections.install(arm,stored,originalSections);arm.storedSections=null;}catch(RuntimeException|LinkageError rollbackFailure){failure.addSuppressed(rollbackFailure);}
             journal(world,origin,installed);
             throw failure;
         }
