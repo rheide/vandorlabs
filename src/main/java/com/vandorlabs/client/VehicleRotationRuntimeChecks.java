@@ -33,7 +33,7 @@ public final class VehicleRotationRuntimeChecks {
                     VehicleStructure probe=new VehicleStructure(probeCells,BlockPos.ORIGIN,EnumFacing.NORTH,1);
                     try{VehicleRotation.validate(probe,new VehicleWorld(world,probe));}
                     catch(IllegalArgumentException unsupported){
-                        require(unsupported.getMessage().startsWith("No safe rotation/data adapter"),"replacement adapter failed its rotation checks: "+state+" class="+block.getClass().getName());
+                        require(unsupported.getMessage().startsWith("No lossless block-data adapter"),"replacement adapter failed its rotation checks: "+state+" class="+block.getClass().getName());
                         boolean denied=false;try{VehicleRotation.rotate(probe,new VehicleWorld(world,probe),1);}catch(IllegalArgumentException expected){denied=true;}
                         require(denied,"unsupported replacement must refuse rotated restoration: "+state);
                         refusedStates++;
