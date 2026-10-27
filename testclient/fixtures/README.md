@@ -85,3 +85,18 @@ and checks capture, snapshot reload, four rotations, clock freezing/thawing,
 Taxi assembly, parking, repeat capture and unknown-data refusal. Run
 `bash testclient/test_viewscreen.sh --focus vehicle-ramps` on Linux or
 `python testclient/run_windows.py --focus vehicle-ramps` on Windows.
+
+## Legacy vehicle controller and physical-server capabilities
+
+`legacy-vehicle-controller-2.6.nbt` retains twelve saved Pilot Seat, Vehicle
+Controller, programmable block and sign cells from a pre-2.6 vehicle. Operator
+identifiers are removed; opaque third-party capability NBT is retained. The
+vehicle upgrade check loads these as native tiles, then checks preflight and
+four rotations without modifying the original data.
+
+`test_server_startup.py --vehicle-world-only` runs the chunk, capability and
+legacy-data checks on a physical Forge server without unrelated canopy or fluid
+fixtures. Supply the standard JAR and the installed Thaumic Augmentation,
+Thaumcraft and Baubles JARs using `--jar` and repeated `--mod` arguments. Include
+NuclearCraft and RedstoneFlux to exercise the original capability provider too.
+The regular Taxi live focus covers assembly, parking and recovery.

@@ -9,7 +9,9 @@ JAVA=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
 CP=$(paste -sd: cp.txt)
 # IE uses Forge's Trove 3 collection classes, absent from the minimal vanilla classpath.
 TROVE_JAR=$(rg --files "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3" | rg '/trove4j-3.0.3.jar$' | head -n 1)
-CP="$CP:$TROVE_JAR"
+# Thaumcraft uses Forge's Scala runtime during client model baking.
+SCALA_JAR=$(rg --files "$HOME/.gradle/caches/modules-2/files-2.1/org.scala-lang/scala-library/2.11.1" | rg '/scala-library-2.11.1.jar$' | head -n 1)
+CP="$CP:$TROVE_JAR:$SCALA_JAR"
 BENCH_GAME_DIR=${VANDOR_LABS_TEST_GAME_DIR:-"$PWD/game"}
 mkdir -p "$BENCH_GAME_DIR"
 python3 - "$BENCH_GAME_DIR/options.txt" <<'PY'
@@ -20,7 +22,8 @@ lines = p.read_text().splitlines() if p.exists() else []
 lines = [line for line in lines if not line.startswith(('soundCategory_master:', 'pauseOnLostFocus:'))]
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
-CAPTURE_JVM=("-Dvandorlabs.utility26ChecksOnly=${VANDOR_LABS_UTILITY26_CHECKS_ONLY:-false}")
+CAPTURE_JVM=("-Dvandorlabs.legacyVehicleFixture=$PWD/../fixtures/legacy-vehicle-controller-2.6.nbt")
+CAPTURE_JVM+=("-Dvandorlabs.utility26ChecksOnly=${VANDOR_LABS_UTILITY26_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleTaxiChecksOnly=${VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleRampChecksOnly=${VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY:-false}" "-Dvandorlabs.vehicleRampFixture=$PWD/../fixtures/vehicle-ramps-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.copySurfaceChecksOnly=${VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY:-false}" "-Dvandorlabs.copySurfaceFixture=$PWD/../fixtures/copy-surfaces-2.6.nbt")

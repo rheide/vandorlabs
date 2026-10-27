@@ -18,6 +18,7 @@ public final class VehicleUpgradeChecks {
     public static void run(World parent){
         int cases=0;
         cases+=legacyTaxiController(parent);
+        cases+=savedLegacyController(parent);
         for(BlockPos origin:Arrays.asList(new BlockPos(103,64,-37),new BlockPos(-217,91,118),new BlockPos(17,5,31))){
             TileEntityRampController source=new TileEntityRampController();source.setPos(origin);
             NBTTagCompound saved=source.writeToNBT(new NBTTagCompound());saved.setBoolean("VehicleRampFrozen",true);
@@ -57,6 +58,37 @@ public final class VehicleUpgradeChecks {
             }
         }
         System.out.println("[vandorlabs][reprolab] vehicle-upgrade26 PASS cases="+cases+" legacy Taxi controller/Pilot Seat/programmable block/sign with opaque capabilities four-turn preservation and unknown-data refusal; unordered ramp reservations rebase inverse data-loss negatives; four hex families six faces vehicle/display palettes original NBT preserved");
+    }
+    /** Real pre-2.6 controller/seat/finish/sign data, read as native tiles before capture. */
+    private static int savedLegacyController(World parent){
+        String path=System.getProperty("vandorlabs.legacyVehicleFixture","");if(path.isEmpty())return 0;
+        try(java.io.InputStream in=new java.io.FileInputStream(path)){
+            NBTTagCompound fixture=CompressedStreamTools.readCompressed(in),original=fixture.copy();
+            NBTTagList saved=fixture.getTagList("Cells",10);List<VehicleStructure.Cell> cells=new ArrayList<>();
+            BlockPos delta=new BlockPos(-1269,-73,12342),seat=null;int opaque=0;
+            for(int i=0;i<saved.tagCount();i++){
+                NBTTagCompound entry=saved.getCompoundTagAt(i);Block block=Block.getBlockFromName(entry.getString("Name"));require(block!=null,"saved legacy registry entry");
+                net.minecraft.block.state.IBlockState state=block.getStateFromMeta(entry.getInteger("Meta"));
+                BlockPos pos=new BlockPos(entry.getInteger("X"),entry.getInteger("Y"),entry.getInteger("Z")).add(delta);
+                NBTTagCompound data=null;
+                if(entry.hasKey("Tile",10)){
+                    NBTTagCompound old=VehicleTileData.translated(entry.getCompoundTag("Tile"),delta);
+                    TileEntity tile=TileEntity.create(parent,old);require(tile!=null,"saved legacy tile factory");
+                    data=tile.writeToNBT(new NBTTagCompound());
+                    // Retain the original opaque extension payload even without its optional provider.
+                    if(old.hasKey("ForgeCaps",10)){data.setTag("ForgeCaps",old.getCompoundTag("ForgeCaps").copy());opaque++;}
+                }
+                if(block==ModBlocks.PILOT_SEAT&&!state.getValue(BlockPilotSeat.UPPER))seat=pos;
+                cells.add(new VehicleStructure.Cell(pos,state,data));
+            }
+            require(seat!=null&&opaque>0,"actual saved seat and capability-bearing blocks");
+            VehicleStructure source=new VehicleStructure(cells,seat,EnumFacing.NORTH,3),turned=source;
+            MovingBlockSupport.validate(source,new VehicleWorld(parent,source));
+            for(int n=0;n<4;n++){turned=VehicleRotation.rotate(turned,new VehicleWorld(parent,turned),1);MovingBlockSupport.validate(turned,new VehicleWorld(parent,turned));}
+            require(turned.write().equals(source.write())&&fixture.equals(original),"actual legacy block data survives four turns without editing source NBT");
+            System.out.println("[vandorlabs] saved-legacy-controller PASS cells="+cells.size()+" opaque="+opaque+" actual native tile load preflight four rotations");
+            return 1;
+        }catch(java.io.IOException failure){throw new IllegalStateException("Cannot read legacy vehicle fixture",failure);}
     }
     private static int legacyTaxiController(World parent){
         BlockPos seat=new BlockPos(0,0,0),controller=seat.east(),wall=controller.east(),sign=wall.east();

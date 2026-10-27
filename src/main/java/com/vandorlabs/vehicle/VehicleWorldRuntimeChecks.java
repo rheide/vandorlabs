@@ -85,7 +85,18 @@ public final class VehicleWorldRuntimeChecks {
                 java.lang.reflect.Field chunks=VehicleWorld.class.getDeclaredField("chunks");chunks.setAccessible(true);
                 require(((Map<?,?>)chunks.get(view)).isEmpty(),"Read-only vehicle operations allocated synthetic chunks");
             }catch(ReflectiveOperationException error){throw new IllegalStateException(error);}
-            System.out.println("[vandorlabs] vehicle-world-compatibility PASS input reversal NBT generic-dirty stale-tile comparator isolation solidity opacity zero chunk capability events");
+            // Hardness coremods can explicitly ask this read-only view for a chunk.
+            // Its capability handlers must observe the physical parent side, not isRemote=true.
+            Chunk local=view.getChunkFromBlockCoords(p);
+            World physical=parent;while(physical instanceof VehicleWorld)physical=((VehicleWorld)physical).parent;
+            require(local.getWorld()==physical,"Explicit snapshot chunk exposes a simulation world to capability handlers");
+            require(local.getBlockState(p)==view.getBlockState(p),"Explicit chunk lost snapshot block state");
+            require(local.getTileEntity(p,Chunk.EnumCreateEntityType.CHECK)==replacement,"Explicit chunk lost snapshot tile");
+            require(local.setBlockState(p,Blocks.AIR.getDefaultState())==null&&view.getBlockState(p)==Blocks.STONE.getDefaultState(),"Explicit chunk accepted a snapshot mutation");
+            require(view.getChunkFromBlockCoords(p)==local,"Explicit chunk lookup is not cached");
+            require(observer.events==0,"Explicit chunk used the remote simulation for capability attachment");
+            if(live)VehicleUpgradeChecks.run(parent);
+            System.out.println("[vandorlabs] vehicle-world-compatibility PASS input reversal NBT generic-dirty stale-tile comparator isolation solidity opacity no implicit chunks explicit read-only chunks physical-side capabilities legacy controller preflight");
         }finally{if(live)MinecraftForge.EVENT_BUS.unregister(observer);}
     }
 }

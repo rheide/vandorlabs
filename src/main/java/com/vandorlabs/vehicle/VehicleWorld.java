@@ -86,10 +86,27 @@ public final class VehicleWorld extends World {
             // Global collision handlers inspect loaded chunks. A lookup must
             // never allocate a chunk or post capability events for this view.
             public Chunk getLoadedChunk(int x,int z){return chunks.get(chunkKey(x,z));}
-            public Chunk provideChunk(int x,int z){return chunks.computeIfAbsent(chunkKey(x,z),k->new Chunk(VehicleWorld.this,x,z));}
+            public Chunk provideChunk(int x,int z){return chunks.computeIfAbsent(chunkKey(x,z),k->snapshotChunk(x,z));}
             public boolean tick(){return false;}
             public String makeString(){return "Vehicle local storage";}
             public boolean isChunkGeneratedAt(int x,int z){return true;}
+        };
+    }
+    /** Capability attachment observes the physical parent side. This view stays
+     * remote for carried tiles, but is not a physical WorldClient on a server. */
+    private Chunk snapshotChunk(int x,int z){
+        World physical=parent;while(physical instanceof VehicleWorld)physical=((VehicleWorld)physical).parent;
+        return new Chunk(physical,x,z){
+            @Override public IBlockState getBlockState(BlockPos p){return VehicleWorld.this.getBlockState(p);}
+            @Override public IBlockState getBlockState(int bx,int by,int bz){return getBlockState(new BlockPos((this.x<<4)+(bx&15),by,(this.z<<4)+(bz&15)));}
+            @Override public TileEntity getTileEntity(BlockPos p,Chunk.EnumCreateEntityType mode){return VehicleWorld.this.getTileEntity(p);}
+            @Override public IBlockState setBlockState(BlockPos p,IBlockState state){return null;}
+            @Override public void addTileEntity(TileEntity tile){}
+            @Override public void addTileEntity(BlockPos p,TileEntity tile){}
+            @Override public void removeTileEntity(BlockPos p){}
+            @Override public void onLoad(){}
+            @Override public void onUnload(){}
+            @Override public void markDirty(){}
         };
     }
     private static long chunkKey(int x,int z){return ((long)x<<32)^(z&0xffffffffL);}

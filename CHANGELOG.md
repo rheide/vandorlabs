@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Fix vehicle inspection and Taxi conversion on dedicated servers with Thaumic Augmentation. Temporary vehicle chunks initialize capabilities on the physical server side while retaining read-only snapshot block and tile access.
+
 - Preserve generated Ramp Controller sections when entering vehicle mode. Freeze and restore only the clock fields each tile owns, avoiding a false lossless-data refusal while retaining strict validation of unknown block data. Rotate saved ramp map bounds with the vehicle so turned snapshots remain consistent.
 
 - Keep Copy Controller surfaces visible after removing the shared drawing tile or another pad block. Release invalid layouts and automatically rediscover repaired or expanded matching squares, preserving surface artwork and active-copy protection.

@@ -207,6 +207,7 @@ def main():
     if args.focus == 'mekanism-tanks':
         properties.append('-Dvandorlabs.mekanismTankOnly=true')
         properties.append('-Dvandorlabs.mekanismTankRestart='+os.environ.get('VANDOR_LABS_MEKANISM_TANK_RESTART',''))
+    properties.append('-Dvandorlabs.legacyVehicleFixture='+str(root/'testclient/fixtures/legacy-vehicle-controller-2.6.nbt'))
     if args.focus == 'vehicle-ramps':
         properties += ['-Dvandorlabs.vehicleRampFixture='+str(root/'testclient/fixtures/vehicle-ramps-2.6.nbt')]
     if args.focus == 'copy-surfaces':
