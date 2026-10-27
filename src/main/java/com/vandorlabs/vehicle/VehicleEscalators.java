@@ -18,7 +18,9 @@ public final class VehicleEscalators {
     public static NBTTagCompound paused(NBTTagCompound saved){
         NBTTagCompound tag=saved.copy();tag.setBoolean("VehicleRampFrozen",true);
         tag.setBoolean("EscalatorRunning",false);tag.setLong("EscalatorTick",0);
-        tag.setLong(SaveSchema.Ramp.LAST_STEP_TICK,0);
+        // Generated ramp cells have no controller step clock. Do not introduce
+        // fields that their tile factory cannot preserve during exact-data validation.
+        if(tag.hasKey(SaveSchema.Ramp.LAST_STEP_TICK,4))tag.setLong(SaveSchema.Ramp.LAST_STEP_TICK,0);
         return tag;
     }
     /** Compatibility with snapshots produced by the earlier virtual-source format. */
@@ -74,7 +76,8 @@ public final class VehicleEscalators {
         NBTTagCompound tag=saved.copy();
         if(tag.getBoolean("VehicleRampFrozen")) {
             tag.removeTag("VehicleRampFrozen");tag.setBoolean("EscalatorRunning",false);
-            tag.setLong("EscalatorTick",tick);tag.setLong(SaveSchema.Ramp.LAST_STEP_TICK,tick);
+            tag.setLong("EscalatorTick",tick);
+            if(tag.hasKey(SaveSchema.Ramp.LAST_STEP_TICK,4))tag.setLong(SaveSchema.Ramp.LAST_STEP_TICK,tick);
             // Preserve the ramp's captured signal baseline. Its one-shot load
             // check already reevaluates local power, and unchanged power must
             // not issue another request or replace the captured ramp pose.

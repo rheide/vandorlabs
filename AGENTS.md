@@ -64,3 +64,5 @@
 - Arm regression coverage must include joined and independent assemblies, regular and Large sizes, all mounting faces and both rotating payload modes. Exercise edits at every materialized endpoint, then reversal and complete payload removal; a successful independent-arm stroke does not establish joined behavior. Keep exact saved-world reproductions in the shared Linux/Windows live focus.
 
 - Shared surface changes must cover Copy Controllers as well as Turntables. Mine both a shared drawing root and another member, assert opaque surviving faces in the client renderer, and exercise rebuilding and expanding pads through temporary holes or unequal sizes. Invalid layouts must not retain a missing renderer root or stale copy area; topology notifications must settle without continuous rescanning. Run the `copy-surfaces` live focus.
+
+- Vehicle ramp regressions must include saved generated `controlled_ramp` cells alongside their controllers. Check capture, all cardinal rotations, exact tile data, parking and recapture; controller-only fixtures miss part-specific clock fields and stale saved map geometry. Run the `vehicle-ramps` live focus.

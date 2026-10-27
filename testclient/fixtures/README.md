@@ -75,3 +75,13 @@ all six surface normals and four horizontal controller facings, including real
 rendered faces and stable idle topology after expansion. It also runs the shared
 surface renderer, picker and damaged-turntable regressions. Linux and Windows
 launchers and the release gate select the same fixture.
+
+## Saved vehicle ramp regression
+
+`vehicle-ramps-2.6.nbt` contains a parked wheeled vehicle with two Ramp Controllers
+and 56 generated ramp sections, plus its surrounding support blocks. Operator
+identifiers are removed. The `vehicle-ramps` focus imports the saved native cells
+and checks capture, snapshot reload, four rotations, clock freezing/thawing,
+Taxi assembly, parking, repeat capture and unknown-data refusal. Run
+`bash testclient/test_viewscreen.sh --focus vehicle-ramps` on Linux or
+`python testclient/run_windows.py --focus vehicle-ramps` on Windows.

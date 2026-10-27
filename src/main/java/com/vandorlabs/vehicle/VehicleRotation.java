@@ -162,6 +162,20 @@ public final class VehicleRotation {
     /** Rotate the retained expanded ramp and its recovery journal as one assembly. */
     private static void rotateRampData(NBTTagCompound data,int width,int depth,int turns,Rotation rotation){
         facing(data,"RampDirection",rotation,true);facing(data,"Facing",rotation,true);
+        // Saved map boxes are block-local geometry, and must turn with the ramp.
+        // Keep their order and micro-unit precision identical to the tile writer.
+        if(data.hasKey("DynmapBoxes",8)&&!data.getString("DynmapBoxes").isEmpty()){
+            StringBuilder boxes=new StringBuilder();
+            for(String box:data.getString("DynmapBoxes").split(";")){
+                String[] coordinates=box.split(",");
+                if(coordinates.length!=6)throw new IllegalArgumentException("Invalid saved ramp map geometry");
+                double[] values=new double[6];for(int i=0;i<6;i++)values[i]=Double.parseDouble(coordinates[i]);
+                for(int i=0;i<turns;i++){double minX=values[0],maxX=values[3];values[0]=1-values[5];values[3]=1-values[2];values[2]=minX;values[5]=maxX;}
+                if(boxes.length()>0)boxes.append(';');
+                for(int i=0;i<6;i++){if(i>0)boxes.append(',');boxes.append(Math.round(values[i]*1000000D)/1000000D);}
+            }
+            data.setString("DynmapBoxes",boxes.toString());
+        }
         for(String key:new String[]{"OriginalState","SourceState"})if(data.hasKey(key,8)){
             IBlockState original=com.vandorlabs.persistence.LegacyBlockStates.decode(data.getString(key));
             if(original!=null){IBlockState rotated=state(original,rotation);data.setString(key,com.vandorlabs.persistence.LegacyBlockStates.encode(rotated));data.setTag(key.equals("OriginalState")?"Original":"Source",NBTUtil.writeBlockState(new NBTTagCompound(),rotated));}

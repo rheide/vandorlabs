@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Preserve generated Ramp Controller sections when entering vehicle mode. Freeze and restore only the clock fields each tile owns, avoiding a false lossless-data refusal while retaining strict validation of unknown block data. Rotate saved ramp map bounds with the vehicle so turned snapshots remain consistent.
+
 - Keep Copy Controller surfaces visible after removing the shared drawing tile or another pad block. Release invalid layouts and automatically rediscover repaired or expanded matching squares, preserving surface artwork and active-copy protection.
 
 - Recapture Rotating Arm platforms at either native endpoint, including folded joined rows. Include replacement blocks in the next stroke, preserve their orientation and contents, and leave mined blocks removed. Keep real obstructions outside the platform blocking movement.

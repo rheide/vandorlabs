@@ -101,4 +101,6 @@ Vehicles built in 2.5 can still enter Taxi Mode when their Vehicle Controller si
 
 Ramp Controllers accept all steel and aluminum scaffolding patterns from Immersive Engineering. Additional explicit vehicle adapters cover complete IE posts and watermills, windmills, wallmounts, decorative metal blocks and Toolboxes, as well as Mekanism storage and glow panels. Complete Dynamic Tanks, Dynamic Valves and Structural Glass now support vehicle transport with their shared fluid and inventory, including save/reload and native reformation after parking. Unlinked Structural Glass also works as ordinary vehicle building material without a completed tank; see [the supported block list](../vehicle-compatibility.md) for their limits.
 
+Vehicles retain generated Ramp Controller sections through capture, rotation and parking. Existing ramps no longer cause a false block-data preservation error when entering Taxi Mode, and their saved map geometry turns with the vehicle. Ramp clocks pause while carried and resume after parking.
+
 [All version guides](README.md) · [Changelog](../../CHANGELOG.md)

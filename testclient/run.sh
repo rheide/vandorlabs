@@ -21,6 +21,7 @@ lines = [line for line in lines if not line.startswith(('soundCategory_master:',
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
 CAPTURE_JVM=("-Dvandorlabs.utility26ChecksOnly=${VANDOR_LABS_UTILITY26_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.vehicleRampChecksOnly=${VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY:-false}" "-Dvandorlabs.vehicleRampFixture=$PWD/../fixtures/vehicle-ramps-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.copySurfaceChecksOnly=${VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY:-false}" "-Dvandorlabs.copySurfaceFixture=$PWD/../fixtures/copy-surfaces-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.armWallOnly=${VANDOR_LABS_ARM_WALL_ONLY:-false}" "-Dvandorlabs.armWallFixture=${VANDOR_LABS_ARM_WALL_FIXTURE:-$PWD/../fixtures/arm-wall-rotating-2.6.nbt}")
 CAPTURE_JVM+=("-Dvandorlabs.armSecondFixture=${VANDOR_LABS_ARM_SECOND_FIXTURE:-}")
