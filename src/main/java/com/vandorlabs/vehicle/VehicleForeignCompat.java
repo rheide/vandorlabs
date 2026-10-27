@@ -22,7 +22,7 @@ public final class VehicleForeignCompat {
     /** Required source members are also used by bounded fragment discovery and exclusion guards. */
     public static Set<BlockPos> required(World world,BlockPos at){
         Set<BlockPos> building=BuildingBlockCompat.required(world,at);if(!building.isEmpty())return building;
-        if(MekanismTankCompat.component(world.getTileEntity(at)))return MekanismTankCompat.required(world,at);
+        if(MekanismTankCompat.component(world.getTileEntity(at))||MekanismTankCompat.reactorGlass(world.getTileEntity(at)))return MekanismTankCompat.required(world,at);
         TileEntity tile=world.getTileEntity(at);if(!post(tile)&&!watermill(tile))return Collections.emptySet();
         NBTTagCompound tag=data(tile);Set<BlockPos> result=new LinkedHashSet<>();IBlockState state=world.getBlockState(at);
         if(post(tile)){

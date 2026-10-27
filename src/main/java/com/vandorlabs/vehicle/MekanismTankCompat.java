@@ -12,11 +12,19 @@ public final class MekanismTankCompat {
     private static final String PREFIX="mekanism.common.tile.TileEntity";
     public static boolean tank(TileEntity tile){String name=tile==null?"":tile.getClass().getName();return name.equals(PREFIX+"DynamicTank")||name.equals(PREFIX+"DynamicValve");}
     public static boolean glass(TileEntity tile){return tile!=null&&tile.getClass().getName().equals(PREFIX+"StructuralGlass");}
+    public static boolean reactorGlass(TileEntity tile){return tile!=null&&tile.getClass().getName().equals("mekanism.generators.common.tile.reactor.TileEntityReactorGlass");}
+    public static boolean standaloneReactorGlass(TileEntity tile){
+        if(!reactorGlass(tile))return false;
+        try{return tile.getClass().getMethod("getReactor").invoke(tile)==null;}
+        catch(ReflectiveOperationException failure){throw new IllegalArgumentException("Cannot inspect Mekanism Reactor Glass links",failure);}
+    }
     public static boolean component(TileEntity tile){return tank(tile)||glass(tile);}
     private static void require(boolean ok,String message){if(!ok)throw new IllegalArgumentException(message);}
     /** Bounded native shell validation also prevents discovery/coupling from taking only one wall. */
     public static Set<BlockPos> required(World world,BlockPos start){
-        TileEntity initial=world.getTileEntity(start);if(!component(initial))return Collections.emptySet();
+        TileEntity initial=world.getTileEntity(start);
+        if(reactorGlass(initial)){require(standaloneReactorGlass(initial),"Detach Reactor Glass from its native reactor before moving it");return Collections.emptySet();}
+        if(!component(initial))return Collections.emptySet();
         if(glass(initial))try{if(initial.getClass().getField("master").get(initial)==null)return Collections.emptySet();}catch(ReflectiveOperationException failure){throw new IllegalArgumentException("Cannot inspect Mekanism Structural Glass links",failure);}
         Set<BlockPos> cells=new LinkedHashSet<>(),visited=new HashSet<>();ArrayDeque<BlockPos> pending=new ArrayDeque<>();pending.add(start);boolean hasTank=false;
         int minX=start.getX(),maxX=minX,minY=start.getY(),maxY=minY,minZ=start.getZ(),maxZ=minZ;

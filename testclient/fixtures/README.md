@@ -116,3 +116,11 @@ Run `bash testclient/test_viewscreen.sh --focus foreign-buildings` on Linux or
 those optional mods installed in the isolated test game. The live fixture uses a
 real client click and asynchronous Taxi assembly, draws a carried 2×2 Galacticraft
 Screen to framebuffers, then checks rotated native parking and recapture.
+
+## Standalone Mekanism Reactor Glass
+
+The `reactor-glass` live focus uses the installed Mekanism and MekanismGenerators
+JARs to place adjacent unlinked panes on a vehicle. It checks four parked headings,
+exact tile data, saved vehicle reload and recapture. A transient native reactor
+link must refuse capture before modifying the source. The same shared fixture
+runs on a physical server with `test_server_startup.py --reactor-glass`.

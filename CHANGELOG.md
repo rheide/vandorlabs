@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Support unlinked Mekanism Generators Reactor Glass as ordinary vehicle building material. Preserve its tile data and facing through capture, rotation and parking, while refusing glass still linked to a native fusion reactor.
+
 - Add explicit vehicle building/decorative adapters for ordinary LibVulpes coils and structural materials, Advanced Rocketry building parts, Furniture Mod decorations and storage, Galacticraft materials/slabs/stairs/glass and Screens, and Thermal Foundation building materials. Preserve orientations, furniture pairs, native inventories and TV dimensions; initialize carried Galacticraft displays without native load callbacks or extra world-position packets. Keep formed machinery and fluid/RF networks refused.
 
 - Fix vehicle inspection and Taxi conversion on dedicated servers with Thaumic Augmentation. Temporary vehicle chunks initialize capabilities on the physical server side while retaining read-only snapshot block and tile access.

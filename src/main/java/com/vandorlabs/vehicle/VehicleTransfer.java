@@ -204,6 +204,7 @@ public final class VehicleTransfer {
     }
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin)throws Exception {return assemble(world,structure,origin,null);}
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin,net.minecraft.entity.player.EntityPlayer actor)throws Exception {
+        for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&MekanismTankCompat.reactorGlass(world.getTileEntity(origin.add(cell.pos))))MekanismTankCompat.required(world,origin.add(cell.pos));
         if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
         if(!structure.hasDedicatedController())throw new IllegalArgumentException("Vehicle Controller missing");
         VehicleWorld validationView=new VehicleWorld(world,structure);

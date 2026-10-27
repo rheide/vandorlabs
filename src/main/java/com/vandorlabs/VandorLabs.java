@@ -103,6 +103,10 @@ public class VandorLabs {
 
     @EventHandler
     public void serverStarted(net.minecraftforge.fml.common.event.FMLServerStartedEvent event){
+        if(Boolean.getBoolean("vandorlabs.reactorGlassChecks")){
+            net.minecraft.world.WorldServer world=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
+            try{com.vandorlabs.vehicle.MekanismReactorGlassChecks.run(world,net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(world));}catch(Exception failure){throw new IllegalStateException("Reactor glass checks",failure);}
+        }
         if(Boolean.getBoolean("vandorlabs.foreignBuildingChecks")){
             net.minecraft.world.WorldServer world=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
             com.vandorlabs.vehicle.ForeignBuildingChecks.run(world,net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(world));

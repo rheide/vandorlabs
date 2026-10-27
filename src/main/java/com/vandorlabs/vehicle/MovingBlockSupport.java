@@ -17,6 +17,7 @@ public final class MovingBlockSupport {
         if(cell.tileData()!=null && tile==null)return false;
         String domain=cell.state.getBlock().getRegistryName().getResourceDomain();
         if(domain.equals("thermalexpansion")||domain.equals("thermaldynamics"))return false; // RF/fluid/network adapters are deliberately deferred.
+        if(MekanismTankCompat.reactorGlass(tile))return MekanismTankCompat.standaloneReactorGlass(tile);
         if(domain.equals("mekanism")&&MekanismTankCompat.component(tile))return true;
         if(BuildingBlockCompat.supported(cell,tile))return true;
         String name=tile==null?"":tile.getClass().getName();

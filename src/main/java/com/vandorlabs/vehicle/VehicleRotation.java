@@ -150,7 +150,7 @@ public final class VehicleRotation {
                     facing(data,"facing",rotation,false);
                     NBTTagCompound old=data.copy();
                     for(EnumFacing side:EnumFacing.values())if(old.hasKey("sideConfig_"+side.getIndex(),3))data.setInteger("sideConfig_"+rotation.rotate(side).getIndex(),old.getInteger("sideConfig_"+side.getIndex()));
-                } else if(domain.equals("mekanism")){
+                } else if(domain.equals("mekanism")||MekanismTankCompat.reactorGlass(view.getTileEntity(before.pos))){
                     facing(data,"facing",rotation,false);
                     if(view.getTileEntity(before.pos)!=null&&view.getTileEntity(before.pos).getClass().getName().equals("mekanism.common.tile.TileEntityGlowPanel"))facing(data,"side",rotation,false);
                 }

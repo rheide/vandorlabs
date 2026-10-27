@@ -22,7 +22,8 @@ lines = p.read_text().splitlines() if p.exists() else []
 lines = [line for line in lines if not line.startswith(('soundCategory_master:', 'pauseOnLostFocus:'))]
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
-CAPTURE_JVM=("-Dvandorlabs.foreignBuildingChecksOnly=${VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY:-false}")
+CAPTURE_JVM=("-Dvandorlabs.reactorGlassChecksOnly=${VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.foreignBuildingChecksOnly=${VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.legacyVehicleFixture=$PWD/../fixtures/legacy-vehicle-controller-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.utility26ChecksOnly=${VANDOR_LABS_UTILITY26_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleTaxiChecksOnly=${VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY:-false}")

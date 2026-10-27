@@ -20,7 +20,10 @@ def main():
     parser.add_argument('--machine-frames', action='store_true', help='Run the complete Core-frame matrix with client classes absent')
     parser.add_argument('--vehicle-world-only', action='store_true', help='Run only physical-server vehicle compatibility checks, without canopy/fluid fixtures')
     parser.add_argument('--foreign-buildings', action='store_true', help='Run focused installed building-mod checks on a physical server')
+    parser.add_argument('--reactor-glass', action='store_true', help='Run standalone Mekanism reactor glass transfer checks')
     args = parser.parse_args()
+    if args.reactor_glass:
+        args.vehicle_world_only = True
     if args.foreign_buildings:
         args.vehicle_world_only = True
     if args.vehicle_world_only:
@@ -53,6 +56,8 @@ def main():
             checks = ['-Dvandorlabs.vehicleWorldCompatibilityChecks=true'] if args.vehicle_world_checks else []
             if args.vehicle_world_checks:
                 checks.append('-Dvandorlabs.legacyVehicleFixture='+str(root/'testclient/fixtures/legacy-vehicle-controller-2.6.nbt'))
+            if args.reactor_glass:
+                checks.append('-Dvandorlabs.reactorGlassChecks=true')
             if args.foreign_buildings:
                 checks.append('-Dvandorlabs.foreignBuildingChecks=true')
             if args.machine_frames:
@@ -78,6 +83,8 @@ def main():
                 wait_for('Done (')
                 if args.vehicle_world_checks:
                     wait_for('vehicle-world-compatibility PASS')
+                if args.reactor_glass:
+                    wait_for('reactor-glass PASS')
                 if args.foreign_buildings:
                     wait_for('foreign-buildings PASS')
                 if args.machine_frames:
