@@ -57,14 +57,16 @@ public final class VehicleWorld extends World {
         this.parent=parent; this.structure=structure; structure.componentView(this); this.chunkProvider=createChunkProvider();
         for(VehicleStructure.Cell cell:structure.cells) if(cell.hasTileData()) {
             try {
-                TileEntity tile=TileEntity.create(null,cell.tileData());
+                TileEntity tile=BuildingBlockCompat.createTile(cell,null,cell.tileData());
                 if(tile!=null){tile.setWorld(this); tiles.put(cell.pos,tile);}
             }catch(RuntimeException | LinkageError error) {
                 // The immutable snapshot remains authoritative even if a mod cannot run in this view.
                 VehicleCompatibility.warn(cell.state.getBlock(),"local tile",error);
             }
         }
+        prepareForeignVisuals();
     }
+    private void prepareForeignVisuals(){if(parent.isRemote&&com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.vehicleBuildingVisuals(this);}
     public void update(VehicleStructure next) {
         VehicleStructure before=structure;next.inheritComponents(before);structure=next;next.componentView(this);
         if(tiles.keySet().stream().anyMatch(pos->next.at(pos)==null || !next.at(pos).hasTileData()))tileRevision++;
@@ -76,10 +78,11 @@ public final class VehicleWorld extends World {
             tiles.remove(cell.pos);
             tileRevision++;
             try {
-                TileEntity tile=TileEntity.create(null,cell.tileData());
+                TileEntity tile=BuildingBlockCompat.createTile(cell,null,cell.tileData());
                 if(tile!=null){tile.setWorld(this);tiles.put(cell.pos,tile);}
             }catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(cell.state.getBlock(),"local tile update",error);}
         }
+        prepareForeignVisuals();
     }
     @Override protected IChunkProvider createChunkProvider() {
         return new IChunkProvider() {

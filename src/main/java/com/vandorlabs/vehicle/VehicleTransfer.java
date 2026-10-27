@@ -404,7 +404,7 @@ public final class VehicleTransfer {
         for(BlockPos p:previous.keySet()){TileEntity detached=world.getTileEntity(p);world.removeTileEntity(p);VehicleForeignCompat.clearDetachedInventory(detached);}
         if(place)for(VehicleStructure.Cell cell:structure.cells) if(cell.tileData()!=null) {
             BlockPos p=origin.add(cell.pos);NBTTagCompound restoredTag=VehicleEscalators.parked(VehicleTileData.translated(cell.tileData(),origin),world.getTotalWorldTime());
-            TileEntity tile=TileEntity.create(world,restoredTag);
+            TileEntity tile=BuildingBlockCompat.createTile(cell,world,restoredTag);
             if(tile==null)throw new IllegalStateException("Cannot restore component at "+p);
             // TileEntity.create invokes readFromNBT before assigning its World.
             // Complete the ramp's live-clock restoration in this atomic context.

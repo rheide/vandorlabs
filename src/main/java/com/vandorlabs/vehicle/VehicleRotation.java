@@ -61,7 +61,7 @@ public final class VehicleRotation {
         }
     }
     @SuppressWarnings({"rawtypes","unchecked"}) private static IBlockState state(IBlockState source,Rotation rotation) {
-        IBlockState rotated=source.withRotation(rotation);
+        IBlockState rotated=BuildingBlockCompat.rotate(source,rotation);
         // Vandor families also include directional blocks whose base class does not override withRotation.
         if(source.getBlock().getRegistryName().getResourceDomain().equals("vandorlabs"))
             for(IProperty property:source.getPropertyKeys())if(source.getValue(property) instanceof EnumFacing) {
@@ -102,6 +102,7 @@ public final class VehicleRotation {
             BlockPos pos=cell(before.pos,width,depth,turns);NBTTagCompound data=before.tileData();
             if(data!=null) {
                 data.setInteger("x",pos.getX());data.setInteger("y",pos.getY());data.setInteger("z",pos.getZ());
+                BuildingBlockCompat.rotateTile(before.state,data,rotation);
                 String domain=before.state.getBlock().getRegistryName().getResourceDomain();
                 if(domain.equals("vandorlabs")) {
                     if(data.getString("id").equals("vandorlabs:modular_gear")||data.getString("id").equals("vandorlabs:track"))com.vandorlabs.gear.GearData.rotate(data,turns,view.parent);

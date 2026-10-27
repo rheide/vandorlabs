@@ -100,3 +100,19 @@ fixtures. Supply the standard JAR and the installed Thaumic Augmentation,
 Thaumcraft and Baubles JARs using `--jar` and repeated `--mod` arguments. Include
 NuclearCraft and RedstoneFlux to exercise the original capability provider too.
 The regular Taxi live focus covers assembly, parking and recovery.
+
+## Optional building/decorative blocks
+
+`test_server_startup.py --foreign-buildings` enumerates the installed LibVulpes,
+Advanced Rocketry, Furniture Mod, Galacticraft and Thermal registries. Supply the
+installed mod JARs and their dependencies with repeated `--mod` arguments. The
+physical-server matrix checks every distinct metadata state admitted by the
+building adapters, four rotations, native furniture pairs, inventories, TV
+constructor dimensions and negative unknown-data/cropped-part cases. RF/fluid
+network equipment remains refused.
+
+Run `bash testclient/test_viewscreen.sh --focus foreign-buildings` on Linux or
+`python testclient/run_windows.py --focus foreign-buildings` on Windows with
+those optional mods installed in the isolated test game. The live fixture uses a
+real client click and asynchronous Taxi assembly, draws a carried 2×2 Galacticraft
+Screen to framebuffers, then checks rotated native parking and recapture.

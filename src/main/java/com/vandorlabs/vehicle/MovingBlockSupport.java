@@ -16,7 +16,9 @@ public final class MovingBlockSupport {
     public static boolean supported(VehicleStructure.Cell cell,TileEntity tile) {
         if(cell.tileData()!=null && tile==null)return false;
         String domain=cell.state.getBlock().getRegistryName().getResourceDomain();
+        if(domain.equals("thermalexpansion")||domain.equals("thermaldynamics"))return false; // RF/fluid/network adapters are deliberately deferred.
         if(domain.equals("mekanism")&&MekanismTankCompat.component(tile))return true;
+        if(BuildingBlockCompat.supported(cell,tile))return true;
         String name=tile==null?"":tile.getClass().getName();
         // Malisis may replace vanilla registry entries while keeping the minecraft namespace.
         if((domain.equals("minecraft") || domain.equals("malisisdoors")) &&

@@ -20,6 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public void vehicleBuildingVisuals(com.vandorlabs.vehicle.VehicleWorld world){com.vandorlabs.client.ForeignBuildingVisuals.prepare(world);}
     @Override public double cockpitMotion(com.vandorlabs.tiles.TileEntityCockpit tile,boolean screens,float partial){return com.vandorlabs.client.CockpitVisualMotion.sample(tile,screens,partial);}
     @Override public void gearMotion(com.vandorlabs.network.MessageGearMotion packet){com.vandorlabs.client.GearMotionClient.receive(packet);}
     @Override public void turntablePacket(com.vandorlabs.network.MessageTurntableSnapshot packet){net.minecraft.client.Minecraft mc=net.minecraft.client.Minecraft.getMinecraft();mc.addScheduledTask(()->{if(mc.world==null)return;net.minecraft.entity.Entity raw=mc.world.getEntityByID(packet.entity);if(raw instanceof com.vandorlabs.turntable.EntityTurntable)try{((com.vandorlabs.turntable.EntityTurntable)raw).receive(packet.total,packet.offset,packet.data);}catch(Exception invalid){com.vandorlabs.VandorLabs.logger.warn("Invalid turntable snapshot",invalid);}});}

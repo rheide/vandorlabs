@@ -35,6 +35,7 @@ public final class CopyPlan {
         }
         if(cells.isEmpty())throw new IllegalArgumentException("The input area contains no blocks");
         VehicleStructure source=VehicleStructure.display(cells);VehicleWorld view=new VehicleWorld(world,source);view.origin=from[0];MovingBlockSupport.validate(source,view);
+        for(VehicleStructure.Cell cell:source.cells)if(com.vandorlabs.vehicle.BuildingBlockCompat.furniture(view.getTileEntity(cell.pos)))throw new IllegalArgumentException("Furniture tile data can move as vehicles; copying these tiles needs a separate material adapter");
         for(VehicleStructure.Cell cell:source.cells)if(MekanismTankCompat.tank(view.getTileEntity(cell.pos)))throw new IllegalArgumentException("Mekanism Dynamic Tanks can be moved as vehicles; copying their shared inventory is not supported");
         VehicleStructure result=CopyChannels.increment(source,owner.channelIncrement);VehicleWorld copied=new VehicleWorld(world,result);copied.origin=to[0];MovingBlockSupport.validate(result,copied);
         empty(world,to,actor);List<CopyMaterials.Need> needs=CopyMaterials.forSnapshot(source,view,actor.capabilities.isCreativeMode);

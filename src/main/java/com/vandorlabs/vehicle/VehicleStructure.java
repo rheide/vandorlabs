@@ -19,7 +19,7 @@ public final class VehicleStructure {
         public final IBlockState state;
         private final NBTTagCompound tile;
         public Cell(BlockPos pos,IBlockState state,NBTTagCompound tile) {
-            this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:com.vandorlabs.ramp.RampCopyData.canonicalizeSets(tile.copy());
+            this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:com.vandorlabs.ramp.RampCopyData.canonicalizeSets(BuildingBlockCompat.canonical(state,tile.copy()));
         }
         public NBTTagCompound tileData(){return tile==null?null:tile.copy();}
         public boolean hasTileData(){return tile!=null;}

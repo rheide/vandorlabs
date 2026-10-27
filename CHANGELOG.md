@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Add explicit vehicle building/decorative adapters for ordinary LibVulpes coils and structural materials, Advanced Rocketry building parts, Furniture Mod decorations and storage, Galacticraft materials/slabs/stairs/glass and Screens, and Thermal Foundation building materials. Preserve orientations, furniture pairs, native inventories and TV dimensions; initialize carried Galacticraft displays without native load callbacks or extra world-position packets. Keep formed machinery and fluid/RF networks refused.
+
 - Fix vehicle inspection and Taxi conversion on dedicated servers with Thaumic Augmentation. Temporary vehicle chunks initialize capabilities on the physical server side while retaining read-only snapshot block and tile access.
 
 - Preserve generated Ramp Controller sections when entering vehicle mode. Freeze and restore only the clock fields each tile owns, avoiding a false lossless-data refusal while retaining strict validation of unknown block data. Rotate saved ramp map bounds with the vehicle so turned snapshots remain consistent.

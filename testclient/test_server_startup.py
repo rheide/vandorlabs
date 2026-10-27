@@ -19,7 +19,10 @@ def main():
     parser.add_argument('--vehicle-world-checks', action='store_true', help='Run carried-tile chunk isolation checks on the physical server')
     parser.add_argument('--machine-frames', action='store_true', help='Run the complete Core-frame matrix with client classes absent')
     parser.add_argument('--vehicle-world-only', action='store_true', help='Run only physical-server vehicle compatibility checks, without canopy/fluid fixtures')
+    parser.add_argument('--foreign-buildings', action='store_true', help='Run focused installed building-mod checks on a physical server')
     args = parser.parse_args()
+    if args.foreign_buildings:
+        args.vehicle_world_only = True
     if args.vehicle_world_only:
         args.vehicle_world_checks = True
     root = Path(__file__).resolve().parents[1]
@@ -50,6 +53,8 @@ def main():
             checks = ['-Dvandorlabs.vehicleWorldCompatibilityChecks=true'] if args.vehicle_world_checks else []
             if args.vehicle_world_checks:
                 checks.append('-Dvandorlabs.legacyVehicleFixture='+str(root/'testclient/fixtures/legacy-vehicle-controller-2.6.nbt'))
+            if args.foreign_buildings:
+                checks.append('-Dvandorlabs.foreignBuildingChecks=true')
             if args.machine_frames:
                 checks.append('-Dvandorlabs.machineFrameChecks=true')
             proc = subprocess.Popen([args.java, '-Xmx2G', *checks, '-jar', str(args.forge.resolve()), 'nogui'],
@@ -73,6 +78,8 @@ def main():
                 wait_for('Done (')
                 if args.vehicle_world_checks:
                     wait_for('vehicle-world-compatibility PASS')
+                if args.foreign_buildings:
+                    wait_for('foreign-buildings PASS')
                 if args.machine_frames:
                     wait_for('constructors PASS ')
                 if args.vehicle_world_only:

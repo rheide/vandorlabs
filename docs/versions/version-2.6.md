@@ -105,4 +105,6 @@ Ramp Controllers accept all steel and aluminum scaffolding patterns from Immersi
 
 Vehicles retain generated Ramp Controller sections through capture, rotation and parking. Existing ramps no longer cause a false block-data preservation error when entering Taxi Mode, and their saved map geometry turns with the vehicle. Ramp clocks pause while carried and resume after parking.
 
+Vehicle building adapters now include ordinary LibVulpes coils, Advanced Rocketry structural/decorative materials, MrCrayfish’s furniture, Galacticraft building blocks and Screens, and Thermal Foundation materials. Furniture keeps its facing and saved data, including native inventories; capture every half of a multi-block piece. Joined Galacticraft wall displays keep their complete rectangle and channel while travelling. RF/fluid equipment and network blocks remain outside this building-focused support. See [vehicle compatibility](../vehicle-compatibility.md) for the exact scope.
+
 [All version guides](README.md) · [Changelog](../../CHANGELOG.md)

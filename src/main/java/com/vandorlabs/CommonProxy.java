@@ -9,6 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class CommonProxy {
+    public void vehicleBuildingVisuals(com.vandorlabs.vehicle.VehicleWorld world){}
     public double cockpitMotion(com.vandorlabs.tiles.TileEntityCockpit tile,boolean screens,float partial){return (screens?tile.screenLift:tile.seatSlide).sample(tile.getWorld().getTotalWorldTime()+partial);}
     public void gearMotion(com.vandorlabs.network.MessageGearMotion packet) { }
     public void turntablePacket(com.vandorlabs.network.MessageTurntableSnapshot packet) { }
