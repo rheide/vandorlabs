@@ -115,8 +115,8 @@ public final class VehicleTaxiRuntimeChecks {
             unchanged.put(at.toImmutable(),new VehicleStructure.Cell(at,w.getBlockState(at),tile==null?null:tile.writeToNBT(new NBTTagCompound())));
         }
         while(!rejected.step(1) && ++rejectedSlices<512);
-        require(rejected.result==null && rejected.error!=null && rejected.error.contains("same Y value") && rejectedSlices<512,
-                "vertically stacked gears in a hull loop are rejected within bounded scan slices");
+        require(rejected.result==null && rejected.error!=null && rejected.error.contains("at least three") && rejectedSlices<512,
+                "stacked gears do not supply three lowest-plane supports; bounded scan: "+rejected.error);
         for(VehicleStructure.Cell cell:unchanged.values()) {
             TileEntity tile=w.getTileEntity(cell.pos);
             require(w.getBlockState(cell.pos).equals(cell.state) && Objects.equals(cell.tileData(),tile==null?null:tile.writeToNBT(new NBTTagCompound())),
@@ -128,14 +128,16 @@ public final class VehicleTaxiRuntimeChecks {
             require(((TileEntityLandingGear)w.getTileEntity(at)).configure(0,0,0,0),"aligned loop gear setup");
         }
         TileEntityLandingGear half=(TileEntityLandingGear)w.getTileEntity(origin.add(10,0,0));
-        w.setBlockToAir(half.getPos().down());
+        // Higher feet can discover an attached child structure. Isolate this
+        // support-plane check from the terrain beneath those feet.
+        for(int x:new int[]{0,9,10})w.setBlockToAir(origin.add(x,-1,0));
         require(half.configure(0,0,8,0),"half-block extension setup");
         require(((BlockTelescopicLandingGear)gear).setExtended(w,half.getPos(),true),"extend half-block gear");half.progress=half.previous=.5F;
         VehicleScan halfScan=new VehicleScan(w,seat);int halfSlices=0;while(!halfScan.step(1) && ++halfSlices<512);
-        require(halfScan.result==null && halfScan.error!=null && halfScan.error.contains("same Y value"),"half-block difference is not rounded into the same support plane");
+        require(halfScan.result==null && halfScan.error!=null && halfScan.error.contains("at least three"),"half-block difference is not rounded into the same support plane: "+halfScan.error);
         require(((BlockTelescopicLandingGear)gear).setExtended(w,half.getPos(),false),"retract half-block gear");half.progress=half.previous=0;
         require(half.configure(0,0,0,0),"restore aligned support");
-        w.setBlockState(half.getPos().down(),Blocks.STONE.getDefaultState(),2);
+        for(int x:new int[]{0,9,10})w.setBlockState(origin.add(x,-1,0),Blocks.STONE.getDefaultState(),2);
         VehicleScan loop=new VehicleScan(w,seat);int slices=0;
         while(!loop.step(1) && ++slices<512);
         require(loop.error==null && loop.result!=null && slices<512,"aligned gear/hull loop finishes within bounded one-cell scan slices: "+loop.error+", slices="+slices);

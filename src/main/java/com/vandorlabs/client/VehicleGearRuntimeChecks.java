@@ -69,7 +69,7 @@ final class VehicleGearRuntimeChecks {
             require(Math.abs(bottom-block.vehicleBottomY(world,base))<.001,"support plane agrees with emitted collision geometry for size="+size);
             require(roots[1].configure(0,0,24,size),"half-block mismatch configuration");roots[1].progress=roots[1].previous=1.5F;
             VehicleScan mismatch=scan(world,seat);
-            require(mismatch.result==null && mismatch.error!=null && mismatch.error.contains("same Y value"),"half-block support mismatch rejected for size="+size);
+            require(mismatch.result==null && mismatch.error!=null && mismatch.error.contains("at least three"),"two supports on the lowest plane cannot convert, size="+size+": "+mismatch.error);
             roots[1].progress=1.49F;
             VehicleScan moving=scan(world,seat);
             require(moving.result==null && moving.error!=null && moving.error.contains("stop moving"),"moving gear remains refused");

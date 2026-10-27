@@ -126,12 +126,12 @@ public final class VehicleEscalatorRuntimeChecks {
         boolean expandedRotationRejected=false;try{VehicleRotation.rotate(expanded.structure,new VehicleWorld(world,expanded.structure),1);}catch(IllegalArgumentException expected){expandedRotationRejected=true;}
         require(expandedRotationRejected,"expanded recovery journals cannot rotate as vehicle cells");
         Cancel cancel=new Cancel();net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(cancel);boolean rejected=false;Exception cancellation=null;
-        try{VehicleTransfer.assemble(world,craft,scan.origin);}catch(Exception expected){rejected=true;cancellation=expected;}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancel);}
+        try{VehicleTransfer.assemble(world,craft,scan.origin,player);}catch(Exception expected){rejected=true;cancellation=expected;}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancel);}
         if(!(world.getTileEntity(rampPos) instanceof TileEntityRampController))throw new IllegalStateException("cancelled assembly failed to restore controller, mode="+mode+", vanilla="+vanilla+", "+difference(world,expanded),cancellation);
         require(rejected && !VehicleTransfer.pending(world) && expanded.structure.matches(world,expanded.origin),"cancelled assembly restores exact live snapshot before activity refresh, mode="+mode+", vanilla="+vanilla+", "+difference(world,expanded));
         ((TileEntityRampController)world.getTileEntity(rampPos)).refreshEscalatorActivity();
         require(rejected && !VehicleTransfer.pending(world) && expanded.structure.matches(world,expanded.origin),"cancelled assembly restores exact controller, sections and source journals");
-        EntityGroundVehicle vehicle=VehicleTransfer.assemble(world,craft,scan.origin);
+        EntityGroundVehicle vehicle=VehicleTransfer.assemble(world,craft,scan.origin,player);
         for(BlockPos p:sections)require(world.isAirBlock(p),"no orphan section after assembly");
         TileEntityRampController paused=(TileEntityRampController)vehicle.view.getTileEntity(rampPos.subtract(scan.origin));require(paused.escalator==mode && paused.attached() && paused.isOpen() && !paused.isEscalatorRunning(),"vehicle ramp keeps extended pose with belt paused");
         require(originalGeometry.equals(geometry(vehicle.view,localSections,BlockPos.ORIGIN,.75)),"moving vehicle retains extended tread surfaces at every render partial tick");
@@ -187,7 +187,7 @@ public final class VehicleEscalatorRuntimeChecks {
         Set<BlockPos> parkedSections=new HashSet<>();for(BlockPos section:turnedSections)parkedSections.add(parking.origin.add(section));
         require(geometry(new VehicleWorld(world,parking.structure),turnedSections,BlockPos.ORIGIN,0).equals(geometry(world,parkedSections,parking.origin,0)),"parking preserves extended posed geometry before world ticks");
         BlockPos parkedRamp=parking.origin.add(turnedController);
-        ramp=(TileEntityRampController)world.getTileEntity(parkedRamp);ramp.onLoad();ramp.scheduledTick();ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
+        ramp=(TileEntityRampController)world.getTileEntity(parkedRamp);require(player.getUniqueID().equals(WorldActionAuthorization.actorId(ramp)),"parking retains the assembling player authorization");ramp.onLoad();ramp.scheduledTick();ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
         require(ramp.escalator==mode && ramp.attached() && ramp.isOpen() && !ramp.error && !ramp.vehicleFrozen,"quarter-turn parked ramp remains extended and resumes world lifecycle: "+ramp.status);
         require(world.getBlockState(parkedRamp).getValue(BlockRampController.FACING)==net.minecraft.util.Rotation.CLOCKWISE_90.rotate(EnumFacing.SOUTH),"quarter-turn world controller points toward restored sources");
         List<VehicleStructure.Cell> parkedOriginals=VehicleEscalators.originals(ramp);
