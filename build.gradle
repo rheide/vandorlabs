@@ -852,7 +852,7 @@ task verifyRelease {
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'bridge-machines', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'utility26', '--timeout', '900' }
             exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'arm-live', '--timeout', '900' }
-            for (focus in ['arm-endpoints','arm-joined','arm-riders','arm-placement','arm-wall']) exec { commandLine 'python', 'testclient/run_windows.py', '--focus', focus, '--timeout', '900' }
+            for (focus in ['arm-endpoints','arm-joined','arm-riders','arm-placement','arm-wall','copy-surfaces']) exec { commandLine 'python', 'testclient/run_windows.py', '--focus', focus, '--timeout', '900' }
             if (System.getenv('VANDOR_LABS_TEST_MEKANISM')) exec { commandLine 'python', 'testclient/run_windows.py', '--focus', 'mekanism-tanks', '--timeout', '900' }
         } else {
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'render-regressions' }
@@ -862,7 +862,7 @@ task verifyRelease {
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'bridge-machines' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility26' }
             exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'arm-live' }
-            for (focus in ['arm-endpoints','arm-joined','arm-riders','arm-placement','arm-wall']) exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', focus }
+            for (focus in ['arm-endpoints','arm-joined','arm-riders','arm-placement','arm-wall','copy-surfaces']) exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', focus }
             if (System.getenv('VANDOR_LABS_TEST_MEKANISM')) exec { environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; commandLine 'bash', 'testclient/test_mekanism_tank.sh' }
         }
         if (digest() != expectedDigest) throw new GradleException('Release JAR changed during live validation')

@@ -64,3 +64,14 @@ all six mounts, independent/joined columns, and rotating/level payloads. Each
 combination edits the payload at a native endpoint, reverses, mines the whole
 platform, and moves the empty arms without resurrecting blocks. Level-mode cases
 replace a block with a chest and assert preservation of its 37 diamonds.
+
+`copy-surfaces-2.6.nbt` preserves the reported Copy Controller and two 5×5 pads,
+including their support blocks and saved artwork. Player identifiers are removed.
+The `copy-surfaces` focus mines the shared drawing tile and a separate member
+through the client, checks every remaining face with the actual TESR, replaces
+the missing block, expands the pair to 7×7, rejects the intermediate size mismatch,
+and checks seed replacement and controller removal. A further 24 cases cover
+all six surface normals and four horizontal controller facings, including real
+rendered faces and stable idle topology after expansion. It also runs the shared
+surface renderer, picker and damaged-turntable regressions. Linux and Windows
+launchers and the release gate select the same fixture.

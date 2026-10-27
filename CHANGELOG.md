@@ -2,6 +2,8 @@
 
 ## 2.6
 
+- Keep Copy Controller surfaces visible after removing the shared drawing tile or another pad block. Release invalid layouts and automatically rediscover repaired or expanded matching squares, preserving surface artwork and active-copy protection.
+
 - Recapture Rotating Arm platforms at either native endpoint, including folded joined rows. Include replacement blocks in the next stroke, preserve their orientation and contents, and leave mined blocks removed. Keep real obstructions outside the platform blocking movement.
 
 - Keep Rotating Arm sweep clearance within the rotation plane, so touching blocks beside the hinge axis do not falsely block wall-mounted arms. Preserve collision checks against real obstructions.

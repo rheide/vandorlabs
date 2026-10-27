@@ -37,14 +37,14 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     public boolean locked(){if(owner!=null&&world!=null&&!world.isBlockLoaded(owner))return true;SurfaceController c=claimedOwner();return c!=null&&c.surfaceLocked();}
     public void bind(BlockPos controller,UUID key){if(!canClaim(controller,key))throw new IllegalArgumentException("Programmable Surface is claimed by another controller");owner=controller.toImmutable();ownerKey=key;changed();}
     public void bind(TileEntityTurntableController controller){bind(controller.getPos(),controller.key);if(controller.hasLegacySurfaceAppearance())migrateLegacy(controller.surfaceOn,controller.surfaceOff);}
-    public void release(){owner=null;ownerKey=null;changed();scheduleGroup();}
+    public void release(){owner=null;ownerKey=null;setGroup(SquareLayout.single(pos,normal()));changed();scheduleGroup();}
     public boolean appearanceConfigured(){return configured;}
     public void migrateLegacy(String on,String off){if(configured)return;surfaceOn=TurntableTextures.normalize(on,true);surfaceOff=TurntableTextures.normalize(off,false);textureLayout=0;configured=true;changed();}
     public boolean active(){SurfaceController controller=claimedOwner();return controller!=null&&controller.surfaceActive(pos);}
     public String selectedTexture(){return active()?surfaceOn:surfaceOff;}
     private EnumFacing normal(){return world!=null&&world.isBlockLoaded(pos)&&world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface?world.getBlockState(pos).getValue(BlockTurntableSurface.FACING):EnumFacing.UP;}
     public SquareLayout appearanceLayout(){
-        SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled)return SquareLayout.single(pos,normal());SquareLayout claimed=controller==null?null:controller.surfaceLayout(pos);if(claimed!=null)return claimed;
+        SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled)return SquareLayout.single(pos,normal());SquareLayout claimed=controller==null?null:controller.surfaceLayout(pos);if(claimed!=null)return availableRoot(claimed);
         if(cachedGroup==null){
             EnumFacing face=EnumFacing.getFront(groupNormal);if(face!=normal())return SquareLayout.single(pos,normal());
             com.vandorlabs.turntable.TurntableGeometry.Face basis=com.vandorlabs.turntable.TurntableGeometry.Face.valueOf(face.name());BlockPos origin=pos.add(groupOffset);Set<BlockPos> cells=new HashSet<>();
@@ -52,19 +52,45 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
             for(int y=0;y<groupSize;y++)for(int x=0;x<groupSize;x++)cells.add(origin.offset(u,x).offset(v,y));
             try{cachedGroup=SquareLayout.of(cells,face);}catch(IllegalArgumentException invalid){cachedGroup=SquareLayout.single(pos,normal());}
         }
-        return cachedGroup;
+        return availableRoot(cachedGroup);
+    }
+    private SquareLayout availableRoot(SquareLayout layout){
+        // A removal packet may arrive before the replacement group data. Never
+        // depend on a missing shared renderer while that update is in flight.
+        if(world!=null&&!pos.equals(layout.root)&&world.isBlockLoaded(layout.root)&&!(world.getTileEntity(layout.root) instanceof TileEntityTurntableSurface))return SquareLayout.single(pos,normal());
+        return layout;
     }
     private boolean groupPending;
     public void setGroup(SquareLayout layout){
         BlockPos next=layout.cell(0,0,0).subtract(pos);boolean different=!next.equals(groupOffset)||groupSize!=layout.size||groupNormal!=layout.normal.getIndex();
         groupOffset=next;groupSize=layout.size;groupNormal=layout.normal.getIndex();cachedGroup=layout;if(different)changed();
     }
-    public void scheduleGroup(){groupPending=true;DeferredTileLoad.schedule(this,()->{if(groupPending){groupPending=false;refreshGroup();}});}
+    public void scheduleGroup(){if(world==null||world.isRemote||groupPending)return;groupPending=true;DeferredTileLoad.schedule(this,()->{if(groupPending){groupPending=false;refreshGroup();}});}
     public void refreshGroup(){
         if(world==null||world.isRemote||!world.isBlockLoaded(pos)||!(world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface))return;
-        SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled){setGroup(SquareLayout.single(pos,normal()));return;}if(controller!=null){SquareLayout layout=controller.surfaceLayout(pos);if(layout!=null)setGroup(layout);return;}
+        SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled){setGroup(SquareLayout.single(pos,normal()));return;}if(controller!=null){
+            if(controller instanceof com.vandorlabs.copier.CopyControllerTile){
+                com.vandorlabs.copier.CopyControllerTile copier=(com.vandorlabs.copier.CopyControllerTile)controller;
+                for(EnumFacing side:EnumFacing.values())if(side.getAxis()!=normal().getAxis()){
+                    BlockPos next=pos.offset(side);if(!world.isBlockLoaded(next)||!copier.sameSurfaceSide(pos,next))continue;
+                    IBlockState state=world.getBlockState(next);TileEntity raw=world.getTileEntity(next);
+                    if(state.getBlock() instanceof BlockTurntableSurface&&state.getValue(BlockTurntableSurface.FACING)==normal()&&raw instanceof TileEntityTurntableSurface&&((TileEntityTurntableSurface)raw).claimedOwner()==null){copier.surfaceChanged();return;}
+                }
+            }
+            SquareLayout layout=controller.surfaceLayout(pos);if(layout!=null)setGroup(layout);return;
+        }
         Set<BlockPos> members;
         try{members=SquareLayout.connected(world,pos,p->{if(!world.isBlockLoaded(p))return true;TileEntity raw=world.getTileEntity(p);return !(raw instanceof TileEntityTurntableSurface)||((TileEntityTurntableSurface)raw).claimedOwner()==null;});}catch(IllegalArgumentException unloaded){return;}
+        // Unclaimed/incomplete pads still reach their adjacent Copy Controller.
+        // This makes later additions and seed replacements discoverable after a
+        // failed scan released the previous claims. Group work stays deferred
+        // and is coalesced across the connected component below.
+        Set<com.vandorlabs.copier.CopyControllerTile> copiers=new HashSet<>();
+        for(BlockPos cell:members)for(EnumFacing side:EnumFacing.values()){
+            BlockPos at=cell.offset(side);if(!world.isBlockLoaded(at))continue;TileEntity raw=world.getTileEntity(at);
+            if(raw instanceof com.vandorlabs.copier.CopyControllerTile&&((com.vandorlabs.copier.CopyControllerTile)raw).surfaceSeed(cell))copiers.add((com.vandorlabs.copier.CopyControllerTile)raw);
+        }
+        for(com.vandorlabs.copier.CopyControllerTile copier:copiers)copier.surfaceChanged();
         SquareLayout layout=null;try{layout=SquareLayout.of(members,normal());}catch(IllegalArgumentException irregular){}
         for(BlockPos cell:members){TileEntity raw=world.getTileEntity(cell);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface surface=(TileEntityTurntableSurface)raw;surface.groupPending=false;surface.setGroup(layout==null?SquareLayout.single(cell,normal()):layout);}}
     }

@@ -8,6 +8,8 @@ Arm attachments, Copy Controllers and Vehicle Couplers support Windows and Linux
 
 The [Copy Controller](../copy-controller.md) duplicates a square input volume onto a matching square output surface. Place input surfaces on its left, output surfaces on its right and a material chest behind it. The front faces the placing player: cyan input is on your left and amber output on your right. Configure scan height and an optional signed redstone-channel offset in the dialog. Creative copies require no materials; Survival copies consume matching building materials and the exact items stored inside copied inventories. Missing materials and incompatible areas appear in the dialog before copying.
 
+Copy Controller pads automatically update when Surface blocks are added, removed or replaced. Both sides must become complete squares of the same size before copying resumes. Incomplete pads keep visible, opaque artwork, and the controller can be reused when enlarging the pads.
+
 Copying and vehicle coupling prepare recovery records in the background, then check the live blocks and inventories again before changing ownership. Lighting and neighboring blocks update over subsequent ticks after the changed chunks are saved. Carried chest edits keep the same exact saved-data size limit without serializing the whole vehicle for each click.
 
 ![Copy Controller casing and its directional input/output markings](version-2.6-copy-controller.png)

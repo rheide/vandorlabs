@@ -31,26 +31,39 @@ public final class CopyControllerTile extends TileEntity implements ITickable,Su
     public void status(String message){status=message;changed();}
     public void requestCopy(EntityPlayerMP player)throws Exception{if(busy())throw new IllegalArgumentException("A copy is already in progress");error="";com.vandorlabs.tiles.WorldActionAuthorization.authorize(this,player);actor=player.getUniqueID();refreshPads(player);CopyTransactions.submit(this,player);}
     public void refreshPads(EntityPlayerMP player){
-        if(busy())throw new IllegalArgumentException("Wait for the current copy to finish");EnumFacing right=front().rotateYCCW();
+        if(busy())throw new IllegalArgumentException("Wait for the current copy to finish");
+        try{refreshPadsChecked(player);}catch(IllegalArgumentException invalid){release();throw invalid;}
+    }
+    private void refreshPadsChecked(EntityPlayerMP player){
+        EnumFacing right=front().rotateYCCW();
         java.util.function.Predicate<BlockPos> leftHalf=p->side(p,right)<0,rightHalf=p->side(p,right)>0;
         SquareLayout left=SquareLayout.scan(world,pos.offset(right.getOpposite()),leftHalf),target=SquareLayout.scan(world,pos.offset(right),rightHalf);
         if(left.size!=target.size)throw new IllegalArgumentException("Input and output surfaces must be square and the same size");
         if(left.normal!=target.normal)throw new IllegalArgumentException("Input and output surfaces must face the same direction");
         Set<BlockPos> cells=new HashSet<>(left.cells);for(BlockPos p:target.cells)if(!cells.add(p))throw new IllegalArgumentException("Input and output surfaces must be separate");
         for(BlockPos p:cells){TileEntity raw=world.getTileEntity(p);if(!(raw instanceof TileEntityTurntableSurface)||!((TileEntityTurntableSurface)raw).canClaim(pos,key))throw new IllegalArgumentException("A surface belongs to another controller");if(player!=null)com.vandorlabs.vehicle.VehicleService.permission(player,p);}
-        release();input=left;output=target;
-        for(SquareLayout area:new SquareLayout[]{input,output})for(BlockPos p:area.cells){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);tile.bind(pos,key);tile.setGroup(area);}
+        SquareLayout oldInput=input,oldOutput=output;input=left;output=target;
+        releaseCells(oldInput,oldOutput,cells);
+        for(SquareLayout area:new SquareLayout[]{input,output})for(BlockPos p:area.cells){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);if(!pos.equals(tile.owner)||!key.equals(tile.ownerKey))tile.bind(pos,key);tile.setGroup(area);}
         refresh=false;error="";status="Ready: "+left.size+" x "+left.size+", height "+height;changed();
     }
     private int side(BlockPos p,EnumFacing right){return (p.getX()-pos.getX())*right.getFrontOffsetX()+(p.getZ()-pos.getZ())*right.getFrontOffsetZ();}
-    public void release(){if(world==null||world.isRemote)return;for(SquareLayout area:new SquareLayout[]{input,output})if(area!=null)for(BlockPos p:area.cells)if(world.isBlockLoaded(p)){TileEntity raw=world.getTileEntity(p);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)raw;if(pos.equals(tile.owner)&&key.equals(tile.ownerKey))tile.release();}}input=output=null;}
+    /** Invalid geometry stops owning pads immediately; remaining cells regain independent artwork. */
+    public void release(){if(world==null||world.isRemote)return;SquareLayout oldInput=input,oldOutput=output;input=output=null;releaseCells(oldInput,oldOutput,Collections.emptySet());}
+    private void releaseCells(SquareLayout first,SquareLayout second,Set<BlockPos> retained){
+        for(SquareLayout area:new SquareLayout[]{first,second})if(area!=null)for(BlockPos p:area.cells)if(!retained.contains(p)&&world.isBlockLoaded(p)){
+            TileEntity raw=world.getTileEntity(p);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)raw;if(pos.equals(tile.owner)&&key.equals(tile.ownerKey))tile.release();}
+        }
+    }
+    public boolean surfaceSeed(BlockPos cell){EnumFacing right=front().rotateYCCW();return cell.equals(pos.offset(right))||cell.equals(pos.offset(right.getOpposite()));}
+    public boolean sameSurfaceSide(BlockPos member,BlockPos neighbour){EnumFacing right=front().rotateYCCW();return Integer.signum(side(member,right))==Integer.signum(side(neighbour,right));}
     public void completed(){activeTicks=20;status="Copy complete";error="";changed();}
     @Override public UUID surfaceKey(){return key;}
     @Override public boolean ownsSurface(BlockPos p){return input!=null&&input.cells.contains(p)||output!=null&&output.cells.contains(p);}
     @Override public SquareLayout surfaceLayout(BlockPos p){return input!=null&&input.cells.contains(p)?input:output!=null&&output.cells.contains(p)?output:null;}
     @Override public boolean surfaceActive(BlockPos p){return (busy()||activeTicks>0)&&output!=null&&output.cells.contains(p);}
     @Override public boolean surfaceLocked(){return busy();}
-    @Override public void surfaceChanged(){refresh=true;error="Surfaces changed; check both complete squares";changed();}
+    @Override public void surfaceChanged(){if(!busy())release();refresh=true;error="Surfaces changed; check both complete squares";changed();}
     @Override public void invalidate(){com.vandorlabs.tiles.WorldActionAuthorization.revoke(this);super.invalidate();}
     @Override public void onChunkUnload(){com.vandorlabs.tiles.WorldActionAuthorization.unloaded(this);super.onChunkUnload();}
     @Override public void onLoad(){com.vandorlabs.tiles.WorldActionAuthorization.resumed(this);refresh=true;}

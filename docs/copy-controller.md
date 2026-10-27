@@ -4,9 +4,25 @@ The Copy Controller makes a complete block copy between two Programmable Surface
 
 Place the controller between two pads. When placed, its front faces you: the cyan input is on your left and the amber output is on your right. Put the material chest directly behind the controller, away from you. Both pads must be complete squares of the same size, face the same direction, and belong to this controller. Pads can be up to 16 × 16 blocks. Configure their artwork and Stretch, Tile or Fit independently through the Programmable Surface dialog; claiming a pad does not change its artwork.
 
-Open the controller and choose **Check areas** after building or changing the pads. Use the **Height** slider, shared with the Turntable Controller, to set the scan height from 1 to 16 blocks. Scanning starts one block outward from each surface, follows its face normal, and includes the entire square at every depth. The output volume must be empty, including players and other entities. Keep complete doors, machines and other multiblock assemblies inside the input volume.
+The controller automatically rechecks the pads as you add or remove Surface blocks. **Check areas** also performs an immediate manual check. Use the **Height** slider, shared with the Turntable Controller, to set the scan height from 1 to 16 blocks. Scanning starts one block outward from each surface, follows its face normal, and includes the entire square at every depth. The output volume must be empty, including players and other entities. Keep complete doors, machines and other multiblock assemblies inside the input volume.
 
 Use **Copy** to start a manual operation. Redstone modes can instead trigger a copy on an active edge: powered or unpowered. An empty channel list uses adjacent physical redstone; a configured list requires all listed channels. The configuring player must remain online, alive and in the same dimension so the operation can recheck their building permissions. Loading a world with an already active signal does not trigger a copy.
+
+## Changing the surface size
+
+Add blocks along the outer edges of each pad until both are filled squares of the
+same size, up to 16 × 16. Keep each pad connected to the Surface block directly
+beside its side of the controller, and keep every added block facing the same way.
+For example, enlarge both 5 × 5 pads to 7 × 7 by adding two columns and two rows
+on each side's available outer edges. The controller detects the new area once
+both squares are complete; rebuilding the controller is unnecessary.
+
+While one side is larger or a pad has holes, copying is unavailable and the dialog
+explains the mismatch. Remaining Surface blocks keep their artwork and stay
+opaque. An incomplete pad displays its blocks independently until it forms a
+complete square again. Removing or replacing blocks preserves the appearance
+settings saved on the remaining surfaces. Finish an active copy before editing
+its protected pads.
 
 ## Materials and exact contents
 

@@ -62,7 +62,7 @@ final class SurfaceClientChecks {
         }
         System.out.println("[vandorlabs][reprolab] surface-damaged-client PASS actual-TESR-FBO-cases="+cases+" six normals root/member removal retained protection self-root opaque faces");
     }
-    private static BufferedImage damagedFace(Minecraft mc,TileEntityTurntableSurface tile,net.minecraft.util.EnumFacing normal){
+    static BufferedImage damagedFace(Minecraft mc,TileEntityTurntableSurface tile,net.minecraft.util.EnumFacing normal){
         Framebuffer frame=new Framebuffer(64,64,true);GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-.6,.6,-.6,.6,-4,4);GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();
         try(TurntableRenderState saved=new TurntableRenderState()){
             frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.depthMask(true);GlStateManager.clearColor(32/255F,48/255F,64/255F,1);GlStateManager.clear(16640);mc.entityRenderer.disableLightmap();if(normal.getAxis()==net.minecraft.util.EnumFacing.Axis.Y)GlStateManager.rotate(90,1,0,0);else if(normal.getAxis()==net.minecraft.util.EnumFacing.Axis.X)GlStateManager.rotate(90,0,1,0);
