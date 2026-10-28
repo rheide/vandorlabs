@@ -61,10 +61,10 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         int redstoneWidth=Math.min(400,xSize-24),redstoneX=layout.left+(xSize-redstoneWidth)/2;
         super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
-        buttonList.add(layout.tab(90,0,4,"Bottom"));
-        buttonList.add(layout.tab(91,1,4,"Top"));
-        buttonList.add(layout.tab(92,2,4,"Sides"));
-        buttonList.add(layout.tab(93,3,4,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+138,redstoneWidth,20,"Transmitter..."));
+        buttonList.add(layout.fullTab(90,0,4,"Bottom"));
+        buttonList.add(layout.fullTab(91,1,4,"Top"));
+        buttonList.add(layout.fullTab(92,2,4,"Sides"));
+        buttonList.add(layout.fullTab(93,3,4,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+138,redstoneWidth,20,"Transmitter..."));
         left=right=layout.listX;top=guiTop+54;
         topList=new ScreenTextureList(left,top,layout.listWidth,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(topList,1)).redstone(te.getPos(),1);
         bottomList=new ScreenTextureList(left,top,layout.listWidth,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(bottomList,0)).redstone(te.getPos(),0);

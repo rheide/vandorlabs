@@ -176,10 +176,10 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         int redstoneWidth=Math.min(400,xSize-24),redstoneX=layout.left+(xSize-redstoneWidth)/2;
         super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
         int tabs=console?4:3,rows=layout.rows(true);
-        buttonList.add(layout.tab(90,0,tabs,"Display"));
-        if(console)buttonList.add(layout.tab(91,1,tabs,"Controls"));
-        buttonList.add(layout.tab(console?92:91,tabs-2,tabs,"Sides"));
-        buttonList.add(layout.tab(console?93:92,tabs-1,tabs,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+138,redstoneWidth,20,"Transmitter..."));
+        buttonList.add(layout.fullTab(90,0,tabs,"Display"));
+        if(console)buttonList.add(layout.fullTab(91,1,tabs,"Controls"));
+        buttonList.add(layout.fullTab(console?92:91,tabs-2,tabs,"Sides"));
+        buttonList.add(layout.fullTab(console?93:92,tabs-1,tabs,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+138,redstoneWidth,20,"Transmitter..."));
         listLeft=layout.listX;listTop=guiTop+54;listRight=listLeft+layout.listWidth;listBottom=listTop+rows*HousingTextureList.ROW_HEIGHT;
         String[] ids=new String[entries.size()],labels=new String[entries.size()];
         for(int i=0;i<ids.length;i++){ids[i]=entries.get(i).option.bareId;labels[i]=entries.get(i).name;}

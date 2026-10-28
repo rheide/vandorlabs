@@ -59,9 +59,9 @@ public class GuiProgrammableInput extends GuiContainer {
         int redstoneWidth=Math.min(400,xSize-24),redstoneX=layout.left+(xSize-redstoneWidth)/2;
         super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
-        buttonList.add(layout.tab(90,0,3,"Controls"));
-        buttonList.add(layout.tab(91,1,3,"Sides"));
-        buttonList.add(layout.tab(92,2,3,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+138,redstoneWidth,20,"Transmitter..."));
+        buttonList.add(layout.fullTab(90,0,3,"Controls"));
+        buttonList.add(layout.fullTab(91,1,3,"Sides"));
+        buttonList.add(layout.fullTab(92,2,3,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+138,redstoneWidth,20,"Transmitter..."));
         listX=layout.listX;listY=guiTop+54;
         screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0);
         for(int i=0;i<3;i++) {

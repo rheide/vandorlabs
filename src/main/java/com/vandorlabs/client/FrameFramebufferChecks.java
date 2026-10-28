@@ -82,7 +82,7 @@ final class FrameFramebufferChecks {
         net.minecraft.client.gui.GuiScreen previous=mc.currentScreen;net.minecraft.inventory.Container container=mc.player.openContainer;
         try{for(int[] size:new int[][]{{320,240},{460,340}}){
             GuiAnimatedScreenSelector gui=new GuiAnimatedScreenSelector(mc.player.inventory,tile);mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
-            require(!screenButton(gui,90).enabled,"new screen dialog did not open its first tab");gui.actionPerformed(screenButton(gui,92));
+            require(!screenButton(gui,90).enabled,"new screen dialog did not open its first tab");for(int id=90;id<=92;id++){net.minecraft.client.gui.GuiButton tab=screenButton(gui,id);require(mc.fontRenderer.getStringWidth(tab.displayString)<=tab.width-6,"screen tab caption clipped");}require(screenButton(gui,90).displayString.equals("Display")&&screenButton(gui,92).displayString.equals("Redstone"),"screen tab labels were shortened");gui.actionPerformed(screenButton(gui,92));
             net.minecraft.client.gui.GuiTextField receive=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiAnimatedScreenSelector.class,gui,"channelField");
             require(receive.getVisible()&&receive.width==Math.min(400,gui.getXSize()-24)&&receive.x==gui.getGuiLeft()+(gui.getXSize()-receive.width)/2,"Redstone receive field retained empty texture-list column");
             net.minecraft.client.gui.GuiButton trigger=screenButton(gui,0),anchor=screenButton(gui,198);require(trigger.x==receive.x&&trigger.width==receive.width&&trigger.y>=receive.y+receive.height+8&&anchor.y>=trigger.y+trigger.height+8,"screen Redstone rows overlap or retain scattered layout");
