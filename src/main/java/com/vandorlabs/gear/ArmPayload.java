@@ -102,7 +102,7 @@ public final class ArmPayload {
             else{
                 BlockPos tip=placed(arm.localCell(0,-arm.assembly().columnHeight(),0));
                 if(!GearAssembly.loaded(world,tip))throw new IllegalArgumentException("Load the attachment first");
-                positions=world.isAirBlock(tip)?Collections.emptySet():Collections.singleton(tip);
+                positions=world.isAirBlock(tip)?Collections.emptySet():surfaceLayer(arm,tip,at->construction(at));
             }
             if(positions.isEmpty())return null;
             Set<BlockPos> connected=new HashSet<>();ArrayDeque<BlockPos> pending=new ArrayDeque<>();pending.add(positions.iterator().next());
@@ -161,6 +161,8 @@ public final class ArmPayload {
     static ArmPayload discover(GearTileEntity arm,EntityPlayerMP actor,BlockPos shift){
         World world=arm.getWorld();BlockPos start=arm.localCell(0,-arm.assembly().columnHeight(),0).add(shift);
         Set<BlockPos> platform=arm.joinEnabled()&&arm.columns().size()>1?JoinedArms.platform(arm,shift):null;
+        if(platform==null&&world.getBlockState(start).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)
+            platform=surfaceLayer(arm,start,at->at.subtract(shift));
         if(platform!=null&&platform.isEmpty())return null;
         JoinedArms.Volume volume=platform==null?null:new JoinedArms.Volume(arm,platform,shift);
         // An unjoined arm selects its tip block. Face contact with a wall or
@@ -203,10 +205,54 @@ public final class ArmPayload {
         }
         if(platform!=null){Set<BlockPos> capturedPositions=new HashSet<>();for(VehicleStructure.Cell cell:captured)capturedPositions.add(cell.pos);if(!capturedPositions.containsAll(platform))throw new IllegalArgumentException("Every corner needs a connected platform surface");}
         if(captured.isEmpty())return null;
+        if(arm.pushBlocks()&&arm.canPushBlocks()&&arm.progress()==1&&!arm.target()){
+            double stroke=arm.activeExtension();int distance=(int)Math.rint(stroke);
+            if(distance<1||Math.abs(stroke-distance)>1e-8)throw new IllegalArgumentException("Pushing requires a whole-block outward stroke");
+            Set<BlockPos> selected=new HashSet<>();for(VehicleStructure.Cell cell:captured)selected.add(cell.pos);
+            for(VehicleStructure.Cell cell:captured)if(cell.hasTileData()||cell.state.getBlock().getMobilityFlag(cell.state)!=net.minecraft.block.material.EnumPushReaction.NORMAL||!cell.state.isFullCube())throw new IllegalArgumentException("Pushing supports ordinary solid blocks without tile data");
+            int base=captured.size();
+            for(int index=0;index<captured.size();index++)for(int step=1;step<=distance;step++){
+                BlockPos at=captured.get(index).pos.offset(arm.mountDirection(),step);
+                if(selected.contains(at))continue;
+                if(!GearAssembly.loaded(world,at))throw new IllegalArgumentException("Load the complete push path first");
+                IBlockState state=world.getBlockState(at);if(state.getBlock().isAir(state,world,at))continue;
+                if(captured.size()>=MAX_BLOCKS||captured.size()-base>=12||physicalMember(arm,at)||state.getBlockHardness(world,at)<0||state.getBlock().getMobilityFlag(state)!=net.minecraft.block.material.EnumPushReaction.NORMAL||!state.isFullCube()||state.getBlock().hasTileEntity(state)||state.getMaterial().isLiquid())
+                    throw new IllegalArgumentException("Push up to twelve ordinary solid blocks; tile entities and immovable blocks stay protected");
+                VehicleService.permission(actor,at);
+                if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented pushing the block");
+                BlockPos target=at.offset(arm.mountDirection(),distance);
+                if(!GearAssembly.loaded(world,target)||!world.getWorldBorder().contains(target))throw new IllegalArgumentException("Load the complete push destination inside the world border");
+                selected.add(at);captured.add(new VehicleStructure.Cell(at,state,null));
+                minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());maxX=Math.max(maxX,at.getX());maxY=Math.max(maxY,at.getY());maxZ=Math.max(maxZ,at.getZ());
+                if(maxX-minX>=MAX_SPAN||maxY-minY>=MAX_SPAN||maxZ-minZ>=MAX_SPAN)throw new IllegalArgumentException("Pushed attachment exceeds the bounded arm span");
+            }
+        }
         BlockPos origin=new BlockPos(minX,minY,minZ);List<VehicleStructure.Cell> normalized=new ArrayList<>();
         for(VehicleStructure.Cell cell:captured)normalized.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin)):null));
         VehicleStructure snapshot=VehicleStructure.display(normalized);try{validateSyncBudget(snapshot.encode());}catch(java.io.IOException tooLarge){throw new IllegalArgumentException("Attachment too large; reduce platform or load height",tooLarge);}
         return new ArmPayload(snapshot,origin.subtract(arm.getPos()).subtract(shift),true,origin.subtract(arm.getPos()));
+    }
+    /** Only the tip's surface layer joins implicitly; surrounding floors and stacked layers stay native. */
+    private static Set<BlockPos> surfaceLayer(GearTileEntity arm,BlockPos tip,java.util.function.Function<BlockPos,BlockPos> construction){
+        World world=arm.getWorld();
+        if(!(world.getBlockState(tip).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface))return Collections.singleton(tip);
+        Set<BlockPos> layer=new LinkedHashSet<>();ArrayDeque<BlockPos> pending=new ArrayDeque<>();pending.add(tip);
+        int plane=ArmOrientation.inverse(arm.mountDirection(),construction.apply(tip).subtract(arm.getPos())).getY();
+        while(!pending.isEmpty()){
+            BlockPos at=pending.removeFirst();if(layer.contains(at))continue;
+            if(!GearAssembly.loaded(world,at))throw new IllegalArgumentException("Load the complete surface layer first");
+            if(!(world.getBlockState(at).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface))continue;
+            BlockPos canonical=ArmOrientation.inverse(arm.mountDirection(),construction.apply(at).subtract(arm.getPos()));
+            if(canonical.getY()!=plane)continue;
+            if(layer.size()>=MAX_BLOCKS||Math.abs(at.getX()-tip.getX())>=MAX_SPAN||Math.abs(at.getY()-tip.getY())>=MAX_SPAN||Math.abs(at.getZ()-tip.getZ())>=MAX_SPAN)
+                throw new IllegalArgumentException("Connected surface layer exceeds the arm attachment limit");
+            layer.add(at);
+            for(EnumFacing side:EnumFacing.values()){
+                BlockPos next=at.offset(side);
+                if(ArmOrientation.inverse(arm.mountDirection(),construction.apply(next).subtract(arm.getPos())).getY()==plane&&!layer.contains(next))pending.add(next);
+            }
+        }
+        return layer;
     }
     private static boolean physicalMember(GearTileEntity arm,BlockPos at){return arm.members().contains(at)&&(arm.storedSections==null||arm.storedSections.at(at.subtract(arm.getPos()))==null);}
     /** Captured vehicle cells have already passed assembly authorization. */

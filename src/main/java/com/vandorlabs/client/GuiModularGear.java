@@ -11,22 +11,28 @@ import java.io.IOException;
 /** Primary controls and motion/appearance settings share one compact page. */
 public final class GuiModularGear extends GuiContainer {
     private GearTileEntity tile;
-    private int trigger,direction;
-    private boolean deployed,rotate,join,load;
+    private int trigger,direction,page;
+    private boolean deployed,rotate,join,load,push;
     private int range,heightLimit;
-    private net.minecraftforge.fml.client.config.GuiSlider rangeSlider,loadSlider;
+    private double angle;
+    private net.minecraftforge.fml.client.config.GuiSlider rangeSlider,loadSlider,angleSlider;
     private GuiTextField channels;
     private String error="";
     public GuiModularGear(ContainerModularGear container){
-        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();rotate=tile.rotatePayload();join=tile.joinEnabled();load=tile.carryLoad()&&tile.canCarryLoad();range=tile.joinRange();heightLimit=tile.loadHeight();xSize=380;ySize=228;
+        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();push=tile.pushBlocks();rotate=tile.rotatePayload();join=tile.joinEnabled();load=tile.carryLoad()&&tile.canCarryLoad();angle=tile.activeAngle();range=tile.joinRange();heightLimit=tile.loadHeight();xSize=380;ySize=254;
     }
     @Override public void initGui(){
-        xSize=Math.min(380,width-12);ySize=228;super.initGui();buttonList.clear();int col=(xSize-36)/2,right=guiLeft+24+col;
+        xSize=Math.min(380,width-12);ySize=254;super.initGui();buttonList.clear();int col=(xSize-36)/2,right=guiLeft+24+col;
         channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+70,col,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(tile.getRedstoneChannels().toString());
         add(0,guiLeft+12,30,col);add(1,guiLeft+12,94,col);add(2,guiLeft+12,120,col);add(7,guiLeft+12,146,col);add(4,guiLeft+(xSize-200)/2,178,200);
-        add(9,right,30,col);add(11,right,94,col);
+        add(14,right,146,col);add(9,right,30,col);add(11,right,94,col);
         rangeSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,right,guiTop+56,col,20,"Range: "," blocks",1,32,range,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=range){range=value;submit();}});buttonList.add(rangeSlider);
         loadSlider=new net.minecraftforge.fml.client.config.GuiSlider(12,right,guiTop+120,col,20,"Height: "," blocks",1,32,heightLimit,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=heightLimit){heightLimit=value;submit();}});buttonList.add(loadSlider);
+        angleSlider=new net.minecraftforge.fml.client.config.GuiSlider(13,right,guiTop+146,col,20,"Angle: "," degrees",-180,180,angle,false,true,slider->{double value=Math.round(slider.getValue()/15)*15;slider.setValue(value);if(value!=angle){angle=value;submit();}});buttonList.add(angleSlider);
+        for(GuiButton button:buttonList)button.y+=26;
+        buttonList.add(new GuiButton(15,guiLeft+12,guiTop+132,col,20,"Transmitter..."));
+        buttonList.add(new DialogTabButton(20,guiLeft+12,guiTop+30,col,20,"Mechanism"));
+        buttonList.add(new DialogTabButton(21,right,guiTop+30,col,20,"Redstone"));
         labels();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
     }
     private void add(int id,int x,int y,int width){buttonList.add(new GuiButton(id,x,guiTop+y,width,20,""));}
@@ -34,7 +40,11 @@ public final class GuiModularGear extends GuiContainer {
     private void labels(){
 
         boolean rest=tile.fullyDeployed();
-        rangeSlider.visible=join;loadSlider.visible=join&&load&&tile.canCarryLoad();
+        for(GuiButton button:buttonList){button.visible=button.id>=20||button.id==4||((page==1)==(button.id==0||button.id==15));if(button.id>=20)button.enabled=button.id!=20+page;}
+        channels.setVisible(page==1);channels.y=guiTop+98;button(0).y=guiTop+60;
+        button(14).visible=page==0&&tile.canPushBlocks();button(14).enabled=rest;button(14).displayString="Push blocks: "+(push?"On":"Off");
+        angleSlider.visible=page==0&&tile.isSwingArmController()&&!tile.isLandingAssembly();angleSlider.enabled=rest;
+        rangeSlider.visible=page==0&&join;loadSlider.visible=page==0&&join&&load&&tile.canCarryLoad();
         button(9).displayString="Join arms: "+(join?"On":"Off");button(9).enabled=rest&&!tile.isLandingAssembly()&&!tile.isFixedMount();rangeSlider.enabled=rest;
         button(11).displayString="Carry load: "+(load?"On":"Off");button(11).enabled=rest&&join&&tile.canCarryLoad();loadSlider.enabled=rest;
         button(0).displayString="Input: "+(tile.isLandingAssembly()&&!tile.isExtendedTrackStroke()?new String[]{"Manual","ON deploys","OFF deploys"}:new String[]{"Manual","ON activates","OFF activates"})[trigger];
@@ -47,24 +57,27 @@ public final class GuiModularGear extends GuiContainer {
     }
     private void submit(){
         if(com.vandorlabs.redstone.ChannelList.parse(channels.getText())==null){error="Invalid channel list";return;}
-        NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",trigger);tag.setInteger("Direction",direction);tag.setBoolean("Deployed",deployed);tag.setString("Channels",channels.getText());tag.setBoolean("RotatePayload",rotate);tag.setBoolean("JoinArms",join);tag.setInteger("JoinRange",range);tag.setBoolean("CarryLoad",load);tag.setInteger("LoadHeight",heightLimit);
+        NBTTagCompound tag=new NBTTagCompound();tag.setBoolean("PushBlocks",push);tag.setDouble("ActiveAngle",angle);tag.setInteger("Trigger",trigger);tag.setInteger("Direction",direction);tag.setBoolean("Deployed",deployed);tag.setString("Channels",channels.getText());tag.setBoolean("RotatePayload",rotate);tag.setBoolean("JoinArms",join);tag.setInteger("JoinRange",range);tag.setBoolean("CarryLoad",load);tag.setInteger("LoadHeight",heightLimit);
         error="";PacketHandler.INSTANCE.sendToServer(new MessageModularGear(inventorySlots.windowId,tag));
     }
     @Override protected void actionPerformed(GuiButton b){
+        if(b.id>=20){page=b.id-20;labels();return;}
+        if(b.id==15){PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),0));return;}
         if(b.id==4){mc.player.closeScreen();return;}
-        if(b.id==0)trigger=GuiOptionCycle.next(trigger,3);else if(b.id==1)direction=GuiOptionCycle.next(direction,4);else if(b.id==2)deployed=!deployed;else if(b.id==7)rotate=!rotate;else if(b.id==9){join=!join;if(!join)load=false;}else if(b.id==11)load=!load;else return;
+        if(b.id==0)trigger=GuiOptionCycle.next(trigger,3);else if(b.id==1)direction=GuiOptionCycle.next(direction,4);else if(b.id==2)deployed=!deployed;else if(b.id==7)rotate=!rotate;else if(b.id==9){join=!join;if(!join)load=false;}else if(b.id==11)load=!load;else if(b.id==14)push=!push;else return;
         submit();labels();
     }
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString("Arms and Landing Gear",12,12,0xffffff);
-        fontRenderer.drawString(tile.usesLegacyInput()?"Channels (any + local)":"Channels (0 = local)",12,57,0xcdd7e4);
+        DialogHeader.logo(0,0,xSize);
+        if(page==1)fontRenderer.drawString(tile.usesLegacyInput()?"Channels (any + local)":"Channels (0 = local)",12,85,0xcdd7e4);
         String failure=error.isEmpty()?tile.error():error;String status=failure.isEmpty()?(tile.isController()?tile.columns().size()+" arms / "+(tile.isLandingAssembly()?tile.assembly().feet().size():0)+" feet":"Track appearance"):"ERROR: "+failure;
-        fontRenderer.drawSplitString(tile.canCarryLoad()?"Load height is measured above the platform.":"Platform only for sideways or rotating arms.",24+(xSize-36)/2,146,(xSize-36)/2,0xcdd7e4);
-        java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,204+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
+        if(page==0&&!angleSlider.visible&&!button(14).visible)fontRenderer.drawSplitString(tile.canCarryLoad()?"Load height is measured above the platform.":"Platform only for sideways or rotating arms.",24+(xSize-36)/2,172,(xSize-36)/2,0xcdd7e4);
+        java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,230+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
-    @Override protected void mouseClicked(int x,int y,int b)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,b,this::actionPerformed,0,1,2,7,9,11))return;super.mouseClicked(x,y,b);channels.mouseClicked(x,y,b);}
+    @Override protected void mouseClicked(int x,int y,int b)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,b,this::actionPerformed,0,1,2,7,9,11,14))return;super.mouseClicked(x,y,b);channels.mouseClicked(x,y,b);}
     @Override protected void keyTyped(char c,int key)throws IOException{if(channels.textboxKeyTyped(c,key))submit();else super.keyTyped(c,key);}
     @Override public void updateScreen(){super.updateScreen();GearTileEntity current=((ContainerModularGear)inventorySlots).currentTile();if(current!=null)tile=current;channels.updateCursorCounter();labels();}
     @Override public void onGuiClosed(){super.onGuiClosed();org.lwjgl.input.Keyboard.enableRepeatEvents(false);}

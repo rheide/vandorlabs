@@ -1,7 +1,6 @@
 # Joined arm platforms
 
-An unjoined Extender or Rotating Arm moves only the block at its tip; touching walls, floors
-and other surrounding blocks stay in place. Both regular and Large Extenders support
+An unjoined Extender moves the block at its tip. When that block is a Programmable Surface, either arm type also selects its face-connected Surface neighbors in the same layer perpendicular to the mounting direction. Stacked layers and ordinary neighboring walls or floors remain outside that selection. Both regular and Large Extenders support
 joined platforms across two axes; Rotating Arms join along their hinge axis. Use
 one arm type and size within each group, with matching section counts and settings.
 
@@ -112,3 +111,20 @@ Removing the whole platform leaves empty arms that keep their original length.
 Blocks outside that platform remain in place and can still obstruct the stroke.
 
 ![A level payload attached to its rotating arm](images/joined-arms/level-contact.png)
+
+
+## Surface layers on a single arm
+
+Place a Programmable Surface on the arm tip, then extend the layer along the two axes perpendicular to the arm. Edge-connected Surfaces move together without enabling **Join arms** or adding support arms. A second layer along the mounting axis stays outside this implicit selection. All selected cells must remain loaded and within the bounded attachment limits. Use the existing joined-arm arrangement when you need multiple supporting mechanisms or an explicit load region.
+
+## Push with a horizontal Large Extender
+
+With the arm at rest, open **Mechanism** and enable **Push blocks**. This option is available to horizontal Large Extenders without landing feet. Use a whole-block outward stroke. Place the first block directly against the arm tip; a contiguous row of ordinary solid blocks can be pushed with it. Pushing refuses tile entities, protected or immovable blocks, and chains requiring more than twelve additional blocks.
+
+At the active endpoint the pushed blocks become ordinary world blocks. Returning the arm leaves every pushed block in place; it never pulls the row back. A blocked stroke retains the last valid ownership state and reports its obstruction. Turn pushing off to resume the ordinary attachment behavior.
+
+## Set a rotating angle
+
+Return the Rotating Arm to rest before changing **Angle** in the **Mechanism** tab. The slider steps in 15-degree increments from −180 to 180 degrees. **Payload: rotates** turns the attachment with the arm; **Payload: stays level** preserves its orientation. Non-grid-aligned endpoints retain the attachment as a captured mechanism until it returns to a representable native endpoint.
+
+Rotating arcs permit at most a quarter-pixel of transient edge contact when the final endpoint is completely clear. Deeper obstructions and overlap at the final endpoint still stop the stroke.

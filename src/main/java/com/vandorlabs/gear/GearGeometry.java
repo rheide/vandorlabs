@@ -98,7 +98,19 @@ public final class GearGeometry {
         try(com.vandorlabs.motion.PlatformRiders.CollisionScope scope=new com.vandorlabs.motion.PlatformRiders.CollisionScope(riders.riders)){for(int i=0;i<after.size();i++){
             AxisAlignedBB swept=swept(root,i,old.get(i),after.get(i),before,next);
             if(old.get(i).equals(after.get(i))||after.get(i).getAverageEdgeLength()==0)continue;
-            if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false)||!world.getCollisionBoxes(null,swept).isEmpty())return false;
+            if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false))return false;
+            List<AxisAlignedBB> obstacles=world.getCollisionBoxes(null,swept);
+            if(!obstacles.isEmpty()){
+                // Allow at most a quarter-pixel of transient arc contact. The target
+                // must be completely clear, so this never publishes overlapping blocks.
+                if(!root.isSwingArmController()||root.isLandingAssembly())return false;
+                List<AxisAlignedBB> endpoint=boxes(root,root.target()?1:0);
+                for(AxisAlignedBB obstacle:obstacles){
+                    double penetration=Math.min(Math.min(swept.maxX,obstacle.maxX)-Math.max(swept.minX,obstacle.minX),Math.min(Math.min(swept.maxY,obstacle.maxY)-Math.max(swept.minY,obstacle.minY),Math.min(swept.maxZ,obstacle.maxZ)-Math.max(swept.minZ,obstacle.minZ)));
+                    if(penetration>1/64D)return false;
+                    for(AxisAlignedBB end:endpoint)if(end.shrink(.0001).intersects(obstacle))return false;
+                }
+            }
         }for(Entity rider:riders.riders){Vec3d move=riders.moves.get(rider);if(!com.vandorlabs.motion.PlatformRiders.clear(rider,move,world.getCollisionBoxes(rider,rider.getEntityBoundingBox().expand(move.x,move.y,move.z).grow(1e-7))))return false;}root.riderPlan=riders;return true;}finally{EXCLUDED.remove();}
     }
     static final class MovePlan {

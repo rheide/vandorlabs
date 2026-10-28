@@ -21,7 +21,7 @@ public final class GearDialogChecks {
     public static void run(Minecraft mc,File output)throws Exception{
         GearBlock[] blocks={GearRegistry.GEAR_EXTENDER,GearRegistry.GEAR_SWING_ARM,GearRegistry.GEAR_MOUNT,GearRegistry.LARGE_GEAR_EXTENDER,GearRegistry.LARGE_GEAR_SWING_ARM,GearRegistry.LARGE_GEAR_MOUNT,TrackRegistry.COMPACT};
         Field[] fields=new Field[1];String[] names={"channels"};for(int i=0;i<1;i++){fields[i]=GuiModularGear.class.getDeclaredField(names[i]);fields[i].setAccessible(true);}
-        for(Field field:GuiModularGear.class.getDeclaredFields())require(!field.getName().equals("angle")&&!field.getName().equals("extension"),"removed motion editors have no hit targets");
+        for(Field field:GuiModularGear.class.getDeclaredFields())require(!field.getName().equals("extension"),"removed reach editor has no hit target");
         GuiScreen previous=mc.currentScreen;net.minecraft.inventory.Container container=mc.player.openContainer;int cases=0;
         try{for(GearBlock block:blocks)for(int[] size:new int[][]{{320,240},{460,340},{1280,720}}){
             GearTileEntity tile=fixture(mc,block);boolean track=tile instanceof com.vandorlabs.gear.track.TrackTile;net.minecraft.client.gui.inventory.GuiContainer gui=track?new GuiTrack(new ContainerModularGear(tile)):new GuiModularGear(new ContainerModularGear(tile));gui.inventorySlots.windowId=-94;mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
@@ -31,7 +31,7 @@ public final class GearDialogChecks {
             if(!track){
                 GuiModularGear armGui=(GuiModularGear)gui;
                 GuiButton join=buttons.stream().filter(b->b.id==9).findFirst().get(),load=buttons.stream().filter(b->b.id==11).findFirst().get();
-                require(join.visible&&load.visible&&((GuiTextField)fields[0].get(gui)).getVisible(),"arm, channel and platform controls share one page");
+                require(join.visible&&load.visible&&!((GuiTextField)fields[0].get(gui)).getVisible(),"mechanism page separates receiver channels from arm geometry");
                 if(join.enabled){
                     armGui.mouseClicked(join.x+5,join.y+5,0);require(join.displayString.endsWith("On"),"left click enables joining");
                     armGui.mouseClicked(join.x+5,join.y+5,1);require(join.displayString.endsWith("Off"),"right click disables joining");
@@ -39,7 +39,11 @@ public final class GearDialogChecks {
                     sliderEndpoints(mc,armGui,buttons,10);
                     if(load.enabled){armGui.mouseClicked(load.x+5,load.y+5,1);require(load.displayString.endsWith("On"),"right click enables load");sliderEndpoints(mc,armGui,buttons,12);}
                 }
-                occupied.clear();for(GuiButton b:buttons)if(b.visible){require(mc.fontRenderer.getStringWidth(b.displayString)<=b.width-4,"one-page label fits "+b.displayString);add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);}GuiTextField text=(GuiTextField)fields[0].get(gui);add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
+                occupied.clear();for(GuiButton b:buttons)if(b.visible){require(mc.fontRenderer.getStringWidth(b.displayString)<=b.width-4,"one-page label fits "+b.displayString);add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);}GuiTextField text=(GuiTextField)fields[0].get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
+                GuiButton redstone=buttons.stream().filter(b->b.id==21).findFirst().get();armGui.mouseClicked(redstone.x+5,redstone.y+5,0);
+                require(text.getVisible()&&!join.visible&&!load.visible,"Redstone tab shows channels and hides geometry");
+                require(buttons.stream().anyMatch(b->b.id==15&&b.visible),"Redstone page exposes physical transmitter inventory");
+                occupied.clear();for(GuiButton b:buttons)if(b.visible)add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
             }
             GuiOptionCycleRuntimeChecks.check(mc);
             GuiButton doneButton=buttons.stream().filter(b->b.id==4).findFirst().get();require(doneButton.width==200,"native Done remains 200 pixels on the single page");
@@ -49,7 +53,7 @@ public final class GearDialogChecks {
                 buttonPixels(mc,gui,doneButton,frame,size,output,block==GearRegistry.GEAR_EXTENDER||track);
             }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}cases++;
         }}finally{mc.displayGuiScreen(previous);mc.player.openContainer=container;org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
-        System.out.println("[vandorlabs][reprolab] arm-platform-dialog PASS cases="+cases+" compact320/460/1280 separate Track/Arm controls no Angle/Active Reach fields native Done normal/hover pixels reverse/forward mouse paths");
+        System.out.println("[vandorlabs][reprolab] arm-platform-dialog PASS cases="+cases+" compact320/460/1280 separated Mechanism/Redstone tabs receiver-channels transmitter-entry no Active Reach fields native Done normal/hover pixels reverse/forward mouse paths");
     }
     private static void sliderEndpoints(Minecraft mc,GuiModularGear gui,List<GuiButton> buttons,int id)throws Exception{
         net.minecraftforge.fml.client.config.GuiSlider slider=(net.minecraftforge.fml.client.config.GuiSlider)buttons.stream().filter(b->b.id==id).findFirst().get();require(slider.visible&&slider.enabled,"enabled slider shares the page");
