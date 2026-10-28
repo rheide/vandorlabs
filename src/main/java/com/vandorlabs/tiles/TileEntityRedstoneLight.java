@@ -350,7 +350,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);tag.setBoolean("RedstoneInverted",redstoneInverted);ChannelData.write(tag,channels);
+        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);tag.setBoolean("RedstoneInverted",redstoneInverted);ChannelData.write(tag,channels);
         // Chunk packets serialize while iterating the chunk's live tile map. Reading
         // redstone here can lazily create a neighbour's missing tile in old saves.
         // Persist the selection; power-dependent activation belongs to runtime only.
@@ -363,7 +363,7 @@ public class TileEntityRedstoneLight extends TileEntity implements RedstoneChann
         return tag;
     }
 
-    @Override public void readFromNBT(NBTTagCompound tag) {
+    @Override public void readFromNBT(NBTTagCompound tag) {tag=com.vandorlabs.redstone.TransmitterSlots.normalize(tag);
         ChannelList previousChannels=channels;
         int oldChannel = channel;
         super.readFromNBT(tag);

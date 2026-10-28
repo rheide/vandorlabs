@@ -538,7 +538,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
-        super.writeToNBT(compound);frameAppearance.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
+        super.writeToNBT(compound);com.vandorlabs.redstone.TransmitterSlots.written(compound);frameAppearance.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
@@ -570,7 +570,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound compound) {
+    public void readFromNBT(NBTTagCompound compound) {compound=com.vandorlabs.redstone.TransmitterSlots.normalize(compound);
         if(FrameAppearance.needsLegacyScreen(compound)){compound=compound.copy();FrameAppearance.migrateLegacyScreen(compound);}
         int previousStair=stairGeometry();
         int tread=compound.hasKey("StairTread",3)?compound.getInteger("StairTread"):8;

@@ -7,7 +7,7 @@ import net.minecraft.util.math.BlockPos;
 public final class VehicleTileData {
     private VehicleTileData() { }
     public static NBTTagCompound translated(NBTTagCompound source, BlockPos offset) {
-        NBTTagCompound result=source.copy();
+        NBTTagCompound result=com.vandorlabs.redstone.TransmitterSlots.normalize(source.copy());
         result.setInteger("x",source.getInteger("x")+offset.getX());
         result.setInteger("y",source.getInteger("y")+offset.getY());
         result.setInteger("z",source.getInteger("z")+offset.getZ());

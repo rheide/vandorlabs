@@ -197,7 +197,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);ChannelData.write(tag,channels);
+        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);ChannelData.write(tag,channels);
         tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);
         if(powerLeverSize>=0)tag.setInteger("PowerLeverSize",powerLeverSize);
         new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(new NbtPrimitiveData(tag));
@@ -206,7 +206,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         return tag;
     }
 
-    @Override public void readFromNBT(NBTTagCompound tag) {
+    @Override public void readFromNBT(NBTTagCompound tag) {tag=com.vandorlabs.redstone.TransmitterSlots.normalize(tag);
         ChannelList previousChannels=channels;
         int oldChannel = channel;
         int oldRotation = mountRotation;

@@ -346,7 +346,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         tag.setInteger("RedstoneChannel",channel);ChannelData.write(tag,channels);return tag;
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);fluids.write(tag);ChannelData.write(tag,channels);tag.merge(itemSettings());
+        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);fluids.write(tag);ChannelData.write(tag,channels);tag.merge(itemSettings());
         tag.setInteger("TrapdoorSchema",1);tag.setBoolean("ChannelSignal",channelSignal);
         tag.setBoolean("TrapdoorPowerKnown",powerKnown);tag.setBoolean("TrapdoorLastPower",lastPower);
         if(partner!=null)tag.setLong("TrapdoorPartner",partner.toLong());
@@ -355,7 +355,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         for(BlockPos cell:assembly)members.appendTag(new net.minecraft.nbt.NBTTagLong(cell.toLong()));
         tag.setTag("TrapdoorAssembly",members);tag.setDouble("TrapdoorHinge",assemblyHinge);tag.setDouble("TrapdoorTravel",assemblyTravel);return tag;
     }
-    @Override public void readFromNBT(NBTTagCompound tag) {
+    @Override public void readFromNBT(NBTTagCompound tag) {tag=com.vandorlabs.redstone.TransmitterSlots.normalize(tag);
         ChannelList previousChannels=channels;
         int old=channel;super.readFromNBT(tag);fluids.read(tag);
         texture=tag.hasKey("housingTexture",3)?ScreenHousingTextures.clamp(tag.getInteger("housingTexture")):ScreenHousingTextures.DEFAULT_TRAPDOOR;

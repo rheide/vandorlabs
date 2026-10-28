@@ -1220,7 +1220,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         tag.setLong(com.vandorlabs.ramp.RampCopyData.ORIGIN,pos.toLong());
         if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
         if(analogDeployment){tag.setBoolean("RampAnalogDeployment",true);tag.setDouble("RampTargetPose",targetPose);}else {tag.removeTag("RampAnalogDeployment");tag.removeTag("RampTargetPose");}
-        super.writeToNBT(tag);tag.setInteger("MoatGeometryRevision",moatGeometryRevision);tag.setBoolean("MoatVerticalSources",verticalMoatSources);tag.setBoolean("MoatMode",moat);tag.setInteger("RampInterpolation",interpolation);
+        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);tag.setInteger("MoatGeometryRevision",moatGeometryRevision);tag.setBoolean("MoatVerticalSources",verticalMoatSources);tag.setBoolean("MoatMode",moat);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setDouble("EscalatorDistance",beltDistance);
         tag.setBoolean("EscalatorRequested",beltRequested);
         tag.setBoolean("EscalatorRunning",beltRunning);tag.setLong("EscalatorTick",beltTick);ChannelData.write(tag,channels);
@@ -1254,7 +1254,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         tag.setTag(SaveSchema.Ramp.CELLS,reservations);
         return com.vandorlabs.ramp.RampCopyData.canonicalizeSets(tag);
     }
-    @Override public void readFromNBT(NBTTagCompound tag) {
+    @Override public void readFromNBT(NBTTagCompound tag) {tag=com.vandorlabs.redstone.TransmitterSlots.normalize(tag);
         tag=com.vandorlabs.ramp.RampCopyData.relocated(tag);
         ChannelList previousChannels=channels;
         int oldChannel=redstoneChannel;

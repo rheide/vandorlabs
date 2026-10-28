@@ -96,12 +96,12 @@ public class TileEntitySlidingDoor extends TileEntity implements RedstoneChannel
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);ChannelData.write(tag,channels);
+        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);ChannelData.write(tag,channels);
         new RedstoneData.Member(channel,channelSignal).write(new NbtPrimitiveData(tag));
         return tag;
     }
 
-    @Override public void readFromNBT(NBTTagCompound tag) {
+    @Override public void readFromNBT(NBTTagCompound tag) {tag=com.vandorlabs.redstone.TransmitterSlots.normalize(tag);
         ChannelList previousChannels=channels;
         int oldChannel = channel;
         super.readFromNBT(tag);
