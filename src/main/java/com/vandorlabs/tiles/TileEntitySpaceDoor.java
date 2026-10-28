@@ -12,6 +12,8 @@ import net.minecraft.util.math.BlockPos;
 
 /** Appearance belongs to the placed door, not a separate registered block. */
 public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
+    public final FrameAppearance frameAppearance=new FrameAppearance();
+
     // Runtime outlet ownership survives chunk reloads, but is excluded from itemSettings.
     private int waterOutlets;
     public int waterOutlets(){return waterOutlets;}
@@ -207,7 +209,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         migrateLegacyMotion();
-        super.writeToNBT(tag);
+        super.writeToNBT(tag);frameAppearance.write(tag);
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         tag.setInteger("DoorFaceTexture",faceTexture);tag.setBoolean("DoorTileTexture",tileTexture);tag.setInteger("DoorTextureLayout",getTextureLayout());
@@ -217,7 +219,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     /** Copy user choices only, not tile coordinates, power or animation state. */
     public NBTTagCompound itemSettings() {
         migrateLegacyMotion();
-        NBTTagCompound tag=new NBTTagCompound();
+        NBTTagCompound tag=new NBTTagCompound();frameAppearance.write(tag);
         new com.vandorlabs.persistence.SpaceDoorData(design,detail,framed,slideDirection,middle,sliding,hinges,trigger,panel)
                 .write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         tag.setInteger("DoorFaceTexture",faceTexture);tag.setBoolean("DoorTileTexture",tileTexture);tag.setInteger("DoorTextureLayout",getTextureLayout());
@@ -225,7 +227,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());
         tag.setInteger("SpaceDoorPlacementDepth",placementDepth);writeSecurity(tag,false);return tag;
     }
-    public void applyItemSettings(NBTTagCompound tag) {
+    public void applyItemSettings(NBTTagCompound tag) {frameAppearance.read(tag);
         setTextureLayout(tag.hasKey("DoorTextureLayout",3)?tag.getInteger("DoorTextureLayout"):tag.getBoolean("DoorTileTexture")?1:0);
         setFaceTexture(tag.hasKey("DoorFaceTexture",3)?tag.getInteger("DoorFaceTexture"):-1);
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
@@ -235,7 +237,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         if(tag.hasKey("SpaceDoorPlacementDepth",3))setPlacementDepth(tag.getInteger("SpaceDoorPlacementDepth"));readSecurity(tag);
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);fluids.read(tag);waterOutlets=tag.getInteger("DoorWaterOutlets")&255;
+        super.readFromNBT(tag);frameAppearance.read(tag);fluids.read(tag);waterOutlets=tag.getInteger("DoorWaterOutlets")&255;
         tileTexture=tag.getBoolean("DoorTileTexture");
         textureLayout=tag.hasKey("DoorTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("DoorTextureLayout"))?tag.getInteger("DoorTextureLayout"):-1;
         faceTexture=tag.hasKey("DoorFaceTexture",3) && tag.getInteger("DoorFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("DoorFaceTexture")):-1;

@@ -64,7 +64,7 @@ final class HousingTextureList {
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
         if(entry!=null && entry.has("detail") && entry.get("detail").getAsInt()>0)return false;
         String category=ScreenHousingTextures.category(choice);
-        return !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
+        return !category.equals("Frame") && !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
     }
     /** Native armor artwork is added locally, leaving every block/screen picker unchanged. */
     static final int NAVIGATION_BLACK=0x0ffffffe,MODEL_ARTWORK=0x0ffffffd;
@@ -79,6 +79,11 @@ final class HousingTextureList {
             if(ScreenHousingTextures.visible(i)&&com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice))entries.add(new Option(choice,name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
         }
         return new HousingTextureList(x,y,width,selected==-2&&nativeArtwork?MODEL_ARTWORK:selected<0?NAVIGATION_BLACK:selected,rows,entries);
+    }
+    static HousingTextureList forFrames(int x,int y,int width,int selected,int rows){
+        List<Option> entries=new ArrayList<>();entries.add(new Option(-1,"Original artwork","Frame","vandorlabs:blocks/programmable_glass/metal_side"));
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i)))entries.add(new Option(ScreenHousingTextures.choiceAt(i),name(i),"Frame",ScreenHousingTextures.fullTexture(i)));
+        return new HousingTextureList(x,y,width,selected,rows,entries);
     }
     static HousingTextureList forGlass(int detail,int x,int y,int width,int selected) {
         List<Option> entries=new ArrayList<>();

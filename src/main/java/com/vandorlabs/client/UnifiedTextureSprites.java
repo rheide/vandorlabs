@@ -23,6 +23,7 @@ public final class UnifiedTextureSprites {
             // Filesystem examples may be hidden but remain valid external choices.
             if(i<ScreenHousingTextures.BUILTIN_COUNT && !ScreenHousingTextures.visible(i))continue;
             com.google.gson.JsonObject e=ScreenHousingTextures.entry(i);
+            if(e!=null&&e.has("frameRail"))event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/"+e.get("frameRail").getAsString()));
             if(e!=null && e.has("top"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),false,false));
             else if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.fullTexture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));
             else event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i)));

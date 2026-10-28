@@ -58,11 +58,12 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override public void initGui() {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
-        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-96,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
-        buttonList.add(layout.tab(90,0,3,"Bottom"));
-        buttonList.add(layout.tab(91,1,3,"Top"));
-        buttonList.add(layout.tab(92,2,3,"Sides"));
+        buttonList.add(layout.tab(90,0,4,"Bottom"));
+        buttonList.add(layout.tab(91,1,4,"Top"));
+        buttonList.add(layout.tab(92,2,4,"Sides"));
+        buttonList.add(layout.tab(93,3,4,"Redstone"));buttonList.add(layout.control(198,142,"Transmitter..."));
         left=right=layout.listX;top=guiTop+54;
         topList=new ScreenTextureList(left,top,layout.listWidth,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(topList,1)).redstone(te.getPos(),1);
         bottomList=new ScreenTextureList(left,top,layout.listWidth,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(bottomList,0)).redstone(te.getPos(),0);
@@ -81,12 +82,14 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
                 .visibleRows(rows).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
         buttonList.add(layout.done(20));refreshButtons();refreshTabs();
     }
-    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
+    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=93)b.enabled=b.id-90!=textureTab;}
 
     private String sidesLabel(){return "Sides: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
+        channelField.setVisible(textureTab==3);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==3;else if(option.id==32)option.visible=textureTab==2;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<2;}
+
         for (GuiButton button : buttonList) {
-            if(button.id==4){ScreenTextureList picker=textureTab==1?topList:bottomList;button.displayString=(picker.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab<2 && picker.hasPair();}
+            if(button.id==4){button.visible=false;ScreenTextureList picker=textureTab==1?topList:bottomList;button.displayString=(picker.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab<2 && picker.hasPair();}
             if (button.id == 0) {
                 button.displayString = "Trigger: " + (!redstoneEnabled?"Disabled":redstoneInverted?"Redstone OFF":"Redstone ON");
             }
@@ -164,9 +167,13 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if(button.id>=90 && button.id<=92){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
+        if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(te.getPos(),0));return;}
+
+        if(button.id==197){mc.displayGuiScreen(new GuiFrameAppearance(inventorySlots,te,this));return;}
+
+        if(button.id>=90 && button.id<=93){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
         if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
-        if(button.id==4){ScreenTextureList picker=textureTab==1?topList:bottomList;if(!picker.hasPair())return;picker.setFramed(!picker.framed());chooseArtwork(picker,textureTab==1?1:0);return;}
+        if(button.id==4){button.visible=false;ScreenTextureList picker=textureTab==1?topList:bottomList;if(!picker.hasPair())return;picker.setFramed(!picker.framed());chooseArtwork(picker,textureTab==1?1:0);return;}
         if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.getSurfaceTextureLayout()));return;}
         if (button.id == 0) {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
@@ -223,10 +230,10 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.half_console.title"),guiLeft+12,guiTop+8,0xFFFFFF);
         if(textureTab==0)bottomList.draw(fontRenderer,mouseX,mouseY);
         else if(textureTab==1)topList.draw(fontRenderer,mouseX,mouseY);
-        else housingList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
-        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        else if(textureTab==2)housingList.draw(fontRenderer,mouseX,mouseY);
+        if(textureTab<2)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
+        if(textureTab<2)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
+        if(textureTab==3)fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 

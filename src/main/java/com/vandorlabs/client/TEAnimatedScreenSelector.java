@@ -94,6 +94,7 @@ public class TEAnimatedScreenSelector
 
     /** Release the last rendered world even if no later light or porthole is drawn. */
     static void unloadGroups(World world) {
+        ScreenSurfaceGroups.unload(world);
         if(lightCacheWorld==world) {
             LIGHT_GROUPS.clear();lightCacheWorld=null;
             lightCacheTick=Long.MIN_VALUE;lightCacheRevision=Long.MIN_VALUE;
@@ -586,7 +587,8 @@ public class TEAnimatedScreenSelector
                 ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
         ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
-        drawScreenQuad(buf,quad,uMin,uMax,vTop,vBottom,false);
+        if(te.frameAppearance.displayFit){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);if(group.columns==group.rows){float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.column+1)*du;uMin+=group.column*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
+        if(te.frameAppearance.split){drawSplitScreen(te,quad,buf);}else drawScreenQuad(buf,quad,uMin,uMax,vTop,vBottom,false);
         if (surface==ScreenSurface.Kind.DIAGONAL) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(-4.0F,-4.0F);
@@ -596,6 +598,7 @@ public class TEAnimatedScreenSelector
             GL11.glPolygonOffset(0.0F,0.0F);
             GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
         }
+        FrameSurfaceRenderer.screen(te,quad);
         GlStateManager.enableLighting();
 
         GlStateManager.enableCull();
@@ -643,7 +646,7 @@ public class TEAnimatedScreenSelector
                 :InputSurfaceLayout.halfInput(keyboard,upper,wallPosition,small);
         renderHousingBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1,te.getSurfaceTextureLayout());
-        if(!redstoneFace(te,0))drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));
+        if(!redstoneFace(te,0))drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));FrameSurfaceRenderer.screen(te,ScreenSurface.input(layout.surface));
     }
 
     /** Full-square screen surface using the half-input's mount/fold state. */
@@ -659,11 +662,17 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         renderHousingBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1,te.getSurfaceTextureLayout());
-        if(!redstoneFace(te,0))drawInputSurface(layout.surface,bindScreenSurface(te));
+        if(!redstoneFace(te,0)){if(te.frameAppearance.split){BufferBuilder split=Tessellator.getInstance().getBuffer();split.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawSplitScreen(te,ScreenSurface.input(layout.surface),split);Tessellator.getInstance().draw();}else drawInputSurface(layout.surface,bindScreenSurface(te));}FrameSurfaceRenderer.screen(te,ScreenSurface.input(layout.surface));
     }
 
     /** Bind a regular full-height programmable animation and return its V range. */
     private static double[] bindScreenSurface(TileEntityAnimatedScreenSelector te) {
+        double[] uv=bindScreenSurfaceNative(te);if(!te.frameAppearance.displayFit)return uv;
+        GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);if(group.columns!=group.rows)return uv;
+        double u0=uv.length>2?uv[2]:0,u1=uv.length>2?uv[3]:1,du=(u1-u0)/group.columns,dv=(uv[1]-uv[0])/group.rows;
+        return new double[]{uv[0]+(group.rows-group.row-1)*dv,uv[0]+(group.rows-group.row)*dv,u0+group.column*du,u0+(group.column+1)*du};
+    }
+    private static double[] bindScreenSurfaceNative(TileEntityAnimatedScreenSelector te) {
         if(te.getSurfaceTexture(0)>=0)return bindSurface(te,0);
         String id = te.getSelectedScreen();
         if (!ModBlocks.DISPLAY_SCREEN_IDS.contains(id)) id = "engineering_screen";
@@ -700,8 +709,8 @@ public class TEAnimatedScreenSelector
         renderHousingBox(wall,0,0,0,16,1,16,te.getSurfaceTextureLayout());
         drawWallMesh(wall,ScreenHousingMesh.halfConsole().textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
 
-        if(!redstoneFace(te,0))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel()));
-        if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleRear(),bindInput(te,te.getSecondaryInputPanel(),1));
+        if(!redstoneFace(te,0))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel()));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));
+        if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleRear(),bindInput(te,te.getSecondaryInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleRear()));
     }
 
     private static boolean redstoneFace(TileEntityAnimatedScreenSelector tile,int slot){
@@ -709,6 +718,16 @@ public class TEAnimatedScreenSelector
         if(!tile.hasRedstoneScreen(slot))return false;
         RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;
     }
+    private static void drawSplitScreen(TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,BufferBuilder buffer){
+        bindAtlas();
+        for(int half=0;half<2;half++){
+            int choice=half==0?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom;
+            if(choice<0)choice=tile.getSurfaceTexture(0)>=0?tile.getSurfaceTexture(0):ScreenHousingTextures.screenIndex(tile.getSelectedScreen()+"_static");
+            TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));
+            drawScreenQuad(buffer,ScreenSurface.half(quad,half==0),sprite.getMinU(),sprite.getMaxU(),sprite.getMinV(),sprite.getMaxV(),false);
+        }
+    }
+
     private static void drawInputSurface(InputSurfaceLayout.Quad quad,double[] uv) {
         Tessellator tess=Tessellator.getInstance();
         BufferBuilder buf=tess.getBuffer();
@@ -839,7 +858,7 @@ public class TEAnimatedScreenSelector
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork
         // fills the deck without cropping or atlas-induced aspect changes.
-        if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel(),1));
+        if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));
     }
 
     private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,
@@ -887,7 +906,7 @@ public class TEAnimatedScreenSelector
         }
         TextureAtlasSprite wall = wallSprite(te);
         TextureAtlasSprite metal = Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite(wallBlock.isPortholeShape() && te.getSideTexture()>=0?ScreenHousingTextures.texture(te.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side");
+                .getAtlasSprite(te.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side"));
         PortholeHex.Slice porthole = wallBlock.isPortholeShape() && !solidDiagonalPortholeJunction(te,state)
                 ? portholeGroup(te, state).slice(te.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY(),
                         wallBlock.isDiagonalShape() && te.isDiagonalHalfHeight()

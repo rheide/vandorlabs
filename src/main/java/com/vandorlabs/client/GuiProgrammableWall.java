@@ -95,7 +95,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
         xSize=layout.width;ySize=layout.height;
         super.initGui();
-        buttonList.clear();
+        buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-96,guiTop+1,58,17,"Frame"));
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH, controlsX=layout.controlsX;
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
         listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);
@@ -233,6 +233,8 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==197){mc.displayGuiScreen(new GuiFrameAppearance(inventorySlots,tile,this));return;}
+
         if(button.id==131){tile.setStairGeometry(tile.stairTread(),tile.stairRoll()==0?1:0);sendStairs();initGui();return;}
         if(button.id==129){faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}
         if(glassSurface() && (button.id==115 || button.id==116)){

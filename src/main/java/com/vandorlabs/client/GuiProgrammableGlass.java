@@ -20,18 +20,20 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui() {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
-        xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();
+        xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-96,guiTop+1,58,17,"Frame"));
         textures=HousingTextureList.forGlassMaterials(size,guiLeft+12,guiTop+30,layout.controlsX-guiLeft-31,shade,material)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).keepView(textures);
         buttonList.add(new GuiButton(3,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Join: "+(join?"On":"Off")));
         buttonList.add(new GuiButton(4,layout.controlsX,guiTop+78,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(tint)));
-        buttonList.add(new GuiButton(5,layout.controlsX,guiTop+102,ProgrammableDialogLayout.CONTROLS_WIDTH,20,framed?"Framed":"Bare"));
+        GuiButton framedButton=new GuiButton(5,layout.controlsX,guiTop+102,ProgrammableDialogLayout.CONTROLS_WIDTH,20,framed?"Framed":"Bare");framedButton.visible=false;buttonList.add(framedButton);
         if(material>=0)buttonList.add(new GuiButton(6,layout.controlsX,guiTop+126,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout)));
         buttonList.add(new GuiButton(2,layout.controlsX,guiTop+ySize-26,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Done"));
     }
     void choose(int choice){if(textures!=null && textures.selected()!=choice)textures.setSelected(choice);if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}else material=choice;send();initGui();}
     private void send(){tile.setSize(size);tile.setShade(shade);tile.setMaterial(material);tile.setTextureLayout(textureLayout);tile.setJoin(join);tile.setAppearance(tint,framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join).withAppearance(tint,framed).withMaterial(material).withTextureLayout(textureLayout));}
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==197){mc.displayGuiScreen(new GuiFrameAppearance(inventorySlots,tile,this));return;}
+
         if(button.id==2){mc.player.closeScreen();return;}
         if(button.id==3)join=!join;
         if(button.id==4)tint=GuiOptionCycle.next(tint,3);

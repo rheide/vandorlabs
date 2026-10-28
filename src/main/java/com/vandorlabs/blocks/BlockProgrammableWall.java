@@ -1,6 +1,8 @@
 package com.vandorlabs.blocks;
 
 import net.minecraft.block.properties.IProperty;
+import net.minecraft.tileentity.TileEntity;
+import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.properties.PropertyInteger;
@@ -231,7 +233,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }
     @Override public boolean isFullCube(IBlockState state) { return false; }
     @Override public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return WaterloggedParts.light(world,pos);
+        TileEntity frameTile=world.getTileEntity(pos);return Math.max(WaterloggedParts.light(world,pos),frameTile instanceof TileEntityAnimatedScreenSelector?((TileEntityAnimatedScreenSelector)frameTile).frameAppearance.light():0);
     }
 
     @Override public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,

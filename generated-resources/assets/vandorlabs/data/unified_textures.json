@@ -2781,5 +2781,1035 @@
     "label": "Copier Output",
     "category": "Surface",
     "source": "surface/copier-output"
+  },
+  {
+    "id": "frame_frames_company_half_full_ashiro_ashiro_thick_full_1254x1254",
+    "label": "Ashiro Thick Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/ashiro/ashiro_thick_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/ashiro/ashiro_thick_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_ashiro_ashiro_thick_half_1254x627",
+    "label": "Ashiro Thick Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/ashiro/ashiro_thick_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/ashiro/ashiro_thick_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_ashiro_ashiro_thin_full_1254x1254",
+    "label": "Ashiro Thin Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/ashiro/ashiro_thin_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/ashiro/ashiro_thin_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_ashiro_ashiro_thin_half_1254x627",
+    "label": "Ashiro Thin Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/ashiro/ashiro_thin_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/ashiro/ashiro_thin_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_paladyne_paladyne_thick_full_1254x1254",
+    "label": "Paladyne Thick Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/paladyne/paladyne_thick_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/paladyne/paladyne_thick_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_paladyne_paladyne_thick_half_1254x627",
+    "label": "Paladyne Thick Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/paladyne/paladyne_thick_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/paladyne/paladyne_thick_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_paladyne_paladyne_thin_full_1254x1254",
+    "label": "Paladyne Thin Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/paladyne/paladyne_thin_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/paladyne/paladyne_thin_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_paladyne_paladyne_thin_half_1254x627",
+    "label": "Paladyne Thin Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/paladyne/paladyne_thin_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/paladyne/paladyne_thin_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_pinnacle_pinnacle_thick_full_1254x1254",
+    "label": "Pinnacle Thick Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/pinnacle/pinnacle_thick_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/pinnacle/pinnacle_thick_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_pinnacle_pinnacle_thick_half_1254x627",
+    "label": "Pinnacle Thick Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/pinnacle/pinnacle_thick_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/pinnacle/pinnacle_thick_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_pinnacle_pinnacle_thin_full_1254x1254",
+    "label": "Pinnacle Thin Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/pinnacle/pinnacle_thin_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/pinnacle/pinnacle_thin_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_pinnacle_pinnacle_thin_half_1254x627",
+    "label": "Pinnacle Thin Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/pinnacle/pinnacle_thin_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/pinnacle/pinnacle_thin_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_seyr_seyr_thick_full_1254x1254",
+    "label": "Seyr Thick Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/seyr/seyr_thick_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/seyr/seyr_thick_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_seyr_seyr_thick_half_1254x627",
+    "label": "Seyr Thick Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/seyr/seyr_thick_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/seyr/seyr_thick_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_seyr_seyr_thin_full_1254x1254",
+    "label": "Seyr Thin Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/seyr/seyr_thin_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/seyr/seyr_thin_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_seyr_seyr_thin_half_1254x627",
+    "label": "Seyr Thin Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/seyr/seyr_thin_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/seyr/seyr_thin_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_vandor_vandor_thick_full_1254x1254",
+    "label": "Vandor Thick Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/vandor/vandor_thick_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/vandor/vandor_thick_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_vandor_vandor_thick_half_1254x627",
+    "label": "Vandor Thick Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/vandor/vandor_thick_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/vandor/vandor_thick_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_vandor_vandor_thin_full_1254x1254",
+    "label": "Vandor Thin Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/vandor/vandor_thin_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/vandor/vandor_thin_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_vandor_vandor_thin_half_1254x627",
+    "label": "Vandor Thin Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/vandor/vandor_thin_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/vandor/vandor_thin_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_vektor_vektor_thick_full_1254x1254",
+    "label": "Vektor Thick Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/vektor/vektor_thick_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/vektor/vektor_thick_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_vektor_vektor_thick_half_1254x627",
+    "label": "Vektor Thick Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/vektor/vektor_thick_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/vektor/vektor_thick_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_vektor_vektor_thin_full_1254x1254",
+    "label": "Vektor Thin Full 1254X1254",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/vektor/vektor_thin_full_1254x1254",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/vektor/vektor_thin_full_1254x1254_rail"
+  },
+  {
+    "id": "frame_frames_company_half_full_vektor_vektor_thin_half_1254x627",
+    "label": "Vektor Thin Half 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-company-half-full/vektor/vektor_thin_half_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-company-half-full/vektor/vektor_thin_half_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_door_window_ashiro_bg",
+    "label": "Ashiro Bg",
+    "category": "Frame",
+    "source": "frames/frames-door-window/ashiro_bg",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/ashiro_bg_rail"
+  },
+  {
+    "id": "frame_frames_door_window_default_frame",
+    "label": "Default Frame",
+    "category": "Frame",
+    "source": "frames/frames-door-window/default_frame",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/default_frame_rail"
+  },
+  {
+    "id": "frame_frames_door_window_door_interior_dark",
+    "label": "Door Interior Dark",
+    "category": "Frame",
+    "source": "frames/frames-door-window/door_interior_dark",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/door_interior_dark_rail"
+  },
+  {
+    "id": "frame_frames_door_window_glass_frame_interior",
+    "label": "Glass Frame Interior",
+    "category": "Frame",
+    "source": "frames/frames-door-window/glass_frame_interior",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/glass_frame_interior_rail"
+  },
+  {
+    "id": "frame_frames_door_window_gunmetal_1",
+    "label": "Gunmetal 1",
+    "category": "Frame",
+    "source": "frames/frames-door-window/gunmetal-1",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/gunmetal-1_rail"
+  },
+  {
+    "id": "frame_frames_door_window_gunmetal_2",
+    "label": "Gunmetal 2",
+    "category": "Frame",
+    "source": "frames/frames-door-window/gunmetal-2",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/gunmetal-2_rail"
+  },
+  {
+    "id": "frame_frames_door_window_gunmetal_3",
+    "label": "Gunmetal 3",
+    "category": "Frame",
+    "source": "frames/frames-door-window/gunmetal-3",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/gunmetal-3_rail"
+  },
+  {
+    "id": "frame_frames_door_window_lights_amber_1",
+    "label": "Lights Amber 1",
+    "category": "Frame",
+    "source": "frames/frames-door-window/lights-amber-1",
+    "frame": true,
+    "frameLight": 3,
+    "frameRail": "frames/frames-door-window/lights-amber-1_rail"
+  },
+  {
+    "id": "frame_frames_door_window_lights_amber_2",
+    "label": "Lights Amber 2",
+    "category": "Frame",
+    "source": "frames/frames-door-window/lights-amber-2",
+    "frame": true,
+    "frameLight": 3,
+    "frameRail": "frames/frames-door-window/lights-amber-2_rail"
+  },
+  {
+    "id": "frame_frames_door_window_lights_cyan_1",
+    "label": "Lights Cyan 1",
+    "category": "Frame",
+    "source": "frames/frames-door-window/lights-cyan-1",
+    "frame": true,
+    "frameLight": 3,
+    "frameRail": "frames/frames-door-window/lights-cyan-1_rail"
+  },
+  {
+    "id": "frame_frames_door_window_lights_cyan_2",
+    "label": "Lights Cyan 2",
+    "category": "Frame",
+    "source": "frames/frames-door-window/lights-cyan-2",
+    "frame": true,
+    "frameLight": 3,
+    "frameRail": "frames/frames-door-window/lights-cyan-2_rail"
+  },
+  {
+    "id": "frame_frames_door_window_paladyne_bg",
+    "label": "Paladyne Bg",
+    "category": "Frame",
+    "source": "frames/frames-door-window/paladyne_bg",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/paladyne_bg_rail"
+  },
+  {
+    "id": "frame_frames_door_window_pinnacle_bg",
+    "label": "Pinnacle Bg",
+    "category": "Frame",
+    "source": "frames/frames-door-window/pinnacle_bg",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/pinnacle_bg_rail"
+  },
+  {
+    "id": "frame_frames_door_window_seyr_bg",
+    "label": "Seyr Bg",
+    "category": "Frame",
+    "source": "frames/frames-door-window/seyr_bg",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/seyr_bg_rail"
+  },
+  {
+    "id": "frame_frames_door_window_silver_1",
+    "label": "Silver 1",
+    "category": "Frame",
+    "source": "frames/frames-door-window/silver-1",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/silver-1_rail"
+  },
+  {
+    "id": "frame_frames_door_window_silver_2",
+    "label": "Silver 2",
+    "category": "Frame",
+    "source": "frames/frames-door-window/silver-2",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/silver-2_rail"
+  },
+  {
+    "id": "frame_frames_door_window_vandor_bg",
+    "label": "Vandor Bg",
+    "category": "Frame",
+    "source": "frames/frames-door-window/vandor_bg",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/vandor_bg_rail"
+  },
+  {
+    "id": "frame_frames_door_window_vektor_bg",
+    "label": "Vektor Bg",
+    "category": "Frame",
+    "source": "frames/frames-door-window/vektor_bg",
+    "frame": true,
+    "frameRail": "frames/frames-door-window/vektor_bg_rail"
+  },
+  {
+    "id": "frame_frames_screen_full_frame_bolted_1254",
+    "label": "Frame Bolted 1254",
+    "category": "Frame",
+    "source": "frames/frames-screen-full/frame_bolted_1254",
+    "frame": true,
+    "frameRail": "frames/frames-screen-full/frame_bolted_1254_rail"
+  },
+  {
+    "id": "frame_frames_screen_full_frame_bolted_thin_1254",
+    "label": "Frame Bolted Thin 1254",
+    "category": "Frame",
+    "source": "frames/frames-screen-full/frame_bolted_thin_1254",
+    "frame": true,
+    "frameRail": "frames/frames-screen-full/frame_bolted_thin_1254_rail"
+  },
+  {
+    "id": "frame_frames_screen_full_frame_cyan_rim_1254",
+    "label": "Frame Cyan Rim 1254",
+    "category": "Frame",
+    "source": "frames/frames-screen-full/frame_cyan_rim_1254",
+    "frame": true,
+    "frameRail": "frames/frames-screen-full/frame_cyan_rim_1254_rail"
+  },
+  {
+    "id": "frame_frames_screen_full_frame_cyan_rim_thin_1254",
+    "label": "Frame Cyan Rim Thin 1254",
+    "category": "Frame",
+    "source": "frames/frames-screen-full/frame_cyan_rim_thin_1254",
+    "frame": true,
+    "frameRail": "frames/frames-screen-full/frame_cyan_rim_thin_1254_rail"
+  },
+  {
+    "id": "frame_frames_screen_full_frame_lightbars_1254",
+    "label": "Frame Lightbars 1254",
+    "category": "Frame",
+    "source": "frames/frames-screen-full/frame_lightbars_1254",
+    "frame": true,
+    "frameLight": 3,
+    "frameRail": "frames/frames-screen-full/frame_lightbars_1254_rail"
+  },
+  {
+    "id": "frame_frames_screen_full_frame_lightbars_thin_1254",
+    "label": "Frame Lightbars Thin 1254",
+    "category": "Frame",
+    "source": "frames/frames-screen-full/frame_lightbars_thin_1254",
+    "frame": true,
+    "frameLight": 3,
+    "frameRail": "frames/frames-screen-full/frame_lightbars_thin_1254_rail"
+  },
+  {
+    "id": "frame_frames_screen_full_frame_plain_1254",
+    "label": "Frame Plain 1254",
+    "category": "Frame",
+    "source": "frames/frames-screen-full/frame_plain_1254",
+    "frame": true,
+    "frameRail": "frames/frames-screen-full/frame_plain_1254_rail"
+  },
+  {
+    "id": "frame_frames_screen_full_frame_plain_thin_1254",
+    "label": "Frame Plain Thin 1254",
+    "category": "Frame",
+    "source": "frames/frames-screen-full/frame_plain_thin_1254",
+    "frame": true,
+    "frameRail": "frames/frames-screen-full/frame_plain_thin_1254_rail"
+  },
+  {
+    "id": "frame_frames_screen_half_frame_bolted_1254x627",
+    "label": "Frame Bolted 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-screen-half/frame_bolted_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-screen-half/frame_bolted_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_screen_half_frame_bolted_thin_1254x627",
+    "label": "Frame Bolted Thin 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-screen-half/frame_bolted_thin_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-screen-half/frame_bolted_thin_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_screen_half_frame_cyan_rim_1254x627",
+    "label": "Frame Cyan Rim 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-screen-half/frame_cyan_rim_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-screen-half/frame_cyan_rim_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_screen_half_frame_cyan_rim_thin_1254x627",
+    "label": "Frame Cyan Rim Thin 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-screen-half/frame_cyan_rim_thin_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-screen-half/frame_cyan_rim_thin_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_screen_half_frame_lightbars_1254x627",
+    "label": "Frame Lightbars 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-screen-half/frame_lightbars_1254x627",
+    "frame": true,
+    "frameLight": 3,
+    "frameRail": "frames/frames-screen-half/frame_lightbars_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_screen_half_frame_lightbars_thin_1254x627",
+    "label": "Frame Lightbars Thin 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-screen-half/frame_lightbars_thin_1254x627",
+    "frame": true,
+    "frameLight": 3,
+    "frameRail": "frames/frames-screen-half/frame_lightbars_thin_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_screen_half_frame_plain_1254x627",
+    "label": "Frame Plain 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-screen-half/frame_plain_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-screen-half/frame_plain_1254x627_rail"
+  },
+  {
+    "id": "frame_frames_screen_half_frame_plain_thin_1254x627",
+    "label": "Frame Plain Thin 1254X627",
+    "category": "Frame",
+    "source": "frames/frames-screen-half/frame_plain_thin_1254x627",
+    "frame": true,
+    "frameRail": "frames/frames-screen-half/frame_plain_thin_1254x627_rail"
+  },
+  {
+    "id": "surface_helipad1",
+    "label": "Helipad 1",
+    "category": "Surface",
+    "source": "surface/helipad1"
+  },
+  {
+    "id": "surface_helipad2",
+    "label": "Helipad 2",
+    "category": "Surface",
+    "source": "surface/helipad2"
+  },
+  {
+    "id": "controls27_half_height_01_reactor_bottom",
+    "label": "01 Reactor Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_01_reactor_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_02_biology_bottom",
+    "label": "02 Biology Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_02_biology_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_03_keyboard_bottom",
+    "label": "03 Keyboard Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_03_keyboard_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_03_medical_bottom",
+    "label": "03 Medical Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_03_medical_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_04_controls_bottom",
+    "label": "04 Controls Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_04_controls_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_04_radar_bottom",
+    "label": "04 Radar Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_04_radar_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_05_communications_bottom",
+    "label": "05 Communications Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_05_communications_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_05_dual_keyboard_bottom",
+    "label": "05 Dual Keyboard Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_05_dual_keyboard_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_06_dual_controls_bottom",
+    "label": "06 Dual Controls Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_06_dual_controls_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_06_navigation_bottom",
+    "label": "06 Navigation Bottom",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_06_navigation_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_button_clusters_sliders",
+    "label": "Button Clusters Sliders",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_button_clusters_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_button_matrix_sliders",
+    "label": "Button Matrix Sliders",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_button_matrix_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_command_keypad",
+    "label": "Command Keypad",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_command_keypad",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_engineering_faders",
+    "label": "Engineering Faders",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_engineering_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_environment_controls",
+    "label": "Environment Controls",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_environment_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_pilot_controls",
+    "label": "Pilot Controls",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_pilot_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_pilot_faders",
+    "label": "Pilot Faders",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_pilot_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_half_height_six_faders",
+    "label": "Six Faders",
+    "category": "Controls/Half-height",
+    "source": "controls27/controls27_half_height_six_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_ashiro_mai_01_keyboard",
+    "label": "01 Keyboard",
+    "category": "Controls/Corporate/Ashiro Mai",
+    "source": "controls27/controls27_corporate_ashiro_mai_01_keyboard",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_ashiro_mai_02_direction_keys",
+    "label": "02 Direction Keys",
+    "category": "Controls/Corporate/Ashiro Mai",
+    "source": "controls27/controls27_corporate_ashiro_mai_02_direction_keys",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_ashiro_mai_03_three_faders",
+    "label": "03 Three Faders",
+    "category": "Controls/Corporate/Ashiro Mai",
+    "source": "controls27/controls27_corporate_ashiro_mai_03_three_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_ashiro_mai_04_command_pads",
+    "label": "04 Command Pads",
+    "category": "Controls/Corporate/Ashiro Mai",
+    "source": "controls27/controls27_corporate_ashiro_mai_04_command_pads",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_ashiro_mai_05_keys_touch_strip",
+    "label": "05 Keys Touch Strip",
+    "category": "Controls/Corporate/Ashiro Mai",
+    "source": "controls27/controls27_corporate_ashiro_mai_05_keys_touch_strip",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_ashiro_mai_06_paired_buttons",
+    "label": "06 Paired Buttons",
+    "category": "Controls/Corporate/Ashiro Mai",
+    "source": "controls27/controls27_corporate_ashiro_mai_06_paired_buttons",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_paladyne_01_keyboard",
+    "label": "01 Keyboard",
+    "category": "Controls/Corporate/Paladyne",
+    "source": "controls27/controls27_corporate_paladyne_01_keyboard",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_paladyne_02_direction_track",
+    "label": "02 Direction Track",
+    "category": "Controls/Corporate/Paladyne",
+    "source": "controls27/controls27_corporate_paladyne_02_direction_track",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_paladyne_03_selectors_guarded_toggle",
+    "label": "03 Selectors Guarded Toggle",
+    "category": "Controls/Corporate/Paladyne",
+    "source": "controls27/controls27_corporate_paladyne_03_selectors_guarded_toggle",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_paladyne_04_four_pads_fader",
+    "label": "04 Four Pads Fader",
+    "category": "Controls/Corporate/Paladyne",
+    "source": "controls27/controls27_corporate_paladyne_04_four_pads_fader",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_paladyne_05_latching_controls",
+    "label": "05 Latching Controls",
+    "category": "Controls/Corporate/Paladyne",
+    "source": "controls27/controls27_corporate_paladyne_05_latching_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_paladyne_06_four_faders",
+    "label": "06 Four Faders",
+    "category": "Controls/Corporate/Paladyne",
+    "source": "controls27/controls27_corporate_paladyne_06_four_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_pinnacle_01_keyboard",
+    "label": "01 Keyboard",
+    "category": "Controls/Corporate/Pinnacle",
+    "source": "controls27/controls27_corporate_pinnacle_01_keyboard",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_pinnacle_02_disc_and_sliders",
+    "label": "02 Disc And Sliders",
+    "category": "Controls/Corporate/Pinnacle",
+    "source": "controls27/controls27_corporate_pinnacle_02_disc_and_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_pinnacle_03_ring_dial",
+    "label": "03 Ring Dial",
+    "category": "Controls/Corporate/Pinnacle",
+    "source": "controls27/controls27_corporate_pinnacle_03_ring_dial",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_pinnacle_04_sequence_keys",
+    "label": "04 Sequence Keys",
+    "category": "Controls/Corporate/Pinnacle",
+    "source": "controls27/controls27_corporate_pinnacle_04_sequence_keys",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_pinnacle_05_three_alignment_faders",
+    "label": "05 Three Alignment Faders",
+    "category": "Controls/Corporate/Pinnacle",
+    "source": "controls27/controls27_corporate_pinnacle_05_three_alignment_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_pinnacle_06_dual_rotary_interlock",
+    "label": "06 Dual Rotary Interlock",
+    "category": "Controls/Corporate/Pinnacle",
+    "source": "controls27/controls27_corporate_pinnacle_06_dual_rotary_interlock",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_seyr_01_keyboard",
+    "label": "01 Keyboard",
+    "category": "Controls/Corporate/Seyr",
+    "source": "controls27/controls27_corporate_seyr_01_keyboard",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_seyr_02_direction_trim",
+    "label": "02 Direction Trim",
+    "category": "Controls/Corporate/Seyr",
+    "source": "controls27/controls27_corporate_seyr_02_direction_trim",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_seyr_03_quadrant_dial",
+    "label": "03 Quadrant Dial",
+    "category": "Controls/Corporate/Seyr",
+    "source": "controls27/controls27_corporate_seyr_03_quadrant_dial",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_seyr_04_paired_faders_knob",
+    "label": "04 Paired Faders Knob",
+    "category": "Controls/Corporate/Seyr",
+    "source": "controls27/controls27_corporate_seyr_04_paired_faders_knob",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_seyr_05_horizontal_adjusters",
+    "label": "05 Horizontal Adjusters",
+    "category": "Controls/Corporate/Seyr",
+    "source": "controls27/controls27_corporate_seyr_05_horizontal_adjusters",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_seyr_06_selection_wheel_slider",
+    "label": "06 Selection Wheel Slider",
+    "category": "Controls/Corporate/Seyr",
+    "source": "controls27/controls27_corporate_seyr_06_selection_wheel_slider",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vandor_01_keyboard",
+    "label": "01 Keyboard",
+    "category": "Controls/Corporate/Vandor",
+    "source": "controls27/controls27_corporate_vandor_01_keyboard",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vandor_02_direction_wheel",
+    "label": "02 Direction Wheel",
+    "category": "Controls/Corporate/Vandor",
+    "source": "controls27/controls27_corporate_vandor_02_direction_wheel",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vandor_03_lever_toggles",
+    "label": "03 Lever Toggles",
+    "category": "Controls/Corporate/Vandor",
+    "source": "controls27/controls27_corporate_vandor_03_lever_toggles",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vandor_04_rotary_bank",
+    "label": "04 Rotary Bank",
+    "category": "Controls/Corporate/Vandor",
+    "source": "controls27/controls27_corporate_vandor_04_rotary_bank",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vandor_05_keypad_jog_wheel",
+    "label": "05 Keypad Jog Wheel",
+    "category": "Controls/Corporate/Vandor",
+    "source": "controls27/controls27_corporate_vandor_05_keypad_jog_wheel",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vandor_06_twin_knobs_presets",
+    "label": "06 Twin Knobs Presets",
+    "category": "Controls/Corporate/Vandor",
+    "source": "controls27/controls27_corporate_vandor_06_twin_knobs_presets",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vektor_01_keyboard",
+    "label": "01 Keyboard",
+    "category": "Controls/Corporate/Vektor",
+    "source": "controls27/controls27_corporate_vektor_01_keyboard",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vektor_02_twin_direction_controls",
+    "label": "02 Twin Direction Controls",
+    "category": "Controls/Corporate/Vektor",
+    "source": "controls27/controls27_corporate_vektor_02_twin_direction_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vektor_03_three_lever_sliders",
+    "label": "03 Three Lever Sliders",
+    "category": "Controls/Corporate/Vektor",
+    "source": "controls27/controls27_corporate_vektor_03_three_lever_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vektor_04_latching_switches",
+    "label": "04 Latching Switches",
+    "category": "Controls/Corporate/Vektor",
+    "source": "controls27/controls27_corporate_vektor_04_latching_switches",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vektor_05_rockers_and_dial",
+    "label": "05 Rockers And Dial",
+    "category": "Controls/Corporate/Vektor",
+    "source": "controls27/controls27_corporate_vektor_05_rockers_and_dial",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_corporate_vektor_06_switch_bank",
+    "label": "06 Switch Bank",
+    "category": "Controls/Corporate/Vektor",
+    "source": "controls27/controls27_corporate_vektor_06_switch_bank",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_ashiro_mai_01_engineering_faders",
+    "label": "01 Engineering Faders",
+    "category": "Controls/Dense/Ashiro Mai",
+    "source": "controls27/controls27_dense_ashiro_mai_01_engineering_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_ashiro_mai_02_pilot_controls",
+    "label": "02 Pilot Controls",
+    "category": "Controls/Dense/Ashiro Mai",
+    "source": "controls27/controls27_dense_ashiro_mai_02_pilot_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_ashiro_mai_03_navigation_bottom",
+    "label": "03 Navigation Bottom",
+    "category": "Controls/Dense/Ashiro Mai",
+    "source": "controls27/controls27_dense_ashiro_mai_03_navigation_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_ashiro_mai_04_button_matrix_sliders",
+    "label": "04 Button Matrix Sliders",
+    "category": "Controls/Dense/Ashiro Mai",
+    "source": "controls27/controls27_dense_ashiro_mai_04_button_matrix_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_paladyne_01_engineering_faders",
+    "label": "01 Engineering Faders",
+    "category": "Controls/Dense/Paladyne",
+    "source": "controls27/controls27_dense_paladyne_01_engineering_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_paladyne_02_pilot_controls",
+    "label": "02 Pilot Controls",
+    "category": "Controls/Dense/Paladyne",
+    "source": "controls27/controls27_dense_paladyne_02_pilot_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_paladyne_03_navigation_bottom",
+    "label": "03 Navigation Bottom",
+    "category": "Controls/Dense/Paladyne",
+    "source": "controls27/controls27_dense_paladyne_03_navigation_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_paladyne_04_button_matrix_sliders",
+    "label": "04 Button Matrix Sliders",
+    "category": "Controls/Dense/Paladyne",
+    "source": "controls27/controls27_dense_paladyne_04_button_matrix_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_pinnacle_01_engineering_faders",
+    "label": "01 Engineering Faders",
+    "category": "Controls/Dense/Pinnacle",
+    "source": "controls27/controls27_dense_pinnacle_01_engineering_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_pinnacle_02_pilot_controls",
+    "label": "02 Pilot Controls",
+    "category": "Controls/Dense/Pinnacle",
+    "source": "controls27/controls27_dense_pinnacle_02_pilot_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_pinnacle_03_navigation_bottom",
+    "label": "03 Navigation Bottom",
+    "category": "Controls/Dense/Pinnacle",
+    "source": "controls27/controls27_dense_pinnacle_03_navigation_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_pinnacle_04_button_matrix_sliders",
+    "label": "04 Button Matrix Sliders",
+    "category": "Controls/Dense/Pinnacle",
+    "source": "controls27/controls27_dense_pinnacle_04_button_matrix_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_seyr_01_engineering_faders",
+    "label": "01 Engineering Faders",
+    "category": "Controls/Dense/Seyr",
+    "source": "controls27/controls27_dense_seyr_01_engineering_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_seyr_02_pilot_controls",
+    "label": "02 Pilot Controls",
+    "category": "Controls/Dense/Seyr",
+    "source": "controls27/controls27_dense_seyr_02_pilot_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_seyr_03_navigation_bottom",
+    "label": "03 Navigation Bottom",
+    "category": "Controls/Dense/Seyr",
+    "source": "controls27/controls27_dense_seyr_03_navigation_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_seyr_04_button_matrix_sliders",
+    "label": "04 Button Matrix Sliders",
+    "category": "Controls/Dense/Seyr",
+    "source": "controls27/controls27_dense_seyr_04_button_matrix_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_vandor_01_engineering_faders",
+    "label": "01 Engineering Faders",
+    "category": "Controls/Dense/Vandor",
+    "source": "controls27/controls27_dense_vandor_01_engineering_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_vandor_02_pilot_controls",
+    "label": "02 Pilot Controls",
+    "category": "Controls/Dense/Vandor",
+    "source": "controls27/controls27_dense_vandor_02_pilot_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_vandor_03_navigation_bottom",
+    "label": "03 Navigation Bottom",
+    "category": "Controls/Dense/Vandor",
+    "source": "controls27/controls27_dense_vandor_03_navigation_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_vandor_04_button_matrix_sliders",
+    "label": "04 Button Matrix Sliders",
+    "category": "Controls/Dense/Vandor",
+    "source": "controls27/controls27_dense_vandor_04_button_matrix_sliders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_vektor_01_engineering_faders",
+    "label": "01 Engineering Faders",
+    "category": "Controls/Dense/Vektor",
+    "source": "controls27/controls27_dense_vektor_01_engineering_faders",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_vektor_02_pilot_controls",
+    "label": "02 Pilot Controls",
+    "category": "Controls/Dense/Vektor",
+    "source": "controls27/controls27_dense_vektor_02_pilot_controls",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_vektor_03_navigation_bottom",
+    "label": "03 Navigation Bottom",
+    "category": "Controls/Dense/Vektor",
+    "source": "controls27/controls27_dense_vektor_03_navigation_bottom",
+    "rectangular": true
+  },
+  {
+    "id": "controls27_dense_vektor_04_button_matrix_sliders",
+    "label": "04 Button Matrix Sliders",
+    "category": "Controls/Dense/Vektor",
+    "source": "controls27/controls27_dense_vektor_04_button_matrix_sliders",
+    "rectangular": true
   }
 ]

@@ -10,6 +10,8 @@ import net.minecraft.world.World;
 
 /** Glass tint is synchronized independently of the baked frame geometry. */
 public final class TileEntityProgrammableGlass extends TileEntity {
+    public final FrameAppearance frameAppearance=new FrameAppearance();
+
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox(){
         net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
         return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
@@ -90,7 +92,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
                 world.getBlockState(pos), 3);
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);fluids.write(tag);
+        super.writeToNBT(tag);frameAppearance.write(tag);fluids.write(tag);
         tag.setInteger("GlassShade", shade);
         tag.setInteger("GlassMaterial",material);
         tag.setBoolean("GlassStretch",stretch);
@@ -103,7 +105,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);fluids.read(tag);
+        super.readFromNBT(tag);frameAppearance.read(tag);fluids.read(tag);
         restored = true;
         material=tag.hasKey("GlassMaterial",3)?GlassMaterials.clamp(tag.getInteger("GlassMaterial")):-1;
         stretch=tag.getBoolean("GlassStretch");

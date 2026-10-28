@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 public final class KitSpriteFormatChecks {
     private static boolean retiredMachinery(String name){
         // Company armor/artwork is independent of the retired machinery kit.
-        if(name.matches("assets/vandorlabs/(?:models/item/armor/|textures/items/armor/|textures/models/armor/companies/|textures/blocks/corp/)(?:[^/]+/)*vektor_[^/]+"))return false;
+        if(name.matches("assets/vandorlabs/(?:models/item/armor/|textures/items/armor/|textures/models/armor/companies/|textures/blocks/corp/|textures/blocks/frames/|textures/blocks/redesign_27/)(?:[^/]+/)*vektor_[^/]+"))return false;
         return name.matches(".*(?:^|/)(?:aster_|rivet_|vektor_|kestrel_|hadron_).*");
     }
     private static final class Sprite extends TextureAtlasSprite {
@@ -31,7 +31,7 @@ public final class KitSpriteFormatChecks {
             rejected = expected.getMessage().contains("broken aspect ratio");
         }
         if (!rejected) throw new AssertionError("Rectangular static sprite was not rejected");
-        if(retiredMachinery("assets/vandorlabs/models/item/armor/vektor_boots.json")||!retiredMachinery("assets/vandorlabs/models/block/vektor_console.json"))throw new AssertionError("Machinery validation must distinguish company armor");
+        if(retiredMachinery("assets/vandorlabs/textures/blocks/frames/frames-company-half-full/vektor/vektor_thin_half_1254x627.png")||retiredMachinery("assets/vandorlabs/models/item/armor/vektor_boots.json")||!retiredMachinery("assets/vandorlabs/models/block/vektor_console.json"))throw new AssertionError("Machinery validation must distinguish company armor");
 
         Set<String> textures = new LinkedHashSet<>();
         try (ZipFile jar = new ZipFile(args[0])) {

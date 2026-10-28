@@ -13,7 +13,7 @@ final class ScreenTextureList {
     ScreenTextureList(int x,int y,int width,int rows,String selected,String[] ids,String[] labels,boolean input) {
         this.ids=ids;this.input=input;
         int choice=ScreenHousingTextures.screenIndex((input?"console_inputs/":"")+selected+"_static");
-        framed=isFramed(choice);
+        framed=false;
         list=new HousingTextureList(x,y,width,canonical(choice),rows,null,
                 value->HousingTextureList.generalTexture(value) || artwork(value,input) && canonical(value)==value,
                 value->"Screens".equals(ScreenHousingTextures.category(value))?(input?"Controls":"Screens"):ScreenHousingTextures.category(value),
@@ -22,13 +22,14 @@ final class ScreenTextureList {
     }
     static boolean artwork(int choice,boolean input) {
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
-        return entry!=null && "Screens".equals(ScreenHousingTextures.category(choice))
-                && entry.get("source").getAsString().startsWith("console_inputs/")==input;
+        return entry!=null && (("Screens".equals(ScreenHousingTextures.category(choice))
+                && entry.get("source").getAsString().startsWith("console_inputs/")==input)
+                || input && ScreenHousingTextures.category(choice).startsWith("Controls/"));
     }
     ScreenTextureList visibleRows(int rows){list.visibleRows(rows);return this;}
     ScreenTextureList restore(int choice){
         if(choice>=0 || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE) {
-            if(artwork(choice,input))framed=isFramed(choice);
+            if(artwork(choice,input))framed=false;
             list.setSelected(canonical(choice));setFramed(framed);
         }
         return this;
@@ -49,7 +50,7 @@ final class ScreenTextureList {
     private int canonical(int choice){return counterpart(choice,false);}
     boolean hasPair(){return artwork(choice(),input) && counterpart(choice(),true)!=counterpart(choice(),false);}
     ScreenTextureList setFramed(boolean value) {
-        framed=value;
+        framed=false;value=false;
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(artwork(i,input) && canonical(i)==i)
             list.thumbnail(i,ScreenHousingTextures.fullTexture(counterpart(i,value)));
         return this;

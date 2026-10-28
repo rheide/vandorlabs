@@ -265,7 +265,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 GlStateManager.depthMask(true);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
                 GlStateManager.disableBlend();
-            } else DoorItemRenderer.opaque(renderer,item);
+            } else if(tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0){Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);DoorItemRenderer.baked(renderer,item,FrameDoorModel.get(item.model,tile.frameAppearance));}else DoorItemRenderer.opaque(renderer,item);
             GlStateManager.enableLighting();
             GlStateManager.popMatrix();
         }

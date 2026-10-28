@@ -63,5 +63,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageProgrammableSurface.Handler.class,MessageProgrammableSurface.class,id++,Side.SERVER);
         INSTANCE.registerMessage(com.vandorlabs.plate.PlateMessage.Handler.class,com.vandorlabs.plate.PlateMessage.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageArmPayloadDig.Handler.class,MessageArmPayloadDig.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageFrameAppearance.Handler.class,MessageFrameAppearance.class,id++,Side.SERVER);
     }
 }

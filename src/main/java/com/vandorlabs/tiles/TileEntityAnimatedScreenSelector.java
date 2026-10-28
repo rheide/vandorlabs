@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
+    public final FrameAppearance frameAppearance=new FrameAppearance();
+
     public static final int REDSTONE_SURFACE=-2;
     public static final int VEHICLE_SURFACE=-3;
     public boolean hasVehicleStatus(int slot){return getSurfaceTexture(slot)==VEHICLE_SURFACE;}
@@ -530,7 +532,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
-        super.writeToNBT(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
+        super.writeToNBT(compound);frameAppearance.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
@@ -583,7 +585,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousPortholeJoin=joinPortholes;
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
-        super.readFromNBT(compound);
+        super.readFromNBT(compound);frameAppearance.read(compound);
         for(int i=0;i<2;i++){
             String key=i==0?"RedstonePrimary":"RedstoneSecondary";
             if(compound.hasKey(key,10))redstoneScreen(i).readFromNBT(compound.getCompoundTag(key));
@@ -608,6 +610,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         animationSpeedIndex = data.animationSpeedIndex;
         inputPanel = data.inputPanel;
         secondaryInputPanel = data.secondaryInputPanel;
+        if(!compound.hasKey("FrameFront",3)){
+            boolean legacy=framed||FrameAppearance.framed(selectedScreen)||FrameAppearance.framed(inputPanel)||FrameAppearance.framed(secondaryInputPanel)||FrameAppearance.bareChoice(primarySurface)!=primarySurface||FrameAppearance.bareChoice(secondarySurface)!=secondarySurface;
+            if(legacy)frameAppearance.migrateLegacyFrame();
+            for(com.vandorlabs.blocks.ModBlocks.ScreenOption option:com.vandorlabs.blocks.ModBlocks.SCREEN_OPTIONS)if(option.framedId.equals(selectedScreen))selectedScreen=option.bareId;
+            selectedScreen=FrameAppearance.bare(selectedScreen);inputPanel=FrameAppearance.bare(inputPanel);secondaryInputPanel=FrameAppearance.bare(secondaryInputPanel);primarySurface=FrameAppearance.bareChoice(primarySurface);secondarySurface=FrameAppearance.bareChoice(secondarySurface);framed=false;
+        }
+
         wallPosition = data.wallPosition;
         smallInput = data.smallInput;
         redstoneChannel = data.redstoneChannel;

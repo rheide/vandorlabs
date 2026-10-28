@@ -18,6 +18,7 @@ import java.io.IOException;
 public class GuiSpaceDoor extends GuiMaterialPicker {
     private static final int SECURITY_CARDS_Y=196;
     private int textureLayout;
+    private int settingsPage;
     private final TileEntitySpaceDoor tile;
     private HousingTextureList textureList;
     private ProgrammableDialogLayout layout;
@@ -48,9 +49,10 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         String channelText=channelField==null?lastValidChannels.toString():channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        int listLeft=layout.listX,listTop=guiTop+38;
+        int listLeft=layout.listX,listTop=guiTop+54;
+        for(int page=0;page<4;page++)buttonList.add(layout.tab(190+page,page,4,new String[]{"Door","Frame","Redstone","Security"}[page]));
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
-                .visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
+                .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
         buttonList.add(layout.choice(12,0,2,52,framed?"Frame: Framed":"Frame: Bare"));
         buttonList.add(layout.control(16,72,triggerLabel()));buttonList.add(layout.choice(13,0,2,92,depthLabel()));
@@ -60,8 +62,9 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+145,154,18);
         ChannelFields.configure(channelField);channelField.setText(channelText);
         buttonList.add(layout.control(19,168,securityLabel()));
-        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();
+        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);buttonList.add(layout.control(198,190,"Transmitter..."));updateChannelValidity();refreshPages();
     }
+    private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=193){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);}
     private net.minecraft.item.ItemStack companyCard(){return CredentialFilterPicker.sample(false,securityAllowed);}
     String companyLabel(){return CredentialFilterPicker.label(false,securityAllowed);}
     private String panelLabel(){return "Panel: "+new String[]{"Off","On","Both"}[panelMode];}
@@ -92,6 +95,8 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
                 lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels).withTextureLayout(textureLayout).withSecurity(panelMode,securityMode,securityAllowed));
     }
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id>=190&&button.id<=193){if(button.id==191){mc.displayGuiScreen(new GuiFrameAppearance(inventorySlots,tile,this));return;}settingsPage=button.id-190;refreshPages();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
             motion=SpaceDoorMotion.values()[GuiOptionCycle.next(motion.ordinal(),SpaceDoorMotion.values().length)];
@@ -114,10 +119,10 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19))return;
-        if(CredentialFilterPicker.click(this,x,y,button,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed,mask->{securityAllowed=mask;sendUpdate();}))return;
+        if(settingsPage==3&&CredentialFilterPicker.click(this,x,y,button,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed,mask->{securityAllowed=mask;sendUpdate();}))return;
         channelField.mouseClicked(x,y,button);
         int before=textureList.selected();
-        if(textureList.click(x,y,button)) {
+        if(settingsPage==0&&textureList.click(x,y,button)) {
             if(before!=textureList.selected()) {
                 int selected=textureList.selected();com.google.gson.JsonObject entry=com.vandorlabs.tiles.ScreenHousingTextures.entry(selected);
                 if(entry!=null && entry.has("design")){design=entry.get("design").getAsInt();detail=entry.get("detail").getAsInt();faceTexture=-1;}
@@ -150,20 +155,20 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY) {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
-        textureList.draw(fontRenderer,mouseX,mouseY);
-        CredentialFilterPicker.draw(mc,fontRenderer,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed);
+        if(settingsPage==0)textureList.draw(fontRenderer,mouseX,mouseY);
+        if(settingsPage==3)CredentialFilterPicker.draw(mc,fontRenderer,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed);
 
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
         fontRenderer.drawString(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?"Large Programmable Door":"Programmable Door",12,8,0xFFFFFF);
-        fontRenderer.drawString("Door type",12,28,0xDAE8F0);
 
-        fontRenderer.drawString("Channels (0 = none)",layout.controlsX-guiLeft,135,0xDAE8F0);
+
+        if(settingsPage==2)fontRenderer.drawString("Channels (0 = none)",layout.controlsX-guiLeft,135,0xDAE8F0);
         if (channel()<0) fontRenderer.drawString("Invalid channel",12,ySize-18,0xFF7777);
 
     }
     @Override public void drawScreen(int x,int y,float partial) {
-        drawDefaultBackground(); DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(x,y,partial); channelField.drawTextBox();
-        if(y>=guiTop+SECURITY_CARDS_Y-1&&y<guiTop+SECURITY_CARDS_Y+17&&x>=layout.controlsX&&x<layout.controlsX+154)drawHoveringText(java.util.Arrays.asList("Empty filter: any card","Click the slot to choose one company card","Right-click the slot or click the company name to clear","The sample card is not consumed"),x,y);
+        drawDefaultBackground();super.drawScreen(x,y,partial);DialogHeader.logo(guiLeft,guiTop,xSize); channelField.drawTextBox();
+        if(settingsPage==3&&y>=guiTop+SECURITY_CARDS_Y-1&&y<guiTop+SECURITY_CARDS_Y+17&&x>=layout.controlsX&&x<layout.controlsX+154)drawHoveringText(java.util.Arrays.asList("Empty filter: any card","Click the slot to choose one company card","Right-click the slot or click the company name to clear","The sample card is not consumed"),x,y);
     }
 }

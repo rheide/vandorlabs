@@ -50,7 +50,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             net.minecraft.world.IBlockAccess world, BlockPos pos) {
         IBlockState actual = super.getActualState(state, world, pos);
         TileEntity tile = world.getTileEntity(pos);
-        if(PanelJoins.flatCorner(state,world,pos)!=null || tile instanceof TileEntityProgrammableGlass && !((TileEntityProgrammableGlass)tile).isFramed())
+        if(PanelJoins.flatCorner(state,world,pos)!=null || tile instanceof TileEntityProgrammableGlass && (!((TileEntityProgrammableGlass)tile).isFramed() || ((TileEntityProgrammableGlass)tile).frameAppearance.front>=0 || ((TileEntityProgrammableGlass)tile).frameAppearance.interior>=0))
             actual=actual.withProperty(TOP,false).withProperty(BOTTOM,false).withProperty(LEFT,false).withProperty(RIGHT,false)
                     .withProperty(INNER_TL,false).withProperty(INNER_TR,false).withProperty(INNER_BL,false).withProperty(INNER_BR,false);
         return tile instanceof TileEntityProgrammableGlass
@@ -82,6 +82,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
         settings.setInteger("Material",te instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)te).getMaterial():-1);
         settings.setBoolean("Stretch",te instanceof TileEntityProgrammableGlass && ((TileEntityProgrammableGlass)te).isStretch());settings.setInteger("LayoutMode",te instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)te).getTextureLayout():1);
         settings.setBoolean("Framed",!(te instanceof TileEntityProgrammableGlass)||((TileEntityProgrammableGlass)te).isFramed());
+        if(te instanceof TileEntityProgrammableGlass)((TileEntityProgrammableGlass)te).frameAppearance.write(settings);
         stack.setTagInfo("ProgrammableGlassSettings", settings);
         return stack;
     }
@@ -100,6 +101,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             world.setBlockState(pos, state.withProperty(SIZE, size), 3);
         TileEntity te = world.getTileEntity(pos);
         if (te instanceof TileEntityProgrammableGlass) {
+            if(settings!=null)((TileEntityProgrammableGlass)te).frameAppearance.read(settings);
             ((TileEntityProgrammableGlass)te).setPanelFacing(placer.getHorizontalFacing().getOpposite());
             ((TileEntityProgrammableGlass)te).setSize(size);
             ((TileEntityProgrammableGlass)te).setShade(shade);
@@ -123,5 +125,5 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
     @Override public net.minecraft.util.math.Vec3d getFogColor(net.minecraft.world.World world,BlockPos pos,IBlockState state,net.minecraft.entity.Entity entity,net.minecraft.util.math.Vec3d original,float partialTicks){return WaterloggedParts.fogColor(world,pos,entity,original,partialTicks);}
     @Override public IBlockState getStateAtViewpoint(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,net.minecraft.util.math.Vec3d point){return WaterloggedParts.viewpoint(state,world,pos,point);}
     @Override public Boolean isEntityInsideMaterial(IBlockAccess world,BlockPos pos,IBlockState state,net.minecraft.entity.Entity entity,double height,net.minecraft.block.material.Material material,boolean head){return WaterloggedParts.entity(world,pos,entity,height,material,head);}
-    @Override public int getLightValue(IBlockState state,IBlockAccess world,BlockPos pos){return WaterloggedParts.light(world,pos);}
+    @Override public int getLightValue(IBlockState state,IBlockAccess world,BlockPos pos){TileEntity tile=world.getTileEntity(pos);return Math.max(WaterloggedParts.light(world,pos),tile instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)tile).frameAppearance.light():0);}
 }

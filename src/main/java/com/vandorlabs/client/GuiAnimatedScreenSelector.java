@@ -173,11 +173,12 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override public void initGui() {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
-        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        int tabs=console?3:2,rows=layout.rows(true);
-        buttonList.add(layout.tab(90,0,tabs,"Screen"));
+        super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-96,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
+        int tabs=console?4:3,rows=layout.rows(true);
+        buttonList.add(layout.tab(90,0,tabs,"Display"));
         if(console)buttonList.add(layout.tab(91,1,tabs,"Controls"));
-        buttonList.add(layout.tab(console?92:91,tabs-1,tabs,"Sides"));
+        buttonList.add(layout.tab(console?92:91,tabs-2,tabs,"Sides"));
+        buttonList.add(layout.tab(console?93:92,tabs-1,tabs,"Redstone"));buttonList.add(layout.control(198,142,"Transmitter..."));
         listLeft=layout.listX;listTop=guiTop+54;listRight=listLeft+layout.listWidth;listBottom=listTop+rows*HousingTextureList.ROW_HEIGHT;
         String[] ids=new String[entries.size()],labels=new String[entries.size()];
         for(int i=0;i<ids.length;i++){ids[i]=entries.get(i).option.bareId;labels[i]=entries.get(i).name;}
@@ -199,15 +200,17 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         channelField.setText(te.getRedstoneChannels().toString());
         buttonList.add(layout.done(20));refreshButtons();refreshTabs();
     }
-    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?92:91))b.enabled=b.id-90!=textureTab;}
+    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?93:92))b.enabled=b.id-90!=textureTab;}
 
     private String sidesLabel(){return "Sides: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
+        int sides=console?2:1,redstone=sides+1;channelField.setVisible(textureTab==redstone);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==redstone;else if(option.id==32)option.visible=textureTab==sides;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<sides;}
+
         redstoneButton.displayString = "Trigger: " + (!redstoneEnabled?"Disabled":redstoneInverted?"Redstone OFF":"Redstone ON");
         modeOffButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_OFF;
         modeStaticButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_STATIC;
         modeAnimatedButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_ANIMATED;
-        frameButton.displayString = ((console && textureTab==1?inputList.framed():framed) ? "[x] " : "[ ] ")
+        frameButton.visible=false;frameButton.displayString = ((console && textureTab==1?inputList.framed():framed) ? "[x] " : "[ ] ")
                 + I18n.format("gui.vandorlabs.selector.framed");
         frameButton.enabled = console && textureTab==1?inputList.hasPair():textureTab==0 && selectedOption != null && selectedOption.hasPair();
         slowButton.enabled = speedIndex != 0;
@@ -234,7 +237,11 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if(button.id>=90 && button.id<=(console?92:91)){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
+        if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(te.getPos(),0));return;}
+
+        if(button.id==197){mc.displayGuiScreen(new GuiFrameAppearance(inventorySlots,te,this));return;}
+
+        if(button.id>=90 && button.id<=(console?93:92)){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
         if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.getSurfaceTextureLayout()));return;}
         switch (button.id) {
             case 0:
@@ -387,10 +394,10 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         fontRenderer.drawString(I18n.format(console?"gui.vandorlabs.console.title":fullInput?"gui.vandorlabs.full_input.title":diagonalScreen?"gui.vandorlabs.diagonal_screen.title":"gui.vandorlabs.selector.title"),guiLeft+12,guiTop+8,0xFFFFFF);
         if(textureTab==0)screenList.draw(fontRenderer,mouseX,mouseY);
         else if(console && textureTab==1)inputList.draw(fontRenderer,mouseX,mouseY);
-        else housingList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
-        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        else if(textureTab==(console?2:1))housingList.draw(fontRenderer,mouseX,mouseY);
+        if(textureTab<(console?2:1))fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
+        if(textureTab<(console?2:1))fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
+        if(textureTab==(console?3:2))fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 

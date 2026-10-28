@@ -197,6 +197,7 @@ public final class ProgrammableSettings {
             NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("States",trigger.isLevelStates());signal.setInteger("Exact",trigger.getExactLevel());signal.setInteger("Low",trigger.getLowTexture());signal.setInteger("Medium",trigger.getMediumTexture());out.setTag(SIGNAL_SETTINGS,signal);
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
+            NBTTagCompound frameSettings=new NBTTagCompound();screen.frameAppearance.write(frameSettings);out.setTag("FrameAppearance",frameSettings);
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
             if(TileEntityAnimatedScreenSelector.supportsSideTexture(block))out.setInteger(SIDE_TEXTURE,screen.getSideTexture());
             if(block==ModBlocks.PROGRAMMABLE_STAIRS){out.setInteger(STAIR_TREAD,screen.stairTread());out.setInteger(STAIR_ROLL,screen.stairRoll());}
@@ -502,6 +503,7 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             long before=screen.getSettingsRevision();
+            if(values.hasKey("FrameAppearance",10)){screen.frameAppearance.read(values.getCompoundTag("FrameAppearance"));applicable=true;com.vandorlabs.tiles.GlassMaterials.changed();screen.markDirty();}
             if(block==ModBlocks.PROGRAMMABLE_STAIRS&&(values.hasKey(STAIR_TREAD,3)||values.hasKey(STAIR_ROLL,3))){screen.setStairGeometry(number(values,STAIR_TREAD,screen.stairTread()),number(values,STAIR_ROLL,screen.stairRoll()));applicable=true;}
             if (values.hasKey(WALL_TEXTURE, 3)) {
                 screen.setHousingTexture(values.getInteger(WALL_TEXTURE));
