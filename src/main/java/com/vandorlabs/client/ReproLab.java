@@ -2179,6 +2179,7 @@ public class ReproLab {
         }
         try {
             mc.getIntegratedServer().addScheduledTask(() -> {
+                if(!Boolean.getBoolean("vandorlabs.dialogChecksOnly")){
                 DoorRuntimeChecks.run(world, serverPlayer);
                 LargeDoorRuntimeChecks.run(world,serverPlayer);
                 DisplayTableRuntimeChecks.run(world, serverPlayer);
@@ -2196,20 +2197,23 @@ public class ReproLab {
                 TurntablePerformanceRuntimeChecks.server((net.minecraft.world.WorldServer)world);
                 try{CockpitRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("cockpit integration",failure);}
                 try{NonWheeledGearRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("non-wheeled landing gear",failure); }
+                }
                 UtilityVisualFixtures.build(world);
                 TextureLayoutVisualFixtures.build(world);
                 GearVisualFixtures.build(world);
                 CockpitVisualFixtures.build(world);
                 TokenSlotVisualChecks.build(world);
+                if(!Boolean.getBoolean("vandorlabs.dialogChecksOnly")){
                 CopyCompatibilityRuntimeChecks.run(world, serverPlayer);
                 RedstoneChannelRuntimeChecks.run(serverPlayer.world, serverPlayer);
                 ControllerRuntimeChecks.run(world, serverPlayer);
                 try{MovingDeviceRuntimeChecks.run((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("moving device removal and configuration",failure);}
+                }
                 ControllerRuntimeChecks.buildFixture(world, serverPlayer);
                 try{TurntableRuntimeChecks.fixture((net.minecraft.world.WorldServer)world,serverPlayer);}catch(Exception failure){throw new IllegalStateException("turntable fixtures",failure);}
                 ModularGearRuntimeChecks.fixture((net.minecraft.world.WorldServer)world);
                 FixedGearRuntimeChecks.fixture((net.minecraft.world.WorldServer)world,serverPlayer);
-                TokenSlotPulseRuntimeCheck.start((net.minecraft.world.WorldServer)world);
+                if(!Boolean.getBoolean("vandorlabs.dialogChecksOnly"))TokenSlotPulseRuntimeCheck.start((net.minecraft.world.WorldServer)world);
             }).get();
         } catch (Exception exception) {
             throw new IllegalStateException("Controller server-thread contracts failed",exception);
