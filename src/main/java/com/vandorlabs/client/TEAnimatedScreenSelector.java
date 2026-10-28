@@ -353,6 +353,15 @@ public class TEAnimatedScreenSelector
                 pathRoot + "_animated.anim");
         ResourceLocation baseLocation = new ResourceLocation(VandorLabs.MODID,
                 pathRoot + "_static.png");
+        ResourceLocation stripLocation=new ResourceLocation(VandorLabs.MODID,pathRoot+"_animated.png");
+        // Layered company artwork retains straight alpha; legacy compact RGB deltas remain unchanged.
+        try{manager.getResource(stripLocation).close();
+            try(InputStream baseStream=manager.getResource(baseLocation).getInputStream();InputStream resource=manager.getResource(stripLocation).getInputStream()){
+                BufferedImage base=TextureUtil.readBufferedImage(baseStream),strip=TextureUtil.readBufferedImage(resource);
+                if(base==null||strip==null||strip.getWidth()!=base.getWidth()||strip.getHeight()%base.getHeight()!=0||strip.getHeight()/base.getHeight()>64||strip.getHeight()/base.getHeight()<2||strip.getWidth()>128||base.getHeight()>128)throw new IOException("Invalid layered animation dimensions");
+                return new DecodedAnimation(strip,strip.getHeight()/base.getHeight());
+            }
+        }catch(java.io.FileNotFoundException absentLayeredStrip){/* Existing compact animations use the original decoder. */}
         try(InputStream baseStream=manager.getResource(baseLocation).getInputStream();
                 InputStream resource=manager.getResource(packed).getInputStream()){
             BufferedImage base = TextureUtil.readBufferedImage(baseStream);
@@ -1063,6 +1072,7 @@ public class TEAnimatedScreenSelector
 
     private static void normalQuad(BufferBuilder buf, TextureAtlasSprite sprite, int sign, double halfOffset,
             double[] clip, double[] a, double[] b, double[] c, double[] d) {
+        sprite=FrameEdgeTextures.edge(sprite,a,b,c,d);
         if(buf instanceof DiagonalWallQuadCapture)((DiagonalWallQuadCapture)buf).texture(sprite);
         if (!Double.isNaN(halfOffset)) {
             // Bake the half-height reflection into positions before shader
@@ -1526,6 +1536,7 @@ public class TEAnimatedScreenSelector
             double x0, double y0, double z0, double x1, double y1, double z1,
             double x2, double y2, double z2, double x3, double y3, double z3,
             double u0, double v0, double u1, double v1) {
+        sprite=FrameEdgeTextures.edge(sprite,new double[]{x0,y0,z0},new double[]{x1,y1,z1},new double[]{x2,y2,z2},new double[]{x3,y3,z3});
         double ua = sprite.getInterpolatedU(u0);
         double va = sprite.getInterpolatedV(v0);
         double ub = sprite.getInterpolatedU(u1);

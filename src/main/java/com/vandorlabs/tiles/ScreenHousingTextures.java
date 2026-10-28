@@ -160,6 +160,7 @@ public final class ScreenHousingTextures {
         int index=localIndex(choice);
         return index<LEGACY_COUNT && MENU.has(IDS[index])?MENU.getAsJsonObject(IDS[index]):entry(choice);
     }
+    public static String menuCategory(int choice){com.google.gson.JsonObject e=menu(choice);return category(choice)+(e!=null&&e.has("menuGroup")?"/"+e.get("menuGroup").getAsString():"");}
     public static String category(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && e.has("category")?e.get("category").getAsString():"Materials";}
     public static String label(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("label")?null:e.has("detail")?e.get("label").getAsString().replaceFirst(" (Small|Medium|Large)$",""):e.get("label").getAsString();}
     public static boolean visible(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("hidden") || !e.get("hidden").getAsBoolean();}

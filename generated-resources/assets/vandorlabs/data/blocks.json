@@ -3655,5 +3655,293 @@
   {
     "id": "programmable_pressure_plate",
     "class": "PlateBlock"
+  },
+  {
+    "id": "company_ashiro_mai_full_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_ashiro_mai_full_communications",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_ashiro_mai_full_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_ashiro_mai_full_navigation",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_ashiro_mai_full_radar",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_ashiro_mai_full_reactor",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_paladyne_full_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_paladyne_full_communications",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_paladyne_full_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_paladyne_full_navigation",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_paladyne_full_radar",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_paladyne_full_reactor",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_pinnacle_full_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_pinnacle_full_communications",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_pinnacle_full_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_pinnacle_full_navigation",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_pinnacle_full_radar",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_pinnacle_full_reactor",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_seyr_full_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_seyr_full_communications",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_seyr_full_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_seyr_full_navigation",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_seyr_full_radar",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_seyr_full_reactor",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vandor_full_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vandor_full_communications",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vandor_full_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vandor_full_navigation",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vandor_full_radar",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vandor_full_reactor",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vektor_full_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vektor_full_communications",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vektor_full_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vektor_full_navigation",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vektor_full_radar",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "company_vektor_full_reactor",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
   }
 ]

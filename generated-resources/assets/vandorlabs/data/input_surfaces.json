@@ -248,5 +248,185 @@
     "id": "specialist_framed_weapons",
     "animated": true,
     "frames": 6
+  },
+  {
+    "id": "company_ashiro_mai_half_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_ashiro_mai_half_communications",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_ashiro_mai_half_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_ashiro_mai_half_navigation",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_ashiro_mai_half_radar",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_ashiro_mai_half_reactor",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_paladyne_half_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_paladyne_half_communications",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_paladyne_half_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_paladyne_half_navigation",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_paladyne_half_radar",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_paladyne_half_reactor",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_pinnacle_half_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_pinnacle_half_communications",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_pinnacle_half_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_pinnacle_half_navigation",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_pinnacle_half_radar",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_pinnacle_half_reactor",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_seyr_half_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_seyr_half_communications",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_seyr_half_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_seyr_half_navigation",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_seyr_half_radar",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_seyr_half_reactor",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vandor_half_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vandor_half_communications",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vandor_half_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vandor_half_navigation",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vandor_half_radar",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vandor_half_reactor",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vektor_half_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vektor_half_communications",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vektor_half_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vektor_half_navigation",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vektor_half_radar",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "company_vektor_half_reactor",
+    "animated": true,
+    "frames": 6
   }
 ]
