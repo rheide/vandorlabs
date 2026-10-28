@@ -333,7 +333,7 @@ public final class VehicleClient {
         @Override public void drawScreen(int x,int y,float partial){
             if(controller()){
                 drawDefaultBackground();int l=panelLeft(),t=panelTop(),w=panelWidth(),h=panelHeight();
-                drawRect(l,t,l+w,t+h,0xff101820);drawRect(l,t,l+w,t+26,0xff1b2b34);DialogHeader.logo(l,t,w);
+                drawRect(l,t,l+w,t+h,0xff101820);drawRect(l,t,l+w,t+26,0xff1b2b34);DialogHeader.logo(l,t,w,26);
                 fontRenderer.drawString("Vehicle Controller",l+14,t+10,0xffffff);
                 VehicleStructure structure=data.structure;
                 if(page==0){
