@@ -213,10 +213,12 @@ final class StaticSurfaceMesh {
             if(ix*(cx/4-vertices[ai])+iy*(cy/4-vertices[ai+1])+iz*(cz/4-vertices[ai+2])<0){ix=-ix;iy=-iy;iz=-iz;}
             // A tiny outward offset keeps rails separate from the underlying transparent pane.
             double ox=nx*.01,oy=ny*.01,oz=nz*.01;
+            net.minecraft.client.renderer.texture.TextureAtlasSprite cutRail=FrameEdgeTextures.edge(sprite,new double[]{vertices[ai],vertices[ai+1],vertices[ai+2]},new double[]{vertices[bi],vertices[bi+1],vertices[bi+2]});
+            boolean authored=cutRail!=sprite||sprite.getIconName().contains("/frames/");
             for(int v=0;v<4;v++) {
                 int source=v==0 || v==3?ai:bi;boolean inset=v>=2;
                 result.pos(vertices[source]+ox+(inset?ix:0),vertices[source+1]+oy+(inset?iy:0),vertices[source+2]+oz+(inset?iz:0))
-                        .color(255,255,255,255).tex(sprite.getInterpolatedU(inset?.5:0),sprite.getInterpolatedV(v==0 || v==3?0:Math.min(8,length/2)))
+                        .color(255,255,255,255).tex(cutRail.getInterpolatedU(authored?(v==0||v==3?0:16):(inset?.5:0)),cutRail.getInterpolatedV(authored?(inset?16:0):(v==0 || v==3?0:Math.min(8,length/2))))
                         .normal(nx,ny,nz).endVertex();
             }
         }
@@ -224,12 +226,13 @@ final class StaticSurfaceMesh {
         // clipped corner arms. Close each exposed rim with opaque outer and inner walls.
         for(int q=0;q<vertices.length;q+=32)if(!paneFace(q,flat,rowAxis) && !hiddenCap(q,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis)) {
             double[] inset=capInset(q,edges,flat,rowAxis);if(inset==null)continue;
+            net.minecraft.client.renderer.texture.TextureAtlasSprite cut=interior==null?null:FrameEdgeTextures.edge(interior,new double[]{vertices[q],vertices[q+1],vertices[q+2]},new double[]{vertices[q+8],vertices[q+9],vertices[q+10]},new double[]{vertices[q+16],vertices[q+17],vertices[q+18]},new double[]{vertices[q+24],vertices[q+25],vertices[q+26]});
             for(int side=0;side<2;side++)for(int v=0;v<4;v++) {
                 int source=q+(side==0?v:3-v)*8;float sign=side==0?1:-1;
                 result.pos(vertices[source]+(side==0?0:inset[0])+vertices[q+5]*sign*.01,
                         vertices[source+1]+(side==0?0:inset[1])+vertices[q+6]*sign*.01,
                         vertices[source+2]+(side==0?0:inset[2])+vertices[q+7]*sign*.01)
-                        .color(255,255,255,255).tex(interior==null?sprite.getInterpolatedU(v==0 || v==3?.16:.28):interior.getInterpolatedU(pane.getUnInterpolatedU(vertices[source+3])),interior==null?sprite.getInterpolatedV(v<2?4:4.12):interior.getInterpolatedV(pane.getUnInterpolatedV(vertices[source+4])))
+                        .color(255,255,255,255).tex(interior==null?sprite.getInterpolatedU(v==0 || v==3?.16:.28):cut.getInterpolatedU(pane.getUnInterpolatedU(vertices[source+3])),interior==null?sprite.getInterpolatedV(v<2?4:4.12):cut.getInterpolatedV(pane.getUnInterpolatedV(vertices[source+4])))
                         .normal(vertices[q+5]*sign,vertices[q+6]*sign,vertices[q+7]*sign).endVertex();
             }
         }

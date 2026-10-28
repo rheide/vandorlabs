@@ -17,6 +17,7 @@ final class WorldSurface {
 
     /** UVs stay attached to their positions when correcting an inward legacy face. */
     static void quad(BufferBuilder buffer, TextureAtlasSprite sprite, boolean reverse, double[]... points) {
+        sprite=FrameEdgeTextures.edge(sprite,points);
         double[] a=points[0],b=points[1],c=points[2],d=points[3];
         rawQuad(buffer,reverse,
                 a[0],a[1],a[2],sprite==null?a[3]:sprite.getInterpolatedU(a[3]),sprite==null?a[4]:sprite.getInterpolatedV(a[4]),

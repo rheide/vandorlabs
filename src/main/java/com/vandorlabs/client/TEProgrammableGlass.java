@@ -111,7 +111,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         if(tile.frameAppearance.front>=0&&com.vandorlabs.tiles.FrameAppearance.border(tile.frameAppearance.front))for(boolean front:new boolean[]{true,false})for(int i=0;i<4;i++){
             int v=front?i:3-i;double px=v==1||v==2?1:0,py=v<2?1:0;
-            WorldSurface.vertex(b,px,py,front?PANE_NEAR-.001:PANE_FAR+.001,sprite.getInterpolatedU((layout.column+px)*16/layout.columns),sprite.getInterpolatedV((layout.rows-layout.row-py)*16/layout.rows),0,0,front?-1:1);
+            WorldSurface.vertex(b,px,py,front?PANE_NEAR-.001:PANE_FAR+.001,sprite.getInterpolatedU((layout.column+px)*16/layout.columns),sprite.getInterpolatedV((layout.rows-layout.row-py)*16/layout.rows/com.vandorlabs.tiles.FrameAppearance.aspect(tile.frameAppearance.front)),0,0,front?-1:1);
         }
         Tessellator.getInstance().draw();GlStateManager.disableBlend();GlStateManager.scale(1D/16,1D/16,1D/16);b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlassFrameMesh.get(tile,layout).draw(b,light/65536,light%65536);Tessellator.getInstance().draw();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
     }

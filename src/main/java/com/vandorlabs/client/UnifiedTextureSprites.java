@@ -14,6 +14,7 @@ import java.util.function.Function;
 /** Resource-pack-aware first frames and door faces, padded once during atlas loading. */
 public final class UnifiedTextureSprites {
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST) public void stitch(TextureStitchEvent.Pre event) {
+        FrameEdgeTextures.clear();
         event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/screen_off"));
         event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/sequence_border_off"));
         for(String panel:com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.INPUT_PANELS)
@@ -23,7 +24,7 @@ public final class UnifiedTextureSprites {
             // Filesystem examples may be hidden but remain valid external choices.
             if(i<ScreenHousingTextures.BUILTIN_COUNT && !ScreenHousingTextures.visible(i))continue;
             com.google.gson.JsonObject e=ScreenHousingTextures.entry(i);
-            if(e!=null&&e.has("frameRail"))event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/"+e.get("frameRail").getAsString()));
+            if(e!=null&&e.has("frameRail"))FrameEdgeTextures.register(event.getMap(),"vandorlabs:blocks/"+e.get("frameRail").getAsString(),e.get("source").getAsString(),e.has("frameAspect")?e.get("frameAspect").getAsDouble():1);
             if(e!=null && e.has("top"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.texture(i),e.get("source").getAsString(),false,false));
             else if(e!=null && e.has("rectangular"))event.getMap().setTextureEntry(new Sprite(ScreenHousingTextures.fullTexture(i),e.get("source").getAsString(),e.has("crop"),e.has("file")));
             else event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i)));

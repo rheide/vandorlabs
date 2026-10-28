@@ -63,6 +63,7 @@ public final class FrameAppearance {
         if(tag.hasKey("PrimarySurfaceTexture",3))tag.setInteger("PrimarySurfaceTexture",bareChoice(primary));if(tag.hasKey("SecondarySurfaceTexture",3))tag.setInteger("SecondarySurfaceTexture",bareChoice(second));return true;
     }
     public void migrateLegacyFrame(){int choice=ScreenHousingTextures.screenIndex("frames/frames-screen-full/frame_bolted_1254");if(choice>0)front=choice;}
+    public static double aspect(int choice){com.google.gson.JsonObject e=choice<0?null:ScreenHousingTextures.entry(choice);return e!=null&&e.has("frameAspect")?Math.max(1,e.get("frameAspect").getAsDouble()):1;}
     public static boolean border(int choice){com.google.gson.JsonObject e=choice<0?null:ScreenHousingTextures.entry(choice);return e==null||!e.has("frameBorder")||e.get("frameBorder").getAsBoolean();}
     public String rail(String fallback){if(front<0)return fallback;com.google.gson.JsonObject e=ScreenHousingTextures.entry(front);return e!=null&&e.has("frameRail")?"vandorlabs:blocks/"+e.get("frameRail").getAsString():front(fallback);}
     public String front(String fallback){return front<0?fallback:ScreenHousingTextures.texture(front);}
