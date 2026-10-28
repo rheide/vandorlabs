@@ -12,7 +12,7 @@ final class GuiOptionCycleRuntimeChecks {
     static void check(Minecraft mc) {
         GuiScreen gui=mc.currentScreen;
         int[] ids;
-        if(gui instanceof GuiFrameAppearance)ids=new int[]{3,4,7,8};
+        if(gui!=null&&(find(gui,3003)!=null||find(gui,3008)!=null))ids=new int[]{3003,3004,3007,3008};
         else if(gui instanceof GuiProgrammableLight)ids=new int[]{101,102,103,104};
         else if(gui instanceof GuiWirelessRedstone)ids=new int[]{1,2};
         else if(gui instanceof GuiTokenSlot)ids=new int[]{1};

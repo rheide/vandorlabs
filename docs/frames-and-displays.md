@@ -2,7 +2,7 @@
 
 Programmable screens, Flatscreens, consoles, glass, walls, portholes and doors
 have a **Frame** page. Its material list contains the **Frame** category only.
-The same 58 finishes are available across these pages, including company
+The same 70 finishes are available across these pages, including company
 borders, plain and bolted screen borders, metallic window borders and interior
 materials.
 

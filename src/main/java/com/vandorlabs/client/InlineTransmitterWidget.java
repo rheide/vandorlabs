@@ -23,7 +23,7 @@ import java.util.*;
 public final class InlineTransmitterWidget {
     public static final int HEIGHT=44;
     private static final String CAPTION="Transmit channels (comma-separated)";
-    private static final java.lang.reflect.Field LEFT=ReflectionHelper.findField(GuiContainer.class,"guiLeft","field_147003_i"),TOP=ReflectionHelper.findField(GuiContainer.class,"guiTop","field_147009_r"),HEIGHT=ReflectionHelper.findField(GuiContainer.class,"ySize","field_147000_g"),BUTTONS=ReflectionHelper.findField(GuiScreen.class,"buttonList","field_146292_n");
+    private static final java.lang.reflect.Field LEFT=ReflectionHelper.findField(GuiContainer.class,"guiLeft","field_147003_i"),TOP=ReflectionHelper.findField(GuiContainer.class,"guiTop","field_147009_r"),GUI_HEIGHT=ReflectionHelper.findField(GuiContainer.class,"ySize","field_147000_g"),BUTTONS=ReflectionHelper.findField(GuiScreen.class,"buttonList","field_146292_n");
     private static final Map<GuiContainer,State> STATES=new WeakHashMap<>();
     private static final class Placement {final InlineTransmitters.ModuleSlot slot;final GuiButton anchor;final GuiTextField field;ItemStack before=ItemStack.EMPTY;boolean dirty,shown,pending;int x,y,width;
         Placement(GuiButton anchor,InlineTransmitters.ModuleSlot slot){this.anchor=anchor;this.slot=slot;field=new GuiTextField(1980,Minecraft.getMinecraft().fontRenderer,0,0,100,18);ChannelFields.configure(field);}}
@@ -37,7 +37,7 @@ public final class InlineTransmitterWidget {
         InlineTransmitters.attach(gui.inventorySlots,mc.player);InlineTransmitters.Binding binding=InlineTransmitters.binding(gui.inventorySlots);if(binding==null)return null;
         binding.hide();State state=STATES.computeIfAbsent(gui,g->new State());for(Placement p:state.buttons.values())p.shown=false;
         int selector=gui instanceof GuiRedstoneScreen?((GuiRedstoneScreen)gui).inlineTransmitterSelector():gui instanceof GuiCockpit?((GuiCockpit)gui).inlineTransmitterSelector():gui instanceof GuiAnimatedScreenSelector?((GuiAnimatedScreenSelector)gui).inlineTransmitterSelector():gui instanceof GuiProgrammableInput?((GuiProgrammableInput)gui).inlineTransmitterSelector():gui instanceof GuiProgrammableHalfConsole?((GuiProgrammableHalfConsole)gui).inlineTransmitterSelector():0;
-        int left=value(LEFT,gui),top=value(TOP,gui),height=value(HEIGHT,gui);boolean shown=false;
+        int left=value(LEFT,gui),top=value(TOP,gui),height=value(GUI_HEIGHT,gui);boolean shown=false;
         for(GuiButton button:buttons(gui)){
             if(!button.visible||!button.displayString.contains("Transmitter"))continue;InlineTransmitters.ModuleSlot slot=binding.modules.get(selector);if(slot==null)continue;
             Placement p=state.buttons.get(button);if(p==null||p.slot!=slot){if(p!=null)save(gui,p);p=new Placement(button,slot);state.buttons.put(button,p);}
