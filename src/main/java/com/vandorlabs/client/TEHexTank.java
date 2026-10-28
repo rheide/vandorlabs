@@ -56,11 +56,16 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
     static double[][] fluidOutline(boolean block,int amount){double[][] polygon=block?BLOCK:OUTLINE;double fraction=Math.max(0,Math.min(1,amount/(double)TileEntityHexTank.CAPACITY)),low=0,high=1,total=area(polygon);if(fraction==1)return polygon;for(int i=0;i<40;i++){double mid=(low+high)/2;if(area(below(polygon,mid))<total*fraction)low=mid;else high=mid;}return below(polygon,(low+high)/2);}
     @Override public void render(TileEntityHexTank tile,double x,double y,double z,float partial,int stage,float alpha){
         if(tile.getWorld()==null||tile.isInvalid()||!tile.getWorld().getBlockState(tile.getPos()).getProperties().containsKey(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING))return;
+        com.vandorlabs.render.ConnectedSquare.Part joined=HexTankGroups.part(tile);
+        if(joined.x!=0||joined.y!=0)return;
         GlStateManager.pushMatrix();
         try(TurntableRenderState state=new TurntableRenderState()){
             GlStateManager.translate(x,y,z);GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.color(1,1,1,1);bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
             EnumFacing facing=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING);
+            if(facing.getAxis()==EnumFacing.Axis.X)GlStateManager.scale(1,joined.size,joined.size);
+            else if(facing.getAxis()==EnumFacing.Axis.Z)GlStateManager.scale(joined.size,joined.size,1);
+            else GlStateManager.scale(joined.size,1,joined.size);
             TextureAtlasSprite casing=sprite(ScreenHousingTextures.texture(tile.getHousingTexture())),port=sprite("vandorlabs:blocks/matter/port"),liner=sprite("vandorlabs:blocks/matter/tank_empty");
             double[][] outline=tile.isBlockShape()?BLOCK:OUTLINE;
             Tessellator t=Tessellator.getInstance();BufferBuilder b=t.getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
@@ -73,7 +78,12 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
             }
             cap(outline,b,port,0xffffff,0,1,facing);cap(outline,b,port,0xffffff,1,1,facing);
             cap(outline,b,liner,0xffffff,FLOOR,INNER,facing);cap(outline,b,liner,0xffffff,CEILING,INNER,facing);t.draw();
-            FluidStack fluid=tile.tank.getFluid();
+            FluidStack fluid=null;int total=0;
+            for(int a=0;a<joined.size;a++)for(int c=0;c<joined.size;c++){
+                net.minecraft.tileentity.TileEntity raw=tile.getWorld().getTileEntity(tile.getPos().offset(HexTankGroups.right(facing.getAxis()),a).offset(HexTankGroups.up(facing.getAxis()),c));
+                if(raw instanceof TileEntityHexTank){FluidStack cell=((TileEntityHexTank)raw).tank.getFluid();if(cell!=null){if(fluid==null)fluid=cell.copy();if(fluid.isFluidEqual(cell))total+=cell.amount;}}
+            }
+            if(fluid!=null)fluid.amount=total/(joined.size*joined.size);
             GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
             if(fluid!=null&&fluid.amount>0){
                 TextureAtlasSprite contents=sprite(fluid.getFluid().getStill(fluid).toString());double top=fluidLevel(fluid.amount);int color=fluid.getFluid().getColor(fluid);

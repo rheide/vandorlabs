@@ -22,11 +22,22 @@ public final class TileEntityHexTank extends TileEntityAnimatedScreenSelector im
         if(world==null)return Collections.singletonList(this);
         EnumFacing axis=world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING);
         EnumFacing step=EnumFacing.getFacingFromAxis(EnumFacing.AxisDirection.POSITIVE,axis.getAxis());
-        List<TileEntityHexTank> result=new ArrayList<>();BlockPos bottom=pos;
-        for(int i=0;i<255&&same(bottom.offset(step.getOpposite()),axis);i++)bottom=bottom.offset(step.getOpposite());
-        for(BlockPos p=bottom;result.size()<256&&same(p,axis);p=p.offset(step))result.add((TileEntityHexTank)world.getTileEntity(p));
-        return result;
+        java.util.LinkedHashMap<BlockPos,TileEntityHexTank> result=new java.util.LinkedHashMap<>();
+        java.util.ArrayDeque<TileEntityHexTank> pending=new java.util.ArrayDeque<>();pending.add(this);
+        while(!pending.isEmpty()&&result.size()<256){
+            TileEntityHexTank cell=pending.removeFirst();if(result.putIfAbsent(cell.getPos(),cell)!=null)continue;
+            com.vandorlabs.render.ConnectedSquare.Part part=HexTankGroups.part(cell);BlockPos root=HexTankGroups.root(cell,part);
+            for(int x=0;x<part.size;x++)for(int y=0;y<part.size;y++){
+                BlockPos at=root.offset(HexTankGroups.right(axis.getAxis()),x).offset(HexTankGroups.up(axis.getAxis()),y);
+                if(!result.containsKey(at)&&same(at,axis))pending.add((TileEntityHexTank)world.getTileEntity(at));
+            }
+            for(EnumFacing direction:new EnumFacing[]{step,step.getOpposite()}){BlockPos at=cell.getPos().offset(direction);if(!result.containsKey(at)&&same(at,axis))pending.add((TileEntityHexTank)world.getTileEntity(at));}
+        }
+        java.util.ArrayList<TileEntityHexTank> ordered=new java.util.ArrayList<>(result.values());
+        ordered.sort(java.util.Comparator.comparingInt((TileEntityHexTank cell)->axis.getAxis()==EnumFacing.Axis.X?cell.getPos().getX():axis.getAxis()==EnumFacing.Axis.Y?cell.getPos().getY():cell.getPos().getZ()).thenComparingLong(cell->cell.getPos().toLong()));
+        return ordered;
     }
+    @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox(){return new net.minecraft.util.math.AxisAlignedBB(pos).grow(3);}
     private boolean same(BlockPos at,EnumFacing facing){return world.isBlockLoaded(at)&&world.getTileEntity(at) instanceof TileEntityHexTank&&world.getBlockState(at).getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING).getAxis()==facing.getAxis();}
     private EnumFacing.Axis portAxis(){return world==null?EnumFacing.Axis.Y:world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING).getAxis();}
     @Override public IFluidTankProperties[] getTankProperties(){

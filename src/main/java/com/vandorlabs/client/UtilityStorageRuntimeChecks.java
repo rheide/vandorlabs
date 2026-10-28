@@ -76,6 +76,24 @@ final class UtilityStorageRuntimeChecks {
                 com.vandorlabs.container.ContainerStorageStatus meter=new com.vandorlabs.container.ContainerStorageStatus(one);require(meter.values[0]==20000&&meter.values[1]==32000,"live combined fluid meter");
                 world.setBlockToAir(pos);world.setBlockToAir(pos.offset(face));
             }
+            for(EnumFacing face:EnumFacing.values())for(int size:new int[]{2,3}){
+                java.util.List<BlockPos> cells=new java.util.ArrayList<>();
+                try{
+                    for(int x=0;x<size;x++)for(int y=0;y<size;y++){
+                        BlockPos at=pos.offset(HexTankGroups.right(face.getAxis()),x).offset(HexTankGroups.up(face.getAxis()),y);cells.add(at);
+                        world.setBlockState(at,tank.getDefaultState().withProperty(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING,face),2);
+                    }
+                    TileEntityHexTank root=(TileEntityHexTank)world.getTileEntity(pos);
+                    for(BlockPos at:cells){TileEntityHexTank cell=(TileEntityHexTank)world.getTileEntity(at);require(HexTankGroups.part(cell).size==size,"complete joined tank section "+face+" "+size);require(HexTankGroups.root(cell,HexTankGroups.part(cell)).equals(pos),"same drawing root for every tank member");}
+                    int capacity=size*size*TileEntityHexTank.CAPACITY;
+                    require(root.fill(new FluidStack(FluidRegistry.WATER,capacity-123),false)==capacity-123&&root.tank.getFluidAmount()==0,"joined fill simulation preserves native owners");
+                    require(root.fill(new FluidStack(FluidRegistry.WATER,capacity-123),true)==capacity-123,"joined fill uses all cells");
+                    require(root.getTankProperties()[0].getCapacity()==capacity&&root.getTankProperties()[0].getContents().amount==capacity-123,"joined aggregate meter");
+                    BlockPos removed=cells.get(cells.size()-1);TileEntityHexTank nativeCell=(TileEntityHexTank)world.getTileEntity(removed);int removedFluid=nativeCell.tank.getFluidAmount();world.setBlockToAir(removed);
+                    int retained=0;for(BlockPos at:cells)if(world.getTileEntity(at) instanceof TileEntityHexTank)retained+=((TileEntityHexTank)world.getTileEntity(at)).tank.getFluidAmount();
+                    require(retained+removedFluid==capacity-123&&HexTankGroups.part(root).size==1,"mining splits incomplete section without duplicating fluid");
+                }finally{for(BlockPos at:cells)world.setBlockToAir(at);}
+            }
             System.out.println("[vandorlabs][reprolab] utility-storage PASS sided energy simulation transfer persistence pooled-fluid split no-mixing");
         }finally{world.setBlockToAir(pos);world.setBlockToAir(pos.up());world.setBlockToAir(pos.south());}
     }
