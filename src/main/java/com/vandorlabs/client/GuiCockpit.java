@@ -16,7 +16,8 @@ public final class GuiCockpit extends GuiMaterialPicker {
     private final List<GuiTextField> fields=new ArrayList<>();
     private HousingTextureList textures;
     private ReceiverPane receiverPane;
-    private boolean surfaceRedstone;
+    private boolean surfaceRedstone,surfaceControls;
+    private RedstoneRowsPane rowsPane;
     @Override protected HousingTextureList materialPicker(){return textures;}
     private int page;
     private boolean redstonePage;
@@ -30,7 +31,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
     private int pages(){return (seating()?1:0)+1+tile.displays.size()+tile.controls.size();}
     public GuiCockpit(ContainerCockpit container){super(container);cockpit=container;tile=container.tile;page=0;for(int category=0;category<5;category++){java.util.List<Integer> candidates=categoryPages(category);if(!candidates.isEmpty()){page=candidates.get(0);break;}}xSize=580;ySize=280;}
     @Override public void initGui(){
-        xSize=Math.min(580,width-12);ySize=Math.min(280,height-12);super.initGui();buttonList.clear();fields.clear();textures=null;receiverPane=null;org.lwjgl.input.Keyboard.enableRepeatEvents(true);
+        xSize=Math.min(580,width-12);ySize=Math.min(280,height-12);super.initGui();buttonList.clear();fields.clear();textures=null;receiverPane=null;rowsPane=null;org.lwjgl.input.Keyboard.enableRepeatEvents(true);
         String[] categories={"Screen","Touch","Throttle","Pilot","Casing","Redstone"};
         int tabX=guiLeft+12,selected=category();
         for(int i=0;i<6;i++){if(i!=5&&categoryPages(i).isEmpty())continue;int tabWidth=fontRenderer.getStringWidth(categories[i])+7;GuiButton tab=new DialogTabButton(200+i,tabX,guiTop+28,tabWidth,20,categories[i]);tabX+=tabWidth+2;tab.enabled=selected!=i;buttonList.add(tab);}
@@ -53,8 +54,9 @@ public final class GuiCockpit extends GuiMaterialPicker {
             buttonList.add(new CockpitButton(34,x,guiTop+ySize-26,110,20,"Default casing"));
         }else if(d<tile.displays.size()){
             TileEntityCockpit.Display screen=tile.displays.get(d);boolean input="touch".equals(screen.role);int controlW=Math.min(154,(xSize-30)/2),cx=guiLeft+xSize-controlW-12;
-            GuiButton displayTab=new DialogTabButton(400,x,guiTop+74,76,18,"Display"),receiveTab=new DialogTabButton(401,x+80,guiTop+74,84,18,"Redstone");displayTab.enabled=surfaceRedstone;receiveTab.enabled=!surfaceRedstone;buttonList.add(displayTab);buttonList.add(receiveTab);
-            if(surfaceRedstone){receiverPane=new ReceiverPane(40,32,fontRenderer,x,guiTop+104,Math.min(240,w),screen.receiveChannels(),screen.activation());buttonList.add(receiverPane.button());}
+            GuiButton displayTab=new DialogTabButton(400,x,guiTop+74,76,18,"Display"),receiveTab=new DialogTabButton(401,x+80,guiTop+74,84,18,"Redstone"),controlsTab=new DialogTabButton(402,x+168,guiTop+74,76,18,"Controls");displayTab.enabled=surfaceRedstone||surfaceControls;receiveTab.enabled=!surfaceRedstone;controlsTab.enabled=!surfaceControls;buttonList.add(displayTab);buttonList.add(receiveTab);buttonList.add(controlsTab);
+            if(surfaceControls){net.minecraft.nbt.NBTTagList values=new net.minecraft.nbt.NBTTagList();for(int row=0;row<screen.rows;row++)values.appendTag(tile.control(screen.id+"/"+row).write());final int display=d;rowsPane=new RedstoneRowsPane(fontRenderer,screen.maxRows(),false,values,row->false,rows->applyRows(display,rows));rowsPane.layout(x,guiTop+98,w,ySize-124,buttonList);}
+            else if(surfaceRedstone){receiverPane=new ReceiverPane(40,32,fontRenderer,x,guiTop+104,Math.min(240,w),screen.receiveChannels(),screen.activation());buttonList.add(receiverPane.button());}
             else{
                 textures=new HousingTextureList(x,guiTop+100,cx-x-10,screen.texture,Math.max(2,(ySize-134)/HousingTextureList.ROW_HEIGHT),null,
                         value->HousingTextureList.generalTexture(value)||ScreenTextureList.artwork(value,input)).visibleRows(Math.max(2,(ySize-134)/HousingTextureList.ROW_HEIGHT)).custom(this::choose)
@@ -75,10 +77,11 @@ public final class GuiCockpit extends GuiMaterialPicker {
     int inlineTransmitterSelector(){return 0;}
     private void text(int id,int x,int y,int width,String value){GuiTextField field=new GuiTextField(id,fontRenderer,x,y,width,18);field.setMaxStringLength(id==0?128:256);field.setText(value);fields.add(field);}
     private void packet(int op,NBTTagCompound values){com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCockpit(inventorySlots.windowId,op,values));}
-    private void redstone(){choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);mc.currentScreen=null;mc.displayGuiScreen(new GuiRedstoneScreen(this,cockpit,displayIndex()));}
+    private void redstone(){choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);surfaceControls=true;surfaceRedstone=false;initGui();}
+    private void applyRows(int display,net.minecraft.nbt.NBTTagList rows){if(!tile.configureRows(display,rows))return;NBTTagCompound tag=new NBTTagCompound();tag.setInteger("RedstoneDisplay",display);tag.setTag("Rows",rows);packet(0,tag);}
     private void choose(int value){if(sidePage())tile.setSideTexture(value);else tile.displays.get(displayIndex()).texture=value;save();}
     private void save(){
-        if(redstonePage)return;
+        if(rowsPane!=null){rowsPane.save();return;}if(redstonePage)return;
         int d=displayIndex(),c=controlIndex();NBTTagCompound tag;
         if(pilotPage()){if(fields.size()!=4)return;for(GuiTextField f:fields)if(ChannelList.parse(f.getText())==null){f.setTextColor(0xff7777);return;}tag=new NBTTagCompound();tag.setBoolean("Pilot",true);tag.setString("Channels",fields.get(0).getText());tag.setBoolean("Taxi",tile.isTaxiMode());tag.setInteger("Trigger",tile.getRedstoneMode());for(int i=0;i<3;i++)tag.setString("Mode"+i,fields.get(i+1).getText());
         }else if(sidePage()){
@@ -93,9 +96,10 @@ public final class GuiCockpit extends GuiMaterialPicker {
         for(GuiTextField f:fields)f.setTextColor(0xe0e0e0);packet(0,tag);
     }
     @Override protected void actionPerformed(GuiButton button){
-        if(button.id==400||button.id==401){save();surfaceRedstone=button.id==401;initGui();return;}
-        if(button.id>=200&&button.id<206){save();surfaceRedstone=false;int category=button.id-200;redstonePage=category==5;if(!redstonePage){java.util.List<Integer> children=categoryPages(category);if(!children.isEmpty())page=children.get(0);}initGui();return;}
-        if(button.id>=300&&button.id<400){save();surfaceRedstone=false;redstonePage=false;page=button.id-300;initGui();return;}
+        if(button.id>=400&&button.id<=402){save();surfaceRedstone=button.id==401;surfaceControls=button.id==402;initGui();return;}
+        if(button.id>=200&&button.id<206){save();surfaceRedstone=false;surfaceControls=false;int category=button.id-200;redstonePage=category==5;if(!redstonePage){java.util.List<Integer> children=categoryPages(category);if(!children.isEmpty())page=children.get(0);}initGui();return;}
+        if(button.id>=300&&button.id<400){save();surfaceRedstone=false;surfaceControls=false;redstonePage=false;page=button.id-300;initGui();return;}
+        if(rowsPane!=null&&rowsPane.action(button))return;
         if(button.id==90)return;
         if(button.id==2){save();mc.player.closeScreen();return;}
         if(button.id==0 || button.id==1){save();page=Math.floorMod(page+(button.id==0?-1:1)*GuiOptionCycle.direction(),pages());initGui();return;}
@@ -116,15 +120,15 @@ public final class GuiCockpit extends GuiMaterialPicker {
         else if(button.id==41){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Control",c);tag.setDouble("Column",tile.controls.get(c).nextColumn());packet(1,tag);return;}
         save();initGui();
     }
-    @Override protected void keyTyped(char ch,int key)throws IOException{boolean consumed=receiverPane!=null&&receiverPane.keyTyped(ch,key);for(GuiTextField f:fields)consumed|=f.textboxKeyTyped(ch,key);if(consumed)save();else super.keyTyped(ch,key);}
-    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,12,13,30,31,32,40,42,43))return;if(receiverPane!=null)receiverPane.mouseClicked(x,y,button);for(GuiTextField f:fields)if(f.getVisible())f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
-    @Override public void updateScreen(){if(receiverPane!=null)receiverPane.field().updateCursorCounter();for(GuiTextField f:fields)f.updateCursorCounter();}
+    @Override protected void keyTyped(char ch,int key)throws IOException{boolean consumed=rowsPane!=null&&rowsPane.keyTyped(ch,key)||receiverPane!=null&&receiverPane.keyTyped(ch,key);for(GuiTextField f:fields)consumed|=f.textboxKeyTyped(ch,key);if(consumed)save();else super.keyTyped(ch,key);}
+    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,12,13,30,31,32,40,42,43,604,605,606))return;if(rowsPane!=null)rowsPane.mouseClicked(x,y,button);if(receiverPane!=null)receiverPane.mouseClicked(x,y,button);for(GuiTextField f:fields)if(f.getVisible())f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
+    @Override public void updateScreen(){if(rowsPane!=null)rowsPane.update();if(receiverPane!=null)receiverPane.field().updateCursorCounter();for(GuiTextField f:fields)f.updateCursorCounter();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize,28);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);int d=displayIndex(),c=controlIndex();String title=redstonePage?"Cockpit":pilotPage()?"Pilot / vehicle modes":sidePage()?(tile.design().equals("cockpit")?"Casing and throttle layout":"Sidewalls and armrests"):d<tile.displays.size()?tile.displays.get(d).id:tile.controls.get(c).id;drawCenteredString(fontRenderer,fontRenderer.trimStringToWidth(title,xSize-128),guiLeft+xSize/2-10,guiTop+12,0xffffff);
         net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
-        if(textures!=null)textures.draw(fontRenderer,x,y);for(GuiTextField f:fields)f.drawTextBox();if(receiverPane!=null)receiverPane.draw();
+        if(textures!=null)textures.draw(fontRenderer,x,y);for(GuiTextField f:fields)f.drawTextBox();if(receiverPane!=null)receiverPane.draw();if(rowsPane!=null)rowsPane.draw();
         if(redstonePage){fontRenderer.drawString("Range for all cockpit controls",guiLeft+12,guiTop+80,0xffffff);fontRenderer.drawString("Target channels are edited on each control page.",guiLeft+12,guiTop+154,0xdae8f0);fontRenderer.drawString("Blank targets use this module's channel defaults.",guiLeft+12,guiTop+166,0xdae8f0);}
         else if(pilotPage()){fontRenderer.drawString("Trigger channels",guiLeft+12,guiTop+101,0xffffff);for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Block channels","Taxi channels","Hover channels"}[i],fields.get(i+1).x,fields.get(i+1).y-11,0xffffff);}
         else if(sidePage()){}
@@ -142,5 +146,6 @@ public final class GuiCockpit extends GuiMaterialPicker {
             drawCenteredString(mc.fontRenderer,mc.fontRenderer.trimStringToWidth(displayString,width-8),x+width/2,y+(height-8)/2,enabled?0xffffff:0x8b969d);
         }
     }
+    @Override public void handleMouseInput()throws IOException{super.handleMouseInput();if(rowsPane!=null)rowsPane.wheel(org.lwjgl.input.Mouse.getEventDWheel());}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

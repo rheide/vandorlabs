@@ -2,180 +2,44 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.container.ContainerAnimatedScreenSelector;
 import com.vandorlabs.network.*;
-import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.*;
 import com.vandorlabs.tiles.RedstoneScreenContents;
 import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
+import net.minecraft.nbt.*;
 import java.io.IOException;
 import java.util.*;
 
-/** A bounded row list, with one label/channel editor and the existing housing picker. */
-public final class GuiRedstoneScreen extends GuiContainer {
+/** Standalone block entry point; the row contents are shared with native host pages. */
+public final class GuiRedstoneScreen extends GuiMaterialPicker {
     private final RedstoneScreenContents tile;
-    private GuiCockpit cockpitParent;private com.vandorlabs.tiles.TileEntityCockpit cockpitTile;private int cockpitDisplay;
-    private int maxRows(){return tile==null?cockpitTile.displays.get(cockpitDisplay).maxRows():tile.maxRows();}
-    private final List<Boolean> sliders=new ArrayList<>();
-    private final List<Boolean> pulses=new ArrayList<>();
-    private final List<Integer> mins=new ArrayList<>(),maxs=new ArrayList<>();
-    private final List<String> labels=new ArrayList<>();
-    private final List<ChannelList> channels=new ArrayList<>();
-    private GuiTextField titleField,labelField,channelField;
-    private String title;
     private final boolean header;
-    private int rowListTop;
+    private RedstoneRowsPane rows;
     private HousingTextureList housing;
-    private int selected=-1,scroll,texture;
+    private GuiTextField titleField,labelField,channelField;
     private boolean materials;
-    public GuiRedstoneScreen(InventoryPlayer inventory,RedstoneScreenContents tile){
-        super(new ContainerAnimatedScreenSelector(inventory,tile.tile(),tile.slot()));this.tile=tile;header=!com.vandorlabs.blocks.RedstoneScreenInteractions.half(tile.getBlockType(),tile.slot());title=tile.title();texture=tile.getHousingTexture();
-        for(int i=0;i<Math.min(tile.rows().size(),tile.maxRows());i++){RedstoneScreenContents.Row row=tile.rows().get(i);labels.add(row.label);channels.add(row.channels);sliders.add(row.slider);pulses.add(row.pulse);mins.add(row.min);maxs.add(row.max);}
-        if(!labels.isEmpty())selected=0;
+    private String title;
+    private int texture;
+    public GuiRedstoneScreen(InventoryPlayer inventory,RedstoneScreenContents tile){super(new ContainerAnimatedScreenSelector(inventory,tile.tile(),tile.slot()));this.tile=tile;header=!com.vandorlabs.blocks.RedstoneScreenInteractions.half(tile.getBlockType(),tile.slot());title=tile.title();texture=tile.getHousingTexture();}
+    @Override protected HousingTextureList materialPicker(){return materials?housing:null;}
+    public void initGui(){xSize=Math.min(420,width-12);ySize=Math.min(300,height-12);super.initGui();buttonList.clear();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
+        titleField=new GuiTextField(2,fontRenderer,guiLeft+66,guiTop+52,xSize-82,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);titleField.setVisible(header&&!materials);
+        if(rows==null){NBTTagList list=tile.rowConfiguration();for(int i=0;i<list.tagCount();i++){NBTTagCompound row=list.getCompoundTagAt(i);row.setInteger("Kind",row.getBoolean("Pulse")?2:row.getBoolean("Slider")?1:0);}rows=new RedstoneRowsPane(fontRenderer,tile.maxRows(),true,list,index->index<tile.rows().size()&&!TransmitterSlots.get(tile.rows().get(index)).isEmpty(),this::applyRows);}
+        rows.layout(guiLeft+12,guiTop+(header?78:54),xSize-24,ySize-(header?78:54)-28,buttonList);labelField=rows.labelField();channelField=rows.channelField();
+        int[] legacy={2,3,5,6,7,8,9,90};for(GuiButton b:rows.buttons()){int action=b.id-RedstoneRowsPane.BASE;b.id=legacy[action];b.visible&=!materials;}
+        housing=new HousingTextureList(guiLeft+12,guiTop+54,xSize-24,texture).visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(value->{texture=value;});
+        GuiButton rowTab=new DialogTabButton(0,guiLeft+12,guiTop+28,76,20,"Rows"),sidesTab=new DialogTabButton(1,guiLeft+92,guiTop+28,90,20,"Sides");rowTab.enabled=materials;sidesTab.enabled=!materials;buttonList.add(rowTab);buttonList.add(sidesTab);buttonList.add(new GuiButton(4,guiLeft+xSize-96,guiTop+ySize-24,84,20,"Done"));
     }
-    public GuiRedstoneScreen(GuiCockpit parent,com.vandorlabs.container.ContainerCockpit container,int display){
-        super(container);tile=null;cockpitParent=parent;cockpitTile=container.tile;cockpitDisplay=display;header=false;title="";texture=cockpitTile.sideTexture();
-        com.vandorlabs.tiles.TileEntityCockpit.Display screen=cockpitTile.displays.get(display);
-        for(int i=0;i<screen.rows;i++){com.vandorlabs.tiles.TileEntityCockpit.Control row=cockpitTile.control(screen.id+"/"+i);labels.add(row.label);channels.add(row.channels);sliders.add(row.kind==1);pulses.add(row.kind==2);mins.add(row.min);maxs.add(row.max);}
-        if(!labels.isEmpty())selected=0;
-    }
-    public void initGui(){
-        if(labelField!=null)store();
-        xSize=Math.min(420,width-12);ySize=Math.min(300,height-12);super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        int cx=guiLeft+xSize-164;
-        rowListTop=header?82:54;
-        titleField=new GuiTextField(2,fontRenderer,guiLeft+78,guiTop+50,xSize-258,18);titleField.setMaxStringLength(RedstoneScreenContents.MAX_TITLE);titleField.setText(title);
-        labelField=new GuiTextField(0,fontRenderer,cx,guiTop+105,148,18);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
-        channelField=new GuiTextField(1,fontRenderer,cx,guiTop+138,148,18);ChannelFields.configure(channelField);
-        housing=new HousingTextureList(guiLeft+12,guiTop+54,xSize-188,texture).visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(value->{texture=value;});
-        buttonList.add(new DialogTabButton(0,guiLeft+12,guiTop+28,76,20,"Rows"));
-        buttonList.add(new DialogTabButton(1,guiLeft+92,guiTop+28,90,20,"Sides"));
-        buttonList.add(new GuiButton(2,cx,guiTop+54,70,18,"Add"));
-        buttonList.add(new GuiButton(3,cx+76,guiTop+54,72,18,"Remove"));
-        buttonList.add(new GuiButton(5,cx,guiTop+74,70,18,"Up"));
-        buttonList.add(new GuiButton(6,cx+76,guiTop+74,72,18,"Down"));
-        buttonList.add(new GuiButton(90,cx,guiTop+136,148,20,"Transmitter..."));
-        buttonList.add(new GuiButton(7,cx,guiTop+160,148,18,"Toggle"));
-        buttonList.add(new GuiButton(8,cx,guiTop+182,70,18,"Low: 5"));buttonList.add(new GuiButton(9,cx+76,guiTop+182,72,18,"High: 15"));
-        buttonList.add(new GuiButton(4,cx,guiTop+ySize-22,148,20,"Done"));load();refresh();
-    }
-    private boolean store(){
-        boolean headingValid=!header || RedstoneScreenContents.validTitle(titleField.getText()) && RedstoneScreenText.fits(fontRenderer,titleField.getText(),RedstoneScreenText.TITLE_WIDTH);
-        titleField.setTextColor(headingValid?0xE0E0E0:0xFF7777);
-        if(!headingValid)return false;
-        if(header)title=titleField.getText().trim();
-        if(selected<0)return true;
-        ChannelList list=ChannelFields.parse(channelField);boolean valid=RedstoneScreenContents.validLabel(labelField.getText()) && RedstoneScreenText.fits(fontRenderer,labelField.getText(),(sliders.get(selected)?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH)) && (!sliders.get(selected) || labelField.getText().length()<=RedstoneScreenContents.SLIDER_LABEL);
-        labelField.setTextColor(valid?0xE0E0E0:0xFF7777);
-        if(!valid || list==null)return false;
-        labels.set(selected,labelField.getText().trim());channels.set(selected,list);return true;
-    }
-    private void load(){labelField.setText(selected<0?"":labels.get(selected));channelField.setText(selected<0?"0":channels.get(selected).toString());}
-    private void refresh(){
-        for(GuiButton b:buttonList)if(b.id>=7 && b.id<=9){b.visible=!materials && selected>=0;if(selected>=0){b.enabled=b.id==7 || sliders.get(selected);b.displayString=b.id==7?(pulses.get(selected)?"Control: Pulse":sliders.get(selected)?"Control: Slider":"Control: Toggle"):b.id==8?"Low: "+mins.get(selected):"High: "+maxs.get(selected);}}
-
-        titleField.setVisible(header && !materials);
-        labelField.setVisible(!materials && selected>=0);channelField.setVisible(tile==null&&!materials&&selected>=0);for(GuiButton b:buttonList)if(b.id==90)b.visible=tile!=null&&!materials&&selected>=0;
-        for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}if(b.id==5 || b.id==6){b.visible=!materials;b.enabled=selected>=0 && (b.id==5?selected>0:selected<labels.size()-1);}}
-    }
-    void checkLayout(){
-        if(!materials && selected>=0){
-            Map<Integer,GuiButton> controls=new HashMap<>();for(GuiButton b:buttonList)controls.put(b.id,b);
-            if(!(controls.get(2).y<controls.get(5).y && controls.get(5).y+controls.get(5).height<labelField.y && labelField.y+labelField.height<channelField.y && channelField.y+channelField.height<controls.get(7).y && controls.get(7).y+controls.get(7).height<controls.get(8).y))throw new IllegalStateException("Redstone row editor order differs");
-            if(!controls.get(8).displayString.startsWith("Low:") || !controls.get(9).displayString.startsWith("High:"))throw new IllegalStateException("Redstone row limit labels differ");
-        }
-        for(GuiButton a:buttonList)if(a.visible){
-            if(a.x<0 || a.y<0 || a.x+a.width>width || a.y+a.height>height)throw new IllegalStateException("Row button outside viewport: "+a.id);
-            for(GuiButton b:buttonList)if(b.visible && a.id<b.id && a.x<b.x+b.width && a.x+a.width>b.x && a.y<b.y+b.height && a.y+a.height>b.y)throw new IllegalStateException("Row buttons overlap: "+a.id+"/"+b.id);
-        }
-    }
-    private void send(){if(!store())return;texture=housing.selected();if(tile==null){
-        net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tag.setInteger("RedstoneDisplay",cockpitDisplay);tag.setInteger("SideTexture",texture);net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();
-        for(int i=0;i<labels.size();i++){net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();row.setString("Label",labels.get(i));com.vandorlabs.redstone.ChannelData.write(row,channels.get(i));row.setInteger("Kind",pulses.get(i)?2:sliders.get(i)?1:0);row.setInteger("Min",mins.get(i));row.setInteger("Max",maxs.get(i));rows.appendTag(row);}tag.setTag("Rows",rows);cockpitTile.configureRows(cockpitDisplay,rows);cockpitTile.setSideTexture(texture);
-        PacketHandler.INSTANCE.sendToServer(new MessageCockpit(inventorySlots.windowId,0,tag));mc.currentScreen=null;mc.displayGuiScreen(cockpitParent);return;
-    }PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs).withPulses(pulses));mc.player.closeScreen();}
-    protected void actionPerformed(GuiButton b){
-        if(b.id==90&&selected>=0){if(!store())return;if(tile==null){int control=cockpitTile.controls.indexOf(cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+selected));PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(cockpitTile.getPos(),100+control));}else{PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs).withPulses(pulses));PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),1+tile.slot()*8+selected));}return;}
-
-        if(b.id==3&&selected>=0){for(int i=selected;i<labels.size();i++)if(installed(i))return;}
-        if((b.id==5||b.id==6)&&selected>=0){int target=selected+(b.id==5?-1:1);if(installed(selected)||target>=0&&target<labels.size()&&installed(target))return;}
-        if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);sliders.remove(selected);pulses.remove(selected);mins.remove(selected);maxs.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
-        if(b.id==7 && selected>=0){
-            if(!store())return;int type=GuiOptionCycle.next(pulses.get(selected)?2:sliders.get(selected)?1:0,3);sliders.set(selected,type==1);pulses.set(selected,type==2);
-            if(sliders.get(selected)){String value=labels.get(selected);while(value.length()>RedstoneScreenContents.SLIDER_LABEL || fontRenderer.getStringWidth(value)>RedstoneScreenContents.SLIDER_LABEL_WIDTH)value=value.substring(0,value.length()-1);labels.set(selected,value);}
-            load();refresh();return;
-        }
-        if(b.id==8 && selected>=0){mins.set(selected,GuiOptionCycle.next(mins.get(selected),1,maxs.get(selected)-2));refresh();return;}
-        if(b.id==9 && selected>=0){maxs.set(selected,GuiOptionCycle.next(maxs.get(selected),mins.get(selected)+2,15));refresh();return;}
-        if(!store())return;
-        if(b.id<2){materials=b.id==1;titleField.setFocused(false);labelField.setFocused(false);channelField.setFocused(false);refresh();}
-        else if(b.id==2 && labels.size()<maxRows()){labels.add("Item "+(labels.size()+1));channels.add(ChannelList.EMPTY);sliders.add(false);pulses.add(false);mins.add(5);maxs.add(15);selected=labels.size()-1;scroll=Math.max(0,selected-visibleRows()+1);load();refresh();labelField.setFocused(true);}
-        else if(b.id==5 || b.id==6){
-            int next=moveRow(labels,channels,selected,b.id==5?-1:1);
-            if(next!=selected){Collections.swap(sliders,selected,next);Collections.swap(pulses,selected,next);Collections.swap(mins,selected,next);Collections.swap(maxs,selected,next);}
-            if(next!=selected){
-                selected=next;scroll=Math.max(Math.min(scroll,selected),selected-visibleRows()+1);
-                load();refresh();
-            }
-        }
-        else if(b.id==4)send();
-    }
-    static int moveRow(List<String> labels,List<ChannelList> channels,int selected,int delta){
-        int next=selected+delta;
-        if(labels.size()!=channels.size() || selected<0 || selected>=labels.size()
-                || Math.abs(delta)!=1 || next<0 || next>=labels.size())return selected;
-        Collections.swap(labels,selected,next);Collections.swap(channels,selected,next);return next;
-    }
-    int inlineTransmitterSelector(){if(selected<0)return -1;if(tile!=null)return 1+tile.slot()*8+selected;return 100+cockpitTile.controls.indexOf(cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+selected));}
-    private boolean installed(int row){if(tile==null)return false;return row<tile.rows().size()&&!com.vandorlabs.redstone.TransmitterSlots.get(tile.rows().get(row)).isEmpty();}
-    private int visibleRows(){return Math.max(1,(ySize-rowListTop-12)/20);}
-    protected void mouseClicked(int x,int y,int button)throws IOException{
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,7,8,9))return;
-        super.mouseClicked(x,y,button);
-        if(materials){if(housing.click(x,y,button))texture=housing.selected();return;}
-        titleField.mouseClicked(x,y,button);labelField.mouseClicked(x,y,button);
-        if(x>=guiLeft+12 && x<guiLeft+xSize-180 && y>=guiTop+rowListTop && y<guiTop+rowListTop+visibleRows()*20){
-            int next=scroll+(y-guiTop-rowListTop)/20;if(next<labels.size() && store()){selected=next;load();refresh();}
-        }
-    }
-    protected void mouseReleased(int x,int y,int button){housing.release();super.mouseReleased(x,y,button);}
-    protected void mouseClickMove(int x,int y,int button,long elapsed){if(materials && housing.drag(y))return;super.mouseClickMove(x,y,button,elapsed);}
-    public void handleMouseInput()throws IOException{super.handleMouseInput();int wheel=Mouse.getEventDWheel();if(wheel!=0){
-        if(materials)housing.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);else scroll=Math.max(0,Math.min(Math.max(0,labels.size()-visibleRows()),scroll+(wheel>0?-1:1)));
-    }}
-    protected void keyTyped(char c,int key)throws IOException{
-        if(key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER){send();return;}
-        if(!materials && (typeText(titleField,RedstoneScreenText.TITLE_WIDTH,c,key)||typeText(labelField,selected>=0 && sliders.get(selected)?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH,c,key))){store();return;}super.keyTyped(c,key);
-    }
-    private boolean typeText(GuiTextField field,int budget,char c,int key){
-        String before=field.getText();int cursor=field.getCursorPosition(),selection=field.getSelectionEnd();
-        if(!field.textboxKeyTyped(c,key))return false;
-        // Reject an overflowing insertion or paste intact; keep deletion available
-        // when editing an oversized label from an older saved screen.
-        if(!RedstoneScreenText.fits(fontRenderer,field.getText(),budget) && fontRenderer.getStringWidth(field.getText())>fontRenderer.getStringWidth(before)){
-            field.setText(before);field.setCursorPosition(cursor);field.setSelectionPos(selection);
-        }
-        return true;
-    }
-    public void updateScreen(){super.updateScreen();titleField.updateCursorCounter();labelField.updateCursorCounter();channelField.updateCursorCounter();}
-    public void onGuiClosed(){super.onGuiClosed();Keyboard.enableRepeatEvents(false);}
-    protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);DialogHeader.logo(guiLeft,guiTop,xSize);}
-    public void drawScreen(int x,int y,float partial){
-        drawDefaultBackground();super.drawScreen(x,y,partial);
-        net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();
-        net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
-        fontRenderer.drawString(tile==null?"Cockpit redstone controls":net.minecraft.client.resources.I18n.format(tile.getBlockType().getUnlocalizedName()+".name"),guiLeft+12,guiTop+10,0xFFFFFF);
-        if(materials){housing.draw(fontRenderer,x,y);net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();return;}
-        for(int i=0;i<visibleRows() && scroll+i<labels.size();i++){
-            int row=scroll+i,yy=guiTop+rowListTop+i*20;drawRect(guiLeft+12,yy,guiLeft+xSize-180,yy+18,row==selected?0xFF365C70:0xFF22313E);
-            fontRenderer.drawString(fontRenderer.trimStringToWidth(labels.get(row),xSize-204),guiLeft+18,yy+5,0xE0ECF5);
-        }
-        int cx=guiLeft+xSize-164;
-        if(header){fontRenderer.drawString("Header",guiLeft+12,guiTop+55,0xDAE8F0);titleField.drawTextBox();drawRect(guiLeft+12,guiTop+76,guiLeft+xSize-180,guiTop+77,0xFF365366);}
-        fontRenderer.drawString(fontRenderer.trimStringToWidth("Text is limited to screen width.",xSize-192),guiLeft+12,guiTop+ySize-14,0xADBECA);
-        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+94,0xDAE8F0);fontRenderer.drawString(tile==null?"Targets (0 = defaults)":"Transmitter",cx,guiTop+127,0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
-        else fontRenderer.drawSplitString("Add an item to create a control.",cx,guiTop+105,148,0xADBECA);
-        net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();
-    }
+    private void applyRows(NBTTagList values){List<String> labels=new ArrayList<>();List<ChannelList> channels=new ArrayList<>();List<Boolean> sliders=new ArrayList<>(),pulses=new ArrayList<>();List<Integer> mins=new ArrayList<>(),maxs=new ArrayList<>();for(int i=0;i<values.tagCount();i++){NBTTagCompound row=values.getCompoundTagAt(i);labels.add(row.getString("Label"));channels.add(ChannelData.read(row,0));sliders.add(row.getInteger("Kind")==1);pulses.add(row.getInteger("Kind")==2);mins.add(row.getInteger("Min"));maxs.add(row.getInteger("Max"));}PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs).withPulses(pulses));}
+    protected void actionPerformed(GuiButton button){if(button.id==0||button.id==1){rows.save();materials=button.id==1;initGui();return;}if(button.id==4){if(header){if(!RedstoneScreenContents.validTitle(titleField.getText())||!RedstoneScreenText.fits(fontRenderer,titleField.getText(),RedstoneScreenText.TITLE_WIDTH))return;title=titleField.getText();}if(!rows.save())return;mc.player.closeScreen();return;}if(!materials){for(GuiButton candidate:rows.buttons())if(candidate.id==button.id){rows.action(candidate);break;}}}
+    int inlineTransmitterSelector(){return rows.selected()<0?-1:1+tile.slot()*8+rows.selected();}
+    protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,7,8,9))return;super.mouseClicked(x,y,button);titleField.mouseClicked(x,y,button);if(materials){if(housing.click(x,y,button))texture=housing.selected();}else rows.mouseClicked(x,y,button);}
+    protected void keyTyped(char ch,int key)throws IOException{if(titleField.getVisible()&&titleField.textboxKeyTyped(ch,key)){title=titleField.getText();return;}if(!materials&&rows.keyTyped(ch,key))return;super.keyTyped(ch,key);}
+    public void updateScreen(){super.updateScreen();titleField.updateCursorCounter();rows.update();}
+    public void handleMouseInput()throws IOException{super.handleMouseInput();if(!materials)rows.wheel(org.lwjgl.input.Mouse.getEventDWheel());}
+    public void onGuiClosed(){super.onGuiClosed();org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
+    protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);DialogHeader.logo(guiLeft,guiTop,xSize);}
+    public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();if(materials)housing.draw(fontRenderer,x,y);else{if(header){fontRenderer.drawString("Header",guiLeft+12,guiTop+57,0xdae8f0);titleField.drawTextBox();}rows.draw();}net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();}
+    void checkLayout(){for(GuiButton a:buttonList)if(a.visible){if(a.x<0||a.y<0||a.x+a.width>width||a.y+a.height>height)throw new IllegalStateException("Row button outside viewport: "+a.id);for(GuiButton b:buttonList)if(b.visible&&a.id<b.id&&a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y)throw new IllegalStateException("Row buttons overlap: "+a.id+"/"+b.id);}}
+    static int moveRow(List<String> labels,List<ChannelList> channels,int selected,int delta){int next=selected+delta;if(labels.size()!=channels.size()||selected<0||selected>=labels.size()||Math.abs(delta)!=1||next<0||next>=labels.size())return selected;Collections.swap(labels,selected,next);Collections.swap(channels,selected,next);return next;}
 }
