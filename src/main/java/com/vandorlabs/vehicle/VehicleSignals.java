@@ -73,7 +73,7 @@ public final class VehicleSignals {
                 IBlockState state=craft.view.getBlockState(pos);boolean extend=gear.getMode()==1?level>0:level==0;
                 if(state.getValue(BlockTelescopicLandingGear.EXTENDED)!=extend)VehicleLandingGear.setExtended(craft,pos,extend);
             }}
-            else if(tile instanceof TileEntityRampController){VehicleRamps.signal(craft,pos,level>0);}
+            else if(tile instanceof TileEntityRampController){VehicleRamps.signal(craft,pos,level);}
             else if(VehicleDoors.supports(tile.getBlockType())){
                 int mode=tile instanceof TileEntitySpaceDoor?((TileEntitySpaceDoor)tile).getTrigger():tile instanceof TileEntityProgrammableTrapdoor?((TileEntityProgrammableTrapdoor)tile).getTrigger():1;
                 if(tile instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)tile).securityMode()>0){VehicleDoors.securitySet(craft,pos,((TileEntitySpaceDoor)tile).securityOpen());return;}

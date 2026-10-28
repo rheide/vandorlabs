@@ -374,7 +374,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         clearCanopyCommand();requestingDeploy=deploy;
         if (recoveryPending && !recover(false)) return false;
         if (!attached()) {
-            if (!deploy && startHalfSteps==0) { open=false; moving=false; error=false; status="Retracted"; sync(); return true; }
+            if (!deploy && startHalfSteps==0) { targetPose=requestedPose;open=false; moving=false; error=false; status="Retracted"; sync(); return true; }
             if (!capture()) return false;
         }
         String problem=validateParts();
@@ -539,7 +539,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
 
     /** Build an endpoint in an isolated VehicleWorld; no placed blocks are written. */
-    public java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> vehicleEndpoint(boolean deploy){
+    public java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> vehicleEndpoint(boolean deploy){return vehicleEndpoint(deploy?1D:0D);}
+    public java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> vehicleEndpoint(double deployment){
+        if(!Double.isFinite(deployment)||deployment<0||deployment>1)throw new IllegalArgumentException("Invalid carried ramp deployment");
+        boolean deploy=deployment>0;
         if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))throw new IllegalStateException("Vehicle endpoint requires an isolated world");
         if(escalator!=0)throw new IllegalArgumentException("Escalator geometry remains frozen in vehicle mode");
         if(usesNativeMoatGeometry())moatGeometryRevision=2;
@@ -559,8 +562,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if(box.minX!=0||box.maxX!=1||box.minZ!=0||box.maxZ!=1)throw new IllegalArgumentException("Ramp platform must use full-width slabs or cubes");
             verticalMoatSources=moat;moatGeometryRevision=2;original=material;low=box.minY;high=box.maxY;length=moat?sources.stream().mapToInt(BlockPos::getY).max().getAsInt()-sourceBaseY()+1:max-min+1;minAlong=min;
         }
-        open=deploy;moving=false;targetPose=deploy?1:0;startPose=targetPose;startTick=world.getTotalWorldTime();
-        latched=deploy;signalKnown=true;error=false;recoveryPending=false;status=deploy?"Deployed":"Retracted";vehicleFrozen=true;
+        open=deploy;moving=false;targetPose=deployment;startPose=targetPose;startTick=world.getTotalWorldTime();
+        latched=deploy;signalKnown=true;error=false;recoveryPending=false;status=deployment>0&&deployment<1?"Deployment: "+Math.round(deployment*100)+"%":deploy?"Deployed":"Retracted";vehicleFrozen=true;
         cells.clear();cells.addAll(occupied(startPose,startPose));
         java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> result=new java.util.ArrayList<>();
         for(BlockPos p:cells){TileEntityControlledRamp part=new TileEntityControlledRamp();part.setWorld(world);part.setPos(p);configurePart(part,p);part.vehicleFrozen=true;
@@ -1207,7 +1210,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         NBTTagList blockers=new NBTTagList();for(BlockPos blocker:canopyBlockers)blockers.appendTag(writePosition(blocker));tag.setTag("RampCanopyBlockers",blockers);
         tag.setLong(com.vandorlabs.ramp.RampCopyData.ORIGIN,pos.toLong());
         if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
-        tag.setBoolean("RampAnalogDeployment",analogDeployment);tag.setDouble("RampTargetPose",targetPose);
+        if(analogDeployment){tag.setBoolean("RampAnalogDeployment",true);tag.setDouble("RampTargetPose",targetPose);}else {tag.removeTag("RampAnalogDeployment");tag.removeTag("RampTargetPose");}
         super.writeToNBT(tag);tag.setInteger("MoatGeometryRevision",moatGeometryRevision);tag.setBoolean("MoatVerticalSources",verticalMoatSources);tag.setBoolean("MoatMode",moat);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setDouble("EscalatorDistance",beltDistance);
         tag.setBoolean("EscalatorRequested",beltRequested);

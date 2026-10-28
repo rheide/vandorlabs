@@ -19,19 +19,24 @@ public final class VehicleRamps {
         List<BlockPos> selected=new ArrayList<>();for(TileEntity tile:craft.view.tiles.values())if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;if(ramp.attached()&&ramp.usesNativeMoatGeometry()&&ramp.moatGeometryRevision()==1)selected.add(tile.getPos().subtract(craft.structure.seat));}
         for(BlockPos relative:selected){BlockPos at=relative.add(craft.structure.seat);TileEntity tile=craft.view.getTileEntity(at);if(tile instanceof TileEntityRampController){TileEntityRampController ramp=(TileEntityRampController)tile;if(ramp.moatGeometryRevision()==1)signal(craft,at,ramp.isOpen()==ramp.activateOnPower);}}
     }
-    public static boolean signal(EntityGroundVehicle craft,BlockPos at,boolean powered){
+    public static boolean signal(EntityGroundVehicle craft,BlockPos at,boolean powered){return signal(craft,at,powered?15:0);}
+    public static boolean signal(EntityGroundVehicle craft,BlockPos at,int level){
+        if(level<0||level>15)throw new IllegalArgumentException("Invalid carried ramp signal level");
         TileEntity raw=craft.view.getTileEntity(at);if(!(raw instanceof TileEntityRampController))return false;
         craft.signals.persist();
         NBTTagCompound old=raw.writeToNBT(new NBTTagCompound());
-        boolean deploy=powered==old.getBoolean("ActivateOnPower");
+        level=Math.max(level,com.vandorlabs.redstone.LoadedRedstonePower.level(craft.view,at));
+        boolean powered=level>0;boolean analog=old.getBoolean("RampAnalogDeployment");
+        double deployment=analog?(old.getBoolean("ActivateOnPower")?level:15-level)/15D:(powered==old.getBoolean("ActivateOnPower")?1D:0D);
+        boolean deploy=deployment>0;
         boolean upgrade=old.getBoolean("MoatMode")&&old.getBoolean("MoatVerticalSources")&&old.getInteger("MoatGeometryRevision")==1;
-        if(old.getBoolean("SignalKnown")&&old.getBoolean("Latched")==deploy&&!upgrade)return false;
+        if(old.getBoolean("SignalKnown")&&(analog?Math.abs(old.getDouble("RampTargetPose")-deployment)<1e-8:old.getBoolean("Latched")==deploy)&&!upgrade)return false;
         try{
             // The clone can discover an unexpanded platform and assemble new cells,
             // while the authoritative world and live control subscriptions remain untouched.
             VehicleWorld staging=new VehicleWorld(craft.world,craft.structure);
             TileEntityRampController ramp=(TileEntityRampController)staging.getTileEntity(at);
-            List<VehicleStructure.Cell> parts=ramp.vehicleEndpoint(deploy);
+            List<VehicleStructure.Cell> parts=ramp.vehicleEndpoint(deployment);
             Set<BlockPos> removed=new HashSet<>(ramp.vehicleSources());
             for(VehicleStructure.Cell cell:craft.structure.cells){TileEntity tile=staging.getTileEntity(cell.pos);
                 if(tile instanceof TileEntityControlledRamp&&((TileEntityControlledRamp)tile).controller.equals(at))removed.add(cell.pos);}

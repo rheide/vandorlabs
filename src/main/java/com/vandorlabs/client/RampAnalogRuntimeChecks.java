@@ -52,11 +52,28 @@ final class RampAnalogRuntimeChecks {
             ControllerRuntimeChecks.reload(controller);require(controller.analogDeployment&&Math.abs(controller.pose(0)-4/15D)<1e-8,"reload preserves intermediate pose");
             source.level(15);ControllerRuntimeChecks.elapsed(controller,controller.durationTicks()+1);require(controller.pose(0)==1,"level 15 fully deploys");
             source.level(0);ControllerRuntimeChecks.elapsed(controller,controller.durationTicks()+1);require(!controller.attached()&&world.getBlockState(root.south()).getBlock()==Blocks.STONE,"zero signal restores native source ownership");
+            java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> carriedCells=new java.util.ArrayList<>();
+            for(BlockPos at:java.util.Arrays.asList(root,root.south(),root.south(2),root.south(3))){TileEntity tile=world.getTileEntity(at);NBTTagCompound data=tile==null?null:com.vandorlabs.vehicle.VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),new BlockPos(-root.getX(),-root.getY(),-root.getZ()));if(tile instanceof TileEntityRampController)data=com.vandorlabs.vehicle.VehicleEscalators.paused(data);carriedCells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(at.subtract(root),world.getBlockState(at),data));}
+            carriedCells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(new BlockPos(2,0,0),ModBlocks.PILOT_SEAT.getDefaultState(),null));
+            controller.setRedstoneChannels(ChannelList.EMPTY);
+            com.vandorlabs.vehicle.EntityGroundVehicle craft=new com.vandorlabs.vehicle.EntityGroundVehicle(world);
+            try{
+                craft.install(new com.vandorlabs.vehicle.VehicleStructure(carriedCells,new BlockPos(2,0,0),EnumFacing.NORTH,3));craft.setPosition(root.getX()+32,root.getY()+16,root.getZ());craft.view.origin=new BlockPos(craft);
+                for(BlockPos at:BlockPos.getAllInBox(new BlockPos(craft).add(-2,-4,-2),new BlockPos(craft).add(6,4,6)))world.getChunkFromBlockCoords(at);
+                craft.signals.open();BlockPos relative=new BlockPos(-2,0,0);
+                for(int level:new int[]{8,12,4,15,0}){
+                    source.level(level);craft.signals.tick();TileEntityRampController carried=(TileEntityRampController)craft.view.getTileEntity(craft.structure.seat.add(relative));
+                    require(Math.abs(carried.pose(0)-level/15D)<1e-8,"carried analog level "+level+" became "+carried.pose(0));
+                    for(TileEntity tile:craft.view.tiles.values())if(tile instanceof TileEntityControlledRamp)require(Math.abs(((TileEntityControlledRamp)tile).pose(0)-carried.pose(0))<1e-8,"carried generated cell lost analog pose");
+                    for(int turn=0;turn<4;turn++){com.vandorlabs.vehicle.VehicleStructure turned=com.vandorlabs.vehicle.VehicleRotation.rotate(craft.structure,craft.view,turn);com.vandorlabs.vehicle.VehicleWorld view=new com.vandorlabs.vehicle.VehicleWorld(world,turned);for(com.vandorlabs.vehicle.VehicleStructure.Cell cell:turned.cells)com.vandorlabs.vehicle.MovingBlockSupport.requireExactTileData(cell,view.getTileEntity(cell.pos));}
+                }
+            }finally{craft.signals.close();craft.setDead();}
+
         }finally{
             RedstoneChannels.unregister(source);if(controller!=null)controller.recover(true);
             for(BlockPos at:BlockPos.getAllInBox(root.add(-5,-2,-2),root.add(5,6,6)))world.setBlockToAir(at);
             actor.setPosition(x,y,z);
         }
-        System.out.println("[vandorlabs][reprolab] ramp-analog PASS levels-0-4-8-12-15 same-on-retarget reversal persisted-target generated-cell-parity reload stationary-door-support moving-support-refused native-recovery");
+        System.out.println("[vandorlabs][reprolab] ramp-analog PASS levels-0-4-8-12-15 same-on-retarget reversal persisted-target generated-cell-parity reload stationary-door-support moving-support-refused native-recovery carried-analog-retarget four-rotation-exact-NBT");
     }
 }
