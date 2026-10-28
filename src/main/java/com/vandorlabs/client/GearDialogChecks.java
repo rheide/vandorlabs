@@ -30,6 +30,8 @@ public final class GearDialogChecks {
             require(done&&(track?!rotation:rotation),"separate Track appearance and arm motion controls");if(track){require(buttons.size()==2,"Track shows only style and Done");require(((com.vandorlabs.gear.track.TrackTile)tile).error().isEmpty(),"standalone mounted Track has no generic arm assembly error");}else for(Field field:fields){GuiTextField text=(GuiTextField)field.get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);}
             if(!track){
                 GuiModularGear armGui=(GuiModularGear)gui;
+                require(gui.getYSize()==218,"Mechanism uses compact panel height");
+                for(int id:new int[]{1,2,7}){GuiButton row=buttons.stream().filter(b->b.id==id).findFirst().get();require(row.y-gui.getGuiTop()==56+26*(id==1?0:id==2?1:2),"Mechanism rows fill the space immediately below tabs");}
                 GuiButton join=buttons.stream().filter(b->b.id==9).findFirst().get(),load=buttons.stream().filter(b->b.id==11).findFirst().get();
                 require(join.visible&&load.visible&&!((GuiTextField)fields[0].get(gui)).getVisible(),"mechanism page separates receiver channels from arm geometry");
                 if(join.enabled){
