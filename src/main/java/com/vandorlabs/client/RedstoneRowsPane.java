@@ -26,7 +26,7 @@ public final class RedstoneRowsPane {
         for(int i=0;i<4;i++)buttons.add(new GuiButton(BASE+i,right+i*w/4,y,w/4-2,18,new String[]{"Add","Del","Up","Down"}[i]));
         label=new GuiTextField(BASE,font,right+32,y+22,w-32,18);label.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
         channels=new GuiTextField(BASE+1,font,right+42,y+44,w-42,18);ChannelFields.configure(channels);
-        if(modules)buttons.add(new GuiButton(BASE+7,right,y+44,w,20,"Transmitter..."));
+        if(modules)buttons.add(new GuiButton(BASE+7,right,y+40,w,20,"Transmitter..."));
         int kindY=y+(modules?88:66);
         buttons.add(new GuiButton(BASE+4,right,kindY,w,18,""));buttons.add(new GuiButton(BASE+5,right,kindY+20,w/2-2,18,""));buttons.add(new GuiButton(BASE+6,right+w/2+2,kindY+20,w/2-2,18,""));
         for(GuiButton button:buttons)actions.put(button,button.id-BASE);host.addAll(buttons);load();refresh();
