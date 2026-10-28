@@ -22,6 +22,8 @@ public final class VehicleWorld extends World {
     public net.minecraft.util.math.Vec3d propulsionMotion=net.minecraft.util.math.Vec3d.ZERO;
     public boolean hover;
     public int tileRevision;
+    private final VehicleLight localLight=new VehicleLight(this);
+    public Map<BlockPos,Integer> lightSources(){return localLight.sources();}
     public java.util.function.Consumer<BlockPos> controlUpdates;
     public static boolean isMovingControl(net.minecraft.block.Block block) {
         return block instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)block).hasSelectableType();
@@ -57,7 +59,7 @@ public final class VehicleWorld extends World {
         this.parent=parent; this.structure=structure; structure.componentView(this); this.chunkProvider=createChunkProvider();
         for(VehicleStructure.Cell cell:structure.cells) if(cell.hasTileData()) {
             try {
-                TileEntity tile=BuildingBlockCompat.createTile(cell,null,cell.tileData());
+                TileEntity tile=localTile(cell);
                 if(tile!=null){tile.setWorld(this); tiles.put(cell.pos,tile);}
             }catch(RuntimeException | LinkageError error) {
                 // The immutable snapshot remains authoritative even if a mod cannot run in this view.
@@ -66,8 +68,38 @@ public final class VehicleWorld extends World {
         }
         prepareForeignVisuals();
     }
+    /** Snapshot signs display saved JSON without re-evaluating server commands. */
+    private TileEntity localTile(VehicleStructure.Cell cell){
+        final net.minecraft.nbt.NBTTagCompound saved=cell.tileData();
+        if(cell.state.getBlock() instanceof net.minecraft.block.BlockSign&&"minecraft:sign".equals(saved.getString("id"))){
+            final net.minecraft.util.text.ITextComponent[] original=new net.minecraft.util.text.ITextComponent[4];
+            net.minecraft.tileentity.TileEntitySign sign=new net.minecraft.tileentity.TileEntitySign(){
+                private final net.minecraft.nbt.NBTTagCompound custom=saved.getCompoundTag("ForgeData").copy();
+                @Override public net.minecraft.nbt.NBTTagCompound getTileData(){return custom;}
+                @Override public net.minecraft.nbt.NBTTagCompound writeToNBT(net.minecraft.nbt.NBTTagCompound output){
+                    output.setString("id",saved.getString("id"));output.setInteger("x",getPos().getX());output.setInteger("y",getPos().getY());output.setInteger("z",getPos().getZ());
+                    for(int i=0;i<4;i++)output.setString("Text"+(i+1),java.util.Objects.equals(signText[i],original[i])?saved.getString("Text"+(i+1)):net.minecraft.util.text.ITextComponent.Serializer.componentToJson(signText[i]));
+                    getStats().writeStatsToNBT(output);
+                    if(saved.hasKey("ForgeData",10)||!custom.hasNoTags())output.setTag("ForgeData",custom.copy());
+                    if(saved.hasKey("ForgeCaps",10))output.setTag("ForgeCaps",saved.getTag("ForgeCaps").copy());
+                    return output;
+                }
+            };
+            sign.setWorld(this);sign.setPos(cell.pos);sign.getStats().readStatsFromNBT(saved);
+            for(int i=0;i<4;i++){
+                String json=saved.getString("Text"+(i+1));
+                try{sign.signText[i]=net.minecraft.util.text.ITextComponent.Serializer.jsonToComponent(json);}
+                catch(com.google.gson.JsonParseException invalid){sign.signText[i]=new net.minecraft.util.text.TextComponentString(json);}
+                if(sign.signText[i]==null)sign.signText[i]=new net.minecraft.util.text.TextComponentString("");
+                original[i]=sign.signText[i].createCopy();
+            }
+            return sign;
+        }
+        return BuildingBlockCompat.createTile(cell,null,saved);
+    }
     private void prepareForeignVisuals(){if(parent.isRemote&&com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.vehicleBuildingVisuals(this);}
     public void update(VehicleStructure next) {
+        localLight.invalidate();
         VehicleStructure before=structure;next.inheritComponents(before);structure=next;next.componentView(this);
         if(tiles.keySet().stream().anyMatch(pos->next.at(pos)==null || !next.at(pos).hasTileData()))tileRevision++;
         tiles.keySet().removeIf(pos->next.at(pos)==null || !next.at(pos).hasTileData());
@@ -78,7 +110,7 @@ public final class VehicleWorld extends World {
             tiles.remove(cell.pos);
             tileRevision++;
             try {
-                TileEntity tile=BuildingBlockCompat.createTile(cell,null,cell.tileData());
+                TileEntity tile=localTile(cell);
                 if(tile!=null){tile.setWorld(this);tiles.put(cell.pos,tile);}
             }catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(cell.state.getBlock(),"local tile update",error);}
         }
@@ -166,15 +198,29 @@ public final class VehicleWorld extends World {
         return type==EnumSkyBlock.SKY&&!provider.hasSkyLight()?0:neighborLight(p,at->getLightFor(type,at));
     }
     @Override public boolean canSeeSky(BlockPos p){return loadedParent(p,false,parent::canSeeSky);}
+    private double lightX=Double.NaN,lightY,lightZ,lightCos,lightSin,lightPivotX,lightPivotZ;
+    private float lightYaw;
+    private VehicleStructure lightStructure;
+    /** Parent light/biome samples follow the physical cell after yaw and translation. */
+    private BlockPos physical(BlockPos pos){
+        if(craft==null)return origin.add(pos);
+        if(lightStructure!=structure||lightX!=craft.posX||lightY!=craft.posY||lightZ!=craft.posZ||lightYaw!=craft.rotationYaw){
+            lightStructure=structure;lightX=craft.posX;lightY=craft.posY;lightZ=craft.posZ;lightYaw=craft.rotationYaw;
+            double radians=Math.toRadians(lightYaw);lightCos=Math.cos(radians);lightSin=Math.sin(radians);lightPivotX=structure.bounds.maxX/2;lightPivotZ=structure.bounds.maxZ/2;
+        }
+        double x=pos.getX()+.5-lightPivotX,z=pos.getZ()+.5-lightPivotZ;
+        return new BlockPos(lightX+lightPivotX+lightCos*x-lightSin*z,lightY+pos.getY()+.5,lightZ+lightPivotZ+lightSin*x+lightCos*z);
+    }
     private <T> T loadedParent(BlockPos p,T fallback,java.util.function.Function<BlockPos,T> read){
-        BlockPos absolute=origin.add(p);
+        BlockPos absolute=physical(p);
         return parent.isBlockLoaded(absolute)?read.apply(absolute):fallback;
     }
     @Override public int getCombinedLight(BlockPos p,int minimum){
-        return loadedParent(p,0,absolute->parent.getCombinedLight(absolute,Math.max(minimum,getBlockState(p).getLightValue(this,p))));
+        int combined=loadedParent(p,0,absolute->parent.getCombinedLight(absolute,minimum));
+        return (combined&0xFFFF0000)|Math.max(combined&65535,Math.max(minimum,localLight.at(p))<<4);
     }
-    @Override public int getLightFor(EnumSkyBlock type,BlockPos p){return loadedParent(p,0,absolute->parent.getLightFor(type,absolute));}
-    @Override public net.minecraft.world.biome.Biome getBiome(BlockPos p){return parent.getBiome(origin.add(p));}
+    @Override public int getLightFor(EnumSkyBlock type,BlockPos p){int parentLight=loadedParent(p,0,absolute->parent.getLightFor(type,absolute));return type==EnumSkyBlock.BLOCK?Math.max(parentLight,localLight.at(p)):parentLight;}
+    @Override public net.minecraft.world.biome.Biome getBiome(BlockPos p){return parent.getBiome(physical(p));}
     @Override public long getTotalWorldTime(){return parent.getTotalWorldTime();}
     @Override public long getWorldTime(){return parent.getWorldTime();}
 }

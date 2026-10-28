@@ -80,6 +80,21 @@ public final class VehicleWorldRuntimeChecks {
             require(view.getLight(p)==(loaded?parent.getLight(p):0),"Direct light reader changed parent sampling");
             for(boolean neighbors:new boolean[]{false,true})require(view.getLight(p,neighbors)==(loaded?parent.getLight(p,neighbors):0),"Light reader lost neighbor flag");
             require(view.canSeeSky(p)==(loaded&&parent.canSeeSky(p)),"Sky reader changed parent sampling");
+            VehicleWorld lampView=new VehicleWorld(parent,VehicleStructure.display(Arrays.asList(
+                    new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.GLOWSTONE.getDefaultState(),null),
+                    new VehicleStructure.Cell(new BlockPos(3,0,0),Blocks.STONE.getDefaultState(),null))));
+            require((lampView.getCombinedLight(BlockPos.ORIGIN,0)&65535)>=240,"Captured luminous block went dark");
+            require(lampView.getLightFor(net.minecraft.world.EnumSkyBlock.BLOCK,BlockPos.ORIGIN.east())>=14,"Captured light does not illuminate neighboring snapshot cells");
+            require(lampView.getLightFor(net.minecraft.world.EnumSkyBlock.BLOCK,BlockPos.ORIGIN.east(2))>=13,"Captured light did not propagate");
+            NBTTagCompound signData=new NBTTagCompound();signData.setString("id","minecraft:sign");signData.setInteger("x",0);signData.setInteger("y",0);signData.setInteger("z",0);
+            for(int line=1;line<=4;line++)signData.setString("Text"+line,"{\"text\":\"Saved line "+line+"\",\"color\":\"aqua\"}");
+            VehicleWorld signView=new VehicleWorld(parent,VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STANDING_SIGN.getDefaultState(),signData))));
+            TileEntity rawSign=signView.getTileEntity(BlockPos.ORIGIN);
+            require(rawSign instanceof net.minecraft.tileentity.TileEntitySign,"Saved sign did not initialize in carried view");
+            require(((net.minecraft.tileentity.TileEntitySign)rawSign).signText[0].getUnformattedText().equals("Saved line 1"),"Saved sign text disappeared in carried view");
+            MovingBlockSupport.requireExactTileData(signView.structure.at(BlockPos.ORIGIN),rawSign);
+            require(signView.structure.at(BlockPos.ORIGIN).tileData().equals(signData),"Sign visualization mutated authoritative saved JSON");
+            ((net.minecraft.tileentity.TileEntitySign)rawSign).signText[0]=new net.minecraft.util.text.TextComponentString("changed");boolean changedSignRefused=false;try{MovingBlockSupport.requireExactTileData(signView.structure.at(BlockPos.ORIGIN),rawSign);}catch(IllegalArgumentException expected){changedSignRefused=true;}require(changedSignRefused,"Sign adapter concealed changed own tile fields");
             require(observer.events==0,"Read-only vehicle operations created capability-bearing chunks: "+observer.events);
             try{
                 java.lang.reflect.Field chunks=VehicleWorld.class.getDeclaredField("chunks");chunks.setAccessible(true);
