@@ -119,7 +119,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     @Override public void invalidate(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.invalidate();}
     @Override public void onChunkUnload(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.onChunkUnload();}
     public boolean expire(long now){boolean changed=false;for(Control c:controls)if(c.until>0 && now>=c.until){c.until=0;c.level=0;if(ordinary())RedstoneChannels.inputChanged(c);changed=true;}if(changed)changed();return changed;}
-    public void updatePower(){boolean dirty=false;for(Display d:displays){boolean active=d.gate==0 || (RedstoneChannels.level(world,pos,d.gate)>0)!=d.inverted;if(active!=d.active){d.active=active;dirty=true;}}if(dirty)changed();}
+    public void updatePower(){boolean dirty=false;for(Display d:displays){boolean powered=false;ChannelList channels=d.receiveChannels();if(d.activation()!=0)for(int i=0;i<channels.size();i++)if(RedstoneChannels.level(world,pos,channels.get(i))>0){powered=true;break;}boolean active=channels.isEmpty()||d.activation()==0||powered==(d.activation()==1);if(active!=d.active){d.active=active;dirty=true;}}if(dirty)changed();}
     @Override public void update(){prepare();if(world==null || world.isRemote)return;expire(world.getTotalWorldTime());updatePower();if(design.equals("cockpit")){com.vandorlabs.cockpit.CockpitReservations.tick(this);}if(data().seat!=null)super.update();}
     public boolean use(Vec3d start,Vec3d end){return use(start,end,null);}
     public boolean use(Vec3d start,Vec3d end,net.minecraft.entity.player.EntityPlayer actor){
@@ -233,9 +233,16 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public final String id,role;
         public int texture=-1,speed=1,gate,rows=3;
         public boolean animated=true,inverted,active=true;
+        private ChannelList receiveChannels;
+        private int receiverGate=-1;
+        private int activation=-1;
+        public ChannelList receiveChannels(){if(receiveChannels==null||receiverGate!=gate){receiveChannels=ChannelList.of(gate);receiverGate=gate;}return receiveChannels;}
+        public int activation(){return activation<0?(gate==0?0:inverted?2:1):activation;}
+        public void receiver(ChannelList channels,int mode){if(channels==null||mode<0||mode>2)throw new IllegalArgumentException("Invalid cockpit receiver");gate=channels.first();receiveChannels=channels;receiverGate=gate;inverted=mode==2;activation=mode;}
+
         Display(String id,String role){this.id=id;this.role=role;}
         public int maxRows(){return "screen".equals(role)?6:3;}
-        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);tag.setInteger("Rows",rows);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);return tag;}
-        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(maxRows(),tag.getInteger("Rows"))):3;texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,Math.min(65535,tag.getInteger("Gate")));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");active=gate==0 || tag.getBoolean("Active");}
+        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);tag.setInteger("Rows",rows);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);if(receiveChannels().size()>1)tag.setIntArray("ReceiveChannels",receiveChannels().toArray());if(activation()!=(gate==0?0:inverted?2:1))tag.setInteger("Activation",activation());return tag;}
+        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(maxRows(),tag.getInteger("Rows"))):3;texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,Math.min(65535,tag.getInteger("Gate")));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");receiveChannels=tag.hasKey("ReceiveChannels",11)?ChannelData.read(tag,"ReceiveChannels",ChannelList.of(gate)):null;receiverGate=gate;activation=tag.hasKey("Activation",3)?Math.max(0,Math.min(2,tag.getInteger("Activation"))):-1;active=gate==0||activation()==0 || tag.getBoolean("Active");}
     }
 }

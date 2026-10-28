@@ -14,7 +14,7 @@ final class CockpitControlRuntimeChecks {
         if(!tile.design().equals("cockpit"))return;
         NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());ContainerCockpit dialog=new ContainerCockpit(tile,null);
         try{
-            sharedModule(tile);
+            sharedModule(tile);receiverPane(tile);
             for(int count=1;count<=2;count++){
                 NBTTagCompound mode=new NBTTagCompound();mode.setInteger("ThrottleCount",count);dialog.update(player,0,mode);
                 require(tile.throttleCount()==count,"server layout edit");
@@ -88,6 +88,18 @@ final class CockpitControlRuntimeChecks {
         upgraded.readFromNBT(TransmitterSlots.normalize(legacy));require(TransmitterSlots.get(upgraded).getMetadata()==2&&TransmitterSlots.savedSlots(upgraded).getKeySet().size()==2,"existing cockpit modules move strongest to main and preserve recoverable extras exactly once");
         require(!TransmitterSlots.savedSlots(upgraded).hasKey("cockpit_throttle_right")&&TransmitterSlots.savedSlots(upgraded).hasKey("cockpit_throttle_left"),"promoted item has one physical owner");
         install(tile,2,ChannelList.EMPTY);
+    }
+    private static void receiverPane(TileEntityCockpit tile){
+        TileEntityCockpit.Display display=tile.displays.get(0);NBTTagCompound before=display.write();
+        try{
+            TileEntityCockpit.Control left=tile.control("throttle_left"),right=tile.control("throttle_right");left.setRedstoneChannels(ChannelList.of(65481));right.setRedstoneChannels(ChannelList.of(65482));left.activate(0);right.activate(0);
+            display.receiver(ChannelList.of(65481,65482),1);tile.updatePower();require(!display.active,"shared receive channels ON hides an unpowered cockpit surface");left.activate(1);tile.updatePower();require(display.active,"any selected receive channel activates cockpit surface");
+            display.receiver(ChannelList.of(65481,65482),2);tile.updatePower();require(!display.active,"shared OFF activation inverts receiving bank");left.activate(0);tile.updatePower();require(display.active,"OFF activation shows unpowered surface");
+            display.receiver(ChannelList.of(65481,65482),0);left.activate(1);tile.updatePower();require(display.active,"Manual activation leaves cockpit surface active");
+            TileEntityCockpit copy=new TileEntityCockpit();copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));require(copy.displays.get(0).receiveChannels().equals(ChannelList.of(65481,65482))&&copy.displays.get(0).activation()==0,"multichannel Manual receiver survives reload");
+            NBTTagCompound legacy=before.copy();legacy.setInteger("Gate",65481);legacy.setBoolean("Inverted",true);legacy.removeTag("ReceiveChannels");legacy.removeTag("Activation");display.read(legacy);require(display.receiveChannels().equals(ChannelList.of(65481))&&display.activation()==2,"old scalar Gate/Inverted maps to shared receive channels/OFF");require(!display.write().hasKey("ReceiveChannels")&&!display.write().hasKey("Activation"),"old singlechannel receiver keeps canonical snapshot shape");
+            legacy.setInteger("Gate",0);display.read(legacy);require(display.receiveChannels().isEmpty()&&display.activation()==0,"old zero Gate remains Manual always active");
+        }finally{display.read(before);}
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException("Cockpit controls: "+message);}
 }
