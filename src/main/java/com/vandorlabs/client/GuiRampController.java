@@ -61,7 +61,7 @@ public class GuiRampController extends GuiContainer {
         channelField.setText(controller.getRedstoneChannels().toString());
 
         buttonList.add(new GuiButton(1,guiLeft+14,guiTop+78,142,20,""));
-        buttonList.add(new GuiButton(3,guiLeft+14,guiTop+102,142,20,""));
+        buttonList.add(new RedstoneActivationButton(3,guiLeft+14,guiTop+102,142,powerOn?1:2));
         buttonList.add(new GuiButton(6,guiLeft+164,guiTop+78,142,20,""));
         buttonList.add(new GuiButton(4,guiLeft+14,guiTop+126,142,20,""));
         buttonList.add(new GuiButton(17,guiLeft+164,guiTop+102,142,20,""));
@@ -85,7 +85,7 @@ public class GuiRampController extends GuiContainer {
             if(button.id>=30)button.enabled=button.id!=30+page;
             if(button.id==3){button.x=guiLeft+14;button.y=guiTop+60;button.width=292;}
             if(button.id==22)button.y=guiTop+86;
-            if(button.id==7){button.x=guiLeft+164;button.y=guiTop+200;button.width=142;}
+            if(button.id==7){button.x=guiLeft+(page==1?184:164);button.y=guiTop+200;button.width=page==1?122:142;}
             if(button.id==18){button.x=guiLeft+14;button.y=guiTop+200;button.width=142;}
             if(button.id==4)button.y=guiTop+128;
             if(button.id==14||button.id==15)button.y=guiTop+152;
@@ -101,7 +101,7 @@ public class GuiRampController extends GuiContainer {
             if (b.id==1) b.displayString=moat?"Mode: Moat":escalator!=0?(escalator==1?"Mode: escalator up":"Mode: escalator down"):elevator
                     ?(extendSegments?"Mode: extend":"Mode: lift")
                     :(extendSegments?"Mode: filled ramp":"Mode: ramp");
-            if (b.id==3) b.displayString=powerOn?"Trigger: redstone ON":"Trigger: redstone OFF";
+            if (b.id==3) ((RedstoneActivationButton)b).setMode(powerOn?1:2);
             if (b.id==6) b.displayString="Ramp direction: "+direction.getName().toUpperCase(java.util.Locale.ROOT);
             if (b.id==4) b.displayString="Base speed: "+(speed==0?"fast":speed==1?"medium":"slow");
             if (b.id==18) b.displayString="Match textures: "+(matchTextures?"On":"Off");

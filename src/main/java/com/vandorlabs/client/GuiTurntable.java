@@ -26,7 +26,7 @@ public final class GuiTurntable extends GuiContainer {
         rpmSlider=new net.minecraftforge.fml.client.config.GuiSlider(12,x+134,y+22,xSize-158,20,"RPM: ","",1,20,Math.round(speed*2),false,true,slider->{double next=slider.getValueInt()/2D;slider.displayString=String.format(java.util.Locale.ROOT,"RPM: %.1f",next);if(speed!=next){speed=next;apply();}});buttonList.add(rpmSlider);
         rpmSlider.displayString=String.format(java.util.Locale.ROOT,"RPM: %.1f",speed);
         field(0,x+140,y+47,xSize-166,channelText(0,tile.scanChannels.toString()));field(1,x+140,y+67,xSize-166,channelText(1,tile.rotationChannels.toString()));field(2,x+140,y+87,xSize-166,channelText(2,tile.directionChannels.toString()));field(3,x+140,y+107,xSize-166,channelText(3,tile.restoreChannels.toString()));
-        buttonList.add(new GuiButton(2,x,y+46,130,20,""));buttonList.add(new GuiButton(3,x,y+66,130,20,""));
+        buttonList.add(new RedstoneActivationButton(2,x,y+46,130,"Scan",scanMode));buttonList.add(new RedstoneActivationButton(3,x,y+66,130,"Rotate",rotationMode));
         buttonList.add(new GuiButton(4,x,y+128,130,20,""));
         angleSlider=new net.minecraftforge.fml.client.config.GuiSlider(11,x+134,y+128,xSize-158,20,"Angle: "," degrees",0,360,tile.angle(1),false,true,slider->{if(syncingAngle)return;int heading=slider.getValueInt();slider.setValue(heading);if(heading==requestedAngle&&pendingTicks>0)return;requestedAngle=heading;pendingTicks=40;NBTTagCompound angle=new NBTTagCompound();angle.setDouble("Angle",heading);send(4,angle);});
         angleSlider.enabled=tile.display()!=null&&!tile.running();buttonList.add(angleSlider);
@@ -38,7 +38,7 @@ public final class GuiTurntable extends GuiContainer {
     }
     private String channelText(int i,String fallback){return fields[i]==null?fallback:fields[i].getText();}
     private void field(int id,int x,int y,int w,String text){GuiTextField field=new GuiTextField(id,fontRenderer,x,y,w,18);field.setMaxStringLength(ChannelList.MAX_TEXT_LENGTH);field.setText(text);fields[id]=field;}
-    private void labels(){for(GuiButton b:buttonList)switch(b.id){case 2:b.displayString="Scan: "+new String[]{"Disabled","ON","OFF"}[scanMode];break;case 3:b.displayString="Rotate: "+new String[]{"","ON","OFF"}[rotationMode];break;case 4:b.displayString=clockwise?"Clockwise":"Counterclockwise";break;default:break;}}
+    private void labels(){for(GuiButton b:buttonList)switch(b.id){case 2:((RedstoneActivationButton)b).setMode(scanMode);break;case 3:((RedstoneActivationButton)b).setMode(rotationMode);break;case 4:b.displayString=clockwise?"Clockwise":"Counterclockwise";break;default:break;}}
     private NBTTagCompound values(){
         for(GuiTextField field:fields)if(field==null)return null;
         for(GuiTextField field:fields)if(ChannelList.parse(field.getText())==null){error="Use comma-separated channel numbers";return null;}

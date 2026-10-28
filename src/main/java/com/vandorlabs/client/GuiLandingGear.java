@@ -17,11 +17,10 @@ public final class GuiLandingGear extends GuiContainer {
     private GuiTextField channel;
     GuiSlider length;
     private int lastSentPixels,seenRevision;
-    private static final String[] MODES={"Disabled","On","Off"};
     public GuiLandingGear(TileEntityLandingGear tile){super(new ContainerRedstoneChannel(tile));this.tile=tile;mode=tile.getMode();size=tile.getSize();lastSentPixels=tile.getExtensionPixels();seenRevision=tile.getConfigurationRevision();xSize=280;ySize=246;}
     public void initGui(){
         String draft=channel==null?tile.getRedstoneChannels().toString():channel.getText();super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        buttonList.add(new GuiButton(0,guiLeft+14,guiTop+66,252,20,"Redstone: "+MODES[mode]));
+        buttonList.add(new RedstoneActivationButton(0,guiLeft+14,guiTop+66,252,mode));
         buttonList.add(new GuiButton(4,guiLeft+14,guiTop+66,252,20,sizeLabel()));
         channel=new GuiTextField(1,fontRenderer,guiLeft+156,guiTop+102,110,18);
         ChannelFields.configure(channel);channel.setText(draft);channel.setVisible(page==1);channel.setFocused(false);
@@ -39,7 +38,7 @@ public final class GuiLandingGear extends GuiContainer {
         ChannelList value=ChannelFields.parse(channel);if(value==null)return;
         PacketHandler.INSTANCE.sendToServer(new MessageLandingGear(tile.getPos(),mode,value.first(),length.getValueInt()*8,size).withChannels(value));mc.player.closeScreen();
     }
-    protected void actionPerformed(GuiButton b){if(b.id==100||b.id==101){page=b.id-100;initGui();return;}if(b.id==90){ChannelList channels=ChannelFields.parse(channel);if(channels!=null)PacketHandler.INSTANCE.sendToServer(new MessageLandingGear(tile.getPos(),mode,channels.first(),length.getValueInt()*8,size).withChannels(channels));PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),0));return;}if(b.id==0){mode=GuiOptionCycle.next(mode,3);for(GuiButton button:buttonList)if(button.id==0)button.displayString="Redstone: "+MODES[mode];}else if(b.id==4){size=tile.getBlockType() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear?(size==0?4:0):GuiOptionCycle.next(size,com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES.length);for(GuiButton button:buttonList)if(button.id==4)button.displayString=sizeLabel();
+    protected void actionPerformed(GuiButton b){if(b.id==100||b.id==101){page=b.id-100;initGui();return;}if(b.id==90){ChannelList channels=ChannelFields.parse(channel);if(channels!=null)PacketHandler.INSTANCE.sendToServer(new MessageLandingGear(tile.getPos(),mode,channels.first(),length.getValueInt()*8,size).withChannels(channels));PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),0));return;}if(b.id==0){mode=GuiOptionCycle.next(mode,3);for(GuiButton button:buttonList)if(button.id==0)((RedstoneActivationButton)button).setMode(mode);}else if(b.id==4){size=tile.getBlockType() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear?(size==0?4:0):GuiOptionCycle.next(size,com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES.length);for(GuiButton button:buttonList)if(button.id==4)button.displayString=sizeLabel();
             PacketHandler.INSTANCE.sendToServer(new MessageLandingGear(tile.getPos(),-1,0,length.getValueInt()*8,size));
         }else if(b.id==3)submit();}
     protected void keyTyped(char c,int key)throws IOException{if(key==Keyboard.KEY_RETURN){submit();return;}if(page!=1||!channel.textboxKeyTyped(c,key))super.keyTyped(c,key);}

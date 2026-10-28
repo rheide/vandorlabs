@@ -24,7 +24,7 @@ public final class GuiModularGear extends GuiContainer {
     @Override public void initGui(){
         xSize=Math.min(380,width-12);ySize=218;super.initGui();buttonList.clear();int col=(xSize-36)/2,right=guiLeft+24+col;
         channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+70,col,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(tile.getRedstoneChannels().toString());
-        add(0,guiLeft+12,30,col);add(1,guiLeft+12,56,col);add(2,guiLeft+12,82,col);add(7,guiLeft+12,108,col);add(4,guiLeft+(xSize-200)/2,164,200);
+        buttonList.add(new RedstoneActivationButton(0,guiLeft+12,guiTop+60,col,trigger));add(1,guiLeft+12,56,col);add(2,guiLeft+12,82,col);add(7,guiLeft+12,108,col);add(4,guiLeft+(xSize-200)/2,164,200);
         add(14,guiLeft+12,134,col);add(9,right,56,col);add(11,right,108,col);
         rangeSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,right,guiTop+82,col,20,"Range: "," blocks",1,32,range,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=range){range=value;submit();}});buttonList.add(rangeSlider);
         loadSlider=new net.minecraftforge.fml.client.config.GuiSlider(12,right,guiTop+134,col,20,"Height: "," blocks",1,32,heightLimit,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=heightLimit){heightLimit=value;submit();}});buttonList.add(loadSlider);
@@ -45,7 +45,7 @@ public final class GuiModularGear extends GuiContainer {
         rangeSlider.visible=page==0&&join;loadSlider.visible=page==0&&join&&load&&tile.canCarryLoad();
         button(9).displayString="Join arms: "+(join?"On":"Off");button(9).enabled=rest&&!tile.isLandingAssembly()&&!tile.isFixedMount();rangeSlider.enabled=rest;
         button(11).displayString="Carry load: "+(load?"On":"Off");button(11).enabled=rest&&join&&tile.canCarryLoad();loadSlider.enabled=rest;
-        button(0).displayString="Input: "+(tile.isLandingAssembly()&&!tile.isExtendedTrackStroke()?new String[]{"Manual","ON deploys","OFF deploys"}:new String[]{"Manual","ON activates","OFF activates"})[trigger];
+        ((RedstoneActivationButton)button(0)).setMode(trigger);
         net.minecraft.util.math.BlockPos fold=com.vandorlabs.gear.ArmOrientation.vector(tile.mountDirection(),new net.minecraft.util.math.BlockPos(net.minecraft.util.EnumFacing.valueOf(new String[]{"NORTH","EAST","SOUTH","WEST"}[direction]).getDirectionVec()));
         button(1).displayString="Fold: "+net.minecraft.util.EnumFacing.getFacingFromVector(fold.getX(),fold.getY(),fold.getZ()).getName();button(1).enabled=tile.isSwingArmController()&&rest&&deployed;
         button(2).displayString=tile.isLandingAssembly()&&!tile.isExtendedTrackStroke()?(deployed?"Target: Deployed":"Target: Stowed"):(deployed?"Target: Off (rest)":"Target: On (active)");button(2).enabled=trigger==0;

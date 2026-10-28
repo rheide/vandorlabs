@@ -30,6 +30,8 @@ final class GuiOptionCycleRuntimeChecks {
         else if(gui instanceof GuiConnectedSeat)ids=new int[]{1};
         else if(gui instanceof GuiTrack)ids=new int[]{0};
         else if(gui instanceof GuiModularGear)ids=new int[]{0,1,2,7};
+        else if(gui instanceof com.vandorlabs.copier.client.GuiCopyController)ids=new int[]{0};
+        else if(gui instanceof GuiCoupler)ids=new int[]{1};
         else if(gui instanceof GuiTurntable)ids=new int[]{0,2,3,4};
         else if(gui instanceof GuiStorageStatus)ids=new int[]{1,2};
         else if(gui instanceof GuiLandingGear)ids=new int[]{0,4};
@@ -43,6 +45,7 @@ final class GuiOptionCycleRuntimeChecks {
             try{mouse=GuiScreen.class.getDeclaredMethod("mouseClicked",int.class,int.class,int.class);}
             catch(NoSuchMethodException e){mouse=GuiScreen.class.getDeclaredMethod("func_73864_a",int.class,int.class,int.class);}
             mouse.setAccessible(true);
+            activationModes(gui,mouse);
             // Keep assembly membership intact: geometry/join changes can detach fixture cells.
             for(int id:ids) {
                 GuiButton button=find(gui,id);
@@ -83,6 +86,33 @@ final class GuiOptionCycleRuntimeChecks {
         for(int step=0;step<7;step++)click(mouse,gui,find(gui,1),0);require(initial.equals(find(gui,1).displayString),"seven forward modes wrap");
         for(int step=0;step<7;step++)click(mouse,gui,find(gui,1),1);require(initial.equals(find(gui,1).displayString),"seven reverse modes wrap");
         mc.displayGuiScreen(null);System.out.println("[vandorlabs][reprolab] moat-mode-reverse-cycle PASS actual-mouse seven-mode wrap");
+    }
+    /** Check exact stored indices as well as labels through both real mouse directions. */
+    private static void activationModes(GuiScreen gui,Method mouse)throws ReflectiveOperationException {
+        boolean owned=gui instanceof GuiRampController||gui instanceof GuiModularGear||gui instanceof GuiLandingGear||gui instanceof GuiAutopilot||gui instanceof GuiCoupler||gui instanceof GuiTurntable||gui instanceof com.vandorlabs.copier.client.GuiCopyController;
+        if(!owned)return;
+        java.lang.reflect.Field page=null;int originalPage=0;
+        try{page=gui.getClass().getDeclaredField("page");page.setAccessible(true);originalPage=page.getInt(gui);page.setInt(gui,1);gui.initGui();}catch(NoSuchFieldException singlePage){}
+        int checked=0;
+        try{
+            for(GuiButton candidate:new ArrayList<>(buttons(gui)))if(candidate instanceof RedstoneActivationButton&&candidate.visible&&candidate.enabled){
+                int id=candidate.id;String field=gui instanceof GuiRampController?"powerOn":gui instanceof GuiModularGear||gui instanceof GuiAutopilot?"trigger":gui instanceof GuiCoupler?"inverted":gui instanceof GuiTurntable?(id==2?"scanMode":"rotationMode"):"mode";
+                java.lang.reflect.Field draft=gui.getClass().getDeclaredField(field);draft.setAccessible(true);
+                boolean pair=gui instanceof GuiRampController||gui instanceof GuiCoupler||gui instanceof GuiTurntable&&id==3;int count=pair?2:3;
+                for(int direction:new int[]{1,0})for(int i=0;i<count;i++){
+                    int before=activationIndex(gui,draft);int expected=pair?(before==1?2:1):Math.floorMod(before+(direction==1?-1:1),3);
+                    click(mouse,gui,find(gui,id),direction);
+                    int actual=activationIndex(gui,draft);require(actual==expected,"activation saved-index semantics "+gui.getClass().getSimpleName()+" id="+id+" expected="+expected+" actual="+actual);
+                    require(find(gui,id) instanceof RedstoneActivationButton&&find(gui,id).displayString.endsWith(RedstoneActivationButton.state(actual)),"shared activation label follows actual saved mode");
+                    require(!pair||actual!=0,"two-state activation never introduces Manual");checked++;
+                }
+            }
+        }finally{if(page!=null){page.setInt(gui,originalPage);gui.initGui();}}
+        if(checked>0)System.out.println("[vandorlabs][reprolab] activation-modes PASS "+gui.getClass().getSimpleName()+" real-mouse-index-checks="+checked);
+    }
+    private static int activationIndex(GuiScreen gui,java.lang.reflect.Field field)throws IllegalAccessException{
+        if(field.getType()!=boolean.class)return field.getInt(gui);
+        boolean value=field.getBoolean(gui);return gui instanceof GuiCoupler?(value?2:1):(value?1:2);
     }
     private static List<GuiButton> buttons(GuiScreen gui){return net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");}
     private static GuiButton find(GuiScreen gui,int id){for(GuiButton b:buttons(gui))if(b.id==id)return b;return null;}
