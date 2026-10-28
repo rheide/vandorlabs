@@ -22,7 +22,6 @@ public final class InlineTransmitters {
         if(tile==null||tile instanceof com.vandorlabs.tiles.TileEntitySecuredDisplay)return;
         Binding binding=new Binding(container);BINDINGS.put(container,binding);
         if(tile instanceof RedstoneChannelMember)binding.add(0);
-        if(tile instanceof com.vandorlabs.tiles.TileEntityCockpit)for(int i=0;i<((com.vandorlabs.tiles.TileEntityCockpit)tile).controls.size();i++)binding.add(100+i);
         if(container instanceof ContainerAnimatedScreenSelector){int screen=((ContainerAnimatedScreenSelector)container).redstoneSlot;if(screen>=0)for(int i=0;i<8;i++)binding.add(1+screen*8+i);}
         for(int i=0;i<9;i++){VisibleSlot slot=new VisibleSlot(player.inventory,i);binding.hotbar.add(slot);append(container,slot);}
     }

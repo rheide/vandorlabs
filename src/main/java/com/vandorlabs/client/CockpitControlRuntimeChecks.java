@@ -14,6 +14,7 @@ final class CockpitControlRuntimeChecks {
         if(!tile.design().equals("cockpit"))return;
         NBTTagCompound before=tile.writeToNBT(new NBTTagCompound());ContainerCockpit dialog=new ContainerCockpit(tile,null);
         try{
+            sharedModule(tile);
             for(int count=1;count<=2;count++){
                 NBTTagCompound mode=new NBTTagCompound();mode.setInteger("ThrottleCount",count);dialog.update(player,0,mode);
                 require(tile.throttleCount()==count,"server layout edit");
@@ -64,6 +65,21 @@ final class CockpitControlRuntimeChecks {
             TileEntityCockpit loaded=new TileEntityCockpit();loaded.readFromNBT(legacy);require(loaded.throttleCount()==2&&loaded.control("throttle_left").kind==1,"legacy twin default and toggle repair");
         }finally{tile.readFromNBT(before);}
         System.out.println("[vandorlabs][reprolab] cockpit-controls PASS single/twin layouts, four positions, custom limits, screen/grip pages, slider hits, persistence and rejected edits "+tile.facing());
+    }
+    static void install(com.vandorlabs.redstone.RedstoneChannelMember member,int tier,ChannelList channels){net.minecraft.item.ItemStack stack=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,1,tier);com.vandorlabs.items.ItemRedstoneTransmitter.configure(stack,channels);TransmitterSlots.set(member,stack);}
+    private static void sharedModule(TileEntityCockpit tile){
+        TransmitterSlots.set(tile,net.minecraft.item.ItemStack.EMPTY);
+        TileEntityCockpit.Control left=tile.control("throttle_left"),right=tile.control("throttle_right");
+        left.setRedstoneChannels(ChannelList.of(65491));right.setRedstoneChannels(ChannelList.of(65492));
+        require(left.transmissionRange()<0&&right.transmissionRange()<0,"no cockpit module disables all controls");
+        install(tile,0,ChannelList.of(65493));
+        require(left.transmissionRange()==16&&right.transmissionRange()==16,"one shared range for both throttles");
+        require(left.transmittedChannels().equals(ChannelList.of(65491))&&right.transmittedChannels().equals(ChannelList.of(65492)),"shared module preserves independent targets");
+        right.setRedstoneChannels(ChannelList.EMPTY);require(right.transmittedChannels().equals(ChannelList.of(65493)),"blank control uses module defaults");
+        left.setLocalLevel(8);right.setLocalLevel(4);TileEntityCockpit copy=new TileEntityCockpit();copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+        require(copy.control("throttle_left").latchedLevel(65491)==8&&copy.control("throttle_right").latchedLevel(65493)==4,"explicit and default channel banks survive reload");
+        TransmitterSlots.set(tile,net.minecraft.item.ItemStack.EMPTY);copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));require(TransmitterSlots.get(copy).isEmpty(),"removed shared module stays empty after reload");
+        install(tile,2,ChannelList.EMPTY);
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException("Cockpit controls: "+message);}
 }

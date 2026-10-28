@@ -91,7 +91,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         return design.equals("yoke_screen")||surface.id.equals("screen_center")?TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:ScreenHousingTextures.screenIndex(surface.id.equals("screen_left")?"bridge_bare_pilot_static":"bridge_bare_engineering_static");
     }
     public boolean configureRows(int index,NBTTagList rows){
-        if(index<0||index>=displays.size())return false;Display d=displays.get(index);if(rows.tagCount()>d.maxRows())return false;for(int i=rows.tagCount();i<d.rows;i++)if(!com.vandorlabs.redstone.TransmitterSlots.get(control(d.id+"/"+i)).isEmpty())return false;
+        if(index<0||index>=displays.size())return false;Display d=displays.get(index);if(rows.tagCount()>d.maxRows())return false;
         for(int i=0;i<rows.tagCount();i++){NBTTagCompound row=rows.getCompoundTagAt(i);int kind=row.getInteger("Kind"),min=row.getInteger("Min"),max=row.getInteger("Max");if(row.getString("Label").length()>24||kind<0||kind>2||min<0||min>13||max<min+2||max>15)return false;ChannelData.read(row,0);}
         boolean placed=ordinary();if(placed)RedstoneChannels.beginTransfer(world);
         try{
@@ -100,11 +100,16 @@ public class TileEntityCockpit extends TileEntityVehicleController {
             for(int i=0;i<d.maxRows();i++){
                 Control c=control(d.id+"/"+i);NBTTagCompound row=i<d.rows?rows.getCompoundTagAt(i):new NBTTagCompound();int previousKind=c.kind;c.kind=row.getInteger("Kind");c.label=row.getString("Label");c.min=i<d.rows?row.getInteger("Min"):5;c.max=i<d.rows?row.getInteger("Max"):15;
                 if(i>=d.rows||previousKind!=c.kind){c.level=0;c.until=0;c.levels.clear();}
-                c.setRedstoneChannels(i<d.rows?com.vandorlabs.redstone.TransmitterSlots.channels(c):ChannelList.EMPTY);
+                c.setRedstoneChannels(i<d.rows?ChannelData.read(row,0):ChannelList.EMPTY);
                 if(placed)RedstoneChannels.register(c);
             }
             d.texture=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;changed();return true;
         }finally{if(placed)RedstoneChannels.endTransfer(world);}
+    }
+    public void sharedTransmitterChanged(){
+        if(world instanceof VehicleWorld){VehicleWorld view=(VehicleWorld)world;if(view.craft!=null&&!view.parent.isRemote)view.craft.signals.cockpitChanged(this);}
+        else if(world!=null&&!world.isRemote){RedstoneChannels.beginTransfer(world);try{for(Control control:controls)RedstoneChannels.unregister(control);for(Control control:controls)RedstoneChannels.register(control);}finally{RedstoneChannels.endTransfer(world);}}
+        changed();
     }
     public Control control(String id){prepare();for(Control c:controls)if(c.id.equals(id))return c;return null;}
     public Display display(String id){prepare();for(Display d:displays)if(d.id.equals(id))return d;return null;}
@@ -161,11 +166,12 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     /** Actual grip targeting is shared with activation, including from a seated eye. */
     public RayTraceResult controlRay(Vec3d start,Vec3d end){ControlHit hit=controlHitLocal(CockpitData.unrotate(start,facing()),CockpitData.unrotate(end,facing()));return hit==null?null:new RayTraceResult(CockpitData.rotate(hit.point,facing()),EnumFacing.UP,pos);}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);screenLift.write(tag,"CockpitScreenLift");seatSlide.write(tag,"CockpitSeatSlide");tag.setLong("CockpitScreenButton",screenButtonUntil);tag.setLong("CockpitSeatButton",seatButtonUntil);tag.setString("CockpitDesign",design);tag.setInteger("CockpitThrottles",throttleCount);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
+        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);screenLift.write(tag,"CockpitScreenLift");seatSlide.write(tag,"CockpitSeatSlide");tag.setLong("CockpitScreenButton",screenButtonUntil);tag.setLong("CockpitSeatButton",seatButtonUntil);tag.setString("CockpitDesign",design);tag.setInteger("CockpitThrottles",throttleCount);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
         NBTTagList screens=new NBTTagList();for(Display d:displays)screens.appendTag(d.write());tag.setTag("CockpitDisplays",screens);
         NBTTagList outputs=new NBTTagList();for(Control c:controls)outputs.appendTag(c.write());tag.setTag("CockpitControls",outputs);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
+        tag=com.vandorlabs.redstone.TransmitterSlots.normalize(tag);
         if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);
         super.readFromNBT(tag);design=tag.hasKey("CockpitDesign",8)?tag.getString("CockpitDesign"):design;CockpitData.get(design);
         screenLift.read(tag,"CockpitScreenLift");seatSlide.read(tag,"CockpitSeatSlide");screenButtonUntil=tag.getLong("CockpitScreenButton");seatButtonUntil=tag.getLong("CockpitSeatButton");
@@ -186,39 +192,42 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public long until;
         private final Map<Integer,Integer> levels=new HashMap<>();
         Control(String id){this.id=id;}
-        public String transmitterSlot(){return "cockpit_"+id;}
+        public String transmitterSlot(){return "main";}
+        /** Explicit targets stay independent; an empty target uses the shared module defaults. */
+        public ChannelList targets(){return channels.isEmpty()?com.vandorlabs.redstone.TransmitterSlots.channels(this):channels;}
+        public ChannelList transmittedChannels(){return targets();}
         public TileEntity channelTile(){return TileEntityCockpit.this;}
-        public int getRedstoneChannel(){return channels.first();}
-        public ChannelList getRedstoneChannels(){return channels;}
+        public int getRedstoneChannel(){return targets().first();}
+        public ChannelList getRedstoneChannels(){return targets();}
         public void setRedstoneChannel(int channel){setRedstoneChannels(ChannelList.of(channel));}
-        public void setRedstoneChannels(ChannelList next){ChannelList before=channels;channels=next;levels.keySet().removeIf(channel->!next.contains(channel));for(int i=0;i<next.size();i++)levels.putIfAbsent(next.get(i),0);if(ordinary())RedstoneChannels.channelChanged(this,before);changed();}
-        public void setKind(int value){if(isThrottle())value=1;if(value<0||value>2||kind==value)return;if(ordinary())RedstoneChannels.unregister(this);boolean pulse=kind==2||value==2;kind=value;if(pulse){level=0;until=0;levels.clear();for(int i=0;i<channels.size();i++)levels.put(channels.get(i),0);}if(ordinary())RedstoneChannels.register(this);changed();}
+        public void setRedstoneChannels(ChannelList next){ChannelList before=targets();channels=next;ChannelList effective=targets();levels.keySet().removeIf(channel->!effective.contains(channel));for(int i=0;i<effective.size();i++)levels.putIfAbsent(effective.get(i),0);if(ordinary())RedstoneChannels.channelChanged(this,before);changed();}
+        public void setKind(int value){if(isThrottle())value=1;if(value<0||value>2||kind==value)return;if(ordinary())RedstoneChannels.unregister(this);boolean pulse=kind==2||value==2;kind=value;if(pulse){level=0;until=0;levels.clear();for(int i=0;i<targets().size();i++)levels.put(targets().get(i),0);}if(ordinary())RedstoneChannels.register(this);changed();}
         public boolean active(){int slash=id.lastIndexOf('/');if(slash>=0){Display display=display(id.substring(0,slash));return display!=null&&display.texture==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE&&Integer.parseInt(id.substring(slash+1))<display.rows;}return !id.equals("throttle_right")||throttleCount==2;}
-        public boolean hasLocalRedstoneSignal(){if(!active())return false;if(kind==2||channels.isEmpty())return level>0;for(int i=0;i<channels.size();i++)if(latchedLevel(channels.get(i))>0)return true;return false;}
+        public boolean hasLocalRedstoneSignal(){if(!active())return false;if(kind==2||targets().isEmpty())return level>0;for(int i=0;i<targets().size();i++)if(latchedLevel(targets().get(i))>0)return true;return false;}
         public boolean hasLocalRedstoneSignal(int channel){return localSignalLevel(channel)>0;}
         public int localSignalLevel(int channel){return active()?(kind==2?level:latchedLevel(channel)):0;}
         public boolean isChannelLatch(){return active()&&kind!=2;}
         public int latchedLevel(int channel){return levels.getOrDefault(channel,level);}
-        public ChannelList latchedChannels(){int[] active=new int[channels.size()];int count=0;for(int i=0;i<channels.size();i++)if(latchedLevel(channels.get(i))>0)active[count++]=channels.get(i);return ChannelList.of(Arrays.copyOf(active,count));}
-        public boolean latchOn(){if(channels.isEmpty())return level>0;for(int i=0;i<channels.size();i++)if(latchedLevel(channels.get(i))==0)return false;return true;}
-        public void applyLinkedLatch(boolean on){applyLinkedChannels(on?channels:ChannelList.EMPTY);}
-        public void applyLinkedChannels(ChannelList active){Map<Integer,Integer> next=new HashMap<>();for(int i=0;i<channels.size();i++)next.put(channels.get(i),active.contains(channels.get(i))?15:0);applyLinkedLevels(next);}
+        public ChannelList latchedChannels(){int[] active=new int[targets().size()];int count=0;for(int i=0;i<targets().size();i++)if(latchedLevel(targets().get(i))>0)active[count++]=targets().get(i);return ChannelList.of(Arrays.copyOf(active,count));}
+        public boolean latchOn(){if(targets().isEmpty())return level>0;for(int i=0;i<targets().size();i++)if(latchedLevel(targets().get(i))==0)return false;return true;}
+        public void applyLinkedLatch(boolean on){applyLinkedChannels(on?targets():ChannelList.EMPTY);}
+        public void applyLinkedChannels(ChannelList active){Map<Integer,Integer> next=new HashMap<>();for(int i=0;i<targets().size();i++)next.put(targets().get(i),active.contains(targets().get(i))?15:0);applyLinkedLevels(next);}
         public void applyLinkedLevels(Map<Integer,Integer> next){if(!levels.equals(next)){levels.clear();levels.putAll(next);markDirty();}}
-        public void setChannelSignal(boolean ignored){int strongest=0;for(int i=0;i<channels.size();i++)strongest=Math.max(strongest,RedstoneChannels.level(world,pos,channels.get(i)));setChannelLevel(strongest);}
-        public void setChannelLevel(int aggregate){if(kind==2||channels.isEmpty())return;int next=kind==1?aggregate:RedstoneChannels.allPowered(world,pos,channels)?15:0;if(level!=next){level=next;changed();}}
+        public void setChannelSignal(boolean ignored){int strongest=0;for(int i=0;i<targets().size();i++)strongest=Math.max(strongest,RedstoneChannels.level(world,pos,targets().get(i)));setChannelLevel(strongest);}
+        public void setChannelLevel(int aggregate){if(kind==2||targets().isEmpty())return;int next=kind==1?aggregate:RedstoneChannels.allPowered(world,pos,targets())?15:0;if(level!=next){level=next;changed();}}
         public boolean isThrottle(){return id.startsWith("throttle_");}
         public int step(){return com.vandorlabs.tiles.TileEntitySignalControl.stepForLevel(level,min,max);}
         public int sliderLevel(int segment){if(isThrottle())return TileEntitySignalControl.levelForStep(segment,min,max);return segment==0?0:min+(max-min)*(Math.max(1,Math.min(3,segment))-1)/2;}
         public double nextColumn(){int segment=0;for(int i=1;i<4;i++)if(Math.abs(sliderLevel(i)-level)<Math.abs(sliderLevel(segment)-level))segment=i;return ((segment+1)%4)/3D;}
         /** Set the owned state before consumers can clone a carried mechanism's snapshot. */
-        public void setLocalLevel(int next){level=Math.max(0,Math.min(15,next));until=kind==2?world.getTotalWorldTime()+20:0;if(kind!=2)for(int i=0;i<channels.size();i++)levels.put(channels.get(i),level);}
+        public void setLocalLevel(int next){level=Math.max(0,Math.min(15,next));until=kind==2?world.getTotalWorldTime()+20:0;if(kind!=2)for(int i=0;i<targets().size();i++)levels.put(targets().get(i),level);}
         public void activate(double column){
-            int next=(kind==1||isThrottle())?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:(channels.isEmpty()?level>0:RedstoneChannels.allPowered(world,pos,channels))?0:15;
+            int next=(kind==1||isThrottle())?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:(targets().isEmpty()?level>0:RedstoneChannels.allPowered(world,pos,targets()))?0:15;
             if(world instanceof VehicleWorld&&!((VehicleWorld)world).parent.isRemote&&((VehicleWorld)world).craft!=null){((VehicleWorld)world).craft.signals.activateCockpit(this,next);return;}
             setLocalLevel(next);if(ordinary()){if(isChannelLatch())RedstoneChannels.latchLevelChanged(this,next);else RedstoneChannels.inputChanged(this);}changed();
         }
-        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setString("Label",label);ChannelData.write(tag,channels);tag.setInteger("Min",min);tag.setInteger("Max",max);tag.setInteger("Kind",kind);tag.setInteger("Level",level);tag.setLong("Until",until);int[] saved=new int[channels.size()];for(int i=0;i<saved.length;i++)saved[i]=latchedLevel(channels.get(i));tag.setIntArray("Levels",saved);return tag;}
-        public void read(NBTTagCompound tag){label=tag.getString("Label");if(label.length()>32)label=label.substring(0,32);channels=ChannelData.read(tag,0);min=tag.hasKey("Min",3)?Math.max(0,Math.min(13,tag.getInteger("Min"))):5;max=tag.hasKey("Max",3)?Math.max(min+2,Math.min(15,tag.getInteger("Max"))):15;kind=Math.max(0,Math.min(2,tag.getInteger("Kind")));level=Math.max(0,Math.min(15,tag.getInteger("Level")));until=Math.max(0,tag.getLong("Until"));levels.clear();int[] saved=tag.getIntArray("Levels");for(int i=0;i<channels.size();i++)levels.put(channels.get(i),i<saved.length?Math.max(0,Math.min(15,saved[i])):level);if(isThrottle()){kind=1;until=0;if(!TileEntitySignalControl.validLimits(min,max)){min=5;max=15;}}}
+        public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setString("Label",label);ChannelData.write(tag,channels);tag.setInteger("Min",min);tag.setInteger("Max",max);tag.setInteger("Kind",kind);tag.setInteger("Level",level);tag.setLong("Until",until);ChannelList bank=targets();tag.setIntArray("LevelChannels",bank.toArray());int[] saved=new int[bank.size()];for(int i=0;i<saved.length;i++)saved[i]=latchedLevel(bank.get(i));tag.setIntArray("Levels",saved);return tag;}
+        public void read(NBTTagCompound tag){label=tag.getString("Label");if(label.length()>32)label=label.substring(0,32);channels=ChannelData.read(tag,0);min=tag.hasKey("Min",3)?Math.max(0,Math.min(13,tag.getInteger("Min"))):5;max=tag.hasKey("Max",3)?Math.max(min+2,Math.min(15,tag.getInteger("Max"))):15;kind=Math.max(0,Math.min(2,tag.getInteger("Kind")));level=Math.max(0,Math.min(15,tag.getInteger("Level")));until=Math.max(0,tag.getLong("Until"));levels.clear();int[] saved=tag.getIntArray("Levels");ChannelList bank=ChannelData.read(tag,"LevelChannels",channels);for(int i=0;i<bank.size();i++)levels.put(bank.get(i),i<saved.length?Math.max(0,Math.min(15,saved[i])):level);if(isThrottle()){kind=1;until=0;if(!TileEntitySignalControl.validLimits(min,max)){min=5;max=15;}}}
     }
     public static final class Display {
         public final String id,role;

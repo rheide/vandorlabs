@@ -15,6 +15,7 @@ import java.util.*;
 final class CockpitDialogRuntimeChecks {
     static void run(Minecraft mc,File output)throws Exception{
         GuiScreen previous=mc.currentScreen;int checked=0;
+        Field redstone=GuiCockpit.class.getDeclaredField("redstonePage");redstone.setAccessible(true);
         Field page=GuiCockpit.class.getDeclaredField("page"),fields=GuiCockpit.class.getDeclaredField("fields");page.setAccessible(true);fields.setAccessible(true);
         Field buttons;try{buttons=GuiScreen.class.getDeclaredField("buttonList");}catch(NoSuchFieldException mapped){buttons=GuiScreen.class.getDeclaredField("field_146292_n");}buttons.setAccessible(true);
         try{
@@ -22,17 +23,17 @@ final class CockpitDialogRuntimeChecks {
                 TileEntityCockpit tile=(TileEntityCockpit)mc.world.getTileEntity(new BlockPos(222+model*6,30,120));
                 require(tile!=null,"fixture synchronized");GuiCockpit gui=new GuiCockpit(new ContainerCockpit(tile,null));gui.inventorySlots.windowId=-77;mc.displayGuiScreen(gui);
                 page.setInt(gui,(tile.data().seat==null?0:1)+1);gui.initGui();
-                java.lang.reflect.Method redstone=GuiCockpit.class.getDeclaredMethod("redstone");redstone.setAccessible(true);redstone.invoke(gui);
+                java.lang.reflect.Method openRows=GuiCockpit.class.getDeclaredMethod("redstone");openRows.setAccessible(true);openRows.invoke(gui);
                 require(mc.currentScreen instanceof GuiRedstoneScreen,"Redstone selection opens the shared row editor");
                 GuiRedstoneScreen editor=(GuiRedstoneScreen)mc.currentScreen;
                 for(int[] size:new int[][]{{320,240},{460,340}}){editor.setWorldAndResolution(mc,size[0],size[1]);editor.checkLayout();}
-                mc.displayGuiScreen(gui);
+                mc.currentScreen=null;mc.displayGuiScreen(gui);
                 int count=(tile.data().seat==null?0:1)+1+tile.displays.size()+tile.controls.size();
-                for(int[] size:new int[][]{{320,240},{460,340},{new ScaledResolution(mc).getScaledWidth(),new ScaledResolution(mc).getScaledHeight()}})for(int index=0;index<count;index++){
-                    page.setInt(gui,index);gui.setWorldAndResolution(mc,size[0],size[1]);
+                for(int[] size:new int[][]{{320,240},{460,340},{new ScaledResolution(mc).getScaledWidth(),new ScaledResolution(mc).getScaledHeight()}})for(int index=0;index<=count;index++){
+                    redstone.setBoolean(gui,index==count);page.setInt(gui,index==count?0:index);gui.setWorldAndResolution(mc,size[0],size[1]);
                     if(size[0]==320)checkDrag(gui);
                     List<Rectangle> occupied=new ArrayList<>();
-                    for(Object raw:(List<?>)buttons.get(gui)){GuiButton button=(GuiButton)raw;if(button.visible)add(occupied,new Rectangle(button.x,button.y,button.width,button.height),size);}
+                    for(Object raw:(List<?>)buttons.get(gui)){GuiButton button=(GuiButton)raw;if(button.visible&&button instanceof DialogTabButton)require(mc.fontRenderer.getStringWidth(button.displayString)<=button.width-4,"tab label fits at "+size[0]);if(button.visible)add(occupied,new Rectangle(button.x,button.y,button.width,button.height),size);}
                     for(Object raw:(List<?>)fields.get(gui)){GuiTextField field=(GuiTextField)raw;add(occupied,new Rectangle(field.x,field.y,field.width,field.height),size);}
                     mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();gui.drawScreen(-1,-1,0);
                     if(index==0 || index==(tile.data().seat==null?0:1) || index==(tile.data().seat==null?0:1)+1 || index==(tile.data().seat==null?0:1)+1+tile.displays.size())javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_utility22_cockpit_dialog_"+model+"_"+size[0]+"_"+index+".png"));

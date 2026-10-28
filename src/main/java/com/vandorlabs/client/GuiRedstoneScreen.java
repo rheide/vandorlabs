@@ -76,7 +76,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         for(GuiButton b:buttonList)if(b.id>=7 && b.id<=9){b.visible=!materials && selected>=0;if(selected>=0){b.enabled=b.id==7 || sliders.get(selected);b.displayString=b.id==7?(pulses.get(selected)?"Control: Pulse":sliders.get(selected)?"Control: Slider":"Control: Toggle"):b.id==8?"Low: "+mins.get(selected):"High: "+maxs.get(selected);}}
 
         titleField.setVisible(header && !materials);
-        labelField.setVisible(!materials && selected>=0);channelField.setVisible(false);for(GuiButton b:buttonList)if(b.id==90)b.visible=!materials&&selected>=0;
+        labelField.setVisible(!materials && selected>=0);channelField.setVisible(tile==null&&!materials&&selected>=0);for(GuiButton b:buttonList)if(b.id==90)b.visible=tile!=null&&!materials&&selected>=0;
         for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}if(b.id==5 || b.id==6){b.visible=!materials;b.enabled=selected>=0 && (b.id==5?selected>0:selected<labels.size()-1);}}
     }
     void checkLayout(){
@@ -93,7 +93,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     private void send(){if(!store())return;texture=housing.selected();if(tile==null){
         net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();tag.setInteger("RedstoneDisplay",cockpitDisplay);tag.setInteger("SideTexture",texture);net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();
         for(int i=0;i<labels.size();i++){net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();row.setString("Label",labels.get(i));com.vandorlabs.redstone.ChannelData.write(row,channels.get(i));row.setInteger("Kind",pulses.get(i)?2:sliders.get(i)?1:0);row.setInteger("Min",mins.get(i));row.setInteger("Max",maxs.get(i));rows.appendTag(row);}tag.setTag("Rows",rows);cockpitTile.configureRows(cockpitDisplay,rows);cockpitTile.setSideTexture(texture);
-        PacketHandler.INSTANCE.sendToServer(new MessageCockpit(inventorySlots.windowId,0,tag));mc.displayGuiScreen(cockpitParent);return;
+        PacketHandler.INSTANCE.sendToServer(new MessageCockpit(inventorySlots.windowId,0,tag));mc.currentScreen=null;mc.displayGuiScreen(cockpitParent);return;
     }PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs).withPulses(pulses));mc.player.closeScreen();}
     protected void actionPerformed(GuiButton b){
         if(b.id==90&&selected>=0){if(!store())return;if(tile==null){int control=cockpitTile.controls.indexOf(cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+selected));PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(cockpitTile.getPos(),100+control));}else{PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs).withPulses(pulses));PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),1+tile.slot()*8+selected));}return;}
@@ -128,7 +128,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         Collections.swap(labels,selected,next);Collections.swap(channels,selected,next);return next;
     }
     int inlineTransmitterSelector(){if(selected<0)return -1;if(tile!=null)return 1+tile.slot()*8+selected;return 100+cockpitTile.controls.indexOf(cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+selected));}
-    private boolean installed(int row){if(tile==null){com.vandorlabs.tiles.TileEntityCockpit.Control c=cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+row);return c!=null&&!com.vandorlabs.redstone.TransmitterSlots.get(c).isEmpty();}return row<tile.rows().size()&&!com.vandorlabs.redstone.TransmitterSlots.get(tile.rows().get(row)).isEmpty();}
+    private boolean installed(int row){if(tile==null)return false;return row<tile.rows().size()&&!com.vandorlabs.redstone.TransmitterSlots.get(tile.rows().get(row)).isEmpty();}
     private int visibleRows(){return Math.max(1,(ySize-rowListTop-12)/20);}
     protected void mouseClicked(int x,int y,int button)throws IOException{
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,7,8,9))return;
@@ -174,7 +174,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         int cx=guiLeft+xSize-164;
         if(header){fontRenderer.drawString("Header",guiLeft+12,guiTop+55,0xDAE8F0);titleField.drawTextBox();drawRect(guiLeft+12,guiTop+76,guiLeft+xSize-180,guiTop+77,0xFF365366);}
         fontRenderer.drawString(fontRenderer.trimStringToWidth("Text is limited to screen width.",xSize-192),guiLeft+12,guiTop+ySize-14,0xADBECA);
-        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+94,0xDAE8F0);fontRenderer.drawString("Transmitter",cx,guiTop+127,0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
+        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+94,0xDAE8F0);fontRenderer.drawString(tile==null?"Targets (0 = defaults)":"Transmitter",cx,guiTop+127,0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
         else fontRenderer.drawSplitString("Add an item to create a control.",cx,guiTop+105,148,0xADBECA);
         net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();
     }

@@ -20,12 +20,12 @@ final class CockpitControlDialogChecks {
         try{
             for(int i=0;i<tile.data().surfaces.size();i++){
                 CockpitData.Surface surface=tile.data().surfaces.get(i);Vec3d target=surface.point(.5,.5).add(new Vec3d(tile.getPos())),eye=target.add(surface.normal.scale(.1));
-                look(mc,eye,target);GuiCockpit gui=new GuiCockpit(container);require(page.getInt(gui)==2+i,"initial page follows clicked surface "+surface.id);
+                look(mc,eye,target);GuiCockpit gui=new GuiCockpit(container);require(page.getInt(gui)==2,"new dialog starts on leftmost Screen tab "+surface.id);
             }
             for(java.util.Map.Entry<String,Vec3d> part:tile.data().pivots.entrySet())if(part.getKey().startsWith("throttle_")){
                 Vec3d eye=new Vec3d(tile.data().seat.x,tile.data().riderY+mc.player.getEyeHeight(),tile.data().seat.z),target=part.getValue().addVector(0,Math.cos(Math.toRadians(22.5))*4.5/16,Math.sin(Math.toRadians(22.5))*4.5/16);
                 look(mc,eye.add(new Vec3d(tile.getPos())),target.add(new Vec3d(tile.getPos())));GuiCockpit gui=new GuiCockpit(container);
-                require(page.getInt(gui)==2+tile.displays.size()+tile.controls.indexOf(tile.control(part.getKey())),"initial page follows clicked grip "+part.getKey());
+                require(page.getInt(gui)==2,"new dialog starts on leftmost Screen tab "+part.getKey());
             }
             TileEntityCockpit.Control throttle=tile.control("throttle_left");int index=tile.controls.indexOf(throttle);
             for(int[] size:new int[][]{{854,480},{480,270}}){
@@ -38,7 +38,7 @@ final class CockpitControlDialogChecks {
             }
             DocumentationRenderCapture.capture(output,"cockpit-throttle-layout",2,2.15,28,-28,1,.65,.1,frame->{tile.setThrottleCount(frame==0?1:2);com.vandorlabs.client.cockpits.CockpitRenderer.renderAnimated(tile.modelId(),0,0,0,net.minecraft.util.EnumFacing.NORTH,0x00f000f0,id->tile.visualDetent(id,0),tile.sideTexture(),tile.getHeight());});
         }finally{mc.player.setPosition(original.x,original.y,original.z);mc.player.rotationYaw=yaw;mc.player.rotationPitch=pitch;mc.displayGuiScreen(previous);}
-        System.out.println("[vandorlabs][reprolab] cockpit-control-dialog PASS clicked screen pages, four-step limits, left/right cycling and single/twin model captures");
+        System.out.println("[vandorlabs][reprolab] cockpit-control-dialog PASS leftmost initial Screen tab, four-step limits, left/right cycling and single/twin model captures");
     }
     private static void look(Minecraft mc,Vec3d eye,Vec3d target){mc.player.setPosition(eye.x,eye.y-mc.player.getEyeHeight(),eye.z);Vec3d d=target.subtract(eye);mc.player.rotationYaw=(float)Math.toDegrees(Math.atan2(-d.x,d.z));mc.player.rotationPitch=(float)-Math.toDegrees(Math.atan2(d.y,Math.sqrt(d.x*d.x+d.z*d.z)));}
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException("Cockpit control dialog: "+message);}
