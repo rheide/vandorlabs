@@ -204,6 +204,12 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         return cells.contains(part.getPos()) && !part.origins.isEmpty()
                 && sources.containsAll(part.origins);
     }
+    /** A real permitted interaction renews location-bound automation authority. */
+    public boolean authorizeInteraction(EntityPlayer player) {
+        if (player==null || world==null || world.isRemote || !usable(player)) return false;
+        setOwner(player);
+        return WorldActionAuthorization.actorId(this)!=null;
+    }
     public boolean usable(EntityPlayer player) {
         return world.getTileEntity(pos)==this && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos);
     }
@@ -301,6 +307,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 || Math.abs((long)endHalf)>ControllerPlatform.MAX_OFFSET_HALF_STEPS)
             return fail("Offsets must be -16 to 16 blocks");
         if (!ControllerPlatform.validTreadPixels(pixels)) return fail("Tread size must be 1, 2, 4, 8 or 16 pixels");
+        // Recovery checks protection too: renew authority before touching the old geometry.
+        // Connected copying has its own edit checks above and must obey the same ordering.
+        setOwner(player);
         // Reset using the old geometry and journal before installing new settings.
         if (attached()) {
             for (BlockPos source:sources) {

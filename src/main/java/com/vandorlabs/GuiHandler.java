@@ -150,8 +150,10 @@ public class GuiHandler implements IGuiHandler {
         }
         if (ID == GUI_RAMP_CONTROLLER) {
             TileEntity te=world.getTileEntity(new BlockPos(x,y,z));
-            if (te instanceof com.vandorlabs.tiles.TileEntityRampController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z)))
+            if (te instanceof com.vandorlabs.tiles.TileEntityRampController && com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,new BlockPos(x,y,z))) {
+                ((com.vandorlabs.tiles.TileEntityRampController)te).authorizeInteraction(player);
                 return new com.vandorlabs.container.ContainerRampController((com.vandorlabs.tiles.TileEntityRampController)te);
+            }
         }
         if (ID == GUI_ANIMATED_SCREEN_SELECTOR) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
