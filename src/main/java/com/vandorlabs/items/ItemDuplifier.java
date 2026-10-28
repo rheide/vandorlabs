@@ -103,6 +103,7 @@ public final class ItemDuplifier extends Item {
     public static boolean applyTo(World world, BlockPos pos, ItemStack tool,
             EntityPlayer player) {
         NBTTagCompound settings = tool.getSubCompound(SETTINGS_TAG);
+        DuplifierUndo.before(player,world,pos);
         return ProgrammableSettings.apply(world, pos,
                 DuplifierApplyOptions.selected(settings, DuplifierApplyOptions.maskWords(tool)),
                 player);
@@ -155,6 +156,8 @@ public final class ItemDuplifier extends Item {
             player.sendStatusMessage(new TextComponentString("Duplifier has no copied settings"), true);
             return;
         }
+        DuplifierUndo.begin(player,world);
+        try {
         if (DuplifierApplyOptions.connected(tool)) {
             int count = DuplifierConnectedApply.apply(world, event.getPos(), tool,
                     player, event.getFace());
@@ -169,5 +172,6 @@ public final class ItemDuplifier extends Item {
             player.sendStatusMessage(new TextComponentString("Duplifier applied settings to 1 block"), true);
         else
             player.sendStatusMessage(new TextComponentString("No copied settings apply here"), true);
+        } finally {DuplifierUndo.finish(player);}
     }
 }

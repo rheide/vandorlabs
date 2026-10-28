@@ -63,6 +63,18 @@ final class DuplifierRuntimeChecks {
                             && porthole.getRedstoneChannel() == 19,
                     "thruster to porthole wall texture, Join or channel transfer failed");
 
+            NBTTagCompound beforeUndo=ProgrammableSettings.capture(world,target);
+            porthole.setHousingTexture(14);
+            com.vandorlabs.items.DuplifierUndo.begin(player,world);
+            require(ItemDuplifier.applyTo(world,target,tool,player),"undo fixture apply failed");
+            com.vandorlabs.items.DuplifierUndo.finish(player);
+            require(porthole.getHousingTexture()==20,"undo fixture did not change target");
+            require(com.vandorlabs.items.DuplifierUndo.undo(player)&&porthole.getHousingTexture()==14,"undo did not restore previous semantic settings");
+            require(!com.vandorlabs.items.DuplifierUndo.undo(player),"undo replayed a consumed operation");
+            com.vandorlabs.items.DuplifierUndo.begin(player,world);ItemDuplifier.applyTo(world,target,tool,player);com.vandorlabs.items.DuplifierUndo.finish(player);
+            porthole.setHousingTexture(15);
+            require(!com.vandorlabs.items.DuplifierUndo.undo(player)&&porthole.getHousingTexture()==15,"undo overwrote a later edit");
+            ProgrammableSettings.apply(world,target,beforeUndo,player);
             NBTTagCompound fromPorthole = ProgrammableSettings.capture(world, target);
             Block ion = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "ion_drive"));
             world.setBlockState(source, ion.getDefaultState(), 3);

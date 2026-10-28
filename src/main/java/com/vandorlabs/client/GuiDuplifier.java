@@ -63,7 +63,7 @@ public final class GuiDuplifier extends GuiContainer {
         buttonList.add(new GuiButton(98, guiLeft + 14, guiTop + 26,
                 392, 18, connectedLabel()));
         for (int i = 0; i < DuplifierApplyOptions.PAGES.length; i++) {
-            GuiButton tab = new GuiButton(i, guiLeft + 10 + i * 80, guiTop + 48,
+            GuiButton tab = new DialogTabButton(i, guiLeft + 10 + i * 80, guiTop + 48,
                     76, 18, DuplifierApplyOptions.PAGES[i]);
             tab.enabled = i != page;
             buttonList.add(tab);
@@ -78,12 +78,14 @@ public final class GuiDuplifier extends GuiContainer {
                     190, 18, optionLabel(i)));
             indexOnPage++;
         }
+        buttonList.add(new GuiButton(97,guiLeft+14,guiTop+ySize-28,132,18,"Undo last application"));
         buttonList.add(new GuiButton(99, guiLeft + 162, guiTop + ySize - 28,
                 96, 18, "Done"));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if (button.id == 99) {
+        if(button.id==97){PacketHandler.INSTANCE.sendToServer(MessageDuplifierOptions.undo());
+        } else if (button.id == 99) {
             mc.player.closeScreen();
         } else if (button.id == 98) {
             DuplifierApplyOptions.setConnected(tool(), !DuplifierApplyOptions.connected(tool()));
