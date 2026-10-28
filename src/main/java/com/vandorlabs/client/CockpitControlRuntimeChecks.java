@@ -79,6 +79,14 @@ final class CockpitControlRuntimeChecks {
         left.setLocalLevel(8);right.setLocalLevel(4);TileEntityCockpit copy=new TileEntityCockpit();copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
         require(copy.control("throttle_left").latchedLevel(65491)==8&&copy.control("throttle_right").latchedLevel(65493)==4,"explicit and default channel banks survive reload");
         TransmitterSlots.set(tile,net.minecraft.item.ItemStack.EMPTY);copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));require(TransmitterSlots.get(copy).isEmpty(),"removed shared module stays empty after reload");
+        NBTTagCompound legacy=tile.writeToNBT(new NBTTagCompound());legacy.removeTag(TransmitterSlots.SCHEMA);legacy.removeTag("ForgeData");
+        NBTTagCompound migrated=TransmitterSlots.normalize(legacy);TileEntityCockpit upgraded=new TileEntityCockpit();upgraded.readFromNBT(migrated);
+        require(TransmitterSlots.get(upgraded).getMetadata()==2&&TransmitterSlots.savedSlots(upgraded).getKeySet().size()==1,"legacy cockpit gets one shared Long Range module");
+        require(upgraded.control("throttle_left").channels.equals(left.channels),"legacy independent target retained");
+        NBTTagCompound forge=new NBTTagCompound(),slots=new NBTTagCompound();net.minecraft.item.ItemStack shortItem=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,1,0),longItem=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,1,2);
+        com.vandorlabs.items.ItemRedstoneTransmitter.configure(shortItem,ChannelList.of(65494));com.vandorlabs.items.ItemRedstoneTransmitter.configure(longItem,ChannelList.of(65495));slots.setTag("cockpit_throttle_left",shortItem.writeToNBT(new NBTTagCompound()));slots.setTag("cockpit_throttle_right",longItem.writeToNBT(new NBTTagCompound()));forge.setTag("VandorTransmitters",slots);legacy.setTag("ForgeData",forge);
+        upgraded.readFromNBT(TransmitterSlots.normalize(legacy));require(TransmitterSlots.get(upgraded).getMetadata()==2&&TransmitterSlots.savedSlots(upgraded).getKeySet().size()==2,"existing cockpit modules move strongest to main and preserve recoverable extras exactly once");
+        require(!TransmitterSlots.savedSlots(upgraded).hasKey("cockpit_throttle_right")&&TransmitterSlots.savedSlots(upgraded).hasKey("cockpit_throttle_left"),"promoted item has one physical owner");
         install(tile,2,ChannelList.EMPTY);
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException("Cockpit controls: "+message);}
