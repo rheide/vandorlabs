@@ -67,6 +67,7 @@ public final class VehicleControllerRuntimeChecks {
             require(field(field(mc.currentScreen,"data"),"structure")==null,"invalid scan supplies real controller data without a fake hull");
             require(buttons(mc).stream().anyMatch(b->b.id==11&&!b.enabled),"incomplete craft cannot assemble");
             for(int id:new int[]{4})require(buttons(mc).stream().anyMatch(b->b.id==id&&b.enabled),"standalone control available: "+id);
+            VehicleTaxiRuntimeChecks.button(mc,91);
             GuiOptionCycleRuntimeChecks.check(mc);VehicleTaxiRuntimeChecks.type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"28811");GuiTextField[] modes=(GuiTextField[])field(mc.currentScreen,"modeChannels");for(int i=0;i<3;i++)VehicleTaxiRuntimeChecks.type(mc,modes[i],Integer.toString(28830+i));mc.currentScreen.updateScreen();
             standaloneStage=2;ticks=0;return;
         }
@@ -129,6 +130,7 @@ public final class VehicleControllerRuntimeChecks {
     private static void panel(Minecraft mc)throws Exception{
         require(mc.currentScreen!=null&&mc.currentScreen.getClass().getName().endsWith("VehicleClient$Preview"),"controller opens integrated panel");
         require(header(mc).forward==1,"controller panel metadata distinct from seat");
+        require(buttons(mc).stream().filter(button->button instanceof DialogTabButton).count()==2,"controller uses standard Vehicle and Redstone tabs");
         require(buttons(mc).stream().anyMatch(button->button.id==11&&button.enabled),"controller Taxi selection assembles the craft");
         require(buttons(mc).stream().noneMatch(button->button.id==5||button.id==2),"controller has no individual seat Height or Taxi setting");
         require(buttons(mc).stream().noneMatch(button->button.id==0||button.id==6),"controller removes Assemble and separate mode channels dialog");
