@@ -27,7 +27,7 @@ public final class CopyPlan {
         for(BlockPos cursor:BlockPos.getAllInBox(from[0],from[1])){
             BlockPos at=cursor.toImmutable();VehicleService.permission(actor,at);IBlockState state=world.getBlockState(at);if(state.getBlock().isAir(state,world,at))continue;
             if(at.equals(owner.getPos())||at.equals(owner.chest()))throw new IllegalArgumentException("Keep the controller and material chest outside the input volume");
-            if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevents reading the input at "+coordinates(at));
+            if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevents reading the input at "+coordinates(at));
             TileEntity tile=world.getTileEntity(at);boundaries.check(at,state,tile);
             if(tile instanceof CopyControllerTile&&(((CopyControllerTile)tile).input!=null||((CopyControllerTile)tile).output!=null||((CopyControllerTile)tile).busy()))throw new IllegalArgumentException("Disconnect other Copy Controllers from their surfaces before copying them");
             NBTTagCompound data=tile==null?null:VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(from[0]));

@@ -297,7 +297,7 @@ public final class VehicleService {
         VehicleEscalators.WorldSnapshot actual=VehicleEscalators.expandedWorldSnapshot(player.world,structure,origin);
         for(VehicleStructure.Cell cell:actual.structure.cells){
             BlockPos at=actual.origin.add(cell.pos);permission(player,at);
-            require(!MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(player.world,at,player.world.getBlockState(at),player)),"A protection rule prevented assembly.");
+            require(!com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new BlockEvent.BreakEvent(player.world,at,player.world.getBlockState(at),player)),"A protection rule prevented assembly.");
         }
     }
     private static Preview seatPreview(EntityPlayerMP player,UUID token,int entity,BlockPos selected){

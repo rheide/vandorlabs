@@ -40,7 +40,7 @@ public final class ArmPayloadHarvest {
         if(!player.capabilities.isCreativeMode){
             Dig dig=DIGS.get(player.getUniqueID());long tick=world.getTotalWorldTime();if(dig==null||!root.equals(dig.root)||!cell.equals(dig.cell)||tick-dig.tick>2||!ItemStack.areItemStacksEqual(dig.tool,player.getHeldItemMainhand())){dig=new Dig();dig.root=root;dig.cell=cell;dig.tick=tick-1;dig.tool=player.getHeldItemMainhand().copy();DIGS.put(player.getUniqueID(),dig);}if(dig.tick==tick)return;dig.tick=tick;dig.progress+=selected.state.getPlayerRelativeBlockHardness(player,arm.payload().view(arm),cell);if(dig.progress<1)return;
         }
-        if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,logical,selected.state,player)))return;
+        if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,logical,selected.state,player)))return;
         net.minecraft.util.NonNullList<ItemStack> drops=net.minecraft.util.NonNullList.create();
         if(!player.capabilities.isCreativeMode){
             if(selected.state.getBlock().canHarvestBlock(arm.payload().view(arm),cell,player)){
@@ -49,7 +49,7 @@ public final class ArmPayloadHarvest {
                 float chance=net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(drops,world,logical,selected.state,fortune,1,silk,player);drops.removeIf(stack->world.rand.nextFloat()>chance);
             }
         }
-        net.minecraft.tileentity.TileEntity tile=arm.payload().view(arm).getTileEntity(cell);if(tile instanceof net.minecraft.inventory.IInventory){net.minecraft.inventory.IInventory inventory=(net.minecraft.inventory.IInventory)tile;for(int slot=0;slot<inventory.getSizeInventory();slot++)if(!inventory.getStackInSlot(slot).isEmpty())drops.add(inventory.getStackInSlot(slot).copy());}
+        net.minecraft.tileentity.TileEntity tile=arm.payload().view(arm).getTileEntity(cell);com.vandorlabs.redstone.TransmitterDrops.retainedDrops(tile,drops);if(tile instanceof net.minecraft.inventory.IInventory){net.minecraft.inventory.IInventory inventory=(net.minecraft.inventory.IInventory)tile;for(int slot=0;slot<inventory.getSizeInventory();slot++)if(!inventory.getStackInSlot(slot).isEmpty())drops.add(inventory.getStackInSlot(slot).copy());}
         if(drops.size()>256)throw new IllegalArgumentException("Too many dropped stacks; attachment retained");
         NBTTagCompound extra=new NBTTagCompound();extra.setBoolean("HarvestCreative",player.capabilities.isCreativeMode);extra.setLong("HarvestCell",cell.toLong());extra.setUniqueId("HarvestActor",player.getUniqueID());extra.setTag("HarvestPayload",arm.payload().write());extra.setTag("HarvestTool",player.getHeldItemMainhand().writeToNBT(new NBTTagCompound()));NBTTagList items=new NBTTagList();
         Vec3d center=arm.payload().transform(arm,arm.progress(),cell.getX()+.5,cell.getY()+.5,cell.getZ()+.5).add(new Vec3d(root));

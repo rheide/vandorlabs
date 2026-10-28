@@ -113,7 +113,7 @@ public final class RedstoneChannels {
         n.manual(player.getPosition(),channels,range,on?15:0);
     }
     private static final class Network {
-        private static final class Counters{long receiverBuckets,receiverCandidates,sourceBuckets,sourceCandidates,deliveries;}
+        private static final class Counters{long receiverBuckets,receiverCandidates,sourceBuckets,sourceCandidates,deliveries;final java.util.ArrayDeque<SourceBucket[]> queryBuffers=new java.util.ArrayDeque<>();}
         private final Counters stats=new Counters();
         private final World world;
         private final Map<ManualRedstoneData.Entry,RedstoneChannelMember> manualSources=new IdentityHashMap<>();
@@ -184,19 +184,33 @@ public final class RedstoneChannels {
         private int level(int channel){return powerSources.getOrDefault(channel,0);}
         private static boolean inside(net.minecraft.util.math.BlockPos source,net.minecraft.util.math.BlockPos target,int range){return range==0||source.distanceSq(target)<=(double)range*range;}
         private static final class Source {final net.minecraft.util.math.BlockPos pos;final int range,level;Source(net.minecraft.util.math.BlockPos pos,int range,int level){this.pos=pos.toImmutable();this.range=range;this.level=level;}}
-        /** Three tier grids visit at most 81 buckets per receiver, regardless of radius. */
+        /** Exact strength banks prevent scanning thousands of equal analog sources. */
+        private static final class SourceBucket {
+            final Set<RedstoneChannelMember>[] levels=new Set[16];int maximum;
+            void add(RedstoneChannelMember member,int level){if(levels[level]==null)levels[level]=identitySet();levels[level].add(member);maximum=Math.max(maximum,level);}
+            void remove(RedstoneChannelMember member,int level){Set<RedstoneChannelMember> set=levels[level];if(set!=null){set.remove(member);if(set.isEmpty())levels[level]=null;}while(maximum>0&&levels[maximum]==null)maximum--;}
+        }
+        /** At most 81 local buckets and one infinite bank, descending published signal strength. */
         private static final class Index {
             final Counters stats;Index(Counters stats){this.stats=stats;}
             final Map<RedstoneChannelMember,Source> all=new IdentityHashMap<>();final int[] strengths=new int[16];
-            final Map<Long,Set<RedstoneChannelMember>>[] grids=new Map[]{new java.util.HashMap<>(),new java.util.HashMap<>(),new java.util.HashMap<>()};
-            final Set<RedstoneChannelMember> infinite=identitySet();
+            final Map<Long,SourceBucket>[] grids=new Map[]{new java.util.HashMap<>(),new java.util.HashMap<>(),new java.util.HashMap<>()};
+            final SourceBucket infinite=new SourceBucket();
             static int tier(int range){return range<=16?0:range<=64?1:2;}
             static int size(int tier){return tier==0?16:tier==1?64:256;}
             static long packed(int x,int y,int z){return ((long)x&67108863L)<<38|((long)y&4095L)<<26|((long)z&67108863L);}
             static long key(net.minecraft.util.math.BlockPos p,int size){return packed(Math.floorDiv(p.getX(),size),Math.floorDiv(p.getY(),size),Math.floorDiv(p.getZ(),size));}
-            void put(RedstoneChannelMember member,Source source){remove(member);all.put(member,source);strengths[source.level]++;if(source.range==0)infinite.add(member);else{int t=tier(source.range);grids[t].computeIfAbsent(key(source.pos,size(t)),k->identitySet()).add(member);}}
-            void remove(RedstoneChannelMember member){Source source=all.remove(member);if(source==null)return;strengths[source.level]--;if(source.range==0)infinite.remove(member);else {int t=tier(source.range);long key=key(source.pos,size(t));Set<RedstoneChannelMember> set=grids[t].get(key);if(set!=null){set.remove(member);if(set.isEmpty())grids[t].remove(key);}}}
-            int at(net.minecraft.util.math.BlockPos pos){int result=0;for(RedstoneChannelMember member:infinite){stats.sourceCandidates++;Source source=all.get(member);if(member.isChannelMemberActive())result=Math.max(result,source.level);if(result==15)return result;}for(int t=0;t<3;t++){int size=size(t),x=Math.floorDiv(pos.getX(),size),y=Math.floorDiv(pos.getY(),size),z=Math.floorDiv(pos.getZ(),size);for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++){stats.sourceBuckets++;Set<RedstoneChannelMember> set=grids[t].get(packed(x+dx,y+dy,z+dz));if(set!=null)for(RedstoneChannelMember member:set){stats.sourceCandidates++;Source source=all.get(member);if(member.isChannelMemberActive()&&inside(source.pos,pos,source.range))result=Math.max(result,source.level);if(result==15)return result;}}}return result;}
+            void put(RedstoneChannelMember member,Source source){remove(member);all.put(member,source);strengths[source.level]++;if(source.range==0)infinite.add(member,source.level);else {int t=tier(source.range);grids[t].computeIfAbsent(key(source.pos,size(t)),k->new SourceBucket()).add(member,source.level);}}
+            void remove(RedstoneChannelMember member){Source source=all.remove(member);if(source==null)return;strengths[source.level]--;if(source.range==0)infinite.remove(member,source.level);else {int t=tier(source.range);long key=key(source.pos,size(t));SourceBucket bucket=grids[t].get(key);if(bucket!=null){bucket.remove(member,source.level);if(bucket.maximum==0)grids[t].remove(key);}}}
+            int at(net.minecraft.util.math.BlockPos pos){
+                SourceBucket[] candidates=stats.queryBuffers.pollFirst();if(candidates==null)candidates=new SourceBucket[82];int count=0,ceiling=0;
+                try{
+                    if(infinite.maximum>0){candidates[count++]=infinite;ceiling=infinite.maximum;}
+                    for(int t=0;t<3;t++){int size=size(t),x=Math.floorDiv(pos.getX(),size),y=Math.floorDiv(pos.getY(),size),z=Math.floorDiv(pos.getZ(),size);for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++){stats.sourceBuckets++;SourceBucket bucket=grids[t].get(packed(x+dx,y+dy,z+dz));if(bucket!=null){candidates[count++]=bucket;ceiling=Math.max(ceiling,bucket.maximum);}}}
+                    for(int level=ceiling;level>0;level--)for(int i=0;i<count;i++){SourceBucket bucket=candidates[i];if(bucket.maximum<level)continue;Set<RedstoneChannelMember> sources=bucket.levels[level];if(sources==null)continue;for(RedstoneChannelMember member:sources){stats.sourceCandidates++;Source source=all.get(member);if(source!=null&&member.isChannelMemberActive()&&inside(source.pos,pos,source.range))return level;}}
+                    return 0;
+                }finally{java.util.Arrays.fill(candidates,null);if(stats.queryBuffers.size()<8)stats.queryBuffers.addFirst(candidates);}
+            }
             int maximum(){for(int level=15;level>0;level--)if(strengths[level]>0)return level;return 0;}
         }
         private static boolean isLatch(RedstoneChannelMember member){return member instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)member).isChannelLatch();}

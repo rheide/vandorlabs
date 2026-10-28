@@ -43,7 +43,7 @@ public final class TurntableSnapshot {
         for(BlockPos mutable:BlockPos.getAllInBox(min,max)){
             BlockPos pos=mutable.toImmutable();if(world.isAirBlock(pos))continue;
             VehicleService.permission(actor,pos);
-            if(MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(world,pos,world.getBlockState(pos),actor)))throw new IllegalArgumentException("A protection rule prevented scanning at "+pos);
+            if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new BlockEvent.BreakEvent(world,pos,world.getBlockState(pos),actor)))throw new IllegalArgumentException("A protection rule prevented scanning at "+pos);
             TileEntity tile=world.getTileEntity(pos);
             boundaries.check(pos,world.getBlockState(pos),tile);
             NBTTagCompound saved=tile==null?null:tile.writeToNBT(new NBTTagCompound());

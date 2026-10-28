@@ -38,6 +38,7 @@ public final class CopyMaterials {
         if(depth>32)return true;
         if(tag instanceof NBTTagCompound){NBTTagCompound data=(NBTTagCompound)tag;for(String key:data.getKeySet()){
             NBTBase value=data.getTag(key);if((key.equals("Items")||key.equals("Inventory")||key.equals("inventory"))&&value instanceof NBTTagList&&((NBTTagList)value).tagCount()>0)return true;
+            if(key.equals("VandorTransmitters")&&value instanceof NBTTagCompound&&!((NBTTagCompound)value).hasNoTags())return true;
             if(key.equals("InsertedToken")&&value instanceof NBTTagCompound&&!new ItemStack((NBTTagCompound)value).isEmpty())return true;
             if((key.equals("Energy")||key.equals("energy")||key.equals("energyStored")||key.equals("electricityStored")||key.equals("Amount"))&&value instanceof net.minecraft.nbt.NBTPrimitive&&((net.minecraft.nbt.NBTPrimitive)value).getDouble()>0)return true;
             if(retained(value,depth+1))return true;
@@ -77,6 +78,7 @@ public final class CopyMaterials {
     }
     private static void inventory(TileEntity tile,List<Need> needs){
         if(tile==null)return;
+        NBTTagCompound transmitters=com.vandorlabs.redstone.TransmitterSlots.savedSlots(tile);for(String key:transmitters.getKeySet()){ItemStack transmitter=new ItemStack(transmitters.getCompoundTag(key));if(!com.vandorlabs.items.ItemRedstoneTransmitter.valid(transmitter)||transmitter.getCount()!=1)throw new IllegalArgumentException("Invalid inserted transmitter; remove it before Survival copying");add(needs,transmitter,1);}
         if(tile.getClass().getName().equals("mekanism.common.tile.TileEntityBin"))try{long count=((Number)tile.getClass().getMethod("getItemCount").invoke(tile)).longValue();if(count<0)throw new IllegalArgumentException("Invalid stored bin count");ItemStack type=(ItemStack)tile.getClass().getField("itemType").get(tile);if(count>0&&type.isEmpty())throw new IllegalArgumentException("Stored bin items cannot be identified");add(needs,type,count);return;}catch(ReflectiveOperationException unsupported){throw new IllegalArgumentException("Cannot account for the bin inventory exactly");}
         List<ItemStack> foreign=VehicleForeignCompat.inventory(tile);if(foreign!=null){for(ItemStack item:foreign)add(needs,item,item.getCount());return;}
         if(tile instanceof IInventory){IInventory inventory=(IInventory)tile;int slots=inventory.getSizeInventory();if(slots<0||slots>8192)throw new IllegalArgumentException("Inventory slot count exceeds the copy limit");for(int slot=0;slot<slots;slot++){ItemStack item=inventory.getStackInSlot(slot);add(needs,item,item.getCount());}}
