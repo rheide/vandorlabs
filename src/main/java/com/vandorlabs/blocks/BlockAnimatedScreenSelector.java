@@ -74,6 +74,7 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
     public TileEntity createNewTileEntity(World worldIn, int meta) {
         TileEntityAnimatedScreenSelector tile = new TileEntityAnimatedScreenSelector();
         tile.setHousingTexture(com.vandorlabs.tiles.ScreenHousingTextures.screenIndex("door_inner"));
+        tile.initializeDisplayArtwork(this);
         return tile;
     }
 
@@ -189,6 +190,7 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
                 ((TileEntityAnimatedScreenSelector)tile).setHousingTexture(com.vandorlabs.tiles.ScreenHousingTextures.screenIndex("door_inner"));
         }
         predictItemSettings(world,pos,stack);
+        TileEntity placed=world.getTileEntity(pos);if(placed instanceof TileEntityAnimatedScreenSelector)((TileEntityAnimatedScreenSelector)placed).initializeDisplayArtwork(this);
     }
 
     public static boolean usesDeviceHousing(net.minecraft.block.Block block) {

@@ -236,6 +236,7 @@ public final class BuildingBlockCompat {
     }
     /** The native doormat reader maps an absent message to the empty string. */
     public static NBTTagCompound canonical(IBlockState state,NBTTagCompound data){
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockAnimatedScreenSelector){com.vandorlabs.tiles.FrameAppearance.migrateLegacyScreen(data);com.vandorlabs.tiles.FrameAppearance.initializeDisplay(state.getBlock(),data);}
         if(state.getBlock().getClass().getName().equals("com.mrcrayfish.furniture.blocks.BlockDoorMat")&&!data.hasKey("message"))data.setString("message","");
         return data;
     }

@@ -386,7 +386,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         DeferredTileLoad.schedule(this, this::finishLoading);
     }
 
-    protected void finishLoading() { RedstoneChannels.register(this);for(RedstoneScreenContents c:controls)if(c!=null)c.finishLoading(); }
+    public boolean initializeDisplayArtwork(net.minecraft.block.Block block){
+        if(!FrameAppearance.displayBlock(block)||frameAppearance.artworkVersion>=1)return false;
+        frameAppearance.artworkVersion=1;
+        if(primarySurface==-1&&"engineering_screen".equals(selectedScreen)&&frameAppearance.front<0){frameAppearance.migrateLegacyFrame();framed=false;}
+        return true;
+    }
+    protected void finishLoading() {if(world!=null&&initializeDisplayArtwork(world.getBlockState(pos).getBlock())){markDirty();net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);} RedstoneChannels.register(this);for(RedstoneScreenContents c:controls)if(c!=null)c.finishLoading(); }
     @Override public void invalidate() { RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.invalidate(); super.invalidate(); }
     @Override public void onChunkUnload() { RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.onChunkUnload(); super.onChunkUnload(); }
 
@@ -565,6 +571,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public void readFromNBT(NBTTagCompound compound) {
+        if(FrameAppearance.needsLegacyScreen(compound)){compound=compound.copy();FrameAppearance.migrateLegacyScreen(compound);}
         int previousStair=stairGeometry();
         int tread=compound.hasKey("StairTread",3)?compound.getInteger("StairTread"):8;
         stairTread=com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)?tread:8;
@@ -610,13 +617,6 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         animationSpeedIndex = data.animationSpeedIndex;
         inputPanel = data.inputPanel;
         secondaryInputPanel = data.secondaryInputPanel;
-        if(!compound.hasKey("FrameFront",3)){
-            boolean legacy=framed||FrameAppearance.framed(selectedScreen)||FrameAppearance.framed(inputPanel)||FrameAppearance.framed(secondaryInputPanel)||FrameAppearance.bareChoice(primarySurface)!=primarySurface||FrameAppearance.bareChoice(secondarySurface)!=secondarySurface;
-            if(legacy)frameAppearance.migrateLegacyFrame();
-            for(com.vandorlabs.blocks.ModBlocks.ScreenOption option:com.vandorlabs.blocks.ModBlocks.SCREEN_OPTIONS)if(option.framedId.equals(selectedScreen))selectedScreen=option.bareId;
-            selectedScreen=FrameAppearance.bare(selectedScreen);inputPanel=FrameAppearance.bare(inputPanel);secondaryInputPanel=FrameAppearance.bare(secondaryInputPanel);primarySurface=FrameAppearance.bareChoice(primarySurface);secondarySurface=FrameAppearance.bareChoice(secondarySurface);framed=false;
-        }
-
         wallPosition = data.wallPosition;
         smallInput = data.smallInput;
         redstoneChannel = data.redstoneChannel;
