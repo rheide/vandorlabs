@@ -56,11 +56,12 @@ public class GuiProgrammableInput extends GuiContainer {
 
     @Override public void initGui() {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
+        int redstoneWidth=Math.min(400,xSize-24),redstoneX=layout.left+(xSize-redstoneWidth)/2;
         super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
         buttonList.add(layout.tab(90,0,3,"Controls"));
         buttonList.add(layout.tab(91,1,3,"Sides"));
-        buttonList.add(layout.tab(92,2,3,"Redstone"));buttonList.add(new GuiButton(198,guiLeft+12,guiTop+138,xSize-24,20,"Transmitter..."));
+        buttonList.add(layout.tab(92,2,3,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+138,redstoneWidth,20,"Transmitter..."));
         listX=layout.listX;listY=guiTop+54;
         screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0);
         for(int i=0;i<3;i++) {
@@ -72,9 +73,9 @@ public class GuiProgrammableInput extends GuiContainer {
             buttonList.add(layout.choice(31,1,2,88,I18n.format("gui.vandorlabs.selector.normal")));
         }
         buttonList.add(layout.control(4,108,""));
-        buttonList.add(new GuiButton(0,guiLeft+12,guiTop+100,xSize-24,20,""));
+        buttonList.add(new GuiButton(0,redstoneX,guiTop+100,redstoneWidth,20,""));
         buttonList.add(layout.control(32,152,sidesLabel()));
-        channelField=new GuiTextField(40,fontRenderer,guiLeft+12,guiTop+70,xSize-24,18);
+        channelField=new GuiTextField(40,fontRenderer,redstoneX,guiTop+70,redstoneWidth,18);
         ChannelFields.configure(channelField);
 
         channelField.setText(te.getRedstoneChannels().toString());
@@ -226,7 +227,7 @@ public class GuiProgrammableInput extends GuiContainer {
         else if(textureTab==1)housingList.draw(fontRenderer,mouseX,mouseY);
         if(textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+26,0xDAE8F0);
         if(textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+58,0xDAE8F0);
-        if(textureTab==2)fontRenderer.drawString("Receive channels (0 = none)",guiLeft+12,guiTop+58,0xDAE8F0);
+        if(textureTab==2)fontRenderer.drawString("Receive channels (0 = none)",channelField.x,guiTop+58,0xDAE8F0);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
