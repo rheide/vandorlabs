@@ -2,6 +2,7 @@
 import argparse,json
 from pathlib import Path
 from PIL import Image
+from frame_edges import opaque_strip
 ROOT=Path(__file__).resolve().parents[1]
 def write_json(path,value):path.write_text(json.dumps(value,indent=2)+'\n')
 def main():
@@ -17,7 +18,7 @@ def main():
         company,height=border.parent.name,border.stem;image=Image.open(border).convert('RGBA');aspect=image.width/image.height
         resized=image.resize((64,round(64/aspect)),Image.Resampling.LANCZOS);canvas=Image.new('RGBA',(64,64));canvas.paste(resized,(0,0))
         stem=f'frames/company/{company}_{height}';target=textures/(stem+'.png');target.parent.mkdir(parents=True,exist_ok=True);canvas.save(target,optimize=True)
-        resized.crop((0,0,64,max(1,resized.height//12))).resize((64,64),Image.Resampling.LANCZOS).save(target.with_name(target.stem+"_rail.png"),optimize=True)
+        opaque_strip(resized).save(target.with_name(target.stem+"_rail.png"),optimize=True)
         append(catalog,dict(id=f'frame_company_{company}_{height}',label=company.replace('_',' ').title()+' '+height.title(),category='Frame',menuGroup='Company/'+company.replace('_',' ').title(),source=stem,frame=True,frameBorder=True,frameAspect=aspect,frameRail=stem+'_rail'))
     for metadata in sorted((source/'displays').glob('*/*/*/animation.json')):
         info=json.loads(metadata.read_text());company,height,subject=metadata.parts[-4:-1];identifier=f'company_{company}_{height}_{subject}';stem=('console_inputs/' if height=='half' else '')+identifier
