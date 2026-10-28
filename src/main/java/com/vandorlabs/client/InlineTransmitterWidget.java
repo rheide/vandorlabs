@@ -68,7 +68,7 @@ public final class InlineTransmitterWidget {
         if(!(event.getGui() instanceof GuiContainer))return;GuiContainer gui=(GuiContainer)event.getGui();InlineTransmitters.Binding binding=InlineTransmitters.binding(gui.inventorySlots);if(binding==null)return;
         int left=value(LEFT,gui),top=value(TOP,gui);List<InlineTransmitters.VisibleSlot> slots=new ArrayList<>(binding.modules.values());slots.addAll(binding.hotbar);Minecraft mc=Minecraft.getMinecraft();State state=STATES.get(gui);List<String> tooltip=Collections.emptyList();
         try(TurntableRenderState saved=new TurntableRenderState()){
-            GlStateManager.setActiveTexture(net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);GlStateManager.disableLighting();GlStateManager.disableDepth();GlStateManager.depthMask(false);GlStateManager.enableTexture2D();GlStateManager.color(1,1,1,1);
+            GlStateManager.setActiveTexture(net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);GlStateManager.disableLighting();GlStateManager.disableDepth();GlStateManager.disableCull();GlStateManager.depthMask(false);GlStateManager.enableTexture2D();GlStateManager.color(1,1,1,1);
             if(state!=null)for(Placement p:state.buttons.values())if(p.shown){
                 mc.fontRenderer.drawSplitString(CAPTION,p.x+24,p.y+2,p.width-24,0xc9d9e2);p.field.drawTextBox();
                 if(!p.slot.getHasStack()&&mc.player.inventory.getItemStack().isEmpty()){
