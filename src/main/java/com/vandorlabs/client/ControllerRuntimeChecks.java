@@ -52,7 +52,7 @@ public final class ControllerRuntimeChecks {
             BlockPos p=BlockPos.fromLong(cells.getCompoundTagAt(i).getLong("Pos"));
             if (world.getTileEntity(p) instanceof TileEntityControlledRamp
                     && ((TileEntityControlledRamp)world.getTileEntity(p)).belongsTo(controller.getPos()))
-                ((TileEntityControlledRamp)world.getTileEntity(p)).move(controller.isOpen(),
+                ((TileEntityControlledRamp)world.getTileEntity(p)).move(controller.isOpen(),tag.hasKey("RampTargetPose",6)?tag.getDouble("RampTargetPose"):(controller.isOpen()?1:0),
                         tag.getDouble("StartPose"),tag.getLong("StartTick"),controller.durationTicks(),controller.isMoving());
         }
         controller.scheduledTick();

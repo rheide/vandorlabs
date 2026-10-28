@@ -330,6 +330,9 @@ public final class ControllerPlatformTest {
             close(ControllerPlatform.pose(.5,false,0,duration),.5,"reversal continuity");
             close(ControllerPlatform.pose(.5,false,duration/4.0,duration),.25,"reversal speed");
             close(ControllerPlatform.pose(.5,false,duration,duration),0,"closed clamp");
+            close(ControllerPlatform.pose(0,8/15D,duration,duration),8/15D,"analog target clamp");
+            close(ControllerPlatform.pose(12/15D,4/15D,0,duration),12/15D,"analog reversal continuity");
+            close(ControllerPlatform.pose(12/15D,4/15D,duration,duration),4/15D,"analog reversal endpoint");
         }
         System.out.println("Controller geometry PASS ("+assertions+" assertions)");
     }

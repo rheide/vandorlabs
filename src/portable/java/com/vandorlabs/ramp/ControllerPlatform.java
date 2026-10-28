@@ -144,7 +144,10 @@ public final class ControllerPlatform {
         return Math.max(0,Math.min(1,1-((cellY-sourceY)+localY-offset)));
     }
     public static double pose(double from,boolean open,double elapsed,int duration) {
+        return pose(from,open?1D:0D,elapsed,duration);
+    }
+    public static double pose(double from,double target,double elapsed,int duration) {
         double distance=Math.max(0,elapsed)/Math.max(1,duration);
-        return open?Math.min(1,from+distance):Math.max(0,from-distance);
+        return target>=from?Math.min(target,from+distance):Math.max(target,from-distance);
     }
 }

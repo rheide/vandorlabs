@@ -108,6 +108,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private final Map<BlockPos,NBTTagCompound> sourceTiles=new LinkedHashMap<>();
     private final Set<BlockPos> cells=new HashSet<>();
     private IBlockState original=Blocks.AIR.getDefaultState();
+    public boolean analogDeployment;
+    private double targetPose=1;
     private boolean open,moving,changing,latched,signalKnown,needsLoadCheck,recoveryPending,legacy;
     private double startPose,low,high=1;
     private long startTick,lastStepTick;
@@ -153,6 +155,10 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     @Override public boolean hasLocalRedstoneSignal() {
         return com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
     }
+    @Override public void setChannelLevel(int level){
+        boolean same=channelSignal==(level>0);setChannelSignal(level>0);
+        if(same&&analogDeployment&&world!=null&&!world.isRemote)evaluateSignal(false);
+    }
     @Override public void setChannelSignal(boolean powered) {
         if(!acceptsWorldCommand())return;
         if (channelSignal == powered) return;
@@ -191,7 +197,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     public void setPlacementDirection(EnumFacing direction){if(direction!=null&&direction.getAxis().isHorizontal()&&configuredFacing==null){configuredFacing=direction;markDirty();}}
     public void setOwner(EntityPlayer player) { owner=player.getUniqueID();WorldActionAuthorization.authorize(this,player); markDirty(); }
     public double pose(double partial) {
-        return moving?ControllerPlatform.pose(startPose,open,world.getTotalWorldTime()-startTick+partial,duration):startPose;
+        return moving?ControllerPlatform.pose(startPose,targetPose,world.getTotalWorldTime()-startTick+partial,duration):startPose;
     }
     private BlockPos reserved(BlockPos source,int distance) { return source.up(top?-distance:distance); }
     public boolean owns(TileEntityControlledRamp part) {
@@ -203,7 +209,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
     private boolean fail(String reason) { clearCanopyCommand();error=true; status=reason; sync(); return false; }
     private boolean hold(String reason) {
-        if (moving) startPose=ControllerPlatform.pose(startPose,open,lastStepTick-startTick,duration);
+        if (moving) startPose=ControllerPlatform.pose(startPose,targetPose,lastStepTick-startTick,duration);
         moving=false; syncParts(); releaseExcept(occupied(startPose,startPose));
         return fail(reason);
     }
@@ -332,6 +338,13 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
     private boolean evaluateSignal(boolean force) {
         if(!acceptsWorldCommand())return false;
+        if(analogDeployment&&escalator==0){
+            int level=com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos);
+            for(int i=0;i<channels.size();i++){int channel=channels.get(i);if(channel>0)level=Math.max(level,RedstoneChannels.level(world,pos,channel));}
+            double desiredPose=(activateOnPower?level:15-level)/15D;
+            if(!force&&signalKnown&&Math.abs(targetPose-desiredPose)<1e-8)return !error;
+            signalKnown=true;latched=desiredPose>0;return requestPose(desiredPose);
+        }
         boolean desired=(hasLocalRedstoneSignal() || channelSignal)==activateOnPower;
         if (!force && signalKnown && desired==latched) return !error;
         signalKnown=true; latched=desired;
@@ -350,11 +363,14 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
 
     /** Public for the block event adapter and live-world regression checks. */
-    public boolean request(boolean deploy) {
+    public boolean request(boolean deploy) {return requestPose(deploy?1:0);}
+    public void setAnalogDeployment(boolean value){if(analogDeployment!=value){analogDeployment=value;signalKnown=false;evaluateSignal(true);sync();}}
+    private boolean requestPose(double requestedPose) {
+        boolean deploy=requestedPose>0;
         if(!acceptsWorldCommand())return false;
         if(vehicleFrozen || world instanceof com.vandorlabs.vehicle.VehicleWorld)return false;
         if (world.isRemote || changing) return false;
-        if(escalator!=0)deploy=true;
+        if(escalator!=0){deploy=true;requestedPose=1;}
         clearCanopyCommand();requestingDeploy=deploy;
         if (recoveryPending && !recover(false)) return false;
         if (!attached()) {
@@ -369,7 +385,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             return fail(problem);
         }
         startPose=pose(0); startTick=world.getTotalWorldTime(); lastStepTick=startTick;
-        open=deploy; moving=Math.abs(startPose-(deploy?1:0))>1e-8;
+        targetPose=requestedPose;open=deploy; moving=Math.abs(startPose-targetPose)>1e-8;
         duration=ControllerPlatform.duration(length,
                 (int)Math.ceil(Math.abs(endOffsetValue()-startOffsetValue())),speed);
         error=false; status=moving?(deploy?"Deploying":"Retracting"):(deploy?"Deployed":"Retracted");
@@ -519,7 +535,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             NBTTagCompound saved=sourceTiles.get(source);
             if (saved!=null) te.sourceTileTags.put(source,saved.copy());
         }
-        te.move(open,startPose,startTick,duration,moving);
+        te.move(open,targetPose,startPose,startTick,duration,moving);
     }
 
     /** Build an endpoint in an isolated VehicleWorld; no placed blocks are written. */
@@ -543,7 +559,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
             if(box.minX!=0||box.maxX!=1||box.minZ!=0||box.maxZ!=1)throw new IllegalArgumentException("Ramp platform must use full-width slabs or cubes");
             verticalMoatSources=moat;moatGeometryRevision=2;original=material;low=box.minY;high=box.maxY;length=moat?sources.stream().mapToInt(BlockPos::getY).max().getAsInt()-sourceBaseY()+1:max-min+1;minAlong=min;
         }
-        open=deploy;moving=false;startPose=deploy?1:0;startTick=world.getTotalWorldTime();
+        open=deploy;moving=false;targetPose=deploy?1:0;startPose=targetPose;startTick=world.getTotalWorldTime();
         latched=deploy;signalKnown=true;error=false;recoveryPending=false;status=deploy?"Deployed":"Retracted";vehicleFrozen=true;
         cells.clear();cells.addAll(occupied(startPose,startPose));
         java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> result=new java.util.ArrayList<>();
@@ -684,7 +700,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
                 if (te instanceof TileEntityControlledRamp && ((TileEntityControlledRamp)te).belongsTo(pos))
                     { TileEntityControlledRamp part=(TileEntityControlledRamp)te;
                     part.escalator=escalator;part.beltDistance=beltDistance;part.beltTick=beltTick;part.beltRunning=beltRunning;
-                    part.move(open,startPose,startTick,duration,moving); }
+                    part.move(open,targetPose,startPose,startTick,duration,moving); }
         }
     }
     private void schedule() { if(!vehicleFrozen && !(world instanceof com.vandorlabs.vehicle.VehicleWorld))world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),1); }
@@ -754,7 +770,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if (!moving || !attached()) return;
         if (world.getTotalWorldTime()==lastStepTick) { schedule(); return; }
         requestingDeploy=open;
-        double previous=ControllerPlatform.pose(startPose,open,lastStepTick-startTick,duration);
+        double previous=ControllerPlatform.pose(startPose,targetPose,lastStepTick-startTick,duration);
         double current=pose(0);
         double next=pose(1);
         if (!reserveStep(previous,next)) {
@@ -770,8 +786,8 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         }
         lastStepTick=world.getTotalWorldTime();
         releaseExcept(occupied(current,next));
-        if (Math.abs(current-(open?1:0))<1e-8) {
-            startPose=open?1:0; moving=false; syncParts();
+        if (Math.abs(current-targetPose)<1e-8) {
+            startPose=targetPose; moving=false; syncParts();
             if (!open && startHalfSteps==0) recover(false);
             else {
                 // Completion is a single validation boundary, not a per-tick world scan.
@@ -1191,6 +1207,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         NBTTagList blockers=new NBTTagList();for(BlockPos blocker:canopyBlockers)blockers.appendTag(writePosition(blocker));tag.setTag("RampCanopyBlockers",blockers);
         tag.setLong(com.vandorlabs.ramp.RampCopyData.ORIGIN,pos.toLong());
         if(vehicleFrozen)tag.setBoolean("VehicleRampFrozen",true);
+        tag.setBoolean("RampAnalogDeployment",analogDeployment);tag.setDouble("RampTargetPose",targetPose);
         super.writeToNBT(tag);tag.setInteger("MoatGeometryRevision",moatGeometryRevision);tag.setBoolean("MoatVerticalSources",verticalMoatSources);tag.setBoolean("MoatMode",moat);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setDouble("EscalatorDistance",beltDistance);
         tag.setBoolean("EscalatorRequested",beltRequested);
@@ -1250,6 +1267,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         startTick=data.startTick; lastStepTick=data.lastStepTick; duration=data.duration;
         length=data.length; minAlong=data.minAlong; facing=EnumFacing.getHorizontal(data.facing);
         configuredFacing=data.hasDirection?EnumFacing.getHorizontal(data.direction):null;
+        analogDeployment=tag.getBoolean("RampAnalogDeployment");targetPose=tag.hasKey("RampTargetPose",6)&&Double.isFinite(tag.getDouble("RampTargetPose"))?Math.max(0,Math.min(1,tag.getDouble("RampTargetPose"))):(data.open?1:0);
         low=data.low; high=data.high; latched=data.latched; signalKnown=data.signalKnown;
         recoveryPending=data.recoveryPending; redstoneChannel=data.redstoneChannel;
         channels=ChannelData.read(tag,redstoneChannel);redstoneChannel=channels.first();

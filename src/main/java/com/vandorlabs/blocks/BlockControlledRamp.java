@@ -46,7 +46,10 @@ public class BlockControlledRamp extends BlockVandorDirectional {
         return net.minecraft.util.EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
     }
     @Override public net.minecraft.block.state.BlockFaceShape getBlockFaceShape(IBlockAccess world,IBlockState state,
-            BlockPos pos,EnumFacing side) { return net.minecraft.block.state.BlockFaceShape.UNDEFINED; }
+            BlockPos pos,EnumFacing side) { return side==EnumFacing.UP&&isSideSolid(state,world,pos,side)?net.minecraft.block.state.BlockFaceShape.SOLID:net.minecraft.block.state.BlockFaceShape.UNDEFINED; }
+    @Override public boolean isSideSolid(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){
+        TileEntity raw=world.getTileEntity(pos);return side==EnumFacing.UP&&raw instanceof TileEntityControlledRamp&&((TileEntityControlledRamp)raw).hasStationaryTop();
+    }
     @Override public void updateTick(World world,BlockPos pos,IBlockState state,Random random) {
         TileEntity te=world.getTileEntity(pos);
         if (te instanceof TileEntityControlledRamp) ((TileEntityControlledRamp)te).recoverOnEvent();

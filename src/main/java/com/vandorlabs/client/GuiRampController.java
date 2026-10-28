@@ -18,20 +18,20 @@ public class GuiRampController extends GuiContainer {
     private int lastStartHalf,lastEndHalf;
     private GuiTextField channelField;
     private GuiTextField treadField;
-    private boolean powerOn,elevator,extendSegments,matchTextures,moat;
+    private boolean analogDeployment,powerOn,elevator,extendSegments,matchTextures,moat;
     private int travelAxis,speed,interpolation,escalator;
-    private int lastUpdate;
+    private int lastUpdate,page;
     private net.minecraft.util.EnumFacing direction;
     public GuiRampController(TileEntityRampController controller) {
         super(new ContainerRampController(controller));
         this.controller=controller;
-        powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;moat=controller.moat;
+        analogDeployment=controller.analogDeployment;powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;moat=controller.moat;
         escalator=controller.escalator;interpolation=controller.interpolation;speed=controller.speed; elevator=controller.elevator;
         travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
         lastUpdate=controller.clientUpdates;
         direction=controller.rampDirection();
         lastStartHalf=controller.startHalfSteps(); lastEndHalf=controller.endHalfSteps();
-        xSize=320; ySize=256;
+        xSize=320; ySize=248;
     }
     @Override public void initGui() {
         super.initGui(); buttonList.clear(); Keyboard.enableRepeatEvents(true);
@@ -66,15 +66,37 @@ public class GuiRampController extends GuiContainer {
         buttonList.add(new GuiButton(4,guiLeft+14,guiTop+126,142,20,""));
         buttonList.add(new GuiButton(17,guiLeft+164,guiTop+102,142,20,""));
         buttonList.add(new GuiButton(19,guiLeft+14,guiTop+151,292,20,""));
+        buttonList.add(new GuiButton(22,guiLeft+14,guiTop+176,292,20,""));
         buttonList.add(new GuiButton(18,guiLeft+14,guiTop+207,122,20,""));
         buttonList.add(new GuiButton(7,guiLeft+14,guiTop+232,292,20,"Done"));
+        for(GuiButton button:buttonList)button.y+=26;
+        startSlider.y=guiTop+56;endSlider.y=guiTop+80;
+        treadField.y+=26;channelField.y=guiTop+120;
+        buttonList.add(new GuiButton(23,guiLeft+14,guiTop+152,292,20,"Transmitter..."));
+        buttonList.add(new DialogTabButton(30,guiLeft+14,guiTop+30,140,20,"Ramp"));
+        buttonList.add(new DialogTabButton(31,guiLeft+164,guiTop+30,142,20,"Redstone"));
         refresh();
     }
     private void refresh() {
+        treadField.setVisible(page==0);channelField.setVisible(page==1);
+        for(GuiButton button:buttonList){
+            boolean redstone=button.id==3||button.id==22||button.id==23;
+            button.visible=button.id>=30||button.id==7||((page==1)==redstone);
+            if(button.id>=30)button.enabled=button.id!=30+page;
+            if(button.id==3){button.x=guiLeft+14;button.y=guiTop+60;button.width=292;}
+            if(button.id==22)button.y=guiTop+86;
+            if(button.id==7){button.x=guiLeft+164;button.y=guiTop+200;button.width=142;}
+            if(button.id==18){button.x=guiLeft+14;button.y=guiTop+200;button.width=142;}
+            if(button.id==4)button.y=guiTop+128;
+            if(button.id==14||button.id==15)button.y=guiTop+152;
+            if(button.id==19)button.y=guiTop+176;
+
+        }
         treadField.setEnabled(!elevator);
         startSlider.enabled=escalator==0;
         endSlider.displayString=offsetLabel(escalator==0?"End / on":"Ramp height",endSlider.getValueInt());
         for (GuiButton b:buttonList) {
+            if(b.id==22){b.enabled=escalator==0;b.displayString="Deployment: "+(analogDeployment?"Analog (0-15)":"Digital (on/off)");}
             if (b.id==14 || b.id==15) b.enabled=!elevator;
             if (b.id==1) b.displayString=moat?"Mode: Moat":escalator!=0?(escalator==1?"Mode: escalator up":"Mode: escalator down"):elevator
                     ?(extendSegments?"Mode: extend":"Mode: lift")
@@ -88,12 +110,15 @@ public class GuiRampController extends GuiContainer {
         }
     }
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id>=30){page=button.id-30;refresh();return;}
+        if(button.id==23){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(controller.getPos(),0));return;}
         if (button.id==1) {
             int mode=GuiOptionCycle.next(moat?6:escalator!=0?escalator+3:elevator?(extendSegments?3:2):(extendSegments?1:0),7);
             moat=mode==6;escalator=mode>=4&&mode<6?mode-3:0;
             elevator=mode==2 || mode==3;extendSegments=mode<4 && (mode&1)!=0;
             if(escalator!=0){travelAxis=0;startSlider.setValue(0);}if(moat)travelAxis=0;
         }
+        if(button.id==22)analogDeployment=!analogDeployment;
         if (button.id==3) powerOn=!powerOn;
         if (button.id==4) speed=GuiOptionCycle.next(speed,3);
         if (button.id==6) direction=GuiOptionCycle.next(direction);
@@ -123,7 +148,7 @@ public class GuiRampController extends GuiContainer {
                 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0) {
             lastStartHalf=start;lastEndHalf=end;
             PacketHandler.INSTANCE.sendToServer(MessageRampController.halfOffsets(controller.getPos(),start,end,
-                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures).withEscalator(escalator).withMoat(moat).withInterpolation(interpolation).withChannels(ChannelFields.parse(channelField)));
+                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures).withAnalogDeployment(analogDeployment).withEscalator(escalator).withMoat(moat).withInterpolation(interpolation).withChannels(ChannelFields.parse(channelField)));
         }
     }
     private int channel() {return ChannelFields.first(channelField);}
@@ -133,7 +158,7 @@ public class GuiRampController extends GuiContainer {
             lastUpdate=controller.clientUpdates;
             if (controller.error) {
                 // A rejected reset retains old server settings; do not display unsaved toggles.
-                powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;moat=controller.moat;
+                analogDeployment=controller.analogDeployment;powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;moat=controller.moat;
                 escalator=controller.escalator;interpolation=controller.interpolation;speed=controller.speed; elevator=controller.elevator;
                 travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
                 direction=controller.rampDirection();
@@ -153,7 +178,7 @@ public class GuiRampController extends GuiContainer {
         if (!treadBefore.equals(treadField.getText()) || !channelBefore.equals(channelField.getText())) submit();
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,3,4,6,17,18,19))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,3,4,6,17,18,19,22))return;
         super.mouseClicked(x,y,button); treadField.mouseClicked(x,y,button); channelField.mouseClicked(x,y,button);
     }
     @Override protected void mouseReleased(int x,int y,int button) {
@@ -167,12 +192,11 @@ public class GuiRampController extends GuiContainer {
     }
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY) {
         fontRenderer.drawString("Ramp Controller",14,10,0xFFFFFF);
-        fontRenderer.drawString("Tread px",164,132,elevator?0x78848C:0xDAE8F0);
-        fontRenderer.drawString(travelAxis==0?"Positive = up; negative = down. Footprint: 8x16.":
-                "Positive = right; negative = left. Footprint: 8x16.",14,175,0xADBECA);
+        DialogHeader.logo(0,0,xSize);
+        if(page==0)fontRenderer.drawString("Tread px",164,158,elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,
-                14,188,292,controller.error?0xFF9988:0xE5C76B);
-        fontRenderer.drawString("Channels",144,212,0xDAE8F0);
+                14,224,292,controller.error?0xFF9988:0xE5C76B);
+        if(page==1)fontRenderer.drawString("Channels",144,124,0xDAE8F0);
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();

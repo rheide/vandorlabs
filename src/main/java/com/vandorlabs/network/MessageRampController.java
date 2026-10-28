@@ -26,7 +26,8 @@ public class MessageRampController implements IMessage {
 
     private BlockPos pos;
     private int interpolation,escalator;
-    private boolean moat;
+    private boolean moat,analogDeployment;
+    public MessageRampController withAnalogDeployment(boolean value){analogDeployment=value;return this;}
     public MessageRampController withMoat(boolean value){moat=value;return this;}
     public MessageRampController withEscalator(int mode){escalator=mode;return this;}
     public MessageRampController withInterpolation(int style){interpolation=style;return this;}
@@ -104,6 +105,7 @@ public class MessageRampController implements IMessage {
         if(buf.readableBytes()>=8 && buf.getInt(buf.readerIndex())==0x45534341){buf.readInt();escalator=buf.readInt();}
         moat=false;if(buf.readableBytes()>=5&&buf.getInt(buf.readerIndex())==0x4D4F4154){buf.readInt();moat=buf.readBoolean();}
         channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
+        analogDeployment=buf.readableBytes()>=5&&buf.readInt()==0x414E4C47&&buf.readBoolean();
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong()); buf.writeInt(drop); buf.writeInt(segments);
@@ -117,6 +119,7 @@ public class MessageRampController implements IMessage {
         buf.writeInt(0x45534341);buf.writeInt(escalator);
         buf.writeInt(0x4D4F4154);buf.writeBoolean(moat);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+        buf.writeInt(0x414E4C47);buf.writeBoolean(analogDeployment);
     }
     public static class Handler implements IMessageHandler<MessageRampController,IMessage> {
         @Override public IMessage onMessage(MessageRampController message,MessageContext context) {
@@ -133,6 +136,7 @@ public class MessageRampController implements IMessage {
                 te.configureHalfOffsets(player,message.startHalfSteps,message.endHalfSteps,message.treadPixels,message.powerOn,message.slow,message.elevator,
                         net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures,false,message.interpolation,message.escalator,message.moat);
                 te.setRedstoneChannels(message.getRedstoneChannels());
+                te.setAnalogDeployment(message.analogDeployment);
                 player.connection.sendPacket(te.getUpdatePacket());
             });
             return null;

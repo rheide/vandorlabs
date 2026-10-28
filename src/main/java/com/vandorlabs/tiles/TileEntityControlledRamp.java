@@ -78,7 +78,7 @@ public class TileEntityControlledRamp extends TileEntity {
     public double low,high=1;
     public boolean top=true,elevator;
     private boolean open,moving;
-    private double startPose;
+    private double startPose,targetPose=1;
     private long startTick;
     private GeometryKey cachedGeometryKey;
     private List<RampGeometry.Box> cachedGeometry,boxedGeometry;
@@ -110,14 +110,27 @@ public class TileEntityControlledRamp extends TileEntity {
     public boolean isOpen() { return open; }
     public boolean isMoving() { return moving || beltRunning; }
     public double pose(double partial) {
-        return moving?ControllerPlatform.pose(startPose,open,world.getTotalWorldTime()-startTick+partial,duration):startPose;
+        return moving?ControllerPlatform.pose(startPose,targetPose,world.getTotalWorldTime()-startTick+partial,duration):startPose;
     }
-    public void move(boolean target,double from,long tick,int ticks,boolean animate) {
+    public void move(boolean target,double from,long tick,int ticks,boolean animate) {move(target,target?1:0,from,tick,ticks,animate);}
+    public void move(boolean target,double endpoint,double from,long tick,int ticks,boolean animate) {
+        targetPose=endpoint;
         cachedBeltDistance=Double.NaN;
         open=target; startPose=from; startTick=tick; duration=ticks; moving=animate;
         markDirty();
         IBlockState s=world.getBlockState(pos);
         world.notifyBlockUpdate(pos,s,s,2);
+    }
+    /** A door needs a complete top face that never moves anywhere in this controller's stroke. */
+    public boolean hasStationaryTop(){
+        if(world==null||escalator!=0||moat)return false;
+        IBlockState state=world.getBlockState(pos);if(!(state.getBlock() instanceof BlockControlledRamp))return false;
+        EnumFacing face=state.getValue(BlockVandorDirectional.FACING);
+        List<RampGeometry.Box> off=geometryUncached(face,0),on=geometryUncached(face,1);
+        if(off.size()!=1||on.size()!=1)return false;
+        RampGeometry.Box a=off.get(0),b=on.get(0);
+        return Math.abs(a.minX)<1e-8&&Math.abs(a.minZ)<1e-8&&Math.abs(a.maxX-1)<1e-8&&Math.abs(a.maxZ-1)<1e-8&&Math.abs(a.maxY-1)<1e-8
+                &&Math.abs(a.minX-b.minX)+Math.abs(a.minY-b.minY)+Math.abs(a.minZ-b.minZ)+Math.abs(a.maxX-b.maxX)+Math.abs(a.maxY-b.maxY)+Math.abs(a.maxZ-b.maxZ)<1e-8;
     }
     public List<AxisAlignedBB> boxes(double partial) {
         List<RampGeometry.Box> geometry=geometry(partial);
@@ -397,6 +410,7 @@ public class TileEntityControlledRamp extends TileEntity {
         super.writeToNBT(tag);tag.setInteger("MoatGeometryRevision",moatGeometryRevision);tag.setBoolean("MoatMode",moat);tag.setBoolean("MoatVerticalSources",verticalMoatSources);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setBoolean("EscalatorRunning",beltRunning);
         tag.setDouble("EscalatorDistance",beltDistance);tag.setLong("EscalatorTick",beltTick);
+        tag.setDouble("RampTargetPose",targetPose);
         new RampCellData(sourceY,row,length,drop,segments,duration,low,high,top,
                 elevator,open,moving,startPose,startTick,startOffset,endOffset(),treadPixels).write(new NbtPrimitiveData(tag));
         // A rotating outer corner reaches one cell beyond the original deck.
@@ -488,6 +502,7 @@ public class TileEntityControlledRamp extends TileEntity {
         segments=data.segments; duration=data.duration; low=data.low; high=data.high;
         top=data.top; elevator=data.elevator; open=data.open; moving=data.moving;
         startPose=data.startPose; startTick=data.startTick;
+        targetPose=tag.hasKey("RampTargetPose",6)&&Double.isFinite(tag.getDouble("RampTargetPose"))?Math.max(0,Math.min(1,tag.getDouble("RampTargetPose"))):(open?1:0);
         treadPixels=data.treadPixels; segments=ControllerPlatform.treadCount(treadPixels);
         int savedTravel=tag.getInteger(SaveSchema.Ramp.TRAVEL_AXIS);
         startOffset=savedTravel==RampGeometry.LEFT?-data.startOffset:data.startOffset;

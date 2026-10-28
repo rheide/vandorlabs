@@ -278,3 +278,10 @@ apply. Command removal of a controller wakes its surviving reservations and
 restores their original blocks and tile data; replacement terrain is preserved.
 
 Steel and aluminum full-height scaffolding from Immersive Engineering can also form ramp platforms, including all three patterns of each metal. Capture and recovery retain the original block variant. Fences and narrow posts are not full-width platforms.
+
+
+## Analog deployment
+
+Open the **Redstone** tab and select **Deployment: Analog (0-15)**. The strongest local or selected-channel signal determines the target deployment: 0 retracts, 15 fully deploys, and intermediate levels stop between the configured endpoints. The existing ON/OFF trigger option reverses this mapping. Changing the level while the ramp is already powered retargets its current pose smoothly. The deployment option, intermediate target and current pose survive saving and loading. Escalators retain their digital running control.
+
+Generated ramp cells can support doors only when they provide a complete top face that stays in exactly the same position throughout the entire configured stroke. For example, the nearest row of a conventional ramp with full-block treads can provide this stationary landing. Narrow treads, moving rows, lifts, sideways travel and Moat sections do not acquire a door support merely because they are temporarily stopped.
