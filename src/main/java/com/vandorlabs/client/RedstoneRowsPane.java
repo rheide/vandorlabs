@@ -19,7 +19,7 @@ public final class RedstoneRowsPane {
     private final List<GuiButton> buttons=new ArrayList<>();
     private final Map<GuiButton,Integer> actions=new IdentityHashMap<>();
     private GuiTextField label,channels;
-    private int x,y,width,height,right,selected=-1,scroll;
+    private int x,y,width,height,right,selected=-1,scroll,listOffset;
     public RedstoneRowsPane(FontRenderer font,int maxRows,boolean modules,NBTTagList values,IntPredicate installed,java.util.function.Consumer<NBTTagList> apply){this.font=font;this.maxRows=maxRows;this.modules=modules;this.installed=installed;this.apply=apply;for(int i=0;i<values.tagCount();i++)rows.add(values.getCompoundTagAt(i).copy());if(!rows.isEmpty())selected=0;}
     public void layout(int x,int y,int width,int height,List<GuiButton> host){
         if(label!=null)store();this.x=x;this.y=y;this.width=width;this.height=height;right=x+Math.max(80,width-184);int w=x+width-right;buttons.clear();actions.clear();
@@ -35,7 +35,8 @@ public final class RedstoneRowsPane {
     public GuiTextField labelField(){return label;}
     public GuiTextField channelField(){return channels;}
     public List<GuiButton> buttons(){return Collections.unmodifiableList(buttons);}
-    private int visibleRows(){return Math.max(1,height/20);}
+    public void setListOffset(int pixels){listOffset=Math.max(0,pixels);}
+    private int visibleRows(){return Math.max(1,(height-listOffset)/20);}
     private void load(){label.setText(selected<0?"":rows.get(selected).getString("Label"));channels.setText(selected<0?"0":ChannelData.read(rows.get(selected),0).toString());}
     private boolean store(){if(selected<0)return true;String value=label.getText();int kind=rows.get(selected).getInteger("Kind");boolean valid=RedstoneScreenContents.validLabel(value)&&RedstoneScreenText.fits(font,value,kind==1?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH)&&(kind!=1||value.length()<=RedstoneScreenContents.SLIDER_LABEL);ChannelList targets=ChannelFields.parse(channels);label.setTextColor(valid?0xe0e0e0:0xff7777);if(!valid||targets==null)return false;rows.get(selected).setString("Label",value);ChannelData.write(rows.get(selected),targets);return true;}
     public boolean save(){if(!store())return false;NBTTagList list=new NBTTagList();for(NBTTagCompound row:rows)list.appendTag(row.copy());apply.accept(list);return true;}
@@ -47,9 +48,9 @@ public final class RedstoneRowsPane {
             else {NBTTagCompound row=rows.get(selected);if(id==4){int kind=GuiOptionCycle.next(row.getInteger("Kind"),3);row.setInteger("Kind",kind);if(kind==1){String text=row.getString("Label");while(text.length()>RedstoneScreenContents.SLIDER_LABEL||font.getStringWidth(text)>RedstoneScreenContents.SLIDER_LABEL_WIDTH)text=text.substring(0,text.length()-1);row.setString("Label",text);}}if(id==5)row.setInteger("Min",GuiOptionCycle.next(row.getInteger("Min"),1,row.getInteger("Max")-2));if(id==6)row.setInteger("Max",GuiOptionCycle.next(row.getInteger("Max"),row.getInteger("Min")+2,15));}}
         scroll=Math.max(0,Math.min(scroll,Math.max(0,rows.size()-visibleRows())));load();refresh();save();return true;
     }
-    public void mouseClicked(int mx,int my,int button){label.mouseClicked(mx,my,button);if(!modules)channels.mouseClicked(mx,my,button);if(mx>=x&&mx<right-8&&my>=y&&my<y+visibleRows()*20){int next=scroll+(my-y)/20;if(next<rows.size()&&store()){selected=next;load();refresh();}}}
+    public void mouseClicked(int mx,int my,int button){label.mouseClicked(mx,my,button);if(!modules)channels.mouseClicked(mx,my,button);if(mx>=x&&mx<right-8&&my>=y+listOffset&&my<y+listOffset+visibleRows()*20){int next=scroll+(my-y-listOffset)/20;if(next<rows.size()&&store()){selected=next;load();refresh();}}}
     public boolean keyTyped(char character,int key){if(key==28||key==156)return save();boolean changed=label.getVisible()&&label.textboxKeyTyped(character,key)||channels.getVisible()&&channels.textboxKeyTyped(character,key);if(changed)save();return changed;}
     public void wheel(int amount){if(amount!=0)scroll=Math.max(0,Math.min(Math.max(0,rows.size()-visibleRows()),scroll+(amount>0?-1:1)));}
     public void update(){label.updateCursorCounter();channels.updateCursorCounter();}
-    public void draw(){for(int i=0;i<visibleRows()&&scroll+i<rows.size();i++){int index=scroll+i,yy=y+i*20;Gui.drawRect(x,yy,right-8,yy+18,index==selected?0xff365c70:0xff22313e);font.drawString(font.trimStringToWidth(rows.get(index).getString("Label"),right-x-16),x+4,yy+5,0xe0ecf5);}if(selected>=0){font.drawString("Label",right,y+27,0xdae8f0);label.drawTextBox();if(!modules){font.drawString("Targets",right,y+49,0xdae8f0);channels.drawTextBox();}}}
+    public void draw(){for(int i=0;i<visibleRows()&&scroll+i<rows.size();i++){int index=scroll+i,yy=y+listOffset+i*20;Gui.drawRect(x,yy,right-8,yy+18,index==selected?0xff365c70:0xff22313e);font.drawString(font.trimStringToWidth(rows.get(index).getString("Label"),right-x-16),x+4,yy+5,0xe0ecf5);}if(selected>=0){font.drawString("Label",right,y+27,0xdae8f0);label.drawTextBox();if(!modules){font.drawString("Targets",right,y+49,0xdae8f0);channels.drawTextBox();}}}
 }
