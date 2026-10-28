@@ -77,7 +77,7 @@ public final class MessageRedstoneScreen implements IMessage {
                 if(!m.valid || !ConfigurationAccess.canConfigure(player) || !player.world.isBlockLoaded(m.pos)
                         || !(player.openContainer instanceof ContainerAnimatedScreenSelector))return;
                 ContainerAnimatedScreenSelector container=(ContainerAnimatedScreenSelector)player.openContainer;
-                if(container.redstoneSlot!=m.slot || !com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(container.getTileEntity().getBlockType(),m.slot) || player.world.getTileEntity(m.pos)!=container.getTileEntity()
+                if((container.redstoneSlot>=0&&container.redstoneSlot!=m.slot) || container.getTileEntity().getSurfaceTexture(m.slot)!=com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || !com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(container.getTileEntity().getBlockType(),m.slot) || player.world.getTileEntity(m.pos)!=container.getTileEntity()
                         || !container.canInteractWith(player))return;
                 RedstoneScreenContents contents=container.getTileEntity().redstoneScreen(m.slot);
                 net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();

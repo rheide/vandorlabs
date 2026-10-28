@@ -27,8 +27,7 @@ public final class MessageSurfaceTexture implements IMessage {
                     if(c.getTileEntity()!=tile || !c.canInteractWith(player))return;
                     if(!com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),m.slot))return;
                     ((TileEntityAnimatedScreenSelector)tile).setSurfaceTexture(m.slot,m.choice);
-                    if(m.choice==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)
-                        player.openGui(com.vandorlabs.VandorLabs.instance,m.slot==0?com.vandorlabs.GuiHandler.GUI_REDSTONE_SCREEN:com.vandorlabs.GuiHandler.GUI_REDSTONE_SCREEN_SECONDARY,player.world,m.pos.getX(),m.pos.getY(),m.pos.getZ());
+
                 }
             });return null;
         }

@@ -16,7 +16,7 @@ final class ScreenTextureList {
         framed=false;
         list=new HousingTextureList(x,y,width,canonical(choice),rows,null,
                 value->HousingTextureList.generalTexture(value) || artwork(value,input) && canonical(value)==value,
-                value->"Screens".equals(ScreenHousingTextures.category(value))?(input?"Controls":"Screens"):ScreenHousingTextures.category(value),
+                value->{com.google.gson.JsonObject entry=ScreenHousingTextures.entry(value);return entry!=null&&entry.has("menuGroup")?ScreenHousingTextures.menuCategory(value):"Screens".equals(ScreenHousingTextures.category(value))?(input?"Controls":"Screens"):ScreenHousingTextures.menuCategory(value);},
                 value->artwork(value,input)?HousingTextureList.name(value).replaceAll("\\b(Bare|Framed)\\s+",""):HousingTextureList.name(value));
         setFramed(framed);
     }
@@ -56,6 +56,7 @@ final class ScreenTextureList {
         return this;
     }
     ScreenTextureList custom(java.util.function.IntConsumer action){list.custom(action);return this;}
+    ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot,Runnable inline){list.redstone(inline).vehicle(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)));return this;}
     ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot){list.redstone(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE))).vehicle(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)));return this;}
     boolean picked(){return list.picked();}
     int choice(){return list.selected();}

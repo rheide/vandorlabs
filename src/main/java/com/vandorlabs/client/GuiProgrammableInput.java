@@ -54,6 +54,10 @@ public class GuiProgrammableInput extends GuiContainer {
         this.ySize = 240;
     }
 
+    private NativeRedstoneRowsPane[] rowEditors=new NativeRedstoneRowsPane[2];private int rowSlot=-1;
+    private boolean rowsPage(){return rowSlot>=0&&textureTab==rowSlot;}
+    int inlineTransmitterSelector(){return rowsPage()?rowEditors[rowSlot].selector():0;}
+    private void openRows(int slot){te.setSurfaceTexture(slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE));rowSlot=slot;if(rowEditors[slot]==null)rowEditors[slot]=new NativeRedstoneRowsPane(this,te,slot);initGui();}
     private FrameAppearancePane framePane;
     private boolean framePage(){return textureTab==10;}
     private ReceiverPane receiver;
@@ -68,7 +72,7 @@ public class GuiProgrammableInput extends GuiContainer {
         buttonList.add(layout.fullTab(91,1,4,"Sides"));
         buttonList.add(layout.fullTab(92,2,4,"Redstone"));buttonList.add(layout.fullTab(197,3,4,"Frame"));buttonList.add(new GuiButton(198,redstoneX,guiTop+132,redstoneWidth,20,"Transmitter..."));
         listX=layout.listX;listY=guiTop+54;
-        screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0);
+        screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0,()->openRows(0));
         for(int i=0;i<3;i++) {
             buttonList.add(layout.choice(1+i,i,3,66,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
             buttonList.add(layout.choice(10+i,i,3,100,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
@@ -86,7 +90,7 @@ public class GuiProgrammableInput extends GuiContainer {
         channelField.setText(receiverDraft);
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housingTexture)
                 .visibleRows(rows).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
-        buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.init(54,buttonList);}
+        buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.init(54,buttonList);}else if(rowsPage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);rowEditors[rowSlot].init(buttonList);}
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
 
@@ -149,6 +153,7 @@ public class GuiProgrammableInput extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
+        if(rowsPage()){if(!rowEditors[rowSlot].click(mouseX,mouseY,button))super.mouseClicked(mouseX,mouseY,button);return;}
         if(framePage()){if(!framePane.click(mouseX,mouseY,button))super.mouseClicked(mouseX,mouseY,button);return;}
         if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,0,4,32))return;
         if (textureTab==1 && housingList.click(mouseX, mouseY, button)) {
@@ -201,11 +206,13 @@ public class GuiProgrammableInput extends GuiContainer {
     protected void actionPerformed(GuiButton button) {
         if(button.id==198)return;
 
+        if(button.id==580&&rowsPage()){rowEditors[rowSlot].save();rowSlot=-1;initGui();return;}
+        if(rowsPage()&&rowEditors[rowSlot].action(button))return;
         if(framePage()&&framePane.action(button))return;
         if(button.id==197){textureTab=10;initGui();return;}
 
         if(button.id>=90 && button.id<=92){textureTab=button.id-90;initGui();return;}
-        if (button.id == 20) { if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
+        if (button.id == 20) {if(rowsPage()&&!rowEditors[rowSlot].save())return; if(channel()<0)return;sendUpdate();mc.player.closeScreen();return; }
         if(button.id==4){button.visible=false;if(!screenList.hasPair())return;screenList.setFramed(!screenList.framed());chooseArtwork(screenList);return;}
         if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(te.getPos(),te.getSurfaceTextureLayout()));return;}
         if (button.id == 0) {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
@@ -221,7 +228,7 @@ public class GuiProgrammableInput extends GuiContainer {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int wheel = Mouse.getEventDWheel();if(framePage()){framePane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}
+        int wheel = Mouse.getEventDWheel();if(rowsPage()){rowEditors[rowSlot].wheel(wheel);return;}if(framePage()){framePane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}
         if (textureTab==1 && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         if(textureTab==0)screenList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);
@@ -232,16 +239,17 @@ public class GuiProgrammableInput extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.input.title"),guiLeft+12,guiTop+8,0xFFFFFF);
-        if(textureTab==0)screenList.draw(fontRenderer,mouseX,mouseY);
+        if(rowsPage())rowEditors[rowSlot].draw();else if(textureTab==0)screenList.draw(fontRenderer,mouseX,mouseY);
         else if(textureTab==1)housingList.draw(fontRenderer,mouseX,mouseY);
-        if(textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+26,0xDAE8F0);
-        if(textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+58,0xDAE8F0);
+        if(!rowsPage()&&textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+54,0xDAE8F0);
+        if(!rowsPage()&&textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+88,0xDAE8F0);
         if(textureTab==2)receiver.drawLabel();
         if(framePage())framePane.draw(mouseX,mouseY);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {
+        if(rowsPage()&&rowEditors[rowSlot].key(c,key))return;
         if (channelField.getVisible() && channelField.textboxKeyTyped(c,key)) { if (channel()>=0) sendUpdate(); }
         else super.keyTyped(c,key);
     }
