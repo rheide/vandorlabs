@@ -22,6 +22,8 @@ final class CockpitDialogRuntimeChecks {
             for(int model=0;model<com.vandorlabs.cockpit.CockpitData.IDS.length;model++){
                 TileEntityCockpit tile=(TileEntityCockpit)mc.world.getTileEntity(new BlockPos(222+model*6,30,120));
                 require(tile!=null,"fixture synchronized");GuiCockpit gui=new GuiCockpit(new ContainerCockpit(tile,null));gui.inventorySlots.windowId=-77;mc.displayGuiScreen(gui);
+                int firstCategory=999,selectedCategory=-1;for(Object raw:(List<?>)buttons.get(gui)){GuiButton button=(GuiButton)raw;if(button.id>=200&&button.id<206){firstCategory=Math.min(firstCategory,button.id);if(!button.enabled)selectedCategory=button.id;}}
+                require(firstCategory==selectedCategory,"new "+tile.design()+" dialog opens leftmost available category");
                 page.setInt(gui,(tile.data().seat==null?0:1)+1);gui.initGui();
                 java.lang.reflect.Method openRows=GuiCockpit.class.getDeclaredMethod("redstone");openRows.setAccessible(true);openRows.invoke(gui);
                 require(mc.currentScreen instanceof GuiRedstoneScreen,"Redstone selection opens the shared row editor");

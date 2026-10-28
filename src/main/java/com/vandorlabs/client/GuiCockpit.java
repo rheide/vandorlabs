@@ -26,7 +26,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
     private int displayIndex(){return page-(seating()?1:0)-1;}
     private int controlIndex(){return displayIndex()-tile.displays.size();}
     private int pages(){return (seating()?1:0)+1+tile.displays.size()+tile.controls.size();}
-    public GuiCockpit(ContainerCockpit container){super(container);cockpit=container;tile=container.tile;page=0;for(int i=0;i<tile.displays.size();i++)if(!"touch".equals(tile.displays.get(i).role)){page=(seating()?1:0)+1+i;break;}xSize=580;ySize=280;}
+    public GuiCockpit(ContainerCockpit container){super(container);cockpit=container;tile=container.tile;page=0;for(int category=0;category<5;category++){java.util.List<Integer> candidates=categoryPages(category);if(!candidates.isEmpty()){page=candidates.get(0);break;}}xSize=580;ySize=280;}
     @Override public void initGui(){
         xSize=Math.min(580,width-12);ySize=Math.min(280,height-12);super.initGui();buttonList.clear();fields.clear();textures=null;org.lwjgl.input.Keyboard.enableRepeatEvents(true);
         String[] categories={"Screen","Touch","Throttle","Pilot","Casing","Redstone"};

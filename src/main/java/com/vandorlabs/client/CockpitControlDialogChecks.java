@@ -20,12 +20,12 @@ final class CockpitControlDialogChecks {
         try{
             for(int i=0;i<tile.data().surfaces.size();i++){
                 CockpitData.Surface surface=tile.data().surfaces.get(i);Vec3d target=surface.point(.5,.5).add(new Vec3d(tile.getPos())),eye=target.add(surface.normal.scale(.1));
-                look(mc,eye,target);GuiCockpit gui=new GuiCockpit(container);require(page.getInt(gui)==2,"new dialog starts on leftmost Screen tab "+surface.id);
+                look(mc,eye,target);GuiCockpit gui=new GuiCockpit(container);require(page.getInt(gui)==3,"new dialog starts on leftmost Screen tab "+surface.id);
             }
             for(java.util.Map.Entry<String,Vec3d> part:tile.data().pivots.entrySet())if(part.getKey().startsWith("throttle_")){
                 Vec3d eye=new Vec3d(tile.data().seat.x,tile.data().riderY+mc.player.getEyeHeight(),tile.data().seat.z),target=part.getValue().addVector(0,Math.cos(Math.toRadians(22.5))*4.5/16,Math.sin(Math.toRadians(22.5))*4.5/16);
                 look(mc,eye.add(new Vec3d(tile.getPos())),target.add(new Vec3d(tile.getPos())));GuiCockpit gui=new GuiCockpit(container);
-                require(page.getInt(gui)==2,"new dialog starts on leftmost Screen tab "+part.getKey());
+                require(page.getInt(gui)==3,"new dialog starts on leftmost Screen tab "+part.getKey());
             }
             TileEntityCockpit.Control throttle=tile.control("throttle_left");int index=tile.controls.indexOf(throttle);
             for(int[] size:new int[][]{{854,480},{480,270}}){
