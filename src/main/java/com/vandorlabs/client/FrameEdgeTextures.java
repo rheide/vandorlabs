@@ -17,6 +17,7 @@ final class FrameEdgeTextures {
         Edge[] edges=new Edge[4];for(int i=0;i<4;i++)edges[i]=new Edge(rail+(i==0?"":"_edge_"+i),source,i,aspect);
         EDGES.put(rail,edges);for(Edge edge:edges)atlas.setTextureEntry(edge);
     }
+    static boolean authored(TextureAtlasSprite sprite){return sprite!=null&&EDGES.containsKey(sprite.getIconName());}
     static TextureAtlasSprite edge(TextureAtlasSprite sprite,double[]... points){
         if(sprite==null)return null;Edge[] choices=EDGES.get(sprite.getIconName());if(choices==null)return sprite;
         double minX=Double.POSITIVE_INFINITY,maxX=-minX,minY=minX,maxY=-minX,cx=0,cy=0;
