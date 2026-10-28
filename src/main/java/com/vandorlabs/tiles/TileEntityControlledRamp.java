@@ -410,7 +410,7 @@ public class TileEntityControlledRamp extends TileEntity {
         super.writeToNBT(tag);tag.setInteger("MoatGeometryRevision",moatGeometryRevision);tag.setBoolean("MoatMode",moat);tag.setBoolean("MoatVerticalSources",verticalMoatSources);tag.setInteger("RampInterpolation",interpolation);
         tag.setInteger("EscalatorMode",escalator);tag.setBoolean("EscalatorRunning",beltRunning);
         tag.setDouble("EscalatorDistance",beltDistance);tag.setLong("EscalatorTick",beltTick);
-        tag.setDouble("RampTargetPose",targetPose);
+        if(Math.abs(targetPose-(open?1:0))>1e-8)tag.setDouble("RampTargetPose",targetPose);else tag.removeTag("RampTargetPose");
         new RampCellData(sourceY,row,length,drop,segments,duration,low,high,top,
                 elevator,open,moving,startPose,startTick,startOffset,endOffset(),treadPixels).write(new NbtPrimitiveData(tag));
         // A rotating outer corner reaches one cell beyond the original deck.

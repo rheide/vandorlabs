@@ -30,7 +30,6 @@ public final class GuiModularGear extends GuiContainer {
         loadSlider=new net.minecraftforge.fml.client.config.GuiSlider(12,right,guiTop+120,col,20,"Height: "," blocks",1,32,heightLimit,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=heightLimit){heightLimit=value;submit();}});buttonList.add(loadSlider);
         angleSlider=new net.minecraftforge.fml.client.config.GuiSlider(13,right,guiTop+146,col,20,"Angle: "," degrees",-180,180,angle,false,true,slider->{double value=Math.round(slider.getValue()/15)*15;slider.setValue(value);if(value!=angle){angle=value;submit();}});buttonList.add(angleSlider);
         for(GuiButton button:buttonList)button.y+=26;
-        buttonList.add(new GuiButton(15,guiLeft+12,guiTop+132,col,20,"Transmitter..."));
         buttonList.add(new DialogTabButton(20,guiLeft+12,guiTop+30,col,20,"Mechanism"));
         buttonList.add(new DialogTabButton(21,right,guiTop+30,col,20,"Redstone"));
         labels();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
@@ -40,7 +39,7 @@ public final class GuiModularGear extends GuiContainer {
     private void labels(){
 
         boolean rest=tile.fullyDeployed();
-        for(GuiButton button:buttonList){button.visible=button.id>=20||button.id==4||((page==1)==(button.id==0||button.id==15));if(button.id>=20)button.enabled=button.id!=20+page;}
+        for(GuiButton button:buttonList){button.visible=button.id>=20||button.id==4||((page==1)==(button.id==0));if(button.id>=20)button.enabled=button.id!=20+page;}
         channels.setVisible(page==1);channels.y=guiTop+98;button(0).y=guiTop+60;
         button(14).visible=page==0&&tile.canPushBlocks();button(14).enabled=rest;button(14).displayString="Push blocks: "+(push?"On":"Off");
         angleSlider.visible=page==0&&tile.isSwingArmController()&&!tile.isLandingAssembly();angleSlider.enabled=rest;
@@ -62,7 +61,6 @@ public final class GuiModularGear extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton b){
         if(b.id>=20){page=b.id-20;labels();return;}
-        if(b.id==15){PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),0));return;}
         if(b.id==4){mc.player.closeScreen();return;}
         if(b.id==0)trigger=GuiOptionCycle.next(trigger,3);else if(b.id==1)direction=GuiOptionCycle.next(direction,4);else if(b.id==2)deployed=!deployed;else if(b.id==7)rotate=!rotate;else if(b.id==9){join=!join;if(!join)load=false;}else if(b.id==11)load=!load;else if(b.id==14)push=!push;else return;
         submit();labels();

@@ -25,7 +25,7 @@ public final class GuiTrack extends GuiContainer {
         if(button.id!=0)return;style=GuiOptionCycle.next(style,3);NBTTagCompound settings=new NBTTagCompound();settings.setInteger("TrackStyle",style);PacketHandler.INSTANCE.sendToServer(new MessageModularGear(inventorySlots.windowId,settings));labels();
     }
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);}
-    @Override protected void drawGuiContainerForegroundLayer(int x,int y){
+    @Override protected void drawGuiContainerForegroundLayer(int x,int y){DialogHeader.logo(0,0,xSize);
         fontRenderer.drawString("Track",12,12,0xffffff);String failure=track.error();String status=failure.isEmpty()?track.status():"ERROR: "+failure;
         java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(4,lines.size());i++)fontRenderer.drawString(lines.get(i),12,70+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
     }

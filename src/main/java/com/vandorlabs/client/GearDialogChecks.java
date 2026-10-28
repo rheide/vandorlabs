@@ -39,10 +39,12 @@ public final class GearDialogChecks {
                     sliderEndpoints(mc,armGui,buttons,10);
                     if(load.enabled){armGui.mouseClicked(load.x+5,load.y+5,1);require(load.displayString.endsWith("On"),"right click enables load");sliderEndpoints(mc,armGui,buttons,12);}
                 }
+                GuiButton angle=buttons.stream().filter(b->b.id==13).findFirst().get();
+                if(angle.visible&&angle.enabled){net.minecraftforge.fml.client.config.GuiSlider slider=(net.minecraftforge.fml.client.config.GuiSlider)angle;int mouse=slider.x+(int)(slider.width*.53);armGui.mouseClicked(mouse,slider.y+10,0);slider.mouseReleased(mouse,slider.y+10);require(Math.abs(slider.getValue()/15-Math.rint(slider.getValue()/15))<1e-8,"angle mouse input snaps to authored fifteen-degree increments");}
                 occupied.clear();for(GuiButton b:buttons)if(b.visible){require(mc.fontRenderer.getStringWidth(b.displayString)<=b.width-4,"one-page label fits "+b.displayString);add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);}GuiTextField text=(GuiTextField)fields[0].get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
                 GuiButton redstone=buttons.stream().filter(b->b.id==21).findFirst().get();armGui.mouseClicked(redstone.x+5,redstone.y+5,0);
                 require(text.getVisible()&&!join.visible&&!load.visible,"Redstone tab shows channels and hides geometry");
-                require(buttons.stream().anyMatch(b->b.id==15&&b.visible),"Redstone page exposes physical transmitter inventory");
+                require(buttons.stream().noneMatch(b->b.id==15),"input-only arm does not expose a transmitter inventory");
                 occupied.clear();for(GuiButton b:buttons)if(b.visible)add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
             }
             GuiOptionCycleRuntimeChecks.check(mc);
@@ -53,7 +55,7 @@ public final class GearDialogChecks {
                 buttonPixels(mc,gui,doneButton,frame,size,output,block==GearRegistry.GEAR_EXTENDER||track);
             }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}cases++;
         }}finally{mc.displayGuiScreen(previous);mc.player.openContainer=container;org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
-        System.out.println("[vandorlabs][reprolab] arm-platform-dialog PASS cases="+cases+" compact320/460/1280 separated Mechanism/Redstone tabs receiver-channels transmitter-entry no Active Reach fields native Done normal/hover pixels reverse/forward mouse paths");
+        System.out.println("[vandorlabs][reprolab] arm-platform-dialog PASS cases="+cases+" compact320/460/1280 separated Mechanism/Redstone tabs receiver-channels input-only no Active Reach fields native Done normal/hover pixels reverse/forward mouse paths");
     }
     private static void sliderEndpoints(Minecraft mc,GuiModularGear gui,List<GuiButton> buttons,int id)throws Exception{
         net.minecraftforge.fml.client.config.GuiSlider slider=(net.minecraftforge.fml.client.config.GuiSlider)buttons.stream().filter(b->b.id==id).findFirst().get();require(slider.visible&&slider.enabled,"enabled slider shares the page");
