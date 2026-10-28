@@ -25,7 +25,7 @@ final class VehicleControllerDialogChecks {
                 require((int)field(gui,"page")==0,"new controller dialog must open its leftmost tab");
                 GuiTextField channels=(GuiTextField)field(gui,"channels");require(!channels.getVisible(),"receive channels leaked onto Vehicle page");
                 for(int page=0;page<2;page++){
-                    Method action=gui.getClass().getDeclaredMethod("actionPerformed",GuiButton.class);action.setAccessible(true);action.invoke(gui,new GuiButton(90+page,0,0,"Page"));
+                    Method action=net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(gui.getClass(),"actionPerformed","func_146284_a",GuiButton.class);action.invoke(gui,new GuiButton(90+page,0,0,"Page"));
                     require(channels.getText().equals(((GuiTextField)field(gui,"channels")).getText()),"switching tabs lost channel draft");
                     channels=(GuiTextField)field(gui,"channels");require(channels.getVisible()==(page==1),"receive channels on wrong tab");
                     java.util.List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
