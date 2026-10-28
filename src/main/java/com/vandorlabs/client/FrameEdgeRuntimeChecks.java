@@ -84,7 +84,9 @@ public final class FrameEdgeRuntimeChecks {
                 NBTTagCompound saved=VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(base));cells.add(new VehicleStructure.Cell(at.subtract(base),world.getBlockState(at),saved));members++;
             }
             require(!door||members==(name.equals("large_door")?9:count*2),"actual door placement retains all upper/lower members: "+name+" "+members);
-            result.add(new Scene(name,VehicleStructure.display(cells)));
+            int minX=0,minY=0,minZ=0;for(VehicleStructure.Cell cell:cells){minX=Math.min(minX,cell.pos.getX());minY=Math.min(minY,cell.pos.getY());minZ=Math.min(minZ,cell.pos.getZ());}
+            BlockPos shift=new BlockPos(-minX,-minY,-minZ);List<VehicleStructure.Cell> rebased=new ArrayList<>();for(VehicleStructure.Cell cell:cells)rebased.add(new VehicleStructure.Cell(cell.pos.add(shift),cell.state,VehicleTileData.translated(cell.tileData(),shift)));
+            result.add(new Scene(name,VehicleStructure.display(rebased)));
         }}finally{for(BlockPos at:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(5,5,3)))world.setBlockToAir(at);actor.setHeldItem(EnumHand.MAIN_HAND,held);actor.rotationYaw=yaw;actor.setPosition(px,py,pz);}
         return result;
     }
