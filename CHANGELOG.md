@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.7 (in development)
+
+- Begin the 2.7 artwork, configuration and mechanism update.
+
 ## 2.6
 
 - Support unlinked Mekanism Generators Reactor Glass as ordinary vehicle building material. Preserve its tile data and facing through capture, rotation and parking, while refusing glass still linked to a native fusion reactor.
