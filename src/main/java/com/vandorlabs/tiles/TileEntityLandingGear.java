@@ -23,6 +23,7 @@ public class TileEntityLandingGear extends TileEntity implements ITickable, Reds
     @Override public double getMaxRenderDistanceSquared() { return Double.MAX_VALUE; }
 
     public float progress, previous;
+    public boolean taxiGrounded;
     private int extensionPixels=16, mode=1, channel, configurationRevision, size;
     public int getSize(){return size;}
     public int getConfigurationRevision(){return configurationRevision;}
@@ -120,12 +121,13 @@ public class TileEntityLandingGear extends TileEntity implements ITickable, Reds
     public void onChunkUnload(){detached=true;RedstoneChannels.unregister(this);super.onChunkUnload();}
     public void sync(){if(world!=null&&!world.isRemote){IBlockState s=world.getBlockState(pos);world.notifyBlockUpdate(pos,s,s,2);}}
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);ChannelData.write(tag,channels);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
+        super.writeToNBT(tag);if(taxiGrounded)tag.setBoolean("TaxiGroundedGear",true);ChannelData.write(tag,channels);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
         tag.setInteger("GearSize",size);tag.setInteger("RedstoneMode",mode);tag.setInteger("RedstoneChannel",channel);tag.setBoolean("LastSignal",lastSignal);
         if(hasOwner){tag.setBoolean("GearHasOwner",true);tag.setInteger("GearOwnerDistance",ownerDistance);
             tag.setInteger("GearOwnerX",ownerX);tag.setInteger("GearOwnerZ",ownerZ);}return tag;
     }
     public void readFromNBT(NBTTagCompound tag){
+        taxiGrounded=tag.getBoolean("TaxiGroundedGear");
         ChannelList previousChannels=channels;
         super.readFromNBT(tag);loadedLegacyData=true;float value=tag.getFloat("Progress");progress=Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;previous=progress;
         extensionPixels=tag.hasKey("ExtensionPixels")?Math.round(Math.max(0,Math.min(64,tag.getInteger("ExtensionPixels")))/8F)*8:16;

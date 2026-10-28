@@ -19,18 +19,21 @@ public final class VehicleLandingGear {
         return true;
     }
     public static boolean setExtended(EntityGroundVehicle craft,BlockPos pos,boolean extend){
-        if(!craft.structure.isActive(pos)||craft.world.isRemote||craft.transferInProgress||craft.ownershipBlocked||!extend&&!craft.hover)return false;
+        if(!craft.structure.isActive(pos)||craft.world.isRemote||craft.transferInProgress||craft.ownershipBlocked)return false;
         net.minecraft.tileentity.TileEntity raw=craft.view.getTileEntity(pos);if(!(raw instanceof TileEntityLandingGear)||!((TileEntityLandingGear)raw).isRoot())return false;
+        boolean grounded=!craft.hover&&(!extend||((TileEntityLandingGear)raw).taxiGrounded);
+        if(grounded&&!TaxiTelescopicGear.canTarget(craft,extend))return false;
+        Set<BlockPos> targets=new HashSet<>();targets.add(pos);if(grounded)for(TileEntityLandingGear gear:TaxiTelescopicGear.supports(craft))targets.add(gear.getPos());
         List<VehicleStructure.Cell> cells=new ArrayList<>();boolean changed=false;
-        for(VehicleStructure.Cell cell:craft.structure.cells){if(cell.pos.equals(pos)&&cell.state.getValue(BlockTelescopicLandingGear.EXTENDED)!=extend){cells.add(new VehicleStructure.Cell(pos,cell.state.withProperty(BlockTelescopicLandingGear.EXTENDED,extend),((TileEntityLandingGear)raw).writeToNBT(new NBTTagCompound())));changed=true;}else cells.add(cell);}
-        if(changed){craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),false);craft.signals.changed(pos);}
+        for(VehicleStructure.Cell cell:craft.structure.cells){if(targets.contains(cell.pos)&&(cell.state.getValue(BlockTelescopicLandingGear.EXTENDED)!=extend||grounded&&!((TileEntityLandingGear)craft.view.getTileEntity(cell.pos)).taxiGrounded)){NBTTagCompound tag=craft.view.getTileEntity(cell.pos).writeToNBT(new NBTTagCompound());if(grounded){tag.setBoolean("TaxiGroundedGear",true);((TileEntityLandingGear)craft.view.getTileEntity(cell.pos)).taxiGrounded=true;}cells.add(new VehicleStructure.Cell(cell.pos,cell.state.withProperty(BlockTelescopicLandingGear.EXTENDED,extend),tag));changed=true;}else cells.add(cell);}
+        if(changed){craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),false);for(BlockPos target:targets)craft.signals.changed(target);}
         return true;
     }
     public static void refreshSignals(EntityGroundVehicle craft){
         if(craft.world.isRemote||craft.view==null)return;
         for(net.minecraft.tileentity.TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityLandingGear&&craft.structure.isActive(raw.getPos())){TileEntityLandingGear gear=(TileEntityLandingGear)raw;
             if(!gear.isRoot()||gear.getMode()==0||gear.getRedstoneChannels().isEmpty())continue;
-            boolean powered=false;for(int i=0;i<gear.getRedstoneChannels().size();i++)powered|=com.vandorlabs.redstone.RedstoneChannels.level(craft.world,gear.getRedstoneChannels().get(i))>0;
+            boolean powered=false;for(int i=0;i<gear.getRedstoneChannels().size();i++)powered|=com.vandorlabs.redstone.RedstoneChannels.level(craft.view,gear.getPos(),gear.getRedstoneChannels().get(i))>0;
             setExtended(craft,gear.getPos(),gear.getMode()==1?powered:!powered);
         }
     }
@@ -46,11 +49,10 @@ public final class VehicleLandingGear {
             if(craft.world.isRemote)continue;
             boolean extend=craft.view.getBlockState(tile.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED);
             float target=extend?tile.getExtensionPixels()/16F:0;
-            // Taxi may finish an extension, but cannot retract its ground supports.
-            if(!craft.hover&&target<tile.progress)continue;
+            if(!craft.hover&&!tile.taxiGrounded&&target<tile.progress)continue;
             float next=tile.progress<target?Math.min(target,tile.progress+.05F):Math.max(target,tile.progress-.05F);
             if(next==tile.progress)continue;
-            if(!craft.world.isRemote&&next>tile.progress){
+            if((craft.hover||!tile.taxiGrounded)&&!craft.world.isRemote&&next>tile.progress){
                 float before=tile.progress;tile.progress=next;boolean blocked=false;
                 try{VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
                     for(net.minecraft.util.math.AxisAlignedBB box:((BlockTelescopicLandingGear)tile.getBlockType()).vehicleBoxes(craft.view,tile.getPos()))
@@ -60,13 +62,21 @@ public final class VehicleLandingGear {
             }
             desired.put(tile.getPos(),next);
         }
+        boolean groundedMotion=false;for(BlockPos at:desired.keySet())groundedMotion|=((TileEntityLandingGear)craft.view.getTileEntity(at)).taxiGrounded;
+        double chassisShift=0;
+        if(groundedMotion&&!craft.hover&&!craft.world.isRemote&&!desired.isEmpty()){chassisShift=TaxiTelescopicGear.shift(craft,desired);if(!Double.isFinite(chassisShift))return;}
         if(desired.isEmpty()||!craft.collisionCache.readyForCanopyPose(craft.view,desired))return;
         for(Map.Entry<BlockPos,Float> entry:desired.entrySet())((TileEntityLandingGear)craft.view.getTileEntity(entry.getKey())).progress=entry.getValue();
         if(craft.world.isRemote)corrections.remove(craft);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,craft.view.getTileEntity(cell.pos).writeToNBT(new NBTTagCompound())):cell);
-        craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),true);
+        VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
+        boolean complete=false;
+        if(groundedMotion&&!craft.hover&&!craft.world.isRemote){complete=true;for(BlockPos at:desired.keySet()){TileEntityLandingGear gear=(TileEntityLandingGear)craft.view.getTileEntity(at);complete&=Math.abs(gear.progress-(craft.view.getBlockState(at).getValue(BlockTelescopicLandingGear.EXTENDED)?gear.getExtensionPixels()/16F:0))<1e-5;}if(complete)next=parking(next,BlockPos.ORIGIN).structure;}
+        if(complete){craft.install(next);craft.signals.open();}else craft.updateCanopies(next,true);
+        if(chassisShift!=0)craft.setPosition(craft.posX,craft.posY+chassisShift,craft.posZ);
         if(!craft.world.isRemote)for(BlockPos pos:desired.keySet())craft.signals.changed(pos);
+        if(complete)for(net.minecraft.entity.player.EntityPlayer player:craft.world.playerEntities)if(player instanceof net.minecraft.entity.player.EntityPlayerMP&&player.getDistanceSq(craft)<256*256)VehicleNetwork.send((net.minecraft.entity.player.EntityPlayerMP)player,craft.structure,craft.getEntityId(),craft.getUniqueID(),new BlockPos(craft),false,false);
     }
     public static VehicleRotation.Plan parking(VehicleStructure source,BlockPos origin){
         Map<BlockPos,VehicleStructure.Cell> cells=new LinkedHashMap<>();
@@ -85,9 +95,10 @@ public final class VehicleLandingGear {
             }
             NBTTagCompound tag=cell.tileData();if(tag==null)throw new IllegalArgumentException("Landing gear is missing its configuration.");
             int size=tag.getInteger("GearSize"),pixels=tag.hasKey("ExtensionPixels")?tag.getInteger("ExtensionPixels"):16;
-            int count=(int)Math.ceil(pixels/16D)+(size>=3?1:0),radius=size>=3?1:0,minimum=size==4?0:-radius;
-            tag.setFloat("Progress",pixels/16F);
-            cells.put(cell.pos,new VehicleStructure.Cell(cell.pos,cell.state.withProperty(BlockTelescopicLandingGear.EXTENDED,true),tag));
+            boolean grounded=tag.getBoolean("TaxiGroundedGear");boolean extend=!grounded||cell.state.getValue(BlockTelescopicLandingGear.EXTENDED);float extension=extend?pixels/16F:0;
+            int count=(int)Math.ceil(extension)+(size>=3?1:0),radius=size>=3?1:0,minimum=size==4?0:-radius;
+            tag.setFloat("Progress",extension);
+            cells.put(cell.pos,new VehicleStructure.Cell(cell.pos,cell.state.withProperty(BlockTelescopicLandingGear.EXTENDED,extend),tag));
             for(int y=0;y<=count;y++)for(int x=minimum;x<=radius;x++)for(int z=minimum;z<=radius;z++){
                 if(x==0&&y==0&&z==0)continue;
                 BlockPos p=cell.pos.add(x,-y,z);VehicleStructure.Cell existing=cells.get(p);

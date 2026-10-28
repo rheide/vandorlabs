@@ -276,6 +276,9 @@ public final class VehicleScan {
                 require(world.isBlockLoaded(p), "The craft touches an unloaded chunk.");
                 IBlockState state=world.getBlockState(p); Block block=state.getBlock();
                 if(block instanceof BlockControlledRamp && !rampSections.contains(p))continue;
+                // Water and stationary drawing pads separate the craft from its surroundings.
+                // Owned generated ramp cells are enqueued explicitly by their controller.
+                if(state.getMaterial()==net.minecraft.block.material.Material.WATER || block instanceof BlockTurntableSurface)continue;
                 if(block.isAir(state,world,p)){airBoundary.add(p);continue;}
                 require(!state.getMaterial().isLiquid() && block!=net.minecraft.init.Blocks.BEDROCK
                         && (state.getBlockHardness(world,p)>=0 || block instanceof BlockControlledRamp), "Unsupported block: "+block.getLocalizedName());

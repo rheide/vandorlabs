@@ -25,7 +25,9 @@ public final class VehicleRotation {
         return Math.floorMod(nearest,4);
     }
     public static Plan plan(EntityGroundVehicle craft) {
+        TaxiModularGear.requireParkable(craft);
         craft.signals.persist();
+        TaxiTelescopicGear.requireParkable(craft);
         int turns=turns(craft.rotationYaw);VehicleStructure placed=craft.rotatedSnapshot(turns);
         double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
         Plan parking=VehicleLandingGear.parking(placed,new BlockPos(Math.round(centerX-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-placed.bounds.maxZ/2)));

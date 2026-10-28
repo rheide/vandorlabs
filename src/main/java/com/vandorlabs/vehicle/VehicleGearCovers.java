@@ -23,7 +23,7 @@ public final class VehicleGearCovers {
             if(LandingGearCovers.needsOpen(cover))next=true;
             else if(cover.getTrigger()!=0){
                 boolean powered=cover.hasLocalRedstoneSignal();ChannelList channels=cover.getRedstoneChannels();
-                for(int i=0;i<channels.size();i++)powered|=RedstoneChannels.level(craft.world,channels.get(i))>0;
+                for(int i=0;i<channels.size();i++)powered|=RedstoneChannels.level(craft.view,cover.getPos(),channels.get(i))>0;
                 next=cover.getTrigger()==1?powered:!powered;
             }
             if(next!=open)desired.put(cover.getPos(),next);
