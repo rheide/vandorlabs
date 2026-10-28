@@ -35,7 +35,7 @@ final class Artwork27RuntimeChecks {
             System.out.println("[vandorlabs][reprolab] vehicle27-world PASS saved-sign-json local-block-light water-surface-foreign-ramp-boundaries undo-later-edit-guard");
             return null;
         }).get();
-        FrameAppearanceRuntimeChecks.run();VehicleControllerDialogChecks.run(mc,output);VehicleRenderRuntimeChecks.run(mc);FrameFramebufferChecks.run(mc,output);FrameEdgeRuntimeChecks.run(mc,output);GearDialogChecks.run(mc,output);VehicleDynamicLights.runChecks(mc);turntableBounds(mc);
+        FrameAppearanceRuntimeChecks.run();VehicleControllerDialogChecks.run(mc,output);VehicleRenderRuntimeChecks.run(mc);FrameFramebufferChecks.run(mc,output);FrameEdgeRuntimeChecks.run(mc,output);CompanyScreenLayerRuntimeChecks.run(mc,output);GearDialogChecks.run(mc,output);VehicleDynamicLights.runChecks(mc);turntableBounds(mc);
         com.vandorlabs.tiles.TileEntityProgrammableLight light=new com.vandorlabs.tiles.TileEntityProgrammableLight();light.setWorld(mc.world);light.setPos(BlockPos.ORIGIN);
         GuiProgrammableLight gui=new GuiProgrammableLight(mc.player.inventory,light);mc.displayGuiScreen(gui);
         try{
