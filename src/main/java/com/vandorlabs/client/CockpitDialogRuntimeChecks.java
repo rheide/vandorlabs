@@ -13,14 +13,18 @@ import java.util.*;
 
 /** Render every cockpit page and check interactive bounds at small and normal GUI sizes. */
 final class CockpitDialogRuntimeChecks {
-    static void run(Minecraft mc,File output)throws Exception{
+    static void run(Minecraft mc,File output)throws Exception{run(mc,output,false);}
+    static void runStandalone(Minecraft mc,File output)throws Exception{run(mc,output,true);}
+    private static void run(Minecraft mc,File output,boolean standalone)throws Exception{
         GuiScreen previous=mc.currentScreen;int checked=0;
         Field redstone=GuiCockpit.class.getDeclaredField("redstonePage");redstone.setAccessible(true);
         Field page=GuiCockpit.class.getDeclaredField("page"),fields=GuiCockpit.class.getDeclaredField("fields");page.setAccessible(true);fields.setAccessible(true);
         Field buttons;try{buttons=GuiScreen.class.getDeclaredField("buttonList");}catch(NoSuchFieldException mapped){buttons=GuiScreen.class.getDeclaredField("field_146292_n");}buttons.setAccessible(true);
         try{
             for(int model=0;model<com.vandorlabs.cockpit.CockpitData.IDS.length;model++){
-                TileEntityCockpit tile=(TileEntityCockpit)mc.world.getTileEntity(new BlockPos(222+model*6,30,120));
+                TileEntityCockpit tile;
+                if(standalone){tile=new TileEntityCockpit(com.vandorlabs.cockpit.CockpitData.IDS[model]);tile.setWorld(mc.world);tile.setPos(new BlockPos(2048+model*6,128,2048));}
+                else tile=(TileEntityCockpit)mc.world.getTileEntity(new BlockPos(222+model*6,30,120));
                 require(tile!=null,"fixture synchronized");GuiCockpit gui=new GuiCockpit(new ContainerCockpit(tile,null));gui.inventorySlots.windowId=-77;mc.displayGuiScreen(gui);
                 int firstCategory=999,selectedCategory=-1;for(Object raw:(List<?>)buttons.get(gui)){GuiButton button=(GuiButton)raw;if(button.id>=200&&button.id<206){firstCategory=Math.min(firstCategory,button.id);if(!button.enabled)selectedCategory=button.id;}}
                 require(firstCategory==selectedCategory,"new "+tile.design()+" dialog opens leftmost available category");

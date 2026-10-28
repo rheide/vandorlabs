@@ -12,6 +12,7 @@ final class CockpitFocusedChecks {
         visualClock(mc);
         CockpitRedstoneRenderChecks.run(mc,output);
         CockpitControlDialogChecks.run(mc,output);
+        CockpitDialogRuntimeChecks.runStandalone(mc,output);
         VehicleStatusRenderChecks.run(mc,output);
         System.out.println("[vandorlabs][reprolab] cockpit-focused PASS");return true;
     }
