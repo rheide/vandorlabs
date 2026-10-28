@@ -91,7 +91,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         return design.equals("yoke_screen")||surface.id.equals("screen_center")?TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:ScreenHousingTextures.screenIndex(surface.id.equals("screen_left")?"bridge_bare_pilot_static":"bridge_bare_engineering_static");
     }
     public boolean configureRows(int index,NBTTagList rows){
-        if(index<0||index>=displays.size())return false;Display d=displays.get(index);if(rows.tagCount()>d.maxRows())return false;
+        if(index<0||index>=displays.size())return false;Display d=displays.get(index);if(rows.tagCount()>d.maxRows())return false;for(int i=rows.tagCount();i<d.rows;i++)if(!com.vandorlabs.redstone.TransmitterSlots.get(control(d.id+"/"+i)).isEmpty())return false;
         for(int i=0;i<rows.tagCount();i++){NBTTagCompound row=rows.getCompoundTagAt(i);int kind=row.getInteger("Kind"),min=row.getInteger("Min"),max=row.getInteger("Max");if(row.getString("Label").length()>24||kind<0||kind>2||min<0||min>13||max<min+2||max>15)return false;ChannelData.read(row,0);}
         boolean placed=ordinary();if(placed)RedstoneChannels.beginTransfer(world);
         try{
@@ -100,7 +100,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
             for(int i=0;i<d.maxRows();i++){
                 Control c=control(d.id+"/"+i);NBTTagCompound row=i<d.rows?rows.getCompoundTagAt(i):new NBTTagCompound();int previousKind=c.kind;c.kind=row.getInteger("Kind");c.label=row.getString("Label");c.min=i<d.rows?row.getInteger("Min"):5;c.max=i<d.rows?row.getInteger("Max"):15;
                 if(i>=d.rows||previousKind!=c.kind){c.level=0;c.until=0;c.levels.clear();}
-                c.setRedstoneChannels(i<d.rows?ChannelData.read(row,0):ChannelList.EMPTY);
+                c.setRedstoneChannels(i<d.rows?com.vandorlabs.redstone.TransmitterSlots.channels(c):ChannelList.EMPTY);
                 if(placed)RedstoneChannels.register(c);
             }
             d.texture=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;changed();return true;
@@ -114,7 +114,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     @Override public void invalidate(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.invalidate();}
     @Override public void onChunkUnload(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.onChunkUnload();}
     public boolean expire(long now){boolean changed=false;for(Control c:controls)if(c.until>0 && now>=c.until){c.until=0;c.level=0;if(ordinary())RedstoneChannels.inputChanged(c);changed=true;}if(changed)changed();return changed;}
-    public void updatePower(){boolean dirty=false;for(Display d:displays){boolean active=d.gate==0 || (RedstoneChannels.level(world,d.gate)>0)!=d.inverted;if(active!=d.active){d.active=active;dirty=true;}}if(dirty)changed();}
+    public void updatePower(){boolean dirty=false;for(Display d:displays){boolean active=d.gate==0 || (RedstoneChannels.level(world,pos,d.gate)>0)!=d.inverted;if(active!=d.active){d.active=active;dirty=true;}}if(dirty)changed();}
     @Override public void update(){prepare();if(world==null || world.isRemote)return;expire(world.getTotalWorldTime());updatePower();if(design.equals("cockpit")){com.vandorlabs.cockpit.CockpitReservations.tick(this);}if(data().seat!=null)super.update();}
     public boolean use(Vec3d start,Vec3d end){return use(start,end,null);}
     public boolean use(Vec3d start,Vec3d end,net.minecraft.entity.player.EntityPlayer actor){
@@ -186,13 +186,14 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public long until;
         private final Map<Integer,Integer> levels=new HashMap<>();
         Control(String id){this.id=id;}
+        public String transmitterSlot(){return "cockpit_"+id;}
         public TileEntity channelTile(){return TileEntityCockpit.this;}
         public int getRedstoneChannel(){return channels.first();}
         public ChannelList getRedstoneChannels(){return channels;}
         public void setRedstoneChannel(int channel){setRedstoneChannels(ChannelList.of(channel));}
         public void setRedstoneChannels(ChannelList next){ChannelList before=channels;channels=next;levels.keySet().removeIf(channel->!next.contains(channel));for(int i=0;i<next.size();i++)levels.putIfAbsent(next.get(i),0);if(ordinary())RedstoneChannels.channelChanged(this,before);changed();}
         public void setKind(int value){if(isThrottle())value=1;if(value<0||value>2||kind==value)return;if(ordinary())RedstoneChannels.unregister(this);boolean pulse=kind==2||value==2;kind=value;if(pulse){level=0;until=0;levels.clear();for(int i=0;i<channels.size();i++)levels.put(channels.get(i),0);}if(ordinary())RedstoneChannels.register(this);changed();}
-        public boolean active(){return !id.equals("throttle_right")||throttleCount==2;}
+        public boolean active(){int slash=id.lastIndexOf('/');if(slash>=0){Display display=display(id.substring(0,slash));return display!=null&&display.texture==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE&&Integer.parseInt(id.substring(slash+1))<display.rows;}return !id.equals("throttle_right")||throttleCount==2;}
         public boolean hasLocalRedstoneSignal(){if(!active())return false;if(kind==2||channels.isEmpty())return level>0;for(int i=0;i<channels.size();i++)if(latchedLevel(channels.get(i))>0)return true;return false;}
         public boolean hasLocalRedstoneSignal(int channel){return localSignalLevel(channel)>0;}
         public int localSignalLevel(int channel){return active()?(kind==2?level:latchedLevel(channel)):0;}
@@ -203,8 +204,8 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         public void applyLinkedLatch(boolean on){applyLinkedChannels(on?channels:ChannelList.EMPTY);}
         public void applyLinkedChannels(ChannelList active){Map<Integer,Integer> next=new HashMap<>();for(int i=0;i<channels.size();i++)next.put(channels.get(i),active.contains(channels.get(i))?15:0);applyLinkedLevels(next);}
         public void applyLinkedLevels(Map<Integer,Integer> next){if(!levels.equals(next)){levels.clear();levels.putAll(next);markDirty();}}
-        public void setChannelSignal(boolean ignored){int strongest=0;for(int i=0;i<channels.size();i++)strongest=Math.max(strongest,RedstoneChannels.level(world,channels.get(i)));setChannelLevel(strongest);}
-        public void setChannelLevel(int aggregate){if(kind==2||channels.isEmpty())return;int next=kind==1?aggregate:RedstoneChannels.allPowered(world,channels)?15:0;if(level!=next){level=next;changed();}}
+        public void setChannelSignal(boolean ignored){int strongest=0;for(int i=0;i<channels.size();i++)strongest=Math.max(strongest,RedstoneChannels.level(world,pos,channels.get(i)));setChannelLevel(strongest);}
+        public void setChannelLevel(int aggregate){if(kind==2||channels.isEmpty())return;int next=kind==1?aggregate:RedstoneChannels.allPowered(world,pos,channels)?15:0;if(level!=next){level=next;changed();}}
         public boolean isThrottle(){return id.startsWith("throttle_");}
         public int step(){return com.vandorlabs.tiles.TileEntitySignalControl.stepForLevel(level,min,max);}
         public int sliderLevel(int segment){if(isThrottle())return TileEntitySignalControl.levelForStep(segment,min,max);return segment==0?0:min+(max-min)*(Math.max(1,Math.min(3,segment))-1)/2;}
@@ -212,7 +213,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         /** Set the owned state before consumers can clone a carried mechanism's snapshot. */
         public void setLocalLevel(int next){level=Math.max(0,Math.min(15,next));until=kind==2?world.getTotalWorldTime()+20:0;if(kind!=2)for(int i=0;i<channels.size();i++)levels.put(channels.get(i),level);}
         public void activate(double column){
-            int next=(kind==1||isThrottle())?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:(channels.isEmpty()?level>0:RedstoneChannels.allPowered(world,channels))?0:15;
+            int next=(kind==1||isThrottle())?sliderLevel(Math.max(0,Math.min(3,(int)Math.round(column*3)))):kind==2?15:(channels.isEmpty()?level>0:RedstoneChannels.allPowered(world,pos,channels))?0:15;
             if(world instanceof VehicleWorld&&!((VehicleWorld)world).parent.isRemote&&((VehicleWorld)world).craft!=null){((VehicleWorld)world).craft.signals.activateCockpit(this,next);return;}
             setLocalLevel(next);if(ordinary()){if(isChannelLatch())RedstoneChannels.latchLevelChanged(this,next);else RedstoneChannels.inputChanged(this);}changed();
         }

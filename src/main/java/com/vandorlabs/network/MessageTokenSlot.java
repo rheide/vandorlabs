@@ -19,7 +19,7 @@ public final class MessageTokenSlot implements IMessage {
             if(container.tile instanceof com.vandorlabs.tiles.TileEntityNavigationTable){
                 com.vandorlabs.tiles.TileEntityNavigationTable tile=(com.vandorlabs.tiles.TileEntityNavigationTable)container.tile;
                 tile.configureDisplay(tile.screenSettings(),message.any,message.mask,message.mode,channels);
-            }else{container.tile.configure(message.any,message.mask,message.mode);container.tile.setRedstoneChannels(channels);}
+            }else{container.tile.configure(message.any,message.mask,message.mode);container.tile.setRedstoneChannels(com.vandorlabs.redstone.TransmitterSlots.channels(container.tile));}
         });return null;}
     }
 }

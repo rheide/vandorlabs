@@ -233,7 +233,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
     @Override public boolean isOpaqueCube(IBlockState state) { return false; }
     @Override public boolean isFullCube(IBlockState state) { return false; }
     @Override public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
-        TileEntity frameTile=world.getTileEntity(pos);return Math.max(WaterloggedParts.light(world,pos),frameTile instanceof TileEntityAnimatedScreenSelector?((TileEntityAnimatedScreenSelector)frameTile).frameAppearance.light():0);
+        TileEntity frameTile=world==null?null:world.getTileEntity(pos);return Math.max(WaterloggedParts.light(world,pos),frameTile instanceof TileEntityAnimatedScreenSelector?((TileEntityAnimatedScreenSelector)frameTile).frameAppearance.light():0);
     }
 
     @Override public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world,

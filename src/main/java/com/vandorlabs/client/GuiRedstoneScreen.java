@@ -55,6 +55,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         buttonList.add(new GuiButton(3,cx+76,guiTop+54,72,18,"Remove"));
         buttonList.add(new GuiButton(5,cx,guiTop+74,70,18,"Up"));
         buttonList.add(new GuiButton(6,cx+76,guiTop+74,72,18,"Down"));
+        buttonList.add(new GuiButton(90,cx,guiTop+136,148,20,"Transmitter..."));
         buttonList.add(new GuiButton(7,cx,guiTop+160,148,18,"Toggle"));
         buttonList.add(new GuiButton(8,cx,guiTop+182,70,18,"Low: 5"));buttonList.add(new GuiButton(9,cx+76,guiTop+182,72,18,"High: 15"));
         buttonList.add(new GuiButton(4,cx,guiTop+ySize-22,148,20,"Done"));load();refresh();
@@ -75,7 +76,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         for(GuiButton b:buttonList)if(b.id>=7 && b.id<=9){b.visible=!materials && selected>=0;if(selected>=0){b.enabled=b.id==7 || sliders.get(selected);b.displayString=b.id==7?(pulses.get(selected)?"Control: Pulse":sliders.get(selected)?"Control: Slider":"Control: Toggle"):b.id==8?"Low: "+mins.get(selected):"High: "+maxs.get(selected);}}
 
         titleField.setVisible(header && !materials);
-        labelField.setVisible(!materials && selected>=0);channelField.setVisible(!materials && selected>=0);
+        labelField.setVisible(!materials && selected>=0);channelField.setVisible(false);for(GuiButton b:buttonList)if(b.id==90)b.visible=!materials&&selected>=0;
         for(GuiButton b:buttonList){if(b.id<2)b.enabled=(b.id==1)!=materials;if(b.id==2){b.visible=!materials;b.enabled=labels.size()<maxRows();}if(b.id==3){b.visible=!materials;b.enabled=selected>=0;}if(b.id==5 || b.id==6){b.visible=!materials;b.enabled=selected>=0 && (b.id==5?selected>0:selected<labels.size()-1);}}
     }
     void checkLayout(){
@@ -95,6 +96,10 @@ public final class GuiRedstoneScreen extends GuiContainer {
         PacketHandler.INSTANCE.sendToServer(new MessageCockpit(inventorySlots.windowId,0,tag));mc.displayGuiScreen(cockpitParent);return;
     }PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs).withPulses(pulses));mc.player.closeScreen();}
     protected void actionPerformed(GuiButton b){
+        if(b.id==90&&selected>=0){if(!store())return;if(tile==null){int control=cockpitTile.controls.indexOf(cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+selected));PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(cockpitTile.getPos(),100+control));}else{PacketHandler.INSTANCE.sendToServer(new MessageRedstoneScreen(tile.getPos(),tile.slot(),title,labels,channels,texture).withSliders(sliders,mins,maxs).withPulses(pulses));PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),1+tile.slot()*8+selected));}return;}
+
+        if(b.id==3&&selected>=0){for(int i=selected;i<labels.size();i++)if(installed(i))return;}
+        if((b.id==5||b.id==6)&&selected>=0){int target=selected+(b.id==5?-1:1);if(installed(selected)||target>=0&&target<labels.size()&&installed(target))return;}
         if(b.id==3 && selected>=0){labels.remove(selected);channels.remove(selected);sliders.remove(selected);pulses.remove(selected);mins.remove(selected);maxs.remove(selected);selected=Math.min(selected,labels.size()-1);scroll=Math.min(scroll,Math.max(0,labels.size()-visibleRows()));load();refresh();return;}
         if(b.id==7 && selected>=0){
             if(!store())return;int type=GuiOptionCycle.next(pulses.get(selected)?2:sliders.get(selected)?1:0,3);sliders.set(selected,type==1);pulses.set(selected,type==2);
@@ -122,6 +127,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
                 || Math.abs(delta)!=1 || next<0 || next>=labels.size())return selected;
         Collections.swap(labels,selected,next);Collections.swap(channels,selected,next);return next;
     }
+    private boolean installed(int row){if(tile==null){com.vandorlabs.tiles.TileEntityCockpit.Control c=cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+row);return c!=null&&!com.vandorlabs.redstone.TransmitterSlots.get(c).isEmpty();}return row<tile.rows().size()&&!com.vandorlabs.redstone.TransmitterSlots.get(tile.rows().get(row)).isEmpty();}
     private int visibleRows(){return Math.max(1,(ySize-rowListTop-12)/20);}
     protected void mouseClicked(int x,int y,int button)throws IOException{
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,7,8,9))return;

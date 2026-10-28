@@ -40,8 +40,8 @@ final class FlatPanelBarRenderer {
         TileEntityAnimatedScreenSelector wall=(TileEntityAnimatedScreenSelector)tile;
         BlockProgrammableWall block=(BlockProgrammableWall)state.getBlock();
         TextureAtlasSprite face=TEAnimatedScreenSelector.wallSprite(wall);
-        TextureAtlasSprite rim=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(block.isPortholeShape() && wall.getSideTexture()>=0
-                ?ScreenHousingTextures.texture(wall.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side");
+        TextureAtlasSprite rim=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(wall.frameAppearance.interior(block.isPortholeShape() && wall.getSideTexture()>=0
+                ?ScreenHousingTextures.texture(wall.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
         PortholeHex.Slice slice=block.isPortholeShape()?TEAnimatedScreenSelector.portholeGroup(wall,state).slice(tile.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY(),EnumFacing.UP):null;
         StaticSurfaceMesh opaque=DiagonalWallMeshCache.get(wall,state,face,rim,slice);
         StaticSurfaceMesh pane=slice==null?null:DiagonalWallMeshCache.glass(wall,state,face,rim,slice);
@@ -76,8 +76,8 @@ final class FlatPanelBarRenderer {
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)root;
         BlockProgrammableWall block=(BlockProgrammableWall)state.getBlock();
         TextureAtlasSprite wall=TEAnimatedScreenSelector.wallSprite(tile);
-        TextureAtlasSprite metal=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(block.isPortholeShape() && tile.getSideTexture()>=0
-                ?ScreenHousingTextures.texture(tile.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side");
+        TextureAtlasSprite metal=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.interior(block.isPortholeShape() && tile.getSideTexture()>=0
+                ?ScreenHousingTextures.texture(tile.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
         BarKey key=new BarKey(wall,metal,block.isPortholeShape()?tile.getPortholeShape():-1);
         StaticSurfaceMesh[] meshes=BARS.get(key);
         if(meshes==null) {

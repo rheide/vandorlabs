@@ -20,7 +20,8 @@ final class FrameSurfaceRenderer {
         GlStateManager.alphaFunc(GL11.GL_GREATER,.01F);GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-6,-6);
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         GlassSurfaceGroups.Layout layout=frame.tile?new GlassSurfaceGroups.Layout(0,0,1,1):ScreenSurfaceGroups.layout(tile);
-        int i=0;for(ScreenSurface.Vertex v:quad.vertices){WorldSurface.vertex(b,v.x,v.y,v.z,sprite.getInterpolatedU((layout.column+(i==1||i==2?1:0))*16D/layout.columns),sprite.getInterpolatedV((layout.rows-layout.row-(i<2?1:0))*16D/layout.rows),quad.nx,quad.ny,quad.nz);i++;}
+        boolean input=tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableInput||tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole;
+        int i=0;for(ScreenSurface.Vertex v:quad.vertices){WorldSurface.vertex(b,v.x,v.y,v.z,sprite.getInterpolatedU((input?layout.column+(i==1||i==2?1:0):layout.columns-layout.column-(i==1||i==2?1:0))*16D/layout.columns),sprite.getInterpolatedV((layout.rows-layout.row-(i<2?1:0))*16D/layout.rows),quad.nx,quad.ny,quad.nz);i++;}
         Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
     }
 }

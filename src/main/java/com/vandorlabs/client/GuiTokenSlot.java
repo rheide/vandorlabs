@@ -15,7 +15,7 @@ public final class GuiTokenSlot extends GuiContainer {
         String text=channels==null?tile.getRedstoneChannels().toString():channels.getText();
         xSize=Math.min(308,width-12);ySize=Math.min(160,height-12);super.initGui();org.lwjgl.input.Keyboard.enableRepeatEvents(true);buttonList.clear();
         buttonList.add(new GuiButton(1,guiLeft+12,guiTop+34,xSize-24,20,""));
-        channels=new GuiTextField(2,fontRenderer,guiLeft+12,guiTop+76,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);
+        channels=new GuiTextField(2,fontRenderer,guiLeft+12,guiTop+76,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);channels.setVisible(false);buttonList.add(new GuiButton(90,guiLeft+12,guiTop+74,xSize-24,20,"Redstone Transmitter..."));
         buttonList.add(new GuiButton(3,guiLeft+12,guiTop+130,xSize-24,20,"Done"));labels();
     }
     int behaviorDraft(){return behavior;}
@@ -23,7 +23,7 @@ public final class GuiTokenSlot extends GuiContainer {
     String companyLabel(){return CredentialFilterPicker.label(tile.chip(),allowed);}
     private void labels(){buttonList.get(0).displayString=TileEntityTokenSlot.behaviorName(behavior);}
     private void save(){if(com.vandorlabs.redstone.ChannelList.parse(channels.getText())==null){channels.setTextColor(0xff7777);return;}channels.setTextColor(0xffffff);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageTokenSlot(inventorySlots.windowId,behavior,false,allowed,channels.getText()));}
-    @Override protected void actionPerformed(GuiButton button){if(button.id==3){mc.player.closeScreen();return;}behavior=GuiOptionCycle.next(behavior,4);save();labels();}
+    @Override protected void actionPerformed(GuiButton button){if(button.id==90){save();com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}if(button.id==3){mc.player.closeScreen();return;}behavior=GuiOptionCycle.next(behavior,4);save();labels();}
     @Override protected void keyTyped(char ch,int key)throws IOException{if(channels.textboxKeyTyped(ch,key))save();else super.keyTyped(ch,key);}
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1))return;
@@ -36,7 +36,7 @@ public final class GuiTokenSlot extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);
         CredentialFilterPicker.draw(mc,fontRenderer,guiLeft+12,guiTop+104,tile.chip(),allowed);
     }
-    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getDisplayName().getUnformattedText(),12,10,0xffffff);fontRenderer.drawString("Channels (0 = none)",12,63,0xffffff);}
+    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getDisplayName().getUnformattedText(),12,10,0xffffff);}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);GlStateManager.disableLighting();GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

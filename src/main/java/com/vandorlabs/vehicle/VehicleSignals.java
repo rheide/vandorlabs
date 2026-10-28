@@ -23,6 +23,7 @@ public final class VehicleSignals {
     private final Set<TileEntityWirelessRedstone> wirelessPorts=Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<TileEntitySpaceDoor> securityDoors=Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<TileEntityTokenSlot> tokenSlots=Collections.newSetFromMap(new IdentityHashMap<>());
+    public void transmitterChanged(RedstoneChannelMember member){revision=-1;tick();Link link=links.get(member);if(link!=null){RedstoneChannels.channelChanged(link,member.getRedstoneChannels());RedstoneChannels.positionChanged(link);}changed(member.channelTile().getPos());persist();}
     public void cockpitChanged(TileEntityCockpit tile){
         revision=-1;dirty.add(tile.getPos());tick();
         for(TileEntityCockpit.Control control:tile.controls){Link link=links.get(control);if(link!=null){RedstoneChannels.channelChanged(link,control.getRedstoneChannels());RedstoneChannels.inputChanged(link);}}
@@ -50,9 +51,12 @@ public final class VehicleSignals {
     }
     private class Link implements RedstoneChannelMember {
         final RedstoneChannelMember source;final TileEntity anchor=new TileEntity(){};
-        boolean registeredLatch;
+        boolean registeredLatch;BlockPos registeredPosition;
         Link(RedstoneChannelMember source){this.source=source;anchor.setWorld(craft.world);registeredLatch=source instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)source).isChannelLatch();}
         public TileEntity channelTile(){return anchor;}
+        public ChannelList transmittedChannels(){return source.transmittedChannels();}
+        public int transmissionRange(){return source.transmissionRange();}
+        public BlockPos channelPosition(){return new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(source.channelTile().getPos()).addVector(.5,.5,.5)));}
         public boolean isChannelMemberActive(){return vehicleAdapterActive(source.channelTile())&&!detached&&!craft.isDead&&!craft.ownershipBlocked&&craft.view!=null&&craft.view.getTileEntity(source.channelTile().getPos())==source.channelTile();}
         public int getRedstoneChannel(){return source.getRedstoneChannel();}
         public ChannelList getRedstoneChannels(){return source.getRedstoneChannels();}
@@ -132,11 +136,13 @@ public final class VehicleSignals {
         craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),geometry);
         craft.view.getTileEntity(pos).updateContainingBlockInfo();
     }
-    private void add(Set<RedstoneChannelMember> wanted,RedstoneChannelMember source){if(!source.getRedstoneChannels().isEmpty())wanted.add(source);}
+    private void add(Set<RedstoneChannelMember> wanted,RedstoneChannelMember source){if(!source.getRedstoneChannels().isEmpty()||!source.transmittedChannels().isEmpty())wanted.add(source);}
     public void tick(){
         if(craft.ownershipBlocked){close();return;}
         if(craft.world.isRemote || craft.view==null || craft.isDead || detached || craft.ownershipBlocked)return;
         if(craft.transferInProgress)return;
+        RedstoneChannels.beginTransfer(craft.world);
+        try{for(Link link:new ArrayList<>(links.values())){BlockPos position=link.channelPosition();if(!position.equals(link.registeredPosition)){link.registeredPosition=position;RedstoneChannels.positionChanged(link);}}}finally{RedstoneChannels.endTransfer(craft.world);}
         if(!deferredLevels.isEmpty()){Map<Link,Integer> pending=new IdentityHashMap<>(deferredLevels);deferredLevels.clear();for(Map.Entry<Link,Integer> entry:pending.entrySet())if(entry.getKey().isChannelMemberActive())entry.getKey().setChannelLevel(entry.getValue());}
         if(revision!=craft.view.tileRevision){
         revision=craft.view.tileRevision;
@@ -215,7 +221,7 @@ public final class VehicleSignals {
             int level;
             if(row.slider){double column=RedstoneScreenInteractions.hitColumn(state,tile,slot,eye,end);if(column<RedstoneScreenContents.SLIDER_LEFT || column>=RedstoneScreenContents.SLIDER_RIGHT)return false;
                 level=row.segmentValue((int)((column-RedstoneScreenContents.SLIDER_LEFT)*row.segments()/(RedstoneScreenContents.SLIDER_RIGHT-RedstoneScreenContents.SLIDER_LEFT)));
-            }else level=RedstoneChannels.allPowered(craft.world,row.channels)?0:15;
+            }else level=RedstoneChannels.allPowered(craft.world,new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(row.channelTile().getPos()).addVector(.5,.5,.5))),row.channels)?0:15;
             RedstoneChannels.latchLevelChanged((LatchLink)link,level);flush();return true;
         }
         return false;

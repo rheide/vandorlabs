@@ -2784,7 +2784,7 @@
   },
   {
     "id": "frame_frames_company_half_full_ashiro_ashiro_thick_full_1254x1254",
-    "label": "Ashiro Thick Full 1254X1254",
+    "label": "Ashiro Thick Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/ashiro/ashiro_thick_full_1254x1254",
     "frame": true,
@@ -2792,7 +2792,7 @@
   },
   {
     "id": "frame_frames_company_half_full_ashiro_ashiro_thick_half_1254x627",
-    "label": "Ashiro Thick Half 1254X627",
+    "label": "Ashiro Thick Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/ashiro/ashiro_thick_half_1254x627",
     "frame": true,
@@ -2800,7 +2800,7 @@
   },
   {
     "id": "frame_frames_company_half_full_ashiro_ashiro_thin_full_1254x1254",
-    "label": "Ashiro Thin Full 1254X1254",
+    "label": "Ashiro Thin Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/ashiro/ashiro_thin_full_1254x1254",
     "frame": true,
@@ -2808,7 +2808,7 @@
   },
   {
     "id": "frame_frames_company_half_full_ashiro_ashiro_thin_half_1254x627",
-    "label": "Ashiro Thin Half 1254X627",
+    "label": "Ashiro Thin Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/ashiro/ashiro_thin_half_1254x627",
     "frame": true,
@@ -2816,7 +2816,7 @@
   },
   {
     "id": "frame_frames_company_half_full_paladyne_paladyne_thick_full_1254x1254",
-    "label": "Paladyne Thick Full 1254X1254",
+    "label": "Paladyne Thick Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/paladyne/paladyne_thick_full_1254x1254",
     "frame": true,
@@ -2824,7 +2824,7 @@
   },
   {
     "id": "frame_frames_company_half_full_paladyne_paladyne_thick_half_1254x627",
-    "label": "Paladyne Thick Half 1254X627",
+    "label": "Paladyne Thick Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/paladyne/paladyne_thick_half_1254x627",
     "frame": true,
@@ -2832,7 +2832,7 @@
   },
   {
     "id": "frame_frames_company_half_full_paladyne_paladyne_thin_full_1254x1254",
-    "label": "Paladyne Thin Full 1254X1254",
+    "label": "Paladyne Thin Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/paladyne/paladyne_thin_full_1254x1254",
     "frame": true,
@@ -2840,7 +2840,7 @@
   },
   {
     "id": "frame_frames_company_half_full_paladyne_paladyne_thin_half_1254x627",
-    "label": "Paladyne Thin Half 1254X627",
+    "label": "Paladyne Thin Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/paladyne/paladyne_thin_half_1254x627",
     "frame": true,
@@ -2848,7 +2848,7 @@
   },
   {
     "id": "frame_frames_company_half_full_pinnacle_pinnacle_thick_full_1254x1254",
-    "label": "Pinnacle Thick Full 1254X1254",
+    "label": "Pinnacle Thick Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/pinnacle/pinnacle_thick_full_1254x1254",
     "frame": true,
@@ -2856,7 +2856,7 @@
   },
   {
     "id": "frame_frames_company_half_full_pinnacle_pinnacle_thick_half_1254x627",
-    "label": "Pinnacle Thick Half 1254X627",
+    "label": "Pinnacle Thick Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/pinnacle/pinnacle_thick_half_1254x627",
     "frame": true,
@@ -2864,7 +2864,7 @@
   },
   {
     "id": "frame_frames_company_half_full_pinnacle_pinnacle_thin_full_1254x1254",
-    "label": "Pinnacle Thin Full 1254X1254",
+    "label": "Pinnacle Thin Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/pinnacle/pinnacle_thin_full_1254x1254",
     "frame": true,
@@ -2872,7 +2872,7 @@
   },
   {
     "id": "frame_frames_company_half_full_pinnacle_pinnacle_thin_half_1254x627",
-    "label": "Pinnacle Thin Half 1254X627",
+    "label": "Pinnacle Thin Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/pinnacle/pinnacle_thin_half_1254x627",
     "frame": true,
@@ -2880,7 +2880,7 @@
   },
   {
     "id": "frame_frames_company_half_full_seyr_seyr_thick_full_1254x1254",
-    "label": "Seyr Thick Full 1254X1254",
+    "label": "Seyr Thick Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/seyr/seyr_thick_full_1254x1254",
     "frame": true,
@@ -2888,7 +2888,7 @@
   },
   {
     "id": "frame_frames_company_half_full_seyr_seyr_thick_half_1254x627",
-    "label": "Seyr Thick Half 1254X627",
+    "label": "Seyr Thick Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/seyr/seyr_thick_half_1254x627",
     "frame": true,
@@ -2896,7 +2896,7 @@
   },
   {
     "id": "frame_frames_company_half_full_seyr_seyr_thin_full_1254x1254",
-    "label": "Seyr Thin Full 1254X1254",
+    "label": "Seyr Thin Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/seyr/seyr_thin_full_1254x1254",
     "frame": true,
@@ -2904,7 +2904,7 @@
   },
   {
     "id": "frame_frames_company_half_full_seyr_seyr_thin_half_1254x627",
-    "label": "Seyr Thin Half 1254X627",
+    "label": "Seyr Thin Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/seyr/seyr_thin_half_1254x627",
     "frame": true,
@@ -2912,7 +2912,7 @@
   },
   {
     "id": "frame_frames_company_half_full_vandor_vandor_thick_full_1254x1254",
-    "label": "Vandor Thick Full 1254X1254",
+    "label": "Vandor Thick Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/vandor/vandor_thick_full_1254x1254",
     "frame": true,
@@ -2920,7 +2920,7 @@
   },
   {
     "id": "frame_frames_company_half_full_vandor_vandor_thick_half_1254x627",
-    "label": "Vandor Thick Half 1254X627",
+    "label": "Vandor Thick Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/vandor/vandor_thick_half_1254x627",
     "frame": true,
@@ -2928,7 +2928,7 @@
   },
   {
     "id": "frame_frames_company_half_full_vandor_vandor_thin_full_1254x1254",
-    "label": "Vandor Thin Full 1254X1254",
+    "label": "Vandor Thin Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/vandor/vandor_thin_full_1254x1254",
     "frame": true,
@@ -2936,7 +2936,7 @@
   },
   {
     "id": "frame_frames_company_half_full_vandor_vandor_thin_half_1254x627",
-    "label": "Vandor Thin Half 1254X627",
+    "label": "Vandor Thin Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/vandor/vandor_thin_half_1254x627",
     "frame": true,
@@ -2944,7 +2944,7 @@
   },
   {
     "id": "frame_frames_company_half_full_vektor_vektor_thick_full_1254x1254",
-    "label": "Vektor Thick Full 1254X1254",
+    "label": "Vektor Thick Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/vektor/vektor_thick_full_1254x1254",
     "frame": true,
@@ -2952,7 +2952,7 @@
   },
   {
     "id": "frame_frames_company_half_full_vektor_vektor_thick_half_1254x627",
-    "label": "Vektor Thick Half 1254X627",
+    "label": "Vektor Thick Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/vektor/vektor_thick_half_1254x627",
     "frame": true,
@@ -2960,7 +2960,7 @@
   },
   {
     "id": "frame_frames_company_half_full_vektor_vektor_thin_full_1254x1254",
-    "label": "Vektor Thin Full 1254X1254",
+    "label": "Vektor Thin Full",
     "category": "Frame",
     "source": "frames/frames-company-half-full/vektor/vektor_thin_full_1254x1254",
     "frame": true,
@@ -2968,7 +2968,7 @@
   },
   {
     "id": "frame_frames_company_half_full_vektor_vektor_thin_half_1254x627",
-    "label": "Vektor Thin Half 1254X627",
+    "label": "Vektor Thin Half",
     "category": "Frame",
     "source": "frames/frames-company-half-full/vektor/vektor_thin_half_1254x627",
     "frame": true,
@@ -3124,7 +3124,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_bolted_1254",
-    "label": "Frame Bolted 1254",
+    "label": "Frame Bolted",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_bolted_1254",
     "frame": true,
@@ -3132,7 +3132,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_bolted_thin_1254",
-    "label": "Frame Bolted Thin 1254",
+    "label": "Frame Bolted Thin",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_bolted_thin_1254",
     "frame": true,
@@ -3140,7 +3140,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_cyan_rim_1254",
-    "label": "Frame Cyan Rim 1254",
+    "label": "Frame Cyan Rim",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_cyan_rim_1254",
     "frame": true,
@@ -3148,7 +3148,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_cyan_rim_thin_1254",
-    "label": "Frame Cyan Rim Thin 1254",
+    "label": "Frame Cyan Rim Thin",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_cyan_rim_thin_1254",
     "frame": true,
@@ -3156,7 +3156,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_lightbars_1254",
-    "label": "Frame Lightbars 1254",
+    "label": "Frame Lightbars",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_lightbars_1254",
     "frame": true,
@@ -3165,7 +3165,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_lightbars_thin_1254",
-    "label": "Frame Lightbars Thin 1254",
+    "label": "Frame Lightbars Thin",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_lightbars_thin_1254",
     "frame": true,
@@ -3174,7 +3174,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_plain_1254",
-    "label": "Frame Plain 1254",
+    "label": "Frame Plain",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_plain_1254",
     "frame": true,
@@ -3182,7 +3182,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_plain_thin_1254",
-    "label": "Frame Plain Thin 1254",
+    "label": "Frame Plain Thin",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_plain_thin_1254",
     "frame": true,
@@ -3190,7 +3190,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_bolted_1254x627",
-    "label": "Frame Bolted 1254X627",
+    "label": "Frame Bolted",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_bolted_1254x627",
     "frame": true,
@@ -3198,7 +3198,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_bolted_thin_1254x627",
-    "label": "Frame Bolted Thin 1254X627",
+    "label": "Frame Bolted Thin",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_bolted_thin_1254x627",
     "frame": true,
@@ -3206,7 +3206,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_cyan_rim_1254x627",
-    "label": "Frame Cyan Rim 1254X627",
+    "label": "Frame Cyan Rim",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_cyan_rim_1254x627",
     "frame": true,
@@ -3214,7 +3214,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_cyan_rim_thin_1254x627",
-    "label": "Frame Cyan Rim Thin 1254X627",
+    "label": "Frame Cyan Rim Thin",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_cyan_rim_thin_1254x627",
     "frame": true,
@@ -3222,7 +3222,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_lightbars_1254x627",
-    "label": "Frame Lightbars 1254X627",
+    "label": "Frame Lightbars",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_lightbars_1254x627",
     "frame": true,
@@ -3231,7 +3231,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_lightbars_thin_1254x627",
-    "label": "Frame Lightbars Thin 1254X627",
+    "label": "Frame Lightbars Thin",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_lightbars_thin_1254x627",
     "frame": true,
@@ -3240,7 +3240,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_plain_1254x627",
-    "label": "Frame Plain 1254X627",
+    "label": "Frame Plain",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_plain_1254x627",
     "frame": true,
@@ -3248,7 +3248,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_plain_thin_1254x627",
-    "label": "Frame Plain Thin 1254X627",
+    "label": "Frame Plain Thin",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_plain_thin_1254x627",
     "frame": true,

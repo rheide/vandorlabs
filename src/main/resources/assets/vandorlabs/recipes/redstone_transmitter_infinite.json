@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " R ",
+    "RMR",
+    " I "
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "M": {
+      "item": "minecraft:nether_star"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:redstone_transmitter",
+    "data": 3,
+    "count": 1
+  }
+}

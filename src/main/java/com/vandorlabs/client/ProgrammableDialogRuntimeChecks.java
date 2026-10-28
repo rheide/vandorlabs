@@ -10,7 +10,7 @@ import net.minecraft.client.gui.GuiTextField;
 /** Check actual initialized pickers at the minimum GUI size and a taller viewport. */
 final class ProgrammableDialogRuntimeChecks {
     static void check(Minecraft mc) {
-        GuiScreen gui=mc.currentScreen;
+        GuiScreen gui=mc.currentScreen;FrameAppearanceRuntimeChecks.run();
         GuiOptionCycleRuntimeChecks.check(mc);
         if(!(gui instanceof GuiProgrammableWall || gui instanceof GuiProgrammableTrapdoor
                 || gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableLight
@@ -60,7 +60,7 @@ final class ProgrammableDialogRuntimeChecks {
                         require(artwork>0,"missing screen artwork category");
                     }
                     if(value instanceof GuiTextField) {
-                        GuiTextField field=(GuiTextField)value;
+                        GuiTextField field=(GuiTextField)value;if(!field.getVisible())continue;
                         for(GuiButton b:buttons)if(b.visible)require(!overlaps(field.x-1,field.y-1,field.width+2,field.height+2,b.x,b.y,b.width,b.height),"channel overlaps button "+b.id);
                     }
                 }

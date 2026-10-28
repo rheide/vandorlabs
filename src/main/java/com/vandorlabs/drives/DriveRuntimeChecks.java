@@ -33,7 +33,7 @@ public final class DriveRuntimeChecks {
         require(tile.assemble(),"formed actual "+spec.design+" "+facing);DeferredTileLoad.flush(world);return tile;
     }
     public static void run(WorldServer world,EntityPlayerMP player)throws Exception{
-        checks=0;BlockPos root=new BlockPos(1130,150,430);for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)world.getChunkFromChunkCoords((root.getX()>>4)+x,(root.getZ()>>4)+z);Source source=new Source(world,root.up(8),64961);RedstoneChannels.register(source);double px=player.posX,py=player.posY,pz=player.posZ;
+        checks=0;BlockPos root=new BlockPos(1130,150,430);for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)world.getChunkFromChunkCoords((root.getX()>>4)+x,(root.getZ()>>4)+z);Source source=new Source(world,root.up(8),64961);RedstoneFixtureTransmitters.equip(source);RedstoneChannels.register(source);double px=player.posX,py=player.posY,pz=player.posZ;
         try{player.setPosition(root.getX(),root.getY()+3,root.getZ()-3);codec();
             for(String design:new String[]{"longburn_drive","meridian_core","oculus_drive"})for(EnumFacing facing:EnumFacing.HORIZONTALS){clear(world,root);FrameMachineDesign spec=FrameMachineDesign.get(design);TileEntityConstructor tile=build(world,root,spec,facing);require(tile.isDrive()&&tile.mount()!=null&&!tile.supportsSecurity(),"all drive data holders are visible without security");int[] textures=new int[tile.surfaceCount()];Arrays.fill(textures,-2);
                 tile.configureMachine(new NavigationScreenSettings(-1,true,1,true,true),textures,false,16,3,ChannelList.of(source.channel));require(!tile.screenSettings().security&&tile.any&&tile.allowed==127&&tile.behavior==0,"legacy security filter/return configuration cannot gate data");

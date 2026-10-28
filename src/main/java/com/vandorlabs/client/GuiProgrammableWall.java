@@ -100,7 +100,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
         listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);
         rows=Math.max(2,(ySize-(faceTabs || slab || porthole?60:64))/HousingTextureList.ROW_HEIGHT);
-        textureList=glassSurface()?HousingTextureList.forCanopy(listX,listY,controlsX-listX-19,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(rows).keepView(textureList)
+        textureList=porthole&&faceTarget==-2?HousingTextureList.forFrames(listX,listY,controlsX-listX-19,tile.frameAppearance.interior,8).visibleRows(rows).keepView(textureList):glassSurface()?HousingTextureList.forCanopy(listX,listY,controlsX-listX-19,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(rows).keepView(textureList)
                 :new HousingTextureList(listX,listY,controlsX-listX-19,selected).visibleRows(rows).custom(this::choose);
         if(faceTabs || slab || porthole) {
             int count=faceTabs?(slab?8:7):porthole?3:2;
@@ -111,7 +111,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                 int face=i-((slab || porthole)?2:1);
                 boolean glass=porthole && i==2;
                 int id=i==0?120:side?127:glass?129:121+face;
-                String label=i==0?"Main":side?"Frame":glass?"Glass":FACE_NAMES[face];
+                String label=i==0?"Main":side?(porthole?"Frame":"Sides"):glass?"Glass":FACE_NAMES[face];
                 GuiButton tab=new DialogTabButton(id,listX+i*tabWidth,guiTop+30,
                         i==count-1?span-i*tabWidth-2:tabWidth-2,18,label);
                 tab.enabled=faceTarget!=(i==0?-1:side?-2:glass?-3:face);buttonList.add(tab);
@@ -205,6 +205,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         if(glassSurface() && textureList!=null && textureList.selected()!=choice)textureList.setSelected(choice);
         if(glassSurface()){if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;tile.setGlassShade(shade);tile.setGlassMaterial(-1);}else tile.setGlassMaterial(choice);sendPortholeSettings();initGui();return;}
         if(faceTarget==-2) {
+            if(porthole){tile.frameAppearance.interior=choice;com.vandorlabs.tiles.GlassMaterials.changed();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageFrameAppearance(tile,tile.frameAppearance));initGui();return;}
             tile.setSideTexture(choice);
             PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSideTexture(tile.getPos(),choice));
             initGui();return;

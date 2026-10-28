@@ -471,6 +471,7 @@ public class TEAnimatedScreenSelector
             drawScreenQuad(b,q,0,1,uv[0],uv[1],ceiling);
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-4,-4);
             Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
+            FrameSurfaceRenderer.screen(te,q);
             GlStateManager.popMatrix();GlStateManager.enableLighting();endLocalTransform();return;
         }
         if (state.getBlock() instanceof BlockProgrammableHalfConsole) {
@@ -522,6 +523,8 @@ public class TEAnimatedScreenSelector
         }
         if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)){
             if(te.hasVehicleStatus(0))RedstoneScreenRenderer.drawVehicle(te,state,0);else RedstoneScreenRenderer.draw(te.redstoneScreen(0),state);
+            ScreenSurface.Kind framedSurface=state.getBlock() instanceof BlockProgrammableConsole?ScreenSurface.Kind.CONSOLE:diagonal?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
+            FrameSurfaceRenderer.screen(te,ScreenSurface.quad(framedSurface,diagonalInverted));
             GlStateManager.enableLighting();GlStateManager.enableCull();GlStateManager.popMatrix();return;
         }
         int mode = te.getEffectiveMode();
@@ -587,7 +590,7 @@ public class TEAnimatedScreenSelector
                 ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
         ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
-        if(te.frameAppearance.displayFit){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);if(group.columns==group.rows){float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.column+1)*du;uMin+=group.column*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
+        if(te.frameAppearance.displayFit){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);if(group.columns==group.rows){float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.columns-group.column)*du;uMin+=(group.columns-group.column-1)*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
         if(te.frameAppearance.split){drawSplitScreen(te,quad,buf);}else drawScreenQuad(buf,quad,uMin,uMax,vTop,vBottom,false);
         if (surface==ScreenSurface.Kind.DIAGONAL) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
@@ -724,7 +727,7 @@ public class TEAnimatedScreenSelector
             int choice=half==0?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom;
             if(choice<0)choice=tile.getSurfaceTexture(0)>=0?tile.getSurfaceTexture(0):ScreenHousingTextures.screenIndex(tile.getSelectedScreen()+"_static");
             TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));
-            drawScreenQuad(buffer,ScreenSurface.half(quad,half==0),sprite.getMinU(),sprite.getMaxU(),sprite.getMinV(),sprite.getMaxV(),false);
+            boolean input=tile.getBlockType() instanceof BlockProgrammableInput;drawScreenQuad(buffer,ScreenSurface.half(quad,half==0),input?sprite.getMaxU():sprite.getMinU(),input?sprite.getMinU():sprite.getMaxU(),sprite.getMinV(),sprite.getMaxV(),false);
         }
     }
 
@@ -906,7 +909,7 @@ public class TEAnimatedScreenSelector
         }
         TextureAtlasSprite wall = wallSprite(te);
         TextureAtlasSprite metal = Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite(te.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side"));
+                .getAtlasSprite(te.frameAppearance.interior(wallBlock.isPortholeShape()&&te.getSideTexture()>=0?ScreenHousingTextures.texture(te.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
         PortholeHex.Slice porthole = wallBlock.isPortholeShape() && !solidDiagonalPortholeJunction(te,state)
                 ? portholeGroup(te, state).slice(te.getPos(),state.getValue(BlockProgrammableWall.FACING).rotateY(),
                         wallBlock.isDiagonalShape() && te.isDiagonalHalfHeight()

@@ -11,6 +11,12 @@ public interface RedstoneChannelMember {
         return tile!=null && !tile.isInvalid() && tile.getWorld()!=null
                 && tile.getWorld().isBlockLoaded(tile.getPos()) && tile.getWorld().getTileEntity(tile.getPos())==tile;
     }
+    /** Stable slot identity for logical controls sharing a tile. */
+    default String transmitterSlot(){return "main";}
+    default ChannelList transmittedChannels(){return TransmitterSlots.channels(this);}
+    /** Negative means no transmitter, zero means unbounded within this dimension. */
+    default int transmissionRange(){return TransmitterSlots.range(this);}
+    default net.minecraft.util.math.BlockPos channelPosition(){return RedstoneChannels.physicalPosition(channelTile().getWorld(),channelTile().getPos());}
     int getRedstoneChannel();
     void setRedstoneChannel(int channel);
     default ChannelList getRedstoneChannels(){return ChannelList.of(Math.max(0,getRedstoneChannel()));}

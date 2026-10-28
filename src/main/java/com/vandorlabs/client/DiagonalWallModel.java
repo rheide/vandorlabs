@@ -20,7 +20,7 @@ public final class DiagonalWallModel implements IBakedModel {
         DiagonalWallState shape=((IExtendedBlockState)state).getValue(DiagonalWallState.PROPERTY);
         if(shape==null)return Collections.emptyList();
         TextureAtlasSprite wall=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(shape.texture));
-        TextureAtlasSprite metal=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
+        TextureAtlasSprite metal=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(shape.frameInterior>=0?ScreenHousingTextures.texture(shape.frameInterior):"vandorlabs:blocks/programmable_glass/metal_side");
         return bake(shape,wall,metal);
     }
     static List<BakedQuad> bake(DiagonalWallState shape,TextureAtlasSprite wall,TextureAtlasSprite metal) {

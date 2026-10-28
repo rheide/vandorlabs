@@ -79,7 +79,7 @@ final class Utility26RuntimeChecks {
         for(EnumFacing side:EnumFacing.values())world.setBlockState(sourcePos.offset(side),Blocks.STONE.getDefaultState(),2);
         world.setBlockState(sourcePos,sourceBlock.getDefaultState(),2);
         TileEntityRedstoneChannel source=(TileEntityRedstoneChannel)world.getTileEntity(sourcePos);
-        source.setRedstoneChannels(ChannelList.of(64321));RedstoneChannels.register(source);
+        com.vandorlabs.redstone.RedstoneFixtureTransmitters.equip(source,ChannelList.of(64321));RedstoneChannels.register(source);
         TileCoupler receiver=new TileCoupler();receiver.setPos(new BlockPos(1,0,0));receiver.configure(ChannelList.of(64321),false);
         VehicleStructure snapshot=new VehicleStructure(Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null),new VehicleStructure.Cell(receiver.getPos(),Block.getBlockFromName("vandorlabs:square_coupler").getDefaultState(),receiver.writeToNBT(new NBTTagCompound()))),BlockPos.ORIGIN,EnumFacing.NORTH,3);
         EntityGroundVehicle craft=new EntityGroundVehicle(world);

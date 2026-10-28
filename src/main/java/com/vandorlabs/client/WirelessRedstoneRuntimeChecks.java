@@ -15,13 +15,13 @@ final class WirelessRedstoneRuntimeChecks {
     static void require(boolean value,String message){if(!value)throw new IllegalStateException("wireless redstone: "+message);}
     static void run(WorldServer world){
         BlockPos txPos=new BlockPos(450,185,450),rxPos=txPos.east(12);
-        BlockWirelessRedstone transmitter=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_transmitter"),receiver=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_receiver");
+        BlockWirelessRedstone transmitter=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_transmitter_block"),receiver=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_receiver");
         Block slider=Block.getBlockFromName("vandorlabs:wall_slider");
         for(EnumFacing port:EnumFacing.values()){
             world.getChunkFromBlockCoords(txPos);world.getChunkFromBlockCoords(rxPos);
             world.setBlockState(txPos,transmitter.getDefaultState().withProperty(BlockWirelessRedstone.FACING,port),2);world.setBlockState(rxPos,receiver.getDefaultState().withProperty(BlockWirelessRedstone.FACING,port),2);
             TileEntityWirelessRedstone tx=(TileEntityWirelessRedstone)world.getTileEntity(txPos),rx=(TileEntityWirelessRedstone)world.getTileEntity(rxPos);
-            tx.setRedstoneChannels(ChannelList.of(64801,64802));rx.setRedstoneChannels(ChannelList.of(64802,64803));RedstoneChannels.register(tx);RedstoneChannels.register(rx);
+            net.minecraft.item.ItemStack module=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,1,0);com.vandorlabs.items.ItemRedstoneTransmitter.configure(module,ChannelList.of(64801,64802));TransmitterSlots.set(tx,module);rx.setRedstoneChannels(ChannelList.of(64802,64803));RedstoneChannels.register(tx);RedstoneChannels.register(rx);
             BlockPos source=txPos.offset(port);
             try{
                 world.setBlockState(source,slider.getDefaultState().withProperty(BlockVandorSwitch.FACING,port),2);TileEntitySignalControl control=(TileEntitySignalControl)world.getTileEntity(source);

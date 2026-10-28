@@ -197,7 +197,7 @@ public final class ProgrammableSettings {
             NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("States",trigger.isLevelStates());signal.setInteger("Exact",trigger.getExactLevel());signal.setInteger("Low",trigger.getLowTexture());signal.setInteger("Medium",trigger.getMediumTexture());out.setTag(SIGNAL_SETTINGS,signal);
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
-            NBTTagCompound frameSettings=new NBTTagCompound();screen.frameAppearance.write(frameSettings);out.setTag("FrameAppearance",frameSettings);
+            NBTTagCompound frameSettings=new NBTTagCompound();screen.frameAppearance.write(frameSettings);if(!frameSettings.hasNoTags())out.setTag("FrameAppearance",frameSettings);
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
             if(TileEntityAnimatedScreenSelector.supportsSideTexture(block))out.setInteger(SIDE_TEXTURE,screen.getSideTexture());
             if(block==ModBlocks.PROGRAMMABLE_STAIRS){out.setInteger(STAIR_TREAD,screen.stairTread());out.setInteger(STAIR_ROLL,screen.stairRoll());}

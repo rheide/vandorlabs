@@ -16,7 +16,7 @@ public final class PlateMessage implements IMessage {
         @Override public IMessage onMessage(PlateMessage message,MessageContext context){net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;player.getServerWorld().addScheduledTask(()->{
             if(!message.valid||!(player.openContainer instanceof PlateContainer)||player.openContainer.windowId!=message.window)return;
             PlateContainer container=(PlateContainer)player.openContainer;com.vandorlabs.redstone.ChannelList list=com.vandorlabs.redstone.ChannelList.parse(message.channels);
-            if(!container.canInteractWith(player)||list==null||message.mode>2||message.sensitivity>2||!com.vandorlabs.tiles.ScreenHousingTextures.validChoice(message.texture))return;container.tile.configure(message.texture,message.mode,message.sensitivity,list);
+            if(!container.canInteractWith(player)||list==null||message.mode>2||message.sensitivity>2||!com.vandorlabs.tiles.ScreenHousingTextures.validChoice(message.texture))return;container.tile.configure(message.texture,message.mode,message.sensitivity,com.vandorlabs.redstone.TransmitterSlots.channels(container.tile));
         });return null;}
     }
 }

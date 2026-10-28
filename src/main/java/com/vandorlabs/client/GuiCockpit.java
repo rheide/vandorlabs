@@ -53,7 +53,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
             buttonList.add(new CockpitButton(33,cx,guiTop+142,controlW,20,"Blank surface"));
         }else{
             TileEntityCockpit.Control control=tile.controls.get(c);
-            text(0,x,y+12,w,control.label);text(1,x,y+52,w,control.channels.toString());
+            text(0,x,y+12,w,control.label);text(1,x,y+52,w,control.channels.toString());fields.get(1).setVisible(false);buttonList.add(new CockpitButton(90,x,y+52,w,20,"Redstone Transmitter..."));
             if(control.isThrottle()){
                 buttonList.add(new CockpitButton(42,x,y+84,w/2-2,20,"Low: "+control.min));buttonList.add(new CockpitButton(43,x+w/2+2,y+84,w/2-2,20,"High: "+control.max));
             }else buttonList.add(new CockpitButton(40,x,y+84,w,20,"Control: "+new String[]{"Toggle","Slider","Pulse (1 second)"}[control.kind]));
@@ -79,6 +79,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         for(GuiTextField f:fields)f.setTextColor(0xe0e0e0);packet(0,tag);
     }
     @Override protected void actionPerformed(GuiButton button){
+        if(button.id==90){save();com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),100+controlIndex()));return;}
         if(button.id==2){save();mc.player.closeScreen();return;}
         if(button.id==0 || button.id==1){save();page=Math.floorMod(page+(button.id==0?-1:1)*GuiOptionCycle.direction(),pages());initGui();return;}
         int d=displayIndex(),c=controlIndex();
@@ -109,7 +110,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         if(textures!=null)textures.draw(fontRenderer,x,y);for(GuiTextField f:fields)f.drawTextBox();
         if(pilotPage()){fontRenderer.drawString("Trigger channels",guiLeft+12,guiTop+61,0xffffff);for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Block channels","Taxi channels","Hover channels"}[i],guiLeft+12,guiTop+91+i*28,0xffffff);}
         else if(sidePage()){}
-        else if(d>=tile.displays.size()){fontRenderer.drawString("Label",guiLeft+12,guiTop+48,0xffffff);fontRenderer.drawString("Output channels",guiLeft+12,guiTop+88,0xffffff);TileEntityCockpit.Control value=tile.controls.get(c);if(value.isThrottle())fontRenderer.drawString("Off 0 / Medium "+((value.min+value.max+1)/2)+" - four positions",guiLeft+12,guiTop+154,0xdae8f0);}
+        else if(d>=tile.displays.size()){fontRenderer.drawString("Label",guiLeft+12,guiTop+48,0xffffff);TileEntityCockpit.Control value=tile.controls.get(c);if(value.isThrottle())fontRenderer.drawString("Off 0 / Medium "+((value.min+value.max+1)/2)+" - four positions",guiLeft+12,guiTop+154,0xdae8f0);}
         else fontRenderer.drawString("Gate channel (0 = always)",fields.get(0).x,guiTop+83,0xffffff);
     }
     /** A solid panel button has no vanilla 256-pixel atlas width limit. */

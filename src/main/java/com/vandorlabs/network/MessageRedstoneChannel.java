@@ -159,7 +159,7 @@ public class MessageRedstoneChannel implements IMessage {
                     if(message.powerLever && block instanceof com.vandorlabs.blocks.BlockIndustrialLever && tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel)((com.vandorlabs.tiles.TileEntityRedstoneChannel)tile).setPowerLeverSize(message.powerLeverSize);
                     if(message.controlLimits && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureLimits(message.lowLimit,message.highLimit);
                     if(message.controlMount && tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel)((com.vandorlabs.tiles.TileEntityRedstoneChannel)tile).configureMount(message.baseHeight,message.baseTilt,message.tiltDirection);
-                    ((RedstoneChannelMember) tile).setRedstoneChannels(message.getRedstoneChannels());
+                    ((RedstoneChannelMember) tile).setRedstoneChannels(tile instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel?com.vandorlabs.redstone.TransmitterSlots.channels((RedstoneChannelMember)tile):message.getRedstoneChannels());
                     if(message.controlTypeUpdate && tile instanceof com.vandorlabs.tiles.TileEntitySignalControl)((com.vandorlabs.tiles.TileEntitySignalControl)tile).configureType(message.controlType);
                     if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){if(message.pilotMode>2)return;((com.vandorlabs.tiles.TileEntityPilotSeat)tile).configure(message.pilotMode,message.pilotHeight,player.world);}
                     if (message.updateParticles && tile instanceof TileEntityRedstoneLight

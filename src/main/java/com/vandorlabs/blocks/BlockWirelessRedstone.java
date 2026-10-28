@@ -14,7 +14,7 @@ import net.minecraft.world.*;
 public final class BlockWirelessRedstone extends BlockVandor {
     public static final PropertyDirection FACING=PropertyDirection.create("facing");
     public final boolean transmitter;
-    public BlockWirelessRedstone(boolean transmitter){super("redstone_"+(transmitter?"transmitter":"receiver"));this.transmitter=transmitter;setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH));}
+    public BlockWirelessRedstone(boolean transmitter){super("redstone_"+(transmitter?"transmitter_block":"receiver"));this.transmitter=transmitter;setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH));}
     @Override protected BlockStateContainer createBlockState(){return new BlockStateContainer(this,FACING);}
     @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,EnumFacing.getFront(Math.floorMod(meta,6)));}
     @Override public int getMetaFromState(IBlockState state){return state.getValue(FACING).getIndex();}

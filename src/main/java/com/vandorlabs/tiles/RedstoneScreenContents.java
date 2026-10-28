@@ -49,6 +49,7 @@ public final class RedstoneScreenContents {
     private boolean configure(String title,List<String> labels,List<ChannelList> channels,int housing,boolean enable){
         if(!validTitle(title))return false;
         if(labels.size()>maxRows() || labels.size()!=channels.size() || !ScreenHousingTextures.validChoice(housing))return false;
+        for(int i=labels.size();i<rows.size();i++)if(!TransmitterSlots.get(rows.get(i)).isEmpty())return false;
         for(int i=0;i<labels.size();i++)if(!validLabel(labels.get(i)) || channels.get(i)==null)return false;
         List<Row> next=new ArrayList<>();
         for(int i=0;i<labels.size();i++) {
@@ -56,7 +57,7 @@ public final class RedstoneScreenContents {
             if(i<rows.size()){row.latched=rows.get(i).latched.intersect(row.channels);row.levels.putAll(rows.get(i).levels);row.slider=rows.get(i).slider;row.pulse=rows.get(i).pulse;row.min=rows.get(i).min;row.max=rows.get(i).max;}
             next.add(row);
         }
-        enabled=enable;this.title=title.trim();rows=next;view=Collections.unmodifiableList(rows);setHousingTexture(housing);if(enabled)refreshRows();else unregisterRows();changed();return true;
+        enabled=enable;this.title=title.trim();rows=next;for(Row row:rows)row.channels=TransmitterSlots.channels(row);view=Collections.unmodifiableList(rows);setHousingTexture(housing);if(enabled)refreshRows();else unregisterRows();changed();return true;
     }
     public NBTTagList rowConfiguration(){
         NBTTagList list=new NBTTagList();
@@ -109,7 +110,7 @@ public final class RedstoneScreenContents {
         if(owner.getWorld()==null || owner.getWorld().isRemote || !enabled || index<0 || index>=rows.size())return;
         Row row=rows.get(index);if(row.channels.isEmpty() || row.slider)return;
         if(row.pulse){pulseRow(index);return;}
-        RedstoneChannels.latchChanged(row,!RedstoneChannels.allPowered(owner.getWorld(),row.channels));
+        RedstoneChannels.latchChanged(row,!RedstoneChannels.allPowered(owner.getWorld(),owner.getPos(),row.channels));
     }
     public void pulseRow(int index){
         net.minecraft.world.World server=serverWorld();if(server==null||server.isRemote||!enabled||index<0||index>=rows.size())return;
@@ -160,7 +161,7 @@ public final class RedstoneScreenContents {
     }
     public final class Row implements RedstoneChannelLatch {
         public final String label;
-        public final ChannelList channels;
+        public ChannelList channels;
         private ChannelList latched=ChannelList.EMPTY;
         private boolean active;
         public boolean slider,pulse;
@@ -188,10 +189,12 @@ public final class RedstoneScreenContents {
 
         Row(String label,ChannelList channels){this.label=label;this.channels=channels;}
         public boolean active(){return pulse?pulseUntil>0&&owner.getWorld()!=null&&owner.getWorld().getTotalWorldTime()<pulseUntil:active;}
+        public String transmitterSlot(){return "row_"+slot+"_"+rows.indexOf(this);}
         public TileEntity channelTile(){return owner;}
         public int getRedstoneChannel(){return channels.first();}
         public ChannelList getRedstoneChannels(){return channels;}
-        public void setRedstoneChannel(int ignored){throw new UnsupportedOperationException("Configure the screen rows");}
+        public void setRedstoneChannel(int channel){setRedstoneChannels(ChannelList.of(channel));}
+        public void setRedstoneChannels(ChannelList next){channels=next;latched=latched.intersect(next);levels.keySet().removeIf(c->!next.contains(c));markDirty();RedstoneChannels.register(this);changed();}
         public boolean hasLocalRedstoneSignal(){return pulse?active():!latched.isEmpty();}
         public boolean hasLocalRedstoneSignal(int channel){return pulse?active():latched.contains(channel);}
         public boolean isChannelLatch(){return !pulse;}
@@ -204,8 +207,8 @@ public final class RedstoneScreenContents {
             if(!latched.equals(value)){latched=value;markDirty();}
         }
         public void setChannelSignal(boolean ignored){
-            int nextLevel=0;for(int i=0;i<channels.size();i++)nextLevel=Math.max(nextLevel,RedstoneChannels.level(owner.getWorld(),channels.get(i)));
+            int nextLevel=0;for(int i=0;i<channels.size();i++)nextLevel=Math.max(nextLevel,RedstoneChannels.level(owner.getWorld(),owner.getPos(),channels.get(i)));
             if(slider && level!=nextLevel){level=nextLevel;changed();}
-            boolean next=RedstoneChannels.allPowered(owner.getWorld(),channels);if(active!=next){active=next;changed();}}
+            boolean next=RedstoneChannels.allPowered(owner.getWorld(),owner.getPos(),channels);if(active!=next){active=next;changed();}}
     }
 }

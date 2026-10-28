@@ -8,7 +8,13 @@ public final class FrameAppearance {
     public boolean tile,displayFit,split;
     public int splitTop=-1,splitBottom=-1;
     public static boolean valid(int choice){return choice==-1 || ScreenHousingTextures.validChoice(choice) && "Frame".equals(ScreenHousingTextures.category(choice));}
-    public void write(NBTTagCompound tag){tag.setInteger("FrameFront",front);tag.setInteger("FrameInterior",interior);tag.setBoolean("FrameTile",tile);tag.setBoolean("DisplayFit",displayFit);tag.setBoolean("DisplaySplit",split);tag.setInteger("DisplaySplitTop",splitTop);tag.setInteger("DisplaySplitBottom",splitBottom);}
+    public void write(NBTTagCompound tag){
+        optional(tag,"FrameFront",front);optional(tag,"FrameInterior",interior);optional(tag,"DisplaySplitTop",splitTop);optional(tag,"DisplaySplitBottom",splitBottom);
+        flag(tag,"FrameTile",tile);flag(tag,"DisplayFit",displayFit);flag(tag,"DisplaySplit",split);
+    }
+    private static void optional(NBTTagCompound tag,String key,int value){if(value<0)tag.removeTag(key);else tag.setInteger(key,value);}
+    private static void flag(NBTTagCompound tag,String key,boolean value){if(value)tag.setBoolean(key,true);else tag.removeTag(key);}
+
     public void read(NBTTagCompound tag){front=tag.hasKey("FrameFront",3)&&valid(tag.getInteger("FrameFront"))?tag.getInteger("FrameFront"):-1;interior=tag.hasKey("FrameInterior",3)&&valid(tag.getInteger("FrameInterior"))?tag.getInteger("FrameInterior"):-1;tile=tag.getBoolean("FrameTile");displayFit=tag.getBoolean("DisplayFit");split=tag.getBoolean("DisplaySplit");splitTop=tag.hasKey("DisplaySplitTop",3)?tag.getInteger("DisplaySplitTop"):-1;splitBottom=tag.hasKey("DisplaySplitBottom",3)?tag.getInteger("DisplaySplitBottom"):-1;if(splitTop!=-1&&!ScreenHousingTextures.validChoice(splitTop))splitTop=-1;if(splitBottom!=-1&&!ScreenHousingTextures.validChoice(splitBottom))splitBottom=-1;}
     public static String bare(String id){
         String result=id.replace("_framed_","_bare_");if(result.startsWith("framed_"))result="bare_"+result.substring(7);return result;

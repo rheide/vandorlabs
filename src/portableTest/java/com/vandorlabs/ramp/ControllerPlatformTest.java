@@ -215,7 +215,7 @@ public final class ControllerPlatformTest {
         close(AnimationFrames.top(1,4),.25,"animation UV top");
         close(AnimationFrames.bottom(1,4),.5,"animation UV bottom");
         ScreenSurface.Quad surface=ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,false);
-        close(surface.topLeft.x,.5,"screen surface inset"); close(surface.topLeft.y,14.85,"screen surface top");
+        close(surface.topLeft.x,0,"diagonal display joins at left block edge");close(surface.topRight.x,16,"diagonal display joins at right block edge"); close(surface.topLeft.y,14.85,"screen surface top");
         check(RampGeometry.firstOccupiedY(10,.5,-1.0,-.25)==9,"occupied range floor");
         check(RampGeometry.lastOccupiedY(10,1,-1.0,-.25)==10,"occupied range ceiling");
         check(RampGeometry.firstOccupiedY(10,.5,0,-2.5)==8,"top slab touching ground excludes ground cell");

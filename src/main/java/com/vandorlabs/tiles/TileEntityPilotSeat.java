@@ -21,7 +21,7 @@ public class TileEntityPilotSeat extends TileEntity implements RedstoneChannelMe
     private final boolean[] modeHigh=new boolean[3];
     public ChannelList modeChannels(int mode){return modeChannels[mode];}
     public void setModeChannels(int mode,ChannelList value){if(mode<0||mode>2||value==null)throw new IllegalArgumentException("Invalid vehicle mode channels");modeChannels[mode]=value;modeHigh[mode]=modePowered(world,mode);markDirty();sync();}
-    private boolean modePowered(World real,int mode){if(real==null)return false;ChannelList list=modeChannels[mode];for(int i=0;i<list.size();i++)if(RedstoneChannels.level(real,list.get(i))>0)return true;return false;}
+    private boolean modePowered(World real,int mode){if(real==null)return false;ChannelList list=modeChannels[mode];for(int i=0;i<list.size();i++)if(RedstoneChannels.level(real,pos,list.get(i))>0)return true;return false;}
     public int pollMode(World real){if(real==null)return -1;int selected=-1;boolean changed=false,baseline=baselineAfterLoad||real.getTotalWorldTime()<readyAt;for(int mode=0;mode<3;mode++){boolean next=modePowered(real,mode);if(next&&!modeHigh[mode]&&!baseline)selected=mode;changed|=next!=modeHigh[mode];modeHigh[mode]=next;}if(changed){markDirty();sync();}return selected;}
     public int getRedstoneMode(){return redstoneMode;}
     public int getHeight(){return height;}
@@ -52,7 +52,7 @@ public class TileEntityPilotSeat extends TileEntity implements RedstoneChannelMe
     public void setChannelSignal(boolean signal){} // Polled against the real world, including in vehicle mode.
     private boolean powered(World real){
         if(real==null || redstoneMode==0 || channels.size()==0 || channels.first()==0)return false;
-        boolean signal=false;for(int n=0;n<channels.size();n++)if(RedstoneChannels.level(real,channels.get(n))>0){signal=true;break;}
+        boolean signal=false;for(int n=0;n<channels.size();n++)if(RedstoneChannels.level(real,pos,channels.get(n))>0){signal=true;break;}
         return redstoneMode==2?!signal:signal;
     }
     /** -1 unchanged, 0 falling edge, 1 rising edge. */

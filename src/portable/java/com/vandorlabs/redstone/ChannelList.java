@@ -42,6 +42,8 @@ public final class ChannelList {
             return of(values);
         }catch(IllegalArgumentException invalid){return null;}
     }
+    /** Internal union: two independently bounded receiver/transmitter banks may total 128 channels. */
+    public ChannelList union(ChannelList other){java.util.TreeSet<Integer> set=new java.util.TreeSet<>();for(int value:values)set.add(value);for(int value:other.values)set.add(value);int[] merged=new int[set.size()];int i=0;for(int value:set)merged[i++]=value;return new ChannelList(merged);}
     public int size(){return values.length;}
     public boolean isEmpty(){return values.length==0;}
     public int first(){return isEmpty()?0:values[0];}

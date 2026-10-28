@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
+    public static final int GUI_TRANSMITTER_ITEM=29;
     public static final int GUI_COPY=26;
     public static final int GUI_SURFACE=28;
     public static final int GUI_PROGRAMMER=24,GUI_COUPLER=25,GUI_PRESSURE_PLATE=27;
@@ -67,6 +68,9 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_TRANSMITTER_ITEM){com.vandorlabs.container.ContainerTransmitterItem c=new com.vandorlabs.container.ContainerTransmitterItem(player,x==0?net.minecraft.util.EnumHand.MAIN_HAND:net.minecraft.util.EnumHand.OFF_HAND);return c.canInteractWith(player)?c:null;}
+        if(ID>=1000&&ID<2256){int selector=ID>=2000?ID-2000:ID-1000;if(selector<0||selector>255)return null;com.vandorlabs.redstone.RedstoneChannelMember m=com.vandorlabs.container.ContainerTransmitterSlot.resolve(world,x,y,z,selector);if(m==null)return null;net.minecraft.inventory.Container c=ID>=2000?new com.vandorlabs.container.ContainerTransmitterItem(player,m,selector):new com.vandorlabs.container.ContainerTransmitterSlot(player,m,selector);return c.canInteractWith(player)?c:null;}
+
         if(ID==GUI_COPY)return com.vandorlabs.copier.CopyControllerContainer.resolve(player,world,x,y,z);
         if(ID==GUI_SURFACE){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));if(!(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface))return null;com.vandorlabs.container.ContainerSurface container=new com.vandorlabs.container.ContainerSurface((com.vandorlabs.tiles.TileEntityTurntableSurface)tile);return container.canInteractWith(player)?container:null;}
         if(ID==GUI_PROGRAMMER){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.programmer.ProgrammerTile&&((com.vandorlabs.programmer.ProgrammerTile)tile).usable(player)?new com.vandorlabs.programmer.ProgrammerContainer(player.inventory,(com.vandorlabs.programmer.ProgrammerTile)tile):null;}
@@ -161,6 +165,9 @@ public class GuiHandler implements IGuiHandler {
 
     @Override
     public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_TRANSMITTER_ITEM)return new com.vandorlabs.client.GuiTransmitterItem(new com.vandorlabs.container.ContainerTransmitterItem(player,x==0?net.minecraft.util.EnumHand.MAIN_HAND:net.minecraft.util.EnumHand.OFF_HAND));
+        if(ID>=1000&&ID<2256){int selector=ID>=2000?ID-2000:ID-1000;if(selector<0||selector>255)return null;com.vandorlabs.redstone.RedstoneChannelMember m=com.vandorlabs.container.ContainerTransmitterSlot.resolve(world,x,y,z,selector);if(m==null)return null;return ID>=2000?new com.vandorlabs.client.GuiTransmitterItem(new com.vandorlabs.container.ContainerTransmitterItem(player,m,selector)):new com.vandorlabs.client.GuiTransmitterSlot(new com.vandorlabs.container.ContainerTransmitterSlot(player,m,selector));}
+
         if(ID==GUI_COPY){com.vandorlabs.copier.CopyControllerContainer container=com.vandorlabs.copier.CopyControllerContainer.resolve(player,world,x,y,z);return container==null?null:new com.vandorlabs.copier.client.GuiCopyController(container);}
         if(ID==GUI_SURFACE){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface?new com.vandorlabs.client.GuiProgrammableSurface(new com.vandorlabs.container.ContainerSurface((com.vandorlabs.tiles.TileEntityTurntableSurface)tile)):null;}
         if(ID==GUI_PROGRAMMER){TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));return tile instanceof com.vandorlabs.programmer.ProgrammerTile?new com.vandorlabs.programmer.client.GuiProgrammer(new com.vandorlabs.programmer.ProgrammerContainer(player.inventory,(com.vandorlabs.programmer.ProgrammerTile)tile)):null;}

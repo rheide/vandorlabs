@@ -16,7 +16,7 @@ public final class MessageWirelessRedstone implements IMessage {
         public IMessage onMessage(MessageWirelessRedstone message,MessageContext context){net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;player.getServerWorld().addScheduledTask(()->{
             if(!(player.openContainer instanceof ContainerWirelessRedstone)||player.openContainer.windowId!=message.window||message.on>15||message.off>15||message.face>5||message.channels.length()>256)return;
             ContainerWirelessRedstone container=(ContainerWirelessRedstone)player.openContainer;ChannelList channels=ChannelList.parse(message.channels);if(!container.canInteractWith(player)||channels==null)return;
-            container.tile.setRedstoneChannels(channels);container.tile.configure(message.analog,message.on,message.off);container.tile.rotatePort(net.minecraft.util.EnumFacing.getFront(message.face));
+            container.tile.setRedstoneChannels(container.tile.transmitter()?com.vandorlabs.redstone.TransmitterSlots.channels(container.tile):channels);container.tile.configure(message.analog,message.on,message.off);container.tile.rotatePort(net.minecraft.util.EnumFacing.getFront(message.face));
         });return null;}
     }
 }

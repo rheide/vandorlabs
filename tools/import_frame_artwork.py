@@ -1,6 +1,7 @@
 """Import authored frame artwork at the established 64px material resolution."""
 import argparse
 import json
+import re
 from pathlib import Path
 from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,10 +24,13 @@ for directory in ['frames-company-half-full', 'frames-door-window', 'frames-scre
         # center pixels must never become holes in the physical frame sides.
         alpha=image.getchannel('A')
         center=image.width//2
-        run=0
-        while run<image.height//3 and alpha.getpixel((center,run))>64:
-            run+=1
-        strip=image.crop((0,0,image.width,max(1,run))) if 0<run<image.height//3 else image
+        start=0
+        while start<image.height//3 and alpha.getpixel((center,start))<=64:
+            start+=1
+        end=start
+        while end<image.height//3 and alpha.getpixel((center,end))>64:
+            end+=1
+        strip=image.crop((image.width//8,start,image.width*7//8,max(start+1,end))) if start<end<image.height//3 else image
         strip.resize((64,64),Image.Resampling.LANCZOS).save(target.with_name(target.stem+'_rail.png'),optimize=True)
         if not any(e['id']==identifier for e in entries):
             entry = dict(id=identifier, label=source.stem.replace('_',' ').replace('-',' ').title(),
@@ -37,7 +41,9 @@ for directory in ['frames-company-half-full', 'frames-door-window', 'frames-scre
             entry["frameRail"]="frames/"+relative.with_suffix("").as_posix()+"_rail"
             entries.append(entry)
         for e in entries:
-            if e["id"]==identifier:e["frameRail"]="frames/"+relative.with_suffix("").as_posix()+"_rail"
+            if e["id"]==identifier:
+                e["frameRail"]="frames/"+relative.with_suffix("").as_posix()+"_rail"
+                e["label"]=re.sub(r"_1254(?:x(?:627|1254))?$", "",source.stem,flags=re.I).replace("_"," ").replace("-"," ").title()
         count += 1
 catalog.write_text(json.dumps(entries,indent=2)+'\n')
 print('Imported',count,'frame textures at 64px; existing choice indices preserved')

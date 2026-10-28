@@ -19,7 +19,7 @@ public final class PlateRuntimeChecks {
         PlateBlock block=(PlateBlock)Block.getBlockFromName("vandorlabs:programmable_pressure_plate");EntityItem item=null;
         try{
             world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),2);world.setBlockState(pos,block.getDefaultState(),3);DeferredTileLoad.flush(world);
-            PlateTile tile=(PlateTile)world.getTileEntity(pos);require(tile!=null,"registered live tile");ChannelList channels=ChannelList.parse("65421,65422");tile.configure(ScreenHousingTextures.DEFAULT_TRAPDOOR,1,channels);
+            PlateTile tile=(PlateTile)world.getTileEntity(pos);require(tile!=null,"registered live tile");ChannelList channels=ChannelList.parse("65421,65422");tile.configure(ScreenHousingTextures.DEFAULT_TRAPDOOR,1,channels);RedstoneFixtureTransmitters.equip(tile,channels);
             for(boolean pressed:new boolean[]{false,true}){
                 IBlockState state=block.getDefaultState().withProperty(PlateBlock.POWER,pressed?15:0),vanilla=Blocks.WOODEN_PRESSURE_PLATE.getDefaultState().withProperty(net.minecraft.block.BlockPressurePlate.POWERED,pressed);
                 require(block.getBoundingBox(state,world,pos).equals(Blocks.WOODEN_PRESSURE_PLATE.getBoundingBox(vanilla,world,pos)),"exact vanilla travel and footprint "+pressed);require(block.getCollisionBoundingBox(state,world,pos)==null,"no solid collision cube");
@@ -40,7 +40,7 @@ public final class PlateRuntimeChecks {
     private static void carried(WorldServer world,BlockPos at){
         PlateBlock block=(PlateBlock)Block.getBlockFromName("vandorlabs:programmable_pressure_plate");BlockPos local=new BlockPos(1,0,0);int cases=0;
         for(int sensitivity=0;sensitivity<3;sensitivity++)for(boolean hover:new boolean[]{false,true})for(float yaw:new float[]{0,37,90,180,270}){
-            PlateTile source=new PlateTile();source.setPos(local);source.configure(ScreenHousingTextures.DEFAULT_TRAPDOOR,1,sensitivity,ChannelList.of(65431));int expected=sensitivity==0?15:1;
+            PlateTile source=new PlateTile();source.setPos(local);source.configure(ScreenHousingTextures.DEFAULT_TRAPDOOR,1,sensitivity,ChannelList.of(65431));RedstoneFixtureTransmitters.equip(source,ChannelList.of(65431));int expected=sensitivity==0?15:1;
             com.vandorlabs.vehicle.VehicleStructure snapshot=new com.vandorlabs.vehicle.VehicleStructure(java.util.Arrays.asList(new com.vandorlabs.vehicle.VehicleStructure.Cell(BlockPos.ORIGIN,com.vandorlabs.blocks.ModBlocks.PILOT_SEAT.getDefaultState(),null),new com.vandorlabs.vehicle.VehicleStructure.Cell(local,block.getDefaultState(),source.writeToNBT(new NBTTagCompound()))),BlockPos.ORIGIN,EnumFacing.NORTH,3);
             com.vandorlabs.vehicle.EntityGroundVehicle craft=new com.vandorlabs.vehicle.EntityGroundVehicle(world);EntityItem item=null;
             try{

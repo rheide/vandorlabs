@@ -18,7 +18,7 @@ public final class DiagonalWallState {
     };
     public final EnumFacing facing;
     public final boolean inverted,halfHeight,hideLower,hideUpper;
-    public final int texture,fill,light;
+    public final int texture,fill,light,frameInterior;
     public final double span,lowerEnd,upperEnd;
     public final BlockProgrammableWall.Corner corner;
     private final double[] clip;
@@ -57,6 +57,7 @@ public final class DiagonalWallState {
     public DiagonalWallState(IBlockState state,IBlockAccess world,BlockPos pos) {
         TileEntity raw=world.getTileEntity(pos);
         TileEntityAnimatedScreenSelector tile=raw instanceof TileEntityAnimatedScreenSelector?(TileEntityAnimatedScreenSelector)raw:null;
+        frameInterior=tile==null?-1:tile.frameAppearance.interior;
         facing=state.getValue(BlockProgrammableWall.FACING);inverted=state.getValue(BlockProgrammableWall.INVERTED);
         texture=tile==null?0:tile.getHousingTexture();halfHeight=tile!=null && tile.isDiagonalHalfHeight();
         fill=tile==null?0:tile.getDiagonalFill();span=BlockProgrammableWall.diagonalSpan(world,pos);

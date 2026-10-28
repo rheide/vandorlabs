@@ -247,6 +247,11 @@ final class ChannelListGuiChecks {
     }
     private static void capture(Minecraft mc,File output,String name)throws java.io.IOException{ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_"+name+".png"));}
     private static GuiTextField field(Minecraft mc)throws ReflectiveOperationException {
+        net.minecraft.client.gui.GuiScreen gui=mc.currentScreen;
+        if(gui instanceof GuiAnimatedScreenSelector||gui instanceof GuiProgrammableInput||gui instanceof GuiProgrammableHalfConsole||gui instanceof GuiSpaceDoor){
+            java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
+            for(net.minecraft.client.gui.GuiButton button:buttons)if(button.enabled&&"Redstone".equals(button.displayString)){if(gui instanceof GuiAnimatedScreenSelector)((GuiAnimatedScreenSelector)gui).actionPerformed(button);else if(gui instanceof GuiProgrammableInput)((GuiProgrammableInput)gui).actionPerformed(button);else if(gui instanceof GuiProgrammableHalfConsole)((GuiProgrammableHalfConsole)gui).actionPerformed(button);else ((GuiSpaceDoor)gui).actionPerformed(button);break;}
+        }
         Field field=mc.currentScreen.getClass().getDeclaredField(index==7?"channel":"channelField");field.setAccessible(true);return (GuiTextField)field.get(mc.currentScreen);
     }
     private static void open(Minecraft mc){pending=mc.getIntegratedServer().addScheduledTask(()->{

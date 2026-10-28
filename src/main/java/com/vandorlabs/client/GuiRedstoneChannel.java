@@ -20,6 +20,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     private final RedstoneChannelMember member;
     private GuiTextField channelField;
     private final boolean signalControl;
+    private boolean transmitterControl(){return member instanceof com.vandorlabs.tiles.TileEntityRedstoneChannel;}
     private final boolean powerLever;
     private int powerLeverSize;
     private int lowLimit=5,highLimit=15,baseHeight,baseTilt,tiltDirection;
@@ -97,7 +98,9 @@ public class GuiRedstoneChannel extends GuiContainer {
         ChannelFields.configure(channelField);
 
         channelField.setText(member.getRedstoneChannels().toString());
-        channelField.setFocused(true);
+        channelField.setFocused(!transmitterControl());
+        if(transmitterControl()){channelField.setVisible(false);buttonList.add(new GuiButton(90,guiLeft+116,guiTop+36,106,20,"Transmitter..."));}
+        else if(!pilotSeat)buttonList.add(new GuiButton(90,guiLeft+xSize-94,guiTop+3,82,18,"Transmitter"));
         if (thruster) housingList = new HousingTextureList(layout.listX,guiTop+38,layout.listWidth,sideTexture).visibleRows(Math.max(2,(ySize-46)/HousingTextureList.ROW_HEIGHT)).custom(value->{sideTexture=value;submit();});
         if (thruster) {
             particleButton = layout.control(2,64,particleLabel());
@@ -139,6 +142,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==90){submit();PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(member.channelTile().getPos(),0));return;}
         if(button.id!=1&&button.id!=4)otherEdited=true;
         if(button.id==21){submit();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessagePilotModes(member.channelTile().getPos(),null));return;}
         if(button.id==18){pilotMode=GuiOptionCycle.next(pilotMode,3);button.displayString=pilotModeLabel();}
@@ -239,7 +243,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     @Override protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         GlStateManager.disableLighting();
         fontRenderer.drawString(fontRenderer.trimStringToWidth(dialogTitle(),xSize-24),12,8,0xFFFFFF);
-        fontRenderer.drawString(thruster?"Channels (0 = none)":"Channels",thruster?layout.controlsX-guiLeft:14,thruster?27:43,0xDAE8F0);
+        fontRenderer.drawString(transmitterControl()?"Redstone":thruster?"Channels (0 = none)":"Channels",thruster?layout.controlsX-guiLeft:14,thruster?27:43,0xDAE8F0);
         if(pilotSeat){fontRenderer.drawString(taxiMode?"Sit: assemble / Exit: park":"Manual Configurizer conversion",14,146,0xDAE8F0);}
         if(pilotSeat && !inspectionStatus.isEmpty()){java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(inspectionStatus,212);for(int i=0;i<Math.min(5,lines.size());i++)fontRenderer.drawString(i==4 && lines.size()>5?fontRenderer.trimStringToWidth(lines.get(i),198)+"...":lines.get(i),14,162+i*9,0xffbb88);if(mouseX-guiLeft>=14 && mouseX-guiLeft<=226 && mouseY-guiTop>=162 && mouseY-guiTop<=207)drawHoveringText(lines,mouseX-guiLeft,mouseY-guiTop);}
         if(thruster)fontRenderer.drawString("Wall texture",12,27,0xDAE8F0);

@@ -596,7 +596,7 @@ tile.vandorlabs.large_gear_mount.name=Large Fixed Arm
 tile.vandorlabs.access_card_slot.name=Access Card Mount
 tile.vandorlabs.data_chip_slot.name=Data Chip Mount
 
-tile.vandorlabs.redstone_transmitter.name=Redstone Transmitter
+tile.vandorlabs.redstone_transmitter_block.name=Redstone Transmitter Block
 tile.vandorlabs.redstone_receiver.name=Redstone Receiver
 tile.vandorlabs.programmable_ramp_slab.name=Ramp Controller Slab
 
@@ -620,3 +620,8 @@ tile.vandorlabs.bogie_track.name=Bogie Track
 tile.vandorlabs.copy_controller.name=Copy Controller
 
 tile.vandorlabs.programmable_pressure_plate.name=Programmable Pressure Plate
+
+item.vandorlabs.redstone_transmitter.short.name=Short Range Redstone Transmitter
+item.vandorlabs.redstone_transmitter.medium.name=Medium Range Redstone Transmitter
+item.vandorlabs.redstone_transmitter.long.name=Long Range Redstone Transmitter
+item.vandorlabs.redstone_transmitter.infinite.name=Infinite Range Redstone Transmitter
