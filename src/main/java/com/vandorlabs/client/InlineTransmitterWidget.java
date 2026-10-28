@@ -43,7 +43,7 @@ public final class InlineTransmitterWidget {
             Placement p=state.buttons.get(button);if(p==null||p.slot!=slot){if(p!=null)save(gui,p);p=new Placement(button,slot);state.buttons.put(button,p);}
             p.x=button.x;p.y=button.y+(button.height-16)/2;p.width=button.width;p.shown=true;
             slot.xPos=p.x-left;slot.yPos=p.y-top;slot.visible=true;
-            p.field.x=p.x;p.field.y=p.y+Math.max(24,mc.fontRenderer.listFormattedStringToWidth(CAPTION,p.width-24).size()*mc.fontRenderer.FONT_HEIGHT+4);p.field.width=p.width;p.field.setVisible(true);p.field.setEnabled(slot.getHasStack());
+            int captionX=p.width<150?p.x:p.x+24,captionY=p.y+(p.width<150?20:2),captionWidth=p.width-(p.width<150?0:24);p.field.x=p.x;p.field.y=Math.max(p.y+24,captionY+mc.fontRenderer.listFormattedStringToWidth(CAPTION,captionWidth).size()*mc.fontRenderer.FONT_HEIGHT+4);p.field.width=p.width;p.field.setVisible(true);p.field.setEnabled(slot.getHasStack());
             ItemStack stack=slot.getStack();if(!ItemStack.areItemStacksEqual(p.before,stack)){boolean sameModule=!p.before.isEmpty()&&!stack.isEmpty()&&p.before.getItem()==stack.getItem()&&p.before.getMetadata()==stack.getMetadata();p.before=stack.copy();p.pending=false;if(!sameModule||!p.dirty){p.field.setText(stack.isEmpty()?"":ItemRedstoneTransmitter.channels(stack).toString());p.dirty=false;}else if(!p.field.isFocused())save(gui,p);}
             button.visible=false;shown=true;
         }
@@ -70,7 +70,7 @@ public final class InlineTransmitterWidget {
         try(TurntableRenderState saved=new TurntableRenderState()){
             GlStateManager.setActiveTexture(net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);GlStateManager.disableLighting();GlStateManager.disableDepth();GlStateManager.disableCull();GlStateManager.depthMask(false);GlStateManager.enableTexture2D();GlStateManager.color(1,1,1,1);
             if(state!=null)for(Placement p:state.buttons.values())if(p.shown){
-                mc.fontRenderer.drawSplitString(CAPTION,p.x+24,p.y+2,p.width-24,0xc9d9e2);p.field.drawTextBox();
+                mc.fontRenderer.drawSplitString(CAPTION,p.width<150?p.x:p.x+24,p.y+(p.width<150?20:2),p.width-(p.width<150?0:24),0xc9d9e2);p.field.drawTextBox();
                 if(!p.slot.getHasStack()&&mc.player.inventory.getItemStack().isEmpty()){
                     GlStateManager.enableTexture2D();GlStateManager.enableAlpha();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);mc.getTextureManager().bindTexture(new net.minecraft.util.ResourceLocation("vandorlabs","textures/items/redstone_transmitter_short.png"));GlStateManager.color(.55F,.55F,.55F,.65F);Gui.drawModalRectWithCustomSizedTexture(p.x,p.y,0,0,16,16,16,16);GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();
                 }
