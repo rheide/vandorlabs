@@ -21,7 +21,7 @@ final class Artwork27RuntimeChecks {
         mc.getIntegratedServer().callFromMainThread(()->{
             net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
             net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
-            VehicleWorldRuntimeChecks.run(world);DuplifierRuntimeChecks.run(actor);RampAnalogRuntimeChecks.run(world,actor);RampAuthorizationRuntimeChecks.run(world,actor);UtilityStorageRuntimeChecks.run(world);RedstoneRangeRuntimeChecks.run(world,actor);
+            VehicleWorldRuntimeChecks.run(world);DuplifierRuntimeChecks.run(actor);RampAnalogRuntimeChecks.run(world,actor);RampAuthorizationRuntimeChecks.run(world,actor);UtilityStorageRuntimeChecks.run(world);RedstoneRangeRuntimeChecks.run(world,actor);com.vandorlabs.redstone.TransmitterMigrationChecks.run();
             BlockPos base=new BlockPos(1000,200,1000);world.getChunkFromBlockCoords(base);
             List<BlockPos> probes=Arrays.asList(base,base.east(),base.west(),base.north());
             try{
