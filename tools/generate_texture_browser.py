@@ -25,11 +25,12 @@ def catalog():
         if entry.get('hidden') or entry.get('alias') or entry.get('detail',0)>0: continue
         if entry.get('category')=='Screens' and bare_source(entry['source'])!=entry['source'] and bare_source(entry['source']) in sources: continue
         entry = dict(entry)
-        if entry.get('category')=='Screens' and entry['source'].startswith('console_inputs/'): entry['category']='Controls'
+        if entry.get('category')=='Screens' and not entry.get('menuGroup') and entry['source'].startswith('console_inputs/'): entry['category']='Controls'
         entry['label'] = entry.get('label', names.get('tile.vandorlabs.'+entry['id']+'.name', entry['id'].replace('_',' ').title()))
         if entry.get('category') in ('Screens','Controls'): entry['label']=re.sub(r'\b(Bare|Framed)\s+','',entry['label'])
         if entry.get('design') is not None or entry.get('detail') is not None:entry['label']=re.sub(r' (Small|Medium|Large)$','',entry['label'])
         entry.setdefault('category','Materials')
+        if entry.get('menuGroup'):entry['category']+='/'+entry['menuGroup']
         result.append(entry)
     return sorted(result,key=lambda e:(e['category'].casefold(),e['category'],e['label'].casefold(),e['id']))
 
@@ -50,6 +51,7 @@ def image(source, entry):
         animation=json.loads(metadata.read_text())['animation'];width=animation.get('width',art.width);height=animation.get('height',width)
         frames=animation.get('frames',[0]);frame=frames[0];frame=frame.get('index',0) if isinstance(frame,dict) else frame
         columns=art.width//width;left=frame%columns*width;top=frame//columns*height;art=art.crop((left,top,left+width,top+height))
+    if entry.get("frameAspect",1)>1 and art.width==art.height:art=art.crop((0,0,art.width,round(art.width/entry["frameAspect"])))
     if entry.get("crop"):
         x,y=art.width//16,art.height//32;art=art.crop((x,y,art.width,art.height-y))
     art.thumbnail((128,128),Image.Resampling.LANCZOS)

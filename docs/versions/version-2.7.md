@@ -30,9 +30,17 @@ outputs from earlier versions receive Long Range hardware when upgraded. Removin
 a granted item leaves its slot empty on later loads. Cockpits share one transmitter
 across their controls and group their individual surfaces below the main tabs.
 The Vehicle Controller uses centered Vehicle and Redstone pages.
+Frame settings and screen control rows stay inside the same configuration
+window. Custom textures are sampled directly from an inventory grid in the
+material picker. Activation selectors use **Manual**, **Redstone ON** and
+**Redstone OFF**; controls that require a signal retain their two-state choices.
 Housing artwork is named **Sides**. New artwork includes six replacement
 corporate armor sets, two Surface helipads and 78 static half-height control
 panels, grouped under Controls in the texture picker.
+
+[Company screen layers](../company-screen-layers.md) add 12 borders and 72
+six-frame animations, grouped by company under Frame and Screens. Transparent
+frame artwork supplies separate opaque edge strips for physical frame interiors.
 
 [Arms](../joined-arm-platforms.md) can move the connected layer of Programmable
 Surfaces attached at their tips. Large horizontal Extenders offer an optional
