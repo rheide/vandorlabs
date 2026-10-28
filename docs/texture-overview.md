@@ -4,6 +4,10 @@
 
 These collages cover the built-in texture picker, including both light states and the native glass finishes. Hidden compatibility aliases and duplicate resolution tiers are omitted. Custom textures from local installations are not included.
 
+## Controls
+
+![Controls textures](texture-browser/collages/controls.png)
+
 ## Corp
 
 ![Corp textures](texture-browser/collages/corp.png)
@@ -15,6 +19,10 @@ These collages cover the built-in texture picker, including both light states an
 ## Double Doors
 
 ![Double Doors textures](texture-browser/collages/double-doors.png)
+
+## Frame
+
+![Frame textures](texture-browser/collages/frame.png)
 
 ## Glass
 
