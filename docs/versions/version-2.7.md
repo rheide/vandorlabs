@@ -23,8 +23,14 @@ a full-height display. Display Fit supports square groups such as 2×2 and 3×3;
 frame Fit also surrounds rectangular groups. Programmable Input is now named
 **Programmable Flatscreen**; its saved registry identifier remains unchanged.
 
-Dialogs use shared tabs, a small Vandor logo and consistent Redstone and Security
-pages. Housing artwork is named **Sides**. New artwork includes six replacement
+Dialogs open on their first tab and use shared tabs, a Vandor logo and consistent
+Redstone and Security pages. Empty transmitter slots show a faded item icon;
+inserted transmitters have an inline channel field. Existing configured blocks
+from earlier versions receive one Long Range transmitter when upgraded. Removing
+that item leaves the slot empty on later loads. Cockpits share one transmitter
+across their controls and group their individual surfaces below the main tabs.
+The Vehicle Controller uses centered Vehicle and Redstone pages.
+Housing artwork is named **Sides**. New artwork includes six replacement
 corporate armor sets, two Surface helipads and 78 static half-height control
 panels, grouped under Controls in the texture picker.
 
@@ -34,7 +40,9 @@ push mode; they leave pushed blocks in place when returning. Rotating Arms offer
 a 15-degree angle slider and retain collision checks against real obstructions.
 
 [Ramp Controllers](../landing-ramps.md) can deploy proportionally to redstone
-levels 0–15. Stationary full-height attachment faces accept doors.
+levels 0–15. Stationary full-height attachment faces accept doors. Permitted
+interaction or configuration authorizes later automation, including recovery of
+an existing ramp; the Configurizer uses the same authorization path.
 [Hexagonal Tanks](../multiblocks/hexagonal-tank/README.md) join into complete
 2×2 and 3×3 sections with native storage in each block.
 

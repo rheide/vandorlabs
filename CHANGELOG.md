@@ -4,6 +4,7 @@
 
 - Add item-owned redstone transmission with 16-, 64-, 256-block and infinite same-dimension ranges, channel editing, manual signals, inventory slots and configuration copying. Use the strongest in-range signal at each receiver and keep receiver input settings separate.
 - Standardize dialog tabs and branding; separate Redstone, Security, Sides and Frame configuration. Rename Programmable Input to Programmable Flatscreen while retaining its registry ID.
+- Open new dialogs on their first tab, identify transmitter slots with a ghost icon and edit their channels inline. Group cockpit pages into two tab rows with one shared transmitter, and use a centered Vehicle Controller dialog. Upgrade configured previous-version transmitters once to Long Range hardware. Authorize ramp automation through permitted interaction and configuration before recovering old geometry.
 - Add 58 selectable frame finishes, separate border and interior materials, faintly lit borders, independent frame/display layouts and split full-height displays. Migrate previous framed display artwork to a separate bolted frame.
 - Replace six corporate armor sets and add two helipads and 78 static control panels at runtime texture resolutions. Refresh the texture browser and collages.
 - Add optional horizontal Large Extender pushing without pulling, connected Surface-layer payloads, 15-degree rotating-arm angles and guarded endpoint clearance.
