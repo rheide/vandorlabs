@@ -54,28 +54,30 @@ public class GuiProgrammableInput extends GuiContainer {
         this.ySize = 240;
     }
 
+    private ReceiverPane receiver;
     @Override public void initGui() {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         int redstoneWidth=Math.min(400,xSize-24),redstoneX=layout.left+(xSize-redstoneWidth)/2;
+        receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
         buttonList.add(layout.fullTab(90,0,3,"Controls"));
         buttonList.add(layout.fullTab(91,1,3,"Sides"));
-        buttonList.add(layout.fullTab(92,2,3,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+138,redstoneWidth,20,"Transmitter..."));
+        buttonList.add(layout.fullTab(92,2,3,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+132,redstoneWidth,20,"Transmitter..."));
         listX=layout.listX;listY=guiTop+54;
         screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0);
         for(int i=0;i<3;i++) {
-            buttonList.add(layout.choice(1+i,i,3,38,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
-            buttonList.add(layout.choice(10+i,i,3,68,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
+            buttonList.add(layout.choice(1+i,i,3,66,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
+            buttonList.add(layout.choice(10+i,i,3,100,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
         }
         if(!(te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole)) {
-            buttonList.add(layout.choice(30,0,2,88,I18n.format("gui.vandorlabs.input.small")));
-            buttonList.add(layout.choice(31,1,2,88,I18n.format("gui.vandorlabs.selector.normal")));
+            buttonList.add(layout.choice(30,0,2,128,I18n.format("gui.vandorlabs.input.small")));
+            buttonList.add(layout.choice(31,1,2,128,I18n.format("gui.vandorlabs.selector.normal")));
         }
         buttonList.add(layout.control(4,108,""));
-        buttonList.add(new GuiButton(0,redstoneX,guiTop+100,redstoneWidth,20,""));
+        buttonList.add(receiver.button());
         buttonList.add(layout.control(32,152,sidesLabel()));
-        channelField=new GuiTextField(40,fontRenderer,redstoneX,guiTop+70,redstoneWidth,18);
+        channelField=receiver.field();
         ChannelFields.configure(channelField);
 
         channelField.setText(te.getRedstoneChannels().toString());
@@ -93,7 +95,7 @@ public class GuiProgrammableInput extends GuiContainer {
         for (GuiButton button : buttonList) {
             if(button.id==4){button.visible=false;button.displayString=(screenList.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab==0 && screenList.hasPair();}
             if (button.id == 0) {
-                button.displayString = "Trigger: " + (!redstoneEnabled?"Disabled":redstoneInverted?"Redstone OFF":"Redstone ON");
+                receiver.setMode(RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
             }
             if (button.id >= 1 && button.id <= 3) button.enabled = displayMode != button.id - 1;
             if (button.id >= 10 && button.id <= 12) button.enabled = speedIndex != button.id - 10;
@@ -227,7 +229,7 @@ public class GuiProgrammableInput extends GuiContainer {
         else if(textureTab==1)housingList.draw(fontRenderer,mouseX,mouseY);
         if(textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+26,0xDAE8F0);
         if(textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+58,0xDAE8F0);
-        if(textureTab==2)fontRenderer.drawString("Receive channels (0 = none)",channelField.x,guiTop+58,0xDAE8F0);
+        if(textureTab==2)receiver.drawLabel();
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
