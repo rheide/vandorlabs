@@ -16,7 +16,7 @@ final class TokenSlotVisualChecks {
     static void build(World world){WaterloggedSurfaceChecks.build(world);
         BlockPos doorPos=new BlockPos(298,33,142);net.minecraft.block.state.IBlockState door=Block.getBlockFromName("vandorlabs:programmable_door").getDefaultState().withProperty(net.minecraft.block.BlockDoor.FACING,EnumFacing.SOUTH);world.setBlockState(doorPos.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),2);world.setBlockState(doorPos,door,2);world.setBlockState(doorPos.up(),door.withProperty(net.minecraft.block.BlockDoor.HALF,net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER),2);com.vandorlabs.tiles.TileEntitySpaceDoor secured=(com.vandorlabs.tiles.TileEntitySpaceDoor)world.getTileEntity(doorPos);secured.setPlacementDepth(0);secured.setPanelMode(2);secured.configureSecurity(2,8);
 
-        for(int kind=0;kind<2;kind++)world.setBlockState(new BlockPos(290+kind*2,34,142),Block.getBlockFromName("vandorlabs:redstone_"+(kind==0?"transmitter":"receiver")).getDefaultState(),2);
+        for(int kind=0;kind<2;kind++)world.setBlockState(new BlockPos(290+kind*2,34,142),Block.getBlockFromName("vandorlabs:"+(kind==0?"redstone_transmitter_block":"redstone_receiver")).getDefaultState(),2);
         for(int kind=0;kind<2;kind++)for(int i=0;i<8;i++){
             BlockPos pos=FIRST.add(i*2,kind*2,0);world.setBlockState(pos.south(),net.minecraft.init.Blocks.STONE.getDefaultState(),2);world.setBlockState(pos,Block.getBlockFromName("vandorlabs:"+(kind==0?"access_card":"data_chip")+"_slot").getDefaultState(),2);
             TileEntityTokenSlot tile=(TileEntityTokenSlot)world.getTileEntity(pos);tile.configure(i==7,i==7?127:1<<i,0);
