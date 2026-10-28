@@ -35,6 +35,7 @@ public final class GuiProgrammableArmor extends GuiMaterialPicker {
 
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y) {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF18242F);
+        DialogHeader.logo(guiLeft,guiTop,xSize);
         fontRenderer.drawString(armor.stack(mc.player).getDisplayName(),guiLeft+12,guiTop+12,0xFFFFFF);
         fontRenderer.drawString("Armor texture",guiLeft+12,guiTop+26,0xCCDDEE);
         textures.draw(fontRenderer,x,y);

@@ -112,6 +112,7 @@ public final class GuiDuplifier extends GuiContainer {
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 22, 0xFF2A3039);
         fontRenderer.drawString("Duplifier: Apply Settings", guiLeft + 10,
                 guiTop + 7, 0xFFFFFFFF);
+        DialogHeader.logo(guiLeft,guiTop,xSize);
         fontRenderer.drawString("Choose which copied properties to apply", guiLeft + 14,
                 guiTop + 70, 0xFFB8C7D2);
     }

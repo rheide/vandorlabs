@@ -13,7 +13,7 @@ import java.io.IOException;
 public final class GuiTurntable extends GuiContainer {
     private final TileEntityTurntableController tile;
     private final GuiTextField[] fields=new GuiTextField[4];
-    private int scanMode,rotationMode;
+    private int scanMode,rotationMode,page;
     private boolean clockwise,observedClockwise;
     private net.minecraftforge.fml.client.config.GuiSlider heightSlider,angleSlider,rpmSlider,autoSnapSlider;
     private int scanHeight,requestedAngle=-1,pendingTicks;
@@ -21,7 +21,7 @@ public final class GuiTurntable extends GuiContainer {
     private double speed,snapTolerance;
     private String error="";
     public GuiTurntable(ContainerTurntable container){super(container);tile=container.tile;scanMode=tile.scanMode;rotationMode=tile.rotationMode;clockwise=observedClockwise=tile.clockwise;scanHeight=tile.height;speed=tile.rpm;snapTolerance=tile.autoSnapTolerance;}
-    @Override public void initGui(){xSize=Math.min(400,width-12);ySize=Math.min(252,height-12);super.initGui();org.lwjgl.input.Keyboard.enableRepeatEvents(true);buttonList.clear();int x=guiLeft+12,y=guiTop;
+    @Override public void initGui(){xSize=Math.min(400,width-12);ySize=Math.min(280,height-12);super.initGui();org.lwjgl.input.Keyboard.enableRepeatEvents(true);buttonList.clear();int x=guiLeft+12,y=guiTop+28;
         heightSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,x,y+22,130,20,"Height: ","",1,16,scanHeight,false,true,slider->{int h=slider.getValueInt();slider.setValue(h);if(h!=scanHeight){scanHeight=h;apply();}});heightSlider.enabled=tile.captureId==null;buttonList.add(heightSlider);
         rpmSlider=new net.minecraftforge.fml.client.config.GuiSlider(12,x+134,y+22,xSize-158,20,"RPM: ","",1,20,Math.round(speed*2),false,true,slider->{double next=slider.getValueInt()/2D;slider.displayString=String.format(java.util.Locale.ROOT,"RPM: %.1f",next);if(speed!=next){speed=next;apply();}});buttonList.add(rpmSlider);
         rpmSlider.displayString=String.format(java.util.Locale.ROOT,"RPM: %.1f",speed);
@@ -32,7 +32,9 @@ public final class GuiTurntable extends GuiContainer {
         angleSlider.enabled=tile.display()!=null&&!tile.running();buttonList.add(angleSlider);
         autoSnapSlider=new net.minecraftforge.fml.client.config.GuiSlider(13,x,y+150,xSize-24,20,"Auto-snap: "," degrees",0,50,Math.round(snapTolerance*10),false,true,slider->{double next=slider.getValueInt()/10D;slider.displayString=String.format(java.util.Locale.ROOT,"Auto-snap: %.1f degrees",next);if(snapTolerance!=next){snapTolerance=next;apply();}});buttonList.add(autoSnapSlider);
         autoSnapSlider.displayString=String.format(java.util.Locale.ROOT,"Auto-snap: %.1f degrees",snapTolerance);
-        int w=(xSize-30)/3;for(int i=0;i<3;i++)buttonList.add(new GuiButton(7+i,x+i*(w+2),y+ySize-26,w,20,new String[]{"Scan","Restore","Done"}[i]));labels();
+        int w=(xSize-30)/3;for(int i=0;i<3;i++)buttonList.add(new GuiButton(7+i,x+i*(w+2),guiTop+ySize-26,w,20,new String[]{"Scan","Restore","Done"}[i]));labels();
+        buttonList.add(new DialogTabButton(90,guiLeft+12,guiTop+26,112,18,"Mechanism"));buttonList.add(new DialogTabButton(91,guiLeft+128,guiTop+26,112,18,"Redstone"));
+        for(GuiButton button:buttonList){if(button.id==90||button.id==91)button.enabled=button.id!=90+page;else if(button.id==2||button.id==3)button.visible=page==1;else if(button.id==4||button.id>=10&&button.id<=13)button.visible=page==0;}
     }
     private String channelText(int i,String fallback){return fields[i]==null?fallback:fields[i].getText();}
     private void field(int id,int x,int y,int w,String text){GuiTextField field=new GuiTextField(id,fontRenderer,x,y,w,18);field.setMaxStringLength(ChannelList.MAX_TEXT_LENGTH);field.setText(text);fields[id]=field;}
@@ -44,19 +46,19 @@ public final class GuiTurntable extends GuiContainer {
     }
     private void send(int operation,NBTTagCompound values){PacketHandler.INSTANCE.sendToServer(new MessageTurntableSettings(inventorySlots.windowId,operation,values));}
     private void apply(){if(fields[3]==null)return;NBTTagCompound tag=values();if(tag!=null){error="";send(0,tag);}}
-    @Override protected void actionPerformed(GuiButton button){switch(button.id){case 2:scanMode=GuiOptionCycle.next(scanMode,3);break;case 3:rotationMode=rotationMode==1?2:1;break;case 4:clockwise=!clockwise;break;case 7:NBTTagCompound tag=values();if(tag!=null){error="";send(3,tag);}return;case 8:send(2,new NBTTagCompound());return;case 9:mc.player.closeScreen();return;case 10:case 11:case 12:case 13:return;default:return;}apply();labels();}
+    @Override protected void actionPerformed(GuiButton button){if(button.id==90||button.id==91){apply();page=button.id-90;initGui();return;}switch(button.id){case 2:scanMode=GuiOptionCycle.next(scanMode,3);break;case 3:rotationMode=rotationMode==1?2:1;break;case 4:clockwise=!clockwise;break;case 7:NBTTagCompound tag=values();if(tag!=null){error="";send(3,tag);}return;case 8:send(2,new NBTTagCompound());return;case 9:mc.player.closeScreen();return;case 10:case 11:case 12:case 13:return;default:return;}apply();labels();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee18212c);}
     private String statusText(){return !error.isEmpty()?error:!tile.lastError.isEmpty()?tile.lastError:tile.message;}
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){
-        fontRenderer.drawString("Turntable Controller",12,8,0xffffff);fontRenderer.drawString("Direction pulse",12,90,0xcdd7e4);fontRenderer.drawString("Restore pulse",12,110,0xcdd7e4);
-        drawRect(10,193,xSize-10,ySize-27,0xff101722);
+        fontRenderer.drawString("Turntable Controller",12,8,0xffffff);DialogHeader.logo(0,0,xSize);if(page==1){fontRenderer.drawString("Direction pulse",12,118,0xcdd7e4);fontRenderer.drawString("Restore pulse",12,138,0xcdd7e4);}
+        int statusY=page==0?82:176;int statusBottom=page==0?146:ySize-28;drawRect(10,statusY,xSize-10,statusBottom,0xff101722);
         java.util.List<String> lines=fontRenderer.listFormattedStringToWidth("Status: "+statusText(),xSize-28);
-        int count=Math.min(lines.size(),Math.max(1,(ySize-27-193)/fontRenderer.FONT_HEIGHT));
-        for(int i=0;i<count;i++)fontRenderer.drawString(lines.get(i),14,193+i*fontRenderer.FONT_HEIGHT,error.isEmpty()&&tile.lastError.isEmpty()?0xcdd7e4:0xff8888);
+        int count=Math.min(lines.size(),Math.max(1,(statusBottom-statusY)/fontRenderer.FONT_HEIGHT));
+        for(int i=0;i<count;i++)fontRenderer.drawString(lines.get(i),14,statusY+i*fontRenderer.FONT_HEIGHT,error.isEmpty()&&tile.lastError.isEmpty()?0xcdd7e4:0xff8888);
     }
-    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);for(GuiTextField field:fields)field.drawTextBox();renderHoveredToolTip(x,y);for(GuiButton b:buttonList)if(b.id==8&&x>=b.x&&x<b.x+b.width&&y>=b.y&&y<b.y+b.height)drawHoveringText(java.util.Collections.singletonList("Restore at "+Math.floorMod((int)Math.round(tile.angle(1)/90)*90,360)+" degrees (nearest block heading)"),x,y);if(x>=guiLeft+10&&x<guiLeft+xSize-10&&y>=guiTop+193&&y<guiTop+ySize-27)drawHoveringText(fontRenderer.listFormattedStringToWidth(statusText(),Math.min(320,width-30)),x,y);}
-    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4))return;super.mouseClicked(x,y,button);for(GuiTextField field:fields)field.mouseClicked(x,y,button);}
-    @Override protected void keyTyped(char c,int key)throws IOException{for(GuiTextField field:fields)if(field.textboxKeyTyped(c,key)){apply();return;}super.keyTyped(c,key);}
+    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);if(page==1)for(GuiTextField field:fields)field.drawTextBox();renderHoveredToolTip(x,y);for(GuiButton b:buttonList)if(b.id==8&&x>=b.x&&x<b.x+b.width&&y>=b.y&&y<b.y+b.height)drawHoveringText(java.util.Collections.singletonList("Restore at "+Math.floorMod((int)Math.round(tile.angle(1)/90)*90,360)+" degrees (nearest block heading)"),x,y);if(x>=guiLeft+10&&x<guiLeft+xSize-10&&y>=guiTop+(page==0?82:176)&&y<guiTop+(page==0?146:ySize-28))drawHoveringText(fontRenderer.listFormattedStringToWidth(statusText(),Math.min(320,width-30)),x,y);}
+    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4))return;super.mouseClicked(x,y,button);if(page==1)for(GuiTextField field:fields)field.mouseClicked(x,y,button);}
+    @Override protected void keyTyped(char c,int key)throws IOException{if(page==1)for(GuiTextField field:fields)if(field.textboxKeyTyped(c,key)){apply();return;}super.keyTyped(c,key);}
     @Override public void updateScreen(){super.updateScreen();if(tile.clockwise!=observedClockwise){clockwise=observedClockwise=tile.clockwise;}heightSlider.enabled=tile.captureId==null;angleSlider.enabled=tile.display()!=null&&!tile.running();
         if(pendingTicks>0){pendingTicks--;double difference=Math.abs(((tile.angle(1)-requestedAngle+540)%360)-180);if(difference<.6||tile.running()||!tile.lastError.isEmpty())pendingTicks=0;}
         if(!angleSlider.dragging&&pendingTicks==0){syncingAngle=true;try{angleSlider.setValue(tile.angle(1));angleSlider.updateSlider();}finally{syncingAngle=false;}}labels();for(GuiTextField field:fields)field.updateCursorCounter();}

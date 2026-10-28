@@ -55,21 +55,24 @@ public final class GuiProgrammableLight extends GuiContainer {
     @Override public void initGui() {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+177,154,18);
+        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+115,154,18);
         ChannelFields.configure(channelField);
         channelField.setText(tile.getRedstoneChannels().toString());
+        channelField.setFocused(false);
         java.util.function.IntPredicate include=choice->(editingOff || !ScreenHousingTextures.isLightOff(choice)) && (HousingTextureList.generalTexture(choice) || "Lights".equals(ScreenHousingTextures.category(choice)) || ScreenHousingTextures.lightOnly(choice));
         faceList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,editingOff && offSelected>=0?offSelected:selected,8,null,include).visibleRows(layout.rows(true))
                 .custom(value->{if(editingOff)offSelected=value;else selected=value;send();});
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housing,8,null,include).visibleRows(layout.rows(true))
                 .custom(value->{housing=value;tile.setHousingTexture(value);send();});
-        buttonList.add(layout.tab(90,0,3,"ON"));buttonList.add(layout.tab(91,1,3,"OFF"));buttonList.add(layout.tab(92,2,3,"Sides"));
-        buttonList.add(layout.control(101,30,joinLabel()));buttonList.add(layout.control(102,52,triggerLabel()));
-        if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,74,sizeLabel()));
+        buttonList.add(layout.tab(90,0,4,"ON"));buttonList.add(layout.tab(91,1,4,"OFF"));buttonList.add(layout.tab(92,2,4,"Sides"));
+        buttonList.add(layout.tab(93,3,4,"Redstone"));
+        buttonList.add(layout.control(101,54,joinLabel()));buttonList.add(layout.control(102,54,triggerLabel()));
+        buttonList.add(layout.control(106,78,"Transmitter..."));
+        if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,76,sizeLabel()));
         if(editingOff){GuiButton automatic=layout.control(105,96,offSelected<0?"OFF: Automatic":"Use automatic OFF");automatic.enabled=offSelected>=0;buttonList.add(automatic);}else buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
     }
     private String brightnessLabel(){return signalBrightness?"Brightness: Signal + offset":"Brightness: Slider";}
-    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
+    private void refreshTabs(){for(GuiButton b:buttonList){if(b.id>=90 && b.id<=93)b.enabled=b.id-90!=textureTab;else if(b.id==102||b.id==106)b.visible=textureTab==3;else if(b.id>=101&&b.id<=105)b.visible=textureTab!=3;}}
 
     private String sizeLabel(){return "Size: "+(small?"Small":"Full");}
     private String sidesLabel(){return "Side layout: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
@@ -118,21 +121,21 @@ public final class GuiProgrammableLight extends GuiContainer {
             }
             return;
         }
-        if (button == 0) {
+        if (textureTab==3 && button == 0) {
             if (mouseX >= layout.controlsX && mouseX <= layout.controlsX+154
-                    && mouseY >= guiTop+138 && mouseY <= guiTop+152) {
+                    && mouseY >= guiTop+164 && mouseY <= guiTop+178) {
                 draggingLevel = true;
                 setLevelFromMouse(mouseX);
                 return;
             }
         }
         super.mouseClicked(mouseX, mouseY, button);
-        channelField.mouseClicked(mouseX, mouseY, button);
+        if(textureTab==3)channelField.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override protected void mouseClickMove(int mouseX, int mouseY,
             int button, long elapsed) {
-        if (faceList.drag(mouseY) || housingList.drag(mouseY)) return;
+        if (textureTab<2&&faceList.drag(mouseY) || textureTab==2&&housingList.drag(mouseY)) return;
         if (draggingLevel && button == 0) setLevelFromMouse(mouseX);
         else super.mouseClickMove(mouseX, mouseY, button, elapsed);
     }
@@ -153,7 +156,8 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==105){offSelected=-1;send();initGui();return;}
-        if(button.id>=90 && button.id<=92){textureTab=button.id-90;editingOff=textureTab==1;initGui();return;}
+        if(button.id==106){send();PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(button.id>=90 && button.id<=93){textureTab=button.id-90;editingOff=textureTab==1;initGui();return;}
         if (button.id == 101) {
             join = !join;
             button.displayString = joinLabel();
@@ -180,7 +184,7 @@ public final class GuiProgrammableLight extends GuiContainer {
             mc.player.closeScreen();
             return;
         }
-        if (channelField.textboxKeyTyped(typedChar, keyCode)) send();
+        if (textureTab==3 && channelField.textboxKeyTyped(typedChar, keyCode)) send();
         else super.keyTyped(typedChar, keyCode);
     }
 
@@ -202,14 +206,16 @@ public final class GuiProgrammableLight extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.title"),guiLeft+12,guiTop+8,0xFFFFFF);
-        if(textureTab<2)faceList.draw(fontRenderer,mouseX,mouseY);else housingList.draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString((signalBrightness?"Signal offset":I18n.format("gui.vandorlabs.light.level"))+": "+(signalBrightness?offset:level),layout.controlsX,guiTop+124,0xDAE8F0);
+        if(textureTab<2)faceList.draw(fontRenderer,mouseX,mouseY);else if(textureTab==2)housingList.draw(fontRenderer,mouseX,mouseY);
+        if(textureTab==3){
+        fontRenderer.drawString((signalBrightness?"Signal offset":I18n.format("gui.vandorlabs.light.level"))+": "+(signalBrightness?offset:level),layout.controlsX,guiTop+146,0xDAE8F0);
         int sliderX=layout.controlsX+8;
-        drawRect(sliderX,guiTop+142,sliderX+SLIDER_W,guiTop+148,0xFF555560);
+        drawRect(sliderX,guiTop+168,sliderX+SLIDER_W,guiTop+174,0xFF555560);
         int thumb=sliderX+Math.round(SLIDER_W*(signalBrightness?(offset+15)/2F:level)/15F);
-        drawRect(thumb-3,guiTop+138,thumb+3,guiTop+152,0xFFB8D7E8);
-        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
-        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
+        drawRect(thumb-3,guiTop+164,thumb+3,guiTop+178,0xFFB8D7E8);
+        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+104,0xDAE8F0);
+        }
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);if(textureTab==3)channelField.drawTextBox();
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }
