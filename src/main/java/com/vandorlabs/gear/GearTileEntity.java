@@ -81,14 +81,14 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 if(!ArmStoredSections.restoreEmpty(this)){payloadPreparationPending=true;return false;}
                 sync();return true;
             }
-            if(mode==GearMotion.Mode.EXTEND&&(progress==0||progress==1)&&(payload==null||(pushBlocks||joinEnabled&&columns.size()>1)&&payload.materialized())&&!ArmTransactions.locked(world,pos)){
+            if(mode==GearMotion.Mode.EXTEND&&(progress==0||progress==1)&&(payload==null||(pushBlocks||joinEnabled&&columns.size()>1||payload.isSurfaceLayer())&&payload.materialized())&&!ArmTransactions.locked(world,pos)){
                 net.minecraft.util.math.Vec3d shift=ArmOrientation.vector(mountDirection,0,pose(progress).footOffsetY(),0);
                 if(Math.abs(shift.x-Math.rint(shift.x))+Math.abs(shift.y-Math.rint(shift.y))+Math.abs(shift.z-Math.rint(shift.z))<1e-8){payload=ArmPayload.discover(this,com.vandorlabs.tiles.WorldActionAuthorization.actor(this),new BlockPos(Math.rint(shift.x),Math.rint(shift.y),Math.rint(shift.z)));sync();
                     if(payload==null){if(!ArmStoredSections.restoreEmpty(this)){payloadPreparationPending=true;return false;}return true;}}
             }
             if(payload==null&&storedSections!=null){if(!ArmStoredSections.restoreEmpty(this)){payloadPreparationPending=true;return false;}}
             if(isSwingArmController()&&(progress==0||progress==1)&&!ArmTransactions.locked(world,pos)
-                    &&(payload==null||payload.materialized()&&(joinEnabled&&columns.size()>1||payload.blocks.cells.size()==1))){
+                    &&(payload==null||payload.materialized()&&(joinEnabled&&columns.size()>1||payload.blocks.cells.size()==1||payload.isSurfaceLayer()))){
                 ArmPayload.Endpoint endpoint=ArmPayload.endpoint(this,progress);
                 if(endpoint!=null){payload=endpoint.capture(com.vandorlabs.tiles.WorldActionAuthorization.actor(this));sync();if(payload==null)return true;}
             }

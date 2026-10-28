@@ -62,7 +62,8 @@ public final class GearGeometry {
     public static List<AxisAlignedBB> boxes(GearTileEntity tile,double progress){
         return tile.boxesAt(progress);
     }
-    static List<AxisAlignedBB> computeBoxes(GearTileEntity tile,double progress){
+    static List<AxisAlignedBB> computeBoxes(GearTileEntity tile,double progress){return computeBoxes(tile,progress,true);}
+    private static List<AxisAlignedBB> computeBoxes(GearTileEntity tile,double progress,boolean payload){
         if(tile.assembly()==null)return Collections.emptyList();GearTopology.Assembly group=tile.assembly();GearMotion.Pose pose=tile.pose(progress);List<AxisAlignedBB> out=new ArrayList<>();BlockPos root=tile.getPos();
         for(BlockPos column:tile.columns()){
             BlockPos sourceColumn=root.add(column);if(!(tile.getWorld().getBlockState(sourceColumn).getBlock() instanceof GearBlock))continue;BlockPos at=root.add(ArmOrientation.inverse(tile.mountDirection(),column));int width=tile.armSize();double shift=(width-1)*.5;
@@ -84,7 +85,7 @@ public final class GearGeometry {
         if(tile.mountDirection()!=EnumFacing.DOWN){
             List<AxisAlignedBB> oriented=new ArrayList<>();for(AxisAlignedBB b:out)oriented.add(ArmOrientation.box(tile.mountDirection(),b.offset(-root.getX(),-root.getY(),-root.getZ())).offset(root));out=oriented;
         }
-        if(tile.payload()!=null)try{out.addAll(tile.payload().boxes(tile,progress));}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();return Collections.emptyList();}
+        if(payload&&tile.payload()!=null)try{out.addAll(tile.payload().boxes(tile,progress));}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();return Collections.emptyList();}
         return Collections.unmodifiableList(out);
     }
     private static List<AxisAlignedBB> armParts(){return MODELS.computeIfAbsent("swing_linkage_sliced",name->GearBlock.movingArmParts());}
@@ -106,12 +107,24 @@ public final class GearGeometry {
                 if(!root.isSwingArmController()||root.isLandingAssembly())return false;
                 List<AxisAlignedBB> endpoint=boxes(root,root.target()?1:0);
                 for(AxisAlignedBB obstacle:obstacles){
-                    double penetration=Math.min(Math.min(swept.maxX,obstacle.maxX)-Math.max(swept.minX,obstacle.minX),Math.min(Math.min(swept.maxY,obstacle.maxY)-Math.max(swept.minY,obstacle.minY),Math.min(swept.maxZ,obstacle.maxZ)-Math.max(swept.minZ,obstacle.minZ)));
-                    if(penetration>1/64D)return false;
+                    if(penetration(swept,obstacle)>1/64D)return false;
+                    if((before==0||before==1)&&!shallowStroke(root,i,after.size(),obstacle,before))return false;
                     for(AxisAlignedBB end:endpoint)if(end.shrink(.0001).intersects(obstacle))return false;
                 }
             }
         }for(Entity rider:riders.riders){Vec3d move=riders.moves.get(rider);if(!com.vandorlabs.motion.PlatformRiders.clear(rider,move,world.getCollisionBoxes(rider,rider.getEntityBoundingBox().expand(move.x,move.y,move.z).grow(1e-7))))return false;}root.riderPlan=riders;return true;}finally{EXCLUDED.remove();}
+    }
+    private static double penetration(AxisAlignedBB a,AxisAlignedBB b){return Math.min(Math.min(a.maxX,b.maxX)-Math.max(a.minX,b.minX),Math.min(Math.min(a.maxY,b.maxY)-Math.max(a.minY,b.minY),Math.min(a.maxZ,b.maxZ)-Math.max(a.minZ,b.minZ)));}
+    /** A harmless first sliver must not hide a deeper obstruction later in this same stroke. */
+    private static boolean shallowStroke(GearTileEntity root,int index,int boxes,AxisAlignedBB obstacle,double start){
+        double end=root.target()?1:0;int payloadStart=boxes-(root.payload()==null?0:root.payload().collisionBoxCount(root));
+        for(int step=0;step<GearTileEntity.ANIMATION_TICKS;step++){
+            double a=start+(end-start)*step/GearTileEntity.ANIMATION_TICKS,b=start+(end-start)*(step+1)/GearTileEntity.ANIMATION_TICKS;AxisAlignedBB sweep;
+            if(index>=payloadStart)sweep=root.payload().sweptBox(root,index-payloadStart,a,b);
+            else {AxisAlignedBB first=computeBoxes(root,a,false).get(index),last=computeBoxes(root,b,false).get(index);double angle=Math.abs(root.pose(b).angleDegrees()-root.pose(a).angleDegrees());sweep=rotationEnvelope(root,first.union(last),(root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
+            if(sweep.intersects(obstacle)&&penetration(sweep,obstacle)>1/64D)return false;
+        }
+        return true;
     }
     static final class MovePlan {
         final Map<Entity,Vec3d> moves=new IdentityHashMap<>();
