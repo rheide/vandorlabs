@@ -49,8 +49,8 @@ public final class GuiRedstoneScreen extends GuiContainer {
         labelField=new GuiTextField(0,fontRenderer,cx,guiTop+105,148,18);labelField.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
         channelField=new GuiTextField(1,fontRenderer,cx,guiTop+138,148,18);ChannelFields.configure(channelField);
         housing=new HousingTextureList(guiLeft+12,guiTop+54,xSize-188,texture).visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(value->{texture=value;});
-        buttonList.add(new GuiButton(0,guiLeft+12,guiTop+28,76,20,"Rows"));
-        buttonList.add(new GuiButton(1,guiLeft+92,guiTop+28,90,20,"Housing"));
+        buttonList.add(new DialogTabButton(0,guiLeft+12,guiTop+28,76,20,"Rows"));
+        buttonList.add(new DialogTabButton(1,guiLeft+92,guiTop+28,90,20,"Sides"));
         buttonList.add(new GuiButton(2,cx,guiTop+54,70,18,"Add"));
         buttonList.add(new GuiButton(3,cx+76,guiTop+54,72,18,"Remove"));
         buttonList.add(new GuiButton(5,cx,guiTop+74,70,18,"Up"));
@@ -159,7 +159,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }
     public void updateScreen(){super.updateScreen();titleField.updateCursorCounter();labelField.updateCursorCounter();channelField.updateCursorCounter();}
     public void onGuiClosed(){super.onGuiClosed();Keyboard.enableRepeatEvents(false);}
-    protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);}
+    protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);DialogHeader.logo(guiLeft,guiTop,xSize);}
     public void drawScreen(int x,int y,float partial){
         drawDefaultBackground();super.drawScreen(x,y,partial);
         net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();
@@ -173,7 +173,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         int cx=guiLeft+xSize-164;
         if(header){fontRenderer.drawString("Header",guiLeft+12,guiTop+55,0xDAE8F0);titleField.drawTextBox();drawRect(guiLeft+12,guiTop+76,guiLeft+xSize-180,guiTop+77,0xFF365366);}
         fontRenderer.drawString(fontRenderer.trimStringToWidth("Text is limited to screen width.",xSize-192),guiLeft+12,guiTop+ySize-14,0xADBECA);
-        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+94,0xDAE8F0);fontRenderer.drawString("Channels (0 = none)",cx,guiTop+127,0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
+        if(selected>=0){fontRenderer.drawString("Label",cx,guiTop+94,0xDAE8F0);fontRenderer.drawString("Transmitter",cx,guiTop+127,0xDAE8F0);labelField.drawTextBox();channelField.drawTextBox();}
         else fontRenderer.drawSplitString("Add an item to create a control.",cx,guiTop+105,148,0xADBECA);
         net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableLighting();
     }

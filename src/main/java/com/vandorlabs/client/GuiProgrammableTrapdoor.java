@@ -14,7 +14,7 @@ import java.io.IOException;
 
 /** Same housing finish picker as other programmable blocks, with live settings. */
 public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
-    private int textureLayout;
+    private int textureLayout,page;
     private final TileEntityProgrammableTrapdoor tile;
     private HousingTextureList textures;
     private int position,trigger,channel,tallWidth,doorDetail;
@@ -37,7 +37,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         xSize=360;ySize=240;
     }
     private int controlsX, channelLabelY;
-    @Override protected HousingTextureList materialPicker(){return textures;}
+    @Override protected HousingTextureList materialPicker(){return page==0?textures:null;}
     @Override public void initGui() {
         String channelText=channelField==null?channelList.toString():channelField.getText();
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
@@ -46,9 +46,9 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         Keyboard.enableRepeatEvents(true);buttonList.clear();
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH;
         controlsX=guiLeft+xSize-controlsWidth-12;
-        textures=HousingTextureList.forDoors(doorDetail,guiLeft+12,guiTop+38,controlsX-guiLeft-31,HousingTextureList.doorSizeChoice(tile.getHousingTexture(),0),false,false)
-                .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->send());
-        int y=guiTop+38;
+        textures=HousingTextureList.forDoors(doorDetail,guiLeft+12,guiTop+64,controlsX-guiLeft-31,HousingTextureList.doorSizeChoice(tile.getHousingTexture(),0),false,false)
+                .visibleRows(Math.max(2,(ySize-92)/HousingTextureList.ROW_HEIGHT)).custom(value->send());
+        int y=guiTop+64;
         buttonList.add(new GuiButton(1,controlsX,y,controlsWidth,20,motionLabel()));y+=22;
         GuiButton positionButton=new GuiButton(2,controlsX,y,diagonal()?(controlsWidth-2)/2:controlsWidth,20,positionLabel());
         positionButton.enabled=!diagonal() || position!=2;buttonList.add(positionButton);
@@ -65,6 +65,10 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         ChannelFields.configure(channelField);
         channelField.setText(channelText);
         done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");done.enabled=parsedChannel()>=0;buttonList.add(done);
+        for(GuiButton button:buttonList)if(button.id!=4){button.visible=button.id==3?page==1:page==0;if(button.id==3)button.y=guiTop+64;}
+        channelLabelY=guiTop+96;channelField.y=guiTop+108;channelField.setVisible(page==1);channelField.setFocused(false);
+        buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+30,110,20,"General"));buttonList.add(new DialogTabButton(101,guiLeft+126,guiTop+30,110,20,"Redstone"));for(GuiButton button:buttonList)if(button.id>=100)button.enabled=button.id!=100+page;
+        if(page==1)buttonList.add(new GuiButton(90,controlsX,guiTop+140,controlsWidth,20,"Transmitter..."));
     }
     private String hingeLabel(){return "Hinge: "+new String[]{"Auto","Left","Right"}[hingeSide];}
     private String rotationLabel(){return "Rotation: "+(rotationFlipped?"Reverse":"Normal");}
@@ -84,6 +88,8 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList).withTextureLayout(textureLayout).withRotationFlipped(rotationFlipped).withHingeSide(hingeSide));
     }
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==100||button.id==101){page=button.id-100;initGui();return;}
+        if(button.id==90){send();PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),0));return;}
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
         if(button.id==1){if(diagonal()){int mode=GuiOptionCycle.next(sliding?slideIntoWall?2:1:0,3);sliding=mode!=0;slideIntoWall=mode==2;}else{int mode=cover?(sliding?4:3):sliding?(slideOverSurface?2:1):0;mode=GuiOptionCycle.next(mode,tile.canOffsetClosedLeaf()?5:3);cover=mode>=3;sliding=mode==1 || mode==2 || mode==4;slideOverSurface=mode==2;}button.displayString=motionLabel();}
         else if(button.id==2){position=diagonal()?(position==0?1:0):GuiOptionCycle.next(position,3);if(diagonal())tallWidth=position;button.displayString=positionLabel();}
@@ -102,13 +108,13 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,2,3,5,6,7,8,9,10))return;
-        channelField.mouseClicked(x,y,button);int before=textures.selected();
-        if(textures.click(x,y,button)){if(before!=textures.selected())send();return;}super.mouseClicked(x,y,button);
+        if(page==1)channelField.mouseClicked(x,y,button);int before=textures.selected();
+        if(page==0&&textures.click(x,y,button)){if(before!=textures.selected())send();return;}super.mouseClicked(x,y,button);
     }
 
     @Override protected void keyTyped(char c,int key)throws IOException {
         if(key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
-        if(channelField.textboxKeyTyped(c,key)){done.enabled=parsedChannel()>=0;channelField.setTextColor(done.enabled?0xE0E0E0:0xFF7777);if(done.enabled)send();return;}
+        if(page==1&&channelField.textboxKeyTyped(c,key)){done.enabled=parsedChannel()>=0;channelField.setTextColor(done.enabled?0xE0E0E0:0xFF7777);if(done.enabled)send();return;}
         super.keyTyped(c,key);
     }
     @Override public void updateScreen(){super.updateScreen();channelField.updateCursorCounter();}
@@ -116,13 +122,13 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     @Override public boolean doesGuiPauseGame(){return false;}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y) {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
-        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);textures.draw(fontRenderer,x,y);
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);DialogHeader.logo(guiLeft,guiTop,xSize);if(page==0)textures.draw(fontRenderer,x,y);
 
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
         fontRenderer.drawString(diagonal()?"Programmable Diagonal Trapdoor":"Programmable Trapdoor",12,8,0xFFFFFF);
-        fontRenderer.drawString("Block texture",12,27,0xDAE8F0);
-        fontRenderer.drawString("Channels (0 = none)",controlsX-guiLeft,channelLabelY-guiTop,0xDAE8F0);
+        if(page==0)fontRenderer.drawString("Block texture",12,54,0xDAE8F0);
+        if(page==1)fontRenderer.drawString("Input channels",controlsX-guiLeft,channelLabelY-guiTop,0xDAE8F0);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);channelField.drawTextBox();}
 }

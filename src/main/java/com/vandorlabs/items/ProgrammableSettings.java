@@ -126,6 +126,7 @@ public final class ProgrammableSettings {
     }
 
     private static ChannelList channels(NBTTagCompound tag,RedstoneChannelMember member) {
+        if(com.vandorlabs.redstone.TransmitterSlots.outputOnly(member))return com.vandorlabs.redstone.TransmitterSlots.channels(member);
         if(tag.hasKey(CHANNEL,11))return ChannelData.read(tag,CHANNEL,member.getRedstoneChannels());
         return tag.hasKey(CHANNEL,3)?ChannelList.of(Math.max(0,tag.getInteger(CHANNEL))):member.getRedstoneChannels();
     }

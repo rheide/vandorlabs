@@ -107,6 +107,7 @@ public final class RedstoneChannels {
     /** Receiver buckets, receiver candidates, source buckets, source candidates, delivered callbacks. */
     public static long[] diagnostics(World world){Network n=existingNetwork(world);return n==null?new long[5]:new long[]{n.stats.receiverBuckets,n.stats.receiverCandidates,n.stats.sourceBuckets,n.stats.sourceCandidates,n.stats.deliveries};}
     public static void manualToggle(net.minecraft.entity.player.EntityPlayer player,net.minecraft.item.ItemStack stack){
+        net.minecraft.util.math.BlockPos use=player.getPosition();if(player.isDead||player.isSpectator()||!player.world.isBlockLoaded(use)||!player.canPlayerEdit(use,net.minecraft.util.EnumFacing.UP,stack)||!player.world.isBlockModifiable(player,use))return;
         Network n=network(player.world);ChannelList channels=com.vandorlabs.items.ItemRedstoneTransmitter.channels(stack);if(channels.isEmpty())return;
         int range=com.vandorlabs.items.ItemRedstoneTransmitter.range(stack);boolean on=!allPowered(player.world,player.getPosition(),channels);
         n.manual(player.getPosition(),channels,range,on?15:0);
@@ -136,7 +137,7 @@ public final class RedstoneChannels {
         private final Set<RedstoneChannelMember> affected=identitySet();
         private final Map<Integer,Integer> powerSources=new java.util.HashMap<>();
         private final Map<RedstoneChannelMember,int[]> delivered=new IdentityHashMap<>();
-        private static ChannelList union(ChannelList a,ChannelList b){return a.union(b);}
+        private static ChannelList union(ChannelList a,ChannelList b){return a.equals(b)?a:a.isEmpty()?b:b.isEmpty()?a:a.union(b);}
         private void finishTransfer(){if(--transferDepth==0){Set<Integer> changed=new java.util.LinkedHashSet<>(transferChannels);transferChannels.clear();settle(changed);}}
         void register(RedstoneChannelMember member){
             ChannelList next=union(member.getRedstoneChannels(),member.transmittedChannels()),previous=subscriptions.get(member);if(next.equals(previous))return;

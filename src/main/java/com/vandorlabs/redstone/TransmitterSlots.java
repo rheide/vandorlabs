@@ -24,6 +24,7 @@ public final class TransmitterSlots {
     }
     public static ChannelList channels(RedstoneChannelMember member){return settings(member).channels;}
     public static int range(RedstoneChannelMember member){return settings(member).range;}
+    public static boolean outputOnly(RedstoneChannelMember member){TileEntity tile=member.channelTile();return member instanceof RedstoneChannelLatch&&!(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&!((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter())||tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot||tile instanceof com.vandorlabs.plate.PlateTile||tile instanceof com.vandorlabs.tiles.TileEntityWaypoint;}
     public static void set(RedstoneChannelMember member,ItemStack stack){
         if(!stack.isEmpty()&&!(stack.getItem() instanceof ItemRedstoneTransmitter))throw new IllegalArgumentException("Not a redstone transmitter");
         TileEntity tile=member.channelTile();
@@ -32,7 +33,7 @@ public final class TransmitterSlots {
         if(stack.isEmpty())slots.removeTag(member.transmitterSlot());else {ItemStack copy=stack.copy();copy.setCount(1);slots.setTag(member.transmitterSlot(),copy.writeToNBT(new NBTTagCompound()));}
         data.setTag(KEY,slots);CACHE.remove(member);
         // Pure controls subscribe to their inserted item's channels, receivers keep their input selection.
-        if(member instanceof RedstoneChannelLatch && !(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&!((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter()) || tile instanceof com.vandorlabs.tiles.TileEntityWaypoint || tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot || tile instanceof com.vandorlabs.plate.PlateTile || tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter())
+        if(outputOnly(member))
             member.setRedstoneChannels(channels(member));
         tile.markDirty();RedstoneChannels.register(member);
         if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)tile.getWorld();if(view.craft!=null&&!view.parent.isRemote)view.craft.signals.transmitterChanged(member);}

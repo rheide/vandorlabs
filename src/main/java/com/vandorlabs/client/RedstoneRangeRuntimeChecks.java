@@ -49,6 +49,7 @@ final class RedstoneRangeRuntimeChecks {
             for(int i=0;i<2048;i++){Member far=new Member(world,origin.add(10000+i*32,0,10000),channel);cleanup.add(far);RedstoneChannels.register(far);}
             long[] start=RedstoneChannels.diagnostics(world);long tick=System.nanoTime();for(int i=0;i<100;i++){source.output=i%2==0?15:0;RedstoneChannels.inputChanged(source);}long elapsed=System.nanoTime()-tick;long[] end=RedstoneChannels.diagnostics(world);long candidates=end[1]-start[1],deliveries=end[4]-start[4];require(candidates<2000&&deliveries<=200,"finite activation ignores 2048 far same-channel receivers");
             System.out.println("[vandorlabs][reprolab] redstone-range-performance receivers=2049 activations=100 receiverBuckets="+(end[0]-start[0])+" receiverCandidates="+candidates+" callbacks="+deliveries+" totalNanos="+elapsed+" legacyBroadcastCallbacks=204900");
+            WirelessRedstoneRuntimeChecks.run(world);
             System.out.println("[vandorlabs][reprolab] redstone-range PASS checks="+checks+" four tiers sphere boundaries noitem linked OFF saved item manual world source copy recipe spatial scalability");
         }finally{for(Member member:cleanup)member.close();}
     }

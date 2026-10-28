@@ -26,7 +26,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
     public GuiCockpit(ContainerCockpit container){super(container);cockpit=container;tile=container.tile;page=container.initialPage(net.minecraft.client.Minecraft.getMinecraft().player);xSize=580;ySize=280;}
     @Override public void initGui(){
         xSize=Math.min(580,width-12);ySize=Math.min(280,height-12);super.initGui();buttonList.clear();fields.clear();textures=null;org.lwjgl.input.Keyboard.enableRepeatEvents(true);
-        buttonList.add(new CockpitButton(0,guiLeft+8,guiTop+6,24,20,"<"));buttonList.add(new CockpitButton(1,guiLeft+xSize-32,guiTop+6,24,20,">"));
+        buttonList.add(new CockpitButton(0,guiLeft+8,guiTop+6,24,20,"<"));buttonList.add(new CockpitButton(1,guiLeft+xSize-60,guiTop+6,24,20,">"));
         buttonList.add(new CockpitButton(2,guiLeft+xSize-92,guiTop+ySize-26,84,20,"Done"));
         int d=displayIndex(),c=controlIndex(),x=guiLeft+12,y=guiTop+48,w=xSize-24;
         if(pilotPage()){
@@ -103,9 +103,9 @@ public final class GuiCockpit extends GuiMaterialPicker {
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,12,13,30,31,32,40,42,43))return;for(GuiTextField f:fields)f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
     @Override public void updateScreen(){for(GuiTextField f:fields)f.updateCursorCounter();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
-    @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);}
+    @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){}
-    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);int d=displayIndex(),c=controlIndex();String title=pilotPage()?"Pilot / vehicle modes":sidePage()?(tile.design().equals("cockpit")?"Casing and throttle layout":"Sidewalls and armrests"):d<tile.displays.size()?tile.displays.get(d).id:tile.controls.get(c).id;drawCenteredString(fontRenderer,title,guiLeft+xSize/2,guiTop+12,0xffffff);
+    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);int d=displayIndex(),c=controlIndex();String title=pilotPage()?"Pilot / vehicle modes":sidePage()?(tile.design().equals("cockpit")?"Casing and throttle layout":"Sidewalls and armrests"):d<tile.displays.size()?tile.displays.get(d).id:tile.controls.get(c).id;drawCenteredString(fontRenderer,fontRenderer.trimStringToWidth(title,xSize-128),guiLeft+xSize/2-10,guiTop+12,0xffffff);
         net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
         if(textures!=null)textures.draw(fontRenderer,x,y);for(GuiTextField f:fields)f.drawTextBox();
         if(pilotPage()){fontRenderer.drawString("Trigger channels",guiLeft+12,guiTop+61,0xffffff);for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Block channels","Taxi channels","Hover channels"}[i],guiLeft+12,guiTop+91+i*28,0xffffff);}
