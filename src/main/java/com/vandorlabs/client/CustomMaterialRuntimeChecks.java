@@ -85,13 +85,12 @@ final class CustomMaterialRuntimeChecks {
         net.minecraft.client.gui.GuiScreen previous=mc.currentScreen;
         try {
             player.inventory.setInventorySlotContents(0,door.copy());final int[] picked={-1};
-            GuiCustomTexture gui=new GuiCustomTexture(new net.minecraft.client.gui.GuiScreen(){},id->picked[0]=id);
-            mc.displayGuiScreen(gui);int left=(gui.width-252)/2,top=(gui.height-198)/2;
-            gui.mouseClicked(left+47,top+143,0);gui.mouseReleased(left+126,top+45,0);
-            require(picked[0]==doorId,"drag into custom sample slot");
+            InventorySamplePicker picker=new InventorySamplePicker(10,10,162,100,stack->com.vandorlabs.tiles.CustomBlockMaterials.choice(stack)>=0,stack->picked[0]=com.vandorlabs.tiles.CustomBlockMaterials.choice(stack),null);
+            picker.click(14,30,0);require(picked[0]==doorId,"inline inventory sample preserves custom door material");
+            require(mc.currentScreen==previous,"custom sampling never opens a child dialog");
             require(player.inventory.getStackInSlot(0).getItem()==door.getItem() && player.inventory.getStackInSlot(0).getCount()==1,"sample consumed inventory item");
             require(player.openContainer==container,"custom picker replaced authorized container");
-        }catch(java.io.IOException e){throw new RuntimeException(e);}finally{player.inventory.setInventorySlotContents(0,original);mc.displayGuiScreen(previous);}
+        }finally{player.inventory.setInventorySlotContents(0,original);mc.displayGuiScreen(previous);}
         System.out.println("[vandorlabs][reprolab] custom-materials-runtime PASS");
     }
     static void checkLightPicker(GuiProgrammableLight gui,java.io.File output) {

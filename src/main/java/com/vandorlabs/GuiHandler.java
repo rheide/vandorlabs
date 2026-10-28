@@ -97,7 +97,7 @@ public class GuiHandler implements IGuiHandler {
         if((ID==GUI_REDSTONE_SCREEN || ID==GUI_REDSTONE_SCREEN_SECONDARY) && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             int slot=ID==GUI_REDSTONE_SCREEN?0:1;
-            if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return new ContainerAnimatedScreenSelector(player.inventory,(TileEntityAnimatedScreenSelector)tile,slot);
+            if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return new ContainerAnimatedScreenSelector(player.inventory,(TileEntityAnimatedScreenSelector)tile);
         }
         if (ID == GUI_PROGRAMMABLE_STORAGE) {
             TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
@@ -198,7 +198,7 @@ public class GuiHandler implements IGuiHandler {
         if((ID==GUI_REDSTONE_SCREEN || ID==GUI_REDSTONE_SCREEN_SECONDARY) && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){
             TileEntity tile=world.getTileEntity(new BlockPos(x,y,z));
             int slot=ID==GUI_REDSTONE_SCREEN?0:1;
-            if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return new com.vandorlabs.client.GuiRedstoneScreen(player.inventory,((TileEntityAnimatedScreenSelector)tile).redstoneScreen(slot));
+            if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return getClientGuiElement(GUI_ANIMATED_SCREEN_SELECTOR,player,world,x,y,z);
         }
         if (ID == GUI_PROGRAMMABLE_STORAGE) {
             TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));

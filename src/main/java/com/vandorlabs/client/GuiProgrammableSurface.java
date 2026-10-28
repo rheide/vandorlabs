@@ -15,7 +15,7 @@ public final class GuiProgrammableSurface extends GuiMaterialPicker {
     public GuiProgrammableSurface(ContainerSurface container){super(container);tile=container.tile;on=tile.surfaceOn;off=tile.surfaceOff;layout=tile.textureLayout;}
     @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui(){ProgrammableDialogLayout positions=new ProgrammableDialogLayout(width,height);xSize=positions.width;ySize=positions.height;super.initGui();buttonList.clear();
-        textures=new HousingTextureList(positions.listX,guiTop+54,positions.listWidth,TurntableTextures.materialChoice(active?on:off),8).visibleRows(positions.rows(true)).keepView(textures);
+        textures=new HousingTextureList(positions.listX,guiTop+54,positions.listWidth,TurntableTextures.materialChoice(active?on:off),8).visibleRows(positions.rows(true)).keepView(textures).custom(this::choose);
         GuiButton onTab=positions.tab(90,0,2,"Active"),offTab=positions.tab(91,1,2,"Inactive");onTab.enabled=!active;offTab.enabled=active;buttonList.add(onTab);buttonList.add(offTab);
         buttonList.add(new GuiButton(1,positions.controlsX,guiTop+30,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(layout)));
         buttonList.add(new GuiButton(3,positions.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Custom..."));
@@ -23,7 +23,7 @@ public final class GuiProgrammableSurface extends GuiMaterialPicker {
     }
     void choose(int choice){String selected=TurntableTextures.fromMaterialChoice(choice);if(active)on=selected;else off=selected;send();initGui();}
     private void send(){PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSurface(inventorySlots.windowId,on,off,layout));}
-    @Override protected void actionPerformed(GuiButton button){if(button.id==2){mc.player.closeScreen();return;}if(button.id==90||button.id==91){active=button.id==90;initGui();return;}if(button.id==3){mc.displayGuiScreen(new GuiCustomTexture(this,this::choose));return;}if(button.id==1){layout=GuiOptionCycle.next(layout,3);send();initGui();}}
+    @Override protected void actionPerformed(GuiButton button){if(button.id==2){mc.player.closeScreen();return;}if(button.id==90||button.id==91){active=button.id==90;initGui();return;}if(button.id==3){textures.customInventory();return;}if(button.id==1){layout=GuiOptionCycle.next(layout,3);send();initGui();}}
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1))return;if(textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff101012);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+18,0xff202028);fontRenderer.drawString("Programmable Surface",guiLeft+8,guiTop+5,0xffffffff);textures.draw(fontRenderer,x,y);DialogHeader.logo(guiLeft,guiTop,xSize,18);super.drawScreen(x,y,partial);}

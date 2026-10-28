@@ -16,11 +16,11 @@ import java.io.IOException;
 
 /** List selector with server-authoritative live updates, like programmable screens. */
 public class GuiSpaceDoor extends GuiMaterialPicker {
-    private static final int SECURITY_CARDS_Y=196;
+    private static final int SECURITY_CARDS_Y=136;
     private int textureLayout;
     private int settingsPage;
     private final TileEntitySpaceDoor tile;
-    private HousingTextureList textureList;
+    private HousingTextureList textureList;private FrameAppearancePane framePane;
     private ProgrammableDialogLayout layout;
     private int faceTexture;
     private int design,detail,depth,lastValidChannel;
@@ -44,25 +44,25 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         lastValidChannels=tile.getRedstoneChannels();lastValidChannel=lastValidChannels.first();
         xSize=420; ySize=240;
     }
-    @Override protected HousingTextureList materialPicker(){return textureList;}
+    @Override protected HousingTextureList materialPicker(){return settingsPage==1&&framePane!=null?framePane.picker():settingsPage==0?textureList:null;}
     @Override public void initGui() {
         String channelText=channelField==null?lastValidChannels.toString():channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int listLeft=layout.listX,listTop=guiTop+54;
-        for(int page=0;page<4;page++)buttonList.add(layout.tab(190+page,page,4,new String[]{"Door","Frame","Redstone","Security"}[page]));
+        for(int page=0;page<4;page++)buttonList.add(layout.fullTab(190+page,page,4,new String[]{"Door","Frame","Redstone","Security"}[page]));
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
-        motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
+        motionButton=layout.control(10,54,motion.label);buttonList.add(motionButton);
         buttonList.add(layout.choice(12,0,2,52,framed?"Frame: Framed":"Frame: Bare"));
-        buttonList.add(layout.control(16,96,triggerLabel()));buttonList.add(layout.choice(13,0,2,92,depthLabel()));
-        hingeButton=layout.choice(15,1,2,52,"");buttonList.add(hingeButton);updateHingeButton();
-        buttonList.add(layout.choice(17,1,2,92,panelLabel()));
-        buttonList.add(layout.control(18,112,layoutLabel()));
+        buttonList.add(RedstoneActivationButton.from(layout.control(16,96,""),trigger));buttonList.add(layout.choice(13,0,2,102,depthLabel()));
+        hingeButton=layout.choice(15,1,2,78,"");buttonList.add(hingeButton);updateHingeButton();
+        buttonList.add(layout.control(17,64,panelLabel()));
+        buttonList.add(layout.control(18,126,layoutLabel()));
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+64,154,18);
         ChannelFields.configure(channelField);channelField.setText(channelText);
-        buttonList.add(layout.control(19,168,securityLabel()));
-        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);buttonList.add(layout.control(198,142,"Transmitter..."));updateChannelValidity();refreshPages();
+        buttonList.add(layout.control(19,90,securityLabel()));
+        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);buttonList.add(layout.control(198,128,"Transmitter..."));updateChannelValidity();refreshPages();if(settingsPage==1){if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!framed;sendUpdate();},()->framed);framePane.init(54,buttonList);}
     }
     private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=193){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);if(!channelField.getVisible())channelField.setFocused(false);}
     private net.minecraft.item.ItemStack companyCard(){return CredentialFilterPicker.sample(false,securityAllowed);}
@@ -74,11 +74,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         hingeButton.enabled=!motion.sliding;
         hingeButton.displayString=!motion.sliding && hinges?"Hinges: On":"Hinges: Off";
     }
-    private String triggerLabel() {
-        return trigger==SpaceDoorData.TRIGGER_REDSTONE_ON?"Trigger: Redstone ON"
-                :trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Trigger: Redstone OFF"
-                :"Trigger: Disabled";
-    }
+
     private String layoutLabel(){return "Face texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
     private String depthLabel() {
         return "Pos: " + new String[]{"Middle", "Near", "Far"}[depth];
@@ -95,7 +91,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
                 lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels).withTextureLayout(textureLayout).withSecurity(panelMode,securityMode,securityAllowed));
     }
     @Override protected void actionPerformed(GuiButton button) {
-        if(button.id>=190&&button.id<=193){if(button.id==191){mc.displayGuiScreen(new GuiFrameAppearance(inventorySlots,tile,this));return;}settingsPage=button.id-190;refreshPages();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(settingsPage==1&&framePane!=null&&framePane.action(button))return;if(button.id>=190&&button.id<=193){settingsPage=button.id-190;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
 
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
@@ -107,7 +103,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
         else if (button.id==13) { depth=GuiOptionCycle.next(depth,3);if(depth!=0&&panelMode==2){panelMode=1;for(GuiButton option:buttonList)if(option.id==17)option.displayString=panelLabel();} button.displayString=depthLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
-        else if (button.id==16) { trigger=GuiOptionCycle.next(trigger,3); button.displayString=triggerLabel(); }
+        else if (button.id==16) { trigger=GuiOptionCycle.next(trigger,3); ((RedstoneActivationButton)button).setMode(trigger); }
         else if(button.id==18){textureLayout=GuiOptionCycle.next(textureLayout,3);tileTexture=textureLayout==1;tile.setTextureLayout(textureLayout);button.displayString=layoutLabel();}
         else if (button.id==17) { panelMode=GuiOptionCycle.next(panelMode,depth==0?3:2);panel=panelMode>0;button.displayString=panelLabel(); }
         else if(button.id==19){int[] modes={0,2,3,4,1};int index=0;while(modes[index]!=securityMode)index++;securityMode=modes[GuiOptionCycle.next(index,5)];button.displayString=securityLabel();}
@@ -118,6 +114,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         if (index>=0 && index<TileEntitySpaceDoor.DESIGNS.length && tile.acceptsDesign(index) && index!=design) { design=index;faceTexture=-1;textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail));sendUpdate(); }
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
+        if(settingsPage==1&&framePane!=null&&framePane.click(x,y,button))return;
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19))return;
         if(settingsPage==3&&CredentialFilterPicker.click(this,x,y,button,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed,mask->{securityAllowed=mask;sendUpdate();}))return;
         if(channelField.getVisible())channelField.mouseClicked(x,y,button);
@@ -143,7 +140,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
             if (!oldText.equals(channelField.getText()) && channel()>=0) sendUpdate();
             return;
         }
-        if (!channelField.isFocused() && (key==Keyboard.KEY_UP || key==Keyboard.KEY_DOWN)) {
+        if (settingsPage==0 && !channelField.isFocused() && (key==Keyboard.KEY_UP || key==Keyboard.KEY_DOWN)) {
             select(design+(key==Keyboard.KEY_UP?-1:1));
             return;
         }
@@ -155,7 +152,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY) {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
-        if(settingsPage==0)textureList.draw(fontRenderer,mouseX,mouseY);
+        if(settingsPage==0)textureList.draw(fontRenderer,mouseX,mouseY);if(settingsPage==1&&framePane!=null)framePane.draw(mouseX,mouseY);
         if(settingsPage==3)CredentialFilterPicker.draw(mc,fontRenderer,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed);
 
     }
@@ -169,6 +166,6 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
     @Override public void drawScreen(int x,int y,float partial) {
         drawDefaultBackground();super.drawScreen(x,y,partial);DialogHeader.logo(guiLeft,guiTop,xSize); channelField.drawTextBox();
-        if(settingsPage==3&&y>=guiTop+SECURITY_CARDS_Y-1&&y<guiTop+SECURITY_CARDS_Y+17&&x>=layout.controlsX&&x<layout.controlsX+154)drawHoveringText(java.util.Arrays.asList("Empty filter: any card","Click the slot to choose one company card","Right-click the slot or click the company name to clear","The sample card is not consumed"),x,y);
+        if(settingsPage==3&&y>=guiTop+SECURITY_CARDS_Y-1&&y<guiTop+SECURITY_CARDS_Y+17&&x>=layout.controlsX&&x<layout.controlsX+154)drawHoveringText(java.util.Arrays.asList("Empty filter: any card","Left/right-click the slot to cycle company","Click the company name to clear","The sample card is not consumed"),x,y);
     }
 }

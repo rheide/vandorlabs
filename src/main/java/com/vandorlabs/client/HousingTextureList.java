@@ -41,7 +41,7 @@ final class HousingTextureList {
         this(x,y,width,selected,count,nativeEntries,HousingTextureList::generalTexture);
     }
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include) {
-        this(x,y,width,selected,count,nativeEntries,include,ScreenHousingTextures::category);
+        this(x,y,width,selected,count,nativeEntries,include,ScreenHousingTextures::menuCategory);
     }
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include,java.util.function.IntFunction<String> category) {
         this(x,y,width,selected,count,nativeEntries,include,category,HousingTextureList::name);
@@ -82,7 +82,7 @@ final class HousingTextureList {
     }
     static HousingTextureList forFrames(int x,int y,int width,int selected,int rows){
         List<Option> entries=new ArrayList<>();entries.add(new Option(-1,"Original artwork","Frame","vandorlabs:blocks/programmable_glass/metal_side"));
-        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i)))entries.add(new Option(ScreenHousingTextures.choiceAt(i),name(i),"Frame",ScreenHousingTextures.fullTexture(i)));
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i)))entries.add(new Option(ScreenHousingTextures.choiceAt(i),name(i),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
         return new HousingTextureList(x,y,width,selected,rows,entries);
     }
     static HousingTextureList forGlass(int detail,int x,int y,int width,int selected) {
@@ -135,7 +135,7 @@ final class HousingTextureList {
     static HousingTextureList forCategory(String category,int x,int y,int width,int selected,int count) {
         return new HousingTextureList(x,y,width,selected,count,null,
                 choice->(generalTexture(choice) || category.equals(ScreenHousingTextures.category(choice))) && (!"Screens".equals(category)||com.vandorlabs.tiles.FrameAppearance.bareChoice(choice)==choice),
-                choice->{com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return "Screens".equals(category)&&e!=null&&e.get("source").getAsString().startsWith("console_inputs/")?"Controls":ScreenHousingTextures.category(choice);},
+                choice->{com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return e!=null&&e.has("menuGroup")?ScreenHousingTextures.menuCategory(choice):"Screens".equals(category)&&e!=null&&e.get("source").getAsString().startsWith("console_inputs/")?"Controls":ScreenHousingTextures.menuCategory(choice);},
                 choice->"Screens".equals(category)?name(choice).replaceAll("\\b(Bare|Framed)\\s+",""):name(choice));
     }
     /** One row per door design, using the size selected beside the list. */
@@ -151,7 +151,7 @@ final class HousingTextureList {
             if(!glassLeaves && entry!=null && entry.has("design") && (entry.get("design").getAsInt()==15 || entry.get("design").getAsInt()==16))return false;
             return (generalTexture(choice) && (entry==null || !entry.has("textureFamily") || entry.get("detail").getAsInt()==detail)) || ("Doors".equals(ScreenHousingTextures.category(choice)) || large && "Double Doors".equals(ScreenHousingTextures.category(choice)))
                     && (entry==null || !entry.has("detail") || entry.get("detail").getAsInt()==detail);
-        },ScreenHousingTextures::category,choice->{
+        },ScreenHousingTextures::menuCategory,choice->{
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
             return entry!=null && entry.has("textureFamily")?name(choice).replaceFirst(" (Small|Large)$",""):name(choice);
         });
@@ -206,12 +206,14 @@ final class HousingTextureList {
         return choice;
     }
     int selected(){return selected==VEHICLE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
+    private InventorySamplePicker inventoryPicker;
+    void customInventory(){inventoryPicker=new InventorySamplePicker(x,y,width,height(),stack->com.vandorlabs.tiles.CustomBlockMaterials.choice(stack)>=0,stack->{int value=com.vandorlabs.tiles.CustomBlockMaterials.choice(stack);setSelected(value);inventoryPicker=null;customConsumer.accept(value);},()->inventoryPicker=null);}
     private int height(){return ROW_HEIGHT*count;}
     private int maxScroll(){return Math.max(0,rows.size()-count);}
     private int thumbHeight(){return Math.max(8,height()*count/Math.max(count,rows.size()));}
     private int thumbY(){return y+(height()-thumbHeight())*scroll/Math.max(1,maxScroll());}
     boolean click(int mouseX,int mouseY,int button) {
-        picked=false;
+        picked=false;if(inventoryPicker!=null)return inventoryPicker.click(mouseX,mouseY,button);
         if(button!=0 || mouseY<y || mouseY>=y+height())return false;
         if(mouseX>=x+width && mouseX<x+width+7 && maxScroll()>0) {
             dragOffset=mouseY>=thumbY() && mouseY<thumbY()+thumbHeight()?mouseY-thumbY():thumbHeight()/2;
@@ -222,17 +224,18 @@ final class HousingTextureList {
         int choice=visibleChoice((mouseY-y)/ROW_HEIGHT);
         if(choice==VEHICLE_ROW){selected=VEHICLE_ROW;custom=-1;missing=-1;vehicleAction.run();return true;}
         if(choice==REDSTONE_ROW){selected=REDSTONE_ROW;custom=-1;missing=-1;redstoneAction.run();return true;}
-        if(choice==CUSTOM_ROW){Minecraft mc=Minecraft.getMinecraft();net.minecraft.item.ItemStack carried=mc.player.inventory.getItemStack();mc.player.inventory.setItemStack(net.minecraft.item.ItemStack.EMPTY);mc.displayGuiScreen(new GuiCustomTexture(mc.currentScreen,value->{setSelected(value);customConsumer.accept(value);}));mc.player.inventory.setItemStack(carried);return true;}
+        if(choice==CUSTOM_ROW){customInventory();return true;}
         if(choice>=0){selected=choice;custom=-1;missing=-1;picked=true;}
         else {String category=categories.get(-choice-1);if(!expanded.remove(category))expanded.add(category);rebuild();}
         return true;
     }
     boolean drag(int mouseY) {
-        if(!dragging)return false;
+        if(inventoryPicker!=null)return false;if(!dragging)return false;
         scroll=GuiProgrammableWall.scrollForDrag(mouseY,y,height(),thumbHeight(),maxScroll(),dragOffset);return true;
     }
     void release(){dragging=false;}
     boolean wheel(int mouseX,int mouseY,int delta) {
+        if(inventoryPicker!=null)return inventoryPicker.wheel(mouseX,mouseY,delta);
         if(delta==0 || mouseX<x || mouseX>=x+width+7 || mouseY<y || mouseY>=y+height())return false;
         scroll=Math.max(0,Math.min(maxScroll(),scroll+(delta>0?-1:1)));return true;
     }
@@ -252,6 +255,7 @@ final class HousingTextureList {
         GlStateManager.disableBlend();
     }
     void draw(FontRenderer font,int mouseX,int mouseY) {
+        if(inventoryPicker!=null){inventoryPicker.draw(mouseX,mouseY);return;}
         Gui.drawRect(x-1,y-1,x+width+8,y+height()+1,0xFF000000);
         Gui.drawRect(x,y,x+width,y+height(),0xFF0A0A0C);
         Minecraft mc=Minecraft.getMinecraft();

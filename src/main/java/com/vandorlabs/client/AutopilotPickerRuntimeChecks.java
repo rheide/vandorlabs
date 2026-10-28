@@ -18,22 +18,18 @@ final class AutopilotPickerRuntimeChecks {
         GuiAutopilot parent=(GuiAutopilot)mc.currentScreen;ItemStack[] before=new ItemStack[36];for(int i=0;i<36;i++)before[i]=mc.player.inventory.getStackInSlot(i).copy();
         require(before[9].getItem()==net.minecraft.item.Item.getItemFromBlock(Blocks.WOOL)&&before[9].getMetadata()==14,"inventory contains a colored route block");
         ((GuiTextField)field(parent,"channels")).setText("28831");
-        VehicleTaxiRuntimeChecks.button(mc,2);require(mc.currentScreen instanceof GuiCustomTexture,"Autopilot reuses Custom Texture inventory picker");
-        GuiScreen picker=mc.currentScreen;int left=(picker.width-252)/2,top=(picker.height-198)/2;
-        ItemStack initial=((ItemStack)field(picker,"sample")).copy();
-        mouse(picker,"mouseClicked","func_73864_a",left+45+18+8,top+79+8,0);
-        require(ItemStack.areItemStacksEqual(initial,(ItemStack)field(picker,"sample")),"non-block inventory items cannot replace route marker");
-        mouse(picker,"mouseClicked","func_73864_a",left+45+8,top+79+8,0);
+        VehicleTaxiRuntimeChecks.button(mc,2);require(mc.currentScreen==parent,"route inventory is an inline top-level tab");
+        InventorySamplePicker picker=(InventorySamplePicker)field(parent,"routePicker");String initial=(String)field(parent,"markerId");
+        mouse(parent,"mouseClicked","func_73864_a",picker.x+18+8,picker.y+16+18+8,0);
+        require(field(parent,"markerId").equals(initial),"non-block items cannot replace route marker");
+        mouse(parent,"mouseClicked","func_73864_a",picker.x+8,picker.y+16+18+8,0);
         VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_autopilot_inventory_picker.png");
-        mouse(picker,"mouseReleased","func_146286_b",left+126,top+45,0);
-        require(mc.currentScreen==parent,"dragging inventory block into sample returns to Autopilot");
+        require(mc.currentScreen==parent,"sampling preserves parent dialog");
         require(field(parent,"markerId").equals("minecraft:wool")&&((Integer)field(parent,"markerMeta"))==14,"selection retains exact block and color metadata");
-        require(((GuiTextField)field(parent,"channels")).getText().equals("28831"),"returning from picker preserves unsaved channels");
-        VehicleTaxiRuntimeChecks.button(mc,2);picker=mc.currentScreen;left=(picker.width-252)/2;top=(picker.height-198)/2;
-        mouse(picker,"mouseClicked","func_73864_a",left+45+36+8,top+79+8,0);VehicleTaxiRuntimeChecks.button(mc,1);
-        require(mc.currentScreen==parent&&field(parent,"markerId").equals("minecraft:wool")&&((Integer)field(parent,"markerMeta"))==14,"Back cancels replacement without changing selected route block");
+        require(((GuiTextField)field(parent,"channels")).getText().equals("28831"),"tab switching preserves unsaved channels");
+        VehicleTaxiRuntimeChecks.button(mc,100);require(mc.currentScreen==parent,"General is a top-level tab in the same window");
         for(int i=0;i<36;i++)require(ItemStack.areItemStacksEqual(before[i],mc.player.inventory.getStackInSlot(i)),"sampling never moves or consumes inventory slot "+i);
         VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_autopilot_route_block.png");
-        System.out.println("[vandorlabs][reprolab] autopilot-inventory-picker PASS shared-custom-texture-grid actual-mouse drag metadata invalid-item Back draft-preserved non-consuming");
+        System.out.println("[vandorlabs][reprolab] autopilot-inventory-picker PASS inline-inventory-grid actual-mouse metadata invalid-item top-level-tabs draft-preserved non-consuming");
     }
 }

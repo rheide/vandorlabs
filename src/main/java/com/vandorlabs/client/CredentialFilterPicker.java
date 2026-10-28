@@ -13,10 +13,9 @@ final class CredentialFilterPicker {
     static String label(boolean chip,int mask){if(mask==0)return chip?"No chip":"No card";ItemStack item=sample(chip,mask);if(item.isEmpty())return chip?"Any chip":"Any card";String company=ItemDesignToken.DESIGNS[item.getMetadata()];return Character.toUpperCase(company.charAt(0))+company.substring(1);}
     static boolean click(GuiScreen parent,int x,int y,int button,int left,int top,boolean chip,int mask,IntConsumer selected){
         if((button!=0&&button!=1)||x<left||x>=left+154||y<top||y>=top+18)return false;
-        if(button==1||x<left+128){selected.accept(127);return true;}
-        Minecraft.getMinecraft().displayGuiScreen(new GuiCustomTexture(parent,chip?"Accepted company chip":"Accepted company card","Use company",sample(chip,mask),
-                stack->!stack.isEmpty()&&stack.getItem()==(chip?ModItems.DATA_CHIP:ModItems.ACCESS_CARD)&&stack.getMetadata()>=0&&stack.getMetadata()<7,
-                stack->selected.accept(stack.getMetadata()==0?127:1<<stack.getMetadata())));return true;
+        if(x<left+128){selected.accept(127);return true;}
+        int company=Integer.bitCount(mask)==1&&mask>1?Integer.numberOfTrailingZeros(mask):0;
+        company=Math.floorMod(company+(button==1?-1:1),7);selected.accept(company==0?127:1<<company);return true;
     }
     static void draw(Minecraft mc,FontRenderer font,int left,int top,boolean chip,int mask){
         int x=left+136;Gui.drawRect(x-1,top-1,x+17,top+17,0xff647480);Gui.drawRect(x,top,x+16,top+16,0xff28343e);

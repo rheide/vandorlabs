@@ -20,13 +20,13 @@ final class MountFilterLiveChecks {
         if(t==20)mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_TOKEN_SLOT,player.world,POS.getX(),POS.getY(),POS.getZ());}).get();
         if(t==50){
             if(!(mc.currentScreen instanceof GuiTokenSlot))throw new IllegalStateException("Mount server dialog did not open");GuiTokenSlot gui=(GuiTokenSlot)mc.currentScreen;
-            gui.mouseClicked(left(gui)+140,top(gui)+112,0);if(!(mc.currentScreen instanceof GuiCustomTexture))throw new IllegalStateException("Mount sample picker missing");GuiCustomTexture picker=(GuiCustomTexture)mc.currentScreen;int x=(picker.width-252)/2,y=(picker.height-198)/2;picker.mouseClicked(x+47,y+143,0);picker.mouseReleased(x+120,y+40,0);
+            gui.actionPerformed(new net.minecraft.client.gui.GuiButton(101,0,0,"Security"));for(int i=0;i<3;i++)gui.mouseClicked(left(gui)+140,top(gui)+86,0);if(mc.currentScreen!=gui)throw new IllegalStateException("Company selection opened a child dialog");
         }
         if(t==70){
             check(mc,chip,8,0,false);GuiTokenSlot gui=(GuiTokenSlot)mc.currentScreen;
             mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();gui.drawScreen(-1,-1,0);
             javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new java.io.File(output,(chip?"chip":"access-card")+"-company-dialog.png"));
-            gui.mouseClicked(left(gui)+30,top(gui)+112,0);gui.mouseClicked(left(gui)+8,top(gui)+44,1);
+            gui.mouseClicked(left(gui)+30,top(gui)+86,0);gui.actionPerformed(new net.minecraft.client.gui.GuiButton(100,0,0,"Redstone"));gui.mouseClicked(left(gui)+30,top(gui)+132,1);
             java.lang.reflect.Field field=GuiTokenSlot.class.getDeclaredField("channels");field.setAccessible(true);GuiTextField channels=(GuiTextField)field.get(gui);channels.setText("64215,64216");channels.setFocused(true);gui.keyTyped(' ',org.lwjgl.input.Keyboard.KEY_SPACE);
         }
         if(t==95){check(mc,chip,127,3,true);mc.player.closeScreen();}

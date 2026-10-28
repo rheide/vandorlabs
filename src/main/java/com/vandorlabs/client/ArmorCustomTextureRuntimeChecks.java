@@ -75,9 +75,8 @@ final class ArmorCustomTextureRuntimeChecks {
                 list.click(field(HousingTextureList.class,"x").getInt(list)+8,field(HousingTextureList.class,"y").getInt(list)+(row-scroll)*22+8,0);stage=3;ticks=0;return;
             }
             if(stage==3){
-                require(mc.currentScreen instanceof GuiCustomTexture,"existing custom inventory sample dialog opened");
-                GuiCustomTexture gui=(GuiCustomTexture)mc.currentScreen;int left=(gui.width-252)/2,top=(gui.height-198)/2;
-                gui.mouseClicked(left+47,top+81,0);gui.mouseReleased(left+126,top+45,0);
+                require(mc.currentScreen instanceof GuiProgrammableArmor,"custom inventory remains inside armor dialog");
+                HousingTextureList list=list(mc);InventorySamplePicker picker=(InventorySamplePicker)field(HousingTextureList.class,"inventoryPicker").get(list);int columns=Math.max(1,Math.min(9,picker.width/18));picker.click(picker.x+(9%columns)*18+8,picker.y+16+(9/columns)*18+8,0);
                 require(mc.currentScreen instanceof GuiProgrammableArmor && mc.player.openContainer.windowId==window,"sample dialog returns to authorized armor container");checkSelected(mc);stage=4;ticks=0;return;
             }
             if(stage==4){
