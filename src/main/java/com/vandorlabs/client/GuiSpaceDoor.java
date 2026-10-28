@@ -163,7 +163,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         fontRenderer.drawString(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?"Large Programmable Door":"Programmable Door",12,8,0xFFFFFF);
 
 
-        if(settingsPage==2)fontRenderer.drawString("Channels (0 = none)",layout.controlsX-guiLeft,54,0xDAE8F0);
+        if(settingsPage==2)fontRenderer.drawString("Receive channels",layout.controlsX-guiLeft,54,0xDAE8F0);
         if (channel()<0) fontRenderer.drawString("Invalid channel",12,ySize-18,0xFF7777);
 
     }

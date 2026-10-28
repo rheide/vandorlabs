@@ -58,12 +58,12 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override public void initGui() {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
-        super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-96,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
+        super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
         buttonList.add(layout.tab(90,0,4,"Bottom"));
         buttonList.add(layout.tab(91,1,4,"Top"));
         buttonList.add(layout.tab(92,2,4,"Sides"));
-        buttonList.add(layout.tab(93,3,4,"Redstone"));buttonList.add(layout.control(198,142,"Transmitter..."));
+        buttonList.add(layout.tab(93,3,4,"Redstone"));buttonList.add(new GuiButton(198,guiLeft+12,guiTop+138,xSize-24,20,"Transmitter..."));
         left=right=layout.listX;top=guiTop+54;
         topList=new ScreenTextureList(left,top,layout.listWidth,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(topList,1)).redstone(te.getPos(),1);
         bottomList=new ScreenTextureList(left,top,layout.listWidth,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(bottomList,0)).redstone(te.getPos(),0);
@@ -72,9 +72,9 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
             buttonList.add(layout.choice(10+i,i,3,76,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
         }
         buttonList.add(layout.control(4,98,""));
-        buttonList.add(layout.control(0,120,""));
+        buttonList.add(new GuiButton(0,guiLeft+12,guiTop+100,xSize-24,20,""));
         buttonList.add(layout.control(32,142,sidesLabel()));
-        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+64,154,18);
+        channelField=new GuiTextField(40,fontRenderer,guiLeft+12,guiTop+70,xSize-24,18);
         ChannelFields.configure(channelField);
 
         channelField.setText(te.getRedstoneChannels().toString());
@@ -233,7 +233,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         else if(textureTab==2)housingList.draw(fontRenderer,mouseX,mouseY);
         if(textureTab<2)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
         if(textureTab<2)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
-        if(textureTab==3)fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+54,0xDAE8F0);
+        if(textureTab==3)fontRenderer.drawString("Receive channels (0 = none)",guiLeft+12,guiTop+58,0xDAE8F0);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 

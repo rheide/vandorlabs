@@ -96,7 +96,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
         xSize=layout.width;ySize=layout.height;
         super.initGui();
-        buttonList.clear();if(redstonePage)buttonList.add(new DialogTabButton(195,guiLeft+8,guiTop+1,80,17,"Appearance"));buttonList.add(new DialogTabButton(196,guiLeft+xSize-160,guiTop+1,62,17,"Redstone"));if(tile.getBlockType() instanceof BlockProgrammableWall)buttonList.add(new DialogTabButton(197,guiLeft+xSize-96,guiTop+1,58,17,"Frame"));
+        buttonList.clear();if(redstonePage)buttonList.add(new DialogTabButton(195,guiLeft+8,guiTop+1,80,17,"Appearance"));buttonList.add(new DialogTabButton(196,guiLeft+xSize-168,guiTop+1,62,17,"Redstone"));if(tile.getBlockType() instanceof BlockProgrammableWall)buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH, controlsX=layout.controlsX;
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
         listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);

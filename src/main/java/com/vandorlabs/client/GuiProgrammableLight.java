@@ -213,7 +213,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         drawRect(sliderX,guiTop+168,sliderX+SLIDER_W,guiTop+174,0xFF555560);
         int thumb=sliderX+Math.round(SLIDER_W*(signalBrightness?(offset+15)/2F:level)/15F);
         drawRect(thumb-3,guiTop+164,thumb+3,guiTop+178,0xFFB8D7E8);
-        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+104,0xDAE8F0);
+        fontRenderer.drawString("Receive channels",layout.controlsX,guiTop+104,0xDAE8F0);
         }
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);if(textureTab==3)channelField.drawTextBox();
     }

@@ -57,7 +57,7 @@ public final class GuiLandingGear extends GuiContainer {
     protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xEE171B23);DialogHeader.logo(guiLeft,guiTop,xSize);}
     protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString(fontRenderer.trimStringToWidth(new net.minecraft.item.ItemStack(tile.getBlockType()).getDisplayName(),xSize-50),14,12,0xFFFFFF);
-        if(page==1)fontRenderer.drawString("Input channels",14,108,0xDDDDDD);
+        if(page==1)fontRenderer.drawString("Receive channels",14,108,0xDDDDDD);
         if(page==1)fontRenderer.drawString("On: extend with power; Off: without",14,168,0xBBBBBB);
         if(page==1)fontRenderer.drawString("Disabled: right-click to move",14,182,0xBBBBBB);
     }
