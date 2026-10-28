@@ -13,11 +13,14 @@ public final class DialogHeader {
         logo(left,top,width,24);
     }
     public static void logo(int left,int top,int width,int headerHeight){
+        boolean lighting=org.lwjgl.opengl.GL11.glIsEnabled(org.lwjgl.opengl.GL11.GL_LIGHTING);GlStateManager.disableLighting();
+        try{
         GlStateManager.setActiveTexture(net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();GlStateManager.enableAlpha();
         Minecraft.getMinecraft().getTextureManager().bindTexture(LOGO);
         GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();
         int h=Math.min(21,headerHeight-2),w=h*12/7;
         Gui.drawModalRectWithCustomSizedTexture(left+width-w-8,top+(headerHeight-h)/2,0,0,w,h,w,h);
         GlStateManager.disableBlend();
+        }finally{if(lighting)GlStateManager.enableLighting();}
     }
 }

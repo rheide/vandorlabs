@@ -22,11 +22,14 @@ public final class FrameAppearancePane {
         int count=(front()?1:0)+(interior()?1:0)+(display()?2:0),index=0,span=(width-24)/count;
         if(front())tab(3000,index++,span,"Front");if(interior())tab(3001,index++,span,"Interior");if(display()){tab(3005,index++,span,"Top");tab(3006,index,span,"Bottom");}
         for(GuiButton b:buttons)if(b.id>=3000&&b.id<=3006)b.enabled=b.id!=(3000+(page<2?page:page+3));
-        int listWidth=controls-(left+12)-19,body=top+contentTop+24;
-        textures=(page<2?HousingTextureList.forFrames(left+12,body,listWidth,page==0?appearance.front:appearance.interior,8):HousingTextureList.forCategory("Screens",left+12,body,listWidth,page==2?appearance.splitTop:appearance.splitBottom,8)).visibleRows(Math.max(2,(height-contentTop-34)/HousingTextureList.ROW_HEIGHT)).keepView(textures);
-        if(display()||owner instanceof TileEntityProgrammableGlass)buttons.add(new GuiButton(3003,controls,body,154,20,"Frame: "+(appearance.tile?"Tile":"Fit")));
-        if(display()){buttons.add(new GuiButton(3004,controls,body+24,154,20,"Display: "+(appearance.displayFit?"Fit":"Tile")));buttons.add(new GuiButton(3007,controls,body+48,154,20,"Split display: "+(appearance.split?"On":"Off")));}
-        if(bareToggle!=null&&framed!=null)buttons.add(new GuiButton(3008,controls,body+72,154,20,framed.getAsBoolean()?"Framed":"Bare"));
+        boolean tiledFrame=display()||owner instanceof TileEntityProgrammableGlass,bare=bareToggle!=null&&framed!=null;
+        boolean anyControls=tiledFrame||display()||bare;int listWidth=anyControls?controls-(left+12)-19:width-24,body=top+contentTop+24;
+        textures=(page<2?HousingTextureList.forFrames(left+12,body,listWidth,page==0?appearance.front:appearance.interior,8):HousingTextureList.forCategory("Screens",left+12,body,listWidth,page==2?appearance.splitTop:appearance.splitBottom,8)).visibleRows(Math.max(2,(height-contentTop-(anyControls?34:56))/HousingTextureList.ROW_HEIGHT)).keepView(textures);
+        int controlY=body;
+        if(tiledFrame){buttons.add(new GuiButton(3003,controls,controlY,154,20,"Frame: "+(appearance.tile?"Tile":"Fit")));controlY+=24;}
+        if(display()){buttons.add(new GuiButton(3004,controls,controlY,154,20,"Display: "+(appearance.displayFit?"Fit":"Tile")));controlY+=24;buttons.add(new GuiButton(3007,controls,controlY,154,20,"Split display: "+(appearance.split?"On":"Off")));controlY+=24;}
+        if(bare)buttons.add(new GuiButton(3008,controls,controlY,154,20,framed.getAsBoolean()?"Framed":"Bare"));
+
     }
     private void tab(int id,int index,int span,String label){buttons.add(new DialogTabButton(id,host.getGuiLeft()+12+index*span,host.getGuiTop()+contentTop,span-2,18,label));}
     public HousingTextureList picker(){return textures;}
