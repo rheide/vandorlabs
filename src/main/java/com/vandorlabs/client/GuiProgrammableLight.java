@@ -55,7 +55,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     @Override public void initGui() {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+115,154,18);
+        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+76,154,18);
         ChannelFields.configure(channelField);
         channelField.setText(tile.getRedstoneChannels().toString());
         channelField.setFocused(false);
@@ -66,8 +66,8 @@ public final class GuiProgrammableLight extends GuiContainer {
                 .custom(value->{housing=value;tile.setHousingTexture(value);send();});
         buttonList.add(layout.tab(90,0,4,"ON"));buttonList.add(layout.tab(91,1,4,"OFF"));buttonList.add(layout.tab(92,2,4,"Sides"));
         buttonList.add(layout.tab(93,3,4,"Redstone"));
-        buttonList.add(layout.control(101,54,joinLabel()));buttonList.add(layout.control(102,54,triggerLabel()));
-        buttonList.add(layout.control(106,78,"Transmitter..."));
+        buttonList.add(layout.control(101,54,joinLabel()));buttonList.add(RedstoneActivationButton.from(layout.control(102,100,""),signalBrightness?3:trigger));
+        buttonList.add(layout.control(106,130,"Transmitter..."));
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,76,sizeLabel()));
         if(editingOff){GuiButton automatic=layout.control(105,96,offSelected<0?"OFF: Automatic":"Use automatic OFF");automatic.enabled=offSelected>=0;buttonList.add(automatic);}else buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
     }
@@ -80,12 +80,6 @@ public final class GuiProgrammableLight extends GuiContainer {
     private String joinLabel() {
         return "Join: "
                 + (join ? I18n.format("options.on") : I18n.format("options.off"));
-    }
-
-    private String triggerLabel() {
-        if(signalBrightness)return brightnessLabel();
-        return trigger == 1 ? "Trigger: Redstone ON"
-                : trigger == 2 ? "Trigger: Redstone OFF" : "Trigger: Disabled";
     }
 
     private int channel() {return ChannelFields.first(channelField);}
@@ -121,9 +115,9 @@ public final class GuiProgrammableLight extends GuiContainer {
             }
             return;
         }
-        if (textureTab==3 && button == 0) {
+        if (textureTab==0 && button == 0) {
             if (mouseX >= layout.controlsX && mouseX <= layout.controlsX+154
-                    && mouseY >= guiTop+164 && mouseY <= guiTop+178) {
+                    && mouseY >= guiTop+152 && mouseY <= guiTop+166) {
                 draggingLevel = true;
                 setLevelFromMouse(mouseX);
                 return;
@@ -167,7 +161,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         if(button.id==104){textureLayout=GuiOptionCycle.next(textureLayout,3);tileSides=textureLayout==1;button.displayString=sidesLabel();send();}
         if (button.id == 102) {
             int choice=GuiOptionCycle.next(signalBrightness?3:trigger,4);signalBrightness=choice==3;trigger=signalBrightness?2:choice;
-            button.displayString = triggerLabel();
+            ((RedstoneActivationButton)button).setMode(signalBrightness?3:trigger);
             send();
         }
         if (button.id == 100) {
@@ -207,13 +201,14 @@ public final class GuiProgrammableLight extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.light.title"),guiLeft+12,guiTop+8,0xFFFFFF);
         if(textureTab<2)faceList.draw(fontRenderer,mouseX,mouseY);else if(textureTab==2)housingList.draw(fontRenderer,mouseX,mouseY);
-        if(textureTab==3){
-        fontRenderer.drawString((signalBrightness?"Signal offset":I18n.format("gui.vandorlabs.light.level"))+": "+(signalBrightness?offset:level),layout.controlsX,guiTop+146,0xDAE8F0);
+        if(textureTab==0){
+        fontRenderer.drawString((signalBrightness?"Signal offset":I18n.format("gui.vandorlabs.light.level"))+": "+(signalBrightness?offset:level),layout.controlsX,guiTop+136,0xDAE8F0);
         int sliderX=layout.controlsX+8;
-        drawRect(sliderX,guiTop+168,sliderX+SLIDER_W,guiTop+174,0xFF555560);
+        drawRect(sliderX,guiTop+156,sliderX+SLIDER_W,guiTop+162,0xFF555560);
         int thumb=sliderX+Math.round(SLIDER_W*(signalBrightness?(offset+15)/2F:level)/15F);
-        drawRect(thumb-3,guiTop+164,thumb+3,guiTop+178,0xFFB8D7E8);
-        fontRenderer.drawString("Receive channels",layout.controlsX,guiTop+104,0xDAE8F0);
+        drawRect(thumb-3,guiTop+152,thumb+3,guiTop+166,0xFFB8D7E8);
+        }
+        if(textureTab==3){fontRenderer.drawString("Receive channels",layout.controlsX,guiTop+62,0xDAE8F0);
         }
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);if(textureTab==3)channelField.drawTextBox();
     }

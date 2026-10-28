@@ -5,13 +5,15 @@ import net.minecraft.client.gui.GuiButton;
 
 /** Shared redstone activation selector; parents retain their saved mode indices and cycling. */
 public final class RedstoneActivationButton extends GuiButton {
-    public static final int MANUAL=0,ON=1,OFF=2;
+    public static final int MANUAL=0,ON=1,OFF=2,SIGNAL=3;
     private final String action;
     public RedstoneActivationButton(int id,int x,int y,int width,int mode){this(id,x,y,width,"Activation",mode);}
     public RedstoneActivationButton(int id,int x,int y,int width,String action,int mode){super(id,x,y,width,20,"");this.action=action;setMode(mode);}
     public void setMode(int mode){displayString=action+": "+state(mode);}
+    public static RedstoneActivationButton from(GuiButton placement,int mode){return from(placement,"Activation",mode);}
+    public static RedstoneActivationButton from(GuiButton placement,String action,int mode){RedstoneActivationButton button=new RedstoneActivationButton(placement.id,placement.x,placement.y,placement.width,action,mode);button.height=placement.height;button.enabled=placement.enabled;button.visible=placement.visible;return button;}
     public static int mode(boolean enabled,boolean inverted){return !enabled?MANUAL:inverted?OFF:ON;}
-    public static String state(int mode){return mode==ON?"Redstone ON":mode==OFF?"Redstone OFF":"Manual";}
+    public static String state(int mode){return mode==ON?"Redstone ON":mode==OFF?"Redstone OFF":mode==SIGNAL?"Signal level":"Manual";}
     @Override public void drawButton(Minecraft mc,int mouseX,int mouseY,float partial){
         if(!visible)return;
         hovered=mouseX>=x&&mouseY>=y&&mouseX<x+width&&mouseY<y+height;

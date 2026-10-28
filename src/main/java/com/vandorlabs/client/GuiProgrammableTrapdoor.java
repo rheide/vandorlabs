@@ -59,7 +59,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         direction.enabled=diagonal() || tile.canOffsetClosedLeaf();buttonList.add(direction);
         if(diagonal()){GuiButton hinge=new GuiButton(10,controlsX+(controlsWidth+2)/2,y,(controlsWidth-2)/2,20,hingeLabel());hinge.enabled=!sliding;buttonList.add(hinge);}y+=22;
         if(diagonal()){GuiButton rotation=new GuiButton(9,controlsX,y,controlsWidth,20,rotationLabel());rotation.enabled=!sliding;buttonList.add(rotation);y+=22;}
-        buttonList.add(new GuiButton(3,controlsX,y,controlsWidth,20,triggerLabel()));y+=22;
+        buttonList.add(new RedstoneActivationButton(3,controlsX,y,controlsWidth,trigger));y+=22;
         channelLabelY=y;
         channelField=new GuiTextField(0,fontRenderer,controlsX,y+11,controlsWidth,18);
         ChannelFields.configure(channelField);
@@ -68,7 +68,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         for(GuiButton button:buttonList)if(button.id!=4){button.visible=button.id==3?page==1:page==0;if(button.id==3)button.y=guiTop+64;}
         channelLabelY=guiTop+96;channelField.y=guiTop+108;channelField.setVisible(page==1);channelField.setFocused(false);
         buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+30,110,20,"General"));buttonList.add(new DialogTabButton(101,guiLeft+126,guiTop+30,110,20,"Redstone"));for(GuiButton button:buttonList)if(button.id>=100)button.enabled=button.id!=100+page;
-        if(page==1)buttonList.add(new GuiButton(90,controlsX,guiTop+140,controlsWidth,20,"Transmitter..."));
+        if(page==1)buttonList.add(new GuiButton(90,controlsX,guiTop+132,controlsWidth,20,"Transmitter..."));
     }
     private String hingeLabel(){return "Hinge: "+new String[]{"Auto","Left","Right"}[hingeSide];}
     private String rotationLabel(){return "Rotation: "+(rotationFlipped?"Reverse":"Normal");}
@@ -77,7 +77,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     private String layoutLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
     private String heightLabel(){return "Height: "+(position==2?"Half":"Full");}
     private String facingLabel(){return "Hinge: "+facing.getName();}
-    private String triggerLabel(){return trigger==SpaceDoorData.TRIGGER_REDSTONE_ON?"Redstone: On":trigger==SpaceDoorData.TRIGGER_REDSTONE_OFF?"Redstone: Off":"Redstone: Disabled";}
+
     private int parsedChannel(){return ChannelFields.first(channelField);}
     private void send() {
         if(parsedChannel()>=0){channelList=ChannelFields.parse(channelField);channel=channelList.first();}
@@ -93,7 +93,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         if(button.id==4){if(parsedChannel()>=0){send();mc.player.closeScreen();}return;}
         if(button.id==1){if(diagonal()){int mode=GuiOptionCycle.next(sliding?slideIntoWall?2:1:0,3);sliding=mode!=0;slideIntoWall=mode==2;}else{int mode=cover?(sliding?4:3):sliding?(slideOverSurface?2:1):0;mode=GuiOptionCycle.next(mode,tile.canOffsetClosedLeaf()?5:3);cover=mode>=3;sliding=mode==1 || mode==2 || mode==4;slideOverSurface=mode==2;}button.displayString=motionLabel();}
         else if(button.id==2){position=diagonal()?(position==0?1:0):GuiOptionCycle.next(position,3);if(diagonal())tallWidth=position;button.displayString=positionLabel();}
-        else if(button.id==3){trigger=GuiOptionCycle.next(trigger,3);button.displayString=triggerLabel();}
+        else if(button.id==3){trigger=GuiOptionCycle.next(trigger,3);((RedstoneActivationButton)button).setMode(trigger);}
         else if(button.id==5){inverted=!inverted;}
         else if(button.id==6){textureLayout=GuiOptionCycle.next(textureLayout,3);tileTexture=textureLayout==1;button.displayString=layoutLabel();}
         else if(button.id==7){

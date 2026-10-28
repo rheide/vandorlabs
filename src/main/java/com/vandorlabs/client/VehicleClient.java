@@ -281,12 +281,12 @@ public final class VehicleClient {
             buttonList.add(new DialogTabButton(91,x+tabWidth+4,t+32,w-tabWidth-4,20,"Redstone"));
             if(hasSettings()){
                 String draft=channels==null?com.vandorlabs.redstone.ChannelData.read(settingsData(),0).toString():channels.getText();
-                channels=new GuiTextField(0,fontRenderer,x,t+80,w-116,18);ChannelFields.configure(channels);channels.setText(draft);channels.setVisible(page==1);channels.setFocused(false);
-                buttonList.add(new GuiButton(4,x+w-110,t+79,110,20,modeLabel()));
+                channels=new GuiTextField(0,fontRenderer,x,t+72,w,18);ChannelFields.configure(channels);channels.setText(draft);channels.setVisible(page==1);channels.setFocused(false);
+                buttonList.add(new RedstoneActivationButton(4,x,t+94,w,pilotMode));
                 int modeWidth=(w-8)/3;
                 for(int i=0;i<3;i++){
                     String value=modeChannels[i]==null?com.vandorlabs.redstone.ChannelData.read(settingsData().getCompoundTag("VehicleModeChannels"+i),0).toString():modeChannels[i].getText();
-                    modeChannels[i]=new GuiTextField(10+i,fontRenderer,x+48,t+122+i*24,w-48,18);ChannelFields.configure(modeChannels[i]);modeChannels[i].setText(value);modeChannels[i].setVisible(page==1);modeChannels[i].setFocused(false);
+                    modeChannels[i]=new GuiTextField(10+i,fontRenderer,x+48,t+132+i*22,w-48,16);ChannelFields.configure(modeChannels[i]);modeChannels[i].setText(value);modeChannels[i].setVisible(page==1);modeChannels[i].setFocused(false);
                     buttonList.add(new GuiButton(10+i,x+i*(modeWidth+4),t+panelHeight()-58,modeWidth,20,new String[]{"Park","Taxi","Hover"}[i]));
                 }
                 observed=draftKey();
@@ -294,10 +294,10 @@ public final class VehicleClient {
             buttonList.add(new GuiButton(1,x,t+panelHeight()-28,w,20,"Done"));
             org.lwjgl.input.Keyboard.enableRepeatEvents(true);refreshButtons();
         }
-        private String modeLabel(){return new String[]{"Signal: Disabled","Signal: ON","Signal: OFF"}[pilotMode];}
+
         private String heightLabel(){return "Height: "+(pilotHeight==0?"Base":"+"+(pilotHeight*2)+" px");}
         @Override public boolean doesGuiPauseGame(){return false;}
-        private void refreshButtons(){for(GuiButton b:buttonList){if(b.id>=10&&b.id<=12){int mode=b.id-10;b.enabled=data.structure!=null&&mode!=data.header.strafe&&!inFlight&&(mode!=0||data.header.sequence!=-1)&&(mode!=1||!data.structure.hasNonWheeledGear);b.visible=page==0;b.displayString=new String[]{"Park","Taxi","Hover"}[mode]+(mode==data.header.strafe?" (current)":"");}if(b.id==4){b.displayString=modeLabel();b.visible=page==1;}if(b.id==90||b.id==91)b.enabled=b.id!=90+page;if(b.id==5)b.displayString=heightLabel();if(b.id==2)b.displayString="Taxi Mode: "+(taxiDraft?"ON":"OFF");}}
+        private void refreshButtons(){for(GuiButton b:buttonList){if(b.id>=10&&b.id<=12){int mode=b.id-10;b.enabled=data.structure!=null&&mode!=data.header.strafe&&!inFlight&&(mode!=0||data.header.sequence!=-1)&&(mode!=1||!data.structure.hasNonWheeledGear);b.visible=page==0;b.displayString=new String[]{"Park","Taxi","Hover"}[mode]+(mode==data.header.strafe?" (current)":"");}if(b.id==4){((RedstoneActivationButton)b).setMode(pilotMode);b.visible=page==1;}if(b.id==90||b.id==91)b.enabled=b.id!=90+page;if(b.id==5)b.displayString=heightLabel();if(b.id==2)b.displayString="Taxi Mode: "+(taxiDraft?"ON":"OFF");}}
         private void failed(String message){inFlight=false;error=message;if(controller()&&channels!=null){com.vandorlabs.redstone.ChannelList value=ChannelFields.parse(channels);if(value!=null)sent=key(value);}else sent=pilotHeight!=settingsData().getInteger("PilotHeight")?"H|"+pilotHeight:"T|"+taxiDraft;closing=false;selectedMode=-1;sentModes=modeChannels[0]==null?savedModes():modeChannels[0].getText()+"|"+modeChannels[1].getText()+"|"+modeChannels[2].getText();}
         private void apply(boolean controls){
             if(inFlight||!hasSettings())return;
@@ -343,9 +343,9 @@ public final class VehicleClient {
                     java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status==null?"Selection unavailable":status,w-28);
                     for(int i=0;i<Math.min(lines.size(),Math.max(1,(h-180)/10));i++)fontRenderer.drawString(lines.get(i),l+14,t+116+i*10,0xffdd88);
                 }else if(channels!=null){
-                    fontRenderer.drawString("Receive: toggle channels (0 = none)",l+14,t+65,0xdae8f0);
-                    fontRenderer.drawString("Receive: mode channels (0 = none)",l+14,t+108,0xdae8f0);
-                    for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Park","Taxi","Hover"}[i],l+14,t+127+i*24,0xc4d0d8);
+                    fontRenderer.drawString("Receive: toggle channels (0 = none)",l+14,t+60,0xdae8f0);
+                    fontRenderer.drawString("Receive: mode channels (0 = none)",l+14,t+120,0xdae8f0);
+                    for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Park","Taxi","Hover"}[i],l+14,t+136+i*22,0xc4d0d8);
                     if(h>=250)fontRenderer.drawString(inFlight?"Applying...":!error.isEmpty()?fontRenderer.trimStringToWidth(error,w-28):"Valid changes apply automatically.",l+14,t+h-48,0xaabbcc);
                 }
             }else{

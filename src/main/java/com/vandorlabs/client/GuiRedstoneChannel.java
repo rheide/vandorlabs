@@ -101,17 +101,17 @@ public class GuiRedstoneChannel extends GuiContainer {
         buttonList.add(new DialogTabButton(101,guiLeft+(generalPage()?116:12),guiTop+30,100,20,"Redstone"));
         for(GuiButton button:buttonList)button.enabled=button.id!=100+page;
         if(page==1){
-            if(transmitterControl())buttonList.add(new GuiButton(90,tx,guiTop+62,tw,20,"Transmitter..."));
-            else if(!pilotSeat)buttonList.add(new GuiButton(90,tx,guiTop+88,tw,20,"Transmitter..."));
-            if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+94,122,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+144,guiTop+94,122,20,"High: "+highLimit));}
-            if(thruster){buttonList.add(layout.control(16,116,redstoneInverted?"Activate on: OFF":"Activate on: ON"));buttonList.add(layout.control(5,140,brightnessLabel()));buttonList.add(layout.control(6,164,thresholdLabel()));}
-            if(pilotSeat)buttonList.add(new GuiButton(18,guiLeft+14,guiTop+94,252,20,pilotModeLabel()));
+            if(transmitterControl())buttonList.add(new GuiButton(90,guiLeft+14,guiTop+62,xSize-28,20,"Transmitter..."));
+            else if(!pilotSeat)buttonList.add(new GuiButton(90,thruster?layout.listX:guiLeft+14,guiTop+(thruster?64:96),thruster?layout.listWidth:xSize-28,20,"Transmitter..."));
+            if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+116,122,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+144,guiTop+116,122,20,"High: "+highLimit));}
+            if(thruster){buttonList.add(RedstoneActivationButton.from(layout.control(16,100,""),redstoneInverted?2:1));buttonList.add(layout.control(5,124,brightnessLabel()));buttonList.add(layout.control(6,148,thresholdLabel()));}
+            if(pilotSeat)buttonList.add(new RedstoneActivationButton(18,guiLeft+14,guiTop+94,252,pilotMode));
         }else{
             if(thruster){housingList=new HousingTextureList(layout.listX,guiTop+64,layout.listWidth,sideTexture).visibleRows(Math.max(2,(ySize-98)/HousingTextureList.ROW_HEIGHT)).custom(value->{sideTexture=value;submit();});particleButton=layout.control(2,64,particleLabel());buttonList.add(particleButton);if(programmableThruster)buttonList.add(layout.control(4,88,shapeLabel()));refreshJoinButton();}
             if(adjustableBase){int y=guiTop+92;buttonList.add(new GuiButton(9,guiLeft+14,y,252,20,heightLabel()));buttonList.add(new GuiButton(10,guiLeft+14,y+24,122,20,tiltLabel()));buttonList.add(new GuiButton(11,guiLeft+144,y+24,122,20,directionLabel()));}
             if(selectableType)buttonList.add(new GuiButton(13,guiLeft+14,guiTop+64,252,20,typeLabel()));
             if(powerLever)buttonList.add(new GuiButton(12,guiLeft+14,guiTop+64,252,20,sizeLabel()));
-            if(pilotSeat){buttonList.add(new GuiButton(15,guiLeft+14,guiTop+64,252,20,"Taxi Mode: "+(taxiMode?"ON":"OFF")));buttonList.add(new GuiButton(19,guiLeft+14,guiTop+88,252,20,pilotHeightLabel()));buttonList.add(new GuiButton(21,guiLeft+14,guiTop+112,252,20,"Modes..."));if(!inspectionStatus.isEmpty()){GuiButton assemble=new GuiButton(20,guiLeft+14,guiTop+236,252,20,"Assemble (inspection required)");assemble.enabled=false;buttonList.add(assemble);}}
+            if(pilotSeat){buttonList.add(new GuiButton(15,guiLeft+14,guiTop+64,252,20,"Taxi Mode: "+(taxiMode?"ON":"OFF")));buttonList.add(new GuiButton(19,guiLeft+14,guiTop+88,252,20,pilotHeightLabel()));if(!inspectionStatus.isEmpty()){GuiButton assemble=new GuiButton(20,guiLeft+14,guiTop+236,252,20,"Assemble (inspection required)");assemble.enabled=false;buttonList.add(assemble);}}
         }
         buttonList.add(new GuiButton(1,guiLeft+xSize-166,guiTop+ySize-26,154,20,pilotSeat?"Close":"Done"));
     }
@@ -140,10 +140,10 @@ public class GuiRedstoneChannel extends GuiContainer {
         if(button.id==100||button.id==101){page=button.id-100;initGui();return;}
         if(button.id==90){submit();PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(member.channelTile().getPos(),0));return;}
         if(button.id!=1&&button.id!=4)otherEdited=true;
-        if(button.id==21){submit();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessagePilotModes(member.channelTile().getPos(),null));return;}
-        if(button.id==18){pilotMode=GuiOptionCycle.next(pilotMode,3);button.displayString=pilotModeLabel();}
+
+        if(button.id==18){pilotMode=GuiOptionCycle.next(pilotMode,3);((RedstoneActivationButton)button).setMode(pilotMode);}
         if(button.id==19){pilotHeight=GuiOptionCycle.next(pilotHeight,4);button.displayString=pilotHeightLabel();com.vandorlabs.vehicle.VehicleNetwork.Packet setting=new com.vandorlabs.vehicle.VehicleNetwork.Packet(com.vandorlabs.vehicle.VehicleNetwork.HEIGHT);setting.entity=-1;setting.origin=member.channelTile().getPos();setting.strafe=(byte)pilotHeight;PacketHandler.INSTANCE.sendToServer(setting);}
-        if(button.id==16){redstoneInverted=!redstoneInverted;button.displayString=redstoneInverted?"Activate on: OFF":"Activate on: ON";}
+        if(button.id==16){redstoneInverted=!redstoneInverted;((RedstoneActivationButton)button).setMode(redstoneInverted?2:1);}
         if(button.id==15){taxiMode=!taxiMode;button.displayString="Taxi Mode: "+(taxiMode?"ON":"OFF");}
         if(button.id==13){controlType=GuiOptionCycle.next(controlType,3);button.displayString=typeLabel();}
         if(button.id==12){powerLeverSize=GuiOptionCycle.next(powerLeverSize,2);button.displayString=sizeLabel();}
@@ -176,7 +176,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         }
     }
 
-    private String pilotModeLabel(){return new String[]{"Trigger: Disabled","Trigger: Redstone ON","Trigger: Redstone OFF"}[pilotMode];}
+
     private String pilotHeightLabel(){return "Height: "+(pilotHeight==0?"Base":"+"+(pilotHeight*2)+" px");}
     private int baseControlsY(){return signalControl?selectableType?146:122:powerLever?96:66;}
     private String dialogTitle(){return pilotSeat?"Pilot Seat":thruster?"Programmable Thruster":"Redstone Channels";}
@@ -238,7 +238,7 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){
         GlStateManager.disableLighting();fontRenderer.drawString(fontRenderer.trimStringToWidth(dialogTitle(),xSize-50),12,8,0xffffff);
-        if(page==1){if(!transmitterControl())fontRenderer.drawString("Receive channels",thruster?layout.controlsX-guiLeft:14,68,0xdae8f0);if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,122,0xdae8f0);fontRenderer.drawString("Click to cycle four levels",14,136,0xdae8f0);}}
+        if(page==1){if(!transmitterControl())fontRenderer.drawString("Receive channels",thruster?layout.controlsX-guiLeft:14,68,0xdae8f0);if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,144,0xdae8f0);fontRenderer.drawString("Click to cycle four levels",14,158,0xdae8f0);}}
         else {if(thruster)fontRenderer.drawString("Wall texture",12,54,0xdae8f0);if(pilotSeat){fontRenderer.drawString(taxiMode?"Sit: assemble / Exit: park":"Manual Configurizer conversion",14,142,0xdae8f0);if(!inspectionStatus.isEmpty()){java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(inspectionStatus,252);for(int i=0;i<Math.min(8,lines.size());i++)fontRenderer.drawString(lines.get(i),14,158+i*9,0xffbb88);}}}
     }
 
