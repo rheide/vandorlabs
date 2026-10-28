@@ -10,6 +10,8 @@ import net.minecraft.world.*;
 
 public final class BlockHexTank extends BlockAnimatedScreenSelector {
     public BlockHexTank(){super("hexagonal_fuel_tank");}
+    @Override public void onBlockAdded(World world,BlockPos pos,IBlockState state){super.onBlockAdded(world,pos,state);HexTankGroups.invalidate(world);}
+    @Override public void breakBlock(World world,BlockPos pos,IBlockState state){HexTankGroups.invalidate(world);super.breakBlock(world,pos,state);}
     @Override public TileEntity createNewTileEntity(World world,int meta){return new TileEntityHexTank();}
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
     @Override public boolean isFullCube(IBlockState state){return false;}

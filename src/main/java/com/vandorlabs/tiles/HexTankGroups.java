@@ -9,9 +9,26 @@ import net.minecraft.world.World;
 /** Bounded complete 2x2/3x3 tank cross sections; storage remains owned by each native cell. */
 public final class HexTankGroups {
     private HexTankGroups(){}
+    private static final java.util.Map<World,Cache> CACHES=new java.util.WeakHashMap<>();
+    private static final class Cache {long tick=Long.MIN_VALUE,computations;final java.util.Map<BlockPos,ConnectedSquare.Part> parts=new java.util.HashMap<>();}
+    private static Cache cache(World world){synchronized(CACHES){return CACHES.computeIfAbsent(world,key->new Cache());}}
+    public static long groupComputations(World world){Cache cache=cache(world);synchronized(cache){return cache.computations;}}
+    public static void invalidate(World world){if(world!=null){Cache cache=cache(world);synchronized(cache){cache.parts.clear();}}}
+
     public static EnumFacing right(EnumFacing.Axis axis){return axis==EnumFacing.Axis.X?EnumFacing.SOUTH:EnumFacing.EAST;}
     public static EnumFacing up(EnumFacing.Axis axis){return axis==EnumFacing.Axis.Y?EnumFacing.SOUTH:EnumFacing.UP;}
     public static ConnectedSquare.Part part(TileEntityHexTank tile){
+        World world=tile.getWorld();if(world==null)return ConnectedSquare.Part.SINGLE;Cache cache=cache(world);
+        synchronized(cache){
+            long tick=world.getTotalWorldTime();if(cache.tick!=tick){cache.tick=tick;cache.parts.clear();}
+            ConnectedSquare.Part found=cache.parts.get(tile.getPos());if(found!=null)return found;
+            if(cache.parts.size()>=4096)cache.parts.clear();
+            cache.computations++;ConnectedSquare.Part part=find(tile);EnumFacing.Axis axis=world.getBlockState(tile.getPos()).getValue(BlockAnimatedScreenSelector.FACING).getAxis();BlockPos root=root(tile,part);
+            for(int x=0;x<part.size;x++)for(int y=0;y<part.size;y++)cache.parts.put(root.offset(right(axis),x).offset(up(axis),y),new ConnectedSquare.Part(part.size,x,y));
+            return part;
+        }
+    }
+    private static ConnectedSquare.Part find(TileEntityHexTank tile){
         World world=tile.getWorld();if(world==null||tile.isBlockShape())return ConnectedSquare.Part.SINGLE;
         BlockPos origin=tile.getPos();EnumFacing.Axis axis=world.getBlockState(origin).getValue(BlockAnimatedScreenSelector.FACING).getAxis();
         boolean[] unloaded={false};

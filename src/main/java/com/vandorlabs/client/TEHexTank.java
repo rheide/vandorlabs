@@ -39,17 +39,27 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
     static float[] casingNormal(double[][] outline,int edge,EnumFacing facing){
         return AxialShellGeometry.normal(outline,edge,facing);
     }
-    private static void casingSide(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double left,double right,double bottom,double top,double scale,EnumFacing facing,boolean tiled){
+    private static void casingSide(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double left,double right,double bottom,double top,double scale,EnumFacing facing,boolean tiled,double repeat){
+        double[] a=outline[edge],c=outline[(edge+1)%outline.length];double units=Math.hypot(c[0]-a[0],c[1]-a[1])*scale*repeat;
+        double begin=left;
+        if(tiled&&units>0)for(int tile=(int)Math.floor(left*units)+1;tile<right*units;tile++){
+            double end=tile/units;casingSegment(outline,b,s,color,edge,begin,end,bottom,top,scale,facing,true,repeat);begin=end;
+        }
+        casingSegment(outline,b,s,color,edge,begin,right,bottom,top,scale,facing,tiled,repeat);
+    }
+    private static void casingSegment(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double left,double right,double bottom,double top,double scale,EnumFacing facing,boolean tiled,double repeat){
         double[][] vertices={point(outline,edge,left,top,scale),point(outline,edge,left,bottom,scale),point(outline,edge,right,bottom,scale),point(outline,edge,right,top,scale)};
-        double[][] uv={casingUV(outline,edge,left,top,tiled,scale),casingUV(outline,edge,left,bottom,tiled,scale),casingUV(outline,edge,right,bottom,tiled,scale),casingUV(outline,edge,right,top,tiled,scale)};
+        double[][] uv={casingUV(outline,edge,left,top,tiled,scale*repeat),casingUV(outline,edge,left,bottom,tiled,scale*repeat),casingUV(outline,edge,right,bottom,tiled,scale*repeat),casingUV(outline,edge,right,top,tiled,scale*repeat)};
+        if(tiled){double[] a=outline[edge],c=outline[(edge+1)%outline.length];double base=Math.floor((left+right)*.5*Math.hypot(c[0]-a[0],c[1]-a[1])*scale*repeat)*16;for(double[] point:uv)point[0]-=base;}
+        if(System.getProperty("vandorlabs.reprolab")!=null)for(double[] point:uv)if(point[0]<-.00001||point[0]>16.00001||point[1]<-.00001||point[1]>16.00001)throw new IllegalStateException("Tank casing crossed its atlas sprite boundary");
         float[] normal=casingNormal(outline,edge,facing);float shade=net.minecraftforge.client.model.pipeline.LightUtil.diffuseLight(normal[0],normal[1],normal[2]);
         float r=(color>>16&255)/255F*shade,g=(color>>8&255)/255F*shade,blue=(color&255)/255F*shade;
         for(int i=0;i<4;i++){double[] p=orient(vertices[i],facing);b.pos(p[0],p[1],p[2]).tex(s.getInterpolatedU(uv[i][0]),s.getInterpolatedV(uv[i][1])).color(r,g,blue,1).normal(normal[0],normal[1],normal[2]).endVertex();}
     }
-    private static void wall(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double scale,double low,double high,EnumFacing facing,boolean tiled){
-        double[] w=window(outline.length==4,edge,facing);if(w==null){casingSide(outline,b,s,color,edge,0,1,low,high,scale,facing,tiled);return;}
-        casingSide(outline,b,s,color,edge,0,1,low,w[2],scale,facing,tiled);casingSide(outline,b,s,color,edge,0,1,w[3],high,scale,facing,tiled);
-        casingSide(outline,b,s,color,edge,0,w[0],w[2],w[3],scale,facing,tiled);casingSide(outline,b,s,color,edge,w[1],1,w[2],w[3],scale,facing,tiled);
+    private static void wall(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double scale,double low,double high,EnumFacing facing,boolean tiled,double repeat){
+        double[] w=window(outline.length==4,edge,facing);if(w==null){casingSide(outline,b,s,color,edge,0,1,low,high,scale,facing,tiled,repeat);return;}
+        casingSide(outline,b,s,color,edge,0,1,low,w[2],scale,facing,tiled,repeat);casingSide(outline,b,s,color,edge,0,1,w[3],high,scale,facing,tiled,repeat);
+        casingSide(outline,b,s,color,edge,0,w[0],w[2],w[3],scale,facing,tiled,repeat);casingSide(outline,b,s,color,edge,w[1],1,w[2],w[3],scale,facing,tiled,repeat);
     }
     static double area(double[][] polygon){double sum=0;for(int i=0;i<polygon.length;i++){double[] a=polygon[i],b=polygon[(i+1)%polygon.length];sum+=a[0]*b[1]-b[0]*a[1];}return Math.abs(sum)*.5;}
     private static double[][] below(double[][] polygon,double level){java.util.List<double[]> out=new java.util.ArrayList<>();for(int i=0;i<polygon.length;i++){double[] a=polygon[i],b=polygon[(i+1)%polygon.length];boolean inside=a[1]<=level,next=b[1]<=level;if(inside)out.add(a.clone());if(inside!=next){double t=(level-a[1])/(b[1]-a[1]);out.add(new double[]{a[0]+(b[0]-a[0])*t,level});}}return out.toArray(new double[0][]);}
@@ -70,7 +80,7 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
             double[][] outline=tile.isBlockShape()?BLOCK:OUTLINE;
             Tessellator t=Tessellator.getInstance();BufferBuilder b=t.getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
             for(int i=0;i<outline.length;i++){
-                wall(outline,b,casing,0xffffff,i,1,0,1,facing,tile.getMainTextureLayout()==1);wall(outline,b,liner,0xffffff,i,INNER,FLOOR,CEILING,facing,false);
+                wall(outline,b,casing,0xffffff,i,1,0,1,facing,tile.getMainTextureLayout()==1,joined.size);wall(outline,b,liner,0xffffff,i,INNER,FLOOR,CEILING,facing,false,1);
                 double[] w=window(tile.isBlockShape(),i,facing);if(w==null)continue;
                 // Thickness around the four edges of every window opening.
                 for(double u:new double[]{w[0],w[1]})quad(b,casing,0xb5c2cc,new double[][]{point(outline,i,u,w[2],1),point(outline,i,u,w[3],1),point(outline,i,u,w[3],INNER),point(outline,i,u,w[2],INNER)},facing,false);

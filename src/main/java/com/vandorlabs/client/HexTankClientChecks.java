@@ -26,7 +26,7 @@ final class HexTankClientChecks {
             javax.imageio.ImageIO.write(image,"png",new File(output,"shot_hex_tank_step_"+stage+".png"));
         }
         for(EnumFacing face:EnumFacing.values())for(int size:new int[]{2,3})render(mc,size,face,false);
-        System.out.println("[vandorlabs][reprolab] hex-tank-render PASS complete-2x2-3x3 six-axes single-root actual-shell-fluid-render partial-construction-four-images");
+        System.out.println("[vandorlabs][reprolab] hex-tank-render PASS complete-2x2-3x3 six-axes single-root actual-shell-fluid-render tiled-fit-atlas-safe partial-construction-four-images");
     }
     private static BufferedImage render(Minecraft mc,int size,EnumFacing face,boolean incomplete){
         Block block=Block.getBlockFromName("vandorlabs:hexagonal_fuel_tank");
@@ -34,7 +34,7 @@ final class HexTankClientChecks {
         for(int x=0;x<size;x++)for(int y=0;y<size;y++){
             if(incomplete&&x==size-1&&y==size-1)continue;
             BlockPos at=BlockPos.ORIGIN.offset(HexTankGroups.right(face.getAxis()),x).offset(HexTankGroups.up(face.getAxis()),y);
-            TileEntityHexTank cell=new TileEntityHexTank();cell.setPos(at);cell.tank.setFluid(new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER,8000));
+            TileEntityHexTank cell=new TileEntityHexTank();cell.setPos(at);cell.setMainTextureLayout(size==3?1:2);cell.tank.setFluid(new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER,8000));
             cells.add(new VehicleStructure.Cell(at,block.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,face),cell.writeToNBT(new NBTTagCompound())));
         }
         VehicleWorld view=new VehicleWorld(mc.world,VehicleStructure.display(cells));int roots=0;

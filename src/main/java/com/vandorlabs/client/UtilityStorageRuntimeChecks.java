@@ -86,6 +86,11 @@ final class UtilityStorageRuntimeChecks {
                     TileEntityHexTank root=(TileEntityHexTank)world.getTileEntity(pos);
                     for(BlockPos at:cells){TileEntityHexTank cell=(TileEntityHexTank)world.getTileEntity(at);require(HexTankGroups.part(cell).size==size,"complete joined tank section "+face+" "+size);require(HexTankGroups.root(cell,HexTankGroups.part(cell)).equals(pos),"same drawing root for every tank member");}
                     int capacity=size*size*TileEntityHexTank.CAPACITY;
+                    HexTankGroups.invalidate(world);long computations=HexTankGroups.groupComputations(world);
+                    for(int query=0;query<64;query++)require(root.getTankProperties()[0].getCapacity()==capacity,"cached joined capacity stays exact");
+                    long scans=HexTankGroups.groupComputations(world)-computations;
+                    require(scans==1,"repeated joined queries reuse the complete partition for every member");
+                    System.out.println("[vandorlabs][reprolab] tank-group-cache axis="+face+" size="+size+" queries=64 prior-component-searches="+(64*size*size)+" cached-component-searches="+scans);
                     require(root.fill(new FluidStack(FluidRegistry.WATER,capacity-123),false)==capacity-123&&root.tank.getFluidAmount()==0,"joined fill simulation preserves native owners");
                     require(root.fill(new FluidStack(FluidRegistry.WATER,capacity-123),true)==capacity-123,"joined fill uses all cells");
                     require(root.getTankProperties()[0].getCapacity()==capacity&&root.getTankProperties()[0].getContents().amount==capacity-123,"joined aggregate meter");
