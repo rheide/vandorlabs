@@ -2,7 +2,14 @@
 
 ## 2.7 (in development)
 
-- Begin the 2.7 artwork, configuration and mechanism update.
+- Add item-owned redstone transmission with 16-, 64-, 256-block and infinite same-dimension ranges, channel editing, manual signals, inventory slots and configuration copying. Use the strongest in-range signal at each receiver and keep receiver input settings separate.
+- Standardize dialog tabs and branding; separate Redstone, Security, Sides and Frame configuration. Rename Programmable Input to Programmable Flatscreen while retaining its registry ID.
+- Add 58 selectable frame finishes, separate border and interior materials, faintly lit borders, independent frame/display layouts and split full-height displays. Migrate previous framed display artwork to a separate bolted frame.
+- Replace six corporate armor sets and add two helipads and 78 static control panels at runtime texture resolutions. Refresh the texture browser and collages.
+- Add optional horizontal Large Extender pushing without pulling, connected Surface-layer payloads, 15-degree rotating-arm angles and guarded endpoint clearance.
+- Add proportional ramp deployment and door placement on stationary ramp cells. Join hexagonal tanks into complete 2×2 and 3×3 sections with native per-cell storage.
+- Add guarded one-level Duplifier settings undo, including connected applications.
+- Treat water and Programmable Surfaces as vehicle discovery boundaries, preserve carried sign text and local lamp illumination, and support optional OptiFine terrain lighting. Reuse static opaque vehicle rendering work.
 
 ## 2.6
 

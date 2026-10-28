@@ -98,7 +98,10 @@ scans are limited to 256 cells and rectangles of at most 16 blocks per side.
 Other block shapes retain their individual layout rules described above.
 
 Duplifier status messages report how many blocks received settings, including a
-single-block application.
+single-block application. **Undo last application** in its dialog restores one
+previous settings operation, including a connected group. Undo refuses targets
+that are unloaded, no longer editable, replaced or edited since the application.
+Inventory contents are not part of a settings undo.
 
 New Programmable Blocks default to **Tile**, including ordinary placement and
 new command-placed blocks. Existing saved modes and configured item modes remain
