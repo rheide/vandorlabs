@@ -43,7 +43,7 @@ public final class InlineTransmitterWidget {
             Placement p=state.buttons.get(button);if(p==null||p.slot!=slot){if(p!=null)save(gui,p);p=new Placement(button,slot);state.buttons.put(button,p);}
             p.x=button.x;p.y=button.y+(button.height-16)/2;p.width=button.width;p.shown=true;
             slot.xPos=p.x-left;slot.yPos=p.y-top;slot.visible=true;
-            p.field.x=p.x;p.field.y=p.y+24;p.field.width=p.width;p.field.setVisible(true);p.field.setEnabled(slot.getHasStack());
+            p.field.x=p.x;p.field.y=p.y+Math.max(24,mc.fontRenderer.listFormattedStringToWidth(CAPTION,p.width-24).size()*mc.fontRenderer.FONT_HEIGHT+4);p.field.width=p.width;p.field.setVisible(true);p.field.setEnabled(slot.getHasStack());
             ItemStack stack=slot.getStack();if(!ItemStack.areItemStacksEqual(p.before,stack)){boolean sameModule=!p.before.isEmpty()&&!stack.isEmpty()&&p.before.getItem()==stack.getItem()&&p.before.getMetadata()==stack.getMetadata();p.before=stack.copy();p.pending=false;if(!sameModule||!p.dirty){p.field.setText(stack.isEmpty()?"":ItemRedstoneTransmitter.channels(stack).toString());p.dirty=false;}else if(!p.field.isFocused())save(gui,p);}
             button.visible=false;shown=true;
         }
