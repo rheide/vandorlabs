@@ -34,7 +34,7 @@ public final class GuiTokenSlot extends GuiContainer {
     @Override public void updateScreen(){channels.updateCursorCounter();labels();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mx,int my){
-        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize);
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize,28);
         if(page==1)CredentialFilterPicker.draw(mc,fontRenderer,guiLeft+12,guiTop+82,tile.chip(),allowed);
     }
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getDisplayName().getUnformattedText(),12,10,0xffffff);if(page==1)fontRenderer.drawString("Accepted credential",12,68,0xdae8f0);}

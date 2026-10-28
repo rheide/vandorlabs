@@ -6,7 +6,7 @@ import org.lwjgl.input.Keyboard;
 
 /** The ordinary categorized material picker, with Trapdoors included in the main collection. */
 public final class GuiPressurePlate extends GuiMaterialPicker {
-    private final PlateContainer container;private HousingTextureList textures;private GuiTextField channels;private int mode,sensitivity,page=1;
+    private final PlateContainer container;private HousingTextureList textures;private GuiTextField channels;private int mode,sensitivity,page;
     public GuiPressurePlate(PlateContainer container){super(container);this.container=container;mode=container.tile.mode();sensitivity=container.tile.sensitivity();}
     @Override protected HousingTextureList materialPicker(){return page==0?textures:null;}
     @Override public void initGui(){
