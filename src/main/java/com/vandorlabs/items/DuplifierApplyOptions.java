@@ -98,7 +98,8 @@ public final class DuplifierApplyOptions {
             option("MoatMode","Moat Mode",4),
             option(ProgrammableSettings.DOOR_SECURITY,"Door Security",3),
             option(ProgrammableSettings.STAIR_TREAD, "Stair step size", 2),
-            option(ProgrammableSettings.STAIR_ROLL, "Stair orientation", 2)
+            option(ProgrammableSettings.STAIR_ROLL, "Stair orientation", 2),
+            option("FrameAppearance", "Frame Finishes", 0)
     };
 
     /** Legacy API covers the original first word; option indices are append-only. */

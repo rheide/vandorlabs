@@ -20,17 +20,23 @@ public final class DuplifierUndo {
     }
     private static final Map<EntityPlayer,Operation> history=new WeakHashMap<>(),pending=new WeakHashMap<>();
     private DuplifierUndo(){}
+    private static NBTTagCompound capture(World world,BlockPos pos){
+        NBTTagCompound settings=ProgrammableSettings.capture(world,pos);net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);
+        if(settings!=null&&settings.hasKey(ProgrammableSettings.FACE_TEXTURES,10)&&tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)
+            settings.getCompoundTag(ProgrammableSettings.FACE_TEXTURES).setIntArray("choices",((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile).getFaceTextures().choices());
+        return settings;
+    }
     public static void begin(EntityPlayer player,World world){if(player!=null&&!world.isRemote)pending.put(player,new Operation(world));}
     public static void before(EntityPlayer player,World world,BlockPos pos){
         Operation operation=pending.get(player);if(operation==null||operation.world!=world||operation.entries.containsKey(pos)||operation.entries.size()>=DuplifierConnectedApply.MAX_CELLS)return;
-        NBTTagCompound settings=ProgrammableSettings.capture(world,pos);
+        NBTTagCompound settings=capture(world,pos);
         if(settings!=null)operation.entries.put(pos.toImmutable(),new Entry(world.getBlockState(pos).getBlock(),settings));
     }
     public static void finish(EntityPlayer player){
         Operation operation=pending.remove(player);if(operation==null)return;
         Iterator<Map.Entry<BlockPos,Entry>> iterator=operation.entries.entrySet().iterator();
         while(iterator.hasNext()){
-            Map.Entry<BlockPos,Entry> value=iterator.next();value.getValue().after=ProgrammableSettings.capture(operation.world,value.getKey());
+            Map.Entry<BlockPos,Entry> value=iterator.next();value.getValue().after=capture(operation.world,value.getKey());
             if(value.getValue().after==null||value.getValue().before.equals(value.getValue().after))iterator.remove();
         }
         if(!operation.entries.isEmpty())history.put(player,operation);
@@ -43,7 +49,7 @@ public final class DuplifierUndo {
             if(!operation.world.isBlockLoaded(pos)||!operation.world.isBlockModifiable(player,pos)
                     ||!player.canPlayerEdit(pos,EnumFacing.UP,player.getHeldItemMainhand())
                     ||operation.world.getBlockState(pos).getBlock()!=entry.block
-                    ||!entry.after.equals(ProgrammableSettings.capture(operation.world,pos)))return false;
+                    ||!entry.after.equals(capture(operation.world,pos)))return false;
         }
         Iterator<Map.Entry<BlockPos,Entry>> iterator=operation.entries.entrySet().iterator();
         while(iterator.hasNext()){

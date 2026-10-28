@@ -145,6 +145,8 @@ public final class ProgrammableSettings {
         Block block = world.getBlockState(pos).getBlock();
         if (tile == null) return null;
         NBTTagCompound out = new NBTTagCompound();
+        com.vandorlabs.tiles.FrameAppearance appearance=frameAppearance(tile);
+        if(appearance!=null){NBTTagCompound frames=new NBTTagCompound();appearance.write(frames);out.setTag("FrameAppearance",frames);}
         if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block))
             out.setTag(REDSTONE_ROWS,((TileEntityAnimatedScreenSelector)tile).redstoneConfiguration());
         if (tile instanceof RedstoneChannelMember && (!(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat) || tile instanceof com.vandorlabs.tiles.TileEntityVehicleController)) {
@@ -198,7 +200,6 @@ public final class ProgrammableSettings {
             NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("States",trigger.isLevelStates());signal.setInteger("Exact",trigger.getExactLevel());signal.setInteger("Low",trigger.getLowTexture());signal.setInteger("Medium",trigger.getMediumTexture());out.setTag(SIGNAL_SETTINGS,signal);
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
-            NBTTagCompound frameSettings=new NBTTagCompound();screen.frameAppearance.write(frameSettings);if(!frameSettings.hasNoTags())out.setTag("FrameAppearance",frameSettings);
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
             if(TileEntityAnimatedScreenSelector.supportsSideTexture(block))out.setInteger(SIDE_TEXTURE,screen.getSideTexture());
             if(block==ModBlocks.PROGRAMMABLE_STAIRS){out.setInteger(STAIR_TREAD,screen.stairTread());out.setInteger(STAIR_ROLL,screen.stairRoll());}
@@ -504,7 +505,6 @@ public final class ProgrammableSettings {
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             long before=screen.getSettingsRevision();
-            if(values.hasKey("FrameAppearance",10)){screen.frameAppearance.read(values.getCompoundTag("FrameAppearance"));applicable=true;com.vandorlabs.tiles.GlassMaterials.changed();screen.markDirty();}
             if(block==ModBlocks.PROGRAMMABLE_STAIRS&&(values.hasKey(STAIR_TREAD,3)||values.hasKey(STAIR_ROLL,3))){screen.setStairGeometry(number(values,STAIR_TREAD,screen.stairTread()),number(values,STAIR_ROLL,screen.stairRoll()));applicable=true;}
             if (values.hasKey(WALL_TEXTURE, 3)) {
                 screen.setHousingTexture(values.getInteger(WALL_TEXTURE));
@@ -516,7 +516,7 @@ public final class ProgrammableSettings {
                 NBTTagCompound faces = values.getCompoundTag(FACE_TEXTURES);
                 boolean enabled = faces.getBoolean("enabled");
                 screen.setFaceTextures(new com.vandorlabs.tiles.FaceTextures(enabled,
-                        enabled ? faces.getIntArray("choices") : screen.getFaceTextures().choices()));
+                        enabled || faces.hasKey("choices",11) ? faces.getIntArray("choices") : screen.getFaceTextures().choices()));
                 applicable = true;
             }
             if (isDisplay(block)) {
@@ -725,6 +725,20 @@ public final class ProgrammableSettings {
             }
             applicable = true;
         }
+        com.vandorlabs.tiles.FrameAppearance appearance=frameAppearance(tile);
+        if(appearance!=null&&values.hasKey("FrameAppearance",10)){
+            com.vandorlabs.tiles.FrameAppearance desired=new com.vandorlabs.tiles.FrameAppearance();desired.read(values.getCompoundTag("FrameAppearance"));
+            if(com.vandorlabs.tiles.FrameAppearance.displayBlock(block))desired.artworkVersion=1;
+            NBTTagCompound before=new NBTTagCompound(),after=new NBTTagCompound();appearance.write(before);desired.write(after);applicable=true;
+            if(!before.equals(after)){appearance.read(after);com.vandorlabs.tiles.GlassMaterials.changed();tile.markDirty();
+                if(world!=null){net.minecraft.block.state.IBlockState actual=world.getBlockState(pos);world.notifyBlockUpdate(pos,actual,actual,3);world.checkLight(pos);}}
+
+        }
         return applicable;
+    }
+    private static com.vandorlabs.tiles.FrameAppearance frameAppearance(TileEntity tile){
+        return tile instanceof TileEntityAnimatedScreenSelector?((TileEntityAnimatedScreenSelector)tile).frameAppearance
+            :tile instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)tile).frameAppearance
+            :tile instanceof TileEntitySpaceDoor?((TileEntitySpaceDoor)tile).frameAppearance:null;
     }
 }

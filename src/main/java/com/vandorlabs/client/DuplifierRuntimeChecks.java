@@ -75,6 +75,12 @@ final class DuplifierRuntimeChecks {
             porthole.setHousingTexture(15);
             require(!com.vandorlabs.items.DuplifierUndo.undo(player)&&porthole.getHousingTexture()==15,"undo overwrote a later edit");
             ProgrammableSettings.apply(world,target,beforeUndo,player);
+            int frameChoice=-1;for(int index=0;index<com.vandorlabs.tiles.ScreenHousingTextures.IDS.length;index++)if("Frame".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(index))){frameChoice=index;break;}
+            require(frameChoice>=0,"frame undo fixture catalog");
+            NBTTagCompound frameCopy=new NBTTagCompound();frameCopy.setInteger("FrameFront",frameChoice);tool.getSubCompound(ItemDuplifier.SETTINGS_TAG).setTag("FrameAppearance",frameCopy);
+            com.vandorlabs.items.DuplifierUndo.begin(player,world);require(ItemDuplifier.applyTo(world,target,tool,player),"frame finishes copy failed");com.vandorlabs.items.DuplifierUndo.finish(player);
+            require(porthole.frameAppearance.front==frameChoice&&com.vandorlabs.items.DuplifierUndo.undo(player)&&porthole.frameAppearance.front==-1,"undo did not clear newly introduced frame finish");
+            tool.getSubCompound(ItemDuplifier.SETTINGS_TAG).removeTag("FrameAppearance");
             NBTTagCompound fromPorthole = ProgrammableSettings.capture(world, target);
             Block ion = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "ion_drive"));
             world.setBlockState(source, ion.getDefaultState(), 3);
