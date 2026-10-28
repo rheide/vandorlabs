@@ -38,6 +38,18 @@ final class VehicleRenderRuntimeChecks {
             for(long[] sample:samples)Arrays.sort(sample);
             System.out.println("[vandorlabs][reprolab] vehicle-wall-render PASS walls=64 uncached-us="+samples[0][12]/1000+" cached-us="+samples[1][12]/1000+" builds="+cache.builds+" hits="+cache.hits);
         }finally{VehicleOpaqueTileCache.enabled=true;cache.delete();GlStateManager.popMatrix();}
+        if(BlockSurfaceFormat.get().getNextOffset()==32)VehicleOpaqueBatchChecks.run(mc,structure,view);
+        EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);craft.install(structure);craft.setPosition(0,200,0);
+        RenderGroundVehicle renderer=new RenderGroundVehicle(mc.getRenderManager());long[][] ordering=new long[2][24];
+        try{
+            for(int mode=0;mode<2;mode++)for(int round=-12;round<24;round++){
+                RenderGroundVehicle.reuseTileOrder=mode==1;RenderGroundVehicle.batchOpaqueTiles=false;RenderGroundVehicle.beginFrame();long start=System.nanoTime();
+                renderer.doRender(craft,0,-10000,0,0,0);
+                if(round>=0)ordering[mode][round]=System.nanoTime()-start;
+            }
+            for(long[] sample:ordering)Arrays.sort(sample);
+            System.out.println("[vandorlabs][reprolab] vehicle-tile-order PASS walls=64 samples=24 previous-us="+ordering[0][12]/1000+" retained-us="+ordering[1][12]/1000+" opaque-list-copies/frame=64->0 opaque-sort-items/frame=64->0");
+        }finally{RenderGroundVehicle.reuseTileOrder=true;RenderGroundVehicle.batchOpaqueTiles=true;RenderGroundVehicle.reload();}
         if(cache.size()!=0)throw new IllegalStateException("vehicle wall cache retains GPU resources after deletion");
     }
 }

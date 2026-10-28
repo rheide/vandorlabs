@@ -17,6 +17,8 @@ import java.util.*;
 public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     private static final Map<EntityGroundVehicle,Regions> meshes=new HashMap<>();
     private static int generation;
+    static boolean reuseTileOrder=true;
+    static boolean batchOpaqueTiles=true;
     private static final Set<EntityGroundVehicle> drawn=Collections.newSetFromMap(new IdentityHashMap<>());
     private static int fallbackDraws,tileDraws;
     public static int tileDraws(){return tileDraws;}
@@ -43,11 +45,14 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         VehicleStructure structure;
         VehicleStructure tileStructure;
         int tileRevision;
-        final List<TileDraw> tiles=new ArrayList<>();
+        final List<TileDraw> tiles=new ArrayList<>(),opaque=new ArrayList<>(),glazing=new ArrayList<>();
+        final List<TileEntity> liquids=new ArrayList<>();
         final List<VehicleStructure.Cell> wheels=new ArrayList<>();
         final VehicleOpaqueTileCache opaqueTiles=new VehicleOpaqueTileCache();
+        final Map<BlockPos,VehicleOpaqueTileBatch> opaqueBatches=new LinkedHashMap<>();
+        final List<TileDraw> unbatchedOpaque=new ArrayList<>();
         final Map<BlockPos,Mesh[]> sections=new LinkedHashMap<>();
-        void delete(){for(Mesh[] pair:sections.values())for(Mesh mesh:pair)mesh.delete();sections.clear();opaqueTiles.delete();tiles.clear();}
+        void delete(){for(Mesh[] pair:sections.values())for(Mesh mesh:pair)mesh.delete();sections.clear();opaqueTiles.delete();for(VehicleOpaqueTileBatch batch:opaqueBatches.values())batch.delete();opaqueBatches.clear();unbatchedOpaque.clear();tiles.clear();}
     }
     private static final class TileDraw {
         final TileEntity tile;final TileEntitySpecialRenderer<TileEntity> renderer;
@@ -122,14 +127,22 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     }
     private static void tiles(EntityGroundVehicle craft,Regions regions){
         if(regions.tileStructure==craft.structure || regions.tileStructure!=null && regions.tileRevision==craft.view.tileRevision)return;
-        regions.opaqueTiles.delete();regions.tiles.clear();
+        for(VehicleOpaqueTileBatch batch:regions.opaqueBatches.values())batch.delete();regions.opaqueBatches.clear();regions.unbatchedOpaque.clear();
+        regions.opaqueTiles.delete();regions.tiles.clear();regions.opaque.clear();regions.glazing.clear();regions.liquids.clear();
         for(TileEntity tile:craft.view.tiles.values()){
+            com.vandorlabs.blocks.ContainedFluids fluid=com.vandorlabs.blocks.WaterloggedParts.data(tile);
+            if(fluid!=null&&fluid.any())regions.liquids.add(tile);
             TileEntitySpecialRenderer<TileEntity> renderer=TileEntityRendererDispatcher.instance.getRenderer(tile);
             if(renderer==null)continue;
             if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && !((com.vandorlabs.tiles.TileEntityCanopy)tile).draws())continue;
             if((Object)renderer instanceof TEAnimatedScreenSelector && (tile.getBlockType().getClass()==com.vandorlabs.blocks.BlockProgrammableBlock.class || tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableSlab))continue;
-            regions.tiles.add(new TileDraw(tile,renderer));
+            TileDraw draw=new TileDraw(tile,renderer);regions.tiles.add(draw);
+            (glassRamp(tile)?regions.glazing:regions.opaque).add(draw);
         }
+        regions.opaque.sort(Comparator.comparing(draw->draw.tile.getPos()));
+        Map<BlockPos,List<TileEntity>> batches=new LinkedHashMap<>();
+        for(TileDraw draw:regions.opaque)if(VehicleOpaqueTileCache.eligible(draw.tile,draw.renderer))batches.computeIfAbsent(section(draw.tile.getPos()),key->new ArrayList<>()).add(draw.tile);else regions.unbatchedOpaque.add(draw);
+        for(Map.Entry<BlockPos,List<TileEntity>> entry:batches.entrySet())regions.opaqueBatches.put(entry.getKey(),new VehicleOpaqueTileBatch(entry.getValue()));
         regions.tileStructure=craft.structure;
         regions.tileRevision=craft.view.tileRevision;
     }
@@ -236,18 +249,24 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         tiles(e,regions);
         // Glass never writes depth: draw opaque tile artwork first, then blend
         // glazing from the far side of the craft toward the local camera.
-        List<TileDraw> orderedTiles=new ArrayList<>(regions.tiles);
+        // Opaque artwork has a stable order until tile membership changes. Only
+        // transparent ramp faces need a camera-dependent sort each frame.
+        List<TileDraw> orderedTiles=reuseTileOrder?regions.glazing:new ArrayList<>(regions.tiles);
+        boolean batched=batchOpaqueTiles&&BlockSurfaceFormat.get().getNextOffset()==32;
+        List<TileDraw> opaque=batched?regions.unbatchedOpaque:regions.opaque;
+        int opaqueCount=reuseTileOrder?opaque.size():0;
         orderedTiles.sort((a,b)->{
             boolean glassA=glassRamp(a.tile),glassB=glassRamp(b.tile);
             if(glassA!=glassB)return glassA?1:-1;
-            if(glassA){int distance=Double.compare(b.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z),
-                    a.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z));if(distance!=0)return distance;}
-            // Equal-distance glazing still needs a stable blend order: integer
-            // alpha rounding must not depend on immutable snapshot insertion order.
-            return a.tile.getPos().compareTo(b.tile.getPos());
+            if(!glassA)return a.tile.getPos().compareTo(b.tile.getPos());
+            int distance=Double.compare(b.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z),a.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z));
+            return distance!=0?distance:a.tile.getPos().compareTo(b.tile.getPos());
         });
         List<TileDraw> canopyGlass=new ArrayList<>();
-        try {for(TileDraw draw:orderedTiles) {
+        try {
+        if(batched&&reuseTileOrder)for(VehicleOpaqueTileBatch batch:regions.opaqueBatches.values()){if(batch.bounds!=null&&Double.isFinite(batch.bounds.minX)&&Double.isFinite(batch.bounds.maxX)&&Double.isFinite(batch.bounds.minY)&&Double.isFinite(batch.bounds.maxY)&&Double.isFinite(batch.bounds.minZ)&&Double.isFinite(batch.bounds.maxZ)&&!tileFrustum.isBoundingBoxInFrustum(pose.world(batch.bounds,e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)))continue;GlStateManager.pushMatrix();try{batch.draw(regions.opaqueTiles,e.structure,partial);tileDraws+=batch.size();}finally{GlStateManager.popMatrix();}}
+        for(int tileIndex=0;tileIndex<opaqueCount+orderedTiles.size();tileIndex++) {
+            TileDraw draw=tileIndex<opaqueCount?opaque.get(tileIndex):orderedTiles.get(tileIndex-opaqueCount);
             TileEntity tile=draw.tile;
             try {
                 net.minecraft.util.math.AxisAlignedBB box=tile.getRenderBoundingBox();
@@ -275,8 +294,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
                 catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(draw.tile.getBlockType(),"canopy glass renderer",error);}
                 finally{GlStateManager.popMatrix();}
             }
-            List<TileEntity> liquids=new ArrayList<>();
-            for(TileEntity tile:e.view.tiles.values()){com.vandorlabs.blocks.ContainedFluids fluid=com.vandorlabs.blocks.WaterloggedParts.data(tile);if(fluid!=null&&fluid.any())liquids.add(tile);}
+            List<TileEntity> liquids=regions.liquids;
             liquids.sort((a,b)->Double.compare(b.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z),a.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z)));
             GlStateManager.depthMask(false);
             try{for(TileEntity tile:liquids){BlockPos p=tile.getPos();WaterloggedRenderer.render(tile,p.getX(),p.getY(),p.getZ());}}

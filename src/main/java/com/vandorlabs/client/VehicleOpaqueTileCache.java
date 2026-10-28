@@ -45,6 +45,7 @@ final class VehicleOpaqueTileCache {
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
         GL11.glCallList(entry.list);
     }
+    void call(TileEntity tile){Entry entry=entries.get(tile);if(entry==null)throw new IllegalStateException("Unprepared opaque tile batch");OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,entry.light&65535,entry.light>>>16);GL11.glCallList(entry.list);hits++;}
     void delete(){for(Entry entry:entries.values())GLAllocation.deleteDisplayLists(entry.list);entries.clear();}
     int size(){return entries.size();}
 }
