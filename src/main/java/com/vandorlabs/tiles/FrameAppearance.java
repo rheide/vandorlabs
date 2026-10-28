@@ -24,6 +24,7 @@ public final class FrameAppearance {
     public void migrateLegacyFrame(){int choice=ScreenHousingTextures.screenIndex("frames/frames-screen-full/frame_bolted_1254");if(choice>0)front=choice;}
     public String rail(String fallback){if(front<0)return fallback;com.google.gson.JsonObject e=ScreenHousingTextures.entry(front);return e!=null&&e.has("frameRail")?"vandorlabs:blocks/"+e.get("frameRail").getAsString():front(fallback);}
     public String front(String fallback){return front<0?fallback:ScreenHousingTextures.texture(front);}
-    public String interior(String fallback){return interior<0?fallback:ScreenHousingTextures.texture(interior);}
+    public static String interiorTexture(int choice,String fallback){if(choice<0)return fallback;com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return e!=null&&e.has("frameRail")?"vandorlabs:blocks/"+e.get("frameRail").getAsString():ScreenHousingTextures.texture(choice);}
+    public String interior(String fallback){return interiorTexture(interior,fallback);}
     public int light(){if(front<0)return 0;com.google.gson.JsonObject e=ScreenHousingTextures.entry(front);return e!=null&&e.has("frameLight")?Math.max(0,Math.min(5,e.get("frameLight").getAsInt())):0;}
 }

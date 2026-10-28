@@ -7,7 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 final class FrameAppearanceRuntimeChecks {
     private static boolean done;
     static void run(){if(done)return;done=true;
-        int frames=0,lit=0;for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i))){frames++;require(!HousingTextureList.generalTexture(i),"frame leaked into ordinary material picker");FrameAppearance a=new FrameAppearance();a.front=i;if(a.light()>0)lit++;require(a.rail("").length()>0,"missing rail texture");}
+        int frames=0,lit=0;for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i))){frames++;require(!HousingTextureList.generalTexture(i),"frame leaked into ordinary material picker");FrameAppearance a=new FrameAppearance();a.front=i;if(a.light()>0)lit++;require(a.rail("").length()>0,"missing rail texture");require(!net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(a.rail("")).getIconName().contains("missingno"),"unstitched packaged frame rail");}
         require(frames==58&&lit>0,"frame catalog coverage");
         TileEntityProgrammableGlass glass=new TileEntityProgrammableGlass();glass.readFromNBT(new NBTTagCompound());require(glass.frameAppearance.front==-1&&glass.frameAppearance.interior==-1,"old glass changes appearance");
         int bolted=ScreenHousingTextures.screenIndex("frames/frames-screen-full/frame_bolted_1254");require(bolted>0,"missing legacy bolted frame");
