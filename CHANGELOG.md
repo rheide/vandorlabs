@@ -9,6 +9,7 @@
 - Add optional horizontal Large Extender pushing without pulling, connected Surface-layer payloads, 15-degree rotating-arm angles and guarded endpoint clearance.
 - Add proportional ramp deployment and door placement on stationary ramp cells. Join hexagonal tanks into complete 2×2 and 3×3 sections with native per-cell storage.
 - Add guarded one-level Duplifier settings undo, including connected applications.
+- Allow matched wheel supports to lower or raise the chassis in Taxi while keeping their feet anchored. Check complete native parking footprints and retain modular arm sections through parking, recapture, rotation and recovery. Refuse in-flight parking and unsafe dismantling of retained material.
 - Treat water and Programmable Surfaces as vehicle discovery boundaries, preserve carried sign text and local lamp illumination, and support optional OptiFine terrain lighting. Reuse static opaque vehicle rendering work.
 
 ## 2.6

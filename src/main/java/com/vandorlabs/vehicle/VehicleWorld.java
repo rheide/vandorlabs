@@ -74,18 +74,18 @@ public final class VehicleWorld extends World {
         if(cell.state.getBlock() instanceof net.minecraft.block.BlockSign&&"minecraft:sign".equals(saved.getString("id"))){
             final net.minecraft.util.text.ITextComponent[] original=new net.minecraft.util.text.ITextComponent[4];
             net.minecraft.tileentity.TileEntitySign sign=new net.minecraft.tileentity.TileEntitySign(){
-                private final net.minecraft.nbt.NBTTagCompound custom=saved.getCompoundTag("ForgeData").copy();
-                @Override public net.minecraft.nbt.NBTTagCompound getTileData(){return custom;}
+                private net.minecraft.nbt.NBTTagCompound custom;
+                @Override public net.minecraft.nbt.NBTTagCompound getTileData(){if(custom==null)custom=new net.minecraft.nbt.NBTTagCompound();return custom;}
                 @Override public net.minecraft.nbt.NBTTagCompound writeToNBT(net.minecraft.nbt.NBTTagCompound output){
                     output.setString("id",saved.getString("id"));output.setInteger("x",getPos().getX());output.setInteger("y",getPos().getY());output.setInteger("z",getPos().getZ());
                     for(int i=0;i<4;i++)output.setString("Text"+(i+1),java.util.Objects.equals(signText[i],original[i])?saved.getString("Text"+(i+1)):net.minecraft.util.text.ITextComponent.Serializer.componentToJson(signText[i]));
                     getStats().writeStatsToNBT(output);
-                    if(saved.hasKey("ForgeData",10)||!custom.hasNoTags())output.setTag("ForgeData",custom.copy());
+                    if(saved.hasKey("ForgeData",10)||custom!=null&&!custom.hasNoTags())output.setTag("ForgeData",getTileData().copy());
                     if(saved.hasKey("ForgeCaps",10))output.setTag("ForgeCaps",saved.getTag("ForgeCaps").copy());
                     return output;
                 }
             };
-            sign.setWorld(this);sign.setPos(cell.pos);sign.getStats().readStatsFromNBT(saved);
+            sign.setWorld(this);sign.setPos(cell.pos);sign.getStats().readStatsFromNBT(saved);if(saved.hasKey("ForgeData",10))sign.getTileData().merge(saved.getCompoundTag("ForgeData"));
             for(int i=0;i<4;i++){
                 String json=saved.getString("Text"+(i+1));
                 try{sign.signText[i]=net.minecraft.util.text.ITextComponent.Serializer.jsonToComponent(json);}
