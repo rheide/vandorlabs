@@ -99,7 +99,7 @@ public final class VehicleCollisionCache {
                     if(canopy.draws()&&canopy.opening()){poses.add(Float.floatToIntBits(canopy.progress));owner=canopy.getPos();movingOwners++;}
                 }
                 if(tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).isRoot()){normalized.removeTag("Progress");normalized.removeTag("LastSignal");poses.add(Float.floatToIntBits(((TileEntityLandingGear)tile).progress));entry.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),cell.state.withProperty(com.vandorlabs.blocks.BlockTelescopicLandingGear.EXTENDED,true)));}
-                if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).isController()){for(String key:new String[]{"GearProgress","GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal","GearRevision"})normalized.removeTag(key);poses.add(Float.floatToIntBits((float)((com.vandorlabs.gear.GearTileEntity)tile).progress()));}
+                if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).isController()){for(String key:new String[]{"GearProgress","GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal","GearRevision"})normalized.removeTag(key);if(normalized.hasKey(com.vandorlabs.gear.GearTaxiState.KEY,10)){NBTTagCompound motion=normalized.getCompoundTag(com.vandorlabs.gear.GearTaxiState.KEY);motion.removeTag("Level");motion.removeTag("Expand");motion.removeTag("Settle");}poses.add(Float.floatToIntBits((float)((com.vandorlabs.gear.GearTileEntity)tile).progress()));}
                 entry.setTag("Tile",normalized);
             }
             blocks.appendTag(entry);

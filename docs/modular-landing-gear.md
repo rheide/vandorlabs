@@ -49,6 +49,17 @@ Taxi over ice. Use the configured channels to operate captured gear,
 and deploy it before landing and parking. Member links, foot orientation and
 fold direction rotate together when the craft is parked at a cardinal heading.
 
+### Change chassis height in Taxi mode
+
+A stopped, block-aligned craft can lower or raise its chassis using at least three complete downward Extender-and-Wheel assemblies. The wheels stay fixed against the same ground while the chassis moves. Regular and Large assemblies are supported. Rotating arms, sideways mounts, mixed legacy/modular supports and incompatible endpoints retain their existing motion restrictions.
+
+1. Build complete wheel arms with at least two sections and enter Taxi mode with them fully deployed.
+2. Stop and align to a cardinal heading on the block grid. Leave room for both the final native parking footprint and the whole movement.
+3. Retract one matching wheel arm. The eligible support group changes height together, shortening by a common whole-block amount while retaining at least one native arm section. Three-section arms can lower to one section, moving the chassis down two blocks.
+4. Request deployment to raise the chassis and restore the retained sections. An obstruction refuses the change without giving away the original material.
+
+The shortened state survives saving, cardinal rotations and parking as blocks. Recapturing that parked craft restores the ability to raise it in Taxi mode. Unused native arm sections remain stored with their owning controllers; they are never dropped or copied during the height change. While sections are retained, the native assembly is protected from mining, explosions and entity destruction. Raise it in Taxi mode before dismantling it.
+
 The native part models, connection masks and pixel textures are adapted from the
 supplied MCTrek landing-gear kit. Inventory models have separate display
 transforms to leave visible padding around the rendered icon.

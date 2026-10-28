@@ -54,7 +54,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> storedSectionCells(){return storedSections==null?java.util.Collections.emptyList():storedSections.cells;}
     private java.util.UUID operator;
     private boolean recoveryDropped;
-    public boolean hasRetainedPayload(){return hasStoredSections()||failedPayload!=null||payload!=null&&!payload.materialized();}
+    public boolean hasRetainedPayload(){return taxiState!=null||hasStoredSections()||failedPayload!=null||payload!=null&&!payload.materialized();}
     public boolean recoveryDropped(){return recoveryDropped;}
     public void recoverOnBreak(net.minecraft.block.Block block){
         if(world==null||world.isRemote||!hasRetainedPayload()||recoveryDropped)return;
@@ -111,12 +111,26 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     }
     private void restorePayloadEndpoint(){if(progress!=(deployedTarget?1:0))return;try{if(payload!=null&&(progress==0||progress==1)&&!payload.materialized()&&payload.restore(this,progress))sync();}catch(RuntimeException | LinkageError failure){motionBlocked=true;lastError="Attachment snapshot retained: "+failure.getMessage();if(payload!=null&&payload.hasOwnershipJournal()){operational=false;sync();}else markDirty();}}
     private EnumFacing mountDirection=EnumFacing.DOWN;
+    private NBTTagCompound taxiState;
+    private boolean taxiClearPending;
+    private void validateTaxiState(NBTTagCompound state){GearTaxiState.validate(state);int expected=state.getInteger("Height")-(state.getInteger("Phase")==1?state.getInteger("Amount"):0);if(assembly==null||assembly.columnHeight()!=expected||assembly.kind()!=GearTopology.FootKind.WHEEL||mode!=GearMotion.Mode.EXTEND||mountDirection!=EnumFacing.DOWN||columns.size()!=1)throw new IllegalArgumentException("Taxi arm topology does not match its retained sections");}
+    public boolean validTaxiState(){if(taxiState==null||failedPayload!=null||failedStoredSections!=null||storedSections!=null||payload!=null||!isOperational())return false;try{validateTaxiState(taxiState);return true;}catch(RuntimeException invalid){return false;}}
+    public boolean hasTaxiSections(){if(taxiState==null||taxiState.getInteger("Phase")!=1)return false;try{GearTaxiState.validate(taxiState);return true;}catch(RuntimeException invalid){return false;}}
+    public int taxiHeight(){return taxiState==null?0:taxiState.getInteger("Height");}
+    public double taxiLevel(){return taxiState==null?0:taxiState.getDouble("Level");}
+    public boolean consumeTaxiClear(){boolean clear=taxiClearPending;taxiClearPending=false;return clear;}
+    public boolean hasTaxiData(){return taxiState!=null;}
+    public int taxiPhase(){return taxiState==null?-1:taxiState.getInteger("Phase");}
+    public int taxiAmount(){return taxiState==null?0:taxiState.getInteger("Amount");}
+    public NBTTagCompound taxiState(){return taxiState==null?null:taxiState.copy();}
+    public void clearTaxiError(){motionBlocked=false;lastError="";markDirty();}
+    public void taxiState(NBTTagCompound next){if(next!=null)validateTaxiState(next);if(next==null&&taxiState!=null)taxiClearPending=true;taxiState=next==null?null:next.copy();markDirty();}
     private boolean pushBlocks;
     public boolean pushBlocks(){return pushBlocks;}
     public boolean canPushBlocks(){return armSize()==2&&mountDirection.getAxis().isHorizontal()&&mode==GearMotion.Mode.EXTEND&&!isLandingAssembly();}
     private boolean rotatePayload,trackExtensionStroke,trackRetractingStroke,armRetractingStroke,formingActiveTrack;
     public boolean isExtendedTrackStroke(){return trackExtensionStroke&&assembly!=null&&assembly.kind()==GearTopology.FootKind.TRACK;}
-    public boolean landingDeployed(){return fullyDeployed()||isExtendedTrackStroke()&&!deployedTarget&&progress==0;}
+    public boolean landingDeployed(){if(taxiState!=null)return taxiState.getInteger("Phase")==1&&progress==1&&validTaxiState();return fullyDeployed()||isExtendedTrackStroke()&&!deployedTarget&&progress==0;}
     public void showError(String message){lastError=message==null?"Arm operation unavailable":message;sync();}
     public boolean formTrackAtActivePose(){if(assembly==null||assembly.kind()!=GearTopology.FootKind.NONE&&!isExtendedTrackStroke()||payload!=null||failedPayload!=null)return false;formingActiveTrack=true;boolean previousStroke=trackExtensionStroke,previousRetracting=trackRetractingStroke;trackRetractingStroke=activeExtension()<0;trackExtensionStroke=true;try{boolean formed=rebuild();if(!formed){trackExtensionStroke=previousStroke;trackRetractingStroke=previousRetracting;}return formed;}finally{formingActiveTrack=false;}}
     private double activeAngle=90,activeExtension=1;
@@ -349,6 +363,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             }
         }
 
+        // A shortened Taxi assembly retains its unused sections until captured
+        // again. Native block mode must not consume that retained ownership.
+        if(taxiState!=null){input();return;}
         if (isOperational()) {
             if(joinEnabled&&columns.size()>1){for(BlockPos member:members)if(!GearAssembly.loaded(world,member)){operational=false;retryUnavailable=true;lastError="Load every joined arm to resume";sync();return;}}
             restorePayloadEndpoint();
@@ -625,9 +642,10 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(operator!=null)tag.setUniqueId("ArmOperator",operator);
         if(failedStoredSections!=null)tag.setTag("ArmStoredSections",failedStoredSections.copy());else if(storedSections!=null)tag.setTag("ArmStoredSections",storedSections.write());
         if(failedPayload!=null)tag.setTag("ArmPayload",failedPayload.copy());else if(payload!=null)tag.setTag("ArmPayload",payload.write());
+        if(taxiState!=null)tag.setTag(GearTaxiState.KEY,taxiState.copy());
         tag.setInteger("GearRevision",motionRevision);
         if(joinedSettingsPresent||joinEnabled||carryLoad||joinRange!=32||loadHeight!=1){tag.setBoolean("ArmJoinEnabled",joinEnabled);tag.setInteger("ArmJoinRange",joinRange);tag.setBoolean("ArmCarryLoad",carryLoad);tag.setInteger("ArmLoadHeight",loadHeight);}
-        tag.setBoolean("TrackExtensionStroke",trackExtensionStroke);if(trackRetractingStroke)tag.setBoolean("TrackRetractingStroke",true);if(armRetractingStroke)tag.setBoolean("ArmRetractingStroke",true);tag.setString("ArmMountDirection",mountDirection.name());tag.setBoolean("ArmPushBlocks",pushBlocks);tag.setBoolean("ArmRotatePayload",rotatePayload);tag.setDouble("ArmActiveAngle",activeAngle);tag.setDouble("ArmActiveExtension",activeExtension);
+        tag.setBoolean("TrackExtensionStroke",trackExtensionStroke);if(trackRetractingStroke)tag.setBoolean("TrackRetractingStroke",true);if(armRetractingStroke)tag.setBoolean("ArmRetractingStroke",true);tag.setString("ArmMountDirection",mountDirection.name());if(pushBlocks)tag.setBoolean("ArmPushBlocks",true);else tag.removeTag("ArmPushBlocks");tag.setBoolean("ArmRotatePayload",rotatePayload);tag.setDouble("ArmActiveAngle",activeAngle);tag.setDouble("ArmActiveExtension",activeExtension);
         if (owner != null) tag.setLong("GearOwnerOffset", owner.subtract(pos).toLong());
         tag.setInteger("GearTrigger",triggerMode);tag.setString("GearChannels",channels.toString());
         NBTTagList columnList=new NBTTagList();
@@ -700,6 +718,8 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 }
             }
         }
+        taxiClearPending=false;taxiState=tag.hasKey(GearTaxiState.KEY,10)?tag.getCompoundTag(GearTaxiState.KEY).copy():null;
+        if(taxiState!=null)try{validateTaxiState(taxiState);}catch(RuntimeException invalid){operational=false;lastError="Taxi arm recovery data retained: "+invalid.getMessage();}
         if(failedStoredSections!=null||failedPayload!=null||payload!=null&&payload.hasOwnershipJournal())operational=false;
         rebuildMemberCache();GearGeometry.register(this);
     }

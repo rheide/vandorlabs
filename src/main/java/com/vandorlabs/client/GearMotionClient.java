@@ -23,7 +23,11 @@ public final class GearMotionClient {
             Map<net.minecraft.util.math.BlockPos,Double> desired=new LinkedHashMap<>();
             for(MessageGearMotion.Pose pose:packet.poses){if(!view.isBlockLoaded(pose.pos))continue;TileEntity raw=view.getTileEntity(pose.pos);
                 if(raw instanceof GearTileEntity){GearTileEntity gear=(GearTileEntity)raw;
+                    if(pose.taxiPhase>=0&&(gear.assembly()==null||gear.assembly().columnHeight()!=pose.taxiHeight))continue;
                     if(gear.acceptMotion(pose.revision,packet.tick,pose.target,pose.blocked)){
+                        if(pose.taxiPhase==-1)gear.taxiState(null);
+                        else if(pose.taxiPhase>=0){net.minecraft.nbt.NBTTagCompound state=new net.minecraft.nbt.NBTTagCompound();state.setInteger("Schema",1);state.setInteger("Phase",pose.taxiPhase);state.setInteger("Height",pose.taxiHeight);state.setInteger("Amount",pose.taxiAmount);state.setDouble("Level",pose.taxiLevel);state.setBoolean("Expand",pose.target);try{gear.taxiState(state);}catch(IllegalArgumentException invalid){continue;}}
+
                         if(craft==null)gear.correctProgress(pose.progress);else desired.put(pose.pos,pose.progress);
                     }
                 }

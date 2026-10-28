@@ -28,7 +28,7 @@ public final class MovingBlockSupport {
                 &&cell.state.getBlock().getClass().getName().equals("net.malisis.doors.block.Door"))return true;
         if(domain.equals("minecraft"))return cell.state.getBlock().getClass().getName().startsWith("net.minecraft.block.");
         if(domain.equals("vandorlabs")) {
-            if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity gear=(com.vandorlabs.gear.GearTileEntity)tile;if(gear.hasRetainedPayload()&&gear.payload()==null||gear.payload()!=null&&gear.payload().hasOwnershipJournal())return false;}
+            if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity gear=(com.vandorlabs.gear.GearTileEntity)tile;if(gear.hasRetainedPayload()&&gear.payload()==null&&!gear.validTaxiState()||gear.payload()!=null&&gear.payload().hasOwnershipJournal())return false;}
             if(tile instanceof com.vandorlabs.surface.SurfaceController&&((com.vandorlabs.surface.SurfaceController)tile).surfaceLocked())return false;
             if(tile instanceof com.vandorlabs.copier.CopyControllerTile){com.vandorlabs.copier.CopyControllerTile controller=(com.vandorlabs.copier.CopyControllerTile)tile;if(controller.input!=null||controller.output!=null||controller.busy())return false;}
             if(tile instanceof TileEntityTurntableController){TileEntityTurntableController controller=(TileEntityTurntableController)tile;return controller.captureId==null&&controller.layout==null&&!com.vandorlabs.turntable.TurntableTransactions.busy(controller);}

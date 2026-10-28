@@ -36,6 +36,8 @@ public final class ArmStoredSections {
             cells.add(new VehicleStructure.Cell(at.subtract(arm.getPos()),world.getBlockState(at),VehicleTileData.translated(world.getTileEntity(at).writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(arm.getPos()))));}
         return cells.isEmpty()?null:new ArmStoredSections(cells);
     }
+    public static NBTTagCompound retain(java.util.List<VehicleStructure.Cell> relative){return read(new ArmStoredSections(relative).write()).write();}
+    public static java.util.List<VehicleStructure.Cell> retained(NBTTagCompound tag){return read(tag).cells;}
     static ArmStoredSections read(NBTTagCompound tag){
         VehicleStructure normalized=VehicleStructure.readDisplay(tag.getCompoundTag("Blocks"));BlockPos offset=BlockPos.fromLong(tag.getLong("Offset"));List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:normalized.cells)cells.add(new VehicleStructure.Cell(offset.add(cell.pos),cell.state,VehicleTileData.translated(cell.tileData(),offset)));
         if(cells.isEmpty()||cells.size()>512)throw new IllegalArgumentException("Invalid stored arm sections");ArmStoredSections stored=new ArmStoredSections(cells);if(stored.cells.isEmpty()||stored.cells.size()>512)throw new IllegalArgumentException("Invalid stored arm sections");

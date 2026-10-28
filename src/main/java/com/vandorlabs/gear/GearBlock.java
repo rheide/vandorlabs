@@ -126,6 +126,18 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
         GearTileEntity.requestNearbyRebuild(world, pos);
     }
 
+    private static boolean taxiRetained(IBlockAccess world,BlockPos pos){
+        TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof GearTileEntity))return false;GearTileEntity member=(GearTileEntity)raw;
+        if(member.hasTaxiData())return true;BlockPos owner=member.owner();if(owner==null||world instanceof World&&!((World)world).isBlockLoaded(owner))return false;
+        TileEntity root=world.getTileEntity(owner);return root instanceof GearTileEntity&&((GearTileEntity)root).hasTaxiData();
+    }
+    private static void taxiMessage(World world,EntityPlayer player){if(!world.isRemote)player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Raise the retained arm sections in Taxi mode before dismantling this assembly"),true);}
+    @Override public void onBlockClicked(World world,BlockPos pos,EntityPlayer player){if(taxiRetained(world,pos))taxiMessage(world,player);else super.onBlockClicked(world,pos,player);}
+    @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,EntityPlayer player,boolean harvest){if(taxiRetained(world,pos)){taxiMessage(world,player);return false;}return super.removedByPlayer(state,world,pos,player,harvest);}
+    @Override public float getPlayerRelativeBlockHardness(IBlockState state,EntityPlayer player,World world,BlockPos pos){return taxiRetained(world,pos)?0:super.getPlayerRelativeBlockHardness(state,player,world,pos);}
+    @Override public boolean canEntityDestroy(IBlockState state,IBlockAccess world,BlockPos pos,Entity entity){return !taxiRetained(world,pos)&&super.canEntityDestroy(state,world,pos,entity);}
+    @Override public float getExplosionResistance(World world,BlockPos pos,Entity entity,net.minecraft.world.Explosion explosion){return taxiRetained(world,pos)?6000000:super.getExplosionResistance(world,pos,entity,explosion);}
+
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state) {
         TileEntity tile = world.getTileEntity(pos);

@@ -186,10 +186,16 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private NBTTagCompound unavailable;
     private boolean rampGeometryUpgradePending;
     public EntityGroundVehicle(World world){super(world);setSize(1,1);isImmuneToFire=true;preventEntitySpawning=true;}
+    /** Preserve the last complete owner if both a replacement and its rollback fail. */
+    public void retainUnavailableSnapshot(VehicleStructure original){
+        NBTTagCompound retained=original.write().copy();signals.close();structure=null;view=null;collision=null;encoded=null;
+        rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=retained;motionX=motionY=motionZ=0;
+    }
     public void install(VehicleStructure snapshot) {
         install(snapshot,null);
     }
     void install(VehicleStructure snapshot,VehicleCollision prepared) {
+        for(VehicleStructure.Cell cell:snapshot.cells){NBTTagCompound data=cell.tileData();if(data!=null&&data.hasKey(com.vandorlabs.gear.GearTaxiState.KEY,10))com.vandorlabs.gear.GearTaxiState.validate(data.getCompoundTag(com.vandorlabs.gear.GearTaxiState.KEY));}
         VehicleAnimationDiagnostics.selectInstall(this);long installSample=VehicleAnimationDiagnostics.start(this);
         VehicleCanopies.forget(this);
         snapshot=VehicleControlSettings.migrate(snapshot);

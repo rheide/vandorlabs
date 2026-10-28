@@ -25,6 +25,7 @@ public final class GearData {
         if(tag.hasKey("ArmMountDirection",8))tag.setString("ArmMountDirection",nextMount.name());
         try{EnumFacing facing=EnumFacing.valueOf(tag.getString("GearDirection"));for(int i=0;i<localTurns;i++)facing=facing.rotateY();tag.setString("GearDirection",facing.name());}catch(IllegalArgumentException ignored){}
         if(tag.hasKey("GearFootFacing",3)){EnumFacing foot=EnumFacing.getHorizontal(tag.getInteger("GearFootFacing"));for(int i=0;i<localTurns;i++)foot=foot.rotateY();tag.setInteger("GearFootFacing",foot.getHorizontalIndex());}
+        if(tag.hasKey(GearTaxiState.KEY,10))tag.setTag(GearTaxiState.KEY,GearTaxiState.rotate(tag.getCompoundTag(GearTaxiState.KEY),turns,parent));
         if(tag.hasKey("ArmStoredSections",10))tag.setTag("ArmStoredSections",ArmStoredSections.rotate(tag.getCompoundTag("ArmStoredSections"),turns,parent));
         if(tag.hasKey("ArmPayload",10)){
             if(parent==null)throw new IllegalArgumentException("Rotating an arm payload requires its read-only world view");
