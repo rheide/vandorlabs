@@ -26,7 +26,7 @@ final class CompanyScreenLayerRuntimeChecks {
             if(id.startsWith("frame_company_")){borders++;require(ScreenHousingTextures.menuCategory(choice).startsWith("Frame/Company/"),"frame company subgroup");}
             if(!id.startsWith("screen_company_"))continue;displays++;
             String source=entry.get("source").getAsString(),root=source.substring(0,source.length()-7);boolean half=source.startsWith("console_inputs/");
-            Object decoded=decode.invoke(null,mc.getResourceManager(),"textures/blocks/"+root);Field imageField=decoded.getClass().getDeclaredField("strip"),countField=decoded.getClass().getDeclaredField("frameCount");imageField.setAccessible(true);countField.setAccessible(true);
+            Object decoded=decode.invoke(null,mc.getResourceManager(),"textures/blocks/"+root);Field imageField=decoded.getClass().getDeclaredField("image"),countField=decoded.getClass().getDeclaredField("frameCount");imageField.setAccessible(true);countField.setAccessible(true);
             BufferedImage strip=(BufferedImage)imageField.get(decoded);int height=half?64:128;require(countField.getInt(decoded)==6&&strip.getWidth()==128&&strip.getHeight()==height*6,"six native-sized decoded frames "+id);
             try(InputStream resource=mc.getResourceManager().getResource(new ResourceLocation("vandorlabs","textures/blocks/"+root+"_animated.png.mcmeta")).getInputStream()){
                 JsonObject animation=new JsonParser().parse(new InputStreamReader(resource,"UTF-8")).getAsJsonObject().getAsJsonObject("animation");require(animation.get("frametime").getAsInt()==4&&animation.getAsJsonArray("frames").size()==6,"four-tick animation timing "+id);
