@@ -42,7 +42,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         if(redstonePage){buttonList.add(new CockpitButton(90,x,guiTop+98,Math.min(240,w),20,"Transmitter..."));
         }else if(pilotPage()){
             buttonList.add(new CockpitButton(10,x,guiTop+74,w/2-2,20,"Taxi on boarding: "+(tile.isTaxiMode()?"On":"Off")));
-            buttonList.add(new CockpitButton(11,x+w/2+2,guiTop+74,w/2-2,20,"Trigger: "+new String[]{"Disabled","ON","OFF"}[tile.getRedstoneMode()]));
+            buttonList.add(new RedstoneActivationButton(11,x+w/2+2,guiTop+74,w/2-2,tile.getRedstoneMode()));
             text(0,x,guiTop+112,w/2-3,tile.getRedstoneChannels().toString());
             for(int i=0;i<3;i++)text(i+1,x+((i+1)%2)*(w/2+3),guiTop+112+((i+1)/2)*40,w/2-3,tile.modeChannels(i).toString());
             for(int i=0;i<3;i++)buttonList.add(new CockpitButton(20+i,x+i*w/3,guiTop+ySize-50,w/3-2,20,new String[]{"Park mode","Taxi mode","Hover mode"}[i]));
