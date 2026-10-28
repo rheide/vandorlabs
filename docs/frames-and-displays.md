@@ -6,8 +6,8 @@ The same 58 finishes are available across these pages, including company
 borders, plain and bolted screen borders, metallic window borders and interior
 materials.
 
-**Front** selects the visible border; **Interior** selects the material on the
-inner and side faces. **Original artwork** restores the block's original
+**Front** selects the visible border. Doors, glass, walls and portholes also
+provide **Interior** for their inner and side faces. **Original artwork** restores the block's original
 material. Existing glass and door finishes retain their original defaults.
 Previously framed screen and control artwork migrates to a separate bolted
 frame, so the display artwork can be selected independently.
@@ -21,11 +21,12 @@ The screen, Flatscreen and diagonal screen frame page also provides
 **Display: Tile / Fit**. Fit spreads one display over a complete square group,
 including 2×2 and 3×3 arrangements. Rectangular groups such as 2×3 or 3×1
 retain individual display images. The frame's Fit layout is independent and
-can surround a rectangular group. Diagonal display artwork reaches both side
+can surround a rectangular group, including neighboring displays with different artwork or playback settings. Display Fit can join matching displays with different frame finishes. Diagonal display artwork reaches both side
 edges, allowing adjacent displays to meet without a housing-colored stripe.
 
 Enable **Split display** to show two half-height images on a full-height
 screen or Flatscreen. Select them independently using **Top** and **Bottom**.
+With Display Fit enabled on a square group, Top spans the upper half of the whole group and Bottom spans the lower half. Different split selections form separate display groups.
 The outer frame continues to surround the complete display. Turning splitting
 off retains the selections for later reuse.
 

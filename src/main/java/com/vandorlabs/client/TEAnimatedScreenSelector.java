@@ -592,7 +592,7 @@ public class TEAnimatedScreenSelector
                 ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
         ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
-        if(te.frameAppearance.displayFit){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);if(group.columns==group.rows){float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.columns-group.column)*du;uMin+=(group.columns-group.column-1)*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
+        if(te.frameAppearance.displayFit&&!te.frameAppearance.split){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);if(group.columns==group.rows){float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.columns-group.column)*du;uMin+=(group.columns-group.column-1)*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
         if(te.frameAppearance.split){drawSplitScreen(te,quad,buf);}else drawScreenQuad(buf,quad,uMin,uMax,vTop,vBottom,false);
         if (surface==ScreenSurface.Kind.DIAGONAL) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
@@ -724,12 +724,20 @@ public class TEAnimatedScreenSelector
         RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;
     }
     private static void drawSplitScreen(TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,BufferBuilder buffer){
-        bindAtlas();
+        bindAtlas();GlassSurfaceGroups.Layout layout=tile.frameAppearance.displayFit?ScreenSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
+        if(layout.columns!=layout.rows)layout=new GlassSurfaceGroups.Layout(0,0,1,1);
+        int n=layout.rows;boolean middle=(n&1)!=0&&layout.row==n/2,input=tile.getBlockType() instanceof BlockProgrammableInput;
         for(int half=0;half<2;half++){
+            boolean upper=layout.row>=n/2;if(!middle&&((half==0)!=upper))continue;
+            double localTop=middle&&half==1?.5:0,localBottom=middle&&half==0?.5:1;
+            ScreenSurface.Quad part=middle?ScreenSurface.half(quad,half==0):quad;
             int choice=half==0?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom;
             if(choice<0)choice=tile.getSurfaceTexture(0)>=0?tile.getSurfaceTexture(0):ScreenHousingTextures.screenIndex(tile.getSelectedScreen()+"_static");
             TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));
-            double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(choice))engineeringBody(uv);boolean input=tile.getBlockType() instanceof BlockProgrammableInput;drawScreenQuad(buffer,ScreenSurface.half(quad,half==0),input?uv[3]:uv[2],input?uv[2]:uv[3],uv[0],uv[1],false);
+            double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(choice))engineeringBody(uv);else if(unpairedInputChoice(choice))insetBody(uv,1D/32);
+            double du=uv[3]-uv[2],dv=uv[1]-uv[0],left=input?(double)layout.column/n:(double)(n-layout.column)/n,right=input?(double)(layout.column+1)/n:(double)(n-layout.column-1)/n;
+            double top=(layout.rows-layout.row-1+localTop)*2/n-half,bottom=(layout.rows-layout.row-1+localBottom)*2/n-half;
+            drawScreenQuad(buffer,part,uv[2]+right*du,uv[2]+left*du,uv[0]+top*dv,uv[0]+bottom*dv,false);
         }
     }
 
@@ -749,11 +757,15 @@ public class TEAnimatedScreenSelector
         }
     }
 
+    private static boolean unpairedInput(String id){return id.equals("analysis_framed_gas_giant")||id.equals("analysis_framed_ice_planet")||id.equals("analysis_framed_surface_map")||id.equals("analysis_framed_terrestrial");}
+    private static boolean unpairedInputChoice(int choice){com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);if(e==null)return false;String source=e.get("source").getAsString();return source.startsWith("console_inputs/")&&source.endsWith("_static")&&unpairedInput(source.substring(15,source.length()-7));}
+    private static double[] inputBody(String id,double top,double bottom){if(!unpairedInput(id))return new double[]{top,bottom};double[] uv={top,bottom,0,1};insetBody(uv,1D/32);return uv;}
+    private static void insetBody(double[] uv,double fraction){double height=(uv[1]-uv[0])*fraction,width=(uv[3]-uv[2])*fraction;uv[0]+=height;uv[1]-=height;uv[2]+=width;uv[3]-=width;}
     private static boolean engineeringChoice(int choice){com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);return entry!=null&&"engineering_screen_static".equals(entry.get("source").getAsString());}
-    private static void engineeringBody(double[] uv){double height=(uv[1]-uv[0])/16,width=(uv[3]-uv[2])/16;uv[0]+=height;uv[1]-=height;uv[2]+=width;uv[3]-=width;}
+    private static void engineeringBody(double[] uv){insetBody(uv,1D/16);}
     private static double[] bindSurface(TileEntityAnimatedScreenSelector te,int slot) {
         bindAtlas();TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(te.getSurfaceTexture(slot)));
-        setWorldLight(te);double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(te.getSurfaceTexture(slot)))engineeringBody(uv);return uv;
+        setWorldLight(te);double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(te.getSurfaceTexture(slot)))engineeringBody(uv);else if(unpairedInputChoice(te.getSurfaceTexture(slot)))insetBody(uv,1D/32);return uv;
     }
     static double[] bindCockpit(com.vandorlabs.tiles.TileEntityCockpit tile,com.vandorlabs.tiles.TileEntityCockpit.Display screen){
         return bindDisplay(tile,screen.texture,screen.active,screen.animated,screen.speed);
@@ -788,12 +800,12 @@ public class TEAnimatedScreenSelector
             vTop=AnimationFrames.top(frame,data.frameCount);
             vBottom=AnimationFrames.bottom(frame,data.frameCount);
             Minecraft.getMinecraft().getTextureManager().bindTexture(data.texture);
-            return new double[] {vTop, vBottom};
+            return inputBody(id,vTop,vBottom);
         } else {
             suffix = "_static";
         }
         Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.input(id,suffix.equals("_off")));
-        return new double[] {vTop, vBottom};
+        return inputBody(id,vTop,vBottom);
     }
 
     private static void setWorldLight(TileEntityAnimatedScreenSelector te) {

@@ -1,0 +1,121 @@
+package com.vandorlabs.client;
+
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.*;
+import com.vandorlabs.vehicle.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.*;
+import javax.imageio.ImageIO;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
+import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.MinecraftForgeClient;
+import org.lwjgl.opengl.GL11;
+
+/** Actual framebuffer comparisons for independent frame and display layouts. */
+final class FrameFramebufferChecks {
+    private static final int SIZE=256,BACKGROUND=0x203040;
+    private static final class Fixture {
+        final VehicleWorld world;final int columns,rows;
+        final List<TileEntityAnimatedScreenSelector> tiles=new ArrayList<>();
+        Fixture(Minecraft mc,int columns,int rows,int material){
+            this.columns=columns;this.rows=rows;List<VehicleStructure.Cell> cells=new ArrayList<>();
+            for(int y=0;y<rows;y++)for(int x=0;x<columns;x++){
+                TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(new BlockPos(x,y,0));tile.setSurfaceTexture(0,material);tile.setDisplayMode(TileEntityAnimatedScreenSelector.MODE_STATIC);tile.setRedstoneEnabled(false);
+                cells.add(new VehicleStructure.Cell(tile.getPos(),ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.SOUTH),tile.writeToNBT(new NBTTagCompound())));
+            }
+            world=new VehicleWorld(mc.world,VehicleStructure.display(cells));
+            for(net.minecraft.tileentity.TileEntity tile:world.tiles.values())tiles.add((TileEntityAnimatedScreenSelector)tile);
+        }
+        void appearance(int front,boolean tile,boolean fit){for(TileEntityAnimatedScreenSelector t:tiles){t.frameAppearance.front=front;t.frameAppearance.tile=tile;t.frameAppearance.displayFit=fit;}GlassMaterials.changed();}
+        void close(){TEAnimatedScreenSelector.unloadGroups(world);}
+    }
+    static void run(Minecraft mc,File output)throws Exception{
+        int pattern=ScreenHousingTextures.screenIndex("ceiling/pale_grey/plain"),dark=ScreenHousingTextures.screenIndex("ceiling/dark_cyan_metallic/plain"),bolted=ScreenHousingTextures.screenIndex("frames/frames-screen-full/frame_bolted_1254");
+        require(pattern>0&&dark>0&&bolted>0,"fixture materials");
+        Fixture one=new Fixture(mc,1,1,pattern),square=new Fixture(mc,2,2,pattern),rectangle=new Fixture(mc,2,3,pattern),row=new Fixture(mc,3,1,pattern);
+        try{
+            BufferedImage single=capture(mc,one),tile=capture(mc,square);Fixture visibilityControl=new Fixture(mc,1,1,dark);try{require(difference(single,capture(mc,visibilityControl),8,8,248,248)>10000,"selected display textures are hidden by housing or the camera sees the rear");}finally{visibilityControl.close();}square.appearance(-1,false,true);GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(square.tiles.get(0));require(group.columns==2&&group.rows==2,"2x2 grouping failed: "+group.key()+" tiles="+square.tiles.size()+" positions="+square.world.tiles.keySet());BufferedImage fit=capture(mc,square);ImageIO.write(single,"png",new File(output,"shot_frames_reference.png"));ImageIO.write(tile,"png",new File(output,"shot_frames_display_tile_2x2.png"));ImageIO.write(fit,"png",new File(output,"shot_frames_display_fit_2x2.png"));
+            require(difference(single,fit,5,5,251,251)<180,"2x2 display Fit does not match one continuous image");
+            require(difference(tile,fit,5,5,251,251)>300,"2x2 display Fit did not change repeated artwork");
+            for(Fixture rectangular:new Fixture[]{rectangle,row}){BufferedImage before=capture(mc,rectangular);rectangular.appearance(-1,false,true);BufferedImage after=capture(mc,rectangular);require(difference(before,after,4,4,252,252)==0,"non-square display Fit stretched a rectangular group");}
+            square.appearance(-1,false,false);BufferedImage bare=capture(mc,square);square.appearance(bolted,true,false);BufferedImage repeated=capture(mc,square);square.appearance(bolted,false,false);BufferedImage perimeter=capture(mc,square);ImageIO.write(perimeter,"png",new File(output,"shot_frames_border_fit_2x2.png"));ImageIO.write(repeated,"png",new File(output,"shot_frames_border_tile_2x2.png"));
+            int repeatedSeam=difference(bare,repeated,120,24,136,232),fitSeam=difference(bare,perimeter,120,24,136,232);
+            require(repeatedSeam>100&&fitSeam<repeatedSeam/3,"frame Fit retained an interior vertical rail");
+            require(difference(bare,perimeter,0,0,256,256)>200,"fitted outer border was not rendered");
+            int background=ScreenHousingTextures.screenIndex("frames/frames-door-window/vandor_bg");require(background>0&&!FrameAppearance.border(background),"opaque frame material fixture");one.appearance(background,true,false);BufferedImage backgroundFrame=capture(mc,one);ImageIO.write(backgroundFrame,"png",new File(output,"shot_frames_background_material.png"));require(difference(single,backgroundFrame,32,32,224,224)==0,"opaque frame material covered display center");require(difference(single,backgroundFrame,0,0,256,256)>200,"opaque frame material did not paint border");one.appearance(-1,false,false);
+            TileEntityAnimatedScreenSelector split=one.tiles.get(0);split.frameAppearance.split=true;split.frameAppearance.splitTop=pattern;split.frameAppearance.splitBottom=dark;
+            BufferedImage splitImage=capture(mc,one);ImageIO.write(splitImage,"png",new File(output,"shot_frames_split_display.png"));Fixture darkReference=new Fixture(mc,1,1,dark);
+            try{BufferedImage darkImage=capture(mc,darkReference);require(distance(splitImage.getRGB(128,64),single.getRGB(128,128))<30,"split upper display differs from selected artwork");require(distance(splitImage.getRGB(128,192),darkImage.getRGB(128,128))<30,"split lower display differs from selected artwork");require(distance(splitImage.getRGB(128,64),splitImage.getRGB(128,192))>30,"independent split artwork is indistinguishable");}finally{darkReference.close();}
+            ImageIO.write(fit,"png",new File(output,"shot_frames_display_fit_2x2.png"));ImageIO.write(perimeter,"png",new File(output,"shot_frames_border_fit_2x2.png"));ImageIO.write(repeated,"png",new File(output,"shot_frames_border_tile_2x2.png"));ImageIO.write(splitImage,"png",new File(output,"shot_frames_split_display.png"));
+            coupledLayouts(mc,output,pattern,dark,bolted,splitImage);
+            opaqueInterior(mc,output);frameDialog(mc,output,one.tiles.get(0));
+            System.out.println("[vandorlabs][reprolab] frame-framebuffer PASS square-display-fit rectangular-rejection independent-frame-fit mixed-artwork-and-frame-negative-controls split-fit-2x2-and-3x3 opaque-interior");
+        }finally{one.close();square.close();rectangle.close();row.close();}
+    }
+    private static void coupledLayouts(Minecraft mc,File output,int pattern,int dark,int bolted,BufferedImage splitReference)throws Exception{
+        for(int n:new int[]{2,3}){
+            Fixture f=new Fixture(mc,n,n,pattern);
+            try{
+                f.appearance(-1,false,true);for(TileEntityAnimatedScreenSelector t:f.tiles){t.frameAppearance.split=true;t.frameAppearance.splitTop=pattern;t.frameAppearance.splitBottom=dark;}GlassMaterials.changed();
+                BufferedImage splitFit=capture(mc,f);ImageIO.write(splitFit,"png",new File(output,"shot_frames_split_fit_"+n+"x"+n+".png"));require(difference(splitReference,splitFit,8,8,248,248)<400,"split+Fit did not span the entire "+n+"x"+n+" display");
+                if(n==2){
+                    int background=ScreenHousingTextures.screenIndex("frames/frames-door-window/vandor_bg");for(int k=0;k<f.tiles.size();k++){f.tiles.get(k).frameAppearance.front=(k&1)==0?bolted:background;f.tiles.get(k).frameAppearance.tile=(k&1)==0;}GlassMaterials.changed();
+                    GlassSurfaceGroups.Layout display=ScreenSurfaceGroups.layout(f.tiles.get(0));require(display.columns==2&&display.rows==2,"display Fit depended on frame finish");BufferedImage mixed=capture(mc,f);int changed=0;for(int row=0;row<2;row++)for(int col=0;col<2;col++)changed+=difference(splitReference,mixed,col*128+20,row*128+20,col*128+108,row*128+108);require(changed<180,"mixed frame finishes changed fitted display interiors");ImageIO.write(mixed,"png",new File(output,"shot_frames_mixed_frame_split_fit.png"));
+                    for(TileEntityAnimatedScreenSelector t:f.tiles)t.frameAppearance.front=-1;f.tiles.get(0).frameAppearance.splitTop=dark;GlassMaterials.changed();BufferedImage unmatched=capture(mc,f);for(TileEntityAnimatedScreenSelector t:f.tiles)t.frameAppearance.displayFit=false;GlassMaterials.changed();BufferedImage tiled=capture(mc,f);require(difference(unmatched,tiled,4,4,252,252)==0,"unequal split artwork joined one fitted display");
+                }
+            }finally{f.close();}
+        }
+        Fixture frame=new Fixture(mc,2,2,pattern);
+        try{
+            frame.appearance(-1,false,false);frame.tiles.get(0).setSurfaceTexture(0,dark);frame.tiles.get(1).frameAppearance.split=true;frame.tiles.get(1).frameAppearance.splitTop=dark;frame.tiles.get(1).frameAppearance.splitBottom=pattern;frame.tiles.get(2).frameAppearance.displayFit=true;frame.tiles.get(3).setDisplayMode(TileEntityAnimatedScreenSelector.MODE_OFF);frame.tiles.get(3).setAnimationSpeedIndex(2);GlassMaterials.changed();BufferedImage bare=capture(mc,frame);
+            for(TileEntityAnimatedScreenSelector t:frame.tiles)t.frameAppearance.front=bolted;GlassMaterials.changed();GlassSurfaceGroups.Layout layout=ScreenSurfaceGroups.frameLayout(frame.tiles.get(0));require(layout.columns==2&&layout.rows==2,"frame Fit depended on artwork, split, playback or Display Fit");BufferedImage fitted=capture(mc,frame);require(difference(bare,fitted,120,24,136,232)<30,"mixed display settings left an interior fitted frame rail");require(difference(bare,fitted,0,0,256,256)>200,"mixed display settings lost fitted outer frame");ImageIO.write(fitted,"png",new File(output,"shot_frames_mixed_displays_frame_fit.png"));
+        }finally{frame.close();}
+    }
+    private static void frameDialog(Minecraft mc,File output,TileEntityAnimatedScreenSelector tile)throws Exception{
+        net.minecraft.client.gui.GuiScreen previous=mc.currentScreen;net.minecraft.inventory.Container container=mc.player.openContainer;
+        GuiAnimatedScreenSelector parent=new GuiAnimatedScreenSelector(mc.player.inventory,tile);GuiFrameAppearance gui=new GuiFrameAppearance(parent.inventorySlots,tile,parent);gui.inventorySlots.windowId=-98;
+        try{mc.displayGuiScreen(gui);for(int[] size:new int[][]{{320,240},{460,340}}){gui.setWorldAndResolution(mc,size[0],size[1]);
+            for(int page:new int[]{0,5,6}){gui.actionPerformed(new net.minecraft.client.gui.GuiButton(page,0,0,"Page"));java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
+                for(net.minecraft.client.gui.GuiButton a:buttons)if(a.visible){require(a.x>=0&&a.y>=0&&a.x+a.width<=size[0]&&a.y+a.height<=size[1],"Frame page control outside viewport");for(net.minecraft.client.gui.GuiButton b:buttons)if(a!=b&&b.visible)require(a.x>=b.x+b.width||b.x>=a.x+a.width||a.y>=b.y+b.height||b.y>=a.y+a.height,"Frame page controls overlap");}
+                GuiOptionCycleRuntimeChecks.check(mc);
+            }
+            Framebuffer frame=new Framebuffer(size[0],size[1],true);projection(0,size[0],size[1],0);
+            try(TurntableRenderState saved=new TurntableRenderState()){prepare(mc,frame);GlStateManager.disableDepth();gui.drawScreen(-1,-1,0);GL11.glFinish();BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(size[0],size[1],frame);int glyphs=0;for(int y=0;y<size[1];y++)for(int x=0;x<size[0];x++)if((image.getRGB(x,y)&0xffffff)==0xffffff)glyphs++;require(glyphs>50,"Frame page text did not reach framebuffer");int cyan=0;for(int y=gui.getGuiTop();y<gui.getGuiTop()+20;y++)for(int x=gui.getGuiLeft()+gui.getXSize()-34;x<gui.getGuiLeft()+gui.getXSize()-6;x++){int pixel=image.getRGB(x,y),r=pixel>>16&255,g=pixel>>8&255,b=pixel&255;if(g>100&&b>100&&g>r+30)cyan++;}require(cyan>5,"supplied Vandor header logo did not render its cyan artwork");ImageIO.write(image,"png",new File(output,"shot_frames_dialog_"+size[0]+".png"));}finally{restore(mc,frame);}
+        }}finally{mc.displayGuiScreen(previous);mc.player.openContainer=container;}
+    }
+    private static BufferedImage capture(Minecraft mc,Fixture fixture){
+        Framebuffer frame=new Framebuffer(SIZE,SIZE,true);int pass=MinecraftForgeClient.getRenderPass();projection(0,fixture.columns,0,fixture.rows);
+        try(TurntableRenderState saved=new TurntableRenderState()){
+            prepare(mc,frame);ForgeHooksClient.setRenderPass(0);
+            TEAnimatedScreenSelector renderer=new TEAnimatedScreenSelector();renderer.setRendererDispatcher(TileEntityRendererDispatcher.instance);
+            for(TileEntityAnimatedScreenSelector tile:fixture.tiles)renderer.render(tile,tile.getPos().getX(),tile.getPos().getY(),0,0,-1,1);
+            GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(SIZE,SIZE,frame);
+        }finally{ForgeHooksClient.setRenderPass(pass);restore(mc,frame);}
+    }
+    private static void opaqueInterior(Minecraft mc,File output)throws Exception{
+        TileEntityProgrammableGlass tile=new TileEntityProgrammableGlass();tile.frameAppearance.front=ScreenHousingTextures.screenIndex("frames/frames-door-window/gunmetal-1");tile.frameAppearance.interior=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1");require(tile.frameAppearance.front>0&&tile.frameAppearance.interior>0,"opaque frame fixture artwork");
+        net.minecraft.block.Block glassBlock=net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass");
+        VehicleWorld lightWorld=new VehicleWorld(mc.world,VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,glassBlock.getDefaultState(),tile.writeToNBT(new NBTTagCompound())))));
+        TileEntityProgrammableGlass lightTile=(TileEntityProgrammableGlass)lightWorld.getTileEntity(BlockPos.ORIGIN);require(glassBlock.getLightValue(lightWorld.getBlockState(BlockPos.ORIGIN),lightWorld,BlockPos.ORIGIN)==3,"lit inner frame must emit faint level three");lightTile.setAppearance(1,false);require(glassBlock.getLightValue(lightWorld.getBlockState(BlockPos.ORIGIN),lightWorld,BlockPos.ORIGIN)==0,"Bare frame retained invisible frame light");
+        Framebuffer frame=new Framebuffer(SIZE,SIZE,true);projection(0,16,0,16);
+        try(TurntableRenderState saved=new TurntableRenderState()){
+            prepare(mc,frame);GlStateManager.rotate(90,0,1,0);mc.getTextureManager().bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
+            BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlassFrameMesh.get(tile,new GlassSurfaceGroups.Layout(0,0,1,1)).draw(buffer,240,240);Tessellator.getInstance().draw();GL11.glFinish();BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(SIZE,SIZE,frame);
+            int holes=0;for(int y=16;y<240;y++)for(int x=118;x<138;x++)if((image.getRGB(x,y)&0xffffff)==BACKGROUND)holes++;require(holes==0,"transparent center pixels leaked into physical frame sides: "+holes);ImageIO.write(image,"png",new File(output,"shot_frames_opaque_interior.png"));
+        }finally{restore(mc,frame);}
+    }
+    private static void projection(double left,double right,double bottom,double top){GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(left,right,bottom,top,-32,32);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();}
+    private static void prepare(Minecraft mc,Framebuffer frame){frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.depthMask(true);GlStateManager.clearColor(32/255F,48/255F,64/255F,1);GlStateManager.clear(16640);GlStateManager.enableDepth();GlStateManager.depthFunc(GL11.GL_LEQUAL);GlStateManager.disableCull();GlStateManager.disableFog();GlStateManager.disableLighting();GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.enableTexture2D();GlStateManager.enableAlpha();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.colorMask(true,true,true,true);GlStateManager.color(1,1,1,1);mc.entityRenderer.disableLightmap();Tessellator.getInstance().getBuffer().setTranslation(0,0,0);}
+    private static void restore(Minecraft mc,Framebuffer frame){GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
+    private static int difference(BufferedImage a,BufferedImage b,int left,int top,int right,int bottom){int n=0;for(int y=top;y<bottom;y++)for(int x=left;x<right;x++)if(distance(a.getRGB(x,y),b.getRGB(x,y))>6)n++;return n;}
+    private static int distance(int a,int b){return Math.abs((a>>16&255)-(b>>16&255))+Math.abs((a>>8&255)-(b>>8&255))+Math.abs((a&255)-(b&255));}
+    private static void require(boolean value,String why){if(!value)throw new IllegalStateException("Frame framebuffer: "+why);}
+    private FrameFramebufferChecks(){}
+}

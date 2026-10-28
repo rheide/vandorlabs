@@ -134,7 +134,9 @@ final class HousingTextureList {
     }
     static HousingTextureList forCategory(String category,int x,int y,int width,int selected,int count) {
         return new HousingTextureList(x,y,width,selected,count,null,
-                choice->generalTexture(choice) || category.equals(ScreenHousingTextures.category(choice)));
+                choice->(generalTexture(choice) || category.equals(ScreenHousingTextures.category(choice))) && (!"Screens".equals(category)||com.vandorlabs.tiles.FrameAppearance.bareChoice(choice)==choice),
+                choice->{com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return "Screens".equals(category)&&e!=null&&e.get("source").getAsString().startsWith("console_inputs/")?"Controls":ScreenHousingTextures.category(choice);},
+                choice->"Screens".equals(category)?name(choice).replaceAll("\\b(Bare|Framed)\\s+",""):name(choice));
     }
     /** One row per door design, using the size selected beside the list. */
     static HousingTextureList forDoors(int detail,int x,int y,int width,int selected) {

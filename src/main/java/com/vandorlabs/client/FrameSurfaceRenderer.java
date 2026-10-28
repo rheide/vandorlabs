@@ -19,7 +19,7 @@ final class FrameSurfaceRenderer {
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.alphaFunc(GL11.GL_GREATER,.01F);GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-6,-6);
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        GlassSurfaceGroups.Layout layout=frame.tile?new GlassSurfaceGroups.Layout(0,0,1,1):ScreenSurfaceGroups.layout(tile);
+        GlassSurfaceGroups.Layout layout=frame.tile?new GlassSurfaceGroups.Layout(0,0,1,1):ScreenSurfaceGroups.frameLayout(tile);
         boolean input=tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableInput||tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole;
         if(FrameAppearance.border(frame.front))region(b,quad,sprite,layout,input,0,0,1,1);
         else{
