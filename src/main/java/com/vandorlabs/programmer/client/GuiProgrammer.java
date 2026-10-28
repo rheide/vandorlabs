@@ -33,8 +33,8 @@ public class GuiProgrammer extends GuiContainer {
     @Override public void initGui(){
         String oldTitle=title==null?container.tile.title:title.getText();ySize=height>=264?264:228;super.initGui();Keyboard.enableRepeatEvents(true);
         title=new GuiTextField(0,fontRenderer,guiLeft+49,guiTop+104,188,18);title.setMaxStringLength(ChipJournal.TITLE_LIMIT);title.setText(oldTitle);
-        buttonList.add(inventoryTab=new GuiButton(5,guiLeft+15,guiTop+80,72,18,"Inventory"));
-        buttonList.add(journalTab=new GuiButton(6,guiLeft+90,guiTop+80,72,18,"Journal"));
+        buttonList.add(inventoryTab=new com.vandorlabs.client.DialogTabButton(5,guiLeft+15,guiTop+80,72,18,"Inventory"));
+        buttonList.add(journalTab=new com.vandorlabs.client.DialogTabButton(6,guiLeft+90,guiTop+80,72,18,"Journal"));
         buttonList.add(type=new GuiButton(0,guiLeft+76,guiTop+57,160,20,""));
         buttonList.add(previous=new GuiButton(1,guiLeft+15,guiTop+166+extraHeight(),24,18,"<"));
         buttonList.add(next=new GuiButton(2,guiLeft+213,guiTop+166+extraHeight(),24,18,">"));

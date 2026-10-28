@@ -62,7 +62,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         int cx=layout.controlsX, rows=layout.rows(true);
         buttonList.add(layout.tab(90,0,3,"Bottom"));
         buttonList.add(layout.tab(91,1,3,"Top"));
-        buttonList.add(layout.tab(92,2,3,"Housing"));
+        buttonList.add(layout.tab(92,2,3,"Sides"));
         left=right=layout.listX;top=guiTop+54;
         topList=new ScreenTextureList(left,top,layout.listWidth,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(topList,1)).redstone(te.getPos(),1);
         bottomList=new ScreenTextureList(left,top,layout.listWidth,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(bottomList,0)).redstone(te.getPos(),0);
@@ -227,7 +227,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
         fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
-        super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {

@@ -177,7 +177,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         int tabs=console?3:2,rows=layout.rows(true);
         buttonList.add(layout.tab(90,0,tabs,"Screen"));
         if(console)buttonList.add(layout.tab(91,1,tabs,"Controls"));
-        buttonList.add(layout.tab(console?92:91,tabs-1,tabs,"Housing"));
+        buttonList.add(layout.tab(console?92:91,tabs-1,tabs,"Sides"));
         listLeft=layout.listX;listTop=guiTop+54;listRight=listLeft+layout.listWidth;listBottom=listTop+rows*HousingTextureList.ROW_HEIGHT;
         String[] ids=new String[entries.size()],labels=new String[entries.size()];
         for(int i=0;i<ids.length;i++){ids[i]=entries.get(i).option.bareId;labels[i]=entries.get(i).name;}
@@ -391,7 +391,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
         fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
-        super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override public void updateScreen() { super.updateScreen(); channelField.updateCursorCounter(); }

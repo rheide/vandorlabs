@@ -111,8 +111,8 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                 int face=i-((slab || porthole)?2:1);
                 boolean glass=porthole && i==2;
                 int id=i==0?120:side?127:glass?129:121+face;
-                String label=i==0?"Main":side?"Side":glass?"Glass":FACE_NAMES[face];
-                GuiButton tab=new GuiButton(id,listX+i*tabWidth,guiTop+30,
+                String label=i==0?"Main":side?"Frame":glass?"Glass":FACE_NAMES[face];
+                GuiButton tab=new DialogTabButton(id,listX+i*tabWidth,guiTop+30,
                         i==count-1?span-i*tabWidth-2:tabWidth-2,18,label);
                 tab.enabled=faceTarget!=(i==0?-1:side?-2:glass?-3:face);buttonList.add(tab);
             }
@@ -334,7 +334,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                         : "gui.vandorlabs.wall.title"),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
         textureList.draw(fontRenderer,mouseX,mouseY);
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }

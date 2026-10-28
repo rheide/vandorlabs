@@ -63,7 +63,7 @@ public final class GuiProgrammableLight extends GuiContainer {
                 .custom(value->{if(editingOff)offSelected=value;else selected=value;send();});
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housing,8,null,include).visibleRows(layout.rows(true))
                 .custom(value->{housing=value;tile.setHousingTexture(value);send();});
-        buttonList.add(layout.tab(90,0,3,"ON"));buttonList.add(layout.tab(91,1,3,"OFF"));buttonList.add(layout.tab(92,2,3,"Housing"));
+        buttonList.add(layout.tab(90,0,3,"ON"));buttonList.add(layout.tab(91,1,3,"OFF"));buttonList.add(layout.tab(92,2,3,"Sides"));
         buttonList.add(layout.control(101,30,joinLabel()));buttonList.add(layout.control(102,52,triggerLabel()));
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,74,sizeLabel()));
         if(editingOff){GuiButton automatic=layout.control(105,96,offSelected<0?"OFF: Automatic":"Use automatic OFF");automatic.enabled=offSelected>=0;buttonList.add(automatic);}else buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
@@ -209,7 +209,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         int thumb=sliderX+Math.round(SLIDER_W*(signalBrightness?(offset+15)/2F:level)/15F);
         drawRect(thumb-3,guiTop+138,thumb+3,guiTop+152,0xFFB8D7E8);
         fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
-        super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }

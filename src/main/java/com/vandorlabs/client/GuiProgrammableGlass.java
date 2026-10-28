@@ -50,7 +50,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
         drawDefaultBackground();drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF101012);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+18,0xFF202028);
         fontRenderer.drawString("Programmable Glass",guiLeft+8,guiTop+5,0xFFFFFFFF);
-        textures.draw(fontRenderer,x,y);super.drawScreen(x,y,partial);
+        textures.draw(fontRenderer,x,y);DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(x,y,partial);
     }
     @Override public boolean doesGuiPauseGame(){return false;}
 }

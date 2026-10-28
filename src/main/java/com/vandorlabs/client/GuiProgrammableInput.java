@@ -59,7 +59,7 @@ public class GuiProgrammableInput extends GuiContainer {
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
         buttonList.add(layout.tab(90,0,2,"Controls"));
-        buttonList.add(layout.tab(91,1,2,"Housing"));
+        buttonList.add(layout.tab(91,1,2,"Sides"));
         listX=layout.listX;listY=guiTop+54;
         screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0);
         for(int i=0;i<3;i++) {
@@ -219,7 +219,7 @@ public class GuiProgrammableInput extends GuiContainer {
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+26,0xDAE8F0);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+58,0xDAE8F0);
         fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+174,0xDAE8F0);
-        super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {
