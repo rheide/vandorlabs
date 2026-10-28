@@ -55,8 +55,8 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,54,motion.label);buttonList.add(motionButton);
         buttonList.add(layout.choice(12,0,2,52,framed?"Frame: Framed":"Frame: Bare"));
-        buttonList.add(RedstoneActivationButton.from(layout.control(16,96,""),trigger));buttonList.add(layout.choice(13,0,2,102,depthLabel()));
-        hingeButton=layout.choice(15,1,2,78,"");buttonList.add(hingeButton);updateHingeButton();
+        buttonList.add(RedstoneActivationButton.from(layout.control(16,96,""),trigger));buttonList.add(layout.control(13,102,depthLabel()));
+        hingeButton=layout.control(15,78,"");buttonList.add(hingeButton);updateHingeButton();
         buttonList.add(layout.control(17,64,panelLabel()));
         buttonList.add(layout.control(18,126,layoutLabel()));
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+64,154,18);
