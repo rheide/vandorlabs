@@ -20,8 +20,8 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui() {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
-        xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));
-        textures=HousingTextureList.forGlassMaterials(size,guiLeft+12,guiTop+30,layout.controlsX-guiLeft-31,shade,material)
+        xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();GuiButton appearance=layout.fullTab(196,0,2,"Appearance");appearance.enabled=false;buttonList.add(appearance);buttonList.add(layout.fullTab(197,1,2,"Frame"));
+        textures=HousingTextureList.forGlassMaterials(size,guiLeft+12,guiTop+54,layout.controlsX-guiLeft-31,shade,material)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).keepView(textures);
         buttonList.add(new GuiButton(3,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Join: "+(join?"On":"Off")));
         buttonList.add(new GuiButton(4,layout.controlsX,guiTop+78,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(tint)));
@@ -50,8 +50,8 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){}
     @Override public void drawScreen(int x,int y,float partial){
         drawDefaultBackground();drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF101012);
-        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+18,0xFF202028);
-        fontRenderer.drawString("Programmable Glass",guiLeft+8,guiTop+5,0xFFFFFFFF);
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF202028);
+        fontRenderer.drawString("Programmable Glass",guiLeft+8,guiTop+8,0xFFFFFFFF);
         textures.draw(fontRenderer,x,y);DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(x,y,partial);
     }
     @Override public boolean doesGuiPauseGame(){return false;}

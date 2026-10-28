@@ -171,17 +171,20 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         return framed ? selectedOption.framedId : selectedOption.bareId;
     }
 
+    private FrameAppearancePane framePane;
+    private boolean framePage(){return textureTab==10;}
     private ReceiverPane receiver;
     @Override public void initGui() {
+        String receiverDraft=channelField==null?te.getRedstoneChannels().toString():channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         int redstoneWidth=Math.min(400,xSize-24),redstoneX=layout.left+(xSize-redstoneWidth)/2;
         receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
-        super.initGui();buttonList.clear();buttonList.add(new DialogTabButton(197,guiLeft+xSize-104,guiTop+1,58,17,"Frame"));Keyboard.enableRepeatEvents(true);
-        int tabs=console?4:3,rows=layout.rows(true);
+        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        int tabs=console?5:4,rows=layout.rows(true);
         buttonList.add(layout.fullTab(90,0,tabs,"Display"));
         if(console)buttonList.add(layout.fullTab(91,1,tabs,"Controls"));
-        buttonList.add(layout.fullTab(console?92:91,tabs-2,tabs,"Sides"));
-        buttonList.add(layout.fullTab(console?93:92,tabs-1,tabs,"Redstone"));buttonList.add(new GuiButton(198,redstoneX,guiTop+132,redstoneWidth,20,"Transmitter..."));
+        buttonList.add(layout.fullTab(console?92:91,console?2:1,tabs,"Sides"));
+        buttonList.add(layout.fullTab(console?93:92,console?3:2,tabs,"Redstone"));buttonList.add(layout.fullTab(197,tabs-1,tabs,"Frame"));buttonList.add(new GuiButton(198,redstoneX,guiTop+132,redstoneWidth,20,"Transmitter..."));
         listLeft=layout.listX;listTop=guiTop+54;listRight=listLeft+layout.listWidth;listBottom=listTop+rows*HousingTextureList.ROW_HEIGHT;
         String[] ids=new String[entries.size()],labels=new String[entries.size()];
         for(int i=0;i<ids.length;i++){ids[i]=entries.get(i).option.bareId;labels[i]=entries.get(i).name;}
@@ -200,10 +203,10 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         buttonList.add(layout.control(32,142,sidesLabel()));
         channelField=receiver.field();
         ChannelFields.configure(channelField);
-        channelField.setText(te.getRedstoneChannels().toString());
-        buttonList.add(layout.done(20));refreshButtons();refreshTabs();
+        channelField.setText(receiverDraft);
+        buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.init(54,buttonList);}
     }
-    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?93:92))b.enabled=b.id-90!=textureTab;}
+    private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?93:92))b.enabled=b.id-90!=textureTab;}
 
     private String sidesLabel(){return "Sides: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
@@ -240,11 +243,12 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(te.getPos(),0));return;}
+        if(button.id==198)return;
 
-        if(button.id==197){mc.displayGuiScreen(new GuiFrameAppearance(inventorySlots,te,this));return;}
+        if(framePage()&&framePane.action(button))return;
+        if(button.id==197){textureTab=10;initGui();return;}
 
-        if(button.id>=90 && button.id<=(console?93:92)){textureTab=button.id-90;refreshTabs();refreshButtons();return;}
+        if(button.id>=90 && button.id<=(console?93:92)){textureTab=button.id-90;initGui();return;}
         if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.getSurfaceTextureLayout()));return;}
         switch (button.id) {
             case 0:
@@ -324,6 +328,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if(framePage()){if(!framePane.click(mouseX,mouseY,mouseButton))super.mouseClicked(mouseX,mouseY,mouseButton);return;}
         if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,0,4,32))return;
         if (textureTab==(console?2:1) && housingList.click(mouseX, mouseY, mouseButton)) {
             if (housingTexture != housingList.selected()) {
@@ -340,6 +345,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
+        if(framePane!=null)framePane.release();
         screenList.release();if(inputList!=null)inputList.release();
         draggingScrollbar = false;
         if (housingList != null) housingList.release();
@@ -350,6 +356,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton,
             long timeSinceLastClick) {
+        if(framePage()){framePane.drag(mouseY);return;}
         if (housingList != null && housingList.drag(mouseY)) return;
         if(screenList.drag(mouseY) || inputList!=null && inputList.drag(mouseY))return;
         super.mouseClickMove(mouseX,mouseY,clickedMouseButton,timeSinceLastClick);
@@ -372,7 +379,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int wheel = Mouse.getEventDWheel();
+        int wheel = Mouse.getEventDWheel();if(framePage()){framePane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}
         if (textureTab==(console?2:1) && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         int mx=Mouse.getEventX()*width/mc.displayWidth,my=height-Mouse.getEventY()*height/mc.displayHeight-1;
@@ -401,6 +408,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(textureTab<(console?2:1))fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+54,0xDAE8F0);
         if(textureTab<(console?2:1))fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+88,0xDAE8F0);
         if(textureTab==(console?3:2))receiver.drawLabel();
+        if(framePage())framePane.draw(mouseX,mouseY);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
