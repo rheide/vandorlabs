@@ -12,7 +12,7 @@ import java.lang.reflect.Field;
 /** Real dialog initialization and left/right cycling on the physical throttle page. */
 final class CockpitControlDialogChecks {
     static void run(Minecraft mc,File output)throws Exception{
-        TileEntityCockpit tile=new TileEntityCockpit();tile.setWorld(mc.world);tile.setPos(new BlockPos(2048,128,2048));
+        TileEntityCockpit tile=new TileEntityCockpit("cockpit");tile.setWorld(mc.world);tile.setPos(new BlockPos(2048,128,2048));
         ContainerCockpit container=new ContainerCockpit(tile,null);container.windowId=-77;
         Field page=GuiCockpit.class.getDeclaredField("page");page.setAccessible(true);
         Field buttons;try{buttons=GuiScreen.class.getDeclaredField("buttonList");}catch(NoSuchFieldException e){buttons=GuiScreen.class.getDeclaredField("field_146292_n");}buttons.setAccessible(true);
