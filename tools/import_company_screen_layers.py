@@ -18,7 +18,7 @@ def main():
         resized=image.resize((64,round(64/aspect)),Image.Resampling.LANCZOS);canvas=Image.new('RGBA',(64,64));canvas.paste(resized,(0,0))
         stem=f'frames/company/{company}_{height}';target=textures/(stem+'.png');target.parent.mkdir(parents=True,exist_ok=True);canvas.save(target,optimize=True)
         resized.crop((0,0,64,max(1,resized.height//12))).resize((64,64),Image.Resampling.LANCZOS).save(target.with_name(target.stem+"_rail.png"),optimize=True)
-        append(catalog,dict(id=f'frame_company_{company}_{height}',label=company.replace('_',' ').title()+' '+height.title(),category='Frame',menuGroup='Company',source=stem,frame=True,frameBorder=True,frameAspect=aspect,frameRail=stem+'_rail'))
+        append(catalog,dict(id=f'frame_company_{company}_{height}',label=company.replace('_',' ').title()+' '+height.title(),category='Frame',menuGroup='Company/'+company.replace('_',' ').title(),source=stem,frame=True,frameBorder=True,frameAspect=aspect,frameRail=stem+'_rail'))
     for metadata in sorted((source/'displays').glob('*/*/*/animation.json')):
         info=json.loads(metadata.read_text());company,height,subject=metadata.parts[-4:-1];identifier=f'company_{company}_{height}_{subject}';stem=('console_inputs/' if height=='half' else '')+identifier
         size=(128,64 if height=='half' else 128);frames=[Image.open(metadata.parent/f'frame_{i:02d}.png').convert('RGBA').resize(size,Image.Resampling.LANCZOS) for i in range(6)]
@@ -26,7 +26,7 @@ def main():
         strip=Image.new('RGBA',(size[0],size[1]*6))
         for i,frame in enumerate(frames):strip.paste(frame,(0,i*size[1]))
         animated=textures/(stem+'_animated.png');strip.save(animated,optimize=True);write_json(Path(str(animated)+'.mcmeta'),dict(animation=dict(width=size[0],height=size[1],frametime=round(info['frame_duration_ms']/50),frames=list(range(6)))))
-        entry=dict(id='screen_'+identifier,label=info['company']+' '+height.title()+' '+subject.title(),category='Screens',menuGroup='Company',source=stem+'_static',frames=6)
+        entry=dict(id='screen_'+identifier,label=info['company']+' '+height.title()+' '+subject.title(),category='Screens',menuGroup='Company/'+company.replace('_',' ').title(),source=stem+'_static',frames=6)
         if height=='half':entry['rectangular']=True
         append(catalog,entry)
         if height=='half':append(inputs,dict(id=identifier,animated=True,frames=6))

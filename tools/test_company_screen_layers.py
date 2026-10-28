@@ -26,5 +26,5 @@ for entry in screens:
     assert strip.getchannel('A').getextrema()[0]<255,'Layer alpha was flattened'
     metadata=json.loads(Path(str(stripPath)+'.mcmeta').read_text())['animation']
     assert metadata==dict(width=size[0],height=size[1],frametime=4,frames=list(range(6)))
-    assert entry['menuGroup']=='Company' and entry['category']=='Screens'
+    assert entry['menuGroup'].startswith('Company/') and entry['category']=='Screens'
 print('company-screen-layers PASS borders=12 displays=72 frames=432 native sizes/alpha/four-tick timing')
