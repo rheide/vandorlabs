@@ -10,7 +10,7 @@ import java.io.IOException;
 /** Surface-local active/inactive artwork uses the standard material picker and scrolling behavior. */
 public final class GuiProgrammableSurface extends GuiMaterialPicker {
     private final TileEntityTurntableSurface tile;
-    private String on,off;private int layout;private boolean active;
+    private String on,off;private int layout;private boolean active=true;
     private HousingTextureList textures;
     public GuiProgrammableSurface(ContainerSurface container){super(container);tile=container.tile;on=tile.surfaceOn;off=tile.surfaceOff;layout=tile.textureLayout;}
     @Override protected HousingTextureList materialPicker(){return textures;}

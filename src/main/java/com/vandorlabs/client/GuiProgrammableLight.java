@@ -64,15 +64,15 @@ public final class GuiProgrammableLight extends GuiContainer {
                 .custom(value->{if(editingOff)offSelected=value;else selected=value;send();});
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housing,8,null,include).visibleRows(layout.rows(true))
                 .custom(value->{housing=value;tile.setHousingTexture(value);send();});
-        buttonList.add(layout.tab(90,0,4,"ON"));buttonList.add(layout.tab(91,1,4,"OFF"));buttonList.add(layout.tab(92,2,4,"Sides"));
-        buttonList.add(layout.tab(93,3,4,"Redstone"));
+        buttonList.add(layout.fullTab(90,0,4,"ON"));buttonList.add(layout.fullTab(91,1,4,"OFF"));buttonList.add(layout.fullTab(92,2,4,"Sides"));
+        buttonList.add(layout.fullTab(93,3,4,"Redstone"));
         buttonList.add(layout.control(101,54,joinLabel()));buttonList.add(RedstoneActivationButton.from(layout.control(102,100,""),signalBrightness?3:trigger));
         buttonList.add(layout.control(106,130,"Transmitter..."));
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,76,sizeLabel()));
         if(editingOff){GuiButton automatic=layout.control(105,96,offSelected<0?"OFF: Automatic":"Use automatic OFF");automatic.enabled=offSelected>=0;buttonList.add(automatic);}else buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
     }
     private String brightnessLabel(){return signalBrightness?"Brightness: Signal + offset":"Brightness: Slider";}
-    private void refreshTabs(){for(GuiButton b:buttonList){if(b.id>=90 && b.id<=93)b.enabled=b.id-90!=textureTab;else if(b.id==102||b.id==106)b.visible=textureTab==3;else if(b.id>=101&&b.id<=105)b.visible=textureTab!=3;}}
+    private void refreshTabs(){channelField.setVisible(textureTab==3);if(textureTab!=3)channelField.setFocused(false);for(GuiButton b:buttonList){if(b.id>=90 && b.id<=93)b.enabled=b.id-90!=textureTab;else if(b.id==102||b.id==106)b.visible=textureTab==3;else if(b.id>=101&&b.id<=105)b.visible=textureTab!=3;}}
 
     private String sizeLabel(){return "Size: "+(small?"Small":"Full");}
     private String sidesLabel(){return "Side layout: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
