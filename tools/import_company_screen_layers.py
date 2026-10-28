@@ -24,6 +24,8 @@ def main():
         info=json.loads(metadata.read_text());company,height,subject=metadata.parts[-4:-1];identifier=f'company_{company}_{height}_{subject}';stem=('console_inputs/' if height=='half' else '')+identifier
         size=(128,64 if height=='half' else 128);frames=[Image.open(metadata.parent/f'frame_{i:02d}.png').convert('RGBA').resize(size,Image.Resampling.LANCZOS) for i in range(6)]
         target=textures/(stem+'_static.png');target.parent.mkdir(parents=True,exist_ok=True);frames[0].save(target,optimize=True)
+        if height=='half':
+            off=Image.new('RGBA',size,(0,0,0,0));off.putalpha(frames[0].getchannel('A'));off.save(textures/(stem+'_off.png'),optimize=True)
         strip=Image.new('RGBA',(size[0],size[1]*6))
         for i,frame in enumerate(frames):strip.paste(frame,(0,i*size[1]))
         animated=textures/(stem+'_animated.png');strip.save(animated,optimize=True);write_json(Path(str(animated)+'.mcmeta'),dict(animation=dict(width=size[0],height=size[1],frametime=round(info['frame_duration_ms']/50),frames=list(range(6)))))

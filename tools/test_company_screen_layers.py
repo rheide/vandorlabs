@@ -22,6 +22,10 @@ for entry in screens:
     stripPath=TEXTURES/(source.removesuffix('_static')+'_animated.png')
     strip=Image.open(stripPath).convert('RGBA')
     assert first.size==size and strip.size==(size[0],size[1]*6)
+    if source.startswith('console_inputs/'):
+        off=Image.open(TEXTURES/(source.removesuffix('_static')+'_off.png')).convert('RGBA')
+        assert off.size==size and off.getchannel('A').tobytes()==first.getchannel('A').tobytes()
+        assert off.convert('RGB').getbbox() is None,'OFF layer is not black'
     assert strip.crop((0,0,*size)).tobytes()==first.tobytes()
     assert strip.getchannel('A').getextrema()[0]<255,'Layer alpha was flattened'
     metadata=json.loads(Path(str(stripPath)+'.mcmeta').read_text())['animation']
