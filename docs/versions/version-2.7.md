@@ -25,9 +25,9 @@ frame Fit also surrounds rectangular groups. Programmable Input is now named
 
 Dialogs open on their first tab and use shared tabs, a Vandor logo and consistent
 Redstone and Security pages. Empty transmitter slots show a faded item icon;
-inserted transmitters have an inline channel field. Existing configured blocks
-from earlier versions receive one Long Range transmitter when upgraded. Removing
-that item leaves the slot empty on later loads. Cockpits share one transmitter
+inserted transmitters have an inline channel field. Existing configured redstone
+outputs from earlier versions receive Long Range hardware when upgraded. Removing
+a granted item leaves its slot empty on later loads. Cockpits share one transmitter
 across their controls and group their individual surfaces below the main tabs.
 The Vehicle Controller uses centered Vehicle and Redstone pages.
 Housing artwork is named **Sides**. New artwork includes six replacement
