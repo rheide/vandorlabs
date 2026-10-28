@@ -52,6 +52,7 @@ def obj(path):
 
 def model(name):
     data=json.loads((ASSETS/'models/block'/f'{name}.json').read_text());result=[]
+    if data.get('parent')=='block/cube':data['elements']=[{'from':[0,0,0],'to':[16,16,16],'faces':{face:{'texture':'#'+face,'uv':[0,0,16,16]} for face in ('north','south','east','west','up','down')}}]
     for element in data['elements']:
         x,y,z=[n/16 for n in element['from']];X,Y,Z=[n/16 for n in element['to']]
         corners={
@@ -104,6 +105,10 @@ def payload():
             state=dict(p.split('=') for p in props.split(','));key=f'{coupler}/{state["facing"]}/{state["locked"]}'
             if coupler=='vehicle_coupler_slab':key+='/'+state['half']
             states[key]=transformed(model(variant['model'].split(':',1)[1]),variant.get('x',0),variant.get('y',0))
+    variants=json.loads((ASSETS/'blockstates/redstone_transmitter_block.json').read_text())['variants']
+    for props,variant in variants.items():
+        facing=dict(p.split('=') for p in props.split(','))['facing']
+        states[f'redstone_transmitter_block/{facing}']=transformed(model('redstone_transmitter'),variant.get('x',0),variant.get('y',0))
     for name in TRACKS:
         source=model(name)
         for facing,yaw in zip(FACES,(0,90,180,270)):states[f'{name}/{facing}']=transformed(source,y=yaw)
@@ -121,7 +126,7 @@ def generate(check=False,definitions_only=False):
     data=payload();encoded=json.dumps(data,separators=(',',':'))+'\n'
     if check:assert DATA.read_text()==encoded,'Stale generated utility map meshes'
     else:DATA.parent.mkdir(parents=True,exist_ok=True);DATA.write_text(encoded)
-    names=('data_chip_programmer','square_coupler','vehicle_coupler_slab',*TRACKS)
+    names=('data_chip_programmer','square_coupler','vehicle_coupler_slab','redstone_transmitter_block',*TRACKS)
     models=[f'customblock:id=%{name},state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer' for name in names]
     textures=[f'texture:id=utility26_{i},filename=assets/vandorlabs/textures/{tex}.png,xcount=1,ycount=1' for i,tex in enumerate(data['textures'])]
     mapping=''.join(f',patch{i}=0:utility26_{i}' for i in range(len(data['textures'])))
@@ -131,7 +136,7 @@ def generate(check=False,definitions_only=False):
             path=ASSETS/filename;content=definitions(path.read_text(),lines)
             if check:assert path.read_text()==content,'Stale utility Dynmap definitions '+filename
             else:path.write_text(content)
-    print(f'Utility Dynmap meshes PASS states={len(data["states"])} textures={len(data["textures"])} programmer-parts=16 coupler-endpoints=36 native-track-defaults=12')
+    print(f'Utility Dynmap meshes PASS states={len(data["states"])} textures={len(data["textures"])} programmer-parts=16 coupler-endpoints=36 native-track-defaults=12 transmitter-facings=6')
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true');parser.add_argument('--data-only',action='store_true');args=parser.parse_args();generate(args.check,args.data_only)

@@ -21049,6 +21049,7 @@ modellist:id=%programmable_storage,state=facing:west,box=0/0/0:16/16/16:e/0:u/1:
 customblock:id=%data_chip_programmer,state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer
 customblock:id=%square_coupler,state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer
 customblock:id=%vehicle_coupler_slab,state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer
+customblock:id=%redstone_transmitter_block,state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer
 customblock:id=%compact_track,state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer
 customblock:id=%armoured_track,state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer
 customblock:id=%bogie_track,state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer

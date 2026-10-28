@@ -23,7 +23,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     private HousingTextureList onList;
     private GuiTextField channelField;
     private ProgrammableDialogLayout layout;
-    private int textureTab;
+    private int textureTab,page;
     private int off;
     private int on,low,medium,exact;private boolean states;
     private HousingTextureList lowList,mediumList;
@@ -40,25 +40,28 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     }
 
     @Override public void initGui() {
+        String draft=channelField==null?tile.getRedstoneChannels().toString():channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        offList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,off).visibleRows(layout.rows(true)).custom(value->{off=value;send();});
-        onList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,on).visibleRows(layout.rows(true)).custom(value->{on=value;send();});
-        lowList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,low).visibleRows(layout.rows(true)).custom(value->{low=value;send();});
-        mediumList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,medium).visibleRows(layout.rows(true)).custom(value->{medium=value;send();});
+        offList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,off).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{off=value;send();});
+        onList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,on).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{on=value;send();});
+        lowList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,low).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{low=value;send();});
+        mediumList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,medium).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{medium=value;send();});
+        buttonList.add(layout.tab(110,0,2,"General"));buttonList.add(layout.tab(111,1,2,"Redstone"));
         String[] names={"Off","Low 1-5","Mid 6-10","High 11-15"};for(int i=0;i<4;i++)buttonList.add(layout.tab(90+i,i,4,names[i]));
-        buttonList.add(layout.control(101,76,statesLabel()));buttonList.add(layout.control(102,100,exactLabel()));
-        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+42,154,18);
+        if(page==1){buttonList.add(layout.control(101,94,statesLabel()));buttonList.add(layout.control(102,118,exactLabel()));buttonList.add(layout.control(112,144,"Transmitter..."));}
+        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+64,154,18);
         ChannelFields.configure(channelField);
-        channelField.setText(tile.getRedstoneChannels().toString());buttonList.add(layout.done(100));refreshTabs();
+        channelField.setText(draft);channelField.setVisible(page==1);channelField.setFocused(false);buttonList.add(layout.done(100));refreshTabs();
     }
     private void refreshTabs(){
         String[] names={"Off","Low 1-5","Mid 6-10","High 11-15"};
         for(GuiButton b:buttonList)if(b.id>=90 && b.id<=93){
-            int index=b.id-90;b.visible=states || index==0 || index==3;b.enabled=index!=textureTab;
+            int index=b.id-90;b.visible=page==0&&(states || index==0 || index==3);b.enabled=index!=textureTab;
             GuiButton position=layout.tab(b.id,states?index:index==0?0:1,states?4:2,states?names[index]:index==0?"Redstone Off":"Redstone On");
-            b.x=position.x;b.width=position.width;b.displayString=position.displayString;
+            b.x=position.x;b.y=position.y+24;b.width=position.width;b.displayString=position.displayString;
         }
+        for(GuiButton button:buttonList)if(button.id==110||button.id==111)button.enabled=button.id!=110+page;
     }
 
     private String statesLabel(){return states?"Artwork: Signal bands":"Artwork: Off / On";}
@@ -75,15 +78,15 @@ public final class GuiProgrammableTrigger extends GuiContainer {
 
     @Override protected void mouseClicked(int x, int y, int button) throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,101,102))return;
-        if(activeList().click(x,y,button)){
+        if(page==0&&activeList().click(x,y,button)){
             int selected=activeList().selected();if(textureTab==0)off=selected;else if(textureTab==1)low=selected;else if(textureTab==2)medium=selected;else on=selected;send();return;
         }
         super.mouseClicked(x, y, button);
-        channelField.mouseClicked(x, y, button);
+        if(page==1)channelField.mouseClicked(x, y, button);
     }
 
     @Override protected void mouseClickMove(int x, int y, int button, long elapsed) {
-        if (activeList().drag(y)) return;
+        if (page==0&&activeList().drag(y)) return;
         super.mouseClickMove(x, y, button, elapsed);
     }
 
@@ -98,10 +101,12 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         int x = Mouse.getEventX() * width / mc.displayWidth;
         int y = height - Mouse.getEventY() * height / mc.displayHeight - 1;
         int wheel = Mouse.getEventDWheel();
-        activeList().wheel(x,y,wheel);
+        if(page==0)activeList().wheel(x,y,wheel);
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==110||button.id==111){page=button.id-110;initGui();return;}
+        if(button.id==112){send();PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
         if(button.id>=90 && button.id<=93){textureTab=button.id-90;refreshTabs();return;}
         if(button.id==101){states=!states;if(!states && (textureTab==1 || textureTab==2))textureTab=3;refreshTabs();button.displayString=statesLabel();send();}
         if(button.id==102){exact=GuiOptionCycle.next(exact,-1,15);button.displayString=exactLabel();send();}
@@ -113,7 +118,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
             if(channel()<0)return;
             send(); mc.player.closeScreen(); return;
         }
-        if (channelField.textboxKeyTyped(typed, key)) send();
+        if (page==1&&channelField.textboxKeyTyped(typed, key)) send();
         else super.keyTyped(typed, key);
     }
 
@@ -133,11 +138,11 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     @Override public void drawScreen(int mouseX, int mouseY, float partial) {
         drawDefaultBackground();
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
-        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 24, 0xFF202028);
+        drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 24, 0xFF202028);DialogHeader.logo(guiLeft,guiTop,xSize);
         fontRenderer.drawString("Programmable Trigger Block", guiLeft + 12,
                 guiTop + 8, 0xFFFFFFFF);
-        activeList().draw(fontRenderer,mouseX,mouseY);
-        fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+30,0xDAE8F0);
+        if(page==0)activeList().draw(fontRenderer,mouseX,mouseY);
+        if(page==1)fontRenderer.drawString("Input channels",layout.controlsX,guiTop+52,0xDAE8F0);
         super.drawScreen(mouseX, mouseY, partial);
         channelField.drawTextBox();
     }

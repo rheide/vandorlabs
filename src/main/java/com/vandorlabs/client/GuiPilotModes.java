@@ -36,7 +36,7 @@ public final class GuiPilotModes extends GuiContainer {
     protected void keyTyped(char c,int key)throws IOException{if(key==1 || key==mc.gameSettings.keyBindInventory.getKeyCode()){actionPerformed(new GuiButton(4,0,0,"Close"));return;}boolean used=false;for(GuiTextField f:fields)used|=f.textboxKeyTyped(c,key);if(!used)super.keyTyped(c,key);}
     protected void mouseClicked(int x,int y,int b)throws IOException{super.mouseClicked(x,y,b);for(GuiTextField f:fields)f.mouseClicked(x,y,b);}
     public void onGuiClosed(){if(fields[0]!=null)apply();super.onGuiClosed();org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
-    protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF17212B);}
+    protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF17212B);DialogHeader.logo(guiLeft,guiTop,xSize);}
     protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString("Vehicle Controller: mode channels",14,12,0xFFFFFF);String[] names={"Block / Park","Taxi","Hover"};for(int i=0;i<3;i++)fontRenderer.drawString(names[i],14,45+i*29,0xDAE8F0);fontRenderer.drawString("0 = unassigned; rising power selects mode",14,132,0xAABBCC);fontRenderer.drawString("Valid changes apply automatically",14,144,0xAABBCC);}
     public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();for(GuiTextField f:fields)f.drawTextBox();}
 }

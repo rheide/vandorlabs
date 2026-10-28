@@ -70,6 +70,7 @@ public final class GuiProgrammableChair extends GuiContainer {
                 guiTop + ySize - 6, 0xFF343C49);
         drawRect(guiLeft + 151, guiTop + 26, guiLeft + 243, guiTop + 135,
                 0xFF111820);
+        DialogHeader.logo(guiLeft,guiTop,xSize);
         ItemStack preview = new ItemStack(ModBlocks.PROGRAMMABLE_CHAIR);
         NBTTagCompound data = new NBTTagCompound();
         data.setInteger("ChairStyle", selected);

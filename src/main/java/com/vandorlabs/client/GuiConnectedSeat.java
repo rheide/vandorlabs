@@ -20,7 +20,7 @@ public final class GuiConnectedSeat extends GuiContainer {
         if(button.id==0)tile.setJoin(!tile.isJoin());else tile.setHeight(GuiOptionCycle.next(tile.getHeight(),3));
         PacketHandler.INSTANCE.sendToServer(new MessageConnectedSeat(tile.getPos(),tile.isJoin(),tile.getHeight()));initGui();
     }
-    protected void drawGuiContainerBackgroundLayer(float ticks,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xEE171B23);}
+    protected void drawGuiContainerBackgroundLayer(float ticks,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xEE171B23);DialogHeader.logo(guiLeft,guiTop,xSize);}
     protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString(new net.minecraft.item.ItemStack(tile.getBlockType()).getDisplayName(),14,12,0xFFFFFF);
         fontRenderer.drawString("Default legs: +1 px",14,84,0xBBBBBB);

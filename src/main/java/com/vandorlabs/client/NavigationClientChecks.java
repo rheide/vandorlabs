@@ -57,9 +57,8 @@ final class NavigationClientChecks {
             ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");int before=(Integer)field(gui,"speed");assertDataOnlyControls(gui);
             gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(4)+6,1);require((Integer)field(gui,"speed")==Math.floorMod(before-1,3),"right-click previous speed");
             gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(4)+6,0);expectedSpeed=before;require((Integer)field(gui,"speed")==before,"left-click next speed");
-            gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(1)+6,0);
             // A selected native option must survive scrolling and scrollbar dragging.
-            int choice=picker.selected();picker.wheel(panel.listX+2,panel.top+35,-120);picker.click(panel.listX+panel.listWidth+2,panel.top+36,0);require(picker.drag(panel.top+100),"shared scrollbar drag");picker.release();require(picker.selected()==choice,"scrolling preserves selection");
+            int choice=picker.selected();picker.wheel(panel.listX+2,panel.top+60,-120);picker.click(panel.listX+panel.listWidth+2,panel.top+60,0);require(picker.drag(panel.top+124),"shared scrollbar drag");picker.release();require(picker.selected()==choice,"scrolling preserves selection");redstone(gui);gui.mouseClicked(panel.controlsX+8,panel.top+gui.controlY(1)+6,0);
             stage=4;ticks=0;return false;
         }
         if(stage==4){
@@ -82,7 +81,7 @@ final class NavigationClientChecks {
             GuiNavigationTable gui=(GuiNavigationTable)mc.currentScreen;require(((int[])field(gui,"choices")).length==2,"screen and keyboard tabs");machineScreen=NavigationRuntimeChecks.artwork();machineKeyboard=-1;
             for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenTextureList.artwork(i,true)){machineKeyboard=ScreenHousingTextures.choiceAt(i);break;}require(machineKeyboard>=0,"keyboard artwork exists");
             paint(gui,machineScreen);ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");GuiButton keyboard=button(gui,21);gui.mouseClicked(keyboard.x+keyboard.width/2,keyboard.y+keyboard.height/2,0);paint(gui,machineKeyboard);assertDataOnlyControls(gui);
-            gui.mouseClicked(panel.controlsX+6,panel.top+gui.controlY(1)+6,0);stage=7;ticks=0;return false;
+            redstone(gui);gui.mouseClicked(panel.controlsX+6,panel.top+gui.controlY(1)+6,0);stage=7;ticks=0;return false;
         }
         if(stage==7){
             if(ticks<15)return false;
@@ -98,6 +97,7 @@ final class NavigationClientChecks {
         }
         return false;
     }
+    private static void redstone(GuiNavigationTable gui)throws Exception{java.util.List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton button:buttons)if(button.displayString.equals("Redstone")){gui.mouseClicked(button.x+button.width/2,button.y+button.height/2,0);return;}throw new IllegalStateException("Missing dedicated Redstone page");}
     private static GuiButton button(GuiNavigationTable gui,int id){
         java.util.List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton button:buttons)if(button.id==id)return button;throw new IllegalStateException("Missing display control "+id);
     }
@@ -105,7 +105,7 @@ final class NavigationClientChecks {
         java.util.List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton button:buttons)if(button.visible){String label=button.displayString.toLowerCase(java.util.Locale.ROOT);require(button.id!=2&&!label.contains("security")&&!label.contains("company")&&!label.contains("return after"),"integrated display has no Security/company/return controls");}
     }
     private static void paint(GuiNavigationTable gui,int choice)throws Exception{
-        HousingTextureList picker=(HousingTextureList)field(gui,"textures");picker.setSelected(choice);java.util.List<?> rows=(java.util.List<?>)field(picker,"rows");int scroll=(Integer)field(picker,"scroll"),row=rows.indexOf(choice)-scroll;require(row>=0,"selected artwork is visible");ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");gui.mouseClicked(panel.listX+30,panel.top+52+row*HousingTextureList.ROW_HEIGHT+10,0);
+        HousingTextureList picker=(HousingTextureList)field(gui,"textures");picker.setSelected(choice);java.util.List<?> rows=(java.util.List<?>)field(picker,"rows");int scroll=(Integer)field(picker,"scroll"),row=rows.indexOf(choice)-scroll;require(row>=0,"selected artwork is visible");ProgrammableDialogLayout panel=(ProgrammableDialogLayout)field(gui,"panel");gui.mouseClicked(panel.listX+30,panel.top+58+row*HousingTextureList.ROW_HEIGHT+10,0);
     }
     static void render(Minecraft mc){if(pending==null)return;try{javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,pending));pending=null;captured=true;}catch(java.io.IOException e){throw new IllegalStateException(e);}}
 }
