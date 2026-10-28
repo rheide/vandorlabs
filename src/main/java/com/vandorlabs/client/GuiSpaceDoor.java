@@ -55,16 +55,16 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,30,motion.label);buttonList.add(motionButton);
         buttonList.add(layout.choice(12,0,2,52,framed?"Frame: Framed":"Frame: Bare"));
-        buttonList.add(layout.control(16,72,triggerLabel()));buttonList.add(layout.choice(13,0,2,92,depthLabel()));
+        buttonList.add(layout.control(16,96,triggerLabel()));buttonList.add(layout.choice(13,0,2,92,depthLabel()));
         hingeButton=layout.choice(15,1,2,52,"");buttonList.add(hingeButton);updateHingeButton();
         buttonList.add(layout.choice(17,1,2,92,panelLabel()));
         buttonList.add(layout.control(18,112,layoutLabel()));
-        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+145,154,18);
+        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+64,154,18);
         ChannelFields.configure(channelField);channelField.setText(channelText);
         buttonList.add(layout.control(19,168,securityLabel()));
-        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);buttonList.add(layout.control(198,190,"Transmitter..."));updateChannelValidity();refreshPages();
+        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);buttonList.add(layout.control(198,142,"Transmitter..."));updateChannelValidity();refreshPages();
     }
-    private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=193){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);}
+    private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=193){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);if(!channelField.getVisible())channelField.setFocused(false);}
     private net.minecraft.item.ItemStack companyCard(){return CredentialFilterPicker.sample(false,securityAllowed);}
     String companyLabel(){return CredentialFilterPicker.label(false,securityAllowed);}
     private String panelLabel(){return "Panel: "+new String[]{"Off","On","Both"}[panelMode];}
@@ -120,7 +120,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19))return;
         if(settingsPage==3&&CredentialFilterPicker.click(this,x,y,button,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed,mask->{securityAllowed=mask;sendUpdate();}))return;
-        channelField.mouseClicked(x,y,button);
+        if(channelField.getVisible())channelField.mouseClicked(x,y,button);
         int before=textureList.selected();
         if(settingsPage==0&&textureList.click(x,y,button)) {
             if(before!=textureList.selected()) {
@@ -138,7 +138,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
             if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return;
         }
         String oldText=channelField.getText();
-        if (channelField.textboxKeyTyped(c,key)) {
+        if (channelField.getVisible() && channelField.textboxKeyTyped(c,key)) {
             updateChannelValidity();
             if (!oldText.equals(channelField.getText()) && channel()>=0) sendUpdate();
             return;
@@ -163,7 +163,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         fontRenderer.drawString(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?"Large Programmable Door":"Programmable Door",12,8,0xFFFFFF);
 
 
-        if(settingsPage==2)fontRenderer.drawString("Channels (0 = none)",layout.controlsX-guiLeft,135,0xDAE8F0);
+        if(settingsPage==2)fontRenderer.drawString("Channels (0 = none)",layout.controlsX-guiLeft,54,0xDAE8F0);
         if (channel()<0) fontRenderer.drawString("Invalid channel",12,ySize-18,0xFF7777);
 
     }

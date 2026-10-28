@@ -43,6 +43,7 @@ for directory in ['frames-company-half-full', 'frames-door-window', 'frames-scre
         for e in entries:
             if e["id"]==identifier:
                 e["frameRail"]="frames/"+relative.with_suffix("").as_posix()+"_rail"
+                e["frameBorder"]=image.getpixel((image.width//2,image.height//2))[3]<128
                 e["label"]=re.sub(r"_1254(?:x(?:627|1254))?$", "",source.stem,flags=re.I).replace("_"," ").replace("-"," ").title()
         count += 1
 catalog.write_text(json.dumps(entries,indent=2)+'\n')

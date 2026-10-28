@@ -109,7 +109,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         int light=tile.getWorld().getCombinedLight(tile.getPos(),tile.frameAppearance.light());OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        if(tile.frameAppearance.front>=0)for(boolean front:new boolean[]{true,false})for(int i=0;i<4;i++){
+        if(tile.frameAppearance.front>=0&&com.vandorlabs.tiles.FrameAppearance.border(tile.frameAppearance.front))for(boolean front:new boolean[]{true,false})for(int i=0;i<4;i++){
             int v=front?i:3-i;double px=v==1||v==2?1:0,py=v<2?1:0;
             WorldSurface.vertex(b,px,py,front?PANE_NEAR-.001:PANE_FAR+.001,sprite.getInterpolatedU((layout.column+px)*16/layout.columns),sprite.getInterpolatedV((layout.rows-layout.row-py)*16/layout.rows),0,0,front?-1:1);
         }

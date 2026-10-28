@@ -374,6 +374,7 @@ public class TEAnimatedScreenSelector
             return;
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
+        if(te.initializeDisplayArtwork(state.getBlock()))com.vandorlabs.tiles.GlassMaterials.changed();
         boolean fluidPass=te.isWaterlogged()&&com.vandorlabs.blocks.WaterloggedParts.supports(state)&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1;
         if(fluidPass&&!(state.getBlock() instanceof BlockProgrammableWall))WaterloggedRenderer.render(te,x,y,z);
         if (!(state.getBlock() instanceof BlockAnimatedScreenSelector)) {
@@ -542,7 +543,7 @@ public class TEAnimatedScreenSelector
             // Off-texture follows the ACTIVE variant id, so it stays correct
             // even if the tile's framed flag ever skews from its screen id.
             boolean framed = ModBlocks.DISPLAY_FRAMED_IDS.contains(screenId);
-            texture = ScreenTextureLocations.off(framed);
+            texture = ScreenTextureLocations.off(false);
             vTop = 0.0F;
             vBottom = 1.0F;
         } else if (mode == TileEntityAnimatedScreenSelector.MODE_ANIMATED) {
@@ -577,6 +578,7 @@ public class TEAnimatedScreenSelector
         }
 
         float uMin=0,uMax=1;
+        if("engineering_screen".equals(screenId)&&te.getSurfaceTexture(0)<0){float span=vBottom-vTop;vTop+=span/16;vBottom-=span/16;uMin=1F/16;uMax=15F/16;}
         bindTexture(texture);
         if(te.getSurfaceTexture(0)>=0){double[] uv=bindSurface(te,0);vTop=(float)uv[0];vBottom=(float)uv[1];uMin=(float)uv[2];uMax=(float)uv[3];}
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightU, lightV);
@@ -684,7 +686,7 @@ public class TEAnimatedScreenSelector
         double vTop = 0;
         double vBottom = 1;
         if (mode == TileEntityAnimatedScreenSelector.MODE_OFF) {
-            texture = ScreenTextureLocations.off(ModBlocks.DISPLAY_FRAMED_IDS.contains(id));
+            texture = ScreenTextureLocations.off(false);
             setWorldLight(te);
         } else if (mode == TileEntityAnimatedScreenSelector.MODE_ANIMATED) {
             AnimData data = animData(id);
@@ -699,7 +701,7 @@ public class TEAnimatedScreenSelector
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240, 240);
         }
         Minecraft.getMinecraft().getTextureManager().bindTexture(texture);
-        return new double[] {vTop, vBottom};
+        double[] uv=new double[]{vTop,vBottom,0,1};if("engineering_screen".equals(id))engineeringBody(uv);return uv;
     }
 
     /** Existing console layout compressed to half height, with input art on
@@ -727,7 +729,7 @@ public class TEAnimatedScreenSelector
             int choice=half==0?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom;
             if(choice<0)choice=tile.getSurfaceTexture(0)>=0?tile.getSurfaceTexture(0):ScreenHousingTextures.screenIndex(tile.getSelectedScreen()+"_static");
             TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));
-            boolean input=tile.getBlockType() instanceof BlockProgrammableInput;drawScreenQuad(buffer,ScreenSurface.half(quad,half==0),input?sprite.getMaxU():sprite.getMinU(),input?sprite.getMinU():sprite.getMaxU(),sprite.getMinV(),sprite.getMaxV(),false);
+            double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(choice))engineeringBody(uv);boolean input=tile.getBlockType() instanceof BlockProgrammableInput;drawScreenQuad(buffer,ScreenSurface.half(quad,half==0),input?uv[3]:uv[2],input?uv[2]:uv[3],uv[0],uv[1],false);
         }
     }
 
@@ -747,9 +749,11 @@ public class TEAnimatedScreenSelector
         }
     }
 
+    private static boolean engineeringChoice(int choice){com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);return entry!=null&&"engineering_screen_static".equals(entry.get("source").getAsString());}
+    private static void engineeringBody(double[] uv){double height=(uv[1]-uv[0])/16,width=(uv[3]-uv[2])/16;uv[0]+=height;uv[1]-=height;uv[2]+=width;uv[3]-=width;}
     private static double[] bindSurface(TileEntityAnimatedScreenSelector te,int slot) {
         bindAtlas();TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(te.getSurfaceTexture(slot)));
-        setWorldLight(te);return new double[]{sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};
+        setWorldLight(te);double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(te.getSurfaceTexture(slot)))engineeringBody(uv);return uv;
     }
     static double[] bindCockpit(com.vandorlabs.tiles.TileEntityCockpit tile,com.vandorlabs.tiles.TileEntityCockpit.Display screen){
         return bindDisplay(tile,screen.texture,screen.active,screen.animated,screen.speed);

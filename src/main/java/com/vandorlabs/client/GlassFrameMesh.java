@@ -12,7 +12,7 @@ final class GlassFrameMesh {
     static StaticSurfaceMesh get(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout){
         net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
         int mask=(layout.column==0?1:0)|(layout.column==layout.columns-1?2:0)|(layout.row==0?4:0)|(layout.row==layout.rows-1?8:0);
-        Key key=new Key(tile.frameAppearance.front>=0?null:atlas.getAtlasSprite("vandorlabs:blocks/space_doors/medium/double_frame_metal"),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),mask);
+        Key key=new Key(tile.frameAppearance.front>=0&&com.vandorlabs.tiles.FrameAppearance.border(tile.frameAppearance.front)?null:atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),mask);
         StaticSurfaceMesh mesh=CACHE.get(key);if(mesh!=null)return mesh;StaticSurfaceMesh.Capture b=StaticSurfaceMesh.capture();
         if((mask&1)!=0)box(b,key,0,0,1,16);if((mask&2)!=0)box(b,key,15,0,16,16);if((mask&4)!=0)box(b,key,0,0,16,1);if((mask&8)!=0)box(b,key,0,15,16,16);
         mesh=b.finish();CACHE.put(key,mesh);return mesh;

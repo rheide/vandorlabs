@@ -74,7 +74,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         buttonList.add(layout.control(4,98,""));
         buttonList.add(layout.control(0,120,""));
         buttonList.add(layout.control(32,142,sidesLabel()));
-        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+177,154,18);
+        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+64,154,18);
         ChannelFields.configure(channelField);
 
         channelField.setText(te.getRedstoneChannels().toString());
@@ -86,7 +86,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     private String sidesLabel(){return "Sides: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
-        channelField.setVisible(textureTab==3);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==3;else if(option.id==32)option.visible=textureTab==2;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<2;}
+        channelField.setVisible(textureTab==3);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==3;else if(option.id==32)option.visible=textureTab==2;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<2;}
 
         for (GuiButton button : buttonList) {
             if(button.id==4){button.visible=false;ScreenTextureList picker=textureTab==1?topList:bottomList;button.displayString=(picker.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab<2 && picker.hasPair();}
@@ -142,7 +142,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         boolean first=textureTab==0 && bottomList.click(mouseX,mouseY,button),second=textureTab==1 && topList.click(mouseX,mouseY,button);
         if(first || second){ScreenTextureList picker=first?bottomList:topList;if(picker.picked())chooseArtwork(picker,first?0:1);return;}
         super.mouseClicked(mouseX, mouseY, button);
-        channelField.mouseClicked(mouseX,mouseY,button);
+        if(channelField.getVisible())channelField.mouseClicked(mouseX,mouseY,button);
     }
 
     @Override protected void mouseReleased(int mouseX,int mouseY,int state) {
@@ -233,12 +233,12 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         else if(textureTab==2)housingList.draw(fontRenderer,mouseX,mouseY);
         if(textureTab<2)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+30,0xDAE8F0);
         if(textureTab<2)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+64,0xDAE8F0);
-        if(textureTab==3)fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+166,0xDAE8F0);
+        if(textureTab==3)fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+54,0xDAE8F0);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {
-        if (channelField.textboxKeyTyped(c,key)) { if (channel()>=0) sendUpdate(); }
+        if (channelField.getVisible() && channelField.textboxKeyTyped(c,key)) { if (channel()>=0) sendUpdate(); }
         else super.keyTyped(c,key);
     }
     @Override public void updateScreen() { super.updateScreen(); channelField.updateCursorCounter(); }

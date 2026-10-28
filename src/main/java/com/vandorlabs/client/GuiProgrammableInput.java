@@ -74,7 +74,7 @@ public class GuiProgrammableInput extends GuiContainer {
         buttonList.add(layout.control(4,108,""));
         buttonList.add(layout.control(0,130,""));
         buttonList.add(layout.control(32,152,sidesLabel()));
-        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+185,154,18);
+        channelField=new GuiTextField(40,fontRenderer,cx,guiTop+64,154,18);
         ChannelFields.configure(channelField);
 
         channelField.setText(te.getRedstoneChannels().toString());
@@ -86,7 +86,7 @@ public class GuiProgrammableInput extends GuiContainer {
 
     private String sidesLabel(){return "Wall texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
-        channelField.setVisible(textureTab==2);
+        channelField.setVisible(textureTab==2);if(!channelField.getVisible())channelField.setFocused(false);
         for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==2;else if(option.id==32)option.visible=textureTab==1;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12||option.id==30||option.id==31)option.visible=textureTab<1;}
 
         for (GuiButton button : buttonList) {
@@ -153,7 +153,7 @@ public class GuiProgrammableInput extends GuiContainer {
         }
         if(textureTab==0 && screenList.click(mouseX,mouseY,button)){if(screenList.picked())chooseArtwork(screenList);return;}
         super.mouseClicked(mouseX, mouseY, button);
-        channelField.mouseClicked(mouseX, mouseY, button);
+        if(channelField.getVisible())channelField.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
@@ -226,12 +226,12 @@ public class GuiProgrammableInput extends GuiContainer {
         else if(textureTab==1)housingList.draw(fontRenderer,mouseX,mouseY);
         if(textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+26,0xDAE8F0);
         if(textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+58,0xDAE8F0);
-        if(textureTab==2)fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+174,0xDAE8F0);
+        if(textureTab==2)fontRenderer.drawString("Channels (0 = none)",layout.controlsX,guiTop+54,0xDAE8F0);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {
-        if (channelField.textboxKeyTyped(c,key)) { if (channel()>=0) sendUpdate(); }
+        if (channelField.getVisible() && channelField.textboxKeyTyped(c,key)) { if (channel()>=0) sendUpdate(); }
         else super.keyTyped(c,key);
     }
     @Override public void updateScreen() { super.updateScreen(); channelField.updateCursorCounter(); }

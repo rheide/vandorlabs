@@ -24,6 +24,7 @@ import java.io.IOException;
 public class GuiProgrammableWall extends GuiMaterialPicker {
     private static final String[] JOINS={"Auto","Straight","Front left corner","Front right corner","Back left corner","Back right corner","Front left T","Front right T","Back left T","Back right T","Left cross","Right cross"};
     private int rows = 8;
+    private boolean redstonePage;
     private HousingTextureList textureList;
     private static final String[] SHADES = {"Clear", "Cyan", "Dark Grey"};
     private static final String[] SHAPES = {"Hexagon", "Octagon", "Square", "Round"};
@@ -88,14 +89,14 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         ySize = porthole ? 272 : slab || diagonal ? 216 : 190;
     }
 
-    @Override protected HousingTextureList materialPicker(){return textureList;}
+    @Override protected HousingTextureList materialPicker(){return redstonePage?null:textureList;}
     @Override public void initGui() { initWallLayout(); }
 
     private void initWallLayout() {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
         xSize=layout.width;ySize=layout.height;
         super.initGui();
-        buttonList.clear();buttonList.add(new DialogTabButton(196,guiLeft+xSize-160,guiTop+1,62,17,"Redstone"));buttonList.add(new DialogTabButton(197,guiLeft+xSize-96,guiTop+1,58,17,"Frame"));
+        buttonList.clear();if(redstonePage)buttonList.add(new DialogTabButton(195,guiLeft+8,guiTop+1,80,17,"Appearance"));buttonList.add(new DialogTabButton(196,guiLeft+xSize-160,guiTop+1,62,17,"Redstone"));if(tile.getBlockType() instanceof BlockProgrammableWall)buttonList.add(new DialogTabButton(197,guiLeft+xSize-96,guiTop+1,58,17,"Frame"));
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH, controlsX=layout.controlsX;
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
         listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?54:30);
@@ -150,7 +151,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         if(diagonalGlass)y+=24;
         if(glassSurface()) {
             buttonList.add(new GuiButton(113,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Tint: ")+com.vandorlabs.tiles.GlassTextures.tintLabel(tile.getGlassTint())));
-            if(diagonalGlass)buttonList.add(new GuiButton(114,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,tile.isGlassFramed()?"Framed":"Bare"));
+            if(diagonalGlass){GuiButton frameToggle=new GuiButton(114,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,tile.isGlassFramed()?"Framed":"Bare");frameToggle.visible=false;buttonList.add(frameToggle);}
             y+=24;
             if(tile.getGlassMaterial()>=0){
                 buttonList.add(new GuiButton(115,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Texture: ")+(tile.getGlassTextureLayout()==2?(diagonalGlass?"Fit":"Fit (aspect)"):tile.getGlassTextureLayout()==1?"Tile":"Stretch")));
@@ -165,6 +166,9 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             buttonList.add(new GuiButton(131,controlsX,y,controlsWidth,20,"Orientation: "+(tile.stairRoll()==0?"Normal":"Sideways")));
         }
         buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
+        if(redstonePage)buttonList.add(new GuiButton(198,guiLeft+12,guiTop+64,154,20,"Transmitter..."));
+        for(GuiButton b:buttonList){if(b.id==196)b.enabled=!redstonePage;else if(b.id!=195&&b.id!=197&&b.id!=198&&b.id!=100)b.visible=!redstonePage;}
+
     }
 
     private void sendStairs(){PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageStairGeometry(tile.getPos(),tile.stairTread(),tile.stairRoll()));}
@@ -228,13 +232,14 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114,115,116,131))return;
+        if(redstonePage){super.mouseClicked(mouseX,mouseY,button);return;}
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if(button.id==196){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(button.id==195||button.id==196){redstonePage=button.id==196;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
 
         if(button.id==197){mc.displayGuiScreen(new GuiFrameAppearance(inventorySlots,tile,this));return;}
 
@@ -331,14 +336,14 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         drawDefaultBackground();
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 18, 0xFF202028);
-        fontRenderer.drawString(diagonalGlass?"Programmable Diagonal Glass":I18n.format(tile.getWorld().getBlockState(tile.getPos()).getBlock()
+        if(!redstonePage)fontRenderer.drawString(fontRenderer.trimStringToWidth(diagonalGlass?"Programmable Diagonal Glass":I18n.format(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                         instanceof com.vandorlabs.blocks.BlockProgrammableStairs ? "gui.vandorlabs.stairs.title"
                 : tile.getBlockType() instanceof BlockProgrammableSlab ? "gui.vandorlabs.slab.title"
                         : tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage ? "tile.vandorlabs.programmable_storage.name"
                         : fullBlock ? "gui.vandorlabs.block.title"
-                        : "gui.vandorlabs.wall.title"),
+                        : "gui.vandorlabs.wall.title"),xSize-176),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
-        textureList.draw(fontRenderer,mouseX,mouseY);
+        if(!redstonePage)textureList.draw(fontRenderer,mouseX,mouseY);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
