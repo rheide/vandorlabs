@@ -133,7 +133,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,7,8,9))return;
         super.mouseClicked(x,y,button);
         if(materials){if(housing.click(x,y,button))texture=housing.selected();return;}
-        titleField.mouseClicked(x,y,button);labelField.mouseClicked(x,y,button);channelField.mouseClicked(x,y,button);
+        titleField.mouseClicked(x,y,button);labelField.mouseClicked(x,y,button);
         if(x>=guiLeft+12 && x<guiLeft+xSize-180 && y>=guiTop+rowListTop && y<guiTop+rowListTop+visibleRows()*20){
             int next=scroll+(y-guiTop-rowListTop)/20;if(next<labels.size() && store()){selected=next;load();refresh();}
         }
@@ -145,7 +145,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
     }}
     protected void keyTyped(char c,int key)throws IOException{
         if(key==Keyboard.KEY_RETURN || key==Keyboard.KEY_NUMPADENTER){send();return;}
-        if(!materials && (typeText(titleField,RedstoneScreenText.TITLE_WIDTH,c,key)||typeText(labelField,selected>=0 && sliders.get(selected)?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH,c,key)||channelField.textboxKeyTyped(c,key))){store();return;}super.keyTyped(c,key);
+        if(!materials && (typeText(titleField,RedstoneScreenText.TITLE_WIDTH,c,key)||typeText(labelField,selected>=0 && sliders.get(selected)?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH,c,key))){store();return;}super.keyTyped(c,key);
     }
     private boolean typeText(GuiTextField field,int budget,char c,int key){
         String before=field.getText();int cursor=field.getCursorPosition(),selection=field.getSelectionEnd();

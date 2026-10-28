@@ -100,7 +100,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         save();initGui();
     }
     @Override protected void keyTyped(char ch,int key)throws IOException{boolean consumed=false;for(GuiTextField f:fields)consumed|=f.textboxKeyTyped(ch,key);if(consumed)save();else super.keyTyped(ch,key);}
-    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,12,13,30,31,32,40,42,43))return;for(GuiTextField f:fields)f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
+    @Override protected void mouseClicked(int x,int y,int button)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,1,10,11,12,13,30,31,32,40,42,43))return;for(GuiTextField f:fields)if(f.getVisible())f.mouseClicked(x,y,button);if(textures!=null && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);}
     @Override public void updateScreen(){for(GuiTextField f:fields)f.updateCursorCounter();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize);}
