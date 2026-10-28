@@ -73,7 +73,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         buttonList.add(layout.fullTab(90,0,5,"Bottom"));
         buttonList.add(layout.fullTab(91,1,5,"Top"));
         buttonList.add(layout.fullTab(92,2,5,"Sides"));
-        buttonList.add(layout.fullTab(93,3,5,"Redstone"));buttonList.add(layout.fullTab(197,4,5,"Frame"));buttonList.add(new GuiButton(198,redstoneX,guiTop+132,redstoneWidth,20,"Transmitter..."));
+        buttonList.add(layout.fullTab(93,4,5,"Redstone"));buttonList.add(layout.fullTab(197,3,5,"Frame"));
         left=right=layout.listX;top=guiTop+54;
         topList=new ScreenTextureList(left,top,layout.listWidth,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(topList,1)).redstone(te.getPos(),1,()->openRows(1));
         bottomList=new ScreenTextureList(left,top,layout.listWidth,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(bottomList,0)).redstone(te.getPos(),0,()->openRows(0));
@@ -94,7 +94,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=93)b.enabled=b.id-90!=textureTab;}
 
-    private String sidesLabel(){return "Sides: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
+    private String sidesLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
         channelField.setVisible(textureTab==3);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==3;else if(option.id==32)option.visible=textureTab==2;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<2;}
 

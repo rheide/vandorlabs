@@ -329,6 +329,7 @@ public final class ProgrammableSettings {
             ((TileEntitySpaceDoor)tile).applyItemSettings(input.getSubCompound("SpaceDoorSettings"));
         if (tile instanceof TileEntityProgrammableGlass && input.getSubCompound("ProgrammableGlassSettings") != null) {
             NBTTagCompound glass = input.getSubCompound("ProgrammableGlassSettings");
+            ((TileEntityProgrammableGlass)tile).frameAppearance.read(glass);
             ((TileEntityProgrammableGlass)tile).setSize(glass.getInteger("Size"));
             ((TileEntityProgrammableGlass)tile).setShade(glass.getInteger("Shade"));
             ((TileEntityProgrammableGlass)tile).setMaterial(glass.hasKey("Material",3)?glass.getInteger("Material"):-1);
@@ -356,6 +357,7 @@ public final class ProgrammableSettings {
             settings.setInteger("Size", glass.getSize());settings.setInteger("Shade",glass.getShade());settings.setBoolean("Join",glass.isJoin());settings.setInteger("Tint",glass.getTint());settings.setBoolean("Framed",glass.isFramed());
             settings.setInteger("Material",glass.getMaterial());
             settings.setBoolean("Stretch",glass.isStretch());settings.setInteger("LayoutMode",glass.getTextureLayout());
+            glass.frameAppearance.write(settings);
             output.setTagInfo("ProgrammableGlassSettings",settings);
         }
         if (tile instanceof TileEntityRampController) output.setTagInfo("CopiedRampSettings", values.copy());

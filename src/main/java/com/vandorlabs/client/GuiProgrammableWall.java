@@ -97,10 +97,10 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         xSize=layout.width;ySize=layout.height;
         super.initGui();
         buttonList.clear();boolean hasFrame=tile.getBlockType() instanceof BlockProgrammableWall;
-        buttonList.add(layout.fullTab(195,0,hasFrame?3:2,"Appearance"));if(hasFrame)buttonList.add(layout.fullTab(197,1,3,"Frame"));buttonList.add(layout.fullTab(196,hasFrame?2:1,hasFrame?3:2,"Redstone"));
+        buttonList.add(layout.fullTab(195,0,hasFrame?2:1,"Appearance"));if(hasFrame)buttonList.add(layout.fullTab(197,1,2,"Frame"));
         for(GuiButton tab:buttonList)tab.enabled=tab.id!=(framePage?197:redstonePage?196:195);
         if(framePage){if(framePane==null)framePane=diagonalGlass?new FrameAppearancePane(this,tile,()->{tile.setGlassAppearance(tile.getGlassTint(),!tile.isGlassFramed());sendPortholeSettings();},()->tile.isGlassFramed()):new FrameAppearancePane(this,tile);framePane.init(54,buttonList);buttonList.add(layout.done(100));return;}
-        if(redstonePage){buttonList.add(new GuiButton(198,guiLeft+12,guiTop+64,xSize-24,20,"Transmitter..."));buttonList.add(layout.done(100));return;}
+        if(redstonePage){buttonList.add(layout.done(100));return;}
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH, controlsX=layout.controlsX;
         boolean faceTabs=supportsFaces() && tile.getFaceTextures().enabled;
         listX=guiLeft+12; listY=guiTop+(faceTabs || slab || porthole?78:54);
@@ -170,7 +170,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             buttonList.add(new GuiButton(131,controlsX,y,controlsWidth,20,"Orientation: "+(tile.stairRoll()==0?"Normal":"Sideways")));
         }
         buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
-        if(redstonePage)buttonList.add(new GuiButton(198,guiLeft+12,guiTop+64,154,20,"Transmitter..."));
+
         java.util.SortedSet<Integer> positions=new java.util.TreeSet<>();for(GuiButton button:buttonList)if(!(button instanceof DialogTabButton)&&button.id!=100&&button.visible)positions.add(button.y);
         if(!positions.isEmpty()&&positions.last()+20>guiTop+ySize-30){int first=positions.first(),step=Math.min(24,(guiTop+ySize-30-first)/positions.size());java.util.List<Integer> ordered=new java.util.ArrayList<>(positions);for(GuiButton button:buttonList)if(!(button instanceof DialogTabButton)&&button.id!=100&&button.visible){button.y=first+ordered.indexOf(button.y)*step;button.height=Math.min(20,step-2);}}
         for(GuiButton b:buttonList){if(b.id==196)b.enabled=!redstonePage;else if(b.id!=195&&b.id!=197&&b.id!=198&&b.id!=100)b.visible=!redstonePage;}
@@ -342,12 +342,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         drawDefaultBackground();
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + ySize, 0xFF101012);
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 24, 0xFF202028);
-        fontRenderer.drawString(fontRenderer.trimStringToWidth(diagonalGlass?"Programmable Diagonal Glass":I18n.format(tile.getWorld().getBlockState(tile.getPos()).getBlock()
-                        instanceof com.vandorlabs.blocks.BlockProgrammableStairs ? "gui.vandorlabs.stairs.title"
-                : tile.getBlockType() instanceof BlockProgrammableSlab ? "gui.vandorlabs.slab.title"
-                        : tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage ? "tile.vandorlabs.programmable_storage.name"
-                        : fullBlock ? "gui.vandorlabs.block.title"
-                        : "gui.vandorlabs.wall.title"),xSize-64),
+        fontRenderer.drawString(fontRenderer.trimStringToWidth(tile.getBlockType().getLocalizedName(),xSize-64),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
         if(framePage)framePane.draw(mouseX,mouseY);else if(!redstonePage)textureList.draw(fontRenderer,mouseX,mouseY);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX, mouseY, partialTicks);

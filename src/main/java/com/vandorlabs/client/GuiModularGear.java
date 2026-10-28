@@ -66,7 +66,7 @@ public final class GuiModularGear extends GuiContainer {
     }
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
-        fontRenderer.drawString("Arms and Landing Gear",12,12,0xffffff);
+        fontRenderer.drawString(fontRenderer.trimStringToWidth(tile.getBlockType().getLocalizedName(),xSize-64),12,12,0xffffff);
         DialogHeader.logo(0,0,xSize);
         if(page==1)fontRenderer.drawString(tile.usesLegacyInput()?"Channels (any + local)":"Channels (0 = local)",12,85,0xcdd7e4);
         String failure=error.isEmpty()?tile.error():error;String status=failure.isEmpty()?(tile.isController()?tile.columns().size()+" arms / "+(tile.isLandingAssembly()?tile.assembly().feet().size():0)+" feet":"Track appearance"):"ERROR: "+failure;

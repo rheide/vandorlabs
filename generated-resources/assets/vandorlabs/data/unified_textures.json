@@ -2789,7 +2789,9 @@
     "source": "frames/frames-company-half-full/ashiro/ashiro_thick_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/ashiro/ashiro_thick_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Ashiro Mai"
   },
   {
     "id": "frame_frames_company_half_full_ashiro_ashiro_thick_half_1254x627",
@@ -2799,7 +2801,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/ashiro/ashiro_thick_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Ashiro Mai"
   },
   {
     "id": "frame_frames_company_half_full_ashiro_ashiro_thin_full_1254x1254",
@@ -2808,7 +2811,9 @@
     "source": "frames/frames-company-half-full/ashiro/ashiro_thin_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/ashiro/ashiro_thin_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Ashiro Mai"
   },
   {
     "id": "frame_frames_company_half_full_ashiro_ashiro_thin_half_1254x627",
@@ -2818,7 +2823,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/ashiro/ashiro_thin_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Ashiro Mai"
   },
   {
     "id": "frame_frames_company_half_full_paladyne_paladyne_thick_full_1254x1254",
@@ -2827,7 +2833,9 @@
     "source": "frames/frames-company-half-full/paladyne/paladyne_thick_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/paladyne/paladyne_thick_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Paladyne"
   },
   {
     "id": "frame_frames_company_half_full_paladyne_paladyne_thick_half_1254x627",
@@ -2837,7 +2845,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/paladyne/paladyne_thick_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Paladyne"
   },
   {
     "id": "frame_frames_company_half_full_paladyne_paladyne_thin_full_1254x1254",
@@ -2846,7 +2855,9 @@
     "source": "frames/frames-company-half-full/paladyne/paladyne_thin_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/paladyne/paladyne_thin_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Paladyne"
   },
   {
     "id": "frame_frames_company_half_full_paladyne_paladyne_thin_half_1254x627",
@@ -2856,7 +2867,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/paladyne/paladyne_thin_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Paladyne"
   },
   {
     "id": "frame_frames_company_half_full_pinnacle_pinnacle_thick_full_1254x1254",
@@ -2865,7 +2877,9 @@
     "source": "frames/frames-company-half-full/pinnacle/pinnacle_thick_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/pinnacle/pinnacle_thick_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Pinnacle"
   },
   {
     "id": "frame_frames_company_half_full_pinnacle_pinnacle_thick_half_1254x627",
@@ -2875,7 +2889,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/pinnacle/pinnacle_thick_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Pinnacle"
   },
   {
     "id": "frame_frames_company_half_full_pinnacle_pinnacle_thin_full_1254x1254",
@@ -2884,7 +2899,9 @@
     "source": "frames/frames-company-half-full/pinnacle/pinnacle_thin_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/pinnacle/pinnacle_thin_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Pinnacle"
   },
   {
     "id": "frame_frames_company_half_full_pinnacle_pinnacle_thin_half_1254x627",
@@ -2894,7 +2911,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/pinnacle/pinnacle_thin_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Pinnacle"
   },
   {
     "id": "frame_frames_company_half_full_seyr_seyr_thick_full_1254x1254",
@@ -2903,7 +2921,9 @@
     "source": "frames/frames-company-half-full/seyr/seyr_thick_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/seyr/seyr_thick_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Seyr"
   },
   {
     "id": "frame_frames_company_half_full_seyr_seyr_thick_half_1254x627",
@@ -2913,7 +2933,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/seyr/seyr_thick_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Seyr"
   },
   {
     "id": "frame_frames_company_half_full_seyr_seyr_thin_full_1254x1254",
@@ -2922,7 +2943,9 @@
     "source": "frames/frames-company-half-full/seyr/seyr_thin_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/seyr/seyr_thin_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Seyr"
   },
   {
     "id": "frame_frames_company_half_full_seyr_seyr_thin_half_1254x627",
@@ -2932,7 +2955,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/seyr/seyr_thin_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Seyr"
   },
   {
     "id": "frame_frames_company_half_full_vandor_vandor_thick_full_1254x1254",
@@ -2941,7 +2965,9 @@
     "source": "frames/frames-company-half-full/vandor/vandor_thick_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/vandor/vandor_thick_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Vandor"
   },
   {
     "id": "frame_frames_company_half_full_vandor_vandor_thick_half_1254x627",
@@ -2951,7 +2977,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/vandor/vandor_thick_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Vandor"
   },
   {
     "id": "frame_frames_company_half_full_vandor_vandor_thin_full_1254x1254",
@@ -2960,7 +2987,9 @@
     "source": "frames/frames-company-half-full/vandor/vandor_thin_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/vandor/vandor_thin_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Vandor"
   },
   {
     "id": "frame_frames_company_half_full_vandor_vandor_thin_half_1254x627",
@@ -2970,7 +2999,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/vandor/vandor_thin_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Vandor"
   },
   {
     "id": "frame_frames_company_half_full_vektor_vektor_thick_full_1254x1254",
@@ -2979,7 +3009,9 @@
     "source": "frames/frames-company-half-full/vektor/vektor_thick_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/vektor/vektor_thick_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Vektor"
   },
   {
     "id": "frame_frames_company_half_full_vektor_vektor_thick_half_1254x627",
@@ -2989,7 +3021,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/vektor/vektor_thick_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Vektor"
   },
   {
     "id": "frame_frames_company_half_full_vektor_vektor_thin_full_1254x1254",
@@ -2998,7 +3031,9 @@
     "source": "frames/frames-company-half-full/vektor/vektor_thin_full_1254x1254",
     "frame": true,
     "frameRail": "frames/frames-company-half-full/vektor/vektor_thin_full_1254x1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0,
+    "menuGroup": "Vektor"
   },
   {
     "id": "frame_frames_company_half_full_vektor_vektor_thin_half_1254x627",
@@ -3008,7 +3043,8 @@
     "frame": true,
     "frameRail": "frames/frames-company-half-full/vektor/vektor_thin_half_1254x627_rail",
     "frameBorder": true,
-    "frameAspect": 2.0
+    "frameAspect": 2.0,
+    "menuGroup": "Vektor"
   },
   {
     "id": "frame_frames_door_window_ashiro_bg",
@@ -3017,7 +3053,9 @@
     "source": "frames/frames-door-window/ashiro_bg",
     "frame": true,
     "frameRail": "frames/frames-door-window/ashiro_bg_rail",
-    "frameBorder": false
+    "frameBorder": false,
+    "frameAspect": 1.0,
+    "menuGroup": "Ashiro Mai"
   },
   {
     "id": "frame_frames_door_window_default_frame",
@@ -3026,7 +3064,8 @@
     "source": "frames/frames-door-window/default_frame",
     "frame": true,
     "frameRail": "frames/frames-door-window/default_frame_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_door_interior_dark",
@@ -3035,7 +3074,8 @@
     "source": "frames/frames-door-window/door_interior_dark",
     "frame": true,
     "frameRail": "frames/frames-door-window/door_interior_dark_rail",
-    "frameBorder": false
+    "frameBorder": false,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_glass_frame_interior",
@@ -3044,7 +3084,8 @@
     "source": "frames/frames-door-window/glass_frame_interior",
     "frame": true,
     "frameRail": "frames/frames-door-window/glass_frame_interior_rail",
-    "frameBorder": false
+    "frameBorder": false,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_gunmetal_1",
@@ -3053,7 +3094,8 @@
     "source": "frames/frames-door-window/gunmetal-1",
     "frame": true,
     "frameRail": "frames/frames-door-window/gunmetal-1_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_gunmetal_2",
@@ -3062,7 +3104,8 @@
     "source": "frames/frames-door-window/gunmetal-2",
     "frame": true,
     "frameRail": "frames/frames-door-window/gunmetal-2_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_gunmetal_3",
@@ -3071,7 +3114,8 @@
     "source": "frames/frames-door-window/gunmetal-3",
     "frame": true,
     "frameRail": "frames/frames-door-window/gunmetal-3_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_lights_amber_1",
@@ -3081,7 +3125,8 @@
     "frame": true,
     "frameLight": 3,
     "frameRail": "frames/frames-door-window/lights-amber-1_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_lights_amber_2",
@@ -3091,7 +3136,8 @@
     "frame": true,
     "frameLight": 3,
     "frameRail": "frames/frames-door-window/lights-amber-2_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_lights_cyan_1",
@@ -3101,7 +3147,8 @@
     "frame": true,
     "frameLight": 3,
     "frameRail": "frames/frames-door-window/lights-cyan-1_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_lights_cyan_2",
@@ -3111,7 +3158,8 @@
     "frame": true,
     "frameLight": 3,
     "frameRail": "frames/frames-door-window/lights-cyan-2_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_paladyne_bg",
@@ -3120,7 +3168,9 @@
     "source": "frames/frames-door-window/paladyne_bg",
     "frame": true,
     "frameRail": "frames/frames-door-window/paladyne_bg_rail",
-    "frameBorder": false
+    "frameBorder": false,
+    "frameAspect": 1.0,
+    "menuGroup": "Paladyne"
   },
   {
     "id": "frame_frames_door_window_pinnacle_bg",
@@ -3129,7 +3179,9 @@
     "source": "frames/frames-door-window/pinnacle_bg",
     "frame": true,
     "frameRail": "frames/frames-door-window/pinnacle_bg_rail",
-    "frameBorder": false
+    "frameBorder": false,
+    "frameAspect": 1.0,
+    "menuGroup": "Pinnacle"
   },
   {
     "id": "frame_frames_door_window_seyr_bg",
@@ -3138,7 +3190,9 @@
     "source": "frames/frames-door-window/seyr_bg",
     "frame": true,
     "frameRail": "frames/frames-door-window/seyr_bg_rail",
-    "frameBorder": false
+    "frameBorder": false,
+    "frameAspect": 1.0,
+    "menuGroup": "Seyr"
   },
   {
     "id": "frame_frames_door_window_silver_1",
@@ -3147,7 +3201,8 @@
     "source": "frames/frames-door-window/silver-1",
     "frame": true,
     "frameRail": "frames/frames-door-window/silver-1_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_silver_2",
@@ -3156,7 +3211,8 @@
     "source": "frames/frames-door-window/silver-2",
     "frame": true,
     "frameRail": "frames/frames-door-window/silver-2_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_door_window_vandor_bg",
@@ -3165,7 +3221,9 @@
     "source": "frames/frames-door-window/vandor_bg",
     "frame": true,
     "frameRail": "frames/frames-door-window/vandor_bg_rail",
-    "frameBorder": false
+    "frameBorder": false,
+    "frameAspect": 1.0,
+    "menuGroup": "Vandor"
   },
   {
     "id": "frame_frames_door_window_vektor_bg",
@@ -3174,7 +3232,9 @@
     "source": "frames/frames-door-window/vektor_bg",
     "frame": true,
     "frameRail": "frames/frames-door-window/vektor_bg_rail",
-    "frameBorder": false
+    "frameBorder": false,
+    "frameAspect": 1.0,
+    "menuGroup": "Vektor"
   },
   {
     "id": "frame_frames_screen_full_frame_bolted_1254",
@@ -3183,7 +3243,8 @@
     "source": "frames/frames-screen-full/frame_bolted_1254",
     "frame": true,
     "frameRail": "frames/frames-screen-full/frame_bolted_1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_screen_full_frame_bolted_thin_1254",
@@ -3192,7 +3253,8 @@
     "source": "frames/frames-screen-full/frame_bolted_thin_1254",
     "frame": true,
     "frameRail": "frames/frames-screen-full/frame_bolted_thin_1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_screen_full_frame_cyan_rim_1254",
@@ -3201,7 +3263,8 @@
     "source": "frames/frames-screen-full/frame_cyan_rim_1254",
     "frame": true,
     "frameRail": "frames/frames-screen-full/frame_cyan_rim_1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_screen_full_frame_cyan_rim_thin_1254",
@@ -3210,7 +3273,8 @@
     "source": "frames/frames-screen-full/frame_cyan_rim_thin_1254",
     "frame": true,
     "frameRail": "frames/frames-screen-full/frame_cyan_rim_thin_1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_screen_full_frame_lightbars_1254",
@@ -3220,7 +3284,8 @@
     "frame": true,
     "frameLight": 3,
     "frameRail": "frames/frames-screen-full/frame_lightbars_1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_screen_full_frame_lightbars_thin_1254",
@@ -3230,7 +3295,8 @@
     "frame": true,
     "frameLight": 3,
     "frameRail": "frames/frames-screen-full/frame_lightbars_thin_1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_screen_full_frame_plain_1254",
@@ -3239,7 +3305,8 @@
     "source": "frames/frames-screen-full/frame_plain_1254",
     "frame": true,
     "frameRail": "frames/frames-screen-full/frame_plain_1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_screen_full_frame_plain_thin_1254",
@@ -3248,7 +3315,8 @@
     "source": "frames/frames-screen-full/frame_plain_thin_1254",
     "frame": true,
     "frameRail": "frames/frames-screen-full/frame_plain_thin_1254_rail",
-    "frameBorder": true
+    "frameBorder": true,
+    "frameAspect": 1.0
   },
   {
     "id": "frame_frames_screen_half_frame_bolted_1254x627",
@@ -3894,7 +3962,7 @@
     "id": "frame_company_ashiro_mai_full",
     "label": "Ashiro Mai Full",
     "category": "Frame",
-    "menuGroup": "Company/Ashiro Mai",
+    "menuGroup": "Ashiro Mai",
     "source": "frames/company/ashiro_mai_full",
     "frame": true,
     "frameBorder": true,
@@ -3905,7 +3973,7 @@
     "id": "frame_company_ashiro_mai_half",
     "label": "Ashiro Mai Half",
     "category": "Frame",
-    "menuGroup": "Company/Ashiro Mai",
+    "menuGroup": "Ashiro Mai",
     "source": "frames/company/ashiro_mai_half",
     "frame": true,
     "frameBorder": true,
@@ -3916,7 +3984,7 @@
     "id": "frame_company_paladyne_full",
     "label": "Paladyne Full",
     "category": "Frame",
-    "menuGroup": "Company/Paladyne",
+    "menuGroup": "Paladyne",
     "source": "frames/company/paladyne_full",
     "frame": true,
     "frameBorder": true,
@@ -3927,7 +3995,7 @@
     "id": "frame_company_paladyne_half",
     "label": "Paladyne Half",
     "category": "Frame",
-    "menuGroup": "Company/Paladyne",
+    "menuGroup": "Paladyne",
     "source": "frames/company/paladyne_half",
     "frame": true,
     "frameBorder": true,
@@ -3938,7 +4006,7 @@
     "id": "frame_company_pinnacle_full",
     "label": "Pinnacle Full",
     "category": "Frame",
-    "menuGroup": "Company/Pinnacle",
+    "menuGroup": "Pinnacle",
     "source": "frames/company/pinnacle_full",
     "frame": true,
     "frameBorder": true,
@@ -3949,7 +4017,7 @@
     "id": "frame_company_pinnacle_half",
     "label": "Pinnacle Half",
     "category": "Frame",
-    "menuGroup": "Company/Pinnacle",
+    "menuGroup": "Pinnacle",
     "source": "frames/company/pinnacle_half",
     "frame": true,
     "frameBorder": true,
@@ -3960,7 +4028,7 @@
     "id": "frame_company_seyr_full",
     "label": "Seyr Full",
     "category": "Frame",
-    "menuGroup": "Company/Seyr",
+    "menuGroup": "Seyr",
     "source": "frames/company/seyr_full",
     "frame": true,
     "frameBorder": true,
@@ -3971,7 +4039,7 @@
     "id": "frame_company_seyr_half",
     "label": "Seyr Half",
     "category": "Frame",
-    "menuGroup": "Company/Seyr",
+    "menuGroup": "Seyr",
     "source": "frames/company/seyr_half",
     "frame": true,
     "frameBorder": true,
@@ -3982,7 +4050,7 @@
     "id": "frame_company_vandor_full",
     "label": "Vandor Full",
     "category": "Frame",
-    "menuGroup": "Company/Vandor",
+    "menuGroup": "Vandor",
     "source": "frames/company/vandor_full",
     "frame": true,
     "frameBorder": true,
@@ -3993,7 +4061,7 @@
     "id": "frame_company_vandor_half",
     "label": "Vandor Half",
     "category": "Frame",
-    "menuGroup": "Company/Vandor",
+    "menuGroup": "Vandor",
     "source": "frames/company/vandor_half",
     "frame": true,
     "frameBorder": true,
@@ -4004,7 +4072,7 @@
     "id": "frame_company_vektor_full",
     "label": "Vektor Full",
     "category": "Frame",
-    "menuGroup": "Company/Vektor",
+    "menuGroup": "Vektor",
     "source": "frames/company/vektor_full",
     "frame": true,
     "frameBorder": true,
@@ -4015,7 +4083,7 @@
     "id": "frame_company_vektor_half",
     "label": "Vektor Half",
     "category": "Frame",
-    "menuGroup": "Company/Vektor",
+    "menuGroup": "Vektor",
     "source": "frames/company/vektor_half",
     "frame": true,
     "frameBorder": true,

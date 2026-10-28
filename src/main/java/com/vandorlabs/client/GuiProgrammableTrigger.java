@@ -49,7 +49,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         mediumList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,medium).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{medium=value;send();});
         buttonList.add(layout.tab(110,0,2,"General"));buttonList.add(layout.tab(111,1,2,"Redstone"));
         String[] names={"Off","Low 1-5","Mid 6-10","High 11-15"};for(int i=0;i<4;i++)buttonList.add(layout.tab(90+i,i,4,names[i]));
-        if(page==1){buttonList.add(layout.control(101,94,statesLabel()));buttonList.add(layout.control(102,118,exactLabel()));buttonList.add(layout.control(112,144,"Transmitter..."));}
+        if(page==1){buttonList.add(layout.control(101,94,statesLabel()));buttonList.add(layout.control(102,118,exactLabel()));}
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+64,154,18);
         ChannelFields.configure(channelField);
         channelField.setText(draft);channelField.setVisible(page==1);channelField.setFocused(false);buttonList.add(layout.done(100));refreshTabs();

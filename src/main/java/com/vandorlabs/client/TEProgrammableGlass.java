@@ -53,7 +53,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         int size = tile.getSize();
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
-        if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1)renderSelectedFrame(tile,state,x,y,z);
+        if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1)renderSelectedFrame(tile,state,x,y,z);
         if(FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
         boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
@@ -102,18 +102,19 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     private void renderSelectedFrame(TileEntityProgrammableGlass tile,net.minecraft.block.state.IBlockState state,double x,double y,double z){
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.front("vandorlabs:blocks/space_doors/medium/double_frame_metal"));
-        GlassSurfaceGroups.Layout layout=tile.frameAppearance.tile?new GlassSurfaceGroups.Layout(0,0,1,1):GlassSurfaceGroups.layout(tile);
+        GlassSurfaceGroups.Layout layout=tile.frameAppearance.tile?new GlassSurfaceGroups.Layout(0,0,1,1):GlassSurfaceGroups.frameLayout(tile);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);
         if(state.getValue(BlockGlassWall.ROTATED)){GlStateManager.translate(.5,0,.5);GlStateManager.rotate(-90,0,1,0);GlStateManager.translate(-.5,0,-.5);}
         GlStateManager.translate(0,0,com.vandorlabs.blocks.PanelDepth.offset(state.getValue(BlockGlassWall.DEPTH))/16D);
-        int light=tile.getWorld().getCombinedLight(tile.getPos(),tile.frameAppearance.light());OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
+        float savedBlockLight=OpenGlHelper.lastBrightnessX,savedSkyLight=OpenGlHelper.lastBrightnessY;
+        int light=tile.getWorld().getCombinedLight(tile.getPos(),tile.frameAppearance.light());if(tile.frameAppearance.light()>0)light=(light&0xffff0000)|240;OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         if(tile.frameAppearance.front>=0&&com.vandorlabs.tiles.FrameAppearance.border(tile.frameAppearance.front))for(boolean front:new boolean[]{true,false})for(int i=0;i<4;i++){
             int v=front?i:3-i;double px=v==1||v==2?1:0,py=v<2?1:0;
-            WorldSurface.vertex(b,px,py,front?PANE_NEAR-.001:PANE_FAR+.001,sprite.getInterpolatedU((layout.column+px)*16/layout.columns),sprite.getInterpolatedV((layout.rows-layout.row-py)*16/layout.rows/com.vandorlabs.tiles.FrameAppearance.aspect(tile.frameAppearance.front)),0,0,front?-1:1);
+            WorldSurface.vertex(b,px,py,front?6D/16-.001:10D/16+.001,sprite.getInterpolatedU((layout.column+px)*16/layout.columns),sprite.getInterpolatedV((layout.rows-layout.row-py)*16/layout.rows/com.vandorlabs.tiles.FrameAppearance.aspect(tile.frameAppearance.front)),0,0,front?-1:1);
         }
-        Tessellator.getInstance().draw();GlStateManager.disableBlend();GlStateManager.scale(1D/16,1D/16,1D/16);b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlassFrameMesh.get(tile,layout).draw(b,light/65536,light%65536);Tessellator.getInstance().draw();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
+        Tessellator.getInstance().draw();GlStateManager.disableBlend();GlStateManager.scale(1D/16,1D/16,1D/16);b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlassFrameMesh.get(tile,layout).draw(b,light/65536,light%65536);Tessellator.getInstance().draw();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,savedBlockLight,savedSkyLight);
     }
 
     private void renderCorner(TileEntityProgrammableGlass tile,net.minecraft.block.state.IBlockState state,

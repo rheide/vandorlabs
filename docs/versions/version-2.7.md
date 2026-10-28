@@ -20,11 +20,11 @@ ON signal. See the transmitter guide for the overlap rules and upgrade behavior.
 Choose front borders and interior materials from the Frame category, retain a
 single border around a group, and select independent upper and lower images on
 a full-height display. Display Fit supports square groups such as 2×2 and 3×3;
-frame Fit also surrounds rectangular groups. Programmable Input is now named
+frame Fit also surrounds rectangular groups. Split controls and Top/Bottom selectors live under Display; both halves share one frame. Frame finishes use 128-pixel artwork, preserve the original glass frame depth and have opaque interior surfaces. The Copifier retains these finishes on configured glass items. Programmable Input is now named
 **Programmable Flatscreen**; its saved registry identifier remains unchanged.
 
 Dialogs open on their first tab and use shared tabs, a Vandor logo and consistent
-Redstone and Security pages. Empty transmitter slots show a faded item icon;
+Redstone and Security pages. Redstone is the last tab, and receiver-only dialogs omit transmitter controls. Empty transmitter slots show a faded item icon;
 inserted transmitters have an inline channel field. Existing configured redstone
 outputs from earlier versions receive Long Range hardware when upgraded. Removing
 a granted item leaves its slot empty on later loads. Cockpits share one transmitter
@@ -43,7 +43,7 @@ six-frame animations, grouped by company under Frame and Screens. Transparent
 frame artwork supplies separate opaque edge strips for physical frame interiors.
 
 [Arms](../joined-arm-platforms.md) can move the connected layer of Programmable
-Surfaces attached at their tips. Large horizontal Extenders offer an optional
+Surfaces attached at their tips, including overhangs beyond joined Extender supports. Horizontal Extenders offer an optional
 push mode; they leave pushed blocks in place when returning. Rotating Arms offer
 a 15-degree angle slider and retain collision checks against real obstructions.
 

@@ -32,7 +32,7 @@ public final class FrameEdgeRuntimeChecks {
         crops();doorUvs();int choices=0;
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i))){
             FrameAppearance a=new FrameAppearance();a.interior=i;TextureAtlasSprite base=mc.getTextureMapBlocks().getAtlasSprite(a.interior(""));
-            for(int edge=0;edge<4;edge++){TextureAtlasSprite strip=FrameEdgeTextures.edge(base,edge);require(strip.getIconWidth()==64&&strip.getIconHeight()==64,"native64 strip size");for(int pixel:strip.getFrameTextureData(0)[0])require((pixel>>>24)>=240,"transparent center sampled by physical frame: "+strip.getIconName());choices++;}
+            for(int edge=0;edge<4;edge++){TextureAtlasSprite strip=FrameEdgeTextures.edge(base,edge);require(strip.getIconWidth()==strip.getIconHeight()&&strip.getIconWidth()<=(FrameAppearance.border(i)?64:128),"native strip or whole opaque material size");for(int pixel:strip.getFrameTextureData(0)[0])require((pixel>>>24)>=240,"transparent center sampled by physical frame: "+strip.getIconName());choices++;}
         }
         List<Scene> scenes=mc.getIntegratedServer().callFromMainThread(()->place(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID()))).get();
         int captures=0;

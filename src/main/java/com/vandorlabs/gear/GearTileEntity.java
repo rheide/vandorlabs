@@ -127,7 +127,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public void taxiState(NBTTagCompound next){if(next!=null)validateTaxiState(next);if(next==null&&taxiState!=null)taxiClearPending=true;taxiState=next==null?null:next.copy();markDirty();}
     private boolean pushBlocks;
     public boolean pushBlocks(){return pushBlocks;}
-    public boolean canPushBlocks(){return armSize()==2&&mountDirection.getAxis().isHorizontal()&&mode==GearMotion.Mode.EXTEND&&!isLandingAssembly();}
+    public boolean canPushBlocks(){return mountDirection.getAxis().isHorizontal()&&mode==GearMotion.Mode.EXTEND&&!isLandingAssembly();}
     private boolean rotatePayload,trackExtensionStroke,trackRetractingStroke,armRetractingStroke,formingActiveTrack;
     public boolean isExtendedTrackStroke(){return trackExtensionStroke&&assembly!=null&&assembly.kind()==GearTopology.FootKind.TRACK;}
     public boolean landingDeployed(){if(taxiState!=null)return taxiState.getInteger("Phase")==1&&progress==1&&validTaxiState();return fullyDeployed()||isExtendedTrackStroke()&&!deployedTarget&&progress==0;}

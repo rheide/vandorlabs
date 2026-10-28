@@ -70,7 +70,7 @@ public class GuiProgrammableInput extends GuiContainer {
         int cx=layout.controlsX, rows=layout.rows(true);
         buttonList.add(layout.fullTab(90,0,4,"Controls"));
         buttonList.add(layout.fullTab(91,1,4,"Sides"));
-        buttonList.add(layout.fullTab(92,2,4,"Redstone"));buttonList.add(layout.fullTab(197,3,4,"Frame"));buttonList.add(new GuiButton(198,redstoneX,guiTop+132,redstoneWidth,20,"Transmitter..."));
+        buttonList.add(layout.fullTab(92,3,4,"Redstone"));buttonList.add(layout.fullTab(197,2,4,"Frame"));
         listX=layout.listX;listY=guiTop+54;
         screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0,()->openRows(0));
         for(int i=0;i<3;i++) {
@@ -94,7 +94,7 @@ public class GuiProgrammableInput extends GuiContainer {
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
 
-    private String sidesLabel(){return "Wall texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
+    private String sidesLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
         channelField.setVisible(textureTab==2);if(!channelField.getVisible())channelField.setFocused(false);
         for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==2;else if(option.id==32)option.visible=textureTab==1;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12||option.id==30||option.id==31)option.visible=textureTab<1;}

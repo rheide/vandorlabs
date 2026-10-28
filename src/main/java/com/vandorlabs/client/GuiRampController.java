@@ -72,7 +72,7 @@ public class GuiRampController extends GuiContainer {
         for(GuiButton button:buttonList)button.y+=26;
         startSlider.y=guiTop+56;endSlider.y=guiTop+80;
         treadField.y+=26;channelField.y=guiTop+120;
-        buttonList.add(new GuiButton(23,guiLeft+14,guiTop+152,292,20,"Transmitter..."));
+
         buttonList.add(new DialogTabButton(30,guiLeft+14,guiTop+30,140,20,"Ramp"));
         buttonList.add(new DialogTabButton(31,guiLeft+164,guiTop+30,142,20,"Redstone"));
         refresh();
@@ -191,7 +191,7 @@ public class GuiRampController extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xFF304858);
     }
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY) {
-        fontRenderer.drawString("Ramp Controller",14,10,0xFFFFFF);
+        fontRenderer.drawString(controller.getBlockType().getLocalizedName(),14,10,0xFFFFFF);
         DialogHeader.logo(0,0,xSize);
         if(page==0)fontRenderer.drawString("Tread px",164,158,elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,

@@ -29,7 +29,13 @@ final class CockpitDialogRuntimeChecks {
                 int firstCategory=999,selectedCategory=-1;for(Object raw:(List<?>)buttons.get(gui)){GuiButton button=(GuiButton)raw;if(button.id>=200&&button.id<206){firstCategory=Math.min(firstCategory,button.id);if(!button.enabled)selectedCategory=button.id;}}
                 require(firstCategory==selectedCategory,"new "+tile.design()+" dialog opens leftmost available category");
                 page.setInt(gui,(tile.data().seat==null?0:1)+1);gui.initGui();
-                java.lang.reflect.Method openRows=GuiCockpit.class.getDeclaredMethod("redstone");openRows.setAccessible(true);openRows.invoke(gui);
+                Field pickerField=GuiCockpit.class.getDeclaredField("textures");pickerField.setAccessible(true);
+                HousingTextureList picker=(HousingTextureList)pickerField.get(gui);
+                Field pickerRows=HousingTextureList.class.getDeclaredField("rows"),scroll=HousingTextureList.class.getDeclaredField("scroll"),redstoneRow=HousingTextureList.class.getDeclaredField("REDSTONE_ROW");
+                pickerRows.setAccessible(true);scroll.setAccessible(true);redstoneRow.setAccessible(true);
+                int row=((List<?>)pickerRows.get(picker)).indexOf(redstoneRow.get(null));require(row>=0,"Redstone picker row exists");
+                scroll.setInt(picker,Math.max(0,row-value(picker,"count")+1));
+                gui.mouseClicked(value(picker,"x")+4,value(picker,"y")+(row-scroll.getInt(picker))*HousingTextureList.ROW_HEIGHT+4,0);
                 require(mc.currentScreen==gui&&rowsField.get(gui) instanceof RedstoneRowsPane,"Redstone artwork selection edits shared rows in the original screen");require(gui.inventorySlots.windowId==-77,"inline controls retain original authenticated window");
                 int count=(tile.data().seat==null?0:1)+1+tile.displays.size()+tile.controls.size();
                 for(int[] size:new int[][]{{320,240},{460,340},{new ScaledResolution(mc).getScaledWidth(),new ScaledResolution(mc).getScaledHeight()}})for(int index=0;index<=count;index++)for(int variant=0;variant<3;variant++){

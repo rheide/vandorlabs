@@ -21,25 +21,28 @@ final class GlassSurfaceGroups {
     static final int MAX_LAYOUTS=8192;
     private static final class Cache extends WorldRenderListener {
         long revision;
+        final Map<BlockPos,Layout> frames=new HashMap<>();
         int tileRevision=-1;
         final Map<BlockPos,Layout> layouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
         final Map<BlockPos,Layout> mainLayouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
-        void clear(){synchronized(GlassSurfaceGroups.class){layouts.clear();mainLayouts.clear();}}
+        void clear(){synchronized(GlassSurfaceGroups.class){layouts.clear();mainLayouts.clear();frames.clear();}}
         @Override public void notifyBlockUpdate(World world,BlockPos pos,IBlockState before,IBlockState after,int flags){clear();}
         @Override public void markBlockRangeForRenderUpdate(int x1,int y1,int z1,int x2,int y2,int z2){clear();}
     }
     private static final Map<World,Cache> CACHES=new WeakHashMap<>();
     static synchronized void invalidate(World world){Cache cache=CACHES.get(world);if(cache!=null)cache.clear();}
     static synchronized void unload(World world){Cache cache=CACHES.remove(world);if(cache!=null)world.removeEventListener(cache);}
-    static Layout layout(TileEntity tile){return layout(tile,false);}
-    static Layout mainLayout(TileEntity tile){return layout(tile,true);}
-    private static synchronized Layout layout(TileEntity tile,boolean main){
+    static Layout layout(TileEntity tile){return layout(tile,false,false);}
+    static Layout frameLayout(TileEntity tile){return layout(tile,false,true);}
+    static Layout mainLayout(TileEntity tile){return layout(tile,true,false);}
+    private static synchronized Layout layout(TileEntity tile,boolean main,boolean frame){
         World world=tile.getWorld();Cache cache=CACHES.get(world);
         if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}
         // Captured vehicle worlds can replace their local structure without ordinary block events.
         int tileRevision=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision:-1;
         if(cache.tileRevision!=tileRevision || cache.revision!=GlassMaterials.revision()){cache.tileRevision=tileRevision;cache.revision=GlassMaterials.revision();cache.clear();}
-        Map<BlockPos,Layout> layouts=main?cache.mainLayouts:cache.layouts;
+        Map<BlockPos,Layout> layouts=frame?cache.frames:main?cache.mainLayouts:cache.layouts;
+        if(layouts.size()>MAX_LAYOUTS)layouts.clear();
         Layout found=layouts.get(tile.getPos());if(found!=null)return found;
         IBlockState state=world.getBlockState(tile.getPos());boolean diagonal=state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).isDiagonalShape();
         EnumFacing facing=PanelJoins.facing(state),right=facing.rotateY(),up=diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()?facing.getOpposite():EnumFacing.UP;
@@ -48,7 +51,7 @@ final class GlassSurfaceGroups {
             BlockPos current=queue.removeFirst();List<BlockPos> candidates=new ArrayList<>();candidates.add(current.offset(right));candidates.add(current.offset(right.getOpposite()));
             if(diagonal)for(boolean positive:new boolean[]{false,true})candidates.addAll(DiagonalPanelGeometry.rowCandidates(current,world.getBlockState(current),BlockProgrammableWall.geometry(world,current),positive));
             else {candidates.add(current.up());candidates.add(current.down());}
-            for(BlockPos next:candidates){if(members.contains(next) || !world.isBlockLoaded(next) || !compatible(world.getTileEntity(current),next,main))continue;members.add(next);queue.add(next);if(members.size()>=LoadedPlaneConnections.LIMIT)break;}
+            for(BlockPos next:candidates){if(members.contains(next) || !world.isBlockLoaded(next) || !compatible(world.getTileEntity(current),next,main,frame))continue;members.add(next);queue.add(next);if(members.size()>=LoadedPlaneConnections.LIMIT)break;}
         }
         BlockPos first=Collections.min(members);EnumFacing basis=PanelJoins.facing(world.getBlockState(first));right=basis.rotateY();up=diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()?basis.getOpposite():EnumFacing.UP;
         Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos p:members)cells.put(PortholeRectangles.cell(PanelPlane.axis(p,right),PanelPlane.axis(p,up)),p);
@@ -60,10 +63,11 @@ final class GlassSurfaceGroups {
         return layouts.get(tile.getPos());
     }
     private static boolean join(TileEntity tile){return tile instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)tile).isJoin():((TileEntityAnimatedScreenSelector)tile).isGlassTextureJoin();}
-    private static boolean compatible(TileEntity root,BlockPos next,boolean main){
+    private static boolean compatible(TileEntity root,BlockPos next,boolean main,boolean frame){
         if(root==null)return false;World world=root.getWorld();IBlockState a=world.getBlockState(root.getPos()),b=world.getBlockState(next);TileEntity other=world.getTileEntity(next);
         if(a.getBlock()!=b.getBlock() || other==null || !main && !join(other))return false;
         if(root instanceof TileEntityProgrammableGlass){TileEntityProgrammableGlass x=(TileEntityProgrammableGlass)root,y=(TileEntityProgrammableGlass)other;
+            if(frame)return x.frameAppearance.front==y.frameAppearance.front&&x.frameAppearance.interior==y.frameAppearance.interior&&x.frameAppearance.tile==y.frameAppearance.tile&&a.getValue(BlockGlassWall.ROTATED).equals(b.getValue(BlockGlassWall.ROTATED))&&a.getValue(BlockGlassWall.DEPTH).equals(b.getValue(BlockGlassWall.DEPTH));
             return x.getMaterial()==y.getMaterial() && x.getTint()==y.getTint() && x.getTextureLayout()==y.getTextureLayout() && a.getValue(BlockGlassWall.ROTATED).equals(b.getValue(BlockGlassWall.ROTATED)) && a.getValue(BlockGlassWall.DEPTH).equals(b.getValue(BlockGlassWall.DEPTH));}
         TileEntityAnimatedScreenSelector x=(TileEntityAnimatedScreenSelector)root,y=(TileEntityAnimatedScreenSelector)other;
         if(main){if(x.getHousingTexture()!=y.getHousingTexture() || x.getMainTextureLayout()!=y.getMainTextureLayout())return false;}

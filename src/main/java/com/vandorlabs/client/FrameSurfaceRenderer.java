@@ -14,6 +14,8 @@ final class FrameSurfaceRenderer {
     static void screen(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad){
         FrameAppearance frame=tile.frameAppearance;
         if(frame.front<0)return;
+        float oldBlock=OpenGlHelper.lastBrightnessX,oldSky=OpenGlHelper.lastBrightnessY;
+        if(frame.light()>0)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,oldSky);
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(frame.front));
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
@@ -28,7 +30,7 @@ final class FrameSurfaceRenderer {
             if(layout.row==0)region(b,quad,sprite,layout,input,FrameAppearance.aspect(frame.front),0,15D/16,1,1);
             if(layout.row==layout.rows-1)region(b,quad,sprite,layout,input,FrameAppearance.aspect(frame.front),0,0,1,1D/16);
         }
-        Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
+        Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldBlock,oldSky);
     }
     private static void region(BufferBuilder b,ScreenSurface.Quad quad,TextureAtlasSprite sprite,GlassSurfaceGroups.Layout layout,boolean input,double aspect,double left,double top,double right,double bottom){
         for(int i=0;i<4;i++){

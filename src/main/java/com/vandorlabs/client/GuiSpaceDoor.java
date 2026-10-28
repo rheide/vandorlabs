@@ -50,7 +50,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int listLeft=layout.listX,listTop=guiTop+54;
-        for(int page=0;page<4;page++)buttonList.add(layout.fullTab(190+page,page,4,new String[]{"Door","Frame","Redstone","Security"}[page]));
+        for(int page=0;page<4;page++)buttonList.add(layout.fullTab(190+page,page==2?3:page==3?2:page,4,new String[]{"Door","Frame","Redstone","Security"}[page]));
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,54,motion.label);buttonList.add(motionButton);
@@ -62,7 +62,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+64,154,18);
         ChannelFields.configure(channelField);channelField.setText(channelText);
         buttonList.add(layout.control(19,90,securityLabel()));
-        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);buttonList.add(layout.control(198,128,"Transmitter..."));updateChannelValidity();refreshPages();if(settingsPage==1){if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!framed;sendUpdate();},()->framed);framePane.init(54,buttonList);}
+        done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();refreshPages();if(settingsPage==1){if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!framed;sendUpdate();},()->framed);framePane.init(54,buttonList);}
     }
     private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=193){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);if(!channelField.getVisible())channelField.setFocused(false);}
     private net.minecraft.item.ItemStack companyCard(){return CredentialFilterPicker.sample(false,securityAllowed);}
@@ -75,7 +75,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         hingeButton.displayString=!motion.sliding && hinges?"Hinges: On":"Hinges: Off";
     }
 
-    private String layoutLabel(){return "Face texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
+    private String layoutLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
     private String depthLabel() {
         return "Pos: " + new String[]{"Middle", "Near", "Far"}[depth];
     }

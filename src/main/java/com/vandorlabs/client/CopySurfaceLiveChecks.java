@@ -26,6 +26,7 @@ final class CopySurfaceLiveChecks {
     private static boolean clicked;
     private static BlockPos removed;
     private static List<BlockPos> original;
+    private static NBTTagCompound pickedAppearance;
     private static SquareLayout stableInput,stableOutput;
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("copy-surfaces fixture="+fixture+" stage="+stage+" tick="+ticks+": "+why);}
     static boolean tick(Minecraft mc,File output)throws Exception{
@@ -37,6 +38,10 @@ final class CopySurfaceLiveChecks {
             mc.playerController.clickBlock(removed,EnumFacing.UP);clicked=true;
         }
         boolean done=mc.getIntegratedServer().callFromMainThread(()->step(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
+        if(stage==5&&ticks>=20){
+            TileEntity raw=mc.world.getTileEntity(removed);require(raw instanceof TileEntityTurntableSurface,"picked placement reached client");TileEntityTurntableSurface placed=(TileEntityTurntableSurface)raw;
+            require(placed.surfaceOn.equals(pickedAppearance.getString("SurfaceOn"))&&placed.surfaceOff.equals(pickedAppearance.getString("SurfaceOff"))&&placed.textureLayout==pickedAppearance.getInteger("SurfaceLayout"),"picked appearance reaches client without another edit");
+        }
         if(stage==3){
             int frames=0;
             for(BlockPos p:original)if(!p.equals(removed)){
@@ -67,7 +72,7 @@ final class CopySurfaceLiveChecks {
         CopyControllerTile copier=(CopyControllerTile)world.getTileEntity(CONTROL);
         if(stage==1){if(!clicked||!world.isAirBlock(removed))return false;stage=2;ticks=0;return false;}
         if(stage==2){if(ticks<30)return false;stage=3;return false;}
-        if(stage==4){require(copier.input==null&&copier.output==null,"invalid pad releases stale copy layout");place(world,player,removed);stage=5;ticks=0;return false;}
+        if(stage==4){require(copier.input==null&&copier.output==null,"invalid pad releases stale copy layout");BlockPos source=original.stream().filter(p->!p.equals(removed)).findFirst().get();Block block=world.getBlockState(source).getBlock();ItemStack picked=block.getPickBlock(world.getBlockState(source),null,world,source,player);pickedAppearance=picked.getSubCompound("ProgrammableSurface").copy();place(world,player,removed,picked);stage=5;ticks=0;return false;}
         if(stage==5){if(ticks<30)return false;require(copier.input!=null&&copier.output!=null&&copier.input.size==5&&copier.output.size==5,"replacement automatically reforms saved pair: "+copier.error);grow(world,player,172,178);stage=6;ticks=0;return false;}
         if(stage==6){if(ticks<30)return false;require(copier.input==null&&copier.output==null&&!copier.error.isEmpty(),"unequal squares cannot keep old copy area");grow(world,player,180,186);stage=7;ticks=0;return false;}
         if(stage==7){if(ticks<30)return false;require(copier.input!=null&&copier.output!=null&&copier.input.size==7&&copier.output.size==7,"both expanded squares discovered automatically: "+copier.error);for(SquareLayout area:new SquareLayout[]{copier.input,copier.output})for(BlockPos p:area.cells)require(((TileEntityTurntableSurface)world.getTileEntity(p)).claimedOwner()==copier,"all expanded cells share ownership");stableInput=copier.input;stableOutput=copier.output;stage=11;ticks=0;return false;}
@@ -78,6 +83,7 @@ final class CopySurfaceLiveChecks {
         return false;
     }
     private static void grow(WorldServer world,EntityPlayerMP player,int z0,int z1){for(int x=-83;x<=-77;x++)for(int z=z0;z<=z1;z++){BlockPos p=new BlockPos(x,83,z);if(!(world.getBlockState(p).getBlock() instanceof BlockTurntableSurface)){if(!world.isAirBlock(p))require(player.interactionManager.tryHarvestBlock(p),"remove existing border before expansion");place(world,player,p);}}}
-    private static void place(WorldServer world,EntityPlayerMP player,BlockPos p){if(world.isAirBlock(p.down()))world.setBlockState(p.down(),Blocks.STONE.getDefaultState(),3);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(Block.getBlockFromName("vandorlabs:turntable_surface")));require(player.getHeldItemMainhand().onItemUse(player,world,p.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1,.5F)==EnumActionResult.SUCCESS,"ordinary surface placement "+p);player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);}
+    private static void place(WorldServer world,EntityPlayerMP player,BlockPos p){place(world,player,p,new ItemStack(Block.getBlockFromName("vandorlabs:turntable_surface")));}
+    private static void place(WorldServer world,EntityPlayerMP player,BlockPos p,ItemStack stack){if(world.isAirBlock(p.down()))world.setBlockState(p.down(),Blocks.STONE.getDefaultState(),3);player.setHeldItem(EnumHand.MAIN_HAND,stack);require(player.getHeldItemMainhand().onItemUse(player,world,p.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1,.5F)==EnumActionResult.SUCCESS,"ordinary surface placement "+p);player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);}
     private CopySurfaceLiveChecks(){}
 }

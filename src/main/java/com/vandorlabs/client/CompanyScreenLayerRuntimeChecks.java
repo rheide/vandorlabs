@@ -23,7 +23,7 @@ final class CompanyScreenLayerRuntimeChecks {
         Map<String,BufferedImage> strips=new HashMap<>();int borders=0,displays=0;
         for(int choice=0;choice<ScreenHousingTextures.IDS.length;choice++){
             JsonObject entry=ScreenHousingTextures.entry(choice);if(entry==null)continue;String id=entry.get("id").getAsString();
-            if(id.startsWith("frame_company_")){borders++;require(ScreenHousingTextures.menuCategory(choice).startsWith("Frame/Company/"),"frame company subgroup");}
+            if(id.startsWith("frame_company_")){borders++;require(ScreenHousingTextures.menuCategory(choice).startsWith("Frame/")&&!ScreenHousingTextures.menuCategory(choice).startsWith("Frame/Company/"),"frame company subgroup");}
             if(!id.startsWith("screen_company_"))continue;displays++;
             String source=entry.get("source").getAsString(),root=source.substring(0,source.length()-7);boolean half=source.startsWith("console_inputs/");
             Object decoded=decode.invoke(null,mc.getResourceManager(),"textures/blocks/"+root);Field imageField=decoded.getClass().getDeclaredField("image"),countField=decoded.getClass().getDeclaredField("frameCount");imageField.setAccessible(true);countField.setAccessible(true);
@@ -36,14 +36,14 @@ final class CompanyScreenLayerRuntimeChecks {
             require(transparent&&changed>0,"transparent animated layers "+id);strips.put(root,strip);
         }
         require(borders==12&&displays==72,"all twelve borders and seventy-two display sequences packaged");
-        pickerGroups(HousingTextureList.forFrames(0,0,260,-1,8),"Frame/Company/",2,6);
+        pickerGroups(HousingTextureList.forFrames(0,0,260,-1,8),"Frame/",-2,6);
         for(boolean input:new boolean[]{false,true}){ScreenTextureList picker=new ScreenTextureList(0,0,260,8,"",new String[0],new String[0],input);Field list=ScreenTextureList.class.getDeclaredField("list");list.setAccessible(true);pickerGroups((HousingTextureList)list.get(picker),"Screens/Company/",6,6);}
         BufferedImage composition=render(mc,strips);ImageIO.write(composition,"png",new File(output,"shot_company_layers_full_half_frames0_3.png"));
         require(difference(composition,0,128,0,128)>40&&difference(composition,256,384,0,128)>40,"full display frames visibly animate under company borders");
         require(difference(composition,0,128,224,64)>10&&difference(composition,256,384,224,64)>10,"half display frames visibly animate under correctly cropped borders");
         System.out.println("[vandorlabs][reprolab] company-screen-layers PASS borders=12 displays=72 frames=432 decoded-alpha-four-tick-timing six-company-picker-subgroups full-half-frame0-3-layered-framebuffer");
     }
-    @SuppressWarnings("unchecked") private static void pickerGroups(HousingTextureList picker,String prefix,int each,int expected)throws Exception{Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);Map<String,Integer> counts=new TreeMap<>();for(HousingTextureList.Option option:((Map<Integer,HousingTextureList.Option>)options.get(picker)).values())if(option.category.startsWith(prefix))counts.put(option.category,counts.getOrDefault(option.category,0)+1);require(counts.size()==expected,"six company subgroups "+counts);for(int count:counts.values())require(count==each,"company subgroup choice count "+counts);}
+    @SuppressWarnings("unchecked") private static void pickerGroups(HousingTextureList picker,String prefix,int each,int expected)throws Exception{Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);Map<String,Integer> counts=new TreeMap<>();for(HousingTextureList.Option option:((Map<Integer,HousingTextureList.Option>)options.get(picker)).values())if(option.category.startsWith(prefix))counts.put(option.category,counts.getOrDefault(option.category,0)+1);require(counts.size()==expected,"six company subgroups "+counts);for(int count:counts.values())require(each<0?count>=-each:count==each,"company subgroup choice count "+counts);}
     private static BufferedImage render(Minecraft mc,Map<String,BufferedImage> strips){
         Framebuffer frame=new Framebuffer(512,384,true);List<ResourceLocation> temporary=new ArrayList<>();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,512,384,0,-10,10);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try(TurntableRenderState saved=new TurntableRenderState()){

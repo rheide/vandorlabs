@@ -68,7 +68,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         for(GuiButton button:buttonList)if(button.id!=4){button.visible=button.id==3?page==1:page==0;if(button.id==3)button.y=guiTop+64;}
         channelLabelY=guiTop+96;channelField.y=guiTop+108;channelField.setVisible(page==1);channelField.setFocused(false);
         buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+30,110,20,"General"));buttonList.add(new DialogTabButton(101,guiLeft+126,guiTop+30,110,20,"Redstone"));for(GuiButton button:buttonList)if(button.id>=100)button.enabled=button.id!=100+page;
-        if(page==1)buttonList.add(new GuiButton(90,controlsX,guiTop+132,controlsWidth,20,"Transmitter..."));
+
     }
     private String hingeLabel(){return "Hinge: "+new String[]{"Auto","Left","Right"}[hingeSide];}
     private String rotationLabel(){return "Rotation: "+(rotationFlipped?"Reverse":"Normal");}

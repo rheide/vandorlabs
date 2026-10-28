@@ -2,6 +2,10 @@
 
 ## 2.7 (in development)
 
+- Correct configurable glass frame depth, opaque interiors, material mapping and Original selection; retain frame drafts during rapid edits. Use 128-pixel front artwork and direct company categories. Move split-display settings under Display and keep one frame for both halves.
+- Remove transmitter controls from passive receiver dialogs, put Redstone last and use block names in configuration headings. Fix cockpit Redstone selection crashes and retain arm dialogs during journal preparation.
+- Include overhanging connected Surface cells in joined-arm capture, synchronize copied Surface appearance on placement, and preserve Copifier frame finishes on glass items.
+
 - Add item-owned redstone transmission with 16-, 64-, 256-block and infinite same-dimension ranges, channel editing, manual signals, inventory slots and configuration copying. Use the strongest in-range signal at each receiver and keep receiver input settings separate.
 - Standardize dialog tabs and branding; separate Redstone, Security, Sides and Frame configuration. Rename Programmable Input to Programmable Flatscreen while retaining its registry ID.
 - Keep frame settings, screen control rows and custom material selection inside their original configuration windows. Reuse one activation selector for Manual, Redstone ON and Redstone OFF, retaining two-state controls where manual operation is unsupported. Draw inventory help above all slot outlines and place transmitter channel fields below their captions.
@@ -9,7 +13,7 @@
 - Add 58 selectable frame finishes, separate border and interior materials, faintly lit borders, independent frame/display layouts and split full-height displays. Migrate previous framed display artwork to a separate bolted frame.
 - Add 12 company borders and 72 six-frame display animations under company subfolders. Cut authored frame edges for physical rails and interiors, preserve half-height proportions, and map Door frame artwork over the complete frame geometry.
 - Replace six corporate armor sets and add two helipads and 78 static control panels at runtime texture resolutions. Refresh the texture browser and collages.
-- Add optional horizontal Large Extender pushing without pulling, connected Surface-layer payloads, 15-degree rotating-arm angles and guarded endpoint clearance.
+- Add optional horizontal Extender pushing without pulling, connected Surface-layer payloads, 15-degree rotating-arm angles and guarded endpoint clearance.
 - Add proportional ramp deployment and door placement on stationary ramp cells. Join hexagonal tanks into complete 2×2 and 3×3 sections with native per-cell storage.
 - Add guarded one-level Duplifier settings undo, including connected applications.
 - Allow matched wheel supports to lower or raise the chassis in Taxi while keeping their feet anchored. Check complete native parking footprints and retain modular arm sections through parking, recapture, rotation and recovery. Refuse in-flight parking and unsafe dismantling of retained material.

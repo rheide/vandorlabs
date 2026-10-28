@@ -19,7 +19,7 @@ def main():
         resized=image.resize((64,round(64/aspect)),Image.Resampling.LANCZOS);canvas=Image.new('RGBA',(64,64));canvas.paste(resized,(0,0))
         stem=f'frames/company/{company}_{height}';target=textures/(stem+'.png');target.parent.mkdir(parents=True,exist_ok=True);canvas.save(target,optimize=True)
         opaque_strip(resized).save(target.with_name(target.stem+"_rail.png"),optimize=True)
-        append(catalog,dict(id=f'frame_company_{company}_{height}',label=company.replace('_',' ').title()+' '+height.title(),category='Frame',menuGroup='Company/'+company.replace('_',' ').title(),source=stem,frame=True,frameBorder=True,frameAspect=aspect,frameRail=stem+'_rail'))
+        append(catalog,dict(id=f'frame_company_{company}_{height}',label=company.replace('_',' ').title()+' '+height.title(),category='Frame',menuGroup=company.replace('_',' ').title(),source=stem,frame=True,frameBorder=True,frameAspect=aspect,frameRail=stem+'_rail'))
     for metadata in sorted((source/'displays').glob('*/*/*/animation.json')):
         info=json.loads(metadata.read_text());company,height,subject=metadata.parts[-4:-1];identifier=f'company_{company}_{height}_{subject}';stem=('console_inputs/' if height=='half' else '')+identifier
         size=(128,64 if height=='half' else 128);frames=[Image.open(metadata.parent/f'frame_{i:02d}.png').convert('RGBA').resize(size,Image.Resampling.LANCZOS) for i in range(6)]

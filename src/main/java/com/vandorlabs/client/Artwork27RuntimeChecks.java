@@ -43,7 +43,7 @@ final class Artwork27RuntimeChecks {
                 gui.setWorldAndResolution(mc,size[0],size[1]);
                 for(int page=0;page<4;page++){
                     gui.actionPerformed(new GuiButton(90+page,0,0,"Page"));checkButtons(gui);
-                    if(page==3){List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");require(buttons.stream().anyMatch(button->button.id==106&&button.visible),"light Redstone tab has no transmitter access");}
+                    if(page==3){List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");require(buttons.stream().noneMatch(button->button.displayString.contains("Transmitter")),"receiver-only light exposes transmitter access");}
                     GuiOptionCycleRuntimeChecks.check(mc);
                 }
             }

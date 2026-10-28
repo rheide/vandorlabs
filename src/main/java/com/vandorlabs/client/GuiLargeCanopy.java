@@ -39,7 +39,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
             buttonList.add(new GuiSlider(1,layout.controlsX,guiTop+y,154,20,"Inner size: ","%",10,100,scale,false,true,slider->sliderChanged(1,slider)));y+=22;
         }
         buttonList.add(layout.control(2,y,"Tint: "+GlassTextures.tintLabel(tint)));y+=22;
-        buttonList.add(layout.control(12,y,"Texture layout: "+com.vandorlabs.render.TextureLayoutMode.label(draft.textureLayout())));y+=22;
+        buttonList.add(layout.control(12,y,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(draft.textureLayout())));y+=22;
         if(tile.block().opening()){
             buttonList.add(layout.control(3,y,"Opening: "+(draft.motion==0?"Sliding":"Rear hinge")));y+=22;
             if(draft.motion==0){buttonList.add(layout.control(11,y,"Slide: "+(draft.slideForward?"Forward":"Backward")));y+=22;}
@@ -52,7 +52,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         if(page==1 && (tile.resizable() || tile.block().opening())){
             buttonList.add(RedstoneActivationButton.from(layout.control(7,y,""),!draft.redstone?0:draft.activateOnPower?1:2));y+=22;
             channelLabelX=layout.controlsX;channelLabelY=guiTop+82;channels=new GuiTextField(10,fontRenderer,layout.controlsX,guiTop+94,154,18);ChannelFields.configure(channels);channels.setText(text);
-            buttonList.add(layout.control(92,124,"Transmitter..."));
+
         }else channels=null;
         buttonList.add(layout.done(8));ready=true;
     }

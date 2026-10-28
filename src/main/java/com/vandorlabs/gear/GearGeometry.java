@@ -102,13 +102,16 @@ public final class GearGeometry {
             if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false))return false;
             List<AxisAlignedBB> obstacles=world.getCollisionBoxes(null,swept);
             if(!obstacles.isEmpty()){
-                // Allow at most a quarter-pixel of transient arc contact. The target
-                // must be completely clear, so this never publishes overlapping blocks.
+                // Only payloads meeting an endpoint face may graze that face during
+                // rotation. Linkage and unrelated obstacles keep the strict tolerance.
                 if(!root.isSwingArmController()||root.isLandingAssembly())return false;
                 List<AxisAlignedBB> endpoint=boxes(root,root.target()?1:0);
                 for(AxisAlignedBB obstacle:obstacles){
-                    if(penetration(swept,obstacle)>1/64D)return false;
-                    if((before==0||before==1)&&!shallowStroke(root,i,after.size(),obstacle,before))return false;
+                    int payloadStart=after.size()-(root.payload()==null?0:root.payload().collisionBoxCount(root));
+                    AxisAlignedBB finalBox=endpoint.get(i),sourceBox=boxes(root,root.target()?0:1).get(i);
+                    double tolerance=i>=payloadStart&&root.rotatePayload()&&(finalBox.grow(.0002).intersects(obstacle)||sourceBox.grow(.0002).intersects(obstacle))?1/4D:1/64D;
+                    if(penetration(swept,obstacle)>tolerance)return false;
+                    if(!shallowStroke(root,i,after.size(),obstacle,before,tolerance))return false;
                     for(AxisAlignedBB end:endpoint)if(end.shrink(.0001).intersects(obstacle))return false;
                 }
             }
@@ -116,13 +119,13 @@ public final class GearGeometry {
     }
     private static double penetration(AxisAlignedBB a,AxisAlignedBB b){return Math.min(Math.min(a.maxX,b.maxX)-Math.max(a.minX,b.minX),Math.min(Math.min(a.maxY,b.maxY)-Math.max(a.minY,b.minY),Math.min(a.maxZ,b.maxZ)-Math.max(a.minZ,b.minZ)));}
     /** A harmless first sliver must not hide a deeper obstruction later in this same stroke. */
-    private static boolean shallowStroke(GearTileEntity root,int index,int boxes,AxisAlignedBB obstacle,double start){
+    private static boolean shallowStroke(GearTileEntity root,int index,int boxes,AxisAlignedBB obstacle,double start,double tolerance){
         double end=root.target()?1:0;int payloadStart=boxes-(root.payload()==null?0:root.payload().collisionBoxCount(root));
         for(int step=0;step<GearTileEntity.ANIMATION_TICKS;step++){
             double a=start+(end-start)*step/GearTileEntity.ANIMATION_TICKS,b=start+(end-start)*(step+1)/GearTileEntity.ANIMATION_TICKS;AxisAlignedBB sweep;
             if(index>=payloadStart)sweep=root.payload().sweptBox(root,index-payloadStart,a,b);
             else {AxisAlignedBB first=computeBoxes(root,a,false).get(index),last=computeBoxes(root,b,false).get(index);double angle=Math.abs(root.pose(b).angleDegrees()-root.pose(a).angleDegrees());sweep=rotationEnvelope(root,first.union(last),(root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
-            if(sweep.intersects(obstacle)&&penetration(sweep,obstacle)>1/64D)return false;
+            if(sweep.intersects(obstacle)&&penetration(sweep,obstacle)>tolerance)return false;
         }
         return true;
     }

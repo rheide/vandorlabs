@@ -102,7 +102,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         for(GuiButton button:buttonList)button.enabled=button.id!=100+page;
         if(page==1){
             if(transmitterControl())buttonList.add(new GuiButton(90,guiLeft+14,guiTop+62,xSize-28,20,"Transmitter..."));
-            else if(!pilotSeat)buttonList.add(new GuiButton(90,thruster?layout.listX:guiLeft+14,guiTop+(thruster?64:96),thruster?layout.listWidth:xSize-28,20,"Transmitter..."));
+
             if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+116,122,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+144,guiTop+116,122,20,"High: "+highLimit));}
             if(thruster){buttonList.add(RedstoneActivationButton.from(layout.control(16,100,""),redstoneInverted?2:1));buttonList.add(layout.control(5,124,brightnessLabel()));buttonList.add(layout.control(6,148,thresholdLabel()));}
             if(pilotSeat)buttonList.add(new RedstoneActivationButton(18,guiLeft+14,guiTop+94,252,pilotMode));
@@ -179,7 +179,7 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     private String pilotHeightLabel(){return "Height: "+(pilotHeight==0?"Base":"+"+(pilotHeight*2)+" px");}
     private int baseControlsY(){return signalControl?selectableType?146:122:powerLever?96:66;}
-    private String dialogTitle(){return pilotSeat?"Pilot Seat":thruster?"Programmable Thruster":"Redstone Channels";}
+    private String dialogTitle(){return member.channelTile().getBlockType().getLocalizedName();}
     private String typeLabel(){return "Type: "+new String[]{"Standard","Twin","Grip"}[controlType];}
     private String sizeLabel(){boolean twin=member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever;return "Size: "+(twin?(powerLeverSize==0?"Small":"Large"):(powerLeverSize==0?"Compact":"Industrial"));}
     private String heightLabel(){return "Base height: "+(baseHeight==0?"Standard":"+"+(baseHeight*2)+" px");}

@@ -30,7 +30,7 @@ public final class GuiLandingGear extends GuiContainer {
             if(pixels!=lastSentPixels){lastSentPixels=pixels;PacketHandler.INSTANCE.sendToServer(new MessageLandingGear(tile.getPos(),pixels));}
         });
         length.displayString=lengthLabel(lastSentPixels);
-        buttonList.add(length);for(GuiButton b:buttonList)b.visible=b.id==0?page==1:page==0;buttonList.add(new DialogTabButton(100,guiLeft+14,guiTop+32,122,20,"General"));buttonList.add(new DialogTabButton(101,guiLeft+144,guiTop+32,122,20,"Redstone"));for(GuiButton b:buttonList)if(b.id>=100)b.enabled=b.id!=100+page;if(page==1)buttonList.add(new GuiButton(90,guiLeft+14,guiTop+134,252,20,"Redstone Transmitter..."));buttonList.add(new GuiButton(3,guiLeft+14,guiTop+ySize-30,252,20,"Done"));
+        buttonList.add(length);for(GuiButton b:buttonList)b.visible=b.id==0?page==1:page==0;buttonList.add(new DialogTabButton(100,guiLeft+14,guiTop+32,122,20,"General"));buttonList.add(new DialogTabButton(101,guiLeft+144,guiTop+32,122,20,"Redstone"));for(GuiButton b:buttonList)if(b.id>=100)b.enabled=b.id!=100+page;buttonList.add(new GuiButton(3,guiLeft+14,guiTop+ySize-30,252,20,"Done"));
     }
     private String sizeLabel(){if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)return size==4?"Size: Large (2x2)":"Size: Small (1 block)";String name=(size==4?"extra large (2×2)":com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES[size]).replace('_',' ');return "Size: "+Character.toUpperCase(name.charAt(0))+name.substring(1);}
     private static String lengthLabel(int pixels){return "Extended length: "+(pixels/16D)+" blocks";}

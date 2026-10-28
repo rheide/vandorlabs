@@ -40,6 +40,42 @@ public final class Gear26RuntimeChecks {
             require(tile.progress()==0&&world.isAirBlock(first)&&world.getBlockState(second).getBlock()==Blocks.STONE,"cleared push obstruction permits safe retry "+face+" "+tile.error());
         }
     }
+    private static void rotatingCeilingContact(WorldServer world,EntityPlayerMP actor,BlockPos root){
+        int cases=0;
+        for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_SWING_ARM,GearRegistry.LARGE_GEAR_SWING_ARM})for(int direction=0;direction<4;direction++){
+            clear(world,root);world.setBlockState(root.west(),Blocks.STONE.getDefaultState(),3);
+            GearTileEntity tile=arm(world,actor,root,block,EnumFacing.EAST,2);tile.operator(actor);
+            NBTTagCompound settings=tile.settings();settings.setBoolean("RotatePayload",true);settings.setInteger("Direction",direction);tile.configure(settings);
+            world.setBlockState(root.east(2),Blocks.STONE.getDefaultState(),3);
+            ArmPayload selected=ArmPayload.discover(tile,actor);Vec3d center=selected.transform(tile,0,.5,.5,.5).add(new Vec3d(root));BlockPos end=new BlockPos(center);
+            if(end.getY()<=root.getY())continue;
+            tile.target(false);require(tile.preparePayloadMotion(),"ceiling contact payload prepared");
+            world.setBlockState(end.up(),Blocks.STONE.getDefaultState(),3);
+            for(int tick=0;tick<80;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
+            require(tile.progress()==0,"rotating payload fits below endpoint ceiling block "+block.getRegistryName()+" direction="+direction+" endpoint="+end+" progress="+tile.progress()+" error="+tile.error());
+            tile.target(true);for(int tick=0;tick<80;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
+            require(tile.progress()==1,"ceiling-contact reversal returns to source");
+            world.setBlockState(end,Blocks.BEDROCK.getDefaultState(),3);tile.target(false);
+            for(int tick=0;tick<80;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
+            require(tile.progress()!=0&&world.getBlockState(end).getBlock()==Blocks.BEDROCK,"solid endpoint obstruction remains refused");cases++;
+        }
+        require(cases==2,"both regular and Large upward rotation fixtures exercised");clear(world,root);
+    }
+    private static void joinedSurfaceLayer(WorldServer world,EntityPlayerMP actor,BlockPos root){
+        clear(world,root);
+        net.minecraft.block.Block surface=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface");
+        GearTileEntity first=null;
+        for(int x:new int[]{0,2})for(int z:new int[]{0,2}){
+            BlockPos at=root.add(x,0,z);world.setBlockState(at.down(),Blocks.STONE.getDefaultState(),2);
+            GearTileEntity tile=arm(world,actor,at,GearRegistry.GEAR_EXTENDER,EnumFacing.UP,2);tile.operator(actor);
+            NBTTagCompound settings=tile.settings();settings.setBoolean("JoinArms",true);tile.configure(settings);if(first==null)first=tile;
+        }
+        for(int x=-1;x<=3;x++)for(int z=-1;z<=3;z++)world.setBlockState(root.add(x,2,z),surface.getDefaultState(),2);
+        require(first.rebuild(),"joined Surface fixture forms");
+        ArmPayload selected=ArmPayload.discover(first,actor);
+        require(selected!=null&&selected.blocks.cells.size()==25,"joined 3x3 arm footprint captures complete 5x5 Surface layer, actual="+(selected==null?0:selected.blocks.cells.size()));
+        clear(world,root);
+    }
     private static void surfaceLayers(WorldServer world,EntityPlayerMP actor,BlockPos root){
         net.minecraft.block.Block surface=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface");
         for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_EXTENDER,GearRegistry.LARGE_GEAR_EXTENDER,GearRegistry.GEAR_SWING_ARM,GearRegistry.LARGE_GEAR_SWING_ARM})for(EnumFacing face:EnumFacing.values())for(boolean rotate:new boolean[]{false,true}){
@@ -73,6 +109,8 @@ public final class Gear26RuntimeChecks {
             ArmPayloadSelectionChecks.run(world,actor);
             TrackLifecycleRuntimeChecks.run(world,actor,root);
             pushBlocks(world,actor,root);
+            rotatingCeilingContact(world,actor,root);
+            joinedSurfaceLayer(world,actor,root);
             surfaceLayers(world,actor,root);
             placementAndClearance(world,actor,root);
             mountedUpwardStack(world,actor,root);

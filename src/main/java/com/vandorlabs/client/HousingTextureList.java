@@ -184,7 +184,7 @@ final class HousingTextureList {
         for(int c=0;c<categories.size();c++) {
             String category=categories.get(c);
             if(!parentsExpanded(category))continue;
-            rows.add(-c-1);
+            rows.add(-200000-c);
             if(expanded.contains(category)) {
                 for(Option option:groups.getOrDefault(category,Collections.emptyList()))rows.add(option.choice);
             }
@@ -202,7 +202,7 @@ final class HousingTextureList {
     /** Pin the category of the first visible texture into the top row. */
     private int visibleChoice(int row) {
         int choice=rows.get(scroll+row);
-        if(row==0 && choice>=0)return -categories.indexOf(options.get(choice).category)-1;
+        if(row==0 && options.containsKey(choice))return -200000-categories.indexOf(options.get(choice).category);
         return choice;
     }
     int selected(){return selected==VEHICLE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
@@ -225,8 +225,8 @@ final class HousingTextureList {
         if(choice==VEHICLE_ROW){selected=VEHICLE_ROW;custom=-1;missing=-1;vehicleAction.run();return true;}
         if(choice==REDSTONE_ROW){selected=REDSTONE_ROW;custom=-1;missing=-1;redstoneAction.run();return true;}
         if(choice==CUSTOM_ROW){customInventory();return true;}
-        if(choice>=0){selected=choice;custom=-1;missing=-1;picked=true;}
-        else {String category=categories.get(-choice-1);if(!expanded.remove(category))expanded.add(category);rebuild();}
+        if(options.containsKey(choice)){selected=choice;custom=-1;missing=-1;picked=true;}
+        else {String category=categories.get(-200000-choice);if(!expanded.remove(category))expanded.add(category);rebuild();}
         return true;
     }
     boolean drag(int mouseY) {
@@ -277,8 +277,8 @@ final class HousingTextureList {
                 }
                 font.drawStringWithShadow(font.trimStringToWidth(custom>=0?"Custom: "+name(custom):"Custom...",width-(custom>=0?26:6)),x+(custom>=0?23:3),yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);
             }
-            else if(choice<0) {
-                String category=categories.get(-choice-1);
+            else if(!options.containsKey(choice)) {
+                String category=categories.get(-200000-choice);
                 font.drawStringWithShadow(font.trimStringToWidth((expanded.contains(category)?"- ":"+ ")+category.substring(category.lastIndexOf('/')+1),width-6-indent(category)),x+3+indent(category),yy+7,0xFFABCFE8);
             } else {
                 com.google.gson.JsonObject metadata=nativeOptions?null:ScreenHousingTextures.entry(ScreenHousingTextures.choiceAt(choice));

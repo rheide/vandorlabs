@@ -119,7 +119,7 @@ Place a Programmable Surface on the arm tip, then extend the layer along the two
 
 ## Push with a horizontal Large Extender
 
-With the arm at rest, open **Mechanism** and enable **Push blocks**. This option is available to horizontal Large Extenders without landing feet. Use a whole-block outward stroke. Place the first block directly against the arm tip; a contiguous row of ordinary solid blocks can be pushed with it. Pushing refuses tile entities, protected or immovable blocks, and chains requiring more than twelve additional blocks.
+With the arm at rest, open **Mechanism** and enable **Push blocks**. This option is available to horizontal regular and Large Extenders without landing feet. Use a whole-block outward stroke. Place the first block directly against the arm tip; a contiguous row of ordinary solid blocks can be pushed with it. Pushing refuses tile entities, protected or immovable blocks, and chains requiring more than twelve additional blocks.
 
 At the active endpoint the pushed blocks become ordinary world blocks. Returning the arm leaves every pushed block in place; it never pulls the row back. A blocked stroke retains the last valid ownership state and reports its obstruction. Turn pushing off to resume the ordinary attachment behavior.
 
@@ -127,4 +127,4 @@ At the active endpoint the pushed blocks become ordinary world blocks. Returning
 
 Return the Rotating Arm to rest before changing **Angle** in the **Mechanism** tab. The slider steps in 15-degree increments from −180 to 180 degrees. **Payload: rotates** turns the attachment with the arm; **Payload: stays level** preserves its orientation. Non-grid-aligned endpoints retain the attachment as a captured mechanism until it returns to a representable native endpoint.
 
-Rotating arcs permit at most a quarter-pixel of transient edge contact when the final endpoint is completely clear. Deeper obstructions and overlap at the final endpoint still stop the stroke.
+Rotating payloads may briefly graze a block that touches a face at either endpoint, up to a quarter-block penetration of the swept bounds. The remaining arc and final endpoint must remain clear. Unrelated obstacles and the arm linkage retain the strict quarter-pixel tolerance; final overlap is never allowed.
