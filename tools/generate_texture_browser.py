@@ -16,11 +16,18 @@ def catalog():
     entries += [dict(id='glass_'+identifier, source='programmable_glass/low/'+identifier, label=label, category='Glass') for identifier,label in zip(*arrays)]
     language = (ROOT/'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text(encoding='utf-8')
     names = dict(line.split('=',1) for line in language.splitlines() if '=' in line and not line.startswith('#'))
+    sources={entry['source'] for entry in entries}
+    def bare_source(source):
+        bare=source.replace('_framed_','_bare_').replace('/framed_','/bare_')
+        return 'bare_'+bare[7:] if bare.startswith('framed_') else bare
     result = []
     for entry in entries:
         if entry.get('hidden') or entry.get('alias') or entry.get('detail',0)>0: continue
+        if entry.get('category')=='Screens' and bare_source(entry['source'])!=entry['source'] and bare_source(entry['source']) in sources: continue
         entry = dict(entry)
+        if entry.get('category')=='Screens' and entry['source'].startswith('console_inputs/'): entry['category']='Controls'
         entry['label'] = entry.get('label', names.get('tile.vandorlabs.'+entry['id']+'.name', entry['id'].replace('_',' ').title()))
+        if entry.get('category') in ('Screens','Controls'): entry['label']=re.sub(r'\b(Bare|Framed)\s+','',entry['label'])
         if entry.get('design') is not None or entry.get('detail') is not None:entry['label']=re.sub(r' (Small|Medium|Large)$','',entry['label'])
         entry.setdefault('category','Materials')
         result.append(entry)
@@ -35,6 +42,9 @@ def image(source, entry):
         if source.endswith("_small"):return image(source[:-6],entry)
         raise FileNotFoundError(source)
     art=Image.open(path).convert('RGBA')
+    fraction=1/16 if source=='engineering_screen_static' else 1/32 if re.fullmatch(r'console_inputs/analysis_framed_(?:gas_giant|ice_planet|surface_map|terrestrial)_static',source) else 0
+    if fraction:
+        w,h=art.size;dx,dy=round(w*fraction),round(h*fraction);art=art.crop((dx,dy,w-dx,h-dy)).resize((w,h),Image.Resampling.LANCZOS)
     metadata=path.with_suffix('.png.mcmeta')
     if metadata.exists() and 'animation' in json.loads(metadata.read_text()):
         animation=json.loads(metadata.read_text())['animation'];width=animation.get('width',art.width);height=animation.get('height',width)
