@@ -127,6 +127,7 @@ public final class GuiRedstoneScreen extends GuiContainer {
                 || Math.abs(delta)!=1 || next<0 || next>=labels.size())return selected;
         Collections.swap(labels,selected,next);Collections.swap(channels,selected,next);return next;
     }
+    int inlineTransmitterSelector(){if(selected<0)return -1;if(tile!=null)return 1+tile.slot()*8+selected;return 100+cockpitTile.controls.indexOf(cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+selected));}
     private boolean installed(int row){if(tile==null){com.vandorlabs.tiles.TileEntityCockpit.Control c=cockpitTile.control(cockpitTile.displays.get(cockpitDisplay).id+"/"+row);return c!=null&&!com.vandorlabs.redstone.TransmitterSlots.get(c).isEmpty();}return row<tile.rows().size()&&!com.vandorlabs.redstone.TransmitterSlots.get(tile.rows().get(row)).isEmpty();}
     private int visibleRows(){return Math.max(1,(ySize-rowListTop-12)/20);}
     protected void mouseClicked(int x,int y,int button)throws IOException{

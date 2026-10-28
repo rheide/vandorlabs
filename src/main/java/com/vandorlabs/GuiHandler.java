@@ -67,7 +67,8 @@ public class GuiHandler implements IGuiHandler {
     }
 
     @Override
-    public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+    public Object getServerGuiElement(int ID,EntityPlayer player,World world,int x,int y,int z){Object result=createServerGuiElement(ID,player,world,x,y,z);if(result instanceof net.minecraft.inventory.Container)com.vandorlabs.redstone.InlineTransmitters.attach((net.minecraft.inventory.Container)result,player);return result;}
+    private Object createServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         if(ID==GUI_TRANSMITTER_ITEM){com.vandorlabs.container.ContainerTransmitterItem c=new com.vandorlabs.container.ContainerTransmitterItem(player,x==0?net.minecraft.util.EnumHand.MAIN_HAND:net.minecraft.util.EnumHand.OFF_HAND);return c.canInteractWith(player)?c:null;}
         if(ID>=1000&&ID<2256){int selector=ID>=2000?ID-2000:ID-1000;if(selector<0||selector>255)return null;com.vandorlabs.redstone.RedstoneChannelMember m=com.vandorlabs.container.ContainerTransmitterSlot.resolve(world,x,y,z,selector);if(m==null)return null;net.minecraft.inventory.Container c=ID>=2000?new com.vandorlabs.container.ContainerTransmitterItem(player,m,selector):new com.vandorlabs.container.ContainerTransmitterSlot(player,m,selector);return c.canInteractWith(player)?c:null;}
 
@@ -164,7 +165,9 @@ public class GuiHandler implements IGuiHandler {
     }
 
     @Override
-    public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+    public Object getClientGuiElement(int ID,EntityPlayer player,World world,int x,int y,int z){Object result=createClientGuiElement(ID,player,world,x,y,z);if(result instanceof net.minecraft.client.gui.inventory.GuiContainer)com.vandorlabs.redstone.InlineTransmitters.attach(((net.minecraft.client.gui.inventory.GuiContainer)result).inventorySlots,player);return result;}
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    private Object createClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
         if(ID==GUI_TRANSMITTER_ITEM)return new com.vandorlabs.client.GuiTransmitterItem(new com.vandorlabs.container.ContainerTransmitterItem(player,x==0?net.minecraft.util.EnumHand.MAIN_HAND:net.minecraft.util.EnumHand.OFF_HAND));
         if(ID>=1000&&ID<2256){int selector=ID>=2000?ID-2000:ID-1000;if(selector<0||selector>255)return null;com.vandorlabs.redstone.RedstoneChannelMember m=com.vandorlabs.container.ContainerTransmitterSlot.resolve(world,x,y,z,selector);if(m==null)return null;return ID>=2000?new com.vandorlabs.client.GuiTransmitterItem(new com.vandorlabs.container.ContainerTransmitterItem(player,m,selector)):new com.vandorlabs.client.GuiTransmitterSlot(new com.vandorlabs.container.ContainerTransmitterSlot(player,m,selector));}
 

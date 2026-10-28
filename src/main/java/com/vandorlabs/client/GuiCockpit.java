@@ -60,6 +60,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
             buttonList.add(new CockpitButton(41,x,y+118,w,20,(control.isThrottle()?new String[]{"Off","Low","Medium","High"}[control.step()]+": ":"Output: ")+control.level+"  (operate)"));
         }
     }
+    int inlineTransmitterSelector(){return 100+controlIndex();}
     private void text(int id,int x,int y,int width,String value){GuiTextField field=new GuiTextField(id,fontRenderer,x,y,width,18);field.setMaxStringLength(id==0?128:256);field.setText(value);fields.add(field);}
     private void packet(int op,NBTTagCompound values){com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCockpit(inventorySlots.windowId,op,values));}
     private void redstone(){choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);mc.displayGuiScreen(new GuiRedstoneScreen(this,cockpit,displayIndex()));}
