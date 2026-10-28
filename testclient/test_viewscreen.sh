@@ -4,6 +4,8 @@ set -euo pipefail
 unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
+unset VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
+unset VANDOR_LABS_ARTWORK27_CHECKS_ONLY
 unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
@@ -35,6 +37,9 @@ case "${1:-}" in
         elif [ "$TARGET" = mekanism-tanks ]; then
             PREFIX=mekanism_tank_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_MEKANISM_TANK_ONLY=true
+        elif [ "$TARGET" = arm-improvements ]; then
+            PREFIX=arm_improvements_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_IMPROVEMENTS_ONLY=true
         elif [ "$TARGET" = arm-wall ]; then
             PREFIX=arm_wall_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_WALL_ONLY=true
@@ -59,6 +64,12 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-recovery ]; then
             PREFIX=arm_recovery_
             : "${VANDOR_LABS_ARM_RECOVERY_PHASE:?Set the isolated arm recovery phase}"
+        elif [ "$TARGET" = taxi-landing27 ]; then
+            PREFIX=taxi_landing27_
+            export VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY=true
+        elif [ "$TARGET" = artwork27 ]; then
+            PREFIX=artwork27_
+            export VANDOR_LABS_ARTWORK27_CHECKS_ONLY=true
         elif [ "$TARGET" = utility26 ]; then
             PREFIX=utility26_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
@@ -207,6 +218,11 @@ if [ "$MODE" = focus ]; then
         echo "Copy surface checks passed: $RUN_OUT"
         exit 0
     fi
+    if [ "$TARGET" = arm-improvements ]; then
+        grep -q "arm-improvements PASS" "$RUN_OUT/client.log"
+        echo "Arm improvements passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = arm-wall ]; then
         grep -q "arm-wall PASS" "$RUN_OUT/client.log"
         echo "Saved wall arm checks passed: $RUN_OUT"
@@ -248,6 +264,16 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-recovery ]; then
         grep -q "arm-durable-recovery PASS" "$RUN_OUT/client.log"
         echo "Arm restart recovery passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = taxi-landing27 ]; then
+        grep -q "taxi-landing27 PASS" "$RUN_OUT/client.log"
+        echo "Taxi landing gear checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = artwork27 ]; then
+        grep -q "artwork27-focused PASS" "$RUN_OUT/client.log"
+        echo "Live artwork 2.7 checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = utility26 ]; then

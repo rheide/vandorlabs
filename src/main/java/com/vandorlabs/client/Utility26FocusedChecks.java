@@ -17,10 +17,13 @@ final class Utility26FocusedChecks {
             java.util.List<Throwable> problems=new java.util.ArrayList<>();
             net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
             net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+            check(problems,"spatial redstone range",()->RedstoneRangeRuntimeChecks.run(world,actor));
             check(problems,"cockpit copy",()->CockpitCopyRuntimeChecks.run(world,actor));
             check(problems,"boundaries and ramps",()->Utility26RuntimeChecks.run(world,actor));
             check(problems,"optional block compatibility",()->ForeignCompatibility26Checks.run(world,actor));
             check(problems,"arms and tracks",()->com.vandorlabs.gear.Gear26RuntimeChecks.run(world,actor));
+            check(problems,"analog ramp and stationary supports",()->RampAnalogRuntimeChecks.run(world,actor));
+            check(problems,"joined tank storage",()->UtilityStorageRuntimeChecks.run(world));
             check(problems,"surface appearance",()->com.vandorlabs.surface.SurfaceRuntimeChecks.run(world,actor));
             check(problems,"moving block exact snapshots",()->com.vandorlabs.vehicle.MovingSupportRuntimeChecks.run(world));
             check(problems,"previous-release vehicle snapshots",()->com.vandorlabs.vehicle.VehicleUpgradeChecks.run(world));
@@ -52,6 +55,7 @@ final class Utility26FocusedChecks {
         check(failures,"Track appearance bounds and errors",()->TrackClientChecks.run(mc,output));
         check(failures,"Track tread animation",()->com.vandorlabs.gear.client.TrackTreadChecks.run(mc,output));
         check(failures,"thruster joined hex rendering",()->ThrusterJoinClientChecks.run(mc,output));
+        check(failures,"joined tank rendering",()->HexTankClientChecks.run(mc,output));
         check(failures,"coupler models",()->Utility26RuntimeChecks.models(mc));
         check(failures,"arm and track rendering",()->com.vandorlabs.gear.client.Gear26ClientChecks.run(mc,output));
         if(!failures.isEmpty()){IllegalStateException failure=new IllegalStateException("Utility 2.6 failed fixtures="+failures.size());for(Throwable problem:failures)failure.addSuppressed(problem);throw failure;}
