@@ -2218,6 +2218,7 @@ public class ReproLab {
         } catch (Exception exception) {
             throw new IllegalStateException("Controller server-thread contracts failed",exception);
         }
+        if(!Boolean.getBoolean("vandorlabs.dialogChecksOnly")){
         onServer(mc, () -> {
             ScreenRuntimeChecks.run(serverPlayer);
             MaterialRuntimeChecks.run(serverPlayer);
@@ -2228,6 +2229,7 @@ public class ReproLab {
         CustomMaterialRuntimeChecks.run(mc.player);
         DeviceRenderBenchmark.run(mc,outDir);
         ItemRuntimeChecks.run(serverPlayer);
+        }
         onServer(mc,()->{
         // Rebuild programmable fixtures after destructive runtime contracts.
         // Keeping render targets downstream from test mutations also avoids
