@@ -29,7 +29,7 @@ public final class FrameEdgeRuntimeChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("frame edges: "+why);}
     private static final class Scene {final String name;final VehicleStructure structure;Scene(String name,VehicleStructure structure){this.name=name;this.structure=structure;}}
     public static void run(Minecraft mc,File output)throws Exception{
-        crops();doorUvs();int choices=0;
+        crops();doorUvs();glassFrameUvs();int choices=0;
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i))){
             FrameAppearance a=new FrameAppearance();a.interior=i;TextureAtlasSprite base=mc.getTextureMapBlocks().getAtlasSprite(a.interior(""));
             for(int edge=0;edge<4;edge++){TextureAtlasSprite strip=FrameEdgeTextures.edge(base,edge);require(strip.getIconWidth()==strip.getIconHeight()&&strip.getIconWidth()<=(FrameAppearance.border(i)?64:128),"native strip or whole opaque material size");for(int pixel:strip.getFrameTextureData(0)[0])require((pixel>>>24)==255,"transparent center sampled by physical frame: "+strip.getIconName());choices++;}
@@ -58,6 +58,25 @@ public final class FrameEdgeRuntimeChecks {
             }
         }
         require(checked>0&&strips.size()>=4,"door does not select distinct authored frame edges");
+    }
+    private static void glassFrameUvs()throws Exception{
+        TileEntityProgrammableGlass tile=new TileEntityProgrammableGlass();tile.frameAppearance.front=ScreenHousingTextures.screenIndex("frames/frames-door-window/door_interior_dark");tile.frameAppearance.interior=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1");
+        TextureAtlasSprite front=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.front("")),inner=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.interior(""));
+        StaticSurfaceMesh mesh=GlassFrameMesh.get(tile,new GlassSurfaceGroups.Layout(0,0,1,1));
+        java.lang.reflect.Field field=StaticSurfaceMesh.class.getDeclaredField("vertices");field.setAccessible(true);float[] data=(float[])field.get(mesh);int checked=0,directions=0;
+        for(int q=0;q<data.length;q+=32){
+            double[][] points=new double[4][3];double minX=16,maxX=0,minY=16,maxY=0,minU=1,maxU=0,minV=1,maxV=0;
+            for(int v=0;v<4;v++){int at=q+v*8;points[v]=new double[]{data[at],data[at+1],data[at+2]};minX=Math.min(minX,data[at]);maxX=Math.max(maxX,data[at]);minY=Math.min(minY,data[at+1]);maxY=Math.max(maxY,data[at+1]);minU=Math.min(minU,data[at+3]);maxU=Math.max(maxU,data[at+3]);minV=Math.min(minV,data[at+4]);maxV=Math.max(maxV,data[at+4]);}
+            if(Math.abs(data[q+7])>.9){
+                require(Math.abs((maxU-minU)/(front.getMaxU()-front.getMinU())*16-(maxX-minX))<.001,"opaque square front stretched across a narrow rail");
+                require(Math.abs((maxV-minV)/(front.getMaxV()-front.getMinV())*16-(maxY-minY))<.001,"opaque square front stretched vertically");checked++;
+            }else{
+                TextureAtlasSprite edge=FrameEdgeTextures.edge(inner,points);
+                require(minU>=edge.getMinU()-.00001&&maxU<=edge.getMaxU()+.00001&&minV>=edge.getMinV()-.00001&&maxV<=edge.getMaxV()+.00001,"inner rim sampled wrong authored edge");
+                for(int kind=0;kind<4;kind++)if(edge==FrameEdgeTextures.edge(inner,kind))directions|=1<<kind;
+            }
+        }
+        require(checked==8&&directions==15,"actual emitted frame lacks complete opaque fronts or four directional interiors");
     }
     private static void crops(){
         BufferedImage authored=new BufferedImage(64,64,BufferedImage.TYPE_INT_ARGB);int[] colors={0xffed3010,0xff21d030,0xff2040ef,0xffeac020};
