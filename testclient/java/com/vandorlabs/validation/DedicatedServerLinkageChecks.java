@@ -118,15 +118,27 @@ public final class DedicatedServerLinkageChecks {
         if(findings.size()!=2||stripped(box,"<init>","(DDDDDD)V",false)!=null)
             throw new IllegalStateException("Side annotation controls failed; check mapped Minecraft classpath");
         findings.clear();references=0;
+        // A reused unannotated client override makes its implementation lambdas
+        // shared too; otherwise a stripped call can hide behind invokedynamic.
+        ClassNode reused=new ClassNode();reused.name="linkage/ReusedLightOverride";reused.superName="net/minecraft/world/World";
+        String light="(Lnet/minecraft/util/math/BlockPos;I)I";
+        MethodNode caller=new MethodNode();caller.name="sharedCaller";caller.desc="()V";caller.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL,reused.name,"getCombinedLight",light,false));
+        MethodNode override=new MethodNode();override.name="getCombinedLight";override.desc=light;
+        override.instructions.add(new InvokeDynamicInsnNode("apply","()Ljava/util/function/Function;",new Handle(Opcodes.H_INVOKESTATIC,"java/lang/invoke/LambdaMetafactory","metafactory","()V",false),new Handle(Opcodes.H_INVOKESTATIC,reused.name,"lambda$getCombinedLight$0",light,false)));
+        MethodNode lambda=new MethodNode();lambda.name="lambda$getCombinedLight$0";lambda.desc=light;lambda.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL,"net/minecraft/world/World","getCombinedLight",light,false));
+        reused.methods.add(caller);reused.methods.add(override);reused.methods.add(lambda);classes.put(reused.name,reused);
+        classify(Collections.singletonList(reused));
+        if(clientMethods.contains(key(reused.name,override))||clientMethods.contains(key(reused.name,lambda)))throw new IllegalStateException("Shared override lambda remained exempt from linkage checks");
+        scan(reused,lambda);if(findings.size()!=1)throw new IllegalStateException("Shared override lambda negative control missed stripped combined light");
+        classes.remove(reused.name);clientMethods.clear();findings.clear();references=0;
     }
-    private void run(Path root)throws IOException {
-        controls();
-        List<ClassNode> mod=new ArrayList<>();
-        try(java.util.stream.Stream<Path> paths=Files.walk(root)){
-            for(Path p:(Iterable<Path>)paths.filter(p->p.toString().endsWith(".class"))::iterator){
-                ClassNode c=new ClassNode();new ClassReader(Files.readAllBytes(p)).accept(c,0);classes.put(c.name,c);mod.add(c);
-            }
-        }
+    private boolean shareTarget(String owner,String name,String desc)throws IOException{
+        ClassNode target=type(owner);boolean changed=false;
+        if(target!=null&&!clientClass(target.name))for(MethodNode method:target.methods)
+            if(method.name.equals(name)&&method.desc.equals(desc)&&!client(method.visibleAnnotations)&&!client(method.invisibleAnnotations))changed|=clientMethods.remove(key(target.name,method));
+        return changed;
+    }
+    private void classify(List<ClassNode> mod)throws IOException{
         // Seed actual client methods, then follow their synthetic lambda implementation handles.
         for(ClassNode c:mod)if(!clientClass(c.name))for(MethodNode m:c.methods)
             if(clientCallback(c,m))clientMethods.add(key(c.name,m));
@@ -147,14 +159,22 @@ public final class DedicatedServerLinkageChecks {
             changed=false;
             for(ClassNode c:mod)if(!clientClass(c.name))for(MethodNode m:c.methods)
                 if(!clientMethods.contains(key(c.name,m)))for(AbstractInsnNode ins:m.instructions.toArray()){
-                    if(!(ins instanceof MethodInsnNode))continue;
-                    MethodInsnNode call=(MethodInsnNode)ins;ClassNode target=type(call.owner);
-                    if(target!=null&&!clientClass(target.name))for(MethodNode method:target.methods)
-                        if(method.name.equals(call.name)&&method.desc.equals(call.desc)
-                                &&!client(method.visibleAnnotations)&&!client(method.invisibleAnnotations)
-                                &&clientMethods.remove(key(target.name,method)))changed=true;
+                    if(ins instanceof MethodInsnNode){MethodInsnNode call=(MethodInsnNode)ins;changed|=shareTarget(call.owner,call.name,call.desc);}
+                    else if(ins instanceof InvokeDynamicInsnNode){
+                        for(Object argument:((InvokeDynamicInsnNode)ins).bsmArgs)if(argument instanceof Handle){Handle handle=(Handle)argument;if(handle.getTag()>Opcodes.H_PUTSTATIC)changed|=shareTarget(handle.getOwner(),handle.getName(),handle.getDesc());}
+                    }else if(ins instanceof LdcInsnNode&&((LdcInsnNode)ins).cst instanceof Handle){Handle handle=(Handle)((LdcInsnNode)ins).cst;if(handle.getTag()>Opcodes.H_PUTSTATIC)changed|=shareTarget(handle.getOwner(),handle.getName(),handle.getDesc());}
                 }
         }while(changed);
+    }
+    private void run(Path root)throws IOException {
+        controls();
+        List<ClassNode> mod=new ArrayList<>();
+        try(java.util.stream.Stream<Path> paths=Files.walk(root)){
+            for(Path p:(Iterable<Path>)paths.filter(p->p.toString().endsWith(".class"))::iterator){
+                ClassNode c=new ClassNode();new ClassReader(Files.readAllBytes(p)).accept(c,0);classes.put(c.name,c);mod.add(c);
+            }
+        }
+        classify(mod);
         for(ClassNode c:mod){
             if(clientClass(c.name))continue;sharedClasses++;
             for(FieldNode f:c.fields)if(!client(f.visibleAnnotations)&&!client(f.invisibleAnnotations)){
@@ -165,7 +185,7 @@ public final class DedicatedServerLinkageChecks {
         }
         for(String finding:findings)System.err.println(finding);
         if(!findings.isEmpty())throw new IllegalStateException("Dedicated-server linkage: "+findings.size()+" unreviewed client API references");
-        System.out.println("Dedicated-server linkage PASS shared-classes="+sharedClasses+" references="+references+" known-bad-controls=2");
+        System.out.println("Dedicated-server linkage PASS shared-classes="+sharedClasses+" references="+references+" known-bad-controls=3");
     }
     public static void main(String[] args)throws Exception {new DedicatedServerLinkageChecks().run(Paths.get(args[0]));}
 }

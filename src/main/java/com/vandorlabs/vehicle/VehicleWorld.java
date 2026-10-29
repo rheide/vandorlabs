@@ -229,8 +229,11 @@ public final class VehicleWorld extends World {
         return parent.isBlockLoaded(absolute)?read.apply(absolute):fallback;
     }
     @Override public int getCombinedLight(BlockPos p,int minimum){
-        int combined=loadedParent(p,0,absolute->parent.getCombinedLight(absolute,minimum));
-        return (combined&0xFFFF0000)|Math.max(combined&65535,Math.max(minimum,localLight.at(p))<<4);
+        // World.getCombinedLight is stripped on a physical server, although
+        // foreign shared block hooks also call this simulation override.
+        int sky=getLightFromNeighborsFor(EnumSkyBlock.SKY,p);
+        int block=Math.max(minimum,getLightFromNeighborsFor(EnumSkyBlock.BLOCK,p));
+        return (sky<<20)|(Math.max(block,localLight.at(p))<<4);
     }
     @Override public int getLightFor(EnumSkyBlock type,BlockPos p){int parentLight=loadedParent(p,0,absolute->parent.getLightFor(type,absolute));return type==EnumSkyBlock.BLOCK?Math.max(parentLight,localLight.at(p)):parentLight;}
     @Override public net.minecraft.world.biome.Biome getBiome(BlockPos p){return parent.getBiome(physical(p));}

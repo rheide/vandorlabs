@@ -30,6 +30,11 @@ public final class VehicleWorldRuntimeChecks {
         if(live)MinecraftForge.EVENT_BUS.register(observer);
         try{
             BlockPos p=new BlockPos(15,8,15);
+            if(live){
+                // The unloaded fallback must not conceal stripped parent-light calls.
+                for(BlockPos sample:Arrays.asList(BlockPos.ORIGIN,p,p.east(),p.south()))parent.getChunkFromBlockCoords(sample);
+                require(parent.isBlockLoaded(BlockPos.ORIGIN)&&parent.isBlockLoaded(p),"Physical light fixture must load its parent chunks");
+            }
             Block neighbor=new Block(Material.ROCK){
                 @Override public void onNeighborChange(net.minecraft.world.IBlockAccess world,BlockPos at,BlockPos from){
                     throw new IllegalStateException("Carried tile invoked foreign comparator callback");
@@ -80,6 +85,11 @@ public final class VehicleWorldRuntimeChecks {
             require(view.getLight(p)==(loaded?parent.getLight(p):0),"Direct light reader changed parent sampling");
             for(boolean neighbors:new boolean[]{false,true})require(view.getLight(p,neighbors)==(loaded?parent.getLight(p,neighbors):0),"Light reader lost neighbor flag");
             require(view.canSeeSky(p)==(loaded&&parent.canSeeSky(p)),"Sky reader changed parent sampling");
+            for(int minimum:new int[]{0,7,15}){
+                int sky=view.getLightFromNeighborsFor(net.minecraft.world.EnumSkyBlock.SKY,p);
+                int block=view.getLightFromNeighborsFor(net.minecraft.world.EnumSkyBlock.BLOCK,p);
+                require(view.getCombinedLight(p,minimum)==((sky<<20)|(Math.max(block,minimum)<<4)),"Loaded-parent combined sky/block/minimum light changed");
+            }
             VehicleWorld lampView=new VehicleWorld(parent,VehicleStructure.display(Arrays.asList(
                     new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.GLOWSTONE.getDefaultState(),null),
                     new VehicleStructure.Cell(new BlockPos(3,0,0),Blocks.STONE.getDefaultState(),null))));
