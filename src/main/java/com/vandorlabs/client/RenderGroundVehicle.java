@@ -78,7 +78,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         int layer,cell;
         Build(Mesh source,int light,int level){cells=source.cells;result.generation=generation;result.light=light;result.level=level;}
     }
-    public static void reload(){generation++;for(Regions regions:meshes.values())regions.delete();meshes.clear();VehicleWheelMotion.clear();TELandingGear.clearWheelModels();}
+    public static void reload(){VehiclePaintingRenderer.clear();generation++;for(Regions regions:meshes.values())regions.delete();meshes.clear();VehicleWheelMotion.clear();TELandingGear.clearWheelModels();}
     public static void cleanup(net.minecraft.world.World world){Iterator<Map.Entry<EntityGroundVehicle,Regions>> i=meshes.entrySet().iterator();while(i.hasNext()){Map.Entry<EntityGroundVehicle,Regions> e=i.next();if(e.getKey().isDead || e.getKey().world!=world){e.getValue().delete();i.remove();}}}
     private static boolean same(List<VehicleStructure.Cell> a,List<VehicleStructure.Cell> b) {
         if(a.size()!=b.size())return false;
@@ -240,12 +240,12 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             BlockMeshVbo.draw(mesh.buffers.get(i),mesh.format,layer);
         }
         GlStateManager.depthMask(true);GlStateManager.disableBlend();GlStateManager.enableLighting();
-        VehicleWheelRenderer.render(e,regions.wheels,partial);
+        VehicleWheelRenderer.render(e,regions.wheels,partial);VehiclePaintingRenderer.render(e,partial);
         // Each vehicle owns a separate World identity, isolating renderer adjacency and animation caches.
         TileEntityRendererDispatcher dispatcher=TileEntityRendererDispatcher.instance;
         double cameraX=dispatcher.entityX,cameraY=dispatcher.entityY,cameraZ=dispatcher.entityZ;
+        double staticX=TileEntityRendererDispatcher.staticPlayerX,staticY=TileEntityRendererDispatcher.staticPlayerY,staticZ=TileEntityRendererDispatcher.staticPlayerZ;
         net.minecraft.world.World previousWorld=dispatcher.world;
-        dispatcher.world=e.view;dispatcher.entityX=localCamera.x;dispatcher.entityY=localCamera.y;dispatcher.entityZ=localCamera.z;
         tiles(e,regions);
         // Glass never writes depth: draw opaque tile artwork first, then blend
         // glazing from the far side of the craft toward the local camera.
@@ -264,6 +264,8 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         });
         List<TileDraw> canopyGlass=new ArrayList<>();
         try {
+        dispatcher.world=e.view;dispatcher.entityX=localCamera.x;dispatcher.entityY=localCamera.y;dispatcher.entityZ=localCamera.z;
+        TileEntityRendererDispatcher.staticPlayerX=localCamera.x;TileEntityRendererDispatcher.staticPlayerY=localCamera.y;TileEntityRendererDispatcher.staticPlayerZ=localCamera.z;
         if(batched&&reuseTileOrder)for(VehicleOpaqueTileBatch batch:regions.opaqueBatches.values()){if(batch.bounds!=null&&Double.isFinite(batch.bounds.minX)&&Double.isFinite(batch.bounds.maxX)&&Double.isFinite(batch.bounds.minY)&&Double.isFinite(batch.bounds.maxY)&&Double.isFinite(batch.bounds.minZ)&&Double.isFinite(batch.bounds.maxZ)&&!tileFrustum.isBoundingBoxInFrustum(pose.world(batch.bounds,e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)))continue;GlStateManager.pushMatrix();try{batch.draw(regions.opaqueTiles,e.structure,partial);tileDraws+=batch.size();}finally{GlStateManager.popMatrix();}}
         for(int tileIndex=0;tileIndex<opaqueCount+orderedTiles.size();tileIndex++) {
             TileDraw draw=tileIndex<opaqueCount?opaque.get(tileIndex):orderedTiles.get(tileIndex-opaqueCount);
@@ -299,7 +301,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
             GlStateManager.depthMask(false);
             try{for(TileEntity tile:liquids){BlockPos p=tile.getPos();WaterloggedRenderer.render(tile,p.getX(),p.getY(),p.getZ());}}
             finally{GlStateManager.depthMask(true);}
-        }finally{dispatcher.world=previousWorld;dispatcher.entityX=cameraX;dispatcher.entityY=cameraY;dispatcher.entityZ=cameraZ;}
+        }finally{TileEntityRendererDispatcher.staticPlayerX=staticX;TileEntityRendererDispatcher.staticPlayerY=staticY;TileEntityRendererDispatcher.staticPlayerZ=staticZ;dispatcher.world=previousWorld;dispatcher.entityX=cameraX;dispatcher.entityY=cameraY;dispatcher.entityZ=cameraZ;}
         GlStateManager.color(1,1,1,1);GlStateManager.popMatrix();
     }
     private static boolean glassRamp(TileEntity tile){

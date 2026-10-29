@@ -4,7 +4,7 @@ set -euo pipefail
 unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
-unset VANDOR_LABS_ARM_START_ONLY
+unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
 unset VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
 unset VANDOR_LABS_ARTWORK27_CHECKS_ONLY
 unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
@@ -17,7 +17,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = reactor-glass ]; then
+        if [ "$TARGET" = vehicle-signs ]; then
+            PREFIX=vehicle_sign_
+            export VANDOR_LABS_SIGN_CHECKS_ONLY=true
+        elif [ "$TARGET" = reactor-glass ]; then
             PREFIX=reactor_glass_
             export VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY=true
         elif [ "$TARGET" = foreign-buildings ]; then
@@ -245,6 +248,12 @@ if [ "$MODE" = focus ]; then
         echo "Arm rider checks passed: $RUN_OUT"
         exit 0
     fi
+    if [ "$TARGET" = vehicle-signs ]; then
+        grep -q "vehicle-sign-render PASS" "$RUN_OUT/client.log"
+        grep -q "vehicle-painting-render PASS" "$RUN_OUT/client.log"
+        echo "Carried sign checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = arm-start ]; then
         grep -q "arm-start PASS" "$RUN_OUT/client.log"
         echo "Arm starting-angle checks passed: $RUN_OUT"
@@ -290,6 +299,7 @@ if [ "$MODE" = focus ]; then
     fi
     if [ "$TARGET" = artwork27 ]; then
         grep -q "artwork27-focused PASS" "$RUN_OUT/client.log"
+        grep -q "shared-screen-transmitter PASS" "$RUN_OUT/client.log"
         echo "Live artwork 2.7 checks passed: $RUN_OUT"
         exit 0
     fi

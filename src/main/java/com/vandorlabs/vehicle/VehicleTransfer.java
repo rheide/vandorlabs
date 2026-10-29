@@ -42,6 +42,7 @@ public final class VehicleTransfer {
         Future<?> io;boolean journalReady,committed,retiring,aborting,rolledBack,rollbackNotice,mutated;
         TransferCheckpoint checkpoint;boolean checkpointReady;
         final ArrayDeque<BlockUpdates> updates=new ArrayDeque<>();
+        final java.util.List<net.minecraft.entity.item.EntityPainting> paintings=new java.util.ArrayList<>();
         final Set<TileEntity> pausedTiles=Collections.newSetFromMap(new IdentityHashMap<TileEntity,Boolean>());
         Work(WorldServer world,Action action,java.util.function.Consumer<Exception> failed){this.world=world;this.action=action;this.failed=failed;}
     }
@@ -90,7 +91,7 @@ public final class VehicleTransfer {
             if(remaining>0){PAUSED_TILES.put(tile,remaining);continue;}PAUSED_TILES.remove(tile);
             if(!tile.isInvalid()&&work.world.isBlockLoaded(tile.getPos())&&work.world.getTileEntity(tile.getPos())==tile&&!work.world.tickableTileEntities.contains(tile))work.world.tickableTileEntities.add(tile);
         }
-        work.pausedTiles.clear();
+        work.pausedTiles.clear();VehiclePaintings.release(work.paintings);
     }
     /** At most one affected chunk is serialized per tick; disk waits never run on this thread. */
     static void tick(WorldServer world){
@@ -111,6 +112,7 @@ public final class VehicleTransfer {
                     Set<Chunk> chunks=new LinkedHashSet<>();VehicleStructure affected=VehicleStructure.read(work.undo.getCompoundTag(work.undo.hasKey("ParkedCraft",10)?"ParkedCraft":work.undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft"));
                     BlockPos origin=BlockPos.fromLong(work.undo.getLong(work.undo.hasKey("AssemblyOriginalOrigin",4)?"AssemblyOriginalOrigin":"Origin"));
                     for(VehicleStructure.Cell cell:affected.cells)chunks.add(world.getChunkFromBlockCoords(origin.add(cell.pos)));
+                    VehiclePaintings.checkpoint(world,affected,origin,chunks);
                     if(work.held!=null)chunks.add(world.getChunkFromBlockCoords(work.held.getPosition()));
                     work.checkpoint=new TransferCheckpoint(world,chunks);
                 }
@@ -202,11 +204,15 @@ public final class VehicleTransfer {
         if(entity.couplingActor()!=null)tag.setUniqueId("CouplingActor",entity.couplingActor());tag.setTag("AutopilotNavigation",entity.autopilot.write());
         tag.setFloat("Yaw",entity.rotationYaw);tag.setDouble("X",entity.posX);tag.setDouble("Y",entity.posY);tag.setDouble("Z",entity.posZ);return tag;
     }
+    static java.util.function.Consumer<String> testFault;
+    private static void fault(String point){if(testFault!=null&&System.getProperty("vandorlabs.reprolab")!=null)testFault.accept(point);}
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin)throws Exception {return assemble(world,structure,origin,null);}
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin,net.minecraft.entity.player.EntityPlayer actor)throws Exception {
         for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&MekanismTankCompat.reactorGlass(world.getTileEntity(origin.add(cell.pos))))MekanismTankCompat.required(world,origin.add(cell.pos));
         if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
         if(!structure.hasDedicatedController())throw new IllegalArgumentException("Vehicle Controller missing");
+        List<net.minecraft.entity.item.EntityPainting> paintings=VehiclePaintings.attached(world,structure,origin);
+        structure=VehiclePaintings.capture(structure,origin,paintings);
         VehicleWorld validationView=new VehicleWorld(world,structure);
         VehicleFlight.requireThruster(structure);
         boolean forceHover=structure.activeNonWheeledGear()&&!VehicleSkiTraction.canStart(world,structure,origin);
@@ -218,7 +224,8 @@ public final class VehicleTransfer {
             if(supports.error!=null||supports.trackSupportCount()<2)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports, or two track blocks.");
         }
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
-        Work work=ACTIVE.get();EntityGroundVehicle entity;
+        Work work=ACTIVE.get();if(work!=null)VehiclePaintings.hold(work.paintings,paintings);EntityGroundVehicle entity;
+        if(work!=null&&work.assembled!=null&&!VehiclePaintings.entries(work.assembled.structure).equals(VehiclePaintings.entries(structure)))throw new IllegalArgumentException("Paintings changed while preparing the vehicle; source retained, please retry");
         if(work!=null){if(work.assembled==null){VehicleCollision prepared=geometry(world,structure);work.assembled=new EntityGroundVehicle(world);work.assembled.install(structure,prepared);}entity=work.assembled;}
         else{entity=new EntityGroundVehicle(world);entity.install(structure);}
         entity.recordCouplingActor(actor);entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
@@ -233,12 +240,14 @@ public final class VehicleTransfer {
         for(com.vandorlabs.entity.EntityChairSeat chair:oldSeats)seated.put(chair.getPassengers().get(0),chair.getChairPos().subtract(origin));
         boolean expandedEscalator=VehicleEscalators.needsExpandedSnapshot(world,structure,origin);
         VehicleEscalators.WorldSnapshot expanded=expandedEscalator?VehicleEscalators.expandedWorldSnapshot(world,structure,origin):new VehicleEscalators.WorldSnapshot(structure,origin);
+        if(expandedEscalator)expanded=new VehicleEscalators.WorldSnapshot(VehiclePaintings.capture(expanded.structure,expanded.origin,paintings),expanded.origin);
         if(actor!=null)for(VehicleStructure.Cell cell:expanded.structure.cells){BlockPos p=expanded.origin.add(cell.pos);VehicleService.permission((net.minecraft.entity.player.EntityPlayerMP)actor,p);}
-        NBTTagCompound undo=record(structure,origin,entity,false);if(expandedEscalator){undo.setTag("AssemblyOriginal",expanded.structure.write());undo.setLong("AssemblyOriginalOrigin",expanded.origin.toLong());}write(world,undo);
+        NBTTagCompound undo=record(structure,origin,entity,false);if(expandedEscalator){undo.setTag("AssemblyOriginal",expanded.structure.write());undo.setLong("AssemblyOriginalOrigin",expanded.origin.toLong());}fault("painting-before-journal");write(world,undo);
         Transaction transaction=new Transaction(world);
         try {
             if(work!=null)work.mutated=true;
             for(net.minecraft.entity.Entity rider:seated.keySet())rider.dismountRidingEntity();
+            VehiclePaintings.remove(world,structure,origin);fault("painting-detached");
             blocks(world,expanded.structure,expanded.origin,false);
             entity.transferEpoch=VehicleOwnership.update(world,entity.getUniqueID(),1,true);
             hold(work,entity); // Include the hold in the initial spawn, before clients can predict.
@@ -294,7 +303,7 @@ public final class VehicleTransfer {
             if(work!=null)work.mutated=true;
             java.util.List<net.minecraftforge.common.util.BlockSnapshot> replaced=new ArrayList<>();
             for(VehicleStructure.Cell cell:placed.cells)replaced.add(net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(world,origin.add(cell.pos)));
-            blocks(world,placed,origin,true);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,placed,origin,player!=null?player.getUniqueID():entity.couplingActor());
+            blocks(world,placed,origin,true);VehiclePaintings.publish(world,placed,origin);fault("painting-parked");com.vandorlabs.tiles.WorldActionAuthorization.installed(world,placed,origin,player!=null?player.getUniqueID():entity.couplingActor());
             if(player!=null && net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent(replaced,
                     world.getBlockState(origin.down()),player,net.minecraft.util.EnumHand.MAIN_HAND)))throw new IOException("A protection rule prevented parking.");
             VehicleOwnership.update(world,entity.getUniqueID(),entity.transferEpoch+1,false);
@@ -360,7 +369,8 @@ public final class VehicleTransfer {
         for(net.minecraft.entity.Entity entity:new ArrayList<>(world.loadedEntityList))
             if(entity.getUniqueID().equals(id)){entity.removePassengers();world.removeEntityDangerously(entity);}
         if(undo.getBoolean("Parking")) {
-            blocks(world,undo.hasKey("ParkedCraft",10)?VehicleStructure.read(undo.getCompoundTag("ParkedCraft")):structure,origin,false);
+            VehicleStructure parked=undo.hasKey("ParkedCraft",10)?VehicleStructure.read(undo.getCompoundTag("ParkedCraft")):structure;VehiclePaintings.remove(world,parked,origin);
+            blocks(world,parked,origin,false);
             EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.setUniqueId(id);restored.install(structure);
             restored.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));restored.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;
             restored.taxiReturnPending=undo.getBoolean("TaxiReturnPending");restored.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
@@ -370,7 +380,7 @@ public final class VehicleTransfer {
             restored.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));
             if(!world.spawnEntity(restored))throw new IOException("Recovery vehicle spawn cancelled; journal retained.");
             restored.signals.tick();
-        }else {VehicleOwnership.update(world,id,1,false);blocks(world,undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure,undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,restoreSource,restoreOrigin,undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null);}
+        }else {VehicleOwnership.update(world,id,1,false);blocks(world,undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure,undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);VehiclePaintings.publish(world,restoreSource,restoreOrigin);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,restoreSource,restoreOrigin,undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null);}
         flush(world);Files.deleteIfExists(journal(world));
         }
     }
@@ -382,7 +392,7 @@ public final class VehicleTransfer {
             if(!world.isBlockLoaded(target))throw new IOException("Recovery chunk unavailable; journal retained.");
             if(world.isAirBlock(target))continue;
             if(world.getBlockState(target)!=cell.state)throw new IOException("Recovery blocked by changed blocks at "+target+"; journal retained.");
-            present.add(cell);
+            present.add(new VehicleStructure.Cell(cell.pos,cell.state,VehiclePaintings.nativeTile(cell.tileData())));
         }
         if(!VehicleStructure.display(present).matches(world,origin))throw new IOException("Recovery blocked by changed block contents; journal retained.");
     }
@@ -404,7 +414,7 @@ public final class VehicleTransfer {
         // World.removeTileEntity also removes pending entries created during a tile tick.
         for(BlockPos p:previous.keySet()){TileEntity detached=world.getTileEntity(p);world.removeTileEntity(p);VehicleForeignCompat.clearDetachedInventory(detached);}
         if(place)for(VehicleStructure.Cell cell:structure.cells) if(cell.tileData()!=null) {
-            BlockPos p=origin.add(cell.pos);NBTTagCompound restoredTag=VehicleEscalators.parked(VehicleTileData.translated(cell.tileData(),origin),world.getTotalWorldTime());
+            BlockPos p=origin.add(cell.pos);NBTTagCompound restoredTag=VehicleEscalators.parked(VehicleTileData.translated(VehiclePaintings.nativeTile(cell.tileData()),origin),world.getTotalWorldTime());
             TileEntity tile=BuildingBlockCompat.createTile(cell,world,restoredTag);
             if(tile==null)throw new IllegalStateException("Cannot restore component at "+p);
             // TileEntity.create invokes readFromNBT before assigning its World.

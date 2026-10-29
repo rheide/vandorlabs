@@ -68,6 +68,18 @@ public final class VehicleWorld extends World {
         }
         prepareForeignVisuals();
     }
+    private float distanceYaw=Float.NaN;
+    private double distanceCos,distanceSin;
+    /** Renderer distance arguments are physical world coordinates, including OptiFine's global camera. */
+    private double physicalTileDistanceSq(BlockPos at,double x,double y,double z){
+        double cx=at.getX()+.5,cy=at.getY()+.5,cz=at.getZ()+.5;
+        if(craft!=null){
+            if(distanceYaw!=craft.rotationYaw){distanceYaw=craft.rotationYaw;distanceCos=Math.cos(Math.toRadians(distanceYaw));distanceSin=Math.sin(Math.toRadians(distanceYaw));}
+            double px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2,lx=cx-px,lz=cz-pz;
+            cx=craft.posX+px+distanceCos*lx-distanceSin*lz;cy+=craft.posY;cz=craft.posZ+pz+distanceSin*lx+distanceCos*lz;
+        }
+        double dx=cx-x,dy=cy-y,dz=cz-z;return dx*dx+dy*dy+dz*dz;
+    }
     /** Snapshot signs display saved JSON without re-evaluating server commands. */
     private TileEntity localTile(VehicleStructure.Cell cell){
         final net.minecraft.nbt.NBTTagCompound saved=cell.tileData();
@@ -75,6 +87,7 @@ public final class VehicleWorld extends World {
             final net.minecraft.util.text.ITextComponent[] original=new net.minecraft.util.text.ITextComponent[4];
             net.minecraft.tileentity.TileEntitySign sign=new net.minecraft.tileentity.TileEntitySign(){
                 private net.minecraft.nbt.NBTTagCompound custom;
+                @Override public double getDistanceSq(double x,double y,double z){return physicalTileDistanceSq(getPos(),x,y,z);}
                 @Override public net.minecraft.nbt.NBTTagCompound getTileData(){if(custom==null)custom=new net.minecraft.nbt.NBTTagCompound();return custom;}
                 @Override public net.minecraft.nbt.NBTTagCompound writeToNBT(net.minecraft.nbt.NBTTagCompound output){
                     output.setString("id",saved.getString("id"));output.setInteger("x",getPos().getX());output.setInteger("y",getPos().getY());output.setInteger("z",getPos().getZ());

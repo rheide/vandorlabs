@@ -2,6 +2,10 @@
 
 ## 2.7 (in development)
 
+- Fix Ramp Controller analog and offset saving with channel lists, standalone Surface helipads, endpoint appearance flicker and folders-first texture browsing.
+- Share one transmitter across screen control rows while preserving their explicit channel targets. Keep removed modules absent across legacy migration and reserve old slot indices without duplicate inventory aliases.
+- Keep joined screen borders at their authored thickness, inset content by the border width and expose Bare alongside split-display settings.
+
 - Correct configurable glass frame depth, opaque interiors, material mapping and Original selection; retain frame drafts during rapid edits. Use 128-pixel front artwork and direct company categories. Move split-display settings under Display and keep one frame for both halves.
 - Remove transmitter controls from passive receiver dialogs, put Redstone last and use block names in configuration headings. Fix cockpit Redstone selection crashes and retain arm dialogs during journal preparation.
 - Include overhanging connected Surface cells in joined-arm capture, synchronize copied Surface appearance on placement, and preserve Copifier frame finishes on glass items.
@@ -17,7 +21,7 @@
 - Add proportional ramp deployment and door placement on stationary ramp cells. Join hexagonal tanks into complete 2×2 and 3×3 sections with native per-cell storage.
 - Add guarded one-level Duplifier settings undo, including connected applications.
 - Allow matched wheel supports to lower or raise the chassis in Taxi while keeping their feet anchored. Check complete native parking footprints and retain modular arm sections through parking, recapture, rotation and recovery. Refuse in-flight parking and unsafe dismantling of retained material.
-- Treat water and Programmable Surfaces as vehicle discovery boundaries, preserve carried sign text and local lamp illumination, and support optional OptiFine terrain lighting. Reuse static opaque vehicle rendering work.
+- Treat water and Programmable Surfaces as vehicle discovery boundaries, preserve carried sign text with OptiFine, native paintings through movement and parking, and local lamp illumination, and support optional OptiFine terrain lighting. Reuse static opaque vehicle rendering work.
 
 ## 2.6
 

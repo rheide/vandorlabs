@@ -76,15 +76,25 @@ final class TaxiModularGear {
         return geometry;
     }
     private static void publish(EntityGroundVehicle craft,Plan next,double y,VehicleCollision geometry){VehicleStructure original=craft.structure;double oldY=craft.posY,oldHover=craft.hoverTarget;try{craft.install(next.structure,geometry);craft.setPosition(craft.posX,y,craft.posZ);craft.view.origin=new BlockPos(craft.posX,y,craft.posZ);craft.hoverTarget+=y-oldY;craft.signals.open();}catch(RuntimeException|LinkageError failure){try{craft.install(original);}catch(RuntimeException|LinkageError rollback){failure.addSuppressed(rollback);craft.retainUnavailableSnapshot(original);}craft.setPosition(craft.posX,oldY,craft.posZ);if(craft.view!=null)craft.view.origin=new BlockPos(craft);craft.hoverTarget=oldHover;throw failure;}for(net.minecraft.entity.player.EntityPlayer player:craft.world.playerEntities)if(player instanceof net.minecraft.entity.player.EntityPlayerMP&&player.getDistanceSq(craft)<256*256)VehicleNetwork.send((net.minecraft.entity.player.EntityPlayerMP)player,craft.structure,craft.getEntityId(),craft.getUniqueID(),new BlockPos(craft),false,false);}
-    private static void error(GearTileEntity gear,String message){if(!java.util.Objects.equals(gear.error(),message))gear.showError(message);}
+    private static void error(EntityGroundVehicle craft,GearTileEntity gear,String message){
+        if(java.util.Objects.equals(gear.error(),message))return;
+        gear.showError(message);com.vandorlabs.VandorLabs.logger.info("Taxi landing adjustment refused at {}: {}",gear.getPos(),message);
+        java.util.UUID owner=craft.couplingActor();net.minecraft.entity.player.EntityPlayer player=owner==null?null:craft.world.getPlayerEntityByUUID(owner);
+        if(player!=null)player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(message),true);
+    }
     /** Return true while this grouped adjustment owns the gear step. */
     static boolean tick(EntityGroundVehicle craft){
-        if(craft.hover||craft.world.isRemote)return false;List<GearTileEntity> roots=roots(craft);if(roots.size()<3)return false;
+        if(craft.hover||craft.world.isRemote)return false;List<GearTileEntity> roots=roots(craft);if(roots.size()<3){
+            for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())){
+                GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()&&gear.isLandingAssembly()){gear.input();if(!gear.target())error(craft,gear,"Taxi height adjustment requires at least three matching vertical wheel arms");}
+            }
+            return false;
+        }
         for(GearTileEntity gear:roots)gear.input();NBTTagCompound first=roots.get(0).taxiState();boolean retained=first!=null;
         boolean expand=retained?first.getBoolean("Expand"):true;
         for(GearTileEntity gear:roots)if(gear.target()!=expand){expand=gear.target();break;}
         if(!retained&&expand)return false;
-        if(!craft.stopped()||!integral(craft.rotationYaw/90D)||!integral(craft.posX)||!integral(craft.posZ)){for(GearTileEntity gear:roots)error(gear,"Stop and align the craft before changing Taxi arm height");return true;}
+        if(!craft.stopped()||!integral(craft.rotationYaw/90D)||!integral(craft.posX)||!integral(craft.posZ)){for(GearTileEntity gear:roots)error(craft,gear,"Stop and align the craft before changing Taxi arm height");return true;}
         int amount=retained?first.getInteger("Amount"):7;double level=retained?first.getDouble("Level"):0;
         try{
             for(GearTileEntity gear:roots){NBTTagCompound state=gear.taxiState();if(retained&&(state==null||state.getInteger("Amount")!=amount||Math.abs(state.getDouble("Level")-level)>1e-6||state.getInteger("Phase")!=first.getInteger("Phase")))throw new IllegalArgumentException("Taxi wheel arms must share one height adjustment");if(!retained){if(gear.progress()!=1||state!=null)throw new IllegalArgumentException("Return every wheel arm to rest first");amount=Math.min(amount,gear.assembly().columnHeight()-1);}}
@@ -125,6 +135,6 @@ final class TaxiModularGear {
             }catch(RuntimeException|LinkageError failure){
                 try{for(Map.Entry<GearTileEntity,NBTTagCompound> entry:originalRoots.entrySet())entry.getKey().readFromNBT(entry.getValue());craft.updateCanopies(original,true);}catch(RuntimeException|LinkageError rollback){failure.addSuppressed(rollback);craft.retainUnavailableSnapshot(original);}craft.setPosition(craft.posX,oldY,craft.posZ);if(craft.view!=null)craft.view.origin=new BlockPos(craft);craft.hoverTarget=oldHover;throw failure;
             }
-        }catch(RuntimeException|LinkageError denied){for(GearTileEntity gear:roots)error(gear,denied.getMessage()==null?"Taxi arm height adjustment refused; snapshot retained":denied.getMessage());return true;}
+        }catch(RuntimeException|LinkageError denied){for(GearTileEntity gear:roots)error(craft,gear,denied.getMessage()==null?"Taxi arm height adjustment refused; snapshot retained":denied.getMessage());return true;}
     }
 }

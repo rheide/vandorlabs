@@ -51,8 +51,10 @@ public final class VehicleTransferRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] vehicle-transfer-backpressure PASS blocked-disk ticks=40 max-us="+maximum/1000+" original-state-intact deferred-commit");
     }
     public static void drain(WorldServer world)throws Exception{
-        long deadline=System.nanoTime()+15_000_000_000L;
-        while(VehicleTransfer.busy(world)&&System.nanoTime()<deadline){VehicleTransfer.tick(world);Thread.sleep(2);}
+        // Advance persistence at the normal 20 Hz server cadence. Fast polling
+        // would exhaust checkpoint retry counts before vanilla flushes its queue.
+        long deadline=System.nanoTime()+45_000_000_000L;
+        while(VehicleTransfer.busy(world)&&System.nanoTime()<deadline){VehicleTransfer.tick(world);Thread.sleep(50);}
         if(VehicleTransfer.busy(world))throw new IllegalStateException("Deferred vehicle transfer did not finish.");
     }
     private VehicleTransferRuntimeChecks(){}

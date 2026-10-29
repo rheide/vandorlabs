@@ -11,6 +11,7 @@ public final class VehicleTileData {
         result.setInteger("x",source.getInteger("x")+offset.getX());
         result.setInteger("y",source.getInteger("y")+offset.getY());
         result.setInteger("z",source.getInteger("z")+offset.getZ());
+        VehiclePaintings.translated(result,offset);
         if(!source.getString("id").startsWith("vandorlabs:"))return result;
         for(String key:new String[]{"Anchor","Pair","TrapdoorPartner","TrapdoorSquare","RampJournalOrigin"})
             if(result.hasKey(key,4)) result.setLong(key,BlockPos.fromLong(result.getLong(key)).add(offset).toLong());

@@ -22,7 +22,7 @@ final class Artwork27RuntimeChecks {
         mc.getIntegratedServer().callFromMainThread(()->{
             net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
             net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
-            VehicleWorldRuntimeChecks.run(world);DuplifierRuntimeChecks.run(actor);RampAnalogRuntimeChecks.run(world,actor);RampAuthorizationRuntimeChecks.run(world,actor);UtilityStorageRuntimeChecks.run(world);RedstoneRangeRuntimeChecks.run(world,actor);com.vandorlabs.redstone.TransmitterMigrationChecks.run();
+            SharedScreenTransmitterChecks.run(world,actor);VehicleWorldRuntimeChecks.run(world);DuplifierRuntimeChecks.run(actor);RampAnalogRuntimeChecks.run(world,actor);RampAuthorizationRuntimeChecks.run(world,actor);UtilityStorageRuntimeChecks.run(world);RedstoneRangeRuntimeChecks.run(world,actor);com.vandorlabs.redstone.TransmitterMigrationChecks.run();
             BlockPos base=new BlockPos(1000,200,1000);world.getChunkFromBlockCoords(base);
             List<BlockPos> probes=Arrays.asList(base,base.east(),base.west(),base.north());
             try{
@@ -40,7 +40,7 @@ final class Artwork27RuntimeChecks {
             String id=com.vandorlabs.turntable.TurntableTextures.fromMaterialChoice(ScreenHousingTextures.choiceAt(i));
             require(mc.getTextureMapBlocks().getAtlasSprite(com.vandorlabs.turntable.TurntableTextures.texture(id,high))!=mc.getTextureMapBlocks().getMissingSprite(),"standalone/joined Surface sprite "+id);
         }
-        FrameAppearanceRuntimeChecks.run();FrameEdgeRuntimeChecks.run(mc,output);VehicleControllerDialogChecks.run(mc,output);VehicleRenderRuntimeChecks.run(mc);FrameFramebufferChecks.run(mc,output);CompanyScreenLayerRuntimeChecks.run(mc,output);GearDialogChecks.run(mc,output);VehicleDynamicLights.runChecks(mc);turntableBounds(mc);
+        FrameAppearanceRuntimeChecks.run();FrameEdgeRuntimeChecks.run(mc,output);VehicleControllerDialogChecks.run(mc,output);VehicleRenderRuntimeChecks.run(mc);VehicleSignRenderChecks.run(mc,output);VehiclePaintingRenderChecks.run(mc,output);FrameFramebufferChecks.run(mc,output);CompanyScreenLayerRuntimeChecks.run(mc,output);GearDialogChecks.run(mc,output);VehicleDynamicLights.runChecks(mc);turntableBounds(mc);
         com.vandorlabs.tiles.TileEntityProgrammableLight light=new com.vandorlabs.tiles.TileEntityProgrammableLight();light.setWorld(mc.world);light.setPos(BlockPos.ORIGIN);
         GuiProgrammableLight gui=new GuiProgrammableLight(mc.player.inventory,light);mc.displayGuiScreen(gui);
         try{

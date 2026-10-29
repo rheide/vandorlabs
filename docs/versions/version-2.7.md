@@ -72,3 +72,5 @@ rises. Modular Extender-wheel assemblies retain removed sections in their roots
 and reuse them when raised, including after parking and recapture. Raise a
 shortened parked assembly in Taxi before dismantling it. See the
 [landing-gear guide](../modular-landing-gear.md) for supported layouts.
+
+Native paintings supported entirely by the vehicle retain their artwork and facing through Taxi/Hover movement, rotation and parking. They return as ordinary paintings when parked.

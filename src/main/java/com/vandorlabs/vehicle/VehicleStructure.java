@@ -51,6 +51,8 @@ public final class VehicleStructure {
     private final List<BlockPos> pilotSeats;
     private final List<BlockPos> passengerSeats;
     private final Cell controller;
+    private final NBTTagList paintingData=new NBTTagList();
+    NBTTagList paintings(){return paintingData.copy();}
     public final List<Cell> liftCells,exhaustCells,gearCovers,couplers;
     public final boolean hasThruster,hasNonWheeledGear,hasSkisOnly;
     public final boolean displayOnly;
@@ -128,6 +130,7 @@ public final class VehicleStructure {
         List<BlockPos> seats=new ArrayList<>(),passengers=new ArrayList<>();List<Cell> lifts=new ArrayList<>(),exhausts=new ArrayList<>(),covers=new ArrayList<>(),couplerCells=new ArrayList<>();boolean thruster=false,nonWheeled=false,skis=false,otherFeet=false;Cell control=null;
         int x=0,y=0,z=0;
         for(Cell cell:cells) {
+            if(cell.tile!=null&&cell.tile.hasKey("ForgeData",10)&&cell.tile.getCompoundTag("ForgeData").hasKey(VehiclePaintings.KEY,9)){NBTTagList list=cell.tile.getCompoundTag("ForgeData").getTagList(VehiclePaintings.KEY,10);for(int i=0;i<list.tagCount();i++){if(paintingData.tagCount()>=64)throw new IllegalArgumentException("Too many vehicle paintings");paintingData.appendTag(list.getCompoundTagAt(i).copy());}}
             if(cell.pos.getX()<0||cell.pos.getY()<0||cell.pos.getZ()<0
                     ||cell.pos.getX()>=(displayOnly?128:MAX_AXIS)||cell.pos.getY()>=(displayOnly?128:MAX_AXIS)||cell.pos.getZ()>=(displayOnly?128:MAX_AXIS)
                     ||positions.put(cell.pos,cell)!=null)throw new IllegalArgumentException("Invalid vehicle cell");

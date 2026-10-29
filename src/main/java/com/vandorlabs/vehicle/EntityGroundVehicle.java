@@ -195,6 +195,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         install(snapshot,null);
     }
     void install(VehicleStructure snapshot,VehicleCollision prepared) {
+        VehiclePaintings.entries(snapshot);
         for(VehicleStructure.Cell cell:snapshot.cells){NBTTagCompound data=cell.tileData();if(data!=null&&data.hasKey(com.vandorlabs.gear.GearTaxiState.KEY,10))com.vandorlabs.gear.GearTaxiState.validate(data.getCompoundTag(com.vandorlabs.gear.GearTaxiState.KEY));}
         VehicleAnimationDiagnostics.selectInstall(this);long installSample=VehicleAnimationDiagnostics.start(this);
         VehicleCanopies.forget(this);
