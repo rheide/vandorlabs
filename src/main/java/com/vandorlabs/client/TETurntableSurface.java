@@ -22,6 +22,7 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
     @SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)Minecraft.getMinecraft().addScheduledTask(()->{RenderTurntable.clear();SurfaceTextureMesh.clear();});}
     @Override public boolean isGlobalRenderer(TileEntityTurntableSurface tile){SquareLayout layout=tile.appearanceLayout();return layout.size>1&&tile.getPos().equals(layout.root);}
     @Override public void render(TileEntityTurntableSurface tile,double x,double y,double z,float partial,int destroy,float alpha){
+        if(!tile.appearanceReady())return;
         SquareLayout layout=tile.appearanceLayout();if(!tile.getPos().equals(layout.root))return;
         TileEntityTurntableController controller=tile.controller();TurntableGeometry.Face face=layout.basis;
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(TurntableTextures.texture(tile.selectedTexture(),layout.size>1));
