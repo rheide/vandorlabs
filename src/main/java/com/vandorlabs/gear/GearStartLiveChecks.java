@@ -29,6 +29,20 @@ public final class GearStartLiveChecks {
             +" rootLocked="+ArmTransactions.locked(world,ROOT)+" controllerLocked="+(root!=null&&ArmTransactions.locked(world,root.getPos()))
             +" accessAllowed="+com.vandorlabs.items.ConfigurationAccess.canKeepDialogOpen(actor,world,ROOT)+" armIdentity="+(raw==arm)+" client="+client);
     }
+    private static BlockPos lateObstruction(WorldServer world,GearTileEntity arm){
+        java.util.List<net.minecraft.util.math.AxisAlignedBB> source=GearGeometry.boxes(arm,1);
+        for(net.minecraft.util.math.AxisAlignedBB destination:arm.payload().boxes(arm,0))
+            for(BlockPos raw:BlockPos.getAllInBox(new BlockPos(destination.minX,destination.minY,destination.minZ),new BlockPos(destination.maxX-.0001,destination.maxY-.0001,destination.maxZ-.0001))){
+                BlockPos at=raw.toImmutable();net.minecraft.util.math.AxisAlignedBB cell=new net.minecraft.util.math.AxisAlignedBB(at);
+                if(arm.members().contains(at)||!world.isAirBlock(at)||!destination.shrink(.0001).intersects(cell))continue;
+                boolean clear=true;for(net.minecraft.util.math.AxisAlignedBB box:source)if(box.shrink(.0001).intersects(cell)){clear=false;break;}if(!clear)continue;
+                world.setBlockState(at,Blocks.BEDROCK.getDefaultState(),3);
+                // A saved partial adjustment needs at least one reachable old step.
+                clear=GearGeometry.canMove(arm,1,1-1D/GearTileEntity.ANIMATION_TICKS);arm.riderPlan=null;
+                if(clear)return at;world.setBlockToAir(at);
+            }
+        throw new IllegalStateException("No late obstacle clear of the actual 45 degree source pose: "+source);
+    }
     public static boolean tick(Minecraft mc)throws Exception{
         if(++ticks==1){require(FIRST>=0&&LIMIT>FIRST&&LIMIT<=48,"fixture range must satisfy 0 <= start < limit <= 48; start="+FIRST+" limit="+LIMIT);mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;}
         if(ticks<80)return false;
@@ -89,8 +103,8 @@ public final class GearStartLiveChecks {
             if(stage==20&&arm.physicalStartAngle()==45&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){
                 require(arm.payload()!=null&&!arm.payload().materialized(),"arbitrary 45 degree pose keeps one captured attachment");
                 dialog(world,actor,arm,client,"dialog remains available at arbitrary stationary angle");
-                world.setBlockState(obstruction,Blocks.BEDROCK.getDefaultState(),3);
-                NBTTagCompound options=arm.settings();options.setDouble("StartAngle",90);arm.configure(options);stage=21;return false;
+                NBTTagCompound options=arm.settings();options.setDouble("StartAngle",90);arm.configure(options);
+                obstruction=lateObstruction(world,arm);stage=21;return false;
             }
             if(stage==21){
                 require(arm.progress()==1,"blocked adjustment from arbitrary angle does not move");
