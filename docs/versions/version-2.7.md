@@ -65,10 +65,10 @@ text. Carried lamps illuminate the vehicle locally; the optional OptiFine dynami
 lighting bridge also illuminates nearby terrain when dynamic lights are enabled.
 Static opaque vehicle artwork reuses geometry and drawing order between frames.
 
-Matched wheel supports can change vehicle height in Taxi mode when the complete
+Matched wheel or track supports can change vehicle height in Taxi mode when the complete
 result stays on the block grid and has a clear native parking footprint. Stop
-and align the craft first. The wheels remain fixed while the chassis lowers or
-rises. Modular Extender-wheel assemblies retain removed sections in their roots
+and align the craft first. The feet remain fixed while the chassis lowers or
+rises. Modular wheel and track assemblies retain removed sections in their roots
 and reuse them when raised, including after parking and recapture. Raise a
 shortened parked assembly in Taxi before dismantling it. See the
 [landing-gear guide](../modular-landing-gear.md) for supported layouts.

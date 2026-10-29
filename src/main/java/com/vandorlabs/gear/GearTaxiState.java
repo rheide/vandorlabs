@@ -3,10 +3,14 @@ package com.vandorlabs.gear;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-/** Only removed native arm sections are owned here; live wheels remain owned by the craft. */
+/** Only removed native arm sections are owned here; live wheels and tracks remain owned by the craft. */
 public final class GearTaxiState {
     public static final String KEY="TaxiArm";
     private GearTaxiState(){}
+    /** Assembly and retained-state loading must agree on eligible ground contacts. */
+    public static boolean supportsFoot(com.vandorlabs.gear.core.GearTopology.FootKind kind){
+        return kind==com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL||kind==com.vandorlabs.gear.core.GearTopology.FootKind.TRACK;
+    }
     public static void validate(NBTTagCompound state){
         for(String key:state.getKeySet())if(!java.util.Arrays.asList("Schema","Phase","Height","Amount","Level","Expand","Sections","Settle").contains(key))throw new IllegalArgumentException("Unknown Taxi arm recovery field");
         if(state.hasKey("Sections",10))for(String key:state.getCompoundTag("Sections").getKeySet())if(!key.equals("Offset")&&!key.equals("Blocks"))throw new IllegalArgumentException("Unknown retained arm section field");

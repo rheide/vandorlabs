@@ -51,9 +51,9 @@ fold direction rotate together when the craft is parked at a cardinal heading.
 
 ### Change chassis height in Taxi mode
 
-A stopped, block-aligned craft can lower or raise its chassis using at least three complete downward Extender-and-Wheel assemblies. The wheels stay fixed against the same ground while the chassis moves. Regular and Large assemblies are supported. Rotating arms, sideways mounts, mixed legacy/modular supports and incompatible endpoints retain their existing motion restrictions.
+A stopped, block-aligned craft can lower or raise its chassis using at least three complete downward Extender assemblies carrying wheels or tracks. The feet stay fixed against the same ground while the chassis moves. Regular and Large assemblies are supported. Rotating arms, sideways mounts, mixed legacy/modular supports and incompatible endpoints retain their existing motion restrictions.
 
-1. Build complete wheel arms with at least two sections and enter Taxi mode with them fully deployed.
+1. Build complete wheel or track arms with at least two sections and enter Taxi mode with them fully deployed.
 2. Stop and align to a cardinal heading on the block grid. Leave room for both the final native parking footprint and the whole movement.
 3. Retract one matching wheel arm. The eligible support group changes height together, shortening by a common whole-block amount while retaining at least one native arm section. Three-section arms can lower to one section, moving the chassis down two blocks.
 4. Request deployment to raise the chassis and restore the retained sections. An obstruction refuses the change without giving away the original material.

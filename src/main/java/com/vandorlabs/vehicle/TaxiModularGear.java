@@ -18,7 +18,7 @@ final class TaxiModularGear {
         for(TileEntity tile:craft.view.tiles.values())if(craft.structure.isActive(tile.getPos())){
             if(tile instanceof com.vandorlabs.tiles.TileEntityLandingGear&&((com.vandorlabs.tiles.TileEntityLandingGear)tile).isRoot())return Collections.emptyList();
             if(tile instanceof GearTileEntity){GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()&&gear.isLandingAssembly()){
-                if(!gear.isOperational()||gear.mode()!=GearMotion.Mode.EXTEND||gear.mountDirection()!=EnumFacing.DOWN||gear.columns().size()!=1||(gear.assembly().kind()!=com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL&&gear.assembly().kind()!=com.vandorlabs.gear.core.GearTopology.FootKind.TRACK))return Collections.emptyList();
+                if(!gear.isOperational()||gear.mode()!=GearMotion.Mode.EXTEND||gear.mountDirection()!=EnumFacing.DOWN||gear.columns().size()!=1||!GearTaxiState.supportsFoot(gear.assembly().kind()))return Collections.emptyList();
                 result.add(gear);
             }}
         }
