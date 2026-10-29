@@ -99,9 +99,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 ArmPayload original=payload;
                 // Simulate owned native cells as captured geometry, excluding only
                 // their exact native collision boxes from foreign obstacles.
-                try{if(original!=null&&original.materialized())payload=original.capturedCopy();boxesAt=Double.NaN;
+                try{if(original!=null&&original.materialized())payload=original.capturedCopy();clearPoses();
                     if(!GearGeometry.startClear(this,original))throw new IllegalArgumentException("Starting angle is blocked; previous position retained");
-                }finally{payload=original;boxesAt=Double.NaN;}
+                }finally{payload=original;clearPoses();}
             }
             GearPushing.preflight(this);
             if(payload!=null&&payload.materialized()){if(!payload.matchesPlaced(this)){net.minecraft.entity.player.EntityPlayer actor=com.vandorlabs.tiles.WorldActionAuthorization.actor(this);payload=payload.refreshPlaced(this,actor instanceof net.minecraft.entity.player.EntityPlayerMP?(net.minecraft.entity.player.EntityPlayerMP)actor:null);}if(!payload.detach(this))return false;sync();}

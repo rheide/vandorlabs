@@ -32,19 +32,24 @@ public final class GearGeometry {
     }
     private static final Map<String,List<AxisAlignedBB>> MODELS=new java.util.concurrent.ConcurrentHashMap<>();
     private static final ThreadLocal<GearTileEntity> EXCLUDED=new ThreadLocal<>();
-    private static final ThreadLocal<Set<AxisAlignedBB>> PREFLIGHT_SOURCES=new ThreadLocal<>();
+    private static final class PreflightSources {
+        final World world;final Set<AxisAlignedBB> boxes;
+        PreflightSources(World world,Set<AxisAlignedBB> boxes){this.world=world;this.boxes=boxes;}
+    }
+    private static final ThreadLocal<PreflightSources> PREFLIGHT_SOURCES=new ThreadLocal<>();
     /** Test a complete configuration sweep without removing its native attachment. */
     static boolean startClear(GearTileEntity root,ArmPayload nativePayload){
         Set<AxisAlignedBB> sources=new HashSet<>();
         if(nativePayload!=null&&nativePayload.materialized())for(BlockPos at:nativePayload.placedCells(root)){
+            if(!GearAssembly.loaded(root.getWorld(),at))return false;
             List<AxisAlignedBB> boxes=new ArrayList<>();net.minecraft.block.state.IBlockState state=root.getWorld().getBlockState(at);
             state.addCollisionBoxToList(root.getWorld(),at,new AxisAlignedBB(at),boxes,null,false);sources.addAll(boxes);
         }
-        PREFLIGHT_SOURCES.set(sources);
+        PreflightSources previous=PREFLIGHT_SOURCES.get();PREFLIGHT_SOURCES.set(new PreflightSources(root.getWorld(),sources));
         try{for(int step=0;step<GearTileEntity.ANIMATION_TICKS;step++)
             if(!canMove(root,1-step/(double)GearTileEntity.ANIMATION_TICKS,1-(step+1)/(double)GearTileEntity.ANIMATION_TICKS))return false;
             return true;
-        }finally{PREFLIGHT_SOURCES.remove();root.riderPlan=null;}
+        }finally{if(previous==null)PREFLIGHT_SOURCES.remove();else PREFLIGHT_SOURCES.set(previous);root.riderPlan=null;}
     }
     public static boolean excluded(GearTileEntity root){return EXCLUDED.get()==root;}
     public static List<AxisAlignedBB> foreign(World world,GearTileEntity root,AxisAlignedBB box){EXCLUDED.set(root);try{return world.getCollisionBoxes(null,box);}finally{EXCLUDED.remove();}}
@@ -64,7 +69,7 @@ public final class GearGeometry {
         for(AxisAlignedBB box:MODELS.computeIfAbsent("wheel_large",GearBlock::modelParts))result.add(yaw(box,turns).offset(pos));
         return result;
     }
-    @SubscribeEvent public static void collisions(GetCollisionBoxesEvent event){Set<AxisAlignedBB> sources=PREFLIGHT_SOURCES.get();if(sources!=null)event.getCollisionBoxesList().removeIf(sources::contains);if(event.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)return;SpatialIndex index=INDICES.get(event.getWorld());if(index==null)return;Set<GearTileEntity> roots=index.near(event.getAabb());
+    @SubscribeEvent public static void collisions(GetCollisionBoxesEvent event){PreflightSources sources=PREFLIGHT_SOURCES.get();if(sources!=null&&sources.world==event.getWorld())event.getCollisionBoxesList().removeIf(sources.boxes::contains);if(event.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)return;SpatialIndex index=INDICES.get(event.getWorld());if(index==null)return;Set<GearTileEntity> roots=index.near(event.getAabb());
         for(GearTileEntity root:roots)if(!root.isInvalid()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root)
             for(AxisAlignedBB box:looseWheelBoxes(root))if(box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);
         for(GearTileEntity root:roots)if(root!=EXCLUDED.get()&&!root.isInvalid()&&root.isOperational()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root&&root.getRenderBoundingBox().intersects(event.getAabb()))for(AxisAlignedBB original:root.collisionBoxes()){AxisAlignedBB box=com.vandorlabs.motion.PlatformRiders.supportCollision(original,event.getEntity(),root.progress()>0&&root.progress()<1);if(box!=null&&box.getAverageEdgeLength()>0&&box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);}
