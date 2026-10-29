@@ -7,3 +7,5 @@ Choose the display from **Screens / Company / company name** and its independent
 Borders use 64-pixel runtime artwork. A half-height border retains its 64×32 aspect inside a square atlas sprite; its frame metadata selects the authored half. Display layers retain their transparency throughout animation, allowing the matching border to overlay the display.
 
 The importer appends catalog entries without moving existing saved texture choices. `tools/import_company_screen_layers.py` consumes the supplied layer pack, and `tools/test_company_screen_layers.py` checks all twelve borders and 432 display frames for dimensions, alpha and timing. The normal texture browser lists the same catalog choices.
+
+Display imports remove their shared transparent registration margin before scaling, using the same crop for every animation frame. This lets the separate frame meet the visible display without a second inset or moving edges. Company borders use 128-pixel artwork. Split Top and Bottom displays retain the selected playback mode and speed.

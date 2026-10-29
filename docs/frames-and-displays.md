@@ -41,4 +41,4 @@ layout discovery reads loaded blocks only and has fixed scan and cache limits.
 
 Company finishes are grouped directly under **Frame / company name**. Other finishes remain at the Frame root. The Copifier copies front, interior and layout settings, including onto glass items for later placement.
 
-Screen frame Fit repeats the outer edge strips at their original thickness. It omits internal borders and keeps separate corners, including on rectangular screen groups. Choose **Bare** in the Frame tab to remove the border. The visible display area reserves the straight-edge thickness of the selected artwork; decorative corners may overlap slightly.
+Screen frame Fit repeats the outer edge strips at their original thickness. It omits internal borders and keeps separate corners, including on rectangular screen groups. Use the **Framed / Bare** button in the Frame tab to remove or restore the border. The selected finish is retained through closing the dialog, saving and reloading. The visible display area reserves the straight-edge thickness of the selected artwork; decorative corners may overlap slightly.

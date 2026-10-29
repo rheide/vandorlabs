@@ -18,10 +18,11 @@
 - Add 58 selectable frame finishes, separate border and interior materials, faintly lit borders, independent frame/display layouts and split full-height displays. Migrate previous framed display artwork to a separate bolted frame.
 - Add 12 company borders and 72 six-frame display animations under company subfolders. Cut authored frame edges for physical rails and interiors, preserve half-height proportions, and map Door frame artwork over the complete frame geometry.
 - Replace six corporate armor sets and add two helipads and 78 static control panels at runtime texture resolutions. Refresh the texture browser and collages.
-- Add optional horizontal Extender pushing without pulling, connected Surface-layer payloads, separate rotating-arm Start and End angles in 15-degree steps and guarded endpoint clearance.
+- Return the original Extender platform on retraction while leaving newly contacted pushed blocks forward. Preserve joined and connected Surface payloads.
+- Preflight complete rotating-arm Start adjustments, retain valid captured endpoints after refusal, and recover previously stuck adjustments. Keep Start on the left and End on the right with 15-degree slider steps.
 - Add proportional ramp deployment and door placement on stationary ramp cells. Join hexagonal tanks into complete 2×2 and 3×3 sections with native per-cell storage.
 - Add guarded one-level Duplifier settings undo, including connected applications.
-- Allow matched wheel supports to lower or raise the chassis in Taxi while keeping their feet anchored. Check complete native parking footprints and retain modular arm sections through parking, recapture, rotation and recovery. Refuse in-flight parking and unsafe dismantling of retained material.
+- Allow matched wheel or track supports to lower or raise the chassis in Taxi while keeping their feet anchored. Check complete native parking footprints and retain modular arm sections through parking, recapture, rotation and recovery. Refuse in-flight parking and unsafe dismantling of retained material.
 - Treat water and Programmable Surfaces as vehicle discovery boundaries, preserve carried sign text with OptiFine, native paintings through movement and parking, and local lamp illumination, and support optional OptiFine terrain lighting. Reuse static opaque vehicle rendering work.
 
 ## 2.6
