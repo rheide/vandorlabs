@@ -27,6 +27,10 @@ final class SharedScreenTransmitterChecks {
             require(binding.modules.get(0).getHasStack(),"one real shared module slot");for(int i=1;i<=16;i++)require(!binding.modules.get(i).getHasStack(),"reserved old row slots do not alias the shared item");
             contents.toggleRow(0);require(RedstoneChannels.level(world,at,28731)==15&&RedstoneChannels.level(world,at,28732)==0&&RedstoneChannels.level(world,at,28733)==0,"row target overrides the module defaults without bridging the other row");
             contents.toggleRow(1);require(RedstoneChannels.level(world,at,28732)==15,"the same module broadcasts a second distinct row");
+            TransmitterSlots.set(screen,ItemStack.EMPTY);
+            require(RedstoneChannels.level(world,at,28731)==0&&RedstoneChannels.level(world,at,28732)==0,"removing shared module immediately withdraws every cached row output");
+            TransmitterSlots.set(screen,module);
+            require(RedstoneChannels.level(world,at,28731)==15&&RedstoneChannels.level(world,at,28732)==15,"reinserting shared module restores saved ON row levels");
             require(contents.configureRows(Arrays.asList("Door bank","Light bank"),Arrays.asList(ChannelList.of(28731),ChannelList.of(28732)),0),"saving row labels retains targets");
             require(contents.rows().get(0).channels.equals(ChannelList.of(28731))&&contents.rows().get(1).channels.equals(ChannelList.of(28732)),"row save does not replace channels with transmitter defaults");
             NBTTagCompound saved=VehicleTileData.translated(screen.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(at));world.removeTileEntity(at);world.setBlockToAir(at);

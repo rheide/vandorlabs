@@ -119,9 +119,21 @@ public final class RedstoneChannels {
         private final Map<ManualRedstoneData.Entry,RedstoneChannelMember> manualSources=new IdentityHashMap<>();
         Network(World world){this.world=world;if(!world.isRemote)syncManual();}
         private void syncManual(){
-            for(RedstoneChannelMember member:manualSources.values()){ChannelList list=outputs.remove(member);if(list!=null)for(int c:channels(list)){Index index=indexes.get(c);if(index!=null){affect(c,index.all.get(member));index.remove(member);}}}
-            manualSources.clear();
+            // Entries are immutable. Retain their existing indexed sources so a
+            // local handheld toggle does not revisit every remote receiver.
+            Set<ManualRedstoneData.Entry> retained=Collections.newSetFromMap(new IdentityHashMap<ManualRedstoneData.Entry,Boolean>());
+            retained.addAll(ManualRedstoneData.get(world).entries);
+            java.util.Iterator<Map.Entry<ManualRedstoneData.Entry,RedstoneChannelMember>> iterator=manualSources.entrySet().iterator();
+            while(iterator.hasNext()){
+                Map.Entry<ManualRedstoneData.Entry,RedstoneChannelMember> entry=iterator.next();
+                if(retained.contains(entry.getKey()))continue;
+                RedstoneChannelMember member=entry.getValue();
+                ChannelList list=outputs.remove(member);
+                if(list!=null)for(int c:channels(list)){Index index=indexes.get(c);if(index!=null){affect(c,index.all.get(member));index.remove(member);}}
+                iterator.remove();
+            }
             for(ManualRedstoneData.Entry entry:ManualRedstoneData.get(world).entries){
+                if(manualSources.containsKey(entry))continue;
                 final TileEntity tile=new TileEntity(){};tile.setWorld(world);tile.setPos(entry.pos);
                 RedstoneChannelMember member=new RedstoneChannelMember(){public TileEntity channelTile(){return tile;}public boolean isChannelMemberActive(){return true;}public int getRedstoneChannel(){return entry.channel;}public void setRedstoneChannel(int c){throw new UnsupportedOperationException();}public boolean hasLocalRedstoneSignal(){return true;}public void setChannelSignal(boolean on){}public ChannelList transmittedChannels(){return ChannelList.of(entry.channel);}public int transmissionRange(){return entry.range;}};
                 manualSources.put(entry,member);refresh(member);

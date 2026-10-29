@@ -42,6 +42,10 @@ public final class ForeignBuildingChecks {
         return new VehicleStructure(cells,BlockPos.ORIGIN,EnumFacing.NORTH,3);
     }
     public static void run(WorldServer world,EntityPlayerMP actor){
+        require(BuildingBlockCompat.validScreenDimensions(4,4,4,4),"maximum screen dimensions");
+        require(!BuildingBlockCompat.validScreenDimensions(Integer.MAX_VALUE,Integer.MAX_VALUE,0,0),"overflowing horizontal screen dimensions");
+        require(!BuildingBlockCompat.validScreenDimensions(0,0,Integer.MAX_VALUE,Integer.MAX_VALUE),"overflowing vertical screen dimensions");
+        require(!BuildingBlockCompat.validScreenDimensions(-1,0,0,0),"negative screen dimensions");
         int blocks=0,states=0,accepted=0,rejected=0,tiles=0,negative=0;
         Map<String,Integer> totals=new TreeMap<>();Set<String> failures=new LinkedHashSet<>();
         for(Block block:Block.REGISTRY){

@@ -13,6 +13,17 @@ final class Utility26FocusedChecks {
     static boolean tick(Minecraft mc,java.io.File output)throws Exception{
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
         if(ticks!=80)return false;
+        if(Boolean.getBoolean("vandorlabs.couplingChecksOnly")){
+            mc.getIntegratedServer().callFromMainThread(()->{
+                net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
+                net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+                com.vandorlabs.vehicle.VehicleUpgradeChecks.run(world);
+                com.vandorlabs.vehicle.VehicleCouplingRuntimeChecks.run(world,actor);
+                com.vandorlabs.vehicle.VehicleCouplingTransferChecks.run(world,actor);
+                return null;
+            }).get();
+            System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;
+        }
         java.util.List<Throwable> failures=mc.getIntegratedServer().callFromMainThread(()->{
             java.util.List<Throwable> problems=new java.util.ArrayList<>();
             net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);

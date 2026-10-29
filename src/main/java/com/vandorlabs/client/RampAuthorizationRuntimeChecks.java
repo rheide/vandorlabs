@@ -47,10 +47,35 @@ public final class RampAuthorizationRuntimeChecks {
             ControllerRuntimeChecks.reload(ramp);require(actor.getUniqueID().equals(WorldActionAuthorization.actorId(ramp)),"fresh receipt survives real chunk proof reload");
             require(ramp.request(false),"freshly authorized saved geometry retracts");ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
             require(!ramp.attached()&&world.getBlockState(root.south()).getBlock()==Blocks.STONE,"one native source owner after recovery");
-            System.out.println("[vandorlabs][reprolab] ramp-authorization PASS saved-attached activation deactivation setting-change invalid-input right-click Configurizer-shared-entry proof-reload native-ownership");
+            packetAcceptance(world,actor,ramp,root);
+            System.out.println("[vandorlabs][reprolab] ramp-authorization PASS saved-attached activation deactivation setting-change invalid-input right-click Configurizer-shared-entry proof-reload native-ownership packet-invalid-offsets blocked-reset accepted-missing-source");
         }finally{
             if(ramp!=null){ramp.setOwner(actor);ramp.recover(true);}for(BlockPos at:BlockPos.getAllInBox(root.add(-2,-2,-2),root.add(3,6,5)))world.setBlockToAir(at);actor.setPosition(x,y,z);
         }
+    }
+    private static void packetAcceptance(World world,EntityPlayerMP actor,TileEntityRampController ramp,BlockPos root){
+        net.minecraft.inventory.Container previous=actor.openContainer;
+        actor.openContainer=new com.vandorlabs.container.ContainerRampController(ramp);
+        try{
+            int start=ramp.startHalfSteps(),end=ramp.endHalfSteps();
+            com.vandorlabs.redstone.ChannelList channels=ramp.getRedstoneChannels();boolean analog=ramp.analogDeployment;
+            packet(actor,root,65,4,true);
+            require(ramp.startHalfSteps()==start&&ramp.endHalfSteps()==end&&ramp.getRedstoneChannels().equals(channels)&&ramp.analogDeployment==analog,"invalid packet offsets preserve geometry, channels and analog setting");
+            require(ramp.request(true),"packet reset fixture captures source");ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
+            world.setBlockState(root.south(),Blocks.DIRT.getDefaultState(),3);
+            packet(actor,root,0,4,true);
+            require(ramp.startHalfSteps()==start&&ramp.endHalfSteps()==end&&ramp.getRedstoneChannels().equals(channels)&&ramp.analogDeployment==analog,"blocked packet reset preserves geometry, channels and analog setting");
+            world.setBlockToAir(root.south());require(ramp.recover(true),"blocked packet fixture recovers native source");
+            world.setBlockToAir(root.south());
+            // Unpowered OFF activation fails without a source, after valid settings commit.
+            packet(actor,root,0,4,false);
+            require(ramp.startHalfSteps()==0&&ramp.endHalfSteps()==4&&ramp.getRedstoneChannels().equals(com.vandorlabs.redstone.ChannelList.of(61927))&&ramp.analogDeployment&&ramp.error&&!ramp.attached(),"accepted packet persists channels and analog setting despite missing-source activation failure");
+        }finally{actor.openContainer=previous;}
+    }
+    private static void packet(EntityPlayerMP actor,BlockPos root,int start,int end,boolean power){
+        com.vandorlabs.network.MessageRampController sent=com.vandorlabs.network.MessageRampController.halfOffsets(root,start,end,16,power,false,false,EnumFacing.SOUTH,61927,0,false,1,true).withChannels(com.vandorlabs.redstone.ChannelList.of(61927)).withAnalogDeployment(true);
+        io.netty.buffer.ByteBuf wire=io.netty.buffer.Unpooled.buffer();
+        try{sent.toBytes(wire);com.vandorlabs.network.MessageRampController received=new com.vandorlabs.network.MessageRampController();received.fromBytes(wire);com.vandorlabs.network.MessageRampController.Handler.apply(actor,received);}finally{wire.release();}
     }
     private static boolean configure(TileEntityRampController ramp,EntityPlayerMP actor,boolean power,int speed){return ramp.configureHalfOffsets(actor,0,2,16,power,speed==2,false,EnumFacing.SOUTH,0,false,speed,true);}
     private RampAuthorizationRuntimeChecks(){}

@@ -26,6 +26,7 @@ public final class ArmRecoveryRuntimeChecks {
         return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0),phase)).get();
     }
     private static boolean run(WorldServer world,EntityPlayerMP actor,String phase)throws Exception{
+        if(phase.contains("coupling-"))return com.vandorlabs.vehicle.VehicleCouplingRecoveryChecks.run(world,actor,phase);
         if(phase.contains("painting-")){if(phase.startsWith("verify-"))return com.vandorlabs.vehicle.VehiclePaintingRecoveryChecks.verify(world,phase);com.vandorlabs.vehicle.TaxiModularRuntimeChecks.run(world,actor);throw new IllegalStateException("Painting crash barrier was not reached");}
         if(phase.contains("push-"))return GearPushRecoveryChecks.run(world,actor,phase);
         if(phase.startsWith("authorization-"))return ArmAuthorizationRestartChecks.run(world,actor,phase.equals("authorization-verify"));

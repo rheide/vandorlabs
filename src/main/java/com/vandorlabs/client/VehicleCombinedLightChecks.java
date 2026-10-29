@@ -38,6 +38,13 @@ final class VehicleCombinedLightChecks {
         System.out.println("[vandorlabs][reprolab] vehicle-combined-light-client PASS yaw0-45-90 remote-parent-golden OptiFine-enabled="+dynamic+" dynamic-contribution="+contribution);
     }
     static void run(WorldServer parent){
+        // Opposite lamps in a valid display snapshot exceeded the former million-cell ceiling.
+        VehicleStructure wide=VehicleStructure.display(Arrays.asList(
+                new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.GLOWSTONE.getDefaultState(),null),
+                new VehicleStructure.Cell(new BlockPos(127,127,127),Blocks.GLOWSTONE.getDefaultState(),null)));
+        VehicleWorld wideView=new VehicleWorld(parent,wide);
+        require(wideView.lightSources().size()==2,"accepted maximum display bounds retain both lamps");
+        require((wideView.getCombinedLight(BlockPos.ORIGIN,0)&65535)>=240,"wide display lamp still illuminates its source");
         EntityGroundVehicle craft=new EntityGroundVehicle(parent);
         VehicleStructure source=lightingStructure();
         craft.install(source);craft.setPosition(1712,190,1712);BlockPos sample=BlockPos.ORIGIN;

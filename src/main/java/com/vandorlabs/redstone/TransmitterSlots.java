@@ -99,8 +99,21 @@ public final class TransmitterSlots {
     public static int range(RedstoneChannelMember member){return settings(member).range;}
     public static boolean outputOnly(RedstoneChannelMember member){if(member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control||member instanceof com.vandorlabs.tiles.RedstoneScreenContents.Row)return false;TileEntity tile=member.channelTile();return member instanceof RedstoneChannelLatch&&!(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&!((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter())||tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot||tile instanceof com.vandorlabs.plate.PlateTile||tile instanceof com.vandorlabs.tiles.TileEntityWaypoint;}
     public static void set(RedstoneChannelMember member,ItemStack stack){
+        net.minecraft.world.World world=member.channelTile().getWorld();
+        boolean placed=world!=null&&!world.isRemote;
+        if(placed)RedstoneChannels.beginTransfer(world);
+        try{setContents(member,stack);}finally{if(placed)RedstoneChannels.endTransfer(world);}
+    }
+    private static void setContents(RedstoneChannelMember member,ItemStack stack){
         if(!stack.isEmpty()&&!(stack.getItem() instanceof ItemRedstoneTransmitter))throw new IllegalArgumentException("Not a redstone transmitter");
         TileEntity tile=member.channelTile();
+        // Shared rows keep their channel lists when their range module changes.
+        // Remove their old indexed output before replacing that module; otherwise
+        // register() sees unchanged subscriptions and retains stale sources.
+        if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
+            for(int side=0;side<2;side++)for(com.vandorlabs.tiles.RedstoneScreenContents.Row row:screen.redstoneScreen(side).rows())RedstoneChannels.unregister(row);
+        }
         RedstoneChannels.unregister(member);
         NBTTagCompound data=tile.getTileData(),slots=data.getCompoundTag(KEY);
         if(stack.isEmpty())slots.removeTag(member.transmitterSlot());else {ItemStack copy=stack.copy();copy.setCount(1);slots.setTag(member.transmitterSlot(),copy.writeToNBT(new NBTTagCompound()));}

@@ -102,6 +102,19 @@ public final class Gear26RuntimeChecks {
         MotionObstacle(WorldServer world,BlockPos at){this.world=world;box=new AxisAlignedBB(at);}
         @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public void collide(net.minecraftforge.event.world.GetCollisionBoxesEvent event){if(event.getWorld()==world&&event.getAabb().intersects(box))event.getCollisionBoxesList().add(box);}
     }
+    public static void rejectedUnformedSettings(){
+        for(int invalid=0;invalid<3;invalid++){
+            GearTileEntity tile=new GearTileEntity();
+            NBTTagCompound before=tile.settings(),settings=before.copy();
+            settings.setDouble("StartAngle",45);
+            if(invalid==0)settings.setInteger("JoinRange",0);
+            else if(invalid==1)settings.setDouble("ActiveExtension",Double.NaN);
+            else settings.setInteger("TrackStyle",-1);
+            boolean denied=false;
+            try{tile.configure(settings);}catch(IllegalArgumentException expected){denied=true;}
+            require(denied&&tile.settings().equals(before),"rejected unformed-arm settings preserve all endpoints and options "+invalid);
+        }
+    }
     private static void tickMountedStack(WorldServer world,BlockPos root,int count){
         for(int tick=0;tick<count;tick++)for(BlockPos at:new BlockPos[]{root,root.up()}){TileEntity raw=world.getTileEntity(at);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
     }
@@ -109,6 +122,7 @@ public final class Gear26RuntimeChecks {
     private static void runMatrices(WorldServer world,EntityPlayerMP actor){
         BlockPos root=new BlockPos(620,170,260);checks=0;
         try{
+            rejectedUnformedSettings();
             ArmPayloadSelectionChecks.run(world,actor);
             TrackLifecycleRuntimeChecks.run(world,actor,root);
             pushBlocks(world,actor,root);

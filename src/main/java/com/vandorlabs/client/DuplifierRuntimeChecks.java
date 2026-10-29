@@ -80,6 +80,20 @@ final class DuplifierRuntimeChecks {
             NBTTagCompound frameCopy=new NBTTagCompound();frameCopy.setInteger("FrameFront",frameChoice);tool.getSubCompound(ItemDuplifier.SETTINGS_TAG).setTag("FrameAppearance",frameCopy);
             com.vandorlabs.items.DuplifierUndo.begin(player,world);require(ItemDuplifier.applyTo(world,target,tool,player),"frame finishes copy failed");com.vandorlabs.items.DuplifierUndo.finish(player);
             require(porthole.frameAppearance.front==frameChoice&&com.vandorlabs.items.DuplifierUndo.undo(player)&&porthole.frameAppearance.front==-1,"undo did not clear newly introduced frame finish");
+            for(boolean unload:new boolean[]{false,true}){
+                com.vandorlabs.items.DuplifierUndo.begin(player,world);
+                require(ItemDuplifier.applyTo(world,target,tool,player),"lifecycle undo fixture apply");
+                com.vandorlabs.items.DuplifierUndo.finish(player);
+                com.vandorlabs.items.DuplifierUndo.begin(player,world);
+                com.vandorlabs.items.DuplifierUndo.before(player,world,target);
+                porthole.setHousingTexture(14);
+                if(unload)com.vandorlabs.items.DuplifierUndo.worldUnloaded(new net.minecraftforge.event.world.WorldEvent.Unload(world));
+                else com.vandorlabs.items.DuplifierUndo.loggedOut(new net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent(player));
+                com.vandorlabs.items.DuplifierUndo.finish(player);
+                require(!com.vandorlabs.items.DuplifierUndo.undo(player)&&porthole.getHousingTexture()==14,"lifecycle retained undo history or pending draft");
+            }
+            com.vandorlabs.items.DuplifierUndo.runBudgetChecks(player,world);
+            ProgrammableSettings.apply(world,target,beforeUndo,player);
             tool.getSubCompound(ItemDuplifier.SETTINGS_TAG).removeTag("FrameAppearance");
             NBTTagCompound fromPorthole = ProgrammableSettings.capture(world, target);
             Block ion = Block.REGISTRY.getObject(new ResourceLocation("vandorlabs", "ion_drive"));

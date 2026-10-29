@@ -116,6 +116,9 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     private int length=1,minAlong,duration=60;
     private EnumFacing facing=EnumFacing.NORTH;
     private EnumFacing configuredFacing;
+    private long configurationRevision;
+    /** Advances when settings commit, even if their requested activation fails. */
+    public long configurationRevision(){return configurationRevision;}
     private UUID owner;
     private int redstoneChannel;
     private boolean channelSignal,lifecycleDetached;
@@ -334,6 +337,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if(escalator!=0)com.vandorlabs.ramp.EscalatorActivity.register(this);else com.vandorlabs.ramp.EscalatorActivity.unregister(this);
         configuredFacing=direction;
         owner=player.getUniqueID();WorldActionAuthorization.authorize(this,player);
+        configurationRevision++;
         sync();
         return evaluateSignal(true);
     }

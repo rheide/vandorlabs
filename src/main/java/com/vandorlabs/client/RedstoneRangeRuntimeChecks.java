@@ -45,6 +45,50 @@ final class RedstoneRangeRuntimeChecks {
             left.output=15;RedstoneChannels.latchChanged(left,true);require(right.output==15&&remote.output==0,"only in-range linked latches mirror ON");right.output=0;RedstoneChannels.latchChanged(right,false);require(left.output==0&&near.received==0,"nearby linked OFF clears original owner instead of retaining stale ON");for(Latch latch:new Latch[]{left,right,remote})latch.close();
             ItemStack original=module(0,ChannelList.of(channel,channel+1)),target=module(2,ChannelList.of(7));InventoryCrafting table=new InventoryCrafting(new Container(){public boolean canInteractWith(net.minecraft.entity.player.EntityPlayer p){return true;}},3,3);table.setInventorySlotContents(4,original);table.setInventorySlotContents(5,target);RecipeTransmitterCopy recipe=new RecipeTransmitterCopy();ItemStack copied=recipe.getCraftingResult(table);require(ItemRedstoneTransmitter.range(copied)==256&&ItemRedstoneTransmitter.channels(copied).equals(ItemRedstoneTransmitter.channels(original)),"center-source copy keeps target range and copies channels");require(ItemStack.areItemStacksEqual(recipe.getRemainingItems(table).get(4),original),"copy returns exact original source");table.setInventorySlotContents(0,target);require(!recipe.matches(table,world),"copy rejects unrelated crafting items");
             Member handheld=new Member(world,actor.getPosition().east(),channel+2);cleanup.add(handheld);RedstoneChannels.register(handheld);ItemStack manual=module(0,ChannelList.of(channel+2));RedstoneChannels.manualToggle(actor,manual);require(handheld.received==15,"ordinary world use creates an in-range saved source");NBTTagCompound manualSave=ManualRedstoneData.get(world).writeToNBT(new NBTTagCompound());ManualRedstoneData reload=new ManualRedstoneData();reload.readFromNBT(manualSave);require(!reload.entries.isEmpty(),"manual toggle source persists in world saved data");RedstoneChannels.manualToggle(actor,manual);require(handheld.received==0,"second world use switches saved source off");
+            ManualRedstoneData manualData=ManualRedstoneData.get(world);
+            NBTTagCompound retainedManual=manualData.writeToNBT(new NBTTagCompound());
+            int manualChannel=65290;
+            List<Member> manualReceivers=new ArrayList<>();
+            try{
+                for(int i=0;i<256;i++){
+                    BlockPos at=actor.getPosition().add(1000+i*40,0,1000);
+                    manualData.apply(at,ChannelList.of(manualChannel),16,true);
+                    Member receiver=new Member(world,at,manualChannel);manualReceivers.add(receiver);RedstoneChannels.register(receiver);
+                }
+                ItemStack trigger=module(0,ChannelList.of(manualChannel));
+                RedstoneChannels.manualToggle(actor,trigger);
+                for(Member receiver:manualReceivers)require(receiver.received==15,"saved remote source initialized");
+                long[] manualBefore=RedstoneChannels.diagnostics(world);
+                RedstoneChannels.manualToggle(actor,trigger);
+                long[] manualAfter=RedstoneChannels.diagnostics(world);
+                long visited=manualAfter[0]-manualBefore[0],queried=manualAfter[2]-manualBefore[2];
+                for(Member receiver:manualReceivers)require(receiver.received==15,"local toggle preserved remote source");
+                require(visited<100&&queried<100,"local manual toggle must not reindex 256 unchanged remote sources");
+                System.out.println("[vandorlabs][reprolab] manual-source-performance sources=256 receiverBuckets="+visited+" sourceBuckets="+queried);
+            }finally{
+                for(Member receiver:manualReceivers)receiver.close();
+                manualData.readFromNBT(retainedManual);
+                ItemStack trigger=module(0,ChannelList.of(manualChannel));
+                RedstoneChannels.manualToggle(actor,trigger);RedstoneChannels.manualToggle(actor,trigger);
+            }
+            com.vandorlabs.tiles.TileEntityPilotSeat seatData=new com.vandorlabs.tiles.TileEntityPilotSeat();seatData.setPos(BlockPos.ORIGIN);
+            com.vandorlabs.vehicle.VehicleStructure controllerStructure=new com.vandorlabs.vehicle.VehicleStructure(Collections.singletonList(new com.vandorlabs.vehicle.VehicleStructure.Cell(BlockPos.ORIGIN,com.vandorlabs.blocks.ModBlocks.PILOT_SEAT.getDefaultState(),seatData.writeToNBT(new NBTTagCompound()))),BlockPos.ORIGIN,net.minecraft.util.EnumFacing.NORTH,1);
+            com.vandorlabs.vehicle.EntityGroundVehicle controlled=new com.vandorlabs.vehicle.EntityGroundVehicle(world);
+            Member modeSource=new Member(world,origin,64900);cleanup.add(modeSource);
+            try{
+                controlled.install(controllerStructure);controlled.setPosition(origin.getX(),origin.getY(),origin.getZ());
+                com.vandorlabs.tiles.TileEntityPilotSeat carriedSeat=(com.vandorlabs.tiles.TileEntityPilotSeat)controlled.view.getTileEntity(BlockPos.ORIGIN);
+                TransmitterSlots.set(modeSource,module(0,ChannelList.of(64900)));
+                carriedSeat.setModeChannels(2,ChannelList.of(64900));carriedSeat.setVehicleChannels(ChannelList.of(64900),world);
+                modeSource.output=15;RedstoneChannels.inputChanged(modeSource);
+                require(carriedSeat.pollMode(world)==2&&carriedSeat.poll(world)==1,"carried controller detects finite source at its physical position");
+                controlled.setPosition(origin.getX()+100,origin.getY(),origin.getZ());
+                require(carriedSeat.pollMode(world)==-1&&carriedSeat.poll(world)==0,"moving beyond finite range withdraws carried mode signal");
+                modeSource.tile.setPos(BlockPos.ORIGIN);RedstoneChannels.positionChanged(modeSource);
+                require(carriedSeat.pollMode(world)==-1&&carriedSeat.poll(world)==-1,"source at snapshot-local origin does not reach distant craft");
+                modeSource.tile.setPos(origin);RedstoneChannels.positionChanged(modeSource);controlled.setPosition(origin.getX(),origin.getY(),origin.getZ());controlled.rotationYaw=90;
+                require(carriedSeat.pollMode(world)==2&&carriedSeat.poll(world)==1,"rotated craft reentry produces physical channel edges");
+            }finally{modeSource.close();controlled.signals.close();controlled.setDead();}
             TransmitterSlots.set(source,module(0,ChannelList.of(channel)));source.output=0;RedstoneChannels.inputChanged(source);
             for(int i=0;i<2048;i++){Member far=new Member(world,origin.add(10000+i*32,0,10000),channel);cleanup.add(far);RedstoneChannels.register(far);}
             long[] start=RedstoneChannels.diagnostics(world);long tick=System.nanoTime();for(int i=0;i<100;i++){source.output=i%2==0?15:0;RedstoneChannels.inputChanged(source);}long elapsed=System.nanoTime()-tick;long[] end=RedstoneChannels.diagnostics(world);long candidates=end[1]-start[1],deliveries=end[4]-start[4];require(candidates<2000&&deliveries<=200,"finite activation ignores 2048 far same-channel receivers");

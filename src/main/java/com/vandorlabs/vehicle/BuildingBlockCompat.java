@@ -261,7 +261,7 @@ public final class BuildingBlockCompat {
         else if(type.equals("com.mrcrayfish.furniture.blocks.BlockFridge")){other=at.down();partner="freezer";}
         else if(type.equals("com.mrcrayfish.furniture.blocks.BlockModernSlidingDoor")){
             boolean top=Boolean.TRUE.equals(property(state,"top"));other=top?at.down():at.up();partner=name;
-            require(!Objects.equals(property(state,"top"),property(world.getBlockState(other),"top")),"Include both furniture door sections");
+            require(world.isBlockLoaded(other)&&!Objects.equals(property(state,"top"),property(world.getBlockState(other),"top")),"Include both furniture door sections");
         }
         if(other!=null){
             require(world.isBlockLoaded(other)&&world.getBlockState(other).getBlock().getRegistryName().toString().equals("cfm:"+partner)&&facing(world.getBlockState(other))==facing(state),"Include the complete furniture assembly");
@@ -270,7 +270,7 @@ public final class BuildingBlockCompat {
         TileEntity tile=world.getTileEntity(at);
         if(tile!=null&&tile.getClass().getName().equals("micdoodle8.mods.galacticraft.core.tile.TileEntityScreen")){
             NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());int left=data.getInteger("connectionsLeft"),right=data.getInteger("connectionsRight"),up=data.getInteger("connectionsUp"),down=data.getInteger("connectionsDown");
-            require(left>=0&&right>=0&&up>=0&&down>=0&&left+right<=8&&up+down<=8,"Invalid Galacticraft screen dimensions");
+            require(validScreenDimensions(left,right,up,down),"Invalid Galacticraft screen dimensions");
             EnumFacing face=facing(state);require(face.getAxis().isHorizontal()||left+right+up+down==0,"Only wall-mounted Galacticraft screens can form a joined display");
             EnumFacing side=face.getAxis().isHorizontal()?face.rotateYCCW():EnumFacing.WEST;
             for(int x=-left;x<=right;x++)for(int y=-down;y<=up;y++){
@@ -283,5 +283,6 @@ public final class BuildingBlockCompat {
         }
         return result;
     }
+    static boolean validScreenDimensions(int left,int right,int up,int down){return left>=0&&right>=0&&up>=0&&down>=0&&(long)left+right<=8&&(long)up+down<=8;}
     private BuildingBlockCompat(){}
 }

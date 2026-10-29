@@ -31,7 +31,11 @@ final class VehicleLight {
         for(BlockPos pos:sources.keySet()){minX=Math.min(minX,pos.getX()-14);minY=Math.min(minY,pos.getY()-14);minZ=Math.min(minZ,pos.getZ()-14);maxX=Math.max(maxX,pos.getX()+14);maxY=Math.max(maxY,pos.getY()+14);maxZ=Math.max(maxZ,pos.getZ()+14);}
         width=maxX-minX+1;height=maxY-minY+1;depth=maxZ-minZ+1;
         long volume=(long)width*height*depth;
-        if(volume>1000000L)throw new IllegalArgumentException("Vehicle light bounds exceed snapshot limit");
+        // Display/arm snapshots accept coordinates 0..127, plus fourteen cells
+        // of propagation on each side. Ordinary vehicles use the smaller 64 axis.
+        int axisLimit=(world.structure.displayOnly?128:VehicleStructure.MAX_AXIS)+28;
+        if(width<=0||height<=0||depth<=0||width>axisLimit||height>axisLimit||depth>axisLimit
+                ||volume>(long)axisLimit*axisLimit*axisLimit)throw new IllegalArgumentException("Vehicle light bounds exceed snapshot limit");
         levels=new byte[(int)volume];int[] queue=new int[levels.length];int head=0,tail=0,count=0;
         for(Map.Entry<BlockPos,Integer> entry:sources.entrySet()){
             BlockPos pos=entry.getKey();int index=((pos.getY()-minY)*depth+pos.getZ()-minZ)*width+pos.getX()-minX;

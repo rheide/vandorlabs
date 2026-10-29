@@ -23,11 +23,27 @@ public final class TransmitterOwnershipChecks {
         ItemStack module=new ItemStack(ModItems.REDSTONE_TRANSMITTER,1,1);ItemRedstoneTransmitter.configure(module,ChannelList.of(65285));module.setStackDisplayName("Configured transmitter ownership fixture");
         try{
             actor.setGameType(GameType.SURVIVAL);actor.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(Items.DIAMOND_PICKAXE));actor.setPosition(mine.getX()+.5,mine.getY(),mine.getZ()-2);
+            unavailableCarriedHost(world,actor,block,module,mine);
             world.setBlockState(mine,block.getDefaultState(),3);TransmitterSlots.set((TileEntityWirelessRedstone)world.getTileEntity(mine),module);TileEntityWirelessRedstone protectedSource=(TileEntityWirelessRedstone)world.getTileEntity(mine);net.minecraft.nbt.NBTTagCompound original=protectedSource.writeToNBT(new net.minecraft.nbt.NBTTagCompound());TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,mine,world.getBlockState(mine),actor));require(original.equals(protectedSource.writeToNBT(new net.minecraft.nbt.NBTTagCompound())),"permission probe is read-only for module inventory");net.minecraftforge.event.world.BlockEvent.BreakEvent cancelled=new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,mine,world.getBlockState(mine),actor);cancelled.setCanceled(true);TransmitterDrops.breaking(cancelled);require(original.equals(protectedSource.writeToNBT(new net.minecraft.nbt.NBTTagCompound())),"cancelled harvest retains exact module ownership");require(actor.interactionManager.tryHarvestBlock(mine)&&world.isAirBlock(mine),"native Survival harvest completes");check(world,mine,module,old,"mining");
             actor.setGameType(GameType.CREATIVE);actor.setPosition(creative.getX()+.5,creative.getY(),creative.getZ()-2);world.setBlockState(creative,block.getDefaultState(),3);TransmitterSlots.set((TileEntityWirelessRedstone)world.getTileEntity(creative),module);require(actor.interactionManager.tryHarvestBlock(creative)&&world.isAirBlock(creative),"native Creative harvest completes");check(world,creative,module,old,"Creative inventory mining");actor.setPosition(mine.getX()+.5,mine.getY(),mine.getZ()-2);
             world.setBlockState(blast,block.getDefaultState(),3);TransmitterSlots.set((TileEntityWirelessRedstone)world.getTileEntity(blast),module);world.newExplosion(null,blast.getX()+.5,blast.getY()+.5,blast.getZ()+.5,4,false,true);require(world.isAirBlock(blast),"native explosion destroys host");check(world,blast,module,old,"explosion");
             System.out.println("[vandorlabs][reprolab] redstone-module-ownership PASS read-only-probe canceled-harvest native-survival-creative-harvest explosion exact-one-module configured-NBT no-host-item-duplication");
         }finally{actor.setHeldItem(EnumHand.MAIN_HAND,held);actor.setGameType(mode);actor.setPosition(before.x,before.y,before.z);for(BlockPos p:new BlockPos[]{mine,creative,blast}){world.setBlockToAir(p);for(EntityItem entity:world.getEntitiesWithinAABB(EntityItem.class,area(p)))if(!old.contains(entity.getUniqueID()))entity.setDead();}}
+    }
+    private static void unavailableCarriedHost(WorldServer world,EntityPlayerMP actor,Block block,ItemStack module,BlockPos origin){
+        TileEntityWirelessRedstone source=(TileEntityWirelessRedstone)block.createTileEntity(world,block.getDefaultState());
+        TransmitterSlots.set(source,module);
+        com.vandorlabs.vehicle.VehicleStructure snapshot=com.vandorlabs.vehicle.VehicleStructure.display(Collections.singletonList(
+                new com.vandorlabs.vehicle.VehicleStructure.Cell(BlockPos.ORIGIN,block.getDefaultState(),source.writeToNBT(new net.minecraft.nbt.NBTTagCompound()))));
+        com.vandorlabs.vehicle.EntityGroundVehicle craft=new com.vandorlabs.vehicle.EntityGroundVehicle(world);
+        craft.structure=snapshot;craft.view=new com.vandorlabs.vehicle.VehicleWorld(world,snapshot);craft.view.craft=craft;craft.setPosition(origin.getX(),origin.getY(),origin.getZ());
+        TileEntityWirelessRedstone carried=(TileEntityWirelessRedstone)craft.view.getTileEntity(BlockPos.ORIGIN);
+        com.vandorlabs.container.ContainerTransmitterSlot slot=new com.vandorlabs.container.ContainerTransmitterSlot(actor,carried,0);
+        com.vandorlabs.container.ContainerTransmitterItem editor=new com.vandorlabs.container.ContainerTransmitterItem(actor,carried,0);
+        require(slot.canInteractWith(actor)&&editor.canInteractWith(actor),"carried module dialogs accept their current live host");
+        craft.retainUnavailableSnapshot(snapshot);
+        require(!slot.canInteractWith(actor)&&!editor.canInteractWith(actor),"quarantined craft rejects module dialogs retaining its discarded view");
+        craft.setDead();
     }
     private static void check(WorldServer world,BlockPos pos,ItemStack module,Set<UUID> old,String phase){int count=0;for(EntityItem entity:world.getEntitiesWithinAABB(EntityItem.class,area(pos)))if(!old.contains(entity.getUniqueID())){ItemStack stack=entity.getItem();count+=modules(stack);if(ItemRedstoneTransmitter.valid(stack))require(ItemStack.areItemStackTagsEqual(stack,module)&&stack.getMetadata()==module.getMetadata(),phase+" retains exact item configuration");}require(count==1,phase+" usable module owners="+count);}
 }

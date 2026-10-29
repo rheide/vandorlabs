@@ -129,7 +129,10 @@ public class MessageRampController implements IMessage {
     public static class Handler implements IMessageHandler<MessageRampController,IMessage> {
         @Override public IMessage onMessage(MessageRampController message,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
-            player.getServerWorld().addScheduledTask(()->{
+            player.getServerWorld().addScheduledTask(()->apply(player,message));return null;
+        }
+        /** Authoritative packet operation, shared with focused container regressions. */
+        public static void apply(EntityPlayerMP player,MessageRampController message){
                 if (message.pos==null || message.getRedstoneChannels()==null || !com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,player.world,message.pos)
                         || !player.world.isBlockLoaded(message.pos)) return;
                 TileEntity raw=player.world.getTileEntity(message.pos);
@@ -138,13 +141,14 @@ public class MessageRampController implements IMessage {
                 if (((ContainerRampController)player.openContainer).controller!=te || !te.usable(player)) return;
                 if (message.direction<0 || message.direction>3 || message.channel<0
                         || message.interpolation<0 || message.interpolation>2 || message.escalator<0 || message.escalator>2) return;
+                long revision=te.configurationRevision();
                 te.configureHalfOffsets(player,message.startHalfSteps,message.endHalfSteps,message.treadPixels,message.powerOn,message.slow,message.elevator,
                         net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures,false,message.interpolation,message.escalator,message.moat);
-                te.setRedstoneChannels(message.getRedstoneChannels());
-                te.setAnalogDeployment(message.analogDeployment);
+                if(te.configurationRevision()!=revision){
+                    te.setRedstoneChannels(message.getRedstoneChannels());
+                    te.setAnalogDeployment(message.analogDeployment);
+                }
                 player.connection.sendPacket(te.getUpdatePacket());
-            });
-            return null;
         }
     }
 }

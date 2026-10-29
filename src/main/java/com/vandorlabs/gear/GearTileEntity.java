@@ -633,7 +633,8 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         double requestedStart=tag.hasKey("StartAngle",6)?tag.getDouble("StartAngle"):startAngle();
         if(!Double.isFinite(requestedStart)||requestedStart < -180||requestedStart > 180||Math.rint(requestedStart/15)*15!=requestedStart)throw new IllegalArgumentException("Starting angle must use 15 degree steps within -180 to 180");
         boolean changeStart=requestedStart!=startAngle();
-        if(changeStart&&(assembly==null||releasing)){startAngle=requestedStart;changeStart=false;}
+        boolean installStart=changeStart&&(assembly==null||releasing);
+        if(installStart)changeStart=false;
         if(changeStart&&(!isSwingArmController()||isLandingAssembly()||!fullyDeployed()||adjustingStart))throw new IllegalArgumentException("Return the Rotating Arm to its starting position before changing its start angle");
         double angle=tag.hasKey("ActiveAngle",6)?tag.getDouble("ActiveAngle"):configuredEndAngle();
         if(angle!=configuredEndAngle()&&Math.rint(angle/15)*15!=angle)throw new IllegalArgumentException("End angle must use 15 degree steps");
@@ -652,6 +653,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(!Double.isFinite(angle)||angle < -180||angle > 180||!Double.isFinite(extension)||extension < -8||extension > 8)throw new IllegalArgumentException("Arm stroke is out of range");
         if((dir!=direction.ordinal()||angle!=activeAngle||rotate!=rotatePayload)&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");
         if(tag.hasKey("TrackStyle",3)){if(assembly!=null&&!fullyDeployed()&&com.vandorlabs.gear.track.TrackStyles.style(this)!=tag.getInteger("TrackStyle"))throw new IllegalArgumentException("Deploy fully before changing track style");com.vandorlabs.gear.track.TrackStyles.apply(this,tag.getInteger("TrackStyle"));}
+        // An unformed/releasing arm accepts its starting angle directly, but a
+        // later validation failure must still leave every setting unchanged.
+        if(installStart)startAngle=requestedStart;
         if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}configured=true;pushBlocks=push;joinEnabled=join;joinRange=range;carryLoad=load;loadHeight=height;rotatePayload=rotate;activeAngle=angle;activeExtension=extension;if(changeStart){savedEndAngle=angle;activeAngle=requestedStart;adjustingStart=true;}if(isSwingArmController())mode=rotate?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");if(changeStart)deployedTarget=false;input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
         if((groupChanged||pushChanged)&&world!=null&&!world.isRemote){for(BlockPos column:new ArrayList<>(columns)){TileEntity raw=world.getTileEntity(pos.add(column));if(raw instanceof GearTileEntity&&raw!=this){GearTileEntity member=(GearTileEntity)raw;member.joinEnabled=join;member.joinRange=range;member.carryLoad=load;member.loadHeight=height;member.direction=direction;member.pushBlocks=pushBlocks;member.rotatePayload=rotatePayload;member.activeAngle=activeAngle;member.startAngle=startAngle;member.activeExtension=activeExtension;member.mode=mode;member.sync();}}if(groupChanged)scheduleRebuild();}
     }
