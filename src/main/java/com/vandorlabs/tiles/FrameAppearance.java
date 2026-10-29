@@ -71,5 +71,5 @@ public final class FrameAppearance {
     public static String interiorTexture(int choice,String fallback){if(choice<0)return fallback;com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return e!=null&&e.has("frameRail")&&border(choice)?"vandorlabs:blocks/"+e.get("frameRail").getAsString():ScreenHousingTextures.texture(choice);}
     public String interior(String fallback){return interiorTexture(interior,fallback);}
     private static int light(int choice){if(choice<0)return 0;com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return e!=null&&e.has("frameLight")?Math.max(0,Math.min(5,e.get("frameLight").getAsInt())):0;}
-    public int light(){return bare?0:Math.max(light(front),light(interior));}
+    public int light(){return Math.max(bare?0:light(front),light(interior));}
 }
