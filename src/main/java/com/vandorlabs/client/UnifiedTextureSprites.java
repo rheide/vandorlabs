@@ -33,6 +33,7 @@ public final class UnifiedTextureSprites {
                 event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/"+e.get("top").getAsString(),e.get("top").getAsString(),false,false));
                 event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/"+e.get("side").getAsString(),e.get("side").getAsString(),false,false));
             }
+            if(e!=null && "Surface".equals(ScreenHousingTextures.category(i)))event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.fullTexture(i)+"_low"));
             if(e!=null && e.has("unlit"))event.getMap().registerSprite(new ResourceLocation(ScreenHousingTextures.texture(i,false)));
         }
     }

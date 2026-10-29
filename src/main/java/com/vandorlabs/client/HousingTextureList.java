@@ -181,18 +181,24 @@ final class HousingTextureList {
     }
     private void rebuild() {
         rows.clear();
-        for(int c=0;c<categories.size();c++) {
-            String category=categories.get(c);
-            if(!parentsExpanded(category))continue;
-            rows.add(-200000-c);
-            if(expanded.contains(category)) {
-                for(Option option:groups.getOrDefault(category,Collections.emptyList()))rows.add(option.choice);
-            }
-        }
+        appendCategories("");
         if(customConsumer!=null)rows.add(CUSTOM_ROW);
         if(redstoneAction!=null)rows.add(REDSTONE_ROW);
         if(vehicleAction!=null)rows.add(VEHICLE_ROW);
         scroll=Math.min(scroll,maxScroll());
+    }
+    private void appendCategories(String parent){
+        for(int c=0;c<categories.size();c++){
+            String category=categories.get(c);
+            int slash=category.lastIndexOf('/');
+            String directParent=slash<0?"":category.substring(0,slash);
+            if(!directParent.equals(parent))continue;
+            rows.add(-200000-c);
+            if(expanded.contains(category)){
+                appendCategories(category);
+                for(Option option:groups.getOrDefault(category,Collections.emptyList()))rows.add(option.choice);
+            }
+        }
     }
     private boolean parentsExpanded(String path){
         while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));if(!expanded.contains(path))return false;}

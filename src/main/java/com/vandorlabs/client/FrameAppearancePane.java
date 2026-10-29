@@ -14,7 +14,11 @@ public final class FrameAppearancePane {
     private final GuiContainer host;private final TileEntity owner;private final FrameAppearance appearance;private final Runnable bareToggle;private final BooleanSupplier framed;
     private boolean displayPage;private HousingTextureList textures;private int page,contentTop;private List<GuiButton> buttons;
     public FrameAppearancePane(GuiContainer host,TileEntity owner){this(host,owner,null,null);}
-    public FrameAppearancePane(GuiContainer host,TileEntity owner,Runnable bareToggle,BooleanSupplier framed){this.host=host;this.owner=owner;this.bareToggle=bareToggle;this.framed=framed;appearance=new FrameAppearance();net.minecraft.nbt.NBTTagCompound draft=new net.minecraft.nbt.NBTTagCompound();MessageFrameAppearance.appearance(owner).write(draft);appearance.read(draft);if(BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType()))appearance.artworkVersion=1;if(!front())page=1;}
+    public FrameAppearancePane(GuiContainer host,TileEntity owner,Runnable bareToggle,BooleanSupplier framed){this.host=host;this.owner=owner;this.bareToggle=bareToggle;this.framed=framed;appearance=new FrameAppearance();net.minecraft.nbt.NBTTagCompound draft=new net.minecraft.nbt.NBTTagCompound();MessageFrameAppearance.appearance(owner).write(draft);appearance.read(draft);if(appearance.splitTop<0)appearance.splitTop=defaultScreen();if(appearance.splitBottom<0)appearance.splitBottom=defaultScreen();if(BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType()))appearance.artworkVersion=1;if(!front())page=1;}
+    private static int defaultScreen(){
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Screens".equals(ScreenHousingTextures.category(i))&&FrameAppearance.bareChoice(i)==i)return ScreenHousingTextures.choiceAt(i);
+        return 0;
+    }
     private boolean front(){return !(owner.getBlockType() instanceof BlockProgrammableWall)||owner.getBlockType() instanceof BlockProgrammableDiagonalGlass;}
     private boolean interior(){return owner instanceof TileEntityProgrammableGlass||owner instanceof TileEntitySpaceDoor||owner.getBlockType() instanceof BlockProgrammableWall;}
     private boolean display(){return FrameAppearance.displayBlock(owner.getBlockType());}
