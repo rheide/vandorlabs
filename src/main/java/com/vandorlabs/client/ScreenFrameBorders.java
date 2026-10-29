@@ -11,6 +11,8 @@ import javax.imageio.ImageIO;
 /** Resource-pack-aware straight-edge thickness, excluding decorative corners. */
 final class ScreenFrameBorders {
     private static final Map<Integer,double[]> CACHE=new HashMap<>();
+    /** Shared nine-slice cut: corners retain authored width; middle pieces extend per cell. */
+    static double cut(int index,double first,double last){return index==0?0:index==1?first:index==2?1-last:1;}
     static void clear(){CACHE.clear();}
     static double[] get(int choice){return CACHE.computeIfAbsent(choice,ScreenFrameBorders::load);}
     /** Include authored outer padding and anti-aliased inner pixels. An edge is

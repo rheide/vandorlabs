@@ -29,7 +29,7 @@ public final class FrameEdgeRuntimeChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("frame edges: "+why);}
     private static final class Scene {final String name;final VehicleStructure structure;Scene(String name,VehicleStructure structure){this.name=name;this.structure=structure;}}
     public static void run(Minecraft mc,File output)throws Exception{
-        crops();paddedBorders();doorUvs();glassFrameUvs();independentSides(mc);diagonalFrameCache(mc);int choices=0;
+        crops();paddedBorders();joinedGlassBorders();doorUvs();glassFrameUvs();independentSides(mc);diagonalFrameCache(mc);int choices=0;
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i))){
             FrameAppearance a=new FrameAppearance();a.interior=i;TextureAtlasSprite base=mc.getTextureMapBlocks().getAtlasSprite(a.interior(""));
             for(int edge=0;edge<4;edge++){TextureAtlasSprite strip=FrameEdgeTextures.edge(base,edge);require(strip.getIconWidth()==strip.getIconHeight()&&strip.getIconWidth()<=(FrameAppearance.border(i)?64:128),"native strip or whole opaque material size");for(int pixel:strip.getFrameTextureData(0)[0])require((pixel>>>24)==255,"transparent center sampled by physical frame: "+strip.getIconName());choices++;}
@@ -174,10 +174,36 @@ public final class FrameEdgeRuntimeChecks {
         java.lang.reflect.Field vertices=StaticSurfaceMesh.class.getDeclaredField("vertices");vertices.setAccessible(true);
         for(int rows:new int[]{1,2}){
             float[] data=(float[])vertices.get(GlassFrameMesh.get(tile,new GlassSurfaceGroups.Layout(0,0,1,rows)));
-            double bottom=widths[3]*rows*16;boolean found=false;
+            double bottom=widths[3]*16;boolean found=false;
             for(int q=0;q<data.length;q+=32)if(Math.abs(data[q+6])>.9&&Math.abs(data[q+1]-bottom)<.0001)found=true;
-            require(found,"emitted glass bottom wall ignored asymmetric/fitted frame thickness");
+            require(found,"joined glass changed native asymmetric border thickness");
         }
+    }
+    private static void joinedGlassBorders()throws Exception{
+        java.lang.reflect.Field vertices=StaticSurfaceMesh.class.getDeclaredField("vertices");vertices.setAccessible(true);
+        int choice=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1");
+        TileEntityProgrammableGlass tile=new TileEntityProgrammableGlass();tile.frameAppearance.front=choice;
+        double[] border=ScreenFrameBorders.get(choice);TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.front(""));
+        float[] corner=null;int checked=0;
+        for(int[] size:new int[][]{{1,1},{2,2},{3,2},{2,3},{3,3}}){
+            float[] data=(float[])vertices.get(GlassFrameMesh.get(tile,new GlassSurfaceGroups.Layout(0,0,size[0],size[1])));
+            boolean left=false,bottom=false,middle=size[1]==1;
+            for(int q=0;q<data.length;q+=32){
+                if(data[q+5]>.9&&Math.abs(data[q]-border[0]*16)<.0001)left=true;
+                if(data[q+6]>.9&&Math.abs(data[q+1]-border[3]*16)<.0001)bottom=true;
+                if(data[q+7]>-.9||Math.abs(data[q+2]-6)>.00001)continue;
+                double minX=16,maxX=0,minY=16,maxY=0,minV=1,maxV=0;
+                for(int v=0;v<4;v++){int at=q+v*8;minX=Math.min(minX,data[at]);maxX=Math.max(maxX,data[at]);minY=Math.min(minY,data[at+1]);maxY=Math.max(maxY,data[at+1]);minV=Math.min(minV,data[at+4]);maxV=Math.max(maxV,data[at+4]);}
+                if(minX==0&&minY==0&&Math.abs(maxX-border[0]*16)<.0001&&Math.abs(maxY-border[3]*16)<.0001){float[] actual=java.util.Arrays.copyOfRange(data,q,q+32);if(corner==null)corner=actual;else require(java.util.Arrays.equals(corner,actual),"joined glass enlarged or resampled its authored corner");}
+                if(size[1]>1&&minX==0&&Math.abs(maxX-border[0]*16)<.0001&&Math.abs(minY-border[3]*16)<.0001&&maxY==16){
+                    require(Math.abs(minV-sprite.getInterpolatedV(border[2]*16))<.00001&&Math.abs(maxV-sprite.getInterpolatedV((1-border[3])*16))<.00001,"joined glass repeats end corners instead of extending the middle edge");middle=true;
+                }
+            }
+            require(left&&bottom&&middle,"joined glass native thickness/source cuts: "+size[0]+"x"+size[1]);checked++;
+        }
+        require(corner!=null,"authored corner geometry");
+        require(((float[])vertices.get(GlassFrameMesh.get(tile,new GlassSurfaceGroups.Layout(1,1,3,3)))).length==0,"joined glass emits a frame inside the pad");
+        System.out.println("[vandorlabs][reprolab] joined-glass-borders PASS layouts="+checked+" native-thickness preserved-corners middle-edge-extension");
     }
     private static void crops(){
         BufferedImage authored=new BufferedImage(64,64,BufferedImage.TYPE_INT_ARGB);int[] colors={0xffed3010,0xff21d030,0xff2040ef,0xffeac020};

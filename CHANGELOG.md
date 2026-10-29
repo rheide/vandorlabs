@@ -2,6 +2,10 @@
 
 ## 2.7 (in development)
 
+- Keep diagonal glass fill controls on one row so texture joining controls remain clear of Done in compact dialogs.
+
+- Extend joined programmable glass frames with native-width border pieces and preserved corners, matching programmable screen frames instead of scaling the full image.
+
 - Use Main artwork for porthole fronts and remove their redundant Front picker; label wall and diagonal-wall finish tabs Exterior.
 
 - Offer general materials alongside frame artwork in Interior and Exterior finish pickers, preserving selections through saves and configuration packets.

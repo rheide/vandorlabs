@@ -41,12 +41,11 @@ final class FrameSurfaceRenderer {
         double t=layout.row==layout.rows-1?border[2]:0,d=layout.row==0?border[3]:0;
         GlStateManager.disableCull();
         for(int row=0;row<3;row++)for(int col=0;col<3;col++)if(row!=1||col!=1){
-            double x0=cut(col,l,r),x1=cut(col+1,l,r),y0=cut(row,t,d),y1=cut(row+1,t,d);
-            if(x1>x0&&y1>y0)region(b,quad,sprite,input,FrameAppearance.aspect(frame.front),x0,y0,x1,y1,cut(col,border[0],border[1]),cut(row,border[2],border[3]),cut(col+1,border[0],border[1]),cut(row+1,border[2],border[3]));
+            double x0=ScreenFrameBorders.cut(col,l,r),x1=ScreenFrameBorders.cut(col+1,l,r),y0=ScreenFrameBorders.cut(row,t,d),y1=ScreenFrameBorders.cut(row+1,t,d);
+            if(x1>x0&&y1>y0)region(b,quad,sprite,input,FrameAppearance.aspect(frame.front),x0,y0,x1,y1,ScreenFrameBorders.cut(col,border[0],border[1]),ScreenFrameBorders.cut(row,border[2],border[3]),ScreenFrameBorders.cut(col+1,border[0],border[1]),ScreenFrameBorders.cut(row+1,border[2],border[3]));
         }
         Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldBlock,oldSky);
     }
-    private static double cut(int index,double first,double last){return index==0?0:index==1?first:index==2?1-last:1;}
     private static void region(BufferBuilder b,ScreenSurface.Quad quad,TextureAtlasSprite sprite,boolean input,double aspect,double left,double top,double right,double bottom,double u0,double v0,double u1,double v1){
         for(int i=0;i<4;i++){
             boolean rightVertex=i==1||i==2;double x=rightVertex?right:left,y=i<2?top:bottom;

@@ -18,7 +18,9 @@ craft being retired; failed transfers retain exactly one painting owner.
 Artwork pickers use short company names and explicit Full/Half frame labels,
 with the current selection revealed when switching tabs. Glass and unsplit
 screens offer full-height frames; split screens also support half-height frames.
-Padded and asymmetric frames preserve their borders and glass openings, and
+Joined glass frames retain their single-block border thickness and extend edge
+pieces while preserving the authored corners, using the same cuts as screen
+frames. Padded and asymmetric frames preserve their borders and glass openings, and
 diagonal half consoles correctly sample native half-height control artwork.
 Carried paintings use the craft’s lighting. Supported integral landing-gear
 height changes can run while driving, with physical collision checks retained.
