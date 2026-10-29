@@ -90,6 +90,7 @@ public final class VehicleWorldRuntimeChecks {
                 int block=view.getLightFromNeighborsFor(net.minecraft.world.EnumSkyBlock.BLOCK,p);
                 require(view.getCombinedLight(p,minimum)==((sky<<20)|(Math.max(block,minimum)<<4)),"Loaded-parent combined sky/block/minimum light changed");
             }
+            require((view.getCombinedLight(p,15)&65535)==240,"Known minimum block-light level 15 was not preserved with parent loaded");
             VehicleWorld lampView=new VehicleWorld(parent,VehicleStructure.display(Arrays.asList(
                     new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.GLOWSTONE.getDefaultState(),null),
                     new VehicleStructure.Cell(new BlockPos(3,0,0),Blocks.STONE.getDefaultState(),null))));
