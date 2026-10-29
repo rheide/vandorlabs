@@ -1539,13 +1539,12 @@ public class TEAnimatedScreenSelector
             double x0, double y0, double z0, double x1, double y1, double z1,
             double x2, double y2, double z2, double x3, double y3, double z3,
             double u0, double v0, double u1, double v1) {
-        if(FrameEdgeTextures.authored(sprite))sprite=FrameEdgeTextures.edge(sprite,new double[]{x0,y0,z0},new double[]{x1,y1,z1},new double[]{x2,y2,z2},new double[]{x3,y3,z3});
-        double ua = sprite.getInterpolatedU(u0);
-        double va = sprite.getInterpolatedV(v0);
-        double ub = sprite.getInterpolatedU(u1);
-        double vb = sprite.getInterpolatedV(v1);
-        WorldSurface.rawQuad(buf,true,x0,y0,z0,ua,va,x1,y1,z1,ub,va,
-                x2,y2,z2,ub,vb,x3,y3,z3,ua,vb);
+        if(FrameEdgeTextures.authored(sprite)){
+            WorldSurface.quad(buf,sprite,true,new double[]{x0,y0,z0,u0,v0},new double[]{x1,y1,z1,u1,v0},
+                    new double[]{x2,y2,z2,u1,v1},new double[]{x3,y3,z3,u0,v1});return;
+        }
+        double ua=sprite.getInterpolatedU(u0),va=sprite.getInterpolatedV(v0),ub=sprite.getInterpolatedU(u1),vb=sprite.getInterpolatedV(v1);
+        WorldSurface.rawQuad(buf,true,x0,y0,z0,ua,va,x1,y1,z1,ub,va,x2,y2,z2,ub,vb,x3,y3,z3,ua,vb);
     }
 
     private static void drawWallMesh(TextureAtlasSprite sprite,ScreenHousingMesh mesh) {
