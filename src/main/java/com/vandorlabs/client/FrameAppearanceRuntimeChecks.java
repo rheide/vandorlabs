@@ -36,6 +36,19 @@ final class FrameAppearanceRuntimeChecks {
         NBTTagCompound legacyGlass=new NBTTagCompound();legacyGlass.setInteger("FrameInterior",bolted);FrameAppearance oldGlass=new FrameAppearance();oldGlass.read(legacyGlass);require(oldGlass.exteriorChoice()==bolted,"legacy exterior must retain its previous interior finish");NBTTagCompound preserved=new NBTTagCompound();oldGlass.write(preserved);require(!preserved.hasKey("FrameExterior"),"legacy absent exterior was rewritten");
         oldGlass.exterior=oldGlass.exteriorChoice();oldGlass.interior=-1;NBTTagCompound independent=new NBTTagCompound();oldGlass.write(independent);FrameAppearance restored=new FrameAppearance();restored.read(independent);require(restored.interior==-1&&restored.exteriorChoice()==bolted,"first Interior change altered legacy Exterior");
         glass.frameAppearance.read(independent);TileEntityProgrammableGlass glassRound=new TileEntityProgrammableGlass();glassRound.readFromNBT(glass.writeToNBT(new NBTTagCompound()));require(glassRound.frameAppearance.interior==-1&&glassRound.frameAppearance.exteriorChoice()==bolted,"independent glass sides lost on tile roundtrip");
+        int materialA=-1,materialB=-1;
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i)&&ScreenHousingTextures.generalTexture(i)){
+            if(materialA<0)materialA=ScreenHousingTextures.choiceAt(i);else{materialB=ScreenHousingTextures.choiceAt(i);break;}
+        }
+        require(materialA>=0&&materialB>=0,"two ordinary material finish fixtures");
+        glass.frameAppearance.interior=materialA;glass.frameAppearance.exterior=materialB;
+        glassRound.readFromNBT(glass.writeToNBT(new NBTTagCompound()));
+        require(glassRound.frameAppearance.interior==materialA&&glassRound.frameAppearance.exteriorChoice()==materialB,"general Interior/Exterior lost through tile save");
+        io.netty.buffer.ByteBuf materialBytes=io.netty.buffer.Unpooled.buffer();
+        new com.vandorlabs.network.MessageFrameAppearance(glass,glass.frameAppearance).toBytes(materialBytes);
+        com.vandorlabs.network.MessageFrameAppearance materialPacket=new com.vandorlabs.network.MessageFrameAppearance();materialPacket.fromBytes(materialBytes);materialBytes.release();
+        io.netty.buffer.ByteBuf materialRound=io.netty.buffer.Unpooled.buffer();materialPacket.toBytes(materialRound);
+        require(materialRound.getInt(12)==materialA&&materialRound.getInt(28)==materialB&&FrameAppearance.validSurface(materialA)&&FrameAppearance.validSurface(materialB),"general finishes lost or refused in packet roundtrip");materialRound.release();
         for(com.vandorlabs.render.ScreenSurface.Kind kind:com.vandorlabs.render.ScreenSurface.Kind.values()){com.vandorlabs.render.ScreenSurface.Quad full=com.vandorlabs.render.ScreenSurface.quad(kind,false),top=com.vandorlabs.render.ScreenSurface.half(full,true),bottom=com.vandorlabs.render.ScreenSurface.half(full,false);require(top.bottomLeft.y==bottom.topLeft.y&&top.bottomLeft.z==bottom.topLeft.z,"split display gap");require(top==com.vandorlabs.render.ScreenSurface.half(full,true),"split geometry allocates repeatedly");}
         try{
             HousingTextureList picker=HousingTextureList.forFrames(0,0,160,-1,8);

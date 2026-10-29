@@ -16,6 +16,7 @@ public final class FrameAppearance {
     public boolean hasFront(){return front>=0&&!bare;}
     public int splitTop=-1,splitBottom=-1;
     public static boolean valid(int choice){return choice==-1 || ScreenHousingTextures.validChoice(choice) && "Frame".equals(ScreenHousingTextures.category(choice));}
+    public static boolean validSurface(int choice){return valid(choice)||ScreenHousingTextures.validChoice(choice)&&ScreenHousingTextures.generalTexture(choice);}
     public void write(NBTTagCompound tag){
         if(artworkVersion>0)tag.setInteger("DisplayArtworkVersion",artworkVersion);else tag.removeTag("DisplayArtworkVersion");
         if(artworkVersion>0)tag.setInteger("FrameFront",front);else optional(tag,"FrameFront",front);optional(tag,"FrameInterior",interior);if(exterior>=-1)tag.setInteger("FrameExterior",exterior);else tag.removeTag("FrameExterior");optional(tag,"DisplaySplitTop",splitTop);optional(tag,"DisplaySplitBottom",splitBottom);
@@ -24,7 +25,7 @@ public final class FrameAppearance {
     private static void optional(NBTTagCompound tag,String key,int value){if(value<0)tag.removeTag(key);else tag.setInteger(key,value);}
     private static void flag(NBTTagCompound tag,String key,boolean value){if(value)tag.setBoolean(key,true);else tag.removeTag(key);}
 
-    public void read(NBTTagCompound tag){bare=tag.getBoolean("FrameBare");artworkVersion=tag.getInteger("DisplayArtworkVersion")==1?1:0;front=tag.hasKey("FrameFront",3)&&valid(tag.getInteger("FrameFront"))?tag.getInteger("FrameFront"):-1;interior=tag.hasKey("FrameInterior",3)&&valid(tag.getInteger("FrameInterior"))?tag.getInteger("FrameInterior"):-1;exterior=tag.hasKey("FrameExterior",3)&&valid(tag.getInteger("FrameExterior"))?tag.getInteger("FrameExterior"):-2;tile=tag.getBoolean("FrameTile");displayFit=tag.getBoolean("DisplayFit");split=tag.getBoolean("DisplaySplit");splitTop=tag.hasKey("DisplaySplitTop",3)?tag.getInteger("DisplaySplitTop"):-1;splitBottom=tag.hasKey("DisplaySplitBottom",3)?tag.getInteger("DisplaySplitBottom"):-1;if(splitTop!=-1&&!ScreenHousingTextures.validChoice(splitTop))splitTop=-1;if(splitBottom!=-1&&!ScreenHousingTextures.validChoice(splitBottom))splitBottom=-1;}
+    public void read(NBTTagCompound tag){bare=tag.getBoolean("FrameBare");artworkVersion=tag.getInteger("DisplayArtworkVersion")==1?1:0;front=tag.hasKey("FrameFront",3)&&valid(tag.getInteger("FrameFront"))?tag.getInteger("FrameFront"):-1;interior=tag.hasKey("FrameInterior",3)&&validSurface(tag.getInteger("FrameInterior"))?tag.getInteger("FrameInterior"):-1;exterior=tag.hasKey("FrameExterior",3)&&validSurface(tag.getInteger("FrameExterior"))?tag.getInteger("FrameExterior"):-2;tile=tag.getBoolean("FrameTile");displayFit=tag.getBoolean("DisplayFit");split=tag.getBoolean("DisplaySplit");splitTop=tag.hasKey("DisplaySplitTop",3)?tag.getInteger("DisplaySplitTop"):-1;splitBottom=tag.hasKey("DisplaySplitBottom",3)?tag.getInteger("DisplaySplitBottom"):-1;if(splitTop!=-1&&!ScreenHousingTextures.validChoice(splitTop))splitTop=-1;if(splitBottom!=-1&&!ScreenHousingTextures.validChoice(splitBottom))splitBottom=-1;}
     public static boolean displayBlock(net.minecraft.block.Block block){
         return block.getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class
             ||block instanceof com.vandorlabs.blocks.BlockProgrammableFullInput

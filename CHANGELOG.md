@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Offer general materials alongside frame artwork in Interior and Exterior finish pickers, preserving selections through saves and configuration packets.
+
 - Keep exact arm pose precision during background vehicle collision preparation so grounded Taxi supports cannot lose contact during height adjustments.
 
 - Separate Interior and Exterior finishes for programmable glass, portholes and diagonal variants; expose their finish controls as top-level tabs while preserving older saved appearances.

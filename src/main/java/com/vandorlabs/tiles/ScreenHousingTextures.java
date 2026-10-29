@@ -163,6 +163,14 @@ public final class ScreenHousingTextures {
     public static String menuCategory(int choice){com.google.gson.JsonObject e=menu(choice);return category(choice)+(e!=null&&e.has("menuGroup")?"/"+e.get("menuGroup").getAsString():"");}
     public static String category(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && e.has("category")?e.get("category").getAsString():"Materials";}
     public static String label(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("label")?null:e.has("detail")?e.get("label").getAsString().replaceFirst(" (Small|Medium|Large)$",""):e.get("label").getAsString();}
+    /** Shared general-material filter for pickers and authenticated finish validation. */
+    public static boolean generalTexture(int choice){
+        if(lightOnly(choice))return false;
+        com.google.gson.JsonObject entry=entry(choice);
+        if(entry!=null && entry.has("detail") && entry.get("detail").getAsInt()>0)return false;
+        String category=category(choice);
+        return !category.equals("Frame") && !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
+    }
     public static boolean visible(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("hidden") || !e.get("hidden").getAsBoolean();}
     public static int screenIndex(String source){
         for(int i=0;i<FINISHES.length;i++)if(source.equals(FINISHES[i].id)||source.equals(FINISHES[i].texture))return i;

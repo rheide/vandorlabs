@@ -60,11 +60,7 @@ final class HousingTextureList {
     }
     void thumbnail(int choice,String texture){Option option=options.get(choice);if(option!=null)option.texture=texture;}
     static boolean generalTexture(int choice) {
-        if(ScreenHousingTextures.lightOnly(choice))return false;
-        com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
-        if(entry!=null && entry.has("detail") && entry.get("detail").getAsInt()>0)return false;
-        String category=ScreenHousingTextures.category(choice);
-        return !category.equals("Frame") && !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
+        return ScreenHousingTextures.generalTexture(choice);
     }
     /** Native armor artwork is added locally, leaving every block/screen picker unchanged. */
     static final int NAVIGATION_BLACK=0x0ffffffe,MODEL_ARTWORK=0x0ffffffd;
@@ -85,6 +81,13 @@ final class HousingTextureList {
     static HousingTextureList forFrames(int x,int y,int width,int selected,int rows,boolean display,boolean half){
         List<Option> entries=new ArrayList<>();if(!display)entries.add(new Option(-1,"Original artwork","Frame","vandorlabs:blocks/programmable_glass/metal_side"));
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(frameAllowed(i,half))entries.add(new Option(ScreenHousingTextures.choiceAt(i),name(i),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
+        return new HousingTextureList(x,y,width,selected,rows,entries);
+    }
+    static HousingTextureList forFrameSurfaces(int x,int y,int width,int selected,int rows){
+        List<Option> entries=new ArrayList<>();
+        entries.add(new Option(-1,"Original artwork","Frame","vandorlabs:blocks/programmable_glass/metal_side"));
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i)&&(frameAllowed(i,false)||generalTexture(i)))
+            entries.add(new Option(ScreenHousingTextures.choiceAt(i),name(i),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
         return new HousingTextureList(x,y,width,selected,rows,entries);
     }
     static boolean frameAllowed(int choice,boolean half){

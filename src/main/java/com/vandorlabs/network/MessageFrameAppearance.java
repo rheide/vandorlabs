@@ -18,7 +18,7 @@ public final class MessageFrameAppearance implements IMessage {
         public IMessage onMessage(MessageFrameAppearance msg,MessageContext context){
             net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if(msg.pos==null||!FrameAppearance.valid(msg.front)||!FrameAppearance.valid(msg.interior)||!FrameAppearance.valid(msg.exterior)||(msg.top!=-1&&!ScreenHousingTextures.validChoice(msg.top))||(msg.bottom!=-1&&!ScreenHousingTextures.validChoice(msg.bottom))||!player.world.isBlockLoaded(msg.pos)||!com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return;
+                if(msg.pos==null||!FrameAppearance.valid(msg.front)||!FrameAppearance.validSurface(msg.interior)||!FrameAppearance.validSurface(msg.exterior)||(msg.top!=-1&&!ScreenHousingTextures.validChoice(msg.top))||(msg.bottom!=-1&&!ScreenHousingTextures.validChoice(msg.bottom))||!player.world.isBlockLoaded(msg.pos)||!com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return;
                 TileEntity owner=player.world.getTileEntity(msg.pos);net.minecraft.inventory.Container c=player.openContainer;
                 boolean matches=c instanceof ContainerProgrammableGlass&&((ContainerProgrammableGlass)c).tile==owner
                     ||c instanceof ContainerAnimatedScreenSelector&&((ContainerAnimatedScreenSelector)c).getTileEntity()==owner

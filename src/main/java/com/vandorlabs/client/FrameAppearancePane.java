@@ -29,7 +29,10 @@ public final class FrameAppearancePane {
         for(GuiButton b:buttons)if(b.id>=3000&&b.id<=3006)b.enabled=b.id!=(3000+(page<2?page:page+3));
         boolean tiledFrame=display()||owner instanceof TileEntityProgrammableGlass,bare=display()||bareToggle!=null&&framed!=null;
         boolean anyControls=tiledFrame||display()||bare;int listWidth=anyControls?controls-(left+12)-19:width-24,body=top+contentTop+(count>1?24:0);
-        textures=(page<2||page==4?HousingTextureList.forFrames(left+12,body,listWidth,page==0?appearance.front:page==4?appearance.exterior:appearance.interior,8,display(),display()&&appearance.split):HousingTextureList.forCategory("Screens",left+12,body,listWidth,page==2?appearance.splitTop:appearance.splitBottom,8)).visibleRows(Math.max(2,(height-contentTop-(anyControls?34:56))/HousingTextureList.ROW_HEIGHT)).keepView(textures);
+        textures=(page==0?HousingTextureList.forFrames(left+12,body,listWidth,appearance.front,8,display(),display()&&appearance.split)
+                :page==1||page==4?HousingTextureList.forFrameSurfaces(left+12,body,listWidth,page==1?appearance.interior:appearance.exterior,8)
+                :HousingTextureList.forCategory("Screens",left+12,body,listWidth,page==2?appearance.splitTop:appearance.splitBottom,8))
+                .visibleRows(Math.max(2,(height-contentTop-(anyControls?34:56))/HousingTextureList.ROW_HEIGHT)).keepView(textures);
         int controlY=body;
         if(tiledFrame){buttons.add(new GuiButton(3003,controls,controlY,154,20,"Texture: "+(appearance.tile?"Tile":"Fit")));controlY+=24;}
 
