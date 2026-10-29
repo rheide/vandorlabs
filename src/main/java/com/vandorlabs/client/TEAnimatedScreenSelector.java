@@ -733,7 +733,7 @@ public class TEAnimatedScreenSelector
         RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;
     }
     private static void drawSplitScreen(TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,BufferBuilder buffer){
-        bindAtlas();GlassSurfaceGroups.Layout layout=tile.frameAppearance.displayFit?ScreenSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
+        Tessellator.getInstance().draw();GlassSurfaceGroups.Layout layout=tile.frameAppearance.displayFit?ScreenSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
         if(layout.columns!=layout.rows)layout=new GlassSurfaceGroups.Layout(0,0,1,1);
         int n=layout.rows;boolean middle=(n&1)!=0&&layout.row==n/2,input=tile.getBlockType() instanceof BlockProgrammableInput;
         for(int half=0;half<2;half++){
@@ -742,12 +742,14 @@ public class TEAnimatedScreenSelector
             ScreenSurface.Quad part=middle?ScreenSurface.half(quad,half==0):quad;
             int choice=half==0?tile.frameAppearance.splitTop:tile.frameAppearance.splitBottom;
             if(choice<0)choice=tile.getSurfaceTexture(0)>=0?tile.getSurfaceTexture(0):ScreenHousingTextures.screenIndex(tile.getSelectedScreen()+"_static");
-            TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));
-            double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(choice))engineeringBody(uv);else if(unpairedInputChoice(choice))insetBody(uv,1D/32);
+            double[] uv=bindDisplay(tile,choice,tile.getEffectiveMode()!=TileEntityAnimatedScreenSelector.MODE_OFF,tile.getEffectiveMode()==TileEntityAnimatedScreenSelector.MODE_ANIMATED,tile.getAnimationSpeedIndex());
+            buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());if(engineeringChoice(choice))engineeringBody(uv);else if(unpairedInputChoice(choice))insetBody(uv,1D/32);
             double du=uv[3]-uv[2],dv=uv[1]-uv[0],left=input?(double)layout.column/n:(double)(n-layout.column)/n,right=input?(double)(layout.column+1)/n:(double)(n-layout.column-1)/n;
             double top=(layout.rows-layout.row-1+localTop)*2/n-half,bottom=(layout.rows-layout.row-1+localBottom)*2/n-half;
             drawScreenQuad(buffer,part,uv[2]+right*du,uv[2]+left*du,uv[0]+top*dv,uv[0]+bottom*dv,false);
+            Tessellator.getInstance().draw();
         }
+        bindAtlas();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
     }
 
     private static void drawInputSurface(TileEntityAnimatedScreenSelector tile,InputSurfaceLayout.Quad quad,double[] uv) {
@@ -1073,7 +1075,7 @@ public class TEAnimatedScreenSelector
 
     private static void normalQuad(BufferBuilder buf, TextureAtlasSprite sprite, int sign, double halfOffset,
             double[] clip, double[] a, double[] b, double[] c, double[] d) {
-        if(FrameEdgeTextures.authored(sprite))sprite=FrameEdgeTextures.edge(sprite,a,b,c,d);
+        if(FrameEdgeTextures.authored(sprite))sprite=FrameEdgeTextures.map(sprite,a,b,c,d);
         if(buf instanceof DiagonalWallQuadCapture)((DiagonalWallQuadCapture)buf).texture(sprite);
         if (!Double.isNaN(halfOffset)) {
             // Bake the half-height reflection into positions before shader

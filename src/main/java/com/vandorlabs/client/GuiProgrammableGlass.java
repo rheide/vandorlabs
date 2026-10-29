@@ -27,7 +27,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
         buttonList.add(new GuiButton(4,layout.controlsX,guiTop+78,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(tint)));
         GuiButton framedButton=new GuiButton(5,layout.controlsX,guiTop+102,ProgrammableDialogLayout.CONTROLS_WIDTH,20,framed?"Framed":"Bare");framedButton.visible=false;buttonList.add(framedButton);
         if(material>=0)buttonList.add(new GuiButton(6,layout.controlsX,guiTop+126,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout)));
-        }else{if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!framed;send();},()->framed);framePane.init(54,buttonList);}
+        }else{if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!tile.isFramed();send();},()->tile.isFramed());framePane.init(54,buttonList);}
         buttonList.add(new GuiButton(2,layout.controlsX,guiTop+ySize-26,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Done"));
     }
     void choose(int choice){if(textures!=null && textures.selected()!=choice)textures.setSelected(choice);if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}else material=choice;send();initGui();}

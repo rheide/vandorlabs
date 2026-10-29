@@ -16,13 +16,20 @@ def main():
         else:assert old==entry,entry['id']
     for border in sorted((source/'borders').glob('*/*.png')):
         company,height=border.parent.name,border.stem;image=Image.open(border).convert('RGBA');aspect=image.width/image.height
-        resized=image.resize((64,round(64/aspect)),Image.Resampling.LANCZOS);canvas=Image.new('RGBA',(64,64));canvas.paste(resized,(0,0))
+        resized=image.resize((128,round(128/aspect)),Image.Resampling.LANCZOS);canvas=Image.new('RGBA',(128,128));canvas.paste(resized,(0,0))
         stem=f'frames/company/{company}_{height}';target=textures/(stem+'.png');target.parent.mkdir(parents=True,exist_ok=True);canvas.save(target,optimize=True)
         opaque_strip(resized).save(target.with_name(target.stem+"_rail.png"),optimize=True)
         append(catalog,dict(id=f'frame_company_{company}_{height}',label=company.replace('_',' ').title()+' '+height.title(),category='Frame',menuGroup=company.replace('_',' ').title(),source=stem,frame=True,frameBorder=True,frameAspect=aspect,frameRail=stem+'_rail'))
     for metadata in sorted((source/'displays').glob('*/*/*/animation.json')):
         info=json.loads(metadata.read_text());company,height,subject=metadata.parts[-4:-1];identifier=f'company_{company}_{height}_{subject}';stem=('console_inputs/' if height=='half' else '')+identifier
-        size=(128,64 if height=='half' else 128);frames=[Image.open(metadata.parent/f'frame_{i:02d}.png').convert('RGBA').resize(size,Image.Resampling.LANCZOS) for i in range(6)]
+        size=(128,64 if height=='half' else 128)
+        originals=[Image.open(metadata.parent/f'frame_{i:02d}.png').convert('RGBA') for i in range(6)]
+        # The display layer's transparent registration canvas matches its source border,
+        # but the runtime supplies a separate physical border. Remove that registration
+        # margin once, using the union for every frame so animated edges never jitter.
+        bounds=[im.getchannel('A').point(lambda a:255 if a>=128 else 0).getbbox() for im in originals]
+        crop=(min(b[0] for b in bounds),min(b[1] for b in bounds),max(b[2] for b in bounds),max(b[3] for b in bounds))
+        frames=[im.crop(crop).resize(size,Image.Resampling.LANCZOS) for im in originals]
         target=textures/(stem+'_static.png');target.parent.mkdir(parents=True,exist_ok=True);frames[0].save(target,optimize=True)
         if height=='half':
             off=Image.new('RGBA',size,(0,0,0,0));off.putalpha(frames[0].getchannel('A'));off.save(textures/(stem+'_off.png'),optimize=True)

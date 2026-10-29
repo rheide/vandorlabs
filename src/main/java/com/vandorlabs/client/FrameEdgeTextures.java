@@ -27,18 +27,33 @@ final class FrameEdgeTextures {
         return choices[horizontal?(cy/points.length>=8?TOP:BOTTOM):(cx/points.length>=8?RIGHT:LEFT)];
     }
     static TextureAtlasSprite edge(TextureAtlasSprite sprite,int edge){Edge[] choices=EDGES.get(sprite.getIconName());return choices==null?sprite:choices[edge];}
+    /** Map the authored edge length along the rim and its thickness across the wall.
+     * Opaque square finishes retain their physical UV scale. */
+    static TextureAtlasSprite map(TextureAtlasSprite sprite,double[]... points){
+        if(!authored(sprite))return sprite;
+        TextureAtlasSprite selected=edge(sprite,points);
+        Edge cut=(Edge)selected;boolean horizontal=cut.edge==TOP||cut.edge==BOTTOM;
+        double lo=Double.POSITIVE_INFINITY,hi=-lo;
+        for(double[] p:points){double across=p[horizontal?4:3];lo=Math.min(lo,across);hi=Math.max(hi,across);}
+        for(double[] p:points){double across=p[horizontal?4:3];p[3]=horizontal?p[0]:16-p[1];p[4]=hi>lo?(across-lo)*16/(hi-lo):0;}
+        return selected;
+    }
     static BufferedImage crop(BufferedImage image,int edge){
-        if(image.getWidth()>64||image.getHeight()>64){BufferedImage nativeImage=new BufferedImage(64,64,BufferedImage.TYPE_INT_ARGB);for(int y=0;y<64;y++)for(int x=0;x<64;x++)nativeImage.setRGB(x,y,image.getRGB(x*image.getWidth()/64,y*image.getHeight()/64));image=nativeImage;}
-        int w=image.getWidth(),h=image.getHeight();boolean vertical=edge==LEFT||edge==RIGHT;int along=vertical?h:w,depth=vertical?w:h;
-        // Largest opaque rectangle within the appropriate outer third; never fall back to a hollow image.
-        int[] heights=new int[along];int bestArea=0,bx=0,by=0,bw=1,bh=1;
-        for(int y=0;y<Math.max(1,depth/3);y++){
-            for(int x=0;x<along;x++)heights[x]=((pixel(image,edge,x,y)>>>24)>=240)?heights[x]+1:0;
-            for(int x=0;x<along;x++)if(heights[x]>0){int height=heights[x];for(int r=x;r<along&&heights[r]>0;r++){height=Math.min(height,heights[r]);int area=(r-x+1)*height;if(area>bestArea){bestArea=area;bx=x;by=y-height+1;bw=r-x+1;bh=height;}}}
-        }
-        if(bestArea==0){boolean found=false;for(int y=0;y<depth&&!found;y++)for(int x=0;x<along;x++)if((pixel(image,edge,x,y)>>>24)>=240){bx=x;by=y;found=true;break;}if(!found)throw new IllegalArgumentException("Frame artwork contains no opaque material");}
+        int w=image.getWidth(),h=image.getHeight();boolean vertical=edge==LEFT||edge==RIGHT;
+        int along=vertical?h:w,depth=vertical?w:h;
+        // Keep the complete authored edge, including its end details. The former
+        // largest-rectangle search silently cropped away directional decorations.
+        int[] widths=new int[Math.max(1,along/2)];
+        for(int i=0;i<widths.length;i++){int at=along/4+i,n=0;while(n<depth/3&&(pixel(image,edge,at,n)>>>24)>=128)n++;widths[i]=n;}
+        Arrays.sort(widths);int band=Math.max(1,widths[widths.length/2]);
         BufferedImage out=new BufferedImage(64,64,BufferedImage.TYPE_INT_ARGB);
-        for(int y=0;y<64;y++)for(int x=0;x<64;x++)out.setRGB(x,y,pixel(image,edge,bx+Math.min(bw-1,x*bw/64),by+Math.min(bh-1,y*bh/64)));
+        for(int x=0;x<64;x++){
+            int at=Math.min(along-1,x*along/64),fallback=0;
+            for(int d=0;d<depth/3;d++)if((pixel(image,edge,at,d)>>>24)>=240){fallback=pixel(image,edge,at,d);break;}
+            if(fallback==0){for(int a=0;a<along&&fallback==0;a++)for(int d=0;d<depth/3;d++)if((pixel(image,edge,a,d)>>>24)>=240){fallback=pixel(image,edge,a,d);break;}}
+            if(fallback==0)throw new IllegalArgumentException("Frame artwork contains no opaque material");
+            for(int y=0;y<64;y++){int color=pixel(image,edge,at,Math.min(band-1,y*band/64));if((color>>>24)>=240)fallback=color;out.setRGB(x,y,fallback|0xff000000);}
+        }
         return out;
     }
     private static int pixel(BufferedImage image,int edge,int along,int depth){

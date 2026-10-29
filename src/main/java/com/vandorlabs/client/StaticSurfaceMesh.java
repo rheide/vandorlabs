@@ -226,14 +226,20 @@ final class StaticSurfaceMesh {
         // clipped corner arms. Close each exposed rim with opaque outer and inner walls.
         for(int q=0;q<vertices.length;q+=32)if(!paneFace(q,flat,rowAxis) && !hiddenCap(q,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis)) {
             double[] inset=capInset(q,edges,flat,rowAxis);if(inset==null)continue;
-            net.minecraft.client.renderer.texture.TextureAtlasSprite cut=interior==null?null:FrameEdgeTextures.edge(interior,new double[]{vertices[q],vertices[q+1],vertices[q+2]},new double[]{vertices[q+8],vertices[q+9],vertices[q+10]},new double[]{vertices[q+16],vertices[q+17],vertices[q+18]},new double[]{vertices[q+24],vertices[q+25],vertices[q+26]});
-            for(int side=0;side<2;side++)for(int v=0;v<4;v++) {
-                int source=q+(side==0?v:3-v)*8;float sign=side==0?1:-1;
-                result.pos(vertices[source]+(side==0?0:inset[0])+vertices[q+5]*sign*.01,
+            for(int side=0;side<2;side++) {
+                double[][] points=new double[4][5];
+                for(int v=0;v<4;v++){
+                    int source=q+(side==0?v:3-v)*8;float sign=side==0?1:-1;
+                    points[v]=new double[]{vertices[source]+(side==0?0:inset[0])+vertices[q+5]*sign*.01,
                         vertices[source+1]+(side==0?0:inset[1])+vertices[q+6]*sign*.01,
-                        vertices[source+2]+(side==0?0:inset[2])+vertices[q+7]*sign*.01)
-                        .color(255,255,255,255).tex(interior==null?sprite.getInterpolatedU(v==0 || v==3?.16:.28):cut.getInterpolatedU(pane.getUnInterpolatedU(vertices[source+3])),interior==null?sprite.getInterpolatedV(v<2?4:4.12):cut.getInterpolatedV(pane.getUnInterpolatedV(vertices[source+4])))
-                        .normal(vertices[q+5]*sign,vertices[q+6]*sign,vertices[q+7]*sign).endVertex();
+                        vertices[source+2]+(side==0?0:inset[2])+vertices[q+7]*sign*.01,
+                        interior==null?(v==0||v==3?.16:.28):pane.getUnInterpolatedU(vertices[source+3]),
+                        interior==null?(v<2?4:4.12):pane.getUnInterpolatedV(vertices[source+4])};
+                }
+                net.minecraft.client.renderer.texture.TextureAtlasSprite cut=interior==null?sprite:FrameEdgeTextures.map(interior,points);
+                for(double[] p:points)result.pos(p[0],p[1],p[2]).color(255,255,255,255)
+                    .tex(cut.getInterpolatedU(p[3]),cut.getInterpolatedV(p[4]))
+                    .normal(vertices[q+5]*(side==0?1:-1),vertices[q+6]*(side==0?1:-1),vertices[q+7]*(side==0?1:-1)).endVertex();
             }
         }
         return result.finish();

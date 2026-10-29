@@ -56,7 +56,7 @@ final class Artwork27RuntimeChecks {
         synchronousDone=true;return false;
     }
     private static void turntableBounds(Minecraft mc)throws Exception{
-        com.vandorlabs.tiles.TileEntityTurntableController tile=new com.vandorlabs.tiles.TileEntityTurntableController();tile.setWorld(mc.world);tile.setPos(BlockPos.ORIGIN);GuiTurntable gui=new GuiTurntable(new com.vandorlabs.container.ContainerTurntable(tile));GuiScreen previous=mc.currentScreen;net.minecraft.inventory.Container container=mc.player.openContainer;
+        com.vandorlabs.tiles.TileEntityTurntableController tile=new com.vandorlabs.tiles.TileEntityTurntableController();tile.setWorld(mc.world);tile.setPos(BlockPos.ORIGIN);GuiTurntable gui=new GuiTurntable(new com.vandorlabs.container.ContainerTurntable(tile));gui.inventorySlots.windowId=-96;GuiScreen previous=mc.currentScreen;net.minecraft.inventory.Container container=mc.player.openContainer;
         try{mc.displayGuiScreen(gui);for(int[] size:new int[][]{{320,240},{460,340}}){gui.setWorldAndResolution(mc,size[0],size[1]);for(int page:new int[]{90,91}){gui.actionPerformed(new GuiButton(page,0,0,"Page"));checkButtons(gui);}}}finally{mc.displayGuiScreen(previous);mc.player.openContainer=container;}
         System.out.println("[vandorlabs][reprolab] turntable-tabs-bounds PASS compact320 regular460 both-pages");
     }

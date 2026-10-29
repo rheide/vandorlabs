@@ -74,3 +74,9 @@ shortened parked assembly in Taxi before dismantling it. See the
 [landing-gear guide](../modular-landing-gear.md) for supported layouts.
 
 Native paintings supported entirely by the vehicle retain their artwork and facing through Taxi/Hover movement, rotation and parking. They return as ordinary paintings when parked.
+
+Company display artwork fills the selected frame opening for single screens and
+square fitted groups. Frame controls include a Framed/Bare button that remembers
+the chosen finish. Top and Bottom split displays retain independent artwork and
+animation playback. Authored frame interiors use their corresponding left, top,
+right and bottom border material instead of stretching the complete hollow image.

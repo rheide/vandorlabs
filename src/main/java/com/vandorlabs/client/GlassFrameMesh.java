@@ -18,8 +18,7 @@ final class GlassFrameMesh {
         mesh=b.finish();CACHE.put(key,mesh);return mesh;
     }
     private static void box(StaticSurfaceMesh.Capture b,Key k,double x,double y,double r,double t){
-        boolean original=k.front!=null&&k.front.getIconName().endsWith("/double_frame_metal");
-        double u0=original?x:0,u1=original?r:16,v0=original?16-t:0,v1=original?16-y:16;
+        double u0=x,u1=r,v0=16-t,v1=16-y;
         if(k.front!=null)WorldSurface.quad(b,k.front,false,new double[]{x,y,6,u0,v1},new double[]{x,t,6,u0,v0},new double[]{r,t,6,u1,v0},new double[]{r,y,6,u1,v1});
         if(k.front!=null)WorldSurface.quad(b,k.front,true,new double[]{x,y,10,u0,v1},new double[]{x,t,10,u0,v0},new double[]{r,t,10,u1,v0},new double[]{r,y,10,u1,v1});
         WorldSurface.quad(b,k.inner,false,new double[]{x,y,6,x,0},new double[]{r,y,6,r,0},new double[]{r,y,10,r,4},new double[]{x,y,10,x,4});

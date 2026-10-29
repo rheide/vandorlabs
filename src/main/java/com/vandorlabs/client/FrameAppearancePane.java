@@ -12,6 +12,7 @@ import java.util.function.BooleanSupplier;
 /** Inline frame settings; the owning dialog retains its tabs, container and Done action. */
 public final class FrameAppearancePane {
     private final GuiContainer host;private final TileEntity owner;private final FrameAppearance appearance;private final Runnable bareToggle;private final BooleanSupplier framed;
+    private int rememberedFront=-1;
     private boolean displayPage;private HousingTextureList textures;private int page,contentTop;private List<GuiButton> buttons;
     public FrameAppearancePane(GuiContainer host,TileEntity owner){this(host,owner,null,null);}
     public FrameAppearancePane(GuiContainer host,TileEntity owner,Runnable bareToggle,BooleanSupplier framed){this.host=host;this.owner=owner;this.bareToggle=bareToggle;this.framed=framed;appearance=new FrameAppearance();net.minecraft.nbt.NBTTagCompound draft=new net.minecraft.nbt.NBTTagCompound();MessageFrameAppearance.appearance(owner).write(draft);appearance.read(draft);if(appearance.splitTop<0)appearance.splitTop=defaultScreen();if(appearance.splitBottom<0)appearance.splitBottom=defaultScreen();if(BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType()))appearance.artworkVersion=1;if(!front())page=1;}
@@ -21,18 +22,18 @@ public final class FrameAppearancePane {
     }
     private boolean front(){return !(owner.getBlockType() instanceof BlockProgrammableWall)||owner.getBlockType() instanceof BlockProgrammableDiagonalGlass;}
     private boolean interior(){return owner instanceof TileEntityProgrammableGlass||owner instanceof TileEntitySpaceDoor||owner.getBlockType() instanceof BlockProgrammableWall;}
-    private boolean display(){return FrameAppearance.displayBlock(owner.getBlockType());}
+    private boolean display(){return BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType());}
     public void init(int relativeContentTop,List<GuiButton> hostButtons){displayPage=false;if(page>1)page=0;contentTop=relativeContentTop;buttons=hostButtons;buttons.removeIf(b->b.id>=3000&&b.id<=3008);int left=host.getGuiLeft(),top=host.getGuiTop(),width=host.getXSize(),height=host.getYSize(),controls=left+width-166;
         int count=(front()?1:0)+(interior()?1:0),index=0,span=(width-24)/count;
         if(count>1){if(front())tab(3000,index++,span,"Front");if(interior())tab(3001,index++,span,"Interior");}
         for(GuiButton b:buttons)if(b.id>=3000&&b.id<=3006)b.enabled=b.id!=(3000+(page<2?page:page+3));
-        boolean tiledFrame=display()||owner instanceof TileEntityProgrammableGlass,bare=bareToggle!=null&&framed!=null;
+        boolean tiledFrame=display()||owner instanceof TileEntityProgrammableGlass,bare=display()||bareToggle!=null&&framed!=null;
         boolean anyControls=tiledFrame||display()||bare;int listWidth=anyControls?controls-(left+12)-19:width-24,body=top+contentTop+(count>1?24:0);
         textures=(page<2?HousingTextureList.forFrames(left+12,body,listWidth,page==0?appearance.front:appearance.interior,8,BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType())):HousingTextureList.forCategory("Screens",left+12,body,listWidth,page==2?appearance.splitTop:appearance.splitBottom,8)).visibleRows(Math.max(2,(height-contentTop-(anyControls?34:56))/HousingTextureList.ROW_HEIGHT)).keepView(textures);
         int controlY=body;
         if(tiledFrame){buttons.add(new GuiButton(3003,controls,controlY,154,20,"Texture: "+(appearance.tile?"Tile":"Fit")));controlY+=24;}
 
-        if(bare)buttons.add(new GuiButton(3008,controls,controlY,154,20,framed.getAsBoolean()?"Framed":"Bare"));
+        if(bare)buttons.add(new GuiButton(3008,controls,controlY,154,20,(display()?appearance.front>=0:framed.getAsBoolean())?"Framed":"Bare"));
 
     }
     public boolean splitDisplay(){return appearance.split;}
@@ -54,7 +55,7 @@ public final class FrameAppearancePane {
     private void tab(int id,int index,int span,String label){buttons.add(new DialogTabButton(id,host.getGuiLeft()+12+index*span,host.getGuiTop()+contentTop,span-2,18,label));}
     public HousingTextureList picker(){return textures;}
     public void draw(int mouseX,int mouseY){if(textures!=null)textures.draw(net.minecraft.client.Minecraft.getMinecraft().fontRenderer,mouseX,mouseY);}
-    public boolean action(GuiButton button){int id=button.id-3000;if(id<0||id>8||id==2)return false;if(id<2||id==5||id==6){page=id<2?id:id-3;refresh();return true;}if(id==3)appearance.tile=!appearance.tile;else if(id==4)appearance.displayFit=!appearance.displayFit;else if(id==7)appearance.split=!appearance.split;else if(id==8&&bareToggle!=null)bareToggle.run();else return false;if(id!=8)send();refresh();return true;}
+    public boolean action(GuiButton button){int id=button.id-3000;if(id<0||id>8||id==2)return false;if(id<2||id==5||id==6){page=id<2?id:id-3;refresh();return true;}if(id==3)appearance.tile=!appearance.tile;else if(id==4)appearance.displayFit=!appearance.displayFit;else if(id==7)appearance.split=!appearance.split;else if(id==8){if(display()){if(appearance.front>=0){rememberedFront=appearance.front;appearance.front=-1;}else appearance.front=rememberedFront>=0?rememberedFront:ScreenHousingTextures.screenIndex("frames/frames-screen-full/frame_bolted_1254");}else if(bareToggle!=null)bareToggle.run();else return false;}else return false;if(id!=8||display())send();refresh();return true;}
     public boolean click(int x,int y,int button)throws java.io.IOException{if(GuiOptionCycle.rightClick(net.minecraft.client.Minecraft.getMinecraft(),buttons,x,y,button,this::action,3003,3004,3007,3008))return true;if(textures!=null&&textures.click(x,y,button)){if(textures.picked()){if(page==0)appearance.front=textures.selected();else if(page==1)appearance.interior=textures.selected();else if(page==2)appearance.splitTop=textures.selected();else appearance.splitBottom=textures.selected();send();}return true;}return false;}
     public boolean wheel(int x,int y,int delta){return textures!=null&&textures.wheel(x,y,delta);}
     public boolean drag(int y){return textures!=null&&textures.drag(y);}
