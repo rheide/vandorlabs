@@ -20,7 +20,7 @@ public final class GearPushLiveChecks {
         if(ticks<80)return false;
         return mc.getIntegratedServer().callFromMainThread(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
-            if(fixture==8){System.out.println("[vandorlabs][reprolab] arm-push PASS regular-Large four-horizontal-faces retracted-config incremental-gap no-pull reload real-asynchronous-journals");return true;}
+            if(fixture==8){System.out.println("[vandorlabs][reprolab] arm-push PASS regular-Large four-horizontal-faces retracted-config incremental-gap return-original leave-contacted reload real-asynchronous-journals");return true;}
             EnumFacing face=EnumFacing.HORIZONTALS[fixture%4];GearBlock block=fixture<4?GearRegistry.GEAR_EXTENDER:GearRegistry.LARGE_GEAR_EXTENDER;
             GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);
             if(stage==0){
@@ -46,7 +46,7 @@ public final class GearPushLiveChecks {
                 arm.target(false);stage=3;return false;
             }
             if(stage==3&&arm.progress()==0&&!ArmTransactions.locked(world,ROOT)){
-                require(world.getBlockState(ROOT.offset(face,4)).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(ROOT.offset(face,5).up()).getBlock()==Blocks.IRON_BLOCK,"retraction does not pull pushed blocks "+arm.error());
+                require(world.getBlockState(ROOT.offset(face,1)).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(ROOT.offset(face,1).up()).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(ROOT.offset(face,5).up()).getBlock()==Blocks.IRON_BLOCK,"retraction returns original Surface layer and leaves contacted blocks "+arm.error());
                 require(world.getBlockState(ROOT.offset(face.getOpposite())).getBlock()==Blocks.STONE,"mounting support remains in place");fixture++;stage=0;ticks=80;
             }
             return false;
