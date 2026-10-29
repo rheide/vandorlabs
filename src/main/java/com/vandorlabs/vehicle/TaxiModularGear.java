@@ -8,7 +8,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.*;
 
-/** Matched vertical wheel arms change chassis height while keeping their physical feet anchored. */
+/** Matched vertical wheel/track arms change chassis height while keeping their physical feet anchored. */
 final class TaxiModularGear {
     private TaxiModularGear(){}
     static void requireParkable(EntityGroundVehicle craft){for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity){int phase=((GearTileEntity)tile).taxiPhase();if(phase>=0&&phase!=1)throw new IllegalArgumentException("Wait for the Taxi arm height adjustment to settle before parking");}}
@@ -18,7 +18,7 @@ final class TaxiModularGear {
         for(TileEntity tile:craft.view.tiles.values())if(craft.structure.isActive(tile.getPos())){
             if(tile instanceof com.vandorlabs.tiles.TileEntityLandingGear&&((com.vandorlabs.tiles.TileEntityLandingGear)tile).isRoot())return Collections.emptyList();
             if(tile instanceof GearTileEntity){GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()&&gear.isLandingAssembly()){
-                if(!gear.isOperational()||gear.mode()!=GearMotion.Mode.EXTEND||gear.mountDirection()!=EnumFacing.DOWN||gear.columns().size()!=1||gear.assembly().kind()!=com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL)return Collections.emptyList();
+                if(!gear.isOperational()||gear.mode()!=GearMotion.Mode.EXTEND||gear.mountDirection()!=EnumFacing.DOWN||gear.columns().size()!=1||(gear.assembly().kind()!=com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL&&gear.assembly().kind()!=com.vandorlabs.gear.core.GearTopology.FootKind.TRACK))return Collections.emptyList();
                 result.add(gear);
             }}
         }
@@ -86,7 +86,7 @@ final class TaxiModularGear {
     static boolean tick(EntityGroundVehicle craft){
         if(craft.hover||craft.world.isRemote)return false;List<GearTileEntity> roots=roots(craft);if(roots.size()<3){
             for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())){
-                GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()&&gear.isLandingAssembly()){gear.input();if(!gear.target())error(craft,gear,"Taxi height adjustment requires at least three matching vertical wheel arms");}
+                GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()&&gear.isLandingAssembly()){gear.input();if(!gear.target())error(craft,gear,"Taxi height adjustment requires at least three matching vertical wheel or track arms");}
             }
             return false;
         }
@@ -97,8 +97,8 @@ final class TaxiModularGear {
         if(!craft.stopped()||!integral(craft.rotationYaw/90D)||!integral(craft.posX)||!integral(craft.posZ)){for(GearTileEntity gear:roots)error(craft,gear,"Stop and align the craft before changing Taxi arm height");return true;}
         int amount=retained?first.getInteger("Amount"):7;double level=retained?first.getDouble("Level"):0;
         try{
-            for(GearTileEntity gear:roots){NBTTagCompound state=gear.taxiState();if(retained&&(state==null||state.getInteger("Amount")!=amount||Math.abs(state.getDouble("Level")-level)>1e-6||state.getInteger("Phase")!=first.getInteger("Phase")))throw new IllegalArgumentException("Taxi wheel arms must share one height adjustment");if(!retained){if(gear.progress()!=1||state!=null)throw new IllegalArgumentException("Return every wheel arm to rest first");amount=Math.min(amount,gear.assembly().columnHeight()-1);}}
-            if(amount<1)throw new IllegalArgumentException("Wheel arms already have their shortest native height");
+            for(GearTileEntity gear:roots){NBTTagCompound state=gear.taxiState();if(retained&&(state==null||state.getInteger("Amount")!=amount||Math.abs(state.getDouble("Level")-level)>1e-6||state.getInteger("Phase")!=first.getInteger("Phase")))throw new IllegalArgumentException("Taxi landing arms must share one height adjustment");if(!retained){if(gear.progress()!=1||state!=null)throw new IllegalArgumentException("Return every landing arm to rest first");amount=Math.min(amount,gear.assembly().columnHeight()-1);}}
+            if(amount<1)throw new IllegalArgumentException("Landing arms already have their shortest native height");
             if(!retained){if(!integral(craft.posY))throw new IllegalArgumentException("Taxi height must start on the block grid");Plan endpoint=endpoint(craft,roots,false,amount);validate(craft,endpoint,craft.posY-amount-endpoint.shift,true);for(GearTileEntity gear:roots){gear.target(false);gear.taxiState(state(gear,amount));}expand=false;first=roots.get(0).taxiState();retained=true;}
             if(first.getInteger("Phase")==1){
                 if(!expand)return false;

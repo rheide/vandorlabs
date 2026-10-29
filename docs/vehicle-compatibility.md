@@ -44,6 +44,14 @@ Small and Medium Wheels occupy one block. Large Wheels reserve a 2Ã—2 vertica
 
 Top slabs have an empty lower half. Vehicle discovery does not connect a top slab to a floor beneath that empty space. Slabs that physically touch another block still connect normally.
 
+## Taxi landing height
+
+In Taxi mode, three or more independent downward Extender Arms carrying wheels or tracks can lower the chassis while their feet stay on the ground. Stop and align the craft to the block grid before retracting. Each arm must have one vertical column, share the same height adjustment, and leave a clear, grid-aligned native parking footprint. Connected multi-block track footprints are preserved. Removed arm sections remain in the vehicle snapshot until extending restores them; shortened vehicles can be saved, parked and recaptured. The cockpit Gear control uses the configured redstone channel for both directions.
+
+## Carried paintings
+
+Vanilla paintings supported entirely by a craft are carried through Taxi conversion and restored when parking. Their saved entity data shares the vehicle ownership journal. Geometry preparation uses the original block snapshot, while painting ownership data is validated separately; changing a source tile or painting during queued preparation refuses conversion and retains the native source.
+
 ## Carried chest inventories
 
 Right-click a vanilla chest while the craft is in Taxi or Hover mode to open the ordinary chest dialog. Double chests provide the normal 54 slots. Named inventories and vanilla chest locks are preserved. Pickup, insertion and shift-click update the vehicle snapshot, so the contents survive saving and parking. Access follows the actual chest position, and the window closes if the player moves out of reach, the chest is replaced, or an ownership transfer starts.

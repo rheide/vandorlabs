@@ -211,6 +211,9 @@ public final class VehicleTransfer {
         for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&MekanismTankCompat.reactorGlass(world.getTileEntity(origin.add(cell.pos))))MekanismTankCompat.required(world,origin.add(cell.pos));
         if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
         if(!structure.hasDedicatedController())throw new IllegalArgumentException("Vehicle Controller missing");
+        // Geometry belongs to the native block snapshot used by the player preflight.
+        // Captured paintings add controller data, but do not change block collision.
+        VehicleStructure geometrySource=structure;
         List<net.minecraft.entity.item.EntityPainting> paintings=VehiclePaintings.attached(world,structure,origin);
         structure=VehiclePaintings.capture(structure,origin,paintings);
         VehicleWorld validationView=new VehicleWorld(world,structure);
@@ -226,7 +229,7 @@ public final class VehicleTransfer {
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         Work work=ACTIVE.get();if(work!=null)VehiclePaintings.hold(work.paintings,paintings);EntityGroundVehicle entity;
         if(work!=null&&work.assembled!=null&&!VehiclePaintings.entries(work.assembled.structure).equals(VehiclePaintings.entries(structure)))throw new IllegalArgumentException("Paintings changed while preparing the vehicle; source retained, please retry");
-        if(work!=null){if(work.assembled==null){VehicleCollision prepared=geometry(world,structure);work.assembled=new EntityGroundVehicle(world);work.assembled.install(structure,prepared);}entity=work.assembled;}
+        if(work!=null){if(work.assembled==null){VehicleCollision prepared=geometry(world,geometrySource);work.assembled=new EntityGroundVehicle(world);work.assembled.install(structure,prepared);}entity=work.assembled;}
         else{entity=new EntityGroundVehicle(world);entity.install(structure);}
         entity.recordCouplingActor(actor);entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
         if(forceHover && !entity.setHover(true))throw new IllegalArgumentException("Unable to enter Hover for non-wheeled landing gear.");
