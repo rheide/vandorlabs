@@ -76,6 +76,7 @@ final class VehicleDynamicLights {
         }
     }
     static void runChecks(Minecraft mc)throws Exception{
+        VehicleCombinedLightChecks.runClient(mc);
         Class<?> lighting;
         try{lighting=Class.forName("net.optifine.DynamicLights");}
         catch(ClassNotFoundException absent){System.out.println("[vandorlabs][reprolab] vehicle-dynamic-light SKIP OptiFine absent; snapshot lighting checked separately");return;}

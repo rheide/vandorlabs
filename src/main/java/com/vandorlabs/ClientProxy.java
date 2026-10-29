@@ -20,6 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return world.isRemote?world.getCombinedLight(pos,minimum):super.vehicleCombinedLight(world,pos,minimum);}
     @Override public void vehicleBuildingVisuals(com.vandorlabs.vehicle.VehicleWorld world){com.vandorlabs.client.ForeignBuildingVisuals.prepare(world);}
     @Override public double cockpitMotion(com.vandorlabs.tiles.TileEntityCockpit tile,boolean screens,float partial){return com.vandorlabs.client.CockpitVisualMotion.sample(tile,screens,partial);}
     @Override public void gearMotion(com.vandorlabs.network.MessageGearMotion packet){com.vandorlabs.client.GearMotionClient.receive(packet);}

@@ -9,6 +9,24 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class CommonProxy {
+    /** Physical server and integrated-server light reads use only shared APIs. */
+    public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return sharedVehicleCombinedLight(world,pos,minimum);}
+    public static int sharedVehicleCombinedLight(World world,BlockPos pos,int minimum){
+        int sky=0,block=0;boolean skylight=world.provider.hasSkyLight();
+        if(world.isBlockLoaded(pos)){
+            if(world.getBlockState(pos).useNeighborBrightness()){
+                for(EnumFacing face:EnumFacing.VALUES)if(face!=EnumFacing.DOWN){
+                    BlockPos neighbor=pos.offset(face);if(!world.isBlockLoaded(neighbor))continue;
+                    if(skylight)sky=Math.max(sky,world.getLightFor(net.minecraft.world.EnumSkyBlock.SKY,neighbor));
+                    block=Math.max(block,world.getLightFor(net.minecraft.world.EnumSkyBlock.BLOCK,neighbor));
+                }
+            }else{
+                if(skylight)sky=world.getLightFor(net.minecraft.world.EnumSkyBlock.SKY,pos);
+                block=world.getLightFor(net.minecraft.world.EnumSkyBlock.BLOCK,pos);
+            }
+        }
+        return (sky<<20)|(Math.max(block,minimum)<<4);
+    }
     public void vehicleBuildingVisuals(com.vandorlabs.vehicle.VehicleWorld world){}
     public double cockpitMotion(com.vandorlabs.tiles.TileEntityCockpit tile,boolean screens,float partial){return (screens?tile.screenLift:tile.seatSlide).sample(tile.getWorld().getTotalWorldTime()+partial);}
     public void gearMotion(com.vandorlabs.network.MessageGearMotion packet) { }

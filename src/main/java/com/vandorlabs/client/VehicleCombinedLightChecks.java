@@ -12,6 +12,27 @@ import net.minecraft.world.*;
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 final class VehicleCombinedLightChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Vehicle combined light: "+why);}
+    static void runClient(net.minecraft.client.Minecraft mc)throws Exception{
+        EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);VehicleStructure source=VehicleStructure.display(Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null),new VehicleStructure.Cell(new BlockPos(4,0,4),Blocks.STONE.getDefaultState(),null)));
+        craft.install(source);craft.setPosition(Math.floor(mc.player.posX),Math.floor(mc.player.posY)+2,Math.floor(mc.player.posZ));
+        VehicleDynamicLights.Probe probe=null;java.lang.reflect.Method update=null;boolean dynamic=false,contribution=false;
+        try{
+            try{Class<?> config=Class.forName("Config");dynamic=(Boolean)config.getMethod("isDynamicLights").invoke(null);if(dynamic)update=Class.forName("net.optifine.DynamicLights").getMethod("update",net.minecraft.client.renderer.RenderGlobal.class);}catch(ClassNotFoundException absent){dynamic=false;}
+            for(int yaw:new int[]{0,45,90}){
+                craft.rotationYaw=yaw;BlockPos physical=new BlockPos(craft.toWorld(new Vec3d(.5,.5,.5)));require(mc.world.isBlockLoaded(physical),"client light comparison needs a loaded parent");
+                for(int minimum:new int[]{0,9,15})require(craft.view.getCombinedLight(BlockPos.ORIGIN,minimum)==mc.world.getCombinedLight(physical,minimum),"client combined-light bridge yaw="+yaw+" minimum="+minimum);
+                if(dynamic){
+                    int ordinary=com.vandorlabs.CommonProxy.sharedVehicleCombinedLight(mc.world,physical,0);
+                    probe=new VehicleDynamicLights.Probe(mc.world,15);probe.setPosition(physical.getX()+.5,physical.getY()+.5,physical.getZ()+.5);mc.world.addEntityToWorld(probe.getEntityId(),probe);
+                    Thread.sleep(60);update.invoke(null,mc.renderGlobal);
+                    int golden=mc.world.getCombinedLight(physical,0);require(craft.view.getCombinedLight(BlockPos.ORIGIN,0)==golden,"OptiFine dynamic source survives carried light bridge yaw="+yaw);
+                    if((ordinary&65535)<224){require((golden&65535)>(ordinary&65535),"enabled OptiFine probe did not contribute light yaw="+yaw);contribution=true;}
+                    mc.world.removeEntityFromWorld(probe.getEntityId());probe=null;Thread.sleep(60);update.invoke(null,mc.renderGlobal);
+                }
+            }
+        }finally{if(probe!=null){mc.world.removeEntityFromWorld(probe.getEntityId());if(update!=null){Thread.sleep(60);update.invoke(null,mc.renderGlobal);}}craft.signals.close();craft.setDead();}
+        System.out.println("[vandorlabs][reprolab] vehicle-combined-light-client PASS yaw0-45-90 remote-parent-golden OptiFine-enabled="+dynamic+" dynamic-contribution="+contribution);
+    }
     static void run(WorldServer parent){
         EntityGroundVehicle craft=new EntityGroundVehicle(parent);
         VehicleStructure source=VehicleStructure.display(Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null),new VehicleStructure.Cell(new BlockPos(4,0,4),Blocks.STONE.getDefaultState(),null)));

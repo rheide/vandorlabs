@@ -229,24 +229,12 @@ public final class VehicleWorld extends World {
         return parent.isBlockLoaded(absolute)?read.apply(absolute):fallback;
     }
     @Override public int getCombinedLight(BlockPos p,int minimum){
-        // Sample the physical cell once. Its slab/neighbor-brightness rule
-        // uses world-cardinal neighbors, even at a fractional vehicle yaw.
-        BlockPos absolute=physical(p);int sky=0,block=0;
-        boolean skylight=parent.provider.hasSkyLight();
-        if(parent.isBlockLoaded(absolute)){
-            if(parent.getBlockState(absolute).useNeighborBrightness()){
-                for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.VALUES)if(face!=net.minecraft.util.EnumFacing.DOWN){
-                    BlockPos neighbor=absolute.offset(face);
-                    if(!parent.isBlockLoaded(neighbor))continue;
-                    if(skylight)sky=Math.max(sky,parent.getLightFor(EnumSkyBlock.SKY,neighbor));
-                    block=Math.max(block,parent.getLightFor(EnumSkyBlock.BLOCK,neighbor));
-                }
-            }else{
-                if(skylight)sky=parent.getLightFor(EnumSkyBlock.SKY,absolute);
-                block=parent.getLightFor(EnumSkyBlock.BLOCK,absolute);
-            }
-        }
-        return (sky<<20)|(Math.max(Math.max(block,minimum),localLight.at(p))<<4);
+        BlockPos absolute=physical(p);
+        int combined=0;
+        if(parent.isBlockLoaded(absolute))combined=com.vandorlabs.VandorLabs.proxy==null
+                ?com.vandorlabs.CommonProxy.sharedVehicleCombinedLight(parent,absolute,minimum)
+                :com.vandorlabs.VandorLabs.proxy.vehicleCombinedLight(parent,absolute,minimum);
+        return (combined&0xFFFF0000)|Math.max(combined&65535,Math.max(minimum,localLight.at(p))<<4);
     }
     @Override public int getLightFor(EnumSkyBlock type,BlockPos p){int parentLight=loadedParent(p,0,absolute->parent.getLightFor(type,absolute));return type==EnumSkyBlock.BLOCK?Math.max(parentLight,localLight.at(p)):parentLight;}
     @Override public net.minecraft.world.biome.Biome getBiome(BlockPos p){return parent.getBiome(physical(p));}
