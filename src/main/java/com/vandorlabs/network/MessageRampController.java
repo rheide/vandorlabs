@@ -104,8 +104,13 @@ public class MessageRampController implements IMessage {
         escalator=0;
         if(buf.readableBytes()>=8 && buf.getInt(buf.readerIndex())==0x45534341){buf.readInt();escalator=buf.readInt();}
         moat=false;if(buf.readableBytes()>=5&&buf.getInt(buf.readerIndex())==0x4D4F4154){buf.readInt();moat=buf.readBoolean();}
-        channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
-        analogDeployment=buf.readableBytes()>=5&&buf.readInt()==0x414E4C47&&buf.readBoolean();
+        channels=ChannelData.readField(buf,channel);
+        invalidChannels=channels==null;
+        analogDeployment=false;
+        if(buf.isReadable()){
+            if(buf.readableBytes()!=5||buf.readInt()!=0x414E4C47)invalidChannels=true;
+            else analogDeployment=buf.readBoolean();
+        }
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong()); buf.writeInt(drop); buf.writeInt(segments);

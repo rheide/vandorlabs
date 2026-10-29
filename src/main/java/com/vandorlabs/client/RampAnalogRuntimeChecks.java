@@ -28,6 +28,14 @@ final class RampAnalogRuntimeChecks {
         void level(int next){level=next;RedstoneChannels.inputChanged(this);}
     }
     static void run(World world,EntityPlayerMP actor){
+        // Exercise the actual dialog wire format, including both trailing extensions.
+        for(boolean analog:new boolean[]{false,true}){
+            com.vandorlabs.network.MessageRampController sent=com.vandorlabs.network.MessageRampController.halfOffsets(BlockPos.ORIGIN,-3,7,16,true,false,false,EnumFacing.SOUTH,8190,0,false,1,true).withChannels(ChannelList.of(8190,8191)).withAnalogDeployment(analog);
+            io.netty.buffer.ByteBuf wire=io.netty.buffer.Unpooled.buffer();
+            try{sent.toBytes(wire);com.vandorlabs.network.MessageRampController received=new com.vandorlabs.network.MessageRampController();received.fromBytes(wire);require(ChannelList.of(8190,8191).equals(received.getRedstoneChannels()),"dialog packet retains channels with analog extension");
+                io.netty.buffer.ByteBuf encoded=io.netty.buffer.Unpooled.buffer();try{received.toBytes(encoded);wire.readerIndex(0);require(wire.equals(encoded),"dialog offsets and analog flag survive packet round trip");}finally{encoded.release();}
+            }finally{wire.release();}
+        }
         BlockPos root=new BlockPos(706,178,296);double x=actor.posX,y=actor.posY,z=actor.posZ;
         Source source=new Source();source.setWorld(world);source.setPos(root.west(4));
         TileEntityRampController controller=null;

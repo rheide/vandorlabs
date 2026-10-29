@@ -48,7 +48,7 @@ push mode; they leave pushed blocks in place when returning. Rotating Arms offer
 a 15-degree angle slider and retain collision checks against real obstructions.
 
 [Ramp Controllers](../landing-ramps.md) can deploy proportionally to redstone
-levels 0–15. Stationary full-height attachment faces accept doors. Permitted
+levels 0–15. Analog mode and start/end offsets persist together when editing channel lists. Stationary full-height attachment faces accept doors. Permitted
 interaction or configuration authorizes later automation, including recovery of
 an existing ramp; the Configurizer uses the same authorization path.
 [Hexagonal Tanks](../multiblocks/hexagonal-tank/README.md) join into complete

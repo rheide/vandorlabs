@@ -23,8 +23,14 @@ public final class ChannelData {
     /** Optional packet extension; null rejects malformed lists without partial application. */
     public static ChannelList read(ByteBuf buffer,int legacy) {
         if(!buffer.isReadable())return legacy<0?null:ChannelList.of(legacy);
+        ChannelList result=readField(buffer,legacy);
+        return buffer.isReadable()?null:result;
+    }
+    /** Decode one bounded list, leaving subsequent versioned packet fields untouched. */
+    public static ChannelList readField(ByteBuf buffer,int legacy) {
+        if(!buffer.isReadable())return legacy<0?null:ChannelList.of(legacy);
         int count=buffer.readUnsignedByte();
-        if(count>ChannelList.MAX_CHANNELS || buffer.readableBytes()!=count*4)return null;
+        if(count>ChannelList.MAX_CHANNELS || buffer.readableBytes()<count*4)return null;
         int[] channels=new int[count];for(int i=0;i<count;i++)channels[i]=buffer.readInt();
         try{return ChannelList.of(channels);}catch(IllegalArgumentException malformed){return null;}
     }
