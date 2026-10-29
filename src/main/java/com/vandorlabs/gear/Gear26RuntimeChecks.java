@@ -25,20 +25,22 @@ public final class Gear26RuntimeChecks {
         for(EnumFacing face:EnumFacing.HORIZONTALS){
             clear(world,root);world.setBlockState(root.offset(face.getOpposite()),Blocks.STONE.getDefaultState(),2);
             GearTileEntity tile=arm(world,actor,root,GearRegistry.LARGE_GEAR_EXTENDER,face,4);tile.operator(actor);
-            BlockPos home=root.offset(face),extended=root.offset(face,4),contact=root.offset(face,3),target=root.offset(face,5);
-            world.setBlockState(extended,Blocks.STONE.getDefaultState(),2);tile.target(false);
+            BlockPos home=root.offset(face),extended=root.offset(face,4),contact=root.offset(face,3).up(),target=root.offset(face,5).up();
+            net.minecraft.block.Block surface=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface");
+            world.setBlockState(extended,surface.getDefaultState(),2);world.setBlockState(extended.up(),surface.getDefaultState(),2);tile.target(false);
             for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
-            require(tile.progress()==0&&world.getBlockState(home).getBlock()==Blocks.STONE,"original attachment retracts before enabling pushing "+face+" "+tile.error());
+            require(tile.progress()==0&&world.getBlockState(home).getBlock()==surface&&world.getBlockState(home.up()).getBlock()==surface,"original attachment retracts before enabling pushing "+face+" "+tile.error());
             NBTTagCompound settings=tile.settings();settings.setBoolean("PushBlocks",true);tile.configure(settings);
+            require(!tile.members().contains(contact)&&!tile.members().contains(target)&&world.isAirBlock(contact)&&world.isAirBlock(target),"push obstacles are outside every reserved arm section "+face);
             world.setBlockState(contact,Blocks.IRON_BLOCK.getDefaultState(),2);world.setBlockState(target,Blocks.BEDROCK.getDefaultState(),2);tile.target(true);
-            for(int tick=0;tick<60;tick++)tile.update();
-            require(tile.progress()==0&&world.getBlockState(home).getBlock()==Blocks.STONE&&world.getBlockState(contact).getBlock()==Blocks.IRON_BLOCK&&world.getBlockState(target).getBlock()==Blocks.BEDROCK,"complete blocked push path retains both native sources "+face+" "+tile.error());
+            for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
+            require(tile.progress()==0&&world.getBlockState(home).getBlock()==surface&&world.getBlockState(home.up()).getBlock()==surface&&world.getBlockState(contact).getBlock()==Blocks.IRON_BLOCK&&world.getBlockState(target).getBlock()==Blocks.BEDROCK,"complete blocked push path retains both native sources "+face+" "+tile.error());
             world.setBlockToAir(target);tile.target(true);
             for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
-            require(tile.progress()==1&&world.getBlockState(extended).getBlock()==Blocks.STONE&&world.getBlockState(target).getBlock()==Blocks.IRON_BLOCK,"outward stroke pushes newly contacted block beyond gap "+face+" "+tile.error());
+            require(tile.progress()==1&&world.getBlockState(extended).getBlock()==surface&&world.getBlockState(extended.up()).getBlock()==surface&&world.getBlockState(target).getBlock()==Blocks.IRON_BLOCK,"outward stroke pushes newly contacted block beyond gap "+face+" "+tile.error());
             NBTTagCompound save=tile.writeToNBT(new NBTTagCompound());require(((GearTileEntity)TileEntity.create(world,save)).pushBlocks(),"push option survives old-compatible NBT");
             tile.target(false);for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
-            require(tile.progress()==0&&world.getBlockState(home).getBlock()==Blocks.STONE&&world.isAirBlock(extended)&&world.getBlockState(target).getBlock()==Blocks.IRON_BLOCK,"retraction returns original attachment and leaves newly pushed block forward "+face+" "+tile.error());
+            require(tile.progress()==0&&world.getBlockState(home).getBlock()==surface&&world.getBlockState(home.up()).getBlock()==surface&&world.isAirBlock(extended)&&world.isAirBlock(extended.up())&&world.getBlockState(target).getBlock()==Blocks.IRON_BLOCK,"retraction returns original attachment and leaves newly pushed block forward "+face+" "+tile.error());
         }
     }
     private static void rotatingCeilingContact(WorldServer world,EntityPlayerMP actor,BlockPos root){
