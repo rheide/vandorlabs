@@ -12,8 +12,12 @@ import net.minecraft.world.*;
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 final class VehicleCombinedLightChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Vehicle combined light: "+why);}
+    private static VehicleStructure lightingStructure(){
+        com.vandorlabs.tiles.TileEntityPilotSeat seat=new com.vandorlabs.tiles.TileEntityPilotSeat();seat.setPos(BlockPos.ORIGIN);
+        return new VehicleStructure(Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,com.vandorlabs.blocks.ModBlocks.PILOT_SEAT.getDefaultState(),seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound())),new VehicleStructure.Cell(new BlockPos(4,0,4),Blocks.STONE.getDefaultState(),null)),BlockPos.ORIGIN,EnumFacing.NORTH,1);
+    }
     static void runClient(net.minecraft.client.Minecraft mc)throws Exception{
-        EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);VehicleStructure source=VehicleStructure.display(Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null),new VehicleStructure.Cell(new BlockPos(4,0,4),Blocks.STONE.getDefaultState(),null)));
+        EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);VehicleStructure source=lightingStructure();
         craft.install(source);craft.setPosition(Math.floor(mc.player.posX),Math.floor(mc.player.posY)+2,Math.floor(mc.player.posZ));
         VehicleDynamicLights.Probe probe=null;java.lang.reflect.Method update=null;boolean dynamic=false,contribution=false;
         try{
@@ -35,7 +39,7 @@ final class VehicleCombinedLightChecks {
     }
     static void run(WorldServer parent){
         EntityGroundVehicle craft=new EntityGroundVehicle(parent);
-        VehicleStructure source=VehicleStructure.display(Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null),new VehicleStructure.Cell(new BlockPos(4,0,4),Blocks.STONE.getDefaultState(),null)));
+        VehicleStructure source=lightingStructure();
         craft.install(source);craft.setPosition(1712,190,1712);BlockPos sample=BlockPos.ORIGIN;
         try{for(int yaw:new int[]{0,45,90}){
             craft.rotationYaw=yaw;BlockPos physical=new BlockPos(craft.toWorld(new Vec3d(sample).addVector(.5,.5,.5)));
