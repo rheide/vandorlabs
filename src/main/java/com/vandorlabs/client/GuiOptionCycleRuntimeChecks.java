@@ -92,12 +92,12 @@ final class GuiOptionCycleRuntimeChecks {
         boolean owned=gui instanceof GuiRampController||gui instanceof GuiModularGear||gui instanceof GuiLandingGear||gui instanceof GuiAutopilot||gui instanceof GuiCoupler||gui instanceof GuiTurntable||gui instanceof com.vandorlabs.copier.client.GuiCopyController;
         if(!owned)return;
         java.lang.reflect.Field page=null;int originalPage=0;
-        try{page=gui.getClass().getDeclaredField("page");page.setAccessible(true);originalPage=page.getInt(gui);page.setInt(gui,1);gui.initGui();}catch(NoSuchFieldException singlePage){}
+        try{page=inheritedField(gui.getClass(),"page");page.setAccessible(true);originalPage=page.getInt(gui);page.setInt(gui,1);gui.initGui();}catch(NoSuchFieldException singlePage){}
         int checked=0;
         try{
             for(GuiButton candidate:new ArrayList<>(buttons(gui)))if(candidate instanceof RedstoneActivationButton&&candidate.visible&&candidate.enabled){
                 int id=candidate.id;String field=gui instanceof GuiRampController?"powerOn":gui instanceof GuiModularGear||gui instanceof GuiAutopilot?"trigger":gui instanceof GuiCoupler?"inverted":gui instanceof GuiTurntable?(id==2?"scanMode":"rotationMode"):"mode";
-                java.lang.reflect.Field draft=gui.getClass().getDeclaredField(field);draft.setAccessible(true);
+                java.lang.reflect.Field draft=inheritedField(gui.getClass(),field);draft.setAccessible(true);
                 boolean pair=gui instanceof GuiRampController||gui instanceof GuiCoupler||gui instanceof GuiTurntable&&id==3;int count=pair?2:3;
                 for(int direction:new int[]{1,0})for(int i=0;i<count;i++){
                     int before=activationIndex(gui,draft);int expected=pair?(before==1?2:1):Math.floorMod(before+(direction==1?-1:1),3);
@@ -109,6 +109,12 @@ final class GuiOptionCycleRuntimeChecks {
             }
         }finally{if(page!=null){page.setInt(gui,originalPage);gui.initGui();}}
         if(checked>0)System.out.println("[vandorlabs][reprolab] activation-modes PASS "+gui.getClass().getSimpleName()+" real-mouse-index-checks="+checked);
+    }
+    private static java.lang.reflect.Field inheritedField(Class<?> type,String name)throws NoSuchFieldException{
+        for(Class<?> current=type;current!=null;current=current.getSuperclass()){
+            try{return current.getDeclaredField(name);}catch(NoSuchFieldException absent){}
+        }
+        throw new NoSuchFieldException(type.getName()+"."+name);
     }
     private static int activationIndex(GuiScreen gui,java.lang.reflect.Field field)throws IllegalAccessException{
         if(field.getType()!=boolean.class)return field.getInt(gui);
