@@ -23,7 +23,7 @@ public final class GuiModularGear extends GuiContainer {
     }
     @Override public void initGui(){
         xSize=Math.min(380,width-12);ySize=218;super.initGui();buttonList.clear();int col=(xSize-36)/2,right=guiLeft+24+col;
-        channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+70,col,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(tile.getRedstoneChannels().toString());
+        channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+70,col,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(ChannelFields.text(tile.getRedstoneChannels()));
         buttonList.add(new RedstoneActivationButton(0,guiLeft+12,guiTop+60,col,trigger));add(1,guiLeft+12,56,col);add(2,guiLeft+12,82,col);add(7,guiLeft+12,108,col);add(4,guiLeft+(xSize-200)/2,164,200);
         add(14,guiLeft+12,134,col);add(9,right,56,col);add(11,right,108,col);
         rangeSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,right,guiTop+82,col,20,"Range: "," blocks",1,32,range,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=range){range=value;submit();}});buttonList.add(rangeSlider);

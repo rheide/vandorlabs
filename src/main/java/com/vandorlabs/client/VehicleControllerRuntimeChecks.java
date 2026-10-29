@@ -95,7 +95,7 @@ public final class VehicleControllerRuntimeChecks {
         VehicleStructure migrated=VehicleControlSettings.migrate(source);
         TileEntityVehicleController settings=new TileEntityVehicleController();settings.readFromNBT(migrated.controller().tileData());
         require(settings.controlsInitialized()&&settings.getRedstoneMode()==2,"legacy controller controls imported once");
-        require(settings.getRedstoneChannels().toString().equals("28801, 28802")&&settings.modeChannels(1).toString().equals("28803"),"legacy toggle and mode channel lists preserved");
+        require(ChannelFields.text(settings.getRedstoneChannels()).equals("28801, 28802")&&settings.modeChannels(1).toString().equals("28803"),"legacy toggle and mode channel lists preserved");
         require(migrated.at(primary.pos).tileData().equals(legacy),"migration preserves independent selected seat height and full NBT");
         require(VehicleControlSettings.migrate(migrated)==migrated,"initialized migration is idempotent");
         settings.setTaxiMode(true);settings.setVehicleChannels(com.vandorlabs.redstone.ChannelList.of(28804),world);

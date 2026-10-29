@@ -19,7 +19,7 @@ public final class GuiLandingGear extends GuiContainer {
     private int lastSentPixels,seenRevision;
     public GuiLandingGear(TileEntityLandingGear tile){super(new ContainerRedstoneChannel(tile));this.tile=tile;mode=tile.getMode();size=tile.getSize();lastSentPixels=tile.getExtensionPixels();seenRevision=tile.getConfigurationRevision();xSize=280;ySize=246;}
     public void initGui(){
-        String draft=channel==null?tile.getRedstoneChannels().toString():channel.getText();super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        String draft=channel==null?ChannelFields.text(tile.getRedstoneChannels()):channel.getText();super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         buttonList.add(new RedstoneActivationButton(0,guiLeft+14,guiTop+66,252,mode));
         buttonList.add(new GuiButton(4,guiLeft+14,guiTop+66,252,20,sizeLabel()));
         channel=new GuiTextField(1,fontRenderer,guiLeft+156,guiTop+102,110,18);

@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiTextField;
 
 /** Shared editing rules for channel lists in programmable dialogs. */
 final class ChannelFields {
+    static String text(ChannelList channels){return channels.isEmpty()?"":channels.toString();}
     static void configure(GuiTextField field) {
         field.setMaxStringLength(ChannelList.MAX_TEXT_LENGTH);
         field.setValidator(text->text.matches("[0-9, ]*"));

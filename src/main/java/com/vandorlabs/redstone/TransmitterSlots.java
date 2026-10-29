@@ -19,6 +19,7 @@ public final class TransmitterSlots {
     /** Canonicalize a previous save without changing its opaque capabilities or caller-owned NBT. */
     public static NBTTagCompound normalize(NBTTagCompound source){
         String id=source.getString("id");
+        if(id.equals("vandorlabs:programmable_viewscreen"))source=sharedScreen(source);
         if(!id.startsWith("vandorlabs:")||!OUTPUT_TYPES.contains(id.substring(11))||source.hasKey(SCHEMA))return source;
         if(!source.hasKey("x",3)||!source.hasKey("y",3)||!source.hasKey("z",3))return source;
         NBTTagCompound tag=source.copy();written(tag);
@@ -57,9 +58,22 @@ public final class TransmitterSlots {
             migrateSlot(slots,"main",channels);
         }
         if(!slots.hasNoTags()){forge.setTag(KEY,slots);tag.setTag("ForgeData",forge);}
-        return tag;
+        return id.equals("vandorlabs:programmable_viewscreen")?sharedScreen(tag):tag;
     }
 
+    /** Move one old per-row module; all surplus items remain saved for normal block drops. */
+    private static NBTTagCompound sharedScreen(NBTTagCompound source){
+        NBTTagCompound old=source.getCompoundTag("ForgeData").getCompoundTag(KEY);
+        if(old.hasKey("main",10))return source;
+        String best=null;int range=-2;
+        for(String key:new java.util.TreeSet<>(old.getKeySet()))if(key.startsWith("row_")){
+            ItemStack item=new ItemStack(old.getCompoundTag(key));int candidate=ItemRedstoneTransmitter.range(item);if(candidate==0)candidate=Integer.MAX_VALUE;
+            if(ItemRedstoneTransmitter.valid(item)&&candidate>range){best=key;range=candidate;}
+        }
+        if(best==null)return source;
+        NBTTagCompound result=source.copy(),slots=result.getCompoundTag("ForgeData").getCompoundTag(KEY);
+        slots.setTag("main",slots.getTag(best));slots.removeTag(best);return result;
+    }
     private static void migrateSlot(NBTTagCompound slots,String key,ChannelList channels){
         if(channels.isEmpty()||slots.hasKey(key,10))return;
         ItemStack item=new ItemStack(com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,1,2);
@@ -81,7 +95,7 @@ public final class TransmitterSlots {
     }
     public static ChannelList channels(RedstoneChannelMember member){return settings(member).channels;}
     public static int range(RedstoneChannelMember member){return settings(member).range;}
-    public static boolean outputOnly(RedstoneChannelMember member){if(member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control)return false;TileEntity tile=member.channelTile();return member instanceof RedstoneChannelLatch&&!(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&!((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter())||tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot||tile instanceof com.vandorlabs.plate.PlateTile||tile instanceof com.vandorlabs.tiles.TileEntityWaypoint;}
+    public static boolean outputOnly(RedstoneChannelMember member){if(member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control||member instanceof com.vandorlabs.tiles.RedstoneScreenContents.Row)return false;TileEntity tile=member.channelTile();return member instanceof RedstoneChannelLatch&&!(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&!((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter())||tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot||tile instanceof com.vandorlabs.plate.PlateTile||tile instanceof com.vandorlabs.tiles.TileEntityWaypoint;}
     public static void set(RedstoneChannelMember member,ItemStack stack){
         if(!stack.isEmpty()&&!(stack.getItem() instanceof ItemRedstoneTransmitter))throw new IllegalArgumentException("Not a redstone transmitter");
         TileEntity tile=member.channelTile();
@@ -93,6 +107,13 @@ public final class TransmitterSlots {
         if(outputOnly(member))
             member.setRedstoneChannels(channels(member));
         tile.markDirty();RedstoneChannels.register(member);
+        if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
+            for(int i=0;i<2;i++){
+                screen.redstoneScreen(i).finishLoading();
+                if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)tile.getWorld();if(view.craft!=null&&!view.parent.isRemote)for(com.vandorlabs.tiles.RedstoneScreenContents.Row row:screen.redstoneScreen(i).rows())view.craft.signals.transmitterChanged(row);}
+            }
+        }
         if(tile instanceof com.vandorlabs.tiles.TileEntityCockpit)((com.vandorlabs.tiles.TileEntityCockpit)tile).sharedTransmitterChanged();
         if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)tile.getWorld();if(view.craft!=null&&!view.parent.isRemote)view.craft.signals.transmitterChanged(member);}
         if(tile.getWorld()!=null&&!tile.getWorld().isRemote){net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());tile.getWorld().notifyBlockUpdate(tile.getPos(),state,state,2);}

@@ -16,7 +16,7 @@ final class CockpitMechanismRuntimeChecks {
             for(int height=0;height<4;height++){
                 com.vandorlabs.container.ContainerCockpit dialog=new com.vandorlabs.container.ContainerCockpit(tile,null);require(dialog.canInteractWith(player),"height dialog reachable");
                 NBTTagCompound casing=new NBTTagCompound();casing.setInteger("Height",height);casing.setInteger("SideTexture",tile.sideTexture());dialog.update(player,0,casing);
-                NBTTagCompound pilot=new NBTTagCompound();pilot.setBoolean("Pilot",true);pilot.setBoolean("Taxi",false);pilot.setInteger("Trigger",tile.getRedstoneMode());pilot.setString("Channels",tile.getRedstoneChannels().toString());for(int mode=0;mode<3;mode++)pilot.setString("Mode"+mode,tile.modeChannels(mode).toString());dialog.update(player,0,pilot);
+                NBTTagCompound pilot=new NBTTagCompound();pilot.setBoolean("Pilot",true);pilot.setBoolean("Taxi",false);pilot.setInteger("Trigger",tile.getRedstoneMode());pilot.setString("Channels",ChannelFields.text(tile.getRedstoneChannels()));for(int mode=0;mode<3;mode++)pilot.setString("Mode"+mode,tile.modeChannels(mode).toString());dialog.update(player,0,pilot);
                 dialog=new com.vandorlabs.container.ContainerCockpit(tile,null);require(dialog.tile.getHeight()==height,"height survives pilot page save and dialog reopening");double drop=(6-height*2)/16D;
                 require(Math.abs(tile.data().seat.y-(original.seat.y-drop))<1e-8,"cushion height in two-pixel steps");
                 require(Math.abs(tile.data().surfaces.get(0).origin.y-(original.surfaces.get(0).origin.y-drop))<1e-8,"armrest touch height follows seat");

@@ -92,7 +92,7 @@ public class GuiRedstoneChannel extends GuiContainer {
     }
 
     @Override public void initGui() {
-        String draft=channelField==null?member.getRedstoneChannels().toString():channelField.getText();
+        String draft=channelField==null?ChannelFields.text(member.getRedstoneChannels()):channelField.getText();
         if(thruster){layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;}else {xSize=280;ySize=pilotSeat?(!inspectionStatus.isEmpty()?300:226):adjustableBase?232:230;}
         super.initGui();buttonList.clear();housingList=null;Keyboard.enableRepeatEvents(true);
         int tx=thruster?layout.controlsX:guiLeft+116,tw=thruster?154:xSize-130;

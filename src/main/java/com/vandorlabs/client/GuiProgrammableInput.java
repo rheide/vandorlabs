@@ -62,11 +62,11 @@ public class GuiProgrammableInput extends GuiContainer {
     private boolean framePage(){return textureTab==10;}
     private ReceiverPane receiver;
     @Override public void initGui() {
-        String receiverDraft=channelField==null?te.getRedstoneChannels().toString():channelField.getText();
+        String receiverDraft=channelField==null?ChannelFields.text(te.getRedstoneChannels()):channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         int redstoneWidth=Math.min(400,xSize-24),redstoneX=layout.left+(xSize-redstoneWidth)/2;
         receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
-        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        super.initGui();buttonList.clear();buttonList.add(new GuiButton(198,redstoneX,layout.top+130,redstoneWidth,20,"Transmitter..."));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
         buttonList.add(layout.fullTab(90,0,4,"Controls"));
         buttonList.add(layout.fullTab(91,1,4,"Sides"));
@@ -96,6 +96,7 @@ public class GuiProgrammableInput extends GuiContainer {
 
     private String sidesLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
+        for(GuiButton b:buttonList)if(b.id==198)b.visible=textureTab==2;
         channelField.setVisible(textureTab==2);if(!channelField.getVisible())channelField.setFocused(false);
         for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==2;else if(option.id==32)option.visible=textureTab==1;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12||option.id==30||option.id==31)option.visible=textureTab<1;}
 

@@ -43,8 +43,8 @@ public final class GuiCockpit extends GuiMaterialPicker {
         }else if(pilotPage()){
             buttonList.add(new CockpitButton(10,x,guiTop+74,w/2-2,20,"Taxi on boarding: "+(tile.isTaxiMode()?"On":"Off")));
             buttonList.add(new RedstoneActivationButton(11,x+w/2+2,guiTop+74,w/2-2,tile.getRedstoneMode()));
-            text(0,x,guiTop+112,w/2-3,tile.getRedstoneChannels().toString());
-            for(int i=0;i<3;i++)text(i+1,x+((i+1)%2)*(w/2+3),guiTop+112+((i+1)/2)*40,w/2-3,tile.modeChannels(i).toString());
+            text(0,x,guiTop+112,w/2-3,ChannelFields.text(tile.getRedstoneChannels()));
+            for(int i=0;i<3;i++)text(i+1,x+((i+1)%2)*(w/2+3),guiTop+112+((i+1)/2)*40,w/2-3,ChannelFields.text(tile.modeChannels(i)));
             for(int i=0;i<3;i++)buttonList.add(new CockpitButton(20+i,x+i*w/3,guiTop+ySize-50,w/3-2,20,new String[]{"Park mode","Taxi mode","Hover mode"}[i]));
         }else if(sidePage()){
             int top=tile.design().equals("chair_siderests")||tile.design().equals("cockpit")?100:76;
@@ -67,7 +67,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
             }
         }else{
             TileEntityCockpit.Control control=tile.controls.get(c);
-            text(0,x,y+12,w,control.label);text(1,x,y+52,w,control.channels.toString());
+            text(0,x,y+12,w,control.label);text(1,x,y+52,w,ChannelFields.text(control.channels));
             if(control.isThrottle()){
                 buttonList.add(new CockpitButton(42,x,y+84,w/2-2,20,"Low: "+control.min));buttonList.add(new CockpitButton(43,x+w/2+2,y+84,w/2-2,20,"High: "+control.max));
             }else buttonList.add(new CockpitButton(40,x,y+84,w,20,"Control: "+new String[]{"Toggle","Slider","Pulse (1 second)"}[control.kind]));
@@ -132,7 +132,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         if(redstonePage){fontRenderer.drawString("Range for all cockpit controls",guiLeft+12,guiTop+80,0xffffff);fontRenderer.drawString("Target channels are edited on each control page.",guiLeft+12,guiTop+154,0xdae8f0);fontRenderer.drawString("Blank targets use this module's channel defaults.",guiLeft+12,guiTop+166,0xdae8f0);}
         else if(pilotPage()){fontRenderer.drawString("Trigger channels",guiLeft+12,guiTop+101,0xffffff);for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Block channels","Taxi channels","Hover channels"}[i],fields.get(i+1).x,fields.get(i+1).y-11,0xffffff);}
         else if(sidePage()){}
-        else if(d>=tile.displays.size()){fontRenderer.drawString("Label",guiLeft+12,guiTop+76,0xffffff);fontRenderer.drawString("Target channels (0 = module defaults)",guiLeft+12,guiTop+116,0xffffff);TileEntityCockpit.Control value=tile.controls.get(c);if(value.isThrottle()&&ySize>=270)fontRenderer.drawString("Off 0 / Medium "+((value.min+value.max+1)/2)+" - four positions",guiLeft+12,guiTop+230,0xdae8f0);}
+        else if(d>=tile.displays.size()){fontRenderer.drawString("Label",guiLeft+12,guiTop+76,0xffffff);fontRenderer.drawString("Target channels (blank = module defaults)",guiLeft+12,guiTop+116,0xffffff);TileEntityCockpit.Control value=tile.controls.get(c);if(value.isThrottle()&&ySize>=270)fontRenderer.drawString("Off 0 / Medium "+((value.min+value.max+1)/2)+" - four positions",guiLeft+12,guiTop+230,0xdae8f0);}
 
     }
     /** A solid panel button has no vanilla 256-pixel atlas width limit. */

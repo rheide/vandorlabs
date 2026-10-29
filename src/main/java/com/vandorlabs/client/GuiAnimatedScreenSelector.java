@@ -180,11 +180,11 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private boolean framePage(){return textureTab==10;}
     private ReceiverPane receiver;
     @Override public void initGui() {
-        String receiverDraft=channelField==null?te.getRedstoneChannels().toString():channelField.getText();
+        String receiverDraft=channelField==null?ChannelFields.text(te.getRedstoneChannels()):channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         int redstoneWidth=Math.min(400,xSize-24),redstoneX=layout.left+(xSize-redstoneWidth)/2;
         receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
-        super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        super.initGui();buttonList.clear();buttonList.add(new GuiButton(198,redstoneX,layout.top+130,redstoneWidth,20,"Transmitter..."));Keyboard.enableRepeatEvents(true);
         int tabs=console?5:4,rows=layout.rows(true);
         buttonList.add(layout.fullTab(90,0,tabs,"Display"));
         if(console)buttonList.add(layout.fullTab(91,1,tabs,"Controls"));
@@ -216,6 +216,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     private String sidesLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
+        for(GuiButton b:buttonList)if(b.id==198)b.visible=textureTab==(console?3:2);
         int sides=console?2:1,redstone=sides+1;channelField.setVisible(textureTab==redstone);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==redstone;else if(option.id==32)option.visible=textureTab==sides;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<sides;}
 
         receiver.setMode(RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));

@@ -22,7 +22,9 @@ import java.util.*;
 @Mod.EventBusSubscriber(modid=VandorLabs.MODID,value=Side.CLIENT)
 public final class InlineTransmitterWidget {
     public static final int HEIGHT=44;
-    private static final String CAPTION="Transmit channels (comma-separated)";
+    private static boolean sharedScreen(GuiContainer gui){return gui instanceof GuiAnimatedScreenSelector||gui instanceof GuiProgrammableInput||gui instanceof GuiProgrammableHalfConsole||gui instanceof GuiRedstoneScreen;}
+    private static String caption(GuiContainer gui){return sharedScreen(gui)?"Shared transmitter range":gui instanceof GuiCockpit?"Default target channels (blank = local)":CAPTION;}
+    private static final String CAPTION="Transmit channels (blank = local)";
     private static final java.lang.reflect.Field LEFT=ReflectionHelper.findField(GuiContainer.class,"guiLeft","field_147003_i"),TOP=ReflectionHelper.findField(GuiContainer.class,"guiTop","field_147009_r"),GUI_HEIGHT=ReflectionHelper.findField(GuiContainer.class,"ySize","field_147000_g"),BUTTONS=ReflectionHelper.findField(GuiScreen.class,"buttonList","field_146292_n");
     private static final Map<GuiContainer,State> STATES=new WeakHashMap<>();
     private static final class Placement {final InlineTransmitters.ModuleSlot slot;final GuiButton anchor;final GuiTextField field;ItemStack before=ItemStack.EMPTY;boolean dirty,shown,pending;int x,y,width;
@@ -43,8 +45,8 @@ public final class InlineTransmitterWidget {
             Placement p=state.buttons.get(button);if(p==null||p.slot!=slot){if(p!=null)save(gui,p);p=new Placement(button,slot);state.buttons.put(button,p);}
             p.x=button.x;p.y=button.y+(button.height-16)/2;p.width=button.width;p.shown=true;
             slot.xPos=p.x-left;slot.yPos=p.y-top;slot.visible=true;
-            int captionX=p.width<150?p.x:p.x+24,captionY=p.y+(p.width<150?20:2),captionWidth=p.width-(p.width<150?0:24);p.field.x=p.x;p.field.y=Math.max(p.y+24,captionY+mc.fontRenderer.listFormattedStringToWidth(CAPTION,captionWidth).size()*mc.fontRenderer.FONT_HEIGHT+4);p.field.width=p.width;p.field.setVisible(true);p.field.setEnabled(slot.getHasStack());
-            ItemStack stack=slot.getStack();if(!ItemStack.areItemStacksEqual(p.before,stack)){boolean sameModule=!p.before.isEmpty()&&!stack.isEmpty()&&p.before.getItem()==stack.getItem()&&p.before.getMetadata()==stack.getMetadata();p.before=stack.copy();p.pending=false;if(!sameModule||!p.dirty){p.field.setText(stack.isEmpty()?"":ItemRedstoneTransmitter.channels(stack).toString());p.dirty=false;}else if(!p.field.isFocused())save(gui,p);}
+            int captionX=p.width<150?p.x:p.x+24,captionY=p.y+(p.width<150?20:2),captionWidth=p.width-(p.width<150?0:24);p.field.x=p.x;p.field.y=Math.max(p.y+24,captionY+mc.fontRenderer.listFormattedStringToWidth(caption(gui),captionWidth).size()*mc.fontRenderer.FONT_HEIGHT+4);p.field.width=p.width;p.field.setVisible(!sharedScreen(gui));p.field.setEnabled(slot.getHasStack());
+            ItemStack stack=slot.getStack();if(!ItemStack.areItemStacksEqual(p.before,stack)){boolean sameModule=!p.before.isEmpty()&&!stack.isEmpty()&&p.before.getItem()==stack.getItem()&&p.before.getMetadata()==stack.getMetadata();p.before=stack.copy();p.pending=false;if(!sameModule||!p.dirty){p.field.setText(stack.isEmpty()?"":ChannelFields.text(ItemRedstoneTransmitter.channels(stack)));p.dirty=false;}else if(!p.field.isFocused())save(gui,p);}
             button.visible=false;shown=true;
         }
         for(Placement p:state.buttons.values())if(!p.shown){save(gui,p);p.field.setFocused(false);p.field.setVisible(false);}
@@ -79,7 +81,7 @@ public final class InlineTransmitterWidget {
             // Finish every slot overlay before drawing any tooltip. A later border must never cross its glyphs.
             for(InlineTransmitters.VisibleSlot slot:slots)if(slot.visible){int x=left+slot.xPos,y=top+slot.yPos;
                 Gui.drawRect(x-1,y-1,x+17,y,0xff8296a2);Gui.drawRect(x-1,y+16,x+17,y+17,0xff8296a2);Gui.drawRect(x-1,y,x,y+16,0xff8296a2);Gui.drawRect(x+16,y,x+17,y+16,0xff8296a2);
-                if(event.getMouseX()>=x&&event.getMouseX()<x+16&&event.getMouseY()>=y&&event.getMouseY()<y+16&&mc.player.inventory.getItemStack().isEmpty())tooltip=slot.getHasStack()?slot.getStack().getTooltip(mc.player,mc.gameSettings.advancedItemTooltips?net.minecraft.client.util.ITooltipFlag.TooltipFlags.ADVANCED:net.minecraft.client.util.ITooltipFlag.TooltipFlags.NORMAL):slot instanceof InlineTransmitters.ModuleSlot?Arrays.asList("Insert a Redstone Transmitter","A module enables transmission.","Receive channels work without a module."):Collections.emptyList();
+                if(event.getMouseX()>=x&&event.getMouseX()<x+16&&event.getMouseY()>=y&&event.getMouseY()<y+16&&mc.player.inventory.getItemStack().isEmpty())tooltip=slot.getHasStack()?slot.getStack().getTooltip(mc.player,mc.gameSettings.advancedItemTooltips?net.minecraft.client.util.ITooltipFlag.TooltipFlags.ADVANCED:net.minecraft.client.util.ITooltipFlag.TooltipFlags.NORMAL):slot instanceof InlineTransmitters.ModuleSlot?Arrays.asList("Insert a Redstone Transmitter","A module enables transmission.","One module supplies the range for every screen row.","Row targets override the module channels.","Blank channels keep the control local."):Collections.emptyList();
             }
             if(!tooltip.isEmpty()&&mc.player.inventory.getItemStack().isEmpty()){
                 GlStateManager.disableLighting();GlStateManager.disableDepth();GlStateManager.depthMask(false);

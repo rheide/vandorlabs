@@ -57,7 +57,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+76,154,18);
         ChannelFields.configure(channelField);
-        channelField.setText(tile.getRedstoneChannels().toString());
+        channelField.setText(ChannelFields.text(tile.getRedstoneChannels()));
         channelField.setFocused(false);
         java.util.function.IntPredicate include=choice->(editingOff || !ScreenHousingTextures.isLightOff(choice)) && (HousingTextureList.generalTexture(choice) || "Lights".equals(ScreenHousingTextures.category(choice)) || ScreenHousingTextures.lightOnly(choice));
         faceList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,editingOff && offSelected>=0?offSelected:selected,8,null,include).visibleRows(layout.rows(true))

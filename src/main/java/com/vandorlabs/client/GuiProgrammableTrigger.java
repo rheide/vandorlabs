@@ -40,7 +40,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
     }
 
     @Override public void initGui() {
-        String draft=channelField==null?tile.getRedstoneChannels().toString():channelField.getText();
+        String draft=channelField==null?ChannelFields.text(tile.getRedstoneChannels()):channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         offList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,off).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{off=value;send();});

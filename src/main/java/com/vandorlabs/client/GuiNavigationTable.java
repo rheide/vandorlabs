@@ -22,7 +22,7 @@ public class GuiNavigationTable extends GuiMaterialPicker {
     public GuiNavigationTable(ContainerTokenSlot container){super(container);tile=(TileEntitySecuredDisplay)container.tile;drive=tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).isDrive();engine=drive?((TileEntityConstructor)tile).driveSettings():com.vandorlabs.drives.DriveSettings.DEFAULT;choices=new int[tile.surfaceCount()];for(int i=0;i<choices.length;i++)choices[i]=tile.surfaceChoice(i);NavigationScreenSettings s=tile.screenSettings();texture=choices.length==0?-1:choices[0];speed=s.speed;animated=s.animated;redstone=s.redstone;security=s.security;allowed=tile.effectiveAllowed();behavior=tile.behavior;}
     @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui(){
-        String text=channels==null?tile.getRedstoneChannels().toString():channels.getText();panel=new ProgrammableDialogLayout(width,height);
+        String text=channels==null?ChannelFields.text(tile.getRedstoneChannels()):channels.getText();panel=new ProgrammableDialogLayout(width,height);
         xSize=panel.width;ySize=panel.height;super.initGui();buttonList.clear();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
         textures=choices.length==0||enginePane()||redstonePane()?null:HousingTextureList.forDisplay(panel.listX,panel.top+58,panel.listWidth,texture,(panel.height-72)/12,tile.nativeArtwork()).keepView(textures).custom(value->{choose(value);save();});
         for(int i=0;i<=redstoneTab();i++){GuiButton tab=panel.tab(20+i,i,redstoneTab()+1,i==redstoneTab()?"Redstone":i==choices.length?"Engine":tile.surfaceLabel(i));tab.enabled=i!=surface;buttonList.add(tab);}

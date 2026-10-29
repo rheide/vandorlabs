@@ -58,7 +58,7 @@ public class GuiRampController extends GuiContainer {
         buttonList.add(new GuiButton(15,guiLeft+282,guiTop+126,20,20,"+"));
         channelField=new GuiTextField(8,fontRenderer,guiLeft+200,guiTop+208,98,18);
         ChannelFields.configure(channelField);
-        channelField.setText(controller.getRedstoneChannels().toString());
+        channelField.setText(ChannelFields.text(controller.getRedstoneChannels()));
 
         buttonList.add(new GuiButton(1,guiLeft+14,guiTop+78,142,20,""));
         buttonList.add(new RedstoneActivationButton(3,guiLeft+14,guiTop+102,142,powerOn?1:2));

@@ -12,7 +12,7 @@ public final class GuiTokenSlot extends GuiContainer {
     private GuiTextField channels;private int page=1;
     public GuiTokenSlot(ContainerTokenSlot container){super(container);tile=container.tile;behavior=tile.behavior;allowed=tile.effectiveAllowed();xSize=308;ySize=160;}
     @Override public void initGui(){
-        String text=channels==null?tile.getRedstoneChannels().toString():channels.getText();xSize=Math.min(308,width-12);ySize=224;super.initGui();org.lwjgl.input.Keyboard.enableRepeatEvents(true);buttonList.clear();
+        String text=channels==null?ChannelFields.text(tile.getRedstoneChannels()):channels.getText();xSize=Math.min(308,width-12);ySize=224;super.initGui();org.lwjgl.input.Keyboard.enableRepeatEvents(true);buttonList.clear();
         buttonList.add(new DialogTabButton(100,guiLeft+154,guiTop+34,142,20,"Redstone"));buttonList.add(new DialogTabButton(101,guiLeft+12,guiTop+34,138,20,"Security"));for(GuiButton b:buttonList)b.enabled=b.id!=100+page;
         channels=new GuiTextField(2,fontRenderer,guiLeft+12,guiTop+76,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);channels.setVisible(false);channels.setFocused(false);
         if(page==0){buttonList.add(new GuiButton(1,guiLeft+12,guiTop+126,xSize-24,20,TileEntityTokenSlot.behaviorName(behavior)));buttonList.add(new GuiButton(90,guiLeft+12,guiTop+74,xSize-24,20,"Redstone Transmitter..."));}

@@ -41,6 +41,8 @@ final class RedstoneScreenRuntimeChecks {
                     owner.world.setBlockState(POS,state,3);
                     RedstoneScreenContents tile=((TileEntityAnimatedScreenSelector)owner.world.getTileEntity(POS)).redstoneScreen(slot());
                     require(tile.configureRows(Arrays.asList("Doors","Lights","Unlinked"),Arrays.asList(ChannelList.of(14901,14902),ChannelList.of(14902),ChannelList.EMPTY),0),"fixture rows");
+                    require(tile.rows().get(0).channels.equals(ChannelList.of(14901,14902))&&tile.rows().get(1).channels.equals(ChannelList.of(14902)),"saving row targets preserves distinct channels before inserting shared module");
+                    require(tile.rows().get(0).transmitterSlot().equals("main")&&tile.rows().get(1).transmitterSlot().equals("main"),"all rows share one module slot");
                     if(shape==16 || shape==21){tile.tile().setCeilingMounted(true);tile.tile().setCeilingPosition(1);}
                     if(shape==18)tile.tile().setWallPosition(1);
                     aim(owner,state,0);

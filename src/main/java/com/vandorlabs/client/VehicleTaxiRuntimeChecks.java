@@ -305,20 +305,20 @@ public final class VehicleTaxiRuntimeChecks {
                 Object data=field(mc.currentScreen,"data");UUID currentPreview=((VehicleNetwork.Packet)field(data,"header")).token;BlockPos selected=((VehicleStructure)field(data,"structure")).controller().pos;
                 mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle e=craft(mc);TileEntityVehicleController pilot=(TileEntityVehicleController)e.view.getTileEntity(e.structure.controller().pos);
-                require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"actual settings packet saves canonical channel list");
+                require(ChannelFields.text(pilot.getRedstoneChannels()).equals("5317, 5318"),"actual settings packet saves canonical channel list");
                 require(com.vandorlabs.redstone.ChannelData.read(e.structure.controller().tileData(),0).equals(pilot.getRedstoneChannels()),"authoritative seat snapshot and local view agree");
                 NBTTagCompound saved=new NBTTagCompound();e.writeToNBT(saved);EntityGroundVehicle loaded=new EntityGroundVehicle(world(mc));loaded.readFromNBT(saved);
                 require(loaded.structure.write().equals(e.structure.write()),"edited channels survive entity save/reload");
                 VehicleNetwork.Packet stale=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);stale.token=stalePreview;stale.entity=e.getEntityId();stale.origin=selected;stale.text="999";VehicleService.configureChannels(player(mc),stale);
-                require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"superseded preview cannot edit channels");
+                require(ChannelFields.text(pilot.getRedstoneChannels()).equals("5317, 5318"),"superseded preview cannot edit channels");
                 require(((TileEntityPilotSeat)world(mc).getTileEntity(unrelatedSeat)).getRedstoneChannel()==777,"assembled settings never edit a real tile at the local seat coordinates");
                 VehicleNetwork.Packet denied=new VehicleNetwork.Packet(VehicleNetwork.SETTINGS);denied.token=currentPreview;denied.entity=e.getEntityId();denied.origin=selected;denied.text="999";
                 player(mc).setGameType(net.minecraft.world.GameType.ADVENTURE);
                 try{VehicleService.configureChannels(player(mc),denied);}finally{player(mc).setGameType(net.minecraft.world.GameType.CREATIVE);}
                 require(e.structure==loaded.structure || e.structure.write().equals(loaded.structure.write()),"denied settings preserve the authoritative snapshot");
-                require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"protection rejects channel edits");
+                require(ChannelFields.text(pilot.getRedstoneChannels()).equals("5317, 5318"),"protection rejects channel edits");
                 denied.origin=selected.up();VehicleService.configureChannels(player(mc),denied);
-                require(pilot.getRedstoneChannels().toString().equals("5317, 5318"),"forged seat identity rejected");
+                require(ChannelFields.text(pilot.getRedstoneChannels()).equals("5317, 5318"),"forged seat identity rejected");
             }).get();break;
             }
             case 26:require(ChannelFields.parse((GuiTextField)field(mc.currentScreen,"channels")).toString().equals("5317, 5318"),"integrated settings draft represents saved canonical list");break;
