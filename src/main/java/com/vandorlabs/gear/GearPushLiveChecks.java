@@ -12,7 +12,9 @@ import net.minecraft.world.WorldServer;
 /** Native placement, full world ticks and actual asynchronous ownership journals. */
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class GearPushLiveChecks {
-    private static int fixture=Integer.getInteger("vandorlabs.armPushFixture",0),stage,ticks;
+    private static final int FIRST=Integer.getInteger("vandorlabs.armPushFixture",0);
+    private static final int LIMIT=Integer.getInteger("vandorlabs.armPushLimit",24);
+    private static int fixture=FIRST,stage,ticks;
     private static final BlockPos ROOT=new BlockPos(620,170,260);
     private static BlockPos scale(BlockPos p,int n){return new BlockPos(p.getX()*n,p.getY()*n,p.getZ()*n);}
     private static void require(boolean ok,String reason){if(!ok)throw new IllegalStateException("push fixture="+fixture+" stage="+stage+" ticks="+ticks+": "+reason);}
@@ -22,11 +24,11 @@ public final class GearPushLiveChecks {
         return scale(u,x).add(scale(v,z));
     }
     public static boolean tick(Minecraft mc)throws Exception{
-        if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;}
+        if(++ticks==1){require(FIRST>=0&&LIMIT>FIRST&&LIMIT<=24,"fixture range must satisfy 0 <= start < limit <= 24; start="+FIRST+" limit="+LIMIT);mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;}
         if(ticks<80)return false;
         return mc.getIntegratedServer().callFromMainThread(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
-            if(fixture==24){System.out.println("[vandorlabs][reprolab] arm-push PASS regular-Large joined-line-rectangle connected-Surface four-horizontal-faces retracted-config incremental-gap return-original leave-contacted reload real-asynchronous-journals");return true;}
+            if(fixture==LIMIT){System.out.println("[vandorlabs][reprolab] arm-push PASS range=["+FIRST+","+LIMIT+") cases="+(LIMIT-FIRST)+" regular-Large joined-line-rectangle connected-Surface four-horizontal-faces retracted-config incremental-gap return-original leave-contacted reload real-asynchronous-journals");return true;}
             EnumFacing face=EnumFacing.HORIZONTALS[fixture%4];GearBlock block=fixture%8<4?GearRegistry.GEAR_EXTENDER:GearRegistry.LARGE_GEAR_EXTENDER;
             GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);
             if(stage==0){
@@ -67,7 +69,7 @@ public final class GearPushLiveChecks {
             if(stage==3&&arm.progress()==0&&!ArmTransactions.locked(world,ROOT)){
                 require(world.getBlockState(ROOT.offset(face,1)).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(ROOT.offset(face,1).up()).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(ROOT.offset(face,5).up()).getBlock()==Blocks.IRON_BLOCK,"retraction returns original Surface layer and leaves contacted blocks "+arm.error());
                 if(fixture>=8)for(int x=0;x<=2;x++)for(int z=0;z<=(fixture>=16?2:0);z++)require(world.getBlockState(ROOT.offset(face,1).add(side(face,x,z))).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface,"every joined original Surface returns natively");
-                require(world.getBlockState(ROOT.offset(face.getOpposite())).getBlock()==Blocks.STONE,"mounting support remains in place");fixture++;stage=0;ticks=80;
+                require(world.getBlockState(ROOT.offset(face.getOpposite())).getBlock()==Blocks.STONE,"mounting support remains in place");System.out.println("[vandorlabs][reprolab] arm-push case PASS fixture="+fixture);fixture++;stage=0;ticks=80;
             }
             return false;
         }).get();

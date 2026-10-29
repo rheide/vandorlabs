@@ -12,17 +12,19 @@ import net.minecraft.world.WorldServer;
 /** Changing the source endpoint uses the same journal and collision path as an ordinary stroke. */
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class GearStartLiveChecks {
-    private static int fixture=Integer.getInteger("vandorlabs.armStartFixture",0),stage,ticks;
+    private static final int FIRST=Integer.getInteger("vandorlabs.armStartFixture",0);
+    private static final int LIMIT=Integer.getInteger("vandorlabs.armStartLimit",48);
+    private static int fixture=FIRST,stage,ticks;
     private static BlockPos obstruction;
     private static final BlockPos ROOT=new BlockPos(620,170,260);
     private static BlockPos scale(BlockPos p,int n){return new BlockPos(p.getX()*n,p.getY()*n,p.getZ()*n);}
     private static void require(boolean ok,String reason){if(!ok)throw new IllegalStateException("start-angle fixture="+fixture+" stage="+stage+" ticks="+ticks+": "+reason);}
     public static boolean tick(Minecraft mc)throws Exception{
-        if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;}
+        if(++ticks==1){require(FIRST>=0&&LIMIT>FIRST&&LIMIT<=48,"fixture range must satisfy 0 <= start < limit <= 48; start="+FIRST+" limit="+LIMIT);mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;}
         if(ticks<80)return false;
         return mc.getIntegratedServer().callFromMainThread(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
-            if(fixture==48){System.out.println("[vandorlabs][reprolab] arm-start PASS regular-Large six-mounts both-payload-modes joined-independent blocked-Start-refusal retry Surface native-payload source-retarget journal motion reversal reload endpoint-pose");return true;}
+            if(fixture==LIMIT){System.out.println("[vandorlabs][reprolab] arm-start PASS range=["+FIRST+","+LIMIT+") cases="+(LIMIT-FIRST)+" regular-Large six-mounts both-payload-modes joined-independent blocked-Start-refusal retry Surface native-payload source-retarget journal motion reversal reload endpoint-pose");return true;}
             EnumFacing face=EnumFacing.values()[fixture%6];GearBlock block=fixture%12<6?GearRegistry.GEAR_SWING_ARM:GearRegistry.LARGE_GEAR_SWING_ARM;
             GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);
             if(stage==0){
