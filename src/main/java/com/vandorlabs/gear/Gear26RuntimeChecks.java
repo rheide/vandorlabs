@@ -24,20 +24,21 @@ public final class Gear26RuntimeChecks {
     private static void pushBlocks(WorldServer world,EntityPlayerMP actor,BlockPos root){
         for(EnumFacing face:EnumFacing.HORIZONTALS){
             clear(world,root);world.setBlockState(root.offset(face.getOpposite()),Blocks.STONE.getDefaultState(),2);
-            GearTileEntity tile=arm(world,actor,root,GearRegistry.LARGE_GEAR_EXTENDER,face,1);tile.operator(actor);
-            BlockPos first=root.offset(face),second=root.offset(face,2),target=root.offset(face,3);
-            world.setBlockState(first,Blocks.STONE.getDefaultState(),2);world.setBlockState(second,Blocks.IRON_BLOCK.getDefaultState(),2);
-            NBTTagCompound settings=tile.settings();settings.setBoolean("PushBlocks",true);settings.setBoolean("Deployed",false);tile.configure(settings);
+            GearTileEntity tile=arm(world,actor,root,GearRegistry.LARGE_GEAR_EXTENDER,face,4);tile.operator(actor);
+            BlockPos home=root.offset(face),extended=root.offset(face,4),contact=root.offset(face,3),target=root.offset(face,5);
+            world.setBlockState(extended,Blocks.STONE.getDefaultState(),2);tile.target(false);
             for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
-            require(tile.progress()==0&&world.isAirBlock(first)&&world.getBlockState(second).getBlock()==Blocks.STONE&&world.getBlockState(target).getBlock()==Blocks.IRON_BLOCK,"large horizontal pushes native chain "+face+" progress="+tile.progress()+" target="+tile.target()+" extension="+tile.activeExtension()+" cells="+(tile.payload()==null?0:tile.payload().blocks.cells.size())+" first="+world.getBlockState(first)+" second="+world.getBlockState(second)+" targetCell="+world.getBlockState(target)+" error="+tile.error());
-            NBTTagCompound save=tile.writeToNBT(new NBTTagCompound());require(((GearTileEntity)TileEntity.create(world,save)).pushBlocks(),"push option survives old-compatible NBT");
-            tile.target(true);for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
-            require(tile.progress()==1&&world.isAirBlock(first)&&world.getBlockState(second).getBlock()==Blocks.STONE&&world.getBlockState(target).getBlock()==Blocks.IRON_BLOCK,"return never pulls native pushed blocks "+face+" "+tile.error());
-            world.setBlockState(first,Blocks.STONE.getDefaultState(),2);world.setBlockState(second,Blocks.BEDROCK.getDefaultState(),2);tile.target(false);
+            require(tile.progress()==0&&world.getBlockState(home).getBlock()==Blocks.STONE,"original attachment retracts before enabling pushing "+face+" "+tile.error());
+            NBTTagCompound settings=tile.settings();settings.setBoolean("PushBlocks",true);tile.configure(settings);
+            world.setBlockState(contact,Blocks.IRON_BLOCK.getDefaultState(),2);world.setBlockState(target,Blocks.BEDROCK.getDefaultState(),2);tile.target(true);
             for(int tick=0;tick<60;tick++)tile.update();
-            require(tile.progress()==1&&world.getBlockState(first).getBlock()==Blocks.STONE&&world.getBlockState(second).getBlock()==Blocks.BEDROCK,"immovable push refuses without removing native sources "+face);
-            world.setBlockToAir(second);world.setBlockToAir(target);tile.target(false);for(int tick=0;tick<60;tick++)tile.update();
-            require(tile.progress()==0&&world.isAirBlock(first)&&world.getBlockState(second).getBlock()==Blocks.STONE,"cleared push obstruction permits safe retry "+face+" "+tile.error());
+            require(tile.progress()==0&&world.getBlockState(home).getBlock()==Blocks.STONE&&world.getBlockState(contact).getBlock()==Blocks.IRON_BLOCK&&world.getBlockState(target).getBlock()==Blocks.BEDROCK,"complete blocked push path retains both native sources "+face+" "+tile.error());
+            world.setBlockToAir(target);tile.target(true);
+            for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
+            require(tile.progress()==1&&world.getBlockState(extended).getBlock()==Blocks.STONE&&world.getBlockState(target).getBlock()==Blocks.IRON_BLOCK,"outward stroke pushes newly contacted block beyond gap "+face+" "+tile.error());
+            NBTTagCompound save=tile.writeToNBT(new NBTTagCompound());require(((GearTileEntity)TileEntity.create(world,save)).pushBlocks(),"push option survives old-compatible NBT");
+            tile.target(false);for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
+            require(tile.progress()==0&&world.getBlockState(home).getBlock()==Blocks.STONE&&world.isAirBlock(extended)&&world.getBlockState(target).getBlock()==Blocks.IRON_BLOCK,"retraction returns original attachment and leaves newly pushed block forward "+face+" "+tile.error());
         }
     }
     private static void rotatingCeilingContact(WorldServer world,EntityPlayerMP actor,BlockPos root){
