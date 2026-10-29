@@ -24,7 +24,7 @@ public final class GearDialogChecks {
         for(Field field:GuiModularGear.class.getDeclaredFields())require(!field.getName().equals("extension"),"removed reach editor has no hit target");
         GuiScreen previous=mc.currentScreen;net.minecraft.inventory.Container container=mc.player.openContainer;int cases=0;
         try{for(GearBlock block:blocks)for(int[] size:new int[][]{{320,240},{460,340},{1280,720}}){
-            GearTileEntity tile=fixture(mc,block);boolean track=tile instanceof com.vandorlabs.gear.track.TrackTile;net.minecraft.client.gui.inventory.GuiContainer gui=track?new GuiTrack(new ContainerModularGear(tile)):new GuiModularGear(new ContainerModularGear(tile));gui.inventorySlots.windowId=-94;mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
+            GearTileEntity tile=fixture(mc,block);boolean track=tile instanceof com.vandorlabs.gear.track.TrackTile;net.minecraft.client.gui.inventory.GuiContainer gui=track?new GuiTrack(new ContainerModularGear(tile)):new RecordingGearGui(new ContainerModularGear(tile));gui.inventorySlots.windowId=-94;mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
             List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");List<Rectangle> occupied=new ArrayList<>();boolean rotation=false,done=false;
             for(GuiButton button:buttons){require(button.id!=6&&button.id!=8&&!button.displayString.equals("Back"),"no page-navigation controls");if(!button.visible)continue;require(mc.fontRenderer.getStringWidth(button.displayString)<=button.width-4,"button text fits "+button.displayString);add(occupied,new Rectangle(button.x,button.y,button.width,button.height),size);if(button.id==7)rotation=true;if(button.id==4)done="Done".equals(button.displayString);}
             require(done&&(track?!rotation:rotation),"separate Track appearance and arm motion controls");if(track){require(buttons.size()==2,"Track shows only style and Done");require(((com.vandorlabs.gear.track.TrackTile)tile).error().isEmpty(),"standalone mounted Track has no generic arm assembly error");}else for(Field field:fields){GuiTextField text=(GuiTextField)field.get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);}
@@ -48,11 +48,14 @@ public final class GearDialogChecks {
                     for(GuiButton endpoint:new GuiButton[]{start,angle}){
                         net.minecraftforge.fml.client.config.GuiSlider slider=(net.minecraftforge.fml.client.config.GuiSlider)endpoint;
                         for(double fraction:new double[]{.13,.37,.53,.71,.89}){
-                            int mouse=slider.x+(int)(slider.width*fraction);armGui.mouseClicked(mouse,slider.y+10,0);slider.mouseReleased(mouse,slider.y+10);
+                            int mouse=slider.x+(int)(slider.width*fraction);armGui.mouseClicked(mouse,slider.y+10,0);armGui.mouseReleased(mouse,slider.y+10,0);
                             require(Math.abs(slider.getValue()/15-Math.rint(slider.getValue()/15))<1e-8,"both angle inputs snap to fifteen degrees");
                             require(slider.displayString.equals(slider.dispString+(int)Math.round(slider.getValue())+slider.suffix),"displayed degrees match the actual snapped angle");
                         }
                     }
+                    angleDrag(mc,(RecordingGearGui)armGui,tile,(net.minecraftforge.fml.client.config.GuiSlider)start);
+                    angleDrag(mc,(RecordingGearGui)armGui,tile,(net.minecraftforge.fml.client.config.GuiSlider)angle);
+                    changedRoot((RecordingGearGui)armGui,tile,(net.minecraftforge.fml.client.config.GuiSlider)start,(net.minecraftforge.fml.client.config.GuiSlider)angle);
                 }
                 occupied.clear();for(GuiButton b:buttons)if(b.visible){require(mc.fontRenderer.getStringWidth(b.displayString)<=b.width-4,"one-page label fits "+b.displayString);add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);}GuiTextField text=(GuiTextField)fields[0].get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
                 GuiButton redstone=buttons.stream().filter(b->b.id==21).findFirst().get();armGui.mouseClicked(redstone.x+5,redstone.y+5,0);
@@ -68,7 +71,42 @@ public final class GearDialogChecks {
                 buttonPixels(mc,gui,doneButton,frame,size,output,block==GearRegistry.GEAR_EXTENDER||track);
             }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}cases++;
         }}finally{mc.displayGuiScreen(previous);mc.player.openContainer=container;org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
-        System.out.println("[vandorlabs][reprolab] arm-platform-dialog PASS cases="+cases+" compact320/460/1280 separated Mechanism/Redstone tabs receiver-channels input-only no Active Reach fields native Done normal/hover pixels reverse/forward mouse paths");
+        System.out.println("[vandorlabs][reprolab] arm-platform-dialog PASS cases="+cases+" compact320/460/1280 separated Mechanism/Redstone tabs receiver-channels input-only angle-drag-preview single-release-submit authoritative-refusal native Done normal/hover pixels reverse/forward mouse paths");
+    }
+    private static final class RecordingGearGui extends GuiModularGear {
+        final List<NBTTagCompound> sent=new ArrayList<>();
+        RecordingGearGui(ContainerModularGear container){super(container);}
+        @Override protected void sendSettings(NBTTagCompound tag){sent.add(tag.copy());}
+    }
+    /** Native slider click/draw-drag/release, with captured outbound settings and tile acknowledgments. */
+    private static void angleDrag(Minecraft mc,RecordingGearGui gui,GearTileEntity tile,net.minecraftforge.fml.client.config.GuiSlider slider)throws Exception{
+        NBTTagCompound authority=tile.writeToNBT(new NBTTagCompound());
+        int revision=tile.motionRevision()+1;authority.setInteger("GearRevision",revision);tile.readFromNBT(authority);gui.updateScreen();
+        double old=slider.getValue();int count=gui.sent.size();
+        gui.mouseClicked(slider.x+slider.width/4,slider.y+10,0);
+        for(double fraction:new double[]{.2,.4,.6,.89})slider.drawButton(mc,slider.x+(int)(slider.width*fraction),slider.y+10,0);
+        double preview=slider.getValue();require(preview!=old,"drag changes angle preview");
+        require(gui.sent.size()==count,"angle dragging sends no intermediate configuration");
+        authority.setInteger("GearRevision",++revision);tile.readFromNBT(authority);gui.updateScreen();
+        require(slider.getValue()==preview,"incoming tile acknowledgment preserves an actively dragged preview");
+        gui.mouseReleased(slider.x+slider.width-1,slider.y+10,0);
+        require(gui.sent.size()==count+1,"angle release sends exactly one final configuration");
+        require(gui.sent.get(count).getDouble(slider.id==16?"StartAngle":"ActiveAngle")==preview,"released packet contains final snapped angle");
+        authority.setInteger("GearRevision",++revision);tile.readFromNBT(authority);gui.updateScreen();
+        require(slider.getValue()==old&&slider.displayString.equals(slider.dispString+(int)Math.round(old)+slider.suffix),"refused angle acknowledgment restores authoritative thumb and label");
+        authority.setDouble(slider.id==16?"ArmStartAngle":"ArmActiveAngle",preview);authority.setInteger("GearRevision",++revision);tile.readFromNBT(authority);gui.updateScreen();
+        require(slider.getValue()==preview,"accepted angle acknowledgment updates displayed endpoint");
+        authority.setDouble(slider.id==16?"ArmStartAngle":"ArmActiveAngle",old);authority.setInteger("GearRevision",++revision);tile.readFromNBT(authority);gui.updateScreen();
+    }
+    /** The same access tile now belongs to a different joined root with the same revision. */
+    private static void changedRoot(RecordingGearGui gui,GearTileEntity access,net.minecraftforge.fml.client.config.GuiSlider start,net.minecraftforge.fml.client.config.GuiSlider end){
+        VehicleWorld world=(VehicleWorld)access.getWorld();NBTTagCompound original=access.writeToNBT(new NBTTagCompound());BlockPos at=access.getPos().east(2);
+        GearTileEntity replacement=new GearTileEntity();replacement.setPos(at);replacement.setWorld(world);
+        NBTTagCompound root=original.copy();root.setInteger("x",at.getX());root.setInteger("y",at.getY());root.setInteger("z",at.getZ());root.setDouble("ArmStartAngle",30);root.setDouble("ArmActiveAngle",60);
+        net.minecraft.nbt.NBTTagList columns=new net.minecraft.nbt.NBTTagList();columns.appendTag(new net.minecraft.nbt.NBTTagIntArray(new int[]{-2,0,0}));root.setTag("GearColumns",columns);replacement.readFromNBT(root);
+        NBTTagCompound member=original.copy();member.setBoolean("GearController",false);member.setLong("GearOwnerOffset",at.subtract(access.getPos()).toLong());
+        try{world.tiles.put(at,replacement);access.readFromNBT(member);gui.updateScreen();require(start.getValue()==30&&end.getValue()==60,"joined root identity change reconciles angles even with equal revision");}
+        finally{access.readFromNBT(original);world.tiles.remove(at);GearGeometry.remove(replacement);gui.updateScreen();}
     }
     private static void sliderEndpoints(Minecraft mc,GuiModularGear gui,List<GuiButton> buttons,int id)throws Exception{
         net.minecraftforge.fml.client.config.GuiSlider slider=(net.minecraftforge.fml.client.config.GuiSlider)buttons.stream().filter(b->b.id==id).findFirst().get();require(slider.visible&&slider.enabled,"enabled slider shares the page");
