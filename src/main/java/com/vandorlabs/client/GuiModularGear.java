@@ -14,12 +14,12 @@ public final class GuiModularGear extends GuiContainer {
     private int trigger,direction,page;
     private boolean deployed,rotate,join,load,push;
     private int range,heightLimit;
-    private double angle;
-    private net.minecraftforge.fml.client.config.GuiSlider rangeSlider,loadSlider,angleSlider;
+    private double angle,startAngle;
+    private net.minecraftforge.fml.client.config.GuiSlider rangeSlider,loadSlider,angleSlider,startSlider;
     private GuiTextField channels;
     private String error="";
     public GuiModularGear(ContainerModularGear container){
-        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();push=tile.pushBlocks();rotate=tile.rotatePayload();join=tile.joinEnabled();load=tile.carryLoad()&&tile.canCarryLoad();angle=tile.activeAngle();range=tile.joinRange();heightLimit=tile.loadHeight();xSize=380;ySize=218;
+        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();push=tile.pushBlocks();rotate=tile.rotatePayload();join=tile.joinEnabled();load=tile.carryLoad()&&tile.canCarryLoad();angle=tile.configuredEndAngle();startAngle=tile.startAngle();range=tile.joinRange();heightLimit=tile.loadHeight();xSize=380;ySize=218;
     }
     @Override public void initGui(){
         xSize=Math.min(380,width-12);ySize=218;super.initGui();buttonList.clear();int col=(xSize-36)/2,right=guiLeft+24+col;
@@ -28,7 +28,8 @@ public final class GuiModularGear extends GuiContainer {
         add(14,guiLeft+12,134,col);add(9,right,56,col);add(11,right,108,col);
         rangeSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,right,guiTop+82,col,20,"Range: "," blocks",1,32,range,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=range){range=value;submit();}});buttonList.add(rangeSlider);
         loadSlider=new net.minecraftforge.fml.client.config.GuiSlider(12,right,guiTop+134,col,20,"Height: "," blocks",1,32,heightLimit,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=heightLimit){heightLimit=value;submit();}});buttonList.add(loadSlider);
-        angleSlider=new net.minecraftforge.fml.client.config.GuiSlider(13,guiLeft+12,guiTop+134,col,20,"Angle: "," degrees",-180,180,angle,false,true,slider->{double value=Math.round(slider.getValue()/15)*15;slider.setValue(value);if(value!=angle){angle=value;submit();}});buttonList.add(angleSlider);
+        angleSlider=new net.minecraftforge.fml.client.config.GuiSlider(13,guiLeft+12,guiTop+134,col,20,"End: "," degrees",-180,180,angle,false,true,slider->{double value=Math.round(slider.getValue()/15)*15;slider.setValue(value);if(value!=angle){angle=value;submit();}});buttonList.add(angleSlider);
+        startSlider=new net.minecraftforge.fml.client.config.GuiSlider(16,right,guiTop+134,col,20,"Start: "," degrees",-180,180,startAngle,false,true,slider->{double value=Math.round(slider.getValue()/15)*15;slider.setValue(value);if(value!=startAngle){startAngle=value;submit();}});buttonList.add(startSlider);
         buttonList.add(new DialogTabButton(20,guiLeft+12,guiTop+30,col,20,"Mechanism"));
         buttonList.add(new DialogTabButton(21,right,guiTop+30,col,20,"Redstone"));
         labels();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
@@ -41,7 +42,7 @@ public final class GuiModularGear extends GuiContainer {
         for(GuiButton button:buttonList){button.visible=button.id>=20||button.id==4||((page==1)==(button.id==0));if(button.id>=20)button.enabled=button.id!=20+page;}
         channels.setVisible(page==1);channels.y=guiTop+98;button(0).y=guiTop+60;
         button(14).visible=page==0&&tile.canPushBlocks();button(14).enabled=tile.progress()==0||tile.progress()==1;button(14).displayString="Push blocks: "+(push?"On":"Off");
-        angleSlider.visible=page==0&&tile.isSwingArmController()&&!tile.isLandingAssembly();angleSlider.enabled=rest;
+        angleSlider.visible=page==0&&tile.isSwingArmController()&&!tile.isLandingAssembly();angleSlider.enabled=rest;startSlider.visible=angleSlider.visible;startSlider.enabled=rest;
         rangeSlider.visible=page==0&&join;loadSlider.visible=page==0&&join&&load&&tile.canCarryLoad();
         button(9).displayString="Join arms: "+(join?"On":"Off");button(9).enabled=rest&&!tile.isLandingAssembly()&&!tile.isFixedMount();rangeSlider.enabled=rest;
         button(11).displayString="Carry load: "+(load?"On":"Off");button(11).enabled=rest&&join&&tile.canCarryLoad();loadSlider.enabled=rest;
@@ -55,7 +56,7 @@ public final class GuiModularGear extends GuiContainer {
     }
     private void submit(){
         if(com.vandorlabs.redstone.ChannelList.parse(channels.getText())==null){error="Invalid channel list";return;}
-        NBTTagCompound tag=new NBTTagCompound();tag.setBoolean("PushBlocks",push);tag.setDouble("ActiveAngle",angle);tag.setInteger("Trigger",trigger);tag.setInteger("Direction",direction);tag.setBoolean("Deployed",deployed);tag.setString("Channels",channels.getText());tag.setBoolean("RotatePayload",rotate);tag.setBoolean("JoinArms",join);tag.setInteger("JoinRange",range);tag.setBoolean("CarryLoad",load);tag.setInteger("LoadHeight",heightLimit);
+        NBTTagCompound tag=new NBTTagCompound();tag.setBoolean("PushBlocks",push);tag.setDouble("ActiveAngle",angle);tag.setDouble("StartAngle",startAngle);tag.setInteger("Trigger",trigger);tag.setInteger("Direction",direction);tag.setBoolean("Deployed",deployed);tag.setString("Channels",channels.getText());tag.setBoolean("RotatePayload",rotate);tag.setBoolean("JoinArms",join);tag.setInteger("JoinRange",range);tag.setBoolean("CarryLoad",load);tag.setInteger("LoadHeight",heightLimit);
         error="";PacketHandler.INSTANCE.sendToServer(new MessageModularGear(inventorySlots.windowId,tag));
     }
     @Override protected void actionPerformed(GuiButton b){

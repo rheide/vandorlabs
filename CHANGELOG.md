@@ -13,7 +13,7 @@
 - Add 58 selectable frame finishes, separate border and interior materials, faintly lit borders, independent frame/display layouts and split full-height displays. Migrate previous framed display artwork to a separate bolted frame.
 - Add 12 company borders and 72 six-frame display animations under company subfolders. Cut authored frame edges for physical rails and interiors, preserve half-height proportions, and map Door frame artwork over the complete frame geometry.
 - Replace six corporate armor sets and add two helipads and 78 static control panels at runtime texture resolutions. Refresh the texture browser and collages.
-- Add optional horizontal Extender pushing without pulling, connected Surface-layer payloads, 15-degree rotating-arm angles and guarded endpoint clearance.
+- Add optional horizontal Extender pushing without pulling, connected Surface-layer payloads, separate rotating-arm Start and End angles in 15-degree steps and guarded endpoint clearance.
 - Add proportional ramp deployment and door placement on stationary ramp cells. Join hexagonal tanks into complete 2×2 and 3×3 sections with native per-cell storage.
 - Add guarded one-level Duplifier settings undo, including connected applications.
 - Allow matched wheel supports to lower or raise the chassis in Taxi while keeping their feet anchored. Check complete native parking footprints and retain modular arm sections through parking, recapture, rotation and recovery. Refuse in-flight parking and unsafe dismantling of retained material.

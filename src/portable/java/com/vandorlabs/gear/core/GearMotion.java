@@ -109,7 +109,7 @@ public final class GearMotion {
         private final double levelOffsetY;
         private final double levelOffsetZ;
 
-        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle) {
+        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle) {
             // A diagonal hinge offset lowers the folded foot by twice the drop
             // while preserving its final horizontal reach and deployed pose.
             this.hingeDrop=hingeDrop;
@@ -123,7 +123,7 @@ public final class GearMotion {
             this.easedDeployProgress = smoothstep(progress);
             double stowed = 1.0 - easedDeployProgress;
             this.offsetY = mode == Mode.EXTEND ? (height + stowedFootY) * stowed : 0.0;
-            this.angleDegrees = mode == Mode.ROTATE || mode == Mode.ROTATE_LEVEL ? activeAngle * stowed : 0.0;
+            this.angleDegrees = mode == Mode.ROTATE || mode == Mode.ROTATE_LEVEL ? startAngle+(activeAngle-startAngle)*stowed : 0.0;
             // Exact endpoints avoid tiny residual sideways translations in
             // fully deployed/stowed states and make joined faces coincide.
             this.sine = angleDegrees == 90.0 ? 1.0 : Math.sin(Math.toRadians(angleDegrees));
@@ -291,11 +291,15 @@ public final class GearMotion {
 
     /** Configurable active endpoint; the construction endpoint remains unchanged. */
     public static Pose pose(Mode mode,Direction direction,int height,double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle){
-        requireFinite(activeAngle,"activeAngle");
-        if(activeAngle < -180 || activeAngle > 180)throw new IllegalArgumentException("Arm angle must be within -180 to 180 degrees");
-        if(height < 1 || height > GearTopology.MAX_COLUMN_HEIGHT || mode==null || direction==null)throw new IllegalArgumentException("Invalid arm pose");
+        return pose(mode,direction,height,progress,stowedFootY,hingeDrop,socketOffset,activeAngle,0);
+    }
+
+    public static Pose pose(Mode mode,Direction direction,int height,double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle){
+        requireFinite(startAngle,"startAngle");requireFinite(activeAngle,"activeAngle");
+        if(startAngle < -180||startAngle > 180||activeAngle < -180||activeAngle > 180)throw new IllegalArgumentException("Arm endpoints must be within -180 to 180 degrees");
+        if(height < 1||height > GearTopology.MAX_COLUMN_HEIGHT||mode==null||direction==null)throw new IllegalArgumentException("Invalid arm pose");
         requireFinite(stowedFootY,"stowedFootY");requireFinite(hingeDrop,"hingeDrop");requireFinite(socketOffset,"socketOffset");
-        return new Pose(mode,direction,height,clampUnit(progress),stowedFootY,hingeDrop,socketOffset,activeAngle);
+        return new Pose(mode,direction,height,clampUnit(progress),stowedFootY,hingeDrop,socketOffset,activeAngle,startAngle);
     }
 
     /** Ease a raw position; finite overshoot is clamped to the end states. */

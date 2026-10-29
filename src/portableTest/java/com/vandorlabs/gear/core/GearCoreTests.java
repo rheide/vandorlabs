@@ -36,6 +36,7 @@ public final class GearCoreTests {
         check(!GearTopology.validateTrackContact(2,offsetTrack,new Cell(1,-1,0)).isValid(),"Large contact stays on actual mounting plane");
         extensionEndpointsAndAttachments();
         cardinalRotationAndRigidity();
+        configuredEndpoints();
         levelFootRotationAndLowerHinge();
         boundsContainTransformedGeometry();
         progressAndReversal();
@@ -49,6 +50,19 @@ public final class GearCoreTests {
         numericSafety();
         System.out.println("PASS: " + checks + " core assertions; topology, masks, limits, "
                 + "attachments, four fold directions, level-foot swivel, bounds, reversal, and numeric safety.");
+    }
+
+    private static void configuredEndpoints(){
+        for(Mode mode:new Mode[]{Mode.ROTATE,Mode.ROTATE_LEVEL})for(Direction direction:Direction.values())for(int start=-180;start<=180;start+=15)for(int end=-180;end<=180;end+=15){
+            double previous=start;
+            for(int sample=0;sample<=24;sample++){
+                double progress=1-sample/24D;
+                Pose pose=GearMotion.pose(mode,direction,3,progress,-1,0,0,end,start);double angle=pose.angleDegrees();
+                check(angle>=Math.min(start,end)-1e-9&&angle<=Math.max(start,end)+1e-9,"configured angle stays within its endpoints");
+                check(end>=start?angle>=previous-1e-9:angle<=previous+1e-9,"configured angle advances monotonically");previous=angle;
+                if(sample==0)close(start,angle,"configured source endpoint");if(sample==24)close(end,angle,"configured destination endpoint");
+            }
+        }
     }
 
     private static void wheelConnector(){

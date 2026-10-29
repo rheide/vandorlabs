@@ -46,7 +46,7 @@ frame artwork supplies separate opaque edge strips for physical frame interiors.
 [Arms](../joined-arm-platforms.md) can move the connected layer of Programmable
 Surfaces attached at their tips, including overhangs beyond joined Extender supports. Horizontal Extenders offer an optional
 push mode; they leave pushed blocks in place when returning. Rotating Arms offer
-a 15-degree angle slider and retain collision checks against real obstructions.
+separate Start and End angle sliders in 15-degree steps and retain collision checks against real obstructions.
 
 [Ramp Controllers](../landing-ramps.md) can deploy proportionally to redstone
 levels 0–15. Analog mode and start/end offsets persist together when editing channel lists. Stationary full-height attachment faces accept doors. Permitted

@@ -394,6 +394,10 @@ public final class ArmPayload {
             Vec3d endpoint=rawTransform(arm,0,0,0,0);double blend=1-progress;blend=blend*blend*(3-2*blend);
             result=result.addVector((Math.rint(endpoint.x)-endpoint.x)*blend,(Math.rint(endpoint.y)-endpoint.y)*blend,(Math.rint(endpoint.z)-endpoint.z)*blend);
         }
+        if(gridAligned&&arm.mode()!=com.vandorlabs.gear.core.GearMotion.Mode.ROTATE_LEVEL&&arm.isSwingArmController()&&Math.abs(arm.physicalStartAngle()/90-Math.rint(arm.physicalStartAngle()/90))<1e-8){
+            Vec3d endpoint=rawTransform(arm,1,0,0,0);double blend=progress*progress*(3-2*progress);
+            result=result.addVector((Math.rint(endpoint.x)-endpoint.x)*blend,(Math.rint(endpoint.y)-endpoint.y)*blend,(Math.rint(endpoint.z)-endpoint.z)*blend);
+        }
         return result;
     }
     private Vec3d rawTransform(GearTileEntity arm,double progress,double x,double y,double z){
@@ -418,14 +422,16 @@ public final class ArmPayload {
     /** Exact coordinate extrema of each rotating corner, including the grid-alignment translation. */
     public AxisAlignedBB sweptBox(GearTileEntity arm,int index,double before,double after){
         AxisAlignedBB box=localCollision(arm).get(index);double lo=Math.toRadians(Math.min(arm.pose(before).angleDegrees(),arm.pose(after).angleDegrees())),hi=Math.toRadians(Math.max(arm.pose(before).angleDegrees(),arm.pose(after).angleDegrees()));
-        Vec3d rawEnd=rawTransform(arm,0,0,0,0),end=transform(arm,0,0,0,0);double angle=Math.toRadians(arm.activeAngle());Vec3d slope=angle==0?Vec3d.ZERO:end.subtract(rawEnd).scale(1/angle);
+        Vec3d rawStart=rawTransform(arm,1,0,0,0),start=transform(arm,1,0,0,0),rawEnd=rawTransform(arm,0,0,0,0),end=transform(arm,0,0,0,0);
+        double base=Math.toRadians(arm.physicalStartAngle()),span=Math.toRadians(arm.activeAngle()-arm.physicalStartAngle());
+        Vec3d initial=start.subtract(rawStart),delta=end.subtract(rawEnd).subtract(initial),slope=span==0?Vec3d.ZERO:delta.scale(1/span),constant=initial.subtract(slope.scale(base));
         double[] min={Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY},max={Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};
         for(int corner=0;corner<8;corner++){
             double x=(corner&1)==0?box.minX:box.maxX,y=(corner&2)==0?box.minY:box.maxY,z=(corner&4)==0?box.minZ:box.maxZ;
             Vec3d f0=atAngle(arm,0,x,y,z),f90=atAngle(arm,90,x,y,z),f180=atAngle(arm,180,x,y,z);
             double[] zero={f0.x,f0.y,f0.z},quarter={f90.x,f90.y,f90.z},half={f180.x,f180.y,f180.z},linear={slope.x,slope.y,slope.z};
             for(int axis=0;axis<3;axis++){
-                double d=(zero[axis]+half[axis])/2,a=(zero[axis]-half[axis])/2,b=quarter[axis]-d,c=linear[axis];
+                double d=(zero[axis]+half[axis])/2+(axis==0?constant.x:axis==1?constant.y:constant.z),a=(zero[axis]-half[axis])/2,b=quarter[axis]-(zero[axis]+half[axis])/2,c=linear[axis];
                 for(double t:new double[]{lo,hi}){double value=a*Math.cos(t)+b*Math.sin(t)+c*t+d;min[axis]=Math.min(min[axis],value);max[axis]=Math.max(max[axis],value);}
                 double radius=Math.hypot(a,b);if(radius>1e-12&&Math.abs(c)<=radius){double phase=Math.atan2(a,b),turn=Math.acos(-c/radius);for(int sign:new int[]{-1,1})for(int k=-2;k<=2;k++){double t=sign*turn-phase+k*2*Math.PI;if(t>lo&&t<hi){double value=a*Math.cos(t)+b*Math.sin(t)+c*t+d;min[axis]=Math.min(min[axis],value);max[axis]=Math.max(max[axis],value);}}}
             }

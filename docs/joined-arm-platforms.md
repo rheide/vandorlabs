@@ -125,6 +125,14 @@ At the active endpoint the pushed blocks become ordinary world blocks. Returning
 
 ## Set a rotating angle
 
-Return the Rotating Arm to rest before changing **Angle** in the **Mechanism** tab. The slider steps in 15-degree increments from −180 to 180 degrees. **Payload: rotates** turns the attachment with the arm; **Payload: stays level** preserves its orientation. Non-grid-aligned endpoints retain the attachment as a captured mechanism until it returns to a representable native endpoint.
+Return the Rotating Arm to rest before changing **Start** or **End** in the **Mechanism** tab. Both sliders step in 15-degree increments from −180 to 180 degrees. **Payload: rotates** turns the attachment with the arm; **Payload: stays level** preserves its orientation. Non-grid-aligned endpoints retain the attachment as a captured mechanism until it returns to a representable native endpoint.
 
 Rotating payloads may briefly graze a block that touches a face at either endpoint, up to a quarter-block penetration of the swept bounds. The remaining arc and final endpoint must remain clear. Unrelated obstacles and the arm linkage retain the strict quarter-pixel tolerance; final overlap is never allowed.
+
+### Start and end angles
+
+Rotating Arms have separate **Start** and **End** sliders in 15-degree steps. Return the arm to its starting position before changing Start. The arm moves its attachment to the new starting angle and checks for obstructions during the adjustment. End selects the destination of the next normal stroke. Both settings are saved with the arm.
+
+### Horizontal pushing
+
+Enable **Push blocks** at either stationary endpoint of a horizontal Extender Arm. Its constructed length remains its maximum extension. Blocks move forward only when contacted: an air gap reduces how far a later block is pushed. Retraction leaves pushed blocks in place. The arm checks the complete path before moving an attached Surface layer and supports up to twelve additional ordinary solid blocks; pushing additional inventories or machinery is refused.

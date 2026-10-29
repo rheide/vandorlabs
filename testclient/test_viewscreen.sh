@@ -4,6 +4,7 @@ set -euo pipefail
 unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
+unset VANDOR_LABS_ARM_START_ONLY
 unset VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
 unset VANDOR_LABS_ARTWORK27_CHECKS_ONLY
 unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
@@ -37,6 +38,9 @@ case "${1:-}" in
         elif [ "$TARGET" = mekanism-tanks ]; then
             PREFIX=mekanism_tank_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_MEKANISM_TANK_ONLY=true
+        elif [ "$TARGET" = arm-start ]; then
+            PREFIX=arm_start_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_START_ONLY=true
         elif [ "$TARGET" = arm-push ]; then
             PREFIX=arm_push_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_PUSH_ONLY=true
@@ -239,6 +243,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-riders ]; then
         grep -q "arm-rider PASS" "$RUN_OUT/client.log"
         echo "Arm rider checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-start ]; then
+        grep -q "arm-start PASS" "$RUN_OUT/client.log"
+        echo "Arm starting-angle checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-push ]; then

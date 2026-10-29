@@ -32,6 +32,7 @@ public final class ArmLiveRuntimeChecks {
     private static void surroundingsIntact(WorldServer world){for(BlockPos at:surroundings())require(world.getBlockState(at).getBlock()==Blocks.COBBLESTONE&&!ArmTransactions.locked(world,at),"surrounding structure stays in place and unlocked at "+at);}
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("arm-live fixture="+fixture+" face="+face()+" stage="+stage+" tick="+ticks+": "+why);}
     public static boolean tick(Minecraft mc)throws Exception{
+        if(Boolean.getBoolean("vandorlabs.armStartOnly"))return GearStartLiveChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.armPushOnly"))return GearPushLiveChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.armImprovementsOnly"))return ArmImprovementsLiveChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.armWallOnly"))return ArmWallRuntimeChecks.tick(mc);
