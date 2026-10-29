@@ -42,7 +42,7 @@ final class Artwork27RuntimeChecks {
         }
         FrameAppearanceRuntimeChecks.run();FrameEdgeRuntimeChecks.run(mc,output);VehicleControllerDialogChecks.run(mc,output);VehicleRenderRuntimeChecks.run(mc);VehicleSignRenderChecks.run(mc,output);VehiclePaintingRenderChecks.run(mc,output);FrameFramebufferChecks.run(mc,output);CompanyScreenLayerRuntimeChecks.run(mc,output);GearDialogChecks.run(mc,output);VehicleDynamicLights.runChecks(mc);turntableBounds(mc);
         com.vandorlabs.tiles.TileEntityProgrammableLight light=new com.vandorlabs.tiles.TileEntityProgrammableLight();light.setWorld(mc.world);light.setPos(BlockPos.ORIGIN);
-        GuiProgrammableLight gui=new GuiProgrammableLight(mc.player.inventory,light);mc.displayGuiScreen(gui);
+        net.minecraft.inventory.Container previousContainer=mc.player.openContainer;GuiProgrammableLight gui=new GuiProgrammableLight(mc.player.inventory,light);gui.inventorySlots.windowId=-95;mc.displayGuiScreen(gui);
         try{
             for(int[] size:new int[][]{{320,240},{460,340}}){
                 gui.setWorldAndResolution(mc,size[0],size[1]);
@@ -52,7 +52,7 @@ final class Artwork27RuntimeChecks {
                     GuiOptionCycleRuntimeChecks.check(mc);
                 }
             }
-        }finally{mc.displayGuiScreen(null);}
+        }finally{mc.displayGuiScreen(null);mc.player.openContainer=previousContainer;}
         synchronousDone=true;return false;
     }
     private static void turntableBounds(Minecraft mc)throws Exception{
