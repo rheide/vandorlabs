@@ -48,14 +48,19 @@ public final class SavedTaxiFollowupChecks {
         for(String field:new String[]{"signal","screen"}){Field value=type.getDeclaredField(field);value.setAccessible(true);value.setBoolean(job,true);}
         Field mode=type.getDeclaredField("requestedMode");mode.setAccessible(true);mode.setInt(job,1);
         Method action=VehicleService.class.getDeclaredMethod("assembleSignal",type);action.setAccessible(true);Exception[] error={null};
-        boolean[] changed={false};NBTTagCompound before=scan.result.write();List<EntityPainting> paintings=VehiclePaintings.attached(world,scan.result,scan.origin);
-        VehicleTransferRuntimeChecks.slowDisk(world,()->VehicleTransfer.submit(world,scan.result,scan.origin,()->{
+        NBTTagCompound[] changedSource={null};boolean[] changed={false};NBTTagCompound before=scan.result.write();List<EntityPainting> paintings=VehiclePaintings.attached(world,scan.result,scan.origin);
+        try{VehicleTransferRuntimeChecks.slowDisk(world,()->VehicleTransfer.submit(world,scan.result,scan.origin,()->{
             try{action.invoke(null,job);}catch(InvocationTargetException failure){Throwable cause=failure.getCause();if(cause instanceof Exception)throw (Exception)cause;if(cause instanceof Error)throw (Error)cause;throw failure;}
-        },failure->error[0]=failure),()->{if(change!=null&&!changed[0]){changed[0]=true;change.run();}return (change!=null||scan.result.matches(world,scan.origin))&&before.equals(scan.result.write())&&world.getTileEntity(controller)!=null&&paintings.stream().allMatch(p->!p.isDead&&world.getEntityFromUuid(p.getUniqueID())==p);});
-        if(change!=null){require(changed[0]&&error[0]!=null,"queued source change must refuse");require(world.getTileEntity(controller)!=null&&paintings.stream().allMatch(p->world.getEntityFromUuid(p.getUniqueID())==p&&!p.isDead),"source blocks and painting retain ownership after refusal");require(!VehicleTransfer.pending(world),"refused transfer retires its unused ownership journal");return null;}
+        },failure->error[0]=failure),()->{if(change!=null&&!changed[0]){changed[0]=true;change.run();changedSource[0]=nativeSource(world,scan.result,scan.origin);}return (change!=null||scan.result.matches(world,scan.origin))&&before.equals(scan.result.write())&&world.getTileEntity(controller)!=null&&paintings.stream().allMatch(p->!p.isDead&&world.getEntityFromUuid(p.getUniqueID())==p);});}catch(Exception preparation){throw new IllegalStateException("Queued player service preparation failed: "+(error[0]==null?preparation:error[0]),error[0]==null?preparation:error[0]);}
+        if(change!=null){require(changed[0]&&error[0]!=null,"queued source change must refuse");require(world.getTileEntity(controller)!=null&&paintings.stream().allMatch(p->world.getEntityFromUuid(p.getUniqueID())==p&&!p.isDead),"source blocks and painting retain ownership after refusal");require(changedSource[0].equals(nativeSource(world,scan.result,scan.origin)),"refusal preserves every native block, own-tile field, opaque capability and edited painting");require(!VehicleTransfer.pending(world),"refused transfer retires its unused ownership journal");return null;}
         require(error[0]==null,"queued player service assembly: "+error[0]);
         for(Entity entity:world.loadedEntityList)if(entity instanceof EntityGroundVehicle&&((EntityGroundVehicle)entity).structure!=null&&Math.abs(entity.posX-scan.origin.getX())<.01&&Math.abs(entity.posZ-scan.origin.getZ())<.01)return (EntityGroundVehicle)entity;
         throw new IllegalStateException("Saved Taxi service did not publish its vehicle");
+    }
+    private static NBTTagCompound nativeSource(WorldServer world,VehicleStructure source,BlockPos origin){
+        NBTTagCompound snapshot=new NBTTagCompound();NBTTagList cells=new NBTTagList();
+        for(VehicleStructure.Cell cell:source.cells){BlockPos pos=origin.add(cell.pos);NBTTagCompound data=new NBTTagCompound();net.minecraft.block.state.IBlockState state=world.getBlockState(pos);data.setString("Block",state.getBlock().getRegistryName().toString());data.setInteger("Meta",state.getBlock().getMetaFromState(state));TileEntity tile=world.getTileEntity(pos);if(tile!=null)data.setTag("Tile",tile.writeToNBT(new NBTTagCompound()));cells.appendTag(data);}
+        snapshot.setTag("Blocks",cells);snapshot.setTag("Paintings",VehiclePaintings.entries(VehiclePaintings.capture(source,origin,VehiclePaintings.attached(world,source,origin))));return snapshot;
     }
     private static void park(WorldServer world,EntityPlayerMP actor,EntityGroundVehicle craft)throws Exception{
         Exception[] failure={null};VehicleTransfer.submit(world,()->{VehicleRotation.Plan plan=VehicleRotation.plan(craft);VehicleTransfer.park(world,craft,plan.origin,actor,false);},error->failure[0]=error);VehicleTransferRuntimeChecks.drain(world);require(failure[0]==null,"queued native parking: "+failure[0]);
@@ -72,12 +77,6 @@ public final class SavedTaxiFollowupChecks {
         String selected=System.getProperty("vandorlabs.followups3Case","");double x=actor.posX,y=actor.posY,z=actor.posZ;
         try{
             if(!selected.equals("tracks")){
-                load(world,"painting");assemble(world,actor,new BlockPos(-141,86,166),()->{
-                    for(EntityPainting painting:world.getEntitiesWithinAABB(EntityPainting.class,new AxisAlignedBB(-146,82,153,-129,92,170))){painting.art=EntityPainting.EnumArt.AZTEC;break;}
-                });
-                load(world,"painting");assemble(world,actor,new BlockPos(-141,86,166),()->{
-                    TileEntity tile=world.getTileEntity(new BlockPos(-141,86,166));tile.getTileData().setInteger("ChangedDuringPreparation",1);tile.markDirty();
-                });
                 NBTTagCompound fixture=load(world,"painting");UUID id=fixture.getTagList("Entities",10).getCompoundTagAt(0).getUniqueId("UUID");
                 EntityGroundVehicle craft=assemble(world,actor,new BlockPos(-141,86,166));
                 require(VehiclePaintings.entries(craft.structure).tagCount()==1&&world.getEntityFromUuid(id)==null,"exact painting has only carried ownership");
@@ -85,6 +84,12 @@ public final class SavedTaxiFollowupChecks {
                 for(int n=0;n<4;n++){VehicleStructure rotated=VehicleRotation.rotate(craft.structure,craft.view,1);craft.install(rotated);}require(saved.equals(craft.structure.write()),"exact painting and native tiles survive four rotations");
                 park(world,actor,craft);require(world.getEntityFromUuid(id) instanceof EntityPainting,"native painting restored exactly once");
                 craft=assemble(world,actor,new BlockPos(-141,86,166));require(VehiclePaintings.entries(craft.structure).tagCount()==1&&world.getEntityFromUuid(id)==null,"exact painting recapture has one owner");park(world,actor,craft);
+                load(world,"painting");assemble(world,actor,new BlockPos(-141,86,166),()->{
+                    for(EntityPainting painting:world.getEntitiesWithinAABB(EntityPainting.class,new AxisAlignedBB(-146,82,153,-129,92,170))){painting.art=EntityPainting.EnumArt.AZTEC;break;}
+                });
+                load(world,"painting");assemble(world,actor,new BlockPos(-141,86,166),()->{
+                    TileEntity tile=world.getTileEntity(new BlockPos(-141,86,166));tile.getTileData().setInteger("ChangedDuringPreparation",1);tile.markDirty();
+                });
                 System.out.println("[vandorlabs][reprolab] saved-taxi-painting PASS exact-native-layout queued-service raw-preflight blocked-disk unchanged-source journal park reload four-turns recapture");
             }
             if(!selected.equals("painting")){
