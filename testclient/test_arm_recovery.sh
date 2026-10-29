@@ -4,7 +4,7 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 export VANDOR_LABS_TEST_SKIP_BUILD=true
 export VANDOR_LABS_TEST_HEAP=${VANDOR_LABS_TEST_HEAP:-4G}
-for phase in ${VANDOR_LABS_ARM_RECOVERY_CASES:-prepared detach detach-partial restore-partial restore-endpoint-partial detach-endpoint-partial harvest-prepared harvest-partial harvest-committed}; do
+for phase in ${VANDOR_LABS_ARM_RECOVERY_CASES:-prepared detach detach-partial restore-partial restore-endpoint-partial detach-endpoint-partial harvest-prepared harvest-partial harvest-committed push-prepared push-partial}; do
     fixture=$(mktemp -d "$ROOT/testclient/arm-restart.XXXXXX")
     export VANDOR_LABS_TEST_GAME_DIR="$fixture/game"
     export VANDOR_LABS_ARM_RECOVERY_PHASE="$phase"

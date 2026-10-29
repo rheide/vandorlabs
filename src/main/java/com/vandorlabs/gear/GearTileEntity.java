@@ -100,6 +100,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 if(!(actor instanceof net.minecraft.entity.player.EntityPlayerMP)){lastError="Use the Configurizer before moving this attachment";return false;}
                 payload=ArmPayload.discover(this,(net.minecraft.entity.player.EntityPlayerMP)actor);sync();
             }
+            GearPushing.preflight(this);
             if(payload!=null&&payload.materialized()){if(!payload.matchesPlaced(this)){net.minecraft.entity.player.EntityPlayer actor=com.vandorlabs.tiles.WorldActionAuthorization.actor(this);payload=payload.refreshPlaced(this,actor instanceof net.minecraft.entity.player.EntityPlayerMP?(net.minecraft.entity.player.EntityPlayerMP)actor:null);}if(!payload.detach(this))return false;sync();}
             if(ArmTransactions.blocked(this)){payloadPreparationPending=true;return false;}
             return true;

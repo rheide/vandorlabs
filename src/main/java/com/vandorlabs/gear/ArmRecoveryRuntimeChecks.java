@@ -26,6 +26,7 @@ public final class ArmRecoveryRuntimeChecks {
         return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0),phase)).get();
     }
     private static boolean run(WorldServer world,EntityPlayerMP actor,String phase)throws Exception{
+        if(phase.contains("push-"))return GearPushRecoveryChecks.run(world,actor,phase);
         if(phase.startsWith("authorization-"))return ArmAuthorizationRestartChecks.run(world,actor,phase.equals("authorization-verify"));
         world.getChunkFromBlockCoords(ROOT);world.getChunkFromBlockCoords(PAYLOAD);
         if(phase.startsWith("verify-")){

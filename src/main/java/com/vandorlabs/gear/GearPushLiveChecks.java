@@ -34,7 +34,10 @@ public final class GearPushLiveChecks {
             if(stage==1&&arm.progress()==0&&!ArmTransactions.locked(world,ROOT)){
                 NBTTagCompound options=arm.settings();options.setBoolean("PushBlocks",true);arm.configure(options);
                 world.setBlockState(ROOT.offset(face,3).up(),Blocks.IRON_BLOCK.getDefaultState(),3);
-                arm.target(true);stage=2;return false;
+                // A late immovable block must refuse before detaching the Surface.
+                BlockPos obstruction=ROOT.offset(face,5).up();world.setBlockState(obstruction,Blocks.BEDROCK.getDefaultState(),3);
+                arm.target(true);require(!arm.preparePayloadMotion()&&arm.progress()==0&&arm.payload().materialized()&&world.getBlockState(ROOT.offset(face,1).up()).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface,"complete push path refuses before source removal");
+                world.setBlockToAir(obstruction);arm.target(true);stage=2;return false;
             }
             if(stage==2&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){
                 require(world.getBlockState(ROOT.offset(face,4)).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface,"initial Surface moves three blocks "+arm.error());
@@ -44,7 +47,7 @@ public final class GearPushLiveChecks {
             }
             if(stage==3&&arm.progress()==0&&!ArmTransactions.locked(world,ROOT)){
                 require(world.getBlockState(ROOT.offset(face,4)).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(ROOT.offset(face,5).up()).getBlock()==Blocks.IRON_BLOCK,"retraction does not pull pushed blocks "+arm.error());
-                fixture++;stage=0;ticks=80;
+                require(world.getBlockState(ROOT.offset(face.getOpposite())).getBlock()==Blocks.STONE,"mounting support remains in place");fixture++;stage=0;ticks=80;
             }
             return false;
         }).get();
