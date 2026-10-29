@@ -1577,8 +1577,10 @@ public class TEAnimatedScreenSelector
         }
     }
 
+    static boolean suppressDisplayContent;
     private static void drawScreenQuad(BufferBuilder buf,ScreenSurface.Quad quad,double uMin,double uMax,
             double vTop,double vBottom,boolean ceiling) {
+        if(suppressDisplayContent)return;
         for(int i=0;i<4;i++) {
             int index=ceiling?(4-i)&3:i;
             ScreenSurface.Vertex vertex=quad.vertices[index];

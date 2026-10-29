@@ -67,10 +67,10 @@ public final class FrameEdgeRuntimeChecks {
     private static List<Scene> place(WorldServer world,EntityPlayerMP actor){
         List<Scene> result=new ArrayList<>();BlockPos base=new BlockPos(758,178,296);ItemStack held=actor.getHeldItemMainhand();double px=actor.posX,py=actor.posY,pz=actor.posZ;float yaw=actor.rotationYaw;
         int frame=ScreenHousingTextures.screenIndex("frames/frames-door-window/gunmetal-1"),inner=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1");require(frame>0&&inner>0,"supplied source artwork");
-        try{for(String name:new String[]{"single_door","paired_door","large_door","glass","wall","porthole"}){
+        try{for(String name:new String[]{"single_door","paired_door","large_door","glass","cyan_glass","opaque_glass","diagonal_glass","wall","porthole","diagonal_porthole"}){
             for(BlockPos at:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(5,5,3))){world.getChunkFromBlockCoords(at);world.setBlockToAir(at);}
             for(int x=-3;x<=5;x++)for(int z=-2;z<=2;z++)world.setBlockState(base.add(x,-1,z),Blocks.STONE.getDefaultState(),2);
-            boolean door=name.contains("door");Block block=Block.getBlockFromName("vandorlabs:"+(door?(name.equals("large_door")?"large_programmable_door":"programmable_door"):name.equals("glass")?"programmable_glass":name.equals("wall")?"programmable_wall":"programmable_porthole_wall"));require(block!=null,"registered fixture block");
+            boolean door=name.contains("door");Block block=Block.getBlockFromName("vandorlabs:"+(door?(name.equals("large_door")?"large_programmable_door":"programmable_door"):(name.equals("glass")||name.equals("cyan_glass")||name.equals("opaque_glass"))?"programmable_glass":name.equals("diagonal_glass")?"programmable_diagonal_glass":name.equals("diagonal_porthole")?"programmable_diagonal_porthole":name.equals("wall")?"programmable_wall":"programmable_porthole_wall"));require(block!=null,"registered fixture block");
             actor.rotationYaw=180;actor.setPosition(base.getX()+.5,base.getY(),base.getZ()+2);int count=name.equals("paired_door")?2:1;
             for(int i=0;i<count;i++){
                 ItemStack stack=new ItemStack(block,1);actor.setHeldItem(EnumHand.MAIN_HAND,stack);BlockPos support=base.east(i).down();
@@ -79,8 +79,8 @@ public final class FrameEdgeRuntimeChecks {
             List<VehicleStructure.Cell> cells=new ArrayList<>();int members=0;
             for(BlockPos at:BlockPos.getAllInBox(base.add(-3,0,-1),base.add(5,4,1))){TileEntity tile=world.getTileEntity(at);if(tile==null||world.getBlockState(at).getBlock()!=block)continue;
                 if(tile instanceof TileEntitySpaceDoor){TileEntitySpaceDoor d=(TileEntitySpaceDoor)tile;d.configure(2,1,true);d.frameAppearance.front=frame;d.frameAppearance.interior=inner;}
-                else if(tile instanceof TileEntityProgrammableGlass){TileEntityProgrammableGlass g=(TileEntityProgrammableGlass)tile;g.setAppearance(1,true);g.frameAppearance.front=frame;g.frameAppearance.interior=inner;}
-                else if(tile instanceof TileEntityAnimatedScreenSelector){TileEntityAnimatedScreenSelector w=(TileEntityAnimatedScreenSelector)tile;w.frameAppearance.interior=inner;}
+                else if(tile instanceof TileEntityProgrammableGlass){TileEntityProgrammableGlass g=(TileEntityProgrammableGlass)tile;g.setAppearance(1,true);g.frameAppearance.front=name.equals("cyan_glass")?inner:name.equals("opaque_glass")?ScreenHousingTextures.screenIndex("frames/frames-door-window/door_interior_dark"):frame;g.frameAppearance.interior=inner;}
+                else if(tile instanceof TileEntityAnimatedScreenSelector){TileEntityAnimatedScreenSelector w=(TileEntityAnimatedScreenSelector)tile;w.frameAppearance.interior=inner;if(name.equals("diagonal_glass")){w.frameAppearance.front=frame;w.setGlassAppearance(1,true);}}
                 NBTTagCompound saved=VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(base));cells.add(new VehicleStructure.Cell(at.subtract(base),world.getBlockState(at),saved));members++;
             }
             require(!door||members==(name.equals("large_door")?9:count*2),"actual door placement retains all upper/lower members: "+name+" "+members);

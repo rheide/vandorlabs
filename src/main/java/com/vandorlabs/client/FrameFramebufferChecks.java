@@ -55,9 +55,22 @@ final class FrameFramebufferChecks {
             try{BufferedImage darkImage=capture(mc,darkReference);require(distance(splitImage.getRGB(128,64),single.getRGB(128,128))<30,"split upper display differs from selected artwork");require(distance(splitImage.getRGB(128,192),darkImage.getRGB(128,128))<30,"split lower display differs from selected artwork");require(distance(splitImage.getRGB(128,64),splitImage.getRGB(128,192))>30,"independent split artwork is indistinguishable");}finally{darkReference.close();}
             ImageIO.write(fit,"png",new File(output,"shot_frames_display_fit_2x2.png"));ImageIO.write(perimeter,"png",new File(output,"shot_frames_border_fit_2x2.png"));ImageIO.write(repeated,"png",new File(output,"shot_frames_border_tile_2x2.png"));ImageIO.write(splitImage,"png",new File(output,"shot_frames_split_display.png"));
             coupledLayouts(mc,output,pattern,dark,bolted,splitImage);
-            companyDisplays(mc,output);opaqueInterior(mc,output);frameDialog(mc,output,one.tiles.get(0));screenRedstoneDialog(mc,output,one.tiles.get(0));pickerDialogs(mc,output);
+            framePersistence(mc);companyDisplays(mc,output);opaqueInterior(mc,output);frameDialog(mc,output,one.tiles.get(0));screenRedstoneDialog(mc,output,one.tiles.get(0));pickerDialogs(mc,output);
             System.out.println("[vandorlabs][reprolab] frame-framebuffer PASS square-display-fit rectangular-rejection independent-frame-fit mixed-artwork-and-frame-negative-controls split-fit-2x2-and-3x3 opaque-interior");
         }finally{one.close();square.close();rectangle.close();row.close();}
+    }
+    private static void framePersistence(Minecraft mc)throws Exception{
+        net.minecraft.client.gui.GuiScreen previous=mc.currentScreen;net.minecraft.inventory.Container old=mc.player.openContainer;
+        Fixture f=new Fixture(mc,1,1,0);int selected=ScreenHousingTextures.screenIndex("frames/company/vektor_full");
+        try{
+            TileEntityAnimatedScreenSelector tile=f.tiles.get(0);tile.frameAppearance.front=selected;
+            GuiAnimatedScreenSelector gui=new GuiAnimatedScreenSelector(mc.player.inventory,tile);gui.inventorySlots.windowId=-95;mc.displayGuiScreen(gui);gui.actionPerformed(screenButton(gui,197));clickButton(gui,3008,0);
+            require(!tile.frameAppearance.hasFront()&&tile.frameAppearance.front==selected,"Bare discarded selected frame finish");
+            TileEntityAnimatedScreenSelector loaded=new TileEntityAnimatedScreenSelector();loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));loaded.setWorld(f.world);loaded.setPos(tile.getPos());
+            require(loaded.frameAppearance.bare&&loaded.frameAppearance.front==selected,"Bare finish lost through save/reload");
+            GuiAnimatedScreenSelector reopened=new GuiAnimatedScreenSelector(mc.player.inventory,loaded);reopened.inventorySlots.windowId=-94;mc.displayGuiScreen(reopened);reopened.actionPerformed(screenButton(reopened,197));clickButton(reopened,3008,0);
+            require(loaded.frameAppearance.hasFront()&&loaded.frameAppearance.front==selected,"reopened Framed button failed to restore saved finish");
+        }finally{mc.displayGuiScreen(previous);mc.player.openContainer=old;f.close();}
     }
     private static void companyDisplays(Minecraft mc,File output)throws Exception{
         int content=ScreenHousingTextures.screenIndex("company_vektor_full_communications_static"),border=ScreenHousingTextures.screenIndex("frames/company/vektor_full");
@@ -66,7 +79,19 @@ final class FrameFramebufferChecks {
         for(int n:new int[]{1,2}){
             Fixture f=new Fixture(mc,n,n,content);
             try{
-                f.appearance(border,false,true);BufferedImage fitted=capture(mc,f);ImageIO.write(fitted,"png",new File(output,"shot_frames_vektor_communications_"+n+"x"+n+".png"));
+                f.appearance(border,false,true);BufferedImage fitted=capture(mc,f);
+                BufferedImage empty;TEAnimatedScreenSelector.suppressDisplayContent=true;try{empty=capture(mc,f);}finally{TEAnimatedScreenSelector.suppressDisplayContent=false;}
+                double[] thickness=ScreenFrameBorders.get(border);
+                for(int edge=0;edge<4;edge++){
+                    int at=edge<2?(edge==0?(int)Math.ceil(thickness[0]*SIZE/n)+1:SIZE-(int)Math.ceil(thickness[1]*SIZE/n)-2):(edge==2?(int)Math.ceil(thickness[2]*SIZE/n)+1:SIZE-(int)Math.ceil(thickness[3]*SIZE/n)-2);
+                    int covered=0;
+                    for(int along=SIZE/2-16;along<SIZE/2+16;along++){
+                        int x=edge<2?at:along,y=edge<2?along:at;
+                        if(distance(fitted.getRGB(x,y),empty.getRGB(x,y))>6)covered++;
+                    }
+                    require(covered>=24,"transparent registration margin remains between content and "+edge+" frame edge on "+n+"x"+n+": covered="+covered);
+                }
+                ImageIO.write(empty,"png",new File(output,"shot_frames_vektor_empty_negative_"+n+"x"+n+".png"));ImageIO.write(fitted,"png",new File(output,"shot_frames_vektor_communications_"+n+"x"+n+".png"));
                 for(TileEntityAnimatedScreenSelector t:f.tiles){t.frameAppearance.split=true;t.frameAppearance.splitTop=half;t.frameAppearance.splitBottom=half;t.setDisplayMode(TileEntityAnimatedScreenSelector.MODE_ANIMATED);}
                 BufferedImage a=captureAt(mc,f,0),b=captureAt(mc,f,4);
                 require(difference(a,b,24,24,232,116)>20,"split TOP animation frozen on "+n+"x"+n);
@@ -132,6 +157,13 @@ final class FrameFramebufferChecks {
                 net.minecraft.inventory.Container window=gui.inventorySlots;java.util.List<Integer> pages=new ArrayList<>();for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b instanceof DialogTabButton&&(b.id<120||b.id>=190&&b.id<=197))pages.add(b.id);
                 for(int page:pages){dialogAction(gui,dialogButton(gui,page));require(mc.currentScreen==gui&&gui.inventorySlots==window,"picker tab replaced the parent screen/window");dialogBounds(mc,gui);renderDialog(mc,gui,new File(output,"shot_picker_"+names[type]+"_"+page+"_"+size[0]+".png"),-1,-1);captures++;
                     if(page==195){java.util.List<Integer> faces=new ArrayList<>();for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b instanceof DialogTabButton&&b.id>=120&&b.id<=129)faces.add(b.id);for(int face:faces){dialogAction(gui,dialogButton(gui,face));dialogBounds(mc,gui);renderDialog(mc,gui,new File(output,"shot_picker_"+names[type]+"_surface_"+face+"_"+size[0]+".png"),-1,-1);captures++;}}
+                    if((page==197||page==191)&&type==6){
+                        TileEntityProgrammableGlass glassTile=(TileEntityProgrammableGlass)tile;boolean before=glassTile.isFramed();
+                        net.minecraft.client.gui.GuiButton toggle=dialogButton(gui,3008);
+                        java.lang.reflect.Method click=net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(net.minecraft.client.gui.GuiScreen.class,"mouseClicked","func_73864_a",int.class,int.class,int.class);
+                        click.invoke(gui,toggle.x+toggle.width/2,toggle.y+toggle.height/2,0);require(glassTile.isFramed()!=before,"first real Glass Framed/Bare click ignored");
+                        toggle=dialogButton(gui,3008);click.invoke(gui,toggle.x+toggle.width/2,toggle.y+toggle.height/2,0);require(glassTile.isFramed()==before,"second real Glass toggle did not restore frame");
+                    }
                     if(page==197||page==191){java.util.List<Integer> inner=new ArrayList<>();for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b instanceof DialogTabButton&&b.id>=3000)inner.add(b.id);for(int sub:inner){dialogAction(gui,dialogButton(gui,sub));require(mc.currentScreen==gui,"frame subtab opened child screen");dialogBounds(mc,gui);renderDialog(mc,gui,new File(output,"shot_picker_"+names[type]+"_frame_"+sub+"_"+size[0]+".png"),-1,-1);captures++;}}
                 }
                 if(type<6){dialogAction(gui,dialogButton(gui,90));java.lang.reflect.Method rows=gui.getClass().getDeclaredMethod("openRows",int.class);rows.setAccessible(true);rows.invoke(gui,0);require(mc.currentScreen==gui&&gui.inventorySlots==window,"Redstone artwork opened a child window");dialogAction(gui,dialogButton(gui,600));dialogBounds(mc,gui);renderDialog(mc,gui,new File(output,"shot_picker_"+names[type]+"_rows_"+size[0]+".png"),-1,-1);captures++;}
@@ -141,6 +173,11 @@ final class FrameFramebufferChecks {
     }
     private static java.util.List<net.minecraft.client.gui.GuiButton> dialogButtons(net.minecraft.client.gui.GuiScreen gui){return net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");}
     private static net.minecraft.client.gui.GuiButton dialogButton(net.minecraft.client.gui.GuiScreen gui,int id){for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b.id==id)return b;throw new IllegalStateException("Missing dialog button "+id);}
+    private static void clickButton(net.minecraft.client.gui.GuiScreen gui,int id,int mouse)throws Exception{
+        net.minecraft.client.gui.GuiButton b=dialogButton(gui,id);
+        net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(net.minecraft.client.gui.GuiScreen.class,"mouseClicked","func_73864_a",int.class,int.class,int.class).invoke(gui,b.x+b.width/2,b.y+b.height/2,mouse);
+        net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(net.minecraft.client.gui.GuiScreen.class,"mouseReleased","func_146286_b",int.class,int.class,int.class).invoke(gui,b.x+b.width/2,b.y+b.height/2,mouse);
+    }
     private static void dialogAction(net.minecraft.client.gui.GuiScreen gui,net.minecraft.client.gui.GuiButton button)throws Exception{net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(net.minecraft.client.gui.GuiScreen.class,"actionPerformed","func_146284_a",net.minecraft.client.gui.GuiButton.class).invoke(gui,button);}
     private static void dialogBounds(Minecraft mc,net.minecraft.client.gui.GuiScreen gui){for(net.minecraft.client.gui.GuiButton a:dialogButtons(gui))if(a.visible){require(a.x>=0&&a.y>=0&&a.x+a.width<=gui.width&&a.y+a.height<=gui.height,"picker control outside viewport: "+a.id);if(a instanceof DialogTabButton)require(mc.fontRenderer.getStringWidth(a.displayString)<=a.width-6,"picker tab caption clipped: "+a.displayString);for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(a!=b&&b.visible)require(a.x>=b.x+b.width||b.x>=a.x+a.width||a.y>=b.y+b.height||b.y>=a.y+a.height,"picker buttons overlap: "+a.id+"/"+b.id);}}
     private static BufferedImage renderDialog(Minecraft mc,net.minecraft.client.gui.inventory.GuiContainer gui,File target,int mouseX,int mouseY)throws Exception{
@@ -153,7 +190,7 @@ final class FrameFramebufferChecks {
         GuiAnimatedScreenSelector gui=new GuiAnimatedScreenSelector(mc.player.inventory,tile);gui.inventorySlots.windowId=-98;
         try{mc.displayGuiScreen(gui);for(int[] size:new int[][]{{320,240},{460,340}}){gui.setWorldAndResolution(mc,size[0],size[1]);
             gui.actionPerformed(screenButton(gui,197));require(mc.currentScreen==gui,"Frame replaced the parent dialog");
-            boolean wasFramed=tile.frameAppearance.front>=0;gui.actionPerformed(screenButton(gui,3008));require((tile.frameAppearance.front>=0)!=wasFramed,"first Framed/Bare click ignored");gui.actionPerformed(screenButton(gui,3008));require((tile.frameAppearance.front>=0)==wasFramed,"second Framed/Bare click did not restore selection");boolean beforeTile=tile.frameAppearance.tile;gui.actionPerformed(screenButton(gui,3003));require(tile.frameAppearance.tile!=beforeTile,"first Frame Texture click applies");tile.frameAppearance.tile=beforeTile;gui.actionPerformed(screenButton(gui,3003));require(tile.frameAppearance.tile==beforeTile,"stale tile acknowledgement must not consume the second Frame Texture click");for(int page:new int[]{197,90,3005,3006}){if(page==90){gui.actionPerformed(screenButton(gui,90));if(!tile.frameAppearance.split)gui.actionPerformed(screenButton(gui,3007));}else gui.actionPerformed(screenButton(gui,page));java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
+            boolean wasFramed=tile.frameAppearance.hasFront();clickButton(gui,3008,0);require(tile.frameAppearance.hasFront()!=wasFramed,"first Framed/Bare click ignored");clickButton(gui,3008,1);require(tile.frameAppearance.hasFront()==wasFramed,"second Framed/Bare click did not restore selection");boolean beforeTile=tile.frameAppearance.tile;clickButton(gui,3003,0);require(tile.frameAppearance.tile!=beforeTile,"first Frame Texture click applies");tile.frameAppearance.tile=beforeTile;clickButton(gui,3003,1);require(tile.frameAppearance.tile==beforeTile,"stale tile acknowledgement must not consume the second Frame Texture click");for(int page:new int[]{197,90,3005,3006}){if(page==90){gui.actionPerformed(screenButton(gui,90));if(!tile.frameAppearance.split){clickButton(gui,3007,0);require(tile.frameAppearance.split,"first real Split display click ignored");}}else clickButton(gui,page,0);java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
                 for(net.minecraft.client.gui.GuiButton a:buttons)if(a.visible){require(a.x>=0&&a.y>=0&&a.x+a.width<=size[0]&&a.y+a.height<=size[1],"Frame page control outside viewport");for(net.minecraft.client.gui.GuiButton b:buttons)if(a!=b&&b.visible)require(a.x>=b.x+b.width||b.x>=a.x+a.width||a.y>=b.y+b.height||b.y>=a.y+a.height,"Frame page controls overlap");}
                 GuiOptionCycleRuntimeChecks.check(mc);
             }

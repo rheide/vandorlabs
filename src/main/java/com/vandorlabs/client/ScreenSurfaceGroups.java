@@ -46,7 +46,7 @@ final class ScreenSurfaceGroups {
     }
     private static boolean matching(TileEntityAnimatedScreenSelector a,TileEntityAnimatedScreenSelector b,boolean frame){
         if(a.isCeilingMounted()!=b.isCeilingMounted()||a.isSmallInput()!=b.isSmallInput()||a.getCeilingPosition(-1)!=b.getCeilingPosition(-1)||a.getWallPosition(-1)!=b.getWallPosition(-1))return false;
-        if(frame)return a.frameAppearance.front==b.frameAppearance.front&&a.frameAppearance.tile==b.frameAppearance.tile;
+        if(frame)return a.frameAppearance.bare==b.frameAppearance.bare&&a.frameAppearance.front==b.frameAppearance.front&&a.frameAppearance.tile==b.frameAppearance.tile;
         return a.frameAppearance.displayFit==b.frameAppearance.displayFit&&a.frameAppearance.split==b.frameAppearance.split
             &&a.frameAppearance.splitTop==b.frameAppearance.splitTop&&a.frameAppearance.splitBottom==b.frameAppearance.splitBottom
             &&a.getSelectedScreen().equals(b.getSelectedScreen())&&a.getSurfaceTexture(0)==b.getSurfaceTexture(0)
