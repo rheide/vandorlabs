@@ -150,8 +150,13 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             if (!porthole) {
                 GuiButton joinShape=new GuiButton(112,controlsX,y,controlsWidth,20,"Join: "+JOINS[tile.getDiagonalJoin()]);
                 joinShape.enabled=!tile.isDiagonalHalfHeight();buttonList.add(joinShape);y+=24;
-                buttonList.add(new GuiButton(109,controlsX,y,controlsWidth,20,"Fill inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off"))); y+=24;
-                buttonList.add(new GuiButton(110,controlsX,y,controlsWidth,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
+                if(diagonalGlass){
+                    buttonList.add(new GuiButton(109,controlsX,y,controlsWidth/2-1,20,"Inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off")));
+                    buttonList.add(new GuiButton(110,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,"Outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
+                }else{
+                    buttonList.add(new GuiButton(109,controlsX,y,controlsWidth,20,"Fill inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off"))); y+=24;
+                    buttonList.add(new GuiButton(110,controlsX,y,controlsWidth,20,"Fill outside: "+((tile.getDiagonalFill()&2)!=0?"On":"Off")));
+                }
             }
         }
         if(diagonalGlass)y+=24;

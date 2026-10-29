@@ -32,7 +32,7 @@ final class ProgrammableDialogRuntimeChecks {
                 for(Field f:gui.getClass().getDeclaredFields()) {
                     f.setAccessible(true);Object value=f.get(gui);
                     if(value instanceof HousingTextureList) {
-                        checkList((HousingTextureList)value,buttons);
+                        checkList((HousingTextureList)value,buttons,(net.minecraft.client.gui.inventory.GuiContainer)gui);
                         if(gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableTrapdoor)
                             checkDoorDesigns((HousingTextureList)value,gui instanceof GuiSpaceDoor);
                         if(gui instanceof GuiProgrammableLight) {
@@ -46,7 +46,7 @@ final class ProgrammableDialogRuntimeChecks {
                     }
                     if(value instanceof ScreenTextureList) {
                         Field list=ScreenTextureList.class.getDeclaredField("list");list.setAccessible(true);
-                        HousingTextureList picker=(HousingTextureList)list.get(value);checkList(picker,buttons);
+                        HousingTextureList picker=(HousingTextureList)list.get(value);checkList(picker,buttons,(net.minecraft.client.gui.inventory.GuiContainer)gui);
                         Field input=ScreenTextureList.class.getDeclaredField("input");input.setAccessible(true);
                         Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);
                         boolean controls=input.getBoolean(value);int artwork=0;
@@ -131,7 +131,7 @@ final class ProgrammableDialogRuntimeChecks {
             require(sizedDesigns.size()==expected,"sized door picker missing designs");
         }
     }
-    private static void checkList(HousingTextureList list,List<GuiButton> buttons)throws ReflectiveOperationException {
+    private static void checkList(HousingTextureList list,List<GuiButton> buttons,net.minecraft.client.gui.inventory.GuiContainer gui)throws ReflectiveOperationException {
         Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);
         Field nativeOptions=HousingTextureList.class.getDeclaredField("nativeOptions");nativeOptions.setAccessible(true);
         int glass=0;
@@ -151,7 +151,8 @@ final class ProgrammableDialogRuntimeChecks {
         }
         if(glass>0)require(glass==com.vandorlabs.tiles.GlassTextures.IDS.length,"glass picker missing finishes");
         int x=integer(list,"x"),y=integer(list,"y"),width=integer(list,"width"),count=integer(list,"count");
-        require(count>=7,"texture list has fewer than seven rows");
+        int required=Math.min(7,Math.max(2,(gui.getGuiTop()+gui.getYSize()-30-y)/HousingTextureList.ROW_HEIGHT));
+        require(count>=required,"texture list underuses available height: rows="+count+" required="+required+" GUI="+gui.getClass().getSimpleName()+" size="+gui.width+"x"+gui.height);
         for(GuiButton b:buttons)if(b.visible)require(!overlaps(x-1,y-1,width+9,count*HousingTextureList.ROW_HEIGHT+2,b.x,b.y,b.width,b.height),"texture list overlaps button "+b.id);
     }
     private static int integer(Object object,String name)throws ReflectiveOperationException {Field f=object.getClass().getDeclaredField(name);f.setAccessible(true);return f.getInt(object);}
