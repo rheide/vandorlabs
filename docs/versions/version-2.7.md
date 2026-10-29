@@ -3,11 +3,14 @@
 Version 2.7 separates display artwork, frame finishes and redstone transmission,
 and expands the controls for moving mechanisms.
 
-Programmable glass, portholes and their diagonal variants have separate Front,
-Interior and Exterior finishes on top-level tabs. Interior and Exterior offer
-the general material catalog alongside frame artwork. Older saved finishes keep
-their appearance until edited. Taxi collision preparation retains exact arm pose precision to keep grounded
-supports in contact during height changes. Interrupted saved Taxi height changes can recover
+Programmable glass and diagonal glass have separate Front, Interior and
+Exterior finishes on top-level tabs. Portholes use Main artwork for their front,
+with separate Interior and Exterior finishes. Wall and diagonal-wall finish tabs
+are labeled Exterior. Interior and Exterior offer the general material catalog
+alongside frame artwork. Older Interior/Exterior defaults retain their appearance
+until edited. Taxi collision preparation retains exact arm pose precision to
+keep grounded supports in contact during height changes. Interrupted saved Taxi
+height changes can recover
 from shallow support penetration when a clear, loaded exit exists. Parking
 paintings checks the restored blocks and other obstacles while excluding the
 craft being retired; failed transfers retain exactly one painting owner.

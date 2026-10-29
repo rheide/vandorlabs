@@ -79,7 +79,6 @@ final class FlatPanelBarRenderer {
         TextureAtlasSprite metal=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.interior(block.isPortholeShape() && tile.getSideTexture()>=0
                 ?ScreenHousingTextures.texture(tile.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
         TextureAtlasSprite outer=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.exterior(block.isPortholeShape()&&tile.getSideTexture()>=0?ScreenHousingTextures.texture(tile.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
-        if(block.isPortholeShape()&&tile.frameAppearance.front>=0)wall=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.front(""));
         BarKey key=new BarKey(wall,metal,outer,block.isPortholeShape()?tile.getPortholeShape():-1);
         StaticSurfaceMesh[] meshes=BARS.get(key);
         if(meshes==null) {

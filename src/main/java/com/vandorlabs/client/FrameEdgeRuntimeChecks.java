@@ -64,6 +64,17 @@ public final class FrameEdgeRuntimeChecks {
                 TextureAtlasSprite pane=TEAnimatedScreenSelector.wallSprite(tile),metal=mc.getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side"));
                 PortholeHex.Slice slice=((BlockProgrammableWall)block).isPortholeShape()?TEAnimatedScreenSelector.portholeGroup(tile,state).slice(BlockPos.ORIGIN,state.getValue(BlockProgrammableWall.FACING).rotateY(),EnumFacing.UP):null;
                 before=block instanceof BlockProgrammableDiagonalGlass?DiagonalWallMeshCache.frame(tile,state,pane):DiagonalWallMeshCache.get(tile,state,pane,metal,slice);
+                if(((BlockProgrammableWall)block).isPortholeShape()){
+                    tile.frameAppearance.front=outer;
+                    StaticSurfaceMesh obsoleteFront=DiagonalWallMeshCache.get(tile,state,pane,metal,slice);
+                    require(java.util.Arrays.equals((float[])vertices.get(before),(float[])vertices.get(obsoleteFront)),"legacy Front overrides porthole Main artwork: "+block.getRegistryName());
+                    tile.frameAppearance.front=-1;tile.frameAppearance.interior=-1;
+                    int originalLight=block.getLightValue(state,view,BlockPos.ORIGIN);
+                    tile.frameAppearance.front=inner;
+                    require(block.getLightValue(state,view,BlockPos.ORIGIN)==originalLight,"obsolete porthole Front emits invisible light");
+                    tile.frameAppearance.interior=inner;
+                    tile.frameAppearance.front=-1;
+                }
                 tile.frameAppearance.exterior=outer;
                 after=block instanceof BlockProgrammableDiagonalGlass?DiagonalWallMeshCache.frame(tile,state,pane):DiagonalWallMeshCache.get(tile,state,pane,metal,slice);
                 independentUvs((float[])vertices.get(before),(float[])vertices.get(after),block.getRegistryName()+" metadata="+meta);variants++;

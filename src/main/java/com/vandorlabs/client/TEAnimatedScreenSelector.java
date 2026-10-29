@@ -1004,7 +1004,6 @@ public class TEAnimatedScreenSelector
         TextureAtlasSprite outer=metal;
         if(wallBlock.isPortholeShape()){
             outer=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(te.frameAppearance.exterior(te.getSideTexture()>=0?ScreenHousingTextures.texture(te.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
-            if(te.frameAppearance.front>=0)wall=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(te.frameAppearance.front(""));
         }
         if(solidDiagonalPortholeJunction(te,state)) {
             drawConfiguredDiagonalWall(buf,te,state,wall,outer);

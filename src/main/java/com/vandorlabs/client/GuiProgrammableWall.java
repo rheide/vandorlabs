@@ -97,9 +97,9 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         xSize=layout.width;ySize=layout.height;
         super.initGui();
         buttonList.clear();boolean hasFrame=tile.getBlockType() instanceof BlockProgrammableWall;
-        boolean separate=porthole||diagonalGlass;
-        if(separate){int count=porthole?5:4;buttonList.add(layout.fullTab(195,0,count,porthole?"Main":"Glass"));if(porthole)buttonList.add(layout.fullTab(213,1,count,"Glass"));String[] names={"Front","Interior","Exterior"};for(int i=0;i<3;i++)buttonList.add(layout.fullTab(210+i,i+(porthole?2:1),count,names[i]));}
-        else{buttonList.add(layout.fullTab(195,0,hasFrame?2:1,"Appearance"));if(hasFrame)buttonList.add(layout.fullTab(197,1,2,"Frame"));}
+        boolean separate=porthole||diagonalGlass;if(porthole&&frameFace==0)frameFace=1;
+        if(separate){int count=4;buttonList.add(layout.fullTab(195,0,count,porthole?"Main":"Glass"));if(porthole)buttonList.add(layout.fullTab(213,1,count,"Glass"));String[] names={"Front","Interior","Exterior"};for(int i=porthole?1:0;i<3;i++)buttonList.add(layout.fullTab(210+i,i+1,count,names[i]));}
+        else{buttonList.add(layout.fullTab(195,0,hasFrame?2:1,"Appearance"));if(hasFrame)buttonList.add(layout.fullTab(197,1,2,"Exterior"));}
         for(GuiButton tab:buttonList)tab.enabled=tab.id!=(framePage?(separate?210+frameFace:197):redstonePage?196:porthole&&faceTarget==-3?213:195);
         if(framePage){if(framePane==null)framePane=diagonalGlass?new FrameAppearancePane(this,tile,()->{tile.setGlassAppearance(tile.getGlassTint(),!tile.isGlassFramed());sendPortholeSettings();},()->tile.isGlassFramed()):new FrameAppearancePane(this,tile);if(separate)framePane.initGlassFace(frameFace,54,buttonList);else framePane.init(54,buttonList);buttonList.add(layout.done(100));return;}
         if(redstonePage){buttonList.add(layout.done(100));return;}
@@ -247,7 +247,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
-        if(framePage&&framePane!=null&&framePane.action(button))return;if(button.id==213){framePage=false;redstonePage=false;faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}if(button.id>=210&&button.id<=212){frameFace=button.id-210;redstonePage=false;framePage=true;initGui();return;}if(button.id==195||button.id==196||button.id==197){if(porthole&&button.id==195){faceTarget=-1;selected=selectedTexture();textureList=null;}redstonePage=button.id==196;framePage=button.id==197;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(framePage&&framePane!=null&&framePane.action(button))return;if(button.id==213){framePage=false;redstonePage=false;faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}if(button.id>=210&&button.id<=212){if(porthole&&button.id==210)return;frameFace=button.id-210;redstonePage=false;framePage=true;initGui();return;}if(button.id==195||button.id==196||button.id==197){if(porthole&&button.id==195){faceTarget=-1;selected=selectedTexture();textureList=null;}redstonePage=button.id==196;framePage=button.id==197;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
 
 
 

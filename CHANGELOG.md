@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Use Main artwork for porthole fronts and remove their redundant Front picker; label wall and diagonal-wall finish tabs Exterior.
+
 - Offer general materials alongside frame artwork in Interior and Exterior finish pickers, preserving selections through saves and configuration packets.
 
 - Keep exact arm pose precision during background vehicle collision preparation so grounded Taxi supports cannot lose contact during height adjustments.

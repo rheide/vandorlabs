@@ -25,7 +25,7 @@ public final class MessageFrameAppearance implements IMessage {
                     ||c instanceof ContainerRedstoneChannel&&((ContainerRedstoneChannel)c).member.channelTile()==owner;
                 FrameAppearance a=FrameAppearance.of(owner);if(!matches||a==null||!c.canInteractWith(player))return;
                 if(com.vandorlabs.blocks.BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType()))a.artworkVersion=1;
-                a.bare=msg.bare;a.front=msg.front;a.interior=msg.interior;a.exterior=msg.exterior;a.tile=msg.tile;a.displayFit=msg.displayFit;a.split=msg.split;a.splitTop=msg.top;a.splitBottom=msg.bottom;com.vandorlabs.tiles.GlassMaterials.changed();owner.markDirty();
+                a.bare=msg.bare;a.front=FrameAppearance.usesMainFront(owner.getBlockType())?-1:msg.front;a.interior=msg.interior;a.exterior=msg.exterior;a.tile=msg.tile;a.displayFit=msg.displayFit;a.split=msg.split;a.splitTop=msg.top;a.splitBottom=msg.bottom;com.vandorlabs.tiles.GlassMaterials.changed();owner.markDirty();
                 net.minecraft.block.state.IBlockState state=player.world.getBlockState(msg.pos);player.world.notifyBlockUpdate(msg.pos,state,state,3);player.world.checkLight(msg.pos);
             });return null;
         }

@@ -15,6 +15,7 @@ public final class FrameAppearance {
     public boolean tile,displayFit,split,bare;
     public boolean hasFront(){return front>=0&&!bare;}
     public int splitTop=-1,splitBottom=-1;
+    public static boolean usesMainFront(net.minecraft.block.Block block){return block instanceof com.vandorlabs.blocks.BlockProgrammableWall&&((com.vandorlabs.blocks.BlockProgrammableWall)block).isPortholeShape();}
     public static boolean valid(int choice){return choice==-1 || ScreenHousingTextures.validChoice(choice) && "Frame".equals(ScreenHousingTextures.category(choice));}
     public static boolean validSurface(int choice){return valid(choice)||ScreenHousingTextures.validChoice(choice)&&ScreenHousingTextures.generalTexture(choice);}
     public void write(NBTTagCompound tag){
@@ -80,5 +81,6 @@ public final class FrameAppearance {
     public int exteriorChoice(){return exterior==-2?interior:exterior;}
     public String exterior(String fallback){return interiorTexture(exteriorChoice(),fallback);}
     private static int light(int choice){if(choice<0)return 0;com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return e!=null&&e.has("frameLight")?Math.max(0,Math.min(5,e.get("frameLight").getAsInt())):0;}
-    public int light(){return Math.max(bare?0:light(front),Math.max(light(interior),light(exteriorChoice())));}
+    public int light(){return light(true);}
+    public int light(boolean includeFront){return Math.max(bare||!includeFront?0:light(front),Math.max(light(interior),light(exteriorChoice())));}
 }
