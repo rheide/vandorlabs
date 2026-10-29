@@ -76,7 +76,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             if(failedStoredSections!=null)throw new IllegalArgumentException("Stored arm sections are unavailable; recovery retained");
             // A push endpoint transfers every pushed block back to the native world.
             // Retraction must not rediscover that resting row as an attachment.
-            if(pushBlocks&&canPushBlocks()&&progress==0&&deployedTarget&&(payload==null||payload.materialized())){
+            if(pushBlocks&&canPushBlocks()&&!deployedTarget&&(payload==null||payload.materialized())){
                 payload=null;
                 if(!ArmStoredSections.restoreEmpty(this)){payloadPreparationPending=true;return false;}
                 sync();return true;
@@ -146,7 +146,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             &&joinEnabled==other.joinEnabled&&joinRange==other.joinRange&&carryLoad==other.carryLoad&&loadHeight==other.loadHeight
             &&legacyAnyChannels==other.legacyAnyChannels&&channels.equals(other.channels);}
     public double minimumExtension(){return assembly==null||assembly.columnHeight()==1?-.5:1-assembly.columnHeight();}
-    public double activeExtension(){if(pushBlocks&&canPushBlocks())return activeExtension;if(assembly!=null&&!isSwingArmController()&&!isFixedMount()){if(isExtendedTrackStroke()&&!trackRetractingStroke)return assembly.columnHeight();if(assembly.kind()==GearTopology.FootKind.NONE)return progress==1||armRetractingStroke?minimumExtension():assembly.columnHeight();if(isExtendedTrackStroke())return minimumExtension();}return activeExtension;}
+    public double activeExtension(){if(assembly!=null&&!isSwingArmController()&&!isFixedMount()){if(isExtendedTrackStroke()&&!trackRetractingStroke)return assembly.columnHeight();if(assembly.kind()==GearTopology.FootKind.NONE)return progress==1||armRetractingStroke?minimumExtension():assembly.columnHeight();if(isExtendedTrackStroke())return minimumExtension();}return activeExtension;}
 
     private GearMotion.Mode mode = GearMotion.Mode.EXTEND;
     private GearMotion.Direction direction = GearMotion.Direction.NORTH;
@@ -376,6 +376,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             double next=GearMotion.advance(progress,deployedTarget,1,ANIMATION_TICKS);
             boolean hadPayload=payload!=null,wasMaterialized=hadPayload&&payload.materialized();
             boolean prepared=next==before||preparePayloadMotion();
+            if(prepared&&next!=before)try{prepared=GearPushing.prepare(this,next);}catch(RuntimeException|LinkageError refused){lastError=refused.getMessage();prepared=false;}
             // Leave the requested target intact while the ownership record reaches disk.
             // Treating this as an obstruction reverses the request before detach can run.
             if(!prepared&&payloadPreparationPending)return;
@@ -612,12 +613,12 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         double extension=tag.hasKey("ActiveExtension",6)?tag.getDouble("ActiveExtension"):activeExtension;
         boolean rotate=tag.hasKey("RotatePayload",1)?tag.getBoolean("RotatePayload"):rotatePayload;
         boolean push=tag.hasKey("PushBlocks",1)?tag.getBoolean("PushBlocks"):pushBlocks;
-        if(push!=pushBlocks&&!fullyDeployed())throw new IllegalArgumentException("Return to rest before changing pushing");
+        if(push!=pushBlocks&&(progress!=0&&progress!=1||payload!=null&&!payload.materialized()))throw new IllegalArgumentException("Return to rest before changing pushing");
         boolean join=tag.hasKey("JoinArms",1)?tag.getBoolean("JoinArms"):joinEnabled,load=tag.hasKey("CarryLoad",1)?tag.getBoolean("CarryLoad"):carryLoad;
         int range=tag.hasKey("JoinRange",3)?tag.getInteger("JoinRange"):joinRange,height=tag.hasKey("LoadHeight",3)?tag.getInteger("LoadHeight"):loadHeight;
         if(range<1||range>32||height<1||height>32)throw new IllegalArgumentException("Platform ranges must be from 1 to 32 blocks");
         if(load&&!canCarryLoad())throw new IllegalArgumentException("Carry load requires a vertically moving Extender Arm");
-        boolean groupChanged=join!=joinEnabled||range!=joinRange||load!=carryLoad||height!=loadHeight||push!=pushBlocks||angle!=activeAngle||rotate!=rotatePayload||dir!=direction.ordinal();
+        boolean groupChanged=join!=joinEnabled||range!=joinRange||load!=carryLoad||height!=loadHeight||angle!=activeAngle||rotate!=rotatePayload||dir!=direction.ordinal();
         if(groupChanged&&!fullyDeployed())throw new IllegalArgumentException("Extend fully before changing joined platform settings");
         if(!Double.isFinite(angle)||angle < -180||angle > 180||!Double.isFinite(extension)||extension < -8||extension > 8)throw new IllegalArgumentException("Arm stroke is out of range");
         if((dir!=direction.ordinal()||angle!=activeAngle||rotate!=rotatePayload)&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");

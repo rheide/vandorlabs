@@ -37,6 +37,9 @@ case "${1:-}" in
         elif [ "$TARGET" = mekanism-tanks ]; then
             PREFIX=mekanism_tank_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_MEKANISM_TANK_ONLY=true
+        elif [ "$TARGET" = arm-push ]; then
+            PREFIX=arm_push_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_PUSH_ONLY=true
         elif [ "$TARGET" = arm-improvements ]; then
             PREFIX=arm_improvements_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_IMPROVEMENTS_ONLY=true
@@ -236,6 +239,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-riders ]; then
         grep -q "arm-rider PASS" "$RUN_OUT/client.log"
         echo "Arm rider checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-push ]; then
+        grep -q "arm-push PASS" "$RUN_OUT/client.log"
+        echo "Incremental arm push checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-endpoints ]; then

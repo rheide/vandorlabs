@@ -40,7 +40,7 @@ public final class GuiModularGear extends GuiContainer {
         boolean rest=tile.fullyDeployed();
         for(GuiButton button:buttonList){button.visible=button.id>=20||button.id==4||((page==1)==(button.id==0));if(button.id>=20)button.enabled=button.id!=20+page;}
         channels.setVisible(page==1);channels.y=guiTop+98;button(0).y=guiTop+60;
-        button(14).visible=page==0&&tile.canPushBlocks();button(14).enabled=rest;button(14).displayString="Push blocks: "+(push?"On":"Off");
+        button(14).visible=page==0&&tile.canPushBlocks();button(14).enabled=tile.progress()==0||tile.progress()==1;button(14).displayString="Push blocks: "+(push?"On":"Off");
         angleSlider.visible=page==0&&tile.isSwingArmController()&&!tile.isLandingAssembly();angleSlider.enabled=rest;
         rangeSlider.visible=page==0&&join;loadSlider.visible=page==0&&join&&load&&tile.canCarryLoad();
         button(9).displayString="Join arms: "+(join?"On":"Off");button(9).enabled=rest&&!tile.isLandingAssembly()&&!tile.isFixedMount();rangeSlider.enabled=rest;

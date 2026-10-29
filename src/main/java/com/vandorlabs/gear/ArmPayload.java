@@ -207,28 +207,6 @@ public final class ArmPayload {
         }
         if(platform!=null){Set<BlockPos> capturedPositions=new HashSet<>();for(VehicleStructure.Cell cell:captured)capturedPositions.add(cell.pos);if(!capturedPositions.containsAll(platform))throw new IllegalArgumentException("Every corner needs a connected platform surface");}
         if(captured.isEmpty())return null;
-        if(arm.pushBlocks()&&arm.canPushBlocks()&&arm.progress()==1&&!arm.target()){
-            double stroke=arm.activeExtension();int distance=(int)Math.rint(stroke);
-            if(distance<1||Math.abs(stroke-distance)>1e-8)throw new IllegalArgumentException("Pushing requires a whole-block outward stroke");
-            Set<BlockPos> selected=new HashSet<>();for(VehicleStructure.Cell cell:captured)selected.add(cell.pos);
-            for(VehicleStructure.Cell cell:captured)if(cell.hasTileData()||cell.state.getBlock().getMobilityFlag(cell.state)!=net.minecraft.block.material.EnumPushReaction.NORMAL||!cell.state.isFullCube())throw new IllegalArgumentException("Pushing supports ordinary solid blocks without tile data");
-            int base=captured.size();
-            for(int index=0;index<captured.size();index++)for(int step=1;step<=distance;step++){
-                BlockPos at=captured.get(index).pos.offset(arm.mountDirection(),step);
-                if(selected.contains(at))continue;
-                if(!GearAssembly.loaded(world,at))throw new IllegalArgumentException("Load the complete push path first");
-                IBlockState state=world.getBlockState(at);if(state.getBlock().isAir(state,world,at))continue;
-                if(captured.size()>=MAX_BLOCKS||captured.size()-base>=12||physicalMember(arm,at)||state.getBlockHardness(world,at)<0||state.getBlock().getMobilityFlag(state)!=net.minecraft.block.material.EnumPushReaction.NORMAL||!state.isFullCube()||state.getBlock().hasTileEntity(state)||state.getMaterial().isLiquid())
-                    throw new IllegalArgumentException("Push up to twelve ordinary solid blocks; tile entities and immovable blocks stay protected");
-                VehicleService.permission(actor,at);
-                if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented pushing the block");
-                BlockPos target=at.offset(arm.mountDirection(),distance);
-                if(!GearAssembly.loaded(world,target)||!world.getWorldBorder().contains(target))throw new IllegalArgumentException("Load the complete push destination inside the world border");
-                selected.add(at);captured.add(new VehicleStructure.Cell(at,state,null));
-                minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());maxX=Math.max(maxX,at.getX());maxY=Math.max(maxY,at.getY());maxZ=Math.max(maxZ,at.getZ());
-                if(maxX-minX>=MAX_SPAN||maxY-minY>=MAX_SPAN||maxZ-minZ>=MAX_SPAN)throw new IllegalArgumentException("Pushed attachment exceeds the bounded arm span");
-            }
-        }
         BlockPos origin=new BlockPos(minX,minY,minZ);List<VehicleStructure.Cell> normalized=new ArrayList<>();
         for(VehicleStructure.Cell cell:captured)normalized.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin)):null));
         VehicleStructure snapshot=VehicleStructure.display(normalized);try{validateSyncBudget(snapshot.encode());}catch(java.io.IOException tooLarge){throw new IllegalArgumentException("Attachment too large; reduce platform or load height",tooLarge);}
