@@ -16,12 +16,12 @@ public class GuiModularGear extends GuiContainer {
     private int range,heightLimit;
     private double angle,startAngle,submittedAngle,submittedStart;
     private GearTileEntity observedTile;
-    private int observedRevision;
+    private int observedRevision,observedClientUpdates;
     private net.minecraftforge.fml.client.config.GuiSlider rangeSlider,loadSlider,angleSlider,startSlider;
     private GuiTextField channels;
     private String error="";
     public GuiModularGear(ContainerModularGear container){
-        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();push=tile.pushBlocks();rotate=tile.rotatePayload();join=tile.joinEnabled();load=tile.carryLoad()&&tile.canCarryLoad();angle=tile.configuredEndAngle();startAngle=tile.startAngle();range=tile.joinRange();heightLimit=tile.loadHeight();submittedAngle=angle;submittedStart=startAngle;observedTile=tile;observedRevision=tile.motionRevision();xSize=380;ySize=218;
+        super(container);tile=container.tile;trigger=tile.triggerMode;direction=tile.direction().ordinal();deployed=tile.target();push=tile.pushBlocks();rotate=tile.rotatePayload();join=tile.joinEnabled();load=tile.carryLoad()&&tile.canCarryLoad();angle=tile.configuredEndAngle();startAngle=tile.startAngle();range=tile.joinRange();heightLimit=tile.loadHeight();submittedAngle=angle;submittedStart=startAngle;observedTile=tile;observedRevision=tile.motionRevision();observedClientUpdates=tile.clientUpdates;xSize=380;ySize=218;
     }
     @Override public void initGui(){
         xSize=Math.min(380,width-12);ySize=218;super.initGui();buttonList.clear();int col=(xSize-36)/2,right=guiLeft+24+col;
@@ -64,8 +64,8 @@ public class GuiModularGear extends GuiContainer {
     protected void sendSettings(NBTTagCompound tag){PacketHandler.INSTANCE.sendToServer(new MessageModularGear(inventorySlots.windowId,tag));}
     private boolean draggingAngles(){return angleSlider!=null&&angleSlider.dragging||startSlider!=null&&startSlider.dragging;}
     private void reconcileAngles(){
-        if(draggingAngles()||tile==observedTile&&tile.motionRevision()==observedRevision)return;
-        observedTile=tile;observedRevision=tile.motionRevision();angle=tile.configuredEndAngle();startAngle=tile.startAngle();submittedAngle=angle;submittedStart=startAngle;
+        if(draggingAngles()||tile==observedTile&&tile.motionRevision()==observedRevision&&tile.clientUpdates==observedClientUpdates)return;
+        observedTile=tile;observedRevision=tile.motionRevision();observedClientUpdates=tile.clientUpdates;angle=tile.configuredEndAngle();startAngle=tile.startAngle();submittedAngle=angle;submittedStart=startAngle;
         angleSlider.setValue(angle);angleSlider.displayString=angleSlider.dispString+(int)Math.round(angle)+angleSlider.suffix;
         startSlider.setValue(startAngle);startSlider.displayString=startSlider.dispString+(int)Math.round(startAngle)+startSlider.suffix;
     }

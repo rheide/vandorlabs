@@ -17,5 +17,5 @@ public final class MessageModularGear implements IMessage {
         try{container.update(player,message.values);}catch(IllegalArgumentException denied){player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(denied.getMessage()),true);}
         // Rejected or journal-suspended edits still need an authoritative response
         // so the open dialog can retire its rejected angle draft.
-        com.vandorlabs.gear.GearTileEntity current=container.currentTile();if(current!=null&&current==before&&current.motionRevision()==revision&&container.canInteractWith(player))current.sync();});return null;}}
+        com.vandorlabs.gear.GearTileEntity current=container.currentTile();if(current!=null&&current==before&&current.motionRevision()==revision&&container.canInteractWith(player))player.connection.sendPacket(current.getUpdatePacket());});return null;}}
 }

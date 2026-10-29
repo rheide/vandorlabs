@@ -81,22 +81,29 @@ public final class GearDialogChecks {
     /** Native slider click/draw-drag/release, with captured outbound settings and tile acknowledgments. */
     private static void angleDrag(Minecraft mc,RecordingGearGui gui,GearTileEntity tile,net.minecraftforge.fml.client.config.GuiSlider slider)throws Exception{
         NBTTagCompound authority=tile.writeToNBT(new NBTTagCompound());
-        int revision=tile.motionRevision()+1;authority.setInteger("GearRevision",revision);tile.readFromNBT(authority);gui.updateScreen();
+        int revision=tile.motionRevision(),updates=tile.clientUpdates;tile.handleUpdateTag(authority.copy());require(tile.clientUpdates==updates+1,"chunk update increments transient acknowledgment counter");gui.updateScreen();
         double old=slider.getValue();int count=gui.sent.size();
         gui.mouseClicked(slider.x+slider.width/4,slider.y+10,0);
         for(double fraction:new double[]{.2,.4,.6,.89})slider.drawButton(mc,slider.x+(int)(slider.width*fraction),slider.y+10,0);
         double preview=slider.getValue();require(preview!=old,"drag changes angle preview");
         require(gui.sent.size()==count,"angle dragging sends no intermediate configuration");
-        authority.setInteger("GearRevision",++revision);tile.readFromNBT(authority);gui.updateScreen();
+        packetAck(tile,authority);gui.updateScreen();
         require(slider.getValue()==preview,"incoming tile acknowledgment preserves an actively dragged preview");
         gui.mouseReleased(slider.x+slider.width-1,slider.y+10,0);
         require(gui.sent.size()==count+1,"angle release sends exactly one final configuration");
         require(gui.sent.get(count).getDouble(slider.id==16?"StartAngle":"ActiveAngle")==preview,"released packet contains final snapped angle");
-        authority.setInteger("GearRevision",++revision);tile.readFromNBT(authority);gui.updateScreen();
+        NBTTagCompound unchanged=tile.settings();packetAck(tile,authority);gui.updateScreen();
+        require(tile.motionRevision()==revision&&tile.settings().equals(unchanged),"same-revision refusal acknowledgment preserves gameplay revision and endpoint fields");
         require(slider.getValue()==old&&slider.displayString.equals(slider.dispString+(int)Math.round(old)+slider.suffix),"refused angle acknowledgment restores authoritative thumb and label");
-        authority.setDouble(slider.id==16?"ArmStartAngle":"ArmActiveAngle",preview);authority.setInteger("GearRevision",++revision);tile.readFromNBT(authority);gui.updateScreen();
+        authority.setDouble(slider.id==16?"ArmStartAngle":"ArmActiveAngle",preview);authority.setInteger("GearRevision",++revision);packetAck(tile,authority);gui.updateScreen();
         require(slider.getValue()==preview,"accepted angle acknowledgment updates displayed endpoint");
-        authority.setDouble(slider.id==16?"ArmStartAngle":"ArmActiveAngle",old);authority.setInteger("GearRevision",++revision);tile.readFromNBT(authority);gui.updateScreen();
+        authority.setDouble(slider.id==16?"ArmStartAngle":"ArmActiveAngle",old);authority.setInteger("GearRevision",++revision);packetAck(tile,authority);gui.updateScreen();
+    }
+    private static void packetAck(GearTileEntity tile,NBTTagCompound authority){
+        int updates=tile.clientUpdates;tile.onDataPacket(null,new net.minecraft.network.play.server.SPacketUpdateTileEntity(tile.getPos(),0,authority.copy()));
+        require(tile.clientUpdates==updates+1,"tile packet increments transient acknowledgment counter");
+        GearTileEntity reloaded=new GearTileEntity();reloaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+        require(reloaded.clientUpdates==0,"acknowledgment counter is not serialized across saved tile reload");
     }
     /** The same access tile now belongs to a different joined root with the same revision. */
     private static void changedRoot(RecordingGearGui gui,GearTileEntity access,net.minecraftforge.fml.client.config.GuiSlider start,net.minecraftforge.fml.client.config.GuiSlider end){

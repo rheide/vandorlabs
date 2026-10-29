@@ -183,6 +183,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private double progress = 1.0;
     private double previousProgress = 1.0;
     private int motionRevision;
+    public transient int clientUpdates;
     private long lastMotionTick=Long.MIN_VALUE;
     public int motionRevision(){return motionRevision;}
     public boolean motionBlocked(){return motionBlocked;}
@@ -765,7 +766,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public NBTTagCompound getUpdateTag() { return writeToNBT(new NBTTagCompound()); }
 
     @Override
-    public void handleUpdateTag(NBTTagCompound tag) { readFromNBT(tag); }
+    public void handleUpdateTag(NBTTagCompound tag) { readFromNBT(tag);clientUpdates++; }
 
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() { return new SPacketUpdateTileEntity(pos, 0, getUpdateTag()); }
@@ -773,7 +774,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override
     public void onDataPacket(NetworkManager manager, SPacketUpdateTileEntity packet) {
         double previous=progress;
-        readFromNBT(packet.getNbtCompound());
+        readFromNBT(packet.getNbtCompound());clientUpdates++;
         previousProgress=previous;
         if (world != null) world.markBlockRangeForRenderUpdate(pos, pos);
     }
