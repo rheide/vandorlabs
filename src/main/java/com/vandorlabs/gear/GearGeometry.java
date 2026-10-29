@@ -32,6 +32,20 @@ public final class GearGeometry {
     }
     private static final Map<String,List<AxisAlignedBB>> MODELS=new java.util.concurrent.ConcurrentHashMap<>();
     private static final ThreadLocal<GearTileEntity> EXCLUDED=new ThreadLocal<>();
+    private static final ThreadLocal<Set<AxisAlignedBB>> PREFLIGHT_SOURCES=new ThreadLocal<>();
+    /** Test a complete configuration sweep without removing its native attachment. */
+    static boolean startClear(GearTileEntity root,ArmPayload nativePayload){
+        Set<AxisAlignedBB> sources=new HashSet<>();
+        if(nativePayload!=null&&nativePayload.materialized())for(BlockPos at:nativePayload.placedCells(root)){
+            List<AxisAlignedBB> boxes=new ArrayList<>();net.minecraft.block.state.IBlockState state=root.getWorld().getBlockState(at);
+            state.addCollisionBoxToList(root.getWorld(),at,new AxisAlignedBB(at),boxes,null,false);sources.addAll(boxes);
+        }
+        PREFLIGHT_SOURCES.set(sources);
+        try{for(int step=0;step<GearTileEntity.ANIMATION_TICKS;step++)
+            if(!canMove(root,1-step/(double)GearTileEntity.ANIMATION_TICKS,1-(step+1)/(double)GearTileEntity.ANIMATION_TICKS))return false;
+            return true;
+        }finally{PREFLIGHT_SOURCES.remove();root.riderPlan=null;}
+    }
     public static boolean excluded(GearTileEntity root){return EXCLUDED.get()==root;}
     public static List<AxisAlignedBB> foreign(World world,GearTileEntity root,AxisAlignedBB box){EXCLUDED.set(root);try{return world.getCollisionBoxes(null,box);}finally{EXCLUDED.remove();}}
     public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld||!world.isBlockLoaded(tile.getPos(),false))return;Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){roots.add(tile);index.put(tile);}else{roots.remove(tile);index.remove(tile);}}
@@ -50,7 +64,7 @@ public final class GearGeometry {
         for(AxisAlignedBB box:MODELS.computeIfAbsent("wheel_large",GearBlock::modelParts))result.add(yaw(box,turns).offset(pos));
         return result;
     }
-    @SubscribeEvent public static void collisions(GetCollisionBoxesEvent event){if(event.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)return;SpatialIndex index=INDICES.get(event.getWorld());if(index==null)return;Set<GearTileEntity> roots=index.near(event.getAabb());
+    @SubscribeEvent public static void collisions(GetCollisionBoxesEvent event){Set<AxisAlignedBB> sources=PREFLIGHT_SOURCES.get();if(sources!=null)event.getCollisionBoxesList().removeIf(sources::contains);if(event.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)return;SpatialIndex index=INDICES.get(event.getWorld());if(index==null)return;Set<GearTileEntity> roots=index.near(event.getAabb());
         for(GearTileEntity root:roots)if(!root.isInvalid()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root)
             for(AxisAlignedBB box:looseWheelBoxes(root))if(box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);
         for(GearTileEntity root:roots)if(root!=EXCLUDED.get()&&!root.isInvalid()&&root.isOperational()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root&&root.getRenderBoundingBox().intersects(event.getAabb()))for(AxisAlignedBB original:root.collisionBoxes()){AxisAlignedBB box=com.vandorlabs.motion.PlatformRiders.supportCollision(original,event.getEntity(),root.progress()>0&&root.progress()<1);if(box!=null&&box.getAverageEdgeLength()>0&&box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);}

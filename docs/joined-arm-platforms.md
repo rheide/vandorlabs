@@ -121,7 +121,7 @@ Place a Programmable Surface on the arm tip, then extend the layer along the two
 
 With the arm at rest, open **Mechanism** and enable **Push blocks**. This option is available to horizontal regular and Large Extenders without landing feet. Use a whole-block outward stroke. Place the first block directly against the arm tip; a contiguous row of ordinary solid blocks can be pushed with it. Pushing refuses tile entities, protected or immovable blocks, and chains requiring more than twelve additional blocks.
 
-At the active endpoint the pushed blocks become ordinary world blocks. Returning the arm leaves every pushed block in place; it never pulls the row back. A blocked stroke retains the last valid ownership state and reports its obstruction. Turn pushing off to resume the ordinary attachment behavior.
+At the active endpoint the pushed blocks become ordinary world blocks. Returning the arm brings its original attached platform back; additional blocks encountered and pushed during extension stay forward. A blocked stroke retains the last valid ownership state and reports its obstruction. The original attachment follows the ordinary joined-platform and connected-Surface discovery rules while pushing is enabled.
 
 ## Set a rotating angle
 
@@ -131,8 +131,8 @@ Rotating payloads may briefly graze a block that touches a face at either endpoi
 
 ### Start and end angles
 
-Rotating Arms have separate **Start** and **End** sliders in 15-degree steps. Return the arm to its starting position before changing Start. The arm moves its attachment to the new starting angle and checks for obstructions during the adjustment. End selects the destination of the next normal stroke. Both settings are saved with the arm.
+Rotating Arms have separate **Start** and **End** sliders in 15-degree steps. Return the arm to its starting position before changing Start. The arm moves its attachment to the new starting angle and checks the complete adjustment path before moving the attachment. End selects the destination of the next normal stroke. Both settings are saved with the arm. Start is the left slider and End the right. A blocked Start change leaves the previous pose and configuration available; valid stationary arbitrary-angle poses also permit configuration.
 
 ### Horizontal pushing
 
-Enable **Push blocks** at either stationary endpoint of a horizontal Extender Arm. Its constructed length remains its maximum extension. Blocks move forward only when contacted: an air gap reduces how far a later block is pushed. Retraction leaves pushed blocks in place. The arm checks the complete path before moving an attached Surface layer and supports up to twelve additional ordinary solid blocks; pushing additional inventories or machinery is refused.
+Enable **Push blocks** at either stationary endpoint of a horizontal Extender Arm. Its constructed length remains its maximum extension. Blocks move forward only when contacted: an air gap reduces how far a later block is pushed. Retraction returns the original attached platform and leaves additional contacted blocks in place. The arm checks the complete path before moving an attached Surface layer and supports up to twelve additional ordinary solid blocks; pushing additional inventories or machinery is refused.
