@@ -306,7 +306,11 @@ public final class VehicleTransfer {
             if(work!=null)work.mutated=true;
             java.util.List<net.minecraftforge.common.util.BlockSnapshot> replaced=new ArrayList<>();
             for(VehicleStructure.Cell cell:placed.cells)replaced.add(net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(world,origin.add(cell.pos)));
-            blocks(world,placed,origin,true);VehiclePaintings.publish(world,placed,origin);fault("painting-parked");com.vandorlabs.tiles.WorldActionAuthorization.installed(world,placed,origin,player!=null?player.getUniqueID():entity.couplingActor());
+            blocks(world,placed,origin,true);
+            // The native destination replaces this hull. Its unsnapped pose must not obstruct
+            // its own paintings while both owners temporarily exist inside the transaction.
+            try(com.vandorlabs.motion.PlatformRiders.CollisionScope ignored=new com.vandorlabs.motion.PlatformRiders.CollisionScope(java.util.Collections.singleton(entity))){VehiclePaintings.publish(world,placed,origin);}
+            fault("painting-parked");com.vandorlabs.tiles.WorldActionAuthorization.installed(world,placed,origin,player!=null?player.getUniqueID():entity.couplingActor());
             if(player!=null && net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent(replaced,
                     world.getBlockState(origin.down()),player,net.minecraft.util.EnumHand.MAIN_HAND)))throw new IOException("A protection rule prevented parking.");
             VehicleOwnership.update(world,entity.getUniqueID(),entity.transferEpoch+1,false);
@@ -343,14 +347,19 @@ public final class VehicleTransfer {
         BlockPos origin=BlockPos.fromLong(undo.getLong("Origin"));
         if(undo.getBoolean("Parking")){
             EntityGroundVehicle entity=work.held;world.removeEntityDangerously(entity);
-            blocks(world,VehicleStructure.read(undo.getCompoundTag("ParkedCraft")),origin,false);
+            VehicleStructure parked=VehicleStructure.read(undo.getCompoundTag("ParkedCraft"));
+            // A publication failure can leave some paintings native. Remove them before their supports.
+            VehiclePaintings.remove(world,parked,origin);blocks(world,parked,origin,false);
             entity.isDead=false;entity.install(work.beforeStructure,work.beforeCollision);
             entity.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));entity.taxiReturnPending=undo.getBoolean("TaxiReturnPending");entity.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;entity.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
             entity.couplingActor=undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null;entity.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));entity.rotationYaw=undo.getFloat("Yaw");entity.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));
             if(!world.spawnEntity(entity))throw new IOException("Recovery vehicle spawn canceled; journal retained.");
         }else{
             if(work.assembled!=null)world.removeEntityDangerously(work.assembled);
-            blocks(world,VehicleStructure.read(undo.getCompoundTag(undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft")),undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,VehicleStructure.read(undo.getCompoundTag(undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft")),undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null);
+            VehicleStructure source=VehicleStructure.read(undo.getCompoundTag(undo.hasKey("AssemblyOriginal",10)?"AssemblyOriginal":"Craft"));
+            BlockPos sourceOrigin=undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin;
+            blocks(world,source,sourceOrigin,true);VehiclePaintings.publish(world,source,sourceOrigin);
+            com.vandorlabs.tiles.WorldActionAuthorization.installed(world,source,sourceOrigin,undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null);
         }
         work.rolledBack=true;work.rollbackNotice=true;work.committed=true;
     }

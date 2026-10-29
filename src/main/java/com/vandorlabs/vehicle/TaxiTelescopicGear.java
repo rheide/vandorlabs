@@ -22,12 +22,11 @@ final class TaxiTelescopicGear {
         return roots;
     }
     static boolean canTarget(EntityGroundVehicle craft,boolean extend){
-        if(!craft.stopped()||!integral(craft.rotationYaw/90D)||!integral(craft.posX)||!integral(craft.posZ))return false;
         List<TileEntityLandingGear> roots=supports(craft);if(roots.size()<3)return false;
         double distance=Double.NaN;List<VehicleStructure.Cell> cells=new ArrayList<>();Map<BlockPos,TileEntityLandingGear> byPos=new HashMap<>();
         for(TileEntityLandingGear gear:roots){
             double target=extend?gear.getExtensionPixels()/16D:0,shift=target-gear.progress;
-            if(!integral(target)||!integral(craft.posY+shift)||!Double.isNaN(distance)&&Math.abs(distance-shift)>1e-5)return false;
+            if(!integral(target)||!gear.taxiGrounded&&!integral(shift)||!Double.isNaN(distance)&&Math.abs(distance-shift)>1e-5)return false;
             distance=shift;byPos.put(gear.getPos(),gear);
         }
         for(VehicleStructure.Cell cell:craft.structure.cells){TileEntityLandingGear gear=byPos.get(cell.pos);if(gear==null){cells.add(cell);continue;}
@@ -36,14 +35,13 @@ final class TaxiTelescopicGear {
         }
         try{
             VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
-            VehicleStructure placed=VehicleRotation.rotate(next,new VehicleWorld(craft.world,next),VehicleRotation.turns(craft.rotationYaw));
-            double x=craft.posX+craft.structure.bounds.maxX/2-placed.bounds.maxX/2,z=craft.posZ+craft.structure.bounds.maxZ/2-placed.bounds.maxZ/2;
-            if(!integral(x)||!integral(z))return false;
-            VehicleRotation.Plan plan=VehicleLandingGear.parking(placed,new BlockPos(Math.round(x),Math.round(craft.posY+distance),Math.round(z)));
-            VehicleWorld view=new VehicleWorld(craft.world,plan.structure);VehicleCollision geometry=new VehicleCollision(view);
-            if(!geometry.loaded(craft.world,plan.origin.getX(),plan.origin.getY(),plan.origin.getZ(),0,0,0,0))return false;
-            for(VehicleStructure.Cell cell:plan.structure.cells)if(!craft.world.isAirBlock(plan.origin.add(cell.pos)))return false;
-            for(AxisAlignedBB box:geometry.boxes)if(!craft.world.getCollisionBoxes(craft,box.offset(plan.origin).shrink(1e-6)).isEmpty())return false;
+            // This remains a carried craft. Check the real endpoint at its
+            // current pose; native grid publication is checked when parking.
+            VehicleWorld view=new VehicleWorld(craft.world,next);VehicleCollision geometry=new VehicleCollision(view);
+            double y=craft.posY+distance;
+            if(!geometry.loaded(craft.world,craft.posX,y,craft.posZ,0,0,0,craft.rotationYaw))return false;
+            VehiclePose pose=new VehiclePose(craft.posX,y,craft.posZ,craft.rotationYaw);
+            for(AxisAlignedBB box:geometry.boxes)if(!craft.world.getCollisionBoxes(craft,pose.world(box,next.bounds.maxX/2,next.bounds.maxZ/2).shrink(1e-6)).isEmpty())return false;
             return true;
         }catch(RuntimeException refused){return false;}
     }
@@ -57,7 +55,7 @@ final class TaxiTelescopicGear {
     static double shift(EntityGroundVehicle craft,Map<BlockPos,Float> desired){
         List<TileEntityLandingGear> roots=supports(craft);if(roots.size()<3)return Double.NaN;
         double shift=Double.NaN;Map<TileEntityLandingGear,Float> before=new LinkedHashMap<>();
-        for(TileEntityLandingGear gear:roots){Float next=desired.get(gear.getPos());if(next==null)return Double.NaN;double endpoint=craft.view.getBlockState(gear.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED)?gear.getExtensionPixels()/16D:0;if(!integral(craft.posY+endpoint-gear.progress))return Double.NaN;double delta=next-gear.progress;if(!Double.isNaN(shift)&&Math.abs(shift-delta)>1e-5)return Double.NaN;shift=delta;before.put(gear,gear.progress);}
+        for(TileEntityLandingGear gear:roots){Float next=desired.get(gear.getPos());if(next==null)return Double.NaN;double endpoint=craft.view.getBlockState(gear.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED)?gear.getExtensionPixels()/16D:0;if(!integral(endpoint))return Double.NaN;double delta=next-gear.progress;if(!Double.isNaN(shift)&&Math.abs(shift-delta)>1e-5)return Double.NaN;shift=delta;before.put(gear,gear.progress);}
         VehiclePose oldPose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw),nextPose=new VehiclePose(craft.posX,craft.posY+shift,craft.posZ,craft.rotationYaw);
         List<AxisAlignedBB> old=VehicleCollision.capture(craft.view).boxes;
         try{

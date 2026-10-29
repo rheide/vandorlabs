@@ -34,13 +34,21 @@ public final class TaxiLandingRuntimeChecks {
                 VehicleStructure decoded=VehicleStructure.read(craft.structure.write());VehicleWorld reloaded=new VehicleWorld(world,decoded);
                 for(BlockPos at:roots)require(((TileEntityLandingGear)reloaded.getTileEntity(at)).taxiGrounded,"grounded endpoint lost after save/reload");
                 require(VehicleLandingGear.setExtended(craft,roots.get(0),true),"raising matched supports refused");settle(craft,origin.getY());require(Arrays.equals(feet,bottoms(craft,block)),"feet moved while chassis raised");
+                if(turn==0){
+                    craft.rotationYaw=17;craft.setPosition(craft.posX+.25,craft.posY+.25,craft.posZ+.375);craft.motionX=.005;craft.motionZ=.003;
+                    double initial=craft.posY;double[] grounded=bottoms(craft,block);
+                    require(VehicleLandingGear.setExtended(craft,roots.get(0),false),"moving noncardinal fractional-position matched supports refused");settle(craft,initial-1);
+                    require(Arrays.equals(grounded,bottoms(craft,block)),"moving lowering changes grounded feet height");
+                    require(VehicleLandingGear.setExtended(craft,roots.get(0),true),"moving raising refused");settle(craft,initial);
+                    require(Arrays.equals(grounded,bottoms(craft,block)),"moving raising changes grounded feet height");
+                }
             }finally{craft.signals.close();craft.setDead();}
         }}finally{for(BlockPos at:BlockPos.getAllInBox(origin.add(-2,0,-2),origin.add(8,4,8)))world.setBlockToAir(at);}
-        System.out.println("[vandorlabs][reprolab] taxi-telescopic PASS four-cardinals matched-supports grounded-lower-raise swept-obstruction safe-refusal native-parking saved-marker");
+        System.out.println("[vandorlabs][reprolab] taxi-telescopic PASS four-cardinals matched-supports grounded-lower-raise swept-obstruction safe-refusal native-parking saved-marker moving-noncardinal-fractional-pose");
     }
     private static double[] bottoms(EntityGroundVehicle craft,BlockTelescopicLandingGear block){double[] result=new double[roots.size()];for(int i=0;i<result.length;i++)result[i]=Math.rint((craft.posY+block.vehicleBottomY(craft.view,roots.get(i)))*1000000)/1000000;return result;}
     private static void settle(EntityGroundVehicle craft,double target)throws Exception{
-        for(int tick=0;tick<2000;tick++){VehicleLandingGear.tick(craft);if(Math.abs(craft.posY-target)<1e-5)return;Thread.sleep(1);}
+        for(int tick=0;tick<2000;tick++){if(craft.motionX!=0||craft.motionZ!=0)craft.setPosition(craft.posX+craft.motionX,craft.posY,craft.posZ+craft.motionZ);VehicleLandingGear.tick(craft);if(Math.abs(craft.posY-target)<1e-5)return;Thread.sleep(1);}
         throw new IllegalStateException("Taxi support animation timed out y="+craft.posY+" target="+target);
     }
 }

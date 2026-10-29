@@ -582,6 +582,7 @@ public class ReproLab {
     public void onDocumentationRender(TickEvent.RenderTickEvent event) {
         if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.render(event);return;}
         if(event.phase==TickEvent.Phase.END && enabled)renderedFrames++;
+        if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.taxiVisibilityChecksOnly"))try{TaxiVisibilityClientChecks.captureFrame(Minecraft.getMinecraft());}catch(Exception failure){throw new IllegalStateException("Taxi natural main-frame capture",failure);}
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.joinedArmDocs"))JoinedArmDocumentation.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.machineBuildDocsOnly"))FrameMachineDocumentation.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.bridgeMachineChecksOnly"))NavigationClientChecks.render(Minecraft.getMinecraft());
@@ -621,6 +622,13 @@ public class ReproLab {
                         "[^A-Za-z0-9._-]", "_");
                 if(!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty())saveName="arm-recovery";
                 if(!System.getProperty("vandorlabs.mekanismTankRestart","").isEmpty())saveName="mekanism-tank-restart";
+                String suppliedWorld=System.getProperty("vandorlabs.testWorldName","");
+                if(!suppliedWorld.isEmpty()){
+                    if(!suppliedWorld.matches("[A-Za-z0-9._-]+"))throw new IllegalArgumentException("Invalid isolated test world name");
+                    if(!new java.io.File(new java.io.File(mc.mcDataDir,"saves"),suppliedWorld+"/level.dat").isFile())throw new IllegalStateException("Requested isolated test world does not exist: "+suppliedWorld);
+                    saveName=suppliedWorld;
+                    System.out.println("[vandorlabs][reprolab] opening explicit isolated saved world="+saveName);
+                }
                 mc.launchIntegratedServer(saveName, "Vandor Labs render test", settings);
                 mc.setIngameFocus();
                 System.out.println("[vandorlabs][reprolab] launching integrated world");
@@ -638,6 +646,7 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.foreignBuildingChecksOnly")){try{if(ForeignBuildingLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Foreign building live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleRampChecksOnly")){try{if(VehicleRampLiveChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved vehicle ramp regression",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.copySurfaceChecksOnly")){try{if(CopySurfaceLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Copy surface regressions",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.taxiVisibilityChecksOnly")){try{if(TaxiVisibilityClientChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Taxi world visibility",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.taxiLanding27ChecksOnly")){try{if(TaxiLandingClientChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Taxi support regression",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.artwork27ChecksOnly")){try{if(Artwork27RuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Artwork 2.7 focused checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.signChecksOnly")){try{if(VehicleSignRenderChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Carried sign rendering",failure);}return;}

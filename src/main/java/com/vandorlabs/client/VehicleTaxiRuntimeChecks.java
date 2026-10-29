@@ -197,11 +197,19 @@ public final class VehicleTaxiRuntimeChecks {
         java.lang.reflect.Method mouse=net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(GuiScreen.class,"mouseClicked","func_73864_a",int.class,int.class,int.class);
         java.lang.reflect.Method key=net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(GuiScreen.class,"keyTyped","func_73869_a",char.class,int.class);
         mouse.invoke(gui,input.x+4,input.y+input.height/2,0);
-        require(input.isFocused(),"actual mouse click focuses channel field");
+        require(input.isFocused(),"actual mouse click focuses channel field: phase="+(phase-1)+" screen="+gui.getClass().getName()+" visible="+input.getVisible()+" x="+input.x+" y="+input.y);
         key.invoke(gui,'\0',org.lwjgl.input.Keyboard.KEY_HOME);
         for(int n=input.getText().length();n>0;n--)key.invoke(gui,'\0',org.lwjgl.input.Keyboard.KEY_DELETE);
         for(char character:text.toCharArray())key.invoke(gui,character,0);
         require(input.getText().equals(text),"actual keyboard path enters channel draft");
+    }
+    private static void redstonePage(Minecraft mc)throws Exception{
+        GuiScreen gui=mc.currentScreen;
+        List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
+        GuiButton tab=null;for(GuiButton button:buttons)if(button.id==91)tab=button;
+        require(tab!=null&&tab.visible,"controller has a visible Redstone tab");
+        if(tab.enabled)net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(GuiScreen.class,"mouseClicked","func_73864_a",int.class,int.class,int.class).invoke(gui,tab.x+tab.width/2,tab.y+tab.height/2,0);
+        require(((GuiTextField)field(gui,"channels")).getVisible(),"real Redstone tab click exposes controller channels");
     }
     private static void mounted(Minecraft mc) throws Exception {
         mc.getIntegratedServer().addScheduledTask(()->{
@@ -248,7 +256,7 @@ public final class VehicleTaxiRuntimeChecks {
             case 3:mc.getIntegratedServer().addScheduledTask(()->{require(((TileEntityPilotSeat)world(mc).getTileEntity(seat)).getHeight()==1,"independent seat height applies immediately");}).get();break;
             case 4:previewLayout(mc);button(mc,2);break;
             case 5:mc.getIntegratedServer().addScheduledTask(()->{require(!((TileEntityPilotSeat)world(mc).getTileEntity(seat)).isTaxiMode(),"seat Taxi OFF applies immediately");VehicleService.previewController(player(mc),origin.add(1,1,1));}).get();break;
-            case 6:previewLayout(mc);screenshot(mc,output,"shot_pilot_controller_settings.png");type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"5319");mc.currentScreen.updateScreen();break;
+            case 6:previewLayout(mc);redstonePage(mc);screenshot(mc,output,"shot_pilot_controller_settings.png");type(mc,(GuiTextField)field(mc.currentScreen,"channels"),"5319");mc.currentScreen.updateScreen();break;
             case 7:mc.getIntegratedServer().addScheduledTask(()->{
                 TileEntityVehicleController controller=(TileEntityVehicleController)world(mc).getTileEntity(origin.add(1,1,1));
                 require(controller.getRedstoneChannel()==5319&&!player(mc).isRiding(),"controller channels apply without conversion on held-high input");player(mc).setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
@@ -280,7 +288,7 @@ public final class VehicleTaxiRuntimeChecks {
                 e.rotationYaw=0;player(mc).setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));VehicleService.previewController(player(mc),e,e.structure.controller().pos);
             }).get();break;
             case 21: {
-                if(modeUiStage==0){previewLayout(mc);screenshot(mc,output,"shot_pilot_captured_preview.png");GuiTextField[] fields=(GuiTextField[])field(mc.currentScreen,"modeChannels");type(mc,fields[1],"6123");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
+                if(modeUiStage==0){previewLayout(mc);redstonePage(mc);screenshot(mc,output,"shot_pilot_captured_preview.png");GuiTextField[] fields=(GuiTextField[])field(mc.currentScreen,"modeChannels");type(mc,fields[1],"6123");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
                 if(modeUiStage==1){screenshot(mc,output,"shot_pilot_mode_channels.png");mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).modeChannels(1).toString().equals("6123"),"inline mode channels automatically apply")).get();((GuiTextField[])field(mc.currentScreen,"modeChannels"))[1].setText("1,,2");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
                 if(modeUiStage==2){mc.getIntegratedServer().addScheduledTask(()->require(((TileEntityPilotSeat)craft(mc).view.getTileEntity(craft(mc).structure.controller().pos)).modeChannels(1).toString().equals("6123"),"invalid inline draft preserves saved mode channels")).get();((GuiTextField[])field(mc.currentScreen,"modeChannels"))[1].setText("6123");mc.currentScreen.updateScreen();modeUiStage++;phase--;break;}
 

@@ -19,8 +19,11 @@ public final class SavedTaxiFollowupChecks {
     private SavedTaxiFollowupChecks(){}
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Saved Taxi followup: "+why);}
     private static NBTTagCompound load(WorldServer world,String name)throws Exception{
+        return loadResource(world,"followups3-"+name);
+    }
+    private static NBTTagCompound loadResource(WorldServer world,String name)throws Exception{
         NBTTagCompound fixture;
-        try(InputStream in=SavedTaxiFollowupChecks.class.getResourceAsStream("/assets/vandorlabs/fixtures/followups3-"+name+".nbt")){
+        try(InputStream in=SavedTaxiFollowupChecks.class.getResourceAsStream("/assets/vandorlabs/fixtures/"+name+".nbt")){
             require(in!=null,"saved fixture exists");fixture=CompressedStreamTools.readCompressed(in);
         }
         NBTTagList cells=fixture.getTagList("Cells",10);
@@ -99,6 +102,70 @@ public final class SavedTaxiFollowupChecks {
         StringBuilder status=new StringBuilder("pos=").append(craft.posX).append(',').append(craft.posY).append(',').append(craft.posZ).append(" yaw=").append(craft.rotationYaw).append(" stopped=").append(craft.stopped()).append(" dead=").append(craft.isDead).append(" transfer=").append(craft.transferInProgress).append(" worldTick=").append(craft.world.getTotalWorldTime()).append(" cacheWaits=").append(craft.collisionCache.waits()).append(" cacheGeneration=").append(craft.collisionCache.generation()).append(" cacheWarming=").append(craft.collisionCache.warming()).append(" cacheFailure=").append(craft.collisionCache.failure()).append(" cacheBypass=").append(craft.collisionCache.bypass());
         for(GearTileEntity gear:roots(craft))status.append(" root=").append(gear.getPos()).append(" progress=").append(gear.progress()).append(" target=").append(gear.target()).append(" operational=").append(gear.isOperational()).append(" phase=").append(gear.taxiPhase()).append(" level=").append(gear.taxiLevel()).append(" amount=").append(gear.taxiAmount()).append(" signal776=").append(com.vandorlabs.redstone.RedstoneChannels.level(craft.view,gear.getPos(),776)).append(" error=").append(gear.error());
         return status.toString();
+    }
+    private static long paintingDrops(WorldServer world){return world.loadedEntityList.stream().filter(e->!e.isDead&&e instanceof net.minecraft.entity.item.EntityItem&&((net.minecraft.entity.item.EntityItem)e).getItem().getItem()==net.minecraft.init.Items.PAINTING).count();}
+    public static void paintingRollback4(WorldServer world,EntityPlayerMP actor)throws Exception{
+        double x=actor.posX,y=actor.posY,z=actor.posZ;EntityGroundVehicle craft=null;
+        try{
+            NBTTagCompound fixture=loadResource(world,"followups4-painting");
+            NBTTagCompound original=fixture.getTagList("Entities",10).getCompoundTagAt(0);UUID id=original.getUniqueId("UUID");
+            long drops=paintingDrops(world);
+            VehicleTransfer.testFault=point->{if(point.equals("painting-detached"))throw new IllegalStateException("injected painting detach failure");};
+            boolean refused=false;try{assemble(world,actor,new BlockPos(-142,86,166));}catch(Exception expected){refused=true;}finally{VehicleTransfer.testFault=null;}
+            require(refused,"caught assembly failure is exercised");
+            require(world.getEntityFromUuid(id) instanceof EntityPainting&&!VehicleTransfer.pending(world),"caught assembly failure restores original native painting and retires journal");
+            EntityPainting nativeOwner=(EntityPainting)world.getEntityFromUuid(id);
+            require(nativeOwner.onValidSurface()&&nativeOwner.art.title.equals(original.getString("Motive"))&&nativeOwner.getHangingPosition().equals(new BlockPos(original.getInteger("TileX"),original.getInteger("TileY"),original.getInteger("TileZ"))),"caught assembly restores exact native art and hanging coordinates");
+            require(paintingDrops(world)==drops,"caught detach failure creates no painting drops");
+            craft=assemble(world,actor,new BlockPos(-142,86,166));NBTTagCompound saved=craft.structure.write();
+            VehicleTransfer.testFault=point->{if(point.equals("painting-parked"))throw new IllegalStateException("injected painting publication failure");};
+            refused=false;try{park(world,actor,craft);}catch(Exception expected){refused=true;}finally{VehicleTransfer.testFault=null;}
+            require(refused&&!craft.isDead&&saved.equals(craft.structure.write())&&world.getEntityFromUuid(id)==null&&!VehicleTransfer.pending(world),"caught parking failure restores sole original carried owner with unchanged saved NBT");
+            long carried=0;for(Entity e:world.loadedEntityList)if(!e.isDead&&e instanceof EntityGroundVehicle&&((EntityGroundVehicle)e).structure!=null){NBTTagList entries=VehiclePaintings.entries(((EntityGroundVehicle)e).structure);for(int n=0;n<entries.tagCount();n++)if(entries.getCompoundTagAt(n).getUniqueId("UUID").equals(id))carried++;}
+            require(carried==1&&paintingDrops(world)==drops,"caught parking failure has exactly one usable carried owner and no painting drops");
+            park(world,actor,craft);require(craft.isDead&&world.getEntityFromUuid(id) instanceof EntityPainting,"retry parks restored carried owner safely");
+            System.out.println("[vandorlabs][reprolab] saved-painting4-rollback PASS caught-detach caught-publish original-NBT exactly-one-owner retry");
+        }finally{VehicleTransfer.testFault=null;if(craft!=null&&!craft.isDead){craft.signals.close();world.removeEntityDangerously(craft);}actor.setPosition(x,y,z);}
+    }
+    public static void painting4(WorldServer world,EntityPlayerMP actor)throws Exception{
+        double x=actor.posX,y=actor.posY,z=actor.posZ;EntityGroundVehicle craft=null;
+        try{
+            NBTTagCompound fixture=loadResource(world,"followups4-painting");
+            NBTTagCompound original=fixture.getTagList("Entities",10).getCompoundTagAt(0);UUID id=original.getUniqueId("UUID");
+            require(original.getString("Motive").equals("Aztec2")&&original.getByte("Facing")==2,"exact saved art/facing");
+            craft=assemble(world,actor,new BlockPos(-142,86,166));
+            require(VehiclePaintings.entries(craft.structure).tagCount()==1&&world.getEntityFromUuid(id)==null,"saved painting exclusively carried");
+            NBTTagCompound saved=craft.structure.write();
+            try{park(world,actor,craft);}catch(Exception failure){
+                require(!craft.isDead&&saved.equals(craft.structure.write())&&world.getEntityFromUuid(id)==null,"failed parking retains exact sole carried painting owner");
+                throw failure;
+            }
+            require(craft.isDead&&world.getEntityFromUuid(id) instanceof EntityPainting,"saved painting returns to one native owner");
+            EntityPainting restored=(EntityPainting)world.getEntityFromUuid(id);
+            require(restored.onValidSurface()&&restored.art.title.equals("Aztec2")&&restored.facingDirection.getHorizontalIndex()==2,"saved painting native support/art/facing restored");
+            long owners=world.loadedEntityList.stream().filter(e->!e.isDead&&e.getUniqueID().equals(id)).count();require(owners==1,"one usable native painting UUID");
+            require(!VehicleTransfer.pending(world),"successful parking retires ownership journal");
+            for(int heading=0;heading<4;heading++){
+                loadResource(world,"followups4-painting");craft=assemble(world,actor,new BlockPos(-142,86,166));
+                // Exercise parking's actual heading/position transform, including grid rounding.
+                craft.rotationYaw=heading*90;craft.setPosition(craft.posX+48.49,craft.posY,craft.posZ+48.51);
+                VehicleRotation.Plan plan=VehicleRotation.plan(craft);
+                for(VehicleStructure.Cell cell:plan.structure.cells){BlockPos at=plan.origin.add(cell.pos);world.getChunkFromBlockCoords(at);require(world.isAirBlock(at),"cardinal parking destination clear heading="+heading+" at="+at);}
+                NBTTagCompound expected=VehiclePaintings.entries(plan.structure).getCompoundTagAt(0);
+                if(heading==0){
+                    EntityGroundVehicle blocker=new EntityGroundVehicle(world);blocker.install(VehiclePaintings.capture(craft.structure,BlockPos.ORIGIN,Collections.emptyList()));blocker.setPosition(craft.posX,craft.posY,craft.posZ);
+                    require(world.spawnEntity(blocker),"other vehicle collision blocker published");VehicleLookup.update(blocker);
+                    NBTTagCompound retained=craft.structure.write();long beforeDrops=paintingDrops(world);boolean refused=false;
+                    try{park(world,actor,craft);}catch(Exception expectedFailure){refused=true;}finally{blocker.signals.close();world.removeEntityDangerously(blocker);VehicleLookup.remove(blocker);}
+                    require(refused&&!craft.isDead&&retained.equals(craft.structure.write())&&world.getEntityFromUuid(id)==null&&paintingDrops(world)==beforeDrops&&!VehicleTransfer.pending(world),"another vehicle still obstructs painting publication without loss or drops");
+                }
+                try{park(world,actor,craft);}catch(Exception failure){throw new IllegalStateException("Saved painting cardinal parking heading="+heading+" origin="+plan.origin+" yaw="+craft.rotationYaw+" position="+craft.posX+","+craft.posY+","+craft.posZ,failure);}restored=(EntityPainting)world.getEntityFromUuid(id);
+                require(craft.isDead&&restored!=null&&restored.onValidSurface()&&restored.art.title.equals("Aztec2")&&restored.facingDirection.getHorizontalIndex()==expected.getByte("Facing")&&restored.getHangingPosition().equals(plan.origin.add(expected.getInteger("TileX"),expected.getInteger("TileY"),expected.getInteger("TileZ"))),"saved painting offset/cardinal native support heading="+heading);
+                require(world.loadedEntityList.stream().filter(e->!e.isDead&&e.getUniqueID().equals(id)).count()==1&&!VehicleTransfer.pending(world),"offset/cardinal sole owner and retired journal heading="+heading);
+                VehiclePaintings.remove(world,plan.structure,plan.origin);VehicleTransfer.blocks(world,plan.structure,plan.origin,false);
+            }
+            System.out.println("[vandorlabs][reprolab] saved-painting4 PASS exact-native-cells-NBT Aztec2-north queued-assemble-park cardinal-offset-grid-rounding other-vehicle-obstruction exactly-one-native-owner");
+        }finally{if(craft!=null&&!craft.isDead){craft.signals.close();world.removeEntityDangerously(craft);}actor.setPosition(x,y,z);}
     }
     public static void run(WorldServer world,EntityPlayerMP actor)throws Exception{
         String selected=System.getProperty("vandorlabs.followups3Case","");double x=actor.posX,y=actor.posY,z=actor.posZ;

@@ -24,9 +24,15 @@ public final class VehiclePaintingRenderer {
         }
         while(CACHES.size()>64||bytes>16L*1024*1024){Map.Entry<java.util.UUID,Cache> oldest=CACHES.entrySet().iterator().next();bytes-=oldest.getValue().bytes;CACHES.remove(oldest.getKey());}
         if(cache.paintings.isEmpty())return;
+        net.minecraft.client.renderer.entity.RenderManager manager=Minecraft.getMinecraft().getRenderManager();
+        net.minecraft.world.World previousWorld=manager.world;
         try(TurntableRenderState saved=new TurntableRenderState()){
-            for(EntityPainting painting:cache.paintings){painting.world=craft.view;try{Minecraft.getMinecraft().getRenderManager().renderEntity(painting,painting.posX,painting.posY,painting.posZ,painting.rotationYaw,partial,false);}finally{painting.world=null;}}
-        }
+            // Vanilla RenderPainting samples its manager's world for each art
+            // tile. Its local coordinates need the same transformed lighting
+            // view as carried blocks, including lamps inside the craft.
+            manager.world=craft.view;
+            for(EntityPainting painting:cache.paintings){painting.world=craft.view;try{manager.renderEntity(painting,painting.posX,painting.posY,painting.posZ,painting.rotationYaw,partial,false);}finally{painting.world=null;}}
+        }finally{manager.world=previousWorld;}
     }
     static void clear(){CACHES.clear();bytes=0;}
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)Minecraft.getMinecraft().addScheduledTask(VehiclePaintingRenderer::clear);}

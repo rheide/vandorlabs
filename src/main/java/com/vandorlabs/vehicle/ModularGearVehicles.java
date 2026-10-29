@@ -65,7 +65,7 @@ public final class ModularGearVehicles {
             desired.put(gear.getPos(),next);
         }
         if(!notify.isEmpty())com.vandorlabs.network.MessageGearMotion.send(craft,notify);
-        if(desired.isEmpty())return;Map<BlockPos,Float> geometry=new LinkedHashMap<>();for(Map.Entry<BlockPos,Double> entry:desired.entrySet())geometry.put(entry.getKey(),entry.getValue().floatValue());
+        if(desired.isEmpty())return;Map<BlockPos,Double> geometry=new LinkedHashMap<>(desired);
         if(!craft.collisionCache.readyForCanopyPose(craft.view,geometry))return;
         if(!craft.world.isRemote)for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){GearTileEntity gear=(GearTileEntity)craft.view.getTileEntity(entry.getKey());List<AxisAlignedBB> before=new ArrayList<>(),after=new ArrayList<>();for(AxisAlignedBB box:GearGeometry.boxes(gear,gear.progress()))before.add(pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2));for(AxisAlignedBB box:GearGeometry.boxes(gear,entry.getValue()))after.add(pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2));GearGeometry.pushEntities(craft.world,before,after,craft);}
         for(Map.Entry<BlockPos,Double> entry:desired.entrySet())((GearTileEntity)craft.view.getTileEntity(entry.getKey())).captureProgress(entry.getValue());

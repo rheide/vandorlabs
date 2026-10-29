@@ -26,10 +26,10 @@ public final class TaxiSettingsRuntimeChecks {
         for(float yaw:new float[]{-372,-12,0,12,78,90,102,258,270,282,348,372})require(VehicleRotation.turns(yaw)==Math.floorMod(Math.round(yaw/90),4),"lenient cardinal heading "+yaw);
         for(float yaw:new float[]{13,45,77,103,Float.NaN}){boolean refused=false;try{VehicleRotation.turns(yaw);}catch(IllegalArgumentException expected){refused=true;}require(refused,"noncardinal heading "+yaw);}
         BlockPos at=new BlockPos(320,102,160);world.getChunkFromBlockCoords(at.west(4));world.getChunkFromBlockCoords(at.east(4));
-        Source source=new Source();source.setWorld(world);source.setPos(at.east(5));RedstoneChannels.register(source);
+        Source source=new Source();source.setWorld(world);source.setPos(at.east(5));RedstoneFixtureTransmitters.equip(source);RedstoneChannels.register(source);
         TileEntityVehicleController seat=new TileEntityVehicleController();seat.setWorld(world);seat.setPos(at);seat.setVehicleChannels(ChannelList.of(5341),world);
         try{
-            seat.configure(1,0,world);require(seat.poll(world)==-1,"ON initial baseline");source.power(true);require(seat.poll(world)==1,"ON rising activation");require(seat.poll(world)==-1,"held signal does not retrigger");
+            seat.configure(1,0,world);require(seat.poll(world)==-1,"ON initial baseline");source.power(true);require(RedstoneChannels.level(world,at,5341)==15,"equipped source reaches controller");require(seat.poll(world)==1,"ON rising activation");require(seat.poll(world)==-1,"held signal does not retrigger");
             seat.configure(2,3,world);require(seat.poll(world)==-1,"OFF edit takes current baseline");source.power(false);require(seat.poll(world)==1,"OFF falling activation");
             seat.configure(0,2,world);source.power(true);require(seat.poll(world)==-1,"disabled ignores signal");
             for(int height=0;height<4;height++){TileEntityPilotSeat heightSeat=new TileEntityPilotSeat();heightSeat.configure(1,height,world);TileEntityPilotSeat copy=new TileEntityPilotSeat();copy.readFromNBT(heightSeat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.getHeight()==height && copy.getRedstoneMode()==1,"height and trigger save "+height);require(Math.abs(copy.seatHeight()-(7+height*2)/16D)<1e-9,"seat cushion height "+height);}

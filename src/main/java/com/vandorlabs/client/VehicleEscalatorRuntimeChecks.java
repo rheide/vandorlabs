@@ -140,6 +140,14 @@ public final class VehicleEscalatorRuntimeChecks {
             probe.hover=true;probe.hoverTarget=probe.posY;
             BlockPos localController=rampPos.subtract(scan.origin);
             boolean activation=paused.writeToNBT(new NBTTagCompound()).getBoolean("ActivateOnPower");
+            require(activation && com.vandorlabs.redstone.LoadedRedstonePower.level(probe.view,localController)==15,"carried physical power fixture");
+            require(!VehicleRamps.signal(probe,localController,false) && ((TileEntityRampController)probe.view.getTileEntity(localController)).isOpen(),"channel off cannot override carried physical power");
+            // Isolate channel control from the physical source that extended the
+            // world fixture. The original vehicle keeps its source for parking.
+            List<VehicleStructure.Cell> channelOnly=new ArrayList<>();
+            for(VehicleStructure.Cell cell:craft.cells)if(!cell.pos.equals(localController.north()))channelOnly.add(cell);
+            probe.install(new VehicleStructure(channelOnly,craft.seat,craft.facing,craft.gearCount));
+            require(com.vandorlabs.redstone.LoadedRedstonePower.level(probe.view,localController)==0,"channel probe has no carried physical power");
             require(VehicleRamps.signal(probe,localController,!activation),"vehicle channel retracts captured ramp");
             require(Math.abs(probe.hoverTarget-probe.posY)<1e-8,"ramp rebasing preserves hover altitude error");
             require(!((TileEntityRampController)probe.view.getTileEntity(localController)).isOpen(),"retracted vehicle ramp pose");

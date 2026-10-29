@@ -25,7 +25,9 @@ public final class TaxiModularRuntimeChecks {
     private static double[] feet(EntityGroundVehicle craft){return roots(craft).stream().mapToDouble(g->foot(g,craft.posY)).sorted().toArray();}
     private static void settle(EntityGroundVehicle craft,boolean expanded)throws Exception{
         boolean reloaded=false;
+        boolean moving=craft.motionX!=0||craft.motionZ!=0;
         for(int tick=0;tick<1500;tick++){
+            if(moving)craft.setPosition(craft.posX+craft.motionX,craft.posY,craft.posZ+craft.motionZ);
             ModularGearVehicles.tick(craft);require(craft.structure!=null,"a valid height change became unavailable");boolean done=true;
             if(!expanded&&!reloaded){NBTTagCompound state=roots(craft).get(0).taxiState();if(state!=null&&state.getInteger("Phase")==0&&state.getDouble("Level")>0&&state.getDouble("Level")<state.getInteger("Amount")){
                 NBTTagCompound before=craft.structure.write();boolean refused=false;try{VehicleRotation.plan(craft);}catch(IllegalArgumentException expected){refused=true;}require(refused&&before.equals(craft.structure.write()),"in-flight native parking is refused without rewriting ownership");
@@ -35,6 +37,20 @@ public final class TaxiModularRuntimeChecks {
             if(done)return;Thread.sleep(1);
         }
         StringBuilder status=new StringBuilder();for(GearTileEntity gear:roots(craft))status.append(gear.getPos()).append(' ').append(gear.progress()).append(' ').append(gear.error()).append(' ').append(gear.taxiState()).append(';');throw new IllegalStateException("Taxi modular height timed out y="+craft.posY+" "+status);
+    }
+    private static void driveHeight(EntityGroundVehicle craft,EntityPlayerMP actor,boolean expanded)throws Exception{
+        double x=craft.posX,z=craft.posZ;boolean moved=false;
+        for(int tick=0;tick<1500;tick++){
+            // Oscillate on the same flat support pad while exercising the full
+            // server entity order: gear, signals, steering, gravity and clipping.
+            byte forward=(byte)((tick/8)%2==0?1:-1);craft.driveSpeed=forward*.04;
+            craft.input(actor,(expanded?2000:0)+tick,forward,(byte)0,false);craft.onUpdate();
+            moved|=Math.hypot(craft.posX-x,craft.posZ-z)>.05;
+            require(craft.structure!=null,"driven height adjustment became unavailable");
+            boolean done=true;for(GearTileEntity gear:roots(craft)){int phase=gear.taxiPhase();done&=expanded?phase<0:phase==1;}
+            if(done){require(moved,"full entity ticks never translated the driven craft");return;}Thread.sleep(1);
+        }
+        throw new IllegalStateException("Driven Taxi height timed out xyz="+craft.posX+","+craft.posY+","+craft.posZ+" roots="+roots(craft).stream().map(g->g.error()+" "+g.taxiState()).collect(java.util.stream.Collectors.joining(";")));
     }
     public static void run(WorldServer world,EntityPlayerMP actor)throws Exception{
         com.vandorlabs.network.GearTaxiPacketChecks.run();
@@ -73,7 +89,28 @@ public final class TaxiModularRuntimeChecks {
                 if(!large&&turns==0){
                     List<VehicleStructure.Cell> asymmetric=new ArrayList<>(craft.structure.cells);asymmetric.add(new VehicleStructure.Cell(new BlockPos((int)craft.structure.bounds.maxX,5,5),Blocks.IRON_BLOCK.getDefaultState(),null));
                     EntityGroundVehicle probe=new EntityGroundVehicle(world);probe.install(new VehicleStructure(asymmetric,craft.structure.seat,craft.structure.facing,craft.structure.gearCount));probe.setPosition(craft.posX,craft.posY,craft.posZ);probe.rotationYaw=90;
-                    try{NBTTagCompound unchanged=probe.structure.write();double before=probe.posY;roots(probe).get(0).target(false);ModularGearVehicles.tick(probe);require(unchanged.equals(probe.structure.write())&&probe.posY==before&&roots(probe).stream().allMatch(g->g.taxiState()==null),"asymmetric half-cell parking footprint refuses without changing its original snapshot");}finally{probe.signals.close();probe.setDead();}
+                    double sourceX=craft.posX,sourceY=craft.posY,sourceZ=craft.posZ;
+                    // The real assembled owner is a physical collision obstacle.
+                    // Isolate the preview on its support pad before moving it.
+                    craft.setPosition(sourceX+64,sourceY,sourceZ);
+                    try{
+                        probe.rotationYaw=17;probe.setPosition(probe.posX+.25,probe.posY+.25,probe.posZ+.375);probe.motionX=.005;probe.motionZ=.003;
+                        double before=probe.posY;double[] grounded=feet(probe);int originalCount=probe.structure.cells.size();
+                        roots(probe).get(0).target(false);settle(probe,false);
+                        require(Math.abs(probe.posY-before+2)<1e-6&&Arrays.equals(grounded,feet(probe)),"moving noncardinal craft lowers exactly two blocks with grounded feet");
+                        require(probe.structure.cells.size()==originalCount-6,"moving contraction retains all removed native arm sections");
+                        roots(probe).get(0).target(true);settle(probe,true);
+                        require(Math.abs(probe.posY-before)<1e-6&&Arrays.equals(grounded,feet(probe))&&probe.structure.cells.size()==originalCount,"moving expansion restores height and every native arm section");
+                        probe.setPosition(sourceX+.25,sourceY,sourceZ+.375);probe.motionX=probe.motionY=probe.motionZ=0;
+                        double drivenY=probe.posY;double[] drivenFeet=feet(probe);require(probe.board(actor),"driver boards full entity height probe");
+                        try{
+                            roots(probe).get(0).target(false);driveHeight(probe,actor,false);
+                            require(Math.abs(probe.posY-drivenY+2)<1e-6&&Arrays.equals(drivenFeet,feet(probe)),"full entity motion lowers exactly two blocks while grounded");
+                            roots(probe).get(0).target(true);driveHeight(probe,actor,true);
+                            require(Math.abs(probe.posY-drivenY)<1e-6&&Arrays.equals(drivenFeet,feet(probe))&&probe.structure.cells.size()==originalCount,"full entity motion raises and restores every retained section");
+                        }finally{if(actor.getRidingEntity()==probe)actor.dismountRidingEntity();}
+
+                    }finally{probe.signals.close();probe.setDead();craft.setPosition(sourceX,sourceY,sourceZ);}
                 }
                 if(!large&&turns==0){BlockPos obstacle=origin.add(5,3,5);world.setBlockState(obstacle,Blocks.STONE.getDefaultState(),2);NBTTagCompound unchanged=craft.structure.write();roots(craft).get(0).target(false);ModularGearVehicles.tick(craft);require(craft.posY==initial&&unchanged.equals(craft.structure.write()),"occupied final footprint changed the original owner");world.setBlockToAir(obstacle);}
                 if(!large&&turns==0){
@@ -111,6 +148,6 @@ public final class TaxiModularRuntimeChecks {
                 System.out.println("[vandorlabs][reprolab] taxi-modular case PASS large="+large+" heading="+turns*90+" native-park-recapture raise original-material-count");
             }finally{if(craft!=null){craft.signals.close();craft.setDead();}if(VehicleTransfer.pending(world))VehicleTransfer.recover(world);if(paintingId!=null){net.minecraft.entity.Entity painting=world.getEntityFromUuid(paintingId);if(painting!=null)world.removeEntityDangerously(painting);}}
         }}finally{actor.setHeldItem(EnumHand.MAIN_HAND,held);actor.setPosition(px,py,pz);for(BlockPos at:BlockPos.getAllInBox(origin.add(-5,-2,-5),origin.add(15,9,15))){world.removeTileEntity(at);world.setBlockToAir(at);}}
-        System.out.println("[vandorlabs][reprolab] taxi-modular PASS regular-Large four-headings native-three-to-one anchored-feet preflight-refusal saved-rotation real-park-recapture reversible-section-ownership");
+        System.out.println("[vandorlabs][reprolab] taxi-modular PASS regular-Large four-headings native-three-to-one anchored-feet preflight-refusal saved-rotation real-park-recapture reversible-section-ownership moving-noncardinal-fractional-pose");
     }
 }

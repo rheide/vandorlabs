@@ -5,7 +5,7 @@ unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LA
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
-unset VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
+unset VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
 unset VANDOR_LABS_ARTWORK27_CHECKS_ONLY
 unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
@@ -74,12 +74,19 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-recovery ]; then
             PREFIX=arm_recovery_
             : "${VANDOR_LABS_ARM_RECOVERY_PHASE:?Set the isolated arm recovery phase}"
+        elif [ "$TARGET" = taxi-visibility ]; then
+            PREFIX=saved_taxi_visibility_
+            export VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY=true
         elif [ "$TARGET" = taxi-landing27 ]; then
             PREFIX=taxi_landing27_
             export VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY=true
         elif [ "$TARGET" = artwork27 ]; then
             PREFIX=artwork27_
             export VANDOR_LABS_ARTWORK27_CHECKS_ONLY=true
+        elif [ "$TARGET" = coupling ]; then
+            PREFIX=coupling_
+            export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
+            export VANDOR_LABS_COUPLING_CHECKS_ONLY=true
         elif [ "$TARGET" = utility26 ]; then
             PREFIX=utility26_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
@@ -184,6 +191,11 @@ if [ -n "${VANDOR_LABS_TEST_JEI:-}" ]; then
 fi
 if [ -n "${VANDOR_LABS_TEST_OPTIFINE:-}" ]; then
     cp "$VANDOR_LABS_TEST_OPTIFINE" "$TEST_RUNTIME_GAME/mods/"
+fi
+if [ -n "${VANDOR_LABS_TEST_SHADERPACK:-}" ]; then
+    mkdir -p "$TEST_RUNTIME_GAME/shaderpacks"
+    cp "$VANDOR_LABS_TEST_SHADERPACK" "$TEST_RUNTIME_GAME/shaderpacks/"
+    printf "shaderPack=%s\n" "$(basename "$VANDOR_LABS_TEST_SHADERPACK")" > "$TEST_RUNTIME_GAME/optionsshaders.txt"
 fi
 # Allow the full software-rendered gallery to finish on a busy host.
 VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout "${VANDOR_LABS_TEST_TIMEOUT:-1200}" testclient/run.sh \
@@ -292,6 +304,11 @@ if [ "$MODE" = focus ]; then
         echo "Arm restart recovery passed: $RUN_OUT"
         exit 0
     fi
+    if [ "$TARGET" = taxi-visibility ]; then
+        grep -q "saved-taxi-world-visibility PASS" "$RUN_OUT/client.log"
+        echo "Saved Taxi visibility checked: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = taxi-landing27 ]; then
         grep -q "taxi-landing27 PASS" "$RUN_OUT/client.log"
         echo "Taxi landing gear checks passed: $RUN_OUT"
@@ -301,6 +318,11 @@ if [ "$MODE" = focus ]; then
         grep -q "artwork27-focused PASS" "$RUN_OUT/client.log"
         grep -q "shared-screen-transmitter PASS" "$RUN_OUT/client.log"
         echo "Live artwork 2.7 checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = coupling ]; then
+        grep -q "coupling-focused PASS" "$RUN_OUT/client.log"
+        echo "Live coupling checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = utility26 ]; then

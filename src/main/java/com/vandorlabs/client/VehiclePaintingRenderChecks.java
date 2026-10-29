@@ -33,7 +33,23 @@ final class VehiclePaintingRenderChecks {
             int changed=0;for(int y=0;y<256;y++)for(int x=0;x<256;x++)if(images[0].getRGB(x,y)!=images[1].getRGB(x,y))changed++;
             ImageIO.write(images[1],"png",new File(output,"shot_vehicle_carried_painting.png"));if(changed<1000)throw new IllegalStateException("Carried painting was not visibly rendered: "+changed);
             for(net.minecraft.entity.Entity entity:mc.world.loadedEntityList)if(entity.getUniqueID().equals(painting.getUniqueID()))throw new IllegalStateException("Painting visualization registered a native world entity");
-            System.out.println("[vandorlabs][reprolab] vehicle-painting-render PASS actual-native-model changed-pixels="+changed+" inert-client-visual no-native-entity-duplicate");
+            // A luminous carried support makes the expected light independent of the
+            // parent world's light at the painting's unrelated local coordinates.
+            List<VehicleStructure.Cell> luminous=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)luminous.add(cell.pos.equals(BlockPos.ORIGIN)?new VehicleStructure.Cell(cell.pos,Blocks.GLOWSTONE.getDefaultState(),null):cell);
+            craft.install(new VehicleStructure(luminous,craft.structure.seat,craft.structure.facing,craft.structure.gearCount));
+            BufferedImage[] lighting=new BufferedImage[2];net.minecraft.world.World previousWorld=mc.getRenderManager().world;
+            try{
+                for(int sample=0;sample<2;sample++){
+                    frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.translate(-.5,-.5,-2);GlStateManager.clearColor(.125F,.188F,.25F,1);GlStateManager.clear(16640);GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);mc.entityRenderer.enableLightmap();
+                    if(sample==0){mc.getRenderManager().world=craft.view;painting.world=craft.view;mc.getRenderManager().renderEntity(painting,painting.posX,painting.posY,painting.posZ,painting.rotationYaw,1,false);}
+                    else {mc.getRenderManager().world=previousWorld;VehiclePaintingRenderer.render(craft,1);}
+                    GL11.glFinish();lighting[sample]=net.minecraft.util.ScreenShotHelper.createScreenshot(256,256,frame);
+                }
+            }finally{mc.getRenderManager().world=previousWorld;painting.world=mc.world;mc.entityRenderer.disableLightmap();}
+            int lightMismatch=0;for(int y=0;y<256;y++)for(int x=0;x<256;x++)if(lighting[0].getRGB(x,y)!=lighting[1].getRGB(x,y))lightMismatch++;
+            ImageIO.write(lighting[1],"png",new File(output,"shot_vehicle_painting_light.png"));
+            if(lightMismatch>0)throw new IllegalStateException("Carried painting differs from native model using snapshot light: "+lightMismatch);
+            System.out.println("[vandorlabs][reprolab] vehicle-painting-render PASS actual-native-model changed-pixels="+changed+" inert-client-visual no-native-entity-duplicate snapshot-light-native-parity");
         }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);RenderGroundVehicle.reload();}
     }
 }

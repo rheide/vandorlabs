@@ -12,7 +12,6 @@ import net.minecraft.util.math.*;
 final class TaxiModularGear {
     private TaxiModularGear(){}
     static void requireParkable(EntityGroundVehicle craft){for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity){int phase=((GearTileEntity)tile).taxiPhase();if(phase>=0&&phase!=1)throw new IllegalArgumentException("Wait for the Taxi arm height adjustment to settle before parking");}}
-    private static boolean integral(double value){return Math.abs(value-Math.rint(value))<1e-6;}
     private static List<GearTileEntity> roots(EntityGroundVehicle craft){
         List<GearTileEntity> result=new ArrayList<>();
         for(TileEntity tile:craft.view.tiles.values())if(craft.structure.isActive(tile.getPos())){
@@ -66,13 +65,13 @@ final class TaxiModularGear {
         return normalized(craft,new ArrayList<>(cells.values()));
     }
     private static Plan normalized(EntityGroundVehicle craft,List<VehicleStructure.Cell> cells){int minY=0;for(VehicleStructure.Cell cell:cells)minY=Math.min(minY,cell.pos.getY());int shift=-minY;List<VehicleStructure.Cell> normalized=new ArrayList<>();BlockPos delta=new BlockPos(0,shift,0);for(VehicleStructure.Cell cell:cells)normalized.add(new VehicleStructure.Cell(cell.pos.add(delta),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),delta):null));return new Plan(new VehicleStructure(normalized,craft.structure.seat.add(delta),craft.structure.facing,craft.structure.gearCount),shift);}
-    private static VehicleCollision validate(EntityGroundVehicle craft,Plan plan,double y,boolean nativeCells){
+    private static VehicleCollision validate(EntityGroundVehicle craft,Plan plan,double y){
         VehicleWorld view=new VehicleWorld(craft.world,plan.structure);for(VehicleStructure.Cell cell:plan.structure.cells)if(cell.hasTileData()&&!view.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Landing gear block data cannot be installed");
         VehicleRotation.validate(plan.structure,view);try{plan.structure.encode();}catch(java.io.IOException failure){throw new IllegalArgumentException("Adjusted craft cannot be saved",failure);}
         VehicleCollision geometry=new VehicleCollision(view);if(!geometry.loaded(craft.world,craft.posX,y,craft.posZ,0,0,0,craft.rotationYaw))throw new IllegalArgumentException("Landing adjustment reaches unloaded terrain");
         VehiclePose pose=new VehiclePose(craft.posX,y,craft.posZ,craft.rotationYaw);
         for(AxisAlignedBB box:geometry.boxes){AxisAlignedBB at=pose.world(box,plan.structure.bounds.maxX/2,plan.structure.bounds.maxZ/2).shrink(1e-6);if(!craft.world.getCollisionBoxes(craft,at).isEmpty())throw new IllegalArgumentException("Landing adjustment is obstructed");}
-        if(nativeCells){VehicleStructure rotated=VehicleRotation.rotate(plan.structure,view,VehicleRotation.turns(craft.rotationYaw));double cx=craft.posX+plan.structure.bounds.maxX/2,cz=craft.posZ+plan.structure.bounds.maxZ/2;if(!integral(cx-rotated.bounds.maxX/2)||!integral(cz-rotated.bounds.maxZ/2)||!integral(y))throw new IllegalArgumentException("Adjusted native parking footprint is not aligned to the block grid");BlockPos origin=new BlockPos(Math.round(cx-rotated.bounds.maxX/2),Math.round(y),Math.round(cz-rotated.bounds.maxZ/2));for(VehicleStructure.Cell cell:rotated.cells){BlockPos at=origin.add(cell.pos);if(at.getY()<0||at.getY()>=craft.world.getHeight()||!craft.world.getWorldBorder().contains(at)||!craft.world.isBlockLoaded(at)||!craft.world.isAirBlock(at))throw new IllegalArgumentException("The adjusted native parking footprint is occupied or unavailable");}}
+
         return geometry;
     }
     private static void publish(EntityGroundVehicle craft,Plan next,double y,VehicleCollision geometry){VehicleStructure original=craft.structure;double oldY=craft.posY,oldHover=craft.hoverTarget;try{craft.install(next.structure,geometry);craft.setPosition(craft.posX,y,craft.posZ);craft.view.origin=new BlockPos(craft.posX,y,craft.posZ);craft.hoverTarget+=y-oldY;craft.signals.open();}catch(RuntimeException|LinkageError failure){try{craft.install(original);}catch(RuntimeException|LinkageError rollback){failure.addSuppressed(rollback);craft.retainUnavailableSnapshot(original);}craft.setPosition(craft.posX,oldY,craft.posZ);if(craft.view!=null)craft.view.origin=new BlockPos(craft);craft.hoverTarget=oldHover;throw failure;}for(net.minecraft.entity.player.EntityPlayer player:craft.world.playerEntities)if(player instanceof net.minecraft.entity.player.EntityPlayerMP&&player.getDistanceSq(craft)<256*256)VehicleNetwork.send((net.minecraft.entity.player.EntityPlayerMP)player,craft.structure,craft.getEntityId(),craft.getUniqueID(),new BlockPos(craft),false,false);}
@@ -82,9 +81,33 @@ final class TaxiModularGear {
         java.util.UUID owner=craft.couplingActor();net.minecraft.entity.player.EntityPlayer player=owner==null?null:craft.world.getPlayerEntityByUUID(owner);
         if(player!=null)player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(message),true);
     }
+    /** A saved intermediate pose can predate correct support collision. Recover
+     * only shallow foot penetration, preserving the craft and all section NBT. */
+    private static void recoverLoadedSupport(EntityGroundVehicle craft,List<GearTileEntity> roots){
+        if(!craft.loadedTaxiSupportCheck)return;
+        Set<AxisAlignedBB> feet=new HashSet<>();for(GearTileEntity root:roots){List<AxisAlignedBB> boxes=GearGeometry.boxes(root,root.progress());int count=root.assembly().feet().size();if(count>boxes.size())throw new IllegalArgumentException("Saved landing foot geometry is unavailable");feet.addAll(boxes.subList(boxes.size()-count,boxes.size()));}
+        VehicleCollision.Raw raw=VehicleCollision.capture(craft.view);if(!raw.complete)throw new IllegalArgumentException("Saved landing geometry is unavailable");
+        VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);double rise=0;
+        for(AxisAlignedBB box:raw.boxes){AxisAlignedBB at=pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2).shrink(1e-6);for(AxisAlignedBB obstacle:craft.world.getCollisionBoxes(craft,at)){
+            if(!feet.contains(box)||obstacle.maxY>at.maxY+1e-5)throw new IllegalArgumentException("Saved landing pose intersects an obstacle outside its feet");
+            rise=Math.max(rise,obstacle.maxY-(at.minY-1e-6));
+        }}
+        if(rise==0){craft.loadedTaxiSupportCheck=false;return;}
+        if(rise>1+1e-6)throw new IllegalArgumentException("Saved landing feet cannot be recovered safely");
+        if(!craft.collision.loaded(craft.world,craft.posX,craft.posY,craft.posZ,0,rise,0,craft.rotationYaw))throw new IllegalArgumentException("Saved landing recovery reaches unloaded terrain");
+        for(AxisAlignedBB box:raw.boxes){AxisAlignedBB at=pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2).shrink(1e-6),target=at.offset(0,rise,0);
+            if(!craft.world.getCollisionBoxes(craft,target).isEmpty())throw new IllegalArgumentException("Saved landing recovery is obstructed above the craft");
+            for(AxisAlignedBB obstacle:craft.world.getCollisionBoxes(craft,at.union(target)))if(!obstacle.intersects(at))throw new IllegalArgumentException("Saved landing recovery crosses an obstacle");
+        }
+        craft.setPosition(craft.posX,craft.posY+rise,craft.posZ);craft.view.origin=new BlockPos(craft);craft.hoverTarget+=rise;craft.motionY=0;craft.loadedTaxiSupportCheck=false;
+        com.vandorlabs.VandorLabs.logger.info("Recovered saved Taxi foot penetration by {} blocks",rise);
+    }
     /** Return true while this grouped adjustment owns the gear step. */
     static boolean tick(EntityGroundVehicle craft){
-        if(craft.hover||craft.world.isRemote)return false;List<GearTileEntity> roots=roots(craft);if(roots.size()<3){
+        if(craft.world.isRemote)return false;
+        if(craft.hover){craft.loadedTaxiSupportCheck=false;return false;}
+        List<GearTileEntity> roots=roots(craft);if(roots.size()<3){
+            craft.loadedTaxiSupportCheck=false;
             for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())){
                 GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()&&gear.isLandingAssembly()){gear.input();if(!gear.target())error(craft,gear,"Taxi height adjustment requires at least three matching vertical wheel or track arms");}
             }
@@ -93,24 +116,29 @@ final class TaxiModularGear {
         for(GearTileEntity gear:roots)gear.input();NBTTagCompound first=roots.get(0).taxiState();boolean retained=first!=null;
         boolean expand=retained?first.getBoolean("Expand"):true;
         for(GearTileEntity gear:roots)if(gear.target()!=expand){expand=gear.target();break;}
+        // Recovery belongs only to a height adjustment already present at load.
+        // A later adjustment must never reinterpret a new obstacle as old terrain.
+        if(!retained)craft.loadedTaxiSupportCheck=false;
         if(!retained&&expand)return false;
-        if(!craft.stopped()||!integral(craft.rotationYaw/90D)||!integral(craft.posX)||!integral(craft.posZ)){for(GearTileEntity gear:roots)error(craft,gear,"Stop and align the craft before changing Taxi arm height");return true;}
+        // A whole-block vertical change preserves the carried local grid at
+        // every heading and horizontal position. Parking has its own grid gate.
         int amount=retained?first.getInteger("Amount"):7;double level=retained?first.getDouble("Level"):0;
         try{
+            if(retained)recoverLoadedSupport(craft,roots);
             for(GearTileEntity gear:roots){NBTTagCompound state=gear.taxiState();if(retained&&(state==null||state.getInteger("Amount")!=amount||Math.abs(state.getDouble("Level")-level)>1e-6||state.getInteger("Phase")!=first.getInteger("Phase")))throw new IllegalArgumentException("Taxi landing arms must share one height adjustment");if(!retained){if(gear.progress()!=1||state!=null)throw new IllegalArgumentException("Return every landing arm to rest first");amount=Math.min(amount,gear.assembly().columnHeight()-1);}}
             if(amount<1)throw new IllegalArgumentException("Landing arms already have their shortest native height");
-            if(!retained){if(!integral(craft.posY))throw new IllegalArgumentException("Taxi height must start on the block grid");Plan endpoint=endpoint(craft,roots,false,amount);validate(craft,endpoint,craft.posY-amount-endpoint.shift,true);for(GearTileEntity gear:roots){gear.target(false);gear.taxiState(state(gear,amount));}expand=false;first=roots.get(0).taxiState();retained=true;}
+            if(!retained){Plan endpoint=endpoint(craft,roots,false,amount);validate(craft,endpoint,craft.posY-amount-endpoint.shift);for(GearTileEntity gear:roots){gear.target(false);gear.taxiState(state(gear,amount));}expand=false;first=roots.get(0).taxiState();retained=true;}
             if(first.getInteger("Phase")==1){
                 if(!expand)return false;
-                Plan full=endpoint(craft,roots,true,amount);validate(craft,full,craft.posY+amount-full.shift,true);
+                Plan full=endpoint(craft,roots,true,amount);validate(craft,full,craft.posY+amount-full.shift);
                 VehicleWorld preview=new VehicleWorld(craft.world,full.structure);List<VehicleStructure.Cell> cells=new ArrayList<>();
                 for(VehicleStructure.Cell cell:full.structure.cells){TileEntity raw=preview.getTileEntity(cell.pos);if(raw instanceof GearTileEntity&&((GearTileEntity)raw).isController()&&((GearTileEntity)raw).isLandingAssembly()){
                     GearTileEntity projected=(GearTileEntity)raw;NBTTagCompound data=cell.tileData(),motion=state(projected,amount);motion.setInteger("Phase",2);motion.setDouble("Level",amount);motion.setBoolean("Expand",true);data.setTag(GearTaxiState.KEY,motion);data.setDouble("GearProgress",progress(projected,amount));cells.add(new VehicleStructure.Cell(cell.pos,cell.state,data));
                 }else cells.add(cell);}
-                Plan moving=new Plan(new VehicleStructure(cells,full.structure.seat,full.structure.facing,full.structure.gearCount),full.shift);VehicleCollision geometry=validate(craft,moving,craft.posY-full.shift,false);publish(craft,moving,craft.posY-full.shift,geometry);return true;
+                Plan moving=new Plan(new VehicleStructure(cells,full.structure.seat,full.structure.facing,full.structure.gearCount),full.shift);VehicleCollision geometry=validate(craft,moving,craft.posY-full.shift);publish(craft,moving,craft.posY-full.shift,geometry);return true;
             }
             double next=expand?Math.max(0,level-1/20D):Math.min(amount,level+1/20D),delta=next-level;Map<GearTileEntity,Double> before=new LinkedHashMap<>();VehiclePose oldPose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw),newPose=new VehiclePose(craft.posX,craft.posY-delta,craft.posZ,craft.rotationYaw);
-            Map<BlockPos,Float> desired=new LinkedHashMap<>();for(GearTileEntity gear:roots)desired.put(gear.getPos(),(float)progress(gear,next));
+            Map<BlockPos,Double> desired=new LinkedHashMap<>();for(GearTileEntity gear:roots)desired.put(gear.getPos(),progress(gear,next));
             if(!craft.collisionCache.readyForCanopyPose(craft.view,desired))return true;
             List<AxisAlignedBB> old=VehicleCollision.capture(craft.view).boxes;
             try{
@@ -125,7 +153,7 @@ final class TaxiModularGear {
             int settling=0;
             if(!expand&&Math.abs(next-amount)<1e-8){settling=level<amount-1e-8?12:first.getInteger("Settle");if(settling>0){settling--;complete=false;}}
 
-            if(complete&&next>0){Plan endpoint=endpoint(craft,roots,false,amount);VehicleCollision geometry=validate(craft,endpoint,craft.posY-delta-endpoint.shift,true);publish(craft,endpoint,craft.posY-delta-endpoint.shift,geometry);return true;}
+            if(complete&&next>0){Plan endpoint=endpoint(craft,roots,false,amount);VehicleCollision geometry=validate(craft,endpoint,craft.posY-delta-endpoint.shift);publish(craft,endpoint,craft.posY-delta-endpoint.shift,geometry);return true;}
             VehicleStructure original=craft.structure;double oldY=craft.posY,oldHover=craft.hoverTarget;Map<GearTileEntity,NBTTagCompound> originalRoots=new LinkedHashMap<>();for(GearTileEntity gear:roots)originalRoots.put(gear,saved(gear,original));
             try{
             List<VehicleStructure.Cell> cells=new ArrayList<>();Map<BlockPos,NBTTagCompound> updates=new HashMap<>();
