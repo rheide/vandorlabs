@@ -41,6 +41,11 @@ public final class FrameEdgeRuntimeChecks {
                 BufferedImage image=capture(mc,view,scene.structure,angle);ImageIO.write(image,"png",new File(output,"shot_frame_edges_"+scene.name+"_"+angle+".png"));
                 int painted=0;for(int y=0;y<image.getHeight();y++)for(int x=0;x<image.getWidth();x++)if((image.getRGB(x,y)&0xffffff)!=0x203040)painted++;
                 require(painted>60,"actual tile renderer emitted no frame at player angle: "+scene.name+" "+angle);captures++;
+                if(!scene.name.contains("door")){
+                    BufferedImage close=capture(mc,view,scene.structure,angle,true);ImageIO.write(close,"png",new File(output,"shot_frame_edges_"+scene.name+"_closeup_"+angle+".png"));
+                    if(angle==55&&(scene.name.equals("glass")||scene.name.equals("cyan_glass")||scene.name.equals("opaque_glass")))straightInnerWalls(close,view,scene.structure,angle,scene.name);
+                    captures++;
+                }
             }}finally{TEAnimatedScreenSelector.unloadGroups(view);}
         }
         System.out.println("[vandorlabs][reprolab] frame-edges PASS opaque-native64-strips="+choices+" authored-four-edge-colors real-item-door-placement single-paired-large saved-geometry glass-wall-porthole player-angle-captures="+captures);
@@ -109,12 +114,41 @@ public final class FrameEdgeRuntimeChecks {
         }}finally{for(BlockPos at:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(5,5,3)))world.setBlockToAir(at);actor.setHeldItem(EnumHand.MAIN_HAND,held);actor.rotationYaw=yaw;actor.setPosition(px,py,pz);}
         return result;
     }
-    private static BufferedImage capture(Minecraft mc,VehicleWorld view,VehicleStructure structure,int angle){
+    private static BufferedImage capture(Minecraft mc,VehicleWorld view,VehicleStructure structure,int angle){return capture(mc,view,structure,angle,false);}
+    private static final class CloseCamera {
+        final double cx,cy,cz,half,sin,cos,tiltSin=Math.sin(Math.toRadians(12)),tiltCos=Math.cos(Math.toRadians(12));
+        CloseCamera(VehicleStructure structure,int angle){
+            cx=(structure.bounds.minX+structure.bounds.maxX)/2;cy=(structure.bounds.minY+structure.bounds.maxY)/2;cz=(structure.bounds.minZ+structure.bounds.maxZ)/2;sin=Math.sin(Math.toRadians(angle));cos=Math.cos(Math.toRadians(angle));
+            double extent=0;for(int i=0;i<8;i++){
+                double x=((i&1)==0?structure.bounds.minX:structure.bounds.maxX)-cx,y=((i&2)==0?structure.bounds.minY:structure.bounds.maxY)-cy,z=((i&4)==0?structure.bounds.minZ:structure.bounds.maxZ)-cz;
+                extent=Math.max(extent,Math.abs(cos*x+sin*z));extent=Math.max(extent,Math.abs(tiltCos*y-tiltSin*(-sin*x+cos*z)));
+            }half=Math.max(.3,extent*1.25);
+        }
+        int[] pixel(double x,double y,double z){x-=cx;y-=cy;z-=cz;return new int[]{(int)Math.round(256+(cos*x+sin*z)*256/half),(int)Math.round(256-(tiltCos*y-tiltSin*(-sin*x+cos*z))*256/half)};}
+    }
+    /** Probe only the opaque inner wall at mid-depth; the glass opening stays transparent. */
+    private static void straightInnerWalls(BufferedImage image,VehicleWorld view,VehicleStructure structure,int angle,String name){
+        CloseCamera camera=new CloseCamera(structure,angle);int checked=0;
+        for(TileEntity raw:view.tiles.values())if(raw instanceof TileEntityProgrammableGlass){
+            net.minecraft.block.state.IBlockState state=view.getBlockState(raw.getPos());double offset=PanelDepth.offset(state.getValue(BlockGlassWall.DEPTH))/16D;
+            for(int side=0;side<2;side++)for(int along=3;along<=13;along++){
+                double x=(side==0?1D:15D)/16,y=along/16D,z=.5+offset;
+                if(state.getValue(BlockGlassWall.ROTATED)){double previousX=x;x=1-z;z=previousX;}
+                int[] pixel=camera.pixel(raw.getPos().getX()+x,raw.getPos().getY()+y,raw.getPos().getZ()+z);
+                require(pixel[0]>=0&&pixel[0]<512&&pixel[1]>=0&&pixel[1]<512,"closeup wall probe outside framebuffer");
+                require((image.getRGB(pixel[0],pixel[1])&0xffffff)!=0x203040,"background slit in "+name+" straight inner wall at "+Arrays.toString(pixel)+" side="+side+" along="+along);checked++;
+            }
+        }
+        require(checked>=22,"closeup did not exercise actual glass inner walls");
+        System.out.println("[vandorlabs][reprolab] frame-inner-wall-closeup PASS "+name+" opaque-pixel-probes="+checked);
+    }
+    private static BufferedImage capture(Minecraft mc,VehicleWorld view,VehicleStructure structure,int angle,boolean closeup){
         int size=512;Framebuffer f=new Framebuffer(size,size,true);int oldPass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();org.lwjgl.util.glu.GLU.gluPerspective(45,1,.1F,40);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
+        CloseCamera camera=closeup?new CloseCamera(structure,angle):null;
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();if(closeup)GlStateManager.ortho(-camera.half,camera.half,-camera.half,camera.half,.1,40);else org.lwjgl.util.glu.GLU.gluPerspective(45,1,.1F,40);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try(TurntableRenderState saved=new TurntableRenderState()){
             f.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.depthMask(true);GlStateManager.clearColor(32/255F,48/255F,64/255F,1);GlStateManager.clear(16640);GlStateManager.enableDepth();GlStateManager.depthFunc(GL11.GL_LEQUAL);GlStateManager.disableCull();GlStateManager.disableFog();GlStateManager.disableLighting();GlStateManager.enableTexture2D();GlStateManager.enableAlpha();GlStateManager.alphaFunc(GL11.GL_GREATER,.01F);GlStateManager.color(1,1,1,1);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
-            GlStateManager.translate(0,0,-6);GlStateManager.rotate(12,1,0,0);GlStateManager.rotate(angle,0,1,0);GlStateManager.translate(-structure.bounds.maxX/2,-structure.bounds.maxY/2,-.5);
+            GlStateManager.translate(0,0,-6);GlStateManager.rotate(12,1,0,0);GlStateManager.rotate(angle,0,1,0);if(closeup)GlStateManager.translate(-camera.cx,-camera.cy,-camera.cz);else GlStateManager.translate(-structure.bounds.maxX/2,-structure.bounds.maxY/2,-.5);
             for(int pass=0;pass<=1;pass++){ForgeHooksClient.setRenderPass(pass);for(TileEntity tile:view.tiles.values())if(tile.shouldRenderInPass(pass)){
                 @SuppressWarnings("unchecked") net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer<TileEntity> renderer=(net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer<TileEntity>)(Object)TileEntityRendererDispatcher.instance.getRenderer(tile);if(renderer==null)continue;renderer.render(tile,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ(),0,-1,1);
             }}GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(size,size,f);
