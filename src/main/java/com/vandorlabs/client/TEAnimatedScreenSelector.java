@@ -478,7 +478,7 @@ public class TEAnimatedScreenSelector
             double[] uv=bindInput(te,te.getInputPanel());
             com.vandorlabs.render.ScreenSurface.Quad q=com.vandorlabs.render.ScreenSurface.quad(com.vandorlabs.render.ScreenSurface.Kind.DIAGONAL,false);
             BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-            drawScreenQuad(b,q,0,1,uv[0],uv[1],ceiling);
+            drawScreenQuad(b,FrameSurfaceRenderer.content(te,q),0,1,uv[0],uv[1],ceiling);
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-4,-4);
             Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
             FrameSurfaceRenderer.screen(te,q);
@@ -602,7 +602,7 @@ public class TEAnimatedScreenSelector
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
         ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
         if(te.frameAppearance.displayFit&&!te.frameAppearance.split){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);if(group.columns==group.rows){float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.columns-group.column)*du;uMin+=(group.columns-group.column-1)*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
-        if(te.frameAppearance.split){drawSplitScreen(te,quad,buf);}else drawScreenQuad(buf,quad,uMin,uMax,vTop,vBottom,false);
+        if(te.frameAppearance.split){drawSplitScreen(te,FrameSurfaceRenderer.content(te,quad),buf);}else drawScreenQuad(buf,FrameSurfaceRenderer.content(te,quad),uMin,uMax,vTop,vBottom,false);
         if (surface==ScreenSurface.Kind.DIAGONAL) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(-4.0F,-4.0F);
@@ -660,7 +660,7 @@ public class TEAnimatedScreenSelector
                 :InputSurfaceLayout.halfInput(keyboard,upper,wallPosition,small);
         renderHousingBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1,te.getSurfaceTextureLayout());
-        if(!redstoneFace(te,0))drawInputSurface(layout.surface,bindInput(te,te.getInputPanel()));FrameSurfaceRenderer.screen(te,ScreenSurface.input(layout.surface));
+        if(!redstoneFace(te,0))drawInputSurface(te,layout.surface,bindInput(te,te.getInputPanel()));FrameSurfaceRenderer.screen(te,ScreenSurface.input(layout.surface));
     }
 
     /** Full-square screen surface using the half-input's mount/fold state. */
@@ -676,7 +676,7 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         renderHousingBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1,te.getSurfaceTextureLayout());
-        if(!redstoneFace(te,0)){if(te.frameAppearance.split){BufferBuilder split=Tessellator.getInstance().getBuffer();split.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawSplitScreen(te,ScreenSurface.input(layout.surface),split);Tessellator.getInstance().draw();}else drawInputSurface(layout.surface,bindScreenSurface(te));}FrameSurfaceRenderer.screen(te,ScreenSurface.input(layout.surface));
+        if(!redstoneFace(te,0)){if(te.frameAppearance.split){BufferBuilder split=Tessellator.getInstance().getBuffer();split.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawSplitScreen(te,FrameSurfaceRenderer.content(te,ScreenSurface.input(layout.surface)),split);Tessellator.getInstance().draw();}else drawInputSurface(te,layout.surface,bindScreenSurface(te));}FrameSurfaceRenderer.screen(te,ScreenSurface.input(layout.surface));
     }
 
     /** Bind a regular full-height programmable animation and return its V range. */
@@ -723,8 +723,8 @@ public class TEAnimatedScreenSelector
         renderHousingBox(wall,0,0,0,16,1,16,te.getSurfaceTextureLayout());
         drawWallMesh(wall,ScreenHousingMesh.halfConsole().textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
 
-        if(!redstoneFace(te,0))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel()));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));
-        if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleRear(),bindInput(te,te.getSecondaryInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleRear()));
+        if(!redstoneFace(te,0))drawInputSurface(te,InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel()));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));
+        if(!redstoneFace(te,1))drawInputSurface(te,InputSurfaceLayout.halfConsoleRear(),bindInput(te,te.getSecondaryInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleRear()));
     }
 
     private static boolean redstoneFace(TileEntityAnimatedScreenSelector tile,int slot){
@@ -750,11 +750,12 @@ public class TEAnimatedScreenSelector
         }
     }
 
-    private static void drawInputSurface(InputSurfaceLayout.Quad quad,double[] uv) {
+    private static void drawInputSurface(TileEntityAnimatedScreenSelector tile,InputSurfaceLayout.Quad quad,double[] uv) {
         Tessellator tess=Tessellator.getInstance();
         BufferBuilder buf=tess.getBuffer();
         buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        drawInputQuad(buf,quad,uv);
+        ScreenSurface.Quad content=FrameSurfaceRenderer.content(tile,ScreenSurface.input(quad));
+        drawScreenQuad(buf,content,uv.length>2?uv[3]:1,uv.length>2?uv[2]:0,uv[0],uv[1],false);
         tess.draw();
     }
 
@@ -886,7 +887,7 @@ public class TEAnimatedScreenSelector
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork
         // fills the deck without cropping or atlas-induced aspect changes.
-        if(!redstoneFace(te,1))drawInputSurface(InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));
+        if(!redstoneFace(te,1))drawInputSurface(te,InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));
     }
 
     private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,

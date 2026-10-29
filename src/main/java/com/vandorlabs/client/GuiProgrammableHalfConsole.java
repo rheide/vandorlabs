@@ -96,8 +96,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     private String sidesLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
-        for(GuiButton b:buttonList)if(b.id==198)b.visible=textureTab==3;
-        channelField.setVisible(textureTab==3);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==3;else if(option.id==32)option.visible=textureTab==2;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<2;}
+        for(GuiButton b:buttonList)if(b.id==198)b.visible=textureTab==3&&(te.hasRedstoneScreen(0)||te.hasRedstoneScreen(1));
+        channelField.setVisible(textureTab==3);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==3&&(option.id!=198||te.hasRedstoneScreen(0)||te.hasRedstoneScreen(1));else if(option.id==32)option.visible=textureTab==2;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<2;}
 
         for (GuiButton button : buttonList) {
             if(button.id==4){button.visible=false;ScreenTextureList picker=textureTab==1?topList:bottomList;button.displayString=(picker.framed()?"[x] ":"[ ] ")+"Framed";button.enabled=textureTab<2 && picker.hasPair();}

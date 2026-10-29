@@ -23,7 +23,7 @@ final class RedstoneScreenRenderer {
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();
         GlStateManager.bindTexture(0);Minecraft.getMinecraft().getTextureManager().bindTexture(RenderIdentifierCache.white());}
-    private static final java.util.Map<ScreenSurface.Quad,FloatBuffer> MATRICES=new java.util.IdentityHashMap<>();
+    private static final java.util.Map<ScreenSurface.Quad,FloatBuffer> MATRICES=new java.util.WeakHashMap<>();
     private static FloatBuffer matrix(ScreenSurface.Quad q,int height){
         FloatBuffer b=BufferUtils.createFloatBuffer(16);
         b.put(new float[]{(float)(q.topLeft.x-q.topRight.x)/128,0,0,0,
@@ -31,7 +31,7 @@ final class RedstoneScreenRenderer {
             0,q.ny,q.nz,0,(float)q.topRight.x,(float)q.topRight.y+q.ny*.02F,(float)q.topRight.z+q.nz*.02F,1});b.flip();return b;
     }
     static void draw(RedstoneScreenContents tile,IBlockState state){
-        ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile.tile(),tile.slot());
+        ScreenSurface.Quad q=FrameSurfaceRenderer.content(tile.tile(),RedstoneScreenInteractions.surface(state,tile.tile(),tile.slot()));
         int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),tile.slot()),count=Math.min(tile.rows().size(),tile.maxRows());
         FloatBuffer transform=MATRICES.get(q);
         if(transform==null){transform=matrix(q,height);MATRICES.put(q,transform);}
@@ -75,7 +75,7 @@ final class RedstoneScreenRenderer {
     }
     static void drawVehicle(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,IBlockState state,int slot){
         int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),slot),top=RedstoneScreenInteractions.rowTop(state.getBlock(),slot);
-        ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile,slot);
+        ScreenSurface.Quad q=FrameSurfaceRenderer.content(tile,RedstoneScreenInteractions.surface(state,tile,slot));
         FloatBuffer transform=MATRICES.get(q);if(transform==null){transform=matrix(q,height);MATRICES.put(q,transform);}
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
         drawVehicleContents(tile.getWorld(),tile.getPos(),height,top);GlStateManager.popMatrix();

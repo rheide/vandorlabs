@@ -20,6 +20,11 @@ public final class ScreenSurface {
             nx=0;ny=(float)(-y/length);nz=(float)(-z/length);
         }
     }
+    public static Quad inset(Quad q,double left,double right,double top,double bottom){
+        double dy=q.bottomLeft.y-q.topLeft.y,dz=q.bottomLeft.z-q.topLeft.z;
+        return new Quad(q.topLeft.x+(q.topRight.x-q.topLeft.x)*left,q.topRight.x-(q.topRight.x-q.topLeft.x)*right,
+                q.bottomLeft.y-dy*bottom,q.bottomLeft.z-dz*bottom,q.topLeft.y+dy*top,q.topLeft.z+dz*top);
+    }
     public static synchronized Quad half(Quad q,boolean top){if(q.halves==null){double y=(q.topLeft.y+q.bottomLeft.y)/2,z=(q.topLeft.z+q.bottomLeft.z)/2;q.halves=new Quad[]{new Quad(q.topLeft.x,q.topRight.x,y,z,q.topLeft.y,q.topLeft.z),new Quad(q.topLeft.x,q.topRight.x,q.bottomLeft.y,q.bottomLeft.z,y,z)};}return q.halves[top?0:1];}
     private static final Quad FLAT=new Quad(0,16,0,-.1,16,-.1);
     private static final Quad CONSOLE=new Quad(.5,15.5,1.46,7.70,15.59,14.75);

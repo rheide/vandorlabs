@@ -20,7 +20,7 @@ ON signal. See the transmitter guide for the overlap rules and upgrade behavior.
 Choose front borders and interior materials from the Frame category, retain a
 single border around a group, and select independent upper and lower images on
 a full-height display. Display Fit supports square groups such as 2×2 and 3×3;
-frame Fit also surrounds rectangular groups. Split controls and Top/Bottom selectors live under Display; both halves share one frame. Frame finishes use 128-pixel artwork, preserve the original glass frame depth and have opaque interior surfaces. The Copifier retains these finishes on configured glass items. Programmable Input is now named
+frame Fit also surrounds rectangular groups with constant border thickness. Screen content reserves the selected border width, and the Frame picker includes Bare. Split controls and Top/Bottom selectors live under Display; both halves share one frame. Frame finishes use 128-pixel artwork, preserve the original glass frame depth and have opaque interior surfaces. The Copifier retains these finishes on configured glass items. Programmable Input is now named
 **Programmable Flatscreen**; its saved registry identifier remains unchanged.
 
 Dialogs open on their first tab and use shared tabs, a Vandor logo and consistent

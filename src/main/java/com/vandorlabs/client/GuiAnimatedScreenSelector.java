@@ -216,8 +216,8 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     private String sidesLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(te.getSurfaceTextureLayout());}
     private void refreshButtons() {
-        for(GuiButton b:buttonList)if(b.id==198)b.visible=textureTab==(console?3:2);
-        int sides=console?2:1,redstone=sides+1;channelField.setVisible(textureTab==redstone);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==redstone;else if(option.id==32)option.visible=textureTab==sides;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<sides;}
+        for(GuiButton b:buttonList)if(b.id==198)b.visible=textureTab==(console?3:2)&&(te.hasRedstoneScreen(0)||te.hasRedstoneScreen(1));
+        int sides=console?2:1,redstone=sides+1;channelField.setVisible(textureTab==redstone);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==redstone&&(option.id!=198||te.hasRedstoneScreen(0)||te.hasRedstoneScreen(1));else if(option.id==32)option.visible=textureTab==sides;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<sides;}
 
         receiver.setMode(RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         modeOffButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_OFF;
