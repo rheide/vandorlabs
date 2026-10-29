@@ -92,8 +92,13 @@ public final class SavedTaxiFollowupChecks {
     }
     private static void control(EntityGroundVehicle craft,boolean on){craft.signals.tick();TileEntityCockpit.Control control=cockpit(craft).control("screen_left/0");require(control!=null&&control.getRedstoneChannels().contains(776),"saved Gear control uses channel 776");craft.signals.activateCockpit(control,on?15:0);craft.signals.tick();for(GearTileEntity gear:roots(craft))gear.input();}
     private static void settle(EntityGroundVehicle craft,boolean expanded)throws Exception{
-        for(int tick=0;tick<1000;tick++){craft.signals.tick();ModularGearVehicles.tick(craft);boolean done=true;for(GearTileEntity gear:roots(craft)){int phase=gear.taxiPhase();done&=expanded?phase<0:phase==1;}if(done)return;Thread.sleep(2);}
-        StringBuilder errors=new StringBuilder();for(GearTileEntity gear:roots(craft))errors.append(gear.getPos()).append(':').append(gear.error()).append(' ');throw new IllegalStateException("Exact saved track motion timed out: "+errors);
+        for(int tick=0;tick<1000;tick++){craft.signals.tick();ModularGearVehicles.tick(craft);boolean done=true;for(GearTileEntity gear:roots(craft)){int phase=gear.taxiPhase();done&=expanded?phase<0:phase==1;}if(done)return;if(tick==249)System.out.println("[vandorlabs][reprolab] saved-track-motion pending expanded="+expanded+" "+motionStatus(craft));Thread.sleep(2);}
+        throw new IllegalStateException("Exact saved track motion timed out expanded="+expanded+" "+motionStatus(craft));
+    }
+    private static String motionStatus(EntityGroundVehicle craft){
+        StringBuilder status=new StringBuilder("pos=").append(craft.posX).append(',').append(craft.posY).append(',').append(craft.posZ).append(" yaw=").append(craft.rotationYaw).append(" stopped=").append(craft.stopped()).append(" transfer=").append(craft.transferInProgress).append(" worldTick=").append(craft.world.getTotalWorldTime()).append(" cacheWaits=").append(craft.collisionCache.waits()).append(" cacheGeneration=").append(craft.collisionCache.generation()).append(" cacheWarming=").append(craft.collisionCache.warming()).append(" cacheFailure=").append(craft.collisionCache.failure()).append(" cacheBypass=").append(craft.collisionCache.bypass());
+        for(GearTileEntity gear:roots(craft))status.append(" root=").append(gear.getPos()).append(" progress=").append(gear.progress()).append(" target=").append(gear.target()).append(" operational=").append(gear.isOperational()).append(" phase=").append(gear.taxiPhase()).append(" state=").append(gear.taxiState()).append(" signal776=").append(com.vandorlabs.redstone.RedstoneChannels.level(craft.view,gear.getPos(),776)).append(" error=").append(gear.error()).append(" saved=").append(gear.writeToNBT(new NBTTagCompound()));
+        return status.toString();
     }
     public static void run(WorldServer world,EntityPlayerMP actor)throws Exception{
         String selected=System.getProperty("vandorlabs.followups3Case","");double x=actor.posX,y=actor.posY,z=actor.posZ;
