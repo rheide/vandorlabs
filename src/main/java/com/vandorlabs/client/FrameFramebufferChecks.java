@@ -93,15 +93,28 @@ final class FrameFramebufferChecks {
                 }
                 ImageIO.write(empty,"png",new File(output,"shot_frames_vektor_empty_negative_"+n+"x"+n+".png"));ImageIO.write(fitted,"png",new File(output,"shot_frames_vektor_communications_"+n+"x"+n+".png"));
                 for(TileEntityAnimatedScreenSelector t:f.tiles){t.frameAppearance.split=true;t.frameAppearance.splitTop=half;t.frameAppearance.splitBottom=half;t.setDisplayMode(TileEntityAnimatedScreenSelector.MODE_ANIMATED);}
-                BufferedImage a=captureAt(mc,f,0),b=captureAt(mc,f,4);
-                require(difference(a,b,24,24,232,116)>20,"split TOP animation frozen on "+n+"x"+n);
-                require(difference(a,b,24,140,232,232)>20,"split BOTTOM animation frozen on "+n+"x"+n);
+                int ticks=f.tiles.get(0).getAnimationSpeedTicks();
+                double[] uv0=splitPlaybackAt(mc,f,0),uv1=splitPlaybackAt(mc,f,ticks);
+                String playback=" ticks=0/"+ticks+" speed="+f.tiles.get(0).getAnimationSpeedIndex()+" frames="+com.vandorlabs.animation.AnimationFrames.frame(0,ticks,6)+"/"+com.vandorlabs.animation.AnimationFrames.frame(ticks,ticks,6)+" texture/UV="+Arrays.toString(uv0)+" / "+Arrays.toString(uv1);
+                require(com.vandorlabs.animation.AnimationFrames.frame(0,ticks,6)!=com.vandorlabs.animation.AnimationFrames.frame(ticks,ticks,6),"fixture samples same authored frame"+playback);
+                require(uv0[4]==uv1[4]&&uv0[0]!=uv1[0],"split playback did not retain compact strip and advance UV frame"+playback);
+                System.out.println("[vandorlabs][reprolab] split-animation-probe "+n+"x"+n+playback);
+                BufferedImage a=captureAt(mc,f,0),b=captureAt(mc,f,ticks);
+                require(difference(a,b,24,24,232,116)>20,"split TOP animation frozen on "+n+"x"+n+playback);
+                require(difference(a,b,24,140,232,232)>20,"split BOTTOM animation frozen on "+n+"x"+n+playback);
                 ImageIO.write(a,"png",new File(output,"shot_frames_split_animated_"+n+"x"+n+"_0.png"));ImageIO.write(b,"png",new File(output,"shot_frames_split_animated_"+n+"x"+n+"_1.png"));
                 for(TileEntityAnimatedScreenSelector t:f.tiles)t.setDisplayMode(TileEntityAnimatedScreenSelector.MODE_STATIC);
-                require(difference(captureAt(mc,f,0),captureAt(mc,f,4),24,24,232,232)==0,"static split animation negative control advanced");
+                require(difference(captureAt(mc,f,0),captureAt(mc,f,ticks),24,24,232,232)==0,"static split animation negative control advanced");
             }finally{f.close();}
         }
         System.out.println("[vandorlabs][reprolab] company-display-framebuffer PASS exact-vektor-communications single-2x2 seamless-source-crop split-top-bottom-animation static-negative-control");
+    }
+    private static double[] splitPlaybackAt(Minecraft mc,Fixture f,long tick){
+        long previous=mc.world.getTotalWorldTime();final double[][] result=new double[1][];
+        try{mc.world.setTotalWorldTime(tick);CockpitVisualMotion.authoredFrame(()->{
+            TileEntityAnimatedScreenSelector tile=f.tiles.get(0);double[] uv=TEAnimatedScreenSelector.bindDisplay(tile,tile.frameAppearance.splitTop,true,true,tile.getAnimationSpeedIndex());
+            result[0]=new double[]{uv[0],uv[1],uv[2],uv[3],GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D)};
+        });return result[0];}finally{mc.world.setTotalWorldTime(previous);}
     }
     private static BufferedImage captureAt(Minecraft mc,Fixture f,long tick){
         long previous=mc.world.getTotalWorldTime();final BufferedImage[] result=new BufferedImage[1];
