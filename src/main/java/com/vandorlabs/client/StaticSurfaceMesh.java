@@ -184,15 +184,18 @@ final class StaticSurfaceMesh {
     /** One-pixel rails on the pane faces, using the regular glass frame artwork. */
     StaticSurfaceMesh outlineFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,
             boolean hideLeft,boolean hideRight,boolean hideFront,boolean hideBack,boolean hideLower,boolean hideUpper,int rowAxis) {
-        return outlineFrame(sprite,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis,false,null,null);
+        return outlineFrame(sprite,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis,false,null,null,null);
     }
     StaticSurfaceMesh outlineFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,net.minecraft.client.renderer.texture.TextureAtlasSprite pane,net.minecraft.client.renderer.texture.TextureAtlasSprite interior,
-            boolean hideLeft,boolean hideRight,boolean hideFront,boolean hideBack,boolean hideLower,boolean hideUpper,int rowAxis){return outlineFrame(sprite,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis,false,pane,interior);}
+            boolean hideLeft,boolean hideRight,boolean hideFront,boolean hideBack,boolean hideLower,boolean hideUpper,int rowAxis){return outlineFrame(sprite,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis,false,pane,interior,interior);}
     StaticSurfaceMesh outlineFlatFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite) {
-        return outlineFrame(sprite,false,false,false,false,false,false,1,true,null,null);
+        return outlineFrame(sprite,false,false,false,false,false,false,1,true,null,null,null);
     }
+    StaticSurfaceMesh outlineFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,net.minecraft.client.renderer.texture.TextureAtlasSprite pane,net.minecraft.client.renderer.texture.TextureAtlasSprite interior,net.minecraft.client.renderer.texture.TextureAtlasSprite exterior,
+            boolean hideLeft,boolean hideRight,boolean hideFront,boolean hideBack,boolean hideLower,boolean hideUpper,int rowAxis){return outlineFrame(sprite,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis,false,pane,interior,exterior);}
+    StaticSurfaceMesh outlineFlatFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,net.minecraft.client.renderer.texture.TextureAtlasSprite pane,net.minecraft.client.renderer.texture.TextureAtlasSprite interior,net.minecraft.client.renderer.texture.TextureAtlasSprite exterior){return outlineFrame(sprite,false,false,false,false,false,false,1,true,pane,interior,exterior);}
     private StaticSurfaceMesh outlineFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,
-            boolean hideLeft,boolean hideRight,boolean hideFront,boolean hideBack,boolean hideLower,boolean hideUpper,int rowAxis,boolean flat,net.minecraft.client.renderer.texture.TextureAtlasSprite pane,net.minecraft.client.renderer.texture.TextureAtlasSprite interior) {
+            boolean hideLeft,boolean hideRight,boolean hideFront,boolean hideBack,boolean hideLower,boolean hideUpper,int rowAxis,boolean flat,net.minecraft.client.renderer.texture.TextureAtlasSprite pane,net.minecraft.client.renderer.texture.TextureAtlasSprite interior,net.minecraft.client.renderer.texture.TextureAtlasSprite exterior) {
         java.util.Map<String,Integer> edges=new java.util.HashMap<>();
         for(int q=0;q<vertices.length;q+=32)if(paneFace(q,flat,rowAxis))for(int e=0;e<4;e++) {
             String key=edgeKey(q+e*8,q+((e+1)&3)*8);edges.put(key,edges.getOrDefault(key,0)+1);
@@ -236,7 +239,7 @@ final class StaticSurfaceMesh {
                         interior==null?(v==0||v==3?.16:.28):pane.getUnInterpolatedU(vertices[source+3]),
                         interior==null?(v<2?4:4.12):pane.getUnInterpolatedV(vertices[source+4])};
                 }
-                net.minecraft.client.renderer.texture.TextureAtlasSprite cut=interior==null?sprite:FrameEdgeTextures.map(interior,points);
+                net.minecraft.client.renderer.texture.TextureAtlasSprite cut=interior==null?sprite:FrameEdgeTextures.map(side==0?exterior:interior,points);
                 for(double[] p:points)result.pos(p[0],p[1],p[2]).color(255,255,255,255)
                     .tex(cut.getInterpolatedU(p[3]),cut.getInterpolatedV(p[4]))
                     .normal(vertices[q+5]*(side==0?1:-1),vertices[q+6]*(side==0?1:-1),vertices[q+7]*(side==0?1:-1)).endVertex();

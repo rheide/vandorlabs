@@ -10,6 +10,14 @@ frames=[e for e in catalog if e['id'].startswith('frame_company_')]
 screens=[e for e in catalog if e['id'].startswith('screen_company_')]
 assert len(frames)==12 and len(screens)==72
 assert len({e['id'] for e in catalog})==len(catalog)
+for company in ('Ashiro','Paladyne','Pinnacle','Seyr','Vandor','Vektor'):
+    group=[e for e in screens if e['label'].startswith(company+' ')]
+    assert len(group)==12 and len({e['label'] for e in group})==12,company
+    assert all(e['label'].split()[1] in ('Full','Half') for e in group),company
+for entry in catalog:
+    if entry['source'].startswith('frames/frames-screen-'):
+        assert entry['label'].endswith(' Half' if '/frames-screen-half/' in entry['source'] else ' Full')
+
 for entry in frames:
     image=Image.open(TEXTURES/(entry['source']+'.png')).convert('RGBA')
     assert image.size==(128,128)

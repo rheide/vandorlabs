@@ -37,9 +37,9 @@ public final class DiagonalWallMeshCache {
         World world=tile.getWorld();WorldCache cache=WORLDS.get(world);
         if(cache==null) { cache=new WorldCache();WORLDS.put(world,cache);world.addEventListener(cache); }
         int settings=(tile.isDiagonalHalfHeight()?1:0)|(tile.isDiagonalFullWidth()?2:0)|(tile.getDiagonalFill()<<2)|(tile.isGlassFramed()?128:0);
-        settings=31*settings+tile.frameAppearance.front;settings=31*settings+tile.frameAppearance.interior;
         Entry entry=cache.entries.get(tile.getPos());
         if(entry!=null && entry.tile.get()==tile && entry.state==state && entry.settings==settings
+                && entry.frameFront==tile.frameAppearance.front && entry.frameInterior==tile.frameAppearance.interior && entry.frameExterior==tile.frameAppearance.exteriorChoice()
                 && entry.wall==wall && entry.metal==metal && entry.slice==slice)return entry;
         cache.remove(tile.getPos());
         StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();
@@ -82,7 +82,8 @@ public final class DiagonalWallMeshCache {
             TextureAtlasSprite rail=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks()
                     .getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal"));
             TextureAtlasSprite interior=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side"));
-            frame=mesh.outlineFrame(rail,wall,interior,hideLeft,hideRight,hideFront,hideBack,
+            TextureAtlasSprite exterior=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side"));
+            frame=mesh.outlineFrame(rail,wall,interior,exterior,hideLeft,hideRight,hideFront,hideBack,
                     com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(world,tile.getPos(),state,false),
                     com.vandorlabs.blocks.DiagonalPanelGeometry.coveredEnd(world,tile.getPos(),state,true),
                     tile.isDiagonalHalfHeight()?2:1);
@@ -119,7 +120,7 @@ public final class DiagonalWallMeshCache {
     private static final class Entry {
         final WeakReference<TileEntityAnimatedScreenSelector> tile;
         final IBlockState state;
-        final int settings;
+        final int settings,frameFront,frameInterior,frameExterior;
         final TextureAtlasSprite wall,metal;
         final StaticSurfaceMesh mesh,glass,frame;
         final PortholeHex.Slice slice;
@@ -127,6 +128,7 @@ public final class DiagonalWallMeshCache {
         Entry(TileEntityAnimatedScreenSelector tile,IBlockState state,int settings,
                 TextureAtlasSprite wall,TextureAtlasSprite metal,StaticSurfaceMesh mesh,StaticSurfaceMesh glass,StaticSurfaceMesh frame,PortholeHex.Slice slice) {
             this.tile=new WeakReference<>(tile);this.state=state;this.settings=settings;
+            this.frameFront=tile.frameAppearance.front;this.frameInterior=tile.frameAppearance.interior;this.frameExterior=tile.frameAppearance.exteriorChoice();
             this.wall=wall;this.metal=metal;this.mesh=mesh;this.glass=glass;this.frame=frame;this.slice=slice;
         }
     }

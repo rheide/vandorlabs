@@ -145,7 +145,7 @@ public final class ProgrammableSettings {
         Block block = world.getBlockState(pos).getBlock();
         if (tile == null) return null;
         NBTTagCompound out = new NBTTagCompound();
-        com.vandorlabs.tiles.FrameAppearance appearance=frameAppearance(tile);
+        com.vandorlabs.tiles.FrameAppearance appearance=com.vandorlabs.tiles.FrameAppearance.of(tile);
         if(appearance!=null){NBTTagCompound frames=new NBTTagCompound();appearance.write(frames);out.setTag("FrameAppearance",frames);}
         if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block))
             out.setTag(REDSTONE_ROWS,((TileEntityAnimatedScreenSelector)tile).redstoneConfiguration());
@@ -727,7 +727,7 @@ public final class ProgrammableSettings {
             }
             applicable = true;
         }
-        com.vandorlabs.tiles.FrameAppearance appearance=frameAppearance(tile);
+        com.vandorlabs.tiles.FrameAppearance appearance=com.vandorlabs.tiles.FrameAppearance.of(tile);
         if(appearance!=null&&values.hasKey("FrameAppearance",10)){
             com.vandorlabs.tiles.FrameAppearance desired=new com.vandorlabs.tiles.FrameAppearance();desired.read(values.getCompoundTag("FrameAppearance"));
             if(com.vandorlabs.tiles.FrameAppearance.displayBlock(block))desired.artworkVersion=1;
@@ -738,9 +738,5 @@ public final class ProgrammableSettings {
         }
         return applicable;
     }
-    private static com.vandorlabs.tiles.FrameAppearance frameAppearance(TileEntity tile){
-        return tile instanceof TileEntityAnimatedScreenSelector?((TileEntityAnimatedScreenSelector)tile).frameAppearance
-            :tile instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)tile).frameAppearance
-            :tile instanceof TileEntitySpaceDoor?((TileEntitySpaceDoor)tile).frameAppearance:null;
-    }
+
 }

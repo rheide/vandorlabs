@@ -478,7 +478,7 @@ public class TEAnimatedScreenSelector
             double[] uv=bindInput(te,te.getInputPanel());
             com.vandorlabs.render.ScreenSurface.Quad q=com.vandorlabs.render.ScreenSurface.quad(com.vandorlabs.render.ScreenSurface.Kind.DIAGONAL,false);
             BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-            drawScreenQuad(b,FrameSurfaceRenderer.content(te,q),0,1,uv[0],uv[1],ceiling);
+            drawDiagonalInputQuad(b,FrameSurfaceRenderer.content(te,q),uv,ceiling);
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-4,-4);
             Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
             FrameSurfaceRenderer.screen(te,q);
@@ -752,6 +752,12 @@ public class TEAnimatedScreenSelector
         bindAtlas();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
     }
 
+    static void drawDiagonalInputQuad(BufferBuilder buffer,ScreenSurface.Quad quad,double[] uv,boolean ceiling){
+        // Static/custom controls bind the shared atlas; animated controls bind a
+        // standalone strip. Retain both U endpoints returned by either source.
+        drawScreenQuad(buffer,quad,uv.length>2?uv[2]:0,uv.length>2?uv[3]:1,uv[0],uv[1],ceiling);
+    }
+
     private static void drawInputSurface(TileEntityAnimatedScreenSelector tile,InputSurfaceLayout.Quad quad,double[] uv) {
         Tessellator tess=Tessellator.getInstance();
         BufferBuilder buf=tess.getBuffer();
@@ -995,15 +1001,20 @@ public class TEAnimatedScreenSelector
     static void drawConfiguredWall(BufferBuilder buf,TileEntityAnimatedScreenSelector te,IBlockState state,
             TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice porthole) {
         BlockProgrammableWall wallBlock=(BlockProgrammableWall)state.getBlock();
+        TextureAtlasSprite outer=metal;
+        if(wallBlock.isPortholeShape()){
+            outer=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(te.frameAppearance.exterior(te.getSideTexture()>=0?ScreenHousingTextures.texture(te.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
+            if(te.frameAppearance.front>=0)wall=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(te.frameAppearance.front(""));
+        }
         if(solidDiagonalPortholeJunction(te,state)) {
-            drawConfiguredDiagonalWall(buf,te,state,wall,metal);
+            drawConfiguredDiagonalWall(buf,te,state,wall,outer);
             return;
         }
         BlockProgrammableWall.FlatCorner flat=wallBlock.flatCorner(state,te.getWorld(),te.getPos());
         DiagonalPortholeMesh mesh=portholeMesh(te,state);
         double rimDepthUv=wallBlock instanceof BlockProgrammablePortholeBlock?16:4;
         if (wallBlock.getShape() == BlockProgrammableWall.Shape.DIAGONAL) {
-            drawConfiguredDiagonalWall(buf,te,state,wall,metal);
+            drawConfiguredDiagonalWall(buf,te,state,wall,outer);
         } else if (flat != null && !wallBlock.isPortholeShape()) {
             renderFlatWall(buf, wall, metal,
                     com.vandorlabs.blocks.PanelDepth.start(
@@ -1019,12 +1030,12 @@ public class TEAnimatedScreenSelector
             } else {
                 panelRect(buf, wall, mesh, 0, 0, 16, 16);
             }
-            panelOuterRim(buf, metal, mesh, porthole, te, state, rimDepthUv);
+            panelOuterRim(buf, outer, mesh, porthole, te, state, rimDepthUv);
             if(mesh!=null && mesh.corner!=null) {
                 // Reuse the joined solid outline for the arms, but never overlay
                 // its solid center across the porthole aperture and pane.
                 StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.independentCapture();
-                drawConfiguredDiagonalWall(capture,te,state,wall,metal);
+                drawConfiguredDiagonalWall(capture,te,state,wall,outer);
                 capture.finish().diagonalArms(mesh.mode,mesh.inverted,mesh.lower,mesh.upper).draw(buf,
                         (int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
             }
@@ -1033,11 +1044,14 @@ public class TEAnimatedScreenSelector
 
     /** Straight local source for the center-owned bar of a T; the opening spans that whole bar. */
     static void drawFlatBar(BufferBuilder buf,TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice opening) {
-        if(opening==null) {renderFlatWall(buf,wall,metal,6,null);return;}
+        drawFlatBar(buf,wall,metal,metal,opening);
+    }
+    static void drawFlatBar(BufferBuilder buf,TextureAtlasSprite wall,TextureAtlasSprite metal,TextureAtlasSprite outer,PortholeHex.Slice opening) {
+        if(opening==null) {renderFlatWall(buf,wall,outer,6,null);return;}
         for(double[] q:opening.frameQuads)panelQuad(buf,wall,null,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
         for(double[] edge:opening.hexEdges)rimSegment(buf,metal,null,edge[0],edge[1],edge[2],edge[3],4);
-        for(int y:new int[]{0,16})topRim(buf,metal,null,y,0,16,4);
-        for(int x:new int[]{0,16})sideRim(buf,metal,null,x,0,16,4);
+        for(int y:new int[]{0,16})topRim(buf,outer,null,y,0,16,4);
+        for(int x:new int[]{0,16})sideRim(buf,outer,null,x,0,16,4);
     }
 
     /** Build only when this wall or its immediate neighbors change. */

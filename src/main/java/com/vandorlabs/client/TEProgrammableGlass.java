@@ -14,18 +14,18 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         @Override protected boolean removeEldestEntry(java.util.Map.Entry<CornerKey,CornerMeshes> entry){return size()>128;}
     };
     private static final class CornerKey {
-        final net.minecraft.client.renderer.texture.TextureAtlasSprite glass,rail;
+        final net.minecraft.client.renderer.texture.TextureAtlasSprite glass,rail,inner,outer;
         final double near,left,right;
         final Double front,back;
-        CornerKey(net.minecraft.client.renderer.texture.TextureAtlasSprite glass,net.minecraft.client.renderer.texture.TextureAtlasSprite rail,
+        CornerKey(net.minecraft.client.renderer.texture.TextureAtlasSprite glass,net.minecraft.client.renderer.texture.TextureAtlasSprite rail,net.minecraft.client.renderer.texture.TextureAtlasSprite inner,net.minecraft.client.renderer.texture.TextureAtlasSprite outer,
                 double near,com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner) {
-            this.glass=glass;this.rail=rail;this.near=near;left=corner==null?0:corner.left();right=corner==null?16:corner.right();front=corner==null?null:corner.frontArm;back=corner==null?null:corner.backArm;
+            this.glass=glass;this.rail=rail;this.inner=inner;this.outer=outer;this.near=near;left=corner==null?0:corner.left();right=corner==null?16:corner.right();front=corner==null?null:corner.frontArm;back=corner==null?null:corner.backArm;
         }
-        @Override public int hashCode(){return java.util.Objects.hash(System.identityHashCode(glass),System.identityHashCode(rail),near,left,right,front,back);}
+        @Override public int hashCode(){return java.util.Objects.hash(System.identityHashCode(glass),System.identityHashCode(rail),System.identityHashCode(inner),System.identityHashCode(outer),near,left,right,front,back);}
         @Override public boolean equals(Object other) {
             if(!(other instanceof CornerKey))return false;
             CornerKey k=(CornerKey)other;
-            return glass==k.glass && rail==k.rail && near==k.near && left==k.left && right==k.right
+            return glass==k.glass && rail==k.rail && inner==k.inner && outer==k.outer && near==k.near && left==k.left && right==k.right
                     && java.util.Objects.equals(front,k.front) && java.util.Objects.equals(back,k.back);
         }
     }
@@ -53,7 +53,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         int size = tile.getSize();
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
-        if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1)renderSelectedFrame(tile,state,x,y,z);
+        if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1)renderSelectedFrame(tile,state,x,y,z);
         if(FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
         boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
@@ -156,13 +156,13 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         net.minecraft.client.renderer.texture.TextureMap atlas=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks();
         net.minecraft.client.renderer.texture.TextureAtlasSprite glass=atlas.getAtlasSprite(com.vandorlabs.tiles.GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
         net.minecraft.client.renderer.texture.TextureAtlasSprite rail=atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal"));
-        CornerKey key=new CornerKey(glass,rail,com.vandorlabs.blocks.PanelJoins.flatNear(state,tile.getWorld(),tile.getPos()),corner);
+        CornerKey key=new CornerKey(glass,rail,atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),com.vandorlabs.blocks.PanelJoins.flatNear(state,tile.getWorld(),tile.getPos()),corner);
         CornerMeshes meshes=CORNERS.get(key);
         if(meshes==null) {
             StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();
             TEAnimatedScreenSelector.renderFlatWall(capture,glass,glass,key.near,corner);
             StaticSurfaceMesh pane=capture.finish();
-            meshes=new CornerMeshes(pane,pane.outlineFlatFrame(rail));CORNERS.put(key,meshes);
+            meshes=new CornerMeshes(pane,pane.outlineFlatFrame(rail,glass,key.inner,key.outer));CORNERS.put(key,meshes);
         }
         return meshes;
     }

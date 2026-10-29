@@ -4,7 +4,13 @@ import net.minecraft.nbt.NBTTagCompound;
 
 /** Independent frame finish selection; absent fields retain previous-release artwork. */
 public final class FrameAppearance {
-    public int front=-1, interior=-1;
+    /** Shared ownership lookup for settings, dialogs and authenticated packets. */
+    public static FrameAppearance of(net.minecraft.tileentity.TileEntity tile){
+        return tile instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)tile).frameAppearance
+            :tile instanceof TileEntityAnimatedScreenSelector?((TileEntityAnimatedScreenSelector)tile).frameAppearance
+            :tile instanceof TileEntitySpaceDoor?((TileEntitySpaceDoor)tile).frameAppearance:null;
+    }
+    public int front=-1, interior=-1, exterior=-2;
     public int artworkVersion;
     public boolean tile,displayFit,split,bare;
     public boolean hasFront(){return front>=0&&!bare;}
@@ -12,13 +18,13 @@ public final class FrameAppearance {
     public static boolean valid(int choice){return choice==-1 || ScreenHousingTextures.validChoice(choice) && "Frame".equals(ScreenHousingTextures.category(choice));}
     public void write(NBTTagCompound tag){
         if(artworkVersion>0)tag.setInteger("DisplayArtworkVersion",artworkVersion);else tag.removeTag("DisplayArtworkVersion");
-        if(artworkVersion>0)tag.setInteger("FrameFront",front);else optional(tag,"FrameFront",front);optional(tag,"FrameInterior",interior);optional(tag,"DisplaySplitTop",splitTop);optional(tag,"DisplaySplitBottom",splitBottom);
+        if(artworkVersion>0)tag.setInteger("FrameFront",front);else optional(tag,"FrameFront",front);optional(tag,"FrameInterior",interior);if(exterior>=-1)tag.setInteger("FrameExterior",exterior);else tag.removeTag("FrameExterior");optional(tag,"DisplaySplitTop",splitTop);optional(tag,"DisplaySplitBottom",splitBottom);
         flag(tag,"FrameBare",bare);flag(tag,"FrameTile",tile);flag(tag,"DisplayFit",displayFit);flag(tag,"DisplaySplit",split);
     }
     private static void optional(NBTTagCompound tag,String key,int value){if(value<0)tag.removeTag(key);else tag.setInteger(key,value);}
     private static void flag(NBTTagCompound tag,String key,boolean value){if(value)tag.setBoolean(key,true);else tag.removeTag(key);}
 
-    public void read(NBTTagCompound tag){bare=tag.getBoolean("FrameBare");artworkVersion=tag.getInteger("DisplayArtworkVersion")==1?1:0;front=tag.hasKey("FrameFront",3)&&valid(tag.getInteger("FrameFront"))?tag.getInteger("FrameFront"):-1;interior=tag.hasKey("FrameInterior",3)&&valid(tag.getInteger("FrameInterior"))?tag.getInteger("FrameInterior"):-1;tile=tag.getBoolean("FrameTile");displayFit=tag.getBoolean("DisplayFit");split=tag.getBoolean("DisplaySplit");splitTop=tag.hasKey("DisplaySplitTop",3)?tag.getInteger("DisplaySplitTop"):-1;splitBottom=tag.hasKey("DisplaySplitBottom",3)?tag.getInteger("DisplaySplitBottom"):-1;if(splitTop!=-1&&!ScreenHousingTextures.validChoice(splitTop))splitTop=-1;if(splitBottom!=-1&&!ScreenHousingTextures.validChoice(splitBottom))splitBottom=-1;}
+    public void read(NBTTagCompound tag){bare=tag.getBoolean("FrameBare");artworkVersion=tag.getInteger("DisplayArtworkVersion")==1?1:0;front=tag.hasKey("FrameFront",3)&&valid(tag.getInteger("FrameFront"))?tag.getInteger("FrameFront"):-1;interior=tag.hasKey("FrameInterior",3)&&valid(tag.getInteger("FrameInterior"))?tag.getInteger("FrameInterior"):-1;exterior=tag.hasKey("FrameExterior",3)&&valid(tag.getInteger("FrameExterior"))?tag.getInteger("FrameExterior"):-2;tile=tag.getBoolean("FrameTile");displayFit=tag.getBoolean("DisplayFit");split=tag.getBoolean("DisplaySplit");splitTop=tag.hasKey("DisplaySplitTop",3)?tag.getInteger("DisplaySplitTop"):-1;splitBottom=tag.hasKey("DisplaySplitBottom",3)?tag.getInteger("DisplaySplitBottom"):-1;if(splitTop!=-1&&!ScreenHousingTextures.validChoice(splitTop))splitTop=-1;if(splitBottom!=-1&&!ScreenHousingTextures.validChoice(splitBottom))splitBottom=-1;}
     public static boolean displayBlock(net.minecraft.block.Block block){
         return block.getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class
             ||block instanceof com.vandorlabs.blocks.BlockProgrammableFullInput
@@ -70,6 +76,8 @@ public final class FrameAppearance {
     public String front(String fallback){return front<0?fallback:ScreenHousingTextures.texture(front);}
     public static String interiorTexture(int choice,String fallback){if(choice<0)return fallback;com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return e!=null&&e.has("frameRail")&&border(choice)?"vandorlabs:blocks/"+e.get("frameRail").getAsString():ScreenHousingTextures.texture(choice);}
     public String interior(String fallback){return interiorTexture(interior,fallback);}
+    public int exteriorChoice(){return exterior==-2?interior:exterior;}
+    public String exterior(String fallback){return interiorTexture(exteriorChoice(),fallback);}
     private static int light(int choice){if(choice<0)return 0;com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return e!=null&&e.has("frameLight")?Math.max(0,Math.min(5,e.get("frameLight").getAsInt())):0;}
-    public int light(){return Math.max(bare?0:light(front),light(interior));}
+    public int light(){return Math.max(bare?0:light(front),Math.max(light(interior),light(exteriorChoice())));}
 }

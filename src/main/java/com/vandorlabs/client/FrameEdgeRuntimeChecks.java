@@ -29,7 +29,7 @@ public final class FrameEdgeRuntimeChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("frame edges: "+why);}
     private static final class Scene {final String name;final VehicleStructure structure;Scene(String name,VehicleStructure structure){this.name=name;this.structure=structure;}}
     public static void run(Minecraft mc,File output)throws Exception{
-        crops();doorUvs();glassFrameUvs();int choices=0;
+        crops();paddedBorders();doorUvs();glassFrameUvs();independentSides(mc);diagonalFrameCache(mc);int choices=0;
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i))){
             FrameAppearance a=new FrameAppearance();a.interior=i;TextureAtlasSprite base=mc.getTextureMapBlocks().getAtlasSprite(a.interior(""));
             for(int edge=0;edge<4;edge++){TextureAtlasSprite strip=FrameEdgeTextures.edge(base,edge);require(strip.getIconWidth()==strip.getIconHeight()&&strip.getIconWidth()<=(FrameAppearance.border(i)?64:128),"native strip or whole opaque material size");for(int pixel:strip.getFrameTextureData(0)[0])require((pixel>>>24)==255,"transparent center sampled by physical frame: "+strip.getIconName());choices++;}
@@ -49,6 +49,58 @@ public final class FrameEdgeRuntimeChecks {
             }}finally{TEAnimatedScreenSelector.unloadGroups(view);}
         }
         System.out.println("[vandorlabs][reprolab] frame-edges PASS opaque-native64-strips="+choices+" authored-four-edge-colors real-item-door-placement single-paired-large saved-geometry glass-wall-porthole player-angle-captures="+captures);
+    }
+    private static void independentSides(Minecraft mc)throws Exception{
+        int inner=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1"),outer=ScreenHousingTextures.screenIndex("frames/frames-door-window/gunmetal-1");
+        java.lang.reflect.Field vertices=StaticSurfaceMesh.class.getDeclaredField("vertices");vertices.setAccessible(true);
+        TileEntityProgrammableGlass glass=new TileEntityProgrammableGlass();glass.frameAppearance.interior=inner;glass.frameAppearance.exterior=-1;
+        StaticSurfaceMesh before=GlassFrameMesh.get(glass,new GlassSurfaceGroups.Layout(0,0,1,1));glass.frameAppearance.exterior=outer;StaticSurfaceMesh after=GlassFrameMesh.get(glass,new GlassSurfaceGroups.Layout(0,0,1,1));
+        independentUvs((float[])vertices.get(before),(float[])vertices.get(after),"flat glass");
+        int variants=0;
+        for(Block block:Block.REGISTRY)if(block instanceof BlockProgrammableWall&&(((BlockProgrammableWall)block).isPortholeShape()||block instanceof BlockProgrammableDiagonalGlass))for(int meta=0;meta<8;meta++){
+            net.minecraft.block.state.IBlockState state=block.getStateFromMeta(meta);TileEntityAnimatedScreenSelector source=(TileEntityAnimatedScreenSelector)block.createTileEntity(null,state);source.frameAppearance.interior=inner;source.frameAppearance.exterior=-1;source.setGlassAppearance(1,true);
+            VehicleStructure structure=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,state,source.writeToNBT(new NBTTagCompound()))));VehicleWorld view=new VehicleWorld(mc.world,structure);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)view.getTileEntity(BlockPos.ORIGIN);
+            try{
+                TextureAtlasSprite pane=TEAnimatedScreenSelector.wallSprite(tile),metal=mc.getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side"));
+                PortholeHex.Slice slice=((BlockProgrammableWall)block).isPortholeShape()?TEAnimatedScreenSelector.portholeGroup(tile,state).slice(BlockPos.ORIGIN,state.getValue(BlockProgrammableWall.FACING).rotateY(),EnumFacing.UP):null;
+                before=block instanceof BlockProgrammableDiagonalGlass?DiagonalWallMeshCache.frame(tile,state,pane):DiagonalWallMeshCache.get(tile,state,pane,metal,slice);
+                tile.frameAppearance.exterior=outer;
+                after=block instanceof BlockProgrammableDiagonalGlass?DiagonalWallMeshCache.frame(tile,state,pane):DiagonalWallMeshCache.get(tile,state,pane,metal,slice);
+                independentUvs((float[])vertices.get(before),(float[])vertices.get(after),block.getRegistryName()+" metadata="+meta);variants++;
+            }finally{DiagonalWallMeshCache.invalidate(view,-1,-1,-1,1,1,1);TEAnimatedScreenSelector.unloadGroups(view);}
+        }
+        require(variants>0,"independent side geometry covers portholes and diagonal glass");
+        System.out.println("[vandorlabs][reprolab] independent-frame-sides PASS flat-glass porthole-diagonal-variants="+variants+" exterior-UV-change interior-preserved geometry-unchanged");
+    }
+    private static void independentUvs(float[] before,float[] after,String name){
+        require(before.length==after.length,"Exterior changed geometry count: "+name);int changed=0,stable=0;
+        for(int q=0;q<before.length;q+=32){boolean uvChanged=false;for(int v=0;v<4;v++)for(int field=0;field<8;field++){int at=q+v*8+field;if(field==3||field==4)uvChanged|=before[at]!=after[at];else require(before[at]==after[at],"Exterior changed position/normal: "+name);}if(uvChanged)changed++;else stable++;}
+        require(changed>0&&stable>0,"Exterior must change its own emitted faces and retain other faces: "+name);
+    }
+    private static void diagonalFrameCache(Minecraft mc)throws Exception{
+        // Find actual catalog pairs that collided in the old 31*front+interior key.
+        Map<Integer,int[]> hashes=new HashMap<>();int[] first=null,second=null;
+        outer:for(int front=-1;front<ScreenHousingTextures.IDS.length;front++)if(FrameAppearance.valid(front))
+            for(int inner=-1;inner<ScreenHousingTextures.IDS.length;inner++)if(FrameAppearance.valid(inner)){
+                int[] old=hashes.putIfAbsent(31*front+inner,new int[]{front,inner});
+                if(old!=null&&old[0]!=front){first=old;second=new int[]{front,inner};break outer;}
+            }
+        require(first!=null,"catalog supplies colliding frame-key regression");
+        TileEntityAnimatedScreenSelector original=new TileEntityAnimatedScreenSelector();original.frameAppearance.front=first[0];original.frameAppearance.interior=first[1];
+        net.minecraft.block.state.IBlockState state=ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState();
+        VehicleStructure structure=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,state,original.writeToNBT(new NBTTagCompound()))));
+        VehicleWorld view=new VehicleWorld(mc.world,structure);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)view.getTileEntity(BlockPos.ORIGIN);
+        TextureAtlasSprite glass=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
+        try{
+            StaticSurfaceMesh before=DiagonalWallMeshCache.frame(tile,state,glass);
+            tile.frameAppearance.front=second[0];tile.frameAppearance.interior=second[1];
+            StaticSurfaceMesh after=DiagonalWallMeshCache.frame(tile,state,glass);
+            require(before!=null&&after!=null&&before!=after,"carried diagonal frame reused colliding finish pair");
+            java.lang.reflect.Field vertices=StaticSurfaceMesh.class.getDeclaredField("vertices");vertices.setAccessible(true);
+            require(!Arrays.equals((float[])vertices.get(before),(float[])vertices.get(after)),"changed diagonal frame finishes retained old emitted UVs");
+            require(after==DiagonalWallMeshCache.frame(tile,state,glass),"unchanged exact finish pair lost cache reuse");
+            System.out.println("[vandorlabs][reprolab] diagonal-frame-cache PASS colliding-finish-pairs carried-view emitted-UV-change exact-pair-reuse");
+        }finally{DiagonalWallMeshCache.invalidate(view,-1,-1,-1,1,1,1);TEAnimatedScreenSelector.unloadGroups(view);}
     }
     private static void doorUvs(){
         Block block=Block.getBlockFromName("vandorlabs:programmable_door");TileEntitySpaceDoor tile=new TileEntitySpaceDoor();tile.configure(2,1,true);
@@ -82,6 +134,39 @@ public final class FrameEdgeRuntimeChecks {
             }
         }
         require(checked==8&&directions==15,"actual emitted frame lacks complete opaque fronts or four directional interiors");
+    }
+    private static void paddedBorders()throws Exception{
+        BufferedImage image=new BufferedImage(64,64,BufferedImage.TYPE_INT_ARGB);
+        for(int y=2;y<62;y++)for(int x=2;x<62;x++)if(x<5||x>=59||y<5||y>=55)image.setRGB(x,y,0xff30b8df);
+        require(ScreenFrameBorders.extent(image,0,64,64)==5,"outer transparent padding hid a frame");
+        require(ScreenFrameBorders.extent(image,3,64,64)==9,"asymmetric bottom thickness was discarded");
+        for(String source:new String[]{"frames/frames-screen-full/frame_lightbars_thin_1254","frames/frames-screen-full/frame_lightbars_1254","frames/frames-screen-full/frame_cyan_rim_1254","frames/frames-screen-full/frame_cyan_rim_thin_1254","frames/frames-screen-full/frame_bolted_thin_1254","frames/frames-company-half-full/ashiro/ashiro_thick_full_1254x1254","frames/frames-company-half-full/ashiro/ashiro_thin_full_1254x1254","frames/frames-company-half-full/seyr/seyr_thick_full_1254x1254","frames/frames-company-half-full/seyr/seyr_thin_full_1254x1254","frames/frames-company-half-full/pinnacle/pinnacle_thin_full_1254x1254"}){
+            int choice=ScreenHousingTextures.screenIndex(source);require(choice>0,"reported frame fixture missing: "+source);
+            for(double width:ScreenFrameBorders.get(choice))require(width>0,"reported frame has no emitted border: "+source);
+        }
+        int pinnacle=ScreenHousingTextures.screenIndex("frames/frames-company-half-full/pinnacle/pinnacle_thin_full_1254x1254");double[] widths=ScreenFrameBorders.get(pinnacle);
+        require(widths[3]>widths[2],"Pinnacle lower crest did not enlarge the content inset");
+        for(int edge=0;edge<4;edge++){
+            BufferedImage strip=FrameEdgeTextures.crop(image,edge);
+            require((strip.getRGB(32,32)&0xffffff)==0x30b8df,"padded edge crop stretched canvas padding into interior");
+        }
+        FrameAppearance interior=new FrameAppearance();interior.interior=pinnacle;
+        TextureAtlasSprite rail=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(interior.interior(""));
+        double[][] porthole={ {3,3,6,0,0},{3,13,6,10,0},{3,13,10,10,4},{3,3,10,0,4} };
+        FrameEdgeTextures.map(rail,porthole);
+        require(porthole[0][4]==0&&porthole[1][4]==0&&porthole[2][4]==16&&porthole[3][4]==16,"vertical porthole stretched along its rim instead of across wall depth");
+        double[][] side={ {3,3,6,0,13},{3,13,6,0,3},{3,13,10,4,3},{3,3,10,4,13} };
+        FrameEdgeTextures.map(rail,side);
+        require(side[0][4]==0&&side[1][4]==0&&side[2][4]==16&&side[3][4]==16,"box side lost its distinct legacy UV orientation");
+        // Inspect actual emitted geometry, including a fitted two-block frame.
+        TileEntityProgrammableGlass tile=new TileEntityProgrammableGlass();tile.frameAppearance.front=pinnacle;
+        java.lang.reflect.Field vertices=StaticSurfaceMesh.class.getDeclaredField("vertices");vertices.setAccessible(true);
+        for(int rows:new int[]{1,2}){
+            float[] data=(float[])vertices.get(GlassFrameMesh.get(tile,new GlassSurfaceGroups.Layout(0,0,1,rows)));
+            double bottom=widths[3]*rows*16;boolean found=false;
+            for(int q=0;q<data.length;q+=32)if(Math.abs(data[q+6])>.9&&Math.abs(data[q+1]-bottom)<.0001)found=true;
+            require(found,"emitted glass bottom wall ignored asymmetric/fitted frame thickness");
+        }
     }
     private static void crops(){
         BufferedImage authored=new BufferedImage(64,64,BufferedImage.TYPE_INT_ARGB);int[] colors={0xffed3010,0xff21d030,0xff2040ef,0xffeac020};

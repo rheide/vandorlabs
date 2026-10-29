@@ -33,9 +33,19 @@ final class FrameEdgeTextures {
         if(!authored(sprite))return sprite;
         TextureAtlasSprite selected=edge(sprite,points);
         Edge cut=(Edge)selected;boolean horizontal=cut.edge==TOP||cut.edge==BOTTOM;
+        // Legacy box sides use U across the wall, while polygonal porthole
+        // segments always use V across it. Find the UV axis independent of
+        // the edge's geometric direction, before replacing either coordinate.
+        int alongAxis=horizontal?0:1;
+        double alongMean=0,uMean=0,vMean=0;
+        for(double[] p:points){alongMean+=p[alongAxis];uMean+=p[3];vMean+=p[4];}
+        alongMean/=points.length;uMean/=points.length;vMean/=points.length;
+        double cu=0,cv=0,uu=0,vv=0;
+        for(double[] p:points){double a=p[alongAxis]-alongMean,u=p[3]-uMean,v=p[4]-vMean;cu+=a*u;cv+=a*v;uu+=u*u;vv+=v*v;}
+        int acrossAxis=(uu>0?cu*cu/uu:0)>=(vv>0?cv*cv/vv:0)?4:3;
         double lo=Double.POSITIVE_INFINITY,hi=-lo;
-        for(double[] p:points){double across=p[horizontal?4:3];lo=Math.min(lo,across);hi=Math.max(hi,across);}
-        for(double[] p:points){double across=p[horizontal?4:3];p[3]=horizontal?p[0]:16-p[1];p[4]=hi>lo?(across-lo)*16/(hi-lo):0;}
+        for(double[] p:points){double across=p[acrossAxis];lo=Math.min(lo,across);hi=Math.max(hi,across);}
+        for(double[] p:points){double across=p[acrossAxis];p[3]=horizontal?p[0]:16-p[1];p[4]=hi>lo?(across-lo)*16/(hi-lo):0;}
         return selected;
     }
     static BufferedImage crop(BufferedImage image,int edge){
@@ -43,16 +53,18 @@ final class FrameEdgeTextures {
         int along=vertical?h:w,depth=vertical?w:h;
         // Keep the complete authored edge, including its end details. The former
         // largest-rectangle search silently cropped away directional decorations.
-        int[] widths=new int[Math.max(1,along/2)];
-        for(int i=0;i<widths.length;i++){int at=along/4+i,n=0;while(n<depth/3&&(pixel(image,edge,at,n)>>>24)>=128)n++;widths[i]=n;}
-        Arrays.sort(widths);int band=Math.max(1,widths[widths.length/2]);
+        int band=Math.max(1,ScreenFrameBorders.extent(image,edge==TOP?2:edge==BOTTOM?3:edge==LEFT?0:1,w,h));
+        int start=band;
+        for(int at=along/4;at<along-along/4;at++)for(int d=0;d<band;d++)
+            if((pixel(image,edge,at,d)>>>24)>=128)start=Math.min(start,d);
+        start=Math.min(start,band-1);
         BufferedImage out=new BufferedImage(64,64,BufferedImage.TYPE_INT_ARGB);
         for(int x=0;x<64;x++){
             int at=Math.min(along-1,x*along/64),fallback=0;
             for(int d=0;d<depth/3;d++)if((pixel(image,edge,at,d)>>>24)>=240){fallback=pixel(image,edge,at,d);break;}
             if(fallback==0){for(int a=0;a<along&&fallback==0;a++)for(int d=0;d<depth/3;d++)if((pixel(image,edge,a,d)>>>24)>=240){fallback=pixel(image,edge,a,d);break;}}
             if(fallback==0)throw new IllegalArgumentException("Frame artwork contains no opaque material");
-            for(int y=0;y<64;y++){int color=pixel(image,edge,at,Math.min(band-1,y*band/64));if((color>>>24)>=240)fallback=color;out.setRGB(x,y,fallback|0xff000000);}
+            for(int y=0;y<64;y++){int color=pixel(image,edge,at,Math.min(band-1,start+y*(band-start)/64));if((color>>>24)>=240)fallback=color;out.setRGB(x,y,fallback|0xff000000);}
         }
         return out;
     }

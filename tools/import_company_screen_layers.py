@@ -36,7 +36,7 @@ def main():
         strip=Image.new('RGBA',(size[0],size[1]*6))
         for i,frame in enumerate(frames):strip.paste(frame,(0,i*size[1]))
         animated=textures/(stem+'_animated.png');strip.save(animated,optimize=True);write_json(Path(str(animated)+'.mcmeta'),dict(animation=dict(width=size[0],height=size[1],frametime=round(info['frame_duration_ms']/50),frames=list(range(6)))))
-        entry=dict(id='screen_'+identifier,label=info['company']+' '+height.title()+' '+subject.title(),category='Screens',menuGroup=company.replace('_',' ').title(),source=stem+'_static',frames=6)
+        entry=dict(id='screen_'+identifier,label=company.replace('_',' ').title().replace('Ashiro Mai','Ashiro')+' '+height.title()+' '+subject.title(),category='Screens',menuGroup=company.replace('_',' ').title(),source=stem+'_static',frames=6)
         if height=='half':entry['rectangular']=True
         append(catalog,entry)
         if height=='half':append(inputs,dict(id=identifier,animated=True,frames=6))

@@ -12,7 +12,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     private final TileEntityProgrammableGlass tile;
     private int size,shade,tint,material,textureLayout;
     private boolean join,framed,stretch;
-    private HousingTextureList textures;private boolean framePage;private FrameAppearancePane framePane;
+    private HousingTextureList textures;private boolean framePage;private int selectedPage;private FrameAppearancePane framePane;
     public GuiProgrammableGlass(TileEntityProgrammableGlass tile) {
         super(new ContainerProgrammableGlass(tile));this.tile=tile;
         textureLayout=tile.getTextureLayout();size=0;shade=tile.getShade();join=tile.isJoin();tint=tile.getTint();framed=tile.isFramed();material=tile.getMaterial();stretch=tile.isStretch();
@@ -20,21 +20,21 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     @Override protected HousingTextureList materialPicker(){return framePage&&framePane!=null?framePane.picker():textures;}
     @Override public void initGui() {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
-        xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();GuiButton appearance=layout.fullTab(196,0,2,"Appearance");appearance.enabled=framePage;buttonList.add(appearance);GuiButton frame=layout.fullTab(197,1,2,"Frame");frame.enabled=!framePage;buttonList.add(frame);
+        xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();String[] pages={"Glass","Front","Interior","Exterior"};for(int i=0;i<pages.length;i++){GuiButton tab=layout.fullTab(196+i,i,pages.length,pages[i]);tab.enabled=selectedPage!=i;buttonList.add(tab);}
         textures=HousingTextureList.forGlassMaterials(size,guiLeft+12,guiTop+54,layout.controlsX-guiLeft-31,shade,material)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).keepView(textures);
         if(!framePage){buttonList.add(new GuiButton(3,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Join: "+(join?"On":"Off")));
         buttonList.add(new GuiButton(4,layout.controlsX,guiTop+78,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(tint)));
         GuiButton framedButton=new GuiButton(5,layout.controlsX,guiTop+102,ProgrammableDialogLayout.CONTROLS_WIDTH,20,framed?"Framed":"Bare");framedButton.visible=false;buttonList.add(framedButton);
         if(material>=0)buttonList.add(new GuiButton(6,layout.controlsX,guiTop+126,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout)));
-        }else{if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!tile.isFramed();send();},()->tile.isFramed());framePane.init(54,buttonList);}
+        }else{if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!tile.isFramed();send();},()->tile.isFramed());framePane.initGlassFace(selectedPage-1,54,buttonList);}
         buttonList.add(new GuiButton(2,layout.controlsX,guiTop+ySize-26,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Done"));
     }
     void choose(int choice){if(textures!=null && textures.selected()!=choice)textures.setSelected(choice);if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}else material=choice;send();initGui();}
     private void send(){tile.setSize(size);tile.setShade(shade);tile.setMaterial(material);tile.setTextureLayout(textureLayout);tile.setJoin(join);tile.setAppearance(tint,framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join).withAppearance(tint,framed).withMaterial(material).withTextureLayout(textureLayout));}
     @Override protected void actionPerformed(GuiButton button) {
         if(framePage&&framePane.action(button))return;
-        if(button.id==196||button.id==197){framePage=button.id==197;initGui();return;}
+        if(button.id>=196&&button.id<=199){selectedPage=button.id-196;framePage=selectedPage>0;initGui();return;}
 
         if(button.id==2){mc.player.closeScreen();return;}
         if(button.id==3)join=!join;

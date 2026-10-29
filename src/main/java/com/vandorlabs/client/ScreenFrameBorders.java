@@ -13,6 +13,16 @@ final class ScreenFrameBorders {
     private static final Map<Integer,double[]> CACHE=new HashMap<>();
     static void clear(){CACHE.clear();}
     static double[] get(int choice){return CACHE.computeIfAbsent(choice,ScreenFrameBorders::load);}
+    /** Include authored outer padding and anti-aliased inner pixels. An edge is
+     * not required to start at the canvas boundary or have equal thickness. */
+    static int extent(BufferedImage image,int edge,int width,int height){
+        int along=edge<2?height:width,depth=edge<2?width:height,extent=0;
+        for(int at=along/4;at<along-along/4;at++)for(int d=0;d<depth/3;d++){
+            int x=edge==0?d:edge==1?width-1-d:at,y=edge==2?d:edge==3?height-1-d:at;
+            if((image.getRGB(x,y)>>>24)>=32)extent=Math.max(extent,d+1);
+        }
+        return extent;
+    }
     private static double[] load(int choice){
         if(choice<0)return new double[4];
         if(!FrameAppearance.border(choice))return new double[]{1D/16,1D/16,1D/16,1D/16};
@@ -21,15 +31,7 @@ final class ScreenFrameBorders {
         try(java.io.InputStream stream=Minecraft.getMinecraft().getResourceManager().getResource(file).getInputStream()){
             BufferedImage image=ImageIO.read(stream);int width=image.getWidth(),height=(int)Math.round(image.getHeight()/FrameAppearance.aspect(choice));
             double[] result=new double[4];
-            for(int edge=0;edge<4;edge++){
-                int along=edge<2?height:width,depth=edge<2?width:height;int[] samples=new int[Math.max(1,along/2)];
-                for(int i=0;i<samples.length;i++){
-                    int at=Math.min(along-1,along/4+i),length=0;
-                    while(length<depth/3){int x=edge==0?length:edge==1?width-1-length:at,y=edge==2?length:edge==3?height-1-length:at;if((image.getRGB(x,y)>>>24)<128)break;length++;}
-                    samples[i]=length;
-                }
-                Arrays.sort(samples);result[edge]=Math.min(.25,(double)samples[samples.length/2]/depth);
-            }
+            for(int edge=0;edge<4;edge++)result[edge]=extent(image,edge,width,height)/(double)(edge<2?width:height);
             return result;
         }catch(java.io.IOException failure){throw new IllegalStateException("Cannot inspect screen frame "+file,failure);}
     }

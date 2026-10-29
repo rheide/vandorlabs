@@ -43,6 +43,8 @@ for directory in ['frames-company-half-full', 'frames-door-window', 'frames-scre
                 e["frameAspect"]=aspect
                 e["frameBorder"]=image.getpixel((image.width//2,image.height//2))[3]<128
                 e["label"]=re.sub(r"_1254(?:x(?:627|1254))?$", "",source.stem,flags=re.I).replace("_"," ").replace("-"," ").title()
+                if directory in ('frames-screen-full','frames-screen-half'):
+                    e['label'] += ' Half' if directory.endswith('-half') else ' Full'
         count += 1
 catalog.write_text(json.dumps(entries,indent=2)+'\n')
 print('Imported',count,'frame textures at 128px; existing choice indices preserved')

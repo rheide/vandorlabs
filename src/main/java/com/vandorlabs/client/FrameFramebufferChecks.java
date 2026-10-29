@@ -55,9 +55,21 @@ final class FrameFramebufferChecks {
             try{BufferedImage darkImage=capture(mc,darkReference);require(distance(splitImage.getRGB(128,64),single.getRGB(128,128))<30,"split upper display differs from selected artwork");require(distance(splitImage.getRGB(128,192),darkImage.getRGB(128,128))<30,"split lower display differs from selected artwork");require(distance(splitImage.getRGB(128,64),splitImage.getRGB(128,192))>30,"independent split artwork is indistinguishable");}finally{darkReference.close();}
             ImageIO.write(fit,"png",new File(output,"shot_frames_display_fit_2x2.png"));ImageIO.write(perimeter,"png",new File(output,"shot_frames_border_fit_2x2.png"));ImageIO.write(repeated,"png",new File(output,"shot_frames_border_tile_2x2.png"));ImageIO.write(splitImage,"png",new File(output,"shot_frames_split_display.png"));
             coupledLayouts(mc,output,pattern,dark,bolted,splitImage);
-            framePersistence(mc);companyDisplays(mc,output);opaqueInterior(mc,output);frameDialog(mc,output,one.tiles.get(0));screenRedstoneDialog(mc,output,one.tiles.get(0));pickerDialogs(mc,output);
+            reportedBorders(mc,output,pattern);framePersistence(mc);companyDisplays(mc,output);opaqueInterior(mc,output);frameDialog(mc,output,one.tiles.get(0));screenRedstoneDialog(mc,output,one.tiles.get(0));pickerDialogs(mc,output);
             System.out.println("[vandorlabs][reprolab] frame-framebuffer PASS square-display-fit rectangular-rejection independent-frame-fit mixed-artwork-and-frame-negative-controls split-fit-2x2-and-3x3 opaque-interior");
         }finally{one.close();square.close();rectangle.close();row.close();}
+    }
+    private static void reportedBorders(Minecraft mc,File output,int material)throws Exception{
+        Fixture fixture=new Fixture(mc,1,1,material);
+        try{
+            for(String source:new String[]{"frames/frames-screen-full/frame_lightbars_thin_1254","frames/frames-screen-full/frame_lightbars_1254","frames/frames-screen-full/frame_cyan_rim_1254","frames/frames-screen-full/frame_cyan_rim_thin_1254","frames/frames-screen-full/frame_bolted_thin_1254","frames/frames-company-half-full/ashiro/ashiro_thick_full_1254x1254","frames/frames-company-half-full/ashiro/ashiro_thin_full_1254x1254","frames/frames-company-half-full/seyr/seyr_thick_full_1254x1254","frames/frames-company-half-full/seyr/seyr_thin_full_1254x1254","frames/frames-company-half-full/pinnacle/pinnacle_thin_full_1254x1254"}){
+                fixture.appearance(ScreenHousingTextures.screenIndex(source),true,false);
+                BufferedImage rendered=capture(mc,fixture),negative;
+                FrameSurfaceRenderer.suppressBorders=true;try{negative=capture(mc,fixture);}finally{FrameSurfaceRenderer.suppressBorders=false;}
+                require(difference(rendered,negative,0,0,SIZE,SIZE)>100,"reported frame remains invisible: "+source);
+                ImageIO.write(rendered,"png",new File(output,"shot_follow4_"+source.substring(source.lastIndexOf('/')+1)+".png"));
+            }
+        }finally{fixture.close();}
     }
     private static void framePersistence(Minecraft mc)throws Exception{
         net.minecraft.client.gui.GuiScreen previous=mc.currentScreen;net.minecraft.inventory.Container old=mc.player.openContainer;
@@ -167,8 +179,10 @@ final class FrameFramebufferChecks {
                 net.minecraft.tileentity.TileEntity tile=view.getTileEntity(BlockPos.ORIGIN);net.minecraft.client.gui.inventory.GuiContainer gui=type==11?new GuiProgrammableLight(mc.player.inventory,(TileEntityProgrammableLight)tile):type==12||type==13?new GuiWirelessRedstone(new com.vandorlabs.container.ContainerWirelessRedstone((TileEntityWirelessRedstone)tile)):type==14?new GuiTokenSlot(new com.vandorlabs.container.ContainerTokenSlot(mc.player.inventory,(TileEntityTokenSlot)tile)):type==15?new GuiRedstoneChannel((com.vandorlabs.redstone.RedstoneChannelMember)tile):type==7?new GuiSpaceDoor((TileEntitySpaceDoor)tile):type>=8?new GuiProgrammableWall(mc.player.inventory,(TileEntityAnimatedScreenSelector)tile):type==6?new GuiProgrammableGlass((TileEntityProgrammableGlass)tile):type==4?new GuiProgrammableInput(mc.player.inventory,(TileEntityAnimatedScreenSelector)tile):type==5?new GuiProgrammableHalfConsole(mc.player.inventory,(TileEntityAnimatedScreenSelector)tile):new GuiAnimatedScreenSelector(mc.player.inventory,(TileEntityAnimatedScreenSelector)tile);
                 gui.inventorySlots.windowId=-200-type;mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
                 for(net.minecraft.client.gui.GuiButton tab:dialogButtons(gui))if(tab instanceof DialogTabButton&&tab.displayString.equals("Redstone"))for(net.minecraft.client.gui.GuiButton other:dialogButtons(gui))if(other instanceof DialogTabButton&&other.y==tab.y)require(other.x<=tab.x,"Redstone must be the last tab: "+names[type]);
-                net.minecraft.inventory.Container window=gui.inventorySlots;java.util.List<Integer> pages=new ArrayList<>();for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b instanceof DialogTabButton&&(b.id<120||b.id>=190&&b.id<=197))pages.add(b.id);
+                if(type==6||type==10){String[] expected=type==6?new String[]{"Glass","Front","Interior","Exterior"}:new String[]{"Main","Glass","Front","Interior","Exterior"};java.util.Set<String> labels=new java.util.HashSet<>();for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b instanceof DialogTabButton){require(b.y==gui.getGuiTop()+30,"glass/porthole retained nested tab: "+b.displayString);labels.add(b.displayString);}require(labels.equals(new java.util.HashSet<>(java.util.Arrays.asList(expected))),"glass/porthole top-level tab coverage");}
+                net.minecraft.inventory.Container window=gui.inventorySlots;java.util.List<Integer> pages=new ArrayList<>();for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b instanceof DialogTabButton&&(b.id<120||b.id>=190&&b.id<=199||b.id>=210&&b.id<=213))pages.add(b.id);
                 for(int page:pages){dialogAction(gui,dialogButton(gui,page));require(mc.currentScreen==gui&&gui.inventorySlots==window,"picker tab replaced the parent screen/window");dialogBounds(mc,gui);renderDialog(mc,gui,new File(output,"shot_picker_"+names[type]+"_"+page+"_"+size[0]+".png"),-1,-1);captures++;
+                    if((type==6&&page>=197&&page<=199)||(type==10&&page>=210&&page<=212))for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b instanceof DialogTabButton)require(b.y==gui.getGuiTop()+30,"frame page retained nested tab: "+b.displayString);
                     if(page==195){java.util.List<Integer> faces=new ArrayList<>();for(net.minecraft.client.gui.GuiButton b:dialogButtons(gui))if(b instanceof DialogTabButton&&b.id>=120&&b.id<=129)faces.add(b.id);for(int face:faces){dialogAction(gui,dialogButton(gui,face));dialogBounds(mc,gui);renderDialog(mc,gui,new File(output,"shot_picker_"+names[type]+"_surface_"+face+"_"+size[0]+".png"),-1,-1);captures++;}}
                     if((page==197||page==191)&&type==6){
                         TileEntityProgrammableGlass glassTile=(TileEntityProgrammableGlass)tile;boolean before=glassTile.isFramed();
@@ -223,6 +237,17 @@ final class FrameFramebufferChecks {
     private static void opaqueInterior(Minecraft mc,File output)throws Exception{
         TileEntityProgrammableGlass tile=new TileEntityProgrammableGlass();tile.frameAppearance.front=ScreenHousingTextures.screenIndex("frames/frames-door-window/gunmetal-1");tile.frameAppearance.interior=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1");require(tile.frameAppearance.front>0&&tile.frameAppearance.interior>0,"opaque frame fixture artwork");
         net.minecraft.block.Block glassBlock=net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass");
+        tile.setAppearance(1,true);tile.setJoin(true);
+        VehicleWorld joinedWorld=new VehicleWorld(mc.world,VehicleStructure.display(java.util.Arrays.asList(
+                new VehicleStructure.Cell(BlockPos.ORIGIN,glassBlock.getDefaultState(),tile.writeToNBT(new NBTTagCompound())),
+                new VehicleStructure.Cell(BlockPos.ORIGIN.east(),glassBlock.getDefaultState(),tile.writeToNBT(new NBTTagCompound())))));
+        TileEntityProgrammableGlass first=(TileEntityProgrammableGlass)joinedWorld.getTileEntity(BlockPos.ORIGIN),second=(TileEntityProgrammableGlass)joinedWorld.getTileEntity(BlockPos.ORIGIN.east());
+        require(GlassSurfaceGroups.frameLayout(first).columns==2,"matching framed glass must share a fitted frame");
+        second.setAppearance(1,false);
+        require(GlassSurfaceGroups.frameLayout(first).columns==1,"bare glass removed the neighboring selected frame's outer rail");
+        second.setAppearance(1,true);
+        require(GlassSurfaceGroups.frameLayout(first).columns==2,"restoring Framed did not invalidate the fitted frame layout");
+        GlassSurfaceGroups.unload(joinedWorld);
         VehicleWorld lightWorld=new VehicleWorld(mc.world,VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,glassBlock.getDefaultState(),tile.writeToNBT(new NBTTagCompound())))));
         TileEntityProgrammableGlass lightTile=(TileEntityProgrammableGlass)lightWorld.getTileEntity(BlockPos.ORIGIN);lightTile.frameAppearance.front=-1;lightTile.frameAppearance.interior=-1;lightTile.frameAppearance.tile=true;require(!glassBlock.getActualState(lightWorld.getBlockState(BlockPos.ORIGIN),lightWorld,BlockPos.ORIGIN).getValue(com.vandorlabs.blocks.BlockGlassWall.TOP),"Original Tile frame must suppress the joined baked frame");lightTile.frameAppearance.read(tile.writeToNBT(new NBTTagCompound()));require(glassBlock.getLightValue(lightWorld.getBlockState(BlockPos.ORIGIN),lightWorld,BlockPos.ORIGIN)==3,"lit inner frame must emit faint level three");lightTile.setAppearance(1,false);require(glassBlock.getLightValue(lightWorld.getBlockState(BlockPos.ORIGIN),lightWorld,BlockPos.ORIGIN)==0,"Bare frame retained invisible frame light");
         Framebuffer frame=new Framebuffer(SIZE,SIZE,true);projection(0,16,0,16);

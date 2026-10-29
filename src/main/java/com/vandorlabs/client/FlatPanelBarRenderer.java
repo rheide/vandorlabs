@@ -59,10 +59,10 @@ final class FlatPanelBarRenderer {
         return GlassSurfaceMapping.map(mesh,sprite,layout,false,0,0,tile.getTextureLayout());
     }
     private static final class BarKey {
-        final TextureAtlasSprite wall,metal;final int shape;
-        BarKey(TextureAtlasSprite wall,TextureAtlasSprite metal,int shape){this.wall=wall;this.metal=metal;this.shape=shape;}
-        @Override public int hashCode(){return Objects.hash(System.identityHashCode(wall),System.identityHashCode(metal),shape);}
-        @Override public boolean equals(Object value){if(!(value instanceof BarKey))return false;BarKey k=(BarKey)value;return wall==k.wall && metal==k.metal && shape==k.shape;}
+        final TextureAtlasSprite wall,metal,outer;final int shape;
+        BarKey(TextureAtlasSprite wall,TextureAtlasSprite metal,TextureAtlasSprite outer,int shape){this.wall=wall;this.metal=metal;this.outer=outer;this.shape=shape;}
+        @Override public int hashCode(){return Objects.hash(System.identityHashCode(wall),System.identityHashCode(metal),System.identityHashCode(outer),shape);}
+        @Override public boolean equals(Object value){if(!(value instanceof BarKey))return false;BarKey k=(BarKey)value;return wall==k.wall && metal==k.metal && outer==k.outer && shape==k.shape;}
     }
     private static final Map<BarKey,StaticSurfaceMesh[]> BARS=new LinkedHashMap<BarKey,StaticSurfaceMesh[]>(128,.75F,true) {
         @Override protected boolean removeEldestEntry(Map.Entry<BarKey,StaticSurfaceMesh[]> e){return size()>128;}
@@ -78,11 +78,13 @@ final class FlatPanelBarRenderer {
         TextureAtlasSprite wall=TEAnimatedScreenSelector.wallSprite(tile);
         TextureAtlasSprite metal=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.interior(block.isPortholeShape() && tile.getSideTexture()>=0
                 ?ScreenHousingTextures.texture(tile.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
-        BarKey key=new BarKey(wall,metal,block.isPortholeShape()?tile.getPortholeShape():-1);
+        TextureAtlasSprite outer=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.exterior(block.isPortholeShape()&&tile.getSideTexture()>=0?ScreenHousingTextures.texture(tile.getSideTexture()):"vandorlabs:blocks/programmable_glass/metal_side"));
+        if(block.isPortholeShape()&&tile.frameAppearance.front>=0)wall=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.front(""));
+        BarKey key=new BarKey(wall,metal,outer,block.isPortholeShape()?tile.getPortholeShape():-1);
         StaticSurfaceMesh[] meshes=BARS.get(key);
         if(meshes==null) {
             PortholeHex.Slice slice=key.shape<0?null:new PortholeHex(1,1,key.shape).slice(0,0);
-            StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();TEAnimatedScreenSelector.drawFlatBar(capture,wall,metal,slice);
+            StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();TEAnimatedScreenSelector.drawFlatBar(capture,wall,metal,outer,slice);
             StaticSurfaceMesh opaque=capture.finish(),pane=null;
             if(slice!=null){capture=StaticSurfaceMesh.capture();TEAnimatedScreenSelector.drawPortholeGlassGeometry(capture,slice,null);pane=capture.finish();}
             meshes=new StaticSurfaceMesh[]{opaque,pane};BARS.put(key,meshes);

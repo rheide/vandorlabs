@@ -81,10 +81,15 @@ final class HousingTextureList {
         return new HousingTextureList(x,y,width,selected==-2&&nativeArtwork?MODEL_ARTWORK:selected<0?NAVIGATION_BLACK:selected,rows,entries);
     }
     static HousingTextureList forFrames(int x,int y,int width,int selected,int rows){return forFrames(x,y,width,selected,rows,false);}
-    static HousingTextureList forFrames(int x,int y,int width,int selected,int rows,boolean display){
+    static HousingTextureList forFrames(int x,int y,int width,int selected,int rows,boolean display){return forFrames(x,y,width,selected,rows,display,false);}
+    static HousingTextureList forFrames(int x,int y,int width,int selected,int rows,boolean display,boolean half){
         List<Option> entries=new ArrayList<>();if(!display)entries.add(new Option(-1,"Original artwork","Frame","vandorlabs:blocks/programmable_glass/metal_side"));
-        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i)))entries.add(new Option(ScreenHousingTextures.choiceAt(i),name(i),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(frameAllowed(i,half))entries.add(new Option(ScreenHousingTextures.choiceAt(i),name(i),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
         return new HousingTextureList(x,y,width,selected,rows,entries);
+    }
+    static boolean frameAllowed(int choice,boolean half){
+        com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
+        return "Frame".equals(ScreenHousingTextures.category(choice)) && (half || entry==null || !entry.has("frameAspect") || entry.get("frameAspect").getAsDouble()<=1.01);
     }
     static HousingTextureList forGlass(int detail,int x,int y,int width,int selected) {
         List<Option> entries=new ArrayList<>();
@@ -108,7 +113,7 @@ final class HousingTextureList {
         return new HousingTextureList(x,y,width,material<0?CANOPY_GLASS_BASE+shade:material,8,entries);
     }
     HousingTextureList keepView(HousingTextureList previous){
-        if(previous!=null){expanded.addAll(previous.expanded);rebuild();scroll=Math.min(maxScroll(),previous.scroll);}
+        if(previous!=null){expanded.addAll(previous.expanded);rebuild();scroll=Math.min(maxScroll(),previous.scroll);ensureSelectedVisible();}
         return this;
     }
     static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {
@@ -179,6 +184,11 @@ final class HousingTextureList {
         selected=choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE?VEHICLE_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE?REDSTONE_ROW:custom>=0?CUSTOM_ROW:nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
         Option option=options.get(selected);if(option!=null){String path=option.category;expanded.add(path);while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));expanded.add(path);}}rebuild();
         int index=rows.indexOf(selected);scroll=Math.max(0,Math.min(maxScroll(),index-count/2));
+    }
+    private void ensureSelectedVisible(){
+        int index=rows.indexOf(selected);
+        // The first row is replaced by its pinned category heading.
+        if(index>=0 && (index<=scroll || index>=scroll+count))scroll=Math.max(0,Math.min(maxScroll(),index-count/2));
     }
     private void rebuild() {
         rows.clear();

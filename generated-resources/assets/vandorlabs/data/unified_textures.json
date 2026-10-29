@@ -3238,7 +3238,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_bolted_1254",
-    "label": "Frame Bolted",
+    "label": "Frame Bolted Full",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_bolted_1254",
     "frame": true,
@@ -3248,7 +3248,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_bolted_thin_1254",
-    "label": "Frame Bolted Thin",
+    "label": "Frame Bolted Thin Full",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_bolted_thin_1254",
     "frame": true,
@@ -3258,7 +3258,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_cyan_rim_1254",
-    "label": "Frame Cyan Rim",
+    "label": "Frame Cyan Rim Full",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_cyan_rim_1254",
     "frame": true,
@@ -3268,7 +3268,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_cyan_rim_thin_1254",
-    "label": "Frame Cyan Rim Thin",
+    "label": "Frame Cyan Rim Thin Full",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_cyan_rim_thin_1254",
     "frame": true,
@@ -3278,7 +3278,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_lightbars_1254",
-    "label": "Frame Lightbars",
+    "label": "Frame Lightbars Full",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_lightbars_1254",
     "frame": true,
@@ -3289,7 +3289,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_lightbars_thin_1254",
-    "label": "Frame Lightbars Thin",
+    "label": "Frame Lightbars Thin Full",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_lightbars_thin_1254",
     "frame": true,
@@ -3300,7 +3300,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_plain_1254",
-    "label": "Frame Plain",
+    "label": "Frame Plain Full",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_plain_1254",
     "frame": true,
@@ -3310,7 +3310,7 @@
   },
   {
     "id": "frame_frames_screen_full_frame_plain_thin_1254",
-    "label": "Frame Plain Thin",
+    "label": "Frame Plain Thin Full",
     "category": "Frame",
     "source": "frames/frames-screen-full/frame_plain_thin_1254",
     "frame": true,
@@ -3320,7 +3320,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_bolted_1254x627",
-    "label": "Frame Bolted",
+    "label": "Frame Bolted Half",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_bolted_1254x627",
     "frame": true,
@@ -3330,7 +3330,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_bolted_thin_1254x627",
-    "label": "Frame Bolted Thin",
+    "label": "Frame Bolted Thin Half",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_bolted_thin_1254x627",
     "frame": true,
@@ -3340,7 +3340,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_cyan_rim_1254x627",
-    "label": "Frame Cyan Rim",
+    "label": "Frame Cyan Rim Half",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_cyan_rim_1254x627",
     "frame": true,
@@ -3350,7 +3350,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_cyan_rim_thin_1254x627",
-    "label": "Frame Cyan Rim Thin",
+    "label": "Frame Cyan Rim Thin Half",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_cyan_rim_thin_1254x627",
     "frame": true,
@@ -3360,7 +3360,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_lightbars_1254x627",
-    "label": "Frame Lightbars",
+    "label": "Frame Lightbars Half",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_lightbars_1254x627",
     "frame": true,
@@ -3371,7 +3371,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_lightbars_thin_1254x627",
-    "label": "Frame Lightbars Thin",
+    "label": "Frame Lightbars Thin Half",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_lightbars_thin_1254x627",
     "frame": true,
@@ -3382,7 +3382,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_plain_1254x627",
-    "label": "Frame Plain",
+    "label": "Frame Plain Half",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_plain_1254x627",
     "frame": true,
@@ -3392,7 +3392,7 @@
   },
   {
     "id": "frame_frames_screen_half_frame_plain_thin_1254x627",
-    "label": "Frame Plain Thin",
+    "label": "Frame Plain Thin Half",
     "category": "Frame",
     "source": "frames/frames-screen-half/frame_plain_thin_1254x627",
     "frame": true,
@@ -4092,7 +4092,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_full_biology",
-    "label": "Ashiro-Mai Technologies Full Biology",
+    "label": "Ashiro Full Biology",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_biology_static",
@@ -4100,7 +4100,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_full_communications",
-    "label": "Ashiro-Mai Technologies Full Communications",
+    "label": "Ashiro Full Communications",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_communications_static",
@@ -4108,7 +4108,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_full_medical",
-    "label": "Ashiro-Mai Technologies Full Medical",
+    "label": "Ashiro Full Medical",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_medical_static",
@@ -4116,7 +4116,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_full_navigation",
-    "label": "Ashiro-Mai Technologies Full Navigation",
+    "label": "Ashiro Full Navigation",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_navigation_static",
@@ -4124,7 +4124,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_full_radar",
-    "label": "Ashiro-Mai Technologies Full Radar",
+    "label": "Ashiro Full Radar",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_radar_static",
@@ -4132,7 +4132,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_full_reactor",
-    "label": "Ashiro-Mai Technologies Full Reactor",
+    "label": "Ashiro Full Reactor",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_reactor_static",
@@ -4140,7 +4140,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_half_biology",
-    "label": "Ashiro-Mai Technologies Half Biology",
+    "label": "Ashiro Half Biology",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_biology_static",
@@ -4149,7 +4149,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_half_communications",
-    "label": "Ashiro-Mai Technologies Half Communications",
+    "label": "Ashiro Half Communications",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_communications_static",
@@ -4158,7 +4158,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_half_medical",
-    "label": "Ashiro-Mai Technologies Half Medical",
+    "label": "Ashiro Half Medical",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_medical_static",
@@ -4167,7 +4167,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_half_navigation",
-    "label": "Ashiro-Mai Technologies Half Navigation",
+    "label": "Ashiro Half Navigation",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_navigation_static",
@@ -4176,7 +4176,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_half_radar",
-    "label": "Ashiro-Mai Technologies Half Radar",
+    "label": "Ashiro Half Radar",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_radar_static",
@@ -4185,7 +4185,7 @@
   },
   {
     "id": "screen_company_ashiro_mai_half_reactor",
-    "label": "Ashiro-Mai Technologies Half Reactor",
+    "label": "Ashiro Half Reactor",
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_reactor_static",
@@ -4194,7 +4194,7 @@
   },
   {
     "id": "screen_company_paladyne_full_biology",
-    "label": "Paladyne Systems Full Biology",
+    "label": "Paladyne Full Biology",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "company_paladyne_full_biology_static",
@@ -4202,7 +4202,7 @@
   },
   {
     "id": "screen_company_paladyne_full_communications",
-    "label": "Paladyne Systems Full Communications",
+    "label": "Paladyne Full Communications",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "company_paladyne_full_communications_static",
@@ -4210,7 +4210,7 @@
   },
   {
     "id": "screen_company_paladyne_full_medical",
-    "label": "Paladyne Systems Full Medical",
+    "label": "Paladyne Full Medical",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "company_paladyne_full_medical_static",
@@ -4218,7 +4218,7 @@
   },
   {
     "id": "screen_company_paladyne_full_navigation",
-    "label": "Paladyne Systems Full Navigation",
+    "label": "Paladyne Full Navigation",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "company_paladyne_full_navigation_static",
@@ -4226,7 +4226,7 @@
   },
   {
     "id": "screen_company_paladyne_full_radar",
-    "label": "Paladyne Systems Full Radar",
+    "label": "Paladyne Full Radar",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "company_paladyne_full_radar_static",
@@ -4234,7 +4234,7 @@
   },
   {
     "id": "screen_company_paladyne_full_reactor",
-    "label": "Paladyne Systems Full Reactor",
+    "label": "Paladyne Full Reactor",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "company_paladyne_full_reactor_static",
@@ -4242,7 +4242,7 @@
   },
   {
     "id": "screen_company_paladyne_half_biology",
-    "label": "Paladyne Systems Half Biology",
+    "label": "Paladyne Half Biology",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "console_inputs/company_paladyne_half_biology_static",
@@ -4251,7 +4251,7 @@
   },
   {
     "id": "screen_company_paladyne_half_communications",
-    "label": "Paladyne Systems Half Communications",
+    "label": "Paladyne Half Communications",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "console_inputs/company_paladyne_half_communications_static",
@@ -4260,7 +4260,7 @@
   },
   {
     "id": "screen_company_paladyne_half_medical",
-    "label": "Paladyne Systems Half Medical",
+    "label": "Paladyne Half Medical",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "console_inputs/company_paladyne_half_medical_static",
@@ -4269,7 +4269,7 @@
   },
   {
     "id": "screen_company_paladyne_half_navigation",
-    "label": "Paladyne Systems Half Navigation",
+    "label": "Paladyne Half Navigation",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "console_inputs/company_paladyne_half_navigation_static",
@@ -4278,7 +4278,7 @@
   },
   {
     "id": "screen_company_paladyne_half_radar",
-    "label": "Paladyne Systems Half Radar",
+    "label": "Paladyne Half Radar",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "console_inputs/company_paladyne_half_radar_static",
@@ -4287,7 +4287,7 @@
   },
   {
     "id": "screen_company_paladyne_half_reactor",
-    "label": "Paladyne Systems Half Reactor",
+    "label": "Paladyne Half Reactor",
     "category": "Screens",
     "menuGroup": "Paladyne",
     "source": "console_inputs/company_paladyne_half_reactor_static",
@@ -4296,7 +4296,7 @@
   },
   {
     "id": "screen_company_pinnacle_full_biology",
-    "label": "Pinnacle Global Full Biology",
+    "label": "Pinnacle Full Biology",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "company_pinnacle_full_biology_static",
@@ -4304,7 +4304,7 @@
   },
   {
     "id": "screen_company_pinnacle_full_communications",
-    "label": "Pinnacle Global Full Communications",
+    "label": "Pinnacle Full Communications",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "company_pinnacle_full_communications_static",
@@ -4312,7 +4312,7 @@
   },
   {
     "id": "screen_company_pinnacle_full_medical",
-    "label": "Pinnacle Global Full Medical",
+    "label": "Pinnacle Full Medical",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "company_pinnacle_full_medical_static",
@@ -4320,7 +4320,7 @@
   },
   {
     "id": "screen_company_pinnacle_full_navigation",
-    "label": "Pinnacle Global Full Navigation",
+    "label": "Pinnacle Full Navigation",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "company_pinnacle_full_navigation_static",
@@ -4328,7 +4328,7 @@
   },
   {
     "id": "screen_company_pinnacle_full_radar",
-    "label": "Pinnacle Global Full Radar",
+    "label": "Pinnacle Full Radar",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "company_pinnacle_full_radar_static",
@@ -4336,7 +4336,7 @@
   },
   {
     "id": "screen_company_pinnacle_full_reactor",
-    "label": "Pinnacle Global Full Reactor",
+    "label": "Pinnacle Full Reactor",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "company_pinnacle_full_reactor_static",
@@ -4344,7 +4344,7 @@
   },
   {
     "id": "screen_company_pinnacle_half_biology",
-    "label": "Pinnacle Global Half Biology",
+    "label": "Pinnacle Half Biology",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "console_inputs/company_pinnacle_half_biology_static",
@@ -4353,7 +4353,7 @@
   },
   {
     "id": "screen_company_pinnacle_half_communications",
-    "label": "Pinnacle Global Half Communications",
+    "label": "Pinnacle Half Communications",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "console_inputs/company_pinnacle_half_communications_static",
@@ -4362,7 +4362,7 @@
   },
   {
     "id": "screen_company_pinnacle_half_medical",
-    "label": "Pinnacle Global Half Medical",
+    "label": "Pinnacle Half Medical",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "console_inputs/company_pinnacle_half_medical_static",
@@ -4371,7 +4371,7 @@
   },
   {
     "id": "screen_company_pinnacle_half_navigation",
-    "label": "Pinnacle Global Half Navigation",
+    "label": "Pinnacle Half Navigation",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "console_inputs/company_pinnacle_half_navigation_static",
@@ -4380,7 +4380,7 @@
   },
   {
     "id": "screen_company_pinnacle_half_radar",
-    "label": "Pinnacle Global Half Radar",
+    "label": "Pinnacle Half Radar",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "console_inputs/company_pinnacle_half_radar_static",
@@ -4389,7 +4389,7 @@
   },
   {
     "id": "screen_company_pinnacle_half_reactor",
-    "label": "Pinnacle Global Half Reactor",
+    "label": "Pinnacle Half Reactor",
     "category": "Screens",
     "menuGroup": "Pinnacle",
     "source": "console_inputs/company_pinnacle_half_reactor_static",
@@ -4398,7 +4398,7 @@
   },
   {
     "id": "screen_company_seyr_full_biology",
-    "label": "Seyr Astronautics Full Biology",
+    "label": "Seyr Full Biology",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_biology_static",
@@ -4406,7 +4406,7 @@
   },
   {
     "id": "screen_company_seyr_full_communications",
-    "label": "Seyr Astronautics Full Communications",
+    "label": "Seyr Full Communications",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_communications_static",
@@ -4414,7 +4414,7 @@
   },
   {
     "id": "screen_company_seyr_full_medical",
-    "label": "Seyr Astronautics Full Medical",
+    "label": "Seyr Full Medical",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_medical_static",
@@ -4422,7 +4422,7 @@
   },
   {
     "id": "screen_company_seyr_full_navigation",
-    "label": "Seyr Astronautics Full Navigation",
+    "label": "Seyr Full Navigation",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_navigation_static",
@@ -4430,7 +4430,7 @@
   },
   {
     "id": "screen_company_seyr_full_radar",
-    "label": "Seyr Astronautics Full Radar",
+    "label": "Seyr Full Radar",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_radar_static",
@@ -4438,7 +4438,7 @@
   },
   {
     "id": "screen_company_seyr_full_reactor",
-    "label": "Seyr Astronautics Full Reactor",
+    "label": "Seyr Full Reactor",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_reactor_static",
@@ -4446,7 +4446,7 @@
   },
   {
     "id": "screen_company_seyr_half_biology",
-    "label": "Seyr Astronautics Half Biology",
+    "label": "Seyr Half Biology",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_biology_static",
@@ -4455,7 +4455,7 @@
   },
   {
     "id": "screen_company_seyr_half_communications",
-    "label": "Seyr Astronautics Half Communications",
+    "label": "Seyr Half Communications",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_communications_static",
@@ -4464,7 +4464,7 @@
   },
   {
     "id": "screen_company_seyr_half_medical",
-    "label": "Seyr Astronautics Half Medical",
+    "label": "Seyr Half Medical",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_medical_static",
@@ -4473,7 +4473,7 @@
   },
   {
     "id": "screen_company_seyr_half_navigation",
-    "label": "Seyr Astronautics Half Navigation",
+    "label": "Seyr Half Navigation",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_navigation_static",
@@ -4482,7 +4482,7 @@
   },
   {
     "id": "screen_company_seyr_half_radar",
-    "label": "Seyr Astronautics Half Radar",
+    "label": "Seyr Half Radar",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_radar_static",
@@ -4491,7 +4491,7 @@
   },
   {
     "id": "screen_company_seyr_half_reactor",
-    "label": "Seyr Astronautics Half Reactor",
+    "label": "Seyr Half Reactor",
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_reactor_static",
@@ -4500,7 +4500,7 @@
   },
   {
     "id": "screen_company_vandor_full_biology",
-    "label": "Vandor Labs Full Biology",
+    "label": "Vandor Full Biology",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_biology_static",
@@ -4508,7 +4508,7 @@
   },
   {
     "id": "screen_company_vandor_full_communications",
-    "label": "Vandor Labs Full Communications",
+    "label": "Vandor Full Communications",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_communications_static",
@@ -4516,7 +4516,7 @@
   },
   {
     "id": "screen_company_vandor_full_medical",
-    "label": "Vandor Labs Full Medical",
+    "label": "Vandor Full Medical",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_medical_static",
@@ -4524,7 +4524,7 @@
   },
   {
     "id": "screen_company_vandor_full_navigation",
-    "label": "Vandor Labs Full Navigation",
+    "label": "Vandor Full Navigation",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_navigation_static",
@@ -4532,7 +4532,7 @@
   },
   {
     "id": "screen_company_vandor_full_radar",
-    "label": "Vandor Labs Full Radar",
+    "label": "Vandor Full Radar",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_radar_static",
@@ -4540,7 +4540,7 @@
   },
   {
     "id": "screen_company_vandor_full_reactor",
-    "label": "Vandor Labs Full Reactor",
+    "label": "Vandor Full Reactor",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_reactor_static",
@@ -4548,7 +4548,7 @@
   },
   {
     "id": "screen_company_vandor_half_biology",
-    "label": "Vandor Labs Half Biology",
+    "label": "Vandor Half Biology",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_biology_static",
@@ -4557,7 +4557,7 @@
   },
   {
     "id": "screen_company_vandor_half_communications",
-    "label": "Vandor Labs Half Communications",
+    "label": "Vandor Half Communications",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_communications_static",
@@ -4566,7 +4566,7 @@
   },
   {
     "id": "screen_company_vandor_half_medical",
-    "label": "Vandor Labs Half Medical",
+    "label": "Vandor Half Medical",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_medical_static",
@@ -4575,7 +4575,7 @@
   },
   {
     "id": "screen_company_vandor_half_navigation",
-    "label": "Vandor Labs Half Navigation",
+    "label": "Vandor Half Navigation",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_navigation_static",
@@ -4584,7 +4584,7 @@
   },
   {
     "id": "screen_company_vandor_half_radar",
-    "label": "Vandor Labs Half Radar",
+    "label": "Vandor Half Radar",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_radar_static",
@@ -4593,7 +4593,7 @@
   },
   {
     "id": "screen_company_vandor_half_reactor",
-    "label": "Vandor Labs Half Reactor",
+    "label": "Vandor Half Reactor",
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_reactor_static",
@@ -4602,7 +4602,7 @@
   },
   {
     "id": "screen_company_vektor_full_biology",
-    "label": "Vektor Heavy Industries Full Biology",
+    "label": "Vektor Full Biology",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_biology_static",
@@ -4610,7 +4610,7 @@
   },
   {
     "id": "screen_company_vektor_full_communications",
-    "label": "Vektor Heavy Industries Full Communications",
+    "label": "Vektor Full Communications",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_communications_static",
@@ -4618,7 +4618,7 @@
   },
   {
     "id": "screen_company_vektor_full_medical",
-    "label": "Vektor Heavy Industries Full Medical",
+    "label": "Vektor Full Medical",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_medical_static",
@@ -4626,7 +4626,7 @@
   },
   {
     "id": "screen_company_vektor_full_navigation",
-    "label": "Vektor Heavy Industries Full Navigation",
+    "label": "Vektor Full Navigation",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_navigation_static",
@@ -4634,7 +4634,7 @@
   },
   {
     "id": "screen_company_vektor_full_radar",
-    "label": "Vektor Heavy Industries Full Radar",
+    "label": "Vektor Full Radar",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_radar_static",
@@ -4642,7 +4642,7 @@
   },
   {
     "id": "screen_company_vektor_full_reactor",
-    "label": "Vektor Heavy Industries Full Reactor",
+    "label": "Vektor Full Reactor",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_reactor_static",
@@ -4650,7 +4650,7 @@
   },
   {
     "id": "screen_company_vektor_half_biology",
-    "label": "Vektor Heavy Industries Half Biology",
+    "label": "Vektor Half Biology",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_biology_static",
@@ -4659,7 +4659,7 @@
   },
   {
     "id": "screen_company_vektor_half_communications",
-    "label": "Vektor Heavy Industries Half Communications",
+    "label": "Vektor Half Communications",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_communications_static",
@@ -4668,7 +4668,7 @@
   },
   {
     "id": "screen_company_vektor_half_medical",
-    "label": "Vektor Heavy Industries Half Medical",
+    "label": "Vektor Half Medical",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_medical_static",
@@ -4677,7 +4677,7 @@
   },
   {
     "id": "screen_company_vektor_half_navigation",
-    "label": "Vektor Heavy Industries Half Navigation",
+    "label": "Vektor Half Navigation",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_navigation_static",
@@ -4686,7 +4686,7 @@
   },
   {
     "id": "screen_company_vektor_half_radar",
-    "label": "Vektor Heavy Industries Half Radar",
+    "label": "Vektor Half Radar",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_radar_static",
@@ -4695,7 +4695,7 @@
   },
   {
     "id": "screen_company_vektor_half_reactor",
-    "label": "Vektor Heavy Industries Half Reactor",
+    "label": "Vektor Half Reactor",
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_reactor_static",
