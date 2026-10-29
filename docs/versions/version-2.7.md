@@ -3,9 +3,46 @@
 Version 2.7 separates display artwork, frame finishes and redstone transmission,
 and expands the controls for moving mechanisms.
 
+Programmable glass, portholes and their diagonal variants have separate Front,
+Interior and Exterior finishes on top-level tabs. Older saved finishes keep
+their appearance until edited. Taxi collision preparation retains exact arm pose precision to keep grounded
+supports in contact during height changes. Interrupted saved Taxi height changes can recover
+from shallow support penetration when a clear, loaded exit exists. Parking
+paintings checks the restored blocks and other obstacles while excluding the
+craft being retired; failed transfers retain exactly one painting owner.
+
+Artwork pickers use short company names and explicit Full/Half frame labels,
+with the current selection revealed when switching tabs. Glass and unsplit
+screens offer full-height frames; split screens also support half-height frames.
+Padded and asymmetric frames preserve their borders and glass openings, and
+diagonal half consoles correctly sample native half-height control artwork.
+Carried paintings use the craft’s lighting. Supported integral landing-gear
+height changes can run while driving, with physical collision checks retained.
+
+Coupled sections recover from interrupted cross-chunk saves and rollbacks while
+retaining exact cargo ownership. Recovery journals and pending latch updates
+remain locked until their disk checkpoints complete. Transmitter editors reject
+discarded vehicle views, and rejected ramp requests preserve channel and analog
+settings. Diagonal frame caches distinguish both selected finishes.
+
+Vehicle light discovery retains only the nearest 32 candidates, and valid large
+display snapshots retain their internal lighting. Glass frames keep their outer
+edge beside Bare glass. Rejected arm settings leave the previous configuration
+intact, and rebuilding a transmitter dialog saves pending channel edits.
+
+Duplifier undo uses a bounded memory budget. If a large operation exceeds it,
+the settings still apply and the player is told that undo is unavailable.
+
+Vehicle light probes are removed when a craft becomes unavailable. Building
+compatibility checks reject overflowing screen dimensions and leave unloaded
+furniture-door neighbors unloaded.
+
 [Redstone Transmitters](../redstone-transmitters.md) carry channel lists and an
 outgoing range of 16, 64 or 256 blocks, or unlimited range within one dimension.
 Insert a transmitter into a transmitting block to enable channel output.
+Carried vehicle controllers receive ranged signals at their physical position.
+Replacing a shared screen transmitter refreshes every row output together.
+Handheld toggles retain unrelated saved sources without rebuilding their indexes.
 Receiver input channels and analog signal processing remain on the receiving
 block. Shift-right-click a transmitter to edit its channels; ordinary use toggles
 a saved signal at the point of use. A crafting-table copy preserves the central

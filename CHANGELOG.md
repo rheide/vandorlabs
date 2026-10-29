@@ -2,6 +2,28 @@
 
 ## 2.7 (in development)
 
+- Keep exact arm pose precision during background vehicle collision preparation so grounded Taxi supports cannot lose contact during height adjustments.
+
+- Separate Interior and Exterior finishes for programmable glass, portholes and diagonal variants; expose their finish controls as top-level tabs while preserving older saved appearances.
+- Recover safely from shallow saved Taxi support penetration before resuming an interrupted height change.
+- Exclude the retiring craft from painting restoration checks and restore painting ownership during caught transfer failures.
+
+- Correct padded screen frames, asymmetric glass openings and interior/porthole texture mapping; keep half-height frames in their supported screen layouts.
+- Shorten company artwork names, label Full/Half frames and reveal selected textures when switching picker tabs. Correct diagonal half-console artwork UVs.
+- Light carried paintings from the craft’s world view and allow supported integral landing-gear height changes while driving.
+
+- Recover coupled cargo after partial cross-chunk saves and interrupted rollback; durably retire recovery journals and checkpoint latch edits before releasing ownership.
+- Reject transmitter edits through discarded vehicle views, preserve channel/analog settings on rejected ramp requests, and distinguish diagonal frame cache entries by both selected finishes.
+
+- Bound nearest vehicle-light selection, support lighting across valid large display snapshots, and preserve glass frame edges beside Bare glass.
+- Preserve arm settings when a proposed configuration is rejected and save pending transmitter edits when dialog controls rebuild.
+- Bound Duplifier undo memory per player and across the server; oversized operations still apply settings and explicitly report that undo is unavailable.
+
+- Poll ranged vehicle-mode signals at the carried controller’s physical position. Use consistent shared-transmitter captions and one frame-owner lookup across settings, dialogs and packets.
+- Refresh all shared screen outputs when replacing a transmitter, release Duplifier undo history on logout/world unload, validate complete coupling signal journals before publication, and retain unchanged handheld redstone sources during local toggles.
+
+- Retire dynamic-light probes when their vehicle becomes unavailable; reject overflowing Galacticraft screen dimensions and avoid loading neighboring furniture-door chunks during validation.
+
 - Fix Ramp Controller analog and offset saving with channel lists, standalone Surface helipads, endpoint appearance flicker and folders-first texture browsing.
 - Share one transmitter across screen control rows while preserving their explicit channel targets. Keep removed modules absent across legacy migration and reserve old slot indices without duplicate inventory aliases.
 - Keep joined screen borders at their authored thickness, inset content by the border width and expose Bare alongside split-display settings.
