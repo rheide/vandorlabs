@@ -38,8 +38,12 @@ public final class GearStartLiveChecks {
                 boolean clear=true;for(net.minecraft.util.math.AxisAlignedBB box:source)if(box.shrink(.0001).intersects(cell)){clear=false;break;}if(!clear)continue;
                 world.setBlockState(at,Blocks.BEDROCK.getDefaultState(),3);
                 // A saved partial adjustment needs at least one reachable old step.
-                clear=GearGeometry.canMove(arm,1,1-1D/GearTileEntity.ANIMATION_TICKS);arm.riderPlan=null;
-                if(clear)return at;world.setBlockToAir(at);
+                boolean selected=false;
+                try{
+                    clear=GearGeometry.canMove(arm,1,1-1D/GearTileEntity.ANIMATION_TICKS);boolean laterBlocked=false;
+                    if(clear)for(int step=2;step<=GearTileEntity.ANIMATION_TICKS;step++)if(!GearGeometry.canMove(arm,1-(step-1)/(double)GearTileEntity.ANIMATION_TICKS,1-step/(double)GearTileEntity.ANIMATION_TICKS)){laterBlocked=true;break;}
+                    if(clear&&laterBlocked){selected=true;return at;}
+                }finally{arm.riderPlan=null;if(!selected)world.setBlockToAir(at);}
             }
         throw new IllegalStateException("No late obstacle clear of the actual 45 degree source pose: "+source);
     }
@@ -83,6 +87,7 @@ public final class GearStartLiveChecks {
                 net.minecraft.util.math.AxisAlignedBB box=ArmOrientation.box(face,new net.minecraft.util.math.AxisAlignedBB(end.minX,end.minY,end.minZ,end.maxX,end.maxY,end.maxZ)).offset(ROOT);
                 obstruction=new BlockPos((box.minX+box.maxX)/2,(box.minY+box.maxY)/2,(box.minZ+box.maxZ)/2);
                 require(!arm.members().contains(obstruction)&&!obstruction.equals(ROOT.offset(face,2)),"late obstacle is outside source and arm cells");
+                require(world.isAirBlock(obstruction),"initial obstacle is clear of every native source cell");
                 world.setBlockState(obstruction,Blocks.BEDROCK.getDefaultState(),3);
                 stage=10;ticks=80;return false;
             }
