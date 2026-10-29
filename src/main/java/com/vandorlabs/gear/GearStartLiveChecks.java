@@ -12,7 +12,7 @@ import net.minecraft.world.WorldServer;
 /** Changing the source endpoint uses the same journal and collision path as an ordinary stroke. */
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class GearStartLiveChecks {
-    private static int fixture,stage,ticks;
+    private static int fixture=Integer.getInteger("vandorlabs.armStartFixture",0),stage,ticks;
     private static BlockPos obstruction;
     private static final BlockPos ROOT=new BlockPos(620,170,260);
     private static void require(boolean ok,String reason){if(!ok)throw new IllegalStateException("start-angle fixture="+fixture+" stage="+stage+" ticks="+ticks+": "+reason);}
@@ -63,11 +63,32 @@ public final class GearStartLiveChecks {
             if(stage==1&&arm.physicalStartAngle()==90&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){
                 require(arm.pose(1).angleDegrees()==90&&arm.pose(0).angleDegrees()==-90,"separate configured endpoints");
                 NBTTagCompound saved=arm.writeToNBT(new NBTTagCompound());GearTileEntity reloaded=(GearTileEntity)net.minecraft.tileentity.TileEntity.create(world,saved);require(reloaded!=null&&reloaded.startAngle()==90&&reloaded.configuredEndAngle()==-90,"saved endpoints survive reload");
-                arm.target(false);stage=2;return false;
+                NBTTagCompound options=arm.settings();options.setDouble("StartAngle",45);arm.configure(options);stage=20;return false;
+            }
+            if(stage==20&&arm.physicalStartAngle()==45&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){
+                require(arm.payload()!=null&&!arm.payload().materialized(),"arbitrary 45 degree pose keeps one captured attachment");
+                require(com.vandorlabs.container.ContainerModularGear.resolve(actor,world,ROOT.getX(),ROOT.getY(),ROOT.getZ())!=null,"dialog remains available at arbitrary stationary angle");
+                world.setBlockState(obstruction,Blocks.BEDROCK.getDefaultState(),3);
+                NBTTagCompound options=arm.settings();options.setDouble("StartAngle",90);arm.configure(options);stage=21;return false;
+            }
+            if(stage==21){
+                require(arm.progress()==1,"blocked adjustment from arbitrary angle does not move");
+                if(!arm.target()||ArmTransactions.locked(world,ROOT))return false;
+                require(arm.physicalStartAngle()==45&&arm.startAngle()==45&&arm.payload()!=null&&!arm.payload().materialized(),"blocked arbitrary Start restores settings and captured ownership");
+                // Load the old release's blocked partial adjustment, keeping the
+                // actual captured attachment rather than a matrix-only fake.
+                NBTTagCompound options=arm.settings();options.setDouble("StartAngle",90);arm.configure(options);arm.captureProgress(.75);arm.captureBlocked(true);
+                NBTTagCompound stuck=arm.writeToNBT(new NBTTagCompound());arm.readFromNBT(stuck);arm.operator(actor);arm.onLoad();stage=30;return false;
+            }
+            if(stage==30&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){
+                require(arm.startAngle()==45&&arm.physicalStartAngle()==45&&arm.configuredEndAngle()==-90,"saved blocked adjustment returns to previous endpoint and clears setting");
+                require(arm.payload()!=null&&!arm.payload().materialized(),"legacy partial adjustment retains exactly one captured attachment");
+                require(com.vandorlabs.container.ContainerModularGear.resolve(actor,world,ROOT.getX(),ROOT.getY(),ROOT.getZ())!=null,"recovered saved adjustment permits configuration and retry");
+                world.setBlockToAir(obstruction);arm.target(false);stage=2;return false;
             }
             if(stage==2&&arm.progress()==0&&!ArmTransactions.locked(world,ROOT)){require(arm.pose(0).angleDegrees()==-90,"configured end angle reached");arm.target(true);stage=3;return false;}
             if(stage==3&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){
-                require(arm.pose(1).angleDegrees()==90&&arm.payload()!=null,"reversal reaches configured source with retained ownership");
+                require(arm.pose(1).angleDegrees()==45&&arm.payload()!=null,"reversal reaches configured source with retained ownership");
                 System.out.println("[vandorlabs][reprolab] arm-start case PASS fixture="+fixture);fixture++;stage=0;ticks=80;
             }
             return false;
