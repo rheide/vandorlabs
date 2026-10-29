@@ -14,7 +14,13 @@ import net.minecraft.world.WorldServer;
 public final class GearPushLiveChecks {
     private static int fixture=Integer.getInteger("vandorlabs.armPushFixture",0),stage,ticks;
     private static final BlockPos ROOT=new BlockPos(620,170,260);
+    private static BlockPos scale(BlockPos p,int n){return new BlockPos(p.getX()*n,p.getY()*n,p.getZ()*n);}
     private static void require(boolean ok,String reason){if(!ok)throw new IllegalStateException("push fixture="+fixture+" stage="+stage+" ticks="+ticks+": "+reason);}
+    private static BlockPos side(EnumFacing face,int x,int z){
+        BlockPos u=ArmOrientation.vector(face,new BlockPos(1,0,0)),v=ArmOrientation.vector(face,new BlockPos(0,0,1));
+        if(u.compareTo(BlockPos.ORIGIN)<0)u=scale(u,-1);if(v.compareTo(BlockPos.ORIGIN)<0)v=scale(v,-1);
+        return scale(u,x).add(scale(v,z));
+    }
     public static boolean tick(Minecraft mc)throws Exception{
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;}
         if(ticks<80)return false;
@@ -31,14 +37,14 @@ public final class GearPushLiveChecks {
                 arm=(GearTileEntity)world.getTileEntity(ROOT);arm.operator(actor);require(arm.rebuild(),"native arm forms "+arm.error());
                 if(fixture>=8){
                     for(int x:new int[]{0,2})for(int z:fixture>=16?new int[]{0,2}:new int[]{0}){
-                        BlockPos base=ROOT.add(ArmOrientation.vector(face,new BlockPos(x,0,z)));
+                        BlockPos base=ROOT.add(side(face,x,z));
                         if(!base.equals(ROOT)){
                             world.setBlockState(base.offset(face.getOpposite()),Blocks.STONE.getDefaultState(),3);
                             for(int n=0;n<4;n++)require(((ItemBlock)Item.getItemFromBlock(block)).placeBlockAt(new ItemStack(block),actor,world,base.offset(face,n),face,.5F,.5F,.5F,block.getDefaultState()),"ordinary joined column placement");
                         }
                         GearTileEntity member=(GearTileEntity)world.getTileEntity(base);member.operator(actor);require(member.rebuild(),"joined column forms");NBTTagCompound settings=member.settings();settings.setBoolean("JoinArms",true);member.configure(settings);
                     }
-                    for(int x=0;x<=2;x++)for(int z=0;z<=(fixture>=16?2:0);z++)world.setBlockState(ROOT.offset(face,4).add(ArmOrientation.vector(face,new BlockPos(x,0,z))),net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState(),3);
+                    for(int x=0;x<=2;x++)for(int z=0;z<=(fixture>=16?2:0);z++)world.setBlockState(ROOT.offset(face,4).add(side(face,x,z)),net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState(),3);
                     require(arm.rebuild()&&arm.columns().size()==(fixture>=16?4:2),"joined group forms before motion");
                 }
                 world.setBlockState(ROOT.offset(face,4),net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState(),3);world.setBlockState(ROOT.offset(face,4).up(),net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState(),3);arm.target(false);stage=1;ticks=80;return false;
@@ -60,7 +66,7 @@ public final class GearPushLiveChecks {
             }
             if(stage==3&&arm.progress()==0&&!ArmTransactions.locked(world,ROOT)){
                 require(world.getBlockState(ROOT.offset(face,1)).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(ROOT.offset(face,1).up()).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface&&world.getBlockState(ROOT.offset(face,5).up()).getBlock()==Blocks.IRON_BLOCK,"retraction returns original Surface layer and leaves contacted blocks "+arm.error());
-                if(fixture>=8)for(int x=0;x<=2;x++)for(int z=0;z<=(fixture>=16?2:0);z++)require(world.getBlockState(ROOT.offset(face,1).add(ArmOrientation.vector(face,new BlockPos(x,0,z)))).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface,"every joined original Surface returns natively");
+                if(fixture>=8)for(int x=0;x<=2;x++)for(int z=0;z<=(fixture>=16?2:0);z++)require(world.getBlockState(ROOT.offset(face,1).add(side(face,x,z))).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface,"every joined original Surface returns natively");
                 require(world.getBlockState(ROOT.offset(face.getOpposite())).getBlock()==Blocks.STONE,"mounting support remains in place");fixture++;stage=0;ticks=80;
             }
             return false;

@@ -15,6 +15,7 @@ public final class GearStartLiveChecks {
     private static int fixture=Integer.getInteger("vandorlabs.armStartFixture",0),stage,ticks;
     private static BlockPos obstruction;
     private static final BlockPos ROOT=new BlockPos(620,170,260);
+    private static BlockPos scale(BlockPos p,int n){return new BlockPos(p.getX()*n,p.getY()*n,p.getZ()*n);}
     private static void require(boolean ok,String reason){if(!ok)throw new IllegalStateException("start-angle fixture="+fixture+" stage="+stage+" ticks="+ticks+": "+reason);}
     public static boolean tick(Minecraft mc)throws Exception{
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;}
@@ -34,11 +35,12 @@ public final class GearStartLiveChecks {
                 net.minecraft.block.Block payload=fixture>=24?net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface"):Blocks.IRON_BLOCK;
                 world.setBlockState(ROOT.offset(face,2),payload.getDefaultState(),3);
                 if(fixture>=24){
-                    BlockPos side=ArmOrientation.vector(face,new BlockPos(2,0,0));
+                    BlockPos unit=ArmOrientation.vector(face,new BlockPos(1,0,0));if(unit.compareTo(BlockPos.ORIGIN)<0)unit=scale(unit,-1);
+                    BlockPos side=scale(unit,2);
                     BlockPos second=ROOT.add(side);world.setBlockState(second.offset(face.getOpposite()),Blocks.STONE.getDefaultState(),3);
                     for(int n=0;n<2;n++)require(((ItemBlock)Item.getItemFromBlock(block)).placeBlockAt(new ItemStack(block),actor,world,second.offset(face,n),face,.5F,.5F,.5F,block.getDefaultState()),"ordinary joined placement");
                     for(BlockPos base:new BlockPos[]{ROOT,second}){GearTileEntity member=(GearTileEntity)world.getTileEntity(base);member.operator(actor);require(member.rebuild(),"joined arm forms");options=member.settings();options.setBoolean("JoinArms",true);options.setBoolean("RotatePayload",fixture%24<12);member.configure(options);}
-                    for(int n=0;n<=2;n++)world.setBlockState(ROOT.offset(face,2).add(ArmOrientation.vector(face,new BlockPos(n,0,0))),payload.getDefaultState(),3);
+                    for(int n=0;n<=2;n++)world.setBlockState(ROOT.offset(face,2).add(scale(unit,n)),payload.getDefaultState(),3);
                     require(arm.rebuild()&&arm.columns().size()==2,"joined line shares one root");
                 }
                 options=arm.settings();options.setDouble("StartAngle",90);options.setDouble("ActiveAngle",-90);arm.configure(options);
