@@ -19,7 +19,7 @@ public final class TransmitterSlots {
     /** Canonicalize a previous save without changing its opaque capabilities or caller-owned NBT. */
     public static NBTTagCompound normalize(NBTTagCompound source){
         String id=source.getString("id");
-        if(id.equals("vandorlabs:programmable_viewscreen"))source=sharedScreen(source);
+        if(id.equals("vandorlabs:programmable_viewscreen")&&source.hasKey(SCHEMA))return sharedScreen(source);
         if(!id.startsWith("vandorlabs:")||!OUTPUT_TYPES.contains(id.substring(11))||source.hasKey(SCHEMA))return source;
         if(!source.hasKey("x",3)||!source.hasKey("y",3)||!source.hasKey("z",3))return source;
         NBTTagCompound tag=source.copy();written(tag);
@@ -63,16 +63,18 @@ public final class TransmitterSlots {
 
     /** Move one old per-row module; all surplus items remain saved for normal block drops. */
     private static NBTTagCompound sharedScreen(NBTTagCompound source){
-        NBTTagCompound old=source.getCompoundTag("ForgeData").getCompoundTag(KEY);
-        if(old.hasKey("main",10))return source;
+        NBTTagCompound originalForge=source.getCompoundTag("ForgeData");
+        if(originalForge.getBoolean("VandorSharedScreenTransmitter"))return source;
+        NBTTagCompound result=source.copy(),forge=result.getCompoundTag("ForgeData");forge.setBoolean("VandorSharedScreenTransmitter",true);result.setTag("ForgeData",forge);
+        NBTTagCompound old=forge.getCompoundTag(KEY);
+        if(old.hasKey("main",10))return result;
         String best=null;int range=-2;
         for(String key:new java.util.TreeSet<>(old.getKeySet()))if(key.startsWith("row_")){
             ItemStack item=new ItemStack(old.getCompoundTag(key));int candidate=ItemRedstoneTransmitter.range(item);if(candidate==0)candidate=Integer.MAX_VALUE;
             if(ItemRedstoneTransmitter.valid(item)&&candidate>range){best=key;range=candidate;}
         }
-        if(best==null)return source;
-        NBTTagCompound result=source.copy(),slots=result.getCompoundTag("ForgeData").getCompoundTag(KEY);
-        slots.setTag("main",slots.getTag(best));slots.removeTag(best);return result;
+        if(best==null)return result;
+        old.setTag("main",old.getTag(best));old.removeTag(best);return result;
     }
     private static void migrateSlot(NBTTagCompound slots,String key,ChannelList channels){
         if(channels.isEmpty()||slots.hasKey(key,10))return;

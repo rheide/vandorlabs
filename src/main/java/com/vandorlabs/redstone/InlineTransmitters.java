@@ -31,7 +31,8 @@ public final class InlineTransmitters {
         public final Map<Integer,ModuleSlot> modules=new LinkedHashMap<>();
         public final List<VisibleSlot> hotbar=new ArrayList<>();
         Binding(Container container){owner=new WeakReference<>(container);}
-        public RedstoneChannelMember source(int selector){Container container=owner.get();return container==null?null:ContainerTransmitterSlot.resolve(com.vandorlabs.network.MessageTransmitterSlot.openedTile(container),selector);}
+        /** Old row slots retain their indices but never alias the shared module inventory. */
+        public RedstoneChannelMember source(int selector){Container container=owner.get();if(container instanceof ContainerAnimatedScreenSelector&&selector>=1&&selector<=16)return null;return container==null?null:ContainerTransmitterSlot.resolve(com.vandorlabs.network.MessageTransmitterSlot.openedTile(container),selector);}
         public boolean usable(EntityPlayer player){Container container=owner.get();return container!=null&&player.openContainer==container&&container.canInteractWith(player);}
         void add(int selector){Container container=owner.get();if(container==null)return;ModuleSlot slot=new ModuleSlot(this,selector);modules.put(selector,slot);append(container,slot);}
         public void hide(){for(ModuleSlot slot:modules.values()){slot.visible=false;slot.xPos=slot.yPos=-10000;}for(VisibleSlot slot:hotbar){slot.visible=false;slot.xPos=slot.yPos=-10000;}}
