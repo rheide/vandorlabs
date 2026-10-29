@@ -98,7 +98,17 @@ public final class GearStartLiveChecks {
                 require(arm.physicalStartAngle()==45&&arm.startAngle()==45&&arm.payload()!=null&&!arm.payload().materialized(),"blocked arbitrary Start restores settings and captured ownership");
                 // Load the old release's blocked partial adjustment, keeping the
                 // actual captured attachment rather than a matrix-only fake.
-                NBTTagCompound options=arm.settings();options.setDouble("StartAngle",90);arm.configure(options);arm.captureProgress(.75);arm.captureBlocked(true);
+                NBTTagCompound options=arm.settings();options.setDouble("StartAngle",90);arm.configure(options);
+                double lastClear=1;boolean blocked=false;
+                for(int step=1;step<=GearTileEntity.ANIMATION_TICKS;step++){
+                    double next=1-step/(double)GearTileEntity.ANIMATION_TICKS;
+                    if(!GearGeometry.canMove(arm,lastClear,next)){blocked=true;break;}lastClear=next;
+                }
+                arm.riderPlan=null;
+                require(blocked&&lastClear>0&&lastClear<1,"old step sequence must have a clear partial pose before its first obstruction; lastClear="+lastClear);
+                for(net.minecraft.util.math.AxisAlignedBB box:GearGeometry.boxes(arm,lastClear))require(GearGeometry.foreign(world,arm,box.shrink(.0001)).isEmpty(),"saved old pose is geometrically clear before recovery: pose="+lastClear+" box="+box);
+                require(!GearGeometry.canMove(arm,lastClear,Math.max(0,lastClear-1D/GearTileEntity.ANIMATION_TICKS)),"next old outward step is blocked");arm.riderPlan=null;
+                arm.captureProgress(lastClear);arm.captureBlocked(true);
                 NBTTagCompound stuck=arm.writeToNBT(new NBTTagCompound());arm.readFromNBT(stuck);arm.operator(actor);arm.onLoad();stage=30;return false;
             }
             if(stage==30&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){
