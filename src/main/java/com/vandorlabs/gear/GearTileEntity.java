@@ -125,7 +125,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private EnumFacing mountDirection=EnumFacing.DOWN;
     private NBTTagCompound taxiState;
     private boolean taxiClearPending;
-    private void validateTaxiState(NBTTagCompound state){GearTaxiState.validate(state);int expected=state.getInteger("Height")-(state.getInteger("Phase")==1?state.getInteger("Amount"):0);if(assembly==null||assembly.columnHeight()!=expected||assembly.kind()!=GearTopology.FootKind.WHEEL||mode!=GearMotion.Mode.EXTEND||mountDirection!=EnumFacing.DOWN||columns.size()!=1)throw new IllegalArgumentException("Taxi arm topology does not match its retained sections");}
+    private void validateTaxiState(NBTTagCompound state){GearTaxiState.validate(state);int expected=state.getInteger("Height")-(state.getInteger("Phase")==1?state.getInteger("Amount"):0);if(assembly==null||assembly.columnHeight()!=expected||(assembly.kind()!=GearTopology.FootKind.WHEEL&&assembly.kind()!=GearTopology.FootKind.TRACK)||mode!=GearMotion.Mode.EXTEND||mountDirection!=EnumFacing.DOWN||columns.size()!=1)throw new IllegalArgumentException("Taxi arm topology does not match its retained sections");}
     public boolean validTaxiState(){if(taxiState==null||failedPayload!=null||failedStoredSections!=null||storedSections!=null||payload!=null||!isOperational())return false;try{validateTaxiState(taxiState);return true;}catch(RuntimeException invalid){return false;}}
     public boolean hasTaxiSections(){if(taxiState==null||taxiState.getInteger("Phase")!=1)return false;try{GearTaxiState.validate(taxiState);return true;}catch(RuntimeException invalid){return false;}}
     public int taxiHeight(){return taxiState==null?0:taxiState.getInteger("Height");}

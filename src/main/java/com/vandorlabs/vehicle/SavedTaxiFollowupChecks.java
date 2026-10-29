@@ -68,6 +68,28 @@ public final class SavedTaxiFollowupChecks {
     private static List<GearTileEntity> roots(EntityGroundVehicle craft){List<GearTileEntity> result=new ArrayList<>();for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&((GearTileEntity)raw).isController()&&((GearTileEntity)raw).isLandingAssembly())result.add((GearTileEntity)raw);return result;}
     private static double[] feet(EntityGroundVehicle craft){return roots(craft).stream().mapToDouble(g->{double low=Double.POSITIVE_INFINITY;for(AxisAlignedBB box:GearGeometry.boxes(g,g.progress()))low=Math.min(low,box.minY);return Math.rint((low+craft.posY)*100000)/100000;}).sorted().toArray();}
     private static TileEntityCockpit cockpit(EntityGroundVehicle craft){for(TileEntity raw:craft.view.tiles.values())if(raw instanceof TileEntityCockpit)return (TileEntityCockpit)raw;throw new IllegalStateException("Saved cockpit missing");}
+    private static void taxiRoundTrips(EntityGroundVehicle craft){
+        for(GearTileEntity root:roots(craft))for(int phase:new int[]{0,1}){
+            VehicleStructure.Cell source=craft.structure.at(root.getPos());NBTTagCompound data=root.writeToNBT(new NBTTagCompound()),original=source.tileData();
+            if(original.hasKey("ForgeCaps"))data.setTag("ForgeCaps",original.getTag("ForgeCaps").copy());
+            NBTTagCompound motion=new NBTTagCompound();motion.setInteger("Schema",1);motion.setInteger("Phase",phase);motion.setInteger("Height",2);motion.setInteger("Amount",1);motion.setDouble("Level",phase);motion.setBoolean("Expand",false);
+            if(phase==1){
+                VehicleStructure.Cell section=craft.structure.at(root.getPos().down());require(section!=null,"actual saved retained arm section");
+                motion.setTag("Sections",ArmStoredSections.retain(Collections.singletonList(new VehicleStructure.Cell(section.pos.subtract(root.getPos()),section.state,VehicleTileData.translated(section.tileData(),BlockPos.ORIGIN.subtract(root.getPos()))))));
+                data.setInteger("GearHeight",1);data.setBoolean("GearTargetDeployed",false);NBTTagList feet=data.getTagList("GearFeet",11),moved=new NBTTagList();for(int n=0;n<feet.tagCount();n++){int[] foot=feet.getIntArrayAt(n);moved.appendTag(new NBTTagIntArray(new int[]{foot[0],foot[1]+1,foot[2]}));}data.setTag("GearFeet",moved);
+            }
+            data.setTag(GearTaxiState.KEY,motion);GearTileEntity loaded=(GearTileEntity)TileEntity.create(craft.view,data.copy());require(loaded!=null,"retained TRACK factory");
+            NBTTagCompound after=loaded.writeToNBT(new NBTTagCompound());StringBuilder difference=new StringBuilder();Set<String> keys=new TreeSet<>(data.getKeySet());keys.addAll(after.getKeySet());for(String key:keys)if(!Objects.equals(data.getTag(key),after.getTag(key)))difference.append(key).append(':').append(data.getTag(key)).append(" -> ").append(after.getTag(key)).append(';');
+            require(loaded.validTaxiState(),"retained TRACK phase "+phase+" rejected: "+difference);
+            MovingBlockSupport.requireExactTileData(new VehicleStructure.Cell(source.pos,source.state,data),loaded);
+            for(String corruption:new String[]{"kind","feet","columns"}){
+                NBTTagCompound invalid=data.copy();if(corruption.equals("kind"))invalid.setString("GearKind","NONE");else if(corruption.equals("feet"))invalid.setTag("GearFeet",new NBTTagList());else{NBTTagList columns=invalid.getTagList("GearColumns",11).copy();columns.appendTag(new NBTTagIntArray(new int[]{1,0,0}));invalid.setTag("GearColumns",columns);}
+                GearTileEntity refused=(GearTileEntity)TileEntity.create(craft.view,invalid);require(refused!=null&&!refused.validTaxiState()&&!refused.isOperational(),"malformed retained TRACK "+corruption+" stays inert in phase "+phase);
+                boolean rejected=false;try{MovingBlockSupport.requireExactTileData(new VehicleStructure.Cell(source.pos,source.state,invalid),refused);}catch(IllegalArgumentException expected){rejected=true;}require(rejected,"malformed TRACK own-field rewrite remains refused: "+corruption);
+            }
+        }
+        System.out.println("[vandorlabs][reprolab] saved-track-taxi-nbt PASS original-one-three-three-footprints phase0 phase1 strict-own-fields invalid-kind-feet-columns inert");
+    }
     private static void control(EntityGroundVehicle craft,boolean on){craft.signals.tick();TileEntityCockpit.Control control=cockpit(craft).control("screen_left/0");require(control!=null&&control.getRedstoneChannels().contains(776),"saved Gear control uses channel 776");craft.signals.activateCockpit(control,on?15:0);craft.signals.tick();for(GearTileEntity gear:roots(craft))gear.input();}
     private static void settle(EntityGroundVehicle craft,boolean expanded)throws Exception{
         for(int tick=0;tick<1000;tick++){craft.signals.tick();ModularGearVehicles.tick(craft);boolean done=true;for(GearTileEntity gear:roots(craft)){int phase=gear.taxiPhase();done&=expanded?phase<0:phase==1;}if(done)return;Thread.sleep(2);}
@@ -96,7 +118,7 @@ public final class SavedTaxiFollowupChecks {
                 load(world,"tracks");EntityGroundVehicle craft=assemble(world,actor,new BlockPos(-163,85,190));
                 require(roots(craft).size()==3&&roots(craft).stream().allMatch(g->g.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.TRACK),"actual three TRACK assemblies");
                 require(roots(craft).stream().mapToInt(g->g.assembly().feet().size()).sum()==7,"actual one/three/three track footprints");
-                double initial=craft.posY;double[] foot=feet(craft);int material=craft.structure.cells.size();control(craft,true);control(craft,false);settle(craft,false);
+                taxiRoundTrips(craft);double initial=craft.posY;double[] foot=feet(craft);int material=craft.structure.cells.size();control(craft,true);control(craft,false);settle(craft,false);
                 require(Math.abs(craft.posY-(initial-1))<1e-6&&Arrays.equals(foot,feet(craft)),"exact saved chassis descends one block with anchored tracks");
                 NBTTagCompound shortSaved=craft.structure.write();craft.install(VehicleStructure.read(shortSaved));require(shortSaved.equals(craft.structure.write()),"shortened saved track section ownership reload");
                 BlockPos controller=new BlockPos(craft.toWorld(new Vec3d(craft.structure.controller().pos).addVector(.5,.5,.5)));park(world,actor,craft);craft=assemble(world,actor,controller);
