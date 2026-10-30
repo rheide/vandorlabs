@@ -31,7 +31,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         textures=HousingTextureList.forCanopy(guiLeft+12,guiTop+54,leftWidth,shade,draft.material)
                 .visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(this::choose).keepView(previous);
         boolean redstoneControls=tile.resizable()||tile.block().opening();
-        buttonList.add(layout.tab(90,0,redstoneControls?2:1,"Canopy"));if(redstoneControls)buttonList.add(layout.tab(91,1,2,"Redstone"));
+        buttonList.add(layout.fullTab(90,0,redstoneControls?2:1,"Canopy"));if(redstoneControls)buttonList.add(layout.fullTab(91,1,2,"Redstone"));
         for(GuiButton button:buttonList)if(button.id==90+page)button.enabled=false;
         int y=54;
         if(page==0){
@@ -51,8 +51,8 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         }
         }
         if(page==1 && (tile.resizable() || tile.block().opening())){
-            buttonList.add(RedstoneActivationButton.from(layout.control(7,y,""),!draft.redstone?0:draft.activateOnPower?1:2));y+=22;
-            channelLabelX=layout.controlsX;channelLabelY=guiTop+82;channels=new GuiTextField(10,fontRenderer,layout.controlsX,guiTop+94,154,18);ChannelFields.configure(channels);channels.setText(text);
+            buttonList.add(new RedstoneActivationButton(7,guiLeft+12,guiTop+96,xSize-24,!draft.redstone?0:draft.activateOnPower?1:2));y+=22;
+            channelLabelX=guiLeft+12;channelLabelY=guiTop+54;channels=new GuiTextField(10,fontRenderer,guiLeft+12,guiTop+68,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);
 
         }else channels=null;
         buttonList.add(layout.done(8));ready=true;

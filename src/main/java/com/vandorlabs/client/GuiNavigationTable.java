@@ -25,13 +25,13 @@ public class GuiNavigationTable extends GuiMaterialPicker {
         String text=channels==null?ChannelFields.text(tile.getRedstoneChannels()):channels.getText();panel=new ProgrammableDialogLayout(width,height);
         xSize=panel.width;ySize=panel.height;super.initGui();buttonList.clear();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
         textures=choices.length==0||enginePane()||redstonePane()?null:HousingTextureList.forDisplay(panel.listX,panel.top+58,panel.listWidth,texture,(panel.height-72)/12,tile.nativeArtwork()).keepView(textures).custom(value->{choose(value);save();});
-        for(int i=0;i<=redstoneTab();i++){GuiButton tab=panel.tab(20+i,i,redstoneTab()+1,i==redstoneTab()?"Redstone":i==choices.length?"Engine":tile.surfaceLabel(i));tab.enabled=i!=surface;buttonList.add(tab);}
+        for(int i=0;i<=redstoneTab();i++){GuiButton tab=panel.fullTab(20+i,i,redstoneTab()+1,i==redstoneTab()?"Redstone":i==choices.length?"Engine":tile.surfaceLabel(i));tab.enabled=i!=surface;buttonList.add(tab);}
         int[] controls=redstonePane()?(drive?(((TileEntityConstructor)tile).driveHasParticles()?new int[]{1,16,9,11}:new int[]{1,16,9}):new int[]{1}):enginePane()?(((TileEntityConstructor)tile).driveHasParticles()?new int[]{10}:new int[0]):new int[]{3,4};
-        for(int id:controls){GuiButton button=panel.control(id,controlY(id),"");if(id==1||id==16)button=RedstoneActivationButton.from(button,id==16?"Engine":"Activation",id==16?(engine.inverted?2:1):(redstone?1:0));if(panel.height<280)button.height=18;buttonList.add(button);}
-        channels=new GuiTextField(6,fontRenderer,panel.controlsX,panel.top+channelY(),ProgrammableDialogLayout.CONTROLS_WIDTH,18);ChannelFields.configure(channels);channels.setText(text);channels.setVisible(redstonePane());channels.setFocused(false);buttonList.add(panel.done(7));labels();
+        for(int id:controls){GuiButton button=redstonePane()?new net.minecraftforge.fml.client.config.GuiButtonExt(id,guiLeft+12,guiTop+controlY(id),xSize-24,20,""):panel.control(id,controlY(id),"");if(id==1||id==16)button=RedstoneActivationButton.from(button,id==16?"Engine":"Activation",id==16?(engine.inverted?2:1):(redstone?1:0));if(panel.height<280)button.height=18;buttonList.add(button);}
+        channels=new GuiTextField(6,fontRenderer,guiLeft+12,panel.top+channelY(),xSize-24,18);ChannelFields.configure(channels);channels.setText(text);channels.setVisible(redstonePane());channels.setFocused(false);buttonList.add(panel.done(7));labels();
     }
-    int controlY(int id){int index=redstonePane()?(id==1?0:id==16?1:id==9?2:3):enginePane()?0:id==3?0:1;return 62+index*(panel.height<280?20:24);}
-    private int channelLabelY(){return panel.height<280?156:174;}
+    int controlY(int id){int index=redstonePane()?(id==1?0:id==16?1:id==9?2:3):enginePane()?0:id==3?0:1;return (redstonePane()?96:62)+index*(panel.height<280?20:24);}
+    private int channelLabelY(){return 54;}
     private int channelY(){return channelLabelY()+14;}
     private int filterLabelY(){return panel.height<280?172:196;}
     int filterY(){return panel.height<280?184:210;}
@@ -52,7 +52,7 @@ public class GuiNavigationTable extends GuiMaterialPicker {
     @Override public void updateScreen(){channels.updateCursorCounter();}
     @Override public void onGuiClosed(){org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+26,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize,26);if(textures!=null)textures.draw(fontRenderer,x,y);else if(!enginePane()&&!redstonePane())fontRenderer.drawString("No screen surfaces",panel.listX,panel.top+38,0xabcfe8);}
-    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getBlockType().getLocalizedName(),12,10,0xffffff);if(redstonePane())fontRenderer.drawString("Receive channels",panel.controlsX-guiLeft,channelLabelY(),0xffffff);if(enginePane())fontRenderer.drawSplitString((((TileEntityConstructor)tile).driveHasParticles()?"Decorative drive. Redstone controls activation, brightness and exhaust. It supplies no vehicle thrust.":"Decorative drive. Redstone controls activation and light brightness. It supplies no vehicle thrust."),12,64,panel.listWidth,0xabcfe8);}
+    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getBlockType().getLocalizedName(),12,10,0xffffff);if(redstonePane())fontRenderer.drawString("Receive channels",12,channelLabelY(),0xffffff);if(enginePane())fontRenderer.drawSplitString((((TileEntityConstructor)tile).driveHasParticles()?"Decorative drive. Redstone controls activation, brightness and exhaust. It supplies no vehicle thrust.":"Decorative drive. Redstone controls activation and light brightness. It supplies no vehicle thrust."),12,64,panel.listWidth,0xabcfe8);}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);GlStateManager.disableLighting();GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

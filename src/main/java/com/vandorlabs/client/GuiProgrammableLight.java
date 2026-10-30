@@ -55,7 +55,7 @@ public final class GuiProgrammableLight extends GuiContainer {
     @Override public void initGui() {
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+76,154,18);
+        channelField=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+68,xSize-24,18);
         ChannelFields.configure(channelField);
         channelField.setText(ChannelFields.text(tile.getRedstoneChannels()));
         channelField.setFocused(false);
@@ -66,7 +66,7 @@ public final class GuiProgrammableLight extends GuiContainer {
                 .custom(value->{housing=value;tile.setHousingTexture(value);send();});
         buttonList.add(layout.fullTab(90,0,4,"ON"));buttonList.add(layout.fullTab(91,1,4,"OFF"));buttonList.add(layout.fullTab(92,2,4,"Sides"));
         buttonList.add(layout.fullTab(93,3,4,"Redstone"));
-        buttonList.add(layout.control(101,54,joinLabel()));buttonList.add(RedstoneActivationButton.from(layout.control(102,100,""),signalBrightness?3:trigger));
+        buttonList.add(layout.control(101,54,joinLabel()));buttonList.add(new RedstoneActivationButton(102,guiLeft+12,guiTop+96,xSize-24,signalBrightness?3:trigger));
 
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableLightFrame)buttonList.add(layout.control(103,76,sizeLabel()));
         if(editingOff){GuiButton automatic=layout.control(105,96,offSelected<0?"OFF: Automatic":"Use automatic OFF");automatic.enabled=offSelected>=0;buttonList.add(automatic);}else buttonList.add(layout.control(104,96,sidesLabel()));buttonList.add(layout.done(100));refreshTabs();
@@ -208,7 +208,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         int thumb=sliderX+Math.round(SLIDER_W*(signalBrightness?(offset+15)/2F:level)/15F);
         drawRect(thumb-3,guiTop+152,thumb+3,guiTop+166,0xFFB8D7E8);
         }
-        if(textureTab==3){fontRenderer.drawString("Receive channels",layout.controlsX,guiTop+62,0xDAE8F0);
+        if(textureTab==3){fontRenderer.drawString("Receive channels",guiLeft+12,guiTop+54,0xDAE8F0);
         }
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();if(textureTab==3)channelField.drawTextBox();
     }

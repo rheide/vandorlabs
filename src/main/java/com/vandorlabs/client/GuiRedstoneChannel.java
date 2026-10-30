@@ -95,16 +95,16 @@ public class GuiRedstoneChannel extends GuiContainer {
         String draft=channelField==null?ChannelFields.text(member.getRedstoneChannels()):channelField.getText();
         if(thruster){layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;}else {xSize=280;ySize=pilotSeat?(!inspectionStatus.isEmpty()?300:226):adjustableBase?232:230;}
         super.initGui();buttonList.clear();housingList=null;Keyboard.enableRepeatEvents(true);
-        int tx=thruster?layout.controlsX:guiLeft+116,tw=thruster?154:xSize-130;
-        channelField=new GuiTextField(0,fontRenderer,tx,guiTop+64,tw,18);ChannelFields.configure(channelField);channelField.setText(draft);channelField.setVisible(page==1&&!transmitterControl());channelField.setFocused(page==1&&!transmitterControl());
-        if(generalPage())buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+30,100,20,"General"));
-        buttonList.add(new DialogTabButton(101,guiLeft+(generalPage()?116:12),guiTop+30,100,20,"Redstone"));
+        int tx=thruster?guiLeft+12:guiLeft+116,tw=thruster?xSize-24:xSize-130;
+        channelField=new GuiTextField(0,fontRenderer,tx,guiTop+(thruster?68:64),tw,18);ChannelFields.configure(channelField);channelField.setText(draft);channelField.setVisible(page==1&&!transmitterControl());channelField.setFocused(page==1&&!transmitterControl());
+        if(generalPage())buttonList.add(thruster?layout.fullTab(100,0,2,"General"):new DialogTabButton(100,guiLeft+12,guiTop+30,100,20,"General"));
+        buttonList.add(thruster?layout.fullTab(101,1,2,"Redstone"):new DialogTabButton(101,guiLeft+(generalPage()?116:12),guiTop+30,100,20,"Redstone"));
         for(GuiButton button:buttonList)button.enabled=button.id!=100+page;
         if(page==1){
             if(transmitterControl())buttonList.add(new GuiButton(90,guiLeft+14,guiTop+62,xSize-28,20,"Transmitter..."));
 
             if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+132,122,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+144,guiTop+132,122,20,"High: "+highLimit));}
-            if(thruster){buttonList.add(RedstoneActivationButton.from(layout.control(16,100,""),redstoneInverted?2:1));buttonList.add(layout.control(5,124,brightnessLabel()));buttonList.add(layout.control(6,148,thresholdLabel()));}
+            if(thruster){buttonList.add(new RedstoneActivationButton(16,tx,guiTop+96,tw,redstoneInverted?2:1));buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(5,tx,guiTop+120,tw,20,brightnessLabel()));buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(6,tx,guiTop+144,tw,20,thresholdLabel()));}
             if(pilotSeat)buttonList.add(new RedstoneActivationButton(18,guiLeft+14,guiTop+94,252,pilotMode));
         }else{
             if(thruster){housingList=new HousingTextureList(layout.listX,guiTop+64,layout.listWidth,sideTexture).visibleRows(Math.max(2,(ySize-98)/HousingTextureList.ROW_HEIGHT)).custom(value->{sideTexture=value;submit();});particleButton=layout.control(2,64,particleLabel());buttonList.add(particleButton);if(programmableThruster)buttonList.add(layout.control(4,88,shapeLabel()));refreshJoinButton();}
@@ -238,7 +238,7 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){
         GlStateManager.disableLighting();fontRenderer.drawString(fontRenderer.trimStringToWidth(dialogTitle(),xSize-50),12,8,0xffffff);
-        if(page==1){if(!transmitterControl())fontRenderer.drawString("Receive channels",thruster?layout.controlsX-guiLeft:14,thruster?54:68,0xdae8f0);if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,160,0xdae8f0);fontRenderer.drawString("Click to cycle four levels",14,174,0xdae8f0);}}
+        if(page==1){if(!transmitterControl())fontRenderer.drawString("Receive channels",thruster?12:14,thruster?54:68,0xdae8f0);if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,160,0xdae8f0);fontRenderer.drawString("Click to cycle four levels",14,174,0xdae8f0);}}
         else {if(thruster)fontRenderer.drawString("Wall texture",12,54,0xdae8f0);if(pilotSeat){fontRenderer.drawString(taxiMode?"Sit: assemble / Exit: park":"Manual Configurizer conversion",14,142,0xdae8f0);if(!inspectionStatus.isEmpty()){java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(inspectionStatus,252);for(int i=0;i<Math.min(8,lines.size());i++)fontRenderer.drawString(lines.get(i),14,158+i*9,0xffbb88);}}}
     }
 

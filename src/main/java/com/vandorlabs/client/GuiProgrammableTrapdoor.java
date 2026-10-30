@@ -65,8 +65,8 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         ChannelFields.configure(channelField);
         channelField.setText(channelText);
         done=new GuiButton(4,controlsX,guiTop+ySize-26,controlsWidth,20,"Done");done.enabled=parsedChannel()>=0;buttonList.add(done);
-        for(GuiButton button:buttonList)if(button.id!=4){button.visible=button.id==3?page==1:page==0;if(button.id==3)button.y=guiTop+64;}
-        channelLabelY=guiTop+96;channelField.y=guiTop+108;channelField.setVisible(page==1);channelField.setFocused(false);
+        for(GuiButton button:buttonList)if(button.id!=4){button.visible=button.id==3?page==1:page==0;if(button.id==3){button.x=guiLeft+12;button.y=guiTop+96;button.width=xSize-24;}}
+        channelLabelY=guiTop+54;channelField.x=guiLeft+12;channelField.width=xSize-24;channelField.y=guiTop+68;channelField.setVisible(page==1);channelField.setFocused(false);
         buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+30,110,20,"General"));buttonList.add(new DialogTabButton(101,guiLeft+126,guiTop+30,110,20,"Redstone"));for(GuiButton button:buttonList)if(button.id>=100)button.enabled=button.id!=100+page;
 
     }
@@ -128,7 +128,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
         fontRenderer.drawString(diagonal()?"Programmable Diagonal Trapdoor":"Programmable Trapdoor",12,8,0xFFFFFF);
         if(page==0)fontRenderer.drawString("Block texture",12,54,0xDAE8F0);
-        if(page==1)fontRenderer.drawString("Receive channels",controlsX-guiLeft,channelLabelY-guiTop,0xDAE8F0);
+        if(page==1)fontRenderer.drawString("Receive channels",12,channelLabelY-guiTop,0xDAE8F0);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);DialogOverlay.prepare();channelField.drawTextBox();}
 }
