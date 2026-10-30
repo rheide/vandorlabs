@@ -30,7 +30,8 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         HousingTextureList previous=textures;
         textures=HousingTextureList.forCanopy(guiLeft+12,guiTop+54,leftWidth,shade,draft.material)
                 .visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(this::choose).keepView(previous);
-        buttonList.add(layout.tab(90,0,2,"Canopy"));buttonList.add(layout.tab(91,1,2,"Redstone"));
+        boolean redstoneControls=tile.resizable()||tile.block().opening();
+        buttonList.add(layout.tab(90,0,redstoneControls?2:1,"Canopy"));if(redstoneControls)buttonList.add(layout.tab(91,1,2,"Redstone"));
         for(GuiButton button:buttonList)if(button.id==90+page)button.enabled=false;
         int y=54;
         if(page==0){

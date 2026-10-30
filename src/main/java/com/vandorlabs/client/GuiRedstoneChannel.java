@@ -238,7 +238,7 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){
         GlStateManager.disableLighting();fontRenderer.drawString(fontRenderer.trimStringToWidth(dialogTitle(),xSize-50),12,8,0xffffff);
-        if(page==1){if(!transmitterControl())fontRenderer.drawString("Receive channels",thruster?layout.controlsX-guiLeft:14,thruster?54:68,0xdae8f0);if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,144,0xdae8f0);fontRenderer.drawString("Click to cycle four levels",14,158,0xdae8f0);}}
+        if(page==1){if(!transmitterControl())fontRenderer.drawString("Receive channels",thruster?layout.controlsX-guiLeft:14,thruster?54:68,0xdae8f0);if(signalControl){fontRenderer.drawString("Off 0 / Medium "+((lowLimit+highLimit+1)/2),14,160,0xdae8f0);fontRenderer.drawString("Click to cycle four levels",14,174,0xdae8f0);}}
         else {if(thruster)fontRenderer.drawString("Wall texture",12,54,0xdae8f0);if(pilotSeat){fontRenderer.drawString(taxiMode?"Sit: assemble / Exit: park":"Manual Configurizer conversion",14,142,0xdae8f0);if(!inspectionStatus.isEmpty()){java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(inspectionStatus,252);for(int i=0;i<Math.min(8,lines.size());i++)fontRenderer.drawString(lines.get(i),14,158+i*9,0xffbb88);}}}
     }
 

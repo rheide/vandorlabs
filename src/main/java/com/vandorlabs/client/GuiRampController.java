@@ -196,7 +196,7 @@ public class GuiRampController extends GuiContainer {
         if(page==0)fontRenderer.drawString("Tread px",164,158,elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,
                 14,224,292,controller.error?0xFF9988:0xE5C76B);
-        if(page==1)fontRenderer.drawString("Channels",144,124,0xDAE8F0);
+        if(page==1)fontRenderer.drawString("Receive channels",108,124,0xDAE8F0);
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();

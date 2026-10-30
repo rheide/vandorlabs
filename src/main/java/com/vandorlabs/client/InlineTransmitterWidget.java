@@ -28,11 +28,13 @@ public final class InlineTransmitterWidget {
         ChannelList observed;int observedRange;boolean observedLocal,dirty,shown;int savedAt=-1000;
         Placement(GuiContainer gui,GuiButton anchor,int selector,RedstoneChannelMember member,Placement draft){
             this.anchor=anchor;this.selector=selector;this.owner=new java.lang.ref.WeakReference<>(gui);
-            field=new GuiTextField(1980,Minecraft.getMinecraft().fontRenderer,anchor.x,anchor.y+44,anchor.width,18);ChannelFields.configure(field);
+            field=new GuiTextField(1980,Minecraft.getMinecraft().fontRenderer,anchor.x+100,anchor.y+44,anchor.width-100,18);ChannelFields.configure(field);
             boolean pending=draft!=null&&(draft.dirty||Minecraft.getMinecraft().player.ticksExisted-draft.savedAt<=40);
             observed=pending?draft.observed:TransmitterSlots.channels(member);observedRange=pending?draft.observedRange:member.transmissionRange();observedLocal=pending?draft.observedLocal:TransmitterSlots.localRedstone(member.channelTile());field.setText(pending?draft.field.getText():ChannelFields.text(observed));dirty=pending&&draft.dirty;if(pending)savedAt=draft.savedAt;
-            local=new GuiButton(1982,anchor.x,anchor.y+22,anchor.width,20,"");
-            range=new GuiSlider(1981,anchor.x,anchor.y,anchor.width,20,"","",0,6,index(observedRange),false,true,s->{int index=s.getValueInt();s.setValue(index);s.displayString="Range: "+TransmitterSlots.RANGES[index]+" blocks";GuiContainer current=owner.get();if(current!=null&&rangeReady())save(current,this);});
+            local=new net.minecraftforge.fml.client.config.GuiButtonExt(1982,anchor.x,anchor.y+22,anchor.width,20,"");
+            range=new GuiSlider(1981,anchor.x,anchor.y,anchor.width,20,"","",0,6,index(observedRange),false,true,s->{int index=s.getValueInt();s.setValue(index);s.displayString="Range: "+TransmitterSlots.RANGES[index]+" blocks";GuiContainer current=owner.get();if(current!=null&&rangeReady())save(current,this);}){
+                @Override public int getHoverState(boolean hovered){return enabled?(hovered?2:1):0;}
+            };
             range.displayString="Range: "+observedRange+" blocks";label();
         }
         boolean rangeReady(){return range!=null;}
@@ -58,7 +60,7 @@ public final class InlineTransmitterWidget {
             RedstoneChannelMember member=binding.source(0);if(member==null||!TransmitterSlots.supported(member))continue;
             Placement p=state.buttons.get(button);if(p==null){p=new Placement(gui,button,0,member,state.draft);state.buttons.put(button,p);}
             p.shown=true;p.range.x=button.x;p.range.y=button.y;p.local.x=button.x;p.local.y=button.y+22;
-            p.field.x=button.x;p.field.y=button.y+44;p.field.setVisible(!sharedScreen(gui));button.visible=false;
+            p.field.x=button.x+100;p.field.y=button.y+44;p.field.setVisible(!sharedScreen(gui));button.visible=false;
         }
         for(Placement p:state.buttons.values())if(!p.shown){save(gui,p);p.field.setFocused(false);p.field.setVisible(false);}
         return state;
@@ -92,9 +94,15 @@ public final class InlineTransmitterWidget {
     @SubscribeEvent public static void closed(GuiScreenEvent.InitGuiEvent.Pre event){if(Minecraft.getMinecraft().currentScreen instanceof GuiContainer){GuiContainer gui=(GuiContainer)Minecraft.getMinecraft().currentScreen;State s=STATES.get(gui);if(s!=null)for(Placement p:s.buttons.values())save(gui,p);}}
     @SubscribeEvent public static void afterDraw(GuiScreenEvent.DrawScreenEvent.Post event){
         if(!(event.getGui() instanceof GuiContainer))return;GuiContainer gui=(GuiContainer)event.getGui();State s=STATES.get(gui);Minecraft mc=Minecraft.getMinecraft();
+        if(s==null)return;
+        // GuiContainer leaves item lighting and depth enabled; these controls are a 2D overlay.
+        net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
+        net.minecraft.client.renderer.GlStateManager.disableLighting();
+        net.minecraft.client.renderer.GlStateManager.disableDepth();
+        net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
         try{if(s!=null)for(Placement p:s.buttons.values())if(p.shown){
             p.range.drawButton(mc,event.getMouseX(),event.getMouseY(),event.getRenderPartialTicks());p.local.drawButton(mc,event.getMouseX(),event.getMouseY(),event.getRenderPartialTicks());p.field.drawTextBox();
-            if(p.field.getVisible()&&p.field.getText().isEmpty()&&!p.field.isFocused())mc.fontRenderer.drawString("Channels (blank = local)",p.field.x+4,p.field.y+5,0x8296a2);
+            if(p.field.getVisible())mc.fontRenderer.drawString(gui instanceof GuiCockpit?"Default channels":"Transmit channels",p.anchor.x,p.field.y+5,0xdae8f0);
         }}finally{restore(s);}
     }
 }

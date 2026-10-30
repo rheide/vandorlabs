@@ -83,7 +83,7 @@ public class GuiModularGear extends GuiContainer {
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString(fontRenderer.trimStringToWidth(tile.getBlockType().getLocalizedName(),xSize-64),12,12,0xffffff);
         DialogHeader.logo(0,0,xSize);
-        if(page==1)fontRenderer.drawString(tile.usesLegacyInput()?"Channels (any + local)":"Channels (0 = local)",12,85,0xcdd7e4);
+        if(page==1)fontRenderer.drawString("Receive channels",12,85,0xcdd7e4);
         String failure=error.isEmpty()?tile.error():error;String status=failure.isEmpty()?(tile.isController()?tile.columns().size()+" arms / "+(tile.isLandingAssembly()?tile.assembly().feet().size():0)+" feet":"Track appearance"):"ERROR: "+failure;
         java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,198+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
     }
