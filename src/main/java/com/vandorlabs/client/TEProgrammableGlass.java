@@ -62,7 +62,9 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         net.minecraft.client.renderer.texture.TextureAtlasSprite material=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
                 com.vandorlabs.tiles.GlassMaterials.texture(tile.getMaterial(),tile.getShade(),size,tile.getTint()));
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
+        float savedPaneBlock=OpenGlHelper.lastBrightnessX,savedPaneSky=OpenGlHelper.lastBrightnessY;
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
+        light=(light&0xffff0000)|GlassInsertLighting.block(tile,light&65535);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.pushMatrix();
         GlStateManager.translate(x,y,z);
@@ -96,6 +98,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.enableLighting();
         GlStateManager.color(1F, 1F, 1F, 1F);
         GlStateManager.popMatrix();
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,savedPaneBlock,savedPaneSky);
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
     }
 
@@ -144,7 +147,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
         GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(opaque);
-        if(pass<0||pass==(opaque?0:1)){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(buffer,sky,block,1,1,1,opacity);Tessellator.getInstance().draw();}
+        if(pass<0||pass==(opaque?0:1)){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(buffer,sky,GlassInsertLighting.block(tile,block),1,1,1,opacity);Tessellator.getInstance().draw();}
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
     }
 

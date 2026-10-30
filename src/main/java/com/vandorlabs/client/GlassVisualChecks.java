@@ -24,6 +24,7 @@ final class GlassVisualChecks {
             mc.gameSettings.hideGUI=true;
         }
         if(ticks==140) {
+            GlassInsertLightingChecks.run(mc,output);
             RuntimeResourceChecks.animations(mc);
             GlassAppearanceRuntimeChecks.checkRenderMeshes(mc.world,output);save(mc,output,"glass-strengths-and-frames");
             mc.gameSettings.hideGUI=false;

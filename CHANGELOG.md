@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Backlight solid Strong replacement artwork inside Cyan/Amber lit Programmable Glass frames, including joined and diagonal panes. Transparent/native glass and unlit or Bare frames retain world lighting.
+
 - Reduce default Programmable Block, Slab and Stairs tile memory by sharing empty face settings and fluid slots; build stair render states without temporary property maps. Preserve saved overrides and custom stair geometry.
 
 - Combine Autopilot route selection into General with a non-consuming nine-slot hotbar picker and evenly spaced tabs. Use full-width Redstone settings on arms, thrusters and other dedicated receiver pages.

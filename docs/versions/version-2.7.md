@@ -141,3 +141,8 @@ Stairs also use compact render-state snapshots to reduce chunk-build allocations
 Custom face choices, stair profiles, fluids and saved block IDs retain their
 existing behavior. These changes reduce memory and state-building costs without
 changing texture resolution or geometry.
+
+
+Cyan and Amber light frames backlight solid Strong replacement materials in
+Programmable Glass and Diagonal Glass, including joined layouts. Native and
+translucent glass retain their normal world lighting.

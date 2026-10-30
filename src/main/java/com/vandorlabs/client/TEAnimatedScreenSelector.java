@@ -936,7 +936,7 @@ public class TEAnimatedScreenSelector
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             StaticSurfaceMesh pane=DiagonalWallMeshCache.get(te,state,glass,glass);
             if(te.getGlassMaterial()>=0)pane=GlassSurfaceMapping.map(pane,glass,GlassSurfaceGroups.layout(te),false,0,0,te.getGlassTextureLayout());
-            pane.drawColored(buffer,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,1,1,1,opacity);
+            pane.drawColored(buffer,(int)OpenGlHelper.lastBrightnessY,GlassInsertLighting.block(te,(int)OpenGlHelper.lastBrightnessX),1,1,1,opacity);
             Tessellator.getInstance().draw();
             GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
             GlStateManager.enableLighting();endLocalTransform();return;

@@ -137,7 +137,7 @@ final class FlatPanelBarRenderer {
                 if(!m.solidPane&&mesh!=null&&mesh.vertexCount()>0){GlStateManager.depthMask(false);drawPane(mesh,sky,block,m.opacity);}
             }else{
                 if(mesh!=null&&mesh.vertexCount()>0)draw(mesh,sky,block);
-                if(m.solidPane){StaticSurfaceMesh pane=part(m.transparent,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width);if(pane!=null&&pane.vertexCount()>0)drawPane(pane,sky,block,m.opacity);}
+                if(m.solidPane){StaticSurfaceMesh pane=part(m.transparent,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width);if(pane!=null&&pane.vertexCount()>0)drawPane(pane,sky,GlassInsertLighting.block(root,block),m.opacity);}
             }
             if(!transparent && i==0 && m.opaque!=null) {
                 StaticSurfaceMesh cap=stemCap(m,bar.straightLeft?bar.frontArm:bar.frontArm+4,PanelJoins.flatNear(state,root.getWorld(),root.getPos()),bar.straightLeft);
