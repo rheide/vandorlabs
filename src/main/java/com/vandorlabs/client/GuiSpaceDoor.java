@@ -165,7 +165,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
 
     }
     @Override public void drawScreen(int x,int y,float partial) {
-        drawDefaultBackground();super.drawScreen(x,y,partial);DialogHeader.logo(guiLeft,guiTop,xSize); channelField.drawTextBox();
+        drawDefaultBackground();super.drawScreen(x,y,partial);DialogOverlay.prepare();DialogHeader.logo(guiLeft,guiTop,xSize); channelField.drawTextBox();
         if(settingsPage==3&&y>=guiTop+SECURITY_CARDS_Y-1&&y<guiTop+SECURITY_CARDS_Y+17&&x>=layout.controlsX&&x<layout.controlsX+154)drawHoveringText(java.util.Arrays.asList("Empty filter: any card","Left/right-click the slot to cycle company","Click the company name to clear","The sample card is not consumed"),x,y);
     }
 }

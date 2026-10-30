@@ -253,7 +253,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         if(!rowsPage()&&textureTab<2)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+88,0xDAE8F0);
         if(textureTab==3)receiver.drawLabel();
         if(framePage())framePane.draw(mouseX,mouseY);
-        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {

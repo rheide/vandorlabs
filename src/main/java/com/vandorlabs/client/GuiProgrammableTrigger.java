@@ -143,7 +143,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
                 guiTop + 8, 0xFFFFFFFF);
         if(page==0)activeList().draw(fontRenderer,mouseX,mouseY);
         if(page==1)fontRenderer.drawString("Receive channels",layout.controlsX,guiTop+52,0xDAE8F0);
-        super.drawScreen(mouseX, mouseY, partial);
+        super.drawScreen(mouseX, mouseY, partial);DialogOverlay.prepare();
         channelField.drawTextBox();
     }
 

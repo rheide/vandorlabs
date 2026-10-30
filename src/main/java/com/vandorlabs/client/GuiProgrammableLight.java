@@ -210,7 +210,7 @@ public final class GuiProgrammableLight extends GuiContainer {
         }
         if(textureTab==3){fontRenderer.drawString("Receive channels",layout.controlsX,guiTop+62,0xDAE8F0);
         }
-        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);if(textureTab==3)channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();if(textureTab==3)channelField.drawTextBox();
     }
 
     @Override public boolean doesGuiPauseGame() { return false; }

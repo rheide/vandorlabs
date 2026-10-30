@@ -96,10 +96,7 @@ public final class InlineTransmitterWidget {
         if(!(event.getGui() instanceof GuiContainer))return;GuiContainer gui=(GuiContainer)event.getGui();State s=STATES.get(gui);Minecraft mc=Minecraft.getMinecraft();
         if(s==null)return;
         // GuiContainer leaves item lighting and depth enabled; these controls are a 2D overlay.
-        net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
-        net.minecraft.client.renderer.GlStateManager.disableLighting();
-        net.minecraft.client.renderer.GlStateManager.disableDepth();
-        net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
+        DialogOverlay.prepare();
         try{if(s!=null)for(Placement p:s.buttons.values())if(p.shown){
             p.range.drawButton(mc,event.getMouseX(),event.getMouseY(),event.getRenderPartialTicks());p.local.drawButton(mc,event.getMouseX(),event.getMouseY(),event.getRenderPartialTicks());p.field.drawTextBox();
             if(p.field.getVisible())mc.fontRenderer.drawString(gui instanceof GuiCockpit?"Default channels":"Transmit channels",p.anchor.x,p.field.y+5,0xdae8f0);

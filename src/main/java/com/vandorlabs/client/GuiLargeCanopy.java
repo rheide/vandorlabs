@@ -97,6 +97,6 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
     @Override public void onGuiClosed(){if(sliderDirty)apply();super.onGuiClosed();}
 
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){}
-    @Override public void drawScreen(int x,int y,float partial){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee101012);fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.block().getUnlocalizedName()+".name"),guiLeft+8,guiTop+8,0xffffff);DialogHeader.logo(guiLeft,guiTop,xSize);if(page==0)textures.draw(fontRenderer,x,y);super.drawScreen(x,y,partial);if(channels!=null){fontRenderer.drawString("Receive channels",channelLabelX,channelLabelY,0xffffff);channels.drawTextBox();}if(!error.isEmpty())fontRenderer.drawSplitString(error,guiLeft+xSize-166,guiTop+ySize+3,154,0xffffaa88);}
+    @Override public void drawScreen(int x,int y,float partial){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee101012);fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.block().getUnlocalizedName()+".name"),guiLeft+8,guiTop+8,0xffffff);DialogHeader.logo(guiLeft,guiTop,xSize);if(page==0)textures.draw(fontRenderer,x,y);super.drawScreen(x,y,partial);DialogOverlay.prepare();if(channels!=null){fontRenderer.drawString("Receive channels",channelLabelX,channelLabelY,0xffffff);channels.drawTextBox();}if(!error.isEmpty())fontRenderer.drawSplitString(error,guiLeft+xSize-166,guiTop+ySize+3,154,0xffffaa88);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

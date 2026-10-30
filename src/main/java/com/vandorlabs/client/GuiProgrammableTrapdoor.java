@@ -130,5 +130,5 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         if(page==0)fontRenderer.drawString("Block texture",12,54,0xDAE8F0);
         if(page==1)fontRenderer.drawString("Receive channels",controlsX-guiLeft,channelLabelY-guiTop,0xDAE8F0);
     }
-    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);channelField.drawTextBox();}
+    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);DialogOverlay.prepare();channelField.drawTextBox();}
 }

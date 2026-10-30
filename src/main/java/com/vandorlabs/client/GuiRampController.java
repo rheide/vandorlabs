@@ -200,6 +200,6 @@ public class GuiRampController extends GuiContainer {
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();
-        super.drawScreen(mouseX,mouseY,partial); treadField.drawTextBox(); channelField.drawTextBox();
+        super.drawScreen(mouseX,mouseY,partial);DialogOverlay.prepare(); treadField.drawTextBox(); channelField.drawTextBox();
     }
 }

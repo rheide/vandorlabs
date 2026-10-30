@@ -421,7 +421,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(!rowsPage()&&textureTab<(console?2:1))fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+88,0xDAE8F0);
         if(textureTab==(console?3:2))receiver.drawLabel();
         if(framePage()||splitPage())framePane.draw(mouseX,mouseY);
-        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();
     }
 
     @Override public void updateScreen() { super.updateScreen(); channelField.updateCursorCounter(); }
