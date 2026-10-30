@@ -55,11 +55,11 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,54,motion.label);buttonList.add(motionButton);
         buttonList.add(layout.choice(12,0,2,52,framed?"Frame: Framed":"Frame: Bare"));
-        buttonList.add(RedstoneActivationButton.from(layout.control(16,96,""),trigger));buttonList.add(layout.control(13,102,depthLabel()));
+        buttonList.add(new RedstoneActivationButton(16,guiLeft+12,guiTop+96,xSize-24,trigger));buttonList.add(layout.control(13,102,depthLabel()));
         hingeButton=layout.control(15,78,"");buttonList.add(hingeButton);updateHingeButton();
         buttonList.add(layout.control(17,64,panelLabel()));
         buttonList.add(layout.control(18,126,layoutLabel()));
-        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+64,154,18);
+        channelField=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+68,xSize-24,18);
         ChannelFields.configure(channelField);channelField.setText(channelText);
         buttonList.add(layout.control(19,90,securityLabel()));
         done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();refreshPages();if(settingsPage==1){if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!framed;sendUpdate();},()->framed);framePane.init(54,buttonList);}
@@ -160,7 +160,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         fontRenderer.drawString(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?"Large Programmable Door":"Programmable Door",12,8,0xFFFFFF);
 
 
-        if(settingsPage==2)fontRenderer.drawString("Receive channels",layout.controlsX-guiLeft,54,0xDAE8F0);
+        if(settingsPage==2)fontRenderer.drawString("Receive channels",12,54,0xDAE8F0);
         if (channel()<0) fontRenderer.drawString("Invalid channel",12,ySize-18,0xFF7777);
 
     }
