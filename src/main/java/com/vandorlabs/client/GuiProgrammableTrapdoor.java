@@ -46,7 +46,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         Keyboard.enableRepeatEvents(true);buttonList.clear();
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH;
         controlsX=guiLeft+xSize-controlsWidth-12;
-        textures=HousingTextureList.forDoors(doorDetail,guiLeft+12,guiTop+64,controlsX-guiLeft-31,HousingTextureList.doorSizeChoice(tile.getHousingTexture(),0),false,false)
+        textures=HousingTextureList.forTrapdoors(doorDetail,guiLeft+12,guiTop+64,controlsX-guiLeft-31,HousingTextureList.doorSizeChoice(tile.getHousingTexture(),0))
                 .visibleRows(Math.max(2,(ySize-92)/HousingTextureList.ROW_HEIGHT)).custom(value->send());
         int y=guiTop+64;
         buttonList.add(new GuiButton(1,controlsX,y,controlsWidth,20,motionLabel()));y+=22;
@@ -128,7 +128,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     @Override protected void drawGuiContainerForegroundLayer(int x,int y) {
         fontRenderer.drawString(diagonal()?"Programmable Diagonal Trapdoor":"Programmable Trapdoor",12,8,0xFFFFFF);
         if(page==0)fontRenderer.drawString("Block texture",12,54,0xDAE8F0);
-        if(page==1)fontRenderer.drawString("Input channels",controlsX-guiLeft,channelLabelY-guiTop,0xDAE8F0);
+        if(page==1)fontRenderer.drawString("Receive channels",controlsX-guiLeft,channelLabelY-guiTop,0xDAE8F0);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);channelField.drawTextBox();}
 }

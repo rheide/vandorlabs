@@ -54,7 +54,7 @@ final class FrameAppearanceRuntimeChecks {
             HousingTextureList picker=HousingTextureList.forFrames(0,0,160,-1,8);
             java.lang.reflect.Field rows=HousingTextureList.class.getDeclaredField("rows"),scroll=HousingTextureList.class.getDeclaredField("scroll"),count=HousingTextureList.class.getDeclaredField("count");rows.setAccessible(true);scroll.setAccessible(true);count.setAccessible(true);
             int originalRow=((java.util.List<?>)rows.get(picker)).indexOf(-1);require(originalRow>=1,"Original artwork has a distinct row from the Frame category");scroll.setInt(picker,Math.max(0,originalRow-count.getInt(picker)+1));
-            require(picker.click(4,(originalRow-scroll.getInt(picker))*HousingTextureList.ROW_HEIGHT+4,0)&&picker.picked()&&picker.selected()==-1,"actual Original artwork click selects the default instead of toggling the category");
+            require(picker.click(4,(1+originalRow-scroll.getInt(picker))*HousingTextureList.ROW_HEIGHT+4,0)&&picker.picked()&&picker.selected()==-1,"actual Original artwork click selects the default instead of toggling the category");
         }catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}
         net.minecraft.nbt.NBTTagCompound copiedSettings=new net.minecraft.nbt.NBTTagCompound(),copiedFrame=new net.minecraft.nbt.NBTTagCompound();copiedFrame.setInteger("FrameFront",bolted);copiedFrame.setInteger("FrameInterior",bolted);copiedFrame.setBoolean("FrameTile",true);copiedSettings.setTag("FrameAppearance",copiedFrame);
         net.minecraft.item.ItemStack glassCopy=com.vandorlabs.items.ProgrammableSettings.applyToItem(new net.minecraft.item.ItemStack(net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass")),copiedSettings);

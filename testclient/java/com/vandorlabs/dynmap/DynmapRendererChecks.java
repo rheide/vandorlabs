@@ -54,9 +54,25 @@ public final class DynmapRendererChecks {
         MapSurface.emit(context,patches,Arrays.asList(new MapSurface.Vertex(new net.minecraft.util.math.Vec3d(0,0,0),0,0),new MapSurface.Vertex(new net.minecraft.util.math.Vec3d(1,0,0),2,0),new MapSurface.Vertex(new net.minecraft.util.math.Vec3d(1,1,0),2,1),new MapSurface.Vertex(new net.minecraft.util.math.Vec3d(0,1,0),0,1)),0);
         require(patches.size()==2,"Authored repeated texture splits into two map tiles");
     }
+    private static void trapdoorFrames(){
+        int variants=0;
+        for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)if(ScreenHousingTextures.visible(choice)&&"Frame".equals(ScreenHousingTextures.category(choice))&&ScreenHousingTextures.canonicalChoice(choice)==choice) {
+            variants++;
+            for(boolean diagonal:new boolean[]{false,true})for(String facing:new String[]{"north","east","south","west"})for(String half:new String[]{"top","bottom"})for(boolean open:new boolean[]{false,true})for(int position=0;position<3;position++) {
+                CustomRenderer renderer=diagonal?new ProgrammableDiagonalTrapdoorRenderer():new ProgrammableTrapdoorRenderer();
+                Context context=new Context("vandorlabs:"+(diagonal?"programmable_diagonal_trapdoor":"programmable_trapdoor"),"facing="+facing+",half="+half+",open="+open);
+                context.data.put("housingTexture",ScreenHousingTextures.choiceAt(choice));context.data.put("TrapdoorPosition",position);
+                RenderPatch[] patches=valid(renderer,context);int metal=0,art=0;
+                for(RenderPatch patch:patches)if(patch.getTextureIndex()==ScreenHousingTextures.BUILTIN_COUNT*2+2)metal++;else if(patch.getTextureIndex()==choice)art++;
+                require(patches.length==12&&metal==6&&art==6,"Frame trapdoor retains solid metal backing and selected artwork on every pose");
+            }
+        }
+        require(variants>0,"Frame trapdoor palette exercised");
+        System.out.println("Frame trapdoor Dynmap PASS variants="+variants+" regular/diagonal all-facings halves positions open/closed opaque-backing");
+    }
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();
-        surfaces();
+        surfaces();trapdoorFrames();
         FrameMachineMapChecks.run();
         UtilityMapChecks.run();SurfaceMapChecks.run();HexThrusterMapChecks.run();
         ProgrammableSlabRenderer slab=new ProgrammableSlabRenderer();

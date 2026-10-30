@@ -30,7 +30,7 @@ final class ArtworkPickerRuntimeChecks {
         require(general>0,"general finish fixture");
         HousingTextureList material=HousingTextureList.forFrameSurfaces(0,0,200,selectedGeneral,8).visibleRows(4);
         int selectedRow=((List<Integer>)rows.get(material)).indexOf(selectedGeneral),selectedTop=scroll.getInt(material);
-        require(material.click(4,(selectedRow-selectedTop)*HousingTextureList.ROW_HEIGHT+4,0)&&material.picked()&&material.selected()==selectedGeneral,"actual general frame finish selection");
+        require(material.click(4,(1+selectedRow-selectedTop)*HousingTextureList.ROW_HEIGHT+4,0)&&material.picked()&&material.selected()==selectedGeneral,"actual general frame finish selection");
         int halves=0,full=0;
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i))){
             boolean half=ScreenHousingTextures.entry(i).has("frameAspect")&&ScreenHousingTextures.entry(i).get("frameAspect").getAsDouble()>1.01;

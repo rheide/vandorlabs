@@ -26,6 +26,9 @@ final class HousingTextureList {
         Option(int choice,String label,String category,String texture){this.choice=choice;this.label=label;this.category=category;this.texture=texture;}
     }
     private final int x,y,width;
+    private final net.minecraft.client.gui.GuiTextField search;
+    private String query="";
+    private int cursorTick=-1;
     private int count;
     private final List<String> categories=new ArrayList<>();
     private final Set<String> expanded=new HashSet<>();
@@ -47,7 +50,9 @@ final class HousingTextureList {
         this(x,y,width,selected,count,nativeEntries,include,category,HousingTextureList::name);
     }
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include,java.util.function.IntFunction<String> category,java.util.function.IntFunction<String> label) {
-        this.x=x;this.y=y;this.width=width;this.count=Math.max(2,count*12/ROW_HEIGHT);
+        this.x=x;this.y=y+ROW_HEIGHT;this.width=width;this.count=Math.max(1,count*12/ROW_HEIGHT-1);
+        search=new net.minecraft.client.gui.GuiTextField(0,Minecraft.getMinecraft().fontRenderer,x+2,y+2,width+3,18);
+        search.setMaxStringLength(128);
         nativeOptions=nativeEntries!=null;
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
         else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && include.test(i))options.put(i,new Option(i,label.apply(i),category.apply(i),ScreenHousingTextures.fullTexture(i)));
@@ -116,7 +121,7 @@ final class HousingTextureList {
         return new HousingTextureList(x,y,width,material<0?CANOPY_GLASS_BASE+shade:material,8,entries);
     }
     HousingTextureList keepView(HousingTextureList previous){
-        if(previous!=null){expanded.addAll(previous.expanded);rebuild();scroll=Math.min(maxScroll(),previous.scroll);ensureSelectedVisible();}
+        if(previous!=null){expanded.addAll(previous.expanded);query=previous.query;search.setText(previous.search.getText());search.setFocused(previous.search.isFocused());rebuild();scroll=Math.min(maxScroll(),previous.scroll);ensureSelectedVisible();}
         return this;
     }
     static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {
@@ -154,11 +159,17 @@ final class HousingTextureList {
     static HousingTextureList forDoors(int detail,int x,int y,int width,int selected,boolean large) {
         return forDoors(detail,x,y,width,selected,large,true);
     }
+    static HousingTextureList forTrapdoors(int detail,int x,int y,int width,int selected) {
+        return forDoorOptions(detail,x,y,width,selected,false,false,true);
+    }
     static HousingTextureList forDoors(int detail,int x,int y,int width,int selected,boolean large,boolean glassLeaves) {
+        return forDoorOptions(detail,x,y,width,selected,large,glassLeaves,false);
+    }
+    private static HousingTextureList forDoorOptions(int detail,int x,int y,int width,int selected,boolean large,boolean glassLeaves,boolean frames) {
         return new HousingTextureList(x,y,width,selected,8,null,choice->{
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
             if(!glassLeaves && entry!=null && entry.has("design") && (entry.get("design").getAsInt()==15 || entry.get("design").getAsInt()==16))return false;
-            return (generalTexture(choice) && (entry==null || !entry.has("textureFamily") || entry.get("detail").getAsInt()==detail)) || ("Doors".equals(ScreenHousingTextures.category(choice)) || large && "Double Doors".equals(ScreenHousingTextures.category(choice)))
+            return frames && frameAllowed(choice,false) || (generalTexture(choice) && (entry==null || !entry.has("textureFamily") || entry.get("detail").getAsInt()==detail)) || ("Doors".equals(ScreenHousingTextures.category(choice)) || large && "Double Doors".equals(ScreenHousingTextures.category(choice)))
                     && (entry==null || !entry.has("detail") || entry.get("detail").getAsInt()==detail);
         },ScreenHousingTextures::menuCategory,choice->{
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
@@ -175,7 +186,7 @@ final class HousingTextureList {
                 :entry!=null && entry.has("textureFamily")?ScreenHousingTextures.sizedTextureIndex(entry.get("textureFamily").getAsString(),detail):choice;
     }
     HousingTextureList visibleRows(int rows) {
-        count=Math.max(2,rows);
+        count=Math.max(1,rows-1);
         setSelected(selected());
         return this;
     }
@@ -195,7 +206,8 @@ final class HousingTextureList {
     }
     private void rebuild() {
         rows.clear();
-        appendCategories("");
+        if(query.isEmpty())appendCategories("");
+        else for(Option option:options.values())if(matches(option))rows.add(option.choice);
         if(customConsumer!=null)rows.add(CUSTOM_ROW);
         if(redstoneAction!=null)rows.add(REDSTONE_ROW);
         if(vehicleAction!=null)rows.add(VEHICLE_ROW);
@@ -214,6 +226,23 @@ final class HousingTextureList {
             }
         }
     }
+    private boolean matches(Option option){
+        String text=(option.label+" "+option.category+" "+option.texture).toLowerCase(Locale.ROOT);
+        for(String token:query.split("\\s+"))if(!text.contains(token))return false;
+        return true;
+    }
+    boolean searchClick(int mx,int my,int button){
+        if(inventoryPicker!=null)return false;
+        boolean hit=mx>=search.x && mx<search.x+search.width && my>=search.y && my<search.y+search.height;
+        search.mouseClicked(mx,my,button);return hit;
+    }
+    boolean searchKey(char character,int key){
+        if(inventoryPicker!=null)return false;
+        if(net.minecraft.client.gui.GuiScreen.isCtrlKeyDown() && key==org.lwjgl.input.Keyboard.KEY_F){search.setFocused(true);return true;}
+        if(!search.isFocused() || key==org.lwjgl.input.Keyboard.KEY_ESCAPE)return false;
+        if(search.textboxKeyTyped(character,key)){String next=search.getText().trim().toLowerCase(Locale.ROOT);if(!next.equals(query)){query=next;scroll=0;rebuild();}}
+        return true;
+    }
     private boolean parentsExpanded(String path){
         while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));if(!expanded.contains(path))return false;}
         return true;
@@ -222,7 +251,7 @@ final class HousingTextureList {
     /** Pin the category of the first visible texture into the top row. */
     private int visibleChoice(int row) {
         int choice=rows.get(scroll+row);
-        if(row==0 && options.containsKey(choice))return -200000-categories.indexOf(options.get(choice).category);
+        if(query.isEmpty() && count>1 && row==0 && options.containsKey(choice))return -200000-categories.indexOf(options.get(choice).category);
         return choice;
     }
     int selected(){return selected==VEHICLE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
@@ -233,7 +262,7 @@ final class HousingTextureList {
     private int thumbHeight(){return Math.max(8,height()*count/Math.max(count,rows.size()));}
     private int thumbY(){return y+(height()-thumbHeight())*scroll/Math.max(1,maxScroll());}
     boolean click(int mouseX,int mouseY,int button) {
-        picked=false;if(inventoryPicker!=null)return inventoryPicker.click(mouseX,mouseY,button);
+        picked=false;if(searchClick(mouseX,mouseY,button))return true;if(inventoryPicker!=null)return inventoryPicker.click(mouseX,mouseY,button);
         if(button!=0 || mouseY<y || mouseY>=y+height())return false;
         if(mouseX>=x+width && mouseX<x+width+7 && maxScroll()>0) {
             dragOffset=mouseY>=thumbY() && mouseY<thumbY()+thumbHeight()?mouseY-thumbY():thumbHeight()/2;
@@ -276,6 +305,10 @@ final class HousingTextureList {
     }
     void draw(FontRenderer font,int mouseX,int mouseY) {
         if(inventoryPicker!=null){inventoryPicker.draw(mouseX,mouseY);return;}
+        TextureSearchInput.shown(this);
+        int tick=Minecraft.getMinecraft().ingameGUI.getUpdateCounter();if(tick!=cursorTick){cursorTick=tick;search.updateCursorCounter();}
+        search.drawTextBox();
+        if(search.getText().isEmpty()&&!search.isFocused())font.drawString("Search textures",search.x+4,search.y+5,0x8296A2);
         Gui.drawRect(x-1,y-1,x+width+8,y+height()+1,0xFF000000);
         Gui.drawRect(x,y,x+width,y+height(),0xFF0A0A0C);
         Minecraft mc=Minecraft.getMinecraft();
@@ -312,6 +345,7 @@ final class HousingTextureList {
                 font.drawStringWithShadow(font.trimStringToWidth(options.get(choice).label,width-26),x+23,yy+7,choice==selected?0xFFFFE08A:0xFFD8D8D8);
             }
         }
+        if(rows.isEmpty())font.drawString("No matching textures",x+4,y+7,0xABCFE8);
         if(maxScroll()>0){Gui.drawRect(x+width,y,x+width+7,y+height(),0xFF303038);Gui.drawRect(x+width,thumbY(),x+width+7,thumbY()+thumbHeight(),0xFF808090);}
     }
 }
