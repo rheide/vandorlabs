@@ -2,6 +2,10 @@
 
 ## 2.7 (in development)
 
+- Combine Autopilot route selection into General with a non-consuming nine-slot hotbar picker and evenly spaced tabs. Use full-width Redstone settings on arms, thrusters and other dedicated receiver pages.
+
+- Restore recessed transmitter range tracks so the slider handle stays distinct from its background, including hover and dragging.
+
 - Add case-insensitive, multiword texture-list search with Ctrl+F focus, retained selection and scrolling. Offer authored Frame artwork on trapdoor leaves with solid backing beneath transparent regions.
 - Audit Redstone dialog terminology and spacing; separate Thruster Lever state text from limit controls and draw enabled screen range controls without a center seam.
 

@@ -24,6 +24,6 @@ public final class GuiPressurePlate extends GuiMaterialPicker {
     @Override public void onGuiClosed(){Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override public boolean doesGuiPauseGame(){return false;}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize);if(page==0)textures.draw(fontRenderer,x,y);}
-    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString("Programmable Pressure Plate",12,8,0xffffff);int cx=xSize-166;if(page==1)fontRenderer.drawSplitString("Wood: On/Off. Gold: full power at 15 entities. Iron: full power at 150.",cx,154,154,0xc0c8d0);}
+    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString("Programmable Pressure Plate",12,8,0xffffff);if(page==1)fontRenderer.drawSplitString("Wood: On/Off. Gold: full power at 15 entities. Iron: full power at 150.",12,142,xSize-24,0xc0c8d0);}
     @Override public void drawScreen(int x,int y,float partial){net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();drawDefaultBackground();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();channels.drawTextBox();}
 }

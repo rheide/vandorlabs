@@ -14,7 +14,7 @@ public final class GuiWirelessRedstone extends GuiContainer {
     private boolean analog,ready,dirty;private int page;
     private int on,off,face;
     public GuiWirelessRedstone(ContainerWirelessRedstone container){super(container);tile=container.tile;analog=tile.analog();on=tile.onLevel();off=tile.offLevel();face=tile.port().getIndex();xSize=280;ySize=tile.transmitter()?160:224;}
-    @Override public void initGui(){String text=channels==null?ChannelFields.text(tile.getRedstoneChannels()):channels.getText();xSize=Math.min(280,width-12);ySize=tile.transmitter()?218:248;super.initGui();ready=false;buttonList.clear();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
+    @Override public void initGui(){String text=channels==null?ChannelFields.text(tile.getRedstoneChannels()):channels.getText();xSize=Math.min(280,width-12);ySize=Math.min(tile.transmitter()?218:248,height-8);super.initGui();ready=false;buttonList.clear();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
         buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+32,112,20,"General"));buttonList.add(new DialogTabButton(101,guiLeft+128,guiTop+32,140,20,"Redstone"));for(GuiButton b:buttonList)b.enabled=b.id!=100+page;
         channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+72,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);channels.setVisible(page==1&&!tile.transmitter());channels.setFocused(false);
         if(page==0)buttonList.add(new GuiButton(2,guiLeft+12,guiTop+66,xSize-24,20,(tile.transmitter()?"Input":"Output")+" port: "+net.minecraft.util.EnumFacing.getFront(face).getName()));

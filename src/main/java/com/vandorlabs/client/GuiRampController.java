@@ -34,7 +34,7 @@ public class GuiRampController extends GuiContainer {
         xSize=320; ySize=248;
     }
     @Override public void initGui() {
-        super.initGui(); buttonList.clear(); Keyboard.enableRepeatEvents(true);
+        ySize=Math.min(248,height-8);super.initGui(); buttonList.clear(); Keyboard.enableRepeatEvents(true);
         startSlider=new GuiSlider(20,guiLeft+14,guiTop+30,292,20,"","",
                 -ControllerPlatform.MAX_OFFSET_HALF_STEPS,ControllerPlatform.MAX_OFFSET_HALF_STEPS,
                 controller.startHalfSteps(),false,true,slider->{
@@ -71,7 +71,7 @@ public class GuiRampController extends GuiContainer {
         buttonList.add(new GuiButton(7,guiLeft+14,guiTop+232,292,20,"Done"));
         for(GuiButton button:buttonList)button.y+=26;
         startSlider.y=guiTop+56;endSlider.y=guiTop+80;
-        treadField.y+=26;channelField.y=guiTop+120;
+        treadField.y+=26;channelField.x=guiLeft+14;channelField.y=guiTop+68;channelField.width=292;
 
         buttonList.add(new DialogTabButton(30,guiLeft+14,guiTop+30,140,20,"Ramp"));
         buttonList.add(new DialogTabButton(31,guiLeft+164,guiTop+30,142,20,"Redstone"));
@@ -83,14 +83,25 @@ public class GuiRampController extends GuiContainer {
             boolean redstone=button.id==3||button.id==22||button.id==23;
             button.visible=button.id>=30||button.id==7||((page==1)==redstone);
             if(button.id>=30)button.enabled=button.id!=30+page;
-            if(button.id==3){button.x=guiLeft+14;button.y=guiTop+60;button.width=292;}
-            if(button.id==22)button.y=guiTop+86;
-            if(button.id==7){button.x=guiLeft+(page==1?184:164);button.y=guiTop+200;button.width=page==1?122:142;}
-            if(button.id==18){button.x=guiLeft+14;button.y=guiTop+200;button.width=142;}
+            if(button.id==3){button.x=guiLeft+14;button.y=guiTop+96;button.width=292;}
+            if(button.id==22)button.y=guiTop+120;
+            if(button.id==7){button.x=guiLeft+164;button.y=guiTop+(ySize<248?186:200);button.width=142;}
+            if(button.id==18){button.x=guiLeft+14;button.y=guiTop+(ySize<248?186:200);button.width=142;}
             if(button.id==4)button.y=guiTop+128;
             if(button.id==14||button.id==15)button.y=guiTop+152;
             if(button.id==19)button.y=guiTop+176;
 
+        }
+        if(ySize<248){
+            startSlider.y=guiTop+54;startSlider.height=18;endSlider.y=guiTop+76;endSlider.height=18;
+            treadField.y=guiTop+142;
+            for(GuiButton button:buttonList){
+                if(button.id==1||button.id==6){button.y=guiTop+98;button.height=18;}
+                if(button.id==4||button.id==17){button.y=guiTop+120;button.height=18;}
+                if(button.id==14||button.id==15){button.y=guiTop+142;button.height=18;}
+                if(button.id==19){button.y=guiTop+164;button.height=18;}
+                if(button.id==7||button.id==18)button.height=18;
+            }
         }
         treadField.setEnabled(!elevator);
         startSlider.enabled=escalator==0;
@@ -193,10 +204,10 @@ public class GuiRampController extends GuiContainer {
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY) {
         fontRenderer.drawString(controller.getBlockType().getLocalizedName(),14,10,0xFFFFFF);
         DialogHeader.logo(0,0,xSize);
-        if(page==0)fontRenderer.drawString("Tread px",164,158,elevator?0x78848C:0xDAE8F0);
+        if(page==0)fontRenderer.drawString("Tread px",164,ySize<248?148:158,elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,
-                14,224,292,controller.error?0xFF9988:0xE5C76B);
-        if(page==1)fontRenderer.drawString("Receive channels",108,124,0xDAE8F0);
+                14,ySize-24,292,controller.error?0xFF9988:0xE5C76B);
+        if(page==1)fontRenderer.drawString("Receive channels",14,54,0xDAE8F0);
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();

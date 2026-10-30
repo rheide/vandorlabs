@@ -25,7 +25,7 @@ final class TransmissionRuntimeChecks {
         if(ready)return InlineTransmitterLiveChecks.tick(mc,output);
         if(ticks<80)return false;
         mc.getIntegratedServer().callFromMainThread(()->{WorldServer world=mc.getIntegratedServer().getWorld(0);EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);run(world);SharedScreenTransmitterChecks.run(world,actor);WirelessRedstoneRuntimeChecks.run(world);com.vandorlabs.redstone.TransmitterMigrationChecks.run();return null;}).get();
-        TransmissionDialogChecks.run(mc,output);ready=true;System.out.println("[vandorlabs][reprolab] transmission-settings PASS seven-ranges sphere boundaries physical-toggle saved-reload legacy-items carried-rows packet-roundtrip");return false;
+        TransmissionDialogChecks.run(mc,output);AutopilotDialogChecks.run(mc,output);ready=true;System.out.println("[vandorlabs][reprolab] transmission-settings PASS seven-ranges sphere boundaries physical-toggle saved-reload legacy-items carried-rows packet-roundtrip");return false;
     }
     private static void run(WorldServer world){
         BlockPos pos=new BlockPos(2110,170,2110);world.getChunkFromBlockCoords(pos);

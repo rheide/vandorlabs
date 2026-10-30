@@ -129,3 +129,8 @@ mode would need to split geometry at sprite boundaries in both the game and
 Dynmap, including joined walls, fills and inverted pieces. Simply multiplying
 atlas UVs would smear sprite-edge pixels; cropping would remove parts of the
 artwork. No derived textures or automatic crop are introduced.
+
+Autopilot route markers are selected directly on General from the nine hotbar
+items, preserving block metadata without consuming a stack. General and Redstone
+are the two top-level tabs. Dedicated Redstone pages use their full content width,
+including regular and Large arm controllers and all programmable thruster shapes.

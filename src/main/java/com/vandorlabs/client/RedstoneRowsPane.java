@@ -21,8 +21,9 @@ public final class RedstoneRowsPane {
     private GuiTextField label,channels;
     private int x,y,width,height,right,selected=-1,scroll,listOffset;
     public RedstoneRowsPane(FontRenderer font,int maxRows,boolean modules,NBTTagList values,IntPredicate installed,java.util.function.Consumer<NBTTagList> apply){this.font=font;this.maxRows=maxRows;this.modules=modules;this.installed=installed;this.apply=apply;for(int i=0;i<values.tagCount();i++)rows.add(values.getCompoundTagAt(i).copy());if(!rows.isEmpty())selected=0;}
+    static int listWidth(int width){return Math.max(80,width-184);}
     public void layout(int x,int y,int width,int height,List<GuiButton> host){
-        if(label!=null)store();this.x=x;this.y=y;this.width=width;this.height=height;right=x+Math.max(80,width-184);int w=x+width-right;buttons.clear();actions.clear();
+        if(label!=null)store();this.x=x;this.y=y;this.width=width;this.height=height;right=x+listWidth(width);int w=x+width-right;buttons.clear();actions.clear();
         for(int i=0;i<4;i++)buttons.add(new GuiButton(BASE+i,right+i*w/4,y,w/4-2,18,new String[]{"Add","Del","Up","Down"}[i]));
         label=new GuiTextField(BASE,font,right+32,y+22,w-32,18);label.setMaxStringLength(RedstoneScreenContents.MAX_LABEL);
         channels=new GuiTextField(BASE+1,font,right+42,y+44,w-42,18);ChannelFields.configure(channels);

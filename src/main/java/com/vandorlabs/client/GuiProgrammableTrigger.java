@@ -47,10 +47,10 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         onList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,on).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{on=value;send();});
         lowList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,low).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{low=value;send();});
         mediumList=new HousingTextureList(layout.listX,guiTop+78,layout.listWidth,medium).visibleRows(Math.max(2,layout.rows(true)-2)).custom(value->{medium=value;send();});
-        buttonList.add(layout.tab(110,0,2,"General"));buttonList.add(layout.tab(111,1,2,"Redstone"));
+        buttonList.add(layout.fullTab(110,0,2,"General"));buttonList.add(layout.fullTab(111,1,2,"Redstone"));
         String[] names={"Off","Low 1-5","Mid 6-10","High 11-15"};for(int i=0;i<4;i++)buttonList.add(layout.tab(90+i,i,4,names[i]));
-        if(page==1){buttonList.add(layout.control(101,94,statesLabel()));buttonList.add(layout.control(102,118,exactLabel()));}
-        channelField=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+64,154,18);
+        if(page==1){buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(101,guiLeft+12,guiTop+96,xSize-24,20,statesLabel()));buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(102,guiLeft+12,guiTop+120,xSize-24,20,exactLabel()));}
+        channelField=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+68,xSize-24,18);
         ChannelFields.configure(channelField);
         channelField.setText(draft);channelField.setVisible(page==1);channelField.setFocused(false);buttonList.add(layout.done(100));refreshTabs();
     }
@@ -142,7 +142,7 @@ public final class GuiProgrammableTrigger extends GuiContainer {
         fontRenderer.drawString("Programmable Trigger Block", guiLeft + 12,
                 guiTop + 8, 0xFFFFFFFF);
         if(page==0)activeList().draw(fontRenderer,mouseX,mouseY);
-        if(page==1)fontRenderer.drawString("Receive channels",layout.controlsX,guiTop+52,0xDAE8F0);
+        if(page==1)fontRenderer.drawString("Receive channels",guiLeft+12,guiTop+54,0xDAE8F0);
         super.drawScreen(mouseX, mouseY, partial);DialogOverlay.prepare();
         channelField.drawTextBox();
     }

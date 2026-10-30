@@ -39,7 +39,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         for(int i=0;i<children.size();i++){int child=children.get(i),display=child-(seating()?1:0)-1,control=display-tile.displays.size();String caption=display>=0&&display<tile.displays.size()?tile.displays.get(display).id:control>=0?tile.controls.get(control).id:"";if(children.size()>1){GuiButton tab=new DialogTabButton(300+child,guiLeft+12+i*childWidth,guiTop+50,childWidth-2,18,fontRenderer.trimStringToWidth(caption.replace("screen_","").replace("touch_","").replace("throttle_",""),childWidth-6));tab.enabled=child!=page;buttonList.add(tab);}}
         buttonList.add(new CockpitButton(2,guiLeft+xSize-92,guiTop+ySize-26,84,20,"Done"));
         int d=displayIndex(),c=controlIndex(),x=guiLeft+12,y=guiTop+76,w=xSize-24;
-        if(redstonePage){buttonList.add(new CockpitButton(90,x,guiTop+98,Math.min(240,w),20,"Transmitter..."));
+        if(redstonePage){buttonList.add(new CockpitButton(90,x,guiTop+68,Math.min(240,w),20,"Transmitter..."));
         }else if(pilotPage()){
             buttonList.add(new CockpitButton(10,x,guiTop+74,w/2-2,20,"Taxi on boarding: "+(tile.isTaxiMode()?"On":"Off")));
             buttonList.add(new RedstoneActivationButton(11,x+w/2+2,guiTop+74,w/2-2,tile.getRedstoneMode()));
@@ -129,7 +129,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);int d=displayIndex(),c=controlIndex();String title=tile.getBlockType().getLocalizedName();drawCenteredString(fontRenderer,fontRenderer.trimStringToWidth(title,xSize-128),guiLeft+xSize/2-10,guiTop+12,0xffffff);
         net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
         if(textures!=null)textures.draw(fontRenderer,x,y);for(GuiTextField f:fields)f.drawTextBox();if(receiverPane!=null)receiverPane.draw();if(rowsPane!=null)rowsPane.draw();
-        if(redstonePage){fontRenderer.drawString("Range for all cockpit controls",guiLeft+12,guiTop+80,0xffffff);fontRenderer.drawString("Target channels are edited on each control page.",guiLeft+12,guiTop+174,0xdae8f0);fontRenderer.drawString("Blank targets use the shared channel defaults.",guiLeft+12,guiTop+186,0xdae8f0);}
+        if(redstonePage){fontRenderer.drawString("Range for all cockpit controls",guiLeft+12,guiTop+54,0xffffff);fontRenderer.drawString("Target channels are edited on each control page.",guiLeft+12,guiTop+144,0xdae8f0);fontRenderer.drawString("Blank targets use the shared channel defaults.",guiLeft+12,guiTop+156,0xdae8f0);}
         else if(pilotPage()){fontRenderer.drawString("Trigger channels",guiLeft+12,guiTop+101,0xffffff);for(int i=0;i<3;i++)fontRenderer.drawString(new String[]{"Block channels","Taxi channels","Hover channels"}[i],fields.get(i+1).x,fields.get(i+1).y-11,0xffffff);}
         else if(sidePage()){}
         else if(d>=tile.displays.size()){fontRenderer.drawString("Label",guiLeft+12,guiTop+76,0xffffff);fontRenderer.drawString("Target channels (blank = shared defaults)",guiLeft+12,guiTop+116,0xffffff);TileEntityCockpit.Control value=tile.controls.get(c);if(value.isThrottle()&&ySize>=270)fontRenderer.drawString("Off 0 / Medium "+((value.min+value.max+1)/2)+" - four positions",guiLeft+12,guiTop+230,0xdae8f0);}

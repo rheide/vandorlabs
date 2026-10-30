@@ -32,9 +32,7 @@ public final class InlineTransmitterWidget {
             boolean pending=draft!=null&&(draft.dirty||Minecraft.getMinecraft().player.ticksExisted-draft.savedAt<=40);
             observed=pending?draft.observed:TransmitterSlots.channels(member);observedRange=pending?draft.observedRange:member.transmissionRange();observedLocal=pending?draft.observedLocal:TransmitterSlots.localRedstone(member.channelTile());field.setText(pending?draft.field.getText():ChannelFields.text(observed));dirty=pending&&draft.dirty;if(pending)savedAt=draft.savedAt;
             local=new net.minecraftforge.fml.client.config.GuiButtonExt(1982,anchor.x,anchor.y+22,anchor.width,20,"");
-            range=new GuiSlider(1981,anchor.x,anchor.y,anchor.width,20,"","",0,6,index(observedRange),false,true,s->{int index=s.getValueInt();s.setValue(index);s.displayString="Range: "+TransmitterSlots.RANGES[index]+" blocks";GuiContainer current=owner.get();if(current!=null&&rangeReady())save(current,this);}){
-                @Override public int getHoverState(boolean hovered){return enabled?(hovered?2:1):0;}
-            };
+            range=new GuiSlider(1981,anchor.x,anchor.y,anchor.width,20,"","",0,6,index(observedRange),false,true,s->{int index=s.getValueInt();s.setValue(index);s.displayString="Range: "+TransmitterSlots.RANGES[index]+" blocks";GuiContainer current=owner.get();if(current!=null&&rangeReady())save(current,this);});
             range.displayString="Range: "+observedRange+" blocks";label();
         }
         boolean rangeReady(){return range!=null;}
@@ -58,8 +56,11 @@ public final class InlineTransmitterWidget {
         for(GuiButton button:current){
             if(!button.visible||!button.displayString.contains("Transmitter"))continue;
             RedstoneChannelMember member=binding.source(0);if(member==null||!TransmitterSlots.supported(member))continue;
+            // This page has no material preview: share its body instead of inheriting
+            // a material picker's narrow settings column or a cockpit's half column.
+            button.width=Math.min(400,gui.getXSize()-24);button.x=gui.getGuiLeft()+(gui.getXSize()-button.width)/2;
             Placement p=state.buttons.get(button);if(p==null){p=new Placement(gui,button,0,member,state.draft);state.buttons.put(button,p);}
-            p.shown=true;p.range.x=button.x;p.range.y=button.y;p.local.x=button.x;p.local.y=button.y+22;
+            p.shown=true;p.range.width=button.width;p.local.width=button.width;p.field.width=button.width-100;p.range.x=button.x;p.range.y=button.y;p.local.x=button.x;p.local.y=button.y+22;
             p.field.x=button.x+100;p.field.y=button.y+44;p.field.setVisible(!sharedScreen(gui));button.visible=false;
         }
         for(Placement p:state.buttons.values())if(!p.shown){save(gui,p);p.field.setFocused(false);p.field.setVisible(false);}

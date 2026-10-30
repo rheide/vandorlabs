@@ -19,10 +19,10 @@ public final class GuiLandingGear extends GuiContainer {
     private int lastSentPixels,seenRevision;
     public GuiLandingGear(TileEntityLandingGear tile){super(new ContainerRedstoneChannel(tile));this.tile=tile;mode=tile.getMode();size=tile.getSize();lastSentPixels=tile.getExtensionPixels();seenRevision=tile.getConfigurationRevision();xSize=280;ySize=246;}
     public void initGui(){
-        String draft=channel==null?ChannelFields.text(tile.getRedstoneChannels()):channel.getText();super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
-        buttonList.add(new RedstoneActivationButton(0,guiLeft+14,guiTop+66,252,mode));
+        String draft=channel==null?ChannelFields.text(tile.getRedstoneChannels()):channel.getText();ySize=Math.min(246,height-8);super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        buttonList.add(new RedstoneActivationButton(0,guiLeft+14,guiTop+96,252,mode));
         buttonList.add(new GuiButton(4,guiLeft+14,guiTop+66,252,20,sizeLabel()));
-        channel=new GuiTextField(1,fontRenderer,guiLeft+156,guiTop+102,110,18);
+        channel=new GuiTextField(1,fontRenderer,guiLeft+14,guiTop+68,252,18);
         ChannelFields.configure(channel);channel.setText(draft);channel.setVisible(page==1);channel.setFocused(false);
         length=new GuiSlider(2,guiLeft+14,guiTop+98,252,20,"","",0,8,lastSentPixels/8D,false,true,slider->{
             int pixels=slider.getValueInt()*8;
@@ -56,9 +56,9 @@ public final class GuiLandingGear extends GuiContainer {
     protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xEE171B23);DialogHeader.logo(guiLeft,guiTop,xSize);}
     protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString(fontRenderer.trimStringToWidth(new net.minecraft.item.ItemStack(tile.getBlockType()).getDisplayName(),xSize-50),14,12,0xFFFFFF);
-        if(page==1)fontRenderer.drawString("Receive channels",14,108,0xDDDDDD);
-        if(page==1)fontRenderer.drawString("On: extend with power; Off: without",14,168,0xBBBBBB);
-        if(page==1)fontRenderer.drawString("Disabled: right-click to move",14,182,0xBBBBBB);
+        if(page==1)fontRenderer.drawString("Receive channels",14,54,0xDDDDDD);
+        if(page==1)fontRenderer.drawString("On: extend with power; Off: without",14,132,0xBBBBBB);
+        if(page==1)fontRenderer.drawString("Manual: right-click to move",14,146,0xBBBBBB);
     }
     public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();channel.drawTextBox();}
 }

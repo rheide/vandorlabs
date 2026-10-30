@@ -21,9 +21,9 @@ public final class GuiCopyController extends GuiContainer {
         xSize=Math.min(400,width-12);super.initGui();buttonList.clear();
         increment=new GuiTextField(1,fontRenderer,guiLeft+12,guiTop+78,xSize-24,18);increment.setMaxStringLength(6);increment.setText(Integer.toString(tile.channelIncrement));
         channels=new GuiTextField(2,fontRenderer,guiLeft+12,guiTop+144,xSize-24,18);channels.setMaxStringLength(ChannelList.MAX_TEXT_LENGTH);channels.setText(tile.channels.toString());
-        buttonList.add(new RedstoneActivationButton(0,guiLeft+12,guiTop+104,Math.min(200,xSize-24),mode));
+        buttonList.add(new RedstoneActivationButton(0,guiLeft+12,guiTop+104,xSize-24,mode));
         int w=(xSize-28)/3;for(int i=0;i<3;i++)buttonList.add(new GuiButton(i+1,guiLeft+12+i*(w+2),guiTop+202,w,20,new String[]{"Copy","Check areas","Done"}[i]));
-        heightSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,guiLeft+12,guiTop+22,130,20,"Height: ","",1,16,scanHeight,false,true,slider->{int next=slider.getValueInt();slider.setValue(next);if(next!=scanHeight){scanHeight=next;submit(0);}});buttonList.add(heightSlider);
+        heightSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,guiLeft+12,guiTop+22,xSize-24,20,"Height: ","",1,16,scanHeight,false,true,slider->{int next=slider.getValueInt();slider.setValue(next);if(next!=scanHeight){scanHeight=next;submit(0);}});buttonList.add(heightSlider);
         labels();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
     }
     private void labels(){((RedstoneActivationButton)buttonList.get(0)).setMode(mode);for(GuiButton button:buttonList)if(button.id!=3)button.enabled=!tile.busy();increment.setEnabled(!tile.busy());channels.setEnabled(!tile.busy());}
@@ -34,7 +34,7 @@ public final class GuiCopyController extends GuiContainer {
         fontRenderer.drawString("Copy Controller",12,8,0xffffff);
         fontRenderer.drawString("Input: left     Output: right     Chest: behind",12,49,0xcdd7e4);
         fontRenderer.drawString("Redstone Channel Increment On Copy",12,65,0xcdd7e4);
-        fontRenderer.drawString("Trigger channels (0 = local redstone)",12,131,0xcdd7e4);
+        fontRenderer.drawString("Receive channels (blank = local)",12,131,0xcdd7e4);
         drawRect(10,172,xSize-10,196,0xff101722);
         String status=!error.isEmpty()?error:tile.error.isEmpty()?tile.status:tile.error;
         java.util.List<String> lines=fontRenderer.listFormattedStringToWidth("Status: "+status,xSize-28);

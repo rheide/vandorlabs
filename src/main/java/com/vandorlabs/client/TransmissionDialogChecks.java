@@ -31,7 +31,8 @@ final class TransmissionDialogChecks {
             else if(tile instanceof TileEntityAutopilot)gui=new GuiAutopilot((TileEntityAutopilot)tile);
             else if(tile instanceof TileEntityProgrammableLight)gui=new GuiProgrammableLight(mc.player.inventory,(TileEntityProgrammableLight)tile);
             else if(tile instanceof TileEntityAnimatedScreenSelector){TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;
-                if(block instanceof BlockProgrammableInput)gui=new GuiProgrammableInput(mc.player.inventory,screen);
+                if(block instanceof BlockProgrammableFullInput)gui=new GuiAnimatedScreenSelector(mc.player.inventory,screen);
+                else if(block instanceof BlockProgrammableInput)gui=new GuiProgrammableInput(mc.player.inventory,screen);
                 else if(block instanceof BlockProgrammableHalfConsole)gui=new GuiProgrammableHalfConsole(mc.player.inventory,screen);
                 else gui=new GuiAnimatedScreenSelector(mc.player.inventory,screen);
             }else gui=new GuiRedstoneChannel((com.vandorlabs.redstone.RedstoneChannelMember)tile);
@@ -45,37 +46,20 @@ final class TransmissionDialogChecks {
                 GuiTextField field=InlineTransmitterWidget.channelsField(gui);if(field!=null&&field.getVisible())for(GuiButton other:buttons)if(other.visible)require(!overlap(field.x,field.y,field.width,field.height,other),"channels overlap "+other.displayString+" "+block.getRegistryName());
                 InlineTransmitterWidget.afterDraw(new net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent.Post(gui,0,0,0));
                 java.awt.image.BufferedImage shot=FrameFramebufferChecks.renderDialog(mc,gui,new File(output,"shot_redstone_"+block.getRegistryName().getResourcePath()+"_"+size[0]+".png"),-1,-1);
-                if(source){GuiButton slider=controls.get(0),local=controls.get(1);int pixel=shot.getRGB(slider.x+slider.width-12,slider.y+8);require(((pixel>>16)&255)>55,"enabled range slider looks disabled "+block.getRegistryName());int dark=0;for(int yy=local.y+3;yy<local.y+local.height-3;yy++)if((shot.getRGB(local.x+local.width/2,yy)&0xffffff)<0x101010)dark++;require(dark<4,"local toggle has a middle texture seam "+block.getRegistryName());}cases++;
+                if(source){GuiButton slider=controls.get(0),local=controls.get(1);int track=shot.getRGB(slider.x+slider.width-12,slider.y+8),thumbX=slider.x+(int)(((net.minecraftforge.fml.client.config.GuiSlider)slider).sliderValue*(slider.width-8));int thumb=shot.getRGB(thumbX+4,slider.y+8);require(((thumb>>16)&255)-((track>>16)&255)>30,"slider track must be recessed beneath its distinct handle "+block.getRegistryName());int dark=0;for(int yy=local.y+3;yy<local.y+local.height-3;yy++)if((shot.getRGB(local.x+local.width/2,yy)&0xffffff)<0x101010)dark++;require(dark<4,"local toggle has a middle texture seam "+block.getRegistryName());}
+                if(block.getRegistryName().getResourcePath().equals("thruster_lever")){
+                    net.minecraftforge.fml.client.config.GuiSlider slider=(net.minecraftforge.fml.client.config.GuiSlider)controls.get(0);
+                    FrameFramebufferChecks.renderDialog(mc,gui,new File(output,"shot_thruster_range_hover_"+size[0]+".png"),slider.x+slider.width/2,slider.y+10);
+                    require(InlineTransmitterWidget.mouseInput(gui,slider.x+4,slider.y+10,0),"range drag begins on track");
+                    FrameFramebufferChecks.renderDialog(mc,gui,new File(output,"shot_thruster_range_drag_"+size[0]+".png"),slider.x+4+(slider.width-8)*2/3,slider.y+10);
+                    slider.mouseReleased(0,0);require(slider.getValueInt()==4,"drag reaches the 64-block step");
+                    FrameFramebufferChecks.renderDialog(mc,gui,new File(output,"shot_thruster_range_released_"+size[0]+".png"),-1,-1);
+                }
+                cases++;
             }
         }}finally{mc.displayGuiScreen(old);mc.player.openContainer=oldContainer;mc.world.setBlockState(pos,previous,2);if(original!=null)mc.world.setTileEntity(pos,original);}
-        additionalDialogs(mc,output,pos);
+        CompleteRedstoneDialogAudit.run(mc,output,pos);
         System.out.println("[vandorlabs][reprolab] transmission-dialogs PASS cases="+cases+" compact320 normal460 all-host-families no-overlap no-item-slots");
-    }
-    private static void additionalDialogs(Minecraft mc,File output,BlockPos pos)throws Exception{
-        net.minecraft.block.state.IBlockState previous=mc.world.getBlockState(pos);TileEntity original=mc.world.getTileEntity(pos);GuiScreen old=mc.currentScreen;net.minecraft.inventory.Container container=mc.player.openContainer;
-        Set<String> seen=new HashSet<>();int captures=0;
-        try{for(Block block:Block.REGISTRY){if(!"vandorlabs".equals(block.getRegistryName().getResourceDomain()))continue;
-            TileEntity seed=block.createTileEntity(mc.world,block.getDefaultState());if(!(seed instanceof TileEntityProgrammableTrapdoor||seed instanceof TileEntityProgrammableTrigger||seed instanceof TileEntityRampController||seed instanceof TileEntityTurntableController||seed instanceof TileEntityLandingGear||seed instanceof TileEntityCanopy||seed instanceof TileEntitySecuredDisplay||seed instanceof com.vandorlabs.coupler.TileCoupler||seed instanceof TileEntityVehicleController||seed instanceof com.vandorlabs.gear.GearTileEntity))continue;GuiContainer gui=null;
-            mc.world.setBlockState(pos,block.getDefaultState(),2);TileEntity tile=mc.world.getTileEntity(pos);
-            if(tile instanceof com.vandorlabs.gear.GearTileEntity&&!(tile instanceof com.vandorlabs.gear.track.TrackTile))gui=new GuiModularGear(new ContainerModularGear((com.vandorlabs.gear.GearTileEntity)tile));
-            else if(tile instanceof TileEntityProgrammableTrapdoor)gui=new GuiProgrammableTrapdoor((TileEntityProgrammableTrapdoor)tile);
-            else if(tile instanceof TileEntityProgrammableTrigger)gui=new GuiProgrammableTrigger(mc.player.inventory,(TileEntityProgrammableTrigger)tile);
-            else if(tile instanceof TileEntityRampController)gui=new GuiRampController((TileEntityRampController)tile);
-            else if(tile instanceof TileEntityTurntableController)gui=new GuiTurntable(new ContainerTurntable((TileEntityTurntableController)tile));
-            else if(tile instanceof TileEntityLandingGear)gui=new GuiLandingGear((TileEntityLandingGear)tile);
-            else if(tile instanceof TileEntityCanopy&&((TileEntityCanopy)tile).owner().configurable())gui=new GuiLargeCanopy((TileEntityCanopy)tile);
-            else if(tile instanceof TileEntitySecuredDisplay)gui=new GuiNavigationTable(new ContainerTokenSlot(mc.player.inventory,(TileEntityTokenSlot)tile));
-            else if(tile instanceof com.vandorlabs.coupler.TileCoupler)gui=new GuiCoupler(new com.vandorlabs.coupler.ContainerCoupler((com.vandorlabs.coupler.TileCoupler)tile));
-            else if(tile instanceof TileEntityVehicleController)gui=new GuiPilotModes((TileEntityVehicleController)tile);
-            if(gui==null||tile instanceof TileEntityCanopy&&!(((TileEntityCanopy)tile).resizable()||((TileEntityCanopy)tile).block().opening()))continue;String key=gui.getClass().getSimpleName()+(tile instanceof TileEntityConstructor?"_constructor":"");if(!seen.add(key))continue;
-            gui.inventorySlots.windowId=-97;mc.displayGuiScreen(gui);
-            for(int[] size:new int[][]{{320,240},{460,340}}){gui.setWorldAndResolution(mc,size[0],size[1]);List<GuiButton> buttons=ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
-                for(GuiButton b:new ArrayList<>(buttons))if(b.visible&&b.enabled&&b.displayString.equals("Redstone")){ReflectionHelper.findMethod(GuiScreen.class,"actionPerformed","func_146284_a",GuiButton.class).invoke(gui,b);break;}
-                buttonBounds(gui);
-                FrameFramebufferChecks.renderDialog(mc,gui,new File(output,"shot_redstone_family_"+key+"_"+size[0]+".png"),-1,-1);captures++;
-            }
-        }}finally{mc.displayGuiScreen(old);mc.player.openContainer=container;mc.world.setBlockState(pos,previous,2);if(original!=null)mc.world.setTileEntity(pos,original);}
-        System.out.println("[vandorlabs][reprolab] redstone-family-captures PASS variants="+seen.size()+" captures="+captures);
     }
     private static void buttonBounds(GuiContainer gui){
         List<GuiButton> buttons=ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
