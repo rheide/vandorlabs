@@ -17,6 +17,12 @@ public final class FaceTextures {
                 choices[i] = values[i] >= 0 && ScreenHousingTextures.validChoice(values[i])
                         ? values[i] : -1;
     }
+    /** Share only the exact empty default; disabled saved choices remain available when re-enabled. */
+    public static FaceTextures of(boolean enabled,int[] values) {
+        if(!enabled && (values==null || values.length!=6 || java.util.Arrays.stream(values).allMatch(v->v<0)))return DEFAULT;
+        FaceTextures result=new FaceTextures(enabled,values);
+        return result.equals(DEFAULT)?DEFAULT:result;
+    }
     public int choice(int face) { return choices[face]; }
     public int texture(int face, int main) {
         return enabled && choices[face] >= 0 ? choices[face] : main;

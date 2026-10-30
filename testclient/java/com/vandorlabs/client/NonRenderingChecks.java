@@ -36,6 +36,7 @@ public final class NonRenderingChecks {
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_glass"));
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(com.vandorlabs.gear.GearTileEntity.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_gear"));
         if(args.length>0 && args[0].equals("vehicle-world")){vehicleWorldCompatibility();return;}
+        if(args.length>0 && args[0].equals("housing-cost")){HousingStateChecks.run();HousingModelChecks.run();FluidPresenceChecks.run();SolidFastPathChecks.run();return;}
         vehicleWorldCompatibility();
         if(args.length>0 && args[0].equals("diagonal-joins")){DiagonalJoinMatrixChecks.run();return;}
         if(args.length>0 && args[0].equals("load-safety")){LoadSafetyChecks.run();return;}

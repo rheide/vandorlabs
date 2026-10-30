@@ -134,3 +134,49 @@ for every placement. GPU texture-cache and bandwidth effects require a controlle
 hardware-rendered benchmark; these state-building numbers cannot quantify them.
 The larger-texture comparison therefore establishes memory scaling and unchanged
 basic geometry, not hardware FPS parity.
+
+## Implemented default-data and stair-state optimizations
+
+The implementation now canonicalizes empty face overrides during tile loading,
+shares the empty fluid-slot array until mutation, and supports stair geometry in
+compact immutable housing snapshots. Disabled overrides with stored non-default
+choices are preserved. No registries, metadata or saved field names change.
+Existing cube/slab quad caches remain in use; no neighbour-sampling cache or
+custom chunk renderer is introduced. Frame objects remain eagerly allocated.
+
+A longer-warmup comparison (1,000 warmups, 31 paired samples per fixture) loads
+the original four production classes from revision `9285598f` in a separate JVM,
+then measures the optimized implementation with the same benchmark. Per 4,096
+blocks using one finish:
+
+| Metric | Original | Optimized |
+| --- | ---: | ---: |
+| Reloaded owned tile graph, all three shapes | 1,572,928 bytes | 1,212,568 bytes |
+| Cube state-build allocation | 688,128 bytes | 688,128 bytes |
+| Slab state-build allocation | 688,128 bytes | 688,128 bytes |
+| Stair state-build allocation | 5,586,944 bytes | 2,342,912 bytes |
+| Cube state-build median | 0.316 ms | 0.350 ms |
+| Slab state-build median | 0.390 ms | 0.372 ms |
+| Stair state-build median | 1.712 ms | 1.209 ms |
+
+Retained tile memory falls approximately 23%, from 384 to 296 bytes per reloaded
+plain block. Fresh tiles also save approximately 24 bytes each. Stair transient
+allocation falls approximately 58%, with a 29% state-build time improvement in
+this warmed comparison. Mixed-finish stairs measured 1.781 to 1.207 ms. Earlier,
+shorter-warmup runs produced variable timings; cube/slab timing differences are
+small and do not establish a CPU improvement. No full chunk-rebuild or FPS
+improvement is claimed.
+
+Validation commands:
+
+- `JAVA_HOME=<Java 8 JDK> ./gradlew testHousingFastPath testDedicatedServerLinkage --offline --no-daemon`
+- `JAVA_HOME=<Java 8 JDK> tools/measure_programmable_cost.sh`
+- `testclient/test_viewscreen.sh --focus solid-housing` with OptiFine and the installed compatibility mods
+
+The non-rendering focus covers 256 housing-state cases (including custom stair
+profiles, rolls, transitions, concurrency and foreign properties), 12,288 exact
+cube/slab model cases, fluid-presence matrices, default NBT sharing and independent
+fluid ownership after mutation/reload. The live focus covers stair appearance,
+configuration, icons and dialogs plus wet-block boundaries. The broader fluid
+focus's mount-filter packet assertion is outside this isolated focus; it was not
+reported as passing. The full release gate remains deferred.

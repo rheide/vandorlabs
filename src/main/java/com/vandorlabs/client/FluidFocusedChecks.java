@@ -15,6 +15,7 @@ final class FluidFocusedChecks {
         if(ticks<200)return false;
         if(!checked){WaterloggedSurfaceChecks.run(mc,output);checked=true;}
         if(!StairDialogLiveChecks.tick(mc,output))return false;
+        if(Boolean.getBoolean("vandorlabs.solidHousingChecksOnly")){System.out.println("[vandorlabs][reprolab] solid-housing PASS");return true;}
         if(!DiagonalTrapdoorDirectionLiveChecks.tick(mc,output))return false;
         if(!MountFilterLiveChecks.tick(mc,output))return false;
         System.out.println("[vandorlabs][reprolab] fluid-focused PASS");return true;

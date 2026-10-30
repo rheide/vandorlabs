@@ -18,6 +18,7 @@ final class HousingStateChecks {
             for(IBlockState state:block.getBlockState().getValidStates())for(int settings=0;settings<4;settings++) {
                 world.setBlockState(pos,state,2);
                 TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);
+                if(block instanceof BlockProgrammableStairs)tile.setStairGeometry(new int[]{4,8,12,16}[settings],settings%3);
                 tile.setHousingTexture(settings+1);tile.setSideTexture(settings==0?-1:settings+5);
                 tile.setSlabTileSides((settings&1)!=0);
                 tile.setFaceTextures(new FaceTextures(settings>1,new int[]{-1,1,2,-1,4,5}));
@@ -37,6 +38,7 @@ final class HousingStateChecks {
                 require(actual.getClean()==state,"extended state lost canonical clean state");
                 for(IProperty<?> property:state.getPropertyKeys())transitions(property,reference,actual);
                 same(reference.withProperty(ProgrammableHousingState.SIDE_FINISH,15),actual.withProperty(ProgrammableHousingState.SIDE_FINISH,15));
+                if(block instanceof BlockProgrammableStairs){final IExtendedBlockState expected=reference;sameFailure(()->expected.withProperty(ProgrammableHousingState.STAIR_GEOMETRY,null),()->actual.withProperty(ProgrammableHousingState.STAIR_GEOMETRY,null));}
                 // Construction must not modify the canonical blockstate's optionals.
                 for(Optional<?> value:((IExtendedBlockState)state).getUnlistedProperties().values())require(!value.isPresent(),"mutated shared clean state");
                 cases++;

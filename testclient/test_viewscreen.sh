@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
-unset VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
+unset VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
@@ -108,6 +108,9 @@ case "${1:-}" in
         elif [ "$TARGET" = creative-catalog ]; then
             PREFIX=catalog_
             export VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY=true
+        elif [ "$TARGET" = solid-housing ]; then
+            PREFIX=fluid_
+            export VANDOR_LABS_FLUID_CHECKS_ONLY=true VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY=true
         elif [ "$TARGET" = fluids ]; then
             PREFIX=fluid_
             export VANDOR_LABS_FLUID_CHECKS_ONLY=true
@@ -380,6 +383,11 @@ if [ "$MODE" = focus ]; then
             grep -q 'creative-catalog-JEI-live PASS' "$RUN_OUT/client.log"
         fi
         echo "Live creative catalog checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = solid-housing ]; then
+        grep -q "solid-housing PASS" "$RUN_OUT/client.log"
+        echo "Live solid housing checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = fluids ]; then

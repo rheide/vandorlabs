@@ -642,7 +642,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)
                 ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
-        faceTextures = new FaceTextures(compound.getBoolean("FaceTexturesEnabled"),
+        faceTextures = FaceTextures.of(compound.getBoolean("FaceTexturesEnabled"),
                 compound.getIntArray("FaceTextures"));
         if (compound.hasKey("SlabTileSides", 1))
             slabTileSides = compound.getBoolean("SlabTileSides");

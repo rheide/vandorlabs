@@ -134,3 +134,10 @@ Autopilot route markers are selected directly on General from the nine hotbar
 items, preserving block metadata without consuming a stack. General and Redstone
 are the two top-level tabs. Dedicated Redstone pages use their full content width,
 including regular and Large arm controllers and all programmable thruster shapes.
+
+
+Programmable Blocks, Slabs and Stairs share empty configuration data after loading.
+Stairs also use compact render-state snapshots to reduce chunk-build allocations.
+Custom face choices, stair profiles, fluids and saved block IDs retain their
+existing behavior. These changes reduce memory and state-building costs without
+changing texture resolution or geometry.

@@ -42,7 +42,7 @@ public final class HousingBlockState extends ExtendedBlockState {
                         && Objects.equals(schema.get(ProgrammableHousingState.SIDE_FINISH).orElse(null),side)
                         && Objects.equals(schema.get(ProgrammableHousingState.FACES).orElse(null),faces)
                         && Objects.equals(schema.get(ProgrammableHousingState.TILE_SIDES).orElse(null),tileSides)
-                        && (schema.size()==4 || Objects.equals(schema.get(ProgrammableHousingState.VISIBLE).orElse(null),visible)
+                        && (!schema.containsKey(ProgrammableHousingState.LIGHT) || Objects.equals(schema.get(ProgrammableHousingState.VISIBLE).orElse(null),visible)
                         && Objects.equals(schema.get(ProgrammableHousingState.LIGHT).orElse(null),light)))return state;
                 return new DirectSnapshot(state,schema,finish,side,faces,tileSides,visible,light);
             }
@@ -65,7 +65,7 @@ public final class HousingBlockState extends ExtendedBlockState {
     }
 
     private static boolean commonSchema(ImmutableMap<IUnlistedProperty<?>,Optional<?>> schema) {
-        return (schema.size()==4 || (schema.size()==6 || schema.size()==7&&schema.containsKey(ProgrammableHousingState.JOINED))
+        return (schema.size()==4 || schema.size()==5&&schema.containsKey(ProgrammableHousingState.STAIR_GEOMETRY) || (schema.size()==6 || schema.size()==7&&schema.containsKey(ProgrammableHousingState.JOINED))
                 && schema.containsKey(ProgrammableHousingState.VISIBLE) && schema.containsKey(ProgrammableHousingState.LIGHT))
                 && schema.containsKey(ProgrammableHousingState.FINISH) && schema.containsKey(ProgrammableHousingState.SIDE_FINISH)
                 && schema.containsKey(ProgrammableHousingState.FACES) && schema.containsKey(ProgrammableHousingState.TILE_SIDES);
@@ -77,23 +77,27 @@ public final class HousingBlockState extends ExtendedBlockState {
         private final Integer finish,side,tileSides,visible,light;
         private final FaceTextures faces;
         private final boolean lighting;
+        private final Integer stairGeometry;
         private volatile Snapshot materialized;
         DirectSnapshot(IExtendedBlockState source,ImmutableMap<IUnlistedProperty<?>,Optional<?>> schema,
                 int finish,int side,FaceTextures faces,int tileSides,int visible,int light) {
             super(source,schema);
             this.schema=schema;this.finish=finish;this.side=side;this.faces=faces;
-            this.tileSides=tileSides;this.visible=visible;this.light=light;lighting=schema.size()>=6;
+            this.tileSides=tileSides;this.visible=visible;this.light=light;lighting=schema.containsKey(ProgrammableHousingState.LIGHT);
+            stairGeometry=schema.containsKey(ProgrammableHousingState.STAIR_GEOMETRY)?source.getValue(ProgrammableHousingState.STAIR_GEOMETRY):null;
         }
-        private DirectSnapshot(DirectSnapshot source) {
+        private DirectSnapshot(DirectSnapshot source) {this(source,source.stairGeometry);}
+        private DirectSnapshot(DirectSnapshot source,Integer geometry) {
             super(source,source.schema);
             schema=source.schema;finish=source.finish;side=source.side;faces=source.faces;
-            tileSides=source.tileSides;visible=source.visible;light=source.light;lighting=source.lighting;
+            tileSides=source.tileSides;visible=source.visible;light=source.light;lighting=source.lighting;stairGeometry=geometry;
         }
         boolean matches(int finish,int side,FaceTextures faces,int tileSides,int visible,int light) {
             return this.finish==finish && this.side==side && this.faces.equals(faces) && this.tileSides==tileSides
                     && (!lighting || this.visible==visible && this.light==light);
         }
         @Override public <V> V getValue(IUnlistedProperty<V> property) {
+            if(property==ProgrammableHousingState.STAIR_GEOMETRY && schema.containsKey(property))return property.getType().cast(stairGeometry);
             if(property==ProgrammableHousingState.FINISH)return property.getType().cast(finish);
             if(property==ProgrammableHousingState.SIDE_FINISH)return property.getType().cast(side);
             if(property==ProgrammableHousingState.FACES)return property.getType().cast(faces);
@@ -107,6 +111,10 @@ public final class HousingBlockState extends ExtendedBlockState {
             return full().getUnlistedProperties();
         }
         @Override public <V> IExtendedBlockState withProperty(IUnlistedProperty<V> property,V value) {
+            if(property==ProgrammableHousingState.STAIR_GEOMETRY && schema.containsKey(property) && value!=null && property.isValid(value)) {
+                if(Objects.equals(stairGeometry,value))return this;
+                return new DirectSnapshot(this,(Integer)value);
+            }
             Snapshot full=full();IExtendedBlockState result=full.withProperty(property,value);
             return result==full?this:result;
         }
@@ -123,7 +131,7 @@ public final class HousingBlockState extends ExtendedBlockState {
                 snapshot=materialized;
                 if(snapshot==null) {
                     ImmutableMap.Builder<IUnlistedProperty<?>,Optional<?>> values=ImmutableMap.builder();
-                    for(IUnlistedProperty<?> property:schema.keySet())values.put(property,Optional.of(getValue(property)));
+                    for(IUnlistedProperty<?> property:schema.keySet())values.put(property,Optional.ofNullable(getValue(property)));
                     snapshot=new Snapshot(this,values.build());materialized=snapshot;
                 }
             }
