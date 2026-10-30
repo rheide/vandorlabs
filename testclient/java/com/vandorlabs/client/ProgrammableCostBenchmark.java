@@ -26,6 +26,11 @@ public class ProgrammableCostBenchmark {
  }
  public static void main(String[] args)throws Exception{
   net.minecraft.init.Bootstrap.register();TileEntity.register("vandorlabs:cost_fixture",TileEntityAnimatedScreenSelector.class);size=Class.forName("SizeAgent").getMethod("size",Object.class);
+  for(Block vanilla:new Block[]{net.minecraft.init.Blocks.STONE,net.minecraft.init.Blocks.STONE_SLAB,net.minecraft.init.Blocks.OAK_STAIRS}){
+   Samples w=new Samples();IBlockState state=vanilla.getDefaultState();BlockPos[] positions=new BlockPos[4096];for(int j=0;j<4096;j++){positions[j]=new BlockPos(j&15,80+((j>>8)&15),(j>>4)&15);w.states.put(positions[j],state);}
+   double[] times=new double[31];long[] allocations=new long[31];for(int round=-100;round<31;round++){w.reset(false);long before=BenchmarkAllocations.currentThreadBytes(),start=System.nanoTime();for(BlockPos pos:positions)sink=vanilla.getExtendedState(vanilla.getActualState(state,w,pos),w,pos);long elapsed=System.nanoTime()-start,bytes=BenchmarkAllocations.currentThreadBytes()-before;if(round>=0){times[round]=elapsed/1e6;allocations[round]=bytes;}}
+   Arrays.sort(times);Arrays.sort(allocations);System.out.printf(Locale.ROOT,"VANILLA %s n=4096 p50_ms=%.6f p95_ms=%.6f alloc=%d tile_bytes=0%n",vanilla.getRegistryName(),times[15],times[29],allocations[15]);
+  }
   System.out.println("MEMORY excludes shared strings/enums/classes/blocks/world; fleet incremental owned graph, includes positions");
   for(Block block:new Block[]{new BlockProgrammableBlock(),new BlockProgrammableSlab(),new BlockProgrammableStairs()})for(boolean mixed:new boolean[]{false,true}){
    Samples w=new Samples();IBlockState state=block.getDefaultState();BlockPos[] positions=new BlockPos[4096];TileEntityAnimatedScreenSelector[] fresh=new TileEntityAnimatedScreenSelector[4096],loaded=new TileEntityAnimatedScreenSelector[4096];

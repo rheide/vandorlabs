@@ -97,3 +97,40 @@ separate measured prototype.
 5. Repeated main textures alone do not materially improve this state-build path.
    Existing shared model caches are outside this benchmark; no additional geometry
    cache or full-rendering speedup is established here.
+
+## Vanilla comparison and larger textures
+
+A subsequent run adds vanilla state-building baselines in the same fixture.
+Per 4,096 blocks, medians in milliseconds:
+
+| Shape | Vanilla | Programmable, one finish | Additional state-build time |
+| --- | ---: | ---: | ---: |
+| Cube (stone) | 0.0246 | 0.2792 | 0.2546 |
+| Slab (stone slab) | 0.1268 | 0.3542 | 0.2274 |
+| Straight stairs (oak) | 1.5609 | 1.7644 | 0.2036 |
+
+Vanilla cubes/slabs allocate zero bytes in this state-building loop; vanilla
+stairs allocate 1,753,088 bytes per section. Programmable cubes/slabs allocate
+688,128 bytes, and stairs 5,783,552 in this run. Allocation can vary with JVM
+escape-analysis decisions and benchmark ordering; the earlier stair result was
+5,390,336. None of the three vanilla references requires a tile entity.
+Ratios from this small substep must not be presented as total rebuild or FPS
+ratios.
+
+Inspection of the standard JAR finds `light_alloy_hull` at 16×16,
+`dark_wall_panel` at 64×64 and `intricate_composite_wall_1` at 128×128.
+For a single square RGBA8 sprite the theoretical uncompressed base-level storage
+is 1 KiB, 16 KiB and 64 KiB respectively; including all mip levels it is roughly
+1.33 KiB, 21.33 KiB and 85.33 KiB. These are per unique sprite, not per placed
+block. Actual atlas allocation includes packing, padding and power-of-two sizing;
+CPU copies and resource-load buffers are additional, and animation changes the
+accounting. The calculation does not measure actual driver memory.
+
+Higher image resolution changes texture coordinates/storage, not the number of
+faces on an ordinary cube or slab. Repeating the same high-resolution sprite
+across many blocks does not allocate another image per block. In this mod sprites
+are stitched as resources load, so the atlas footprint is not newly incurred
+for every placement. GPU texture-cache and bandwidth effects require a controlled
+hardware-rendered benchmark; these state-building numbers cannot quantify them.
+The larger-texture comparison therefore establishes memory scaling and unchanged
+basic geometry, not hardware FPS parity.
