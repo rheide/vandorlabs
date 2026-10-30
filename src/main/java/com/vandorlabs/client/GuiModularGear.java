@@ -25,8 +25,8 @@ public class GuiModularGear extends GuiContainer {
     }
     @Override public void initGui(){
         xSize=Math.min(380,width-12);ySize=218;super.initGui();buttonList.clear();int col=(xSize-36)/2,right=guiLeft+24+col;
-        channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+70,col,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(ChannelFields.text(tile.getRedstoneChannels()));
-        buttonList.add(new RedstoneActivationButton(0,guiLeft+12,guiTop+60,col,trigger));add(1,guiLeft+12,56,col);add(2,guiLeft+12,82,col);add(7,guiLeft+12,108,col);add(4,guiLeft+(xSize-200)/2,164,200);
+        channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+98,xSize-24,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(ChannelFields.text(tile.getRedstoneChannels()));
+        buttonList.add(new RedstoneActivationButton(0,guiLeft+12,guiTop+60,xSize-24,trigger));add(1,guiLeft+12,56,col);add(2,guiLeft+12,82,col);add(7,guiLeft+12,108,col);add(4,guiLeft+(xSize-200)/2,ySize-54,200);
         add(14,guiLeft+12,134,col);add(9,right,56,col);add(11,right,108,col);
         rangeSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,right,guiTop+82,col,20,"Range: "," blocks",1,32,range,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=range){range=value;submit();}});buttonList.add(rangeSlider);
         loadSlider=new net.minecraftforge.fml.client.config.GuiSlider(12,right,guiTop+134,col,20,"Height: "," blocks",1,32,heightLimit,false,true,slider->{int value=slider.getValueInt();slider.setValue(value);if(value!=heightLimit){heightLimit=value;submit();}});buttonList.add(loadSlider);
@@ -42,7 +42,9 @@ public class GuiModularGear extends GuiContainer {
 
         boolean rest=tile.fullyDeployed();
         for(GuiButton button:buttonList){button.visible=button.id>=20||button.id==4||((page==1)==(button.id==0));if(button.id>=20)button.enabled=button.id!=20+page;}
-        channels.setVisible(page==1);channels.y=guiTop+98;button(0).y=guiTop+60;
+        channels.setVisible(page==1);channels.y=guiTop+98;channels.width=xSize-24;
+        channels.setEnabled(!tile.isFixedMount());channels.setTextColor(tile.isFixedMount()?0x82939f:0xe0e8ec);
+        button(0).y=guiTop+60;button(0).width=xSize-24;button(0).enabled=!tile.isFixedMount();
         button(14).visible=page==0&&tile.canPushBlocks();button(14).enabled=tile.progress()==0||tile.progress()==1;button(14).displayString="Push blocks: "+(push?"On":"Off");
         angleSlider.visible=page==0&&tile.isSwingArmController()&&!tile.isLandingAssembly();angleSlider.enabled=rest;startSlider.visible=angleSlider.visible;startSlider.enabled=rest;
         rangeSlider.visible=page==0&&join;loadSlider.visible=page==0&&join&&load&&tile.canCarryLoad();
@@ -83,9 +85,12 @@ public class GuiModularGear extends GuiContainer {
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString(fontRenderer.trimStringToWidth(tile.getBlockType().getLocalizedName(),xSize-64),12,12,0xffffff);
         DialogHeader.logo(0,0,xSize);
-        if(page==1)fontRenderer.drawString("Receive channels",12,85,0xcdd7e4);
-        String failure=error.isEmpty()?tile.error():error;String status=failure.isEmpty()?(tile.isController()?tile.columns().size()+" arms / "+(tile.isLandingAssembly()?tile.assembly().feet().size():0)+" feet":"Track appearance"):"ERROR: "+failure;
-        java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,198+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
+        if(page==1){
+            fontRenderer.drawString("Receive channels",12,85,tile.isFixedMount()?0x82939f:0xcdd7e4);
+            if(tile.isFixedMount())fontRenderer.drawSplitString("Fixed arms remain deployed and do not use activation signals.",12,126,xSize-24,0x82939f);
+        }
+        String failure=error.isEmpty()?tile.error():error;String status=failure.isEmpty()?(tile.isController()?tile.columns().size()+" arms / "+(tile.isLandingAssembly()?tile.assembly().feet().size():0)+" feet":"No assembled mechanism"):"ERROR: "+failure;
+        java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,ySize-20+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
     @Override protected void mouseClicked(int x,int y,int b)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,b,this::actionPerformed,0,1,2,7,9,11,14))return;super.mouseClicked(x,y,b);channels.mouseClicked(x,y,b);}

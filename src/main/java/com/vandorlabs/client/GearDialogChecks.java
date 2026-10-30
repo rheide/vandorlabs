@@ -60,6 +60,11 @@ public final class GearDialogChecks {
                 occupied.clear();for(GuiButton b:buttons)if(b.visible){require(mc.fontRenderer.getStringWidth(b.displayString)<=b.width-4,"one-page label fits "+b.displayString);add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);}GuiTextField text=(GuiTextField)fields[0].get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
                 GuiButton redstone=buttons.stream().filter(b->b.id==21).findFirst().get();armGui.mouseClicked(redstone.x+5,redstone.y+5,0);
                 require(text.getVisible()&&!join.visible&&!load.visible,"Redstone tab shows channels and hides geometry");
+                GuiButton activation=buttons.stream().filter(b->b.id==0).findFirst().get();
+                require(activation.x==gui.getGuiLeft()+12&&activation.width==gui.getXSize()-24
+                        &&text.x==activation.x&&text.width==activation.width,"Redstone controls use the full content width for "+block.getRegistryName());
+                require(activation.enabled!=tile.isFixedMount(),"only fixed arms disable activation");
+                require(buttons.stream().filter(b->b.id==4).findFirst().get().y+20<=gui.getGuiTop()+gui.getYSize()-20,"Done clears the two-line status footer");
                 require(buttons.stream().noneMatch(b->b.id==15),"input-only arm does not expose a transmitter inventory");
                 occupied.clear();for(GuiButton b:buttons)if(b.visible)add(occupied,new Rectangle(b.x,b.y,b.width,b.height),size);add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);
             }
