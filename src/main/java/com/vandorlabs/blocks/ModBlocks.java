@@ -420,7 +420,10 @@ public class ModBlocks {
     public static void onMissingDisplayBlocks(RegistryEvent.MissingMappings<Block> event) {
         for (RegistryEvent.MissingMappings.Mapping<Block> mapping : event.getMappings()) {
             if (!VandorLabs.MODID.equals(mapping.key.getResourceDomain())) continue;
-            String replacement = replacementBlockId(mapping.key.getResourcePath());
+            // The handheld transmitter retains the old item ID; only the placed
+            // block moved to a separate registry name in 2.7.
+            String replacement = "redstone_transmitter".equals(mapping.key.getResourcePath())
+                    ? "redstone_transmitter_block" : replacementBlockId(mapping.key.getResourcePath());
             if (replacement != null) {
                 Block block = Block.REGISTRY.getObject(
                         new ResourceLocation(VandorLabs.MODID, replacement));

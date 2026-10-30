@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Preserve placed redstone transmitters when upgrading worlds that use their previous block registry ID.
+
 - Keep diagonal glass fill controls on one row so texture joining controls remain clear of Done in compact dialogs.
 
 - Extend joined programmable glass frames with native-width border pieces and preserved corners, matching programmable screen frames instead of scaling the full image.
