@@ -154,6 +154,17 @@ task testVehicleSelection(type: JavaExec) {
 }
 check.dependsOn testVehicleSelection
 
+task testTrapdoorFrames(type: JavaExec) {
+    group = 'verification'
+    description = 'Check ordinary trapdoor mesh parity and frame aperture geometry without GL'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'trapdoor-material'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
 task testHousingFastPath(type: JavaExec) {
     group = 'verification'
     description = 'Check compact housing/stair states, default sharing and fluid-slot isolation'

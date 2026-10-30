@@ -146,3 +146,9 @@ changing texture resolution or geometry.
 Cyan and Amber light frames backlight solid Strong replacement materials in
 Programmable Glass and Diagonal Glass, including joined layouts. Native and
 translucent glass retain their normal world lighting.
+
+
+Frame finishes on Programmable Trapdoors and Diagonal Trapdoors have open centers.
+Their inner edges follow the authored frame border through hinged and sliding
+motion. Tiled layouts repeat the frame per leaf; joined Fit/Stretch layouts keep
+an outer border without internal rails. This changes rendering only.

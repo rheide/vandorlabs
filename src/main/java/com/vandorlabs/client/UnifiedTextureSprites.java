@@ -14,7 +14,7 @@ import java.util.function.Function;
 /** Resource-pack-aware first frames and door faces, padded once during atlas loading. */
 public final class UnifiedTextureSprites {
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST) public void stitch(TextureStitchEvent.Pre event) {
-        FrameEdgeTextures.clear();ScreenFrameBorders.clear();
+        FrameEdgeTextures.clear();ScreenFrameBorders.clear();TrapdoorFrameMesh.clear();
         event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/screen_off"));
         event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/sequence_border_off"));
         for(String panel:com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.INPUT_PANELS)

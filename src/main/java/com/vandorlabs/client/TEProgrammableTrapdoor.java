@@ -50,16 +50,9 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
             boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
             boolean tiled=materialCoordinates(tile,state,group,scratch.closed,scratch.uv,UnifiedTextureSprites.aspect(sprite));
             TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
-            if("Frame".equals(ScreenHousingTextures.category(tile.getHousingTexture()))) {
-                // Keep transparent authored borders on a solid metal leaf. Reuse scratch
-                // storage and inset the backing to avoid coincident overlay polygons.
-                double cx=0,cy=0,cz=0;
-                for(double[] v:scratch.moving){cx+=v[0]/8;cy+=v[1]/8;cz+=v[2]/8;}
-                for(int i=0;i<8;i++)for(int axis=0;axis<3;axis++) {
-                    double center=axis==0?cx:axis==1?cy:cz;
-                    scratch.closed[i][axis]=center+(scratch.moving[i][axis]-center)*.9998;
-                }
-                TrapdoorSurfaceMesh.draw(buffer,edge,edge,scratch.closed,scratch.uv,light,first,end,tiled,false,false);
+            if(com.vandorlabs.tiles.FrameAppearance.border(tile.getHousingTexture())) {
+                TrapdoorFrameMesh.draw(buffer,sprite,edge,scratch.moving,scratch.uv,scratch.frame,light,tile.getHousingTexture(),first,tiled);
+                return;
             }
             TrapdoorSurfaceMesh.draw(buffer,sprite,scratch.moving,scratch.uv,light,tile.getHousingTexture(),first,end,tiled,tiled && door && tile.getTextureLayout()!=2);
             double[][] edgeUv=tall?TALL_EDGES:diagonal?SHALLOW_EDGES:FLAT_EDGES;
@@ -173,7 +166,7 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     static void drawMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] original,int light) {
         drawMesh(buffer,sprite,vertices,original,light,0,6);
     }
-    private static void drawMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] original,int light,int first,int end) {
+    static void drawMesh(BufferBuilder buffer,TextureAtlasSprite sprite,double[][] vertices,double[][] original,int light,int first,int end) {
         for(int face=first;face<end;face++) {
             int[] indices=TrapdoorGeometry.FACES[face];
             double[] a=vertices[indices[0]],b=vertices[indices[1]],c=vertices[indices[2]];
