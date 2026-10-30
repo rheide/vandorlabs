@@ -2,6 +2,9 @@
 
 ## 2.7 (in development)
 
+- Add case-insensitive, multiword texture-list search with Ctrl+F focus, retained selection and scrolling. Offer authored Frame artwork on trapdoor leaves with solid backing beneath transparent regions.
+- Audit Redstone dialog terminology and spacing; separate Thruster Lever state text from limit controls and draw enabled screen range controls without a center seam.
+
 - Rename the Redstone Receiver Block registry ID to `redstone_receiver_block` without remapping the old receiver ID. Existing receiver blocks, items and saved assemblies using the old ID are not migrated.
 
 - Replace block transmitter-item slots with built-in 4–256 block range sliders and independent Local Redstone toggles. Preserve legacy hardware for recovery and retain handheld transmitters in creative.

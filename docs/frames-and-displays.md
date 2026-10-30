@@ -42,3 +42,10 @@ layout discovery reads loaded blocks only and has fixed scan and cache limits.
 Company finishes are grouped directly under **Frame / company name**. Other finishes remain at the Frame root. The Copifier copies front, interior and layout settings, including onto glass items for later placement.
 
 Screen frame Fit repeats the outer edge strips at their original thickness. It omits internal borders and keeps separate corners, including on rectangular screen groups. Use the **Framed / Bare** button in the Frame tab to remove or restore the border. The selected finish is retained through closing the dialog, saving and reloading. The visible display area reserves the straight-edge thickness of the selected artwork; decorative corners may overlap slightly.
+
+
+Trapdoor leaf textures can use the authored Frame collection. The selected image
+covers the leaf, with solid metal behind its transparent regions. Use the texture
+layout setting to choose between the complete artwork and repeated square pixels
+on diagonal trapdoors. Texture pickers support case-insensitive, multiword search
+by name, category or identifier; click the search field or press Ctrl+F to focus it.

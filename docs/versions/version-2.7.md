@@ -15,6 +15,16 @@ from shallow support penetration when a clear, loaded exit exists. Parking
 paintings checks the restored blocks and other obstacles while excluding the
 craft being retired; failed transfers retain exactly one painting owner.
 
+Texture lists include a quick search field. Click the field or press **Ctrl+F**
+to filter immediately by artwork name, category or identifier. Search ignores
+case and accepts multiple words. Clearing the search restores the current
+category view; filtering keeps the selected material and supports wheel scrolling
+and scrollbar dragging. Escape closes the dialog normally.
+
+Trapdoor leaf pickers also offer the authored Frame artwork. Transparent frame
+regions retain a solid metal backing. These choices apply the existing image to
+the leaf surface; they do not introduce another frame assembly or new textures.
+
 Artwork pickers use short company names and explicit Full/Half frame labels,
 with the current selection revealed when switching tabs. Glass and unsplit
 screens offer full-height frames; split screens also support half-height frames.
