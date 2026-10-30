@@ -103,3 +103,19 @@ animation playback. Authored frame interiors use their corresponding left, top,
 right and bottom border material instead of stretching the complete hollow image.
 
 The Redstone Receiver Block now uses `vandorlabs:redstone_receiver_block`. The previous `vandorlabs:redstone_receiver` ID is removed without remapping; old receiver blocks, items and saved assemblies are not migrated. Handheld redstone transmitters retain their separate item ID.
+
+Square artwork on diagonal surfaces keeps a tradeoff between preserving the
+complete image and preserving square pixels. A shallow slope is about 11.8%
+longer than its vertical projection; a 45-degree slope is about 41.4% longer.
+Diagonal trapdoors already account for that length in **Tile** mode, repeating
+the existing artwork without creating textures. **Fit (aspect)** also tiles
+when the complete image would have the wrong aspect. **Stretch** preserves the
+whole image, including authored frame borders, and therefore stretches it to
+the surface. For frame and door artwork, keep Stretch when the complete border
+must remain visible.
+
+Diagonal walls retain their existing complete-image mapping. A general repeat
+mode would need to split geometry at sprite boundaries in both the game and
+Dynmap, including joined walls, fills and inverted pieces. Simply multiplying
+atlas UVs would smear sprite-edge pixels; cropping would remove parts of the
+artwork. No derived textures or automatic crop are introduced.
