@@ -268,6 +268,7 @@ public class BlockVandorSwitch extends BlockVandor {
 
     @Override
     public int getWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+        if(!com.vandorlabs.redstone.TransmitterSlots.localRedstone(world,pos))return 0;
         if(!state.getValue(ON))return 0;
         TileEntity tile=world.getTileEntity(pos);
         return tile instanceof TileEntityRedstoneChannel?((TileEntityRedstoneChannel)tile).getOutputLevel():15;
@@ -275,6 +276,7 @@ public class BlockVandorSwitch extends BlockVandor {
 
     @Override
     public int getStrongPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+        if(!com.vandorlabs.redstone.TransmitterSlots.localRedstone(world,pos))return 0;
         // Strong on every side while ON (like a vanilla lever): the support
         // block is guaranteed strongly powered, so it conducts up/through to
         // lamps and dust no matter which face the switch sits on.

@@ -13,7 +13,7 @@ public final class GuiPressurePlate extends GuiMaterialPicker {
         String draft=channels==null?ChannelFields.text(container.tile.getRedstoneChannels()):channels.getText();ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         textures=HousingTextureList.forCategory("Trapdoors",layout.listX,guiTop+62,layout.listWidth,textures==null?container.tile.texture():textures.selected()).visibleRows(layout.rows(true)-1).keepView(textures);
         channels=new GuiTextField(0,fontRenderer,layout.controlsX,guiTop+49,154,18);ChannelFields.configure(channels);channels.setText(draft);channels.setVisible(false);buttonList.add(layout.tab(100,0,2,"General"));buttonList.add(layout.tab(101,1,2,"Redstone"));for(GuiButton b:buttonList)b.enabled=b.id!=100+page;if(page==1)buttonList.add(layout.control(90,64,"Redstone Transmitter..."));
-        if(page==1){buttonList.add(layout.control(1,94,label()));buttonList.add(layout.control(3,120,"Sensitivity: "+PlateTile.sensitivityName(sensitivity)));}buttonList.add(layout.done(2));
+        if(page==0){buttonList.add(layout.control(1,64,label()));buttonList.add(layout.control(3,90,"Sensitivity: "+PlateTile.sensitivityName(sensitivity)));}buttonList.add(layout.done(2));
     }
     private String label(){return new String[]{"Output: Disabled","Output: Pressed","Output: Released"}[mode];}
     private void send(){com.vandorlabs.redstone.ChannelList list=ChannelFields.parse(channels);if(list!=null)com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new PlateMessage(inventorySlots.windowId,textures.selected(),mode,sensitivity,list.toString()));}

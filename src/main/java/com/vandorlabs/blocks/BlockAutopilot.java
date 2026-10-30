@@ -22,6 +22,6 @@ public final class BlockAutopilot extends BlockVandorDirectional {
     }
     public void neighborChanged(IBlockState state,World world,BlockPos pos,Block block,BlockPos from){TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileEntityAutopilot && !(tile instanceof TileEntityWaypoint))((TileEntityAutopilot)tile).refreshPower();}
     public boolean canProvidePower(IBlockState state){return waypoint;}
-    public int getWeakPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,EnumFacing side){TileEntity raw=world.getTileEntity(pos);return raw instanceof TileEntityWaypoint&&((TileEntityWaypoint)raw).hasLocalRedstoneSignal()?15:0;}
+    public int getWeakPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,EnumFacing side){TileEntity raw=world.getTileEntity(pos);return com.vandorlabs.redstone.TransmitterSlots.localRedstone(world,pos)&&raw instanceof TileEntityWaypoint&&((TileEntityWaypoint)raw).hasLocalRedstoneSignal()?15:0;}
     public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityWaypoint)((TileEntityWaypoint)raw).endPulse();else if(raw instanceof TileEntityAutopilot)com.vandorlabs.vehicle.VehicleAutopilot.depart((TileEntityAutopilot)raw);}
 }

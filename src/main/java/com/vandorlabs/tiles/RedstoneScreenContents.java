@@ -139,7 +139,7 @@ public final class RedstoneScreenContents {
         if(SignalUpdateBatch.isActive())SignalUpdateBatch.afterSignals(owner,this::syncRows);else syncRows();
     }
     private void syncRows(){if(owner.getWorld()!=null && !owner.getWorld().isRemote && !owner.isInvalid()){
-        net.minecraft.block.state.IBlockState state=owner.getWorld().getBlockState(owner.getPos());owner.getWorld().notifyBlockUpdate(owner.getPos(),state,state,2);
+        net.minecraft.block.state.IBlockState state=owner.getWorld().getBlockState(owner.getPos());owner.getWorld().notifyBlockUpdate(owner.getPos(),state,state,2);if(com.vandorlabs.redstone.TransmitterSlots.localRedstone(owner))com.vandorlabs.redstone.TransmitterSlots.notifyLocalOutput(owner);
     }}
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
         tag.setBoolean("Enabled",enabled);NBTTagList list=new NBTTagList();

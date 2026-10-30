@@ -357,6 +357,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (world != null && world.isRemote) world.markBlockRangeForRenderUpdate(pos,pos);
     }
 
+    // Rows own transmission; the host channel list is a display input, never a wire repeater.
+    @Override public ChannelList transmittedChannels(){return ChannelList.EMPTY;}
     @Override public TileEntity channelTile() { return this; }
     @Override public int getRedstoneChannel() { return redstoneChannel; }
     @Override public boolean hasLocalRedstoneSignal() {

@@ -20,6 +20,8 @@ public final class PlateBlock extends BlockBasePressurePlate {
     private static final ThreadLocal<Integer> SENSING=new ThreadLocal<>();
     public PlateBlock(){super(Material.WOOD);setDefaultState(blockState.getBaseState().withProperty(POWER,0));setRegistryName("vandorlabs","programmable_pressure_plate");setUnlocalizedName("vandorlabs.programmable_pressure_plate");setCreativeTab(com.vandorlabs.VandorLabs.VANDOR_LABS_TAB);setHardness(.5F);setSoundType(SoundType.WOOD);}
     @Override protected BlockStateContainer createBlockState(){return new ExtendedBlockState(this,new net.minecraft.block.properties.IProperty[]{POWER},new IUnlistedProperty[]{ProgrammableHousingState.FINISH});}
+    @Override public int getWeakPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return com.vandorlabs.redstone.TransmitterSlots.localRedstone(world,pos)?super.getWeakPower(state,world,pos,side):0;}
+    @Override public int getStrongPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return com.vandorlabs.redstone.TransmitterSlots.localRedstone(world,pos)?super.getStrongPower(state,world,pos,side):0;}
     @Override protected int getRedstoneStrength(IBlockState state){return state.getValue(POWER);}
     @Override protected IBlockState setRedstoneStrength(IBlockState state,int strength){return state.withProperty(POWER,Math.max(0,Math.min(15,strength)));}
     @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(POWER,meta&15);}

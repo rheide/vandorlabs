@@ -71,7 +71,7 @@ final class CockpitControlRuntimeChecks {
         TransmitterSlots.set(tile,net.minecraft.item.ItemStack.EMPTY);
         TileEntityCockpit.Control left=tile.control("throttle_left"),right=tile.control("throttle_right");
         left.setRedstoneChannels(ChannelList.of(65491));right.setRedstoneChannels(ChannelList.of(65492));
-        require(left.transmissionRange()<0&&right.transmissionRange()<0,"no cockpit module disables all controls");
+        require(left.transmissionRange()==16&&right.transmissionRange()==16,"cockpit controls have built-in range without a module");
         install(tile,0,ChannelList.of(65493));
         require(left.transmissionRange()==16&&right.transmissionRange()==16,"one shared range for both throttles");
         require(left.transmittedChannels().equals(ChannelList.of(65491))&&right.transmittedChannels().equals(ChannelList.of(65492)),"shared module preserves independent targets");

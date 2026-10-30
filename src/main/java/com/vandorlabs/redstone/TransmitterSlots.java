@@ -5,9 +5,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
-/** Slot contents live in ForgeData, preserving them through every tile's normal snapshot path. */
+/** Built-in settings and recoverable legacy hardware persist through normal ForgeData snapshots. */
 public final class TransmitterSlots {
     private static final String KEY="VandorTransmitters";
+    private static final String SETTINGS="VandorTransmission";
+    public static final int[] RANGES={4,8,16,32,64,128,256};
     public static final String SCHEMA="TransmitterSchema";
     private static final java.util.Set<String> OUTPUT_TYPES=new java.util.HashSet<>(java.util.Arrays.asList(
             "redstone_channel","signal_control","wireless_redstone","token_slot","programmable_pressure_plate",
@@ -95,8 +97,81 @@ public final class TransmitterSlots {
         NBTTagCompound slots=savedSlots(member.channelTile());
         return new ItemStack(slots.getCompoundTag(member.transmitterSlot()));
     }
-    public static ChannelList channels(RedstoneChannelMember member){return settings(member).channels;}
-    public static int range(RedstoneChannelMember member){return settings(member).range;}
+    private static NBTTagCompound savedSettings(TileEntity tile,String slot){
+        try{
+            NBTTagCompound data=(NBTTagCompound)CUSTOM_DATA.get(tile);
+            if(data==null||!data.hasKey(SETTINGS,10))return NO_DATA;
+            NBTTagCompound all=data.getCompoundTag(SETTINGS);
+            return all.hasKey(slot,10)?all.getCompoundTag(slot):NO_DATA;
+        }catch(IllegalAccessException brokenForge){throw new IllegalStateException("Cannot read transmission settings",brokenForge);}
+    }
+    private static NBTTagCompound configuration(RedstoneChannelMember member){return savedSettings(member.channelTile(),member.transmitterSlot());}
+    private static final java.util.Map<RedstoneChannelMember,SavedChannels> CONFIG_CACHE=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<RedstoneChannelMember,SavedChannels>());
+    private static final class SavedChannels {
+        final NBTTagCompound identity;final ChannelList channels;
+        SavedChannels(NBTTagCompound tag){identity=tag;channels=ChannelData.read(tag,"Channels",ChannelList.EMPTY);}
+    }
+    public static boolean supported(RedstoneChannelMember member){
+        return outputOnly(member)||member instanceof com.vandorlabs.tiles.TileEntityCockpit
+                ||member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control
+                ||member instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+                ||member instanceof com.vandorlabs.tiles.RedstoneScreenContents.Row;
+    }
+    public static ChannelList channels(RedstoneChannelMember member){
+        NBTTagCompound configured=configuration(member);
+        if(configured.hasKey("Channels",11)){SavedChannels cached=CONFIG_CACHE.get(member);if(cached==null||cached.identity!=configured){cached=new SavedChannels(configured);CONFIG_CACHE.put(member,cached);}return cached.channels;}
+        Cached legacy=settings(member);
+        if(legacy.range>=0)return legacy.channels;
+        return outputOnly(member)?member.getRedstoneChannels():ChannelList.EMPTY;
+    }
+    public static boolean validRange(int range){for(int allowed:RANGES)if(range==allowed)return true;return false;}
+    public static int range(RedstoneChannelMember member){
+        NBTTagCompound configured=configuration(member);
+        if(configured.hasKey("Range",3)){int value=configured.getInteger("Range");return validRange(value)?value:16;}
+        int legacy=settings(member).range;
+        return legacy>=0?(legacy==0?256:legacy):supported(member)?16:-1;
+    }
+    public static boolean localRedstone(TileEntity tile){
+        NBTTagCompound configured=savedSettings(tile,"main");
+        if(configured.hasKey("Local",1))return configured.getBoolean("Local");
+        // Enabling new physical outputs must be deliberate in existing worlds.
+        return !(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+                ||tile instanceof com.vandorlabs.tiles.TileEntityCockpit
+                ||tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter());
+    }
+    /** Combined physical output for hosts with several independent controls. */
+    public static int localOutput(net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos){
+        TileEntity tile=world.getTileEntity(pos);if(tile==null||!localRedstone(tile))return 0;int level=0;
+        if(tile instanceof com.vandorlabs.tiles.TileEntityCockpit){
+            for(com.vandorlabs.tiles.TileEntityCockpit.Control control:((com.vandorlabs.tiles.TileEntityCockpit)tile).controls)if(control.active())level=Math.max(level,control.level);
+        }else if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
+            for(int side=0;side<2;side++)if(screen.hasRedstoneScreen(side))for(com.vandorlabs.tiles.RedstoneScreenContents.Row row:screen.redstoneScreen(side).rows())level=Math.max(level,row.slider?row.level():row.active()?15:0);
+        }
+        return Math.max(0,Math.min(15,level));
+    }
+    public static boolean localRedstone(net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos){TileEntity tile=world.getTileEntity(pos);return tile==null||localRedstone(tile);}
+    /** Settings are independent of the retained legacy inventory, which is still returned on mining. */
+    public static void configure(RedstoneChannelMember member,ChannelList channels,int range,boolean local){
+        if(channels==null||!validRange(range)||!supported(member))throw new IllegalArgumentException("Invalid transmission settings");
+        TileEntity tile=member.channelTile();boolean previousLocal=localRedstone(tile);NBTTagCompound data=tile.getTileData(),all=data.getCompoundTag(SETTINGS),next=new NBTTagCompound();
+        next.setIntArray("Channels",channels.toArray());next.setInteger("Range",range);next.setBoolean("Local",local);
+        all.setTag(member.transmitterSlot(),next);data.setTag(SETTINGS,all);
+        set(member,get(member));
+        if(previousLocal!=local)notifyLocalOutput(tile);
+    }
+    /** Notify native output and support conduction without requesting unloaded chunks. */
+    public static void notifyLocalOutput(TileEntity tile){
+        net.minecraft.world.World world=tile.getWorld();if(world==null||world.isRemote||!world.isBlockLoaded(tile.getPos()))return;
+        net.minecraft.util.math.BlockPos pos=tile.getPos();net.minecraft.block.Block block=world.getBlockState(pos).getBlock();
+        for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.values()){
+            net.minecraft.util.math.BlockPos neighbor=pos.offset(face);if(!world.isBlockLoaded(neighbor))continue;
+            world.neighborChanged(neighbor,block,pos);
+            if(world.getBlockState(neighbor).isNormalCube())for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values()){
+                net.minecraft.util.math.BlockPos target=neighbor.offset(side);if(world.isBlockLoaded(target))world.neighborChanged(target,block,neighbor);
+            }
+        }
+    }
     public static boolean outputOnly(RedstoneChannelMember member){if(member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control||member instanceof com.vandorlabs.tiles.RedstoneScreenContents.Row)return false;TileEntity tile=member.channelTile();return member instanceof RedstoneChannelLatch&&!(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&!((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter())||tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot||tile instanceof com.vandorlabs.plate.PlateTile||tile instanceof com.vandorlabs.tiles.TileEntityWaypoint;}
     public static void set(RedstoneChannelMember member,ItemStack stack){
         net.minecraft.world.World world=member.channelTile().getWorld();

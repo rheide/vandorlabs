@@ -80,6 +80,9 @@ case "${1:-}" in
         elif [ "$TARGET" = taxi-landing27 ]; then
             PREFIX=taxi_landing27_
             export VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY=true
+        elif [ "$TARGET" = transmission ]; then
+            PREFIX=transmission_
+            export VANDOR_LABS_TRANSMISSION_CHECKS_ONLY=true
         elif [ "$TARGET" = artwork27 ]; then
             PREFIX=artwork27_
             export VANDOR_LABS_ARTWORK27_CHECKS_ONLY=true
@@ -312,6 +315,12 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = taxi-landing27 ]; then
         grep -q "taxi-landing27 PASS" "$RUN_OUT/client.log"
         echo "Taxi landing gear checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = transmission ]; then
+        grep -q "transmission-settings PASS" "$RUN_OUT/client.log"
+        grep -q "inline-transmitter-survival PASS" "$RUN_OUT/client.log"
+        echo "Transmission settings passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = artwork27 ]; then

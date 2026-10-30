@@ -103,7 +103,7 @@ public class GuiRedstoneChannel extends GuiContainer {
         if(page==1){
             if(transmitterControl())buttonList.add(new GuiButton(90,guiLeft+14,guiTop+62,xSize-28,20,"Transmitter..."));
 
-            if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+116,122,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+144,guiTop+116,122,20,"High: "+highLimit));}
+            if(signalControl){buttonList.add(new GuiButton(7,guiLeft+14,guiTop+132,122,20,"Low: "+lowLimit));buttonList.add(new GuiButton(8,guiLeft+144,guiTop+132,122,20,"High: "+highLimit));}
             if(thruster){buttonList.add(RedstoneActivationButton.from(layout.control(16,100,""),redstoneInverted?2:1));buttonList.add(layout.control(5,124,brightnessLabel()));buttonList.add(layout.control(6,148,thresholdLabel()));}
             if(pilotSeat)buttonList.add(new RedstoneActivationButton(18,guiLeft+14,guiTop+94,252,pilotMode));
         }else{

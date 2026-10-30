@@ -126,7 +126,7 @@ public final class ProgrammableSettings {
     }
 
     private static ChannelList channels(NBTTagCompound tag,RedstoneChannelMember member) {
-        if(com.vandorlabs.redstone.TransmitterSlots.outputOnly(member))return com.vandorlabs.redstone.TransmitterSlots.channels(member);
+        if(com.vandorlabs.redstone.TransmitterSlots.outputOnly(member))return tag.hasKey("Transmission",10)?ChannelList.of(tag.getCompoundTag("Transmission").getIntArray("Channels")):com.vandorlabs.redstone.TransmitterSlots.channels(member);
         if(tag.hasKey(CHANNEL,11))return ChannelData.read(tag,CHANNEL,member.getRedstoneChannels());
         return tag.hasKey(CHANNEL,3)?ChannelList.of(Math.max(0,tag.getInteger(CHANNEL))):member.getRedstoneChannels();
     }
@@ -145,6 +145,10 @@ public final class ProgrammableSettings {
         Block block = world.getBlockState(pos).getBlock();
         if (tile == null) return null;
         NBTTagCompound out = new NBTTagCompound();
+        if(tile instanceof RedstoneChannelMember&&com.vandorlabs.redstone.TransmitterSlots.supported((RedstoneChannelMember)tile)){
+            RedstoneChannelMember member=(RedstoneChannelMember)tile;NBTTagCompound transmission=new NBTTagCompound();
+            transmission.setIntArray("Channels",com.vandorlabs.redstone.TransmitterSlots.channels(member).toArray());transmission.setInteger("Range",member.transmissionRange());transmission.setBoolean("Local",com.vandorlabs.redstone.TransmitterSlots.localRedstone(tile));out.setTag("Transmission",transmission);
+        }
         com.vandorlabs.tiles.FrameAppearance appearance=com.vandorlabs.tiles.FrameAppearance.of(tile);
         if(appearance!=null){NBTTagCompound frames=new NBTTagCompound();appearance.write(frames);out.setTag("FrameAppearance",frames);}
         if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block))
@@ -374,7 +378,10 @@ public final class ProgrammableSettings {
         pos=ProgrammableTarget.settingsPos(world,pos);
         TileEntity tile = world.getTileEntity(pos);
         Block block = world.getBlockState(pos).getBlock();
-        return applyToTile(world, pos, values, player, tile, block);
+        boolean batch=world!=null&&!world.isRemote;
+        if(batch)com.vandorlabs.redstone.RedstoneChannels.beginTransfer(world);
+        try{return applyToTile(world, pos, values, player, tile, block);}
+        finally{if(batch)com.vandorlabs.redstone.RedstoneChannels.endTransfer(world);}
     }
 
     private static boolean applyToTile(World world, BlockPos pos, NBTTagCompound values,
@@ -384,6 +391,11 @@ public final class ProgrammableSettings {
         if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Mode",3) && !com.vandorlabs.render.TextureLayoutMode.valid(values.getCompoundTag(GLASS_LAYOUT).getInteger("Mode")))return false;
         if(values.hasKey(STAIR_TREAD,3)&&!com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(values.getInteger(STAIR_TREAD)))return false;
         if(values.hasKey(STAIR_ROLL,3)&&(values.getInteger(STAIR_ROLL)<0||values.getInteger(STAIR_ROLL)>2))return false;
+        NBTTagCompound transmission=values.getCompoundTag("Transmission");ChannelList transmissionChannels=null;
+        if(values.hasKey("Transmission",10)){
+            if(!transmission.hasKey("Channels",11)||!transmission.hasKey("Range",3)||!transmission.hasKey("Local",1)||!com.vandorlabs.redstone.TransmitterSlots.validRange(transmission.getInteger("Range")))return false;
+            try{transmissionChannels=ChannelList.of(transmission.getIntArray("Channels"));}catch(IllegalArgumentException invalid){return false;}
+        }
         boolean applicable = false;
         if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
@@ -735,6 +747,9 @@ public final class ProgrammableSettings {
             if(!before.equals(after)){appearance.read(after);com.vandorlabs.tiles.GlassMaterials.changed();tile.markDirty();
                 if(world!=null){net.minecraft.block.state.IBlockState actual=world.getBlockState(pos);world.notifyBlockUpdate(pos,actual,actual,3);world.checkLight(pos);}}
 
+        }
+        if(transmissionChannels!=null&&tile instanceof RedstoneChannelMember&&com.vandorlabs.redstone.TransmitterSlots.supported((RedstoneChannelMember)tile)){
+            com.vandorlabs.redstone.TransmitterSlots.configure((RedstoneChannelMember)tile,transmissionChannels,transmission.getInteger("Range"),transmission.getBoolean("Local"));applicable=true;
         }
         return applicable;
     }

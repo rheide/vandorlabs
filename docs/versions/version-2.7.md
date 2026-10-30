@@ -43,16 +43,7 @@ Vehicle light probes are removed when a craft becomes unavailable. Building
 compatibility checks reject overflowing screen dimensions and leave unloaded
 furniture-door neighbors unloaded.
 
-[Redstone Transmitters](../redstone-transmitters.md) carry channel lists and an
-outgoing range of 16, 64 or 256 blocks, or unlimited range within one dimension.
-Insert a transmitter into a transmitting block to enable channel output.
-Carried vehicle controllers receive ranged signals at their physical position.
-Replacing a shared screen transmitter refreshes every row output together.
-Handheld toggles retain unrelated saved sources without rebuilding their indexes.
-Receiver input channels and analog signal processing remain on the receiving
-block. Shift-right-click a transmitter to edit its channels; ordinary use toggles
-a saved signal at the point of use. A crafting-table copy preserves the central
-source transmitter while copying its channels to the adjacent destination.
+Transmitting blocks use a built-in **Range** slider with 4, 8, 16, 32, 64, 128 and 256 block settings, plus **Local Redstone: On/Off**. No item insertion is required. Physical output can be disabled while channels remain active. Screen rows and cockpit controls share host settings and keep independent channel targets. [Handheld Redstone Transmitters](../redstone-transmitters.md) remain in creative and retain their original item ranges and use behavior.
 
 Different places can receive different levels on the same channel. A receiver
 uses the strongest signal that reaches it. Linked controls within a transmitter's
@@ -67,20 +58,7 @@ frame Fit also surrounds rectangular groups with constant border thickness. Scre
 **Programmable Flatscreen**; its saved registry identifier remains unchanged.
 
 Dialogs open on their first tab and use shared tabs, a Vandor logo and consistent
-Redstone and Security pages. Redstone is the last tab, and receiver-only dialogs omit transmitter controls. Empty transmitter slots show a faded item icon;
-inserted transmitters have an inline channel field. Existing configured redstone
-outputs from earlier versions receive Long Range hardware when upgraded. Removing
-a granted item leaves its slot empty on later loads. Screen control rows share one transmitter; edit its range on the Redstone tab and set output channels on each row. Row targets override the module channel list.
-Cockpits share one transmitter
-across their controls and group their individual surfaces below the main tabs.
-The Vehicle Controller uses centered Vehicle and Redstone pages.
-Frame settings and screen control rows stay inside the same configuration
-window. Custom textures are sampled directly from an inventory grid in the
-material picker. Activation selectors use **Manual**, **Redstone ON** and
-**Redstone OFF**; controls that require a signal retain their two-state choices.
-Housing artwork is named **Sides**. New artwork includes six replacement
-corporate armor sets, two Surface helipads and 78 static half-height control
-panels, grouped under Controls in the texture picker.
+Redstone and Security pages. Redstone is the last tab, and receiver-only dialogs omit transmitter controls. Built-in range sliders and Local Redstone toggles replace module slots. Existing module settings remain compatible, and previously inserted items stay recoverable through mining. Screen rows share their host range; each row keeps its own channels. Cockpit controls may also use the shared default channel list.
 
 [Company screen layers](../company-screen-layers.md) add 12 borders and 72
 six-frame animations, grouped by company under Frame and Screens. Transparent

@@ -15,6 +15,10 @@ import java.util.List;
 
 /** Seated cockpit is a genuine Pilot Seat with authored multiblock collision. */
 public final class BlockCockpit extends BlockPilotSeat {
+    @Override public boolean canProvidePower(net.minecraft.block.state.IBlockState state){return true;}
+    @Override public int getWeakPower(net.minecraft.block.state.IBlockState state,net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing side){return com.vandorlabs.redstone.TransmitterSlots.localOutput(world,pos);}
+    @Override public int getStrongPower(net.minecraft.block.state.IBlockState state,net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing side){return getWeakPower(state,world,pos,side);}
+
     public final String design;
     public BlockCockpit(String design){super(design);this.design=design;}
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,design.equals("cockpit")?DirectionalPlacement.alongPlayer(placer):DirectionalPlacement.towardPlayer(placer));}

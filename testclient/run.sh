@@ -27,6 +27,7 @@ CAPTURE_JVM+=("-Dvandorlabs.foreignBuildingChecksOnly=${VANDOR_LABS_FOREIGN_BUIL
 CAPTURE_JVM+=("-Dvandorlabs.legacyVehicleFixture=$PWD/../fixtures/legacy-vehicle-controller-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.taxiVisibilityChecksOnly=${VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.taxiLanding27ChecksOnly=${VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.transmissionChecksOnly=${VANDOR_LABS_TRANSMISSION_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.artwork27ChecksOnly=${VANDOR_LABS_ARTWORK27_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.couplingChecksOnly=${VANDOR_LABS_COUPLING_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.utility26ChecksOnly=${VANDOR_LABS_UTILITY26_CHECKS_ONLY:-false}")

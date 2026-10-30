@@ -35,11 +35,11 @@ public final class TileEntityWirelessRedstone extends TileEntityRedstoneChannel 
                 for(EnumFacing direction:EnumFacing.values()){BlockPos neighbor=source.offset(direction);if(world.isBlockLoaded(neighbor))level=Math.max(level,world.getBlockState(neighbor).getStrongPower(world,neighbor,direction));}
             }else level=state.getWeakPower(world,source,side);
         }
-        level=Math.max(0,Math.min(15,level));if(level==inputLevel)return;inputLevel=level;changed(false);RedstoneChannels.inputChanged(this);
+        level=Math.max(0,Math.min(15,level));if(level==inputLevel)return;inputLevel=level;changed(true);RedstoneChannels.inputChanged(this);
     }
     private void changed(boolean output){
         markDirty();if(world==null||world.isRemote)return;IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);
-        if(output){Runnable notify=()->{if(world.getTileEntity(pos)!=this)return;world.notifyNeighborsOfStateChange(pos,state.getBlock(),false);world.notifyNeighborsOfStateChange(pos.offset(port()),state.getBlock(),false);};if(SignalUpdateBatch.isActive())SignalUpdateBatch.afterSignals(this,notify);else notify.run();}
+        if(output){Runnable notify=()->{if(world.getTileEntity(pos)!=this)return;world.notifyNeighborsOfStateChange(pos,state.getBlock(),false);world.notifyNeighborsOfStateChange(pos.offset(port()),state.getBlock(),false);world.notifyNeighborsOfStateChange(pos.offset(port().getOpposite()),state.getBlock(),false);};if(SignalUpdateBatch.isActive())SignalUpdateBatch.afterSignals(this,notify);else notify.run();}
     }
     public void rotatePort(EnumFacing facing){if(world==null)return;world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockWirelessRedstone.FACING,facing),3);sampleInput();changed(true);}
     @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,()->{sampleInput();changed(true);});}

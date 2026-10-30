@@ -1,100 +1,100 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.VandorLabs;
-import com.vandorlabs.items.ItemRedstoneTransmitter;
-import com.vandorlabs.items.ModItems;
 import com.vandorlabs.redstone.*;
 import com.vandorlabs.network.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.client.config.GuiSlider;
 import net.minecraftforge.fml.relauncher.*;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import java.util.*;
 
-/** Real module/hotbar slots and channel editing stay in the authenticated block window. */
+/** Shared range, local-output and channel controls inside each authenticated block dialog. */
 @Mod.EventBusSubscriber(modid=VandorLabs.MODID,value=Side.CLIENT)
 public final class InlineTransmitterWidget {
-    public static final int HEIGHT=44;
-    private static boolean sharedScreen(GuiContainer gui){return gui instanceof GuiAnimatedScreenSelector||gui instanceof GuiProgrammableInput||gui instanceof GuiProgrammableHalfConsole||gui instanceof GuiRedstoneScreen;}
-    private static String caption(GuiContainer gui){return sharedScreen(gui)?"Shared transmitter range":gui instanceof GuiCockpit?"Default target channels (blank = local)":CAPTION;}
-    private static final String CAPTION="Transmit channels (blank = local)";
-    private static final java.lang.reflect.Field LEFT=ReflectionHelper.findField(GuiContainer.class,"guiLeft","field_147003_i"),TOP=ReflectionHelper.findField(GuiContainer.class,"guiTop","field_147009_r"),GUI_HEIGHT=ReflectionHelper.findField(GuiContainer.class,"ySize","field_147000_g"),BUTTONS=ReflectionHelper.findField(GuiScreen.class,"buttonList","field_146292_n");
+    public static final int HEIGHT=64;
+    private static final java.lang.reflect.Field BUTTONS=ReflectionHelper.findField(GuiScreen.class,"buttonList","field_146292_n");
     private static final Map<GuiContainer,State> STATES=new WeakHashMap<>();
-    private static final class Placement {final InlineTransmitters.ModuleSlot slot;final GuiButton anchor;final GuiTextField field;ItemStack before=ItemStack.EMPTY;boolean dirty,shown,pending;int x,y,width;
-        Placement(GuiButton anchor,InlineTransmitters.ModuleSlot slot){this.anchor=anchor;this.slot=slot;field=new GuiTextField(1980,Minecraft.getMinecraft().fontRenderer,0,0,100,18);ChannelFields.configure(field);}}
-    private static final class State {final Map<GuiButton,Placement> buttons=new IdentityHashMap<>();}
+    private static boolean sharedScreen(GuiContainer gui){return gui instanceof GuiAnimatedScreenSelector||gui instanceof GuiProgrammableInput||gui instanceof GuiProgrammableHalfConsole||gui instanceof GuiRedstoneScreen;}
+    private static final class State {final Map<GuiButton,Placement> buttons=new IdentityHashMap<>();Placement draft;}
+    private static final class Placement {
+        final GuiButton anchor,local;final int selector;final java.lang.ref.WeakReference<GuiContainer> owner;final GuiTextField field;final GuiSlider range;
+        ChannelList observed;int observedRange;boolean observedLocal,dirty,shown;int savedAt=-1000;
+        Placement(GuiContainer gui,GuiButton anchor,int selector,RedstoneChannelMember member,Placement draft){
+            this.anchor=anchor;this.selector=selector;this.owner=new java.lang.ref.WeakReference<>(gui);
+            field=new GuiTextField(1980,Minecraft.getMinecraft().fontRenderer,anchor.x,anchor.y+44,anchor.width,18);ChannelFields.configure(field);
+            boolean pending=draft!=null&&(draft.dirty||Minecraft.getMinecraft().player.ticksExisted-draft.savedAt<=40);
+            observed=pending?draft.observed:TransmitterSlots.channels(member);observedRange=pending?draft.observedRange:member.transmissionRange();observedLocal=pending?draft.observedLocal:TransmitterSlots.localRedstone(member.channelTile());field.setText(pending?draft.field.getText():ChannelFields.text(observed));dirty=pending&&draft.dirty;if(pending)savedAt=draft.savedAt;
+            local=new GuiButton(1982,anchor.x,anchor.y+22,anchor.width,20,"");
+            range=new GuiSlider(1981,anchor.x,anchor.y,anchor.width,20,"","",0,6,index(observedRange),false,true,s->{int index=s.getValueInt();s.setValue(index);s.displayString="Range: "+TransmitterSlots.RANGES[index]+" blocks";GuiContainer current=owner.get();if(current!=null&&rangeReady())save(current,this);});
+            range.displayString="Range: "+observedRange+" blocks";label();
+        }
+        boolean rangeReady(){return range!=null;}
+        void label(){local.displayString="Local Redstone: "+(observedLocal?"On":"Off");}
+    }
     private InlineTransmitterWidget(){}
-    private static int value(java.lang.reflect.Field field,Object instance){try{return field.getInt(instance);}catch(IllegalAccessException badForge){throw new IllegalStateException(badForge);}}
+    private static int index(int value){for(int i=0;i<TransmitterSlots.RANGES.length;i++)if(TransmitterSlots.RANGES[i]==value)return i;return 2;}
     @SuppressWarnings("unchecked") private static List<GuiButton> buttons(GuiScreen gui){try{return (List<GuiButton>)BUTTONS.get(gui);}catch(IllegalAccessException badForge){throw new IllegalStateException(badForge);}}
-    private static void save(GuiContainer gui,Placement p){if(!p.dirty||p.pending||p.before.isEmpty())return;ChannelList next=ChannelFields.parse(p.field);if(next==null)return;if(next.equals(ItemRedstoneTransmitter.channels(p.before))){p.dirty=false;return;}PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.hosted(gui.inventorySlots.windowId,p.slot.selector,p.before,next));p.dirty=false;p.pending=true;}
+    private static void save(GuiContainer gui,Placement p){
+        ChannelList next=ChannelFields.parse(p.field);if(next==null)return;int range=TransmitterSlots.RANGES[p.range.getValueInt()];
+        if(!p.dirty&&next.equals(p.observed)&&range==p.observedRange)return;
+        PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.settings(gui.inventorySlots.windowId,p.selector,next,range,p.observedLocal));
+        p.observed=next;p.observedRange=range;p.dirty=false;p.savedAt=Minecraft.getMinecraft().player.ticksExisted;
+    }
     private static State layout(GuiContainer gui){
-        Minecraft mc=Minecraft.getMinecraft();if(mc.player==null)return null;
-        InlineTransmitters.attach(gui.inventorySlots,mc.player);InlineTransmitters.Binding binding=InlineTransmitters.binding(gui.inventorySlots);if(binding==null)return null;
-        binding.hide();State state=STATES.computeIfAbsent(gui,g->new State());
-        // A placement retains its anchor. Explicitly discard rebuilt tab buttons;
-        // weak keys cannot collect a key strongly referenced by their own value.
-        List<GuiButton> current=buttons(gui);
-        Iterator<Map.Entry<GuiButton,Placement>> obsolete=state.buttons.entrySet().iterator();
-        while(obsolete.hasNext()){Map.Entry<GuiButton,Placement> entry=obsolete.next();if(!containsAnchor(current,entry.getKey())){save(gui,entry.getValue());obsolete.remove();}}
+        Minecraft mc=Minecraft.getMinecraft();if(mc.player==null)return null;InlineTransmitters.attach(gui.inventorySlots,mc.player);
+        InlineTransmitters.Binding binding=InlineTransmitters.binding(gui.inventorySlots);if(binding==null)return null;binding.hide();
+        State state=STATES.computeIfAbsent(gui,g->new State());List<GuiButton> current=buttons(gui);
+        Iterator<Map.Entry<GuiButton,Placement>> iterator=state.buttons.entrySet().iterator();while(iterator.hasNext()){Map.Entry<GuiButton,Placement> e=iterator.next();if(!current.contains(e.getKey())){save(gui,e.getValue());state.draft=e.getValue();iterator.remove();}}
         for(Placement p:state.buttons.values())p.shown=false;
-        int selector=gui instanceof GuiRedstoneScreen?((GuiRedstoneScreen)gui).inlineTransmitterSelector():gui instanceof GuiCockpit?((GuiCockpit)gui).inlineTransmitterSelector():gui instanceof GuiAnimatedScreenSelector?((GuiAnimatedScreenSelector)gui).inlineTransmitterSelector():gui instanceof GuiProgrammableInput?((GuiProgrammableInput)gui).inlineTransmitterSelector():gui instanceof GuiProgrammableHalfConsole?((GuiProgrammableHalfConsole)gui).inlineTransmitterSelector():0;
-        int left=value(LEFT,gui),top=value(TOP,gui),height=value(GUI_HEIGHT,gui);boolean shown=false;
-        for(GuiButton button:buttons(gui)){
-            if(!button.visible||!button.displayString.contains("Transmitter"))continue;InlineTransmitters.ModuleSlot slot=binding.modules.get(selector);if(slot==null)continue;
-            Placement p=state.buttons.get(button);if(p==null||p.slot!=slot){if(p!=null)save(gui,p);p=new Placement(button,slot);state.buttons.put(button,p);}
-            p.x=button.x;p.y=button.y+(button.height-16)/2;p.width=button.width;p.shown=true;
-            slot.xPos=p.x-left;slot.yPos=p.y-top;slot.visible=true;
-            int captionX=p.width<150?p.x:p.x+24,captionY=p.y+(p.width<150?20:2),captionWidth=p.width-(p.width<150?0:24);p.field.x=p.x;p.field.y=Math.max(p.y+24,captionY+mc.fontRenderer.listFormattedStringToWidth(caption(gui),captionWidth).size()*mc.fontRenderer.FONT_HEIGHT+4);p.field.width=p.width;p.field.setVisible(!sharedScreen(gui));p.field.setEnabled(slot.getHasStack());
-            ItemStack stack=slot.getStack();if(!ItemStack.areItemStacksEqual(p.before,stack)){boolean sameModule=!p.before.isEmpty()&&!stack.isEmpty()&&p.before.getItem()==stack.getItem()&&p.before.getMetadata()==stack.getMetadata();p.before=stack.copy();p.pending=false;if(!sameModule||!p.dirty){p.field.setText(stack.isEmpty()?"":ChannelFields.text(ItemRedstoneTransmitter.channels(stack)));p.dirty=false;}else if(!p.field.isFocused())save(gui,p);}
-            button.visible=false;shown=true;
+        for(GuiButton button:current){
+            if(!button.visible||!button.displayString.contains("Transmitter"))continue;
+            RedstoneChannelMember member=binding.source(0);if(member==null||!TransmitterSlots.supported(member))continue;
+            Placement p=state.buttons.get(button);if(p==null){p=new Placement(gui,button,0,member,state.draft);state.buttons.put(button,p);}
+            p.shown=true;p.range.x=button.x;p.range.y=button.y;p.local.x=button.x;p.local.y=button.y+22;
+            p.field.x=button.x;p.field.y=button.y+44;p.field.setVisible(!sharedScreen(gui));button.visible=false;
         }
         for(Placement p:state.buttons.values())if(!p.shown){save(gui,p);p.field.setFocused(false);p.field.setVisible(false);}
-        if(shown)for(int i=0;i<binding.hotbar.size();i++){InlineTransmitters.VisibleSlot slot=binding.hotbar.get(i);slot.xPos=12+i*18;slot.yPos=height-50;slot.visible=true;}
         return state;
     }
-    private static boolean containsAnchor(List<GuiButton> buttons,GuiButton anchor){for(GuiButton button:buttons)if(button==anchor)return true;return false;}
-    static int retainedAnchors(GuiContainer gui){State state=STATES.get(gui);return state==null?0:state.buttons.size();}
-    /** Anchors are restored after rendering so each dialog still owns tab visibility and rebuilds. */
     private static void restore(State state){if(state!=null)for(Placement p:state.buttons.values())if(p.shown)p.anchor.visible=true;}
+    static int retainedAnchors(GuiContainer gui){State s=STATES.get(gui);return s==null?0:s.buttons.size();}
+    static GuiTextField channelsField(GuiContainer gui){State s=STATES.get(gui);if(s!=null)for(Placement p:s.buttons.values())if(p.shown)return p.field;return null;}
+    static List<GuiButton> controls(GuiContainer gui){State s=STATES.get(gui);List<GuiButton> result=new ArrayList<>();if(s!=null)for(Placement p:s.buttons.values())if(p.shown){result.add(p.range);result.add(p.local);}return result;}
+    static boolean mouseInput(GuiContainer gui,int x,int y,int button){
+        State s=STATES.get(gui);if(s==null)return false;
+        for(Placement p:s.buttons.values())if(p.shown){
+            if(button==0&&p.range.mousePressed(Minecraft.getMinecraft(),x,y))return true;
+            if((button==0||button==1)&&p.local.mousePressed(Minecraft.getMinecraft(),x,y)){p.observedLocal=!p.observedLocal;p.label();p.dirty=true;save(gui,p);return true;}
+            boolean hit=p.field.getVisible()&&x>=p.field.x&&x<p.field.x+p.field.width&&y>=p.field.y&&y<p.field.y+p.field.height;
+            if(!hit)save(gui,p);if(p.field.getVisible())p.field.mouseClicked(x,y,button);if(hit)return true;
+        }return false;
+    }
+    static boolean keyInput(GuiContainer gui,char character,int key){State s=STATES.get(gui);if(s==null)return false;for(Placement p:s.buttons.values())if(p.shown&&p.field.getVisible()&&p.field.isFocused()){
+        if(key==Keyboard.KEY_RETURN||key==Keyboard.KEY_NUMPADENTER||key==Keyboard.KEY_ESCAPE){save(gui,p);p.field.setFocused(false);return key!=Keyboard.KEY_ESCAPE;}
+        if(p.field.textboxKeyTyped(character,key))p.dirty=true;return true;
+    }return false;}
     @SubscribeEvent public static void beforeDraw(GuiScreenEvent.DrawScreenEvent.Pre event){if(event.getGui() instanceof GuiContainer)layout((GuiContainer)event.getGui());}
-    @SubscribeEvent public static void action(GuiScreenEvent.ActionPerformedEvent.Pre event){if(!(event.getGui() instanceof GuiContainer))return;GuiContainer gui=(GuiContainer)event.getGui();State state=STATES.get(gui);if(state==null)return;for(Placement p:state.buttons.values())save(gui,p);if(state.buttons.containsKey(event.getButton()))event.setCanceled(true);}
-    static GuiTextField channelsField(GuiContainer gui){State state=STATES.get(gui);if(state!=null)for(Placement p:state.buttons.values())if(p.shown)return p.field;return null;}
-    static boolean mouseInput(GuiContainer gui,int x,int y,int button){State state=STATES.get(gui);if(state==null)return false;boolean consumed=false;
-        for(Placement p:state.buttons.values())if(p.shown){boolean hit=p.slot.getHasStack()&&x>=p.field.x&&x<p.field.x+p.field.width&&y>=p.field.y&&y<p.field.y+p.field.height;if(!hit)save(gui,p);p.field.mouseClicked(x,y,button);if(hit)consumed=true;}return consumed;
+    @SubscribeEvent public static void action(GuiScreenEvent.ActionPerformedEvent.Pre event){if(!(event.getGui() instanceof GuiContainer))return;GuiContainer gui=(GuiContainer)event.getGui();State s=STATES.get(gui);if(s==null)return;for(Placement p:s.buttons.values())save(gui,p);if(s.buttons.containsKey(event.getButton()))event.setCanceled(true);}
+    @SubscribeEvent public static void mouse(GuiScreenEvent.MouseInputEvent.Pre event){
+        if(!(event.getGui() instanceof GuiContainer)||Mouse.getEventButton()<0)return;GuiContainer gui=(GuiContainer)event.getGui();
+        if(!Mouse.getEventButtonState()){State s=STATES.get(gui);if(s!=null)for(Placement p:s.buttons.values())p.range.mouseReleased(0,0);return;}
+        Minecraft mc=Minecraft.getMinecraft();int x=Mouse.getEventX()*gui.width/mc.displayWidth,y=gui.height-Mouse.getEventY()*gui.height/mc.displayHeight-1;
+        if(mouseInput(gui,x,y,Mouse.getEventButton()))event.setCanceled(true);
     }
-    static boolean keyInput(GuiContainer gui,char character,int key){State state=STATES.get(gui);if(state==null)return false;for(Placement p:state.buttons.values())if(p.shown&&p.field.isFocused()){
-        if(key==Keyboard.KEY_RETURN||key==Keyboard.KEY_NUMPADENTER){save(gui,p);p.field.setFocused(false);}else if(key==Keyboard.KEY_ESCAPE){save(gui,p);p.field.setFocused(false);return false;}else if(p.field.textboxKeyTyped(character,key))p.dirty=true;return true;}return false;
-    }
-    @SubscribeEvent public static void mouse(GuiScreenEvent.MouseInputEvent.Pre event){if(!(event.getGui() instanceof GuiContainer)||!Mouse.getEventButtonState()||Mouse.getEventButton()<0)return;GuiContainer gui=(GuiContainer)event.getGui();Minecraft mc=Minecraft.getMinecraft();int x=Mouse.getEventX()*gui.width/mc.displayWidth,y=gui.height-Mouse.getEventY()*gui.height/mc.displayHeight-1;if(mouseInput(gui,x,y,Mouse.getEventButton()))event.setCanceled(true);}
     @SubscribeEvent public static void key(GuiScreenEvent.KeyboardInputEvent.Pre event){if(event.getGui() instanceof GuiContainer&&Keyboard.getEventKeyState()&&keyInput((GuiContainer)event.getGui(),Keyboard.getEventCharacter(),Keyboard.getEventKey()))event.setCanceled(true);}
+    @SubscribeEvent public static void closed(GuiScreenEvent.InitGuiEvent.Pre event){if(Minecraft.getMinecraft().currentScreen instanceof GuiContainer){GuiContainer gui=(GuiContainer)Minecraft.getMinecraft().currentScreen;State s=STATES.get(gui);if(s!=null)for(Placement p:s.buttons.values())save(gui,p);}}
     @SubscribeEvent public static void afterDraw(GuiScreenEvent.DrawScreenEvent.Post event){
-        if(!(event.getGui() instanceof GuiContainer))return;GuiContainer gui=(GuiContainer)event.getGui();InlineTransmitters.Binding binding=InlineTransmitters.binding(gui.inventorySlots);if(binding==null)return;
-        int left=value(LEFT,gui),top=value(TOP,gui);List<InlineTransmitters.VisibleSlot> slots=new ArrayList<>(binding.modules.values());slots.addAll(binding.hotbar);Minecraft mc=Minecraft.getMinecraft();State state=STATES.get(gui);List<String> tooltip=Collections.emptyList();
-        try(TurntableRenderState saved=new TurntableRenderState()){
-            GlStateManager.setActiveTexture(net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);GlStateManager.disableLighting();GlStateManager.disableDepth();GlStateManager.disableCull();GlStateManager.depthMask(false);GlStateManager.enableTexture2D();GlStateManager.color(1,1,1,1);
-            if(state!=null)for(Placement p:state.buttons.values())if(p.shown){
-                mc.fontRenderer.drawSplitString(caption(gui),p.width<150?p.x:p.x+24,p.y+(p.width<150?20:2),p.width-(p.width<150?0:24),0xc9d9e2);p.field.drawTextBox();
-                if(!p.slot.getHasStack()&&mc.player.inventory.getItemStack().isEmpty()){
-                    GlStateManager.enableTexture2D();GlStateManager.enableAlpha();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);mc.getTextureManager().bindTexture(new net.minecraft.util.ResourceLocation("vandorlabs","textures/items/redstone_transmitter_short.png"));GlStateManager.color(.55F,.55F,.55F,.65F);Gui.drawModalRectWithCustomSizedTexture(p.x,p.y,0,0,16,16,16,16);GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();
-                }
-                if(p.field.getVisible()&&event.getMouseX()>=p.field.x&&event.getMouseX()<p.field.x+p.field.width&&event.getMouseY()>=p.field.y&&event.getMouseY()<p.field.y+p.field.height)tooltip=Arrays.asList(caption(gui),"Enter or click outside to apply.");
-            }
-            // Finish every slot overlay before drawing any tooltip. A later border must never cross its glyphs.
-            for(InlineTransmitters.VisibleSlot slot:slots)if(slot.visible){int x=left+slot.xPos,y=top+slot.yPos;
-                Gui.drawRect(x-1,y-1,x+17,y,0xff8296a2);Gui.drawRect(x-1,y+16,x+17,y+17,0xff8296a2);Gui.drawRect(x-1,y,x,y+16,0xff8296a2);Gui.drawRect(x+16,y,x+17,y+16,0xff8296a2);
-                if(event.getMouseX()>=x&&event.getMouseX()<x+16&&event.getMouseY()>=y&&event.getMouseY()<y+16&&mc.player.inventory.getItemStack().isEmpty())tooltip=slot.getHasStack()?slot.getStack().getTooltip(mc.player,mc.gameSettings.advancedItemTooltips?net.minecraft.client.util.ITooltipFlag.TooltipFlags.ADVANCED:net.minecraft.client.util.ITooltipFlag.TooltipFlags.NORMAL):slot instanceof InlineTransmitters.ModuleSlot?(sharedScreen(gui)?Arrays.asList("Insert a Redstone Transmitter","One module supplies the range for every screen row.","Row targets override the module channels."):Arrays.asList("Insert a Redstone Transmitter","A module enables transmission.","Blank channels keep the control local.")):Collections.emptyList();
-            }
-            if(!tooltip.isEmpty()&&mc.player.inventory.getItemStack().isEmpty()){
-                GlStateManager.disableLighting();GlStateManager.disableDepth();GlStateManager.depthMask(false);
-                net.minecraftforge.fml.client.config.GuiUtils.drawHoveringText(tooltip,event.getMouseX(),event.getMouseY(),gui.width,gui.height,-1,mc.fontRenderer);
-            }
-        }finally{restore(state);}
+        if(!(event.getGui() instanceof GuiContainer))return;GuiContainer gui=(GuiContainer)event.getGui();State s=STATES.get(gui);Minecraft mc=Minecraft.getMinecraft();
+        try{if(s!=null)for(Placement p:s.buttons.values())if(p.shown){
+            p.range.drawButton(mc,event.getMouseX(),event.getMouseY(),event.getRenderPartialTicks());p.local.drawButton(mc,event.getMouseX(),event.getMouseY(),event.getRenderPartialTicks());p.field.drawTextBox();
+            if(p.field.getVisible()&&p.field.getText().isEmpty()&&!p.field.isFocused())mc.fontRenderer.drawString("Channels (blank = local)",p.field.x+4,p.field.y+5,0x8296a2);
+        }}finally{restore(s);}
     }
 }

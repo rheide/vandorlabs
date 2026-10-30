@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Replace block transmitter-item slots with built-in 4–256 block range sliders and independent Local Redstone toggles. Preserve legacy hardware for recovery and retain handheld transmitters in creative.
+
 - Preserve placed redstone transmitters when upgrading worlds that use their previous block registry ID.
 
 - Keep diagonal glass fill controls on one row so texture joining controls remain clear of Done in compact dialogs.

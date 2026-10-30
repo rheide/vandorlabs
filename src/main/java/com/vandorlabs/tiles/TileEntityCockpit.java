@@ -113,7 +113,12 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     }
     public Control control(String id){prepare();for(Control c:controls)if(c.id.equals(id))return c;return null;}
     public Display display(String id){prepare();for(Display d:displays)if(d.id.equals(id))return d;return null;}
-    public void changed(){markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
+    private int publishedLocalOutput;
+    public void changed(){
+        markDirty();if(world==null)return;
+        net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);
+        if(!world.isRemote){int next=com.vandorlabs.redstone.TransmitterSlots.localOutput(world,pos);if(next!=publishedLocalOutput){publishedLocalOutput=next;com.vandorlabs.redstone.TransmitterSlots.notifyLocalOutput(this);}}
+    }
     private boolean ordinary(){return world!=null && !world.isRemote && !(world instanceof VehicleWorld);}
     @Override public void onLoad(){super.onLoad();prepare();if(ordinary())DeferredTileLoad.schedule(this,()->{for(Control c:controls)RedstoneChannels.register(c);});}
     @Override public void invalidate(){if(ordinary())for(Control c:controls)RedstoneChannels.unregister(c);super.invalidate();}

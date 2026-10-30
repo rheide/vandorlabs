@@ -18,7 +18,7 @@ public final class GuiWirelessRedstone extends GuiContainer {
         buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+32,112,20,"General"));buttonList.add(new DialogTabButton(101,guiLeft+128,guiTop+32,140,20,"Redstone"));for(GuiButton b:buttonList)b.enabled=b.id!=100+page;
         channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+72,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);channels.setVisible(page==1&&!tile.transmitter());channels.setFocused(false);
         if(page==0)buttonList.add(new GuiButton(2,guiLeft+12,guiTop+66,xSize-24,20,(tile.transmitter()?"Input":"Output")+" port: "+net.minecraft.util.EnumFacing.getFront(face).getName()));
-        else{if(tile.transmitter())buttonList.add(new GuiButton(90,guiLeft+12,guiTop+70,xSize-24,20,"Redstone Transmitter..."));buttonList.add(new GuiButton(1,guiLeft+12,guiTop+(tile.transmitter()?122:102),xSize-24,20,"Signal: "+(analog?"Analog":"Digital")));
+        else{if(tile.transmitter())buttonList.add(new GuiButton(90,guiLeft+12,guiTop+70,xSize-24,20,"Redstone Transmitter..."));buttonList.add(new GuiButton(1,guiLeft+12,guiTop+(tile.transmitter()?140:102),xSize-24,20,"Signal: "+(analog?"Analog":"Digital")));
             if(!tile.transmitter()){GuiSlider slider=new GuiSlider(3,guiLeft+12,guiTop+128,xSize-24,20,"On level: ","",0,15,on,false,true,s->{on=s.getValueInt();if(ready)dirty=true;});slider.enabled=!analog;buttonList.add(slider);buttonList.add(new GuiSlider(4,guiLeft+12,guiTop+154,xSize-24,20,"Off level: ","",0,15,off,false,true,s->{off=s.getValueInt();if(ready)dirty=true;}));}
         }
         buttonList.add(new GuiButton(5,guiLeft+12,guiTop+ySize-30,xSize-24,20,"Done"));ready=true;

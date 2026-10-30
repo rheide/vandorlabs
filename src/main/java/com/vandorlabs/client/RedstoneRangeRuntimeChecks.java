@@ -30,9 +30,9 @@ final class RedstoneRangeRuntimeChecks {
         Member source=new Member(world,origin,channel);source.output=11;cleanup.add(source);RedstoneChannels.register(source);
         try{
             NBTTagCompound before=source.tile.writeToNBT(new NBTTagCompound());source.transmittedChannels();source.transmissionRange();require(before.equals(source.tile.writeToNBT(new NBTTagCompound())),"read-only absent module preserves exact previous-release tile NBT");
-            Member near=new Member(world,origin.east(),channel);cleanup.add(near);RedstoneChannels.register(near);require(near.received==0,"no item never transmits");
+            Member near=new Member(world,origin.east(),channel);cleanup.add(near);RedstoneChannels.register(near);require(near.received==0,"test member has no implicit source");
             for(int tier=0;tier<4;tier++){
-                int range=ItemRedstoneTransmitter.RANGES[tier],distance=range==0?4096:range;
+                int range=tier==3?256:ItemRedstoneTransmitter.RANGES[tier],distance=range;
                 Member edge=new Member(world,origin.east(distance),channel),outside=new Member(world,origin.east(distance+1),channel),up=new Member(world,origin.up(distance),channel),diagonal=new Member(world,origin.add(distance,1,0),channel);Collections.addAll(cleanup,edge,outside,up,diagonal);
                 for(Member m:new Member[]{edge,outside,up,diagonal})RedstoneChannels.register(m);
                 TransmitterSlots.set(source,module(tier,ChannelList.of(channel)));

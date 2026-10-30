@@ -23,10 +23,11 @@ public final class BlockWirelessRedstone extends BlockVandor {
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing face,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,EnumFacing.getDirectionFromEntityLiving(pos,placer));}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityWirelessRedstone();}
-    @Override public boolean canProvidePower(IBlockState state){return !transmitter;}
+    @Override public boolean isSideSolid(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return true;}
+    @Override public boolean canProvidePower(IBlockState state){return true;}
     @Override public boolean canConnectRedstone(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return side==state.getValue(FACING).getOpposite();}
     @Override public boolean shouldCheckWeakPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return false;}
-    @Override public int getWeakPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){TileEntity tile=world.getTileEntity(pos);return !transmitter&&side==state.getValue(FACING).getOpposite()&&tile instanceof TileEntityWirelessRedstone?((TileEntityWirelessRedstone)tile).getOutputLevel():0;}
+    @Override public int getWeakPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){TileEntity tile=world.getTileEntity(pos);if(!(tile instanceof TileEntityWirelessRedstone))return 0;TileEntityWirelessRedstone endpoint=(TileEntityWirelessRedstone)tile;if(transmitter)return com.vandorlabs.redstone.TransmitterSlots.localRedstone(tile)&&side==state.getValue(FACING)?endpoint.localSignalLevel(0):0;return side==state.getValue(FACING).getOpposite()?endpoint.getOutputLevel():0;}
     @Override public int getStrongPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return getWeakPower(state,world,pos,side);}
     @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){if(!world.isRemote&&world.getTileEntity(pos) instanceof TileEntityWirelessRedstone)((TileEntityWirelessRedstone)world.getTileEntity(pos)).sampleInput();}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){if(hand!=EnumHand.MAIN_HAND)return false;if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_WIRELESS_REDSTONE,world,pos.getX(),pos.getY(),pos.getZ());return true;}

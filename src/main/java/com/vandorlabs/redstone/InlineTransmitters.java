@@ -11,7 +11,7 @@ import net.minecraftforge.fml.relauncher.*;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
-/** Real module and hotbar slots attached to the original authenticated configuration container. */
+/** Shared settings bindings; old inventory indices remain inert for window compatibility. */
 public final class InlineTransmitters {
     private static final Map<Container,Binding> BINDINGS=Collections.synchronizedMap(new WeakHashMap<Container,Binding>());
     private InlineTransmitters(){}
@@ -44,20 +44,9 @@ public final class InlineTransmitters {
     }
     public static final class ModuleSlot extends VisibleSlot {
         public final int selector;private final Binding binding;
-        ModuleSlot(Binding binding,int selector){super(new ModuleInventory(binding,selector),0);this.binding=binding;this.selector=selector;}
+        ModuleSlot(Binding binding,int selector){super(new InventoryBasic("Transmission settings",false,1),0);this.binding=binding;this.selector=selector;}
         @Override public int getSlotStackLimit(){return 1;}
-        @Override public boolean isItemValid(ItemStack stack){return binding.source(selector)!=null&&ItemRedstoneTransmitter.valid(stack);}
-        @Override public boolean canTakeStack(EntityPlayer player){return binding.source(selector)!=null&&binding.usable(player);}
-    }
-    /** A live one-slot inventory, refreshing only when its exact saved compound or member changes. */
-    private static final class ModuleInventory extends InventoryBasic {
-        final Binding binding;final int selector;private boolean ready,refreshing;private RedstoneChannelMember previous;private NBTTagCompound observed;
-        ModuleInventory(Binding binding,int selector){super("Redstone Transmitter",false,1);this.binding=binding;this.selector=selector;refresh();ready=true;}
-        @Override public int getInventoryStackLimit(){return 1;}
-        private void refresh(){if(refreshing)return;RedstoneChannelMember member=binding.source(selector);NBTTagCompound slots=member==null?null:TransmitterSlots.savedSlots(member.channelTile());NBTTagCompound current=slots!=null&&slots.hasKey(member.transmitterSlot(),10)?slots.getCompoundTag(member.transmitterSlot()):null;if(member==previous&&current==observed)return;refreshing=true;try{previous=member;observed=current;super.setInventorySlotContents(0,current==null?ItemStack.EMPTY:new ItemStack(current));}finally{refreshing=false;}}
-        @Override public ItemStack getStackInSlot(int slot){refresh();return super.getStackInSlot(slot);}
-        @Override public ItemStack decrStackSize(int slot,int count){refresh();return super.decrStackSize(slot,count);}
-        @Override public ItemStack removeStackFromSlot(int slot){refresh();ItemStack removed=super.removeStackFromSlot(slot);if(!removed.isEmpty())markDirty();return removed;}
-        @Override public void markDirty(){super.markDirty();if(!ready||refreshing)return;RedstoneChannelMember member=binding.source(selector);if(member==null)return;net.minecraft.world.World world=member.channelTile().getWorld();if(world==null||ContainerTransmitterSlot.physicalWorld(world).isRemote)return;TransmitterSlots.set(member,super.getStackInSlot(0));previous=member;NBTTagCompound slots=TransmitterSlots.savedSlots(member.channelTile());observed=slots.hasKey(member.transmitterSlot(),10)?slots.getCompoundTag(member.transmitterSlot()):null;}
+        @Override public boolean isItemValid(ItemStack stack){return false;}
+        @Override public boolean canTakeStack(EntityPlayer player){return false;}
     }
 }
