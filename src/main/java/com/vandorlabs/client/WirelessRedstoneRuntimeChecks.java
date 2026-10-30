@@ -15,7 +15,10 @@ final class WirelessRedstoneRuntimeChecks {
     static void require(boolean value,String message){if(!value)throw new IllegalStateException("wireless redstone: "+message);}
     static void run(WorldServer world){
         BlockPos txPos=new BlockPos(450,185,450),rxPos=txPos.east(12);
-        BlockWirelessRedstone transmitter=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_transmitter_block"),receiver=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_receiver");
+        BlockWirelessRedstone transmitter=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_transmitter_block"),receiver=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_receiver_block");
+        require(receiver!=null && "redstone_receiver_block".equals(receiver.getRegistryName().getResourcePath()),"receiver block registry ID");
+        require(!Block.REGISTRY.containsKey(new net.minecraft.util.ResourceLocation("vandorlabs:redstone_receiver")),"old receiver ID deliberately has no remap or alias");
+        require(net.minecraft.item.Item.getByNameOrId("vandorlabs:redstone_transmitter")==com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,"handheld transmitter retains its separate registry ID");
         Block slider=Block.getBlockFromName("vandorlabs:wall_slider");
         for(EnumFacing port:EnumFacing.values()){
             world.getChunkFromBlockCoords(txPos);world.getChunkFromBlockCoords(rxPos);

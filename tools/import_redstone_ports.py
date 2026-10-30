@@ -9,6 +9,7 @@ def write(path,data):
     path.write_text(json.dumps(data,indent=2)+'\n',encoding='utf-8')
 for kind in ('transmitter','receiver'):
     name='redstone_'+kind
+    block_id=name+'_block'
     sheet=Image.open(ROOT/'build'/(name+'.png')).convert('RGB')
     assert sheet.width//3==sheet.height//2
     size=sheet.width//3
@@ -24,6 +25,6 @@ for kind in ('transmitter','receiver'):
     textures.update(north='vandorlabs:blocks/'+name+'/port',south='vandorlabs:blocks/'+name+'/type')
     write(ASSETS/'models/block'/(name+'.json'),dict(parent='block/cube',textures=dict(textures,particle=textures['north'])))
     rotations={'north':{},'south':{'y':180},'west':{'y':270},'east':{'y':90},'up':{'x':270},'down':{'x':90}}
-    write(ASSETS/'blockstates'/(name+'.json'),dict(variants={'facing='+side:dict(model='vandorlabs:'+name,**rotation) for side,rotation in rotations.items()}))
-    write(ASSETS/'models/item'/(name+'.json'),dict(parent='vandorlabs:block/'+name,display=dict(gui=dict(rotation=[30,225,0],scale=[.5,.5,.5]))))
+    write(ASSETS/'blockstates'/(block_id+'.json'),dict(variants={'facing='+side:dict(model='vandorlabs:'+name,**rotation) for side,rotation in rotations.items()}))
+    write(ASSETS/'models/item'/(block_id+'.json'),dict(parent='vandorlabs:block/'+name,display=dict(gui=dict(rotation=[30,225,0],scale=[.5,.5,.5]))))
 print('Split two directional redstone blocks: port front, type back, four arrows following signal flow')

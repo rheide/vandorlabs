@@ -31,7 +31,7 @@ public final class GuiWirelessRedstone extends GuiContainer {
     @Override protected void keyTyped(char ch,int key)throws IOException{if(page==1&&!tile.transmitter()&&channels.textboxKeyTyped(ch,key))save();else super.keyTyped(ch,key);}
     @Override public void onGuiClosed(){if(ready)save();org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize,28);}
-    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.transmitter()?"Redstone Transmitter Block":"Redstone Receiver",12,10,0xffffff);if(page==1&&!tile.transmitter())fontRenderer.drawString("Receive channels",12,60,0xffffff);if(page==1&&!tile.transmitter()&&analog)fontRenderer.drawString("On level follows received signal",12,180,0xc9d9e2);}
+    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.transmitter()?"Redstone Transmitter Block":"Redstone Receiver Block",12,10,0xffffff);if(page==1&&!tile.transmitter())fontRenderer.drawString("Receive channels",12,60,0xffffff);if(page==1&&!tile.transmitter()&&analog)fontRenderer.drawString("On level follows received signal",12,180,0xc9d9e2);}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();channels.drawTextBox();}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

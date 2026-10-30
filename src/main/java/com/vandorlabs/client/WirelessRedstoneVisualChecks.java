@@ -31,7 +31,7 @@ final class WirelessRedstoneVisualChecks {
             WirelessRedstoneRuntimeChecks.require(clear>visible&&visible>500,"security glass has transparent background and visible reinforcement");
         }
         for(boolean tx:new boolean[]{true,false}){
-            BlockWirelessRedstone block=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_"+(tx?"transmitter":"receiver"));
+            BlockWirelessRedstone block=(BlockWirelessRedstone)Block.getBlockFromName("vandorlabs:redstone_"+(tx?"transmitter_block":"receiver_block"));
             for(EnumFacing port:EnumFacing.values()){
                 IBlockState state=block.getDefaultState().withProperty(BlockWirelessRedstone.FACING,port);IBakedModel model=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);List<BakedQuad> quads=new ArrayList<>(model.getQuads(state,null,0));for(EnumFacing face:EnumFacing.values())quads.addAll(model.getQuads(state,face,0));
                 WirelessRedstoneRuntimeChecks.require(quads.size()==6,"six textured cube faces");

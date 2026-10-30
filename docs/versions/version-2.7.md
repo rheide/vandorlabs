@@ -101,3 +101,5 @@ square fitted groups. Frame controls include a Framed/Bare button that remembers
 the chosen finish. Top and Bottom split displays retain independent artwork and
 animation playback. Authored frame interiors use their corresponding left, top,
 right and bottom border material instead of stretching the complete hollow image.
+
+The Redstone Receiver Block now uses `vandorlabs:redstone_receiver_block`. The previous `vandorlabs:redstone_receiver` ID is removed without remapping; old receiver blocks, items and saved assemblies are not migrated. Handheld redstone transmitters retain their separate item ID.

@@ -597,7 +597,7 @@ tile.vandorlabs.access_card_slot.name=Access Card Mount
 tile.vandorlabs.data_chip_slot.name=Data Chip Mount
 
 tile.vandorlabs.redstone_transmitter_block.name=Redstone Transmitter Block
-tile.vandorlabs.redstone_receiver.name=Redstone Receiver
+tile.vandorlabs.redstone_receiver_block.name=Redstone Receiver Block
 tile.vandorlabs.programmable_ramp_slab.name=Ramp Controller Slab
 
 tile.vandorlabs.oculus_drive_core.name=Pinnacle Oculus Drive Core

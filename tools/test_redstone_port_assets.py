@@ -5,6 +5,7 @@ from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
 for kind in ('transmitter','receiver'):
     name='redstone_'+kind
+    block_id=name+'_block'
     folder=ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks'/name
     for face in ('up','port','type','left','right','down'):
         image=Image.open(folder/(face+'.png'))
@@ -13,7 +14,7 @@ for kind in ('transmitter','receiver'):
     assert model['textures']['north'].endswith('/port') and model['textures']['south'].endswith('/type')
     expected=('up','down','left','right')
     assert tuple(model['textures'][face].split('/')[-1] for face in ('up','down','west','east'))==expected
-    states=json.loads((ROOT/'src/main/resources/assets/vandorlabs/blockstates'/(name+'.json')).read_text())
+    states=json.loads((ROOT/'src/main/resources/assets/vandorlabs/blockstates'/(block_id+'.json')).read_text())
     assert len(states['variants'])==6
 catalog=json.loads((ROOT/'generated-resources/assets/vandorlabs/data/unified_textures.json').read_text())
 for index in range(1,5):
