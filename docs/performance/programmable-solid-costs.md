@@ -180,3 +180,8 @@ fluid ownership after mutation/reload. The live focus covers stair appearance,
 configuration, icons and dialogs plus wet-block boundaries. The broader fluid
 focus's mount-filter packet assertion is outside this isolated focus; it was not
 reported as passing. The full release gate remains deferred.
+
+The broad non-rendering suite also stops at the trapdoor assertion
+`virtual channel failed to open square`. Repeating it with the original four
+production classes reproduces the same failure, so this assertion predates these
+solid-block optimizations. The applicable housing and dedicated-server checks pass.
