@@ -82,7 +82,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
         settings.setInteger("Material",te instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)te).getMaterial():-1);
         settings.setBoolean("Stretch",te instanceof TileEntityProgrammableGlass && ((TileEntityProgrammableGlass)te).isStretch());settings.setInteger("LayoutMode",te instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)te).getTextureLayout():1);
         settings.setBoolean("Framed",!(te instanceof TileEntityProgrammableGlass)||((TileEntityProgrammableGlass)te).isFramed());
-        if(te instanceof TileEntityProgrammableGlass)((TileEntityProgrammableGlass)te).frameAppearance.write(settings);
+        if(te instanceof TileEntityProgrammableGlass){((TileEntityProgrammableGlass)te).frameAppearance.write(settings);((TileEntityProgrammableGlass)te).glassPlayback.writeSettings(settings);}
         stack.setTagInfo("ProgrammableGlassSettings", settings);
         return stack;
     }
@@ -101,7 +101,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
             world.setBlockState(pos, state.withProperty(SIZE, size), 3);
         TileEntity te = world.getTileEntity(pos);
         if (te instanceof TileEntityProgrammableGlass) {
-            if(settings!=null)((TileEntityProgrammableGlass)te).frameAppearance.read(settings);
+            if(settings!=null){((TileEntityProgrammableGlass)te).frameAppearance.read(settings);((TileEntityProgrammableGlass)te).glassPlayback.read(settings);}
             ((TileEntityProgrammableGlass)te).setPanelFacing(placer.getHorizontalFacing().getOpposite());
             ((TileEntityProgrammableGlass)te).setSize(size);
             ((TileEntityProgrammableGlass)te).setShade(shade);

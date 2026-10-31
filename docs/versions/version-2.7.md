@@ -19,25 +19,27 @@ for every runtime texture. With Complementary's RP Support set to labPBR,
 bare metals, coated panels, glass and fabric have distinct reflective finishes.
 The maps preserve existing diffuse artwork and add no light emission.
 
-The texture list groups screen artwork under **Displays**. **Gold** retains
-Pinnacle designs and **Cool** retains Paladyne designs, for both Full and Half
-screens. Both styles also offer Gas Giant, Ice Planet, Station, Surface Map, Targeting,
+The texture list groups screen artwork under **Displays**. **Gold** and **Cool** use their Bridge artwork for Biology, Communications,
+Medical, Navigation, Radar and Reactor, in both Full and Half layouts. Older
+selections resolve to these designs without changing saved identities. Both styles also offer Gas Giant, Ice Planet, Station, Surface Map, Targeting,
 Terrestrial, Engineering, Pilot, Ship Status, Engineering Charts, Personal Terminal,
-Viewscreen, Science, Starmap and Weapons in both heights. Their six original subjects
-also have Bridge alternatives, such as **Biology Bridge (Gold/Full)**.
+Viewscreen, Science, Starmap and Weapons in both heights.
 
-Gold adds 17 expansion subjects in both heights: Airlock, Life Support, Power Grid
+All three styles include 17 expansion subjects in both heights: Airlock, Life Support, Power Grid
 Status, City Transit Map, Ship Deck Plan, Power Distribution, Shields, Damage Control,
 FTL Calibration, Station Berth Control, Industrial Fabrication, Industrial Refinery,
 Facility Access Control, Boot Sequence, Standby, Access Denied and Signal Lost.
 Each animation has six distinct frames and retains the existing playback controls.
+Door Controller is available in all three styles and both heights. Classic uses
+the new Door Controller artwork. Classic Half Medical, Ship Status, Engineering
+Charts, Starmap and Weapons use compositions authored for half-height displays.
 
 **Large** choices appear beside the standard artwork. **Viewscreen (Classic/Full)
 Large** and its Half counterpart use the original 256px-wide animation frames.
-Cool and Gold Viewscreen Large choices use 512px-wide frames, as do Gold's
+Cool and Gold Viewscreen Large choices use 512px-wide frames, as do all three styles’
 **City Transit Map** Large choices. Full images remain square; Half images are
 half as tall as their width. Standard choices retain their native 128px width.
-Compare all three styles, Bridge alternatives and Large choices in the
+Compare all three styles and Large choices in the
 [display matrix](../display-matrix.html). The former root **Engineering Screen
 (Full)** resolves to **Engineering (Classic/Full)**, including existing saves.
 Names place the subject first, such as **Biology (Gold/Full)** or
@@ -260,3 +262,17 @@ Original restores the supplied pane. Slim Glass openings have opaque inner
 reveal walls, and Interior finishes apply to the leaf reveals as well as the
 fixed frame. Front finishes remain separate; square frame artwork tiles at
 world-sized pixels on both door sizes.
+
+### Display playback on glazing and input sizes
+
+Selecting a Display for Programmable Glass, Diagonal Glass or Porthole glazing
+adds an Animation tab with Off, Static and Animated modes and Slow, Normal and
+Fast speeds. Playback is independent of the porthole wall artwork. Existing glass
+remains Static at Normal speed. Joined images require matching playback settings.
+Translucent glazing renders from back to front so panes behind a screen remain
+visible in the correct order.
+
+Programmable Light, Half-Input and Flatscreen use a single **Size: Small/Full**
+toggle. Small Flatscreens are half a block square, matching Small Programmable
+Lights. Wall, floor and ceiling mounts retain matching models, bounds and click
+surfaces; changing size preserves artwork and settings.

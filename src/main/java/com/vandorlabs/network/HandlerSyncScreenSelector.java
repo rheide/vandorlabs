@@ -49,7 +49,7 @@ public class HandlerSyncScreenSelector implements IMessageHandler<MessageSyncScr
             te.setRedstoneChannels(message.getRedstoneChannels());
             te.setHousingTexture(message.getHousingTexture());
             if (player.world.getBlockState(message.getPos()).getBlock()
-                    == ModBlocks.PROGRAMMABLE_INPUT) {
+                    == ModBlocks.PROGRAMMABLE_INPUT || player.world.getBlockState(message.getPos()).getBlock()==ModBlocks.PROGRAMMABLE_FULL_INPUT) {
                 te.setSmallInput(message.isSmallInput());
             }
             if(te.getSettingsRevision()==before)return;

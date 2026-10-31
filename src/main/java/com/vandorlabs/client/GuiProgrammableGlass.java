@@ -20,21 +20,23 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     @Override protected HousingTextureList materialPicker(){return framePage&&framePane!=null?framePane.picker():textures;}
     @Override public void initGui() {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
-        xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();String[] pages={"Glass","Front","Interior","Exterior"};for(int i=0;i<pages.length;i++){GuiButton tab=layout.fullTab(196+i,i,pages.length,pages[i]);tab.enabled=selectedPage!=i;buttonList.add(tab);}
+        xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();String[] pages=GlassPlaybackPane.available(material)?new String[]{"Glass","Front","Interior","Exterior","Animation"}:new String[]{"Glass","Front","Interior","Exterior"};for(int i=0;i<pages.length;i++){GuiButton tab=layout.fullTab(196+i,i,pages.length,pages[i]);tab.enabled=selectedPage!=i;buttonList.add(tab);}
         textures=HousingTextureList.forGlassMaterials(size,guiLeft+12,guiTop+54,layout.controlsX-guiLeft-31,shade,material)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).keepView(textures);
-        if(!framePage){buttonList.add(new GuiButton(3,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Join: "+(join?"On":"Off")));
+        if(selectedPage==4){GlassPlaybackPane.init(layout,tile.glassPlayback,buttonList);}
+        else if(!framePage){buttonList.add(new GuiButton(3,layout.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Join: "+(join?"On":"Off")));
         buttonList.add(new GuiButton(4,layout.controlsX,guiTop+78,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(tint)));
         GuiButton framedButton=new GuiButton(5,layout.controlsX,guiTop+102,ProgrammableDialogLayout.CONTROLS_WIDTH,20,framed?"Framed":"Bare");framedButton.visible=false;buttonList.add(framedButton);
         if(material>=0)buttonList.add(new GuiButton(6,layout.controlsX,guiTop+126,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout)));
         }else{if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!tile.isFramed();send();},()->tile.isFramed());framePane.initGlassFace(selectedPage-1,54,buttonList);}
         buttonList.add(new GuiButton(2,layout.controlsX,guiTop+ySize-26,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Done"));
     }
-    void choose(int choice){if(textures!=null && textures.selected()!=choice)textures.setSelected(choice);if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}else material=choice;send();initGui();}
-    private void send(){tile.setSize(size);tile.setShade(shade);tile.setMaterial(material);tile.setTextureLayout(textureLayout);tile.setJoin(join);tile.setAppearance(tint,framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join).withAppearance(tint,framed).withMaterial(material).withTextureLayout(textureLayout));}
+    void choose(int choice){if(textures!=null && textures.selected()!=choice)textures.setSelected(choice);if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}else material=choice;if(selectedPage==4&&!GlassPlaybackPane.available(material)){selectedPage=0;framePage=false;}send();initGui();}
+    private void send(){tile.setSize(size);tile.setShade(shade);tile.setMaterial(material);tile.setTextureLayout(textureLayout);tile.setJoin(join);tile.setAppearance(tint,framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),size,shade,join).withAppearance(tint,framed).withMaterial(material).withTextureLayout(textureLayout).withPlayback(tile.glassPlayback.mode(),tile.glassPlayback.speed()));}
     @Override protected void actionPerformed(GuiButton button) {
+        if(GlassPlaybackPane.action(button,tile.glassPlayback)){send();initGui();return;}
         if(framePage&&framePane.action(button))return;
-        if(button.id>=196&&button.id<=199){selectedPage=button.id-196;framePage=selectedPage>0;initGui();return;}
+        if(button.id>=196&&button.id<=200){selectedPage=button.id-196;framePage=selectedPage>0&&selectedPage<4;initGui();return;}
 
         if(button.id==2){mc.player.closeScreen();return;}
         if(button.id==3)join=!join;
@@ -55,6 +57,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
         drawDefaultBackground();drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF101012);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF202028);
         fontRenderer.drawString("Programmable Glass",guiLeft+8,guiTop+8,0xFFFFFFFF);
+        if(selectedPage==4)GlassPlaybackPane.draw(this);
         if(framePage)framePane.draw(x,y);else textures.draw(fontRenderer,x,y);DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(x,y,partial);
     }
     @Override public boolean doesGuiPauseGame(){return false;}

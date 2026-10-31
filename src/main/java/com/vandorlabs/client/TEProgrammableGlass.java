@@ -47,6 +47,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     @Override public void render(TileEntityProgrammableGlass tile, double x, double y,
             double z, float partial, int stage, float alpha) {
         if (tile.getWorld() == null) return;
+        if(GlazingRenderOrder.handle(tile,x,y,z,partial,stage,alpha))return;
         if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
         if(tile.fluids.any()&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1)WaterloggedRenderer.render(tile,x,y,z);
@@ -89,7 +90,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         double inset=tile.getMaterial()<0?0:.0001;
         if(tile.getMaterial()<0){pane(b,PANE_NEAR+inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));pane(b,PANE_FAR-inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));}
-        else{GlStateManager.scale(1F/16,1F/16,1F/16);GlassSurfaceMapping.map(materialPlane(),material,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout()).drawColored(b,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,1,1,1,opacity);}
+        else{GlStateManager.scale(1F/16,1F/16,1F/16);GlazingDisplay.draw(GlassSurfaceMapping.map(materialPlane(),material,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout()),tile,b,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,opacity);}
         Tessellator.getInstance().draw();
         GlStateManager.enableCull();
         GlStateManager.depthMask(true);
@@ -146,8 +147,9 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
         GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(opaque);
-        if(pass<0||pass==(opaque?0:1)){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(buffer,sky,GlassInsertLighting.block(tile,block),1,1,1,opacity);Tessellator.getInstance().draw();}
+        if(pass<0||pass==(opaque?0:1)){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(mesh,tile,buffer,sky,GlassInsertLighting.block(tile,block),opacity);Tessellator.getInstance().draw();}
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
+        bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
     }
 
     static CornerMeshes meshes(TileEntityProgrammableGlass tile,net.minecraft.block.state.IBlockState state,

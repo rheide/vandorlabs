@@ -134,10 +134,10 @@ final class FlatPanelBarRenderer {
             Material m=materials[i];StaticSurfaceMesh mesh=part(transparent?m.transparent:m.opaque,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width,!transparent && m.cap==null?.02:0);
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             if(transparent){
-                if(!m.solidPane&&mesh!=null&&mesh.vertexCount()>0){GlStateManager.depthMask(false);drawPane(mesh,sky,block,m.opacity);}
+                if(!m.solidPane&&mesh!=null&&mesh.vertexCount()>0){GlStateManager.depthMask(false);drawPane(mesh,root,sky,GlassInsertLighting.block(root,block),m.opacity);}
             }else{
                 if(mesh!=null&&mesh.vertexCount()>0)draw(mesh,sky,block);
-                if(m.solidPane){StaticSurfaceMesh pane=part(m.transparent,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width);if(pane!=null&&pane.vertexCount()>0)drawPane(pane,sky,GlassInsertLighting.block(root,block),m.opacity);}
+                if(m.solidPane){StaticSurfaceMesh pane=part(m.transparent,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width);if(pane!=null&&pane.vertexCount()>0)drawPane(pane,root,sky,GlassInsertLighting.block(root,block),m.opacity);}
             }
             if(!transparent && i==0 && m.opaque!=null) {
                 StaticSurfaceMesh cap=stemCap(m,bar.straightLeft?bar.frontArm:bar.frontArm+4,PanelJoins.flatNear(state,root.getWorld(),root.getPos()),bar.straightLeft);
@@ -149,8 +149,8 @@ final class FlatPanelBarRenderer {
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         return true;
     }
-    private static void drawPane(StaticSurfaceMesh mesh,int sky,int block,float opacity){
-        BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(b,sky,block,1,1,1,opacity);Tessellator.getInstance().draw();
+    private static void drawPane(StaticSurfaceMesh mesh,TileEntity root,int sky,int block,float opacity){
+        BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(mesh,root,b,sky,block,opacity);Tessellator.getInstance().draw();
     }
     private static void draw(StaticSurfaceMesh mesh,int sky,int block) {
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.draw(b,sky,block);Tessellator.getInstance().draw();

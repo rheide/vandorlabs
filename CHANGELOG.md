@@ -2,6 +2,10 @@
 
 ## 2.7 (in development)
 
+- Complete matching Classic/Cool/Gold expansion displays and Large City Transit variants; add Door Controller in both heights for every style. Replace five Classic Half animations with dedicated half-height compositions.
+- Retain the six Bridge designs as the primary Cool/Gold displays, remove duplicate animation resources, and preserve saved selections through aliases.
+- Fix translucent glass ordering, add independent Display playback controls to glass and portholes, and standardize Small/Full sizing with a half-block Small Flatscreen.
+
 - Add 17 Gold expansion display subjects in Full and Half layouts, with six-frame animations. Add Large Viewscreen choices for all three styles (Classic 256px, Cool/Gold 512px) and Large Gold City Transit Map choices (512px), preserving native aspect ratios and existing choices.
 - Replace the root Engineering Screen choice with Engineering (Classic/Full), preserving saved IDs and redirecting default/fallback rendering to the retained design.
 

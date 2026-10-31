@@ -61,6 +61,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     private ModBlocks.ScreenOption selectedOption;
     private boolean framed;
+    private boolean smallInput;
     private boolean redstoneEnabled;
     private boolean redstoneInverted;
     private int displayMode;
@@ -109,6 +110,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         this.ySize = 240;
         this.redstoneEnabled = te.isRedstoneEnabled();
         redstoneInverted=te.isRedstoneInverted();
+        this.smallInput = te.isSmallInput();
         this.displayMode = te.getDisplayMode();
         this.speedIndex = te.getAnimationSpeedIndex();
         this.inputPanel = te.getInputPanel();
@@ -206,6 +208,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         frameButton=layout.control(4,98,"");redstoneButton=receiver.button();
         java.util.Collections.addAll(buttonList,modeOffButton,modeStaticButton,modeAnimatedButton,slowButton,normalButton,fastButton,frameButton,redstoneButton);
         buttonList.add(layout.control(32,142,sidesLabel()));
+        if(fullInput)buttonList.add(layout.control(30,172,""));
         channelField=receiver.field();
         ChannelFields.configure(channelField);
         channelField.setText(receiverDraft);
@@ -219,6 +222,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         for(GuiButton b:buttonList)if(b.id==198)b.visible=textureTab==(console?3:2)&&(te.hasRedstoneScreen(0)||te.hasRedstoneScreen(1));
         int sides=console?2:1,redstone=sides+1;channelField.setVisible(textureTab==redstone);if(!channelField.getVisible())channelField.setFocused(false);for(GuiButton option:buttonList){if(option.id==0||option.id==198)option.visible=textureTab==redstone&&(option.id!=198||te.hasRedstoneScreen(0)||te.hasRedstoneScreen(1));else if(option.id==32)option.visible=textureTab==sides;else if(option.id>=1&&option.id<=3||option.id>=10&&option.id<=12)option.visible=textureTab<sides;}
 
+        for(GuiButton button:buttonList)if(button.id==30){button.visible=textureTab==0;button.displayString="Size: "+(smallInput?"Small":"Full");}
         receiver.setMode(RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         modeOffButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_OFF;
         modeStaticButton.enabled = displayMode != TileEntityAnimatedScreenSelector.MODE_STATIC;
@@ -235,7 +239,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(channel()<0)return;
         PacketHandler.INSTANCE.sendToServer(new MessageSyncScreenSelector(pos,
                 activeId(), redstoneEnabled, displayMode, framed, speedIndex,
-                inputPanel, inputPanel, false, channel(), housingTexture).withRedstoneInverted(redstoneInverted).withChannels(ChannelFields.parse(channelField)));
+                inputPanel, inputPanel, smallInput, channel(), housingTexture).withRedstoneInverted(redstoneInverted).withChannels(ChannelFields.parse(channelField)));
     }
 
     private void chooseArtwork(ScreenTextureList picker,int slot) {
@@ -260,6 +264,9 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(button.id>=90 && button.id<=(console?93:92)){textureTab=button.id-90;initGui();return;}
         if(button.id==32){te.setSurfaceTextureLayout(GuiOptionCycle.next(te.getSurfaceTextureLayout(),3));button.displayString=sidesLabel();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageProgrammableSlabSides(pos,te.getSurfaceTextureLayout()));return;}
         switch (button.id) {
+            case 30:
+                smallInput=!smallInput;
+                break;
             case 0:
                 {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
                 break;
@@ -340,7 +347,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(rowsPage()){if(!rowEditors[rowSlot].click(mouseX,mouseY,mouseButton))super.mouseClicked(mouseX,mouseY,mouseButton);return;}
         if(textureTab==0&&!rowsPage()&&!splitPage()&&framePane.click(mouseX,mouseY,mouseButton))return;
         if(framePage()||splitPage()){if(!framePane.click(mouseX,mouseY,mouseButton))super.mouseClicked(mouseX,mouseY,mouseButton);return;}
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,0,4,32))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,0,4,30,32))return;
         if (textureTab==(console?2:1) && housingList.click(mouseX, mouseY, mouseButton)) {
             if (housingTexture != housingList.selected()) {
                 housingTexture = housingList.selected();

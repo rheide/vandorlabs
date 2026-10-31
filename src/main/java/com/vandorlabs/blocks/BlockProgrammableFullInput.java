@@ -22,8 +22,8 @@ public class BlockProgrammableFullInput extends BlockProgrammableInput {
                 raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
                         ?(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw:null;
         InputSurfaceLayout.Box box=tile!=null && tile.isCeilingMounted()
-                ?InputSurfaceLayout.ceilingInput(true,false,tile.getCeilingPosition(1)).housing
-                :InputSurfaceLayout.fullInput(state.getValue(KEYBOARD),state.getValue(UPPER)).housing;
+                ?InputSurfaceLayout.ceilingInput(true,tile.isSmallInput(),tile.getCeilingPosition(1)).housing
+                :InputSurfaceLayout.fullInput(state.getValue(KEYBOARD),state.getValue(UPPER),tile!=null && tile.isSmallInput()).housing;
         AxisAlignedBB local=new AxisAlignedBB(box.x0/16,box.y0/16,box.z0/16,
                 box.x1/16,box.y1/16,box.z1/16);
         return rotateFromNorth(local, state.getValue(FACING));

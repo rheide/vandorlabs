@@ -92,7 +92,7 @@ public final class ScreenHousingTextures {
     public static final String[] IDS;
     private static final String[] TEXTURES;
     private static final java.util.Map<Integer,Integer> REDIRECTS=new java.util.HashMap<>();
-    private static final java.util.Map<String,String> SCREEN_REDIRECTS=new java.util.HashMap<>();
+    private static final java.util.Map<String,String> SCREEN_REDIRECTS=new java.util.HashMap<>(),INPUT_REDIRECTS=new java.util.HashMap<>();
     private static final String[] SQUARE_TEXTURES, UNLIT_TEXTURES, STORAGE_TOP, STORAGE_SIDE;
     private static final java.util.List<com.google.gson.JsonObject> EXTRAS=new java.util.ArrayList<>();
     private static final com.google.gson.JsonObject MENU;
@@ -130,7 +130,8 @@ public final class ScreenHousingTextures {
                 if("Screens".equals(e.get("category").getAsString())){
                     String source=e.get("source").getAsString(),replacement=EXTRAS.get(target-LEGACY_COUNT).get("source").getAsString();
                     String oldId=source.replaceFirst("^console_inputs/", "").replaceFirst("_static$",""),newId=replacement.replaceFirst("^console_inputs/", "").replaceFirst("_static$","");
-                    String previous=SCREEN_REDIRECTS.put(oldId,newId);if(previous!=null&&!previous.equals(newId))throw new IllegalStateException("Conflicting screen aliases: "+oldId);
+                    java.util.Map<String,String> redirects=source.startsWith("console_inputs/")?INPUT_REDIRECTS:SCREEN_REDIRECTS;
+                    String previous=redirects.put(oldId,newId);if(previous!=null&&!previous.equals(newId))throw new IllegalStateException("Conflicting screen aliases: "+oldId);
                 }
             }
             if(e.has("detail") && e.get("detail").getAsInt()>0){
@@ -239,6 +240,7 @@ public final class ScreenHousingTextures {
     }
 
     /** Retired display identities resolve at use time, preserving original saved NBT. */
+    public static String canonicalInput(String id){return INPUT_REDIRECTS.getOrDefault(id,id);}
     public static String canonicalScreen(String id){return SCREEN_REDIRECTS.getOrDefault(id,id);}
     /** Full artwork for door leaves and thumbnails; ordinary blocks use one square half. */
     public static String fullTexture(int choice) {

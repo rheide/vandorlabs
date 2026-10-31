@@ -13,6 +13,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public final class MessageProgrammableGlass implements IMessage {
+    private int playbackMode=-1,playbackSpeed=1;
+    public MessageProgrammableGlass withPlayback(int mode,int speed){playbackMode=mode;playbackSpeed=speed;return this;}
+    private void readPlayback(ByteBuf bytes){
+        if(!bytes.isReadable())return;
+        if(bytes.readableBytes()!=3||bytes.readUnsignedByte()!=1)throw new IllegalArgumentException("Invalid glass playback extension");
+        playbackMode=bytes.readUnsignedByte();playbackSpeed=bytes.readUnsignedByte();
+        if(!com.vandorlabs.tiles.GlassPlayback.valid(playbackMode)||!com.vandorlabs.tiles.GlassPlayback.valid(playbackSpeed))throw new IllegalArgumentException("Invalid glass playback values");
+    }
+    private void writePlayback(ByteBuf bytes){if(playbackMode>=0){bytes.writeByte(1);bytes.writeByte(playbackMode);bytes.writeByte(playbackSpeed);}}
     private BlockPos pos;
     private int size, shade;
     private boolean join;
@@ -36,10 +45,13 @@ public final class MessageProgrammableGlass implements IMessage {
         material=b.readableBytes()>=4?b.readInt():-1;
         stretch=b.isReadable() && b.readBoolean();
         layout=b.isReadable()?b.readUnsignedByte():stretch?0:1;
+            readPlayback(b);
     }
     @Override public void toBytes(ByteBuf b) {
         b.writeLong(pos.toLong()); b.writeInt(size); b.writeInt(shade); b.writeBoolean(join);b.writeByte(tint);b.writeBoolean(framed);b.writeInt(material);b.writeBoolean(stretch);b.writeByte(layout<0?(stretch?0:1):layout);
+            writePlayback(b);
     }
+
     public static final class Handler implements IMessageHandler<MessageProgrammableGlass, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableGlass msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
@@ -62,6 +74,7 @@ public final class MessageProgrammableGlass implements IMessage {
                 TileEntity updated = player.world.getTileEntity(msg.pos);
                 if (updated instanceof TileEntityProgrammableGlass) {
                     ((TileEntityProgrammableGlass) updated).setSize(msg.size);
+                if(msg.playbackMode>=0)((TileEntityProgrammableGlass) updated).glassPlayback.set(msg.playbackMode,msg.playbackSpeed);
                     ((TileEntityProgrammableGlass) updated).setShade(msg.shade);
                     ((TileEntityProgrammableGlass) updated).setMaterial(msg.material);
                     ((TileEntityProgrammableGlass) updated).setTextureLayout(msg.layout);

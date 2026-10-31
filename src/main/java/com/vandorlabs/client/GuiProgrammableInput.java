@@ -78,8 +78,7 @@ public class GuiProgrammableInput extends GuiContainer {
             buttonList.add(layout.choice(10+i,i,3,100,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
         }
         if(!(te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole)) {
-            buttonList.add(layout.choice(30,0,2,128,I18n.format("gui.vandorlabs.input.small")));
-            buttonList.add(layout.choice(31,1,2,128,I18n.format("gui.vandorlabs.selector.normal")));
+            buttonList.add(layout.control(30,128,""));
         }
         buttonList.add(layout.control(4,108,""));
         buttonList.add(receiver.button());
@@ -107,8 +106,7 @@ public class GuiProgrammableInput extends GuiContainer {
             }
             if (button.id >= 1 && button.id <= 3) button.enabled = displayMode != button.id - 1;
             if (button.id >= 10 && button.id <= 12) button.enabled = speedIndex != button.id - 10;
-            if (button.id == 30) button.enabled = !smallInput;
-            if (button.id == 31) button.enabled = smallInput;
+            if (button.id == 30) button.displayString = "Size: "+(smallInput?"Small":"Full");
         }
     }
 
@@ -156,7 +154,7 @@ public class GuiProgrammableInput extends GuiContainer {
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
         if(rowsPage()){if(!rowEditors[rowSlot].click(mouseX,mouseY,button))super.mouseClicked(mouseX,mouseY,button);return;}
         if(framePage()){if(!framePane.click(mouseX,mouseY,button))super.mouseClicked(mouseX,mouseY,button);return;}
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,0,4,32))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,0,4,30,32))return;
         if (textureTab==1 && housingList.click(mouseX, mouseY, button)) {
             if (housingTexture != housingList.selected()) {
                 housingTexture = housingList.selected();
@@ -219,8 +217,7 @@ public class GuiProgrammableInput extends GuiContainer {
         if (button.id == 0) {int trigger=GuiOptionCycle.next(!redstoneEnabled?0:redstoneInverted?2:1,3);redstoneEnabled=trigger!=0;redstoneInverted=trigger==2;}
         else if (button.id >= 1 && button.id <= 3) displayMode = button.id - 1;
         else if (button.id >= 10 && button.id <= 12) speedIndex = button.id - 10;
-        else if (button.id == 30) smallInput = true;
-        else if (button.id == 31) smallInput = false;
+        else if (button.id == 30) smallInput = !smallInput;
         else return;
         refreshButtons();
         sendUpdate();

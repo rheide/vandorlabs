@@ -2,7 +2,7 @@
   "parent": "block/block",
   "textures": {
     "wall": "vandorlabs:blocks/programmable_glass/door_side",
-    "input": "vandorlabs:blocks/console_inputs/console_controls_engineering_keyboard_item",
+    "input": "vandorlabs:blocks/unified/screen_console_inputs_console_controls_medical_keyboard_static",
     "screen": "vandorlabs:blocks/engineering_screen_static",
     "particle": "vandorlabs:blocks/programmable_glass/door_side"
   },

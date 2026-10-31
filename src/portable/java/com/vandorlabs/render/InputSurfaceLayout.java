@@ -38,6 +38,9 @@ public final class InputSurfaceLayout {
             horizontal(.25,15.75,.25,15.75,8.02));
     private static final Mounted FULL_FLOOR_UPPER=new Mounted(new Box(0,15,0,16,16,16),
             horizontal(.25,15.75,.25,15.75,16.02));
+    private static final Mounted SMALL_WALL=new Mounted(new Box(4,4,15,12,12,16),vertical(4.25,11.75,4.25,11.75,14.98));
+    private static final Mounted SMALL_FLOOR_LOWER=new Mounted(new Box(4,7,4,12,8,12),horizontal(4.25,11.75,4.25,11.75,8.02));
+    private static final Mounted SMALL_FLOOR_UPPER=new Mounted(new Box(4,15,4,12,16,12),horizontal(4.25,11.75,4.25,11.75,16.02));
     private static final Quad HALF_CONSOLE_FRONT=horizontal(.25,15.75,.25,7.25,1.02);
     private static final Quad HALF_CONSOLE_REAR=new Quad(
             new Vertex(.25,7.75,14.70,0,0),new Vertex(15.75,7.75,14.70,1,0),
@@ -81,6 +84,11 @@ public final class InputSurfaceLayout {
     }
 
     public static Mounted fullInput(boolean keyboard,boolean upper) {
+        return fullInput(keyboard,upper,false);
+    }
+
+    public static Mounted fullInput(boolean keyboard,boolean upper,boolean small) {
+        if(small)return keyboard?(upper?SMALL_FLOOR_UPPER:SMALL_FLOOR_LOWER):SMALL_WALL;
         return keyboard?(upper?FULL_FLOOR_UPPER:FULL_FLOOR_LOWER):FULL_WALL;
     }
 
@@ -93,9 +101,9 @@ public final class InputSurfaceLayout {
         return CEILING_INPUTS[full?1:0][small?1:0][Math.max(0,Math.min(2,position))];
     }
     private static Mounted createCeilingInput(boolean full,boolean small,int position){
-        double scale=full?1:small?SMALL_SCALE:1;
+        double scale=small?(full?.5:SMALL_SCALE):1;
         double x0=(16-16*scale)/2,x1=16-x0;
-        double depth=full?16:8*scale;
+        double depth=(full?16:8)*scale;
         double z0=ceilingStart(depth,position);
         return new Mounted(new Box(x0,15,z0,x1,16,z0+depth),
                 horizontalDown(x0+.25,x1-.25,z0+.25,z0+depth-.25,14.98));

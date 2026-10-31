@@ -329,6 +329,13 @@ final class StaticSurfaceMesh {
                     .normal(vertices[i+5],vertices[i+6],vertices[i+7]).endVertex();
     }
 
+    /** Transform atlas UVs at emission time without copying the cached mesh. */
+    void drawColoredMapped(BufferBuilder buffer,int sky,int block,float alpha,net.minecraft.client.renderer.texture.TextureAtlasSprite source,double[] uv){
+        double us=(uv[3]-uv[2])/(source.getMaxU()-source.getMinU()),vs=(uv[1]-uv[0])/(source.getMaxV()-source.getMinV());
+        for(int i=0;i<vertices.length;i+=8)buffer.pos(vertices[i],vertices[i+1],vertices[i+2]).color(1F,1F,1F,alpha)
+            .tex(uv[2]+(vertices[i+3]-source.getMinU())*us,uv[0]+(vertices[i+4]-source.getMinV())*vs).lightmap(sky,block).normal(vertices[i+5],vertices[i+6],vertices[i+7]).endVertex();
+    }
+
     /** Split source quads once, retaining atlas coordinates across the diagonal cuts. */
     StaticSurfaceMesh[] xPanels(int hand,boolean caps) {
         StaticSurfaceMesh[] panels=new StaticSurfaceMesh[4];

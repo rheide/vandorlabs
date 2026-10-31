@@ -13,6 +13,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 /** Applies a porthole glass shade while its configuration dialog is open. */
 public final class MessageProgrammableWallShade implements IMessage {
+    private int playbackMode=-1,playbackSpeed=1;
+    public MessageProgrammableWallShade withPlayback(int mode,int speed){playbackMode=mode;playbackSpeed=speed;return this;}
+    private void readPlayback(ByteBuf bytes){
+        if(!bytes.isReadable())return;
+        if(bytes.readableBytes()!=3||bytes.readUnsignedByte()!=1)throw new IllegalArgumentException("Invalid glass playback extension");
+        playbackMode=bytes.readUnsignedByte();playbackSpeed=bytes.readUnsignedByte();
+        if(!com.vandorlabs.tiles.GlassPlayback.valid(playbackMode)||!com.vandorlabs.tiles.GlassPlayback.valid(playbackSpeed))throw new IllegalArgumentException("Invalid glass playback values");
+    }
+    private void writePlayback(ByteBuf bytes){if(playbackMode>=0){bytes.writeByte(1);bytes.writeByte(playbackMode);bytes.writeByte(playbackSpeed);}}
     private BlockPos pos;
     private int shade;
     private boolean join;
@@ -45,6 +54,7 @@ public final class MessageProgrammableWallShade implements IMessage {
         material=buf.readableBytes()>=4?buf.readInt():-1;
         stretch=buf.isReadable() && buf.readBoolean();textureJoin=!buf.isReadable() || buf.readBoolean();
         layout=buf.isReadable()?buf.readUnsignedByte():stretch?0:1;
+            readPlayback(buf);
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -53,6 +63,7 @@ public final class MessageProgrammableWallShade implements IMessage {
         buf.writeInt(shape);
         if(appearance){buf.writeByte(tint);buf.writeBoolean(framed);}
         if(appearance){buf.writeInt(material);buf.writeBoolean(stretch);buf.writeBoolean(textureJoin);buf.writeByte(layout<0?(stretch?0:1):layout);}
+            writePlayback(buf);
     }
 
     public static final class Handler implements IMessageHandler<MessageProgrammableWallShade, IMessage> {
@@ -75,6 +86,7 @@ public final class MessageProgrammableWallShade implements IMessage {
                         || (!((BlockProgrammableWall) player.world.getBlockState(msg.pos)
                         .getBlock()).isPortholeShape() && !(player.world.getBlockState(msg.pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass))) return;
                 ((TileEntityAnimatedScreenSelector) raw).setGlassShade(msg.shade);
+                if(msg.playbackMode>=0)((TileEntityAnimatedScreenSelector) raw).glassPlayback.set(msg.playbackMode,msg.playbackSpeed);
                 if(msg.appearance){TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)raw;tile.setGlassMaterial(msg.material);tile.setGlassAppearance(msg.tint,msg.framed);tile.setGlassLayout(msg.stretch,msg.textureJoin);tile.setGlassTextureLayout(msg.layout);}
                 ((TileEntityAnimatedScreenSelector) raw).setJoinPortholes(msg.join);
                 ((TileEntityAnimatedScreenSelector) raw).setPortholeShape(msg.shape);

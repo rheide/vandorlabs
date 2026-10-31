@@ -24,7 +24,7 @@ import java.io.IOException;
 public class GuiProgrammableWall extends GuiMaterialPicker {
     private static final String[] JOINS={"Auto","Straight","Front left corner","Front right corner","Back left corner","Back right corner","Front left T","Front right T","Back left T","Back right T","Left cross","Right cross"};
     private int rows = 8;
-    private boolean redstonePage,framePage;private int frameFace;private FrameAppearancePane framePane;
+    private boolean animationPage,redstonePage,framePage;private int frameFace;private FrameAppearancePane framePane;
     private HousingTextureList textureList;
     private static final String[] SHADES = {"Clear", "Cyan", "Dark Grey"};
     private static final String[] SHAPES = {"Hexagon", "Octagon", "Square", "Round"};
@@ -98,9 +98,13 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         super.initGui();
         buttonList.clear();boolean hasFrame=tile.getBlockType() instanceof BlockProgrammableWall;
         boolean separate=porthole||diagonalGlass;if(porthole&&frameFace==0)frameFace=1;
-        if(separate){int count=4;buttonList.add(layout.fullTab(195,0,count,porthole?"Main":"Glass"));if(porthole)buttonList.add(layout.fullTab(213,1,count,"Glass"));String[] names={"Front","Interior","Exterior"};for(int i=porthole?1:0;i<3;i++)buttonList.add(layout.fullTab(210+i,i+1,count,names[i]));}
+        if(separate){int count=GlassPlaybackPane.available(tile.getGlassMaterial())?5:4;if(count==5)buttonList.add(layout.fullTab(214,4,count,"Animation"));buttonList.add(layout.fullTab(195,0,count,porthole?"Main":"Glass"));if(porthole)buttonList.add(layout.fullTab(213,1,count,"Glass"));String[] names={"Front","Interior","Exterior"};for(int i=porthole?1:0;i<3;i++)buttonList.add(layout.fullTab(210+i,i+1,count,names[i]));}
         else{buttonList.add(layout.fullTab(195,0,hasFrame?2:1,"Appearance"));if(hasFrame)buttonList.add(layout.fullTab(197,1,2,"Exterior"));}
-        for(GuiButton tab:buttonList)tab.enabled=tab.id!=(framePage?(separate?210+frameFace:197):redstonePage?196:porthole&&faceTarget==-3?213:195);
+        for(GuiButton tab:buttonList)tab.enabled=tab.id!=(animationPage?214:framePage?(separate?210+frameFace:197):redstonePage?196:porthole&&faceTarget==-3?213:195);
+        if(animationPage){
+            textureList=HousingTextureList.forCanopy(guiLeft+12,guiTop+54,layout.controlsX-guiLeft-31,tile.getGlassShade(),tile.getGlassMaterial()).visibleRows(Math.max(2,(ySize-84)/HousingTextureList.ROW_HEIGHT)).keepView(textureList);
+            GlassPlaybackPane.init(layout,tile.glassPlayback,buttonList);buttonList.add(layout.done(100));return;
+        }
         if(framePage){if(framePane==null)framePane=diagonalGlass?new FrameAppearancePane(this,tile,()->{tile.setGlassAppearance(tile.getGlassTint(),!tile.isGlassFramed());sendPortholeSettings();},()->tile.isGlassFramed()):new FrameAppearancePane(this,tile);if(separate)framePane.initGlassFace(frameFace,54,buttonList);else framePane.init(54,buttonList);buttonList.add(layout.done(100));return;}
         if(redstonePage){buttonList.add(layout.done(100));return;}
         int controlsWidth=ProgrammableDialogLayout.CONTROLS_WIDTH, controlsX=layout.controlsX;
@@ -205,7 +209,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     private void sendPortholeSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableWallShade(
-                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()).withMaterial(tile.getGlassMaterial()).withLayout(tile.getGlassTextureLayout(),tile.isGlassTextureJoin()));
+                tile.getPos(), shade, join, shape).withAppearance(tile.getGlassTint(),tile.isGlassFramed()).withMaterial(tile.getGlassMaterial()).withLayout(tile.getGlassTextureLayout(),tile.isGlassTextureJoin()).withPlayback(tile.glassPlayback.mode(),tile.glassPlayback.speed()));
     }
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
@@ -220,7 +224,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     void choose(int choice) {
         selected = choice;
         if(glassSurface() && textureList!=null && textureList.selected()!=choice)textureList.setSelected(choice);
-        if(glassSurface()){if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;tile.setGlassShade(shade);tile.setGlassMaterial(-1);}else tile.setGlassMaterial(choice);sendPortholeSettings();initGui();return;}
+        if(animationPage||glassSurface()){if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;tile.setGlassShade(shade);tile.setGlassMaterial(-1);}else tile.setGlassMaterial(choice);if(animationPage&&!GlassPlaybackPane.available(tile.getGlassMaterial())){animationPage=false;if(porthole)faceTarget=-3;}sendPortholeSettings();initGui();return;}
         if(faceTarget==-2) {
             if(porthole){tile.frameAppearance.interior=choice;com.vandorlabs.tiles.GlassMaterials.changed();PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageFrameAppearance(tile,tile.frameAppearance));initGui();return;}
             tile.setSideTexture(choice);
@@ -252,6 +256,9 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(GlassPlaybackPane.action(button,tile.glassPlayback)){sendPortholeSettings();initGui();return;}
+        if(button.id==214){animationPage=true;framePage=false;redstonePage=false;initGui();return;}
+        if(button.id==195||button.id==196||button.id==197||button.id>=210&&button.id<=213)animationPage=false;
         if(framePage&&framePane!=null&&framePane.action(button))return;if(button.id==213){framePage=false;redstonePage=false;faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}if(button.id>=210&&button.id<=212){if(porthole&&button.id==210)return;frameFace=button.id-210;redstonePage=false;framePage=true;initGui();return;}if(button.id==195||button.id==196||button.id==197){if(porthole&&button.id==195){faceTarget=-1;selected=selectedTexture();textureList=null;}redstonePage=button.id==196;framePage=button.id==197;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
 
 
@@ -351,6 +358,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         drawRect(guiLeft, guiTop, guiLeft + xSize, guiTop + 24, 0xFF202028);
         fontRenderer.drawString(fontRenderer.trimStringToWidth(tile.getBlockType().getLocalizedName(),xSize-64),
                 guiLeft + 8, guiTop + 5, 0xFFFFFFFF);
+        if(animationPage)GlassPlaybackPane.draw(this);
         if(framePage)framePane.draw(mouseX,mouseY);else if(!redstonePage)textureList.draw(fontRenderer,mouseX,mouseY);
         DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX, mouseY, partialTicks);
     }

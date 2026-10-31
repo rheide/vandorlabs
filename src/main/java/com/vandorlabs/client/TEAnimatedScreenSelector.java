@@ -331,7 +331,7 @@ public class TEAnimatedScreenSelector
     }
 
     private static synchronized AnimData inputAnimData(String id) {
-        id=ScreenHousingTextures.canonicalScreen(id);
+        id=ScreenHousingTextures.canonicalInput(id);
         return animation("input_"+id,TEX_ROOT+"console_inputs/"+id);
     }
 
@@ -385,6 +385,7 @@ public class TEAnimatedScreenSelector
             return;
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass || state.getBlock() instanceof BlockProgrammableWall&&((BlockProgrammableWall)state.getBlock()).isPortholeShape())if(GlazingRenderOrder.handle(te,x,y,z,partialTicks,destroyStage,alpha))return;
         if(te.initializeDisplayArtwork(state.getBlock()))com.vandorlabs.tiles.GlassMaterials.changed();
         boolean fluidPass=te.isWaterlogged()&&com.vandorlabs.blocks.WaterloggedParts.supports(state)&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1;
         if(fluidPass&&!(state.getBlock() instanceof BlockProgrammableWall))WaterloggedRenderer.render(te,x,y,z);
@@ -678,8 +679,8 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
         InputSurfaceLayout.Mounted layout=te.isCeilingMounted()
-                ?InputSurfaceLayout.ceilingInput(true,false,te.getCeilingPosition(1))
-                :InputSurfaceLayout.fullInput(keyboard,upper);
+                ?InputSurfaceLayout.ceilingInput(true,te.isSmallInput(),te.getCeilingPosition(1))
+                :InputSurfaceLayout.fullInput(keyboard,upper,te.isSmallInput());
         bindAtlas();
         renderHousingBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1,te.getSurfaceTextureLayout());
@@ -796,6 +797,7 @@ public class TEAnimatedScreenSelector
         return bindDisplay(tile,screen.texture,screen.active,screen.animated,screen.speed);
     }
     static double[] bindDisplay(net.minecraft.tileentity.TileEntity tile,int texture,boolean active,boolean animated,int speed){
+        if(texture>=0)texture=ScreenHousingTextures.clamp(texture);
         if(texture<0 || !active){Minecraft.getMinecraft().getTextureManager().bindTexture(ScreenTextureLocations.off(false));return new double[]{0,1,0,1};}
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(texture);
         if(animated && entry!=null && "Screens".equals(ScreenHousingTextures.category(texture))){
@@ -955,10 +957,10 @@ public class TEAnimatedScreenSelector
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             StaticSurfaceMesh pane=DiagonalWallMeshCache.get(te,state,glass,glass);
             if(te.getGlassMaterial()>=0)pane=GlassSurfaceMapping.map(pane,glass,GlassSurfaceGroups.layout(te),false,0,0,te.getGlassTextureLayout());
-            pane.drawColored(buffer,(int)OpenGlHelper.lastBrightnessY,GlassInsertLighting.block(te,(int)OpenGlHelper.lastBrightnessX),1,1,1,opacity);
+            GlazingDisplay.draw(pane,te,buffer,(int)OpenGlHelper.lastBrightnessY,GlassInsertLighting.block(te,(int)OpenGlHelper.lastBrightnessX),opacity);
             Tessellator.getInstance().draw();
             GlStateManager.depthMask(true);GlStateManager.enableCull();GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();
-            GlStateManager.enableLighting();endLocalTransform();return;
+            GlStateManager.enableLighting();bindAtlas();endLocalTransform();return;
         }
         TextureAtlasSprite wall = wallSprite(te);
         TextureAtlasSprite metal = Minecraft.getMinecraft().getTextureMapBlocks()
@@ -1493,7 +1495,7 @@ public class TEAnimatedScreenSelector
         GlStateManager.color(1,1,1,1);
         BufferBuilder buf=Tessellator.getInstance().getBuffer();
         int sky=(int)OpenGlHelper.lastBrightnessY,block=(int)OpenGlHelper.lastBrightnessX;
-        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());glass.drawColored(buf,sky,block,1,1,1,opacity);
+        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(glass,tile,buf,sky,block,opacity);
         Tessellator.getInstance().draw();
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
         GlStateManager.disableBlend();bindAtlas();

@@ -41,7 +41,7 @@ final class ScreenCatalogRuntimeChecks {
         }
         require(mc.currentScreen instanceof GuiAnimatedScreenSelector,"screen picker did not open phase="+phase);GuiAnimatedScreenSelector gui=(GuiAnimatedScreenSelector)mc.currentScreen;
         boolean half=fixture>=IDS.length;String path=half?HALF[fixture-IDS.length]:IDS[fixture]+"_static";String nativeId=path.startsWith("controls27/")?null:path.replaceFirst("^console_inputs/","").replaceFirst("_static$","");int slot=half?1:0;
-        int choice=ScreenHousingTextures.clamp(ScreenHousingTextures.screenIndex(path));String expected=half&&!ScreenHousingTextures.entry(choice).get("source").getAsString().startsWith("console_inputs/")?null:nativeId;require(choice>0&&ScreenHousingTextures.visible(choice),"active display/control fixture missing "+path);
+        int choice=ScreenHousingTextures.clamp(ScreenHousingTextures.screenIndex(path));if(nativeId!=null)nativeId=half?ScreenHousingTextures.canonicalInput(nativeId):ScreenHousingTextures.canonicalScreen(nativeId);String expected=half&&!ScreenHousingTextures.entry(choice).get("source").getAsString().startsWith("console_inputs/")?null:nativeId;require(choice>0&&ScreenHousingTextures.visible(choice),"active display/control fixture missing "+path);
         if(phase==2){
             Field tab=GuiAnimatedScreenSelector.class.getDeclaredField("textureTab");tab.setAccessible(true);
             if(tab.getInt(gui)!=(half?1:0)){
@@ -78,7 +78,7 @@ final class ScreenCatalogRuntimeChecks {
             require((half?loaded.getInputPanel():loaded.getSelectedScreen()).equals(replacement),"saved display identity did not resolve "+old);require(after.getString(half?"inputPanel":"selectedScreen").equals(old),"use-time alias rewrote original snapshot identity");
             if(half){require(loaded.getSecondaryInputPanel().equals(replacement)&&after.getString("secondaryInputPanel").equals(old),"secondary half identity changed");require(mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/console_inputs/"+replacement+"_off")!=mc.getTextureMapBlocks().getMissingSprite(),"half display OFF atlas sprite missing");}count++;
         }
-        require(count==80,"expected company, framed, sensor and keyboard redirects: "+count);System.out.println("[vandorlabs][reprolab] screen-catalog-aliases PASS saved-identities="+count+" both heights stable numeric choices original snapshot NBT retained");
+        require(count==106,"expected company, framed, sensor and keyboard redirects: "+count);System.out.println("[vandorlabs][reprolab] screen-catalog-aliases PASS saved-identities="+count+" both heights stable numeric choices original snapshot NBT retained");
     }
     private static String[] expansionChoices(boolean half){
         java.util.List<String> result=new java.util.ArrayList<>();
@@ -86,7 +86,7 @@ final class ScreenCatalogRuntimeChecks {
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);if(!DisplayExpansionRuntimeChecks.expansion(entry))continue;String source=entry.get("source").getAsString();
             if(source.startsWith("console_inputs/")==half)result.add(half?source:source.replaceFirst("_static$",""));
         }
-        require(result.size()==21,"21 new selections per height");
+        require(result.size()==60,"60 new selections per height");
         for(String id:new String[]{"extra_bare_viewscreen","cool27_"+(half?"half":"full")+"_extra_viewscreen","gold27_"+(half?"half":"full")+"_extra_viewscreen"})result.add((half?"console_inputs/":"")+id+(half?"_static":""));
         return result.toArray(new String[0]);
     }

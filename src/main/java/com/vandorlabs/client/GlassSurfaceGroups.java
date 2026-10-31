@@ -85,17 +85,19 @@ final class GlassSurfaceGroups {
     private static boolean compatible(TileEntity root,BlockPos next,boolean main,boolean frame){
         if(root==null)return false;World world=root.getWorld();IBlockState a=world.getBlockState(root.getPos()),b=world.getBlockState(next);TileEntity other=world.getTileEntity(next);
         if(a.getBlock()!=b.getBlock() || other==null || !main && !join(other))return false;
+        if(!frame&&!main){int material=GlazingDisplay.material(root);if(material>=0&&"Screens".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(material))&&!com.vandorlabs.tiles.GlassPlayback.of(root).same(com.vandorlabs.tiles.GlassPlayback.of(other)))return false;}
         if(root instanceof TileEntityProgrammableGlass){TileEntityProgrammableGlass x=(TileEntityProgrammableGlass)root,y=(TileEntityProgrammableGlass)other;
             if(frame)return x.isFramed()==y.isFramed()&&x.frameAppearance.front==y.frameAppearance.front&&x.frameAppearance.interior==y.frameAppearance.interior&&x.frameAppearance.exteriorChoice()==y.frameAppearance.exteriorChoice()&&x.frameAppearance.tile==y.frameAppearance.tile&&a.getValue(BlockGlassWall.ROTATED).equals(b.getValue(BlockGlassWall.ROTATED))&&a.getValue(BlockGlassWall.DEPTH).equals(b.getValue(BlockGlassWall.DEPTH));
-            return x.getMaterial()==y.getMaterial() && x.getTint()==y.getTint() && x.getTextureLayout()==y.getTextureLayout() && a.getValue(BlockGlassWall.ROTATED).equals(b.getValue(BlockGlassWall.ROTATED)) && a.getValue(BlockGlassWall.DEPTH).equals(b.getValue(BlockGlassWall.DEPTH));}
+            return sameMaterial(x.getMaterial(),y.getMaterial()) && x.getTint()==y.getTint() && x.getTextureLayout()==y.getTextureLayout() && a.getValue(BlockGlassWall.ROTATED).equals(b.getValue(BlockGlassWall.ROTATED)) && a.getValue(BlockGlassWall.DEPTH).equals(b.getValue(BlockGlassWall.DEPTH));}
         TileEntityAnimatedScreenSelector x=(TileEntityAnimatedScreenSelector)root,y=(TileEntityAnimatedScreenSelector)other;
         if(main){if(x.getHousingTexture()!=y.getHousingTexture() || x.getMainTextureLayout()!=y.getMainTextureLayout())return false;}
-        else if(x.getGlassMaterial()!=y.getGlassMaterial() || x.getGlassTint()!=y.getGlassTint() || x.getGlassTextureLayout()!=y.getGlassTextureLayout())return false;
+        else if(!sameMaterial(x.getGlassMaterial(),y.getGlassMaterial()) || x.getGlassTint()!=y.getGlassTint() || x.getGlassTextureLayout()!=y.getGlassTextureLayout())return false;
         if(a.getValue(BlockProgrammableWall.FACING).getAxis()!=b.getValue(BlockProgrammableWall.FACING).getAxis())return false;
         if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return a.getValue(BlockProgrammableWall.FACING)==b.getValue(BlockProgrammableWall.FACING) && a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH));
         int mode=BlockProgrammableWall.geometry(world,root.getPos());
         return mode==BlockProgrammableWall.geometry(world,next) && x.getDiagonalFill()==y.getDiagonalFill()
                 && (DiagonalPanelGeometry.samePlane(root.getPos(),a,next,b,mode) || DiagonalPanelGeometry.rowsMeet(root.getPos(),a,next,b,mode));
     }
+    private static boolean sameMaterial(int a,int b){return a==b||a>=0&&b>=0&&com.vandorlabs.tiles.ScreenHousingTextures.clamp(a)==com.vandorlabs.tiles.ScreenHousingTextures.clamp(b);}
     private GlassSurfaceGroups(){}
 }

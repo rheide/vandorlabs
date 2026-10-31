@@ -2,8 +2,8 @@
   "parent": "block/block",
   "textures": {
     "wall": "vandorlabs:blocks/programmable_glass/door_side",
-    "front": "vandorlabs:blocks/console_inputs/input_surfaces_keyboard_touchpad_item",
-    "rear": "vandorlabs:blocks/console_inputs/sliders_buttons_pilot_faders_item",
+    "front": "vandorlabs:blocks/unified/screen_console_inputs_input_surfaces_keyboard_touchpad_static",
+    "rear": "vandorlabs:blocks/unified/controls27_half_height_pilot_faders",
     "particle": "vandorlabs:blocks/programmable_glass/door_side"
   },
   "display": {

@@ -27,6 +27,7 @@ import java.util.Map;
 
 public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
     public final FrameAppearance frameAppearance=new FrameAppearance();
+    public final GlassPlayback glassPlayback=new GlassPlayback(this);
 
     public static final int REDSTONE_SURFACE=-2;
     public static final int VEHICLE_SURFACE=-3;
@@ -57,7 +58,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(fluids.any() && pass==1)return true;
         if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1;
         net.minecraft.block.Block block = getBlockType();
-        if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==1||pass==0&&(glassFramed||com.vandorlabs.tiles.GlassMaterials.opaque(glassMaterial,glassTint));
+        if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==0||pass==1;
         if(world!=null && getMainTextureLayout()==0 && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
@@ -109,7 +110,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public static int getInputFrameCount(String id) {
-        Integer frames = INPUT_FRAME_COUNTS.get(ScreenHousingTextures.canonicalScreen(id));
+        Integer frames = INPUT_FRAME_COUNTS.get(ScreenHousingTextures.canonicalInput(id));
         return frames == null ? 1 : frames;
     }
 
@@ -410,7 +411,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public String getInputPanel() {
-        return ScreenHousingTextures.canonicalScreen(inputPanel);
+        return ScreenHousingTextures.canonicalInput(inputPanel);
     }
 
     public void setInputPanel(String inputPanel) {
@@ -421,7 +422,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public String getSecondaryInputPanel() {
-        return ScreenHousingTextures.canonicalScreen(secondaryInputPanel);
+        return ScreenHousingTextures.canonicalInput(secondaryInputPanel);
     }
 
     public void setSecondaryInputPanel(String inputPanel) {
@@ -540,7 +541,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
-        super.writeToNBT(compound);com.vandorlabs.redstone.TransmitterSlots.written(compound);frameAppearance.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
+        super.writeToNBT(compound);com.vandorlabs.redstone.TransmitterSlots.written(compound);frameAppearance.write(compound);glassPlayback.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
@@ -594,7 +595,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousPortholeJoin=joinPortholes;
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
-        super.readFromNBT(compound);frameAppearance.read(compound);
+        super.readFromNBT(compound);frameAppearance.read(compound);glassPlayback.read(compound);
         for(int i=0;i<2;i++){
             String key=i==0?"RedstonePrimary":"RedstoneSecondary";
             if(compound.hasKey(key,10))redstoneScreen(i).readFromNBT(compound.getCompoundTag(key));

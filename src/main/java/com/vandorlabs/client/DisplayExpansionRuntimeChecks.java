@@ -13,7 +13,7 @@ import net.minecraft.client.resources.IResourceManager;
 
 /** Actual decoder/atlas/GL coverage for all standard and explicitly sized Large additions. */
 final class DisplayExpansionRuntimeChecks {
-    static boolean expansion(JsonObject entry){return entry!=null&&(entry.get("id").getAsString().startsWith("screen_expansion27_")||entry.get("id").getAsString().startsWith("screen_large27_"));}
+    static boolean expansion(JsonObject entry){return entry!=null&&(entry.get("id").getAsString().startsWith("screen_expansion27_")||entry.get("id").getAsString().startsWith("screen_large27_")||entry.get("id").getAsString().startsWith("screen_door27_"));}
     static void run(Minecraft mc,File output)throws Exception{
         Method decode=TEAnimatedScreenSelector.class.getDeclaredMethod("decodeCompactAnimation",IResourceManager.class,String.class);decode.setAccessible(true);int layouts=0,large=0;
         for(int choice=0;choice<ScreenHousingTextures.IDS.length;choice++){
@@ -33,7 +33,7 @@ final class DisplayExpansionRuntimeChecks {
         require(!retired.equals(retained)&&ScreenTextureLocations.stationary(retired).equals(ScreenTextureLocations.stationary(retained)),"Engineering static fallback replacement");
         Method animation=TEAnimatedScreenSelector.class.getDeclaredMethod("animData",String.class);animation.setAccessible(true);require(animation.invoke(null,retired)==animation.invoke(null,retained),"Engineering animation replacement shares cache");
         Method crop=TEAnimatedScreenSelector.class.getDeclaredMethod("engineeringChoice",int.class);crop.setAccessible(true);require(!(Boolean)crop.invoke(null,ScreenHousingTextures.screenIndex("engineering_screen_static")),"retired Engineering choice crops retained pixels");
-        require(layouts==42&&large==8,"42 additions including eight Large choices");System.out.println("[vandorlabs][reprolab] display-expansion-animations PASS layouts=42 frames=252 Large=8 native-128-256-512 decoder static-OFF-atlas exact-GL-pixels");
+        require(layouts==120&&large==12,"120 additions including twelve Large choices");System.out.println("[vandorlabs][reprolab] display-expansion-animations PASS layouts=120 frames=720 Large=12 native-128-256-512 decoder static-OFF-atlas exact-GL-pixels");
     }
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("Display expansion: "+message);}
 }

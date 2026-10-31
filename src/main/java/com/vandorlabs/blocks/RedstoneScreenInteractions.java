@@ -67,8 +67,8 @@ public final class RedstoneScreenInteractions {
         if(block instanceof BlockProgrammableInput){
             boolean full=block instanceof BlockProgrammableFullInput;
             boolean keyboard=state.getValue(BlockProgrammableInput.KEYBOARD),upper=state.getValue(BlockProgrammableInput.UPPER);
-            InputSurfaceLayout.Mounted layout=tile!=null && tile.isCeilingMounted()?InputSurfaceLayout.ceilingInput(full,!full && tile.isSmallInput(),tile.getCeilingPosition(full?1:2)):
-                full?InputSurfaceLayout.fullInput(keyboard,upper):InputSurfaceLayout.halfInput(keyboard,upper,tile==null?(upper?2:0):tile.getWallPosition(upper?2:0),tile!=null && tile.isSmallInput());
+            InputSurfaceLayout.Mounted layout=tile!=null && tile.isCeilingMounted()?InputSurfaceLayout.ceilingInput(full,tile.isSmallInput(),tile.getCeilingPosition(full?1:2)):
+                full?InputSurfaceLayout.fullInput(keyboard,upper,tile!=null && tile.isSmallInput()):InputSurfaceLayout.halfInput(keyboard,upper,tile==null?(upper?2:0):tile.getWallPosition(upper?2:0),tile!=null && tile.isSmallInput());
             return ScreenSurface.input(layout.surface);
         }
         if(block instanceof BlockDiagonalHalfConsole)return ScreenSurface.halfDiagonal(state.getValue(BlockDiagonalHalfConsole.UPPER));
