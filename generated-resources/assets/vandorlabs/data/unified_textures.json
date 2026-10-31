@@ -3541,70 +3541,70 @@
   },
   {
     "id": "controls27_half_height_01_reactor_bottom",
-    "label": "Reactor Bottom",
+    "label": "Reactor",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_01_reactor_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_02_biology_bottom",
-    "label": "Biology Bottom",
+    "label": "Biology",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_02_biology_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_03_keyboard_bottom",
-    "label": "Keyboard Bottom",
+    "label": "Keyboard",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_03_keyboard_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_03_medical_bottom",
-    "label": "Medical Bottom",
+    "label": "Medical",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_03_medical_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_04_controls_bottom",
-    "label": "Controls Bottom",
+    "label": "Controls",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_04_controls_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_04_radar_bottom",
-    "label": "Radar Bottom",
+    "label": "Radar",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_04_radar_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_05_communications_bottom",
-    "label": "Communications Bottom",
+    "label": "Communications",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_05_communications_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_05_dual_keyboard_bottom",
-    "label": "Dual Keyboard Bottom",
+    "label": "Dual Keyboard",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_05_dual_keyboard_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_06_dual_controls_bottom",
-    "label": "Dual Controls Bottom",
+    "label": "Dual Controls",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_06_dual_controls_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_06_navigation_bottom",
-    "label": "Navigation Bottom",
+    "label": "Navigation",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_06_navigation_bottom",
     "rectangular": true
@@ -3933,7 +3933,7 @@
   },
   {
     "id": "controls27_dense_ashiro_mai_03_navigation_bottom",
-    "label": "Navigation Bottom",
+    "label": "Navigation",
     "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_dense_ashiro_mai_03_navigation_bottom",
     "rectangular": true
@@ -3961,7 +3961,7 @@
   },
   {
     "id": "controls27_dense_paladyne_03_navigation_bottom",
-    "label": "Navigation Bottom",
+    "label": "Navigation",
     "category": "Controls/Paladyne",
     "source": "controls27/controls27_dense_paladyne_03_navigation_bottom",
     "rectangular": true
@@ -3989,7 +3989,7 @@
   },
   {
     "id": "controls27_dense_pinnacle_03_navigation_bottom",
-    "label": "Navigation Bottom",
+    "label": "Navigation",
     "category": "Controls/Pinnacle",
     "source": "controls27/controls27_dense_pinnacle_03_navigation_bottom",
     "rectangular": true
@@ -4017,7 +4017,7 @@
   },
   {
     "id": "controls27_dense_seyr_03_navigation_bottom",
-    "label": "Navigation Bottom",
+    "label": "Navigation",
     "category": "Controls/Seyr",
     "source": "controls27/controls27_dense_seyr_03_navigation_bottom",
     "rectangular": true
@@ -4045,7 +4045,7 @@
   },
   {
     "id": "controls27_dense_vandor_03_navigation_bottom",
-    "label": "Navigation Bottom",
+    "label": "Navigation",
     "category": "Controls/Vandor",
     "source": "controls27/controls27_dense_vandor_03_navigation_bottom",
     "rectangular": true
@@ -4073,7 +4073,7 @@
   },
   {
     "id": "controls27_dense_vektor_03_navigation_bottom",
-    "label": "Navigation Bottom",
+    "label": "Navigation",
     "category": "Controls/Vektor",
     "source": "controls27/controls27_dense_vektor_03_navigation_bottom",
     "rectangular": true

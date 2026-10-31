@@ -10,13 +10,14 @@ def restructure(catalog,blocks,language):
     result=copy.deepcopy(catalog);definitions=copy.deepcopy(blocks);names={};retired=set();active=set()
     for entry in result:
         category=entry.get('category','')
-        if category.startswith('Controls/'):
+        if category=='Controls' or category.startswith('Controls/'):
             entry['category']=category.replace('Controls/Corporate/','Controls/').replace('Controls/Dense/','Controls/').replace('Controls/Half-height','Controls/Classic')
-            entry['label']=re.sub(r'^\d+[\s._-]+','',entry['label'])
+            entry['label']=re.sub(r' Bottom$','',re.sub(r'^\d+[\s._-]+','',entry['label']))
             continue
         if category!='Screens':continue
         half=entry['source'].startswith('console_inputs/');source=entry['source'].removeprefix('console_inputs/').removesuffix('_static');height='Half' if half else 'Full'
-        if half and source.startswith(CONTROL_PREFIXES):continue
+        if half and source.startswith(CONTROL_PREFIXES):
+            entry['label']=re.sub(r' Bottom$','',entry['label']);continue
         company=re.fullmatch(r'company_(ashiro_mai|paladyne|pinnacle|seyr|vandor|vektor)_(full|half)_(.+)',source)
         if company:
             company,tier,subject=company.groups();kept='pinnacle' if company in ('pinnacle','vektor') else 'paladyne'

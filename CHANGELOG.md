@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Remove the trailing Bottom label from Controls texture names across Classic, root and company folders, preserving saved texture IDs.
+
 - Add borderless animated Station and Targeting displays to Classic/Half, completing the matching Full/Half subject set.
 
 - Name the Classic specialist sensor displays Radar (Classic/Full) and Radar (Classic/Half).

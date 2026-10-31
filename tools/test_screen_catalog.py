@@ -13,7 +13,7 @@ assert restructure(catalog,blocks,lang)==(catalog,blocks,lang),'regeneration is 
 byid={e['id']:e for e in catalog};byblock={e['id']:e for e in blocks};groups=collections.defaultdict(list)
 for e in catalog:
     if e.get('category','').startswith('Controls/'):
-        assert not any(x in e['category'] for x in ('Corporate','Dense','Half-height')) and not re.match(r'^\d',e['label'])
+        assert not any(x in e['category'] for x in ('Corporate','Dense','Half-height')) and not re.match(r'^\d',e['label']) and not e['label'].endswith(' Bottom')
         groups[e['category']].append(e['label'].casefold())
 assert len(groups)==7 and len(groups['Controls/Classic'])==18
 for group,labels in groups.items():assert len(set(labels))==len(labels) and len(labels)==(18 if group=='Controls/Classic' else 10),group

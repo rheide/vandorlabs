@@ -25,7 +25,8 @@ Full or Half height. Tactical Starmap, Science Biology Wide Left/Right and the
 Console Biology/Engineering/Medical/Navigation/Sensors/Signals artwork are
 removed without replacement mappings. Console blocks remain available.
 
-Input controls remain separate under **Controls**. Company controls and their
+Input controls remain separate under **Controls**. Control names omit the
+redundant **Bottom** suffix in Classic and company folders. Company controls and their
 Dense variants share company folders directly below Controls. The former
 Half-height folder is **Controls/Classic**. Numeric prefixes are removed from
 control names; names remain unique within each folder. Controls have no
