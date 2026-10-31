@@ -36,6 +36,7 @@ public final class NonRenderingChecks {
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_glass"));
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(com.vandorlabs.gear.GearTileEntity.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_gear"));
         if(args.length>0 && args[0].equals("vehicle-world")){vehicleWorldCompatibility();return;}
+        if(args.length>0 && args[0].equals("duplifier-direction")){DuplifierDirectionChecks.run();contiguous();return;}
         if(args.length>0 && args[0].equals("trapdoor-material")){TrapdoorMeshParityChecks.run();try{TrapdoorFrameCoreChecks.run();}catch(Exception e){throw new IllegalStateException(e);}return;}
         if(args.length>0 && args[0].equals("housing-cost")){HousingStateChecks.run();HousingModelChecks.run();FluidPresenceChecks.run();SolidFastPathChecks.run();return;}
         vehicleWorldCompatibility();
@@ -163,6 +164,7 @@ public final class NonRenderingChecks {
         };
         player.capabilities.allowEdit=true;
         ItemStack tool=new ItemStack(new Item());
+        DuplifierApplyOptions.setIgnoreDirectionality(tool,true);
         NBTTagCompound copy=new NBTTagCompound();copy.setInteger(ProgrammableSettings.WALL_TEXTURE,4);
         tool.setTagInfo(ItemDuplifier.SETTINGS_TAG,copy);
         BlockPos origin=new BlockPos(10,100,10);

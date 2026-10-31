@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Add an independent Ignore directionality toggle beside Connected Matching Blocks in the Duplifier dialog. Match rotated or differently mounted blocks without rotating targets, while retaining block-type, texture and other configuration boundaries.
+
 - Add Satin Silver, Cool Steel and Pale Titanium to Materials, retaining their native 128px artwork and all existing saved texture choice indices.
 
 - Include LabPBR specular companions for all runtime textures, with material-specific finishes for alloy, steel, painted panels, glass, composite and fabric. Preserve diffuse artwork, transparency and existing light emission; share duplicate maps in the standard JAR.

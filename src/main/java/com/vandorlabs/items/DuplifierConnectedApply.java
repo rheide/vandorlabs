@@ -25,7 +25,7 @@ public final class DuplifierConnectedApply {
                 && player.canPlayerEdit(pos, face, tool);
     }
 
-    private static NBTTagCompound configuration(World world, BlockPos pos) {
+    private static NBTTagCompound configuration(World world, BlockPos pos,boolean ignoreDirectionality) {
         NBTTagCompound settings = ProgrammableSettings.capture(world, pos);
         // Disabled face overrides still hold saved choices. Those must match
         // too, even though the normal copy snapshot omits them while disabled.
@@ -42,21 +42,28 @@ public final class DuplifierConnectedApply {
             settings.getCompoundTag(ProgrammableSettings.FACE_TEXTURES).setIntArray("choices",
                     ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile)
                             .getFaceTextures().choices());
-        if (settings != null) {
+        if (settings != null && ignoreDirectionality) {
             settings.removeTag(ProgrammableSettings.SWITCH_ROTATION);
             settings.removeTag(ProgrammableSettings.RAMP_DIRECTION);
+            settings.removeTag(ProgrammableSettings.STAIR_ROLL);
+            settings.removeTag(ProgrammableSettings.TRAPDOOR_COVER_FACING);
+            settings.removeTag(ProgrammableSettings.TRAPDOOR_ROTATION_FLIPPED);
+            settings.removeTag("placement_ceiling");
+            settings.removeTag("placement_ceiling_position");
+            settings.removeTag("placement_wall_position");
         }
         return settings;
     }
 
-    private static boolean matchingState(IBlockState original, IBlockState candidate) {
+    private static boolean matchingState(IBlockState original, IBlockState candidate,boolean ignoreDirectionality) {
         if (original.getBlock() != candidate.getBlock()) return false;
         for (net.minecraft.block.properties.IProperty<?> property : original.getPropertyKeys()) {
             String name = property.getName();
-            if (name.equals("facing") || name.equals("rotation") || name.equals("rotated")
+            if (ignoreDirectionality && (property.getValueClass()==EnumFacing.class
+                    || property.getValueClass()==EnumFacing.Axis.class
+                    || name.equals("facing") || name.equals("rotation") || name.equals("rotated")
                     || name.equals("hinge") || name.equals("inverted")
-                    || name.equals("half") && original.getBlock()
-                            instanceof com.vandorlabs.blocks.BlockProgrammableSlab) continue;
+                    || name.equals("half"))) continue;
             if (!original.getValue(property).equals(candidate.getValue(property))) return false;
         }
         return true;
@@ -69,7 +76,8 @@ public final class DuplifierConnectedApply {
         BlockPos origin = ProgrammableTarget.settingsPos(world, clicked);
         if (!editable(world, origin, player, face, tool)) return 0;
         IBlockState originalState = world.getBlockState(origin);
-        NBTTagCompound originalSettings = configuration(world, origin);
+        boolean ignoreDirectionality=DuplifierApplyOptions.ignoreDirectionality(tool);
+        NBTTagCompound originalSettings = configuration(world, origin,ignoreDirectionality);
         if (originalSettings == null) return 0;
         Set<BlockPos> visited = new HashSet<>();
         Set<BlockPos> targets = new LinkedHashSet<>();
@@ -82,8 +90,8 @@ public final class DuplifierConnectedApply {
             if (!visited.add(cell) || !editable(world, cell, player, face, tool)) continue;
             BlockPos root = ProgrammableTarget.settingsPos(world, cell);
             if (!editable(world, root, player, face, tool)
-                    || !matchingState(originalState, world.getBlockState(root))
-                    || !originalSettings.equals(configuration(world, root))) continue;
+                    || !matchingState(originalState, world.getBlockState(root),ignoreDirectionality)
+                    || !originalSettings.equals(configuration(world, root,ignoreDirectionality))) continue;
             if (++cells > MAX_CELLS) return -1;
             targets.add(root.toImmutable());
             // Walk physical cells so the upper half of a door or seat can

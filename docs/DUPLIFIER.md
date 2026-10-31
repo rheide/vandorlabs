@@ -39,9 +39,15 @@ The **Armor Texture** switch on the **Common** page controls armor applications.
 the multi-block icon when this mode is On; an empty tool keeps the off icon.
 Turn it On in Apply Settings to apply the selected copied properties to the
 clicked block and its entire matching group, following neighbors that share a face, edge, or corner. A neighbor must have the same
-block type and original configuration as the clicked block. Facing and
-rotation are ignored when matching. Top and bottom Programmable Slabs can join
-the same group; applying settings preserves each slab's half. Other placement properties still match.
+block type and original configuration as the clicked block.
+**Ignore directionality**, beside the connected-mode switch, starts Off.
+Turn it On to match different facings, axes, rotations, hinges and halves,
+including mounting data stored by programmable tiles. Top and bottom
+Programmable Slabs can then join the same group. Target block orientations
+and halves remain in place when settings are applied. With the switch Off,
+orientation participates in matching.
+This controls group discovery; explicit settings such as Stair orientation or
+Ramp Direction still follow their individual apply switches.
 Slabs and full blocks never join the same group, even with identical settings.
 Matching checks all other properties even when their copy switches are Off;
 it also checks saved face choices when overrides are disabled.
@@ -51,7 +57,7 @@ the search halfway through a wall. Diagonal contact connects groups, including v
 The search uses loaded chunks and blocks you can edit. Door and seat halves and
 Landing Gear parts and canopy followers are addressed through their settings root and applied once.
 Groups larger than 4,096 occupied block cells are rejected without applying
-settings. The mode stays on the tool when you copy or clear settings; crafting
+settings. Both switches stay on the tool when you copy or clear settings; crafting
 still applies settings to the crafted item.
 
 ![Duplifier apply options](images/gallery/tools/duplifier-config.png)

@@ -11,6 +11,11 @@ The maps preserve existing diffuse artwork and add no light emission.
 The Materials picker includes Satin Silver, Cool Steel and Pale Titanium,
 using their native 128px artwork and matching shader material finishes.
 
+The Duplifier places Connected Matching Blocks and Ignore directionality in
+separate columns. Enable Ignore directionality to include differently oriented
+matching blocks while preserving their placement. Both choices are saved on
+the tool; other configuration differences still separate matching groups.
+
 Programmable glass and diagonal glass have separate Front, Interior and
 Exterior finishes on top-level tabs. Portholes use Main artwork for their front,
 with separate Interior and Exterior finishes. Wall and diagonal-wall finish tabs

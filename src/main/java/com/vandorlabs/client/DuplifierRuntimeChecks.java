@@ -180,6 +180,8 @@ final class DuplifierRuntimeChecks {
         java.util.Collections.addAll(all, barrier, behind, diagonal, hiddenFaces, slab, facing);
         ItemStack tool = new ItemStack(ModItems.DUPLIFIER);
         require(!DuplifierApplyOptions.connected(tool), "connected apply must default off");
+        require(!DuplifierApplyOptions.ignoreDirectionality(tool),"ignore directionality must default off");
+        DuplifierApplyOptions.setIgnoreDirectionality(tool,true);
         NBTTagCompound copy = new NBTTagCompound();
         copy.setInteger(ProgrammableSettings.WALL_TEXTURE, 20);
         copy.setInteger(ProgrammableSettings.CHANNEL, 7);

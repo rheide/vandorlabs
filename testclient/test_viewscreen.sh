@@ -114,6 +114,9 @@ case "${1:-}" in
         elif [ "$TARGET" = material-finishes ]; then
             PREFIX=material_
             export VANDOR_LABS_MATERIAL_FINISH_CHECKS_ONLY=true
+        elif [ "$TARGET" = duplifier-direction ]; then
+            PREFIX=duplifier_
+            export VANDOR_LABS_DUPLIFIER_DIRECTION_CHECKS_ONLY=true
         elif [ "$TARGET" = solid-housing ]; then
             PREFIX=fluid_
             export VANDOR_LABS_FLUID_CHECKS_ONLY=true VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY=true
@@ -399,6 +402,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = material-finishes ]; then
         grep -q 'material-finishes-live PASS' "$RUN_OUT/client.log"
         echo "Live material picker checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = duplifier-direction ]; then
+        grep -q 'duplifier-direction-live PASS' "$RUN_OUT/client.log"
+        echo "Live Duplifier direction checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = solid-housing ]; then

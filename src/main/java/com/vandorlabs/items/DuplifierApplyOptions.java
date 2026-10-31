@@ -8,6 +8,7 @@ public final class DuplifierApplyOptions {
     public static final String TAG = "DuplifierApplyMask";
     private static final String COUNT_TAG = "DuplifierApplyOptionCount";
     public static final String CONNECTED_TAG = "DuplifierConnected";
+    public static final String IGNORE_DIRECTION_TAG = "DuplifierIgnoreDirectionality";
     public static final String[] PAGES = {"Common", "Displays", "Blocks", "Doors", "Ramps"};
 
     public static final class Option {
@@ -116,6 +117,15 @@ public final class DuplifierApplyOptions {
 
     public static void setConnected(ItemStack tool, boolean connected) {
         tool.setTagInfo(CONNECTED_TAG, new net.minecraft.nbt.NBTTagByte((byte)(connected ? 1 : 0)));
+    }
+
+    public static boolean ignoreDirectionality(ItemStack tool) {
+        NBTTagCompound root=tool.getTagCompound();
+        return root!=null && root.getBoolean(IGNORE_DIRECTION_TAG);
+    }
+
+    public static void setIgnoreDirectionality(ItemStack tool,boolean ignore) {
+        tool.setTagInfo(IGNORE_DIRECTION_TAG,new net.minecraft.nbt.NBTTagByte((byte)(ignore?1:0)));
     }
 
     public static long[] legacyWords(long low){long[] words=new long[WORD_COUNT];java.util.Arrays.fill(words,-1L);words[0]=low;trim(words);return words;}
