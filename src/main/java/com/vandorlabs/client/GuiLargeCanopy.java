@@ -74,7 +74,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         // GuiSlider owns its value callback and drag state. Rebuilding here cancels the drag.
         if(button instanceof GuiSlider)return;
         switch(button.id){
-            case 2:tint=GuiOptionCycle.next(tint,3);break;
+            case 2:tint=GuiOptionCycle.next(tint,com.vandorlabs.tiles.GlassTextures.TINT_COUNT);break;
             case 3:draft.motion=GuiOptionCycle.next(draft.motion,2);break;
             case 12:draft.textureLayout(GuiOptionCycle.next(draft.textureLayout(),3));break;
             case 11:draft.slideForward=!draft.slideForward;break;

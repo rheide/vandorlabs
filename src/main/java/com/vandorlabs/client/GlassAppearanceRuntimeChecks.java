@@ -33,12 +33,12 @@ final class GlassAppearanceRuntimeChecks {
         int assertions=0;
         for(Block block:new Block[]{regular,diagonal}) {
             player.world.setBlockState(pos,block.getDefaultState(),3);
-            for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++)for(boolean frame:new boolean[]{false,true}) {
+            for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<4;tint++)for(boolean frame:new boolean[]{false,true}) {
                 if(block==regular) {
                     TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)player.world.getTileEntity(pos);
                     tile.setShade(shade);tile.setAppearance(tint,frame);
-                    require(tile.shouldRenderInPass(tint==2?0:1),"regular pane pass follows opacity");
-                    if(tint==2)require(!tile.shouldRenderInPass(1),"opaque regular pane skips translucent pass");
+                    require(tile.shouldRenderInPass(tint==3?0:1),"regular pane pass follows opacity");
+                    if(tint==3)require(!tile.shouldRenderInPass(1),"opaque regular pane skips translucent pass");
                     TileEntityProgrammableGlass loaded=new TileEntityProgrammableGlass();loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                     require(loaded.getShade()==shade && loaded.getTint()==tint && loaded.isFramed()==frame,"regular NBT");
                     IBlockState actual=regular.getActualState(player.world.getBlockState(pos),player.world,pos);
@@ -46,7 +46,7 @@ final class GlassAppearanceRuntimeChecks {
                 } else {
                     TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player.world.getTileEntity(pos);
                     tile.setGlassShade(shade);tile.setGlassAppearance(tint,frame);
-                    require(tile.shouldRenderInPass(tint==2?0:1),"diagonal pane pass follows opacity");
+                    require(tile.shouldRenderInPass(tint==3?0:1),"diagonal pane pass follows opacity");
                     TileEntityAnimatedScreenSelector loaded=new TileEntityAnimatedScreenSelector();loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                     require(loaded.getGlassShade()==shade && loaded.getGlassTint()==tint && loaded.isGlassFramed()==frame,"diagonal NBT");
                 }
@@ -86,7 +86,7 @@ final class GlassAppearanceRuntimeChecks {
     }
     private static void materialChecks(EntityPlayer player,BlockPos pos){
         Block[] blocks={Block.getBlockFromName("vandorlabs:programmable_glass"),ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS,Block.getBlockFromName("vandorlabs:regular_canopy_glass")};
-        for(Block source:blocks)for(Block target:blocks)for(int material:new int[]{-1,0})for(int tint=0;tint<3;tint++){
+        for(Block source:blocks)for(Block target:blocks)for(int material:new int[]{-1,0})for(int tint=0;tint<4;tint++){
             player.world.setBlockState(pos,source.getDefaultState(),3);
             player.world.setBlockState(pos.east(6),target.getDefaultState(),3);
             NBTTagCompound values=new NBTTagCompound();values.setInteger(ProgrammableSettings.GLASS_MATERIAL,material);values.setInteger(ProgrammableSettings.GLASS_TINT,tint);
@@ -108,7 +108,7 @@ final class GlassAppearanceRuntimeChecks {
             }
             player.world.setBlockToAir(pos);player.world.setBlockToAir(pos.east(6));
         }
-        require(com.vandorlabs.tiles.GlassMaterials.opacity(0,0)<com.vandorlabs.tiles.GlassMaterials.opacity(0,1) && com.vandorlabs.tiles.GlassMaterials.opacity(0,2)==1,"strong material tint is opaque");
+        require(com.vandorlabs.tiles.GlassMaterials.opacity(0,0)<com.vandorlabs.tiles.GlassMaterials.opacity(0,1) && com.vandorlabs.tiles.GlassMaterials.opacity(0,2)<1 && com.vandorlabs.tiles.GlassMaterials.opacity(0,3)==1,"Strong remains translucent and Opaque is solid");
         System.out.println("[vandorlabs][reprolab] glass-materials PASS cross-family-copy NBT picked-items configured-crafting opacity=35/65/100");
     }
 
@@ -165,7 +165,7 @@ final class GlassAppearanceRuntimeChecks {
     }
 
     private static void packetChecks(BlockPos pos) {
-        for(int tint=0;tint<3;tint++)for(boolean frame:new boolean[]{false,true}) {
+        for(int tint=0;tint<4;tint++)for(boolean frame:new boolean[]{false,true}) {
             ByteBuf first=Unpooled.buffer(),second=Unpooled.buffer();
             new MessageProgrammableGlass(pos,1,12,true).withAppearance(tint,frame).withMaterial(0).toBytes(first);
             MessageProgrammableGlass decoded=new MessageProgrammableGlass();decoded.fromBytes(first.duplicate());decoded.toBytes(second);
@@ -185,7 +185,7 @@ final class GlassAppearanceRuntimeChecks {
         Block regular=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_glass"));
         for(int x=38;x<=52;x++)for(int z=38;z<=46;z++)world.setBlockState(new BlockPos(x,3,z),Blocks.STONE.getDefaultState(),2);
         for(int x=38;x<=52;x++)for(int y=4;y<=8;y++)world.setBlockState(new BlockPos(x,y,46),Blocks.QUARTZ_BLOCK.getDefaultState(),2);
-        for(int tint=0;tint<3;tint++)for(int frame=0;frame<2;frame++) {
+        for(int tint=0;tint<4;tint++)for(int frame=0;frame<2;frame++) {
             int x=40+(tint*2+frame)*2;
             BlockPos flat=new BlockPos(x,5,40),slope=new BlockPos(x,5,43);
             world.setBlockState(flat,regular.getDefaultState(),3);

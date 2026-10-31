@@ -30,7 +30,7 @@ final class JoinedGlassRuntimeChecks {
             for(String id:IDS){
                 Block block=Block.getBlockFromName("vandorlabs:"+id);world.setBlockState(BASE,block.getDefaultState(),3);
                 TileEntity raw=world.getTileEntity(BASE);if(raw instanceof TileEntityAnimatedScreenSelector){((TileEntityAnimatedScreenSelector)raw).setHousingTexture(8);((TileEntityAnimatedScreenSelector)raw).setSideTexture(26);}
-                for(int material:new int[]{-1,0})for(int tint=0;tint<3;tint++)for(boolean stretch:new boolean[]{false,true})for(int shade=0;shade<GlassTextures.IDS.length;shade++){
+                for(int material:new int[]{-1,0})for(int tint=0;tint<4;tint++)for(boolean stretch:new boolean[]{false,true})for(int shade=0;shade<GlassTextures.IDS.length;shade++){
                     NBTTagCompound values=settings(material,tint,stretch);values.setInteger(ProgrammableSettings.GLASS_SHADE,shade);require(ProgrammableSettings.apply(world,BASE,values,player),"apply "+id);
                     NBTTagCompound captured=ProgrammableSettings.capture(world,BASE);require(captured.getInteger(ProgrammableSettings.GLASS_MATERIAL)==material && captured.getInteger(ProgrammableSettings.GLASS_SHADE)==shade && captured.getInteger(ProgrammableSettings.GLASS_TINT)==tint,"palette capture "+id);
                     require(captured.getCompoundTag(ProgrammableSettings.GLASS_LAYOUT).getBoolean("Stretch")==stretch,"layout capture");

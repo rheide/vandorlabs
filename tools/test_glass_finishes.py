@@ -12,18 +12,18 @@ for detail in ('low', 'medium'):
     for file in (TEXTURES / detail).glob('*.png'):
         data = Image.open(file).convert('RGBA')
         assert data.size == clear.size
-        if not file.stem.startswith(('clear', 'soft_cyan', 'soft_dark_grey')) and not file.stem.endswith(('_mild','_strong')):
+        if not file.stem.startswith(('clear', 'soft_cyan', 'soft_dark_grey')) and not file.stem.endswith(('_mild','_strong','_opaque')):
             assert data.getchannel('A').getextrema()[0] >= 76, file.name
             assert ImageStat.Stat(data.getchannel('A')).mean[0] > ImageStat.Stat(clear.getchannel('A')).mean[0] + 40, file.name
-    assert len(list((TEXTURES / detail).glob('*.png'))) == 57
+    assert len(list((TEXTURES / detail).glob('*.png'))) == 76
     for name in ('soft_cyan','soft_dark_grey') + tuple(n for n in ('white','orange','magenta','light_blue','yellow','lime','pink','grey','light_grey','cyan','purple','blue','brown','green','red','black')):
         means = [ImageStat.Stat(Image.open(TEXTURES / detail / (name + suffix + '.png')).getchannel('A')).mean[0]
-                 for suffix in ('_mild','','_strong')]
-        assert means[0] < means[1] < means[2], (name, means)
+                 for suffix in ('_mild','','_strong','_opaque')]
+        assert means[0] < means[1] < means[2] < means[3], (name, means)
     for suffix in ('_mild',):
         assert Image.open(TEXTURES / detail / ('clear'+suffix+'.png')).tobytes() == clear.tobytes()
 
-    for file in (TEXTURES / detail).glob('*_strong.png'):
+    for file in (TEXTURES / detail).glob('*_opaque.png'):
         assert Image.open(file).getchannel('A').getextrema()==(255,255), file
 
 # Thickness caps sample the same fully opaque metal patch as regular glass.
@@ -88,5 +88,5 @@ for file in (ROOT / 'src/main/resources/assets/vandorlabs/models/item/configured
                         point = rotate(point, axis, angle)
                     assert abs(point[0]) <= 7.5 and abs(point[1]) <= 7.5, (file.name, point)
     count += 1
-assert count == 399, count
-print('PASS: 114 glass textures, three increasing tint strengths, and projected slot padding for all 399 item models')
+assert count == 513, count
+print('PASS: 152 glass textures, four tint levels, and projected slot padding for all 513 item models')

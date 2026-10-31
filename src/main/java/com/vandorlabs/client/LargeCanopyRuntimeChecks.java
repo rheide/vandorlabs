@@ -22,7 +22,7 @@ public final class LargeCanopyRuntimeChecks {
             for(EnumFacing facing:EnumFacing.HORIZONTALS){List<AxisAlignedBB> boxes=CanopyMesh.collision(faces,"front_canopy_glass",width,0,facing,BlockPos.ORIGIN);require(!boxes.isEmpty(),"empty collision");for(AxisAlignedBB box:boxes)require(box.maxX>box.minX && box.maxY>box.minY && box.maxZ>box.minZ,"zero-volume collision");
                 Vec3d start=CanopyMesh.rotate(new Vec3d(width/2D,width/2D,-1),facing),end=CanopyMesh.rotate(new Vec3d(width/2D,width/2D,6),facing);require(CanopyMesh.trace(faces,"front_canopy_glass",width,0,facing,BlockPos.ORIGIN,start,end)!=null,"center ray missed");}
         }
-        for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){LargeCanopySettings settings=new LargeCanopySettings();settings.shade=shade;settings.tint=tint;NBTTagCompound tag=new NBTTagCompound();settings.write(tag);LargeCanopySettings restored=new LargeCanopySettings();restored.read(tag);require(settings.key().equals(restored.key()),"settings NBT");}
+        for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<4;tint++){LargeCanopySettings settings=new LargeCanopySettings();settings.shade=shade;settings.tint=tint;NBTTagCompound tag=new NBTTagCompound();settings.write(tag);LargeCanopySettings restored=new LargeCanopySettings();restored.read(tag);require(settings.key().equals(restored.key()),"settings NBT");}
         BlockCanopy block=(BlockCanopy)com.vandorlabs.blocks.ModBlocks.BLOCKS.stream().filter(b->b.getRegistryName().getResourcePath().equals("large_front_canopy_glass")).findFirst().get();
         BlockPos pos=new BlockPos(40,20,40);for(int x=0;x<5;x++)for(int y=0;y<5;y++)for(int z=0;z<5;z++)player.world.setBlockToAir(pos.add(x,y,z));
         player.world.setBlockState(pos,block.getDefaultState(),3);block.onBlockPlacedBy(player.world,pos,player.world.getBlockState(pos),player,new ItemStack(block));TileEntityCanopy tile=TileEntityCanopy.at(player.world,pos);require(tile.cells().contains(pos),"default anchor footprint");int originalCells=tile.cells().size();
@@ -38,7 +38,7 @@ public final class LargeCanopyRuntimeChecks {
         require(LargeCanopyOwnership.apply(tile,player,0,100,0,0) && tile.cells().size()<=25 && player.world.isAirBlock(pos.add(0,0,4)),"shrinking leaves stale cells");
         for(net.minecraft.block.Block raw:ModBlocks.BLOCKS)if(raw instanceof BlockCanopy){
             BlockCanopy canopy=(BlockCanopy)raw;List<CanopyMesh.Face> base=CanopyMesh.MODELS.get(canopy.kind.equals("regular_canopy_glass")?"regular_1x1_00":canopy.kind);
-            for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++)for(CanopyMesh.Face face:CanopyFinishes.faces(base,shade,tint))if(face.baseMaterial.equals("glass"))require(face.material.equals(GlassTextures.texture(shade,1,tint)),"canopy palette "+canopy.kind);
+            for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<4;tint++)for(CanopyMesh.Face face:CanopyFinishes.faces(base,shade,tint))if(face.baseMaterial.equals("glass"))require(face.material.equals(GlassTextures.texture(shade,1,tint)),"canopy palette "+canopy.kind);
             if(LargeCanopySettings.supports(canopy.kind))for(EnumFacing facing:EnumFacing.HORIZONTALS){BlockPos clicked=new BlockPos(10,80,10);BlockPos placed=canopy.placementAnchor(clicked,facing);require(placed.offset(facing.rotateY(),canopy.width/2).up(canopy.height/2).equals(clicked),"large canopy centered placement");}
         }
         System.out.println("[vandorlabs][reprolab] large-canopy-runtime PASS shapes=42 poses=168 palette=57 resize-protection NBT configured-items");
@@ -89,12 +89,12 @@ public final class LargeCanopyRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] canopy-rear-depth PASS real-mesh rear-wall-separation source-collision-unchanged exact-UVs shared-seams depth-extrema both-anchor-conventions rear-faces="+rearFaces);
     }
     public static void icons(Minecraft mc){
-        for(net.minecraft.block.Block block:ModBlocks.BLOCKS)if(block instanceof BlockCanopy && LargeCanopySettings.supports(((BlockCanopy)block).kind))for(int depth:new int[]{0,16,80})for(int scale:new int[]{10,71,100})for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){
+        for(net.minecraft.block.Block block:ModBlocks.BLOCKS)if(block instanceof BlockCanopy && LargeCanopySettings.supports(((BlockCanopy)block).kind))for(int depth:new int[]{0,16,80})for(int scale:new int[]{10,71,100})for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<4;tint++){
             LargeCanopySettings settings=new LargeCanopySettings();settings.depth=depth;settings.scale=scale;settings.shade=shade;settings.tint=tint;checkIcon(mc,block,settings);
         }
         net.minecraft.block.Block canopy=net.minecraft.block.Block.getBlockFromName("vandorlabs:canopy");
         for(int angle=0;angle<3;angle++)for(int motion=0;motion<2;motion++){
-            for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<3;tint++){
+            for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<4;tint++){
                 LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.shade=shade;settings.tint=tint;checkIcon(mc,canopy,settings);
             }
             LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.material=9;checkIcon(mc,canopy,settings);settings.tileMaterial=true;checkIcon(mc,canopy,settings);

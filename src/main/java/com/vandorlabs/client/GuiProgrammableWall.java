@@ -262,7 +262,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             int mode=button.id==115?GuiOptionCycle.next(tile.getGlassTextureLayout(),3):tile.getGlassTextureLayout();tile.setGlassLayout(mode!=1,button.id==116?!tile.isGlassTextureJoin():tile.isGlassTextureJoin());tile.setGlassTextureLayout(mode);sendPortholeSettings();initGui();return;
         }
         if(glassSurface() && (button.id==113 || button.id==114)) {
-            tile.setGlassAppearance(button.id==113?GuiOptionCycle.next(tile.getGlassTint(),3):tile.getGlassTint(),
+            tile.setGlassAppearance(button.id==113?GuiOptionCycle.next(tile.getGlassTint(),com.vandorlabs.tiles.GlassTextures.TINT_COUNT):tile.getGlassTint(),
                     button.id==114?!tile.isGlassFramed():tile.isGlassFramed());
             sendPortholeSettings();initGui();
         }

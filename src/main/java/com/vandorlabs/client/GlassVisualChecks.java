@@ -64,7 +64,7 @@ final class GlassVisualChecks {
         if(ticks==340){save(mc,output,"glass-closed-frame-bottom-regular-diagonal");camera(mc,61,6,43,67,16);}
         if(ticks==370){save(mc,output,"glass-closed-frame-side-regular-diagonal");
             mc.getIntegratedServer().addScheduledTask(()->{
-                for(int type=0;type<2;type++)for(int tint=0;tint<3;tint++){
+                for(int type=0;type<2;type++)for(int tint=0;tint<4;tint++){
                     BlockPos p=new BlockPos(70+(2-tint)*3,5,40+type*4);
                     for(int dx=0;dx<2;dx++)for(int dy=0;dy<2;dy++){
                         BlockPos cell=p.add(dx,dy,0);mc.getIntegratedServer().getEntityWorld().setBlockState(cell,(type==0?net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass"):com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS).getDefaultState(),3);

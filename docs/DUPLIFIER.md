@@ -66,7 +66,7 @@ still applies settings to the crafted item.
 | --- | --- |
 | Wall Texture | Programmable block, slab, stairs, wall, porthole, trapdoor, display housing, light housing, trigger off finish, and propulsion side finish. All use the ordered `ScreenHousingTextures` list. |
 | Redstone Channel | Every configured block that implements `RedstoneChannelMember`. |
-| Frame / Glass Tint | Regular and diagonal programmable glass preserve Bare / Framed and Mild / Normal / Strong independently. |
+| Frame / Glass Tint | Regular and diagonal programmable glass preserve Bare / Framed and Mild / Normal / Strong / Opaque independently. |
 | Glass Material / Layout | Copy the selected glass or regular panel material between canopies, visors, regular/diagonal programmable glass and portholes. Canopies preserve Fit/Tile; glass blocks and portholes preserve Tile/Stretch and material joining; shade and tint remain independent options. Porthole Main and Side textures use their usual separate options. |
 | Canopy / Pilot Settings | Front-window depth, inner size, hinge and Openable; Canopy opening motion, slide direction and front profile; Pilot Seat Taxi Mode. Placement mount and facing stay with the target. |
 | Join | Portholes, Programmable Glass, Programmable Light, connected propulsion blocks, and Luxury/Military Seats. |

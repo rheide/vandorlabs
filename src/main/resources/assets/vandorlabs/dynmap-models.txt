@@ -20734,6 +20734,7 @@ modellist:id=%large_power_lever,state=facing:west/floor:true/powered:true,box=6.
 customblock:id=%angled_front_1x1,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
 customblock:id=%angled_front_1x2,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
 customblock:id=%canopy,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
+customblock:id=%long_canopy,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
 customblock:id=%regular_canopy_glass,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
 customblock:id=%front_canopy_glass,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
 customblock:id=%large_front_canopy_glass,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
@@ -20741,8 +20742,6 @@ customblock:id=%space_visor_2x1,state=*,class=com.vandorlabs.dynmap.CanopyRender
 customblock:id=%space_visor_3x1,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
 customblock:id=%space_visor_5x1,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
 customblock:id=%space_visor_5x1_double_height,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
-
-customblock:id=%long_canopy,state=*,class=com.vandorlabs.dynmap.CanopyRenderer
 
 # Generated six-face ramp controllers
 modellist:id=%programmable_ramp,state=active:false/active_face:north/mode:0,box=0.000000/0.000000/0.000000:16.000000/16.000000/16.000000:n/0:s/1:w/2:e/3:u/0:d/4

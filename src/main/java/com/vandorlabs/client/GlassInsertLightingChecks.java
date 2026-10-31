@@ -28,8 +28,8 @@ final class GlassInsertLightingChecks {
         for(String color:new String[]{"cyan","amber"}) {
             int choice=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-"+color+"-1");
             FrameAppearance frame=new FrameAppearance();frame.front=choice;require(choice>=0&&frame.light()>0,"light frame fixture");
-            for(int tint=0;tint<3;tint++)for(boolean framed:new boolean[]{false,true})for(int selected:new int[]{-1,material}){
-                int expected=framed&&tint==2&&selected>=0?240:32;
+            for(int tint=0;tint<4;tint++)for(boolean framed:new boolean[]{false,true})for(int selected:new int[]{-1,material}){
+                int expected=framed&&tint==3&&selected>=0?240:32;
                 require(GlassInsertLighting.block(32,selected,tint,framed,frame)==expected,"lighting eligibility");
             }
             for(boolean diagonal:new boolean[]{false,true})for(int n:new int[]{1,2}){
@@ -37,8 +37,8 @@ final class GlassInsertLightingChecks {
                 List<VehicleStructure.Cell> cells=new ArrayList<>();
                 for(int y=0;y<n;y++)for(int x=0;x<n;x++){
                     TileEntity seed;
-                    if(diagonal){TileEntityAnimatedScreenSelector t=new TileEntityAnimatedScreenSelector();t.setGlassMaterial(material);t.setGlassAppearance(2,true);t.setGlassLayout(false,true);t.setDiagonalGeometry(1,0);seed=t;}
-                    else{TileEntityProgrammableGlass t=new TileEntityProgrammableGlass();t.setMaterial(material);t.setAppearance(2,true);t.setJoin(true);seed=t;}
+                    if(diagonal){TileEntityAnimatedScreenSelector t=new TileEntityAnimatedScreenSelector();t.setGlassMaterial(material);t.setGlassAppearance(3,true);t.setGlassLayout(false,true);t.setDiagonalGeometry(1,0);seed=t;}
+                    else{TileEntityProgrammableGlass t=new TileEntityProgrammableGlass();t.setMaterial(material);t.setAppearance(3,true);t.setJoin(true);seed=t;}
                     seed.setPos(new BlockPos(x,y,diagonal?y:0));FrameAppearance.of(seed).front=choice;
                     cells.add(new VehicleStructure.Cell(seed.getPos(),block.getDefaultState(),seed.writeToNBT(new NBTTagCompound())));
                 }

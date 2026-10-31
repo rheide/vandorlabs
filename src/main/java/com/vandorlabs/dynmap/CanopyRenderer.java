@@ -11,7 +11,7 @@ import java.util.*;
 
 /** Closed overview meshes, clipped into each occupied voxel to avoid duplicated assemblies. */
 public final class CanopyRenderer extends CustomRenderer {
-    @Override protected int getMaximumTextureCount() { return 4 + 19 * 3; }
+    @Override protected int getMaximumTextureCount() { return 4 + com.vandorlabs.tiles.GlassTextures.IDS.length * com.vandorlabs.tiles.GlassTextures.TINT_COUNT; }
     @Override
     public String[] getTileEntityFieldsNeeded() {
         return new String[] {"Anchor", "Pair", "CanopyMask", "CanopyRoofMask", "CanopyWidth", "CenteredPlacement", "CanopyDepth", "CanopyScale", "CanopyShade", "CanopyTint", "CanopyMount", "CanopyAngle", "CanopyMotion"};
@@ -72,7 +72,7 @@ public final class CanopyRenderer extends CustomRenderer {
         for (CanopyMesh.Face face : mesh) {
             int texture =
                     face.baseMaterial.equals("glass")
-                            ? 4+shade*3+tint
+                            ? 4+shade*com.vandorlabs.tiles.GlassTextures.TINT_COUNT+tint
                             : face.baseMaterial.equals("amber")
                                     ? 2
                                     : face.baseMaterial.equals("light") ? 3 : 0;

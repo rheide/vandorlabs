@@ -38,7 +38,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
 
         if(button.id==2){mc.player.closeScreen();return;}
         if(button.id==3)join=!join;
-        if(button.id==4)tint=GuiOptionCycle.next(tint,3);
+        if(button.id==4)tint=GuiOptionCycle.next(tint,com.vandorlabs.tiles.GlassTextures.TINT_COUNT);
         if(button.id==5)framed=!framed;
         if(button.id==6){textureLayout=GuiOptionCycle.next(textureLayout,3);stretch=textureLayout!=1;}
         send();initGui();

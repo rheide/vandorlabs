@@ -17,8 +17,8 @@ for detail in ('low', 'medium'):
     for name, rgb, opacity in [('clear', 0xFFFFFF, 0), ('soft_cyan', 0x33D9F2, .0513),
                                ('soft_dark_grey', 0x1A1F29, .1754)] + [(n, c, .30) for n, c in COLORS]:
         tint = ((rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255)
-        for suffix, factor in (('_mild', .4), ('', 1), ('_strong', 1.35)):
-            if "--strong-only" in sys.argv and suffix != "_strong": continue
+        for suffix, factor in (('_mild', .4), ('', 1), ('_strong', 1.35), ('_opaque', 1.35)):
+            if "--strong-only" in sys.argv and suffix not in ("_strong", "_opaque"): continue
             # Preserve the existing Normal finish exactly; adjust only the color overlay.
             strength = min(.8, opacity * factor)
             image = Image.new('RGBA', base.size)
@@ -28,8 +28,8 @@ for detail in ('low', 'medium'):
                 combined = strength + alpha * (1 - strength)
                 color = tuple(round((c * strength + original * alpha * (1 - strength)) / combined)
                               if combined else original for c, original in zip(tint, (r, g, b)))
-                pixels.append((*color, 255 if suffix=="_strong" else round(combined * 255)))
+                pixels.append((*color, 255 if suffix=="_opaque" else 217 if suffix=="_strong" else round(combined * 255)))
             image.putdata(pixels)
             (OUT / detail).mkdir(parents=True, exist_ok=True)
             image.save(OUT / detail / (name + suffix + '.png'))
-print('Generated 19 glass finishes at 3 tint strengths and both detail sizes')
+print('Generated 19 glass finishes at 4 tint strengths and both detail sizes')

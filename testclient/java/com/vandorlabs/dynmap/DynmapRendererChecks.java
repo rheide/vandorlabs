@@ -112,10 +112,10 @@ public final class DynmapRendererChecks {
         valid(new CanopyRenderer(),canopy);
         for(String facing:new String[]{"north","east","south","west"})for(int mount=0;mount<4;mount++){
             Context mounted=new Context("vandorlabs:regular_canopy_glass","facing="+facing);mounted.data.put("CanopyMount",mount);mounted.data.put("CanopyShade",18);mounted.data.put("CanopyTint",2);
-            boolean glazing=false;for(RenderPatch patch:valid(new CanopyRenderer(),mounted))glazing|=patch.getTextureIndex()==60;
+            boolean glazing=false;for(RenderPatch patch:valid(new CanopyRenderer(),mounted))glazing|=patch.getTextureIndex()==78;
             require(glazing,"Mounted canopy retains its glazing artwork");
         }
-        require(new CanopyRenderer().getMaximumTextureCount(FACTORY)==61,"All canopy materials declared");
+        require(new CanopyRenderer().getMaximumTextureCount(FACTORY)==80,"All canopy materials declared");
         for(int design=0;design<30;design++)for(String facing:new String[]{"north","east","south","west"})for(boolean open:new boolean[]{false,true}){
             Context door=new Context("vandorlabs:programmable_door","facing="+facing+",half=lower,hinge=left,open="+open);door.data.put("SpaceDesign",design);
             RenderPatch[] mesh=valid(new ProgrammableDoorRenderer(),door);

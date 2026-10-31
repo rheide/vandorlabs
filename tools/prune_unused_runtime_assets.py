@@ -53,11 +53,11 @@ def check_jar(path):
         aliases=json.loads(files['data/texture_aliases.json'])
         for tier in ('low','medium'):
             assert f'textures/blocks/programmable_glass/{tier}/clear_mild.png' not in files
-            strong=f'textures/blocks/programmable_glass/{tier}/clear_strong.png'
+            strong=f'textures/blocks/programmable_glass/{tier}/clear_opaque.png'
             target=aliases.get(strong,strong)
-            assert target in files, 'Opaque Strong Clear artwork is missing'
+            assert target in files, 'Opaque Clear artwork is missing'
             with Image.open(io.BytesIO(jar.read(prefix+target))) as image:
-                assert image.convert('RGBA').getchannel('A').getextrema()==(255,255), 'Strong Clear must retain opaque pixels'
+                assert image.convert('RGBA').getchannel('A').getextrema()==(255,255), 'Opaque Clear must retain opaque pixels'
         for name,text in files.items():
             if name.startswith('dynmap'):
                 for filename in re.findall(r'filename=([^,\n]+)',text):
@@ -65,7 +65,7 @@ def check_jar(path):
                     if filename.startswith(prefix):filename=filename[len(prefix):]
                     elif not filename.startswith('textures/'):filename='textures/'+filename
                     assert filename in files,(name,filename)
-    print('PASS: no audited unused artwork or duplicate Mild Clear; Strong Clear remains opaque; all Dynmap images resolve')
+    print('PASS: no audited unused artwork or duplicate Mild Clear; Opaque Clear remains opaque; all Dynmap images resolve')
 
 if __name__=='__main__':
     import argparse

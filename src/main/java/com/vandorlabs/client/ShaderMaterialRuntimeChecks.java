@@ -26,40 +26,40 @@ final class ShaderMaterialRuntimeChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Shader material: "+why);}
     static void run(Minecraft mc,File output)throws Exception{
         // Validate the atlas after a real reload before opacity probes: Missingno is opaque too.
-        mc.refreshResources();strongAtlas(mc);
+        mc.refreshResources();opaqueAtlas(mc);
         tiledHousing(mc,output);extendedHousing(mc);int cases=0;
         for(boolean diagonal:new boolean[]{false,true})for(int material:new int[]{-1,0})for(int shade=0;shade<(material<0?GlassTextures.IDS.length:1);shade++){
             BlockPos pos=BlockPos.ORIGIN;net.minecraft.block.Block block=diagonal?ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS:net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass");
             net.minecraft.block.state.IBlockState state=block.getDefaultState();TileEntity source=block.createTileEntity(mc.world,state);
-            if(diagonal){TileEntityAnimatedScreenSelector glass=(TileEntityAnimatedScreenSelector)source;glass.setGlassShade(shade);glass.setGlassMaterial(material);glass.setGlassAppearance(2,false);}
-            else{TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)source;glass.setShade(shade);glass.setMaterial(material);glass.setAppearance(2,false);}
+            if(diagonal){TileEntityAnimatedScreenSelector glass=(TileEntityAnimatedScreenSelector)source;glass.setGlassShade(shade);glass.setGlassMaterial(material);glass.setGlassAppearance(GlassTextures.OPAQUE,false);}
+            else{TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)source;glass.setShade(shade);glass.setMaterial(material);glass.setAppearance(GlassTextures.OPAQUE,false);}
             VehicleWorld view=new VehicleWorld(mc.world,VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(pos,state,source.writeToNBT(new NBTTagCompound())))));
-            TileEntity tile=view.getTileEntity(pos);require(tile.shouldRenderInPass(0),"Strong pane participates in opaque pass");
+            TileEntity tile=view.getTileEntity(pos);require(tile.shouldRenderInPass(0),"Opaque pane participates in opaque pass");
             BufferedImage red=capture(mc,tile,true),blue=capture(mc,tile,false);int covered=0;
             for(int x=24;x<40;x++)for(int y=24;y<40;y++){
                 int a=red.getRGB(x,y)&0xffffff,b=blue.getRGB(x,y)&0xffffff;
                 if(a==b)covered++;
             }
-            require(covered>120,"Strong pane occludes background "+diagonal+" material="+material+" shade="+shade+" pixels="+covered);
-            if(material<0&&shade==0){javax.imageio.ImageIO.write(red,"png",new File(output,"strong-glass-"+(diagonal?"diagonal":"flat")+".png"));}
+            require(covered>120,"Opaque pane occludes background "+diagonal+" material="+material+" shade="+shade+" pixels="+covered);
+            if(material<0&&shade==0){javax.imageio.ImageIO.write(red,"png",new File(output,"opaque-glass-"+(diagonal?"diagonal":"flat")+".png"));}
             cases++;
         }
-        System.out.println("[vandorlabs][reprolab] shader-materials-live PASS opaque-background-pixel-cases="+cases+" Clear/all native Strong shades/replacement materials flat and diagonal, opaque-pass depth ownership; shader-pack hardware acceptance separate");
+        System.out.println("[vandorlabs][reprolab] shader-materials-live PASS opaque-background-pixel-cases="+cases+" Clear/all native Opaque shades/replacement materials flat and diagonal, opaque-pass depth ownership; shader-pack hardware acceptance separate");
     }
-    private static void strongAtlas(Minecraft mc){
+    private static void opaqueAtlas(Minecraft mc){
         net.minecraft.client.renderer.texture.TextureMap atlas=mc.getTextureMapBlocks();int sprites=0,pixels=0;
         for(int shade=0;shade<GlassTextures.IDS.length;shade++){
-            String name=GlassTextures.texture(shade,1,2);TextureAtlasSprite sprite=atlas.getAtlasSprite(name);
-            require(sprite!=atlas.getMissingSprite()&&name.equals(sprite.getIconName()),"actual Strong atlas sprite exists after reload: "+name);
-            require(sprite.getIconWidth()>0&&sprite.getIconHeight()>0&&sprite.getFrameCount()>0,"actual Strong sprite has decoded pixels: "+name);
+            String name=GlassTextures.texture(shade,1,GlassTextures.OPAQUE);TextureAtlasSprite sprite=atlas.getAtlasSprite(name);
+            require(sprite!=atlas.getMissingSprite()&&name.equals(sprite.getIconName()),"actual Opaque atlas sprite exists after reload: "+name);
+            require(sprite.getIconWidth()>0&&sprite.getIconHeight()>0&&sprite.getFrameCount()>0,"actual Opaque sprite has decoded pixels: "+name);
             for(int frame=0;frame<sprite.getFrameCount();frame++){
-                int[][] mipmaps=sprite.getFrameTextureData(frame);require(mipmaps!=null&&mipmaps.length>0&&mipmaps[0]!=null&&mipmaps[0].length==sprite.getIconWidth()*sprite.getIconHeight(),"native Strong atlas frame is complete: "+name);
-                for(int color:mipmaps[0]){require((color>>>24)==255,"native Strong atlas pixel remains opaque after reload: "+name);pixels++;}
+                int[][] mipmaps=sprite.getFrameTextureData(frame);require(mipmaps!=null&&mipmaps.length>0&&mipmaps[0]!=null&&mipmaps[0].length==sprite.getIconWidth()*sprite.getIconHeight(),"native Opaque atlas frame is complete: "+name);
+                for(int color:mipmaps[0]){require((color>>>24)==255,"native Opaque atlas pixel remains opaque after reload: "+name);pixels++;}
             }
             sprites++;
         }
-        require(sprites==19,"all nineteen native Strong shades verified");
-        System.out.println("[vandorlabs][reprolab] strong-glass-atlas PASS post-reload native-sprites="+sprites+" alpha255-pixels="+pixels+" explicit missing-sprite rejection; actual background FBO checks follow");
+        require(sprites==19,"all nineteen native Opaque shades verified");
+        System.out.println("[vandorlabs][reprolab] opaque-glass-atlas PASS post-reload native-sprites="+sprites+" alpha255-pixels="+pixels+" explicit missing-sprite rejection; actual background FBO checks follow");
     }
     private static BufferedImage capture(Minecraft mc,TileEntity tile,boolean red){
         Framebuffer frame=new Framebuffer(64,64,true);int oldPass=MinecraftForgeClient.getRenderPass();

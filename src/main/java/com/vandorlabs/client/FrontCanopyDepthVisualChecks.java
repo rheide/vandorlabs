@@ -30,7 +30,7 @@ final class FrontCanopyDepthVisualChecks {
         net.minecraft.block.Block canopy=net.minecraft.block.Block.getBlockFromName("vandorlabs:large_front_canopy_glass");
         TileEntityCanopy tile=new TileEntityCanopy();tile.setPos(ROOT);tile.anchor=ROOT;tile.centeredPlacement=true;tile.hollowPlacement=true;
         tile.large.depth=16;tile.large.scale=71;tile.large.openable=true;tile.large.hinge=0;tile.progress=tile.previous=open?1:0;tile.targetOpen=open;
-        if(opaque){tile.large.material=CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.IRON_BLOCK));tile.large.tint=2;}
+        if(opaque){tile.large.material=CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.IRON_BLOCK));tile.large.tint=com.vandorlabs.tiles.GlassTextures.OPAQUE;}
         // This tile is not attached to a World yet, so writeToNBT cannot infer
         // its configurable block type. Include the authored settings explicitly.
         NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());tile.large.write(saved);

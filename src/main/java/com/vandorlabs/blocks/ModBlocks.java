@@ -489,7 +489,7 @@ public class ModBlocks {
     @SideOnly(Side.CLIENT)
     public static void onTextureStitch(TextureStitchEvent.Pre event) {
         event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/matter/port"));
-        for(int size=0;size<2;size++)for(int tint=0;tint<3;tint++)for(int id=0;id<com.vandorlabs.tiles.GlassTextures.IDS.length;id++)
+        for(int size=0;size<2;size++)for(int tint=0;tint<com.vandorlabs.tiles.GlassTextures.TINT_COUNT;tint++)for(int id=0;id<com.vandorlabs.tiles.GlassTextures.IDS.length;id++)
             event.getMap().registerSprite(new ResourceLocation(com.vandorlabs.tiles.GlassTextures.texture(id,size,tint)));
         for (String face : new String[]{"front","back","left","right","top","bottom"})
             for (String state : new String[]{"on","off"})
@@ -622,10 +622,10 @@ public class ModBlocks {
     private static void registerGlassItemModels(Block block,Item item){
         boolean diagonal=block instanceof BlockProgrammableDiagonalGlass;
         int count=com.vandorlabs.tiles.GlassTextures.IDS.length;
-        ResourceLocation[] variants=new ResourceLocation[count*(diagonal?1:2)*6];
+        ResourceLocation[] variants=new ResourceLocation[count*(diagonal?1:2)*8];
         for(int size=0;size<(diagonal?1:2);size++)for(int shade=0;shade<count;shade++)
-            for(int tint=0;tint<3;tint++)for(int frame=0;frame<2;frame++) {
-                int index=((size*count+shade)*3+tint)*2+frame;
+            for(int tint=0;tint<com.vandorlabs.tiles.GlassTextures.TINT_COUNT;tint++)for(int frame=0;frame<2;frame++) {
+                int index=((size*count+shade)*com.vandorlabs.tiles.GlassTextures.TINT_COUNT+tint)*2+frame;
                 variants[index]=new ResourceLocation(VandorLabs.MODID,"configured/glass_"+(diagonal?"diagonal":"regular")+"_"+size+"_"+com.vandorlabs.tiles.GlassTextures.IDS[shade]+"_t"+tint+"_f"+frame);
             }
         ModelLoader.registerItemVariants(item,variants);
@@ -636,7 +636,7 @@ public class ModBlocks {
             String tintKey=diagonal?"GlassTint":"Tint",frameKey=diagonal?"GlassFramed":"Framed";
             int tint=tag==null||!tag.hasKey(tintKey,3)?1:com.vandorlabs.tiles.GlassTextures.clampTint(tag.getInteger(tintKey));
             boolean frame=tag==null||!tag.hasKey(frameKey)||tag.getBoolean(frameKey);
-            return new ModelResourceLocation(variants[((size*count+shade)*3+tint)*2+(frame?1:0)],"inventory");
+            return new ModelResourceLocation(variants[((size*count+shade)*com.vandorlabs.tiles.GlassTextures.TINT_COUNT+tint)*2+(frame?1:0)],"inventory");
         });
     }
 

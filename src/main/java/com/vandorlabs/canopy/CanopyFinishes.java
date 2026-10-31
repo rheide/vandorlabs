@@ -13,7 +13,7 @@ public final class CanopyFinishes {
     private static final class Key {
         final List<CanopyMesh.Face> source;final int shade,tint,material;final int layout;final double aspect;
         Key(List<CanopyMesh.Face> source,int shade,int tint,int material,int layout,double aspect){this.layout=layout;this.aspect=aspect;this.material=material;this.source=source;this.shade=shade;this.tint=tint;}
-        public int hashCode(){return System.identityHashCode(source)*31+shade*3+tint+material*97+layout+Double.hashCode(aspect);}
+        public int hashCode(){return System.identityHashCode(source)*31+shade*GlassTextures.TINT_COUNT+tint+material*97+layout+Double.hashCode(aspect);}
         public boolean equals(Object other){if(!(other instanceof Key))return false;Key k=(Key)other;return source==k.source && shade==k.shade && tint==k.tint && material==k.material && layout==k.layout && aspect==k.aspect;}
     }
     private static final Map<Key,List<CanopyMesh.Face>> CACHE=new LinkedHashMap<Key,List<CanopyMesh.Face>>(64,.75F,true){protected boolean removeEldestEntry(Map.Entry<Key,List<CanopyMesh.Face>> entry){return size()>128;}};

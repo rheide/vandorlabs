@@ -13,7 +13,7 @@ for diagonal in (False, True):
     for size in range(1 if diagonal else 2):
         for name in ids:
             detail = 'medium' if diagonal or size else 'low'
-            for tint, suffix in enumerate(('_mild', '', '_strong')):
+            for tint, suffix in enumerate(('_mild', '', '_strong', '_opaque')):
                 texture = f'vandorlabs:blocks/programmable_glass/{detail}/{name}{suffix}'
                 for framed in (False, True):
                     if diagonal:
@@ -52,4 +52,4 @@ for diagonal in (False, True):
                         (out / f'{stem}.json').write_text(json.dumps(model, indent=2) + '\n')
 (ROOT / 'src/main/resources/assets/vandorlabs/models/item/programmable_diagonal_glass.json').write_text(
     (out / 'glass_diagonal_0_clear.json').read_text())
-print('Generated 342 padded configurable glass item variants and 57 default aliases')
+print('Generated 456 padded configurable glass item variants and 57 default aliases')
