@@ -274,5 +274,7 @@ visible in the correct order.
 
 Programmable Light, Half-Input and Flatscreen use a single **Size: Small/Full**
 toggle. Small Flatscreens are half a block square, matching Small Programmable
-Lights. Wall, floor and ceiling mounts retain matching models, bounds and click
+Lights. Small Flatscreens keep their own frame borders across the gaps between
+adjacent blocks; Full Flatscreens retain connected frames. Wall, floor and ceiling
+mounts retain matching models, bounds and click
 surfaces; changing size preserves artwork and settings.

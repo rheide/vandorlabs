@@ -21,6 +21,7 @@ final class ScreenSurfaceGroups {
     static synchronized GlassSurfaceGroups.Layout layout(TileEntityAnimatedScreenSelector tile){return layout(tile,false);}
     static synchronized GlassSurfaceGroups.Layout frameLayout(TileEntityAnimatedScreenSelector tile){return layout(tile,true);}
     private static GlassSurfaceGroups.Layout layout(TileEntityAnimatedScreenSelector tile,boolean frame){
+        if(tile.isSmallInput()&&tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableFullInput)return new GlassSurfaceGroups.Layout(0,0,1,1);
         World world=tile.getWorld();Cache cache=CACHES.get(world);if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}
         int vehicle=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision:-1;
         if(cache.revision!=GlassMaterials.revision()||cache.vehicleRevision!=vehicle){cache.clear();cache.revision=GlassMaterials.revision();cache.vehicleRevision=vehicle;}

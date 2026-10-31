@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.7 (in development)
+## 2.7
 
 - Complete matching Classic/Cool/Gold expansion displays and Large City Transit variants; add Door Controller in both heights for every style. Replace five Classic Half animations with dedicated half-height compositions.
 - Retain the six Bridge designs as the primary Cool/Gold displays, remove duplicate animation resources, and preserve saved selections through aliases.

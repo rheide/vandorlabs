@@ -51,7 +51,7 @@ final class GlazingFeatureChecks {
             verify(mc,true);capture(mc,gui,output,"after");
             if(fixture<2)click(gui,30,1);else{click(gui,701,0);click(gui,711,0);}phase++;return false;
         }
-        verify(mc,false);mc.player.closeScreen();if(++fixture==BLOCKS.length){geometry();packets();System.out.println("[vandorlabs][reprolab] glazing-features PASS six-dialogs real-clicks server-roundtrip save-reload Small-Full left-right playback-mode-speed geometry packets");return true;}phase=0;return false;
+        verify(mc,false);mc.player.closeScreen();if(++fixture==BLOCKS.length){geometry(mc);packets();System.out.println("[vandorlabs][reprolab] glazing-features PASS six-dialogs real-clicks server-roundtrip save-reload Small-Full left-right playback-mode-speed geometry packets");return true;}phase=0;return false;
     }
     private static void verify(Minecraft mc,boolean changed)throws Exception{
         mc.getIntegratedServer().addScheduledTask(()->{
@@ -64,7 +64,14 @@ final class GlazingFeatureChecks {
         List<GuiButton> buttons=buttons(gui);for(int i=0;i<buttons.size();i++){GuiButton a=buttons.get(i);if(!a.visible)continue;for(int j=i+1;j<buttons.size();j++){GuiButton b=buttons.get(j);if(b.visible)require(a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y,"overlapping buttons "+a.id+"/"+b.id+" "+BLOCKS[fixture]);}}
         mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT);net.minecraft.client.renderer.GlStateManager.disableDepth();mc.entityRenderer.setupOverlayRendering();gui.drawScreen(-1,-1,0);ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"glass-display-order_dialog_"+BLOCKS[fixture]+"_"+stage+".png"));
     }
-    private static void geometry(){
+    private static void geometry(Minecraft mc){
+        for(boolean small:new boolean[]{false,true}){
+            java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> cells=new java.util.ArrayList<>();
+            cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));
+            for(int x=0;x<2;x++){TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(new BlockPos(3+x,3,3));tile.setSmallInput(small);cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(new BlockPos(3+x,3,3),ModBlocks.PROGRAMMABLE_FULL_INPUT.getDefaultState(),tile.writeToNBT(new NBTTagCompound())));}
+            com.vandorlabs.vehicle.VehicleWorld view=new com.vandorlabs.vehicle.VehicleWorld(mc.world,new com.vandorlabs.vehicle.VehicleStructure(cells,BlockPos.ORIGIN,net.minecraft.util.EnumFacing.NORTH,1));
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)view.getTileEntity(new BlockPos(3,3,3));GlassSurfaceGroups.Layout layout=ScreenSurfaceGroups.frameLayout(tile);require(layout.columns==(small?1:2)&&layout.rows==1,"Small Flatscreen frames must not join across gaps");ScreenSurfaceGroups.unload(view);
+        }
         for(boolean keyboard:new boolean[]{false,true})for(boolean upper:new boolean[]{false,true}){com.vandorlabs.render.InputSurfaceLayout.Mounted m=com.vandorlabs.render.InputSurfaceLayout.fullInput(keyboard,upper,true);require(m.housing.x1-m.housing.x0==8&&(keyboard?m.housing.z1-m.housing.z0:m.housing.y1-m.housing.y0)==8,"small Flatscreen half-block square");}
         for(int position=0;position<3;position++){com.vandorlabs.render.InputSurfaceLayout.Box b=com.vandorlabs.render.InputSurfaceLayout.ceilingInput(true,true,position).housing;require(b.x1-b.x0==8&&b.z1-b.z0==8,"ceiling small size");}
     }
