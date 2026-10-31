@@ -23,11 +23,23 @@ The texture list groups screen artwork under **Displays**. **Gold** retains
 Pinnacle designs and **Cool** retains Paladyne designs, for both Full and Half
 screens. Both styles also offer Gas Giant, Ice Planet, Station, Surface Map, Targeting,
 Terrestrial, Engineering, Pilot, Ship Status, Engineering Charts, Personal Terminal,
-Viewscreen, Science, Starmap and Weapons in both heights. Each style has 27 choices
-per height, including its six retained original subjects and their new Bridge
-alternatives, such as **Biology Bridge (Gold/Full)**. Every new animation has six
-native-resolution frames: 128 × 128 for Full and 128 × 64 for Half. Compare all three styles
-and the Bridge alternatives in the [display matrix](../display-matrix.html).
+Viewscreen, Science, Starmap and Weapons in both heights. Their six original subjects
+also have Bridge alternatives, such as **Biology Bridge (Gold/Full)**.
+
+Gold adds 17 expansion subjects in both heights: Airlock, Life Support, Power Grid
+Status, City Transit Map, Ship Deck Plan, Power Distribution, Shields, Damage Control,
+FTL Calibration, Station Berth Control, Industrial Fabrication, Industrial Refinery,
+Facility Access Control, Boot Sequence, Standby, Access Denied and Signal Lost.
+Each animation has six distinct frames and retains the existing playback controls.
+
+**Large** choices appear beside the standard artwork. **Viewscreen (Classic/Full)
+Large** and its Half counterpart use the original 256px-wide animation frames.
+Cool and Gold Viewscreen Large choices use 512px-wide frames, as do Gold's
+**City Transit Map** Large choices. Full images remain square; Half images are
+half as tall as their width. Standard choices retain their native 128px width.
+Compare all three styles, Bridge alternatives and Large choices in the
+[display matrix](../display-matrix.html). The former root **Engineering Screen
+(Full)** resolves to **Engineering (Classic/Full)**, including existing saves.
 Names place the subject first, such as **Biology (Gold/Full)** or
 **Biology (Gold/Half)**. Saved Vektor choices use Gold; retired Ashiro, Seyr and
 Vandor choices use Cool. Seyr Communications, Navigation and Reactor retain

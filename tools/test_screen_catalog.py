@@ -10,7 +10,7 @@ assert hashlib.sha256('\n'.join(e['id'] for e in catalog[:589]).encode()).hexdig
 inputs=[e for e in catalog if e['source'].startswith(tuple('console_inputs/'+p for p in CONTROL_PREFIXES))]
 assert len(inputs)==18 and hashlib.sha256(json.dumps([{k:v for k,v in e.items() if k not in {'label','category','menuGroup','hidden','alias','retireAnimation'}} for e in inputs],sort_keys=True).encode()).hexdigest()=='a4a027ab9cf2419c6641b9ecb619e0ba7e20af5a7735ffca89b22a8682501d3b'
 assert restructure(catalog,blocks,lang)==(catalog,blocks,lang),'regeneration is not idempotent'
-byid={e['id']:e for e in catalog};byblock={e['id']:e for e in blocks};groups=collections.defaultdict(list)
+byid={e['id']:e for e in catalog};assert byid['screen_engineering_screen_static']['hidden'] and byid['screen_engineering_screen_static']['alias']=='screen_bridge_bare_engineering_static';byblock={e['id']:e for e in blocks};groups=collections.defaultdict(list)
 for e in catalog:
     if e.get('category','').startswith('Controls/') and not e.get('hidden'):
         assert not any(x in e['category'] for x in ('Corporate','Dense','Half-height')) and not re.match(r'^\d',e['label']) and not e['label'].endswith(' Bottom')
@@ -35,10 +35,10 @@ for e in catalog:
     if e.get('retireAnimation'):
         source=e['source'].removeprefix('console_inputs/').removesuffix('_static');assert e['hidden']
         if not e['source'].startswith('console_inputs/'):assert byblock[source]['retired']
-        if source.startswith(('company_','bridge_','console_controls_')) or '_framed_' in source or source in ROOT_CONTROL_MERGES:assert 'alias' in e and not byid[e['alias']].get('hidden')
+        if source.startswith(('company_','bridge_','console_controls_')) or '_framed_' in source or source in ROOT_CONTROL_MERGES or source=='engineering_screen':assert 'alias' in e and not byid[e['alias']].get('hidden')
         else:assert 'alias' not in e
     if e.get('category')=='Screens' and not e.get('hidden') and e not in inputs:
-        height='Half' if e['source'].startswith('console_inputs/') else 'Full';assert e['label'].endswith('/'+height+')') or e['label'].endswith('('+height+')'),e['id']
+        height='Half' if e['source'].startswith('console_inputs/') else 'Full';assert e['label'].removesuffix(' Large').endswith('/'+height+')') or e['label'].removesuffix(' Large').endswith('('+height+')'),e['id']
     if e.get('category')=='Screens' and e['source'].startswith(('ship_','cruiser_')):assert e['menuGroup']=='Ship'
 for prefix in ('screen_','screen_console_inputs_'):
     for variant in ('bare','framed'):

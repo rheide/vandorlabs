@@ -648,5 +648,110 @@
     "id": "gold27_half_specialist_weapons",
     "animated": true,
     "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_operations_airlock",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_operations_life_support",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_engineering_power_grid",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_operations_city_transit",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "large27_gold_half_city_transit",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_operations_deck_plan",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_engineering_power_distribution",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_bridge_shields",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_bridge_damage_control",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_engineering_ftl_calibration",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_station_berth_control",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_industrial_fabrication",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_industrial_refinery",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_facility_access_control",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_extra_boot_sequence",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_extra_standby",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_extra_access_denied",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "expansion27_gold_half_extra_signal_lost",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "large27_classic_half_viewscreen",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "large27_cool_half_viewscreen",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "large27_gold_half_viewscreen",
+    "animated": true,
+    "frames": 6
   }
 ]

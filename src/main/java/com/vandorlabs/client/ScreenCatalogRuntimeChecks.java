@@ -17,16 +17,17 @@ import net.minecraft.world.GameType;
 
 /** Full-screen taxonomy, old saved identities, real picker clicks and actual animation decoding. */
 final class ScreenCatalogRuntimeChecks {
+    private static final boolean EXPANSION_ONLY=Boolean.getBoolean("vandorlabs.displayExpansionChecksOnly");
     private static final boolean CLASSIC_ONLY=Boolean.getBoolean("vandorlabs.classicControlsChecksOnly");
     private static final BlockPos POS=new BlockPos(240,90,240);
-    private static final String[] IDS=CLASSIC_ONLY?new String[0]:withStyleExpansions(new String[]{"company_pinnacle_full_biology","company_paladyne_full_medical","company_seyr_full_reactor","company_seyr_full_communications","company_seyr_full_navigation","specialist_bare_sensors","analysis_bare_surface_map","cruiser_command_left","ship_freighter","bridge_bare_ship_status"},false);
-    private static final String[] HALF=CLASSIC_ONLY?classicChoices():withStyleExpansions(new String[]{"console_inputs/company_pinnacle_half_biology_static","console_inputs/company_paladyne_half_medical_static","console_inputs/company_seyr_half_communications_static","console_inputs/company_seyr_half_navigation_static","console_inputs/company_seyr_half_reactor_static","console_inputs/specialist_bare_sensors_static","console_inputs/analysis_bare_station_static","console_inputs/analysis_bare_targeting_static","console_inputs/bridge_bare_pilot_static","console_inputs/analysis_framed_surface_map_static","console_inputs/input_surfaces_keyboard_static","console_inputs/input_surfaces_command_keypad_static","console_inputs/sliders_buttons_six_faders_static","controls27/controls27_half_height_command_keypad","console_inputs/input_surfaces_keyboard_touchpad_static","console_inputs/console_controls_medical_keyboard_static","controls27/controls27_corporate_pinnacle_01_keyboard","controls27/controls27_dense_pinnacle_01_engineering_faders","controls27/controls27_dense_pinnacle_03_navigation_bottom","controls27/controls27_half_height_six_faders","controls27/controls27_corporate_pinnacle_05_three_alignment_faders","controls27/controls27_corporate_seyr_06_selection_wheel_slider"},true);
+    private static final String[] IDS=CLASSIC_ONLY?new String[0]:EXPANSION_ONLY?expansionChoices(false):withStyleExpansions(new String[]{"company_pinnacle_full_biology","company_paladyne_full_medical","company_seyr_full_reactor","company_seyr_full_communications","company_seyr_full_navigation","specialist_bare_sensors","analysis_bare_surface_map","cruiser_command_left","ship_freighter","bridge_bare_ship_status"},false);
+    private static final String[] HALF=CLASSIC_ONLY?classicChoices():EXPANSION_ONLY?expansionChoices(true):withStyleExpansions(new String[]{"console_inputs/company_pinnacle_half_biology_static","console_inputs/company_paladyne_half_medical_static","console_inputs/company_seyr_half_communications_static","console_inputs/company_seyr_half_navigation_static","console_inputs/company_seyr_half_reactor_static","console_inputs/specialist_bare_sensors_static","console_inputs/analysis_bare_station_static","console_inputs/analysis_bare_targeting_static","console_inputs/bridge_bare_pilot_static","console_inputs/analysis_framed_surface_map_static","console_inputs/input_surfaces_keyboard_static","console_inputs/input_surfaces_command_keypad_static","console_inputs/sliders_buttons_six_faders_static","controls27/controls27_half_height_command_keypad","console_inputs/input_surfaces_keyboard_touchpad_static","console_inputs/console_controls_medical_keyboard_static","controls27/controls27_corporate_pinnacle_01_keyboard","controls27/controls27_dense_pinnacle_01_engineering_faders","controls27/controls27_dense_pinnacle_03_navigation_bottom","controls27/controls27_half_height_six_faders","controls27/controls27_corporate_pinnacle_05_three_alignment_faders","controls27/controls27_corporate_seyr_06_selection_wheel_slider"},true);
     private static int ticks,phase,fixture;private static boolean done;
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(done)return true;
         mc.gameSettings.pauseOnLostFocus=false;if(++ticks%20!=0)return false;
         if(phase==0){
-            aliases(mc);classicAliases(mc);if(!CLASSIC_ONLY){StyleScreenRuntimeChecks.run(mc,output,"Cool");StyleScreenRuntimeChecks.run(mc,output,"Gold");CompanyScreenLayerRuntimeChecks.run(mc,output);}
+            aliases(mc);classicAliases(mc);if(EXPANSION_ONLY)DisplayExpansionRuntimeChecks.run(mc,output);if(!CLASSIC_ONLY&&!EXPANSION_ONLY){StyleScreenRuntimeChecks.run(mc,output,"Cool");StyleScreenRuntimeChecks.run(mc,output,"Gold");CompanyScreenLayerRuntimeChecks.run(mc,output);}
             mc.player.closeScreen();mc.playerController.setGameType(GameType.CREATIVE);
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityPlayerMP p=player(mc);p.interactionManager.setGameType(GameType.CREATIVE);p.inventory.currentItem=0;p.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));p.capabilities.isFlying=true;p.sendPlayerAbilities();
@@ -57,7 +58,7 @@ final class ScreenCatalogRuntimeChecks {
             TileEntityAnimatedScreenSelector loaded=new TileEntityAnimatedScreenSelector();loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));selected(loaded,half,choice,expected);
         }).get();
         selected((TileEntityAnimatedScreenSelector)mc.world.getTileEntity(POS),half,choice,expected);
-        mc.getFramebuffer().bindFramebuffer(true);mc.entityRenderer.setupOverlayRendering();mc.entityRenderer.disableLightmap();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);gui.drawScreen(-1,-1,0);
+        mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT);net.minecraft.client.renderer.GlStateManager.disableDepth();mc.entityRenderer.setupOverlayRendering();mc.entityRenderer.disableLightmap();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);gui.drawScreen(-1,-1,0);
         ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"screen-catalog-"+path.replace('/','_')+".png"));
         if(++fixture==IDS.length+HALF.length){mc.player.closeScreen();done=true;System.out.println("[vandorlabs][reprolab] screen-catalog-live PASS Displays Gold Cool Classic Ship both heights separate company/Classic controls actual clicks packets save/reload original Seyr animations screenshots");return true;}
         phase=2;return false;
@@ -77,7 +78,17 @@ final class ScreenCatalogRuntimeChecks {
             require((half?loaded.getInputPanel():loaded.getSelectedScreen()).equals(replacement),"saved display identity did not resolve "+old);require(after.getString(half?"inputPanel":"selectedScreen").equals(old),"use-time alias rewrote original snapshot identity");
             if(half){require(loaded.getSecondaryInputPanel().equals(replacement)&&after.getString("secondaryInputPanel").equals(old),"secondary half identity changed");require(mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/console_inputs/"+replacement+"_off")!=mc.getTextureMapBlocks().getMissingSprite(),"half display OFF atlas sprite missing");}count++;
         }
-        require(count==79,"expected company, framed, sensor and keyboard redirects: "+count);System.out.println("[vandorlabs][reprolab] screen-catalog-aliases PASS saved-identities="+count+" both heights stable numeric choices original snapshot NBT retained");
+        require(count==80,"expected company, framed, sensor and keyboard redirects: "+count);System.out.println("[vandorlabs][reprolab] screen-catalog-aliases PASS saved-identities="+count+" both heights stable numeric choices original snapshot NBT retained");
+    }
+    private static String[] expansionChoices(boolean half){
+        java.util.List<String> result=new java.util.ArrayList<>();
+        for(int choice=0;choice<ScreenHousingTextures.IDS.length;choice++){
+            com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);if(!DisplayExpansionRuntimeChecks.expansion(entry))continue;String source=entry.get("source").getAsString();
+            if(source.startsWith("console_inputs/")==half)result.add(half?source:source.replaceFirst("_static$",""));
+        }
+        require(result.size()==21,"21 new selections per height");
+        for(String id:new String[]{"extra_bare_viewscreen","cool27_"+(half?"half":"full")+"_extra_viewscreen","gold27_"+(half?"half":"full")+"_extra_viewscreen"})result.add((half?"console_inputs/":"")+id+(half?"_static":""));
+        return result.toArray(new String[0]);
     }
     private static String[] classicChoices(){
         java.util.List<String> result=new java.util.ArrayList<>();

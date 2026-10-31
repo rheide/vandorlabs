@@ -63,7 +63,7 @@ public final class ArmorTextureSampler {
                     String panel=listed.getBlock() instanceof BlockProgrammableHalfConsole && slot==1?tile.getSecondaryInputPanel():tile.getInputPanel();
                     return off?"vandorlabs:blocks/console_inputs/"+panel+"_off":ScreenHousingTextures.fullTexture(ScreenHousingTextures.screenIndex("console_inputs/"+panel+"_static"));
                 }
-                String id=tile.getSelectedScreen();if(!ModBlocks.DISPLAY_SCREEN_IDS.contains(id))id="engineering_screen";
+                String id=tile.getSelectedScreen();if(!ModBlocks.DISPLAY_SCREEN_IDS.contains(id))id=ScreenHousingTextures.canonicalScreen("engineering_screen");
                 return off?"vandorlabs:blocks/"+(ModBlocks.DISPLAY_FRAMED_IDS.contains(id)?"sequence_border_off":"screen_off")
                         :ScreenHousingTextures.fullTexture(ScreenHousingTextures.screenIndex(id+"_static"));
             }

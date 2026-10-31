@@ -547,7 +547,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": true,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "extra_bare_door_controller",
@@ -4324,6 +4325,174 @@
   },
   {
     "id": "gold27_full_specialist_weapons",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_operations_airlock",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_operations_life_support",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_engineering_power_grid",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_operations_city_transit",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "large27_gold_full_city_transit",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_operations_deck_plan",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_engineering_power_distribution",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_bridge_shields",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_bridge_damage_control",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_engineering_ftl_calibration",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_station_berth_control",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_industrial_fabrication",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_industrial_refinery",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_facility_access_control",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_extra_boot_sequence",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_extra_standby",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_extra_access_denied",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "expansion27_gold_full_extra_signal_lost",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "large27_classic_full_viewscreen",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "large27_cool_full_viewscreen",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "large27_gold_full_viewscreen",
     "type": "display",
     "class": "BlockDisplaySequenced",
     "item": false,

@@ -140,7 +140,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         }
         if (current == null) {
             for (Entry e : entries) {
-                if ("engineering_screen".equals(e.option.key)) {
+                if (ScreenHousingTextures.canonicalScreen("engineering_screen").equals(e.option.bareId)) {
                     current = e;
                     break;
                 }
@@ -166,7 +166,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     /** Block id currently addressed: the selected family's active variant. */
     private String activeId() {
         if (selectedOption == null) {
-            return "engineering_screen";
+            return ScreenHousingTextures.canonicalScreen("engineering_screen");
         }
         return framed ? selectedOption.framedId : selectedOption.bareId;
     }

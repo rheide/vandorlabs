@@ -607,7 +607,7 @@ final class ScreenRuntimeChecks {
             TileEntityAnimatedScreenSelector restored =
                     new TileEntityAnimatedScreenSelector();
             restored.readFromNBT(tag);
-            require("engineering_screen".equals(restored.getSelectedScreen())
+            require(com.vandorlabs.tiles.ScreenHousingTextures.canonicalScreen("engineering_screen").equals(restored.getSelectedScreen())
                             && restored.isRedstoneEnabled()
                             && restored.getDisplayMode()
                             == TileEntityAnimatedScreenSelector.MODE_STATIC
@@ -702,7 +702,7 @@ final class ScreenRuntimeChecks {
 
     private static void assertDistinctConfiguration(
             TileEntityAnimatedScreenSelector tile, String context) {
-        require(tile != null && "engineering_screen".equals(tile.getSelectedScreen())
+        require(tile != null && com.vandorlabs.tiles.ScreenHousingTextures.canonicalScreen("engineering_screen").equals(tile.getSelectedScreen())
                         && tile.isRedstoneEnabled()
                         && tile.getDisplayMode()
                         == TileEntityAnimatedScreenSelector.MODE_STATIC
@@ -733,7 +733,7 @@ final class ScreenRuntimeChecks {
         MessageSyncScreenSelector restored = new MessageSyncScreenSelector();
         restored.fromBytes(bytes);
         require(pos.equals(restored.getPos())
-                        && "engineering_screen".equals(restored.getSelectedScreen())
+                        && com.vandorlabs.tiles.ScreenHousingTextures.canonicalScreen("engineering_screen").equals(restored.getSelectedScreen())
                         && restored.isRedstoneEnabled()
                         && restored.getDisplayMode()
                         == TileEntityAnimatedScreenSelector.MODE_ANIMATED

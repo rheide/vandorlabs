@@ -1319,7 +1319,10 @@
     "label": "Engineering Screen (Full)",
     "category": "Screens",
     "source": "engineering_screen_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_bridge_bare_engineering_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_extra_bare_door_controller_static",
@@ -5837,5 +5840,378 @@
     "source": "console_inputs/gold27_half_specialist_weapons_static",
     "frames": 6,
     "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_operations_airlock",
+    "label": "Airlock (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_operations_airlock_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_operations_airlock",
+    "label": "Airlock (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_operations_airlock_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_operations_life_support",
+    "label": "Life Support (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_operations_life_support_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_operations_life_support",
+    "label": "Life Support (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_operations_life_support_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_engineering_power_grid",
+    "label": "Power Grid Status (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_engineering_power_grid_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_engineering_power_grid",
+    "label": "Power Grid Status (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_engineering_power_grid_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_operations_city_transit",
+    "label": "City Transit Map (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_operations_city_transit_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_large27_gold_full_city_transit",
+    "label": "City Transit Map (Gold/Full) Large",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "large27_gold_full_city_transit_static",
+    "frames": 6,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_expansion27_gold_half_operations_city_transit",
+    "label": "City Transit Map (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_operations_city_transit_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_large27_gold_half_city_transit",
+    "label": "City Transit Map (Gold/Half) Large",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/large27_gold_half_city_transit_static",
+    "frames": 6,
+    "rectangular": true,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_expansion27_gold_full_operations_deck_plan",
+    "label": "Ship Deck Plan (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_operations_deck_plan_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_operations_deck_plan",
+    "label": "Ship Deck Plan (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_operations_deck_plan_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_engineering_power_distribution",
+    "label": "Power Distribution (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_engineering_power_distribution_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_engineering_power_distribution",
+    "label": "Power Distribution (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_engineering_power_distribution_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_bridge_shields",
+    "label": "Shields (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_bridge_shields_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_bridge_shields",
+    "label": "Shields (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_bridge_shields_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_bridge_damage_control",
+    "label": "Damage Control (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_bridge_damage_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_bridge_damage_control",
+    "label": "Damage Control (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_bridge_damage_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_engineering_ftl_calibration",
+    "label": "FTL Calibration (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_engineering_ftl_calibration_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_engineering_ftl_calibration",
+    "label": "FTL Calibration (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_engineering_ftl_calibration_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_station_berth_control",
+    "label": "Station Berth Control (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_station_berth_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_station_berth_control",
+    "label": "Station Berth Control (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_station_berth_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_industrial_fabrication",
+    "label": "Industrial Fabrication (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_industrial_fabrication_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_industrial_fabrication",
+    "label": "Industrial Fabrication (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_industrial_fabrication_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_industrial_refinery",
+    "label": "Industrial Refinery (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_industrial_refinery_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_industrial_refinery",
+    "label": "Industrial Refinery (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_industrial_refinery_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_facility_access_control",
+    "label": "Facility Access Control (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_facility_access_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_facility_access_control",
+    "label": "Facility Access Control (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_facility_access_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_extra_boot_sequence",
+    "label": "Boot Sequence (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_extra_boot_sequence_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_extra_boot_sequence",
+    "label": "Boot Sequence (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_extra_boot_sequence_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_extra_standby",
+    "label": "Standby (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_extra_standby_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_extra_standby",
+    "label": "Standby (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_extra_standby_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_extra_access_denied",
+    "label": "Access Denied (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_extra_access_denied_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_extra_access_denied",
+    "label": "Access Denied (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_extra_access_denied_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_gold_full_extra_signal_lost",
+    "label": "Signal Lost (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "expansion27_gold_full_extra_signal_lost_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_gold_half_extra_signal_lost",
+    "label": "Signal Lost (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/expansion27_gold_half_extra_signal_lost_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_large27_classic_full_viewscreen",
+    "label": "Viewscreen (Classic/Full) Large",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "large27_classic_full_viewscreen_static",
+    "frames": 6,
+    "large": true,
+    "pixelWidth": 256
+  },
+  {
+    "id": "screen_large27_classic_half_viewscreen",
+    "label": "Viewscreen (Classic/Half) Large",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/large27_classic_half_viewscreen_static",
+    "frames": 6,
+    "rectangular": true,
+    "large": true,
+    "pixelWidth": 256
+  },
+  {
+    "id": "screen_large27_cool_full_viewscreen",
+    "label": "Viewscreen (Cool/Full) Large",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "large27_cool_full_viewscreen_static",
+    "frames": 6,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_large27_cool_half_viewscreen",
+    "label": "Viewscreen (Cool/Half) Large",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/large27_cool_half_viewscreen_static",
+    "frames": 6,
+    "rectangular": true,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_large27_gold_full_viewscreen",
+    "label": "Viewscreen (Gold/Full) Large",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "large27_gold_full_viewscreen_static",
+    "frames": 6,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_large27_gold_half_viewscreen",
+    "label": "Viewscreen (Gold/Half) Large",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/large27_gold_half_viewscreen_static",
+    "frames": 6,
+    "rectangular": true,
+    "large": true,
+    "pixelWidth": 512
   }
 ]

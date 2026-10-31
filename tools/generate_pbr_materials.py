@@ -46,9 +46,12 @@ def catalog_hints():
     result = {}
     for entry in entries:
         hint = ' '.join(str(entry.get(key, '')) for key in ('id', 'label', 'category', 'menuGroup'))
+        if entry.get('category')=='Screens':hint+=' display artwork'
         for key in ('source', 'unlit'):
             if entry.get(key):
                 result.setdefault('blocks/'+entry[key]+'.png', []).append(hint)
+                if entry.get('category')=='Screens' and entry[key].endswith('_static'):
+                    for suffix in ('_off.png','_animated.png'):result.setdefault('blocks/'+entry[key].removesuffix('_static')+suffix, []).append(hint)
     return {key: ' '.join(values) for key, values in result.items()}
 
 
@@ -57,6 +60,7 @@ def classify(relative, hint=''):
     text = re.sub(r'[_/.-]+', ' ', name+' '+hint.lower())
     if not name.startswith(('blocks/', 'block/', 'items/', 'models/')) or '/dynmap/' in name:
         return 'neutral'  # GUI/icon/particle art is not a physical block finish.
+    if 'display artwork' in text:return 'display'
     if '/armor/roles/' in name and not any(word in text for word in ('helmet', 'hazmat', 'security')):
         return 'fabric'
     if 'satin silver' in text:

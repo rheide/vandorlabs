@@ -487,7 +487,7 @@ final class CopyCompatibilityRuntimeChecks {
                 label + " is missing");
         TileEntityAnimatedScreenSelector selector =
                 (TileEntityAnimatedScreenSelector) tile;
-        require("engineering_screen".equals(selector.getSelectedScreen())
+        require(com.vandorlabs.tiles.ScreenHousingTextures.canonicalScreen("engineering_screen").equals(selector.getSelectedScreen())
                         && selector.isRedstoneEnabled()
                         && selector.getDisplayMode()
                         == TileEntityAnimatedScreenSelector.MODE_STATIC

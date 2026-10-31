@@ -100,6 +100,8 @@ def restructure(catalog,blocks,language):
                 entry.update(hidden=True,alias=f'screen_company_{kept}_{tier}_{subject}',retireAnimation=True);retired.add(source)
             else:
                 group='Gold' if kept=='pinnacle' else 'Cool';entry.update(menuGroup=group,label=f'{subject.replace("_"," ").title()} ({group}/{height})')
+        elif source=='engineering_screen':
+            entry.update(hidden=True,alias='screen_bridge_bare_engineering_static',retireAnimation=True);retired.add(source)
         elif source in ('bridge_bare_sensors','bridge_framed_sensors'):
             variant='framed' if '_framed_' in source else 'bare';prefix='screen_console_inputs_' if half else 'screen_'
             entry.update(hidden=True,alias=f'{prefix}specialist_{variant}_sensors_static',retireAnimation=True);retired.add(source)
@@ -112,7 +114,9 @@ def restructure(catalog,blocks,language):
             entry.update(hidden=True,retireAnimation=True);retired.add(source)
         if not entry.get('hidden'):
             suffix=f'({entry["menuGroup"]}/{height})' if entry.get('menuGroup') else f'({height})'
-            if not entry['label'].endswith(suffix):entry['label']=re.sub(r'\s*\((?:[^()]+/)?(?:Full|Half)\)$','',entry['label'])+' '+suffix
+            label=entry['label'].removesuffix(' Large') if entry.get('large') else entry['label']
+            if not label.endswith(suffix):label=re.sub(r'\s*\((?:[^()]+/)?(?:Full|Half)\)$','',label)+' '+suffix
+            entry['label']=label+(' Large' if entry.get('large') else '')
         key=('gui.vandorlabs.console.input.' if half else 'tile.vandorlabs.')+source+('' if half else '.name');names[key]=entry['label']
     # Frame choices are separate now; paired legacy framed artwork has no menu row.
     bysource={e['source']:e for e in result};byid={e['id']:e for e in result}

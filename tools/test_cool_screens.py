@@ -12,7 +12,7 @@ def main():
     byid={e['id']:e for e in catalog};byblock={e['id']:e for e in blocks};byinput={e['id']:e for e in inputs}
     assert len(audit['entries'])==42 and len({e['id'] for e in audit['entries']})==42
     for height in ('full','half'):
-        assert sum(e.get('menuGroup')==style and not e.get('hidden') and e['source'].startswith('console_inputs/')==(height=='half') for e in catalog)==27
+        assert sum(e.get('menuGroup')==style and e['id'].startswith(('screen_company_','screen_'+style.lower()+'27_')) and not e.get('hidden') and e['source'].startswith('console_inputs/')==(height=='half') for e in catalog)==27
         assert sum(e['height']==height and e['variant']=='bridge' for e in audit['entries'])==6
         assert sum(e['height']==height and e['variant']=='expanded' for e in audit['entries'])==15
     jar=ZipFile(args.jar) if args.jar else None
@@ -39,5 +39,5 @@ def main():
         if jar:assert json.loads(jar.read('assets/vandorlabs/data/unified_textures.json'))==catalog
     finally:
         if jar:jar.close()
-    print(style+' screens PASS: 42 animations, 252 exact authored frames, saved catalog/block/input prefixes retained, 27 choices per height, six Bridge alternatives per height'+(' in exact JAR' if args.jar else ''))
+    print(style+' screens PASS: 42 animations, 252 exact authored frames, saved catalog/block/input prefixes retained, 27 retained base/Bridge choices per height, six Bridge alternatives per height'+(' in exact JAR' if args.jar else ''))
 if __name__=='__main__':main()

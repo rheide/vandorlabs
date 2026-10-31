@@ -132,7 +132,7 @@ final class DuplifierRuntimeChecks {
                     "screen settings did not apply to programmable console");
             TileEntityAnimatedScreenSelector console =
                     (TileEntityAnimatedScreenSelector) world.getTileEntity(target);
-            require("engineering_screen".equals(console.getSelectedScreen())
+            require(com.vandorlabs.tiles.ScreenHousingTextures.canonicalScreen("engineering_screen").equals(console.getSelectedScreen())
                             && console.getDisplayMode() == TileEntityAnimatedScreenSelector.MODE_STATIC
                             && console.getAnimationSpeedIndex() == 2
                             && console.isRedstoneEnabled() && console.getHousingTexture() == 14,

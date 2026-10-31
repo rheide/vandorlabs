@@ -27,13 +27,19 @@ def standardize(textures,catalog):
             if line.startswith('map_Kd vandorlabs:blocks/'):
                 obj_atlases.add(line.split('vandorlabs:blocks/',1)[1].strip()+'.png')
     doubles={e['source'] for e in catalog if e.get('category')=='Double Doors'}
+    native=set()
+    for entry in catalog:
+        if entry.get('large'):
+            assert entry.get('pixelWidth') in (256,512) and entry.get('category')=='Screens'
+            native.add(entry['source']+'.png')
+            if entry['source'].startswith('console_inputs/'):native.add(entry['source'].removesuffix('_static')+'_off.png')
     changed=0
     for path in (textures/'blocks').rglob('*.png'):
         rel=path.relative_to(textures/'blocks').as_posix()
         metadata=path.with_suffix('.png.mcmeta')
         animated=metadata.exists() and 'animation' in json.loads(metadata.read_text())
         # Programmable Surface masters span complete pads; their 64px local variants remain native too.
-        if rel in obj_atlases or 'atlas' in path.stem or rel.startswith(('canopy/','aircraft_throttles/','universal_constructor/','turntable/turntable_block_top','surface/')) or animated:continue
+        if rel in native or rel in obj_atlases or 'atlas' in path.stem or rel.startswith(('canopy/','aircraft_throttles/','universal_constructor/','turntable/turntable_block_top','surface/')) or animated:continue
         with Image.open(path) as source:
             w,h=source.size
             # Tall doors cover two blocks; square double doors cover four.

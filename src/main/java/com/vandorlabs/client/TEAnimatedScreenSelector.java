@@ -549,7 +549,7 @@ public class TEAnimatedScreenSelector
 
         String screenId = te.getSelectedScreen();
         if (!ModBlocks.DISPLAY_SCREEN_IDS.contains(screenId)) {
-            screenId = "engineering_screen";
+            screenId = ScreenHousingTextures.canonicalScreen("engineering_screen");
         }
 
         ResourceLocation texture;
@@ -696,7 +696,7 @@ public class TEAnimatedScreenSelector
     private static double[] bindScreenSurfaceNative(TileEntityAnimatedScreenSelector te) {
         if(te.getSurfaceTexture(0)>=0)return bindSurface(te,0);
         String id = te.getSelectedScreen();
-        if (!ModBlocks.DISPLAY_SCREEN_IDS.contains(id)) id = "engineering_screen";
+        if (!ModBlocks.DISPLAY_SCREEN_IDS.contains(id)) id = ScreenHousingTextures.canonicalScreen("engineering_screen");
         int mode = te.getEffectiveMode();
         ResourceLocation texture;
         double vTop = 0;
@@ -786,7 +786,7 @@ public class TEAnimatedScreenSelector
     private static boolean unpairedInputChoice(int choice){com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);if(e==null)return false;String source=e.get("source").getAsString();return source.startsWith("console_inputs/")&&source.endsWith("_static")&&unpairedInput(source.substring(15,source.length()-7));}
     private static double[] inputBody(String id,double top,double bottom){if(!unpairedInput(id))return new double[]{top,bottom};double[] uv={top,bottom,0,1};insetBody(uv,1D/32);return uv;}
     private static void insetBody(double[] uv,double fraction){double height=(uv[1]-uv[0])*fraction,width=(uv[3]-uv[2])*fraction;uv[0]+=height;uv[1]-=height;uv[2]+=width;uv[3]-=width;}
-    private static boolean engineeringChoice(int choice){com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);return entry!=null&&"engineering_screen_static".equals(entry.get("source").getAsString());}
+    private static boolean engineeringChoice(int choice){com.google.gson.JsonObject entry=ScreenHousingTextures.entry(ScreenHousingTextures.canonicalChoice(choice));return entry!=null&&"engineering_screen_static".equals(entry.get("source").getAsString());}
     private static void engineeringBody(double[] uv){insetBody(uv,1D/16);}
     private static double[] bindSurface(TileEntityAnimatedScreenSelector te,int slot) {
         bindAtlas();TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(te.getSurfaceTexture(slot)));

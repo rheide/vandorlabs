@@ -2,6 +2,9 @@
 
 ## 2.7 (in development)
 
+- Add 17 Gold expansion display subjects in Full and Half layouts, with six-frame animations. Add Large Viewscreen choices for all three styles (Classic 256px, Cool/Gold 512px) and Large Gold City Transit Map choices (512px), preserving native aspect ratios and existing choices.
+- Replace the root Engineering Screen choice with Engineering (Classic/Full), preserving saved IDs and redirecting default/fallback rendering to the retained design.
+
 - Remove unlisted paired framed screen artwork from the runtime JAR, redirect legacy choices to listed bare designs and enforce a screen-resource/menu audit during packaging. Listed animations and Off-state resources remain supported.
 
 - Merge root Controls into Classic, retain existing Classic artwork for ten duplicate names, and move four unique controls into Classic. Remove the Root Controls matrix column while preserving old saved selections through shared artwork aliases.
