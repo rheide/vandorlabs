@@ -536,7 +536,7 @@ processResources {
     inputs.dir('texture-packs/additional/assets/vandorlabs/textures')
     inputs.dir('texture-packs/default/assets/vandorlabs/textures')
     inputs.dir('texture-packs/original/assets/vandorlabs/textures')
-    inputs.files('tools/compact_runtime_assets.py', 'tools/prune_retired_textures.py', 'tools/prune_unused_runtime_assets.py')
+    inputs.files('tools/compact_runtime_assets.py', 'tools/prune_retired_textures.py', 'tools/prune_unused_runtime_assets.py', 'tools/prune_unlisted_screen_artwork.py')
     inputs.file('tools/deduplicate_runtime_textures.py')
     inputs.file('tools/optimize_runtime_pngs.py')
     inputs.file('tools/generate_pbr_materials.py')
@@ -588,6 +588,7 @@ processResources {
         exec {
             commandLine pythonExecutable, 'tools/prune_unused_runtime_assets.py', '--stage', target.parentFile
         }
+        exec { commandLine pythonExecutable, 'tools/prune_unlisted_screen_artwork.py', '--stage', target.parentFile }
         exec {
             commandLine pythonExecutable, 'tools/generate_pbr_materials.py', '--stage', target.parentFile
         }
@@ -634,7 +635,7 @@ check.dependsOn testSharedRuntimeTextures
 task testScreenCatalog(type: Exec) {
     group = 'verification'
     dependsOn jar
-    doFirst { exec { commandLine pythonExecutable, 'tools/test_unused_runtime_assets.py' } }
+    doFirst { exec { commandLine pythonExecutable, 'tools/test_unused_runtime_assets.py' }; exec { commandLine pythonExecutable, 'tools/prune_unlisted_screen_artwork.py', '--check-jar', jar.archivePath } }
     doFirst { for (style in ['Cool', 'Gold']) { exec { commandLine pythonExecutable, 'tools/test_cool_screens.py', '--style', style, '--jar', jar.archivePath } } }
     commandLine pythonExecutable, 'tools/test_screen_catalog.py', '--jar', jar.archivePath
 }

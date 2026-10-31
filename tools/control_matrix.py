@@ -2,14 +2,13 @@
 import html,re
 from texture_matrix import render_page
 
-COLUMNS=('Classic','Ashiro Mai','Paladyne','Pinnacle','Seyr','Vandor','Vektor','Root Controls')
+COLUMNS=('Classic','Ashiro Mai','Paladyne','Pinnacle','Seyr','Vandor','Vektor')
 
 def generate_control_matrix(entries):
     cells={};counts={column:0 for column in COLUMNS}
     for entry in entries:
         category=entry['category']
-        if category=='Controls':column='Root Controls'
-        elif category.startswith('Controls/'):column=category.split('/',1)[1]
+        if category.startswith('Controls/'):column=category.split('/',1)[1]
         else:continue
         if column not in counts:raise ValueError('Unknown control folder: '+column)
         name=re.sub(r'^(Console Controls|Input Surfaces|Sliders Buttons) ','',entry['label'])
@@ -20,7 +19,7 @@ def generate_control_matrix(entries):
     def esc(value):return html.escape(value,quote=True)
     headings=['Control type']+[column+' ('+str(counts[column])+')' for column in COLUMNS]
     md=['# Control texture matrix','', '[Open the visual comparison page](control-matrix.html) · [Company control guide](company-controls.md)','',
-        'Columns are texture folders; rows group matching control names. Every cell shows the first frame. A dash means that folder has no texture with that name. Root family prefixes are omitted from row names; the original menu label is available on each preview. Similar layouts retain their own artwork.','',
+        'Columns are texture folders; rows group matching control names. Every cell shows the first frame. A dash means that folder has no texture with that name. Similar layouts retain their own artwork.','',
         '| '+' | '.join(headings)+' |','|'+'|'.join('---' for _ in headings)+'|']
     rendered=[]
     for name in rows:
@@ -36,7 +35,7 @@ def generate_control_matrix(entries):
     page=render_page(title='Control texture matrix',summary=str(len(cells))+' textures · '+str(len(rows))+' control types · '+str(len(COLUMNS))+' folders',
         headers=''.join('<th scope="col">'+esc(h)+'</th>' for h in headings),rows='\n'.join(rendered),
         nav='<a href="texture-browser/index.html">Texture browser</a> · <a href="display-matrix.html">Display matrix</a> · <a href="company-controls.md">Control guide</a> · <a href="control-matrix.md">Markdown matrix</a>',
-        intro='Classic and company folders are compared by control name. Root Controls is included for completeness; its family prefixes are omitted from row names. Each preview is a first frame. A dash means that design is unavailable in the folder. Select a texture to open its PNG.',
+        intro='Classic and company folders are compared by control name. Each preview is a first frame. A dash means that design is unavailable in the folder. Select a texture to open its PNG.',
         filter_label='Find a control',placeholder='Keyboard, Fader Bank, Navigation…',table_label='Scrollable control texture comparison',unit='control types',
         footer='Shared names identify related layouts; textures retain their company-specific artwork. Scroll horizontally to compare every folder. Headers stay visible while scrolling.')
     return {'../control-matrix.html':page,'../control-matrix.md':('\n'.join(md)+'\n').encode()}

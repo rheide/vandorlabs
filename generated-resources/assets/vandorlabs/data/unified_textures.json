@@ -575,7 +575,10 @@
     "category": "Screens",
     "source": "analysis_framed_gas_giant_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_analysis_bare_gas_giant_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_analysis_framed_ice_planet_static",
@@ -583,7 +586,10 @@
     "category": "Screens",
     "source": "analysis_framed_ice_planet_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_analysis_bare_ice_planet_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_analysis_framed_station_static",
@@ -591,7 +597,10 @@
     "category": "Screens",
     "source": "analysis_framed_station_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_analysis_bare_station_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_analysis_framed_surface_map_static",
@@ -599,7 +608,10 @@
     "category": "Screens",
     "source": "analysis_framed_surface_map_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_analysis_bare_surface_map_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_analysis_framed_targeting_static",
@@ -607,7 +619,10 @@
     "category": "Screens",
     "source": "analysis_framed_targeting_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_analysis_bare_targeting_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_analysis_framed_terrestrial_static",
@@ -615,7 +630,10 @@
     "category": "Screens",
     "source": "analysis_framed_terrestrial_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_analysis_bare_terrestrial_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_bridge_bare_engineering_static",
@@ -658,7 +676,10 @@
     "category": "Screens",
     "source": "bridge_framed_pilot_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_bridge_bare_pilot_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_bridge_framed_sensors_static",
@@ -668,7 +689,7 @@
     "rectangular": true,
     "menuGroup": "Classic",
     "hidden": true,
-    "alias": "screen_specialist_framed_sensors_static",
+    "alias": "screen_specialist_bare_sensors_static",
     "retireAnimation": true
   },
   {
@@ -677,7 +698,10 @@
     "category": "Screens",
     "source": "bridge_framed_ship_status_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_bridge_bare_ship_status_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_biology_static",
@@ -769,7 +793,10 @@
     "category": "Screens",
     "source": "console_inputs/bridge_framed_engineering_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_bridge_bare_engineering_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_bridge_framed_pilot_static",
@@ -777,7 +804,10 @@
     "category": "Screens",
     "source": "console_inputs/bridge_framed_pilot_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_bridge_bare_pilot_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_bridge_framed_sensors_static",
@@ -786,7 +816,7 @@
     "source": "console_inputs/bridge_framed_sensors_static",
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_console_inputs_specialist_framed_sensors_static",
+    "alias": "screen_console_inputs_specialist_bare_sensors_static",
     "retireAnimation": true
   },
   {
@@ -795,12 +825,15 @@
     "category": "Screens",
     "source": "console_inputs/bridge_framed_ship_status_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_bridge_bare_ship_status_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_console_controls_biology_controls_static",
-    "label": "Console Controls Biology Controls",
-    "category": "Screens",
+    "label": "Biology Controls",
+    "category": "Controls/Classic",
     "source": "console_inputs/console_controls_biology_controls_static",
     "rectangular": true
   },
@@ -833,15 +866,18 @@
   },
   {
     "id": "screen_console_inputs_console_controls_navigation_controls_static",
-    "label": "Console Controls Navigation Controls",
-    "category": "Screens",
+    "label": "Navigation Controls",
+    "category": "Controls/Classic",
     "source": "console_inputs/console_controls_navigation_controls_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_06_navigation_bottom",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_console_controls_sensor_controls_static",
-    "label": "Console Controls Sensor Controls",
-    "category": "Screens",
+    "label": "Sensor Controls",
+    "category": "Controls/Classic",
     "source": "console_inputs/console_controls_sensor_controls_static",
     "rectangular": true
   },
@@ -883,7 +919,10 @@
     "category": "Screens",
     "source": "console_inputs/extra_framed_door_controller_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_extra_bare_door_controller_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_extra_framed_engineering_charts_static",
@@ -891,7 +930,10 @@
     "category": "Screens",
     "source": "console_inputs/extra_framed_engineering_charts_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_extra_bare_engineering_charts_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_extra_framed_personal_terminal_static",
@@ -899,7 +941,10 @@
     "category": "Screens",
     "source": "console_inputs/extra_framed_personal_terminal_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_extra_bare_personal_terminal_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_extra_framed_viewscreen_static",
@@ -907,28 +952,40 @@
     "category": "Screens",
     "source": "console_inputs/extra_framed_viewscreen_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_extra_bare_viewscreen_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_input_surfaces_command_keypad_static",
     "label": "Keypad And Dial",
-    "category": "Screens",
+    "category": "Controls/Classic",
     "source": "console_inputs/input_surfaces_command_keypad_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_command_keypad",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_input_surfaces_engineering_faders_static",
-    "label": "Input Surfaces Engineering Faders",
-    "category": "Screens",
+    "label": "Engineering Faders",
+    "category": "Controls/Classic",
     "source": "console_inputs/input_surfaces_engineering_faders_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_engineering_faders",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_input_surfaces_keyboard_static",
-    "label": "Input Surfaces Keyboard",
-    "category": "Screens",
+    "label": "Keyboard",
+    "category": "Controls/Classic",
     "source": "console_inputs/input_surfaces_keyboard_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_03_keyboard_bottom",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_input_surfaces_keyboard_touchpad_static",
@@ -939,57 +996,75 @@
   },
   {
     "id": "screen_console_inputs_input_surfaces_pilot_controls_static",
-    "label": "Input Surfaces Pilot Controls",
-    "category": "Screens",
+    "label": "Pilot Controls",
+    "category": "Controls/Classic",
     "source": "console_inputs/input_surfaces_pilot_controls_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_pilot_controls",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_input_surfaces_science_touchpad_static",
-    "label": "Input Surfaces Science Touchpad",
-    "category": "Screens",
+    "label": "Science Touchpad",
+    "category": "Controls/Classic",
     "source": "console_inputs/input_surfaces_science_touchpad_static",
     "rectangular": true
   },
   {
     "id": "screen_console_inputs_sliders_buttons_button_clusters_sliders_static",
-    "label": "Sliders Buttons Button Clusters Sliders",
-    "category": "Screens",
+    "label": "Button Clusters Sliders",
+    "category": "Controls/Classic",
     "source": "console_inputs/sliders_buttons_button_clusters_sliders_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_button_clusters_sliders",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_sliders_buttons_button_matrix_sliders_static",
-    "label": "Sliders Buttons Button Matrix Sliders",
-    "category": "Screens",
+    "label": "Button Matrix Sliders",
+    "category": "Controls/Classic",
     "source": "console_inputs/sliders_buttons_button_matrix_sliders_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_button_matrix_sliders",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_sliders_buttons_environment_controls_static",
-    "label": "Sliders Buttons Environment Controls",
-    "category": "Screens",
+    "label": "Environment Controls",
+    "category": "Controls/Classic",
     "source": "console_inputs/sliders_buttons_environment_controls_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_environment_controls",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_sliders_buttons_pilot_faders_static",
-    "label": "Sliders Buttons Pilot Faders",
-    "category": "Screens",
+    "label": "Pilot Faders",
+    "category": "Controls/Classic",
     "source": "console_inputs/sliders_buttons_pilot_faders_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_pilot_faders",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_sliders_buttons_six_faders_static",
     "label": "Fader Bank",
-    "category": "Screens",
+    "category": "Controls/Classic",
     "source": "console_inputs/sliders_buttons_six_faders_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "controls27_half_height_six_faders",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_sliders_buttons_twin_faders_transport_static",
-    "label": "Sliders Buttons Twin Faders Transport",
-    "category": "Screens",
+    "label": "Twin Faders Transport",
+    "category": "Controls/Classic",
     "source": "console_inputs/sliders_buttons_twin_faders_transport_static",
     "rectangular": true
   },
@@ -1047,7 +1122,10 @@
     "category": "Screens",
     "source": "console_inputs/specialist_framed_biology_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_specialist_bare_biology_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_specialist_framed_medical_static",
@@ -1055,7 +1133,10 @@
     "category": "Screens",
     "source": "console_inputs/specialist_framed_medical_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_specialist_bare_medical_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_specialist_framed_science_static",
@@ -1063,7 +1144,10 @@
     "category": "Screens",
     "source": "console_inputs/specialist_framed_science_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_specialist_bare_science_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_specialist_framed_sensors_static",
@@ -1071,7 +1155,10 @@
     "category": "Screens",
     "source": "console_inputs/specialist_framed_sensors_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_specialist_bare_sensors_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_specialist_framed_starmap_static",
@@ -1079,7 +1166,10 @@
     "category": "Screens",
     "source": "console_inputs/specialist_framed_starmap_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_specialist_bare_starmap_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_specialist_framed_weapons_static",
@@ -1087,7 +1177,10 @@
     "category": "Screens",
     "source": "console_inputs/specialist_framed_weapons_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_console_inputs_specialist_bare_weapons_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_medical_static",
@@ -1266,7 +1359,10 @@
     "category": "Screens",
     "source": "extra_framed_door_controller_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_extra_bare_door_controller_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_extra_framed_engineering_charts_static",
@@ -1274,7 +1370,10 @@
     "category": "Screens",
     "source": "extra_framed_engineering_charts_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_extra_bare_engineering_charts_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_extra_framed_personal_terminal_static",
@@ -1282,7 +1381,10 @@
     "category": "Screens",
     "source": "extra_framed_personal_terminal_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_extra_bare_personal_terminal_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_extra_framed_viewscreen_static",
@@ -1290,7 +1392,10 @@
     "category": "Screens",
     "source": "extra_framed_viewscreen_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_extra_bare_viewscreen_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_science_biology_wide_left_static",
@@ -1492,7 +1597,10 @@
     "category": "Screens",
     "source": "specialist_framed_biology_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_specialist_bare_biology_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_specialist_framed_medical_static",
@@ -1500,7 +1608,10 @@
     "category": "Screens",
     "source": "specialist_framed_medical_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_specialist_bare_medical_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_specialist_framed_science_static",
@@ -1508,7 +1619,10 @@
     "category": "Screens",
     "source": "specialist_framed_science_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_specialist_bare_science_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_specialist_framed_sensors_static",
@@ -1516,7 +1630,10 @@
     "category": "Screens",
     "source": "specialist_framed_sensors_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_specialist_bare_sensors_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_specialist_framed_starmap_static",
@@ -1524,7 +1641,10 @@
     "category": "Screens",
     "source": "specialist_framed_starmap_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_specialist_bare_starmap_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_specialist_framed_weapons_static",
@@ -1532,7 +1652,10 @@
     "category": "Screens",
     "source": "specialist_framed_weapons_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_specialist_bare_weapons_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_tactical_starmap_static",

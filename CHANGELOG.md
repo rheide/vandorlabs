@@ -2,6 +2,10 @@
 
 ## 2.7 (in development)
 
+- Remove unlisted paired framed screen artwork from the runtime JAR, redirect legacy choices to listed bare designs and enforce a screen-resource/menu audit during packaging. Listed animations and Off-state resources remain supported.
+
+- Merge root Controls into Classic, retain existing Classic artwork for ten duplicate names, and move four unique controls into Classic. Remove the Root Controls matrix column while preserving old saved selections through shared artwork aliases.
+
 - Expand Gold with 15 animated subjects in Full and Half height and six Bridge alternatives per height, preserving the original Gold designs, saved choices and native six-frame artwork. Include both styles’ alternatives in the display comparison matrix.
 
 - Give Programmable Trigger On/Off and analog bands independent Displays artwork, Off/Static/Animated modes and playback speeds, with flat state tabs. Preserve legacy Static defaults, saved settings, Duplifier copying and configured items.

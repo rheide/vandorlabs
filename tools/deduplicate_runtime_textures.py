@@ -32,6 +32,31 @@ def stage(directory):
         for duplicate in paths[1:]:
             aliases[duplicate.relative_to(directory).as_posix()]=canonical
             saved+=duplicate.stat().st_size;duplicate.unlink()
+    # Retired root inputs still occur in old tile NBT. Resolve those native paths
+    # to retained Classic pixels without packing their discarded artwork.
+    catalog=json.loads((directory/'data/unified_textures.json').read_text());byid={e['id']:e for e in catalog}
+    pbr_path=directory/'data/pbr_materials.json';pbr=json.loads(pbr_path.read_text())
+    def replacement(old,semantic):
+        canonical=aliases.get(semantic,semantic)
+        assert not (directory/old).exists() and (directory/canonical).exists(),(old,canonical)
+        aliases[old]=canonical;pbr['maps'][old]=dict(pbr['maps'][semantic])
+        for channel in ('_s','_n'):
+            companion=semantic.removesuffix('.png')+channel+'.png';companion=aliases.get(companion,companion)
+            if (directory/companion).exists():aliases[old.removesuffix('.png')+channel+'.png']=companion
+    references='\n'.join(p.read_text() for p in directory.glob('dynmap*.txt'))+'\n'+'\n'.join(p.read_text() for p in (directory/'models').rglob('*.json'))
+    for entry in catalog:
+        if not (entry.get('hidden') and entry.get('alias') and entry['source'].startswith('console_inputs/')):continue
+        target=byid[entry['alias']]
+        if target.get('category')!='Controls/Classic':continue
+        old='textures/blocks/'+entry['source'].removesuffix('_static');semantic='textures/blocks/'+target['source']+'.png'
+        if entry.get('category')=='Controls/Classic':
+            replacement(old+'_static.png',semantic)
+            replacement(old+'_off.png','textures/blocks/console_inputs/console_controls_biology_controls_off.png')
+        # Native compatibility icons can also be named by the map/model registry.
+        # They share listed Classic pixels instead of retaining retired icon art.
+        item=old+'_item.png'
+        if item in references or item.removeprefix('textures/').removesuffix('.png') in references:replacement(item,semantic)
+    pbr_path.write_text(json.dumps(pbr,indent=2)+'\n')
     output=directory/'data/texture_aliases.json';output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(dict(sorted(aliases.items())),indent=2)+'\n')
     # Dynmap reads ZIP entries directly instead of Minecraft's resource manager.

@@ -37,20 +37,11 @@ These five types also exist in Classic.
 
 ## Other Classic controls
 
-Biology, Button Clusters Sliders, Controls, Dual Controls, Environment Controls, Keyboard Full, Keyboard Touchpad, Pilot Faders, Radar.
+Biology, Biology Controls, Button Clusters Sliders, Controls, Dual Controls,
+Environment Controls, Keyboard Full, Keyboard Touchpad, Pilot Faders, Radar,
+Science Touchpad, Sensor Controls and Twin Faders Transport.
 
-The company folders contain 60 textures across 26 control names. Classic contains 16 textures. Root Controls artwork remains separate.
-
-## Root Controls
-
-The root contains 14 textures. These retain their existing family prefixes:
-
-| Prefix | Controls |
-|---|---|
-| Console Controls | Biology Controls; Navigation Controls; Sensor Controls |
-| Input Surfaces | Engineering Faders; Keyboard; Pilot Controls; Science Touchpad |
-| Sliders Buttons | Button Clusters Sliders; Button Matrix Sliders; Environment Controls; Pilot Faders; Twin Faders Transport |
-
-The root also contains **Fader Bank** and **Keypad And Dial**, matching their
-Classic and company control families. Root Biology Controls and
-Sensor Controls correspond visually to Classic Biology and Radar.
+The company folders contain 60 textures across 26 control names. Classic contains
+20 textures. Former root controls now live in Classic without family-name prefixes.
+Where a root control had the same name as an existing Classic design, the existing
+Classic artwork is retained. Old saved selections resolve to that artwork.

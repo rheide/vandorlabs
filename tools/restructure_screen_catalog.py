@@ -39,6 +39,23 @@ RETIRED_CONTROLS={
     'screen_console_inputs_console_controls_engineering_keyboard_static',
 }
 
+# Retire duplicate native root art, keeping old numeric and native input identities.
+ROOT_CONTROL_MERGES={
+    'console_controls_navigation_controls':'controls27_half_height_06_navigation_bottom',
+    'input_surfaces_command_keypad':'controls27_half_height_command_keypad',
+    'input_surfaces_engineering_faders':'controls27_half_height_engineering_faders',
+    'input_surfaces_keyboard':'controls27_half_height_03_keyboard_bottom',
+    'input_surfaces_pilot_controls':'controls27_half_height_pilot_controls',
+    **{'sliders_buttons_'+name:'controls27_half_height_'+name for name in
+       ('button_clusters_sliders','button_matrix_sliders','environment_controls','pilot_faders','six_faders')},
+}
+ROOT_CONTROL_UNIQUE={
+    'console_controls_biology_controls':'Biology Controls',
+    'console_controls_sensor_controls':'Sensor Controls',
+    'input_surfaces_science_touchpad':'Science Touchpad',
+    'sliders_buttons_twin_faders_transport':'Twin Faders Transport',
+}
+
 def restructure(catalog,blocks,language):
     result=copy.deepcopy(catalog);definitions=copy.deepcopy(blocks);names={};retired=set();active=set()
     for entry in result:
@@ -51,6 +68,16 @@ def restructure(catalog,blocks,language):
         if entry['id'] in CLASSIC_KEYBOARDS:
             entry.update(category='Controls/Classic',label=CLASSIC_KEYBOARDS[entry['id']])
             names['gui.vandorlabs.console.input.'+entry['source'].removeprefix('console_inputs/').removesuffix('_static')]=entry['label']
+            continue
+        source=entry['source'].removeprefix('console_inputs/').removesuffix('_static')
+        if source in ROOT_CONTROL_MERGES:
+            target=next(e for e in result if e['id']==ROOT_CONTROL_MERGES[source])
+            entry.update(category='Controls/Classic',label=target['label'],hidden=True,alias=target['id'],retireAnimation=True)
+            names['gui.vandorlabs.console.input.'+source]=target['label']
+            continue
+        if source in ROOT_CONTROL_UNIQUE:
+            entry.update(category='Controls/Classic',label=ROOT_CONTROL_UNIQUE[source])
+            names['gui.vandorlabs.console.input.'+source]=entry['label']
             continue
         if category=='Controls' or category.startswith('Controls/'):
             entry['category']=category.replace('Controls/Corporate/','Controls/').replace('Controls/Dense/','Controls/').replace('Controls/Half-height','Controls/Classic')
@@ -87,6 +114,19 @@ def restructure(catalog,blocks,language):
             suffix=f'({entry["menuGroup"]}/{height})' if entry.get('menuGroup') else f'({height})'
             if not entry['label'].endswith(suffix):entry['label']=re.sub(r'\s*\((?:[^()]+/)?(?:Full|Half)\)$','',entry['label'])+' '+suffix
         key=('gui.vandorlabs.console.input.' if half else 'tile.vandorlabs.')+source+('' if half else '.name');names[key]=entry['label']
+    # Frame choices are separate now; paired legacy framed artwork has no menu row.
+    bysource={e['source']:e for e in result};byid={e['id']:e for e in result}
+    for entry in result:
+        source=entry['source'];bare=source.replace('_framed_','_bare_')
+        if entry.get('category')=='Screens' and source!=bare and bare in bysource:
+            entry.update(hidden=True,alias=bysource[bare]['id'],retireAnimation=True)
+            retired.add(source.removeprefix('console_inputs/').removesuffix('_static'))
+    for entry in result:
+        if 'alias' not in entry:continue
+        target=byid[entry['alias']];seen={entry['id']}
+        while 'alias' in target:
+            assert target['id'] not in seen,'Cyclic artwork alias';seen.add(target['id']);target=byid[target['alias']]
+        entry['alias']=target['id']
     assert [e['id'] for e in result]==[e['id'] for e in catalog]
     for entry in definitions:
         if entry['id'] in retired:entry['retired']=True

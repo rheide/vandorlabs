@@ -17,15 +17,16 @@ import net.minecraft.world.GameType;
 
 /** Full-screen taxonomy, old saved identities, real picker clicks and actual animation decoding. */
 final class ScreenCatalogRuntimeChecks {
+    private static final boolean CLASSIC_ONLY=Boolean.getBoolean("vandorlabs.classicControlsChecksOnly");
     private static final BlockPos POS=new BlockPos(240,90,240);
-    private static final String[] IDS=withStyleExpansions(new String[]{"company_pinnacle_full_biology","company_paladyne_full_medical","company_seyr_full_reactor","company_seyr_full_communications","company_seyr_full_navigation","specialist_bare_sensors","analysis_bare_surface_map","cruiser_command_left","ship_freighter","bridge_bare_ship_status"},false);
-    private static final String[] HALF=withStyleExpansions(new String[]{"console_inputs/company_pinnacle_half_biology_static","console_inputs/company_paladyne_half_medical_static","console_inputs/company_seyr_half_communications_static","console_inputs/company_seyr_half_navigation_static","console_inputs/company_seyr_half_reactor_static","console_inputs/specialist_bare_sensors_static","console_inputs/analysis_bare_station_static","console_inputs/analysis_bare_targeting_static","console_inputs/bridge_bare_pilot_static","console_inputs/analysis_framed_surface_map_static","console_inputs/input_surfaces_keyboard_static","console_inputs/input_surfaces_command_keypad_static","console_inputs/sliders_buttons_six_faders_static","controls27/controls27_half_height_command_keypad","console_inputs/input_surfaces_keyboard_touchpad_static","console_inputs/console_controls_medical_keyboard_static","controls27/controls27_corporate_pinnacle_01_keyboard","controls27/controls27_dense_pinnacle_01_engineering_faders","controls27/controls27_dense_pinnacle_03_navigation_bottom","controls27/controls27_half_height_six_faders","controls27/controls27_corporate_pinnacle_05_three_alignment_faders","controls27/controls27_corporate_seyr_06_selection_wheel_slider"},true);
+    private static final String[] IDS=CLASSIC_ONLY?new String[0]:withStyleExpansions(new String[]{"company_pinnacle_full_biology","company_paladyne_full_medical","company_seyr_full_reactor","company_seyr_full_communications","company_seyr_full_navigation","specialist_bare_sensors","analysis_bare_surface_map","cruiser_command_left","ship_freighter","bridge_bare_ship_status"},false);
+    private static final String[] HALF=CLASSIC_ONLY?classicChoices():withStyleExpansions(new String[]{"console_inputs/company_pinnacle_half_biology_static","console_inputs/company_paladyne_half_medical_static","console_inputs/company_seyr_half_communications_static","console_inputs/company_seyr_half_navigation_static","console_inputs/company_seyr_half_reactor_static","console_inputs/specialist_bare_sensors_static","console_inputs/analysis_bare_station_static","console_inputs/analysis_bare_targeting_static","console_inputs/bridge_bare_pilot_static","console_inputs/analysis_framed_surface_map_static","console_inputs/input_surfaces_keyboard_static","console_inputs/input_surfaces_command_keypad_static","console_inputs/sliders_buttons_six_faders_static","controls27/controls27_half_height_command_keypad","console_inputs/input_surfaces_keyboard_touchpad_static","console_inputs/console_controls_medical_keyboard_static","controls27/controls27_corporate_pinnacle_01_keyboard","controls27/controls27_dense_pinnacle_01_engineering_faders","controls27/controls27_dense_pinnacle_03_navigation_bottom","controls27/controls27_half_height_six_faders","controls27/controls27_corporate_pinnacle_05_three_alignment_faders","controls27/controls27_corporate_seyr_06_selection_wheel_slider"},true);
     private static int ticks,phase,fixture;private static boolean done;
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(done)return true;
         mc.gameSettings.pauseOnLostFocus=false;if(++ticks%20!=0)return false;
         if(phase==0){
-            aliases(mc);StyleScreenRuntimeChecks.run(mc,output,"Cool");StyleScreenRuntimeChecks.run(mc,output,"Gold");CompanyScreenLayerRuntimeChecks.run(mc,output);
+            aliases(mc);classicAliases(mc);if(!CLASSIC_ONLY){StyleScreenRuntimeChecks.run(mc,output,"Cool");StyleScreenRuntimeChecks.run(mc,output,"Gold");CompanyScreenLayerRuntimeChecks.run(mc,output);}
             mc.player.closeScreen();mc.playerController.setGameType(GameType.CREATIVE);
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityPlayerMP p=player(mc);p.interactionManager.setGameType(GameType.CREATIVE);p.inventory.currentItem=0;p.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));p.capabilities.isFlying=true;p.sendPlayerAbilities();
@@ -38,8 +39,8 @@ final class ScreenCatalogRuntimeChecks {
             mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=player(mc);p.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,p.world,POS.getX(),POS.getY(),POS.getZ());}).get();phase++;return false;
         }
         require(mc.currentScreen instanceof GuiAnimatedScreenSelector,"screen picker did not open phase="+phase);GuiAnimatedScreenSelector gui=(GuiAnimatedScreenSelector)mc.currentScreen;
-        boolean half=fixture>=IDS.length;String path=half?HALF[fixture-IDS.length]:IDS[fixture]+"_static";String expected=path.startsWith("controls27/")?null:path.replaceFirst("^console_inputs/","").replaceFirst("_static$","");int slot=half?1:0;
-        int choice=ScreenHousingTextures.screenIndex(path);require(choice>0&&ScreenHousingTextures.visible(choice),"active display/control fixture missing "+path);
+        boolean half=fixture>=IDS.length;String path=half?HALF[fixture-IDS.length]:IDS[fixture]+"_static";String nativeId=path.startsWith("controls27/")?null:path.replaceFirst("^console_inputs/","").replaceFirst("_static$","");int slot=half?1:0;
+        int choice=ScreenHousingTextures.clamp(ScreenHousingTextures.screenIndex(path));String expected=half&&!ScreenHousingTextures.entry(choice).get("source").getAsString().startsWith("console_inputs/")?null:nativeId;require(choice>0&&ScreenHousingTextures.visible(choice),"active display/control fixture missing "+path);
         if(phase==2){
             Field tab=GuiAnimatedScreenSelector.class.getDeclaredField("textureTab");tab.setAccessible(true);
             if(tab.getInt(gui)!=(half?1:0)){
@@ -76,7 +77,30 @@ final class ScreenCatalogRuntimeChecks {
             require((half?loaded.getInputPanel():loaded.getSelectedScreen()).equals(replacement),"saved display identity did not resolve "+old);require(after.getString(half?"inputPanel":"selectedScreen").equals(old),"use-time alias rewrote original snapshot identity");
             if(half){require(loaded.getSecondaryInputPanel().equals(replacement)&&after.getString("secondaryInputPanel").equals(old),"secondary half identity changed");require(mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/console_inputs/"+replacement+"_off")!=mc.getTextureMapBlocks().getMissingSprite(),"half display OFF atlas sprite missing");}count++;
         }
-        require(count==48,"expected 42 company, four Bridge Sensors and two retired keyboard redirects: "+count);System.out.println("[vandorlabs][reprolab] screen-catalog-aliases PASS saved-identities="+count+" both heights stable numeric choices original snapshot NBT retained");
+        require(count==79,"expected company, framed, sensor and keyboard redirects: "+count);System.out.println("[vandorlabs][reprolab] screen-catalog-aliases PASS saved-identities="+count+" both heights stable numeric choices original snapshot NBT retained");
+    }
+    private static String[] classicChoices(){
+        java.util.List<String> result=new java.util.ArrayList<>();
+        for(int choice=0;choice<ScreenHousingTextures.IDS.length;choice++)if(ScreenHousingTextures.visible(choice)&&ScreenHousingTextures.menuCategory(choice).equals("Controls/Classic"))result.add(ScreenHousingTextures.entry(choice).get("source").getAsString());
+        require(result.size()==20,"twenty Classic controls");return result.toArray(new String[0]);
+    }
+    private static void classicAliases(Minecraft mc)throws Exception{
+        int count=0;
+        for(int choice=0;choice<ScreenHousingTextures.IDS.length;choice++){
+            com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);if(entry==null||!"Controls/Classic".equals(ScreenHousingTextures.category(choice))||!entry.has("alias"))continue;
+            require(!ScreenHousingTextures.visible(choice),"duplicate root remains visible");int target=ScreenHousingTextures.clamp(choice);
+            require(target!=choice&&ScreenHousingTextures.visible(target)&&ScreenHousingTextures.menuCategory(target).equals("Controls/Classic"),"root numeric alias");
+            String old=entry.get("source").getAsString().replaceFirst("^console_inputs/", "").replaceFirst("_static$","");
+            TileEntityAnimatedScreenSelector seed=new TileEntityAnimatedScreenSelector();seed.frameAppearance.artworkVersion=1;seed.setInputPanel(old);seed.setSecondaryInputPanel(old);NBTTagCompound saved=seed.writeToNBT(new NBTTagCompound());
+            TileEntityAnimatedScreenSelector loaded=new TileEntityAnimatedScreenSelector();loaded.readFromNBT(saved);require(loaded.getInputPanel().equals(old)&&loaded.getSecondaryInputPanel().equals(old),"native input identity retained");NBTTagCompound after=loaded.writeToNBT(new NBTTagCompound());require(after.getString("inputPanel").equals(old)&&after.getString("secondaryInputPanel").equals(old),"root alias rewrote saved input NBT");
+            String replacement=ScreenHousingTextures.entry(target).get("source").getAsString();java.awt.image.BufferedImage actual,expected,off;
+            try(java.io.InputStream in=mc.getResourceManager().getResource(RenderIdentifierCache.input(old,false)).getInputStream()){actual=ImageIO.read(in);}
+            try(java.io.InputStream in=mc.getResourceManager().getResource(new net.minecraft.util.ResourceLocation("vandorlabs","textures/blocks/"+replacement+".png")).getInputStream()){expected=ImageIO.read(in);}
+            try(java.io.InputStream in=mc.getResourceManager().getResource(RenderIdentifierCache.input(old,true)).getInputStream()){off=ImageIO.read(in);}
+            require(actual.getWidth()==128&&actual.getHeight()==64&&java.util.Arrays.equals(actual.getRGB(0,0,128,64,null,0,128),expected.getRGB(0,0,128,64,null,0,128)),"native root binds retained Classic pixels "+old);
+            for(int pixel:off.getRGB(0,0,128,64,null,0,128))require(pixel==0xff000000,"native root OFF remains black");count++;
+        }
+        require(count==10,"ten root duplicates");System.out.println("[vandorlabs][reprolab] classic-controls PASS ten retired native/numeric aliases retained-Classic-pixels black-OFF original-NBT both-input-slots twenty Classic choices no-root-folder");
     }
     private static String[] withStyleExpansions(String[] fixtures,boolean half){
         java.util.List<String> result=new java.util.ArrayList<>(java.util.Arrays.asList(fixtures));

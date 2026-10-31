@@ -3,7 +3,7 @@ import argparse,collections,hashlib,io,json,re,struct,zlib
 from pathlib import Path
 from zipfile import ZipFile
 from PIL import Image
-from restructure_screen_catalog import ROOT,restructure,CONTROL_PREFIXES,SEYR_CLASSIC,CLASSIC_KEYBOARDS,RETIRED_CONTROLS
+from restructure_screen_catalog import ROOT,restructure,CONTROL_PREFIXES,SEYR_CLASSIC,CLASSIC_KEYBOARDS,RETIRED_CONTROLS,ROOT_CONTROL_MERGES,ROOT_CONTROL_UNIQUE
 p=argparse.ArgumentParser(description=__doc__);p.add_argument('--jar',type=Path);args=p.parse_args()
 base=ROOT/'generated-resources/assets/vandorlabs';catalog=json.loads((base/'data/unified_textures.json').read_text());blocks=json.loads((base/'data/blocks.json').read_text());lang=(base/'lang/en_us.lang').read_text()
 assert hashlib.sha256('\n'.join(e['id'] for e in catalog[:589]).encode()).hexdigest()=='eeafff4b2f8dd4bb611bef5d5beaf5ca03da0bfcc82a3159ab3cadd9e84f8466'
@@ -15,11 +15,17 @@ for e in catalog:
     if e.get('category','').startswith('Controls/') and not e.get('hidden'):
         assert not any(x in e['category'] for x in ('Corporate','Dense','Half-height')) and not re.match(r'^\d',e['label']) and not e['label'].endswith(' Bottom')
         groups[e['category']].append(e['label'].casefold())
-assert len(groups)==7 and len(groups['Controls/Classic'])==16
-for group,labels in groups.items():assert len(set(labels))==len(labels) and len(labels)==(16 if group=='Controls/Classic' else 10),group
+assert len(groups)==7 and len(groups['Controls/Classic'])==20
+for group,labels in groups.items():assert len(set(labels))==len(labels) and len(labels)==(20 if group=='Controls/Classic' else 10),group
 for identifier,label in CLASSIC_KEYBOARDS.items():
     assert byid[identifier]['category']=='Controls/Classic' and byid[identifier]['label']==label and not byid[identifier].get('hidden')
 for identifier in RETIRED_CONTROLS:assert byid[identifier]['hidden']
+for source,target in ROOT_CONTROL_MERGES.items():
+    entry=byid['screen_console_inputs_'+source+'_static'];assert entry['hidden'] and entry['alias']==target and entry['category']=='Controls/Classic'
+    assert not byid[target].get('hidden') and entry['label']==byid[target]['label']
+for source,label in ROOT_CONTROL_UNIQUE.items():
+    entry=byid['screen_console_inputs_'+source+'_static'];assert not entry.get('hidden') and entry['category']=='Controls/Classic' and entry['label']==label
+assert not any(e.get('category')=='Controls' or e.get('category')=='Screens' and e['source'].startswith('console_inputs/') and not e.get('menuGroup') and not e.get('hidden') for e in catalog)
 for group,company in [('Gold','pinnacle'),('Cool','paladyne')]:
     for height in ('Full','Half'):
         choices=[e for e in catalog if e['id'].startswith('screen_company_') and e.get('menuGroup')==group and not e.get('hidden') and ('console_inputs/' in e['source'])==(height=='Half')]
@@ -29,14 +35,14 @@ for e in catalog:
     if e.get('retireAnimation'):
         source=e['source'].removeprefix('console_inputs/').removesuffix('_static');assert e['hidden']
         if not e['source'].startswith('console_inputs/'):assert byblock[source]['retired']
-        if source.startswith(('company_','bridge_','console_controls_')):assert 'alias' in e and not byid[e['alias']].get('hidden')
+        if source.startswith(('company_','bridge_','console_controls_')) or '_framed_' in source or source in ROOT_CONTROL_MERGES:assert 'alias' in e and not byid[e['alias']].get('hidden')
         else:assert 'alias' not in e
     if e.get('category')=='Screens' and not e.get('hidden') and e not in inputs:
         height='Half' if e['source'].startswith('console_inputs/') else 'Full';assert e['label'].endswith('/'+height+')') or e['label'].endswith('('+height+')'),e['id']
     if e.get('category')=='Screens' and e['source'].startswith(('ship_','cruiser_')):assert e['menuGroup']=='Ship'
 for prefix in ('screen_','screen_console_inputs_'):
     for variant in ('bare','framed'):
-        assert byid[f'{prefix}bridge_{variant}_sensors_static']['alias']==f'{prefix}specialist_{variant}_sensors_static'
+        assert byid[f'{prefix}bridge_{variant}_sensors_static']['alias']==f'{prefix}specialist_bare_sensors_static'
         height='Half' if 'console_inputs' in prefix else 'Full';name='Radar';assert byid[f'{prefix}specialist_{variant}_sensors_static']['label']==f'{name} (Classic/{height})'
 for tier in ('full','half'):
     for subject in SEYR_CLASSIC:
@@ -71,7 +77,11 @@ if args.jar:
                     assert packaged.size==original.size and packaged.tobytes()==original.tobytes(),f'Seyr {tier} {subject} artwork changed'
                 metadata='textures/blocks/'+root+'_animated.png.mcmeta';assert json.loads(jar.read(prefix+metadata))==json.loads((ROOT/'texture-packs/additional/assets/vandorlabs'/metadata).read_text())
         for e in catalog:
-            if e.get('retireAnimation'):
+            if e.get('retireAnimation') and e['source'].removeprefix('console_inputs/').removesuffix('_static') in ROOT_CONTROL_MERGES:
+                root='textures/blocks/'+e['source'].removesuffix('_static');target='textures/blocks/'+byid[e['alias']]['source']+'.png'
+                assert prefix+root+'_static.png' not in names and aliases[root+'_static.png']==aliases.get(target,target)
+                off=Image.open(io.BytesIO(jar.read(prefix+aliases[root+'_off.png']))).convert('RGBA');assert off.size==(128,64) and off.getextrema()==((0,0),(0,0),(0,0),(255,255))
+            elif e.get('retireAnimation'):
                 root='textures/blocks/'+e['source'].removesuffix('_static')
                 for suffix in ('_static.png','_animated.png','_animated.anim','_animated.png.mcmeta')+(('_off.png',) if e['source'].startswith('console_inputs/') else ()):
                     assert prefix+root+suffix not in names and root+suffix not in aliases,(e['id'],suffix)

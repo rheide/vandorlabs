@@ -58,6 +58,15 @@ Half-height folder is **Controls/Classic**. Numeric prefixes are removed from
 control names; names remain unique within each folder. Controls have no
 Full/Half suffix. Saved numeric artwork indices retain their positions.
 
+Root Controls are merged into **Controls/Classic**. Existing Classic artwork wins
+for duplicate names; Biology Controls, Sensor Controls, Science Touchpad and Twin
+Faders Transport join the folder as distinct controls. Classic now contains 20
+choices. Saved root selections remain supported using the retained artwork.
+
+The JAR omits retired and unlisted paired framed screen artwork. Legacy selections
+resolve to listed designs; animation frames and Off-state images belonging to
+listed textures remain available.
+
 The Materials picker includes Satin Silver, Cool Steel and Pale Titanium,
 using their native 128px artwork and matching shader material finishes.
 
