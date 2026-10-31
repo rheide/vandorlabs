@@ -5357,5 +5357,362 @@
     "source": "console_inputs/cool27_half_specialist_weapons_static",
     "frames": 6,
     "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_analysis_gas_giant",
+    "label": "Gas Giant (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_analysis_gas_giant_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_analysis_gas_giant",
+    "label": "Gas Giant (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_analysis_gas_giant_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_analysis_ice_planet",
+    "label": "Ice Planet (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_analysis_ice_planet_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_analysis_ice_planet",
+    "label": "Ice Planet (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_analysis_ice_planet_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_analysis_station",
+    "label": "Station (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_analysis_station_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_analysis_station",
+    "label": "Station (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_analysis_station_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_analysis_surface_map",
+    "label": "Surface Map (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_analysis_surface_map_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_analysis_surface_map",
+    "label": "Surface Map (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_analysis_surface_map_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_analysis_targeting",
+    "label": "Targeting (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_analysis_targeting_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_analysis_targeting",
+    "label": "Targeting (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_analysis_targeting_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_analysis_terrestrial",
+    "label": "Terrestrial (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_analysis_terrestrial_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_analysis_terrestrial",
+    "label": "Terrestrial (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_analysis_terrestrial_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_biology",
+    "label": "Biology Bridge (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_biology_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_biology",
+    "label": "Biology Bridge (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_biology_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_communications",
+    "label": "Communications Bridge (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_communications_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_communications",
+    "label": "Communications Bridge (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_communications_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_medical",
+    "label": "Medical Bridge (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_medical_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_medical",
+    "label": "Medical Bridge (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_medical_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_navigation",
+    "label": "Navigation Bridge (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_navigation_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_navigation",
+    "label": "Navigation Bridge (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_navigation_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_radar",
+    "label": "Radar Bridge (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_radar_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_radar",
+    "label": "Radar Bridge (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_radar_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_reactor",
+    "label": "Reactor Bridge (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_reactor_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_reactor",
+    "label": "Reactor Bridge (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_reactor_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_engineering",
+    "label": "Engineering (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_engineering_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_engineering",
+    "label": "Engineering (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_engineering_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_pilot",
+    "label": "Pilot (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_pilot_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_pilot",
+    "label": "Pilot (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_pilot_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_bridge_ship_status",
+    "label": "Ship Status (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_bridge_ship_status_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_bridge_ship_status",
+    "label": "Ship Status (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_bridge_ship_status_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_extra_engineering_charts",
+    "label": "Engineering Charts (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_extra_engineering_charts_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_extra_engineering_charts",
+    "label": "Engineering Charts (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_extra_engineering_charts_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_extra_personal_terminal",
+    "label": "Personal Terminal (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_extra_personal_terminal_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_extra_personal_terminal",
+    "label": "Personal Terminal (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_extra_personal_terminal_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_extra_viewscreen",
+    "label": "Viewscreen (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_extra_viewscreen_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_extra_viewscreen",
+    "label": "Viewscreen (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_extra_viewscreen_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_specialist_science",
+    "label": "Science (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_specialist_science_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_specialist_science",
+    "label": "Science (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_specialist_science_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_specialist_starmap",
+    "label": "Starmap (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_specialist_starmap_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_specialist_starmap",
+    "label": "Starmap (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_specialist_starmap_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_gold27_full_specialist_weapons",
+    "label": "Weapons (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "gold27_full_specialist_weapons_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_gold27_half_specialist_weapons",
+    "label": "Weapons (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/gold27_half_specialist_weapons_static",
+    "frames": 6,
+    "rectangular": true
   }
 ]

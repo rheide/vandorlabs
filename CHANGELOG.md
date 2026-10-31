@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Expand Gold with 15 animated subjects in Full and Half height and six Bridge alternatives per height, preserving the original Gold designs, saved choices and native six-frame artwork. Include both styles’ alternatives in the display comparison matrix.
+
 - Give Programmable Trigger On/Off and analog bands independent Displays artwork, Off/Static/Animated modes and playback speeds, with flat state tabs. Preserve legacy Static defaults, saved settings, Duplifier copying and configured items.
 - Offer Displays in the shared Glass material picker, including Programmable Glass and Porthole Wall glazing.
 

@@ -1,0 +1,682 @@
+{
+  "entries": [
+    {
+      "id": "screen_gold27_full_analysis_gas_giant",
+      "source": "gold27_full_analysis_gas_giant_static",
+      "label": "Gas Giant (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "6d669c51d0677ed172d8b36c7aa0625edd41c0503d82e7efbf4e075ff832543c",
+        "6866ab6b592cbbdc2178bcac63639aa16bedf5a4f7110fe8d2e1aad25f8448e7",
+        "6b83e04284195548c6efaf5799440533e407a48ad56ee26dc0501e434822ebd7",
+        "99c89f63d77f617b1df7fe63955691b6ca4e8653d9442cc94b8469ec3d606fc0",
+        "01308f6a4a203eaec744c034d525a38b2cb44e28f738f1cd5f86182a92b031e9",
+        "3e4e141d475a9cbd899662f4836befd830a9b21f5988dfaf6e41f21cb51b4063"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_analysis_gas_giant",
+      "source": "console_inputs/gold27_half_analysis_gas_giant_static",
+      "label": "Gas Giant (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "89078063eae9e13d960ad1ad30d91acd2030e9505e5a142a57413f4cc9e114a5",
+        "32db9e5867d81efc5a6dc19a63bbd5ae8a7b4530c8facef514bf23383bbef57e",
+        "e3eb078331e9041ef9154b77f1908b83d91e6f47e9e5009b507fed951c76539c",
+        "066730eacd1760ac1a138b6db643b627d94750b710e841937f34cfdad7dab1a1",
+        "f1223c99b951dac7b304862f703d2b19c833488e1777c52bf8c1533d51e89a55",
+        "ab6920d701b20086e3fe30f90a58b3c0752258bdcd2cf470076e18942c858c36"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_analysis_ice_planet",
+      "source": "gold27_full_analysis_ice_planet_static",
+      "label": "Ice Planet (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "d98d0fd4c20dbdaf2170718b8060dc49113bab3f389853782adcb9726303713e",
+        "354c8409d65f9390afee0fb83db175fd11bc4726666aa07789c80595bffc82f9",
+        "c474f59d0a1620a0cbc6a55b571bad39449586405a12103f4e2f8e42ddd8eb8b",
+        "d71fb4a8a90e638f32f4221263eb6f68217c83abfa00e51d286c901631f21623",
+        "8eff6ebaccba30b3c1851fe2641a881a9f10fa7186ef787fa9ea20550cd26eb0",
+        "38fa0b61e873e6d50f39e0269ad2af68f7d9f98d65a3403e6629656d7d382c24"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_analysis_ice_planet",
+      "source": "console_inputs/gold27_half_analysis_ice_planet_static",
+      "label": "Ice Planet (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "21c13b5f5d6726295178ac749d8ef4c01b8b175b425a9c84dc53277782a5144c",
+        "86a75fdabb4e599b6cdd61e94d95529649d55776dd0780b25e3b7675e1783244",
+        "d17a1dcf6cbc15a90023a81d4a4b7f0c0374f3d59b203148c1990c28fbc168ca",
+        "fe53f6138133245fcf483a21996a24880c0228c5b8397e2d6c25c45df6b726e0",
+        "da0048b1c01b019b0462f2647411de0f5100af0c110e9e91f6fa3504ce31542c",
+        "abb1ac842d9709c6ba7363ea85375c03ab441a018be4c5e5961206a2032a3617"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_analysis_station",
+      "source": "gold27_full_analysis_station_static",
+      "label": "Station (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "660dd30bc0d75d0b58371e43179254fcbd39db1f30fc616ee07ab264a3aab635",
+        "8b970ccf4527cdfdba3fc402b279aa679fc2e6d8e5fc88a7e8106ef448f20427",
+        "6d08e7b2bedf9f12ceb457e615cdecbed30a18c2d15af1c17d7c10519e8817a5",
+        "93721fddd54e2a2f1927665c5ffba576c2c5fd759beb714d0a654b6f1b6f0c53",
+        "cf104b95c8d70a86d7826f4e3f41f3a9f3b82285dd6ad6b1ab96657f6318a67d",
+        "d457bba41dc056e5dc4110ab359d1660331c9f2aa51ed9ce2fe82b6261efc8a3"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_analysis_station",
+      "source": "console_inputs/gold27_half_analysis_station_static",
+      "label": "Station (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "fcb85e3e3fefe4b9a9e66e5a6a82e77b7fc840fc959e54b47a151382baa89b4a",
+        "4f5f031e2f9fcb3dc85b1df40c3e73a14bb7e03e8eb9d1cc122bc4c68112571d",
+        "7d0acdbbe188ed574e570807fe9c42df7f0d66a858df8ba7ff0d20becb56ba96",
+        "fbb340a2070418b6ad1e84c3a0f820c1dbaed6d09f291ad84765a3d11e884c3c",
+        "c698a719c626a461b5b84240f6e7140ed50c38d9c7ad9e7c7e5e34213ba8cd0c",
+        "b87971f95915105b2901c6cfd7ae577ed56ace0944dd95e4be269bf22d30740f"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_analysis_surface_map",
+      "source": "gold27_full_analysis_surface_map_static",
+      "label": "Surface Map (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "17dce4c0bbc0d7cacd77a0e002ca1312f25e4edbc3a7e92dd8ddd9a7b8aaef34",
+        "16aa5032e4f3301764abf02ed29f9cc4a0efa1aaf78bc075d90be52170de21d3",
+        "03ed68a93c2351745273ddd0b543eea0686192f970b04b2280b150210000cf6f",
+        "a101fbd8443893032bd26c1c7e9f79d0a8959df8b362d6b261154607a3ddb998",
+        "edeaf8d8692894b764ef095aab2dc092c93d83cfb34c0de1ac4bc22486e2083b",
+        "8c26f91473a8745089343ed311bc8d1f6eaac8e2471af46b40e8dbb5425a4ab0"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_analysis_surface_map",
+      "source": "console_inputs/gold27_half_analysis_surface_map_static",
+      "label": "Surface Map (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "fe535ac458f93df466002eefde3138b97fd8c7dc72378b3219d3c97ed7ae93c0",
+        "5d4341ef793f35401e7232c8cbc490da5a6da9b132a3f1927e1b02dc0b05f70d",
+        "c3e73d6685b6a2bf1a1029415fd1f3b0519180e3370b7865dd6e2f6053747237",
+        "89115e26ee547f691bccdee025635effe972ab3f0667bc253bdb927792a8c196",
+        "9d917cea47f88b3115e7c9f960299cb1b0d334574590c23d5a672abdb6821f30",
+        "f2c2998e9f1fbc4bffcdd17870741cef7db1aa97ef3d174ad6ef2f131aec092d"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_analysis_targeting",
+      "source": "gold27_full_analysis_targeting_static",
+      "label": "Targeting (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "b56441b416c4ffae398393270fb1d6d4e0748f772c03bff336a11d08b8949390",
+        "955fd6376462063d48db65e472d9a974634f1fa4f9d5270b4d09c6d87d97ada2",
+        "ef6a40977a6efbb806708c454a47cb21210df73fcaf7d732790778a8b39fbbd5",
+        "503a0dc1e0a77c4892c4b21f314e83eb8100f26ecacb9aaa763fa1ba50ff8c43",
+        "0a8c38af37f298968ce5ea79f4be39f2048279edf847ba3d4ded6e0ea7eaf4a3",
+        "27d2bb26cf727262ad6b4f8ebc77d6f7a6ac71ae51f056960ee3eb823023419b"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_analysis_targeting",
+      "source": "console_inputs/gold27_half_analysis_targeting_static",
+      "label": "Targeting (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "15f58c3ff749bcb453f13ed3a87669dc16e77b2b2f330da4867f0026a5113f0c",
+        "a3cf221737e04f81aa31cbd073f5c9192fe6d776edf7ccfcff3059fc3f19813e",
+        "3c86731609f8ea050eda3568f80c7b08d34a8144abd91002d2fd489236133f53",
+        "4e2df7cb6edafbc8c091b3f3c178ce3c73b1ab6e896d39c9b3a8d56d8f2df41c",
+        "823ceb8a6aa9faba6fb05b2c5a0acc96a336921506231b418af218a5ff4b5edd",
+        "b4eb3c831c1876a6d56341f8edc0d1eba07651456673ab05f1fdda6d1d55a624"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_analysis_terrestrial",
+      "source": "gold27_full_analysis_terrestrial_static",
+      "label": "Terrestrial (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "797e78c93c03f4c52ce89ce1b89a229a39bfc2446795325155776bfeeb5ba86a",
+        "bd3b6b1c7d2a6cbd9b4b09aa29ed7fb131aa2db1be033c5f849bbe0fb30f555b",
+        "dc85f89b407ef9031cd3c8e34f1fe088150d9145e433b76d5ae951ba93acddb6",
+        "cfead02d48648d151ae8af0aef843b659c14b2012c0ff95568fc166f98a48b87",
+        "971387744d7e08c49e123997635b3a88dc3104a3f495ae4e857778312d60b22a",
+        "efd6e00f607544d69afc0b72ffeb636fb4be12fe0a14ea05937ca53b7d0cc789"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_analysis_terrestrial",
+      "source": "console_inputs/gold27_half_analysis_terrestrial_static",
+      "label": "Terrestrial (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "9f60baee5aeb8f05a45b049eaaee4f73c32ac4ab0858933dabbe20877842fbfb",
+        "396c00493b7372f169b5c284b69716262a1f2f05fe939506fb3a9c878d31e28c",
+        "6d56881f60687a257725c7d4eba9a7a4c2b1a8c05d28b6889231c2dd722ecf42",
+        "04b7a5adb0041ab24a5a119e66b3759b8382a686c42ec2cc16cbedd8c80a1131",
+        "6712bac50135a4f1ddaaebdb782a836f1015ecbced78eabd518d33666e91ebb5",
+        "cfc7f26cf98ff8ae63c909698a1d64d3eb793f70e4fdbe1d106f0628da51486c"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_biology",
+      "source": "gold27_full_bridge_biology_static",
+      "label": "Biology Bridge (Gold/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "92d15e831d7b8cc8b396cad3337d9879214787faa36ead334f9a322ae2cffca4",
+        "eedf2d588a35ec8972355db1e6d25707c46c75c64e464acde813d5280bd6a034",
+        "d54a687163b032a09c0136e687876cd539fd47a6f4c40cafd6883de05acfd342",
+        "a97907f5918adb6eb0dfa564b8912ccbc2483a1b4a251dd34778aeb0bef07606",
+        "d243702f651a56c4ed83f98a6db26776b149e34a808b02dc037db322d3ff6e9c",
+        "7c81c9fae90868a89b84cf4c02f090633e5655b773b15657def71d14f7d4a253"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_biology",
+      "source": "console_inputs/gold27_half_bridge_biology_static",
+      "label": "Biology Bridge (Gold/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "3b78aa179ba19719c6b677eef238d5b5d72aed6d36cd8310b0992514f09efaad",
+        "e4c6c2541702c5502095dedc93d73ef3aed269e25e2fd81b8de2f5210672dd27",
+        "bd387a1322b1b77a9a79983e535c5f0e2cb71e91c7bd9d300a6bffce09894fe7",
+        "f013ab858de3a0703b110d5e46949bc58502637ff3843ef43064a6876f23f49c",
+        "cbee5b2e7c8213828e012ab111814b8b083f0590230cbbee07ceddfa0aa1e036",
+        "359ad3635eb9cb50df6926fce16d1c434a8eb7229d62dd093ad92d27aedf877f"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_communications",
+      "source": "gold27_full_bridge_communications_static",
+      "label": "Communications Bridge (Gold/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "b205517caeeb107e251729b317eddac48483b024be93f3ee2ca4170de5512454",
+        "28bc65e904403c29059de7e6de89301a3d367cdd9d9fefe025e8da38242f9a3d",
+        "601e0889983587d03954585a30e48d433c7776dce07ccb4dbc46c2f8ebf44a37",
+        "88305bae43b94135b3424d70a776964c779200d9caa904836d524443b95bc762",
+        "f5abce1fe3bd0606574174a08e2cc66bb264a2768caeaa2aa2be88f90584ad2d",
+        "f7e180034b8ccbdd6c1f9d0e27d7dbb0c09c93f4b6e637d155f3bf120fcfcc6c"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_communications",
+      "source": "console_inputs/gold27_half_bridge_communications_static",
+      "label": "Communications Bridge (Gold/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "ce6891e686ae3c4d88167d7022c5c8f1589ac19f2c2a2331b4d011aca1f4e8cb",
+        "432569e073ea0e8852bcee97eb88e23712a112e4f568c0bc72f213e67d65c7eb",
+        "d7b32a7519322333b843fd401e4a690bd60a7ba8fd57c3dff9ff9ec8e8d902cb",
+        "124fe32fabbadbe81d1fc942f08626c4dc3e38a5ed28c034e6d0648b86cb33ef",
+        "f055a9be5ba3bec7d97f499de376ca79a2feda1bf8e2e9b6f9eb452a62adaf4c",
+        "69af1844d1b831a2b1180cea238279e3c5f0b9b9ea9b7c5f66194f184b67ef98"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_medical",
+      "source": "gold27_full_bridge_medical_static",
+      "label": "Medical Bridge (Gold/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "f5a58699dc7d8a0a7cc9e6ee9b58474cd813f09183452b6e62fe939ba626dd8a",
+        "134dac4a0edb89e8d594ccc851833a0c0f03cb3fd1e0b3c246834a59996412cd",
+        "dd95f7a5122afe9b59c1d6d6bc0d22759b1ef1fa5f2715202cf5ee2301c8b3c6",
+        "8ed622cc6cbd3a891ff57a06ab5fe749b3cfc2bfe04aa1bd12718254dfa967b8",
+        "d62551257fdb207b8ddc5f578e0edc1e2764dcb1bf8e409bacf345c9d0530d2c",
+        "caefb0064bf2f74f004cbd7ece65ae461a042dced48996416f3aae5edae999d7"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_medical",
+      "source": "console_inputs/gold27_half_bridge_medical_static",
+      "label": "Medical Bridge (Gold/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "e1febe5afe3706294c527b5fd0cf07ab1ca844d9c1b8556ca0302d4c128f7e52",
+        "ba60140478b31a63c456d447df42a93b50c2c28dd294051d2948aa05c1800c62",
+        "2a758580be7b2873f56c7046c04105b8d6c02db7eef21b879cbc7b7dd41789a5",
+        "76f8f57a041ba78f7206b5bab550e3400f6538194e6c8f1ee880317bd9942283",
+        "91842d9383ff83739b9bf284e274055a52c3abffc015fc2592acec8ce2e89046",
+        "714133b7998e3d67071cf14ce676805266af12cef893eef2dee622344b8f02dc"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_navigation",
+      "source": "gold27_full_bridge_navigation_static",
+      "label": "Navigation Bridge (Gold/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "7f7e6eac4a4de79c73681e008ca150938b4ee812de2ab1c991f15623bd6b42d4",
+        "36a3145fbdcc81e8a1836bfc3794a9d628d12efdd07d22e1ca6f36b6eafada9e",
+        "53f56db6c0df61bb2af6830d77bdc3cc498ce07d6c04fb513e52b246bcf9cc29",
+        "ff3ad86909d05260dad8f6f24bc3fb49cd639cfb250179e5a4d959cddf536f24",
+        "1e5304fd4aa0fbffe036184156613e2b718dd4a826e0fdcb6ee938d1d0a9c1f3",
+        "079751680d2b2cdd6b7d3ec02914aad82d935fb1702be5fd67f37e7f65053697"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_navigation",
+      "source": "console_inputs/gold27_half_bridge_navigation_static",
+      "label": "Navigation Bridge (Gold/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "81b7fb64ebd67acc94d83660338d4e039f2d29bd6d6add94491e547e014bbeee",
+        "839cbaebb24519bc611b9482ff82acde2bf5dfd52babcb1edc80773dd35d0741",
+        "d318951f532248194dd2a50b0980049c14d43499582b6d4d9d42a10f8b334c60",
+        "4c8d0b815673d5fed4c08679d7476b4df9f9c5707974e47c4d3072d37f034a69",
+        "9e60b94e6c99a825952623b44b1444b5fade46c77f8e4e97086fd8d4af256ba9",
+        "7c14fd4afe8ccdd695e92bc9b1a6b00bedbd7f8bb38b17b8ee4bf495cc82ed3c"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_radar",
+      "source": "gold27_full_bridge_radar_static",
+      "label": "Radar Bridge (Gold/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "96d9ea0b7fc7205d9112e4a7a94a16ef9a6d11c07fc9cff489a7fb51cf5c2f6f",
+        "d819a3e12551fcfaebede749e6645cdf56ceac687b481dc5ac13550db6510e63",
+        "eb1ef26386a212339e76afedf9ace3ea8b213cf09d1624091434004ce8bb983e",
+        "f292cea5039a45880b500723ce793dc1b1917fcd60f6f763e2a201469ac986d5",
+        "bb99fb2743702348ed884253cdc6d80a1d349a05e4f04a169a0b63085b924437",
+        "da9affcc812603fc4ce6a540cac0be04f09bb9e1f927862ecf10d786f1e6ad00"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_radar",
+      "source": "console_inputs/gold27_half_bridge_radar_static",
+      "label": "Radar Bridge (Gold/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "7305d75b214de4dd4ce482395b9b6d3759706277a24428256aa8c3f693d3b065",
+        "98a36685c6159c0d9a74032e7770d91dcbcbdb77606a1972ed846f266be91eb6",
+        "08bda33bc1572ed43d8960492b9ac60b434a7491c4e0838079c3ecbfb9e68b00",
+        "ec894f3a3e12a05bc4544ca91e1695173f0967ec5cf1a26439e3601568c8f0b0",
+        "355c40b60f98a98d32993d762444c0789263e0d4445fc6c3f0e5fbfbe1349ef2",
+        "7a086ea8b6465c898f30b05aa783afa35a8e1f8f659f584cba95046f5386b288"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_reactor",
+      "source": "gold27_full_bridge_reactor_static",
+      "label": "Reactor Bridge (Gold/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "bf278f54e2c0d0ac4fd36633e95acdc31e98b9e232eb42326631abeb4217542b",
+        "8485659bad67b2e2b3fe6abeb9deb9b733ef58e95d5e34fb22281da4e8bf14cf",
+        "72a40952e74eb2340433242406073cba2f78ccd7c03136de3338979bb14b8d6a",
+        "a54025355a60f43bc64b39654afca9b6d130daf7f6df86b5b8474a635c5694f5",
+        "afc9957c5b5fd583dd934451672851b9e1977c9dc99faf510a07216ff6fa1ce9",
+        "d34b1d3c4ad546d99a674397201e9bf0104d1de56fad860cafc08a390aa3fca2"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_reactor",
+      "source": "console_inputs/gold27_half_bridge_reactor_static",
+      "label": "Reactor Bridge (Gold/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "aa278214dc8606f45bee951f1bbdfa4ddc11b42969d26f05780a5e6d07936c61",
+        "3bc744f5303d0f78b14494dabbcfe31ac5087183fdd9a53563bd18e64aac9f14",
+        "d6139471f05d1e31db0efc484b47b442ad38bbd45e0f1e65405d1b6fb94bcac1",
+        "243887f5c6a1842debf23259b34d6829551d0f57217f3c23b3ed0fe93ce363df",
+        "e6cd285dbbe03a748ff1759954ca8e7ae3b83daf17219d960b8014f9be1f27fa",
+        "be09595cd916c7d77ad8fdc8fdc068ee066da1862235396d72464dd4a66c752e"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_engineering",
+      "source": "gold27_full_bridge_engineering_static",
+      "label": "Engineering (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "da364d185f3eeb520c7502ac94012634a8e72f0c3f7a689da3926bddbcc15ac7",
+        "e746659c5c7f7e7331a6b1e7493ef989a1c74e0083e3b5873a693a59b86479be",
+        "b5a6d06420fd7d28a7b2fe771e0218a454dff3ec10be6a71391f1796eede9efb",
+        "75540110ab2457cda0a4bd1145a406b3add1c357ee41751a833cb2e9dcb00514",
+        "5f1f307229720ed76f49aa99ebd6260dc2e20e233f457d9a5f11e5cfbbe66ac2",
+        "2c5c8262a4cdefd0bc0947b8bd812d0898064791c1eefca0a8926a22a55a5310"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_engineering",
+      "source": "console_inputs/gold27_half_bridge_engineering_static",
+      "label": "Engineering (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "e43ccf6d5b1f8043da92616fa649b8b7e96ca3eb1c15b73db1d1635f8ac80377",
+        "73ce06905bf1080158b639ecec4061120579781e4cb25c0f9570f5f3b38aaa27",
+        "18da8ad901315a9469ad09c300045b2b83c536bbbd770412ee29997ec403c783",
+        "64a51c8617567d96ef1be5e0731360e636a8a783e67f201f20a0e504260a96de",
+        "9bbf7e2ff233627b364570055cb23acbdb842c8d7e2bdcab084169c602781dba",
+        "0b9584b02b8484fdcf6e43e2de1ecab7f2d3325d38d69345ef5005c9cf3d61a1"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_pilot",
+      "source": "gold27_full_bridge_pilot_static",
+      "label": "Pilot (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "3f4617c1e6c455db3a4e381141ec479fdb4b638ef4ac81e9948e064f3f47ccd8",
+        "dcb2ec56ccf1e2a6804d6e5fc3c0f3498c89e469efaac872f64d5120e87cb4c7",
+        "9a0f490a99ba24838cd616738d5ec0ecd748c54084d82774fdc688c8501a5779",
+        "795396975c1135986ae754eb5098f8916b40b9ca0da4a01ee0ede0ce392cbdab",
+        "af506df9e1d11d4dae3a451ebdb65f62f08770743c6da5ee76f16558fc517620",
+        "5b1ad0c64144f330c29bad638f1c60f65f9ef7b39ad10b1110c1ab3f6b8b3d0a"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_pilot",
+      "source": "console_inputs/gold27_half_bridge_pilot_static",
+      "label": "Pilot (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "dd3fae77e7bf406ea13925049b27cc20e0e39ef9adeb5d5e76fc8879ce2c0e22",
+        "95579b05182e655720509bbf530067305002dfb5780d13b58a0a9d0d9834c707",
+        "5f39448c8f19b3b7addbde5ebe28f340fdc08f80b349afb71c0d6b19d1009593",
+        "b5162a0a638d6785c61f135a0ff29ede004a2dde1215949008b36c87b19e9e30",
+        "50faef567ef1d8baae9dcb99db08d9006f49a1dafdc3449b6cb5d67713ce12f0",
+        "0f5d65122726855c7aa3b3677a4194f942ff4e5a68abd5469788a2c4e07d2670"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_bridge_ship_status",
+      "source": "gold27_full_bridge_ship_status_static",
+      "label": "Ship Status (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "a16afb9ee2c418e3745e03fa1bac3ff5e1687da8dd88a86e33d190cb1a121f56",
+        "bb5a74d9f72cefe07f045fc39dc0aab1078b1e607f86d3574d28dc7887eb6e1a",
+        "56d03d6da4ffad8afb32e95e45c9c43aea6382dd5ac078a25eb5157515df34af",
+        "ec5d926a44b2984ee133cc35a40e1307dd311ac7a0cc1468d8437beefacad20e",
+        "93c27581a82a21fbf2bda2cc27952edcecb7f6ea986423fc0b7d5be7ba916721",
+        "2021f520b01bcf4f8490f3d443e4cf0c1a8437f2caeb6bc682f9fc47760c682d"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_bridge_ship_status",
+      "source": "console_inputs/gold27_half_bridge_ship_status_static",
+      "label": "Ship Status (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "c8eacdee41822a60395542ef89f633ed97d17c355e8da9d300e2b6f573c80029",
+        "cf3c357acc095dc7e94cd36a1ee4b6e357e719d81f4b07d5d49fd5b1ad2606d1",
+        "17b8435f1ff679c7ab1379b7d2820da6129d97d829ce37baaa393193515137cb",
+        "6756fd68e2b4edf9b966d6e8103733000d5e9b80c308ed03e25a967ad0f817ae",
+        "3b10f373cb646d2bdce7dad04091340838fc3b5abefb461710d9326a4c81445b",
+        "c6483699b4d48294c965d4536be2f4a9381bc72a21e794ccb28e8d057bc9a9a1"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_extra_engineering_charts",
+      "source": "gold27_full_extra_engineering_charts_static",
+      "label": "Engineering Charts (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "320ff12788a8c1de376312b3e92109a476b692d09a620ce45c292f35df857342",
+        "83182d4ab8fe2f31ee9462163edd7f357f98da8dc6b394f0e198e26f7c9adbf7",
+        "839ed07b1019b8def9c43ee817c0fe5cda505c1ea4a22391152fe8504c3a438b",
+        "e55a49255cbd9c89aa7d1154562a4a453717c23c35db31353e7be2802059db9d",
+        "60890513ff34d9bb0b1fb94b975ddd0820e913163297bbc1a3ebc1664e717fc1",
+        "75b400a712a274d511d23b470d32ea757b4f4739c6ba05ce96d11323f6c668cc"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_extra_engineering_charts",
+      "source": "console_inputs/gold27_half_extra_engineering_charts_static",
+      "label": "Engineering Charts (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "aa78561453e4645c009d7adce99d95b7f1746bfffffdc167afaa307396626b57",
+        "c4aff5112c21be9b0c8255c279d9a1e0b9a0f5c29a257f22dc22cf1c1487a2e6",
+        "e6b95e40b8415ec330f7a853e599e050e4b8bdab15c4f7130fac385cd1b9386d",
+        "77682d27b52d3711263c23273a08d58cbfc6153fb6acb43c0a8445985b29a8fb",
+        "de1cd72863ee243ebac5843ecf53bc2bd6353c2bc2ce05c61a43a9f823357c68",
+        "f9239a10f04af4777b22ec936c0aabe3daa6fcaedf04f97641371de28aecfc26"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_extra_personal_terminal",
+      "source": "gold27_full_extra_personal_terminal_static",
+      "label": "Personal Terminal (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "b23c66496115f18deb464ceac56db9116ce747d0171393f7369e6b32cfb629d7",
+        "60e280bf0f5895fa756769b5441222eae0553488024b754155287fd14eb526ca",
+        "c18a81cce8c1397238edc2a27c4b8ff54457c33a8466bf72aa61005e6a4fa08f",
+        "e41b1daebbd05ebf910e8de5650687c064531ab2709e625b2821425918a641bc",
+        "5edb47b87e2442481f6b61686164c9f16e60665dd5814802fb83003b7f1b37ce",
+        "45ce9de5c96af2b62ed2e6ad2156b0fb051f9275d5e6d87864d2631f739607f1"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_extra_personal_terminal",
+      "source": "console_inputs/gold27_half_extra_personal_terminal_static",
+      "label": "Personal Terminal (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "d6f2d5a18b3d2b5e38db68f1bc95fd7e9066ad713fe9d58f8e8e3c17fc715e51",
+        "f9a76ae592fe6a92d4553a26211c1bf26f1830c8c2776964dd210ee3df92c054",
+        "0d81cba19cbbbb9ef6c2629277843327c0a24062d76c41981bbb23d9dda4962a",
+        "d6f5c82e46b373550dbc6f0b0c4e217014b81d8582da67ecc265f881b4d6f587",
+        "0b430f104582875a297b67f877d9a706fa081a76c8a720457a5ec440fe88244c",
+        "77f8c30085e5a51ad13efcc0010fdde8ccf182259a9ea16e3496bd859461c9ee"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_extra_viewscreen",
+      "source": "gold27_full_extra_viewscreen_static",
+      "label": "Viewscreen (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "516133ba9d3370779ef61e478c0f0debc30fef6b6cdf41bd46b1570b4003bbee",
+        "95358646e923af88c1672bf6390b5f99627f71baf6e98cfdf6b0f467e190b53a",
+        "13f0cb8721cefff087184bfe8e8bd41686a625b215919e6cba774c6bd956e9e1",
+        "615e49d7a1dd26593a8c2be51ff81d05229f0ff5e10156f5a86d46e9a340bfae",
+        "235d17a95cd0b050218bd011fd69914e97ca14abb458207faf4f8896f3a4f6ca",
+        "6af372dd8fc223c5d87358dd9a7cb2989fc1d6ad2231cdee5c03b109887523a0"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_extra_viewscreen",
+      "source": "console_inputs/gold27_half_extra_viewscreen_static",
+      "label": "Viewscreen (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "6a009e6a51752a43af4e4f6ea69844fbdb34aeb8ff25f5d5fbb038e337f33e7e",
+        "746c677952ca556aff974d22df32cb609efb7ed4464ccb90b1fa2e771d880681",
+        "e6492efc14bfb1abf9a2835dfa2f935010631f6bc8d693385ebc181be4c4ee1f",
+        "fb9eb13247df120925bc3fe7023af43c27755c046ebfb2be8ef804cd12dde2f5",
+        "ea77de327744a31a97277417954bd8277c52514d4522a2acbde247f89d781a9a",
+        "d376a874008b9c7c2cc36f85805a67746355ea3f6370716d756860a5f7547b91"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_specialist_science",
+      "source": "gold27_full_specialist_science_static",
+      "label": "Science (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "6e14b13f645565676d7b8cc8dc6c7bca8523a2bbd79e5ddee3c71661a51d3add",
+        "037115e4321b75a46458759751ec92af46ad5e0e13b9305ac35cbdbe3f3f8c60",
+        "f808cabbdca30bb65e55e50f3c804c2d5f751ffdc2b6f33ecdb966a3e2135a01",
+        "1bd4b0e7169c836db5ab983e1c2755a073a52c7a7a75a920666696ea81f7b5b0",
+        "500ab28299c0a455e9b25eecf3a89ae5b6cddc62166c55428cd64a0e71fb2dc4",
+        "a7cf4a92dd4e667d67e71d7f2ed984645ead0dda830a81e90e38072498293ef4"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_specialist_science",
+      "source": "console_inputs/gold27_half_specialist_science_static",
+      "label": "Science (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "5860c3327f2d115807c3d10097c9396503a64327519133edb39941cf777227c4",
+        "6757c202098d1d49ca2159da09f49536c46fec64572e17aa949303dc88848ddc",
+        "b7c4edb0b5439497e954fab929ce33f6102c2c360be6b4ab98bf9e6d91477f07",
+        "f0dc5810454318e3e1dfbdab0ad1a4231ede9e1fb64eac854c65f703ab0c576f",
+        "3bf55c5bf0fe97bba1a54e7690275cb7e5d312b97dfca1333f13e62e07dc7e8d",
+        "623ab73545f9d32720f374b03c0717926b8d20052877627fdbf9c88774c6998e"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_specialist_starmap",
+      "source": "gold27_full_specialist_starmap_static",
+      "label": "Starmap (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "7eba79b08dbd437593241872d0d230107976c626455fc1679baa6fe1599e73d1",
+        "6f6d76bc8de740239934ab7795030972d41124558c8ab499812070e138b72f1f",
+        "a64f4adcf9a48995361b7fb4e106a606d0b3dae9764564a7872e3098de9d5a2d",
+        "4adabac7a714a8dc377b0def328741a81d806940d0b7742c19b3b6ae52d591bb",
+        "d20d0f96649beccb61ecb0f004523cb1e99a9763894da0feeead7a069a891169",
+        "f09be5a3104030cc949962deb4a51b7a528f44b3de8878c67801ad9c42e430c5"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_specialist_starmap",
+      "source": "console_inputs/gold27_half_specialist_starmap_static",
+      "label": "Starmap (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "2502b7ab91e80b41b596db3bdb7e864f56ae5bc765a6ffd6230ffd4cd67e4cf7",
+        "be2d981f161a57db00b9d2cccb931b75b19f6c79c94d8b8eec4927fd3ff210b5",
+        "e396cb01b9549cb6ed8b00f528b4cbf6eebc8d0ef4b3469c5583bbe224a797f2",
+        "33575ea3572ecae7d63e6e77e440ae1109b8923fd469e8e297162bb4ab09ac9e",
+        "060b15f0d6ee8d6082f41ffda3ef38fbdadbbaafc5210e78ed2d8d32c47dcc71",
+        "b5c22778adac5a9a193121c40242ec59d7f55472237b30318b359d16166be258"
+      ]
+    },
+    {
+      "id": "screen_gold27_full_specialist_weapons",
+      "source": "gold27_full_specialist_weapons_static",
+      "label": "Weapons (Gold/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "ac019845529907304b4215cd5374719e005d2fa8642092cd0c6b4b3690588a05",
+        "e730ee7c7faecdfc80251076065e29c31f7d1123831f12bbf4ed81300049e24a",
+        "b21adf013fefa19f5637b5cf700e76324df95a0a401479e069641c3a0e3e79fe",
+        "bff2318093d77af892812b148cbc1d5d87a0fb8980b4b74f61e6ca16214abc55",
+        "5ef5986bbe50eee3f56b36e9619ecab709babc110d60f5600771c99e4bda30a0",
+        "dbabf6e19955a8fde4a0e06ad6977a197f25b94205087b350e4ae42cd37976ca"
+      ]
+    },
+    {
+      "id": "screen_gold27_half_specialist_weapons",
+      "source": "console_inputs/gold27_half_specialist_weapons_static",
+      "label": "Weapons (Gold/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 200,
+      "frameHashes": [
+        "d5579af1e6b990c7827b4cd276651ea28cfc0b6c0f01689b1d6d33b4d36e0665",
+        "8a3a99f0973c0433a9228f6faa841d84b9872a66217accff0a7699c2618f55ae",
+        "0d4ca45cafc548a58028f8c7ee3e1ffdca7566736c29b9b29a3560813d010288",
+        "bcd6f7b3f445402425365bb2fb0d4bb7b686e6c0d45f2011bf4a51ccf6b84752",
+        "83663ce72089e32b986352eae4f4fef71aaa52eb7a697a9ea373f2d149db6961",
+        "43dc5bdec6f3850095ac31782c9d0c8970381549cf8cd9024796156dc35a33e4"
+      ]
+    }
+  ],
+  "previousCatalogCount": 633,
+  "previousCatalogIdsSha256": "717c2807c758baa8ef5636c9a016542aaa87bc26074d600fffef98b9931f459d",
+  "previousBlockCount": 431,
+  "previousBlockIdsSha256": "3b88fa1c5c176c9f6f5232b55910ba27f74c677c4d8f967cc61f4a53fde79761",
+  "previousInputCount": 109,
+  "previousInputIdsSha256": "01158a721af43b52d3e50eb5e88ef262281d451147ef2df26bfcb891e0ace097"
+}

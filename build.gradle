@@ -635,7 +635,7 @@ task testScreenCatalog(type: Exec) {
     group = 'verification'
     dependsOn jar
     doFirst { exec { commandLine pythonExecutable, 'tools/test_unused_runtime_assets.py' } }
-    doFirst { exec { commandLine pythonExecutable, 'tools/test_cool_screens.py', '--jar', jar.archivePath } }
+    doFirst { for (style in ['Cool', 'Gold']) { exec { commandLine pythonExecutable, 'tools/test_cool_screens.py', '--style', style, '--jar', jar.archivePath } } }
     commandLine pythonExecutable, 'tools/test_screen_catalog.py', '--jar', jar.archivePath
 }
 check.dependsOn testScreenCatalog

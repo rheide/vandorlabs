@@ -18,14 +18,14 @@ import net.minecraft.world.GameType;
 /** Full-screen taxonomy, old saved identities, real picker clicks and actual animation decoding. */
 final class ScreenCatalogRuntimeChecks {
     private static final BlockPos POS=new BlockPos(240,90,240);
-    private static final String[] IDS=withCool(new String[]{"company_pinnacle_full_biology","company_paladyne_full_medical","company_seyr_full_reactor","company_seyr_full_communications","company_seyr_full_navigation","specialist_bare_sensors","analysis_bare_surface_map","cruiser_command_left","ship_freighter","bridge_bare_ship_status"},false);
-    private static final String[] HALF=withCool(new String[]{"console_inputs/company_pinnacle_half_biology_static","console_inputs/company_paladyne_half_medical_static","console_inputs/company_seyr_half_communications_static","console_inputs/company_seyr_half_navigation_static","console_inputs/company_seyr_half_reactor_static","console_inputs/specialist_bare_sensors_static","console_inputs/analysis_bare_station_static","console_inputs/analysis_bare_targeting_static","console_inputs/bridge_bare_pilot_static","console_inputs/analysis_framed_surface_map_static","console_inputs/input_surfaces_keyboard_static","console_inputs/input_surfaces_command_keypad_static","console_inputs/sliders_buttons_six_faders_static","controls27/controls27_half_height_command_keypad","console_inputs/input_surfaces_keyboard_touchpad_static","console_inputs/console_controls_medical_keyboard_static","controls27/controls27_corporate_pinnacle_01_keyboard","controls27/controls27_dense_pinnacle_01_engineering_faders","controls27/controls27_dense_pinnacle_03_navigation_bottom","controls27/controls27_half_height_six_faders","controls27/controls27_corporate_pinnacle_05_three_alignment_faders","controls27/controls27_corporate_seyr_06_selection_wheel_slider"},true);
+    private static final String[] IDS=withStyleExpansions(new String[]{"company_pinnacle_full_biology","company_paladyne_full_medical","company_seyr_full_reactor","company_seyr_full_communications","company_seyr_full_navigation","specialist_bare_sensors","analysis_bare_surface_map","cruiser_command_left","ship_freighter","bridge_bare_ship_status"},false);
+    private static final String[] HALF=withStyleExpansions(new String[]{"console_inputs/company_pinnacle_half_biology_static","console_inputs/company_paladyne_half_medical_static","console_inputs/company_seyr_half_communications_static","console_inputs/company_seyr_half_navigation_static","console_inputs/company_seyr_half_reactor_static","console_inputs/specialist_bare_sensors_static","console_inputs/analysis_bare_station_static","console_inputs/analysis_bare_targeting_static","console_inputs/bridge_bare_pilot_static","console_inputs/analysis_framed_surface_map_static","console_inputs/input_surfaces_keyboard_static","console_inputs/input_surfaces_command_keypad_static","console_inputs/sliders_buttons_six_faders_static","controls27/controls27_half_height_command_keypad","console_inputs/input_surfaces_keyboard_touchpad_static","console_inputs/console_controls_medical_keyboard_static","controls27/controls27_corporate_pinnacle_01_keyboard","controls27/controls27_dense_pinnacle_01_engineering_faders","controls27/controls27_dense_pinnacle_03_navigation_bottom","controls27/controls27_half_height_six_faders","controls27/controls27_corporate_pinnacle_05_three_alignment_faders","controls27/controls27_corporate_seyr_06_selection_wheel_slider"},true);
     private static int ticks,phase,fixture;private static boolean done;
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(done)return true;
         mc.gameSettings.pauseOnLostFocus=false;if(++ticks%20!=0)return false;
         if(phase==0){
-            aliases(mc);CoolScreenRuntimeChecks.run(mc,output);CompanyScreenLayerRuntimeChecks.run(mc,output);
+            aliases(mc);StyleScreenRuntimeChecks.run(mc,output,"Cool");StyleScreenRuntimeChecks.run(mc,output,"Gold");CompanyScreenLayerRuntimeChecks.run(mc,output);
             mc.player.closeScreen();mc.playerController.setGameType(GameType.CREATIVE);
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityPlayerMP p=player(mc);p.interactionManager.setGameType(GameType.CREATIVE);p.inventory.currentItem=0;p.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));p.capabilities.isFlying=true;p.sendPlayerAbilities();
@@ -78,13 +78,17 @@ final class ScreenCatalogRuntimeChecks {
         }
         require(count==48,"expected 42 company, four Bridge Sensors and two retired keyboard redirects: "+count);System.out.println("[vandorlabs][reprolab] screen-catalog-aliases PASS saved-identities="+count+" both heights stable numeric choices original snapshot NBT retained");
     }
-    private static String[] withCool(String[] fixtures,boolean half){
-        java.util.List<String> result=new java.util.ArrayList<>(java.util.Arrays.asList(fixtures));int added=0;
-        for(int choice=0;choice<ScreenHousingTextures.IDS.length;choice++){
-            com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);if(entry==null)continue;String source=entry.get("source").getAsString();
-            if(source.startsWith(half?"console_inputs/cool27_":"cool27_")){result.add(half?source:source.replaceFirst("_static$",""));added++;}
+    private static String[] withStyleExpansions(String[] fixtures,boolean half){
+        java.util.List<String> result=new java.util.ArrayList<>(java.util.Arrays.asList(fixtures));
+        for(String style:new String[]{"cool","gold"}){
+            int added=0;
+            for(int choice=0;choice<ScreenHousingTextures.IDS.length;choice++){
+                com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);if(entry==null)continue;String source=entry.get("source").getAsString();
+                if(source.startsWith((half?"console_inputs/":"")+style+"27_")){result.add(half?source:source.replaceFirst("_static$",""));added++;}
+            }
+            require(added==21,style+" picker coverage per height "+added);
         }
-        require(added==21,"Cool picker coverage per height "+added);return result.toArray(new String[0]);
+        return result.toArray(new String[0]);
     }
     private static EntityPlayerMP player(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);}
     private static Field field(String name)throws Exception{Field f=HousingTextureList.class.getDeclaredField(name);f.setAccessible(true);return f;}

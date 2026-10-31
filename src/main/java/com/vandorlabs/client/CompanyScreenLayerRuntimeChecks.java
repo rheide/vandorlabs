@@ -38,7 +38,7 @@ final class CompanyScreenLayerRuntimeChecks {
         }
         require(borders==12&&displays==30,"all twelve borders and thirty retained display sequences packaged");
         pickerGroups(HousingTextureList.forFrames(0,0,260,-1,8),"Frame/",-2,6);
-        for(boolean input:new boolean[]{false,true}){ScreenTextureList picker=new ScreenTextureList(0,0,260,8,"",new String[0],new String[0],input);Field list=ScreenTextureList.class.getDeclaredField("list");list.setAccessible(true);pickerGroups((HousingTextureList)list.get(picker),"Displays/Gold",6,1);pickerGroups((HousingTextureList)list.get(picker),"Displays/Cool",27,1);}
+        for(boolean input:new boolean[]{false,true}){ScreenTextureList picker=new ScreenTextureList(0,0,260,8,"",new String[0],new String[0],input);Field list=ScreenTextureList.class.getDeclaredField("list");list.setAccessible(true);pickerGroups((HousingTextureList)list.get(picker),"Displays/Gold",27,1);pickerGroups((HousingTextureList)list.get(picker),"Displays/Cool",27,1);}
         BufferedImage composition=render(mc,strips);ImageIO.write(composition,"png",new File(output,"shot_company_layers_full_half_frames0_3.png"));
         require(difference(composition,0,128,0,128)>40&&difference(composition,256,384,0,128)>40,"full display frames visibly animate under company borders");
         require(difference(composition,0,128,224,64)>10&&difference(composition,256,384,224,64)>10,"half display frames visibly animate under correctly cropped borders");
