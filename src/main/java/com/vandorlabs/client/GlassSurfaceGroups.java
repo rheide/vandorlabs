@@ -22,10 +22,11 @@ final class GlassSurfaceGroups {
     private static final class Cache extends WorldRenderListener {
         long revision;
         final Map<BlockPos,Layout> frames=new HashMap<>();
+        final Map<BlockPos,Integer> frameMasks=new HashMap<>();
         int tileRevision=-1;
         final Map<BlockPos,Layout> layouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
         final Map<BlockPos,Layout> mainLayouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
-        void clear(){synchronized(GlassSurfaceGroups.class){layouts.clear();mainLayouts.clear();frames.clear();}}
+        void clear(){synchronized(GlassSurfaceGroups.class){layouts.clear();mainLayouts.clear();frames.clear();frameMasks.clear();}}
         @Override public void notifyBlockUpdate(World world,BlockPos pos,IBlockState before,IBlockState after,int flags){clear();}
         @Override public void markBlockRangeForRenderUpdate(int x1,int y1,int z1,int x2,int y2,int z2){clear();}
     }
@@ -34,6 +35,24 @@ final class GlassSurfaceGroups {
     static synchronized void unload(World world){Cache cache=CACHES.remove(world);if(cache!=null)world.removeEventListener(cache);}
     static Layout layout(TileEntity tile){return layout(tile,false,false);}
     static Layout frameLayout(TileEntity tile){return layout(tile,false,true);}
+    /** Local contour edges are independent of rectangular artwork partitions. */
+    static synchronized int frameMask(TileEntityProgrammableGlass tile){
+        if(tile.frameAppearance.tile||!tile.isJoin())return 15;
+        World world=tile.getWorld();Cache cache=CACHES.get(world);
+        if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}
+        int revision=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision:-1;
+        if(cache.tileRevision!=revision||cache.revision!=GlassMaterials.revision()){cache.tileRevision=revision;cache.revision=GlassMaterials.revision();cache.clear();}
+        Integer old=cache.frameMasks.get(tile.getPos());if(old!=null)return old;
+        EnumFacing right=PanelJoins.facing(world.getBlockState(tile.getPos())).rotateY();
+        BlockPos p=tile.getPos();BlockPos[] next={p.offset(right.getOpposite()),p.offset(right),p.down(),p.up()};boolean[] joined=new boolean[4];int mask=0;
+        for(int i=0;i<4;i++){joined[i]=world.isBlockLoaded(next[i])&&compatible(tile,next[i],false,true);if(!joined[i])mask|=1<<i;}
+        for(int side=0;side<2;side++)for(int vertical=0;vertical<2;vertical++)if(joined[side]&&joined[2+vertical]){
+            BlockPos diagonal=next[side].add(0,vertical==0?-1:1,0);
+            if(!world.isBlockLoaded(diagonal)||!compatible(tile,diagonal,false,true))mask|=1<<(4+side+vertical*2);
+        }
+        if(cache.frameMasks.size()>=MAX_LAYOUTS)cache.frameMasks.clear();cache.frameMasks.put(p.toImmutable(),mask);return mask;
+    }
+
     static Layout mainLayout(TileEntity tile){return layout(tile,true,false);}
     private static synchronized Layout layout(TileEntity tile,boolean main,boolean frame){
         World world=tile.getWorld();Cache cache=CACHES.get(world);

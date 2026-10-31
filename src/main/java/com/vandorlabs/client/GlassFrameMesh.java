@@ -11,9 +11,11 @@ import java.util.*;
 final class GlassFrameMesh {
     private static final Map<Key,StaticSurfaceMesh> CACHE=new LinkedHashMap<Key,StaticSurfaceMesh>(64,.75F,true){protected boolean removeEldestEntry(Map.Entry<Key,StaticSurfaceMesh> e){return size()>256;}};
     private static final class Key{final TextureAtlasSprite front,inner,outer;final int mask,choice,columns,rows;Key(TextureAtlasSprite f,TextureAtlasSprite i,TextureAtlasSprite o,int m,int c,int w,int h){front=f;inner=i;outer=o;mask=m;choice=c;columns=w;rows=h;}public int hashCode(){return Objects.hash(System.identityHashCode(front),System.identityHashCode(inner),System.identityHashCode(outer),mask,choice,columns,rows);}public boolean equals(Object o){if(!(o instanceof Key))return false;Key k=(Key)o;return front==k.front&&inner==k.inner&&outer==k.outer&&mask==k.mask&&choice==k.choice&&columns==k.columns&&rows==k.rows;}}
+    private static final GlassSurfaceGroups.Layout UNIT=new GlassSurfaceGroups.Layout(0,0,1,1);
+    static StaticSurfaceMesh get(TileEntityProgrammableGlass tile){return get(tile,UNIT);}
     static StaticSurfaceMesh get(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout){
         net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
-        int mask=(layout.column==0?1:0)|(layout.column==layout.columns-1?2:0)|(layout.row==0?4:0)|(layout.row==layout.rows-1?8:0);
+        int mask=GlassSurfaceGroups.frameMask(tile);
         Key key=new Key(atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),mask,tile.frameAppearance.front,layout.columns,layout.rows);
         StaticSurfaceMesh mesh=CACHE.get(key);if(mesh!=null)return mesh;StaticSurfaceMesh.Capture b=StaticSurfaceMesh.capture();
         double[] widths=ScreenFrameBorders.get(key.choice);
@@ -23,6 +25,10 @@ final class GlassFrameMesh {
         double top=(mask&8)!=0?(key.choice<0?1:widths[2]*16):0;
         if(left>0)box(b,key,0,0,left,16);if(right>0)box(b,key,16-right,0,16,16);
         if(bottom>0)box(b,key,left,0,16-right,bottom);if(top>0)box(b,key,left,16-top,16-right,16);
+        for(int corner=0;corner<4;corner++)if((mask&(16<<corner))!=0){
+            boolean rightCorner=(corner&1)!=0,topCorner=(corner&2)!=0;double w=key.choice<0?1:widths[rightCorner?1:0]*16,h=key.choice<0?1:widths[topCorner?2:3]*16;
+            box(b,key,rightCorner?16-w:0,topCorner?16-h:0,rightCorner?16:w,topCorner?16:h);
+        }
         if(key.choice>=0&&FrameAppearance.border(key.choice))front(b,key,atlas.getAtlasSprite(ScreenHousingTextures.texture(key.choice)),widths);
         mesh=b.finish();CACHE.put(key,mesh);return mesh;
     }
@@ -37,6 +43,16 @@ final class GlassFrameMesh {
             if(x1<=x0||y1<=y0)continue;
             double u0=sprite.getInterpolatedU(ScreenFrameBorders.cut(col,border[0],border[1])*16),u1=sprite.getInterpolatedU(ScreenFrameBorders.cut(col+1,border[0],border[1])*16);
             double v0=sprite.getInterpolatedV(ScreenFrameBorders.cut(row,border[2],border[3])*16/FrameAppearance.aspect(key.choice)),v1=sprite.getInterpolatedV(ScreenFrameBorders.cut(row+1,border[2],border[3])*16/FrameAppearance.aspect(key.choice));
+            WorldSurface.rawQuad(b,false,x0,y0,6,u0,v1,x0,y1,6,u0,v0,x1,y1,6,u1,v0,x1,y0,6,u1,v1);
+            WorldSurface.rawQuad(b,true,x0,y0,10,u0,v1,x0,y1,10,u0,v0,x1,y1,10,u1,v0,x1,y0,10,u1,v1);
+        }
+        concave(b,key,sprite,border);
+    }
+    private static void concave(StaticSurfaceMesh.Capture b,Key key,TextureAtlasSprite sprite,double[] border){
+        for(int corner=0;corner<4;corner++)if((key.mask&(16<<corner))!=0){
+            boolean right=(corner&1)!=0,top=(corner&2)!=0;double l=border[right?1:0],h=border[top?2:3];
+            double x0=right?16-l*16:0,x1=right?16:l*16,y0=top?16-h*16:0,y1=top?16:h*16;
+            double u0=sprite.getInterpolatedU(right?(1-l)*16:0),u1=sprite.getInterpolatedU(right?16:l*16),v0=sprite.getInterpolatedV(top?0:(1-h)*16/FrameAppearance.aspect(key.choice)),v1=sprite.getInterpolatedV(top?h*16/FrameAppearance.aspect(key.choice):16/FrameAppearance.aspect(key.choice));
             WorldSurface.rawQuad(b,false,x0,y0,6,u0,v1,x0,y1,6,u0,v0,x1,y1,6,u1,v0,x1,y0,6,u1,v1);
             WorldSurface.rawQuad(b,true,x0,y0,10,u0,v1,x0,y1,10,u0,v0,x1,y1,10,u1,v0,x1,y0,10,u1,v1);
         }

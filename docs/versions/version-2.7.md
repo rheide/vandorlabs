@@ -152,3 +152,8 @@ Frame finishes on Programmable Trapdoors and Diagonal Trapdoors have open center
 Their inner edges follow the authored frame border through hinged and sliding
 motion. Tiled layouts repeat the frame per leaf; joined Fit/Stretch layouts keep
 an outer border without internal rails. This changes rendering only.
+
+
+Selected Programmable Glass frames follow the outer contour of joined panels,
+including stepped and unequal layouts. Internal borders are suppressed independently
+of the rectangles used to fit pane artwork; concave corners retain solid frame faces.

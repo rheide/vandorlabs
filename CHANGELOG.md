@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Join selected glass frames along the continuous contour of stepped and unequal connected panels, removing internal rectangle rails and filling concave corner gaps.
+
 - Give Frame finishes on regular and diagonal trapdoors an open center and physical inner edges aligned with the authored border. Keep border width constant across joined Fit/Stretch leaves and omit internal rails.
 
 - Backlight solid Strong replacement artwork inside Cyan/Amber lit Programmable Glass frames, including joined and diagonal panes. Transparent/native glass and unlit or Bare frames retain world lighting.

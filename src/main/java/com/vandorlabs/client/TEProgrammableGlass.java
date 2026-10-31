@@ -104,7 +104,6 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
 
     private void renderSelectedFrame(TileEntityProgrammableGlass tile,net.minecraft.block.state.IBlockState state,double x,double y,double z){
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
-        GlassSurfaceGroups.Layout layout=tile.frameAppearance.tile?new GlassSurfaceGroups.Layout(0,0,1,1):GlassSurfaceGroups.frameLayout(tile);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);
         if(state.getValue(BlockGlassWall.ROTATED)){GlStateManager.translate(.5,0,.5);GlStateManager.rotate(-90,0,1,0);GlStateManager.translate(-.5,0,-.5);}
         GlStateManager.translate(0,0,com.vandorlabs.blocks.PanelDepth.offset(state.getValue(BlockGlassWall.DEPTH))/16D);
@@ -113,7 +112,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.scale(1D/16,1D/16,1D/16);
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        GlassFrameMesh.get(tile,layout).draw(b,light/65536,light%65536);Tessellator.getInstance().draw();
+        GlassFrameMesh.get(tile).draw(b,light/65536,light%65536);Tessellator.getInstance().draw();
         GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,savedBlockLight,savedSkyLight);
     }
 
