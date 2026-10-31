@@ -25,6 +25,8 @@ final class CanopyTriggerInversionChecks {
     private static LargeCanopySettings copy(LargeCanopySettings value){NBTTagCompound tag=new NBTTagCompound();value.write(tag);LargeCanopySettings result=new LargeCanopySettings();result.read(tag);return result;}
     private static final class Source extends net.minecraft.tileentity.TileEntity implements RedstoneChannelMember {
         public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
+        public ChannelList transmittedChannels(){return ChannelList.of(CHANNEL);}
+        public int transmissionRange(){return 256;}
         boolean high;public net.minecraft.tileentity.TileEntity channelTile(){return this;}public int getRedstoneChannel(){return CHANNEL;}public void setRedstoneChannel(int ignored){}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean ignored){}
         void power(boolean value){high=value;RedstoneChannels.inputChanged(this);}
     }
@@ -78,13 +80,18 @@ final class CanopyTriggerInversionChecks {
     }
     static void invertInGui(net.minecraft.client.Minecraft mc)throws java.io.IOException{
         require(mc.currentScreen instanceof GuiLargeCanopy,"actual settings dialog open");GuiLargeCanopy gui=(GuiLargeCanopy)mc.currentScreen;
+        click(gui,91); // Activation is on the dedicated Redstone page.
         for(int i=0;i<3;i++){
             java.util.List<net.minecraft.client.gui.GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
             net.minecraft.client.gui.GuiButton trigger=controls.stream().filter(button->button.id==7).findFirst().get();
-            if(trigger.displayString.equals("Trigger: redstone OFF"))return;
+            if(trigger.displayString.equals("Activation: "+RedstoneActivationButton.state(RedstoneActivationButton.OFF))){click(gui,90);return;}
             gui.mouseClicked(trigger.x+trigger.width/2,trigger.y+trigger.height/2,0);
         }
         throw new IllegalStateException("canopy trigger inversion: actual mouse did not cycle to OFF");
+    }
+    private static void click(GuiLargeCanopy gui,int id)throws java.io.IOException{
+        java.util.List<net.minecraft.client.gui.GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");
+        net.minecraft.client.gui.GuiButton b=controls.stream().filter(button->button.id==id).findFirst().orElseThrow(()->new IllegalStateException("Missing canopy control "+id));gui.mouseClicked(b.x+b.width/2,b.y+b.height/2,0);
     }
     private CanopyTriggerInversionChecks(){}
 }

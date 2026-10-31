@@ -8,6 +8,7 @@ final class CanopyPerformanceRuntimeChecks {
     public static void main(String[] args){net.minecraft.init.Bootstrap.register();run();}
     private static double area(List<CanopyMesh.Face> faces){double sum=0;for(CanopyMesh.Face f:faces)for(int i=1;i<f.vertices.length-1;i++)sum+=f.vertices[i].subtract(f.vertices[0]).crossProduct(f.vertices[i+1].subtract(f.vertices[0])).lengthVector()/2;return sum;}
     static void run(){
+        CanopySettingsKeyChecks.run();
         int variants=0;long oldTime=0,newTime=0;
         for(int width=1;width<=3;width++)for(int angle=0;angle<3;angle++)for(int motion=0;motion<2;motion++)for(int mount=0;mount<2;mount++)for(int material:new int[]{-1,0})for(boolean forward:new boolean[]{false,true}){
             LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.mount=mount;settings.material=material;settings.tileMaterial=material>=0;settings.slideForward=forward;

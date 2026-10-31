@@ -52,6 +52,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
 
     /** Vehicle rendering uses the same phases inside its local world transform. */
     void renderPass(TileEntityCanopy tile,double x,double y,double z,float partial,int stage,float alpha,int pass) {
+        if(pass==1&&com.vandorlabs.tiles.GlassMaterials.opaque(tile.large.material,tile.large.tint))return;
         if (tile.block() == null || !tile.draws()) return;
         double progress =
                 tile.opening()
@@ -78,9 +79,10 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
             prepared.solidDirty=prepared.glassDirty=true;
         }
         List<DrawFace> opaque=prepared.opaque,glass=prepared.glass;
-        Vec3d camera=new Vec3d(rendererDispatcher.entityX-tile.getPos().getX(),rendererDispatcher.entityY-tile.getPos().getY(),rendererDispatcher.entityZ-tile.getPos().getZ());
+        if(pass==0&&opaque.isEmpty()||pass==1&&glass.isEmpty())return;
         if(pass!=0){
-            for(DrawFace face:glass)face.distance=face.center.squareDistanceTo(camera);
+            double cx=rendererDispatcher.entityX-tile.getPos().getX(),cy=rendererDispatcher.entityY-tile.getPos().getY(),cz=rendererDispatcher.entityZ-tile.getPos().getZ();
+            for(DrawFace face:glass){double dx=face.center.x-cx,dy=face.center.y-cy,dz=face.center.z-cz;face.distance=dx*dx+dy*dy+dz*dz;}
             glass.sort((a, b) -> Double.compare(b.distance, a.distance));
             if(prepared.glassOrder==null||prepared.glassOrder.length!=glass.size())prepared.glassDirty=true;
             else for(int i=0;i<glass.size();i++)if(prepared.glassOrder[i]!=glass.get(i)){prepared.glassDirty=true;break;}

@@ -15,7 +15,7 @@ import net.minecraft.world.*;
 import java.util.*;
 
 public final class TileEntityCanopy extends TileEntity implements ITickable, com.vandorlabs.redstone.RedstoneChannelMember {
-    @Override public boolean shouldRenderInPass(int pass){return (pass==0||pass==1)&&draws();}
+    @Override public boolean shouldRenderInPass(int pass){return (pass==0||pass==1&&!GlassMaterials.opaque(large.material,large.tint))&&draws();}
     public BlockPos anchor, pair;
     public boolean centeredPlacement,hollowPlacement;
     public final com.vandorlabs.canopy.LargeCanopySettings large=new com.vandorlabs.canopy.LargeCanopySettings();
@@ -25,18 +25,24 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     private String posedKey;
     private List<CanopyMesh.Face> baseFaces;
     private String baseKey;
+    private String baseModel,baseSettings;
+    private double baseAspect;
+    private int baseWidth,baseConnections,baseRoof;
+    private boolean baseCentered;
     public boolean opening(){return block()!=null && (block().opening() || resizable() && large.openable);}
     public List<CanopyMesh.Face> faces(){return faces(progress);}
     /** Appearance and connection geometry stay constant while the mechanism moves. */
     public List<CanopyMesh.Face> baseFaces(){
-        if(block()==null)return Collections.emptyList();
-        int connections=mask(),width=width();String model=model();
+        BlockCanopy block=block();if(block==null)return Collections.emptyList();
+        int connections=mask(),width=width();String model=modelId(block,connections),settings=large.key();
         double aspect=large.material<0 || com.vandorlabs.VandorLabs.proxy==null?1:com.vandorlabs.VandorLabs.proxy.materialAspect(large.material);
-        String key=model+":"+large.key()+":"+aspect+":"+centeredPlacement+":"+width+":"+connections+":"+(block().kind.equals("regular_canopy_glass")?roofMask():connections);
-        if(!key.equals(baseKey)){
+        int roof=block.kind.equals("regular_canopy_glass")?roofMask(connections):connections;
+        if(baseFaces==null||!model.equals(baseModel)||!settings.equals(baseSettings)||aspect!=baseAspect||centeredPlacement!=baseCentered||width!=baseWidth||connections!=baseConnections||roof!=baseRoof){
             List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model));
             if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,block().length,Math.min(block().length==3?3:2,large.angle),(connections&8)!=0);
-            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material,large.textureLayout(),aspect);baseKey=key;
+            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material,large.textureLayout(),aspect);
+            baseModel=model;baseSettings=settings;baseAspect=aspect;baseCentered=centeredPlacement;baseWidth=width;baseConnections=connections;baseRoof=roof;
+            baseKey=model+":"+settings+":"+aspect+":"+centeredPlacement+":"+width+":"+connections+":"+roof;
         }
         return baseFaces;
     }
@@ -153,13 +159,17 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         return result;
     }
 
-    public String model() {
-        if(block()==null)return "";
-        String id = block().kind;
+    private static String[] modelNames(String prefix,boolean suffixZero){String[] result=new String[16];for(int i=0;i<16;i++)result[i]=i==0&&!suffixZero?prefix:prefix+"_0"+Integer.toHexString(i);return result;}
+    private static final String[] REGULAR_MODELS=modelNames("regular_1x1",true),ANGLED_SMALL_MODELS=modelNames("angled_front_1x1",false),ANGLED_LONG_MODELS=modelNames("angled_front_1x2",false);
+    public String model() {BlockCanopy block=block();if(block==null)return "";return block.kind.equals("regular_canopy_glass")||block.kind.startsWith("angled_")?modelId(block,mask()):block.kind;}
+    private static String modelId(BlockCanopy block,int connections) {
+        String id = block.kind;
         if (id.equals("regular_canopy_glass"))
-            return String.format(java.util.Locale.ROOT, "regular_1x1_%02x", mask());
+            return REGULAR_MODELS[connections];
         if (id.startsWith("angled_")) {
-            int mask = mask() & 11;
+            int mask = connections & 11;
+            if(id.equals("angled_front_1x1"))return ANGLED_SMALL_MODELS[mask];
+            if(id.equals("angled_front_1x2"))return ANGLED_LONG_MODELS[mask];
             return mask == 0 ? id : String.format(java.util.Locale.ROOT, "%s_%02x", id, mask);
         }
         return id;
@@ -170,7 +180,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         if (b == null) return 0;
         int result = 0;
         EnumFacing f = facing();
-        for (int bit : new int[] {1, 2, 4, 8}) {
+        for (int bit=1;bit<=8;bit<<=1) {
             EnumFacing dir =
                     bit == 1
                             ? f.rotateYCCW()
@@ -195,9 +205,10 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     }
 
     /** Fixed glazing keeps a roof frame against a shell that can move away. */
-    public int roofMask(){
-        int result=mask();EnumFacing f=facing();
-        for(int bit:new int[]{1,2,4,8})if((result&bit)!=0){
+    public int roofMask(){return roofMask(mask());}
+    private int roofMask(int connections){
+        int result=connections;EnumFacing f=facing();
+        for(int bit=1;bit<=8;bit<<=1)if((result&bit)!=0){
             EnumFacing dir=bit==1?f.rotateYCCW():bit==2?f.rotateY():bit==4?f:f.getOpposite();
             TileEntityCanopy neighbor=com.vandorlabs.canopy.CanopyReservations.logicalAt(world,pos.offset(dir));
             if(neighbor!=null && neighbor.constituent().block()!=null && neighbor.constituent().block().opening())result&=~bit;

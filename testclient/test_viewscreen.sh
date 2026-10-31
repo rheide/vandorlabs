@@ -138,6 +138,12 @@ case "${1:-}" in
         elif [ "$TARGET" = canopies ]; then
             PREFIX=canopy_
             export VANDOR_LABS_CANOPY_CHECKS_ONLY=true
+        elif [ "$TARGET" = large-canopies ]; then
+            PREFIX=large_
+            export VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY=true
+        elif [ "$TARGET" = canopy-cost ]; then
+            PREFIX=canopy_
+            export VANDOR_LABS_CANOPY_GLASS_COST_CHECKS_ONLY=true
         elif [ "$TARGET" = armor ] || [ "$TARGET" = armor-tools ] || [ "$TARGET" = armor-duplifier ]; then
             PREFIX=armor_
             export VANDOR_LABS_ARMOR_CHECKS_ONLY=true
@@ -462,6 +468,17 @@ if [ "$MODE" = focus ]; then
         for name in icons facings mounted; do test -s "$RUN_OUT/shot_pilot_seat_$name.png"; done
         python3 testclient/analyze_pilot_seat.py "$RUN_OUT"
         echo "Live Pilot Seat checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = canopy-cost ]; then
+        grep -q 'canopy-glass-cost PASS cases=33' "$RUN_OUT/client.log"
+        echo "Canopy Glass cost comparison passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = large-canopies ]; then
+        grep -q 'large-canopy-live PASS' "$RUN_OUT/client.log"
+        grep -q 'canopy-opacity-render PASS' "$RUN_OUT/client.log"
+        echo "Live large canopy and material opacity checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = canopies ]; then

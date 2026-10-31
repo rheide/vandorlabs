@@ -11,6 +11,10 @@ The maps preserve existing diffuse artwork and add no light emission.
 The Materials picker includes Satin Silver, Cool Steel and Pale Titanium,
 using their native 128px artwork and matching shader material finishes.
 
+Canopy rendering reuses settings and neighbour results and skips empty Opaque
+passes. The [Canopy performance comparison](../performance/canopy-glass.md)
+records CPU submission, allocation and geometry costs against vanilla glass.
+
 The Duplifier places Connected Matching Blocks and Ignore directionality in
 separate columns. Enable Ignore directionality to include differently oriented
 matching blocks while preserving their placement. Both choices are saved on

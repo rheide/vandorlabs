@@ -25,7 +25,7 @@ final class ProgrammableDialogRuntimeChecks {
                 if(gui instanceof GuiLargeCanopy)require(buttons.stream().noneMatch(button->button.id==9 || button.id==10),"canopy dialog still has texture/page toggles");
                 for(GuiButton a:buttons) {
                     if(!a.visible)continue;
-                    require(a.width<=200,"button exceeds Minecraft texture width");
+                    require(a.width<=200 || a instanceof DialogTabButton || a instanceof RedstoneActivationButton,"button exceeds Minecraft texture width: "+a.id+" "+a.getClass().getSimpleName());
                     require(a.x>=0 && a.y>=0 && a.x+a.width<=gui.width && a.y+a.height<=gui.height,"button outside viewport");
                     for(GuiButton b:buttons)if(a!=b && b.visible)require(!overlaps(a.x,a.y,a.width,a.height,b.x,b.y,b.width,b.height),"buttons overlap: "+a.id+"/"+b.id);
                 }
