@@ -23,10 +23,32 @@ def control_name(label):
     label=re.sub(r' Bottom$','',re.sub(r'^\d+[\s._-]+','',label))
     return CONTROL_NAMES.get(label,label)
 
+CLASSIC_KEYBOARDS={
+    'screen_console_inputs_input_surfaces_keyboard_touchpad_static':'Keyboard Touchpad',
+    'screen_console_inputs_console_controls_medical_keyboard_static':'Keyboard Full',
+}
+RETIRED_CONTROLS={
+    'controls27_half_height_05_communications_bottom',
+    'controls27_half_height_05_dual_keyboard_bottom',
+    'controls27_half_height_03_medical_bottom',
+    'controls27_half_height_01_reactor_bottom',
+    'screen_console_inputs_console_controls_communications_keyboard_static',
+    'screen_console_inputs_console_controls_engineering_keyboard_static',
+}
+
 def restructure(catalog,blocks,language):
     result=copy.deepcopy(catalog);definitions=copy.deepcopy(blocks);names={};retired=set();active=set()
     for entry in result:
         category=entry.get('category','')
+        if entry['id'] in RETIRED_CONTROLS:
+            entry['hidden']=True
+            if entry['source'].startswith('console_inputs/'):
+                entry.update(retireAnimation=True,alias='screen_console_inputs_console_controls_medical_keyboard_static')
+            continue
+        if entry['id'] in CLASSIC_KEYBOARDS:
+            entry.update(category='Controls/Classic',label=CLASSIC_KEYBOARDS[entry['id']])
+            names['gui.vandorlabs.console.input.'+entry['source'].removeprefix('console_inputs/').removesuffix('_static')]=entry['label']
+            continue
         if category=='Controls' or category.startswith('Controls/'):
             entry['category']=category.replace('Controls/Corporate/','Controls/').replace('Controls/Dense/','Controls/').replace('Controls/Half-height','Controls/Classic')
             entry['label']=control_name(entry['label'])

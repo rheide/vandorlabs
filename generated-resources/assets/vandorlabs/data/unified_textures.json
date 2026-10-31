@@ -809,19 +809,25 @@
     "label": "Console Controls Communications Keyboard",
     "category": "Screens",
     "source": "console_inputs/console_controls_communications_keyboard_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true,
+    "alias": "screen_console_inputs_console_controls_medical_keyboard_static"
   },
   {
     "id": "screen_console_inputs_console_controls_engineering_keyboard_static",
     "label": "Console Controls Engineering Keyboard",
     "category": "Screens",
     "source": "console_inputs/console_controls_engineering_keyboard_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true,
+    "alias": "screen_console_inputs_console_controls_medical_keyboard_static"
   },
   {
     "id": "screen_console_inputs_console_controls_medical_keyboard_static",
-    "label": "Console Controls Medical Keyboard",
-    "category": "Screens",
+    "label": "Keyboard Full",
+    "category": "Controls/Classic",
     "source": "console_inputs/console_controls_medical_keyboard_static",
     "rectangular": true
   },
@@ -926,8 +932,8 @@
   },
   {
     "id": "screen_console_inputs_input_surfaces_keyboard_touchpad_static",
-    "label": "Input Surfaces Keyboard Touchpad",
-    "category": "Screens",
+    "label": "Keyboard Touchpad",
+    "category": "Controls/Classic",
     "source": "console_inputs/input_surfaces_keyboard_touchpad_static",
     "rectangular": true
   },
@@ -3544,7 +3550,8 @@
     "label": "Reactor",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_01_reactor_bottom",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true
   },
   {
     "id": "controls27_half_height_02_biology_bottom",
@@ -3565,7 +3572,8 @@
     "label": "Medical",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_03_medical_bottom",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true
   },
   {
     "id": "controls27_half_height_04_controls_bottom",
@@ -3586,14 +3594,16 @@
     "label": "Communications",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_05_communications_bottom",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true
   },
   {
     "id": "controls27_half_height_05_dual_keyboard_bottom",
     "label": "Dual Keyboard",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_05_dual_keyboard_bottom",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true
   },
   {
     "id": "controls27_half_height_06_dual_controls_bottom",

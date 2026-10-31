@@ -3,20 +3,23 @@ import argparse,collections,hashlib,io,json,re,struct,zlib
 from pathlib import Path
 from zipfile import ZipFile
 from PIL import Image
-from restructure_screen_catalog import ROOT,restructure,CONTROL_PREFIXES,SEYR_CLASSIC
+from restructure_screen_catalog import ROOT,restructure,CONTROL_PREFIXES,SEYR_CLASSIC,CLASSIC_KEYBOARDS,RETIRED_CONTROLS
 p=argparse.ArgumentParser(description=__doc__);p.add_argument('--jar',type=Path);args=p.parse_args()
 base=ROOT/'generated-resources/assets/vandorlabs';catalog=json.loads((base/'data/unified_textures.json').read_text());blocks=json.loads((base/'data/blocks.json').read_text());lang=(base/'lang/en_us.lang').read_text()
 assert hashlib.sha256('\n'.join(e['id'] for e in catalog[:589]).encode()).hexdigest()=='eeafff4b2f8dd4bb611bef5d5beaf5ca03da0bfcc82a3159ab3cadd9e84f8466'
-inputs=[e for e in catalog if e.get('category')=='Screens' and e['source'].startswith(tuple('console_inputs/'+p for p in CONTROL_PREFIXES))]
-assert len(inputs)==18 and hashlib.sha256(json.dumps(inputs,sort_keys=True).encode()).hexdigest()=='f2c8309280064349311bc775a107979a8f3f0f3352d549dfb7746f95d8e3a107'
+inputs=[e for e in catalog if e['source'].startswith(tuple('console_inputs/'+p for p in CONTROL_PREFIXES))]
+assert len(inputs)==18 and hashlib.sha256(json.dumps([{k:v for k,v in e.items() if k not in {'label','category','menuGroup','hidden','alias','retireAnimation'}} for e in inputs],sort_keys=True).encode()).hexdigest()=='a4a027ab9cf2419c6641b9ecb619e0ba7e20af5a7735ffca89b22a8682501d3b'
 assert restructure(catalog,blocks,lang)==(catalog,blocks,lang),'regeneration is not idempotent'
 byid={e['id']:e for e in catalog};byblock={e['id']:e for e in blocks};groups=collections.defaultdict(list)
 for e in catalog:
-    if e.get('category','').startswith('Controls/'):
+    if e.get('category','').startswith('Controls/') and not e.get('hidden'):
         assert not any(x in e['category'] for x in ('Corporate','Dense','Half-height')) and not re.match(r'^\d',e['label']) and not e['label'].endswith(' Bottom')
         groups[e['category']].append(e['label'].casefold())
-assert len(groups)==7 and len(groups['Controls/Classic'])==18
-for group,labels in groups.items():assert len(set(labels))==len(labels) and len(labels)==(18 if group=='Controls/Classic' else 10),group
+assert len(groups)==7 and len(groups['Controls/Classic'])==16
+for group,labels in groups.items():assert len(set(labels))==len(labels) and len(labels)==(16 if group=='Controls/Classic' else 10),group
+for identifier,label in CLASSIC_KEYBOARDS.items():
+    assert byid[identifier]['category']=='Controls/Classic' and byid[identifier]['label']==label and not byid[identifier].get('hidden')
+for identifier in RETIRED_CONTROLS:assert byid[identifier]['hidden']
 for group,company in [('Gold','pinnacle'),('Cool','paladyne')]:
     for height in ('Full','Half'):
         choices=[e for e in catalog if e.get('menuGroup')==group and not e.get('hidden') and ('console_inputs/' in e['source'])==(height=='Half')]
@@ -26,7 +29,7 @@ for e in catalog:
     if e.get('retireAnimation'):
         source=e['source'].removeprefix('console_inputs/').removesuffix('_static');assert e['hidden']
         if not e['source'].startswith('console_inputs/'):assert byblock[source]['retired']
-        if source.startswith('company_') or source.startswith('bridge_'):assert 'alias' in e and not byid[e['alias']].get('hidden')
+        if source.startswith(('company_','bridge_','console_controls_')):assert 'alias' in e and not byid[e['alias']].get('hidden')
         else:assert 'alias' not in e
     if e.get('category')=='Screens' and not e.get('hidden') and e not in inputs:
         height='Half' if e['source'].startswith('console_inputs/') else 'Full';assert e['label'].endswith('/'+height+')') or e['label'].endswith('('+height+')'),e['id']
@@ -76,4 +79,4 @@ if args.jar:
                 path='textures/blocks/'+e['source']+'.png';assert prefix+aliases.get(path,path) in names,e['id']
     from prune_unused_runtime_assets import check_jar
     check_jar(args.jar)
-print('Display/control catalog PASS: 589 saved indices; 18 native inputs untouched; Gold/Cool both heights; six original Seyr animations; separate numbered-free unique company/Classic controls; retired assets absent')
+print('Display/control catalog PASS: 589 saved indices; 18 native input identities retained; Gold/Cool both heights; six original Seyr animations; separate numbered-free unique company/Classic controls; retired assets absent')
