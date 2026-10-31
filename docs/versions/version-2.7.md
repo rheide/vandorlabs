@@ -278,3 +278,7 @@ Lights. Small Flatscreens keep their own frame borders across the gaps between
 adjacent blocks; Full Flatscreens retain connected frames. Wall, floor and ceiling
 mounts retain matching models, bounds and click
 surfaces; changing size preserves artwork and settings.
+
+Applying unchanged programmable settings preserves saved texture identities and
+avoids redundant block updates, dirty saves and render-cache invalidation, including
+legacy display aliases and default transmitter settings.

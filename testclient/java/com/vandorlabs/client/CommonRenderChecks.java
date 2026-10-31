@@ -198,6 +198,7 @@ final class CommonRenderChecks {
             tile.setDiagonalGeometry(2,3);tile.setHousingTexture(4);tile.setCeilingPosition(1);tile.setWallPosition(1);
             tile.setMainTextureLayout(layout);
             NBTTagCompound copy=ProgrammableSettings.capture(world,p);
+            NBTTagCompound original=tile.writeToNBT(new NBTTagCompound());
             long revision=tile.getSettingsRevision();world.updates=world.dirty=world.renderUpdates=world.lightChecks=0;
             require(ProgrammableSettings.apply(world,p,copy),"identical settings no longer applicable");
             tile.setSelectedScreen(tile.getSelectedScreen());tile.setInputPanel(tile.getInputPanel());tile.setSecondaryInputPanel(tile.getSecondaryInputPanel());
@@ -206,11 +207,13 @@ final class CommonRenderChecks {
             tile.setCeilingMounted(tile.isCeilingMounted());tile.setWallPosition(1);tile.setSurfaceTexture(0,tile.getSurfaceTexture(0));
             tile.setDiagonalGeometry(2,3);
             require(revision==tile.getSettingsRevision() && world.updates==0 && world.dirty==0 && world.renderUpdates==0 && world.lightChecks==0,
-                    "identical settings dirtied/rebuilt a block");
+                    "identical settings dirtied/rebuilt a block: state="+state+" layout="+layout+" revision="+revision+"->"+tile.getSettingsRevision()+" updates="+world.updates+" dirty="+world.dirty+" renders="+world.renderUpdates+" light="+world.lightChecks);
+            require(original.equals(tile.writeToNBT(new NBTTagCompound())),"no-op configuration changed saved fields or raw aliases");
             copy.setInteger(ProgrammableSettings.WALL_TEXTURE,2);
             require(ProgrammableSettings.apply(world,p,copy) && tile.getHousingTexture()==2 && tile.getSettingsRevision()>revision
                     && world.updates>0 && world.dirty>0,"changed finish not persisted or synchronized");
         }
+        System.out.println("No-op configuration PASS cases=6 updates=0 dirty=0 revisions=0 rebuilds=0 light-checks=0; raw saved texture aliases retained");
     }
     private static void distance() {
         require(new TileEntityLandingGear().getMaxRenderDistanceSquared()==Double.MAX_VALUE,"gear retained 64-block cutoff");

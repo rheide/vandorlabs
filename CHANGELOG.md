@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Avoid redundant updates and cache invalidation when applying unchanged programmable settings, including legacy display aliases and default transmitter settings. Preserve the original saved texture identity on a no-op change.
+
 - Complete matching Classic/Cool/Gold expansion displays and Large City Transit variants; add Door Controller in both heights for every style. Replace five Classic Half animations with dedicated half-height compositions.
 - Retain the six Bridge designs as the primary Cool/Gold displays, remove duplicate animation resources, and preserve saved selections through aliases.
 - Fix translucent glass ordering, add independent Display playback controls to glass and portholes, and standardize Small/Full sizing with a half-block Small Flatscreen.

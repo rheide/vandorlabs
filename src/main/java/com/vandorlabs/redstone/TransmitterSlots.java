@@ -154,6 +154,8 @@ public final class TransmitterSlots {
     /** Settings are independent of the retained legacy inventory, which is still returned on mining. */
     public static void configure(RedstoneChannelMember member,ChannelList channels,int range,boolean local){
         if(channels==null||!validRange(range)||!supported(member))throw new IllegalArgumentException("Invalid transmission settings");
+        if(channels.equals(channels(member))&&range==range(member)&&local==localRedstone(member.channelTile())
+                &&(!outputOnly(member)||channels.equals(member.getRedstoneChannels())))return;
         TileEntity tile=member.channelTile();boolean previousLocal=localRedstone(tile);NBTTagCompound data=tile.getTileData(),all=data.getCompoundTag(SETTINGS),next=new NBTTagCompound();
         next.setIntArray("Channels",channels.toArray());next.setInteger("Range",range);next.setBoolean("Local",local);
         all.setTag(member.transmitterSlot(),next);data.setTag(SETTINGS,all);

@@ -416,7 +416,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     public void setInputPanel(String inputPanel) {
         String next=isValidInputPanel(inputPanel)?inputPanel:INPUT_PANELS[0];
-        if(this.inputPanel.equals(next))return;
+        if(getInputPanel().equals(ScreenHousingTextures.canonicalInput(next)))return;
         this.inputPanel=next;
         settingsChanged();
     }
@@ -427,7 +427,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     public void setSecondaryInputPanel(String inputPanel) {
         String next=isValidInputPanel(inputPanel)?inputPanel:INPUT_PANELS[0];
-        if(this.secondaryInputPanel.equals(next))return;
+        if(getSecondaryInputPanel().equals(ScreenHousingTextures.canonicalInput(next)))return;
         this.secondaryInputPanel=next;
         settingsChanged();
     }
@@ -458,7 +458,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setSelectedScreen(String selectedScreen) {
-        if(java.util.Objects.equals(this.selectedScreen,selectedScreen))return;
+        if(java.util.Objects.equals(getSelectedScreen(),ScreenHousingTextures.canonicalScreen(selectedScreen)))return;
         this.selectedScreen = selectedScreen;
         settingsChanged();
     }
