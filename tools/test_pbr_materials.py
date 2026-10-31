@@ -22,6 +22,9 @@ class MaterialChecks(unittest.TestCase):
             ('items/industrial_alloy_ingot.png', '', 'brushed_alloy'),
             ('models/armor/roles/scientist_chestpiece.png', '', 'fabric'),
             ('block/ramp_slab_side_on.png', '', 'paint'),
+            ('blocks/materials/satin_silver.png', '', 'satin_silver'),
+            ('blocks/materials/cool_steel.png', '', 'brushed_steel'),
+            ('blocks/materials/pale_titanium.png', '', 'titanium'),
         ]
         for name, hint, expected in cases:
             self.assertEqual(classify(name, hint), expected, name)

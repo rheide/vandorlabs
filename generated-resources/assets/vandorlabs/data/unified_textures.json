@@ -4701,5 +4701,23 @@
     "source": "console_inputs/company_vektor_half_reactor_static",
     "frames": 6,
     "rectangular": true
+  },
+  {
+    "id": "material_satin_silver",
+    "label": "Satin Silver",
+    "category": "Materials",
+    "source": "materials/satin_silver"
+  },
+  {
+    "id": "material_cool_steel",
+    "label": "Cool Steel",
+    "category": "Materials",
+    "source": "materials/cool_steel"
+  },
+  {
+    "id": "material_pale_titanium",
+    "label": "Pale Titanium",
+    "category": "Materials",
+    "source": "materials/pale_titanium"
   }
 ]

@@ -32,6 +32,24 @@ def validate_render(output):
     return len(files)
 
 
+def place_material_finishes(command, labels, jar):
+    """Exercise new saved palette slots using indices from the exact artifact."""
+    import json
+    prefix='assets/vandorlabs/data/'
+    with ZipFile(jar) as archive:
+        entries=json.loads(archive.read(prefix+'unified_textures.json'))
+        legacy=len(json.loads(archive.read(prefix+'dynmap_material_aspects.json')))-len(entries)
+    choices={entry['id']:legacy+i for i,entry in enumerate(entries)}
+    names=('satin_silver','cool_steel','pale_titanium')
+    if not any('material_'+name in choices for name in names):return
+    occupied={(label['x'],label['y'],label['z']) for label in labels}
+    for i,name in enumerate(names):
+        choice=choices['material_'+name];x=60+2*i;y=12;z=60
+        assert (x,y,z) not in occupied,'Material fixture overlaps another assembly'
+        command(f'setblock {x} {y} {z} vandorlabs:programmable_block 0 replace {{housingTexture:{choice},HousingTextureVersion:1}}')
+        labels.append(dict(x=x,y=y,z=z,block='programmable_block',material=name,choice=choice))
+
+
 def place_utility_models(command, labels):
     """Place all programmer cells and persistent coupler endpoints in the real map fixture."""
     for facing, x, direction in (('north', 0, (1, 0)), ('east', 5, (0, 1)),
@@ -222,6 +240,7 @@ def main():
                             labels.append({'x':x,'y':12,'z':z,'block':block,'facing':facing})
                     place_utility_models(command,labels)
                     place_frame_machines(command,labels,root)
+                    place_material_finishes(command,labels,args.jar)
                     validate_fixture_matrix(labels)
                     command('save-all flush');command('say VANDOR_DYNMAP_FIXTURE_SAVED');wait('VANDOR_DYNMAP_FIXTURE_SAVED')
                     content=logpath.read_text(errors='replace')

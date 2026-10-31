@@ -8,6 +8,9 @@ for every runtime texture. With Complementary's RP Support set to labPBR,
 bare metals, coated panels, glass and fabric have distinct reflective finishes.
 The maps preserve existing diffuse artwork and add no light emission.
 
+The Materials picker includes Satin Silver, Cool Steel and Pale Titanium,
+using their native 128px artwork and matching shader material finishes.
+
 Programmable glass and diagonal glass have separate Front, Interior and
 Exterior finishes on top-level tabs. Portholes use Main artwork for their front,
 with separate Interior and Exterior finishes. Wall and diagonal-wall finish tabs

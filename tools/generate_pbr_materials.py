@@ -21,6 +21,8 @@ PROFILES = {
     'paint': (74, 10, 0, None, 0),
     'matte': (28, 10, 0, None, 0),
     'satin': (112, 10, 0, None, 0),
+    'satin_silver': (160, 10, 0, 237, 4),
+    'titanium': (150, 10, 0, 230, 4),
     'fabric': (12, 10, 38, None, 0),
     'rubber': (24, 10, 0, None, 0),
     'stone': (32, 10, 48, None, 5),
@@ -57,6 +59,10 @@ def classify(relative, hint=''):
         return 'neutral'  # GUI/icon/particle art is not a physical block finish.
     if '/armor/roles/' in name and not any(word in text for word in ('helmet', 'hazmat', 'security')):
         return 'fabric'
+    if 'satin silver' in text:
+        return 'satin_silver'
+    if 'titanium' in text:
+        return 'titanium'
     if any(word in text for word in ('carpet', 'padding', 'upholstery', 'fabric', 'seat cushion')):
         return 'fabric'
     if 'rubber' in text:
@@ -81,7 +87,7 @@ def classify(relative, hint=''):
         return 'frame'
     if 'alloy' in text or 'aluminium' in text or 'aluminum' in text:
         return 'brushed_alloy'
-    if any(word in text for word in ('gunmetal', 'metal floor', 'metal cabinet', 'metal drawers', 'metal overhead', 'wall pipes', 'perforated', 'grate', 'ribbed wall')):
+    if any(word in text for word in ('steel', 'gunmetal', 'metal floor', 'metal cabinet', 'metal drawers', 'metal overhead', 'wall pipes', 'perforated', 'grate', 'ribbed wall')):
         return 'brushed_steel'
     # Uncertain surfaces stay coated/dielectric instead of inventing bare metal.
     return 'paint'

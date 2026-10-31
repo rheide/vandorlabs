@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Add Satin Silver, Cool Steel and Pale Titanium to Materials, retaining their native 128px artwork and all existing saved texture choice indices.
+
 - Include LabPBR specular companions for all runtime textures, with material-specific finishes for alloy, steel, painted panels, glass, composite and fabric. Preserve diffuse artwork, transparency and existing light emission; share duplicate maps in the standard JAR.
 
 - Join selected glass frames along the continuous contour of stepped and unequal connected panels, removing internal rectangle rails and filling concave corner gaps.
