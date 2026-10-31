@@ -5000,5 +5000,362 @@
     "source": "console_inputs/analysis_bare_targeting_static",
     "frames": 6,
     "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_biology",
+    "label": "Biology Bridge (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_biology_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_biology",
+    "label": "Biology Bridge (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_biology_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_communications",
+    "label": "Communications Bridge (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_communications_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_communications",
+    "label": "Communications Bridge (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_communications_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_medical",
+    "label": "Medical Bridge (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_medical_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_medical",
+    "label": "Medical Bridge (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_medical_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_navigation",
+    "label": "Navigation Bridge (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_navigation_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_navigation",
+    "label": "Navigation Bridge (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_navigation_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_radar",
+    "label": "Radar Bridge (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_radar_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_radar",
+    "label": "Radar Bridge (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_radar_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_reactor",
+    "label": "Reactor Bridge (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_reactor_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_reactor",
+    "label": "Reactor Bridge (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_reactor_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_analysis_gas_giant",
+    "label": "Gas Giant (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_analysis_gas_giant_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_analysis_gas_giant",
+    "label": "Gas Giant (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_analysis_gas_giant_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_analysis_ice_planet",
+    "label": "Ice Planet (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_analysis_ice_planet_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_analysis_ice_planet",
+    "label": "Ice Planet (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_analysis_ice_planet_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_analysis_station",
+    "label": "Station (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_analysis_station_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_analysis_station",
+    "label": "Station (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_analysis_station_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_analysis_surface_map",
+    "label": "Surface Map (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_analysis_surface_map_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_analysis_surface_map",
+    "label": "Surface Map (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_analysis_surface_map_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_analysis_targeting",
+    "label": "Targeting (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_analysis_targeting_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_analysis_targeting",
+    "label": "Targeting (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_analysis_targeting_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_analysis_terrestrial",
+    "label": "Terrestrial (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_analysis_terrestrial_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_analysis_terrestrial",
+    "label": "Terrestrial (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_analysis_terrestrial_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_engineering",
+    "label": "Engineering (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_engineering_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_engineering",
+    "label": "Engineering (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_engineering_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_pilot",
+    "label": "Pilot (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_pilot_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_pilot",
+    "label": "Pilot (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_pilot_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_bridge_ship_status",
+    "label": "Ship Status (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_bridge_ship_status_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_bridge_ship_status",
+    "label": "Ship Status (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_bridge_ship_status_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_extra_engineering_charts",
+    "label": "Engineering Charts (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_extra_engineering_charts_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_extra_engineering_charts",
+    "label": "Engineering Charts (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_extra_engineering_charts_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_extra_personal_terminal",
+    "label": "Personal Terminal (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_extra_personal_terminal_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_extra_personal_terminal",
+    "label": "Personal Terminal (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_extra_personal_terminal_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_extra_viewscreen",
+    "label": "Viewscreen (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_extra_viewscreen_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_extra_viewscreen",
+    "label": "Viewscreen (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_extra_viewscreen_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_specialist_science",
+    "label": "Science (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_specialist_science_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_specialist_science",
+    "label": "Science (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_specialist_science_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_specialist_starmap",
+    "label": "Starmap (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_specialist_starmap_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_specialist_starmap",
+    "label": "Starmap (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_specialist_starmap_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_cool27_full_specialist_weapons",
+    "label": "Weapons (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "cool27_full_specialist_weapons_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_cool27_half_specialist_weapons",
+    "label": "Weapons (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/cool27_half_specialist_weapons_static",
+    "frames": 6,
+    "rectangular": true
   }
 ]

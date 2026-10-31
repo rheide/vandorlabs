@@ -10,7 +10,13 @@ The maps preserve existing diffuse artwork and add no light emission.
 
 The texture list groups screen artwork under **Displays**. **Gold** retains
 Pinnacle designs and **Cool** retains Paladyne designs, for both Full and Half
-screens. Names place the subject first, such as **Biology (Gold/Full)** or
+screens. Cool also offers Gas Giant, Ice Planet, Station, Surface Map, Targeting,
+Terrestrial, Engineering, Pilot, Ship Status, Engineering Charts, Personal Terminal,
+Viewscreen, Science, Starmap and Weapons in both heights. Its six original subjects
+also have Bridge alternatives, such as **Biology Bridge (Cool/Full)**, so both
+designs can be compared. Each new animation has six native-resolution frames. Compare all three styles
+and the Bridge alternatives in the [display matrix](../display-matrix.html).
+Names place the subject first, such as **Biology (Gold/Full)** or
 **Biology (Gold/Half)**. Saved Vektor choices use Gold; retired Ashiro, Seyr and
 Vandor choices use Cool. Seyr Communications, Navigation and Reactor retain
 their original textures and animations in **Classic**, for both heights.

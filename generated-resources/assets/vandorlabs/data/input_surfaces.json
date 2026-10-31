@@ -438,5 +438,110 @@
     "id": "analysis_bare_targeting",
     "animated": true,
     "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_biology",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_communications",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_medical",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_navigation",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_radar",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_reactor",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_analysis_gas_giant",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_analysis_ice_planet",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_analysis_station",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_analysis_surface_map",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_analysis_targeting",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_analysis_terrestrial",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_engineering",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_pilot",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_bridge_ship_status",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_extra_engineering_charts",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_extra_personal_terminal",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_extra_viewscreen",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_specialist_science",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_specialist_starmap",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "cool27_half_specialist_weapons",
+    "animated": true,
+    "frames": 6
   }
 ]

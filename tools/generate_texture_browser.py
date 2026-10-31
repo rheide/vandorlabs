@@ -85,6 +85,8 @@ def generate():
         filename='collages/'+re.sub(r'[^a-z0-9]+','-',category.lower()).strip('-')+'.png';files[filename]=png(collage);collages[category]=filename
     from control_matrix import generate_control_matrix
     files.update(generate_control_matrix(entries))
+    from display_matrix import generate_display_matrix
+    files.update(generate_display_matrix(entries))
     payload=json.dumps(dict(entries=entries,collages=collages),ensure_ascii=False,separators=(',',':')).replace('</','<\/')
     template=(ROOT/'tools/texture_browser.html').read_text(encoding='utf-8');files['index.html']=template.replace('/*CATALOG*/{}',payload).encode('utf-8')
     hosting=ROOT/'tools/texture_browser_hosting.json'

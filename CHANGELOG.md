@@ -2,6 +2,10 @@
 
 ## 2.7 (in development)
 
+- Add a visual display matrix comparing Classic, Cool and Gold, with native Full/Half previews and the new Bridge alternatives alongside existing Cool artwork.
+
+- Expand Cool with 15 animated display subjects in Full and Half height, plus Bridge alternatives for Biology, Communications, Medical, Navigation, Radar and Reactor. Preserve the original Cool designs and every authored pixel across all six animation frames.
+
 - Name Classic/root keypad-and-dial panels Keypad And Dial and the root six-fader panel Fader Bank. Add a visual control matrix comparing Classic, every company and root artwork.
 
 - Move Keyboard Touchpad and Keyboard Full into Controls/Classic. Remove the Classic Communications, Dual Keyboard, Medical and Reactor controls plus the root Communications/Engineering keyboards; retain saved IDs and redirect old native keyboard selections to Keyboard Full.

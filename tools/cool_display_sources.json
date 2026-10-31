@@ -1,0 +1,682 @@
+{
+  "previousCatalogCount": 591,
+  "previousCatalogIdsSha256": "d8c137803f621467be49ecfeb2ce8a43915f07bab83c20231c2785b010568f0b",
+  "previousBlockCount": 410,
+  "previousBlockIdsSha256": "694dd386f70f5843b99b50f985fb6e75722c505bfa04380020363bad850b6142",
+  "previousInputCount": 88,
+  "previousInputIdsSha256": "711dcf9a8c809eaee7aa3d23b6821c386f7e160d889c90bcd54bbf39a2c3fe3f",
+  "entries": [
+    {
+      "id": "screen_cool27_full_bridge_biology",
+      "source": "cool27_full_bridge_biology_static",
+      "label": "Biology Bridge (Cool/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "b28d0d6e3a581e2d99f3b5444538df32f1384a984ee2c773007fc58cec173b08",
+        "e71228a4663ef4460fdedce560c79ea9d265bd6c61756e366f94cff72922f868",
+        "bdc188c3ec5680b3f2d9d55d77c79d0f48185d6c210f58fbee503c23f68b6985",
+        "796d22c93f044ed55794aafe52b9388fad1d45baa591c045491d3480d6710ca2",
+        "47461dad93b1ccda595543ae6a597eedfa320a45834a9c954b5310c1d6e9f071",
+        "7256add5ea35feaa0502c44dd0a74fb45880c387554a94b19d8a124c6b7e8330"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_biology",
+      "source": "console_inputs/cool27_half_bridge_biology_static",
+      "label": "Biology Bridge (Cool/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "131a733375fb2ecef0aaeb430a213c0450d0a24adb89e2abaf675ee9b5902e5b",
+        "2f5f379cf30fc6b8e86958013134dcb4114d8725910637dbcf463acca77c9570",
+        "f3b861e87105b924df89c5ae8ae444716c8ff72d20a2992ccdd89144d4302c36",
+        "94da7380d8d34eade4eea0a71c67b6209854e433292ed7799ee13eef11f49c46",
+        "d06b41215e9f927d94860d1ba8329d0a945ebeaf1052e9cfb1c700c15cb9c6eb",
+        "0b7a908c5ee71ec6c0dd35ea706c94216dd8ebb981a660c529990bc25848541b"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_bridge_communications",
+      "source": "cool27_full_bridge_communications_static",
+      "label": "Communications Bridge (Cool/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "f24c0e61dbb01878686d0f2e22362dc1a36ae55f0744d71f723ad2dd298cb8b5",
+        "fb274ffb6a90b5f1b5308f6d77b595048e0b00115a0dfb4131a4740731960e97",
+        "239aa0283b20a5886b154a89d4630a5cda58efbc8273d4282726ed951bb83f62",
+        "2e6439a92863bc4ad90f488edfecb083c5cf9815ac64362baa942930cf287d1c",
+        "afd35e00b14c9ce3127a589706978b6d3fa46e1e301211478d53c27d6edc6573",
+        "0832e9cebb398b31fd7c65b88e6a14670c32ac301f8225010db6a045d98c1dec"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_communications",
+      "source": "console_inputs/cool27_half_bridge_communications_static",
+      "label": "Communications Bridge (Cool/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "1f030ae37672d74f8e4d2ce06fc70a0cc7a56c6ec93f91c10ae0e0b31e87552e",
+        "1fbcbe31566a47c6c486960013b85b97ed09ce738ea617d8e3bcf65340d14cd7",
+        "4abc93ce4d85bdcff4d159f333680e81f87666a357a125c6014f948fc5fd8cba",
+        "588958f19861cec2a69ec1f86836b026a1ddf36f84eeafd743f65b3b17406b38",
+        "7e7a4066881cb93f33683d28b8b96ea4c6ba8ea6ac90d74204e3157041c1e09d",
+        "b0585453db365625a50d48e7b3449bed1bd543d313b3acc1b340a1f76dfc3921"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_bridge_medical",
+      "source": "cool27_full_bridge_medical_static",
+      "label": "Medical Bridge (Cool/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "c54da701c14c0dc78f7952fe7e211b670aff8c7eddb9103942a579e2c7e1efb6",
+        "aba463bfb195121c8a7ec0168b254c2259ffbe8ee02b067e942c6db68afb571e",
+        "b6cf41dc3fb6f8cfe854f974df9a5e5e4eb734efdb4a2cfbb555022fa0e29cac",
+        "5ae090ac0566975a276935acabf99596b11e1638c8f7d9ab1810db45286dae19",
+        "9d77f3dde77ac8250e141f94f9c1fd6684472daee537b6b32c85e57c216d0913",
+        "f41b8ed0155280d327198a35fecd129e81be35ad3275ff4a3813793fb5c731d8"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_medical",
+      "source": "console_inputs/cool27_half_bridge_medical_static",
+      "label": "Medical Bridge (Cool/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "47140e8ad66fd7eda68391b7f0cf43677190c905bb90b572cbbca8adf4700e24",
+        "05650246e7db44123b13047d1c0da9cc1788394dd7c7823b0b45c47715efbbe2",
+        "9083a96582024b6a662dda6567fbe80d7c613fa516a6ff867ff7aa9d2a51d1c8",
+        "bbeb610a393d4c300702dd5f2557019379b4c1163c4f9169280d934b2e6ce2eb",
+        "cab09dcb434c049f10b0c734a0cc50a6e469c0c6a71bc9d9d5bd4f628ebcfcb6",
+        "4e821182c1c0b6e3c073075207e78f3ba3193402b2d635a414c493cea6eea819"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_bridge_navigation",
+      "source": "cool27_full_bridge_navigation_static",
+      "label": "Navigation Bridge (Cool/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "cbb388fcb435533aa70fd05c372f564b14cbea0d86dcd40f3ee9161ab9140b5c",
+        "d4375d56e802f63567193bd9161dc537948f6c8efe997262240bc4580a978c53",
+        "570cfaab918b8851d9445422bdc86673aa94dce0c118a3819b65740a5516790a",
+        "926f042e7e4da1c159c49e0353a236d72bac679a13cb6a232fb6d8dc7977a3b5",
+        "6a02dac306332a828fc4f1c69611675e5c9cb35770b0ddd21bf6f0c05ec6f348",
+        "b8a179148c44ee3087686108f5a85a4b2eac0613b611fd201493ea7715a7bc56"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_navigation",
+      "source": "console_inputs/cool27_half_bridge_navigation_static",
+      "label": "Navigation Bridge (Cool/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "d5ad4e0480d5bb2c1ced85ace2656b8ae06174adcb38c2a7e9e9ca60dc432b99",
+        "82bfca03c98dcee1d327d02b59b9aab0e2287e19f986184fd69a35e77387c135",
+        "8a8bf226d2f67f07b253c373b76172a575885979f5ebb5a5794d1e3cc5684e3f",
+        "b0fb17e7b82c8892be167529c88d4300379a7db7f5e42a80810546df5abcd1ab",
+        "b7a866a5f1511ea94df5f33f9bfa33890f065e91a854e4649a0f80a919a4b593",
+        "1c1f1f5520f18b54bb6f5482ba98024ddc058b4b93f77361d68129821844be73"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_bridge_radar",
+      "source": "cool27_full_bridge_radar_static",
+      "label": "Radar Bridge (Cool/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "bdbdffe761b4a58b8eb5eb1ad56f04f1fc0d9877865bb48484b3f9652d2b7e28",
+        "0c5368f106ab5abc0deeb7482683ab5ab2b0abece40af312f915ca3c6b5dd709",
+        "5db194606c9223c525cae27653c80ead83b69a23a819e83e2cc567c2f9787cd6",
+        "150bc8d80480b395a5775323424923db3d7ee272fce866d24ef24f50fce4c6fc",
+        "c9a3dc7ae4ada0262b247a8aee77a35c29319e2e767c8d117eaea947a412f095",
+        "19ef493e4c82ed86f8803a89d531535f1380a52563425b7de0dc6cfff6731263"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_radar",
+      "source": "console_inputs/cool27_half_bridge_radar_static",
+      "label": "Radar Bridge (Cool/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "be64186fc963527856b96b64b4df78cff0f0e4effb8a162cc2fc6942f70c2549",
+        "233b540bbedd54b4d1657d6c9333ed3a03702460cd61124427392a4a4c6c2b5f",
+        "f5148ad3315fdf057dc1216a1ecb111dcb2d465162f657ebd20d4f9c2fa4ed35",
+        "4eb1f6b6ce29645de1dba64768419752f7e3e003ee52f0579231b9cb41b85621",
+        "8f9c0e9a7774e7f2edc60738b004a6bd52ba7d1d1afa804ca0267f8783bff730",
+        "cb5223366b9a2c5642ad0ca765ef8aacb87dfefc459c80cae5f4c5097cc83e85"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_bridge_reactor",
+      "source": "cool27_full_bridge_reactor_static",
+      "label": "Reactor Bridge (Cool/Full)",
+      "height": "full",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "d9d928e72321629faa6043214517ff4755e7a8acf000a051a7a34807c804b698",
+        "f3eb1d9c048960c57efd627100fe1fa96d17786ab181a004487edd928c4048c5",
+        "7ba4af66c3bcf892fd009183ff8ca7ec619ac15c339262a3c51fcb2082897fba",
+        "979b573439aea577f202d213cedbc3b1cd8c7858c65ea946d60899916872ed86",
+        "f969f9a035d45e5208b182842922cc5f7e63303129f64664166bf67d2e75e670",
+        "9dc1e108197f38a2ed4b4c8786285507e28d0c6f5e372a900361b76850fe611d"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_reactor",
+      "source": "console_inputs/cool27_half_bridge_reactor_static",
+      "label": "Reactor Bridge (Cool/Half)",
+      "height": "half",
+      "variant": "bridge",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "1eb0e8da959bcb93c7b313c56341033d2dfde6f148ca3a2310141a8679d787e9",
+        "7049756929c81d6aca381d277d5994b4c2dd303111a205511cee926b64160687",
+        "5bb340900f41bc4e4fea9b5ac44207dc0a3bcddf7f89bbc88f464009984a07b9",
+        "6e558b0b348a7f5c433e359f82a100063b6722b2c41386379ce61874a2a91115",
+        "bcad2fff3bda68f95b904f225146949cb59df4384efd13ce1880bafdff75c294",
+        "45b5201f8726a87a30637b849785322769782816d6d9f4af8572b8278d8f1360"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_analysis_gas_giant",
+      "source": "cool27_full_analysis_gas_giant_static",
+      "label": "Gas Giant (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "fd55a8942b81dfc5e985ab6086c47fb423b7bb05ff4513716ade348c2530b662",
+        "e0651a2f4b3708693daa288510ef0bb95e5dc4559a459533d3a6a969da2c456c",
+        "d4f13b29368b85e6abc8ea278b67198b769ead872c1a562d258477364850a5ca",
+        "74a81ba5e36d9e19d9d1d4c5da342f95c627e9d0716bba40f549f8b8cb269d61",
+        "b4e3668c9c949de11c0ec5e8f0555256e1500f89cb17b15813b24ab4bdd1df3e",
+        "44ff51110f402677a11f591480eb98b1c6aa98f48489d510385f0bd6212c3490"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_analysis_gas_giant",
+      "source": "console_inputs/cool27_half_analysis_gas_giant_static",
+      "label": "Gas Giant (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "0aac5465d01c6102ae9f02d7a95e736149538c4c135746b85785a20ecebd6fe6",
+        "fd1353f777bd2d438aa66f01a8d3125405e52351b671bfb1215dcea6c8055667",
+        "b3df5631802d7c549b3790d0c4f02a3adfc151d7e423475b19354bab3ed01f72",
+        "f14d5e0c599fe0477c5a73837c14012d14ea24e59668cd002942d0d3a861045b",
+        "a49bbcb530f258e6aa9a674f4043b1583fa20cf826af3d891a38b0088cc74e18",
+        "aac85e8aa7377e60c28d32470973a511a2824f6895b4fbf32d0d792a0a504444"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_analysis_ice_planet",
+      "source": "cool27_full_analysis_ice_planet_static",
+      "label": "Ice Planet (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "542417d7ed47f0360f6f6bb339093d514c6e598767496c8973c72aacf5b84a30",
+        "68ba6648cccefc4906e716422003d01e88ecf0aa4d0190fa1ef9d503c48a4a78",
+        "20369341954672b1cb5c5962932dad1383e4c609f81a7bd32f4458bc5d99baea",
+        "7a787da3f6b4eac00d3f5030931db51a3f61abb625852809240f383a979d2726",
+        "807b3076bc0078ea2b4d07ea0ac09ddea7462a118c501649bef0494b0a4c93f7",
+        "bbe559b5314b53591c9678054ad88256dbd0500b8583c55d0f0ea39836def0f5"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_analysis_ice_planet",
+      "source": "console_inputs/cool27_half_analysis_ice_planet_static",
+      "label": "Ice Planet (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "d622dfd348e456b1271f02ecac696e5f3f4418b8d03acd65872b6450f29f5a02",
+        "d1678d01cffd0b9a9eed8ab0acffd75fe3001c927551a4483e8fc3baf45509c7",
+        "830094b9228a31f12b1e7600573357d862c75fa2fa9375d49d78bbb59b25ad44",
+        "d23e420c382ac2b3a7a9e672f188916fb1978e8058bbf0ba74514a6eeb796e0e",
+        "94287ac9169dfb7c7dd46fbcbff50ab786365e6313acf0d1dd38799ce0e96f91",
+        "d1b3165b15b805c0494599360f36b498416b79076bc6858cd0512214d4ee2a3e"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_analysis_station",
+      "source": "cool27_full_analysis_station_static",
+      "label": "Station (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "e49e22ae2c8d0dee8209ca018a6f3f437804f73f64af2c30ba9507452218707f",
+        "dd8940644e145684c91f229f0af55c4ac944616952d8e6ab1685a779b7726660",
+        "b04a2d36999ebdf6ca4f47facee60356c2e30882feebe1c08fdd8313b5f27354",
+        "6ab828b8afaeaccd604c147835d8cf713ce8e146c6d62701176cdb047e7fffb7",
+        "c1b2f40dcf4e1100a8f22534e68e96b53aa681eb97e6d7113cad7a08760c78bd",
+        "7a575417cd62b9227c2aa66a7e90776b218a00092e614061a69df561a61c56f8"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_analysis_station",
+      "source": "console_inputs/cool27_half_analysis_station_static",
+      "label": "Station (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "1ba64067cb706b7180442c7037103fec5373a9e6fb3a4165c123502fe3883a43",
+        "f2f2264734908674a149121584e26e84220dfc8e6a694036c23c17067cb6d499",
+        "773921dbf669890d54b88d9244d3092f5fb7691d1196ad51ce836387e632daab",
+        "0944c97f30506f9e0bb3ef534ef9ec3cc567c7a881c9dae698579a673badf6a7",
+        "d75fb2ca930c5edeb5e96569edbec789c1670db2927a0a0c8e99b4353651bdb9",
+        "655cd8fce7e85e74c75b215a39354213487f11d493389efbecc74ae50fe46e14"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_analysis_surface_map",
+      "source": "cool27_full_analysis_surface_map_static",
+      "label": "Surface Map (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "e51b9ead1871334aa14d92a0c457532f658e15d916bb28ed8f7d46ab3f4c850a",
+        "f42beb3a28f0c61e920a0447b88aecff5768c198600b3b5581aa8424ce175763",
+        "fb1449c61daeb37ce395b3984c719a93b873b8c026054e6e1f29ef9aacbe625e",
+        "4f6171e05d8255b14cabc65f854e51b40ccb2a213d0ed5a6c1d6a152eac137bb",
+        "115e41b799e6e1d00a4e6df04f3b3ca96def8fee0b21e8c367ba3f85eb640ac6",
+        "d7b21574d2d8303e376a75008c36f0f56135d0f3518affdb034f8bb5181f11fe"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_analysis_surface_map",
+      "source": "console_inputs/cool27_half_analysis_surface_map_static",
+      "label": "Surface Map (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "05aa9695de91bac3b4a6fc3ef62d5eec8ef1d5cff279f6086532a3ece3b29b7f",
+        "77e82c28cb9ec57796bea30bf0c378d16b5333ca949b8da87396a065f1e86894",
+        "0ccbeefa27ab94fc18bf09727bed809e4030aab70cdd4b5fe8bdfd617020e331",
+        "d42319a0a2c35acaa9b1200b5457dc947690e00d1fe26e2a0a2d7ecca753aed9",
+        "e706c0dce94aabddcd1c795c81c8a77870aeea7cf477257443d575a17d6959e9",
+        "a2b94e0add798468d1620fd0ed56b69a0f1afbda5086d8f95744ec830c170fca"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_analysis_targeting",
+      "source": "cool27_full_analysis_targeting_static",
+      "label": "Targeting (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "2f514146237a6048de5cad1ee540c3dca7d89b46368b2abc42a1ab0572da3851",
+        "d83f6f5add9adaabbaaa98699a7c1c260495a8c6a4fc874d32bddbc6386402ae",
+        "68235a5d82077bca182c29e2709bbf2d77b6abcd624fa9aed23b17bc2d452db9",
+        "daf643bef9f6e6f7ce4d433d1282e0299f1f5f58790c1511b64dd4b514d4c333",
+        "945067d2a88d2ffb9ef874f39841d96d8e0ee4dcde7f5435e083d3981a66fa6e",
+        "a0e3cc43abe1e1e44f4e00e5918d3294224ec98830221a20fd54112d70aed7c5"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_analysis_targeting",
+      "source": "console_inputs/cool27_half_analysis_targeting_static",
+      "label": "Targeting (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "3a883a956263e1ca297cffc77d893b8136191303d41b2bdd916b6f3070c40f3e",
+        "b6e255552cfcc7f485b965514cb094aa27c860c81b19ff39546d35c676a9761c",
+        "44a2378e7c21ff44ea6f707a52e034cd4d4fe4e68f7d6efb2d193b3ee8cc4484",
+        "fcd5e163c3f69c7e01b4b48afe80f9d21f1c23bcaf295132c64752e6ede21179",
+        "72dba2a659bdbd84bdd640d42e9a9573f5b3a8baa67cf7076befa9cd59a30ccd",
+        "3afc2838caccd047d54a45c8c78e07f9a60ddb1b346f4f917d507d5a03844fb2"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_analysis_terrestrial",
+      "source": "cool27_full_analysis_terrestrial_static",
+      "label": "Terrestrial (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "f78e42e2cc85c06ee7cd90d4e1bbdcbee412e0ae40c9adfba605342889be6c2b",
+        "094e112816279706b94636c77167edeb990dd6864d44ea1e434082b812e3edf3",
+        "56957ba1deee79ba935354e1f035bc4ad28b41f90a0f7b3b8a7546795503ec27",
+        "287949e15acce993b8cdb55d5c24be1dc247d7385093b08df891074fcc170e00",
+        "f7b3e50b7c149f19207b8a7f472203099ffa1616592dcb762664ef93557ab15a",
+        "fd3e5c7b3c3483196571b1a70a8edcdb887cd9123c6fb2276d73c454b0c7f671"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_analysis_terrestrial",
+      "source": "console_inputs/cool27_half_analysis_terrestrial_static",
+      "label": "Terrestrial (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "631cef0ae11b72fab7a113360f7ad3d6e24da966029c8969ca3bbd8815791ac4",
+        "0a07f08b7602aeb210bc9cd0962022b7cac915bead476a892072a654cb26fe2c",
+        "4806c5552c0ba9cb51119d1caa1f509f8b6624ecc40090f7b8225f89566b25f2",
+        "6e907f20c50e9ab5afd3d6cf6bfb611650382a3717dbb68fd696ef8ceb58b14f",
+        "3490f28ad91011cb2758116bdae0c1cbf89816bd64482a6872443aea492a9d78",
+        "b8a43fce6e991f10183bbb237efd542971c50e83356f0df59eb6375c014ce345"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_bridge_engineering",
+      "source": "cool27_full_bridge_engineering_static",
+      "label": "Engineering (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "e4909dc861b440b5cc7db9cea6fccea8e52f6703bff079e896cfcdabaaf25bfd",
+        "4e8e76d768193b526493a16507c9430bca011fc608bbe644f39b7c86af8a2e97",
+        "782079beef2b7d5ed6f609c9dd530fd3808fb082c0f1eae475dcd2baf7f5bca4",
+        "7bd9fdb7d4c4aceeccb193a4a2edb14371cc4cac643dac8de2cfee04f2700caa",
+        "ca0383b3d7e4fd63ceefa4cdfb755261b00fcd706540c07aa699182a7435bc63",
+        "78517201513bfc7c446691b2b1f7f10c027fcb61be542eca678fb90a5913a643"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_engineering",
+      "source": "console_inputs/cool27_half_bridge_engineering_static",
+      "label": "Engineering (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "71890bc060567818dca1c4661bac7355621c92aa099500c44560462d9686237f",
+        "54a2901e762a50703c5a59decb3bfd4cb66012b4aade6a4740db2e44559a9c71",
+        "73478ea3365c1a86139495daf24beb9428235683a9a0bd278f496d2d6bcd143f",
+        "f840e25aa87e756d237dac11dd62f00b064fe1930d0d56ec838e8a4493a2eb9f",
+        "5c7e7967053c49738ac7c26bd6cf4532aea89e53bb5a1f09a86ac27f231c50ad",
+        "7744032ac91af0226b2ce1b1b9c4e91e2e9de12172cd59509b99882da3228d16"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_bridge_pilot",
+      "source": "cool27_full_bridge_pilot_static",
+      "label": "Pilot (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "711f07596d3eff4c0534300da2f9a9faeec583a357b2b8da05644679b39c9968",
+        "70a6fe51b92cc0e616c3e132f96e60893d9484a38939cb8d2820a0994af8c830",
+        "66b38fdea554d16cbfd2a0e5460b45c55e3815f3108205ba709ff114b25bb3bc",
+        "4735fbc6bfd181f4472c5b38bab5e2296729c0c95e1be481227a01df110a3a7b",
+        "11f6f1575473c24a35c118fafbb3ebe85ea94460fd0f5a1df3b06688d93ceb6b",
+        "1e7fd5c812a52a1555039f284ddf28e88c7f42eebaa49551eec7e9267d52dcbd"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_pilot",
+      "source": "console_inputs/cool27_half_bridge_pilot_static",
+      "label": "Pilot (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "9ce488f95f852a5a5f891953d27534e720ee7225521389e1866de40cceb86b2f",
+        "8d23d2af0121797f87af05af8ddf40fcabe1cb07fdb3ddec1a19d59ae9240106",
+        "f52df452a375e9802c891051d27cbf1d7e342f8f1f2946e71a86b1d04b3787ce",
+        "a69f571cf85c66588bb0f25a2179374b76e515f0f5c70aa9a96d02aaca86a266",
+        "0750533a636bbb2f06b6d21b7e97bdb31bb9f821b4ee9232a3c9f749de3f533f",
+        "bf5976da0856ee48295c4e5d1aa1cbd8d29230239e7519a44c25d36e3793190a"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_bridge_ship_status",
+      "source": "cool27_full_bridge_ship_status_static",
+      "label": "Ship Status (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "295b6882ecf2963d04121a818e20f7677892c7a0c30d0b184058be32163da010",
+        "65f29ac6d48efa9d6ae2b290ebff6d1e8b95d5b6b48452688d87d4ecec3da231",
+        "0e1f8429a99d33014ac66dce66a3c1be11d02b8b5de979568398db03f39a13cf",
+        "af5c50405ec762339ca83300aa847f0c4c361d06041f3709614e0f2add3eefb8",
+        "9d4138ca70fc3811a886d21858aeab75e9a7b224b3fa14421ae93952415f5717",
+        "a842a2410dbc2e80421e82053fe3e329d611e53748bee5c12810255375c2c0b5"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_bridge_ship_status",
+      "source": "console_inputs/cool27_half_bridge_ship_status_static",
+      "label": "Ship Status (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "4bdd68d628cf5782dd4be622c0efec0beab04373b777e3de978dfd7501ffbbc2",
+        "01471ed8a9505b5424ee3c6018079f20ddd2a50a7c7d774c343314c6fce5079e",
+        "956dd06e3e932670d3b38403cbe9d8f92401d84f6191860fbbf6289185624082",
+        "0cb1d369214497310baade33fcbf7a0c9c03c44db07d11a4e82734a3ea88832b",
+        "f6788a9002545aa6b072e9b4606f24007c74fc6816a95237d35e5a4750717abd",
+        "d4ff48cf0eecd7281d90f488935821ce777c8897c21461edbc3c16a9a0aa93af"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_extra_engineering_charts",
+      "source": "cool27_full_extra_engineering_charts_static",
+      "label": "Engineering Charts (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "6f7dd3e69e7271cb16f89464d79cc02d47d3cfb16ee89c6b9adc0ac6f723dee4",
+        "564f5004b7a4c7f4978a36e9905f0ffed5f7721020c337e287f42daf534e6b19",
+        "9fc77a48306ac7f5731604238962dfc01cc40083ac07af3f706bf58eb80c7df9",
+        "5be2f42ecb1dee14adf652bd0ddc2adf911552a667f4fbd1eb75d8b182968a6e",
+        "a639ff79f470a97ed170e6a650e7f973b09fe2dcb63784d5ac2534a0c9ca6d1e",
+        "21656a8ea61972bc3b5cdc449ae85666ff42f901ef4ce9eded4f1ebd715db116"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_extra_engineering_charts",
+      "source": "console_inputs/cool27_half_extra_engineering_charts_static",
+      "label": "Engineering Charts (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "55d1d74760ae0c78def49ac5b92a1b39da892c1722c6dd6835d05651d7155233",
+        "24e2e105c4ff5b4b4adfbb94a8117bccd5491362c26abb6542322fef84e80f3d",
+        "f0a2b6b42cf3fe0150c1acd281dc3ced828c8178e7bd7fa93ada9ef94eb6950d",
+        "6742b24a53bf5a69616e3b368e91800e9d9c59885ef94abcafc37f636883bc91",
+        "ca966d6b9e6d55b7401119327a71264b5ba55401bfc96dd3b5ca91344106ecb2",
+        "28c3596dcc38d9375630b4b019fb5a3e5aad21f08d6098a61e0c6f930481618a"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_extra_personal_terminal",
+      "source": "cool27_full_extra_personal_terminal_static",
+      "label": "Personal Terminal (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "3dc51d77e1c49df4cc415b64fd2147fab320e1f8a6f1fa2fdc963def4e5aa7d7",
+        "be1b5e84e9b3960a0bc6b40754d1f9940087406dee358cb5c797f43b2211ef8c",
+        "7691a3fecaeca067d0fe03d1fe867a33e35821b8caa54794e730e4fa1a5ba937",
+        "a29d279b621e7f5a579aa23ef51b2d0745b8d1969bc7b515e95d85db7fcff036",
+        "50f717327743dd8c6d79860587e783b0dfac336943f7e876509d434856b14f99",
+        "a943c4cfbf138d2bcfa84c8413c60c6067ea895e6165f06691571b47fb219914"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_extra_personal_terminal",
+      "source": "console_inputs/cool27_half_extra_personal_terminal_static",
+      "label": "Personal Terminal (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "bc6e7fd5b38a9909b2871fbe4b9deef122767dd799ed33f16affc084e080c8af",
+        "544f399971e45108289e5593432036861e15ef1cb7c4faacfedbcf7f6d042bff",
+        "1d7cc800cfd4e46e3b6651ffb1a7e170bc62612588f7fb445f18b2567b1dd540",
+        "004c341caada365b5611d92c05eb6f80edceb486ac8e2e87c2b9f2e566fe515c",
+        "7df0584f4f1a1643b1f0140b0abb5ef6f97d57a32da8bae365b350c619776484",
+        "73e5ae02c7623ac31a3e097552b238eef23176620fae16634e198f0e6917a7d3"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_extra_viewscreen",
+      "source": "cool27_full_extra_viewscreen_static",
+      "label": "Viewscreen (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "853eb11a6f2d6fc043bdfb0d11c74487d4a07b37221bd07b4ef7a27b34f55fa1",
+        "43d79c3464b529b1d79c30f666985ad064609b09eb31ba973a6a5287002b0725",
+        "51189bc3599bef9a10dd6d832e334438bf5aee21e5e5135defb37590f4f26957",
+        "247895608976ffe5b628bf4b8f11cd224201b8f500ed421864b12390b176e4f7",
+        "33faf32e5e8252b982a120661c67000213726b0e636ea48df05ac3d880050d35",
+        "f98f2477987df4679656accb1668e91b9f17a9f752643e908793a3794aa37f3d"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_extra_viewscreen",
+      "source": "console_inputs/cool27_half_extra_viewscreen_static",
+      "label": "Viewscreen (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "c54cbc1b85bc9653e873e662d344085d058dc7cb20995daaa29b92cb8ff4dbdc",
+        "2505dbc481ef71685cf664a380a9d02bb832cc681e07a3c501a67e84964fe636",
+        "1d11067c890d46af0d33a7d481fda04b6f9a224e55381c10b1582ab858bc31bb",
+        "03cc7ee14c84e71d1e239722be012ab3d8f389b5990d5f9ce127d19999f3bd14",
+        "b9845593a3d43f780199936d9e61050911b2652460ca8ed4b85ea39deae3fc8a",
+        "0246448814a07614e2db3e577469bdcba6f561aa329ffac22aa364ffeafa7e66"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_specialist_science",
+      "source": "cool27_full_specialist_science_static",
+      "label": "Science (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "fc98d7fe227e104b44798a45c8456fa9b9dd9dda431848590936dcd319364d3e",
+        "5d2be990e74b05ceaf1b0eb801dbfeea2bf34b75cfe8504e44dc034b13dd589b",
+        "ad4df2b357eb130ae49e4327ad7c902919ea252b8a84b20684b4fba40a05ea84",
+        "f0b214f9c5e336ad08ed4bd90165628cce3e187e0c3dba148d33fa82155f59fb",
+        "2d9d612f1df89bf809c5967f02930ccdedcd03270c9287550be6c16be808286d",
+        "1c18ec3e274f6e90b18a1e9f336e0f9c130056fdfe1d1739446727d81a633e26"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_specialist_science",
+      "source": "console_inputs/cool27_half_specialist_science_static",
+      "label": "Science (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "ec687b6057e4fa836be68dbfb2659d5b943fa20820719096390ec57b19f977c8",
+        "2b6eb58a27575c4b4e9ef5f15a9c79f5daa32b8ce5f00313fa2b0449085039cb",
+        "94ff02511f27e50b36547be9562e6041b7a61543b762612817adb78b35278136",
+        "59f3c1539f83c49618c13589b96dfb07d4b45900b8b5dbab6d412d4c0a68cfd3",
+        "68ceb2b5a214189ac55ab00d52f0549927124b4d72c675050bf11278b2439b30",
+        "36da409afa282c46039b18bd9cfd255047cb34524302867aad92a171264eecda"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_specialist_starmap",
+      "source": "cool27_full_specialist_starmap_static",
+      "label": "Starmap (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "9be8cbd24297431fb7cbff66986bcac87acadb8ff955177191aa4286a174091a",
+        "308b582da9d0e3e9da67146e02fb796fd8e110786fa9cce5c983219f31c8d2f6",
+        "5c09372c7026330bade6427b322a54e469355432d3e9b42621c6c5583b633581",
+        "ba2964a532c05427f474a0c1bb49793e092a820f4929c182e969ad9247f1ba6b",
+        "0b3a69b3ab072a3b55c96b611ef560c60273ed0e42387417e6c6ad41211fc89a",
+        "dfe5bc2ce2c409e778983257ef4b6a38d9b9f766204dd3d09243424d3ce4824e"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_specialist_starmap",
+      "source": "console_inputs/cool27_half_specialist_starmap_static",
+      "label": "Starmap (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "fdc780e772086c5247163a229aa6452336c5b32452676cac0525e7da222d3ec0",
+        "c7fe03a481c0e6fdf0f06f02cfc2b028bc44db09269f38ebda52c07bfd814b31",
+        "d909058a7cefda6c5e3d73df583b658ba098b119c50c3320825e79340b780dcd",
+        "c1fb91bb445a43178368ef8b718a49f21e92cb56687d3ace56fead1fb8a74a4e",
+        "441d9a724c67e1e945a82eaa23179b78b1c36f9ffdb7724bb0cdc8ad6258404a",
+        "c1b64f48f397029d4e5a056815adcf63796fb3071284bb4e9b4e91ebf332c578"
+      ]
+    },
+    {
+      "id": "screen_cool27_full_specialist_weapons",
+      "source": "cool27_full_specialist_weapons_static",
+      "label": "Weapons (Cool/Full)",
+      "height": "full",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "ad3709ff5f8406e70c46434e2e8dbf059307050a3c4f7938467779d8e8d4ed5d",
+        "44f1269c2bdf0dcebc43da3dee97578a6d6e69972406b73c8bf2f616fc148878",
+        "4216f76f8b7b53c4f7756c8d8f880066e0ba4ceab9bf847c76e3cfb02b4f87f6",
+        "8fffac52d35c2472ad231cc5b0300ea271862df13dff4dc9b50ce80e170d2d88",
+        "922d1a65282a192d46ce69bfc3ccacaab9a7c7d71f3980930e5e943fedbed936",
+        "3f8431e081a83c7ed60beae43f8fd3ec60e10eb6d1264345fa1ace967b3815b3"
+      ]
+    },
+    {
+      "id": "screen_cool27_half_specialist_weapons",
+      "source": "console_inputs/cool27_half_specialist_weapons_static",
+      "label": "Weapons (Cool/Half)",
+      "height": "half",
+      "variant": "expanded",
+      "frameDurationMs": 250,
+      "frameHashes": [
+        "8e495206b4708ecee1ef13cd8e776acb3cccfb4e41bbb6023f35f40863666620",
+        "7bdcb147c7a1a805abf176825ef8b7269098173e6a92471051f9499fb03d2ed7",
+        "22def2268d143be629e05abbe00bb9769acb68f0ddcc590158dbbd7b255c7721",
+        "1cf7646bc77a191a9e2d1b1aff3f3d428a4ed7810cb2a6df55da06ef056f7f0b",
+        "84b890f78c796357e37cb2a3fddf62c2f739d4d59c4d9904e3de3a6040881933",
+        "cfacd1f2f7d8b56f58f6ed8986ed98789ace4e9798c32f5e6cd3448f5621b792"
+      ]
+    }
+  ]
+}

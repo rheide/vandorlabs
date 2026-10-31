@@ -22,7 +22,7 @@ for identifier,label in CLASSIC_KEYBOARDS.items():
 for identifier in RETIRED_CONTROLS:assert byid[identifier]['hidden']
 for group,company in [('Gold','pinnacle'),('Cool','paladyne')]:
     for height in ('Full','Half'):
-        choices=[e for e in catalog if e.get('menuGroup')==group and not e.get('hidden') and ('console_inputs/' in e['source'])==(height=='Half')]
+        choices=[e for e in catalog if e['id'].startswith('screen_company_') and e.get('menuGroup')==group and not e.get('hidden') and ('console_inputs/' in e['source'])==(height=='Half')]
         assert len(choices)==6
         for e in choices:assert company in e['id'] and e['label'].endswith(f'({group}/{height})')
 for e in catalog:

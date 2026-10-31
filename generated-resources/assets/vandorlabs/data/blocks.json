@@ -3975,5 +3975,173 @@
     "framed": false,
     "programmable_only": true,
     "retired": true
+  },
+  {
+    "id": "cool27_full_bridge_biology",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_bridge_communications",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_bridge_medical",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_bridge_navigation",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_bridge_radar",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_bridge_reactor",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_analysis_gas_giant",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_analysis_ice_planet",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_analysis_station",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_analysis_surface_map",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_analysis_targeting",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_analysis_terrestrial",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_bridge_engineering",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_bridge_pilot",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_bridge_ship_status",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_extra_engineering_charts",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_extra_personal_terminal",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_extra_viewscreen",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_specialist_science",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_specialist_starmap",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
+  },
+  {
+    "id": "cool27_full_specialist_weapons",
+    "type": "display",
+    "class": "BlockDisplaySequenced",
+    "item": false,
+    "framed": false,
+    "programmable_only": true
   }
 ]

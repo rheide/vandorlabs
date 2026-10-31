@@ -1,6 +1,6 @@
 """Generate visual control comparisons from the same visible catalog as the browser."""
 import html,re
-from pathlib import Path
+from texture_matrix import render_page
 
 COLUMNS=('Classic','Ashiro Mai','Paladyne','Pinnacle','Seyr','Vandor','Vektor','Root Controls')
 
@@ -33,6 +33,10 @@ def generate_control_matrix(entries):
                 markdown.append('[!['+label+']('+path+')]('+path+')')
             else:parts.append('<td class="missing" aria-label="Unavailable">—</td>');markdown.append('—')
         rendered.append(''.join(parts)+'</tr>');md.append('| '+' | '.join(markdown)+' |')
-    template=(Path(__file__).parent/'control_matrix.html').read_text()
-    page=template.replace('<!--HEADERS-->',''.join('<th scope="col">'+esc(h)+'</th>' for h in headings)).replace('<!--ROWS-->','\n'.join(rendered)).replace('<!--SUMMARY-->',str(len(cells))+' textures · '+str(len(rows))+' control types · '+str(len(COLUMNS))+' folders')
-    return {'../control-matrix.html':page.encode(),'../control-matrix.md':('\n'.join(md)+'\n').encode()}
+    page=render_page(title='Control texture matrix',summary=str(len(cells))+' textures · '+str(len(rows))+' control types · '+str(len(COLUMNS))+' folders',
+        headers=''.join('<th scope="col">'+esc(h)+'</th>' for h in headings),rows='\n'.join(rendered),
+        nav='<a href="texture-browser/index.html">Texture browser</a> · <a href="display-matrix.html">Display matrix</a> · <a href="company-controls.md">Control guide</a> · <a href="control-matrix.md">Markdown matrix</a>',
+        intro='Classic and company folders are compared by control name. Root Controls is included for completeness; its family prefixes are omitted from row names. Each preview is a first frame. A dash means that design is unavailable in the folder. Select a texture to open its PNG.',
+        filter_label='Find a control',placeholder='Keyboard, Fader Bank, Navigation…',table_label='Scrollable control texture comparison',unit='control types',
+        footer='Shared names identify related layouts; textures retain their company-specific artwork. Scroll horizontally to compare every folder. Headers stay visible while scrolling.')
+    return {'../control-matrix.html':page,'../control-matrix.md':('\n'.join(md)+'\n').encode()}
