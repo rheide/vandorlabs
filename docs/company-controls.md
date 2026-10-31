@@ -1,5 +1,7 @@
 # Company controls
 
+[Visual control matrix](control-matrix.html) · [Markdown matrix with texture previews](control-matrix.md)
+
 Every company has ten control textures. Shared names describe related layouts; each company retains its own artwork. Saved identifiers and numeric choices are unchanged. Navigation Controls is distinct from the Navigation display.
 
 ## Available for all six companies
@@ -20,7 +22,7 @@ These five types also exist in Classic.
 | Directional Controls | Ashiro Mai, Paladyne, Seyr, Vandor | No |
 | Dual Dial Controls | Pinnacle, Vandor | No |
 | Fader Bank | Ashiro Mai, Paladyne, Pinnacle, Vektor | Yes |
-| Keypad And Dial | Ashiro Mai, Vandor | No |
+| Keypad And Dial | Ashiro Mai, Vandor | Yes |
 
 ## Company-specific designs
 
@@ -35,7 +37,7 @@ These five types also exist in Classic.
 
 ## Other Classic controls
 
-Biology, Button Clusters Sliders, Command Keypad, Controls, Dual Controls, Environment Controls, Keyboard Full, Keyboard Touchpad, Pilot Faders, Radar.
+Biology, Button Clusters Sliders, Controls, Dual Controls, Environment Controls, Keyboard Full, Keyboard Touchpad, Pilot Faders, Radar.
 
 The company folders contain 60 textures across 26 control names. Classic contains 16 textures. Root Controls artwork remains separate.
 
@@ -46,10 +48,9 @@ The root contains 14 textures. These retain their existing family prefixes:
 | Prefix | Controls |
 |---|---|
 | Console Controls | Biology Controls; Navigation Controls; Sensor Controls |
-| Input Surfaces | Command Keypad; Engineering Faders; Keyboard; Pilot Controls; Science Touchpad |
-| Sliders Buttons | Button Clusters Sliders; Button Matrix Sliders; Environment Controls; Pilot Faders; Six Faders; Twin Faders Transport |
+| Input Surfaces | Engineering Faders; Keyboard; Pilot Controls; Science Touchpad |
+| Sliders Buttons | Button Clusters Sliders; Button Matrix Sliders; Environment Controls; Pilot Faders; Twin Faders Transport |
 
-The root covers the five control types shared by all companies. Six Faders has
-the same layout family as Fader Bank. The Classic and root Command Keypad
-textures each combine a keypad with a rotary dial. Root Biology Controls and
+The root also contains **Fader Bank** and **Keypad And Dial**, matching their
+Classic and company control families. Root Biology Controls and
 Sensor Controls correspond visually to Classic Biology and Radar.

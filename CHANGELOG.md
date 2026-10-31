@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Name Classic/root keypad-and-dial panels Keypad And Dial and the root six-fader panel Fader Bank. Add a visual control matrix comparing Classic, every company and root artwork.
+
 - Move Keyboard Touchpad and Keyboard Full into Controls/Classic. Remove the Classic Communications, Dual Keyboard, Medical and Reactor controls plus the root Communications/Engineering keyboards; retain saved IDs and redirect old native keyboard selections to Keyboard Full.
 
 - Name control artwork Navigation Controls and align related company layouts as Fader Bank, Directional Controls, Dial And Sliders, Dual Dial Controls and Keypad And Dial, retaining distinct artwork and saved choices.

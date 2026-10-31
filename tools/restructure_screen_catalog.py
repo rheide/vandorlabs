@@ -8,6 +8,9 @@ CONTROL_PREFIXES=('input_surfaces_','console_controls_','sliders_buttons_')
 # Name related control layouts consistently without changing their saved identities.
 CONTROL_NAMES={
     'Navigation':'Navigation Controls',
+    'Command Keypad':'Keypad And Dial',
+    'Input Surfaces Command Keypad':'Keypad And Dial',
+    'Sliders Buttons Six Faders':'Fader Bank',
     'Three Faders':'Fader Bank', 'Four Faders':'Fader Bank',
     'Three Alignment Faders':'Fader Bank', 'Three Lever Sliders':'Fader Bank',
     'Six Faders':'Fader Bank',
@@ -57,7 +60,8 @@ def restructure(catalog,blocks,language):
         half=entry['source'].startswith('console_inputs/');source=entry['source'].removeprefix('console_inputs/').removesuffix('_static');height='Half' if half else 'Full'
         if half and source.startswith(CONTROL_PREFIXES):
             entry['label']=control_name(entry['label'])
-            if source=='console_controls_navigation_controls':names['gui.vandorlabs.console.input.'+source]='Navigation Controls'
+            native_names={'console_controls_navigation_controls':'Navigation Controls','input_surfaces_command_keypad':'Keypad And Dial','sliders_buttons_six_faders':'Fader Bank'}
+            if source in native_names:names['gui.vandorlabs.console.input.'+source]=native_names[source]
             continue
         company=re.fullmatch(r'company_(ashiro_mai|paladyne|pinnacle|seyr|vandor|vektor)_(full|half)_(.+)',source)
         if company:

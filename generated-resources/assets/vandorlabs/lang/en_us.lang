@@ -322,7 +322,7 @@ tile.vandorlabs.programmable_ramp.name=Ramp Controller
 gui.vandorlabs.selector.bare=Bare
 gui.vandorlabs.console.input.input_surfaces_keyboard=Keyboard
 gui.vandorlabs.console.input.input_surfaces_keyboard_touchpad=Keyboard Touchpad
-gui.vandorlabs.console.input.input_surfaces_command_keypad=Command Pad
+gui.vandorlabs.console.input.input_surfaces_command_keypad=Keypad And Dial
 gui.vandorlabs.console.input.input_surfaces_pilot_controls=Pilot
 gui.vandorlabs.console.input.input_surfaces_science_touchpad=Science Pad
 gui.vandorlabs.console.input.input_surfaces_engineering_faders=Eng. Faders
@@ -336,7 +336,7 @@ gui.vandorlabs.console.input.sliders_buttons_button_clusters_sliders=Button Clus
 gui.vandorlabs.console.input.sliders_buttons_button_matrix_sliders=Button Matrix
 gui.vandorlabs.console.input.sliders_buttons_environment_controls=Environment
 gui.vandorlabs.console.input.sliders_buttons_pilot_faders=Pilot Faders
-gui.vandorlabs.console.input.sliders_buttons_six_faders=Six Faders
+gui.vandorlabs.console.input.sliders_buttons_six_faders=Fader Bank
 gui.vandorlabs.console.input.sliders_buttons_twin_faders_transport=Twin Faders
 
 item.vandorlabs.programmable_matter_ingot.name=Programmable Matter Ingot

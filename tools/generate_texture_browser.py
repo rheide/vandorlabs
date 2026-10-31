@@ -83,6 +83,8 @@ def generate():
                 lines.append(label[:length]);label=label[length:].lstrip()
             for line,text in enumerate(lines[:2]):draw.text((x+6,y+132+line*16),text,font=font,fill=(226,238,245))
         filename='collages/'+re.sub(r'[^a-z0-9]+','-',category.lower()).strip('-')+'.png';files[filename]=png(collage);collages[category]=filename
+    from control_matrix import generate_control_matrix
+    files.update(generate_control_matrix(entries))
     payload=json.dumps(dict(entries=entries,collages=collages),ensure_ascii=False,separators=(',',':')).replace('</','<\/')
     template=(ROOT/'tools/texture_browser.html').read_text(encoding='utf-8');files['index.html']=template.replace('/*CATALOG*/{}',payload).encode('utf-8')
     hosting=ROOT/'tools/texture_browser_hosting.json'

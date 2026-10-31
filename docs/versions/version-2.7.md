@@ -30,7 +30,8 @@ redundant **Bottom** suffix in Classic and company folders. **Navigation Control
 distinguishes control panels from Navigation displays. Similar company layouts
 share functional names such as **Fader Bank** and **Dial And Sliders** while
 retaining their original artwork. See the [company control comparison](../company-controls.md)
-for shared types and company-specific designs. Classic includes **Keyboard Touchpad**
+for shared types and company-specific designs, or compare the actual textures
+in the [control matrix](../control-matrix.html). Classic includes **Keyboard Touchpad**
 and **Keyboard Full**. The former Classic Communications, Dual Keyboard, Medical
 and Reactor controls and the root Communications/Engineering keyboards are removed;
 old native keyboard selections use Keyboard Full. Company controls and their

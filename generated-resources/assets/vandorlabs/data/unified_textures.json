@@ -911,7 +911,7 @@
   },
   {
     "id": "screen_console_inputs_input_surfaces_command_keypad_static",
-    "label": "Input Surfaces Command Keypad",
+    "label": "Keypad And Dial",
     "category": "Screens",
     "source": "console_inputs/input_surfaces_command_keypad_static",
     "rectangular": true
@@ -981,7 +981,7 @@
   },
   {
     "id": "screen_console_inputs_sliders_buttons_six_faders_static",
-    "label": "Sliders Buttons Six Faders",
+    "label": "Fader Bank",
     "category": "Screens",
     "source": "console_inputs/sliders_buttons_six_faders_static",
     "rectangular": true
@@ -3635,7 +3635,7 @@
   },
   {
     "id": "controls27_half_height_command_keypad",
-    "label": "Command Keypad",
+    "label": "Keypad And Dial",
     "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_command_keypad",
     "rectangular": true
