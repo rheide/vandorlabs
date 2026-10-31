@@ -1,5 +1,5 @@
 """Pixel-identical whole sprites and atlas tiles have distinct Dynmap meanings."""
-import tempfile
+import tempfile,json
 from pathlib import Path
 from PIL import Image
 from deduplicate_runtime_textures import stage
@@ -8,6 +8,7 @@ with tempfile.TemporaryDirectory() as temporary:
     root=Path(temporary);folder=root/'textures/blocks';folder.mkdir(parents=True)
     for name in ('whole','duplicate','atlas'):
         Image.new('RGBA',(64,64),(100,160,220,255)).save(folder/(name+'.png'))
+    (root/"data").mkdir();(root/"data/unified_textures.json").write_text("[]");(root/"data/pbr_materials.json").write_text(json.dumps({"maps":{}}))
     text=root/'dynmap-texture.txt'
     text.write_text('texture:id=whole,filename=assets/vandorlabs/textures/blocks/whole.png,xcount=1,ycount=1\ntexture:id=atlas,filename=assets/vandorlabs/textures/blocks/atlas.png,xcount=4,ycount=4\nblock:id=%fixture,state=*,patch0=3:atlas\n')
     stage(root)
