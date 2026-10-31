@@ -7,24 +7,109 @@
     "particle": "vandorlabs:blocks/programmable_glass/door_side"
   },
   "display": {
-    "gui": { "rotation": [30, 225, 0], "scale": [0.68, 0.68, 0.68] }
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "scale": [
+        0.62,
+        0.62,
+        0.62
+      ],
+      "translation": [
+        0,
+        2,
+        0
+      ]
+    }
   },
   "elements": [
     {
-      "from": [0, 0, 0], "to": [16, 1, 8],
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        1,
+        8
+      ],
       "faces": {
-        "up": { "texture": "#input" }, "down": { "texture": "#wall" },
-        "north": { "texture": "#wall" }, "south": { "texture": "#wall" },
-        "east": { "texture": "#wall" }, "west": { "texture": "#wall" }
+        "up": {
+          "texture": "#input",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "down": {
+          "texture": "#wall"
+        },
+        "north": {
+          "texture": "#wall"
+        },
+        "south": {
+          "texture": "#wall"
+        },
+        "east": {
+          "texture": "#wall"
+        },
+        "west": {
+          "texture": "#wall"
+        }
       }
     },
     {
-      "from": [0, 1, 7], "to": [16, 2, 18],
-      "rotation": { "origin": [8, 1, 8], "axis": "x", "angle": -45, "rescale": false },
+      "from": [
+        0,
+        1,
+        7
+      ],
+      "to": [
+        16,
+        2,
+        18
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          1,
+          8
+        ],
+        "axis": "x",
+        "angle": -45,
+        "rescale": false
+      },
       "faces": {
-        "up": { "texture": "#screen" }, "down": { "texture": "#wall" },
-        "north": { "texture": "#wall" }, "south": { "texture": "#wall" },
-        "east": { "texture": "#wall" }, "west": { "texture": "#wall" }
+        "up": {
+          "texture": "#screen",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "down": {
+          "texture": "#wall"
+        },
+        "north": {
+          "texture": "#wall"
+        },
+        "south": {
+          "texture": "#wall"
+        },
+        "east": {
+          "texture": "#wall"
+        },
+        "west": {
+          "texture": "#wall"
+        }
       }
     }
   ]

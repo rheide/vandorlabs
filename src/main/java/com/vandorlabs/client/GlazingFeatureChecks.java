@@ -51,7 +51,7 @@ final class GlazingFeatureChecks {
             verify(mc,true);capture(mc,gui,output,"after");
             if(fixture<2)click(gui,30,1);else{click(gui,701,0);click(gui,711,0);}phase++;return false;
         }
-        verify(mc,false);mc.player.closeScreen();if(++fixture==BLOCKS.length){geometry(mc);packets();System.out.println("[vandorlabs][reprolab] glazing-features PASS six-dialogs real-clicks server-roundtrip save-reload Small-Full left-right playback-mode-speed geometry packets");return true;}phase=0;return false;
+        verify(mc,false);mc.player.closeScreen();if(++fixture==BLOCKS.length){geometry(mc);packets();icons(mc,output);System.out.println("[vandorlabs][reprolab] glazing-features PASS six-dialogs real-clicks server-roundtrip save-reload Small-Full left-right playback-mode-speed geometry packets");return true;}phase=0;return false;
     }
     private static void verify(Minecraft mc,boolean changed)throws Exception{
         mc.getIntegratedServer().addScheduledTask(()->{
@@ -63,6 +63,19 @@ final class GlazingFeatureChecks {
     private static void capture(Minecraft mc,GuiScreen gui,File output,String stage)throws Exception{
         List<GuiButton> buttons=buttons(gui);for(int i=0;i<buttons.size();i++){GuiButton a=buttons.get(i);if(!a.visible)continue;for(int j=i+1;j<buttons.size();j++){GuiButton b=buttons.get(j);if(b.visible)require(a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y,"overlapping buttons "+a.id+"/"+b.id+" "+BLOCKS[fixture]);}}
         mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT);net.minecraft.client.renderer.GlStateManager.disableDepth();mc.entityRenderer.setupOverlayRendering();gui.drawScreen(-1,-1,0);ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"glass-display-order_dialog_"+BLOCKS[fixture]+"_"+stage+".png"));
+    }
+    private static void icons(Minecraft mc,File output)throws Exception{
+        int old=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.EXTFramebufferObject.GL_FRAMEBUFFER_BINDING_EXT);TurntableRenderState saved=new TurntableRenderState();
+        net.minecraft.client.shader.Framebuffer frame=new net.minecraft.client.shader.Framebuffer(256,128,true);
+        net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_PROJECTION);net.minecraft.client.renderer.GlStateManager.pushMatrix();net.minecraft.client.renderer.GlStateManager.loadIdentity();net.minecraft.client.renderer.GlStateManager.ortho(0,64,32,0,-1000,1000);net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_MODELVIEW);net.minecraft.client.renderer.GlStateManager.pushMatrix();
+        try{
+            frame.bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.loadIdentity();net.minecraft.client.renderer.GlStateManager.depthMask(true);net.minecraft.client.renderer.GlStateManager.clearColor(.1F,.16F,.23F,1);net.minecraft.client.renderer.GlStateManager.clear(16640);net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.disableFog();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();
+            net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();net.minecraft.client.renderer.GlStateManager.depthMask(false);Gui.drawRect(8,8,24,24,0xff2e3b4c);Gui.drawRect(40,8,56,24,0xff2e3b4c);net.minecraft.client.renderer.GlStateManager.depthMask(true);net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting();
+            mc.getRenderItem().renderItemAndEffectIntoGUI(new ItemStack(ModBlocks.PROGRAMMABLE_CONSOLE),8,8);mc.getRenderItem().renderItemAndEffectIntoGUI(new ItemStack(ModBlocks.PROGRAMMABLE_HALF_CONSOLE),40,8);org.lwjgl.opengl.GL11.glFinish();
+            java.awt.image.BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(256,128,frame);ImageIO.write(image,"png",new File(output,"glass-display-order_console_icons.png"));
+            for(int slot=0;slot<2;slot++){int left=32+slot*128,minX=256,minY=128,maxX=-1,maxY=-1;for(int y=0;y<128;y++)for(int x=slot*128;x<(slot+1)*128;x++){int expected=x>=left&&x<left+64&&y>=32&&y<96?0x2e3b4c:0x1a293b,pixel=image.getRGB(x,y);if(Math.abs((pixel>>16&255)-(expected>>16&255))>10||Math.abs((pixel>>8&255)-(expected>>8&255))>10||Math.abs((pixel&255)-(expected&255))>10){minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);}}require(maxX>=minX&&minX>=left+4&&maxX<left+60&&minY>=36&&maxY<92,"console icon padding slot="+slot+" bounds="+minX+","+minY+","+maxX+","+maxY);}
+            System.out.println("[vandorlabs][reprolab] console-icons PASS full-half native inventory transforms one-pixel padding full artwork UVs");
+        }finally{net.minecraft.client.renderer.GlStateManager.popMatrix();net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_PROJECTION);net.minecraft.client.renderer.GlStateManager.popMatrix();net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_MODELVIEW);net.minecraft.client.renderer.OpenGlHelper.glBindFramebuffer(net.minecraft.client.renderer.OpenGlHelper.GL_FRAMEBUFFER,old);saved.close();frame.deleteFramebuffer();}
     }
     private static void geometry(Minecraft mc){
         for(boolean small:new boolean[]{false,true}){

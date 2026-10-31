@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Keep console item artwork inside its inventory slots, use full image UVs, and replace retired icon textures with retained catalog artwork.
+
 - Clear stale received redstone power when the last channel is removed, while coalescing temporary channel changes during ownership transfers.
 
 - Avoid redundant updates and cache invalidation when applying unchanged programmable settings, including legacy display aliases and default transmitter settings. Preserve the original saved texture identity on a no-op change.
