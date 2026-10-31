@@ -34,7 +34,7 @@ for e in catalog:
 for prefix in ('screen_','screen_console_inputs_'):
     for variant in ('bare','framed'):
         assert byid[f'{prefix}bridge_{variant}_sensors_static']['alias']==f'{prefix}specialist_{variant}_sensors_static'
-        height='Half' if 'console_inputs' in prefix else 'Full';assert byid[f'{prefix}specialist_{variant}_sensors_static']['label']==f'Sensors (Classic/{height})'
+        height='Half' if 'console_inputs' in prefix else 'Full';name='Radar';assert byid[f'{prefix}specialist_{variant}_sensors_static']['label']==f'{name} (Classic/{height})'
 for tier in ('full','half'):
     for subject in SEYR_CLASSIC:
         e=byid[f'screen_company_seyr_{tier}_{subject}'];assert e['label']==subject.title()+f' (Classic/{tier.title()})' and not e.get('hidden')

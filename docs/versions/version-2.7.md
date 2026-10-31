@@ -16,8 +16,8 @@ Vandor choices use Cool. Seyr Communications, Navigation and Reactor retain
 their original textures and animations in **Classic**, for both heights.
 
 **Displays/Classic** also contains the original Analysis, Bridge, Extra and
-Specialist displays. Specialist Sensors is **Sensors (Classic/Full)** or
-**Sensors (Classic/Half)** and replaces Bridge Sensors. Cruiser and ship views
+Specialist displays. Specialist Sensors is **Radar (Classic/Full)** or
+**Radar (Classic/Half)** and replaces Bridge Sensors. Cruiser and ship views
 are under **Displays/Ship**. All selectable display artwork names identify
 Full or Half height. Tactical Starmap, Science Biology Wide Left/Right and the
 Console Biology/Engineering/Medical/Navigation/Sensors/Signals artwork are

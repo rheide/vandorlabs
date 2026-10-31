@@ -33,6 +33,7 @@ def restructure(catalog,blocks,language):
         elif source.startswith(('ship_','cruiser_')):entry['menuGroup']='Ship'
         elif source.startswith(('analysis_','bridge_','extra_','specialist_')):
             subject=re.sub(r'^(analysis|bridge|extra|specialist)_(bare_|framed_)?','',source)
+            if source in ('specialist_bare_sensors','specialist_framed_sensors'):subject='radar'
             entry.update(menuGroup='Classic',label=subject.replace('_',' ').title()+f' (Classic/{height})')
         elif source in ('tactical_starmap','science_biology_wide_left','science_biology_wide_right') or source.startswith('console_'):
             entry.update(hidden=True,retireAnimation=True);retired.add(source)

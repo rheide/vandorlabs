@@ -1013,7 +1013,7 @@
   },
   {
     "id": "screen_console_inputs_specialist_bare_sensors_static",
-    "label": "Sensors (Classic/Half)",
+    "label": "Radar (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_bare_sensors_static",
     "rectangular": true,
@@ -1061,7 +1061,7 @@
   },
   {
     "id": "screen_console_inputs_specialist_framed_sensors_static",
-    "label": "Sensors (Classic/Half)",
+    "label": "Radar (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_framed_sensors_static",
     "rectangular": true,
@@ -1458,7 +1458,7 @@
   },
   {
     "id": "screen_specialist_bare_sensors_static",
-    "label": "Sensors (Classic/Full)",
+    "label": "Radar (Classic/Full)",
     "category": "Screens",
     "source": "specialist_bare_sensors_static",
     "rectangular": true,
@@ -1506,7 +1506,7 @@
   },
   {
     "id": "screen_specialist_framed_sensors_static",
-    "label": "Sensors (Classic/Full)",
+    "label": "Radar (Classic/Full)",
     "category": "Screens",
     "source": "specialist_framed_sensors_static",
     "rectangular": true,

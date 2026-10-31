@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Name the Classic specialist sensor displays Radar (Classic/Full) and Radar (Classic/Half).
+
 - Rename the visible Screens category to Displays; organize matching Full/Half artwork into Gold, Cool, Classic and Ship, with height suffixes and stable saved indices. Merge duplicate company designs while retaining original Seyr Communications, Navigation and Reactor animations in Classic.
 - Replace Bridge Sensors with Specialist Sensors, and remove Tactical Starmap, Science Biology Wide Left/Right and the Console display artwork without removing console blocks.
 - Prune unused Dynmap exports using live texture/model references, preserving native shared-texture aliases; omit retired display static images, animations, OFF variants and their generated companions.
