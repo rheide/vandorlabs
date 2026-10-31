@@ -40,7 +40,7 @@ final class HousingModelChecks {
                         .withProperty(ProgrammableHousingState.SIDE_FINISH,mode==1?3:-1)
                         .withProperty(ProgrammableHousingState.FACES,mode<2?FaceTextures.DEFAULT:new FaceTextures(true,mode==2?new int[]{1,2,3,4,5,6}:new int[]{-1,-1,-1,-1,-1,-1}))
                         .withProperty(ProgrammableHousingState.TILE_SIDES,tiled).withProperty(ProgrammableHousingState.VISIBLE,visible);
-                List<BakedQuad> golden=reference.getQuads(state,null,0);
+                List<BakedQuad> golden=geometricFaces(reference.getQuads(state,null,0));
                 same(golden,model.getQuads(state,null,0));same(golden,model.getQuads(state,null,42));
                 for(EnumFacing side:EnumFacing.values())require(model.getQuads(state,side,0).isEmpty(),"general faces duplicated as side faces");
                 inputs.add(state);expected.add(golden);cases++;
@@ -57,11 +57,18 @@ final class HousingModelChecks {
             for(int choice=0;choice<1500;choice++) {
                 IExtendedBlockState state=((IExtendedBlockState)block.getDefaultState()).withProperty(ProgrammableHousingState.FINISH,CustomBlockMaterials.ID_BASE+choice)
                         .withProperty(ProgrammableHousingState.VISIBLE,63);
-                same(reference.getQuads(state,null,0),model.getQuads(state,null,0));
+                same(geometricFaces(reference.getQuads(state,null,0)),model.getQuads(state,null,0));
             }
             require(model.cachedFaceLists()<=ProgrammableHousingModel.MAX_FACE_LISTS,"unbounded common face lists");
         }
         System.out.println("PASS: "+cases+" exact housing model cases, mixed overrides/storage artwork, concurrent chunk workers and bounded face lists");
+    }
+    /** Legacy reference intentionally substituted lighting faces. Geometry/UVs
+     * remain the oracle, but declared faces must now follow the emitted normals. */
+    private static List<BakedQuad> geometricFaces(List<BakedQuad> source){
+        List<BakedQuad> result=new ArrayList<>();
+        for(BakedQuad q:source){int[] d=q.getVertexData();int stride=d.length/4;double[] a=new double[3],b=new double[3];for(int i=0;i<3;i++){a[i]=Float.intBitsToFloat(d[stride+i])-Float.intBitsToFloat(d[i]);b[i]=Float.intBitsToFloat(d[2*stride+i])-Float.intBitsToFloat(d[i]);}EnumFacing face=EnumFacing.getFacingFromVector((float)(a[1]*b[2]-a[2]*b[1]),(float)(a[2]*b[0]-a[0]*b[2]),(float)(a[0]*b[1]-a[1]*b[0]));result.add(new BakedQuad(d,q.getTintIndex(),face,q.getSprite(),q.shouldApplyDiffuseLighting(),q.getFormat()));}
+        return result;
     }
     private static void same(List<BakedQuad> expected,List<BakedQuad> actual) {
         require(expected.size()==actual.size(),"housing quad count changed");

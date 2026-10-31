@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Match programmable cube/slab face lighting to vanilla positional sampling and geometric face normals, avoiding bright side-neighbour light bleeding onto unrelated faces.
+
 - Add an independent Ignore directionality toggle beside Connected Matching Blocks in the Duplifier dialog. Match rotated or differently mounted blocks without rotating targets, while retaining block-type, texture and other configuration boundaries.
 
 - Add Satin Silver, Cool Steel and Pale Titanium to Materials, retaining their native 128px artwork and all existing saved texture choice indices.

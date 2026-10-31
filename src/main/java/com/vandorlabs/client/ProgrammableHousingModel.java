@@ -179,12 +179,9 @@ public final class ProgrammableHousingModel implements IBakedModel {
                 data[offset + uv + 1] = Float.floatToRawIntBits(sprite.getInterpolatedV(v.v));
                 if(format.hasNormal())data[offset+format.getNormalOffset()/4]=packedNormal;
             }
-            // Flat block lighting samples the declared face. Use a perpendicular
-            // direction to sample the housing position, preserving the old
-            // maximum-neighbor light rule for every face.
-            EnumFacing sampleFace = FACE[i].getAxis() == EnumFacing.Axis.Y
-                    ? EnumFacing.NORTH : EnumFacing.UP;
-            return retainedQuad(data, -1, sampleFace,
+            // Keep the geometric face: vanilla and OptiFine use it to choose
+            // the visible surface's light sample, independently of its neighbours.
+            return retainedQuad(data, -1, normal,
                     sprite, false, format);
     }
 

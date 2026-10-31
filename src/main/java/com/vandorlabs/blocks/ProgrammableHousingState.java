@@ -73,7 +73,7 @@ public final class ProgrammableHousingState {
         }
         IExtendedBlockState sampled=HousingBlockState.sample((IExtendedBlockState)state,finish,tile==null?-1:tile.getSideTexture(),
                 tile==null?com.vandorlabs.tiles.FaceTextures.DEFAULT:tile.getFaceTextures(),
-                tileSides,visible,neighborLight(world,pos));
+                tileSides,visible,0);
         if(tile!=null&&tile.getWorld()!=null&&tile.getWorld().isRemote&&state.getBlock().getClass()==BlockProgrammableBlock.class&&tileSides!=1){
             HousingFaceLayouts joined=com.vandorlabs.client.JoinedHousingFaces.sample(tile,visible);
             if(joined!=HousingFaceLayouts.NONE)sampled=sampled.withProperty(JOINED,joined);
@@ -81,12 +81,11 @@ public final class ProgrammableHousingState {
         return sampled;
     }
 
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public static int light(IBlockState state, IBlockAccess world, BlockPos pos) {
-        if (state instanceof IExtendedBlockState) {
-            Integer snapshot = ((IExtendedBlockState)state).getValue(LIGHT);
-            if (snapshot != null) return snapshot;
-        }
-        return neighborLight(world, pos);
+        // The mesher supplies the visible face's sampling position. An owner-cell
+        // maximum leaks bright side neighbours into unrelated faces and shaders.
+        return world.getCombinedLight(pos,0);
     }
 
     public static int neighborLight(IBlockAccess world, BlockPos pos) {
