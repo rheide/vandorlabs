@@ -3,6 +3,11 @@
 Version 2.7 separates display artwork, frame finishes and redstone transmission,
 and expands the controls for moving mechanisms.
 
+The standard JAR also includes [shader material maps](../shader-materials.md)
+for every runtime texture. With Complementary's RP Support set to labPBR,
+bare metals, coated panels, glass and fabric have distinct reflective finishes.
+The maps preserve existing diffuse artwork and add no light emission.
+
 Programmable glass and diagonal glass have separate Front, Interior and
 Exterior finishes on top-level tabs. Portholes use Main artwork for their front,
 with separate Interior and Exterior finishes. Wall and diagonal-wall finish tabs

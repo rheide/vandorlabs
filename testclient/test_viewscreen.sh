@@ -108,6 +108,9 @@ case "${1:-}" in
         elif [ "$TARGET" = creative-catalog ]; then
             PREFIX=catalog_
             export VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY=true
+        elif [ "$TARGET" = pbr-materials ]; then
+            PREFIX=pbr_
+            export VANDOR_LABS_PBR_MATERIAL_CHECKS_ONLY=true
         elif [ "$TARGET" = solid-housing ]; then
             PREFIX=fluid_
             export VANDOR_LABS_FLUID_CHECKS_ONLY=true VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY=true
@@ -383,6 +386,11 @@ if [ "$MODE" = focus ]; then
             grep -q 'creative-catalog-JEI-live PASS' "$RUN_OUT/client.log"
         fi
         echo "Live creative catalog checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = pbr-materials ]; then
+        grep -q 'pbr-materials-live PASS' "$RUN_OUT/client.log"
+        echo "Live PBR resource checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = solid-housing ]; then

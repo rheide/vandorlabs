@@ -510,6 +510,7 @@ processResources {
     inputs.files('tools/compact_runtime_assets.py', 'tools/prune_retired_textures.py', 'tools/prune_unused_runtime_assets.py')
     inputs.file('tools/deduplicate_runtime_textures.py')
     inputs.file('tools/optimize_runtime_pngs.py')
+    inputs.file('tools/generate_pbr_materials.py')
     inputs.file('src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java')
     inputs.property('pythonExecutable', pythonExecutable)
     doFirst {
@@ -559,6 +560,9 @@ processResources {
             commandLine pythonExecutable, 'tools/prune_unused_runtime_assets.py', '--stage', target.parentFile
         }
         exec {
+            commandLine pythonExecutable, 'tools/generate_pbr_materials.py', '--stage', target.parentFile
+        }
+        exec {
             environment 'PYTHONPATH', project.file('build/tooling/python-packages').absolutePath
             commandLine pythonExecutable, 'tools/optimize_runtime_pngs.py', '--stage', target.parentFile
         }
@@ -597,6 +601,13 @@ task testSharedRuntimeTextures(type: Exec) {
     commandLine pythonExecutable, 'tools/deduplicate_runtime_textures.py', '--check-jar', jar.archivePath
 }
 check.dependsOn testSharedRuntimeTextures
+
+task testPbrMaterials(type: Exec) {
+    dependsOn jar
+    workingDir projectDir
+    commandLine pythonExecutable, 'tools/generate_pbr_materials.py', '--check-jar', jar.archivePath
+}
+check.dependsOn testPbrMaterials
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 

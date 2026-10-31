@@ -53,8 +53,11 @@ with ZipFile(jar) as archive:
             image=Image.open(io.BytesIO(archive.read(name)))
             if '/textures/items/armor/' in name:
                 assert image.size==(16,16),name
-                x0,y0,x1,y1=image.convert('RGBA').getbbox()
-                assert x0>0 and y0>0 and x1<16 and y1<16,name
+                # Material alpha encodes emission, not inventory transparency.
+                # The companion coverage check validates its diffuse mask.
+                if not name.endswith(('_s.png','_n.png')):
+                    x0,y0,x1,y1=image.convert('RGBA').getbbox()
+                    assert x0>0 and y0>0 and x1<16 and y1<16,name
             elif '/textures/items/' in name:assert image.size==(128,128),name
             elif '/textures/models/armor/roles/' in name or '/textures/models/armor/companies/' in name:assert image.size==(64,32),name
             if '/imported/trapdoors/' in name:assert image.size==(128,128),name
