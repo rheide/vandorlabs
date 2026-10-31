@@ -10,22 +10,26 @@ import java.util.*;
 
 /** Cached diagonal panels for native artwork, panes and replacement/tiled materials. */
 final class XDoorMeshes {
-    private static final Map<Key,StaticSurfaceMesh[]> CACHE=new LinkedHashMap<>(64,.75F,true);
-    static void clear(){CACHE.clear();}
+    private static final com.google.common.cache.Cache<Key,StaticSurfaceMesh[]> CACHE=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(4*1024*1024).weigher((Key k,StaticSurfaceMesh[] v)->1024+Arrays.stream(v).mapToInt(m->m.vertexCount()*32).sum()+(k.model instanceof DoorGlassModel?((DoorGlassModel)k.model).memoryBytes():0)).build();
+    static void clear(){CACHE.invalidateAll();}
     static StaticSurfaceMesh[] get(TileEntitySpaceDoor tile,IBlockState state,boolean right,int part) {
         DoorRenderModels.Entry entry=DoorRenderModels.get(state.getBlock(),tile.metadata(true,right,part));
         int choice=part==1?tile.getFaceTexture():-1;
-        Key key=new Key(entry,right,choice,tile.isTileTexture());
-        StaticSurfaceMesh[] panels=CACHE.get(key);if(panels!=null)return panels;
+        double scale=tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?1.5:1;IBakedModel model=part==2?DoorGlassModel.get(entry.model,tile,scale):FrameDoorModel.applies(tile.frameAppearance,part)?entry.framed(tile.frameAppearance,scale):entry.model;
+        Key key=new Key(model,right,choice,tile.getTextureLayout(),scale);
+        StaticSurfaceMesh[] panels=CACHE.getIfPresent(key);if(panels!=null)return panels;
         TextureAtlasSprite sprite=choice<0?null:Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(choice));
-        panels=build(entry.model,right,choice,tile.isTileTexture(),sprite,part==1);
-        CACHE.put(key,panels);if(CACHE.size()>256)CACHE.remove(CACHE.keySet().iterator().next());
+        panels=build(model,right,choice,tile.getTextureLayout(),sprite,part==1,scale);
+        CACHE.put(key,panels);
         return panels;
     }
     static StaticSurfaceMesh[] build(IBakedModel model,boolean right,int choice,boolean tiled,TextureAtlasSprite sprite,boolean caps) {
+        return build(model,right,choice,tiled?1:0,sprite,caps,1);
+    }
+    private static StaticSurfaceMesh[] build(IBakedModel model,boolean right,int choice,int layout,TextureAtlasSprite sprite,boolean caps,double scale) {
         SelectedDoorGeometry selected=choice<0?null:new SelectedDoorGeometry(model);
         StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();
-        if(selected!=null)SelectedDoorFaceCache.emit(capture,selected.bounds,sprite,choice,tiled,0);
+        if(selected!=null){double aspect=UnifiedTextureSprites.aspect(sprite);boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,(selected.bounds[3]-selected.bounds[0])*scale,(selected.bounds[4]-selected.bounds[1])*scale,aspect);if(fit)SelectedDoorFaceCache.emit(capture,selected.bounds,sprite,choice,false,0);else DoorFaceTextureMesh.draw(capture,sprite,selected.bounds,0,aspect,scale);}
         IBakedModel source=selected==null?model:selected;
         for(int side=-1;side<6;side++)for(BakedQuad quad:source.getQuads(null,side<0?null:EnumFacing.getFront(side),42)) {
             int[] data=quad.getVertexData();int stride=data.length/4;
@@ -39,9 +43,9 @@ final class XDoorMeshes {
         StaticSurfaceMesh full=capture.finish();return full.xPanels(right?1:0,caps);
     }
     private static final class Key {
-        final DoorRenderModels.Entry entry;final boolean right,tiled;final int choice;
-        Key(DoorRenderModels.Entry entry,boolean right,int choice,boolean tiled){this.entry=entry;this.right=right;this.choice=choice;this.tiled=tiled;}
-        @Override public int hashCode(){return 31*(31*System.identityHashCode(entry)+choice)+(right?2:0)+(tiled?1:0);}
-        @Override public boolean equals(Object other){if(!(other instanceof Key))return false;Key k=(Key)other;return entry==k.entry && right==k.right && choice==k.choice && tiled==k.tiled;}
+        final IBakedModel model;final boolean right;final int choice,layout;final double scale;
+        Key(IBakedModel model,boolean right,int choice,int layout,double scale){this.model=model;this.right=right;this.choice=choice;this.layout=layout;this.scale=scale;}
+        public int hashCode(){return Objects.hash(System.identityHashCode(model),right,choice,layout,scale);}
+        public boolean equals(Object other){if(!(other instanceof Key))return false;Key k=(Key)other;return model==k.model&&right==k.right&&choice==k.choice&&layout==k.layout&&scale==k.scale;}
     }
 }

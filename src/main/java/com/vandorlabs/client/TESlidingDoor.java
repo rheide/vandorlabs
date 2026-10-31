@@ -217,11 +217,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         boolean paired=state.getValue(BlockConnectingDetailedDoor.PAIRED);
         boolean right=state.getValue(BlockVandorDoor.HINGE)==BlockDoor.EnumHingePosition.LEFT;
         boolean glass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1;
-        if (glass && !tile.hasGlass()) return;
+        if (glass && (!tile.hasGlass()||tile.opaqueGlass())) return;
         RenderItem renderer=Minecraft.getMinecraft().getRenderItem();
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
-        for (int part=glass?2:0;part<=(glass?2:1);part++) {
+        for (int part=glass?2:0;part<=(glass?2:tile.hasGlass()&&tile.opaqueGlass()?2:1);part++) {
             if(tile.isXSplit() && part!=0) {
                 renderXPanels(tile,state,facing,progress,x,y,z,size,right,part,light,glass);
                 continue;
@@ -245,7 +245,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             if(part==1 && tile.getFaceTexture()>=0) {
                 GlStateManager.disableLighting();
                 DoorRenderModels.Entry selected=DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,1));
-                renderSelectedDoorFace(tile,light,selected.selected());
+                renderSelectedDoorFace(tile,light,selected.selected(),size);
                 GlStateManager.translate(.5,.5,.5);DoorItemRenderer.baked(renderer,selected,selected.selected());
                 GlStateManager.enableLighting();GlStateManager.popMatrix();continue;
             }
@@ -253,19 +253,19 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             GlStateManager.disableLighting();
             DoorRenderModels.Entry item=DoorRenderModels.get(state.getBlock(),
                     tile.metadata(paired,right,part));
-            if (glass) {
+            if (part==2) {
                 Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
                 GlStateManager.color(1,1,1,1);
-                GlStateManager.enableBlend();
+                if(glass)GlStateManager.enableBlend();else GlStateManager.disableBlend();
                 GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
                         GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
-                GlStateManager.depthMask(false);
-                DoorItemRenderer.baked(renderer,item,item.model);
+                GlStateManager.depthMask(!glass);
+                DoorItemRenderer.baked(renderer,item,DoorGlassModel.get(item.model,tile,size));
                 GlStateManager.depthMask(true);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
                 GlStateManager.disableBlend();
-            } else if(tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0){Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);DoorItemRenderer.baked(renderer,item,FrameDoorModel.get(item.model,tile.frameAppearance));}else DoorItemRenderer.opaque(renderer,item);
+            } else if(FrameDoorModel.applies(tile.frameAppearance,part)){Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);DoorItemRenderer.baked(renderer,item,item.framed(tile.frameAppearance,size));}else DoorItemRenderer.opaque(renderer,item);
             GlStateManager.enableLighting();
             GlStateManager.popMatrix();
         }
@@ -296,17 +296,17 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                     size*com.vandorlabs.render.XDoorPanel.shiftY(panel,travel),tile.positionOffset());
             GlStateManager.scale(size,size,1);
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-            panels[panel].draw(buffer,light>>>16,light&65535);Tessellator.getInstance().draw();GlStateManager.popMatrix();
+            panels[panel].drawColored(buffer,light>>>16,light&65535,1,1,1,part==2&&tile.hasGlassOverride()?com.vandorlabs.tiles.GlassMaterials.opacity(tile.glassAppearance().material,tile.glassAppearance().tint):1);Tessellator.getInstance().draw();GlStateManager.popMatrix();
         }
         if(glass){GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();}
         GlStateManager.enableLighting();
     }
 
-    private static void renderSelectedDoorFace(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int light,SelectedDoorGeometry geometry) {
+    private static void renderSelectedDoorFace(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int light,SelectedDoorGeometry geometry,double scale) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
         buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        SelectedDoorFaceCache.get(geometry,tile.getFaceTexture(),tile.getTextureLayout())
+        SelectedDoorFaceCache.get(geometry,tile.getFaceTexture(),tile.getTextureLayout(),scale)
                 .draw(buffer,light>>>16,light&65535);
         Tessellator.getInstance().draw();
     }

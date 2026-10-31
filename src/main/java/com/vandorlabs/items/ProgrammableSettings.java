@@ -55,6 +55,7 @@ public final class ProgrammableSettings {
     public static final String GLASS_SHADE = "glass_shade";
     public static final String GLASS_MATERIAL = "glass_material";
     public static final String GLASS_LAYOUT = "glass_layout";
+    public static final String DOOR_GLASS="DoorGlassAppearance";
     public static final String GLASS_TINT = "glass_tint";
     public static final String GLASS_SIZE = "glass_size";
     public static final String SIDE_TEXTURE="side_texture";
@@ -279,6 +280,7 @@ public final class ProgrammableSettings {
             out.setInteger(DOOR_PANEL, door.panelMode());
             NBTTagCompound security=new NBTTagCompound();security.setInteger("Mode",door.securityMode());security.setInteger("Allowed",door.keyReader().effectiveAllowed());out.setTag(DOOR_SECURITY,security);
             out.setInteger(DOOR_DEPTH, door.getPlacementDepth());
+            if(door.supportsGlassAppearance()){NBTTagCompound finish=new NBTTagCompound();door.glassAppearance().write(finish);out.setTag(DOOR_GLASS,finish);}
         } else if (tile instanceof TileEntityProgrammableChair) {
             TileEntityProgrammableChair chair = (TileEntityProgrammableChair) tile;
             if (chair instanceof com.vandorlabs.tiles.TileEntityConnectedSeat)
@@ -632,6 +634,7 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntitySpaceDoor) {
             TileEntitySpaceDoor door = (TileEntitySpaceDoor) tile;
+            if(values.hasKey(DOOR_GLASS,10)){door.setGlassAppearance(com.vandorlabs.tiles.DoorGlassAppearance.read(values.getCompoundTag(DOOR_GLASS)));applicable=true;}
             if(values.hasKey(DOOR_TILE_TEXTURE,1)){door.setTileTexture(values.getBoolean(DOOR_TILE_TEXTURE));applicable=true;}if(values.hasKey(DOOR_TEXTURE_LAYOUT,3)){door.setTextureLayout(values.getInteger(DOOR_TEXTURE_LAYOUT));applicable=true;}
             if(values.hasKey(DOOR_FACE_TEXTURE,3)){door.setFaceTexture(values.getInteger(DOOR_FACE_TEXTURE));applicable=true;}
             if(values.hasKey(DOOR_SECURITY,10)){NBTTagCompound security=values.getCompoundTag(DOOR_SECURITY);door.configureSecurity(security.getInteger("Mode"),security.getInteger("Allowed"));applicable=true;}

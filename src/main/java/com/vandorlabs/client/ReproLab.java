@@ -707,6 +707,7 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.cockpitChecksOnly")) {
             try {if(CockpitFocusedChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("cockpit focused checks",failure);}return;
         }
+        if(Boolean.getBoolean("vandorlabs.doorAppearanceChecksOnly")){try{if(DoorAppearanceLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception e){throw new IllegalStateException("door appearance checks",e);}return;}
         if(Boolean.getBoolean("vandorlabs.glassAppearanceChecksOnly")) {
             try {if(GlassVisualChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("glass live checks",failure);}

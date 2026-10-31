@@ -108,9 +108,9 @@ trimming its geometry.
 Their supplied one-model-pixel border width stays unchanged. Sliding models have no hinges.
 Observation metal and glass use separate opaque/cutout and translucent passes.
 
-Programmable Glass selects Small or Large detail, a glass finish, Mild / Normal / Strong tint, and Bare / Framed edges in its settings menu. Programmable Diagonal Glass exposes the same tint and frame choices alongside its diagonal geometry controls.
+Programmable Glass selects Small or Large detail, a glass finish, Mild / Normal / Strong / Opaque tint, and Bare / Framed edges in its settings menu. Programmable Diagonal Glass exposes the same tint and frame choices alongside its diagonal geometry controls.
 
-Both glass blocks include the regular material catalog in the same list. For these materials, Mild and Normal Tint use 35% and 65% opacity; Strong is fully opaque. Strong is also fully opaque for every finish in the Glass category, including Clear. Mild and Normal retain their translucent finishes. Opaque Strong panes render with solid geometry and write depth, including inside corners, joined T panels and porthole openings.
+Both glass blocks include the regular material catalog in the same list. For these materials, Mild, Normal and Strong use 35%, 65% and 85% opacity; Opaque is fully solid. Native glass finishes also offer the separate Opaque level, including Clear. Opaque panes render with solid geometry and write depth, including inside corners, joined T panels and porthole openings.
 
 Non-glass materials also offer Tile/Stretch across matching joined panels. Porthole Wall, Diagonal Porthole and Porthole Block expose the same glass/material catalog and tint controls in a separate Glass tab; their Main and Side textures remain independent. See the [building gallery](gallery/building.md#selected-close-ups-and-glass) for joined material examples and layout rules.
 The glass shade is selected independently for each size. The thick inside faces
@@ -168,6 +168,17 @@ extruded frame sides. Those sides now sample the frame material.
 openings. It is available for regular and large doors at both supported
 resolutions, with the existing glass reflection pane behind the supplied
 cutout artwork.
+Its two openings have opaque inner reveal surfaces through the leaf depth,
+following the supplied perimeter and central strut. Interior frame finishes
+also apply to these surfaces.
+
+White Glass, Dark Glass and Slim Glass have a separate **Glass** tab on both
+regular and Large doors. Select a native glass shade or a general material,
+then choose Mild, Normal, Strong or Opaque tint. General materials also offer
+Fit/Tile/Stretch mapping. **Original** restores the design's supplied pane.
+The finish is saved on configured items and can be copied with the Duplifier's
+Door Glass option. Front and Interior frame finishes remain independent;
+ordinary square materials tile at world-sized pixels on both door sizes.
 
 ## Card security
 
@@ -197,3 +208,26 @@ Use a fluid bucket on either face to fill that side of a Programmable Door; its 
 An open Programmable Door with stored water on just one side continuously supplies water into the dry side. The outlet feeds ordinary vanilla spreading while the door stays open and wet. Closing, draining or removing the door releases its outlet to drain naturally; existing independent water sources are preserved. Saved door compartments remain independent. Both-wet doors, lava, trapdoors and other waterlogged blocks do not create outlets.
 
 Frame front and interior finishes are independently selectable in the Frame page. See [frame finishes and programmable displays](frames-and-displays.md) for layout and migration behavior.
+
+## Rendering cost
+
+Large doors draw two moving leaves from one assembly renderer. Their nine
+member tiles do not each draw a complete door. A normal single door uses two
+tiles; paired normal doors use four. Large White/Dark/Slim glass doors retain
+the same authored per-leaf pane/reveal counts as their normal versions, with
+a differently sized outer frame. A square material tiled across a larger
+surface can add quads at world-unit boundaries; this preserves pixel size.
+
+The material lookup path now reuses registered block IDs, primitive metadata
+indices and the most recent exact frame configuration. In a warmed isolated
+client, 10,000 repeated model/frame lookups allocated 2,080,000 bytes before
+and zero after the change. Median lookup time changed from 0.710 to 0.087 ms;
+this measures that lookup loop, rather than complete door rendering or FPS.
+Frame and glazing model caches have bounded retained-byte budgets and reset
+with resource reloads. Optional shader/OptiFine paths still use their compatible
+rendering route. Slim Glass adds opaque reveal faces around its two cutouts,
+so it has more leaf geometry than White/Dark Glass.
+
+Measurement data: [lookup before](performance/door-materials/lookup-before.csv),
+[lookup after](performance/door-materials/lookup-after.csv),
+[per-leaf geometry](performance/door-materials/geometry.csv).

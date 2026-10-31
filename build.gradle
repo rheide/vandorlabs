@@ -164,6 +164,16 @@ task testHousingFaceLighting(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+task testDoorFrameMaterials(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'door-material'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
 task testTrapdoorFrames(type: JavaExec) {
     group = 'verification'
     description = 'Check ordinary trapdoor mesh parity and frame aperture geometry without GL'

@@ -257,3 +257,4 @@ for tier,expected_size in [('low',(128,256)),('medium',(256,512))]:
                         assert set(element['faces'])=={'north','south'}
                         assert all(0<=uv<=16 for face in element['faces'].values() for uv in face['uv'])
 print('Slim Glass PASS: both native resolutions, cutout frames and isolated shimmer panes on every mount variant')
+import test_slim_glass_frame  # Validate the emitted reveal walls as well as the pane faces.

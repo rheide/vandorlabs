@@ -9,7 +9,10 @@ final class DoorFaceTextureMesh {
         draw(buffer,sprite,b,light,1);
     }
     static void draw(BufferBuilder buffer,TextureAtlasSprite sprite,double[] b,int light,double aspect) {
-        double width=Math.max(1,aspect),height=Math.max(1,1/aspect);
+        draw(buffer,sprite,b,light,aspect,1);
+    }
+    static void draw(BufferBuilder buffer,TextureAtlasSprite sprite,double[] b,int light,double aspect,double scale) {
+        double width=Math.max(1,aspect)/scale,height=Math.max(1,1/aspect)/scale;
         for(double x=b[0];x<b[3]-1e-9;x+=width)for(double y=b[1];y<b[4]-1e-9;y+=height) {
             double x1=Math.min(x+width,b[3]),y1=Math.min(y+height,b[4]),u=(x1-x)/width,spanV=(y1-y)/height;
             for(int side=0;side<2;side++) {

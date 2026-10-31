@@ -24,9 +24,19 @@ public final class MessageFrameAppearance implements IMessage {
                     ||c instanceof ContainerAnimatedScreenSelector&&((ContainerAnimatedScreenSelector)c).getTileEntity()==owner
                     ||c instanceof ContainerRedstoneChannel&&((ContainerRedstoneChannel)c).member.channelTile()==owner;
                 FrameAppearance a=FrameAppearance.of(owner);if(!matches||a==null||!c.canInteractWith(player))return;
-                if(com.vandorlabs.blocks.BlockAnimatedScreenSelector.usesDeviceHousing(owner.getBlockType()))a.artworkVersion=1;
-                a.bare=msg.bare;a.front=FrameAppearance.usesMainFront(owner.getBlockType())?-1:msg.front;a.interior=msg.interior;a.exterior=msg.exterior;a.tile=msg.tile;a.displayFit=msg.displayFit;a.split=msg.split;a.splitTop=msg.top;a.splitBottom=msg.bottom;com.vandorlabs.tiles.GlassMaterials.changed();owner.markDirty();
-                net.minecraft.block.state.IBlockState state=player.world.getBlockState(msg.pos);player.world.notifyBlockUpdate(msg.pos,state,state,3);player.world.checkLight(msg.pos);
+                java.util.List<TileEntity> owners=new java.util.ArrayList<>();owners.add(owner);
+                if(owner instanceof com.vandorlabs.tiles.TileEntitySpaceDoor){
+                    BlockPos mate=((com.vandorlabs.tiles.TileEntitySpaceDoor)owner).mate();
+                    if(mate!=null){if(!player.world.isBlockLoaded(mate))return;TileEntity other=player.world.getTileEntity(mate);
+                        if(!(other instanceof com.vandorlabs.tiles.TileEntitySpaceDoor)||!((com.vandorlabs.tiles.TileEntitySpaceDoor)other).usable(player))return;owners.add(other);}
+                }
+                for(TileEntity target:owners){
+                    FrameAppearance appearance=FrameAppearance.of(target);
+                    if(com.vandorlabs.blocks.BlockAnimatedScreenSelector.usesDeviceHousing(target.getBlockType()))appearance.artworkVersion=1;
+                    appearance.bare=msg.bare;appearance.front=FrameAppearance.usesMainFront(target.getBlockType())?-1:msg.front;appearance.interior=msg.interior;appearance.exterior=msg.exterior;appearance.tile=msg.tile;appearance.displayFit=msg.displayFit;appearance.split=msg.split;appearance.splitTop=msg.top;appearance.splitBottom=msg.bottom;target.markDirty();
+                    net.minecraft.block.state.IBlockState state=player.world.getBlockState(target.getPos());player.world.notifyBlockUpdate(target.getPos(),state,state,3);player.world.checkLight(target.getPos());
+                }
+                com.vandorlabs.tiles.GlassMaterials.changed();
             });return null;
         }
     }

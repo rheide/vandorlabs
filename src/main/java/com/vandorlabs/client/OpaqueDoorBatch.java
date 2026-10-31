@@ -51,12 +51,15 @@ public final class OpaqueDoorBatch {
                 && (!(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor) || mesh(tile,state,true,true,0)!=null && mesh(tile,state,true,true,1)!=null);
     }
     private static Mesh mesh(TileEntitySpaceDoor tile,IBlockState state,boolean paired,boolean right,int part){
-        return DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,part)).batchMesh();
+        DoorRenderModels.Entry entry=DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,part));
+        net.minecraft.client.renderer.block.model.IBakedModel model=FrameDoorModel.applies(tile.frameAppearance,part)?entry.framed(tile.frameAppearance,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?1.5:1):entry.model;
+        return model instanceof FrameDoorModel?((FrameDoorModel)model).batch(entry):entry.batchMesh();
     }
-    static Mesh prepare(DoorRenderModels.Entry entry) {
-        net.minecraft.client.renderer.block.model.ItemTransformVec3f transform=entry.model.getItemCameraTransforms().getTransform(net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType.NONE);
-        if(!transform.equals(net.minecraft.client.renderer.block.model.ItemTransformVec3f.DEFAULT) || !entry.model.getOverrides().getOverrides().isEmpty())return null;
-        DoorQuadPlan plan=entry.plan(entry.model);
+    static Mesh prepare(DoorRenderModels.Entry entry) {return prepare(entry,entry.model);}
+    static Mesh prepare(DoorRenderModels.Entry entry,net.minecraft.client.renderer.block.model.IBakedModel model) {
+        net.minecraft.client.renderer.block.model.ItemTransformVec3f transform=model.getItemCameraTransforms().getTransform(net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType.NONE);
+        if(!transform.equals(net.minecraft.client.renderer.block.model.ItemTransformVec3f.DEFAULT) || !model.getOverrides().getOverrides().isEmpty())return null;
+        DoorQuadPlan plan=entry.plan(model);
         if(plan==null || entry.stack.hasEffect() || plan.itemFormat!=DefaultVertexFormats.ITEM
                 || DefaultVertexFormats.ITEM.getNextOffset()!=28) return null;
         // Diffuse/emissive transitions cannot be replayed as GL state changes in a shared batch.

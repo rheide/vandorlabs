@@ -15,15 +15,16 @@ final class SelectedDoorFaceCache {
     static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,boolean tiled) {
         return get(geometry,choice,tiled?1:0);
     }
-    static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,int layout) {
-        Key key=new Key(geometry,choice,layout);StaticSurfaceMesh cached=MESHES.get(key);
+    static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,int layout) {return get(geometry,choice,layout,1);}
+    static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,int layout,double scale) {
+        Key key=new Key(geometry,choice,layout,scale);StaticSurfaceMesh cached=MESHES.get(key);
         if(cached!=null)return cached;
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice));
         double[] bounds=geometry.bounds;double aspect=UnifiedTextureSprites.aspect(sprite);
         boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,bounds[3]-bounds[0],bounds[4]-bounds[1],aspect);
         StaticSurfaceMesh mesh;
         if(fit)mesh=build(bounds,sprite,choice,false);
-        else{StaticSurfaceMesh.Capture buffer=StaticSurfaceMesh.capture();DoorFaceTextureMesh.draw(buffer,sprite,bounds,0,aspect);mesh=buffer.finish();}
+        else{StaticSurfaceMesh.Capture buffer=StaticSurfaceMesh.capture();DoorFaceTextureMesh.draw(buffer,sprite,bounds,0,aspect,scale);mesh=buffer.finish();}
         MESHES.put(key,mesh);if(MESHES.size()>LIMIT)MESHES.remove(MESHES.keySet().iterator().next());
         return mesh;
     }
@@ -46,12 +47,12 @@ final class SelectedDoorFaceCache {
     private static final class Key {
         final SelectedDoorGeometry geometry;
         final int choice;
-        final int layout;
-        Key(SelectedDoorGeometry geometry,int choice,int layout) { this.geometry=geometry;this.choice=choice;this.layout=layout; }
-        @Override public int hashCode() { return 31*(31*System.identityHashCode(geometry)+choice)+layout; }
+        final int layout;final double scale;
+        Key(SelectedDoorGeometry geometry,int choice,int layout,double scale) { this.geometry=geometry;this.choice=choice;this.layout=layout;this.scale=scale; }
+        @Override public int hashCode() { return 31*(31*System.identityHashCode(geometry)+choice)+layout+Double.hashCode(scale); }
         @Override public boolean equals(Object value) {
             if(!(value instanceof Key))return false;Key other=(Key)value;
-            return geometry==other.geometry && choice==other.choice && layout==other.layout;
+            return geometry==other.geometry && choice==other.choice && layout==other.layout&&scale==other.scale;
         }
     }
 }

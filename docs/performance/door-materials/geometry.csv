@@ -1,0 +1,9 @@
+size,design,frame_quads_per_leaf,leaf_quads_per_leaf,glass_quads_per_leaf,assembly_tiles,opaque_batch_available
+normal,2,112,6,42,2,false
+normal,15,112,48,12,2,false
+normal,16,112,48,12,2,false
+normal,29,112,66,28,2,false
+large,2,92,6,252,9,false
+large,15,92,48,12,9,false
+large,16,92,48,12,9,false
+large,29,92,66,28,9,false

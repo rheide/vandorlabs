@@ -20,7 +20,8 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     private int textureLayout;
     private int settingsPage;
     private final TileEntitySpaceDoor tile;
-    private HousingTextureList textureList;private FrameAppearancePane framePane;
+    private HousingTextureList textureList,glassTextures;private FrameAppearancePane framePane;
+    private com.vandorlabs.tiles.DoorGlassAppearance glassAppearance;
     private ProgrammableDialogLayout layout;
     private int faceTexture;
     private int design,detail,depth,lastValidChannel;
@@ -32,7 +33,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
 
     public GuiSpaceDoor(TileEntitySpaceDoor tile) {
         super(new ContainerSpaceDoor(tile));
-        this.tile=tile;
+        this.tile=tile;glassAppearance=tile.glassAppearance();
         faceTexture=tile.getFaceTexture();tileTexture=tile.isTileTexture();textureLayout=tile.getTextureLayout();
         design=tile.getDesign(); detail=0; framed=tile.isFramed();
         faceTexture=HousingTextureList.doorSizeChoice(faceTexture,0);
@@ -44,13 +45,15 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         lastValidChannels=tile.getRedstoneChannels();lastValidChannel=lastValidChannels.first();
         xSize=420; ySize=240;
     }
-    @Override protected HousingTextureList materialPicker(){return settingsPage==1&&framePane!=null?framePane.picker():settingsPage==0?textureList:null;}
+    @Override protected HousingTextureList materialPicker(){return settingsPage==4?glassTextures:settingsPage==1&&framePane!=null?framePane.picker():settingsPage==0?textureList:null;}
     @Override public void initGui() {
         String channelText=channelField==null?lastValidChannels.toString():channelField.getText();
         layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int listLeft=layout.listX,listTop=guiTop+54;
-        for(int page=0;page<4;page++)buttonList.add(layout.fullTab(190+page,page==2?3:page==3?2:page,4,new String[]{"Door","Frame","Redstone","Security"}[page]));
+        if(settingsPage==4&&!glassDesign())settingsPage=0;
+        int[] pages=glassDesign()?new int[]{0,1,4,3,2}:new int[]{0,1,3,2};String[] labels={"Door","Frame","Redstone","Security","Glass"};
+        for(int at=0;at<pages.length;at++)buttonList.add(layout.fullTab(190+pages[at],at,pages.length,labels[pages[at]]));
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,54,motion.label);buttonList.add(motionButton);
@@ -62,9 +65,16 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         channelField=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+68,xSize-24,18);
         ChannelFields.configure(channelField);channelField.setText(channelText);
         buttonList.add(layout.control(19,90,securityLabel()));
+        if(settingsPage==4){
+            glassTextures=HousingTextureList.forGlassMaterials(0,listLeft,listTop,layout.listWidth,glassAppearance.shade,glassAppearance.material).visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).keepView(glassTextures);
+            if(glassAppearance.material==com.vandorlabs.tiles.DoorGlassAppearance.ORIGINAL)glassTextures.setSelected(-1);
+            GuiButton tint=layout.control(20,54,"Tint: "+com.vandorlabs.tiles.GlassTextures.tintLabel(glassAppearance.tint));tint.enabled=glassAppearance.material!=com.vandorlabs.tiles.DoorGlassAppearance.ORIGINAL;buttonList.add(tint);
+            GuiButton repeat=layout.control(21,78,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(glassAppearance.layout));repeat.visible=glassAppearance.material>=0;buttonList.add(repeat);
+            GuiButton original=layout.control(22,102,"Original glass");original.enabled=glassAppearance.material!=com.vandorlabs.tiles.DoorGlassAppearance.ORIGINAL;buttonList.add(original);
+        }
         done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();refreshPages();if(settingsPage==1){if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!framed;sendUpdate();},()->framed);framePane.init(54,buttonList);}
     }
-    private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=193){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);if(!channelField.getVisible())channelField.setFocused(false);}
+    private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=194){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;if(b.id>=20&&b.id<=22)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);if(!channelField.getVisible())channelField.setFocused(false);}
     private net.minecraft.item.ItemStack companyCard(){return CredentialFilterPicker.sample(false,securityAllowed);}
     String companyLabel(){return CredentialFilterPicker.label(false,securityAllowed);}
     private String panelLabel(){return "Panel: "+new String[]{"Off","On","Both"}[panelMode];}
@@ -75,6 +85,9 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         hingeButton.displayString=!motion.sliding && hinges?"Hinges: On":"Hinges: Off";
     }
 
+    private boolean glassDesign(){return design==15||design==16||design==29;}
+    void chooseGlass(int choice){int shade=glassAppearance.shade,material=choice;if(choice>=HousingTextureList.CANOPY_GLASS_BASE&&choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}glassAppearance=new com.vandorlabs.tiles.DoorGlassAppearance(material,shade,glassAppearance.tint,glassAppearance.layout);faceTexture=-1;sendUpdate();sendGlass();initGui();}
+    private void sendGlass(){tile.setGlassAppearance(glassAppearance);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDoorGlass(tile.getPos(),glassAppearance));}
     private String layoutLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
     private String depthLabel() {
         return "Pos: " + new String[]{"Middle", "Near", "Far"}[depth];
@@ -91,7 +104,12 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
                 lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels).withTextureLayout(textureLayout).withSecurity(panelMode,securityMode,securityAllowed));
     }
     @Override protected void actionPerformed(GuiButton button) {
-        if(settingsPage==1&&framePane!=null&&framePane.action(button))return;if(button.id>=190&&button.id<=193){settingsPage=button.id-190;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(button.id>=20&&button.id<=22){
+            if(button.id==22)glassAppearance=com.vandorlabs.tiles.DoorGlassAppearance.DEFAULT;
+            else glassAppearance=new com.vandorlabs.tiles.DoorGlassAppearance(glassAppearance.material,glassAppearance.shade,button.id==20?GuiOptionCycle.next(glassAppearance.tint,com.vandorlabs.tiles.GlassTextures.TINT_COUNT):glassAppearance.tint,button.id==21?GuiOptionCycle.next(glassAppearance.layout,3):glassAppearance.layout);
+            sendGlass();initGui();return;
+        }
+        if(settingsPage==1&&framePane!=null&&framePane.action(button))return;if(button.id>=190&&button.id<=194){settingsPage=button.id-190;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
 
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
@@ -114,8 +132,9 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         if (index>=0 && index<TileEntitySpaceDoor.DESIGNS.length && tile.acceptsDesign(index) && index!=design) { design=index;faceTexture=-1;textureList.setSelected(com.vandorlabs.tiles.ScreenHousingTextures.doorIndex(design,detail));sendUpdate(); }
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
+        if(settingsPage==4&&glassTextures!=null&&glassTextures.click(x,y,button)){if(glassTextures.picked())chooseGlass(glassTextures.selected());return;}
         if(settingsPage==1&&framePane!=null&&framePane.click(x,y,button))return;
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19,20,21))return;
         if(settingsPage==3&&CredentialFilterPicker.click(this,x,y,button,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed,mask->{securityAllowed=mask;sendUpdate();}))return;
         if(channelField.getVisible())channelField.mouseClicked(x,y,button);
         int before=textureList.selected();
@@ -152,7 +171,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY) {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
-        if(settingsPage==0)textureList.draw(fontRenderer,mouseX,mouseY);if(settingsPage==1&&framePane!=null)framePane.draw(mouseX,mouseY);
+        if(settingsPage==0)textureList.draw(fontRenderer,mouseX,mouseY);if(settingsPage==4&&glassTextures!=null)glassTextures.draw(fontRenderer,mouseX,mouseY);if(settingsPage==1&&framePane!=null)framePane.draw(mouseX,mouseY);
         if(settingsPage==3)CredentialFilterPicker.draw(mc,fontRenderer,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed);
 
     }

@@ -2,8 +2,9 @@
 
 ## 2.7 (in development)
 
+- Give regular and Large White Glass, Dark Glass and Slim Glass doors a Glass material picker with native shades, general materials, tint/layout controls and Original reset. Preserve finishes through saves, configured items and Duplifier copying.
+- Add opaque inner reveal walls to Slim Glass openings and apply Interior finishes to glass-door leaf reveals. Keep Front finishes separate and tile square frame materials at their world pixel scale.
 - Separate translucent Strong glass from a new fully solid Opaque setting across programmable panes, portholes and canopies.
-
 - Match programmable cube/slab face lighting to vanilla positional sampling and geometric face normals, avoiding bright side-neighbour light bleeding onto unrelated faces.
 
 - Add an independent Ignore directionality toggle beside Connected Matching Blocks in the Duplifier dialog. Match rotated or differently mounted blocks without rotating targets, while retaining block-type, texture and other configuration boundaries.

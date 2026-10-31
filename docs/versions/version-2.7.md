@@ -156,7 +156,7 @@ existing behavior. These changes reduce memory and state-building costs without
 changing texture resolution or geometry.
 
 
-Cyan and Amber light frames backlight solid Strong replacement materials in
+Cyan and Amber light frames backlight solid Opaque replacement materials in
 Programmable Glass and Diagonal Glass, including joined layouts. Native and
 translucent glass retain their normal world lighting.
 
@@ -170,3 +170,14 @@ an outer border without internal rails. This changes rendering only.
 Selected Programmable Glass frames follow the outer contour of joined panels,
 including stepped and unequal layouts. Internal borders are suppressed independently
 of the rectangles used to fit pane artwork; concave corners retain solid frame faces.
+
+Glass finishes offer Mild, Normal, Strong and Opaque. Strong remains translucent;
+Opaque explicitly fills the pane. General materials use 35%, 65%, 85% and 100%
+opacity respectively. The same policy applies to portholes and canopies.
+
+White Glass, Dark Glass and Slim Glass have a Glass tab on regular and Large
+doors, with native glass shades, general materials, tint and mapping controls.
+Original restores the supplied pane. Slim Glass openings have opaque inner
+reveal walls, and Interior finishes apply to the leaf reveals as well as the
+fixed frame. Front finishes remain separate; square frame artwork tiles at
+world-sized pixels on both door sizes.

@@ -65,5 +65,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageArmPayloadDig.Handler.class,MessageArmPayloadDig.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageTransmitterSlot.Handler.class,MessageTransmitterSlot.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageFrameAppearance.Handler.class,MessageFrameAppearance.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageDoorGlass.Handler.class,MessageDoorGlass.class,id++,Side.SERVER);
     }
 }

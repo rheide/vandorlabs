@@ -63,6 +63,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   -Dvandorlabs.pbrMaterialChecksOnly="${VANDOR_LABS_PBR_MATERIAL_CHECKS_ONLY:-false}" \
   -Dvandorlabs.materialFinishChecksOnly="${VANDOR_LABS_MATERIAL_FINISH_CHECKS_ONLY:-false}" \
   -Dvandorlabs.duplifierDirectionChecksOnly="${VANDOR_LABS_DUPLIFIER_DIRECTION_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.doorAppearanceChecksOnly="${VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY:-false}" \
   -Dvandorlabs.fluidChecksOnly="${VANDOR_LABS_FLUID_CHECKS_ONLY:-false}" \
   -Dvandorlabs.cockpitChecksOnly="${VANDOR_LABS_COCKPIT_CHECKS_ONLY:-false}" \
   -Dvandorlabs.renderRegressionChecksOnly="${VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY:-false}" \

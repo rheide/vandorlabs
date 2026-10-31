@@ -23,6 +23,8 @@ final class DoorQuadPlan {
         return model.getClass().getName().equals("net.minecraftforge.client.model.ModelLoader$VanillaModelWrapper$1")
                 || model.getClass()==SimpleBakedModel.class
                 || model.getClass()==net.minecraftforge.client.model.obj.OBJModel.OBJBakedModel.class
+                || model instanceof DoorGlassModel
+                || model instanceof FrameDoorModel
                 || model instanceof SelectedDoorGeometry
                 || model instanceof ScaledDoorItemModel && ((ScaledDoorItemModel)model).stableQuads();
     }
