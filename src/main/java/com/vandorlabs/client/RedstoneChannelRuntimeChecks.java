@@ -235,11 +235,13 @@ final class RedstoneChannelRuntimeChecks {
         BlockPos pos = new BlockPos(26, 240, 26), sourcePos = pos.east(4);
         Block block = com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_LIGHT;
         world.setBlockState(pos, block.getDefaultState(), 3);
-        world.setBlockState(sourcePos, block.getDefaultState(), 3);
+        world.setBlockState(sourcePos, Block.REGISTRY.getObject(new ResourceLocation(
+                "vandorlabs:redstone_transmitter_block")).getDefaultState()
+                .withProperty(com.vandorlabs.blocks.BlockWirelessRedstone.FACING, EnumFacing.UP), 3);
         com.vandorlabs.tiles.TileEntityProgrammableLight light =
                 (com.vandorlabs.tiles.TileEntityProgrammableLight) world.getTileEntity(pos);
-        com.vandorlabs.tiles.TileEntityProgrammableLight source =
-                (com.vandorlabs.tiles.TileEntityProgrammableLight) world.getTileEntity(sourcePos);
+        com.vandorlabs.tiles.TileEntityWirelessRedstone source =
+                (com.vandorlabs.tiles.TileEntityWirelessRedstone) world.getTileEntity(sourcePos);
         source.setRedstoneChannel(4279);
         light.setOn(false);
         try {
@@ -253,7 +255,10 @@ final class RedstoneChannelRuntimeChecks {
                         boolean expected = trigger == 1 ? powered : trigger == 2 && !powered;
                         require(light.isOn() == expected && block.getLightValue(
                                         world.getBlockState(pos), world, pos) == (expected ? 11 : 0),
-                                "Light trigger/emission mismatch: " + trigger + "/" + remote + "/" + powered);
+                                "Light trigger/emission mismatch: " + trigger + "/" + remote + "/" + powered
+                                        + " actual="+light.isOn()+" level="+light.getSignalLevel()+" source="+source.hasLocalRedstoneSignal()
+                                        +" channels="+source.transmittedChannels()+" range="+source.transmissionRange()
+                                        +" active="+source.isChannelMemberActive()+" joined="+light.isJoin()+" direct="+light.hasDirectTriggerPower());
                         if (trigger != 0) {
                             light.setOn(!expected);
                             require(light.isOn() == expected, "manual click overrode Light trigger");

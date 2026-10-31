@@ -18,7 +18,7 @@ final class RedstoneLoadChecks {
         GuardedWorld world = new GuardedWorld(source);
         BlockPos pos = new BlockPos(0,64,0);
         TileEntityRedstoneLight tile = new TileEntityRedstoneLight();
-        tile.setWorld(world); tile.setPos(pos);
+        tile.setWorld(world); tile.setPos(pos);world.tiles.put(pos,tile);
         world.states.put(pos,Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:rocket_thruster")).getDefaultState());
         tile.onLoad(); // Reading its own block is safe; neighbour reads and power callbacks must wait.
         world.allowReads=true;
@@ -31,21 +31,24 @@ final class RedstoneLoadChecks {
                 .withProperty(net.minecraft.block.BlockLever.POWERED,true)
                 .withProperty(net.minecraft.block.BlockLever.FACING,net.minecraft.block.BlockLever.EnumOrientation.UP_X));
         if (!LoadedRedstonePower.isPowered(world,pos)) throw new IllegalStateException("loaded strong power ignored");
+        tile.invalidate();
         world.states.clear();
         world.states.put(pos,Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation(
                 "vandorlabs:programmable_light")).getDefaultState());
         world.allowReads=false;
         TileEntityProgrammableLight programmable = new TileEntityProgrammableLight();
-        programmable.setWorld(world); programmable.setPos(pos);
+        programmable.setWorld(world); programmable.setPos(pos);world.tiles.put(pos,programmable);
         net.minecraft.nbt.NBTTagCompound saved = programmable.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
         saved.setInteger("RedstoneChannel", 1);
         programmable.readFromNBT(saved);
         programmable.onLoad(); // Joining and channel registration must wait until chunk tile iteration ends.
+        world.allowReads=true;programmable.invalidate();com.vandorlabs.tiles.DeferredTileLoad.flush(world);world.tiles.clear();
         System.out.println("[vandorlabs][reprolab] redstone-load-safety PASS");
     }
 
     private static final class GuardedWorld extends World {
         final Map<BlockPos,IBlockState> states=new HashMap<>();
+        final Map<BlockPos,TileEntity> tiles=new HashMap<>();
         boolean allowReads;
         GuardedWorld(World source) {
             super(source.getSaveHandler(),new net.minecraft.world.storage.WorldInfo(source.getWorldInfo()),
@@ -57,6 +60,11 @@ final class RedstoneLoadChecks {
             if(!allowReads && !pos.equals(new BlockPos(0,64,0)))throw new IllegalStateException("onLoad read neighbour during chunk tile iteration");
             if(!isBlockLoaded(pos))throw new IllegalStateException("redstone read unloaded chunk at "+pos);
             return states.getOrDefault(pos,Blocks.AIR.getDefaultState());
+        }
+        @Override public TileEntity getTileEntity(BlockPos pos){
+            if(!allowReads)throw new IllegalStateException("onLoad queried tile identity during chunk tile iteration");
+            if(!isBlockLoaded(pos))throw new IllegalStateException("tile identity read unloaded chunk at "+pos);
+            return tiles.get(pos);
         }
         @Override public void markChunkDirty(BlockPos pos,TileEntity tile) { }
         @Override public boolean checkLightFor(net.minecraft.world.EnumSkyBlock type,BlockPos pos){return true;}

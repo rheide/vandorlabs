@@ -493,13 +493,16 @@ final class CopyCompatibilityRuntimeChecks {
                         == TileEntityAnimatedScreenSelector.MODE_STATIC
                         && !selector.isFramed()
                         && selector.getAnimationSpeedIndex() == 2
-                        && TileEntityAnimatedScreenSelector.INPUT_PANELS[1]
+                        && com.vandorlabs.tiles.ScreenHousingTextures.canonicalInput(
+                                TileEntityAnimatedScreenSelector.INPUT_PANELS[1])
                         .equals(selector.getInputPanel())
-                        && TileEntityAnimatedScreenSelector.INPUT_PANELS[
-                        TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1]
+                        && com.vandorlabs.tiles.ScreenHousingTextures.canonicalInput(
+                                TileEntityAnimatedScreenSelector.INPUT_PANELS[
+                                TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1])
                         .equals(selector.getSecondaryInputPanel())
                         && selector.getWallPosition(0) == 1
-                        && selector.isSmallInput(), label + " was not preserved");
+                        && selector.isSmallInput(), label + " was not preserved: "
+                        + selector.writeToNBT(new NBTTagCompound()));
     }
 
     private static void require(boolean condition, String message) {

@@ -96,6 +96,7 @@ final class Version12RuntimeChecks {
                 world.setBlockState(p.east(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);tile.inputChanged();
                 require(!world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"Off mode with power");
                 require(tile.configure(1,731,16),"On mode settings");
+                com.vandorlabs.redstone.RedstoneFixtureTransmitters.equip(tile);
                 require(world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"On mode with power");
                 TileEntityLandingGear restored=new TileEntityLandingGear();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                 require(restored.getSize()==size&&restored.getMode()==1&&restored.getRedstoneChannel()==731&&restored.getExtensionPixels()==16,"gear saved settings");

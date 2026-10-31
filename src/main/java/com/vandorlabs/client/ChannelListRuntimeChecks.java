@@ -25,6 +25,8 @@ final class ChannelListRuntimeChecks {
             TileEntityRedstoneChannel b=(TileEntityRedstoneChannel)world.getTileEntity(cells[1]);
             TileEntityRedstoneChannel momentary=(TileEntityRedstoneChannel)world.getTileEntity(cells[2]);
             a.setRedstoneChannels(ChannelList.of(14841,14842));b.setRedstoneChannels(ChannelList.of(14842,14843));momentary.setRedstoneChannels(ChannelList.of(14841,14843));
+            for(TileEntityRedstoneChannel source:new TileEntityRedstoneChannel[]{a,b,momentary})
+                TransmitterSlots.configure(source,source.getRedstoneChannels(),32,true);
             TileEntityProgrammableLight[] lights=new TileEntityProgrammableLight[4];
             for(int i=0;i<4;i++) {
                 world.setBlockState(cells[i+3],ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState(),3);
