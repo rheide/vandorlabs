@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Name control artwork Navigation Controls and align related company layouts as Fader Bank, Directional Controls, Dial And Sliders, Dual Dial Controls and Keypad And Dial, retaining distinct artwork and saved choices.
+
 - Remove the trailing Bottom label from Controls texture names across Classic, root and company folders, preserving saved texture IDs.
 
 - Add borderless animated Station and Targeting displays to Classic/Half, completing the matching Full/Half subject set.

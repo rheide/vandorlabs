@@ -5,6 +5,23 @@ ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/'generated-resources/assets/vandorlabs'
 SEYR_CLASSIC={'communications','navigation','reactor'}
 CONTROL_PREFIXES=('input_surfaces_','console_controls_','sliders_buttons_')
+# Name related control layouts consistently without changing their saved identities.
+CONTROL_NAMES={
+    'Navigation':'Navigation Controls',
+    'Three Faders':'Fader Bank', 'Four Faders':'Fader Bank',
+    'Three Alignment Faders':'Fader Bank', 'Three Lever Sliders':'Fader Bank',
+    'Six Faders':'Fader Bank',
+    'Direction Keys':'Directional Controls', 'Direction Track':'Directional Controls',
+    'Direction Trim':'Directional Controls', 'Direction Wheel':'Directional Controls',
+    'Disc And Sliders':'Dial And Sliders', 'Selection Wheel Slider':'Dial And Sliders',
+    'Dual Rotary Interlock':'Dual Dial Controls', 'Twin Knobs Presets':'Dual Dial Controls',
+    'Command Pads':'Keypad And Dial', 'Keypad Jog Wheel':'Keypad And Dial',
+    'Twin Direction Controls':'Dual Directional Controls',
+}
+
+def control_name(label):
+    label=re.sub(r' Bottom$','',re.sub(r'^\d+[\s._-]+','',label))
+    return CONTROL_NAMES.get(label,label)
 
 def restructure(catalog,blocks,language):
     result=copy.deepcopy(catalog);definitions=copy.deepcopy(blocks);names={};retired=set();active=set()
@@ -12,12 +29,14 @@ def restructure(catalog,blocks,language):
         category=entry.get('category','')
         if category=='Controls' or category.startswith('Controls/'):
             entry['category']=category.replace('Controls/Corporate/','Controls/').replace('Controls/Dense/','Controls/').replace('Controls/Half-height','Controls/Classic')
-            entry['label']=re.sub(r' Bottom$','',re.sub(r'^\d+[\s._-]+','',entry['label']))
+            entry['label']=control_name(entry['label'])
             continue
         if category!='Screens':continue
         half=entry['source'].startswith('console_inputs/');source=entry['source'].removeprefix('console_inputs/').removesuffix('_static');height='Half' if half else 'Full'
         if half and source.startswith(CONTROL_PREFIXES):
-            entry['label']=re.sub(r' Bottom$','',entry['label']);continue
+            entry['label']=control_name(entry['label'])
+            if source=='console_controls_navigation_controls':names['gui.vandorlabs.console.input.'+source]='Navigation Controls'
+            continue
         company=re.fullmatch(r'company_(ashiro_mai|paladyne|pinnacle|seyr|vandor|vektor)_(full|half)_(.+)',source)
         if company:
             company,tier,subject=company.groups();kept='pinnacle' if company in ('pinnacle','vektor') else 'paladyne'
