@@ -55,13 +55,13 @@ or frame rate.
 
 ## Package size
 
-The current standard package contains 1,797 logical specular companions backed
-by 321 physical PNGs; 1,476 paths reuse another map. The physical companions
-occupy 484,059 bytes before ZIP compression and 367,889 bytes in the JAR.
-The complete JAR is about 52.60 MiB, compared with 52.01 MiB before this set
-of material, door and glass changes: approximately 0.59 MiB larger (1.13%).
-A companion-only comparison before the three new materials added about
-0.48 MiB (0.92%). These are packaged bytes, not measured GPU memory.
+The current standard package contains 1,643 logical specular companions backed
+by 318 physical PNGs; 1,325 paths reuse another map. The physical companions
+occupy 482,486 bytes before ZIP compression and 367,542 bytes in the JAR.
+The complete JAR is about 44.63 MiB after display consolidation and removal
+of unused map exports, compared with 52.60 MiB before that cleanup.
+An earlier companion-only comparison added about 0.48 MiB (0.92%).
+These are packaged bytes, not measured GPU memory.
 
 The live resource check uses an 8192 by 4096 atlas. One complete RGBA8 atlas
 plane at that size is 128 MiB, or about 171 MiB with a full mip chain.

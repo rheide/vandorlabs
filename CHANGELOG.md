@@ -4,6 +4,7 @@
 
 - Rename the visible Screens category to Displays; organize matching Full/Half artwork into Gold, Cool, Classic and Ship, with height suffixes and stable saved indices. Merge duplicate company designs while retaining original Seyr Communications, Navigation and Reactor animations in Classic.
 - Replace Bridge Sensors with Specialist Sensors, and remove Tactical Starmap, Science Biology Wide Left/Right and the Console display artwork without removing console blocks.
+- Prune unused Dynmap exports using live texture/model references, preserving native shared-texture aliases; omit retired display static images, animations, OFF variants and their generated companions.
 - Flatten Corporate/Dense controls into company folders directly under Controls, rename Half-height to Classic, and remove numbered prefixes while keeping input controls separate and names unique.
 
 - Keep programmable trapdoor frame walls at the ordinary leaf texture scale and remove shared borders only beside another cutout frame, preserving boundaries against regular materials.

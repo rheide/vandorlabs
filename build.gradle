@@ -625,6 +625,7 @@ check.dependsOn testSharedRuntimeTextures
 task testScreenCatalog(type: Exec) {
     group = 'verification'
     dependsOn jar
+    doFirst { exec { commandLine pythonExecutable, 'tools/test_unused_runtime_assets.py' } }
     commandLine pythonExecutable, 'tools/test_screen_catalog.py', '--jar', jar.archivePath
 }
 check.dependsOn testScreenCatalog

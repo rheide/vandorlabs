@@ -1,29 +1,43 @@
 """Omit obsolete artwork only after checking model, catalog, code and Dynmap references."""
 from pathlib import Path
-import re
+import re,json
 
 ROOT=Path(__file__).resolve().parents[1]
 
 def candidate(path):
-    return (path.startswith('blocks/console_inputs/') and path.endswith('_item.png')
+    return (path.startswith('blocks/dynmap/') and path.endswith('.png') and not path.endswith(('_s.png','_n.png'))
+        or path.startswith('blocks/console_inputs/') and path.endswith('_item.png')
         or re.fullmatch(r'blocks/space_doors/(?:low|medium)/(?:double_frame_glass|expansion_glass_tile|glass_overlay|glass_interior|.+_window_mask)\.png',path)
         or re.fullmatch(r'blocks/(?:quiet_.+|border_.+|push_button_(?:lit|unlit)|rocker_switch_(?:lit|unlit))\.png',path))
 
 def unused(files):
     java='\n'.join(p.read_text(errors='replace') for root in ('src/main/java','src/portable/java') for p in (ROOT/root).rglob('*.java'))
-    references=java+'\n'+'\n'.join(text for name,text in files.items() if name.endswith(('.json','.mtl')))
+    references=java+'\n'+'\n'.join(text for name,text in files.items() if name.endswith(('.json','.mtl')) and name not in ('data/texture_aliases.json','data/pbr_materials.json'))
+    # Dedup targets used by any native path remain live even when their shortest
+    # physical filename happens to be a generated Dynmap export. Export-to-export
+    # aliases and the PBR inventory itself do not establish usage.
+    aliases=json.loads(files.get('data/texture_aliases.json','{}'))
+    native_targets={target for alias,target in aliases.items() if not alias.startswith('textures/blocks/dynmap/')}
     dynmap='\n'.join(line for name,text in files.items() if name.startswith('dynmap') for line in text.splitlines() if not line.startswith('texture:'))
+    used_ids=set(re.findall(r'[\w:./-]+',dynmap))
+    for token in list(used_ids):
+        while ':' in token:
+            token=token.partition(':')[2];used_ids.add(token)
+    ids_by_path={}
+    for name,text in files.items():
+        if not name.startswith('dynmap'):continue
+        for line in text.splitlines():
+            if not line.startswith('texture:'):continue
+            identifier=re.search(r'texture:id=([^,]+)',line);filename=re.search(r'filename=([^,\n]+)',line)
+            if identifier and filename:
+                path=filename[1].removeprefix('assets/vandorlabs/').removeprefix('textures/')
+                ids_by_path.setdefault(path,set()).add(identifier[1])
     result=[]
     for name in files:
         if not name.startswith('textures/'):continue
         path=name[len('textures/'):]
-        if not candidate(path) or path in references or Path(path).stem in references:continue
-        ids=[]
-        for resource,text in files.items():
-            if resource.startswith('dynmap'):
-                for line in text.splitlines():
-                    if line.startswith('texture:') and ('filename='+path in line or '/textures/'+path in line):ids.append(re.search(r'texture:id=([^,]+)',line).group(1))
-        if any(re.search(r'(?<![\w])'+re.escape(identifier)+r'(?=,|$)',dynmap,re.M) for identifier in ids):continue
+        if not candidate(path) or name in native_targets or path in references or path.removesuffix('.png') in references or (not path.startswith('blocks/dynmap/') and Path(path).stem in references):continue
+        if ids_by_path.get(path,set()) & used_ids:continue
         result.append(name)
     return result
 
