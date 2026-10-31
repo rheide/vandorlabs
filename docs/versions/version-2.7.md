@@ -42,6 +42,9 @@ Trapdoor leaf pickers also offer the authored Frame artwork. Border frames
 have open centers with opaque inner walls through the leaf depth. Ordinary
 materials and frame background finishes retain a complete leaf surface; virtual
 door sprites are sampled from the atlas without being opened as PNG files.
+Frame side walls keep the same pixel scale as ordinary trapdoors. Shared
+mechanisms remove a border only where another cutout-frame leaf touches it;
+ordinary materials retain the boundary. Tile layout keeps a frame per leaf.
 
 Artwork pickers use short company names and explicit Full/Half frame labels,
 with the current selection revealed when switching tabs. Glass and unsplit

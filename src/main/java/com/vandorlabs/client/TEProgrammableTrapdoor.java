@@ -52,13 +52,25 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
             TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
             // Only authored Frame choices have an aperture. Ordinary/virtual door sprites are solid leaves.
             if(tile.getHousingTexture()>=0 && com.vandorlabs.tiles.FrameAppearance.valid(tile.getHousingTexture()) && com.vandorlabs.tiles.FrameAppearance.border(tile.getHousingTexture())) {
-                TrapdoorFrameMesh.draw(buffer,sprite,edge,scratch.moving,scratch.uv,scratch.frame,light,tile.getHousingTexture(),first,tiled);
+                TrapdoorFrameMesh.draw(buffer,sprite,edge,scratch.moving,scratch.uv,scratch.frame,light,tile.getHousingTexture(),first,tiled,diagonal?2/16D:TrapdoorGeometry.THICKNESS,frameJoins(tile,state,group));
                 return;
             }
             TrapdoorSurfaceMesh.draw(buffer,sprite,scratch.moving,scratch.uv,light,tile.getHousingTexture(),first,end,tiled,tiled && door && tile.getTextureLayout()!=2);
             double[][] edgeUv=tall?TALL_EDGES:diagonal?SHALLOW_EDGES:FLAT_EDGES;
             for(int face=0;face<6;face++)if(face<first || face>=end)drawMesh(buffer,edge,scratch.moving,edgeUv,light,face,face+1);
         }
+    }
+    /** Appearance contacts are independent of the shared mechanism membership. */
+    private static int frameJoins(TileEntityProgrammableTrapdoor tile,IBlockState state,List<TileEntityProgrammableTrapdoor> group){
+        boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor,tall=diagonal&&tile.getPosition()!=2;
+        boolean widthX=state.getValue(BlockProgrammableTrapdoor.FACING).getAxis()==(diagonal?net.minecraft.util.EnumFacing.Axis.Z:net.minecraft.util.EnumFacing.Axis.X);
+        net.minecraft.util.math.BlockPos pos=tile.getPos();int joins=0;
+        for(TileEntityProgrammableTrapdoor other:group){
+            int choice=other.getHousingTexture();if(other==tile||!FrameAppearance.valid(choice)||choice<0||!FrameAppearance.border(choice))continue;
+            net.minecraft.util.math.BlockPos at=other.getPos();int du=widthX?at.getX()-pos.getX():at.getZ()-pos.getZ(),dv=tall?pos.getY()-at.getY():widthX?at.getZ()-pos.getZ():at.getX()-pos.getX();
+            if(dv==0){if(du==-1)joins|=1;else if(du==1)joins|=2;}if(du==0){if(dv==-1)joins|=4;else if(dv==1)joins|=8;}
+        }
+        return joins;
     }
     private static void writeCorners(TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,
             java.util.List<TileEntityProgrammableTrapdoor> group,double[][] out) {

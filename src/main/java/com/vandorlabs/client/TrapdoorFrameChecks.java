@@ -22,7 +22,7 @@ import org.lwjgl.opengl.GL11;
 /** Emitted triangles must leave the aperture open and connect both sides at authored inner edges. */
 final class TrapdoorFrameChecks {
  static void run(Minecraft mc,File output)throws Exception{
-  solidMaterials(mc);
+  mixedFrames(mc,output);solidMaterials(mc);
   int choice=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1"),cases=0;
   TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice));
   for(boolean diagonal:new boolean[]{false,true})for(int position=0;position<3;position++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean sliding:new boolean[]{false,true})for(int layout=0;layout<3;layout++){
@@ -35,6 +35,7 @@ final class TrapdoorFrameChecks {
     double[][] corners=diagonal?BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,pose):tile.corners(state,pose);
     double[][] inverse=inverse(corners),uv=TEProgrammableTrapdoor.materialCoordinates(tile,state);int v=diagonal&&position!=2?1:2,uAxis=axis(uv,0),vAxis=axis(uv,v),depth=3-uAxis-vAxis;
     BufferBuilder buffer=new BufferBuilder(65536);buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());TEProgrammableTrapdoor.drawConfiguredLeaf(buffer,sprite,tile,state,pose,0xf000f0);buffer.finishDrawing();
+    nativeEdgeUvs(buffer,corners,diagonal&&position!=2?2:0,diagonal);
     ByteBuffer bytes=buffer.getByteBuffer();int stride=BlockSurfaceFormat.get().getNextOffset(),walls=0;
     for(int i=0;i<buffer.getVertexCount();i+=4){double[][] p=new double[4][3];for(int j=0;j<4;j++)for(int a=0;a<3;a++){p[j][a]=inverse[a][3];for(int b=0;b<3;b++)p[j][a]+=inverse[a][b]*bytes.getFloat((i+j)*stride+b*4);}
      boolean broad=true;double min=1,max=0;for(double[] q:p){broad&=Math.abs(q[depth]-p[0][depth])<1e-5;min=Math.min(min,q[depth]);max=Math.max(max,q[depth]);}
@@ -47,6 +48,38 @@ final class TrapdoorFrameChecks {
   }
   System.out.println("[vandorlabs][reprolab] trapdoor-frame-aperture PASS cases="+cases+" regular diagonal all mounts facings inversions hinge/slide closed/moving/open all layouts inner-walls");
  }
+ private static void mixedFrames(Minecraft mc,File output)throws Exception{
+  int frame=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1"),otherFrame=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-amber-1"),cases=0;
+  require(FrameAppearance.valid(otherFrame),"second authored frame fixture");
+  for(boolean diagonal:new boolean[]{false,true})for(int position=0;position<3;position++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int layout=0;layout<3;layout++)for(boolean both:new boolean[]{false,true}){
+   BlockPos root=new BlockPos(2,2,2),neighbour=root.offset(facing.rotateY());List<VehicleStructure.Cell> cells=new ArrayList<>();net.minecraft.nbt.NBTTagList members=new net.minecraft.nbt.NBTTagList();members.appendTag(new net.minecraft.nbt.NBTTagLong(root.toLong()));members.appendTag(new net.minecraft.nbt.NBTTagLong(neighbour.toLong()));
+   Block block=diagonal?ModBlocks.PROGRAMMABLE_DIAGONAL_TRAPDOOR:ModBlocks.PROGRAMMABLE_TRAPDOOR;IBlockState state=block.getDefaultState().withProperty(BlockTrapDoor.FACING,facing);
+   for(int i=0;i<2;i++){TileEntityProgrammableTrapdoor seed=diagonal?new TileEntityProgrammableDiagonalTrapdoor():new TileEntityProgrammableTrapdoor();seed.setPos(i==0?root:neighbour);seed.configure(i==0?frame:both?otherFrame:0,position,false,0,0);seed.setTextureLayout(layout);NBTTagCompound tag=seed.writeToNBT(new NBTTagCompound());tag.setTag("TrapdoorAssembly",members.copy());cells.add(new VehicleStructure.Cell(seed.getPos(),state,tag));}
+   VehicleWorld world=new VehicleWorld(mc.world,VehicleStructure.display(cells));TileEntityProgrammableTrapdoor tile=(TileEntityProgrammableTrapdoor)world.getTileEntity(root);require(tile.group().size()==2,"mixed fixture lost shared mechanism");require(world.getTileEntity(neighbour).getPos().equals(neighbour),"mixed fixture tile coordinates differ from cells");
+   BufferBuilder b=new BufferBuilder(65536);b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());TEProgrammableTrapdoor.drawConfiguredLeaf(b,mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(frame)),tile,state,0,0xf000f0);b.finishDrawing();
+   double[][] corners=diagonal?BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,0):tile.corners(state,0),transform=inverse(corners);boolean rail=false;java.nio.ByteBuffer data=b.getByteBuffer();int stride=BlockSurfaceFormat.get().getNextOffset(),vAxis=diagonal&&position!=2?1:2,depth=3-vAxis;
+   double directionU=transform[0][0]*(neighbour.getX()-root.getX())+transform[0][2]*(neighbour.getZ()-root.getZ()),directionV=transform[vAxis][0]*(neighbour.getX()-root.getX())+transform[vAxis][2]*(neighbour.getZ()-root.getZ());boolean edgeU=Math.abs(directionU)>Math.abs(directionV);double probeU=edgeU?(directionU>0?.99:.01):.473,probeV=!edgeU?(directionV>0?.99:.01):.519;
+   for(int i=0;i<b.getVertexCount();i+=4){double[][] q=new double[4][3];for(int j=0;j<4;j++)for(int a=0;a<3;a++){q[j][a]=transform[a][3];for(int k=0;k<3;k++)q[j][a]+=transform[a][k]*data.getFloat((i+j)*stride+k*4);}if(Math.abs(q[0][depth]-q[1][depth])<1e-5&&Math.abs(q[0][depth]-q[2][depth])<1e-5)rail|=insideAt(q[0],q[1],q[2],0,vAxis,probeU,probeV)||insideAt(q[0],q[2],q[3],0,vAxis,probeU,probeV);}
+   boolean tiled=TEProgrammableTrapdoor.materialCoordinates(tile,state,tile.group(),new double[8][3],new double[8][3],1);
+   require(rail==(!both||tiled),"frame contact diagonal="+diagonal+" position="+position+" facing="+facing+" layout="+layout+" both="+both+" rail="+rail);cases++;
+   if(!diagonal&&position==0&&facing==EnumFacing.NORTH)capturePair(mc,output,world,root,"trapdoor-pair-"+(both?"frames":"mixed")+"-layout-"+layout);
+  }
+  System.out.println("[vandorlabs][reprolab] trapdoor-mixed-frame PASS cases="+cases+" ordinary neighbours retain border; different authored frames join; Tile retains per-leaf borders; all facings regular/diagonal positions; shared motion group unchanged");
+ }
+ private static void capturePair(Minecraft mc,File output,VehicleWorld world,BlockPos root,String name)throws Exception{
+  Framebuffer target=new Framebuffer(512,256,true);GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-.05,2.05,-.05,1.05,-16,16);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();BufferBuilder b=Tessellator.getInstance().getBuffer();
+  try(TurntableRenderState saved=new TurntableRenderState()){
+   target.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.rotate(-90,1,0,0);GlStateManager.depthMask(true);GlStateManager.clearColor(.12F,.18F,.25F,1);GlStateManager.clear(16640);GlStateManager.enableDepth();GlStateManager.disableCull();GlStateManager.disableFog();GlStateManager.disableLighting();GlStateManager.enableTexture2D();GlStateManager.enableAlpha();GlStateManager.disableBlend();GlStateManager.color(1,1,1,1);mc.entityRenderer.disableLightmap();mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+   b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());for(int i=0;i<2;i++){BlockPos pos=root.east(i);TileEntityProgrammableTrapdoor tile=(TileEntityProgrammableTrapdoor)world.getTileEntity(pos);b.setTranslation(i,0,0);TEProgrammableTrapdoor.drawConfiguredLeaf(b,mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(tile.getHousingTexture())),tile,world.getBlockState(pos),0,0xf000f0);}Tessellator.getInstance().draw();GL11.glFinish();ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(512,256,target),"png",new File(output,name+".png"));
+  }finally{b.setTranslation(0,0,0);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);target.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
+ }
+ private static void nativeEdgeUvs(BufferBuilder b,double[][] corners,int first,boolean diagonal){
+  double[][] transform=inverse(corners);java.nio.ByteBuffer bytes=b.getByteBuffer();int stride=BlockSurfaceFormat.get().getNextOffset(),depth=first==0?1:2;TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
+  for(int i=0;i<b.getVertexCount();i+=4){double[][] q=new double[4][3];for(int j=0;j<4;j++)for(int a=0;a<3;a++){q[j][a]=transform[a][3];for(int k=0;k<3;k++)q[j][a]+=transform[a][k]*bytes.getFloat((i+j)*stride+k*4);}int axis=-1;for(int a=0;a<3;a++){boolean flat=true;for(int j=1;j<4;j++)flat&=Math.abs(q[j][a]-q[0][a])<1e-5;if(flat)axis=a;}if(axis==depth)continue;require(axis>=0,"edge plane absent");
+   for(int j=0;j<4;j++){double[] uv=q[j].clone();uv[depth]*=diagonal?2/16D:com.vandorlabs.render.TrapdoorGeometry.THICKNESS;double u=axis==0?uv[2]:uv[0],v=axis==1?uv[2]:uv[1];float actualU=bytes.getFloat((i+j)*stride+16),actualV=bytes.getFloat((i+j)*stride+20);require(Math.abs(sprite.getInterpolatedU(u*16)-actualU)<1e-5&&Math.abs(sprite.getInterpolatedV(v*16)-actualV)<1e-5,"frame side UV differs from ordinary leaf pixel scale first="+first+" diagonal="+diagonal);}
+  }
+ }
+ private static boolean insideAt(double[] a,double[] b,double[] c,int u,int v,double x,double y){double area=cross(a,b,c,u,v);if(Math.abs(area)<1e-8)return false;double[] p=new double[3];p[u]=x;p[v]=y;return cross(p,b,c,u,v)/area>1e-5&&cross(a,p,c,u,v)/area>1e-5&&cross(a,b,p,u,v)/area>1e-5;}
  private static void solidMaterials(Minecraft mc){
   LinkedHashSet<Integer> choices=new LinkedHashSet<>();choices.add(ScreenHousingTextures.screenIndex("cargo_doors/low/reinforced_leaf"));
   for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i)&&(!FrameAppearance.valid(i)||!FrameAppearance.border(i)))choices.add(i);

@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Keep programmable trapdoor frame walls at the ordinary leaf texture scale and remove shared borders only beside another cutout frame, preserving boundaries against regular materials.
+
 - Keep ordinary programmable trapdoor materials solid and restrict open-center extrusion to Frame artwork; avoid reading virtual door sprites as PNG files while rendering.
 
 - Reduce repeated Canopy settings/connection work and skip empty Opaque glass passes; retain measured vanilla/Canopy CPU, allocation and geometry comparisons in the performance guide.
