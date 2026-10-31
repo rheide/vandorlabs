@@ -16,7 +16,7 @@ final class ScreenTextureList {
         framed=false;
         list=new HousingTextureList(x,y,width,canonical(choice),rows,null,
                 value->HousingTextureList.generalTexture(value) || artwork(value,input) && canonical(value)==value,
-                value->{com.google.gson.JsonObject entry=ScreenHousingTextures.entry(value);return entry!=null&&entry.has("menuGroup")?ScreenHousingTextures.menuCategory(value):"Screens".equals(ScreenHousingTextures.category(value))?(input?"Controls":"Screens"):ScreenHousingTextures.menuCategory(value);},
+                value->{com.google.gson.JsonObject entry=ScreenHousingTextures.entry(value);return entry!=null&&entry.has("menuGroup")?ScreenHousingTextures.menuCategory(value):"Screens".equals(ScreenHousingTextures.category(value))?(input?"Controls":"Displays"):ScreenHousingTextures.menuCategory(value);},
                 value->artwork(value,input)?HousingTextureList.name(value).replaceAll("\\b(Bare|Framed)\\s+",""):HousingTextureList.name(value));
         setFramed(framed);
     }
@@ -29,6 +29,7 @@ final class ScreenTextureList {
     ScreenTextureList visibleRows(int rows){list.visibleRows(rows);return this;}
     ScreenTextureList restore(int choice){
         if(choice>=0 || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE) {
+            if(choice>=0&&ScreenHousingTextures.validChoice(choice))choice=ScreenHousingTextures.clamp(choice);
             if(artwork(choice,input))framed=false;
             list.setSelected(canonical(choice));setFramed(framed);
         }

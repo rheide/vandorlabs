@@ -77,7 +77,7 @@ final class HousingTextureList {
         if(nativeArtwork)entries.add(new Option(MODEL_ARTWORK,"Model artwork","Display","minecraft:blocks/concrete_gray"));
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++){
             int choice=ScreenHousingTextures.choiceAt(i);
-            if(ScreenHousingTextures.visible(i)&&com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice))entries.add(new Option(choice,name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+            if(ScreenHousingTextures.visible(i)&&com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice))entries.add(new Option(choice,name(choice),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
         }
         return new HousingTextureList(x,y,width,selected==-2&&nativeArtwork?MODEL_ARTWORK:selected<0?NAVIGATION_BLACK:selected,rows,entries);
     }
@@ -116,7 +116,7 @@ final class HousingTextureList {
                 com.vandorlabs.tiles.GlassTextures.LABELS[i],"Glass",com.vandorlabs.tiles.GlassTextures.texture(i,detail)));
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && generalTexture(i)){
             int choice=ScreenHousingTextures.choiceAt(i);
-            entries.add(new Option(choice,name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+            entries.add(new Option(choice,name(choice),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
         }
         return new HousingTextureList(x,y,width,material<0?CANOPY_GLASS_BASE+shade:material,8,entries);
     }
@@ -129,7 +129,7 @@ final class HousingTextureList {
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             if(com.vandorlabs.items.ItemProgrammableArmor.listedMaterial(ScreenHousingTextures.choiceAt(i))) {
                 int choice=ScreenHousingTextures.choiceAt(i);
-                entries.add(new Option(choice,"Lights".equals(ScreenHousingTextures.category(i)) ? ScreenHousingTextures.label(i) : name(choice),ScreenHousingTextures.category(i),ScreenHousingTextures.fullTexture(i)));
+                entries.add(new Option(choice,"Lights".equals(ScreenHousingTextures.category(i)) ? ScreenHousingTextures.label(i) : name(choice),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
             }
         }
         for(com.vandorlabs.items.ArmorTextures.Entry entry:com.vandorlabs.items.ArmorTextures.ALL)

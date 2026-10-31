@@ -117,7 +117,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "bridge_bare_ship_status",
@@ -141,7 +142,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": true,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "bridge_framed_ship_status",
@@ -199,7 +201,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "console_controls",
@@ -214,7 +217,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "console_keyboard",
@@ -229,7 +233,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "console_navigation",
@@ -237,7 +242,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "console_panel_1",
@@ -287,7 +293,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "console_signals",
@@ -295,7 +302,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "console_wide_left",
@@ -766,7 +774,8 @@
     "framed": false,
     "programmable_only": true,
     "wide_pair": "science_biology_wide",
-    "pair_side": "left"
+    "pair_side": "left",
+    "retired": true
   },
   {
     "id": "science_biology_wide_right",
@@ -776,7 +785,8 @@
     "framed": false,
     "programmable_only": true,
     "wide_pair": "science_biology_wide",
-    "pair_side": "right"
+    "pair_side": "right",
+    "retired": true
   },
   {
     "id": "science_panel_1",
@@ -1273,7 +1283,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "dark_wall_panel",
@@ -3662,7 +3673,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_ashiro_mai_full_communications",
@@ -3670,7 +3682,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_ashiro_mai_full_medical",
@@ -3678,7 +3691,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_ashiro_mai_full_navigation",
@@ -3686,7 +3700,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_ashiro_mai_full_radar",
@@ -3694,7 +3709,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_ashiro_mai_full_reactor",
@@ -3702,7 +3718,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_paladyne_full_biology",
@@ -3806,7 +3823,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_seyr_full_communications",
@@ -3822,7 +3840,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_seyr_full_navigation",
@@ -3838,7 +3857,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_seyr_full_reactor",
@@ -3854,7 +3874,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vandor_full_communications",
@@ -3862,7 +3883,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vandor_full_medical",
@@ -3870,7 +3892,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vandor_full_navigation",
@@ -3878,7 +3901,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vandor_full_radar",
@@ -3886,7 +3910,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vandor_full_reactor",
@@ -3894,7 +3919,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vektor_full_biology",
@@ -3902,7 +3928,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vektor_full_communications",
@@ -3910,7 +3937,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vektor_full_medical",
@@ -3918,7 +3946,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vektor_full_navigation",
@@ -3926,7 +3955,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vektor_full_radar",
@@ -3934,7 +3964,8 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   },
   {
     "id": "company_vektor_full_reactor",
@@ -3942,6 +3973,7 @@
     "class": "BlockDisplaySequenced",
     "item": false,
     "framed": false,
-    "programmable_only": true
+    "programmable_only": true,
+    "retired": true
   }
 ]

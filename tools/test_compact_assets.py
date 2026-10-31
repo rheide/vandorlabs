@@ -65,5 +65,8 @@ with ZipFile(jar) as archive:
     pane=lambda tier:Image.open(io.BytesIO(texture_read(prefix+'textures/blocks/space_doors/'+tier+'/glass_tile.png'))).convert('RGBA')
     small,large=pane('low'),pane('medium');assert small.size==(128,128) and large.size==(128,128)
     assert small.tobytes()==large.tobytes(),'Legacy pane aliases must use the standard pixels'
-    assert sum(e.get('hidden',False) and 'alias' in e for e in entries)==29
+    assert sum(e.get('hidden',False) and 'alias' in e and e.get('detail')==2 for e in entries)==29
+    by_id={e['id']:e for e in entries}
+    for entry in entries:
+        if entry.get('hidden') and entry.get('alias'):assert entry['alias'] in by_id and not by_id[entry['alias']].get('hidden'),entry['id']
 print('PASS:',checked,'packaged models preserve geometry/UVs/materials after shared-parent expansion; references resolve, High resources absent, hatch/icon sizes and matched pane pattern verified')

@@ -523,234 +523,279 @@
   },
   {
     "id": "screen_analysis_bare_gas_giant_static",
-    "label": "Analysis Bare Gas Giant",
+    "label": "Gas Giant (Classic/Full)",
     "category": "Screens",
     "source": "analysis_bare_gas_giant_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_bare_ice_planet_static",
-    "label": "Analysis Bare Ice Planet",
+    "label": "Ice Planet (Classic/Full)",
     "category": "Screens",
     "source": "analysis_bare_ice_planet_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_bare_station_static",
-    "label": "Analysis Bare Station",
+    "label": "Station (Classic/Full)",
     "category": "Screens",
     "source": "analysis_bare_station_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_bare_surface_map_static",
-    "label": "Analysis Bare Surface Map",
+    "label": "Surface Map (Classic/Full)",
     "category": "Screens",
     "source": "analysis_bare_surface_map_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_bare_targeting_static",
-    "label": "Analysis Bare Targeting",
+    "label": "Targeting (Classic/Full)",
     "category": "Screens",
     "source": "analysis_bare_targeting_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_bare_terrestrial_static",
-    "label": "Analysis Bare Terrestrial",
+    "label": "Terrestrial (Classic/Full)",
     "category": "Screens",
     "source": "analysis_bare_terrestrial_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_framed_gas_giant_static",
-    "label": "Analysis Framed Gas Giant",
+    "label": "Gas Giant (Classic/Full)",
     "category": "Screens",
     "source": "analysis_framed_gas_giant_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_framed_ice_planet_static",
-    "label": "Analysis Framed Ice Planet",
+    "label": "Ice Planet (Classic/Full)",
     "category": "Screens",
     "source": "analysis_framed_ice_planet_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_framed_station_static",
-    "label": "Analysis Framed Station",
+    "label": "Station (Classic/Full)",
     "category": "Screens",
     "source": "analysis_framed_station_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_framed_surface_map_static",
-    "label": "Analysis Framed Surface Map",
+    "label": "Surface Map (Classic/Full)",
     "category": "Screens",
     "source": "analysis_framed_surface_map_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_framed_targeting_static",
-    "label": "Analysis Framed Targeting",
+    "label": "Targeting (Classic/Full)",
     "category": "Screens",
     "source": "analysis_framed_targeting_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_analysis_framed_terrestrial_static",
-    "label": "Analysis Framed Terrestrial",
+    "label": "Terrestrial (Classic/Full)",
     "category": "Screens",
     "source": "analysis_framed_terrestrial_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_bridge_bare_engineering_static",
-    "label": "Bridge Bare Engineering",
+    "label": "Engineering (Classic/Full)",
     "category": "Screens",
     "source": "bridge_bare_engineering_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_bridge_bare_pilot_static",
-    "label": "Bridge Bare Pilot",
+    "label": "Pilot (Classic/Full)",
     "category": "Screens",
     "source": "bridge_bare_pilot_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_bridge_bare_sensors_static",
-    "label": "Bridge Bare Sensors",
+    "label": "Radar (Classic/Full)",
     "category": "Screens",
     "source": "bridge_bare_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_specialist_bare_sensors_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_bridge_bare_ship_status_static",
-    "label": "Bridge Bare Ship Status",
+    "label": "Ship Status (Classic/Full)",
     "category": "Screens",
     "source": "bridge_bare_ship_status_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_bridge_framed_pilot_static",
-    "label": "Bridge Framed Pilot",
+    "label": "Pilot (Classic/Full)",
     "category": "Screens",
     "source": "bridge_framed_pilot_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_bridge_framed_sensors_static",
-    "label": "Bridge Framed Sensors",
+    "label": "Radar (Classic/Full)",
     "category": "Screens",
     "source": "bridge_framed_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_specialist_framed_sensors_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_bridge_framed_ship_status_static",
-    "label": "Bridge Framed Ship Status",
+    "label": "Ship Status (Classic/Full)",
     "category": "Screens",
     "source": "bridge_framed_ship_status_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_biology_static",
     "label": "Console Biology",
     "category": "Screens",
     "source": "console_biology_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "screen_console_engineering_static",
     "label": "Console Engineering",
     "category": "Screens",
     "source": "console_engineering_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_analysis_framed_gas_giant_static",
-    "label": "Analysis Framed Gas Giant",
+    "label": "Gas Giant (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/analysis_framed_gas_giant_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_analysis_framed_ice_planet_static",
-    "label": "Analysis Framed Ice Planet",
+    "label": "Ice Planet (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/analysis_framed_ice_planet_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_analysis_framed_surface_map_static",
-    "label": "Analysis Framed Surface Map",
+    "label": "Surface Map (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/analysis_framed_surface_map_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_analysis_framed_terrestrial_static",
-    "label": "Analysis Framed Terrestrial",
+    "label": "Terrestrial (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/analysis_framed_terrestrial_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_bridge_bare_engineering_static",
-    "label": "Bridge Bare Engineering",
+    "label": "Engineering (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/bridge_bare_engineering_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_bridge_bare_pilot_static",
-    "label": "Bridge Bare Pilot",
+    "label": "Pilot (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/bridge_bare_pilot_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_bridge_bare_sensors_static",
     "label": "Bridge Bare Sensors",
     "category": "Screens",
     "source": "console_inputs/bridge_bare_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_console_inputs_specialist_bare_sensors_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_bridge_bare_ship_status_static",
-    "label": "Bridge Bare Ship Status",
+    "label": "Ship Status (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/bridge_bare_ship_status_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_bridge_framed_engineering_static",
-    "label": "Bridge Framed Engineering",
+    "label": "Engineering (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/bridge_framed_engineering_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_bridge_framed_pilot_static",
-    "label": "Bridge Framed Pilot",
+    "label": "Pilot (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/bridge_framed_pilot_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_bridge_framed_sensors_static",
     "label": "Bridge Framed Sensors",
     "category": "Screens",
     "source": "console_inputs/bridge_framed_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_console_inputs_specialist_framed_sensors_static",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_bridge_framed_ship_status_static",
-    "label": "Bridge Framed Ship Status",
+    "label": "Ship Status (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/bridge_framed_ship_status_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_console_controls_biology_controls_static",
@@ -796,59 +841,67 @@
   },
   {
     "id": "screen_console_inputs_extra_bare_door_controller_static",
-    "label": "Extra Bare Door Controller",
+    "label": "Door Controller (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/extra_bare_door_controller_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_extra_bare_engineering_charts_static",
-    "label": "Extra Bare Engineering Charts",
+    "label": "Engineering Charts (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/extra_bare_engineering_charts_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_extra_bare_personal_terminal_static",
-    "label": "Extra Bare Personal Terminal",
+    "label": "Personal Terminal (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/extra_bare_personal_terminal_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_extra_bare_viewscreen_static",
-    "label": "Extra Bare Viewscreen",
+    "label": "Viewscreen (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/extra_bare_viewscreen_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_extra_framed_door_controller_static",
-    "label": "Extra Framed Door Controller",
+    "label": "Door Controller (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/extra_framed_door_controller_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_extra_framed_engineering_charts_static",
-    "label": "Extra Framed Engineering Charts",
+    "label": "Engineering Charts (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/extra_framed_engineering_charts_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_extra_framed_personal_terminal_static",
-    "label": "Extra Framed Personal Terminal",
+    "label": "Personal Terminal (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/extra_framed_personal_terminal_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_extra_framed_viewscreen_static",
-    "label": "Extra Framed Viewscreen",
+    "label": "Viewscreen (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/extra_framed_viewscreen_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_input_surfaces_command_keypad_static",
@@ -936,479 +989,553 @@
   },
   {
     "id": "screen_console_inputs_specialist_bare_biology_static",
-    "label": "Specialist Bare Biology",
+    "label": "Biology (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_bare_biology_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_bare_medical_static",
-    "label": "Specialist Bare Medical",
+    "label": "Medical (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_bare_medical_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_bare_science_static",
-    "label": "Specialist Bare Science",
+    "label": "Science (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_bare_science_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_bare_sensors_static",
-    "label": "Specialist Bare Sensors",
+    "label": "Sensors (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_bare_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_bare_starmap_static",
-    "label": "Specialist Bare Starmap",
+    "label": "Starmap (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_bare_starmap_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_bare_weapons_static",
-    "label": "Specialist Bare Weapons",
+    "label": "Weapons (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_bare_weapons_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_framed_biology_static",
-    "label": "Specialist Framed Biology",
+    "label": "Biology (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_framed_biology_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_framed_medical_static",
-    "label": "Specialist Framed Medical",
+    "label": "Medical (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_framed_medical_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_framed_science_static",
-    "label": "Specialist Framed Science",
+    "label": "Science (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_framed_science_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_framed_sensors_static",
-    "label": "Specialist Framed Sensors",
+    "label": "Sensors (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_framed_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_framed_starmap_static",
-    "label": "Specialist Framed Starmap",
+    "label": "Starmap (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_framed_starmap_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_inputs_specialist_framed_weapons_static",
-    "label": "Specialist Framed Weapons",
+    "label": "Weapons (Classic/Half)",
     "category": "Screens",
     "source": "console_inputs/specialist_framed_weapons_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_console_medical_static",
     "label": "Console Medical",
     "category": "Screens",
     "source": "console_medical_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "screen_console_navigation_static",
     "label": "Console Navigation",
     "category": "Screens",
     "source": "console_navigation_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "screen_console_sensors_static",
     "label": "Console Sensors",
     "category": "Screens",
     "source": "console_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "screen_console_signals_static",
     "label": "Console Signals",
     "category": "Screens",
     "source": "console_signals_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "screen_cruiser_command_left_static",
-    "label": "Cruiser Command Left",
+    "label": "Cruiser Command Left (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_command_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_command_right_static",
-    "label": "Cruiser Command Right",
+    "label": "Cruiser Command Right (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_command_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_patrol_left_static",
-    "label": "Cruiser Patrol Left",
+    "label": "Cruiser Patrol Left (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_patrol_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_patrol_right_static",
-    "label": "Cruiser Patrol Right",
+    "label": "Cruiser Patrol Right (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_patrol_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_science_left_static",
-    "label": "Cruiser Science Left",
+    "label": "Cruiser Science Left (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_science_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_science_right_static",
-    "label": "Cruiser Science Right",
+    "label": "Cruiser Science Right (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_science_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_three_views_bottom_center_static",
-    "label": "Cruiser Three Views Bottom Center",
+    "label": "Cruiser Three Views Bottom Center (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_three_views_bottom_center_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_three_views_bottom_left_static",
-    "label": "Cruiser Three Views Bottom Left",
+    "label": "Cruiser Three Views Bottom Left (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_three_views_bottom_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_three_views_bottom_right_static",
-    "label": "Cruiser Three Views Bottom Right",
+    "label": "Cruiser Three Views Bottom Right (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_three_views_bottom_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_three_views_top_center_static",
-    "label": "Cruiser Three Views Top Center",
+    "label": "Cruiser Three Views Top Center (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_three_views_top_center_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_three_views_top_left_static",
-    "label": "Cruiser Three Views Top Left",
+    "label": "Cruiser Three Views Top Left (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_three_views_top_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_cruiser_three_views_top_right_static",
-    "label": "Cruiser Three Views Top Right",
+    "label": "Cruiser Three Views Top Right (Ship/Full)",
     "category": "Screens",
     "source": "cruiser_three_views_top_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_engineering_screen_static",
-    "label": "Engineering Screen",
+    "label": "Engineering Screen (Full)",
     "category": "Screens",
     "source": "engineering_screen_static",
     "rectangular": true
   },
   {
     "id": "screen_extra_bare_door_controller_static",
-    "label": "Extra Bare Door Controller",
+    "label": "Door Controller (Classic/Full)",
     "category": "Screens",
     "source": "extra_bare_door_controller_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_extra_bare_engineering_charts_static",
-    "label": "Extra Bare Engineering Charts",
+    "label": "Engineering Charts (Classic/Full)",
     "category": "Screens",
     "source": "extra_bare_engineering_charts_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_extra_bare_personal_terminal_static",
-    "label": "Extra Bare Personal Terminal",
+    "label": "Personal Terminal (Classic/Full)",
     "category": "Screens",
     "source": "extra_bare_personal_terminal_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_extra_bare_viewscreen_static",
-    "label": "Extra Bare Viewscreen",
+    "label": "Viewscreen (Classic/Full)",
     "category": "Screens",
     "source": "extra_bare_viewscreen_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_extra_framed_door_controller_static",
-    "label": "Extra Framed Door Controller",
+    "label": "Door Controller (Classic/Full)",
     "category": "Screens",
     "source": "extra_framed_door_controller_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_extra_framed_engineering_charts_static",
-    "label": "Extra Framed Engineering Charts",
+    "label": "Engineering Charts (Classic/Full)",
     "category": "Screens",
     "source": "extra_framed_engineering_charts_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_extra_framed_personal_terminal_static",
-    "label": "Extra Framed Personal Terminal",
+    "label": "Personal Terminal (Classic/Full)",
     "category": "Screens",
     "source": "extra_framed_personal_terminal_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_extra_framed_viewscreen_static",
-    "label": "Extra Framed Viewscreen",
+    "label": "Viewscreen (Classic/Full)",
     "category": "Screens",
     "source": "extra_framed_viewscreen_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_science_biology_wide_left_static",
     "label": "Science Biology Wide Left",
     "category": "Screens",
     "source": "science_biology_wide_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "screen_science_biology_wide_right_static",
     "label": "Science Biology Wide Right",
     "category": "Screens",
     "source": "science_biology_wide_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "screen_ship_chamfered_square_1_static",
-    "label": "Ship Chamfered Square 1",
+    "label": "Ship Chamfered Square 1 (Ship/Full)",
     "category": "Screens",
     "source": "ship_chamfered_square_1_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_chamfered_square_2_static",
-    "label": "Ship Chamfered Square 2",
+    "label": "Ship Chamfered Square 2 (Ship/Full)",
     "category": "Screens",
     "source": "ship_chamfered_square_2_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_chamfered_wide_1_left_static",
-    "label": "Ship Chamfered Wide 1 Left",
+    "label": "Ship Chamfered Wide 1 Left (Ship/Full)",
     "category": "Screens",
     "source": "ship_chamfered_wide_1_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_chamfered_wide_1_right_static",
-    "label": "Ship Chamfered Wide 1 Right",
+    "label": "Ship Chamfered Wide 1 Right (Ship/Full)",
     "category": "Screens",
     "source": "ship_chamfered_wide_1_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_chamfered_wide_2_left_static",
-    "label": "Ship Chamfered Wide 2 Left",
+    "label": "Ship Chamfered Wide 2 Left (Ship/Full)",
     "category": "Screens",
     "source": "ship_chamfered_wide_2_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_chamfered_wide_2_right_static",
-    "label": "Ship Chamfered Wide 2 Right",
+    "label": "Ship Chamfered Wide 2 Right (Ship/Full)",
     "category": "Screens",
     "source": "ship_chamfered_wide_2_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_crescent_explorer_static",
-    "label": "Ship Crescent Explorer",
+    "label": "Ship Crescent Explorer (Ship/Full)",
     "category": "Screens",
     "source": "ship_crescent_explorer_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_freighter_static",
-    "label": "Ship Freighter",
+    "label": "Ship Freighter (Ship/Full)",
     "category": "Screens",
     "source": "ship_freighter_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_research_cruiser_left_static",
-    "label": "Ship Research Cruiser Left",
+    "label": "Ship Research Cruiser Left (Ship/Full)",
     "category": "Screens",
     "source": "ship_research_cruiser_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_research_cruiser_right_static",
-    "label": "Ship Research Cruiser Right",
+    "label": "Ship Research Cruiser Right (Ship/Full)",
     "category": "Screens",
     "source": "ship_research_cruiser_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_rounded_square_1_static",
-    "label": "Ship Rounded Square 1",
+    "label": "Ship Rounded Square 1 (Ship/Full)",
     "category": "Screens",
     "source": "ship_rounded_square_1_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_rounded_square_2_static",
-    "label": "Ship Rounded Square 2",
+    "label": "Ship Rounded Square 2 (Ship/Full)",
     "category": "Screens",
     "source": "ship_rounded_square_2_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_rounded_wide_1_left_static",
-    "label": "Ship Rounded Wide 1 Left",
+    "label": "Ship Rounded Wide 1 Left (Ship/Full)",
     "category": "Screens",
     "source": "ship_rounded_wide_1_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_rounded_wide_1_right_static",
-    "label": "Ship Rounded Wide 1 Right",
+    "label": "Ship Rounded Wide 1 Right (Ship/Full)",
     "category": "Screens",
     "source": "ship_rounded_wide_1_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_rounded_wide_2_left_static",
-    "label": "Ship Rounded Wide 2 Left",
+    "label": "Ship Rounded Wide 2 Left (Ship/Full)",
     "category": "Screens",
     "source": "ship_rounded_wide_2_left_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_ship_rounded_wide_2_right_static",
-    "label": "Ship Rounded Wide 2 Right",
+    "label": "Ship Rounded Wide 2 Right (Ship/Full)",
     "category": "Screens",
     "source": "ship_rounded_wide_2_right_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Ship"
   },
   {
     "id": "screen_specialist_bare_biology_static",
-    "label": "Specialist Bare Biology",
+    "label": "Biology (Classic/Full)",
     "category": "Screens",
     "source": "specialist_bare_biology_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_bare_medical_static",
-    "label": "Specialist Bare Medical",
+    "label": "Medical (Classic/Full)",
     "category": "Screens",
     "source": "specialist_bare_medical_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_bare_science_static",
-    "label": "Specialist Bare Science",
+    "label": "Science (Classic/Full)",
     "category": "Screens",
     "source": "specialist_bare_science_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_bare_sensors_static",
-    "label": "Specialist Bare Sensors",
+    "label": "Sensors (Classic/Full)",
     "category": "Screens",
     "source": "specialist_bare_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_bare_starmap_static",
-    "label": "Specialist Bare Starmap",
+    "label": "Starmap (Classic/Full)",
     "category": "Screens",
     "source": "specialist_bare_starmap_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_bare_weapons_static",
-    "label": "Specialist Bare Weapons",
+    "label": "Weapons (Classic/Full)",
     "category": "Screens",
     "source": "specialist_bare_weapons_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_framed_biology_static",
-    "label": "Specialist Framed Biology",
+    "label": "Biology (Classic/Full)",
     "category": "Screens",
     "source": "specialist_framed_biology_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_framed_medical_static",
-    "label": "Specialist Framed Medical",
+    "label": "Medical (Classic/Full)",
     "category": "Screens",
     "source": "specialist_framed_medical_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_framed_science_static",
-    "label": "Specialist Framed Science",
+    "label": "Science (Classic/Full)",
     "category": "Screens",
     "source": "specialist_framed_science_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_framed_sensors_static",
-    "label": "Specialist Framed Sensors",
+    "label": "Sensors (Classic/Full)",
     "category": "Screens",
     "source": "specialist_framed_sensors_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_framed_starmap_static",
-    "label": "Specialist Framed Starmap",
+    "label": "Starmap (Classic/Full)",
     "category": "Screens",
     "source": "specialist_framed_starmap_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_specialist_framed_weapons_static",
-    "label": "Specialist Framed Weapons",
+    "label": "Weapons (Classic/Full)",
     "category": "Screens",
     "source": "specialist_framed_weapons_static",
-    "rectangular": true
+    "rectangular": true,
+    "menuGroup": "Classic"
   },
   {
     "id": "screen_tactical_starmap_static",
     "label": "Tactical Starmap",
     "category": "Screens",
     "source": "tactical_starmap_static",
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "retireAnimation": true
   },
   {
     "id": "light_porthole_off",
@@ -3414,547 +3541,547 @@
   },
   {
     "id": "controls27_half_height_01_reactor_bottom",
-    "label": "01 Reactor Bottom",
-    "category": "Controls/Half-height",
+    "label": "Reactor Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_01_reactor_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_02_biology_bottom",
-    "label": "02 Biology Bottom",
-    "category": "Controls/Half-height",
+    "label": "Biology Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_02_biology_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_03_keyboard_bottom",
-    "label": "03 Keyboard Bottom",
-    "category": "Controls/Half-height",
+    "label": "Keyboard Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_03_keyboard_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_03_medical_bottom",
-    "label": "03 Medical Bottom",
-    "category": "Controls/Half-height",
+    "label": "Medical Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_03_medical_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_04_controls_bottom",
-    "label": "04 Controls Bottom",
-    "category": "Controls/Half-height",
+    "label": "Controls Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_04_controls_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_04_radar_bottom",
-    "label": "04 Radar Bottom",
-    "category": "Controls/Half-height",
+    "label": "Radar Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_04_radar_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_05_communications_bottom",
-    "label": "05 Communications Bottom",
-    "category": "Controls/Half-height",
+    "label": "Communications Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_05_communications_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_05_dual_keyboard_bottom",
-    "label": "05 Dual Keyboard Bottom",
-    "category": "Controls/Half-height",
+    "label": "Dual Keyboard Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_05_dual_keyboard_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_06_dual_controls_bottom",
-    "label": "06 Dual Controls Bottom",
-    "category": "Controls/Half-height",
+    "label": "Dual Controls Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_06_dual_controls_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_06_navigation_bottom",
-    "label": "06 Navigation Bottom",
-    "category": "Controls/Half-height",
+    "label": "Navigation Bottom",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_06_navigation_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_button_clusters_sliders",
     "label": "Button Clusters Sliders",
-    "category": "Controls/Half-height",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_button_clusters_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_button_matrix_sliders",
     "label": "Button Matrix Sliders",
-    "category": "Controls/Half-height",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_button_matrix_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_command_keypad",
     "label": "Command Keypad",
-    "category": "Controls/Half-height",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_command_keypad",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_engineering_faders",
     "label": "Engineering Faders",
-    "category": "Controls/Half-height",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_engineering_faders",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_environment_controls",
     "label": "Environment Controls",
-    "category": "Controls/Half-height",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_environment_controls",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_pilot_controls",
     "label": "Pilot Controls",
-    "category": "Controls/Half-height",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_pilot_controls",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_pilot_faders",
     "label": "Pilot Faders",
-    "category": "Controls/Half-height",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_pilot_faders",
     "rectangular": true
   },
   {
     "id": "controls27_half_height_six_faders",
     "label": "Six Faders",
-    "category": "Controls/Half-height",
+    "category": "Controls/Classic",
     "source": "controls27/controls27_half_height_six_faders",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_ashiro_mai_01_keyboard",
-    "label": "01 Keyboard",
-    "category": "Controls/Corporate/Ashiro Mai",
+    "label": "Keyboard",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_corporate_ashiro_mai_01_keyboard",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_ashiro_mai_02_direction_keys",
-    "label": "02 Direction Keys",
-    "category": "Controls/Corporate/Ashiro Mai",
+    "label": "Direction Keys",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_corporate_ashiro_mai_02_direction_keys",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_ashiro_mai_03_three_faders",
-    "label": "03 Three Faders",
-    "category": "Controls/Corporate/Ashiro Mai",
+    "label": "Three Faders",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_corporate_ashiro_mai_03_three_faders",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_ashiro_mai_04_command_pads",
-    "label": "04 Command Pads",
-    "category": "Controls/Corporate/Ashiro Mai",
+    "label": "Command Pads",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_corporate_ashiro_mai_04_command_pads",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_ashiro_mai_05_keys_touch_strip",
-    "label": "05 Keys Touch Strip",
-    "category": "Controls/Corporate/Ashiro Mai",
+    "label": "Keys Touch Strip",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_corporate_ashiro_mai_05_keys_touch_strip",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_ashiro_mai_06_paired_buttons",
-    "label": "06 Paired Buttons",
-    "category": "Controls/Corporate/Ashiro Mai",
+    "label": "Paired Buttons",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_corporate_ashiro_mai_06_paired_buttons",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_paladyne_01_keyboard",
-    "label": "01 Keyboard",
-    "category": "Controls/Corporate/Paladyne",
+    "label": "Keyboard",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_corporate_paladyne_01_keyboard",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_paladyne_02_direction_track",
-    "label": "02 Direction Track",
-    "category": "Controls/Corporate/Paladyne",
+    "label": "Direction Track",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_corporate_paladyne_02_direction_track",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_paladyne_03_selectors_guarded_toggle",
-    "label": "03 Selectors Guarded Toggle",
-    "category": "Controls/Corporate/Paladyne",
+    "label": "Selectors Guarded Toggle",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_corporate_paladyne_03_selectors_guarded_toggle",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_paladyne_04_four_pads_fader",
-    "label": "04 Four Pads Fader",
-    "category": "Controls/Corporate/Paladyne",
+    "label": "Four Pads Fader",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_corporate_paladyne_04_four_pads_fader",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_paladyne_05_latching_controls",
-    "label": "05 Latching Controls",
-    "category": "Controls/Corporate/Paladyne",
+    "label": "Latching Controls",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_corporate_paladyne_05_latching_controls",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_paladyne_06_four_faders",
-    "label": "06 Four Faders",
-    "category": "Controls/Corporate/Paladyne",
+    "label": "Four Faders",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_corporate_paladyne_06_four_faders",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_pinnacle_01_keyboard",
-    "label": "01 Keyboard",
-    "category": "Controls/Corporate/Pinnacle",
+    "label": "Keyboard",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_corporate_pinnacle_01_keyboard",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_pinnacle_02_disc_and_sliders",
-    "label": "02 Disc And Sliders",
-    "category": "Controls/Corporate/Pinnacle",
+    "label": "Disc And Sliders",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_corporate_pinnacle_02_disc_and_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_pinnacle_03_ring_dial",
-    "label": "03 Ring Dial",
-    "category": "Controls/Corporate/Pinnacle",
+    "label": "Ring Dial",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_corporate_pinnacle_03_ring_dial",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_pinnacle_04_sequence_keys",
-    "label": "04 Sequence Keys",
-    "category": "Controls/Corporate/Pinnacle",
+    "label": "Sequence Keys",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_corporate_pinnacle_04_sequence_keys",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_pinnacle_05_three_alignment_faders",
-    "label": "05 Three Alignment Faders",
-    "category": "Controls/Corporate/Pinnacle",
+    "label": "Three Alignment Faders",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_corporate_pinnacle_05_three_alignment_faders",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_pinnacle_06_dual_rotary_interlock",
-    "label": "06 Dual Rotary Interlock",
-    "category": "Controls/Corporate/Pinnacle",
+    "label": "Dual Rotary Interlock",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_corporate_pinnacle_06_dual_rotary_interlock",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_seyr_01_keyboard",
-    "label": "01 Keyboard",
-    "category": "Controls/Corporate/Seyr",
+    "label": "Keyboard",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_corporate_seyr_01_keyboard",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_seyr_02_direction_trim",
-    "label": "02 Direction Trim",
-    "category": "Controls/Corporate/Seyr",
+    "label": "Direction Trim",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_corporate_seyr_02_direction_trim",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_seyr_03_quadrant_dial",
-    "label": "03 Quadrant Dial",
-    "category": "Controls/Corporate/Seyr",
+    "label": "Quadrant Dial",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_corporate_seyr_03_quadrant_dial",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_seyr_04_paired_faders_knob",
-    "label": "04 Paired Faders Knob",
-    "category": "Controls/Corporate/Seyr",
+    "label": "Paired Faders Knob",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_corporate_seyr_04_paired_faders_knob",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_seyr_05_horizontal_adjusters",
-    "label": "05 Horizontal Adjusters",
-    "category": "Controls/Corporate/Seyr",
+    "label": "Horizontal Adjusters",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_corporate_seyr_05_horizontal_adjusters",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_seyr_06_selection_wheel_slider",
-    "label": "06 Selection Wheel Slider",
-    "category": "Controls/Corporate/Seyr",
+    "label": "Selection Wheel Slider",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_corporate_seyr_06_selection_wheel_slider",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vandor_01_keyboard",
-    "label": "01 Keyboard",
-    "category": "Controls/Corporate/Vandor",
+    "label": "Keyboard",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_corporate_vandor_01_keyboard",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vandor_02_direction_wheel",
-    "label": "02 Direction Wheel",
-    "category": "Controls/Corporate/Vandor",
+    "label": "Direction Wheel",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_corporate_vandor_02_direction_wheel",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vandor_03_lever_toggles",
-    "label": "03 Lever Toggles",
-    "category": "Controls/Corporate/Vandor",
+    "label": "Lever Toggles",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_corporate_vandor_03_lever_toggles",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vandor_04_rotary_bank",
-    "label": "04 Rotary Bank",
-    "category": "Controls/Corporate/Vandor",
+    "label": "Rotary Bank",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_corporate_vandor_04_rotary_bank",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vandor_05_keypad_jog_wheel",
-    "label": "05 Keypad Jog Wheel",
-    "category": "Controls/Corporate/Vandor",
+    "label": "Keypad Jog Wheel",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_corporate_vandor_05_keypad_jog_wheel",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vandor_06_twin_knobs_presets",
-    "label": "06 Twin Knobs Presets",
-    "category": "Controls/Corporate/Vandor",
+    "label": "Twin Knobs Presets",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_corporate_vandor_06_twin_knobs_presets",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vektor_01_keyboard",
-    "label": "01 Keyboard",
-    "category": "Controls/Corporate/Vektor",
+    "label": "Keyboard",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_corporate_vektor_01_keyboard",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vektor_02_twin_direction_controls",
-    "label": "02 Twin Direction Controls",
-    "category": "Controls/Corporate/Vektor",
+    "label": "Twin Direction Controls",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_corporate_vektor_02_twin_direction_controls",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vektor_03_three_lever_sliders",
-    "label": "03 Three Lever Sliders",
-    "category": "Controls/Corporate/Vektor",
+    "label": "Three Lever Sliders",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_corporate_vektor_03_three_lever_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vektor_04_latching_switches",
-    "label": "04 Latching Switches",
-    "category": "Controls/Corporate/Vektor",
+    "label": "Latching Switches",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_corporate_vektor_04_latching_switches",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vektor_05_rockers_and_dial",
-    "label": "05 Rockers And Dial",
-    "category": "Controls/Corporate/Vektor",
+    "label": "Rockers And Dial",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_corporate_vektor_05_rockers_and_dial",
     "rectangular": true
   },
   {
     "id": "controls27_corporate_vektor_06_switch_bank",
-    "label": "06 Switch Bank",
-    "category": "Controls/Corporate/Vektor",
+    "label": "Switch Bank",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_corporate_vektor_06_switch_bank",
     "rectangular": true
   },
   {
     "id": "controls27_dense_ashiro_mai_01_engineering_faders",
-    "label": "01 Engineering Faders",
-    "category": "Controls/Dense/Ashiro Mai",
+    "label": "Engineering Faders",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_dense_ashiro_mai_01_engineering_faders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_ashiro_mai_02_pilot_controls",
-    "label": "02 Pilot Controls",
-    "category": "Controls/Dense/Ashiro Mai",
+    "label": "Pilot Controls",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_dense_ashiro_mai_02_pilot_controls",
     "rectangular": true
   },
   {
     "id": "controls27_dense_ashiro_mai_03_navigation_bottom",
-    "label": "03 Navigation Bottom",
-    "category": "Controls/Dense/Ashiro Mai",
+    "label": "Navigation Bottom",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_dense_ashiro_mai_03_navigation_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_dense_ashiro_mai_04_button_matrix_sliders",
-    "label": "04 Button Matrix Sliders",
-    "category": "Controls/Dense/Ashiro Mai",
+    "label": "Button Matrix Sliders",
+    "category": "Controls/Ashiro Mai",
     "source": "controls27/controls27_dense_ashiro_mai_04_button_matrix_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_paladyne_01_engineering_faders",
-    "label": "01 Engineering Faders",
-    "category": "Controls/Dense/Paladyne",
+    "label": "Engineering Faders",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_dense_paladyne_01_engineering_faders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_paladyne_02_pilot_controls",
-    "label": "02 Pilot Controls",
-    "category": "Controls/Dense/Paladyne",
+    "label": "Pilot Controls",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_dense_paladyne_02_pilot_controls",
     "rectangular": true
   },
   {
     "id": "controls27_dense_paladyne_03_navigation_bottom",
-    "label": "03 Navigation Bottom",
-    "category": "Controls/Dense/Paladyne",
+    "label": "Navigation Bottom",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_dense_paladyne_03_navigation_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_dense_paladyne_04_button_matrix_sliders",
-    "label": "04 Button Matrix Sliders",
-    "category": "Controls/Dense/Paladyne",
+    "label": "Button Matrix Sliders",
+    "category": "Controls/Paladyne",
     "source": "controls27/controls27_dense_paladyne_04_button_matrix_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_pinnacle_01_engineering_faders",
-    "label": "01 Engineering Faders",
-    "category": "Controls/Dense/Pinnacle",
+    "label": "Engineering Faders",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_dense_pinnacle_01_engineering_faders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_pinnacle_02_pilot_controls",
-    "label": "02 Pilot Controls",
-    "category": "Controls/Dense/Pinnacle",
+    "label": "Pilot Controls",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_dense_pinnacle_02_pilot_controls",
     "rectangular": true
   },
   {
     "id": "controls27_dense_pinnacle_03_navigation_bottom",
-    "label": "03 Navigation Bottom",
-    "category": "Controls/Dense/Pinnacle",
+    "label": "Navigation Bottom",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_dense_pinnacle_03_navigation_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_dense_pinnacle_04_button_matrix_sliders",
-    "label": "04 Button Matrix Sliders",
-    "category": "Controls/Dense/Pinnacle",
+    "label": "Button Matrix Sliders",
+    "category": "Controls/Pinnacle",
     "source": "controls27/controls27_dense_pinnacle_04_button_matrix_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_seyr_01_engineering_faders",
-    "label": "01 Engineering Faders",
-    "category": "Controls/Dense/Seyr",
+    "label": "Engineering Faders",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_dense_seyr_01_engineering_faders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_seyr_02_pilot_controls",
-    "label": "02 Pilot Controls",
-    "category": "Controls/Dense/Seyr",
+    "label": "Pilot Controls",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_dense_seyr_02_pilot_controls",
     "rectangular": true
   },
   {
     "id": "controls27_dense_seyr_03_navigation_bottom",
-    "label": "03 Navigation Bottom",
-    "category": "Controls/Dense/Seyr",
+    "label": "Navigation Bottom",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_dense_seyr_03_navigation_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_dense_seyr_04_button_matrix_sliders",
-    "label": "04 Button Matrix Sliders",
-    "category": "Controls/Dense/Seyr",
+    "label": "Button Matrix Sliders",
+    "category": "Controls/Seyr",
     "source": "controls27/controls27_dense_seyr_04_button_matrix_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_vandor_01_engineering_faders",
-    "label": "01 Engineering Faders",
-    "category": "Controls/Dense/Vandor",
+    "label": "Engineering Faders",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_dense_vandor_01_engineering_faders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_vandor_02_pilot_controls",
-    "label": "02 Pilot Controls",
-    "category": "Controls/Dense/Vandor",
+    "label": "Pilot Controls",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_dense_vandor_02_pilot_controls",
     "rectangular": true
   },
   {
     "id": "controls27_dense_vandor_03_navigation_bottom",
-    "label": "03 Navigation Bottom",
-    "category": "Controls/Dense/Vandor",
+    "label": "Navigation Bottom",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_dense_vandor_03_navigation_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_dense_vandor_04_button_matrix_sliders",
-    "label": "04 Button Matrix Sliders",
-    "category": "Controls/Dense/Vandor",
+    "label": "Button Matrix Sliders",
+    "category": "Controls/Vandor",
     "source": "controls27/controls27_dense_vandor_04_button_matrix_sliders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_vektor_01_engineering_faders",
-    "label": "01 Engineering Faders",
-    "category": "Controls/Dense/Vektor",
+    "label": "Engineering Faders",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_dense_vektor_01_engineering_faders",
     "rectangular": true
   },
   {
     "id": "controls27_dense_vektor_02_pilot_controls",
-    "label": "02 Pilot Controls",
-    "category": "Controls/Dense/Vektor",
+    "label": "Pilot Controls",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_dense_vektor_02_pilot_controls",
     "rectangular": true
   },
   {
     "id": "controls27_dense_vektor_03_navigation_bottom",
-    "label": "03 Navigation Bottom",
-    "category": "Controls/Dense/Vektor",
+    "label": "Navigation Bottom",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_dense_vektor_03_navigation_bottom",
     "rectangular": true
   },
   {
     "id": "controls27_dense_vektor_04_button_matrix_sliders",
-    "label": "04 Button Matrix Sliders",
-    "category": "Controls/Dense/Vektor",
+    "label": "Button Matrix Sliders",
+    "category": "Controls/Vektor",
     "source": "controls27/controls27_dense_vektor_04_button_matrix_sliders",
     "rectangular": true
   },
@@ -4096,7 +4223,10 @@
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_biology_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_full_communications",
@@ -4104,7 +4234,10 @@
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_communications_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_full_medical",
@@ -4112,7 +4245,10 @@
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_medical_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_full_navigation",
@@ -4120,7 +4256,10 @@
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_navigation_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_full_radar",
@@ -4128,7 +4267,10 @@
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_radar_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_full_reactor",
@@ -4136,7 +4278,10 @@
     "category": "Screens",
     "menuGroup": "Ashiro Mai",
     "source": "company_ashiro_mai_full_reactor_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_half_biology",
@@ -4145,7 +4290,10 @@
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_biology_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_half_communications",
@@ -4154,7 +4302,10 @@
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_communications_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_half_medical",
@@ -4163,7 +4314,10 @@
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_medical_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_half_navigation",
@@ -4172,7 +4326,10 @@
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_navigation_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_half_radar",
@@ -4181,7 +4338,10 @@
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_radar_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_ashiro_mai_half_reactor",
@@ -4190,208 +4350,211 @@
     "menuGroup": "Ashiro Mai",
     "source": "console_inputs/company_ashiro_mai_half_reactor_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_full_biology",
-    "label": "Paladyne Full Biology",
+    "label": "Biology (Cool/Full)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "company_paladyne_full_biology_static",
     "frames": 6
   },
   {
     "id": "screen_company_paladyne_full_communications",
-    "label": "Paladyne Full Communications",
+    "label": "Communications (Cool/Full)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "company_paladyne_full_communications_static",
     "frames": 6
   },
   {
     "id": "screen_company_paladyne_full_medical",
-    "label": "Paladyne Full Medical",
+    "label": "Medical (Cool/Full)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "company_paladyne_full_medical_static",
     "frames": 6
   },
   {
     "id": "screen_company_paladyne_full_navigation",
-    "label": "Paladyne Full Navigation",
+    "label": "Navigation (Cool/Full)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "company_paladyne_full_navigation_static",
     "frames": 6
   },
   {
     "id": "screen_company_paladyne_full_radar",
-    "label": "Paladyne Full Radar",
+    "label": "Radar (Cool/Full)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "company_paladyne_full_radar_static",
     "frames": 6
   },
   {
     "id": "screen_company_paladyne_full_reactor",
-    "label": "Paladyne Full Reactor",
+    "label": "Reactor (Cool/Full)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "company_paladyne_full_reactor_static",
     "frames": 6
   },
   {
     "id": "screen_company_paladyne_half_biology",
-    "label": "Paladyne Half Biology",
+    "label": "Biology (Cool/Half)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_biology_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_paladyne_half_communications",
-    "label": "Paladyne Half Communications",
+    "label": "Communications (Cool/Half)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_communications_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_paladyne_half_medical",
-    "label": "Paladyne Half Medical",
+    "label": "Medical (Cool/Half)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_medical_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_paladyne_half_navigation",
-    "label": "Paladyne Half Navigation",
+    "label": "Navigation (Cool/Half)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_navigation_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_paladyne_half_radar",
-    "label": "Paladyne Half Radar",
+    "label": "Radar (Cool/Half)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_radar_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_paladyne_half_reactor",
-    "label": "Paladyne Half Reactor",
+    "label": "Reactor (Cool/Half)",
     "category": "Screens",
-    "menuGroup": "Paladyne",
+    "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_reactor_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_pinnacle_full_biology",
-    "label": "Pinnacle Full Biology",
+    "label": "Biology (Gold/Full)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "company_pinnacle_full_biology_static",
     "frames": 6
   },
   {
     "id": "screen_company_pinnacle_full_communications",
-    "label": "Pinnacle Full Communications",
+    "label": "Communications (Gold/Full)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "company_pinnacle_full_communications_static",
     "frames": 6
   },
   {
     "id": "screen_company_pinnacle_full_medical",
-    "label": "Pinnacle Full Medical",
+    "label": "Medical (Gold/Full)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "company_pinnacle_full_medical_static",
     "frames": 6
   },
   {
     "id": "screen_company_pinnacle_full_navigation",
-    "label": "Pinnacle Full Navigation",
+    "label": "Navigation (Gold/Full)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "company_pinnacle_full_navigation_static",
     "frames": 6
   },
   {
     "id": "screen_company_pinnacle_full_radar",
-    "label": "Pinnacle Full Radar",
+    "label": "Radar (Gold/Full)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "company_pinnacle_full_radar_static",
     "frames": 6
   },
   {
     "id": "screen_company_pinnacle_full_reactor",
-    "label": "Pinnacle Full Reactor",
+    "label": "Reactor (Gold/Full)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "company_pinnacle_full_reactor_static",
     "frames": 6
   },
   {
     "id": "screen_company_pinnacle_half_biology",
-    "label": "Pinnacle Half Biology",
+    "label": "Biology (Gold/Half)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_biology_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_pinnacle_half_communications",
-    "label": "Pinnacle Half Communications",
+    "label": "Communications (Gold/Half)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_communications_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_pinnacle_half_medical",
-    "label": "Pinnacle Half Medical",
+    "label": "Medical (Gold/Half)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_medical_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_pinnacle_half_navigation",
-    "label": "Pinnacle Half Navigation",
+    "label": "Navigation (Gold/Half)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_navigation_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_pinnacle_half_radar",
-    "label": "Pinnacle Half Radar",
+    "label": "Radar (Gold/Half)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_radar_static",
     "frames": 6,
     "rectangular": true
   },
   {
     "id": "screen_company_pinnacle_half_reactor",
-    "label": "Pinnacle Half Reactor",
+    "label": "Reactor (Gold/Half)",
     "category": "Screens",
-    "menuGroup": "Pinnacle",
+    "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_reactor_static",
     "frames": 6,
     "rectangular": true
@@ -4402,13 +4565,16 @@
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_biology_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_seyr_full_communications",
-    "label": "Seyr Full Communications",
+    "label": "Communications (Classic/Full)",
     "category": "Screens",
-    "menuGroup": "Seyr",
+    "menuGroup": "Classic",
     "source": "company_seyr_full_communications_static",
     "frames": 6
   },
@@ -4418,13 +4584,16 @@
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_medical_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_seyr_full_navigation",
-    "label": "Seyr Full Navigation",
+    "label": "Navigation (Classic/Full)",
     "category": "Screens",
-    "menuGroup": "Seyr",
+    "menuGroup": "Classic",
     "source": "company_seyr_full_navigation_static",
     "frames": 6
   },
@@ -4434,13 +4603,16 @@
     "category": "Screens",
     "menuGroup": "Seyr",
     "source": "company_seyr_full_radar_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_seyr_full_reactor",
-    "label": "Seyr Full Reactor",
+    "label": "Reactor (Classic/Full)",
     "category": "Screens",
-    "menuGroup": "Seyr",
+    "menuGroup": "Classic",
     "source": "company_seyr_full_reactor_static",
     "frames": 6
   },
@@ -4451,13 +4623,16 @@
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_biology_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_seyr_half_communications",
-    "label": "Seyr Half Communications",
+    "label": "Communications (Classic/Half)",
     "category": "Screens",
-    "menuGroup": "Seyr",
+    "menuGroup": "Classic",
     "source": "console_inputs/company_seyr_half_communications_static",
     "frames": 6,
     "rectangular": true
@@ -4469,13 +4644,16 @@
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_medical_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_seyr_half_navigation",
-    "label": "Seyr Half Navigation",
+    "label": "Navigation (Classic/Half)",
     "category": "Screens",
-    "menuGroup": "Seyr",
+    "menuGroup": "Classic",
     "source": "console_inputs/company_seyr_half_navigation_static",
     "frames": 6,
     "rectangular": true
@@ -4487,13 +4665,16 @@
     "menuGroup": "Seyr",
     "source": "console_inputs/company_seyr_half_radar_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_seyr_half_reactor",
-    "label": "Seyr Half Reactor",
+    "label": "Reactor (Classic/Half)",
     "category": "Screens",
-    "menuGroup": "Seyr",
+    "menuGroup": "Classic",
     "source": "console_inputs/company_seyr_half_reactor_static",
     "frames": 6,
     "rectangular": true
@@ -4504,7 +4685,10 @@
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_biology_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_full_communications",
@@ -4512,7 +4696,10 @@
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_communications_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_full_medical",
@@ -4520,7 +4707,10 @@
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_medical_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_full_navigation",
@@ -4528,7 +4718,10 @@
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_navigation_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_full_radar",
@@ -4536,7 +4729,10 @@
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_radar_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_full_reactor",
@@ -4544,7 +4740,10 @@
     "category": "Screens",
     "menuGroup": "Vandor",
     "source": "company_vandor_full_reactor_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_paladyne_full_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_half_biology",
@@ -4553,7 +4752,10 @@
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_biology_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_half_communications",
@@ -4562,7 +4764,10 @@
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_communications_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_half_medical",
@@ -4571,7 +4776,10 @@
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_medical_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_half_navigation",
@@ -4580,7 +4788,10 @@
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_navigation_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_half_radar",
@@ -4589,7 +4800,10 @@
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_radar_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vandor_half_reactor",
@@ -4598,7 +4812,10 @@
     "menuGroup": "Vandor",
     "source": "console_inputs/company_vandor_half_reactor_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_paladyne_half_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_full_biology",
@@ -4606,7 +4823,10 @@
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_biology_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_full_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_full_communications",
@@ -4614,7 +4834,10 @@
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_communications_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_full_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_full_medical",
@@ -4622,7 +4845,10 @@
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_medical_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_full_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_full_navigation",
@@ -4630,7 +4856,10 @@
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_navigation_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_full_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_full_radar",
@@ -4638,7 +4867,10 @@
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_radar_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_full_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_full_reactor",
@@ -4646,7 +4878,10 @@
     "category": "Screens",
     "menuGroup": "Vektor",
     "source": "company_vektor_full_reactor_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_full_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_half_biology",
@@ -4655,7 +4890,10 @@
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_biology_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_half_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_half_communications",
@@ -4664,7 +4902,10 @@
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_communications_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_half_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_half_medical",
@@ -4673,7 +4914,10 @@
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_medical_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_half_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_half_navigation",
@@ -4682,7 +4926,10 @@
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_navigation_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_half_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_half_radar",
@@ -4691,7 +4938,10 @@
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_radar_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_half_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_vektor_half_reactor",
@@ -4700,7 +4950,10 @@
     "menuGroup": "Vektor",
     "source": "console_inputs/company_vektor_half_reactor_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_company_pinnacle_half_reactor",
+    "retireAnimation": true
   },
   {
     "id": "material_satin_silver",

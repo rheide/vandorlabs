@@ -19,6 +19,9 @@ def retired():
     used = {path for name, path in finishes if not menu.get(name, {}).get('hidden')}
     for entry in entries:
         paths = {entry['source']}
+        if entry.get('retireAnimation'):
+            paths.add(entry['source'].removesuffix('_static')+'_animated')
+            if entry['source'].startswith('console_inputs/'):paths.add(entry['source'].removesuffix('_static')+'_off')
         paths.update(entry[key] for key in ('unlit', 'top', 'side') if key in entry)
         if entry.get('rectangular'):
             paths.add('unified/' + entry['id'])
@@ -43,7 +46,7 @@ def stage(directory):
     removed = 0
     saved = 0
     for path in paths:
-        for suffix in ('.png', '.png.mcmeta'):
+        for suffix in ('.png', '.png.mcmeta', '.anim'):
             file = directory / 'textures/blocks' / (path + suffix)
             if file.exists():
                 saved += file.stat().st_size
@@ -78,6 +81,7 @@ def check_jar(file):
         for path in paths:
             assert prefix + 'textures/blocks/' + path + '.png' not in names, path
             assert prefix + 'textures/blocks/' + path + '.png.mcmeta' not in names, path
+            assert prefix + 'textures/blocks/' + path + '.anim' not in names, path
         assert present('dark_wall_panel')
         for name in names:
             if name.startswith(prefix + 'models/') and name.endswith('.json'):

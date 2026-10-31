@@ -19,6 +19,7 @@ final class ScreenTextureLocations {
     static ResourceLocation off(boolean framed) {return framed?OFF_FRAMED:OFF_PLAIN;}
 
     static synchronized ResourceLocation stationary(String id) {
+        id=com.vandorlabs.tiles.ScreenHousingTextures.canonicalScreen(id);
         ResourceLocation texture=STATIC.get(id);
         if(texture==null) {
             texture=location(id+"_static.png");

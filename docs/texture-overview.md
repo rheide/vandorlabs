@@ -12,6 +12,10 @@ These collages cover the built-in texture picker, including both light states an
 
 ![Corp textures](texture-browser/collages/corp.png)
 
+## Displays
+
+![Displays textures](texture-browser/collages/displays.png)
+
 ## Doors
 
 ![Doors textures](texture-browser/collages/doors.png)
@@ -47,10 +51,6 @@ These collages cover the built-in texture picker, including both light states an
 ## Panels
 
 ![Panels textures](texture-browser/collages/panels.png)
-
-## Screens
-
-![Screens textures](texture-browser/collages/screens.png)
 
 ## Storage
 

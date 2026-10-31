@@ -13,7 +13,10 @@ def main():
     def append(entries,entry):
         old=next((e for e in entries if e['id']==entry['id']),None)
         if old is None:entries.append(entry)
-        else:assert old==entry,entry['id']
+        else:
+            # User-facing taxonomy and retirement metadata are maintained separately.
+            presentation={'label','menuGroup','hidden','alias','retireAnimation','retired'}
+            assert {k:v for k,v in old.items() if k not in presentation}=={k:v for k,v in entry.items() if k not in presentation},entry['id']
     for border in sorted((source/'borders').glob('*/*.png')):
         company,height=border.parent.name,border.stem;image=Image.open(border).convert('RGBA');aspect=image.width/image.height
         resized=image.resize((128,round(128/aspect)),Image.Resampling.LANCZOS);canvas=Image.new('RGBA',(128,128));canvas.paste(resized,(0,0))

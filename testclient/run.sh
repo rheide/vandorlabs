@@ -60,6 +60,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   env LIBGL_ALWAYS_SOFTWARE=1 \
   "$JAVA" "-Xmx${VANDOR_LABS_TEST_HEAP:-2G}" "${CAPTURE_JVM[@]}" \
   -Dvandorlabs.solidHousingChecksOnly="${VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.screenCatalogChecksOnly="${VANDOR_LABS_SCREEN_CATALOG_CHECKS_ONLY:-false}" \
   -Dvandorlabs.pbrMaterialChecksOnly="${VANDOR_LABS_PBR_MATERIAL_CHECKS_ONLY:-false}" \
   -Dvandorlabs.materialFinishChecksOnly="${VANDOR_LABS_MATERIAL_FINISH_CHECKS_ONLY:-false}" \
   -Dvandorlabs.duplifierDirectionChecksOnly="${VANDOR_LABS_DUPLIFIER_DIRECTION_CHECKS_ONLY:-false}" \

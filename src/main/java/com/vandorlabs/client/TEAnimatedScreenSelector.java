@@ -317,6 +317,7 @@ public class TEAnimatedScreenSelector
     }
 
     private static synchronized AnimData animData(String screenId) {
+        screenId=ScreenHousingTextures.canonicalScreen(screenId);
         return animation(screenId,TEX_ROOT+screenId);
     }
 
@@ -330,6 +331,7 @@ public class TEAnimatedScreenSelector
     }
 
     private static synchronized AnimData inputAnimData(String id) {
+        id=ScreenHousingTextures.canonicalScreen(id);
         return animation("input_"+id,TEX_ROOT+"console_inputs/"+id);
     }
 

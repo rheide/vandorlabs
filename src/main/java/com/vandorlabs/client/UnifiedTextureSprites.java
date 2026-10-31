@@ -18,7 +18,7 @@ public final class UnifiedTextureSprites {
         event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/screen_off"));
         event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/sequence_border_off"));
         for(String panel:com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.INPUT_PANELS)
-            event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/console_inputs/"+panel+"_off","console_inputs/"+panel+"_off",false,false));
+            if(ScreenHousingTextures.canonicalScreen(panel).equals(panel))event.getMap().setTextureEntry(new Sprite("vandorlabs:blocks/console_inputs/"+panel+"_off","console_inputs/"+panel+"_off",false,false));
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++) {
             if(ScreenHousingTextures.canonicalChoice(i)!=i)continue;
             // Filesystem examples may be hidden but remain valid external choices.

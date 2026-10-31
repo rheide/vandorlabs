@@ -118,7 +118,7 @@ public class ModBlocks {
             String id = e.get("id").getAsString();
             boolean display = e.has("type")
                     && "display".equals(e.get("type").getAsString());
-            if (display) {
+            if (display && !(e.has("retired") && e.get("retired").getAsBoolean())) {
                 DISPLAY_SCREEN_IDS.add(id);
                 if (e.has("framed") && e.get("framed").getAsBoolean()) {
                     DISPLAY_FRAMED_IDS.add(id);

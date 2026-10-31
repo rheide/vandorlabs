@@ -92,6 +92,7 @@ public final class ScreenHousingTextures {
     public static final String[] IDS;
     private static final String[] TEXTURES;
     private static final java.util.Map<Integer,Integer> REDIRECTS=new java.util.HashMap<>();
+    private static final java.util.Map<String,String> SCREEN_REDIRECTS=new java.util.HashMap<>();
     private static final String[] SQUARE_TEXTURES, UNLIT_TEXTURES, STORAGE_TOP, STORAGE_SIDE;
     private static final java.util.List<com.google.gson.JsonObject> EXTRAS=new java.util.ArrayList<>();
     private static final com.google.gson.JsonObject MENU;
@@ -126,6 +127,11 @@ public final class ScreenHousingTextures {
                 for(int j=0;j<IDS.length;j++)if(alias.equals(IDS[j])){target=j;break;}
                 if(target<0)throw new IllegalStateException("Missing texture alias: "+alias);
                 REDIRECTS.put(LEGACY_COUNT+i,target);
+                if("Screens".equals(e.get("category").getAsString())){
+                    String source=e.get("source").getAsString(),replacement=EXTRAS.get(target-LEGACY_COUNT).get("source").getAsString();
+                    String oldId=source.replaceFirst("^console_inputs/", "").replaceFirst("_static$",""),newId=replacement.replaceFirst("^console_inputs/", "").replaceFirst("_static$","");
+                    String previous=SCREEN_REDIRECTS.put(oldId,newId);if(previous!=null&&!previous.equals(newId))throw new IllegalStateException("Conflicting screen aliases: "+oldId);
+                }
             }
             if(e.has("detail") && e.get("detail").getAsInt()>0){
                 for(int j=0;j<EXTRAS.size();j++){
@@ -160,7 +166,11 @@ public final class ScreenHousingTextures {
         int index=localIndex(choice);
         return index<LEGACY_COUNT && MENU.has(IDS[index])?MENU.getAsJsonObject(IDS[index]):entry(choice);
     }
-    public static String menuCategory(int choice){com.google.gson.JsonObject e=menu(choice);return category(choice)+(e!=null&&e.has("menuGroup")?"/"+e.get("menuGroup").getAsString():"");}
+    public static String menuCategory(int choice){
+        com.google.gson.JsonObject e=menu(choice);String category=category(choice);
+        if("Screens".equals(category))category=e!=null&&!e.has("menuGroup")&&e.has("source")&&e.get("source").getAsString().startsWith("console_inputs/")?"Controls":"Displays";
+        return category+(e!=null&&e.has("menuGroup")?"/"+e.get("menuGroup").getAsString():"");
+    }
     public static String category(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && e.has("category")?e.get("category").getAsString():"Materials";}
     public static String label(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("label")?null:e.has("detail")?e.get("label").getAsString().replaceFirst(" (Small|Medium|Large)$",""):e.get("label").getAsString();}
     /** Shared general-material filter for pickers and authenticated finish validation. */
@@ -228,6 +238,8 @@ public final class ScreenHousingTextures {
         return choiceAt(Math.floorMod(textureIndex(choice) + direction, IDS.length));
     }
 
+    /** Retired display identities resolve at use time, preserving original saved NBT. */
+    public static String canonicalScreen(String id){return SCREEN_REDIRECTS.getOrDefault(id,id);}
     /** Full artwork for door leaves and thumbnails; ordinary blocks use one square half. */
     public static String fullTexture(int choice) {
         if(CustomBlockMaterials.isCustom(choice) && com.vandorlabs.VandorLabs.proxy!=null)return com.vandorlabs.VandorLabs.proxy.customTexture(choice);

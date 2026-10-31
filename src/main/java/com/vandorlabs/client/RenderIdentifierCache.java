@@ -23,6 +23,6 @@ final class RenderIdentifierCache {
     private static final Map<String,ModelResourceLocation> GEAR_TIPS=new HashMap<>();
     static ModelResourceLocation gearTip(String family,int size,boolean front){String key=family+"_"+com.vandorlabs.blocks.BlockTelescopicLandingGear.SIZES[Math.min(3,size)]+(front?"_nose_front":"_nose_rear");return GEAR_TIPS.computeIfAbsent(key,name->new ModelResourceLocation("vandorlabs:"+name,"inventory"));}
     static ResourceLocation white(){return reference?new ResourceLocation("vandorlabs","textures/blocks/screen_white.png"):WHITE;}
-    static ResourceLocation input(String id,boolean off){if(reference)return legacyInput(id,off);ResourceLocation[] pair=INPUTS.get(id);if(pair==null){pair=new ResourceLocation[]{legacyInput(id,false),legacyInput(id,true)};INPUTS.put(id,pair);}return pair[off?1:0];}
+    static ResourceLocation input(String id,boolean off){id=com.vandorlabs.tiles.ScreenHousingTextures.canonicalScreen(id);if(reference)return legacyInput(id,off);ResourceLocation[] pair=INPUTS.get(id);if(pair==null){pair=new ResourceLocation[]{legacyInput(id,false),legacyInput(id,true)};INPUTS.put(id,pair);}return pair[off?1:0];}
     private static ResourceLocation legacyInput(String id,boolean off){return new ResourceLocation("vandorlabs","textures/blocks/console_inputs/"+id+(off?"_off":"_static")+".png");}
 }

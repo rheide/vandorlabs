@@ -109,7 +109,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public static int getInputFrameCount(String id) {
-        Integer frames = INPUT_FRAME_COUNTS.get(id);
+        Integer frames = INPUT_FRAME_COUNTS.get(ScreenHousingTextures.canonicalScreen(id));
         return frames == null ? 1 : frames;
     }
 
@@ -410,7 +410,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public String getInputPanel() {
-        return inputPanel;
+        return ScreenHousingTextures.canonicalScreen(inputPanel);
     }
 
     public void setInputPanel(String inputPanel) {
@@ -421,7 +421,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public String getSecondaryInputPanel() {
-        return secondaryInputPanel;
+        return ScreenHousingTextures.canonicalScreen(secondaryInputPanel);
     }
 
     public void setSecondaryInputPanel(String inputPanel) {
@@ -453,7 +453,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public String getSelectedScreen() {
-        return selectedScreen;
+        return ScreenHousingTextures.canonicalScreen(selectedScreen);
     }
 
     public void setSelectedScreen(String selectedScreen) {

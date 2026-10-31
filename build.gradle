@@ -622,6 +622,13 @@ task testSharedRuntimeTextures(type: Exec) {
 }
 check.dependsOn testSharedRuntimeTextures
 
+task testScreenCatalog(type: Exec) {
+    group = 'verification'
+    dependsOn jar
+    commandLine pythonExecutable, 'tools/test_screen_catalog.py', '--jar', jar.archivePath
+}
+check.dependsOn testScreenCatalog
+
 task testPbrMaterials(type: Exec) {
     dependsOn jar
     workingDir projectDir

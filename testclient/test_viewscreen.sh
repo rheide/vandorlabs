@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
-unset VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
+unset VANDOR_LABS_SCREEN_CATALOG_CHECKS_ONLY VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
@@ -83,6 +83,9 @@ case "${1:-}" in
         elif [ "$TARGET" = transmission ]; then
             PREFIX=transmission_
             export VANDOR_LABS_TRANSMISSION_CHECKS_ONLY=true
+        elif [ "$TARGET" = screen-catalog ]; then
+            PREFIX=screen-catalog_
+            export VANDOR_LABS_SCREEN_CATALOG_CHECKS_ONLY=true
         elif [ "$TARGET" = artwork27 ]; then
             PREFIX=artwork27_
             export VANDOR_LABS_ARTWORK27_CHECKS_ONLY=true
@@ -345,6 +348,11 @@ if [ "$MODE" = focus ]; then
         grep -q "transmission-settings PASS" "$RUN_OUT/client.log"
         grep -q "inline-transmitter-survival PASS" "$RUN_OUT/client.log"
         echo "Transmission settings passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = screen-catalog ]; then
+        grep -q "screen-catalog-live PASS" "$RUN_OUT/client.log"
+        echo "Screen catalog live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = artwork27 ]; then

@@ -2,6 +2,10 @@
 
 ## 2.7 (in development)
 
+- Rename the visible Screens category to Displays; organize matching Full/Half artwork into Gold, Cool, Classic and Ship, with height suffixes and stable saved indices. Merge duplicate company designs while retaining original Seyr Communications, Navigation and Reactor animations in Classic.
+- Replace Bridge Sensors with Specialist Sensors, and remove Tactical Starmap, Science Biology Wide Left/Right and the Console display artwork without removing console blocks.
+- Flatten Corporate/Dense controls into company folders directly under Controls, rename Half-height to Classic, and remove numbered prefixes while keeping input controls separate and names unique.
+
 - Keep programmable trapdoor frame walls at the ordinary leaf texture scale and remove shared borders only beside another cutout frame, preserving boundaries against regular materials.
 
 - Keep ordinary programmable trapdoor materials solid and restrict open-center extrusion to Frame artwork; avoid reading virtual door sprites as PNG files while rendering.

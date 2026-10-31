@@ -8,6 +8,27 @@ for every runtime texture. With Complementary's RP Support set to labPBR,
 bare metals, coated panels, glass and fabric have distinct reflective finishes.
 The maps preserve existing diffuse artwork and add no light emission.
 
+The texture list groups screen artwork under **Displays**. **Gold** retains
+Pinnacle designs and **Cool** retains Paladyne designs, for both Full and Half
+screens. Names place the subject first, such as **Biology (Gold/Full)** or
+**Biology (Gold/Half)**. Saved Vektor choices use Gold; retired Ashiro, Seyr and
+Vandor choices use Cool. Seyr Communications, Navigation and Reactor retain
+their original textures and animations in **Classic**, for both heights.
+
+**Displays/Classic** also contains the original Analysis, Bridge, Extra and
+Specialist displays. Specialist Sensors is **Sensors (Classic/Full)** or
+**Sensors (Classic/Half)** and replaces Bridge Sensors. Cruiser and ship views
+are under **Displays/Ship**. All selectable display artwork names identify
+Full or Half height. Tactical Starmap, Science Biology Wide Left/Right and the
+Console Biology/Engineering/Medical/Navigation/Sensors/Signals artwork are
+removed without replacement mappings. Console blocks remain available.
+
+Input controls remain separate under **Controls**. Company controls and their
+Dense variants share company folders directly below Controls. The former
+Half-height folder is **Controls/Classic**. Numeric prefixes are removed from
+control names; names remain unique within each folder. Controls have no
+Full/Half suffix. Saved numeric artwork indices retain their positions.
+
 The Materials picker includes Satin Silver, Cool Steel and Pale Titanium,
 using their native 128px artwork and matching shader material finishes.
 
