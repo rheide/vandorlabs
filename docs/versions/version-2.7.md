@@ -3,6 +3,17 @@
 Version 2.7 separates display artwork, frame finishes and redstone transmission,
 and expands the controls for moving mechanisms.
 
+Programmable Trigger blocks have top-level **Off / On** tabs, or **0 / 1–5 /
+6–10 / 11–15** tabs in signal-band mode, followed by **Redstone** settings.
+Each state can select Materials or Displays and independently choose
+**Off / Static / Animated** playback and **Slow / Normal / Fast** speed.
+Existing triggers keep their static appearance. These settings survive saves,
+configured items and Duplifier copying.
+
+The **Glass** material picker also includes Displays for Programmable Glass,
+Porthole Wall and related glazing pickers. Glass materials use the display's
+static first frame with the existing tint and texture-layout settings.
+
 The standard JAR also includes [shader material maps](../shader-materials.md)
 for every runtime texture. With Complementary's RP Support set to labPBR,
 bare metals, coated panels, glass and fabric have distinct reflective finishes.

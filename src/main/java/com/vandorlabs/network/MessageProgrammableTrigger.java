@@ -27,6 +27,11 @@ public final class MessageProgrammableTrigger implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private int[] modes,speeds;
+    public MessageProgrammableTrigger withArtwork(int[] modes,int[] speeds){
+        if(!TileEntityProgrammableTrigger.validArtwork(modes,speeds))throw new IllegalArgumentException("Invalid trigger playback");
+        this.modes=modes.clone();this.speeds=speeds.clone();return this;
+    }
     private boolean states;private int exact=-1,low,medium;
     public MessageProgrammableTrigger withLevels(boolean states,int exact,int low,int medium){this.states=states;this.exact=exact;this.low=low;this.medium=medium;return this;}
     private BlockPos pos;
@@ -37,12 +42,19 @@ public final class MessageProgrammableTrigger implements IMessage {
         this.pos = pos; this.off = off; this.on = on; this.channel = channel;
     }
     @Override public void fromBytes(ByteBuf buf) {
-        pos = BlockPos.fromLong(buf.readLong());
-        off = buf.readInt(); on = buf.readInt(); channel = buf.readInt();
-
+        invalidChannels=true;modes=null;speeds=null;
+        if(buf.readableBytes()<33)return;
+        pos=BlockPos.fromLong(buf.readLong());off=buf.readInt();on=buf.readInt();channel=buf.readInt();
         states=buf.readBoolean();exact=buf.readInt();low=buf.readInt();medium=buf.readInt();
-        channels=ChannelData.read(buf,channel);invalidChannels=channels==null;
-        invalidChannels|=exact< -1 || exact>15 || !ScreenHousingTextures.validChoice(low) || !ScreenHousingTextures.validChoice(medium);
+        channels=ChannelData.readField(buf,channel);
+        if(channels==null||exact< -1||exact>15||!ScreenHousingTextures.validChoice(low)||!ScreenHousingTextures.validChoice(medium))return;
+        if(buf.isReadable()){
+            if(buf.readableBytes()!=9||buf.readUnsignedByte()!=1)return;
+            modes=new int[4];speeds=new int[4];
+            for(int i=0;i<4;i++){modes[i]=buf.readUnsignedByte();speeds[i]=buf.readUnsignedByte();}
+            if(!TileEntityProgrammableTrigger.validArtwork(modes,speeds))return;
+        }
+        invalidChannels=false;
     }
     @Override public void toBytes(ByteBuf buf) {
         buf.writeLong(pos.toLong());
@@ -50,6 +62,7 @@ public final class MessageProgrammableTrigger implements IMessage {
 
         buf.writeBoolean(states);buf.writeInt(exact);buf.writeInt(low);buf.writeInt(medium);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+        if(modes!=null){buf.writeByte(1);for(int i=0;i<4;i++){buf.writeByte(modes[i]);buf.writeByte(speeds[i]);}}
 
     }
 
@@ -74,8 +87,7 @@ public final class MessageProgrammableTrigger implements IMessage {
                 if (!(raw instanceof TileEntityProgrammableTrigger)
                         || container.getTileEntity() != raw
                         || !container.canInteractWith(player)) return;
-                ((TileEntityProgrammableTrigger) raw).configureLevels(msg.states,msg.exact,msg.low,msg.medium);
-                ((TileEntityProgrammableTrigger) raw).configure(msg.off, msg.on, msg.getRedstoneChannels());
+                ((TileEntityProgrammableTrigger) raw).configureArtwork(msg.off,msg.on,msg.states,msg.exact,msg.low,msg.medium,msg.getRedstoneChannels(),msg.modes,msg.speeds);
             });
             return null;
         }

@@ -67,6 +67,10 @@ final class HousingTextureList {
     static boolean generalTexture(int choice) {
         return ScreenHousingTextures.generalTexture(choice);
     }
+    static boolean displayTexture(int choice){
+        return ScreenHousingTextures.menuCategory(choice).startsWith("Displays")
+                && com.vandorlabs.tiles.FrameAppearance.bareChoice(choice)==choice;
+    }
     /** Native armor artwork is added locally, leaving every block/screen picker unchanged. */
     static final int NAVIGATION_BLACK=0x0ffffffe,MODEL_ARTWORK=0x0ffffffd;
     static HousingTextureList forNavigation(int x,int y,int width,int selected,int rows){
@@ -114,7 +118,7 @@ final class HousingTextureList {
         List<Option> entries=new ArrayList<>();
         for(int i=0;i<com.vandorlabs.tiles.GlassTextures.IDS.length;i++)entries.add(new Option(CANOPY_GLASS_BASE+i,
                 com.vandorlabs.tiles.GlassTextures.LABELS[i],"Glass",com.vandorlabs.tiles.GlassTextures.texture(i,detail)));
-        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && generalTexture(i)){
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && (generalTexture(i)||displayTexture(i))){
             int choice=ScreenHousingTextures.choiceAt(i);
             entries.add(new Option(choice,name(choice),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
         }

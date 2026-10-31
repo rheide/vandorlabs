@@ -2,6 +2,9 @@
 
 ## 2.7 (in development)
 
+- Give Programmable Trigger On/Off and analog bands independent Displays artwork, Off/Static/Animated modes and playback speeds, with flat state tabs. Preserve legacy Static defaults, saved settings, Duplifier copying and configured items.
+- Offer Displays in the shared Glass material picker, including Programmable Glass and Porthole Wall glazing.
+
 - Add a visual display matrix comparing Classic, Cool and Gold, with native Full/Half previews and the new Bridge alternatives alongside existing Cool artwork.
 
 - Expand Cool with 15 animated display subjects in Full and Half height, plus Bridge alternatives for Biology, Communications, Medical, Navigation, Radar and Reactor. Preserve the original Cool designs and every authored pixel across all six animation frames.

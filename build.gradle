@@ -109,6 +109,15 @@ task testVehicleWorldCompatibility(type: JavaExec) {
 }
 check.dependsOn testVehicleWorldCompatibility
 
+task testTriggerArtwork(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'trigger-artwork'
+}
+check.dependsOn testTriggerArtwork
+
 task testNetworkBoundaries(type: JavaExec) {
     group = 'verification'
     dependsOn compileNonRenderingChecks

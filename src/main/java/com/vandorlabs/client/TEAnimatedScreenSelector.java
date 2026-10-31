@@ -441,7 +441,12 @@ public class TEAnimatedScreenSelector
             GlStateManager.disableLighting();
             bindAtlas();
             setNeighborWorldLight(te);
-            renderHousingBox(wallSprite(te),0,0,0,16,16,16,te.getMainTextureLayout());
+            if(te instanceof com.vandorlabs.tiles.TileEntityProgrammableTrigger && !((com.vandorlabs.tiles.TileEntityProgrammableTrigger)te).hasOnlyStaticArtwork()){
+                com.vandorlabs.tiles.TileEntityProgrammableTrigger trigger=(com.vandorlabs.tiles.TileEntityProgrammableTrigger)te;
+                int slot=trigger.getVisibleSlot(),mode=trigger.getArtworkMode(slot),choice=trigger.getTexture(slot);
+                if(mode==com.vandorlabs.animation.ScreenBehavior.OFF||mode==com.vandorlabs.animation.ScreenBehavior.ANIMATED&&"Screens".equals(ScreenHousingTextures.category(choice)))renderTriggerArtwork(trigger,slot);
+                else renderHousingBox(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice)),0,0,0,16,16,16,te.getMainTextureLayout());
+            }else renderHousingBox(wallSprite(te),0,0,0,16,16,16,te.getMainTextureLayout());
             GlStateManager.enableLighting();
             endLocalTransform();
             return;
@@ -852,6 +857,18 @@ public class TEAnimatedScreenSelector
     private static void renderSlab(TextureAtlasSprite sprite, boolean upper,
             int layout) {
         drawWallMesh(sprite, ScreenHousingMesh.slab(upper, true).textureLayout(layout,UnifiedTextureSprites.aspect(sprite)));
+    }
+
+    private static void renderTriggerArtwork(com.vandorlabs.tiles.TileEntityProgrammableTrigger tile,int slot){
+        int mode=tile.getArtworkMode(slot);
+        double[] uv=bindDisplay(tile,tile.getTexture(slot),mode!=com.vandorlabs.animation.ScreenBehavior.OFF,
+                mode==com.vandorlabs.animation.ScreenBehavior.ANIMATED,tile.getArtworkSpeed(slot));
+        BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.setTranslation(0,0,0);buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+        for(ScreenHousingMesh.Face face:ScreenHousingMesh.cube().quads)for(int i=0;i<4;i++){
+            ScreenHousingMesh.Vertex vertex=face.vertices[(4-i)&3];
+            WorldSurface.vertex(buffer,vertex.x,vertex.y,vertex.z,uv[2]+vertex.u/16*(uv[3]-uv[2]),uv[0]+vertex.v/16*(uv[1]-uv[0]),face.nx,face.ny,face.nz);
+        }
+        Tessellator.getInstance().draw();bindAtlas();
     }
 
     private static void renderHousingBox(TextureAtlasSprite sprite,double x0,double y0,double z0,double x1,double y1,double z1,int layout){

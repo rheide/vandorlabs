@@ -202,7 +202,8 @@ public final class ProgrammableSettings {
             TileEntityProgrammableTrigger trigger = (TileEntityProgrammableTrigger) tile;
             out.setInteger(WALL_TEXTURE, trigger.getHousingTexture());
             out.setInteger(TRIGGER_ON_TEXTURE, trigger.getOnTexture());
-            NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("States",trigger.isLevelStates());signal.setInteger("Exact",trigger.getExactLevel());signal.setInteger("Low",trigger.getLowTexture());signal.setInteger("Medium",trigger.getMediumTexture());out.setTag(SIGNAL_SETTINGS,signal);
+            NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("States",trigger.isLevelStates());signal.setInteger("Exact",trigger.getExactLevel());signal.setInteger("Low",trigger.getLowTexture());signal.setInteger("Medium",trigger.getMediumTexture());
+            int[] modes=new int[4],speeds=new int[4];for(int i=0;i<4;i++){modes[i]=trigger.getArtworkMode(i);speeds[i]=trigger.getArtworkSpeed(i);}signal.setIntArray("Modes",modes);signal.setIntArray("Speeds",speeds);out.setTag(SIGNAL_SETTINGS,signal);
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
             out.setInteger(WALL_TEXTURE, screen.getHousingTexture());
@@ -510,13 +511,13 @@ public final class ProgrammableSettings {
                     || "light".equals(values.getString(PRIMARY_KIND));
         } else if (tile instanceof TileEntityProgrammableTrigger) {
             TileEntityProgrammableTrigger trigger = (TileEntityProgrammableTrigger) tile;
-            if(values.hasKey(SIGNAL_SETTINGS,10)){NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);trigger.configureLevels(signal.getBoolean("States"),signal.getInteger("Exact"),signal.getInteger("Low"),signal.getInteger("Medium"));applicable=true;}
-            if (values.hasKey(WALL_TEXTURE) || values.hasKey(TRIGGER_ON_TEXTURE)
-                    || values.hasKey(CHANNEL)) {
-                trigger.configure(number(values, WALL_TEXTURE, trigger.getHousingTexture()),
-                        number(values, TRIGGER_ON_TEXTURE, trigger.getOnTexture()),
-                        channels(values,trigger));
-                applicable = true;
+            if(values.hasKey(SIGNAL_SETTINGS,10)||values.hasKey(WALL_TEXTURE)||values.hasKey(TRIGGER_ON_TEXTURE)||values.hasKey(CHANNEL)){
+                NBTTagCompound signal=values.getCompoundTag(SIGNAL_SETTINGS);int[] modes=new int[4],speeds=new int[4];
+                for(int i=0;i<4;i++){modes[i]=trigger.getArtworkMode(i);speeds[i]=trigger.getArtworkSpeed(i);}
+                if(signal.hasKey("Modes",11))modes=signal.getIntArray("Modes");if(signal.hasKey("Speeds",11))speeds=signal.getIntArray("Speeds");
+                if(!trigger.configureArtwork(number(values,WALL_TEXTURE,trigger.getHousingTexture()),number(values,TRIGGER_ON_TEXTURE,trigger.getOnTexture()),
+                        flag(signal,"States",trigger.isLevelStates()),number(signal,"Exact",trigger.getExactLevel()),number(signal,"Low",trigger.getLowTexture()),number(signal,"Medium",trigger.getMediumTexture()),channels(values,trigger),modes,speeds))return false;
+                applicable=true;
             }
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;

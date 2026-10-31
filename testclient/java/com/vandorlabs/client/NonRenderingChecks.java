@@ -35,6 +35,10 @@ public final class NonRenderingChecks {
         ModBlocks.PROGRAMMABLE_DIAGONAL_WALL = new BlockProgrammableWall("programmable_diagonal_wall", BlockProgrammableWall.Shape.DIAGONAL);
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_glass"));
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(com.vandorlabs.gear.GearTileEntity.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_data_check_gear"));
+        if(args.length>0 && args[0].equals("trigger-artwork")){
+            net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableTrigger.class,new net.minecraft.util.ResourceLocation("vandorlabs:programmable_trigger_block"));
+            TriggerArtworkChecks.run();ChannelListChecks.packetExtensions();return;
+        }
         if(args.length>0 && args[0].equals("vehicle-world")){vehicleWorldCompatibility();return;}
         if(args.length>0 && args[0].equals("housing-lighting")){HousingFaceLightingChecks.run();return;}
         if(args.length>0 && args[0].equals("door-material")){DoorFrameMaterialChecks.run();DoorGlassDataChecks.run();return;}

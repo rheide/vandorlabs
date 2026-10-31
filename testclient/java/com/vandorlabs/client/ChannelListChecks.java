@@ -19,6 +19,7 @@ final class ChannelListChecks {
         persistence();packets();copying();orSignals();latches();
         System.out.println("PASS: channel-list parsing, legacy/list NBT, independent latch banks, multi-source OR, edits and unloads");
     }
+    static void packetExtensions(){packets();}
     private static void packets() {
         BlockPos pos=new BlockPos(1,80,1);
         net.minecraftforge.fml.common.network.simpleimpl.IMessage[] messages={
@@ -36,7 +37,8 @@ final class ChannelListChecks {
                 Class<?> type=message.getClass();java.lang.reflect.Method getter=type.getMethod("getRedstoneChannels");
                 type.getMethod("withChannels",ChannelList.class).invoke(message,ChannelList.of(41,42));
                 io.netty.buffer.ByteBuf encoded=io.netty.buffer.Unpooled.buffer();message.toBytes(encoded);
-                int legacyLength=encoded.writerIndex()-9;
+                // Ramp appends its analog-deployment field after the channel list.
+                int legacyLength=encoded.writerIndex()-9-(message instanceof com.vandorlabs.network.MessageRampController?5:0);
                 for(int mode=0;mode<4;mode++) {
                     net.minecraftforge.fml.common.network.simpleimpl.IMessage decoded=(net.minecraftforge.fml.common.network.simpleimpl.IMessage)type.newInstance();
                     io.netty.buffer.ByteBuf input=encoded.copy(0,mode==0?encoded.writerIndex():legacyLength);
