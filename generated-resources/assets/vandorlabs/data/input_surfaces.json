@@ -428,5 +428,15 @@
     "id": "company_vektor_half_reactor",
     "animated": true,
     "frames": 6
+  },
+  {
+    "id": "analysis_bare_station",
+    "animated": true,
+    "frames": 6
+  },
+  {
+    "id": "analysis_bare_targeting",
+    "animated": true,
+    "frames": 6
   }
 ]

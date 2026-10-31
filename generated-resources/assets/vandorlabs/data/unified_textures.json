@@ -4972,5 +4972,23 @@
     "label": "Pale Titanium",
     "category": "Materials",
     "source": "materials/pale_titanium"
+  },
+  {
+    "id": "screen_console_inputs_analysis_bare_station_static",
+    "label": "Station (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/analysis_bare_station_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_console_inputs_analysis_bare_targeting_static",
+    "label": "Targeting (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/analysis_bare_targeting_static",
+    "frames": 6,
+    "rectangular": true
   }
 ]

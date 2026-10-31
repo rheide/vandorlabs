@@ -21,6 +21,7 @@ final class CompanyScreenLayerRuntimeChecks {
     static void run(Minecraft mc,File output)throws Exception{
         Method decode=TEAnimatedScreenSelector.class.getDeclaredMethod("decodeCompactAnimation",IResourceManager.class,String.class);decode.setAccessible(true);
         Map<String,BufferedImage> strips=new HashMap<>();int borders=0,displays=0;
+        classicHalf(mc,output,decode);
         for(int choice=0;choice<ScreenHousingTextures.IDS.length;choice++){
             JsonObject entry=ScreenHousingTextures.entry(choice);if(entry==null)continue;String id=entry.get("id").getAsString();
             if(id.startsWith("frame_company_")){borders++;require(ScreenHousingTextures.menuCategory(choice).startsWith("Frame/")&&!ScreenHousingTextures.menuCategory(choice).startsWith("Frame/Company/"),"frame company subgroup");}
@@ -44,6 +45,39 @@ final class CompanyScreenLayerRuntimeChecks {
         System.out.println("[vandorlabs][reprolab] company-screen-layers PASS borders=12 displays=30 frames=180 decoded-alpha-four-tick-timing Gold-Cool-both-heights-Classic-Seyr-picker-subgroups full-half-frame0-3-layered-framebuffer");
     }
     @SuppressWarnings("unchecked") private static void pickerGroups(HousingTextureList picker,String prefix,int each,int expected)throws Exception{Field options=HousingTextureList.class.getDeclaredField("options");options.setAccessible(true);Map<String,Integer> counts=new TreeMap<>();for(HousingTextureList.Option option:((Map<Integer,HousingTextureList.Option>)options.get(picker)).values())if(option.category.startsWith(prefix))counts.put(option.category,counts.getOrDefault(option.category,0)+1);require(counts.size()==expected,"six company subgroups "+counts);for(int count:counts.values())require(each<0?count>=-each:count==each,"company subgroup choice count "+counts);}
+    private static void classicHalf(Minecraft mc,File output,Method decode)throws Exception{
+        Map<String,BufferedImage> strips=new HashMap<>();
+        for(String subject:new String[]{"station","targeting"}){
+            String root="console_inputs/analysis_bare_"+subject;
+            Object decoded=decode.invoke(null,mc.getResourceManager(),"textures/blocks/"+root);
+            Field image=decoded.getClass().getDeclaredField("image"),count=decoded.getClass().getDeclaredField("frameCount");image.setAccessible(true);count.setAccessible(true);
+            BufferedImage strip=(BufferedImage)image.get(decoded);require(count.getInt(decoded)==6&&strip.getWidth()==128&&strip.getHeight()==384,"Classic Half six-frame decode "+subject);
+            Set<Integer> changedPhases=new HashSet<>();
+            for(int phase=1;phase<6;phase++)for(int y=0;y<64;y++)for(int x=0;x<128;x++){
+                int pixel=strip.getRGB(x,y+phase*64);require(pixel>>>24==255,"Classic opaque artwork "+subject);
+                if(pixel!=strip.getRGB(x,y))changedPhases.add(phase);
+            }
+            require(changedPhases.size()==5,"Classic Half every phase animates "+subject);
+            TextureAtlasSprite off=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/"+root+"_off");require(off!=mc.getTextureMapBlocks().getMissingSprite(),"Classic Half OFF stitched "+subject);
+            strips.put(subject,strip);
+        }
+        BufferedImage composition=renderClassicHalf(mc,strips);ImageIO.write(composition,"png",new File(output,"shot_classic_half_station_targeting_six_frames.png"));
+        require(difference(composition,0,128,0,64)>0&&difference(composition,0,128,128,64)>0,"Classic Half rendered phases animate");
+        System.out.println("[vandorlabs][reprolab] classic-half-animations PASS Station Targeting six native 128x64 phases decoded OFF sprites rendered");
+    }
+    private static BufferedImage renderClassicHalf(Minecraft mc,Map<String,BufferedImage> strips){
+        Framebuffer frame=new Framebuffer(512,384,true);List<ResourceLocation> temporary=new ArrayList<>();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,512,384,0,-10,10);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
+        try(TurntableRenderState saved=new TurntableRenderState()){
+            frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.clearColor(.125F,.188F,.25F,1);GlStateManager.clear(16640);GlStateManager.disableDepth();GlStateManager.disableCull();GlStateManager.disableLighting();GlStateManager.disableFog();GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.enableTexture2D();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA,GL11.GL_ONE_MINUS_SRC_ALPHA,GL11.GL_ONE,GL11.GL_ZERO);GlStateManager.color(1,1,1,1);mc.entityRenderer.disableLightmap();
+            String[] subjects={"station","targeting"};
+            for(int subject=0;subject<2;subject++)for(int phase=0;phase<6;phase++){
+                BufferedImage image=strips.get(subjects[subject]).getSubimage(0,phase*64,128,64);
+                ResourceLocation dynamic=mc.getTextureManager().getDynamicTextureLocation("classic_half_animation_check",new DynamicTexture(image));temporary.add(dynamic);mc.getTextureManager().bindTexture(dynamic);
+                Gui.drawModalRectWithCustomSizedTexture((phase%3)*128,(subject*2+phase/3)*64,0,0,128,64,128,64);
+            }
+            GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(512,384,frame);
+        }finally{for(ResourceLocation texture:temporary)mc.getTextureManager().deleteTexture(texture);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
+    }
     private static BufferedImage render(Minecraft mc,Map<String,BufferedImage> strips){
         Framebuffer frame=new Framebuffer(512,384,true);List<ResourceLocation> temporary=new ArrayList<>();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,512,384,0,-10,10);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try(TurntableRenderState saved=new TurntableRenderState()){

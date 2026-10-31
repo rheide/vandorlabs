@@ -1,5 +1,5 @@
 """Saved IDs, display-height taxonomy, controls separation and exact packaged artwork."""
-import argparse,collections,hashlib,io,json,re
+import argparse,collections,hashlib,io,json,re,struct,zlib
 from pathlib import Path
 from zipfile import ZipFile
 from PIL import Image
@@ -38,9 +38,28 @@ for prefix in ('screen_','screen_console_inputs_'):
 for tier in ('full','half'):
     for subject in SEYR_CLASSIC:
         e=byid[f'screen_company_seyr_{tier}_{subject}'];assert e['label']==subject.title()+f' (Classic/{tier.title()})' and not e.get('hidden')
+# New half displays append choices; their authored native frames are compact and opaque.
+new_half={}
+for subject in ('station','targeting'):
+    stem='analysis_bare_'+subject;identifier='screen_console_inputs_'+stem+'_static';entry=byid[identifier]
+    assert entry['label']==subject.title()+' (Classic/Half)' and entry['menuGroup']=='Classic'
+    assert catalog.index(entry)>=589 and entry['frames']==6 and entry['rectangular']
+    assert dict(id=stem,animated=True,frames=6) in json.loads((base/'data/input_surfaces.json').read_text())
+    relative='textures/blocks/console_inputs/'+stem
+    source=ROOT/'texture-packs/additional/assets/vandorlabs'
+    art=Image.open(source/(relative+'_static.png')).convert('RGB');encoded=(source/(relative+'_animated.anim')).read_bytes()
+    assert encoded[:5]==b'VLTA\x02' and struct.unpack('>HHHI',encoded[5:15])==(128,64,6,128*64*3*5)
+    delta=zlib.decompress(encoded[15:]);assert len(delta)==128*64*3*5
+    raw=art.tobytes();frames=[raw]
+    for i in range(5):
+        raw=bytes((a+b)&255 for a,b in zip(raw,delta[i*128*64*3:(i+1)*128*64*3]));frames.append(raw)
+    assert len(set(frames))==6 and art.size==(128,64)
+    off=Image.open(source/(relative+'_off.png')).convert('RGBA');assert off.size==(128,64) and off.getextrema()==((0,0),(0,0),(0,0),(255,255))
+    new_half[relative]=encoded
 if args.jar:
     with ZipFile(args.jar) as jar:
         prefix='assets/vandorlabs/';names=set(jar.namelist());aliases=json.loads(jar.read(prefix+'data/texture_aliases.json'));assert json.loads(jar.read(prefix+'data/unified_textures.json'))==catalog
+        for relative,encoded in new_half.items():assert jar.read(prefix+relative+'_animated.anim')==encoded
         for tier in ('full','half'):
             for subject in SEYR_CLASSIC:
                 root=byid[f'screen_company_seyr_{tier}_{subject}']['source'].removesuffix('_static')

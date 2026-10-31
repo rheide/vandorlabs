@@ -697,3 +697,5 @@ gui.vandorlabs.console.input.company_vektor_half_medical=Vektor Half Medical
 gui.vandorlabs.console.input.company_vektor_half_navigation=Vektor Half Navigation
 gui.vandorlabs.console.input.company_vektor_half_radar=Vektor Half Radar
 gui.vandorlabs.console.input.company_vektor_half_reactor=Vektor Half Reactor
+gui.vandorlabs.console.input.analysis_bare_station=Station (Classic/Half)
+gui.vandorlabs.console.input.analysis_bare_targeting=Targeting (Classic/Half)

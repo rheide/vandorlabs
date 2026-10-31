@@ -18,7 +18,9 @@ their original textures and animations in **Classic**, for both heights.
 **Displays/Classic** also contains the original Analysis, Bridge, Extra and
 Specialist displays. Specialist Sensors is **Radar (Classic/Full)** or
 **Radar (Classic/Half)** and replaces Bridge Sensors. Cruiser and ship views
-are under **Displays/Ship**. All selectable display artwork names identify
+are under **Displays/Ship**. Classic also includes borderless, six-frame animated
+**Station (Classic/Half)** and **Targeting (Classic/Half)**, completing the
+matching Full/Half subject set. All selectable display artwork names identify
 Full or Half height. Tactical Starmap, Science Biology Wide Left/Right and the
 Console Biology/Engineering/Medical/Navigation/Sensors/Signals artwork are
 removed without replacement mappings. Console blocks remain available.

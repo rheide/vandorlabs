@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Add borderless animated Station and Targeting displays to Classic/Half, completing the matching Full/Half subject set.
+
 - Name the Classic specialist sensor displays Radar (Classic/Full) and Radar (Classic/Half).
 
 - Rename the visible Screens category to Displays; organize matching Full/Half artwork into Gold, Cool, Classic and Ship, with height suffixes and stable saved indices. Merge duplicate company designs while retaining original Seyr Communications, Navigation and Reactor animations in Classic.
