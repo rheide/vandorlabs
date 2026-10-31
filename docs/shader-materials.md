@@ -52,3 +52,21 @@ every packaged logical path, decoded pixels, dimensions and animation metadata.
 The isolated `pbr-materials` client focus checks resource-manager access and
 reloads with OptiFine. Those checks do not establish hardware shader appearance
 or frame rate.
+
+## Package size
+
+The current standard package contains 1,797 logical specular companions backed
+by 321 physical PNGs; 1,476 paths reuse another map. The physical companions
+occupy 484,059 bytes before ZIP compression and 367,889 bytes in the JAR.
+The complete JAR is about 52.60 MiB, compared with 52.01 MiB before this set
+of material, door and glass changes: approximately 0.59 MiB larger (1.13%).
+A companion-only comparison before the three new materials added about
+0.48 MiB (0.92%). These are packaged bytes, not measured GPU memory.
+
+The live resource check uses an 8192 by 4096 atlas. One complete RGBA8 atlas
+plane at that size is 128 MiB, or about 171 MiB with a full mip chain.
+OptiFine can already allocate auxiliary planes, and atlas packing/settings
+change the actual result; this is a capacity calculation rather than a
+measurement of additional GPU allocation. Reusing PNG files saves package
+space and generation work, but does not make different atlas regions share
+the same GPU storage.
