@@ -34,26 +34,29 @@ def master_frames(folder,height,slug):
         result.append(frame)
     return result
 
+def install_display(catalog,blocks,inputs,assets,audit,identifier,subject,style,height,frames,large=False,master_hashes=None):
+    w,h=frames[0].size;assert len(frames)==6 and w in (128,256,512) and h==w//(2 if height=='half' else 1)
+    hashes=[hashlib.sha256(f.tobytes()).hexdigest() for f in frames];assert len(set(hashes))==6
+    for f in frames:assert f.size==(w,h) and f.mode=='RGBA' and f.getchannel('A').getextrema()==(255,255)
+    stem=('console_inputs/' if height=='half' else '')+identifier;rgb=[f.convert('RGB').tobytes() for f in frames]
+    delta=b''.join(bytes((b-a)&255 for a,b in zip(rgb[i-1],rgb[i])) for i in range(1,6))
+    assets[TEXTURES/(stem+'_static.png')]=png(frames[0]);assets[TEXTURES/(stem+'_animated.anim')]=b'VLTA\x02'+struct.pack('>HHHI',w,h,6,len(delta))+zlib.compress(delta,9)
+    if height=='half':
+        assets[TEXTURES/(stem+'_off.png')]=png(Image.new('RGBA',(w,h),(0,0,0,255)));append(inputs,dict(id=identifier,animated=True,frames=6))
+    else:append(blocks,dict(id=identifier,type='display',**{'class':'BlockDisplaySequenced'},item=False,framed=False,programmable_only=True))
+    entry=dict(id='screen_'+identifier,label=subject+f' ({style}/{height.title()})'+(' Large' if large else ''),category='Screens',menuGroup=style,source=stem+'_static',frames=6)
+    if height=='half':entry['rectangular']=True
+    if large:entry.update(large=True,pixelWidth=w)
+    append(catalog,entry);audit['entries'].append(dict(id=entry['id'],label=entry['label'],source=entry['source'],style=style,height=height,width=w,frameHashes=hashes,**({'masterFrameHashes':master_hashes} if master_hashes else {})))
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('game',type=Path);parser.add_argument('masters',type=Path);parser.add_argument('cool',type=Path);parser.add_argument('gold',type=Path);args=parser.parse_args()
     catalog=json.loads((DATA/'unified_textures.json').read_text());blocks=json.loads((DATA/'blocks.json').read_text());inputs=json.loads((DATA/'input_surfaces.json').read_text());audit=dict(entries=[]);assets={}
     for entries,key in [(catalog,'Catalog'),(blocks,'Block'),(inputs,'Input')]:
         prior=[e for e in entries if not re.match(r'(screen_)?(?:expansion27_|large27_)',e['id'])]
         audit['previous'+key+'Count']=len(prior);audit['previous'+key+'IdsSha256']=digest_ids(prior)
-    def install(identifier,subject,style,height,frames,large=False,master_hashes=None):
-        w,h=frames[0].size;assert len(frames)==6 and w in (128,256,512) and h==w//(2 if height=='half' else 1)
-        hashes=[hashlib.sha256(f.tobytes()).hexdigest() for f in frames];assert len(set(hashes))==6
-        for f in frames:assert f.size==(w,h) and f.mode=='RGBA' and f.getchannel('A').getextrema()==(255,255)
-        stem=('console_inputs/' if height=='half' else '')+identifier;rgb=[f.convert('RGB').tobytes() for f in frames]
-        delta=b''.join(bytes((b-a)&255 for a,b in zip(rgb[i-1],rgb[i])) for i in range(1,6))
-        assets[TEXTURES/(stem+'_static.png')]=png(frames[0]);assets[TEXTURES/(stem+'_animated.anim')]=b'VLTA\x02'+struct.pack('>HHHI',w,h,6,len(delta))+zlib.compress(delta,9)
-        if height=='half':
-            assets[TEXTURES/(stem+'_off.png')]=png(Image.new('RGBA',(w,h),(0,0,0,255)));append(inputs,dict(id=identifier,animated=True,frames=6))
-        else:append(blocks,dict(id=identifier,type='display',**{'class':'BlockDisplaySequenced'},item=False,framed=False,programmable_only=True))
-        entry=dict(id='screen_'+identifier,label=subject+f' ({style}/{height.title()})'+(' Large' if large else ''),category='Screens',menuGroup=style,source=stem+'_static',frames=6)
-        if height=='half':entry['rectangular']=True
-        if large:entry.update(large=True,pixelWidth=w)
-        append(catalog,entry);audit['entries'].append(dict(id=entry['id'],label=entry['label'],source=entry['source'],style=style,height=height,width=w,frameHashes=hashes,**({'masterFrameHashes':master_hashes} if master_hashes else {})))
+    from functools import partial
+    install=partial(install_display,catalog,blocks,inputs,assets,audit)
     with ZipFile(args.game) as game,ZipFile(args.masters) as masters:
         manifest=next(n for n in game.namelist() if n.endswith('/manifest.json'));prefix=manifest.removesuffix('manifest.json');info=json.loads(game.read(manifest));assert len(info)==34
         mp=next(n for n in masters.namelist() if n.endswith('/manifest.json')).removesuffix('manifest.json')

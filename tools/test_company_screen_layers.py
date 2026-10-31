@@ -11,7 +11,7 @@ screens=[e for e in catalog if e['id'].startswith('screen_company_')]
 assert len(frames)==12 and len(screens)==72
 assert len({e['id'] for e in catalog})==len(catalog)
 for height in ('full','half'):
-    assert sum(not e.get('hidden') and '_'+height+'_' in e['id'] for e in screens)==15
+    assert sum(not e.get('hidden') and '_'+height+'_' in e['id'] for e in screens)==3
 for entry in screens:
     if not entry.get('hidden'):
         height='Half' if '_half_' in entry['id'] else 'Full'

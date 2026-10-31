@@ -1,0 +1,1194 @@
+{
+  "previousCatalogCount": 717,
+  "previousCatalogIdsSha256": "298b0074431a5b46224dd08257581829652eb6d0cdd015c939652dbf5d76efc2",
+  "previousBlockCount": 473,
+  "previousBlockIdsSha256": "7a55c5743ec678a04e63dbac1ef7c89e1aa7c183a1f37a047f02a68779f2efb1",
+  "previousInputCount": 151,
+  "previousInputIdsSha256": "1042fe5ce7269887e1df864173492fd8c744c0809afc81b2b5e29a1e191b263f",
+  "entries": [
+    {
+      "id": "screen_expansion27_classic_full_operations_airlock",
+      "label": "Airlock (Classic/Full)",
+      "source": "expansion27_classic_full_operations_airlock_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "881a754b086433ccb66e3f253a39358a016dc9e02c3ebeff2966a3c73f0c0272",
+        "5d96bd9dcdc4e01f221791612f0ab8a900c6d6f9615672df8cb70e06be880900",
+        "dd01906fe2c4ebd9010b8df9502b2cce6df156b07ef0f82fd1442b7eeff5089e",
+        "456b413cd205784252b0397693d6570a26a2d9ca13cdc4fffe7ea51e4e3ceb65",
+        "70c196d09c973cc0b68bbaa2d78abc609029cc1db7a9b4ac70b6f16952647118",
+        "14f18575cea1b405daf623922c26ba953854d0cb13bb0aefa286f021904f2317"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_operations_airlock",
+      "label": "Airlock (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_operations_airlock_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "1bad38afae4448dc648a0dd1cd348418c696cf9787728531769dbf41238df3f3",
+        "08b0ea3c2abb1d0eaf7b1b1e42b1182d2f3dd4b4c5b2593b5d2a243baa7d0167",
+        "5e595b8da23d816fae17b5fddb1413dd38e4769847e298306841b75f99de635d",
+        "4e850945174c091ad81bef2fb1d631ee6dcfbcdaa213b0dee9cc582a55589cdb",
+        "59cb1ee2f5fd9634e995988bb62f6422fcefbfccdf39c8d613c9f3dd79eeabc4",
+        "c89665b494cce3335013253c4a8b31421a1d8400e2a9fe7e322958e62ad5baf4"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_operations_life_support",
+      "label": "Life Support (Classic/Full)",
+      "source": "expansion27_classic_full_operations_life_support_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "0a519aa9828473129b9f5e9a1d4fc67d479135ee61eedfaaf0870ec5a13be0e4",
+        "95443265dbd2c589d9d4a27106f98a4947a7a1bd1b967af40057445b82a9cda0",
+        "fd22e5de34cf40b00c1ef853c58b2a530a8f43b9d44c2fe292dd418600d33393",
+        "f14b50ed6c339e88a2a9d5abfc4e56d94c4eb0073f0c7efcb4a1ebf4940bc90a",
+        "f63cca6ea6702f59986cbb727647a3f4a6ea77f4ff311368d5bbdb464133f29b",
+        "233d8a6f62e556607afd6eec52865034828b4355d91f108f3efd6eaa565f7621"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_operations_life_support",
+      "label": "Life Support (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_operations_life_support_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "faec749e41e586e32f70273ad5ba529ed2a2c75d60954052025921954fd49f01",
+        "ac6c850e39f9eaa4547b9238b4229cbc23996ab4396a9b921a0fcc2fc5ae17ce",
+        "dfcea44a09a4753ddad509418a3be37306a764dd0a69a9458005ae185e93a8c4",
+        "0d4918a6eb328b45b6ca9db9ed227ef34a5cad88feb751818db3e0013ad21320",
+        "a1cf6b9d485234e8cc6f44d502244b24c0c74a986910b93cff1ec19bbde1dc02",
+        "b2f8a69d9a02fc52b9d7928bdec0f31937652c1c60ff026d4f2432228e5c9520"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_power_grid_status",
+      "label": "Power Grid Status (Classic/Full)",
+      "source": "expansion27_classic_full_power_grid_status_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "4a4a3fdd56ad14978eca02684e8334d3da81a59fe0d50bb521f0d03f11b0a886",
+        "323622441e041867be131da0ce8d5d8d5659960411696371e1df1bea1e34fec4",
+        "8d16f4ed2a0c207f99f6e54a17430590d528197bf28af05b582fd058b09b2195",
+        "08f3c1e59aca5e42aa847baf2f8a5dce1904b3a47bc02beaf3d4c6143fd8b92e",
+        "f08c362c6e66e7b56e500d48ab714fccb4e670c5d7b54d16fc6b14db98afe11b",
+        "71cac1b4e4ccf519a3991e4ff97dc0c72310ef12b3d05ea42932bac997be6c19"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_power_grid_status",
+      "label": "Power Grid Status (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_power_grid_status_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "98b15efd341ad4d827aa2cbc01fc61de6fc3c7db1523e3d3f3983ede38fe3beb",
+        "0c0392a39cbdac13d73746a6ee80d9cd9c177a1749f8fd48544f5bc12b67ac5b",
+        "32718f1e12768657b53212ac9976f7b5c24243387cd1daefec935d168a53bce3",
+        "a130805babcc930d2b8688ba033ad23d29a76c446c1ce3295fb615c5037378db",
+        "d4b9a1c0d5e98f68cde67cc621910c0bfd95b3f49190861e4b650b14d7cce2c0",
+        "bdf5a4bf8ca6f52123ce70096b1262886d9759b0774016fbbb4d4a6deb1d8008"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_transit_city_map",
+      "label": "City Transit Map (Classic/Full)",
+      "source": "expansion27_classic_full_transit_city_map_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "9d31d0645ea92bb2b17e525a71fd0e950f8c9c3acfa246dcd21fbbe851e92c08",
+        "a30bf015df36fc6fb807d130cbba23c7f74b06ad8727d07a0ece970b197fc5e9",
+        "a223b03e202673d4e32109724366cde88ff0bd809015a626e05b5965fd278b3d",
+        "d638afb73bfba82b710365e19f6e6f035f245cc6d614fa71fe2d75fcb3e7f4e2",
+        "3d4ac356503c6d9f20529ac4df1570a4acdce3528d80e52680e4e25a7da84856",
+        "ba92dc71b54809f61015782fb567359d280d155ec95fd97e6b74b7e96a1c942c"
+      ]
+    },
+    {
+      "id": "screen_large27_classic_full_city_transit",
+      "label": "City Transit Map (Classic/Full) Large",
+      "source": "large27_classic_full_city_transit_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 512,
+      "frameHashes": [
+        "e72aa3f8fd903cba9af0710681a9b4335ea2d0dd4912d4f36dfc16e2deb31d13",
+        "5713c8253622423efe4d6845ede2cfdd729263390c631a054b7f334001ec74d0",
+        "66b6dfba1540c56889a034f5b827a3220ee3e0b609abb84e9b1d215e7c22601a",
+        "a93c96c74cd658a61f5928a18bda9320579c411801124803d221e9f39a8b0452",
+        "54d11b367a0e9414759e23860340a5602819b00ce3141a74c38193f0a5470f3c",
+        "73207ad66f9016830b62ad34964b64a12c2f0620e8123d52471d0e4ce66bd250"
+      ],
+      "masterFrameHashes": [
+        "5d14dd9ee5349ce1ee584da9e60ebc47bd34fe2f485e33a3513d52ae16e3ced5",
+        "67cfda7e352e4662271fc1a3edfc8c11f58dd719f8923cb9de020477721f791d",
+        "3caa95ee0bbef5d4972ae2fb5938e9b6e51c474dba390391b82b7475cc8a9333",
+        "084768c58f9904ab264d321f069fe8c84e2755e6951aaa20b1e8c9c1d1a131bc",
+        "c2e2e354365e32e95435a40e7798af6e7ab33aa168e341f3e0fd2ac7329d96c4",
+        "8aebb528e7fda307eec36bfe52588674a4a56ed81dbe4b6664bc883f1c9c4eb3"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_transit_city_map",
+      "label": "City Transit Map (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_transit_city_map_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "5cbae5020ca30a3fccbfdea8c3bceebad0da1ee84b671ade520adb40ed7f71c7",
+        "da6c6b7715abaf6d47f44cc731da9db1a59f59a6b874fb6703d740b211f37440",
+        "e25e059fef2fd2b556c3985ccc69b3b946ccdc23ae249da4d7f9c5640594dcf0",
+        "5d0066044d801ae0f4aa0fe5c80c98cdd5c0d6c0d1dbc2da27834b6e6129308a",
+        "aa7521ce8bb3dcbe643aaa73e743bf84e5bcce10bdf785e09c81a74a4f094611",
+        "ab6af16f2e86c2c41f2631d045790bc0614d75e34bb71a6848a0113caa642269"
+      ]
+    },
+    {
+      "id": "screen_large27_classic_half_city_transit",
+      "label": "City Transit Map (Classic/Half) Large",
+      "source": "console_inputs/large27_classic_half_city_transit_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 512,
+      "frameHashes": [
+        "1d48ac25f6b7691e2f8bf993bf9cef5d2cb39d6b7646719af837b01f96d9b147",
+        "3e67e2ba5a24bc084187514a180d4c1a403a1227e832ec43bc64bb1df45ce0dc",
+        "a013ce3c794f7d0c0587f5ea593272471122e9f2565ee38f8908e1482eed2e98",
+        "6b130524bd7ff9df26a3111f5e9ec65263bc00dc3bcb9a765f7773939e9e7e6b",
+        "a1b50c61741f346ebdc388760ab3fb8f7c018ecae3bd43d20f145299b79beac2",
+        "d616b4586551f9098f78a885225e9ae0c75b488c59a684afdd1050a306c0d0a8"
+      ],
+      "masterFrameHashes": [
+        "46c11bf20e550a83412914efe335e1ce93e454c046339297868b5a3d916dfaed",
+        "df2a05d6eb50ba91eb91a801c530e068a8525ddd311f30751e899643bf27ef0e",
+        "ef2eda8ca647ad8355d0a6decc81c6f8d1c3d6bac11d538557371e48b4d09360",
+        "783a47663bfdffd798b4f8464edaf10444908f359a35848129faa996ff729a3a",
+        "8b263bb2f754296eee4dae45a3878f83acdb72c44af227b0b45aeff3d20dee80",
+        "31a50ebf82511263a52f723893113bcc8ddfdd3d6c3ceb373ae4eecf21be9c2a"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_ship_deck_plan",
+      "label": "Ship Deck Plan (Classic/Full)",
+      "source": "expansion27_classic_full_ship_deck_plan_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "0cccd7a764b5e3803ab50e1302639109832984296a1acaf35d31e482c84d7047",
+        "0c8498b917794b16ada727d108c54922c2c9664d2105e48554b596ec63df9b20",
+        "2d035ea2b7ce7c483e0271b194e89e8ec4f10cf9df4ddffd5e1583a7081399c3",
+        "69d5a22327e3e7632a6882901ad7d3972600fcfc4d997bc8f5ab9b904a965b50",
+        "39f36f6146d05cbdb0b78647380d7600878621113e7f84b1e988676b903d0973",
+        "801f20f9cc34285793637fa7ac5e00a4732e09ac8bd2b8a9e7b35167dcd76cde"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_ship_deck_plan",
+      "label": "Ship Deck Plan (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_ship_deck_plan_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "7dcedd605232290c78846c24dae33a21c019661aee2a16be0813c845a72ac4b6",
+        "7675b9d6460da5eee2a82b374fb1ee5ed452e17621e00241336eeeebfff8d5ac",
+        "5997529e7d66927ce726ff34229f175915b455729f30a81465d8703f02fc260c",
+        "19b4c52c1fcb41a16f2839a8436d9120726fa1dd3af782364f211b1948909c92",
+        "13ce3cb2d97fe94bda9ba4be2e39e3a83f3332d29b63da56d11328e2bda622d1",
+        "4174a085f2b0ae81972fe3b7a012c4adf4b6f616306193a2ab790e7153b3d54f"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_engineering_power_distribution",
+      "label": "Power Distribution (Classic/Full)",
+      "source": "expansion27_classic_full_engineering_power_distribution_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "6cfa47793296d174e8990002a1786f6ab2dca2feacf410412cb04d1d4c74af30",
+        "f0789599814202d867d97cd91e65b121f66556ddb4bc5429ee6b1af5afd040d9",
+        "3206fecd7378ba41cc620e9d95c9248b322e352dd09590430d596521b186c8c2",
+        "d702338174695f729d56e5945e86cf8bf9f333cb5f941e9211f1ebe6586e506f",
+        "e176bde45df07346765f4281318ac52856a6e4c4a55ab2118f50611d82101bc3",
+        "836e585837f130b39ea38b417fb2354564ec3139d36f2b4694fd361c1e0de30f"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_engineering_power_distribution",
+      "label": "Power Distribution (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_engineering_power_distribution_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "250301ae87ac418753fe88fc647ed20c1ec0af6f33cc586afecfd3d3c4bb5152",
+        "f6fb68471132d1bec9441e32a8447d684aeec0bb972986293cba4e9eb378e2b0",
+        "d541bbb2a04b3d2ced7528b10c2ca6953e047e2d0ecb5462ff14b74783f2865b",
+        "03310e7b8224bf9b389d15ac9bca8bddeb511c15df39f68b479769b8a89fe55c",
+        "87f31542d3cc0b7b1d3272cd842e3b1ce95fdfb341c3a142d29aafaf956b4f82",
+        "0b9e6e43120252668dfb9ec613eaf2ca3ead96eeb991257c78dd9457261d291c"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_bridge_shields",
+      "label": "Shields (Classic/Full)",
+      "source": "expansion27_classic_full_bridge_shields_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "3994e0e6e69b0a7b187197938e6d2af0adc97a02ad062c1c40d7e0e7cac58827",
+        "101c32386ae137c04798149b1b4ba6e2da0270f200362d613c7d68cd0372b5ef",
+        "c7564e94f487b3d43f008e4952eb50d87a899d401ad6c7c853bef2438ba3716c",
+        "40f39a921e6e0eae614e57ab2a023394bd761850d37f5eeb9d9dd437ab9b3176",
+        "868000a8fb4e226d0d7ea94c216a83e4e9fa706838ef3eac45c9fbc0d61e3b1e",
+        "8c21ce46ac4ced52e9607e57f9ce25b246459228009b5c2fae5bbfc76bc71097"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_bridge_shields",
+      "label": "Shields (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_bridge_shields_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "3c49787e632e6c6ee8bff03a07a8fdfdb41f19c6fff16f01c2f239fbe60ef0c0",
+        "8bf456dcb7f1d750812fc0f4c32375c895b4a8fd002688cab7eeeec2ff3d3c65",
+        "06df7ecf0ff0ee4b726db7c8fa3b95281ffaab542853c4a200917e13966c0d3b",
+        "42c1d02a9ad9d2eccd4bf10b57eec5f03c7765a2f08a72e586652ea4021b26bc",
+        "b3bc881858b077edaa9a103466584502f86dc1d7e5aa486d9f4be3488f58220a",
+        "3ee609347fb4b2122f3873c95171b7ffd322f133d6539d85c9bc61cdc4604f6b"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_bridge_damage_control",
+      "label": "Damage Control (Classic/Full)",
+      "source": "expansion27_classic_full_bridge_damage_control_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "40078b4a55779283aa68c600774f6a4a688fa94966ccf45fb0253f86bb1272e4",
+        "94ce76cb89b34832d9a2126209fab67f19eff36cee4cf477d9d50997dab6afcb",
+        "9952f4b6f6258977622dd61a682af1a6b784ba8f6f3c3a35b633a920d1650a5f",
+        "5008f3d0575d22bb823bef9c07039b0ace37e91fbee972115e775f87cd466af7",
+        "81c04651d5f7f309f2477618b1b4a1df4ec45ea67fbdaeb26ead99dc6f6e01cc",
+        "de2343fb3df7573034db275170bfcad9be4f358972198885a9d8533378c46e9c"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_bridge_damage_control",
+      "label": "Damage Control (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_bridge_damage_control_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "5fb32e2276b7490ae66d10384a3f6d7f73109b80f2c06f69285bb11de6ecf611",
+        "fecb2f51f00e3ec698bd0e21c9c6a741fd1fba4527b33c6024f39ec19d8a0e34",
+        "a47aa6af51199511b2276107640186258978f9d39b61820df88ecc9184d9c534",
+        "08216722c9e57da571b1499c2cc7518ed7ee55437c9085b4b37f3a3f5413ee61",
+        "f7ccd63e184bb661150b2e71841c6b2f997cd88cf72d66dfcc4238d4e679ef50",
+        "24be24e5a32ab51dc2eda5f80b699e6fca78124f954995ace7d71d30d5fe8f03"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_engineering_ftl_calibration",
+      "label": "FTL Calibration (Classic/Full)",
+      "source": "expansion27_classic_full_engineering_ftl_calibration_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "baed41307f0b2f790759cbd2debdcf84c8754559a78d83a11eca1267a6dd1627",
+        "94f4f6205448022e2dc38f88f108aa09e08bfb774ebd4c446383f8b7def9035a",
+        "8f20504003c88c9d5c1c75a366f4f76b1aaa28d6f2cd77b9823944505176a624",
+        "ae4ba5b3a2f5cb68c47e6554f70faee602fcfd511a070f57531b2ab055623431",
+        "0dd9cef264cc9a4eb3d3d69c6788c93f042b2aff6dcdb82134ef01b2b3a5202a",
+        "27bfba1b19998cec276427341dc7ba00cbc59bc60bbc01203fd40cfbbfec1291"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_engineering_ftl_calibration",
+      "label": "FTL Calibration (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_engineering_ftl_calibration_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "f216a818e3c31e7f606cd5e14ed7f3130e34884d26629e4d93abc2be04cca9c0",
+        "3eb440c3538040bdc38450a6fc48681c5549521cdb3a251f6977b80c09a01e21",
+        "3a406c69e9aa0f7c83f2aec4380fb7f826af4e7d74a52f343580d5f54b35b0f1",
+        "0bd2774a2cc52f728310ede144e99508353a3d075379f795cfc567034a6bb087",
+        "fce41c993ed0a400e428d11bfe08a9128f38a5cbaad30eeb247546f670369951",
+        "8211b1658cb497899431f1bdf5790af7f43ab8d32fd8e22e2ac179b3cf110718"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_station_berth_control",
+      "label": "Station Berth Control (Classic/Full)",
+      "source": "expansion27_classic_full_station_berth_control_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "0e70b757771e7e31b189789d700b5930e798166cf51f2aa47ab32a04b99973cd",
+        "3affbc0f969006605b5bfb7ca87fc6c17f696b0f263f47aa0bef7a0df1e96628",
+        "3eb4cf4ab927ee0dbf39345f1587b09ef1f032e91c2b8226889c3e69a01b87b0",
+        "e20926ec5ed770b25a8137a1ed3da9435c02c2c6e3f41491bf9f30994f23bce0",
+        "4a9af62ab747a53e3d8a895a8d7a5a0487ef5b8dbee9ac0243bf9145110dc691",
+        "f6690f92d88865241c111830c50466256d3ecdf93aa0840842a123b68a7cbd58"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_station_berth_control",
+      "label": "Station Berth Control (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_station_berth_control_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "eb4d25130d47e47ef2936daf95aeb52128ad36683abc9e7ea363c77e8c6a0a37",
+        "20d74fb449ebe04ac8e28d6e233024b5ee81e3b51c6e2ca8c2f4d1de606ca634",
+        "a40e2943399285082f879e59170fa2cd226a4d3a7ad772f01f6f3ef5ba700184",
+        "cdd19375ccbbc866a13c7db1456b1a68b93b7488734e2227fae7abf9ed1a8205",
+        "cc190017a804b7e9624bd97fdb6ad2b983271dbb090a4a7022d14ed0d6429ea4",
+        "3d80649a59242e455e344b524b9ee308f86db5e94af111d0c386308d944473b9"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_industrial_fabrication",
+      "label": "Industrial Fabrication (Classic/Full)",
+      "source": "expansion27_classic_full_industrial_fabrication_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "dd830f97c2e889b19a0181af8502ae3861dac86aa27da35cf35340e17ffa7426",
+        "dfb9406db2d40c94b34ca952a47ccfc17b2928a9141b29ebcf6f62b6b3e2b02b",
+        "7942f0848e6dca693705e40e9366f631a3c8ed7caab00af1615128107c0796a3",
+        "438f0b1016b830358fab4ad51a382c2289b953dd427a5e9fe3b04ab412f7c698",
+        "40fd042edf3c8deb76b6119f28fb56d2d7ea1a588eb4172cf4e3738b33061329",
+        "47ccbf681f43d290f7a502cffaf06b60e0a9abe57973d7044ae32323a0e100f4"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_industrial_fabrication",
+      "label": "Industrial Fabrication (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_industrial_fabrication_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "7bc5fbd76a55d216bb5673319f92e3251c0824c1b20b2d5915e0433da9cc0ae4",
+        "90bc6e609eda19501be72de75d082a85902c9574d547d9803784e84c616c7869",
+        "e1327eb76f73710ef2a15232de0b931e3a6036e96dd24d6b99a174c7393e2cfd",
+        "98e5629a409f1de1f0f21a6c34ec1e1bfd4eaad47239ab8f381e408589eb64f9",
+        "8e575b2c2fd23e4c7cd88c8efb6d020ec2507498e608f70acf2acd07251faafa",
+        "058e0d2b29878e2de8f470c85c09f7fe1607ce088d2f352b2b3a1ad7395e3a33"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_industrial_refinery",
+      "label": "Industrial Refinery (Classic/Full)",
+      "source": "expansion27_classic_full_industrial_refinery_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "e603993927739e7e96d85e4bbfd54353fb49eadf9ad1697892f1cec95764f9f9",
+        "c3f03d6e37fdd7981f27c40b1a8a2a3b52edb163ac080cde2503678d9b6bb244",
+        "cc982b9a2e9dae8dfd3353a81f55856f3af5af650a678834ccecfb99d7f7b853",
+        "66b72532bb02069caa75a2c953681eda7797d882e57943ab058396702b1d5b54",
+        "8f5fee8d4962c16ca90c619dfccdf243ca47876e9488225b4c506e0522aef856",
+        "8c6fd61a94b9ca948516d6bb07bbc777fba6fa82ddfb5c398c47825d6df22a2b"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_industrial_refinery",
+      "label": "Industrial Refinery (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_industrial_refinery_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "70f7a83349cc41591624e52a6ac6bdc73fd6c6ad9f477c4d0e05240ff45061e9",
+        "8169c2f91139d556b7f2e1f27baac21ad19a1612486bf9335b60455ccd6fe0a7",
+        "5e4e6e5c40437bcf4ae960f91747c7baacf10e49c335bd6780d0c5afda2ae129",
+        "63704b4aa8d46ea8e53c5948bfd07c4c10c2205fe5e4802a71cbb782350874b4",
+        "d276ee4771b145fcd20c32b6a3fa22f28c62a7a7c3d330ff48f26d011d3f8a6b",
+        "3ecd011e24ab0ff428a6124cd47b7a7914f3406941aea9623295ed3e15a6ad26"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_facility_access_control",
+      "label": "Facility Access Control (Classic/Full)",
+      "source": "expansion27_classic_full_facility_access_control_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "8d71d4f7179431da949be134dd468dcfd9fe04ccb252c83a40852c3ec0bfd0f3",
+        "8cbc5258f6480bcd0756f0005cf2b58d0dbc34af2dc329b4d61b8329b6d61d42",
+        "0316181888028a189fe8915c2991cb3a1e6e99dfd90c7fb696e154a3c3db065c",
+        "90c4871f45279499b0285e28dc26dc1292e24e0a2eb16cf4d33b72851be44872",
+        "e6a3cf9f93cb981eec230456c6d9a37600cc39cb716bacb3a4ad32f8ab03d42d",
+        "c7a84a57a7dda184ad0ad6394c0d30449165586b9f759148876f17db344daf59"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_facility_access_control",
+      "label": "Facility Access Control (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_facility_access_control_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "3044a42c2bbc0469160c5e91de4c63dee2da5cd75a3a5aeb1c090206089466b7",
+        "fe2fc4e21b4acb6f85420122877de6cde428068baf59a4a7ebd3bb6a281b82c8",
+        "a1e55bb63f1dd2a17e3466cedb4fd646d367f5b90ce0de9b45c616973a69a672",
+        "cbcf76f97b5ad09b1516ab1190eef140b733c9496f1b45831d6a309fb0494cf6",
+        "2f9db91ad9df79175de8dd31e7b7b9cf227eed1cc4b9150eb2b9f7d99f6862d4",
+        "25aed569c4c0b959589b39fb21d0db87c381869dc4b68053501cf48e5d73390b"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_extra_boot_sequence",
+      "label": "Boot Sequence (Classic/Full)",
+      "source": "expansion27_classic_full_extra_boot_sequence_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "cedbc178da8487cb0e617b8328ed264bd215b28d148c53b0c7a02353b747d282",
+        "f887b4f838ad9d9e956f79b3d2c42991f5eb7c5eb2495df1c29d654d334a2466",
+        "1b4abdb474f0a04a3b93da49bd3266547b7cef14cb4bae0a1e2bda6dd6b9bb6d",
+        "cc836def046fe8827cd5aacb75df632589b65754fb91f038fdd7e632304b5ce4",
+        "bae83368209033b7a8532cea559d9f37c0d53e6a5022e10a509e6d8d470585c5",
+        "21421fd8550d045f295d2445f94402a7901d2e3f5417512ea49509a3a6ba23b9"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_extra_boot_sequence",
+      "label": "Boot Sequence (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_extra_boot_sequence_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "e81af70705d7ed1fcbd56c1127f27dffa781ed1d04892cab70d674b2bc67b7e8",
+        "5bdd11b26a54c3cf8af38f62dd49069c85cf71c7adb987ef2cb8be3e1da64c91",
+        "4b7b96bc4b0065e75335d0c5b3e2c7af4490d9be19071d6e8ad377afcd5a83eb",
+        "a662680f3ea53782facc5468f56f8319f60e6cf9987243a7102a1d0992aa6b3b",
+        "facdd612ea76b41a018b91ccdffa6e3a8df8de4590f1fe912d202e276eb060a9",
+        "a822bc7be9fd2ebc47f1d80c391a97e0484845d114f1ea8386b4f655f05c6188"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_extra_standby",
+      "label": "Standby (Classic/Full)",
+      "source": "expansion27_classic_full_extra_standby_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "372a24851d3e30f7bc02e96331017255785035e3722592a2b6ed3decc4181652",
+        "60df8defbc158746d2ca41d6671c912a4b4e77bce14e7ada0eeac3c1bc1911e9",
+        "8e700571dc7ffb244eaed1d771c757a5e25d8e8ceed428a2ec8207b33624198a",
+        "2769e64f86b9a4797948da2e5846aeb5b78fcdf2a6b5731cfa447f0ed9f7248e",
+        "e4ac3474af6edc38c64d2ac00cd152e3d4ecee199fc7c5e0b1c8c69f54982c1e",
+        "7dc436dfffa5f51bf63f2a6e054785c4eeb1ec15f2220794e5c351f551c89498"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_extra_standby",
+      "label": "Standby (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_extra_standby_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "56938b9af01f02e54debe68147b2dea2eaef8225bd1a5ff8c9ceb644f0888a85",
+        "b0bbdf48dae3015504fec9d0b1f6962d240f21ad2dd4584e3442ceae349c8636",
+        "179414ce6655e49a4a49421e677f81df73720d416fa409dbc4c5bb0dfde0179b",
+        "d2e00232e036b726b55ea3cb6e1963d2285c2e4b4785c4113a854c81e95265c4",
+        "adcc81aeb2e6cf7dcc3ca2137b2ed083e88468c29c2ba2397a193639b6636e86",
+        "bdc4ace7913119b3d56f67200e5dcd63a68d5cb19a1e32beab2fe8c46a3a9624"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_extra_access_denied",
+      "label": "Access Denied (Classic/Full)",
+      "source": "expansion27_classic_full_extra_access_denied_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "b0842791e8b457e8e7c6493e94efbca57e9b5bcce82f355bea7340d2956d5365",
+        "6536a67f4f1dfa5cc9e25c4f63bb2acd683791b4be4a2fd42a5e2e6906c115d9",
+        "4b3fde1238807e70e829268f75aba38262e95dd9cbcfe2254aafc9ed0291b293",
+        "18e759981bc42e0c7f517fd46fc0935d0b2636a9fd98a54de66b8d95e6ceedbc",
+        "9f889ebf31c55902cfd360d173c6b6b3e525d87940a50db6c0b17248d600f5f3",
+        "b3e20223e0b45b8efaf581e1e860f7da438230b1bd67e3752c8b2b1f6585fef4"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_extra_access_denied",
+      "label": "Access Denied (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_extra_access_denied_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "1728ecbc06cc67756aaab741293a6150367a1a398f779874e5ad09cdf3d6c115",
+        "0a4388f22b1d0c1737f0df06dbbee4960bc9ce8242e37d285cbfce62a3eb9cdb",
+        "aff9ac60ba62d4ba3b3a0cc3c75b929dd099e517214deba27bdeb816f3848f4e",
+        "2f9e2c203ae2ca6fd114ce797aac0f5b20bb6c91ca7795bdb0795cf26dcebe50",
+        "fd2f7b3cff3787fa84934eb22f413392cf533fef3239ec1d99b327a36ed50375",
+        "b7e8e852e70bc045bb8d49e89abaf54a9cd4107e86915ad37e46da2666595aed"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_full_extra_signal_lost",
+      "label": "Signal Lost (Classic/Full)",
+      "source": "expansion27_classic_full_extra_signal_lost_static",
+      "style": "Classic",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "1fd3a2f46dd4048de4bd194152aa2eb37eecd7f8ba97113d93044bffbce53ac8",
+        "880fe6ac7f5d5438cc0998c64f3b814b17227b9e444cf336e047691771756c4a",
+        "2f308aee427c4d32d9366f59233861b4b4f7f0f512d9812521531125d3b49756",
+        "4d5f9b148d0bd7349a3e594d043db11796b96c24bd7909d89b6e30864d49aa06",
+        "81f06eb51118dfd87c72f63abfcb100717e0190a4096c7d4f13d5fe9f99099e3",
+        "45ee820b20f52222e552572ddea3eae30f42aa3e2cf5e1ede85084f251f73363"
+      ]
+    },
+    {
+      "id": "screen_expansion27_classic_half_extra_signal_lost",
+      "label": "Signal Lost (Classic/Half)",
+      "source": "console_inputs/expansion27_classic_half_extra_signal_lost_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "0d42eb54c58362174cb409d161d345899762ba9f0b7ef2bb11832d64a0ed59f2",
+        "26f37202857ac964c8d8aac040f5ee593b92ed284337d6f655edda7ae60961e1",
+        "663c3016e9714b9dc5c3c6a59a6c0a85d9c5c3e16f05e285d60b116a0aac75be",
+        "76d86f97202582eb2ce22081d9cb009897efe1e28c8aaa34b530d605c641cb74",
+        "53023689efd986d1e23e033232c0f816558c10598f6c671e8820c888ef4288f6",
+        "4cc48da2581ccbb85e5c406e6e3fa57ab15e0a4c559451031fc1e6ff8ef4eb89"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_operations_airlock",
+      "label": "Airlock (Cool/Full)",
+      "source": "expansion27_cool_full_operations_airlock_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "5a2d59d7b31d4fd2aa9718734a97fa38ccd90f27cf3b235c5e3a100cf3d9fe7f",
+        "ecac1244b940fdbcbee7bfd66204bfbe3d3180de8e15b9e26a3c7bfab588d8a8",
+        "7eec3ed4692567cbd4f05ffb8bc6e4a284eb220e9fd9420f83692cf0d1ca6122",
+        "320cd4b515c057c171bddacd51e5a4bc29d7c02d6df6e928241598048a1af6a8",
+        "ed7f22a8a84cf7098d97126453850a3770d57c73ea192907ddff8d9d164a6902",
+        "e1203ecd9f7dd57b46be8f88980cc46d49df4d6b9e527bbfbc5938763e0b332c"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_operations_airlock",
+      "label": "Airlock (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_operations_airlock_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "ccf9c5dcf83af27a30df994b36c7c159af1ede26f0c7e2ac86f357a77684d7bd",
+        "ad27b37e936a8c2e3e73c69cfee21e1958a9fc947af68d57d3732ad73af0a6d8",
+        "9e81b1c2e2f52a4aa49ef0652e4d85f162c897a0ee57c20f5a3b98f2fc9c13d7",
+        "ad74f0d29c0a3cbe031a458c81b73fd2e0345c14e45e4dd6cc5fd8a918d93a59",
+        "a42ffd03dbeac1228f3ba0f5228526ca39c491641682e0024e735284ab73778f",
+        "b2468e8f897e8859e19076b838e8c81936c065e1c4aa5d1d08a13c8653378ac7"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_operations_life_support",
+      "label": "Life Support (Cool/Full)",
+      "source": "expansion27_cool_full_operations_life_support_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "c5e03f7573fbb09976a538c3edef1e2a37f8da142f05216d0b21de9ed79c68a9",
+        "121b163e3b3f053d3292ded381f50191004a7bcf5cfea98dc5a9b433c025ef1c",
+        "84d21cd73c2baba8774ac6204b796bcb07837bb2ec295e5ca72a0607b235aeed",
+        "574301c2e3499c0e4e312e5bb08ac41dfa69a4845b7ac5a2274461367ba8680a",
+        "677b7bae6c59df3cd0cb571619eff1fb2cd09e321d19d59893cf06ce98b7fc1c",
+        "ca993fb6974add63b77f405a12f2e591c314b0d69ad1e025d3a583b996e62ed4"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_operations_life_support",
+      "label": "Life Support (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_operations_life_support_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "b763c1b768dff5094d3d376b10df2537cca0d78588c9256540812caa36711599",
+        "c8783e40acf56396929ccd070b345cadd70c9a5dda84535cbae4f5768987dbef",
+        "799bb4fa774840d7c5c74076df40372f791fd5e6cee128481ad01df6a26dfc03",
+        "bdba50c100ce22496196e70176fdd658b8af821d7998877225e4674e274ef567",
+        "d3813c95637ad1b617a96f4002389bb8c6211d83606cc8f4fbc403b5f01c6a1a",
+        "c788d9d8f8209f89ad05bbd4937769c86fc56be421ba2040d3ec83b7d53dc73f"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_power_grid_status",
+      "label": "Power Grid Status (Cool/Full)",
+      "source": "expansion27_cool_full_power_grid_status_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "5773e2c1b596490c99cc5213d5fc9d569baacde7c45f40df9fac734211e5c1ec",
+        "3364417d398a1fb70478f2ce51a38a84df309005e8f5533ca86fb01260d1d560",
+        "9a41f1d019a1ab4aaabe6db0f32b9026c762821afc74c5378f1d96affe63a3a3",
+        "dcefeaceeab28876181eb0160870c0a80d11c0f7ed34f0b5d9bc7803f40540be",
+        "2ab8c068bfd2b0fecfd86610858fea8e083513ca2837edc0bef4c02489bb1ea5",
+        "33fa0c41b461ecabdd9e23d8e8c753bc4a7f00371137fde3a0c70e7087d06b61"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_power_grid_status",
+      "label": "Power Grid Status (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_power_grid_status_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "f5984e759becce32f68b960864cda7feda07c4fe743e933da7cf3a6899c99af8",
+        "bb84cef2c3284929edfdea6fa005a010287df2ee480a8868502cee4ef229b24c",
+        "e74603a73b280cf24f18dcb854c6e6c96d5bd4700dcedea7808cdf20b040a7f9",
+        "3122a9b2b822854ffa170152071b0e208e1354c16a706552b226ef9147737b3c",
+        "bcea78899ebf2f841fe97dcee71389c35f771f19940980af7cddf0681e6a1868",
+        "cbf9c093528db9dff9b1b7a7718491321e2acd2b2503dab63fa74e3f01cd3603"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_transit_city_map",
+      "label": "City Transit Map (Cool/Full)",
+      "source": "expansion27_cool_full_transit_city_map_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "44f66a75e52df3281b033a775a6e8c58cf0dabb5854774b92ac087a8a1a316aa",
+        "cbb524a54ab456d4161d5d3ae9ac82d31980e60d506c55f3052f77225ea3f047",
+        "7a4192bfc30b271e18940eaa98fb81ad2607f872bcfbb6a935159d1ad7e0afc0",
+        "396ddef30746e61ddfbf2ad384ddc1427f39fc3f616f20086395ec1155aff607",
+        "329c61831d1082ffd9804fc6df72b90161ce79b0e738ac8ceede228c19608600",
+        "400f61cf7aebaf499f4e4a0be2c09fd1ea97d47e87edd0cbb3a52339e2a29fa7"
+      ]
+    },
+    {
+      "id": "screen_large27_cool_full_city_transit",
+      "label": "City Transit Map (Cool/Full) Large",
+      "source": "large27_cool_full_city_transit_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 512,
+      "frameHashes": [
+        "6f792e74d500286db48ab42817ea0dbf8a4518ed7d0aa123de4a3c4f2e847b7d",
+        "e063300461417dbfe3198cfebfbad6c4bf5afb1a20470d16df00a2157c5d0ef7",
+        "016123ca515d5247d8e7cb25307bc0967020906a67e91701c268e31b8c95828b",
+        "ebcf0e1cb77abe921b766b0a56cb48dfe1add9700a9083781d95fc225e750a1b",
+        "068db42b1f29314836c4aa3bcb1248bb2308be7f6f210fde46fc6805e058211b",
+        "3831c228cc02a8842e5d4b51fd6ffb5409010fa1f3004f68268b2b0ec61656c3"
+      ],
+      "masterFrameHashes": [
+        "25ceede6fd884dec90038e1a2b8b07142cfa208a9998b590800fe627801730a4",
+        "1f4d53dbe2e9dafa8a806484879b6f940f07b8fed993b35099fd9ffdf2df03e7",
+        "37c12e0dec0298ab0aa643d6f24aab6b38e46f3685f5d3ee1afcab9f327e6573",
+        "6d22c5e5d332a591c50052edca9b2d842272dfc09ac0e7a5ea1bd893f522ccb6",
+        "45f1a1cb8975f3b304224ff87b9470ca215a9b5ed1ca495b0501b1c3bf784abd",
+        "c89b0b0e235ce5f6df49b6af40965184502f696789c3331877394d29e72e7ab5"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_transit_city_map",
+      "label": "City Transit Map (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_transit_city_map_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "5bc8ff338bea6304c797c484471649719ae7110cdd2ab124c10292b9467ec4b1",
+        "ee6582ec3d7d233ca9204e99929ec892044e33750ae781799d5ac57c900d4ce7",
+        "83a42046a2e732b89627b1a8420d53f073b03677407ab03c026240b4a898f007",
+        "735ef175bfc27aaed049815c252f62cee893ef1b9fd92c84b54dd75e744898bc",
+        "11640d6530d47320d86a5eea0ffcd7811f58e9781f1c4c88f5456fbcac21d0be",
+        "82faf404fe001ebed4c054759850bf6c50e6666768bee16afaed088caa351b20"
+      ]
+    },
+    {
+      "id": "screen_large27_cool_half_city_transit",
+      "label": "City Transit Map (Cool/Half) Large",
+      "source": "console_inputs/large27_cool_half_city_transit_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 512,
+      "frameHashes": [
+        "51b87c39d9a52d4d8efbad4211b6c167b014917614cd9e6cf6d22c9bb29dcbde",
+        "a28b7d02843f0b0d85bd61d90f2a2f7039344bc39d119e115d439269c957f3df",
+        "80f6f017aeb74e9313fe5594429d877c1daa030328feb33ba9e66e6484f5c768",
+        "ff6846660b84ffa3a2e0e2847cdbccc3d414ccc67c54a931117ef8b4b2d8e7d9",
+        "ea15079cd32e5e2abf98bdfe56cffb94bd1353a097350e8e4253f921f40fe1f0",
+        "16880190b712866ce28847a2c21433401f91ada04eb8fd53e5883055c5dec55c"
+      ],
+      "masterFrameHashes": [
+        "4f81314eb6e155a20cc265ae4eda689d85d1433c7d0a9d3665414b7e5d912eb5",
+        "aa07a9e7a8f7080c2a05794c3f94971c74157af49ceb128f4bc0ddde942724bc",
+        "4f7ba51347e5f484abd66c2372f71f92659ed72304b27432be12f5c1368ce61f",
+        "e0dc6e46e602b59730e25195de46523c59ca29c184765ba23cd64a2b59ca451a",
+        "ccb3e5a11cc0424c9f487d2db0df9b94035d647d08df5d3b15cd185697d5ff52",
+        "6cd4e7588aa9dd604b0423fd6da113a9cbecda80e5c49ae1fc0c95b6e603c3cd"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_ship_deck_plan",
+      "label": "Ship Deck Plan (Cool/Full)",
+      "source": "expansion27_cool_full_ship_deck_plan_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "20658a49b504ede88f6fb28941b27dc48645748122ea809646df4672271a03a9",
+        "c2bb627ea89b1c3be3724fc0c8287561d2731c12111c167e3246e594f86ec4ac",
+        "6e2e5bbebd9d334e2c3d360234abfc31a83526ea07d9ee7e557801608939c364",
+        "662e5efb87fd2a12092b2eae66feac91333da7f26bdb592d0d5b51d0657023a6",
+        "2ffd1833c53b5b97b0f99a6b7da6b40ec7f39cb373636f78a343fd0bd49823a4",
+        "add57e1457c1182a6fa306489d122971161e72b1b3f4918dac602a1947633482"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_ship_deck_plan",
+      "label": "Ship Deck Plan (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_ship_deck_plan_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "dd81cdabc4557f035a58b3d26aa55586e8c0ae4a23cc537be52e0db2e8bfbcd3",
+        "c0d1b3754d1b861758603daccb3f8689c3dd32523ce4349444dff70b159d4006",
+        "198ea45e387a8fae292c81a40aad5904edafc6204fa91e7e80784f64f2888865",
+        "def44b6dcd8803a5b6f7ca97ae8eee5cd8a4c5a80bd7db444b2147dbd9565482",
+        "30dad2014c3497d493bead913b92d047fecd9d9ec45e58efcc203783671dfcad",
+        "e4aa7f762cf0fc45fa14af51b76f3ee0a5d7b29077a417fcc01d4cda5a3fe248"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_engineering_power_distribution",
+      "label": "Power Distribution (Cool/Full)",
+      "source": "expansion27_cool_full_engineering_power_distribution_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "1820e483e40410bad6ecae9d991e399efd5465891a7178d0ad04a7ef87ec582d",
+        "f264d5339e5292abeb65a0cae2195dc4769668e743cbafb251d182e1fd01f4e7",
+        "b15404e32f8c6d1d5d5c49ef990fc3afc2d94041f846ea30d8455f10170fdaa8",
+        "2db617a3cd9f7fe1ad1bff4531fe8b15ad086e26b7ee48d675d0f7cc404edaba",
+        "e60620a935ee938f1dca2e5162d2b629ec80fd92a755ce2f675e62e4d85632c3",
+        "e13ab4abf1fca37009cc92046f7ffe57ece0f89a15e6ac8226c8a948663fc0b3"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_engineering_power_distribution",
+      "label": "Power Distribution (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_engineering_power_distribution_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "024c185d2ac2c75c201f4ac104a1e1d7f71f2dfe1d725efadc5f526b79736924",
+        "f98b9355a2ba517141fcdfce453f1ebd4d40ee2703bb84d182b2fea8b79f4b4f",
+        "36dc6ceaa2b0db244fe0817eb09b7bd9842f309c6c2a12487b020a477ed5dd91",
+        "320c273daf4d53829d393586213c457d4f6db5d97b6ed0d2a1eaf236ea6bc121",
+        "17bb63834753fac0fa269903406cac04ea37dd30bfea20a757e102e160a7bc92",
+        "b43b45c69f98e2e380c432bcc5ac33a4e06bc6845d03f88841f72e6064590920"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_bridge_shields",
+      "label": "Shields (Cool/Full)",
+      "source": "expansion27_cool_full_bridge_shields_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "439039793afef61edb59a034a41b047917da9d13a24ab844cb56aeffc51e5c4e",
+        "c7d42e6b3b2ce6c3bf8bf7e3e0053d2a10dbd9a23732f42efd8bdeed2b602327",
+        "238a9a213fa4a3cdc06aa53e7f39083e9a68a3da0a53be2ada69da0bdd1b0211",
+        "22f72d9ce0d0cff2f60953112b648536096bec4ba2af68a6bef04d1f154c871d",
+        "ab86e7cd2134f8a1088be2d99f83f814ab7fc791ffbeafab4bb66b8ba8351bff",
+        "96fb85085fd12a3a0496510d1e57fff44c2b62c153453cccc39a77bc5f720813"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_bridge_shields",
+      "label": "Shields (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_bridge_shields_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "44fbc6ae20bc6321db86c222a7e919aa85c2f872993e588327952a5ff834d178",
+        "ccc22ef83bff194435e3e9f992e2c24881fc506da1245e2cb8a588dfde44c69a",
+        "60d66fe534805ede654ebbe5ef7848c6c5f291882d7a01e6283a3f9805a6f607",
+        "7a3b3b204cce4a3ccd9f1bb3937813bb7c5d112a7c20ac0734ca6b8fbc380e09",
+        "9d7a3c833172eefe2d8c9e6ca9d220028a742bfb8f6fa53b087ea5bfd796690c",
+        "cfb57197c017694b98b95b097f130c7a966898c6cce3a7bd9de52765839c9478"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_bridge_damage_control",
+      "label": "Damage Control (Cool/Full)",
+      "source": "expansion27_cool_full_bridge_damage_control_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "cdddba972ffbc85a6874dca9086a1593f3f68842297b2f0ae06fc1e6a458cf0e",
+        "d15836f8554a770aafa0e23a5d831af29baee9520b61b55069015f4086f7ffb7",
+        "78c8e50333aaceafa614b03297cf9a870a128ee49e14dfa2a3ecfd464b80630f",
+        "82f4adba9edd8173e44f1f50c2399f0163b61159d5636b79a5479951b8d1b916",
+        "e88ebf6011654d32c86e3f255757eb4828e817dc433652ad20e2e8d00e770bc3",
+        "e3c104571542d99ebc7c46f5ab13939f465897f47afdf18699dc02da05ef8567"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_bridge_damage_control",
+      "label": "Damage Control (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_bridge_damage_control_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "35748e8468206ebe16b1c8c7631f1cf2f2312c598771eb435b8cf41c05346a1f",
+        "540bcde57e17b75eefd46a4f66ea68b6d1ed7cfad91d8045f0d2cddb9f2f1857",
+        "e9803c47cbea01009d93b34b5ea8402c0a0090f83bc90661d3b8f72bd1b1f1e1",
+        "876a363360f010c35334b511fe0a663c86c491a4ae6a5e920da8a1d6acd28008",
+        "7f34795a2d1286a64b36f22850b7fe9c1c0ebedd8f46f5c346cf7b1017eaad92",
+        "2e9cd8fe04bed67026095893794423b0996e9daeebfce0a7b5c417b0f1719116"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_engineering_ftl_calibration",
+      "label": "FTL Calibration (Cool/Full)",
+      "source": "expansion27_cool_full_engineering_ftl_calibration_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "9b76e8c82791f8aa31c082ff6981c15673a8a89e4565feb6e18bfd7af23b8b44",
+        "dbeac8a023456f9f1a80ab6b4daf8d0b8b69920653ff6af877f3c6fd600c0683",
+        "79148aaf7e21062232e7212a8bbe86918dd6646992000641d16edb37ecbd63da",
+        "123a043b79d6ab7ab4454aae9127313a22dfd958cbdd9406c55806a37c1bd8ee",
+        "37d2facb1a56221e413522bed8801fe8ac67d266ef044c98b2988012e38a76f6",
+        "327cfcc2714607dbfbb700f4d4c41461078aec5af808122f1a10c580266ba1c3"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_engineering_ftl_calibration",
+      "label": "FTL Calibration (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_engineering_ftl_calibration_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "d8ae730c185962d15ed6241823672362e8147c1d228981652a27db84185ba23d",
+        "eb9249d74d3609c25c3dffaa96c4999aec9680235a519f2fb6d96952498daae2",
+        "ccebf4587002173ac4edee6c55ab36741c1e3030b5da49ebfc44ab2830e919d9",
+        "da1d6df79cf4196bd36c864ac1c3d68dcaaaa746ef967ae66c0bc7ef5e292dd2",
+        "4e16c5a85ab912e449f09c167f449978a9e137851761004db84aa3e23136c50e",
+        "71d786ed629ed262d1adfbbde1e292846899e49ae45254cdf9d552e6124ea88b"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_station_berth_control",
+      "label": "Station Berth Control (Cool/Full)",
+      "source": "expansion27_cool_full_station_berth_control_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "468701bfc9622785eaacbdeeb9579d088b273bae99a2afad3927878e64b14080",
+        "ee87c4f05e4ffb8c0430eb8aa4d8b9a5b60afef6569ffb8f4c106c93e3bab81c",
+        "797dad4305d7b3e884c27f56928807d9c0ca96405d31874f3174a11e9c2f8ac2",
+        "340241e1853740373d4ccf16436998fda54ff8739c47b69013be76f79449f5d2",
+        "bff13212fec4fd18f16e88930bd0f4120c66d8a99d71b532dc61746b31cc777a",
+        "43b246cb1642419d186ba68275a6f4fdd963edd188b80f46a5745fde9a1735d8"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_station_berth_control",
+      "label": "Station Berth Control (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_station_berth_control_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "df5ac855a7d9c1e81e08b3c71d7c806764bc6e0d20ef67b410b79aa68f047aa4",
+        "11d48f01a567c6c3900ae41d225bb68fd26c3d6065008f1e41ac69949d06806b",
+        "834e1b185bfe9f792835f73476bf1f38830023981499dc97f12d35ec48cc0288",
+        "6433a62b1a79883b0491c17e6fd9550b62314e18bd8e2b2ac7d6f22bc392206a",
+        "c518788115b4a60adbce4f896ec2328eaba0cb304be87201d9049e4c17c390d0",
+        "551fae83cb4c2167577406f33abe848629067e2051eddf1436c1f6c27f982e79"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_industrial_fabrication",
+      "label": "Industrial Fabrication (Cool/Full)",
+      "source": "expansion27_cool_full_industrial_fabrication_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "c85a25a8f1d7990f9ce45516f53bc5275ed3889fe7c3241b17b946282b6c6644",
+        "d59a514e79a189cd87cd53a26ea22078e04c1e5f0ac9aea452966c73b027884e",
+        "4e78e44afdfa7cb4bab4c4efc31297275a360492e094fa7a36d390c7f069358b",
+        "f5a7eb5f0a39758bf86d7b29e0d3dd9bd68ec7f5f120adb26f40928f0af1b3ba",
+        "4b7d28ce66cf5666fcf5cf968ccd0a28ae27acd6d5f6f435fd75cf0b356d1ad4",
+        "a047399a7426502e8f68a9adf0602ddf5b918f028876153f0115aa404d7f5b46"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_industrial_fabrication",
+      "label": "Industrial Fabrication (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_industrial_fabrication_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "6577bf970a32cd511629479f3ab80d4d16b912a9173a86ffb8e700489e7d3c68",
+        "dc79fdb09eab8b84c2d777368075b28f68979a0229572e8e0c4d338ff0f7453b",
+        "44a32de493f61c119c04929fa320a3f333be99147b7f293555e5fca28ea63985",
+        "7f537ebef4fecc0803321beacee6003b5ed31dc3d4aef8b8d27ce7c04309cd5c",
+        "43043e6f98552ccfa3563c50de1c3ea45ed02179b06c5de9045331d646a1abfd",
+        "2c14af3d5157ae9fecb6132426a7179afa42e8a739c6e6d048c4d95a11d96d48"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_industrial_refinery",
+      "label": "Industrial Refinery (Cool/Full)",
+      "source": "expansion27_cool_full_industrial_refinery_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "512acfc77758f5c6908583a8ead2c899904fb3b684bc34587740e6fb7487ef65",
+        "ed49c8ebeeb5397c28c493dfa64becffc5a9cbf435a4b8eb4b9c76f8464f6cb1",
+        "e5919bd5372494883ae12e3186b8c4d70785fb9c94842c278c314792c13a8d88",
+        "1e87669943fd79a61b469477d46954763642d0e7b6e5d61975ec85a3c1c117ac",
+        "98b5e858b2067711cc3e59a7d9f4fc07369c45bf161af5123c51e278163c70ab",
+        "885d948b83b72c520078f33b982d29161826aef69cfbf0ed7a304547571bff01"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_industrial_refinery",
+      "label": "Industrial Refinery (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_industrial_refinery_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "3a614887f135ffb234ef81cd7d2f72d9580f59bf8ae202e8172ecafa71378264",
+        "57834557e0a2a99d869f63b97a8f1289d0616feabf6b85dd062dfb981f963249",
+        "4e5374a3126e3547f233abc1e703934460f8f57fc40fa887f2e985546ec2c143",
+        "15bab16464095e23cfd7cb84af95507461876952c0c9440a1c7dba552446a53d",
+        "0f3c49310122c53cb7ce44a3c4ce8662695c14258d4fcf8ce827f1e3f9d0ed23",
+        "97823d76dec84cd9c390f200b0954f01343fc1f5d628beb23e362373609a0d28"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_facility_access_control",
+      "label": "Facility Access Control (Cool/Full)",
+      "source": "expansion27_cool_full_facility_access_control_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "114b429e578a0a296b87507ab05f851f4847e9cfbd8ee5b72d42d91cac553a43",
+        "5c8df7484d1adda9cc5fdf90af8e871ae911cf791a0e404272fcbcc7eb111f2d",
+        "b6502cce9afde7a02e6b86380469732c081c5ef654da2ea126ed9c8e9e6e8314",
+        "4ccb0829a75884b87de1c4feede6e858520ccc7a7006891ad13f9d3dc26bd760",
+        "5f2b2fae2c0047295f712883d3487b962c10814b0153dd22979c39cea0a4c337",
+        "05202a77afc0cdd55c82064ad49381e5b8ea3737ee2c91ef2f6aa899e3aa2608"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_facility_access_control",
+      "label": "Facility Access Control (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_facility_access_control_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "406d481e2ec08191e72685f13e4aec6be853e7fe13244df39e3f091fbd9f6603",
+        "4b8e0d0e51f143146a7957ddd6abedc641f873dc255e2093251ae9570a19bffd",
+        "c141132fb8e905d979410da13255e26d60c575140d43cd54ea4994a22bf834d7",
+        "4faebf89cafacc42558803af0c2aac67c9ee66d4ab2d26e7aa556022520134f3",
+        "076c989eb16a38732d80f5448563e224910e341e4e1f3db152e17c62223e2240",
+        "ac97cbbf029185323f4fb5018f1935e795f9f9b75572d1fd078f56cb9a40862d"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_extra_boot_sequence",
+      "label": "Boot Sequence (Cool/Full)",
+      "source": "expansion27_cool_full_extra_boot_sequence_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "16b42b2cebe7c16780f0edc72feb864f9b598088eafb03631e054c7c293da362",
+        "77125c0d5877144e9ecbce87956f6fb7653afe9582da3a4ebcea5af53fe74b40",
+        "0842791e2503434fb8b0f6bfdba122cec453830cb9e3d4c74a25558f24526741",
+        "e8e9dbdef79f5e5b487dcc4bf5db300c7e902a6fa5de965edd6d0ca544b83e5c",
+        "f0b37f54cc7e2f016d87d5e5df3f7e7fbdc47eed77c0904aa5c35ff2059ad11b",
+        "d5ab667204ed4ad66bc9745544a2eb10cbf326308c53bb81f1649ed78c0b1eb5"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_extra_boot_sequence",
+      "label": "Boot Sequence (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_extra_boot_sequence_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "6f1ff40b0ef2a4236d276c130a4e480edaffa5c8a927f49862570b32a01cbd9c",
+        "0ca47c1c665f00f6521ff21bb01c06a87c4968d66aeb6c29054107b1460193d7",
+        "fb69baf9115ddc90a2d0594dc1e02ddd7a37d5746695886737c840b67e2ec75f",
+        "66429dfc233ee407b65c1726cb452ea67e596efae70f265c9152b2ee6abcd15f",
+        "6d0a67de2d456aab5b2f5eee692290e103fc354b0d7626a519af7dfd779a4628",
+        "84152b2351955561b062557f43c98c68bbd401ab60c6cdf963674c6088c75a1a"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_extra_standby",
+      "label": "Standby (Cool/Full)",
+      "source": "expansion27_cool_full_extra_standby_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "42ed09ca8e0d063a84e9ffa19fddaa6d3f553de9d728537973c29b864bf14fe5",
+        "caf9df309a7f713156875a9d279f0512b06d0b0cd568189302f914e1d44b4852",
+        "e59fd9ae5d8d4b24c75cf45da5cb82a685ddf59f8b5f6354d4f2e1df8c94c49b",
+        "4839415117757e141653387872e3d5399d588faa574940ef232726db036e79f3",
+        "7dce73cb82bab7bc14175faa4c2242f38d0930b9c3e5443309a43be83060b2fd",
+        "d9d60d4c4024e8919cc77a777f104ce27d8c1ceac1ef1e2fda59693f0ea7680b"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_extra_standby",
+      "label": "Standby (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_extra_standby_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "1045c32c9169005ddc0a8902703107539736caa2a86f353dc043f012ca85c818",
+        "e9540ca26b0f2bdef77c41b2c6fa6418a9435f97e171c0ed91988d4ea5af8bcb",
+        "ebdf293084827472b4bd34c9266dcf909c34fdac99b06b009dacdf0d19bb7b83",
+        "4e04d548a5a4e0b3e925c555d5ef87567b491f3b4a45a5ffff6c28b483d71960",
+        "d85ec16d05957f1201b04a0580dcbb580da8fb9b0cc52de7f301a9ef7cc73324",
+        "bf99b642e512fa46edbb5d374c50a7aa53027fa820ac7eaaa8d0717d0678aa7c"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_extra_access_denied",
+      "label": "Access Denied (Cool/Full)",
+      "source": "expansion27_cool_full_extra_access_denied_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "8c675ab0d7dd9b5970104962e03ce97005f533d5353f719369901f6723df96eb",
+        "723289e2ac4240b31528b307caa718b51f90abd8447677e71c3c87e6382faec1",
+        "5e07513e6c8410fc581f45bac142f3d461104f02a110a7462cefefe27c7fcf0f",
+        "5f2658d8721e25999e4054d1d829557238eea995f52b6e35a13e8bc9726d338e",
+        "551cea31d85697ff4742280d4af964f4412597d9fab62594aaae2fc40fdd262e",
+        "abbdd6c73d76a1e5e6cea04d505feeaf97cbdd2c81d019767501ce578dde51ee"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_extra_access_denied",
+      "label": "Access Denied (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_extra_access_denied_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "db5a65ec5cd7908129e05140391e45ed5a3dabdcd4b426da86aaaebc10e79837",
+        "97afc4e3a6b089db7a58998b4dd4a1feaab8cb1d0c575515b73899f7b5ccff7b",
+        "463766b1e1a9bfa90e34c90bf10a90f372bc57b0a2e29296d90ce6499ee6912e",
+        "dfdac0d3808749c9dfe3e6c4cf901784d37edaf6d7e3195295b803964f21d49b",
+        "6bbdb07be579adf0ad802d23888ad43e2ad74d1b5c1785b46a4a628ba9bca16d",
+        "92c7abdc08044ce13f538d98cb114d6b4c825336a1923a94d75fcd1456a1ee03"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_full_extra_signal_lost",
+      "label": "Signal Lost (Cool/Full)",
+      "source": "expansion27_cool_full_extra_signal_lost_static",
+      "style": "Cool",
+      "height": "full",
+      "width": 128,
+      "frameHashes": [
+        "cb93133a7796111cb463605807ea21cd4cfc03e7a963dfae57306ebdc902e957",
+        "92e62ff0ba1035572ebe1b679bd3622a4303a95795a6504ced96d24f6f22540b",
+        "1b01edd0e542685167f61b550c416c466192b26cb5cf32a40661b4dd02ab19c1",
+        "29156cdf6f83c81b54a5ffc46c2fd1aee7e79b390fed13f8c60d2ba2944dad82",
+        "8c4daac947c2e040a1436a9c0e5f883ca1cfc8910fb71400e5eb91c5e4b5c2c4",
+        "c58f5eab6c4c4d37b2c148624a802ac3ca63a1a4a007d61252f0c42e1ac455cb"
+      ]
+    },
+    {
+      "id": "screen_expansion27_cool_half_extra_signal_lost",
+      "label": "Signal Lost (Cool/Half)",
+      "source": "console_inputs/expansion27_cool_half_extra_signal_lost_static",
+      "style": "Cool",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "a91f38ea3b5320d53ae7c86f242cc081f1ec9410fde699ae6202b6d04230605c",
+        "daee5b025ab967c3053714c91189b8cd320a1e50a4c33a643d126084c763dafb",
+        "d8f61491d6f2b80c079a0c363ffdd2d407cba78be6b2c1c69e036fd12291c60a",
+        "95919a9c8139e58ac5fd68ee36026f9601b286bc9cd7bc59cac9b830fc0f4615",
+        "ffa388dd2998ee294ad2ca9c660c3ee011b4cbacb47f4e4bc9c6759252c53f95",
+        "6e7ba138b0b11900e5471c5e3219da75232f45b145fcc8b6964111bb47b84149"
+      ]
+    }
+  ]
+}

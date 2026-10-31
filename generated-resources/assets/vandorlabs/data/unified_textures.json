@@ -887,7 +887,10 @@
     "category": "Screens",
     "source": "console_inputs/extra_bare_door_controller_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_door27_classic_half_controller",
+    "retireAnimation": true
   },
   {
     "id": "screen_console_inputs_extra_bare_engineering_charts_static",
@@ -921,7 +924,7 @@
     "rectangular": true,
     "menuGroup": "Classic",
     "hidden": true,
-    "alias": "screen_console_inputs_extra_bare_door_controller_static",
+    "alias": "screen_door27_classic_half_controller",
     "retireAnimation": true
   },
   {
@@ -1330,7 +1333,10 @@
     "category": "Screens",
     "source": "extra_bare_door_controller_static",
     "rectangular": true,
-    "menuGroup": "Classic"
+    "menuGroup": "Classic",
+    "hidden": true,
+    "alias": "screen_door27_classic_full_controller",
+    "retireAnimation": true
   },
   {
     "id": "screen_extra_bare_engineering_charts_static",
@@ -1364,7 +1370,7 @@
     "rectangular": true,
     "menuGroup": "Classic",
     "hidden": true,
-    "alias": "screen_extra_bare_door_controller_static",
+    "alias": "screen_door27_classic_full_controller",
     "retireAnimation": true
   },
   {
@@ -4361,7 +4367,7 @@
     "source": "company_ashiro_mai_full_biology_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_biology",
+    "alias": "screen_cool27_full_bridge_biology",
     "retireAnimation": true
   },
   {
@@ -4372,7 +4378,7 @@
     "source": "company_ashiro_mai_full_communications_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_communications",
+    "alias": "screen_cool27_full_bridge_communications",
     "retireAnimation": true
   },
   {
@@ -4383,7 +4389,7 @@
     "source": "company_ashiro_mai_full_medical_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_medical",
+    "alias": "screen_cool27_full_bridge_medical",
     "retireAnimation": true
   },
   {
@@ -4394,7 +4400,7 @@
     "source": "company_ashiro_mai_full_navigation_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_navigation",
+    "alias": "screen_cool27_full_bridge_navigation",
     "retireAnimation": true
   },
   {
@@ -4405,7 +4411,7 @@
     "source": "company_ashiro_mai_full_radar_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_radar",
+    "alias": "screen_cool27_full_bridge_radar",
     "retireAnimation": true
   },
   {
@@ -4416,7 +4422,7 @@
     "source": "company_ashiro_mai_full_reactor_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_reactor",
+    "alias": "screen_cool27_full_bridge_reactor",
     "retireAnimation": true
   },
   {
@@ -4428,7 +4434,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_biology",
+    "alias": "screen_cool27_half_bridge_biology",
     "retireAnimation": true
   },
   {
@@ -4440,7 +4446,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_communications",
+    "alias": "screen_cool27_half_bridge_communications",
     "retireAnimation": true
   },
   {
@@ -4452,7 +4458,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_medical",
+    "alias": "screen_cool27_half_bridge_medical",
     "retireAnimation": true
   },
   {
@@ -4464,7 +4470,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_navigation",
+    "alias": "screen_cool27_half_bridge_navigation",
     "retireAnimation": true
   },
   {
@@ -4476,7 +4482,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_radar",
+    "alias": "screen_cool27_half_bridge_radar",
     "retireAnimation": true
   },
   {
@@ -4488,7 +4494,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_reactor",
+    "alias": "screen_cool27_half_bridge_reactor",
     "retireAnimation": true
   },
   {
@@ -4497,7 +4503,10 @@
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "company_paladyne_full_biology_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_cool27_full_bridge_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_full_communications",
@@ -4505,7 +4514,10 @@
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "company_paladyne_full_communications_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_cool27_full_bridge_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_full_medical",
@@ -4513,7 +4525,10 @@
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "company_paladyne_full_medical_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_cool27_full_bridge_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_full_navigation",
@@ -4521,7 +4536,10 @@
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "company_paladyne_full_navigation_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_cool27_full_bridge_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_full_radar",
@@ -4529,7 +4547,10 @@
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "company_paladyne_full_radar_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_cool27_full_bridge_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_full_reactor",
@@ -4537,7 +4558,10 @@
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "company_paladyne_full_reactor_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_cool27_full_bridge_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_half_biology",
@@ -4546,7 +4570,10 @@
     "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_biology_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_cool27_half_bridge_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_half_communications",
@@ -4555,7 +4582,10 @@
     "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_communications_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_cool27_half_bridge_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_half_medical",
@@ -4564,7 +4594,10 @@
     "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_medical_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_cool27_half_bridge_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_half_navigation",
@@ -4573,7 +4606,10 @@
     "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_navigation_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_cool27_half_bridge_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_half_radar",
@@ -4582,7 +4618,10 @@
     "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_radar_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_cool27_half_bridge_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_paladyne_half_reactor",
@@ -4591,7 +4630,10 @@
     "menuGroup": "Cool",
     "source": "console_inputs/company_paladyne_half_reactor_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_cool27_half_bridge_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_full_biology",
@@ -4599,7 +4641,10 @@
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "company_pinnacle_full_biology_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_gold27_full_bridge_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_full_communications",
@@ -4607,7 +4652,10 @@
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "company_pinnacle_full_communications_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_gold27_full_bridge_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_full_medical",
@@ -4615,7 +4663,10 @@
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "company_pinnacle_full_medical_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_gold27_full_bridge_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_full_navigation",
@@ -4623,7 +4674,10 @@
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "company_pinnacle_full_navigation_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_gold27_full_bridge_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_full_radar",
@@ -4631,7 +4685,10 @@
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "company_pinnacle_full_radar_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_gold27_full_bridge_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_full_reactor",
@@ -4639,7 +4696,10 @@
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "company_pinnacle_full_reactor_static",
-    "frames": 6
+    "frames": 6,
+    "hidden": true,
+    "alias": "screen_gold27_full_bridge_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_half_biology",
@@ -4648,7 +4708,10 @@
     "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_biology_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_gold27_half_bridge_biology",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_half_communications",
@@ -4657,7 +4720,10 @@
     "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_communications_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_gold27_half_bridge_communications",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_half_medical",
@@ -4666,7 +4732,10 @@
     "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_medical_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_gold27_half_bridge_medical",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_half_navigation",
@@ -4675,7 +4744,10 @@
     "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_navigation_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_gold27_half_bridge_navigation",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_half_radar",
@@ -4684,7 +4756,10 @@
     "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_radar_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_gold27_half_bridge_radar",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_pinnacle_half_reactor",
@@ -4693,7 +4768,10 @@
     "menuGroup": "Gold",
     "source": "console_inputs/company_pinnacle_half_reactor_static",
     "frames": 6,
-    "rectangular": true
+    "rectangular": true,
+    "hidden": true,
+    "alias": "screen_gold27_half_bridge_reactor",
+    "retireAnimation": true
   },
   {
     "id": "screen_company_seyr_full_biology",
@@ -4703,7 +4781,7 @@
     "source": "company_seyr_full_biology_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_biology",
+    "alias": "screen_cool27_full_bridge_biology",
     "retireAnimation": true
   },
   {
@@ -4722,7 +4800,7 @@
     "source": "company_seyr_full_medical_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_medical",
+    "alias": "screen_cool27_full_bridge_medical",
     "retireAnimation": true
   },
   {
@@ -4741,7 +4819,7 @@
     "source": "company_seyr_full_radar_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_radar",
+    "alias": "screen_cool27_full_bridge_radar",
     "retireAnimation": true
   },
   {
@@ -4761,7 +4839,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_biology",
+    "alias": "screen_cool27_half_bridge_biology",
     "retireAnimation": true
   },
   {
@@ -4782,7 +4860,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_medical",
+    "alias": "screen_cool27_half_bridge_medical",
     "retireAnimation": true
   },
   {
@@ -4803,7 +4881,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_radar",
+    "alias": "screen_cool27_half_bridge_radar",
     "retireAnimation": true
   },
   {
@@ -4823,7 +4901,7 @@
     "source": "company_vandor_full_biology_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_biology",
+    "alias": "screen_cool27_full_bridge_biology",
     "retireAnimation": true
   },
   {
@@ -4834,7 +4912,7 @@
     "source": "company_vandor_full_communications_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_communications",
+    "alias": "screen_cool27_full_bridge_communications",
     "retireAnimation": true
   },
   {
@@ -4845,7 +4923,7 @@
     "source": "company_vandor_full_medical_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_medical",
+    "alias": "screen_cool27_full_bridge_medical",
     "retireAnimation": true
   },
   {
@@ -4856,7 +4934,7 @@
     "source": "company_vandor_full_navigation_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_navigation",
+    "alias": "screen_cool27_full_bridge_navigation",
     "retireAnimation": true
   },
   {
@@ -4867,7 +4945,7 @@
     "source": "company_vandor_full_radar_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_radar",
+    "alias": "screen_cool27_full_bridge_radar",
     "retireAnimation": true
   },
   {
@@ -4878,7 +4956,7 @@
     "source": "company_vandor_full_reactor_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_paladyne_full_reactor",
+    "alias": "screen_cool27_full_bridge_reactor",
     "retireAnimation": true
   },
   {
@@ -4890,7 +4968,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_biology",
+    "alias": "screen_cool27_half_bridge_biology",
     "retireAnimation": true
   },
   {
@@ -4902,7 +4980,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_communications",
+    "alias": "screen_cool27_half_bridge_communications",
     "retireAnimation": true
   },
   {
@@ -4914,7 +4992,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_medical",
+    "alias": "screen_cool27_half_bridge_medical",
     "retireAnimation": true
   },
   {
@@ -4926,7 +5004,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_navigation",
+    "alias": "screen_cool27_half_bridge_navigation",
     "retireAnimation": true
   },
   {
@@ -4938,7 +5016,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_radar",
+    "alias": "screen_cool27_half_bridge_radar",
     "retireAnimation": true
   },
   {
@@ -4950,7 +5028,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_paladyne_half_reactor",
+    "alias": "screen_cool27_half_bridge_reactor",
     "retireAnimation": true
   },
   {
@@ -4961,7 +5039,7 @@
     "source": "company_vektor_full_biology_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_pinnacle_full_biology",
+    "alias": "screen_gold27_full_bridge_biology",
     "retireAnimation": true
   },
   {
@@ -4972,7 +5050,7 @@
     "source": "company_vektor_full_communications_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_pinnacle_full_communications",
+    "alias": "screen_gold27_full_bridge_communications",
     "retireAnimation": true
   },
   {
@@ -4983,7 +5061,7 @@
     "source": "company_vektor_full_medical_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_pinnacle_full_medical",
+    "alias": "screen_gold27_full_bridge_medical",
     "retireAnimation": true
   },
   {
@@ -4994,7 +5072,7 @@
     "source": "company_vektor_full_navigation_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_pinnacle_full_navigation",
+    "alias": "screen_gold27_full_bridge_navigation",
     "retireAnimation": true
   },
   {
@@ -5005,7 +5083,7 @@
     "source": "company_vektor_full_radar_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_pinnacle_full_radar",
+    "alias": "screen_gold27_full_bridge_radar",
     "retireAnimation": true
   },
   {
@@ -5016,7 +5094,7 @@
     "source": "company_vektor_full_reactor_static",
     "frames": 6,
     "hidden": true,
-    "alias": "screen_company_pinnacle_full_reactor",
+    "alias": "screen_gold27_full_bridge_reactor",
     "retireAnimation": true
   },
   {
@@ -5028,7 +5106,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_pinnacle_half_biology",
+    "alias": "screen_gold27_half_bridge_biology",
     "retireAnimation": true
   },
   {
@@ -5040,7 +5118,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_pinnacle_half_communications",
+    "alias": "screen_gold27_half_bridge_communications",
     "retireAnimation": true
   },
   {
@@ -5052,7 +5130,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_pinnacle_half_medical",
+    "alias": "screen_gold27_half_bridge_medical",
     "retireAnimation": true
   },
   {
@@ -5064,7 +5142,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_pinnacle_half_navigation",
+    "alias": "screen_gold27_half_bridge_navigation",
     "retireAnimation": true
   },
   {
@@ -5076,7 +5154,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_pinnacle_half_radar",
+    "alias": "screen_gold27_half_bridge_radar",
     "retireAnimation": true
   },
   {
@@ -5088,7 +5166,7 @@
     "frames": 6,
     "rectangular": true,
     "hidden": true,
-    "alias": "screen_company_pinnacle_half_reactor",
+    "alias": "screen_gold27_half_bridge_reactor",
     "retireAnimation": true
   },
   {
@@ -5129,7 +5207,7 @@
   },
   {
     "id": "screen_cool27_full_bridge_biology",
-    "label": "Biology Bridge (Cool/Full)",
+    "label": "Biology (Cool/Full)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "cool27_full_bridge_biology_static",
@@ -5137,7 +5215,7 @@
   },
   {
     "id": "screen_cool27_half_bridge_biology",
-    "label": "Biology Bridge (Cool/Half)",
+    "label": "Biology (Cool/Half)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "console_inputs/cool27_half_bridge_biology_static",
@@ -5146,7 +5224,7 @@
   },
   {
     "id": "screen_cool27_full_bridge_communications",
-    "label": "Communications Bridge (Cool/Full)",
+    "label": "Communications (Cool/Full)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "cool27_full_bridge_communications_static",
@@ -5154,7 +5232,7 @@
   },
   {
     "id": "screen_cool27_half_bridge_communications",
-    "label": "Communications Bridge (Cool/Half)",
+    "label": "Communications (Cool/Half)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "console_inputs/cool27_half_bridge_communications_static",
@@ -5163,7 +5241,7 @@
   },
   {
     "id": "screen_cool27_full_bridge_medical",
-    "label": "Medical Bridge (Cool/Full)",
+    "label": "Medical (Cool/Full)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "cool27_full_bridge_medical_static",
@@ -5171,7 +5249,7 @@
   },
   {
     "id": "screen_cool27_half_bridge_medical",
-    "label": "Medical Bridge (Cool/Half)",
+    "label": "Medical (Cool/Half)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "console_inputs/cool27_half_bridge_medical_static",
@@ -5180,7 +5258,7 @@
   },
   {
     "id": "screen_cool27_full_bridge_navigation",
-    "label": "Navigation Bridge (Cool/Full)",
+    "label": "Navigation (Cool/Full)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "cool27_full_bridge_navigation_static",
@@ -5188,7 +5266,7 @@
   },
   {
     "id": "screen_cool27_half_bridge_navigation",
-    "label": "Navigation Bridge (Cool/Half)",
+    "label": "Navigation (Cool/Half)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "console_inputs/cool27_half_bridge_navigation_static",
@@ -5197,7 +5275,7 @@
   },
   {
     "id": "screen_cool27_full_bridge_radar",
-    "label": "Radar Bridge (Cool/Full)",
+    "label": "Radar (Cool/Full)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "cool27_full_bridge_radar_static",
@@ -5205,7 +5283,7 @@
   },
   {
     "id": "screen_cool27_half_bridge_radar",
-    "label": "Radar Bridge (Cool/Half)",
+    "label": "Radar (Cool/Half)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "console_inputs/cool27_half_bridge_radar_static",
@@ -5214,7 +5292,7 @@
   },
   {
     "id": "screen_cool27_full_bridge_reactor",
-    "label": "Reactor Bridge (Cool/Full)",
+    "label": "Reactor (Cool/Full)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "cool27_full_bridge_reactor_static",
@@ -5222,7 +5300,7 @@
   },
   {
     "id": "screen_cool27_half_bridge_reactor",
-    "label": "Reactor Bridge (Cool/Half)",
+    "label": "Reactor (Cool/Half)",
     "category": "Screens",
     "menuGroup": "Cool",
     "source": "console_inputs/cool27_half_bridge_reactor_static",
@@ -5588,7 +5666,7 @@
   },
   {
     "id": "screen_gold27_full_bridge_biology",
-    "label": "Biology Bridge (Gold/Full)",
+    "label": "Biology (Gold/Full)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "gold27_full_bridge_biology_static",
@@ -5596,7 +5674,7 @@
   },
   {
     "id": "screen_gold27_half_bridge_biology",
-    "label": "Biology Bridge (Gold/Half)",
+    "label": "Biology (Gold/Half)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "console_inputs/gold27_half_bridge_biology_static",
@@ -5605,7 +5683,7 @@
   },
   {
     "id": "screen_gold27_full_bridge_communications",
-    "label": "Communications Bridge (Gold/Full)",
+    "label": "Communications (Gold/Full)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "gold27_full_bridge_communications_static",
@@ -5613,7 +5691,7 @@
   },
   {
     "id": "screen_gold27_half_bridge_communications",
-    "label": "Communications Bridge (Gold/Half)",
+    "label": "Communications (Gold/Half)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "console_inputs/gold27_half_bridge_communications_static",
@@ -5622,7 +5700,7 @@
   },
   {
     "id": "screen_gold27_full_bridge_medical",
-    "label": "Medical Bridge (Gold/Full)",
+    "label": "Medical (Gold/Full)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "gold27_full_bridge_medical_static",
@@ -5630,7 +5708,7 @@
   },
   {
     "id": "screen_gold27_half_bridge_medical",
-    "label": "Medical Bridge (Gold/Half)",
+    "label": "Medical (Gold/Half)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "console_inputs/gold27_half_bridge_medical_static",
@@ -5639,7 +5717,7 @@
   },
   {
     "id": "screen_gold27_full_bridge_navigation",
-    "label": "Navigation Bridge (Gold/Full)",
+    "label": "Navigation (Gold/Full)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "gold27_full_bridge_navigation_static",
@@ -5647,7 +5725,7 @@
   },
   {
     "id": "screen_gold27_half_bridge_navigation",
-    "label": "Navigation Bridge (Gold/Half)",
+    "label": "Navigation (Gold/Half)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "console_inputs/gold27_half_bridge_navigation_static",
@@ -5656,7 +5734,7 @@
   },
   {
     "id": "screen_gold27_full_bridge_radar",
-    "label": "Radar Bridge (Gold/Full)",
+    "label": "Radar (Gold/Full)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "gold27_full_bridge_radar_static",
@@ -5664,7 +5742,7 @@
   },
   {
     "id": "screen_gold27_half_bridge_radar",
-    "label": "Radar Bridge (Gold/Half)",
+    "label": "Radar (Gold/Half)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "console_inputs/gold27_half_bridge_radar_static",
@@ -5673,7 +5751,7 @@
   },
   {
     "id": "screen_gold27_full_bridge_reactor",
-    "label": "Reactor Bridge (Gold/Full)",
+    "label": "Reactor (Gold/Full)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "gold27_full_bridge_reactor_static",
@@ -5681,7 +5759,7 @@
   },
   {
     "id": "screen_gold27_half_bridge_reactor",
-    "label": "Reactor Bridge (Gold/Half)",
+    "label": "Reactor (Gold/Half)",
     "category": "Screens",
     "menuGroup": "Gold",
     "source": "console_inputs/gold27_half_bridge_reactor_static",
@@ -6213,5 +6291,676 @@
     "rectangular": true,
     "large": true,
     "pixelWidth": 512
+  },
+  {
+    "id": "screen_expansion27_classic_full_operations_airlock",
+    "label": "Airlock (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_operations_airlock_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_operations_airlock",
+    "label": "Airlock (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_operations_airlock_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_operations_life_support",
+    "label": "Life Support (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_operations_life_support_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_operations_life_support",
+    "label": "Life Support (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_operations_life_support_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_power_grid_status",
+    "label": "Power Grid Status (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_power_grid_status_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_power_grid_status",
+    "label": "Power Grid Status (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_power_grid_status_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_transit_city_map",
+    "label": "City Transit Map (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_transit_city_map_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_large27_classic_full_city_transit",
+    "label": "City Transit Map (Classic/Full) Large",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "large27_classic_full_city_transit_static",
+    "frames": 6,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_expansion27_classic_half_transit_city_map",
+    "label": "City Transit Map (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_transit_city_map_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_large27_classic_half_city_transit",
+    "label": "City Transit Map (Classic/Half) Large",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/large27_classic_half_city_transit_static",
+    "frames": 6,
+    "rectangular": true,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_expansion27_classic_full_ship_deck_plan",
+    "label": "Ship Deck Plan (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_ship_deck_plan_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_ship_deck_plan",
+    "label": "Ship Deck Plan (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_ship_deck_plan_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_engineering_power_distribution",
+    "label": "Power Distribution (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_engineering_power_distribution_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_engineering_power_distribution",
+    "label": "Power Distribution (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_engineering_power_distribution_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_bridge_shields",
+    "label": "Shields (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_bridge_shields_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_bridge_shields",
+    "label": "Shields (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_bridge_shields_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_bridge_damage_control",
+    "label": "Damage Control (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_bridge_damage_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_bridge_damage_control",
+    "label": "Damage Control (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_bridge_damage_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_engineering_ftl_calibration",
+    "label": "FTL Calibration (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_engineering_ftl_calibration_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_engineering_ftl_calibration",
+    "label": "FTL Calibration (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_engineering_ftl_calibration_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_station_berth_control",
+    "label": "Station Berth Control (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_station_berth_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_station_berth_control",
+    "label": "Station Berth Control (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_station_berth_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_industrial_fabrication",
+    "label": "Industrial Fabrication (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_industrial_fabrication_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_industrial_fabrication",
+    "label": "Industrial Fabrication (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_industrial_fabrication_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_industrial_refinery",
+    "label": "Industrial Refinery (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_industrial_refinery_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_industrial_refinery",
+    "label": "Industrial Refinery (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_industrial_refinery_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_facility_access_control",
+    "label": "Facility Access Control (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_facility_access_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_facility_access_control",
+    "label": "Facility Access Control (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_facility_access_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_extra_boot_sequence",
+    "label": "Boot Sequence (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_extra_boot_sequence_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_extra_boot_sequence",
+    "label": "Boot Sequence (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_extra_boot_sequence_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_extra_standby",
+    "label": "Standby (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_extra_standby_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_extra_standby",
+    "label": "Standby (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_extra_standby_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_extra_access_denied",
+    "label": "Access Denied (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_extra_access_denied_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_extra_access_denied",
+    "label": "Access Denied (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_extra_access_denied_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_classic_full_extra_signal_lost",
+    "label": "Signal Lost (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "expansion27_classic_full_extra_signal_lost_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_classic_half_extra_signal_lost",
+    "label": "Signal Lost (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/expansion27_classic_half_extra_signal_lost_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_operations_airlock",
+    "label": "Airlock (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_operations_airlock_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_operations_airlock",
+    "label": "Airlock (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_operations_airlock_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_operations_life_support",
+    "label": "Life Support (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_operations_life_support_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_operations_life_support",
+    "label": "Life Support (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_operations_life_support_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_power_grid_status",
+    "label": "Power Grid Status (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_power_grid_status_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_power_grid_status",
+    "label": "Power Grid Status (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_power_grid_status_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_transit_city_map",
+    "label": "City Transit Map (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_transit_city_map_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_large27_cool_full_city_transit",
+    "label": "City Transit Map (Cool/Full) Large",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "large27_cool_full_city_transit_static",
+    "frames": 6,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_expansion27_cool_half_transit_city_map",
+    "label": "City Transit Map (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_transit_city_map_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_large27_cool_half_city_transit",
+    "label": "City Transit Map (Cool/Half) Large",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/large27_cool_half_city_transit_static",
+    "frames": 6,
+    "rectangular": true,
+    "large": true,
+    "pixelWidth": 512
+  },
+  {
+    "id": "screen_expansion27_cool_full_ship_deck_plan",
+    "label": "Ship Deck Plan (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_ship_deck_plan_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_ship_deck_plan",
+    "label": "Ship Deck Plan (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_ship_deck_plan_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_engineering_power_distribution",
+    "label": "Power Distribution (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_engineering_power_distribution_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_engineering_power_distribution",
+    "label": "Power Distribution (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_engineering_power_distribution_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_bridge_shields",
+    "label": "Shields (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_bridge_shields_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_bridge_shields",
+    "label": "Shields (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_bridge_shields_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_bridge_damage_control",
+    "label": "Damage Control (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_bridge_damage_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_bridge_damage_control",
+    "label": "Damage Control (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_bridge_damage_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_engineering_ftl_calibration",
+    "label": "FTL Calibration (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_engineering_ftl_calibration_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_engineering_ftl_calibration",
+    "label": "FTL Calibration (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_engineering_ftl_calibration_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_station_berth_control",
+    "label": "Station Berth Control (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_station_berth_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_station_berth_control",
+    "label": "Station Berth Control (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_station_berth_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_industrial_fabrication",
+    "label": "Industrial Fabrication (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_industrial_fabrication_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_industrial_fabrication",
+    "label": "Industrial Fabrication (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_industrial_fabrication_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_industrial_refinery",
+    "label": "Industrial Refinery (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_industrial_refinery_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_industrial_refinery",
+    "label": "Industrial Refinery (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_industrial_refinery_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_facility_access_control",
+    "label": "Facility Access Control (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_facility_access_control_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_facility_access_control",
+    "label": "Facility Access Control (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_facility_access_control_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_extra_boot_sequence",
+    "label": "Boot Sequence (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_extra_boot_sequence_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_extra_boot_sequence",
+    "label": "Boot Sequence (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_extra_boot_sequence_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_extra_standby",
+    "label": "Standby (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_extra_standby_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_extra_standby",
+    "label": "Standby (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_extra_standby_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_extra_access_denied",
+    "label": "Access Denied (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_extra_access_denied_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_extra_access_denied",
+    "label": "Access Denied (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_extra_access_denied_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_expansion27_cool_full_extra_signal_lost",
+    "label": "Signal Lost (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "expansion27_cool_full_extra_signal_lost_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_expansion27_cool_half_extra_signal_lost",
+    "label": "Signal Lost (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/expansion27_cool_half_extra_signal_lost_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_door27_classic_full_controller",
+    "label": "Door Controller (Classic/Full)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "door27_classic_full_controller_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_door27_classic_half_controller",
+    "label": "Door Controller (Classic/Half)",
+    "category": "Screens",
+    "menuGroup": "Classic",
+    "source": "console_inputs/door27_classic_half_controller_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_door27_cool_full_controller",
+    "label": "Door Controller (Cool/Full)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "door27_cool_full_controller_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_door27_cool_half_controller",
+    "label": "Door Controller (Cool/Half)",
+    "category": "Screens",
+    "menuGroup": "Cool",
+    "source": "console_inputs/door27_cool_half_controller_static",
+    "frames": 6,
+    "rectangular": true
+  },
+  {
+    "id": "screen_door27_gold_full_controller",
+    "label": "Door Controller (Gold/Full)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "door27_gold_full_controller_static",
+    "frames": 6
+  },
+  {
+    "id": "screen_door27_gold_half_controller",
+    "label": "Door Controller (Gold/Half)",
+    "category": "Screens",
+    "menuGroup": "Gold",
+    "source": "console_inputs/door27_gold_half_controller_static",
+    "frames": 6,
+    "rectangular": true
   }
 ]

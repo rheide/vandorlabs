@@ -12,7 +12,7 @@ def main():
     byid={e['id']:e for e in catalog};byblock={e['id']:e for e in blocks};byinput={e['id']:e for e in inputs}
     assert len(audit['entries'])==42 and len({e['id'] for e in audit['entries']})==42
     for height in ('full','half'):
-        assert sum(e.get('menuGroup')==style and e['id'].startswith(('screen_company_','screen_'+style.lower()+'27_')) and not e.get('hidden') and e['source'].startswith('console_inputs/')==(height=='half') for e in catalog)==27
+        assert sum(e.get('menuGroup')==style and e['id'].startswith(('screen_company_','screen_'+style.lower()+'27_')) and not e.get('hidden') and e['source'].startswith('console_inputs/')==(height=='half') for e in catalog)==21
         assert sum(e['height']==height and e['variant']=='bridge' for e in audit['entries'])==6
         assert sum(e['height']==height and e['variant']=='expanded' for e in audit['entries'])==15
     jar=ZipFile(args.jar) if args.jar else None
@@ -23,7 +23,7 @@ def main():
         return (TEXTURES/relative).read_bytes()
     try:
         for expected in audit['entries']:
-            entry=byid[expected['id']];assert entry['label']==expected['label'] and entry['menuGroup']==style and not entry.get('hidden') and entry['frames']==6
+            entry=byid[expected['id']];assert entry['label']==expected['label'].replace(' Bridge (',' (') and entry['menuGroup']==style and not entry.get('hidden') and entry['frames']==6
             root=entry['source'].removesuffix('_static');identifier=root.removeprefix('console_inputs/');height=64 if expected['height']=='half' else 128
             if height==64:assert byinput[identifier]==dict(id=identifier,animated=True,frames=6)
             else:assert byblock[identifier]['programmable_only'] and not byblock[identifier].get('retired')
@@ -39,5 +39,5 @@ def main():
         if jar:assert json.loads(jar.read('assets/vandorlabs/data/unified_textures.json'))==catalog
     finally:
         if jar:jar.close()
-    print(style+' screens PASS: 42 animations, 252 exact authored frames, saved catalog/block/input prefixes retained, 27 retained base/Bridge choices per height, six Bridge alternatives per height'+(' in exact JAR' if args.jar else ''))
+    print(style+' screens PASS: 42 animations, 252 exact authored frames, saved catalog/block/input prefixes retained, 21 retained primary/expanded choices per height, six preferred Bridge designs per height'+(' in exact JAR' if args.jar else ''))
 if __name__=='__main__':main()

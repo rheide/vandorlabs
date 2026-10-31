@@ -100,6 +100,8 @@ def restructure(catalog,blocks,language):
                 entry.update(hidden=True,alias=f'screen_company_{kept}_{tier}_{subject}',retireAnimation=True);retired.add(source)
             else:
                 group='Gold' if kept=='pinnacle' else 'Cool';entry.update(menuGroup=group,label=f'{subject.replace("_"," ").title()} ({group}/{height})')
+        elif source in ('extra_bare_door_controller','extra_framed_door_controller'):
+            entry.update(hidden=True,alias=f'screen_door27_classic_{height.lower()}_controller',retireAnimation=True);retired.add(source)
         elif source=='engineering_screen':
             entry.update(hidden=True,alias='screen_bridge_bare_engineering_static',retireAnimation=True);retired.add(source)
         elif source in ('bridge_bare_sensors','bridge_framed_sensors'):
@@ -118,6 +120,14 @@ def restructure(catalog,blocks,language):
             if not label.endswith(suffix):label=re.sub(r'\s*\((?:[^()]+/)?(?:Full|Half)\)$','',label)+' '+suffix
             entry['label']=label+(' Large' if entry.get('large') else '')
         key=('gui.vandorlabs.console.input.' if half else 'tile.vandorlabs.')+source+('' if half else '.name');names[key]=entry['label']
+    # Retain the new Bridge artwork as the primary Gold/Cool designs.
+    for entry in result:
+        source=entry['source'].removeprefix('console_inputs/').removesuffix('_static')
+        company=re.fullmatch(r'company_(pinnacle|paladyne)_(full|half)_(biology|communications|medical|navigation|radar|reactor)',source)
+        if company:
+            brand,height,subject=company.groups();style='gold' if brand=='pinnacle' else 'cool'
+            entry.update(hidden=True,alias=f'screen_{style}27_{height}_bridge_{subject}',retireAnimation=True);retired.add(source)
+        if re.fullmatch(r'(?:gold|cool)27_(?:full|half)_bridge_(biology|communications|medical|navigation|radar|reactor)',source):entry['label']=entry['label'].replace(' Bridge (',' (')
     # Frame choices are separate now; paired legacy framed artwork has no menu row.
     bysource={e['source']:e for e in result};byid={e['id']:e for e in result}
     for entry in result:
@@ -135,6 +145,10 @@ def restructure(catalog,blocks,language):
     for entry in definitions:
         if entry['id'] in retired:entry['retired']=True
         elif entry['id'] in active:entry.pop('retired',None)
+    for entry in result:
+        if entry.get('category')!='Screens':continue
+        source=entry['source'].removeprefix('console_inputs/').removesuffix('_static');half=entry['source'].startswith('console_inputs/')
+        names[('gui.vandorlabs.console.input.' if half else 'tile.vandorlabs.')+source+('' if half else '.name')]=entry['label']
     lines=[line.split('=',1)[0]+'='+names[line.split('=',1)[0]] if line.split('=',1)[0] in names else line for line in language.splitlines()]
     existing={line.split('=',1)[0] for line in language.splitlines() if '=' in line};lines.extend(key+'='+value for key,value in sorted(names.items()) if key not in existing)
     return result,definitions,'\n'.join(lines)+'\n'

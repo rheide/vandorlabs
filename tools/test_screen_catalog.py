@@ -29,13 +29,13 @@ assert not any(e.get('category')=='Controls' or e.get('category')=='Screens' and
 for group,company in [('Gold','pinnacle'),('Cool','paladyne')]:
     for height in ('Full','Half'):
         choices=[e for e in catalog if e['id'].startswith('screen_company_') and e.get('menuGroup')==group and not e.get('hidden') and ('console_inputs/' in e['source'])==(height=='Half')]
-        assert len(choices)==6
+        assert len(choices)==0
         for e in choices:assert company in e['id'] and e['label'].endswith(f'({group}/{height})')
 for e in catalog:
     if e.get('retireAnimation'):
         source=e['source'].removeprefix('console_inputs/').removesuffix('_static');assert e['hidden']
         if not e['source'].startswith('console_inputs/'):assert byblock[source]['retired']
-        if source.startswith(('company_','bridge_','console_controls_')) or '_framed_' in source or source in ROOT_CONTROL_MERGES or source=='engineering_screen':assert 'alias' in e and not byid[e['alias']].get('hidden')
+        if source.startswith(('company_','bridge_','console_controls_')) or '_framed_' in source or source in ROOT_CONTROL_MERGES or source in ('engineering_screen','extra_bare_door_controller'):assert 'alias' in e and not byid[e['alias']].get('hidden')
         else:assert 'alias' not in e
     if e.get('category')=='Screens' and not e.get('hidden') and e not in inputs:
         height='Half' if e['source'].startswith('console_inputs/') else 'Full';assert e['label'].removesuffix(' Large').endswith('/'+height+')') or e['label'].removesuffix(' Large').endswith('('+height+')'),e['id']

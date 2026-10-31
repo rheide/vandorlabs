@@ -1,0 +1,84 @@
+{
+  "entries": [
+    {
+      "id": "screen_console_inputs_specialist_bare_weapons_static",
+      "label": "Weapons (Classic/Half)",
+      "source": "console_inputs/specialist_bare_weapons_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "95be07dc0838007646849b57abe2c566da53153e7c450c2e70a85dd4b3726432",
+        "4c36374d00967f82a3b807284264aa0f5364a34ba7c24b381eb8e93c20b48738",
+        "6f0ea4df70336001783a133eba4764bb12ffbc27834d8c9cbb79ae0c8b4d627f",
+        "cce9cb44b70ecd004d29728debf265d179fa7b47c94c207237ebc40e40795078",
+        "535a4ea8922b5ebfacec59b0eb9e8b6cb73499efb56ade1c00173e996c78b38b",
+        "11b9b0c82e7835fcb9ff7e8269530fa1b0bd359114c10d76a86d1242be7516f6"
+      ]
+    },
+    {
+      "id": "screen_console_inputs_bridge_bare_ship_status_static",
+      "label": "Ship Status (Classic/Half)",
+      "source": "console_inputs/bridge_bare_ship_status_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "d27256f58ca42917a773e691a82049be5a07116e6e5eec5c63c95db021017823",
+        "bb0127e4685fa126fa40068f922b33bbce1da87a0c44f147dbc2849301f30cb9",
+        "46e94545f4f8d26a31d7b0da6492cb8d5b51a24b023e96a6a1761a5b249caff6",
+        "79c7e4a84fdbaaa3a8442173297b752e551730a8fe3204b1558225ea89533a5c",
+        "dd61bc4095e760fb681722f282b75ca0aa8f420fe1c01140d6908851cb6a5616",
+        "cd7f4d4653494bcc494c65aabb7c2307dabe6b1678a7621a0776afd15cf14198"
+      ]
+    },
+    {
+      "id": "screen_console_inputs_specialist_bare_medical_static",
+      "label": "Medical (Classic/Half)",
+      "source": "console_inputs/specialist_bare_medical_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "92080ac1af5ac5929e0f7b576fc3a19153be4f9b3467eebc67c66ccab62e4d68",
+        "202d22e2eb024e9e4191d109584ec14107ccd639da9c7aee8372bd9d117c0657",
+        "1d84a5bb6198fb72a2ddd881c41c0644b1f33d9dae4e709d7641f01fce3d4930",
+        "ce09c355e0728ccbad0b822a33dd51ac15f161b610cae56beb831854e6d1c641",
+        "66e38fd489845bd7c5fd89d05c0eaee4727f68a311c5f2ef96b294742e21ef2c",
+        "7112939d90b876aa3713dcbe94f5fc26af5c7390a880aa8921b7028f4c30818b"
+      ]
+    },
+    {
+      "id": "screen_console_inputs_extra_bare_engineering_charts_static",
+      "label": "Engineering Charts (Classic/Half)",
+      "source": "console_inputs/extra_bare_engineering_charts_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "8dd4f5e99b44dad016318690b7941b54aece421ba56b19ad9d58563deb5ad3eb",
+        "c010102042b7dd145e536faf19f70637961502e1a00ae9fcaf756136791a7f70",
+        "a1b52acef421d7937ac12499b784fa9eafef7cc90354ebafc68e6eb6f03a7e24",
+        "595d0fa2a20344010ab913b5b9b6d1ad40275fcbc2792c697338d76a31a8b029",
+        "fa48ab7fdf209391d06b7dc2f7e9c0a88e918c68a3c342d7bb6c4f2db8f0c739",
+        "9448b6540e80ff1e20031bd63d5a9fb24b147195d8e5e2ffd6833145b58b144b"
+      ]
+    },
+    {
+      "id": "screen_console_inputs_specialist_bare_starmap_static",
+      "label": "Starmap (Classic/Half)",
+      "source": "console_inputs/specialist_bare_starmap_static",
+      "style": "Classic",
+      "height": "half",
+      "width": 128,
+      "frameHashes": [
+        "5927b7de7fa56cdbe29c751a0236d29c484b4382785ea2a239702a231611c3de",
+        "d2d32c06efb30453366a2973c007fcdc071acb1ac277d5daed93d3bd1c2232bc",
+        "bffea89783ed28d8f2dab8f2777a472b7ded5bd6718a69fa473e35b32a20b35c",
+        "c7d635861d4b256c39d171aed21f3675358e7ef188bf82edf02d2847a6e9457a",
+        "7d8ee69a27da9af49d2d6b009b7510db8564707184fc66a9e8d660421ffe87ac",
+        "a0173cefc84b26ca65dc1f7144370fae67efa8953a9d91446d7b0214a82343dd"
+      ]
+    }
+  ]
+}
