@@ -26,7 +26,7 @@ final class HousingTextureList {
         Option(int choice,String label,String category,String texture){this.choice=choice;this.label=label;this.category=category;this.texture=texture;}
     }
     private final int x,y,width;
-    private final net.minecraft.client.gui.GuiTextField search;
+    private net.minecraft.client.gui.GuiTextField search;
     private String query="";
     private int cursorTick=-1;
     private int count;
@@ -51,8 +51,6 @@ final class HousingTextureList {
     }
     HousingTextureList(int x,int y,int width,int selected,int count,List<Option> nativeEntries,java.util.function.IntPredicate include,java.util.function.IntFunction<String> category,java.util.function.IntFunction<String> label) {
         this.x=x;this.y=y+ROW_HEIGHT;this.width=width;this.count=Math.max(1,count*12/ROW_HEIGHT-1);
-        search=new net.minecraft.client.gui.GuiTextField(0,Minecraft.getMinecraft().fontRenderer,x+2,y+2,width+3,18);
-        search.setMaxStringLength(128);
         nativeOptions=nativeEntries!=null;
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
         else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && include.test(i))options.put(i,new Option(i,label.apply(i),category.apply(i),ScreenHousingTextures.fullTexture(i)));
@@ -125,7 +123,7 @@ final class HousingTextureList {
         return new HousingTextureList(x,y,width,material<0?CANOPY_GLASS_BASE+shade:material,8,entries);
     }
     HousingTextureList keepView(HousingTextureList previous){
-        if(previous!=null){expanded.addAll(previous.expanded);query=previous.query;search.setText(previous.search.getText());search.setFocused(previous.search.isFocused());rebuild();scroll=Math.min(maxScroll(),previous.scroll);ensureSelectedVisible();}
+        if(previous!=null){expanded.addAll(previous.expanded);query=previous.query;if(previous.search!=null){searchField().setText(previous.search.getText());search.setFocused(previous.search.isFocused());}rebuild();scroll=Math.min(maxScroll(),previous.scroll);ensureSelectedVisible();}
         return this;
     }
     static HousingTextureList forArmor(net.minecraft.item.ItemStack stack,int x,int y,int width,int selected) {
@@ -235,13 +233,19 @@ final class HousingTextureList {
         for(String token:query.split("\\s+"))if(!text.contains(token))return false;
         return true;
     }
+    private net.minecraft.client.gui.GuiTextField searchField(){
+        if(search==null){search=new net.minecraft.client.gui.GuiTextField(0,Minecraft.getMinecraft().fontRenderer,x+2,y-ROW_HEIGHT+2,width+3,18);search.setMaxStringLength(128);search.setText(query);}
+        return search;
+    }
     boolean searchClick(int mx,int my,int button){
         if(inventoryPicker!=null)return false;
+        net.minecraft.client.gui.GuiTextField search=searchField();
         boolean hit=mx>=search.x && mx<search.x+search.width && my>=search.y && my<search.y+search.height;
         search.mouseClicked(mx,my,button);return hit;
     }
     boolean searchKey(char character,int key){
         if(inventoryPicker!=null)return false;
+        net.minecraft.client.gui.GuiTextField search=searchField();
         if(net.minecraft.client.gui.GuiScreen.isCtrlKeyDown() && key==org.lwjgl.input.Keyboard.KEY_F){search.setFocused(true);return true;}
         if(!search.isFocused() || key==org.lwjgl.input.Keyboard.KEY_ESCAPE)return false;
         if(search.textboxKeyTyped(character,key)){String next=search.getText().trim().toLowerCase(Locale.ROOT);if(!next.equals(query)){query=next;scroll=0;rebuild();}}
@@ -309,6 +313,7 @@ final class HousingTextureList {
     }
     void draw(FontRenderer font,int mouseX,int mouseY) {
         if(inventoryPicker!=null){inventoryPicker.draw(mouseX,mouseY);return;}
+        net.minecraft.client.gui.GuiTextField search=searchField();
         TextureSearchInput.shown(this);
         int tick=Minecraft.getMinecraft().ingameGUI.getUpdateCounter();if(tick!=cursorTick){cursorTick=tick;search.updateCursorCounter();}
         search.drawTextBox();

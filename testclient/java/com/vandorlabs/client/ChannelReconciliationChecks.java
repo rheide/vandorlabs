@@ -16,12 +16,14 @@ final class ChannelReconciliationChecks {
         }
         Random random=new Random(14004);
         for(int step=0;step<2000;step++) {
-            // Neighbors may change more than once before one input event is delivered.
+            // Coalesce and reorder each changed source's input notifications.
+            Set<Member> changed=new LinkedHashSet<>();
             for(int change=0;change<1+random.nextInt(5);change++) {
-                Member source=members.get(random.nextInt(members.size()));source.on=random.nextBoolean();
+                Member source=members.get(random.nextInt(members.size()));source.on=random.nextBoolean();changed.add(source);
             }
             Member notified=members.get(random.nextInt(members.size()));
-            RedstoneChannels.inputChanged(notified);
+            changed.add(notified);List<Member> notifications=new ArrayList<>(changed);Collections.shuffle(notifications,random);
+            RedstoneChannels.beginTransfer(world);try{for(Member member:notifications)RedstoneChannels.inputChanged(member);}finally{RedstoneChannels.endTransfer(world);}
             verify(members);
             if(step%7==0) {
                 Member moved=members.get(random.nextInt(members.size()));
@@ -29,8 +31,7 @@ final class ChannelReconciliationChecks {
                 moved.on=random.nextBoolean();RedstoneChannels.register(moved);members.add(moved);verify(members);
             }
         }
-        for(Member member:members)member.on=false;
-        RedstoneChannels.inputChanged(members.get(0));verify(members);
+        RedstoneChannels.beginTransfer(world);try{for(Member member:members){member.on=false;RedstoneChannels.inputChanged(member);}}finally{RedstoneChannels.endTransfer(world);}verify(members);
         // Find a source, then deliver unrelated repeated neighbor notifications.
         Member source=members.get(31);source.on=true;RedstoneChannels.inputChanged(source);
         for(Member member:members)member.reads=0;
@@ -56,6 +57,8 @@ final class ChannelReconciliationChecks {
         Member(NonRenderingChecks.MemoryWorld world,int index){setWorld(world);setPos(new BlockPos(index,100,0));world.tiles.put(getPos(),this);}
         public TileEntity channelTile(){return this;}
         public int getRedstoneChannel(){return 14004;}
+        public com.vandorlabs.redstone.ChannelList transmittedChannels(){return getRedstoneChannels();}
+        public int transmissionRange(){return 0;}
         public void setRedstoneChannel(int value){throw new UnsupportedOperationException();}
         public boolean hasLocalRedstoneSignal(){reads++;return on;}
         public void setChannelSignal(boolean value){signal=value;}

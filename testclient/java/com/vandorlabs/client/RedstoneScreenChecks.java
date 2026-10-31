@@ -113,6 +113,8 @@ final class RedstoneScreenChecks {
         public TileEntity channelTile(){return this;}
         public int getRedstoneChannel(){return 41;}
         public ChannelList getRedstoneChannels(){return ChannelList.of(41,42);}
+        public ChannelList transmittedChannels(){return getRedstoneChannels();}
+        public int transmissionRange(){return 0;}
         public void setRedstoneChannel(int channel){}
         public boolean hasLocalRedstoneSignal(){return on;}
         public void setChannelSignal(boolean value){}

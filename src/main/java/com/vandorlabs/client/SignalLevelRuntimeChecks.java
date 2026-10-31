@@ -100,6 +100,8 @@ public final class SignalLevelRuntimeChecks {
         Source(World world,BlockPos pos){setWorld(world);setPos(pos);}
         public TileEntity channelTile(){return this;}
         public int getRedstoneChannel(){return 16001;}
+        public ChannelList transmittedChannels(){return ChannelList.of(16001);}
+        public int transmissionRange(){return 16;}
         public void setRedstoneChannel(int channel){}
         public boolean hasLocalRedstoneSignal(){return level>0;}
         public int localSignalLevel(int channel){return level;}

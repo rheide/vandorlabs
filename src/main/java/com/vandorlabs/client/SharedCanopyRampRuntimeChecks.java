@@ -33,7 +33,7 @@ final class SharedCanopyRampRuntimeChecks {
     static void run(World world,EntityPlayerMP actor){
         CanopyReservationRuntimeChecks.run(world,actor);
         Vec3d before=actor.getPositionVector();long time=world.getTotalWorldTime();
-        Source source=new Source();source.setWorld(world);source.setPos(RAMP.west(12));
+        Source source=new Source();source.setWorld(world);source.setPos(RAMP.west(12));com.vandorlabs.redstone.RedstoneFixtureTransmitters.equip(source);
         try{for(int order=0;order<3;order++){boolean rampFirst=order==0;source.high=false;RedstoneChannels.register(source);
             clear(world);BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:large_front_canopy_glass");
             LargeCanopySettings settings=new LargeCanopySettings();settings.depth=24;settings.scale=50;settings.hinge=2;settings.openable=true;settings.redstone=true;settings.channels=ChannelList.of(801);

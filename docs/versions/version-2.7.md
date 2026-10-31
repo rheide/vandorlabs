@@ -282,3 +282,7 @@ surfaces; changing size preserves artwork and settings.
 Applying unchanged programmable settings preserves saved texture identities and
 avoids redundant block updates, dirty saves and render-cache invalidation, including
 legacy display aliases and default transmitter settings.
+
+Clearing a receiver’s last channel removes its received signal immediately.
+Temporary channel changes inside an ownership transfer publish only the final
+installed signal, avoiding an intermediate Off pulse.

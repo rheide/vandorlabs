@@ -49,6 +49,7 @@ final class TurntableFollowupRuntimeChecks {
             }
             TurntableTransactionsChecks.restore(tile,player);for(com.vandorlabs.vehicle.VehicleStructure.Cell cell:expected.blocks.cells)require(world.getBlockState(expected.origin.add(cell.pos))==cell.state,"quarter-turn restores wedge corners");
             for(BlockPos p:tile.layout.cells)require(!BlockTurntableSurface.locked(world,p),"Restore releases every surface lock");
+            RedstoneFixtureTransmitters.equip(first);RedstoneFixtureTransmitters.equip(second);
             RedstoneChannels.register(first);RedstoneChannels.register(second);
             NBTTagCompound settings=tile.writeToNBT(new NBTTagCompound());settings.setString("DirectionChannels","65011,65012");tile.settings(settings);tile.update();TurntableTransactions.drainForChecks(world);boolean original=tile.clockwise;
             first.on=true;RedstoneChannels.inputChanged(first);tile.update();TurntableTransactions.drainForChecks(world);require(tile.clockwise==original,"direction waits for all channels");

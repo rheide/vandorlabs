@@ -16,7 +16,7 @@ final class ChannelListChecks {
         int[] maximum=new int[ChannelList.MAX_CHANNELS];for(int i=0;i<maximum.length;i++)maximum[i]=Integer.MAX_VALUE-i;
         ChannelList full=ChannelList.of(maximum);require(full.equals(ChannelList.parse(full.toString())),"maximum canonical list cannot be reopened");
         int[] copy=full.toArray();copy[0]=0;require(!full.contains(0),"channel list is mutable");
-        persistence();packets();copying();orSignals();latches();
+        persistence();packets();copying();emptyBank();orSignals();latches();
         System.out.println("PASS: channel-list parsing, legacy/list NBT, independent latch banks, multi-source OR, edits and unloads");
     }
     static void packetExtensions(){packets();}
@@ -101,6 +101,12 @@ final class ChannelListChecks {
         ChannelData.write(bytes,ChannelList.of(1,2,3));require(ChannelData.read(bytes,1).equals(ChannelList.of(1,2,3)),"packet list roundtrip");bytes.release();
         bytes=io.netty.buffer.Unpooled.buffer();bytes.writeByte(65);require(ChannelData.read(bytes,1)==null,"oversized packet accepted");bytes.release();
     }
+    private static void emptyBank(){
+        NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);Member source=new Member(world,0,ChannelList.of(1)),receiver=new Member(world,1,ChannelList.of(1));source.on=true;RedstoneChannels.register(source);RedstoneChannels.register(receiver);require(receiver.signal,"empty bank positive control");
+        receiver.setRedstoneChannels(ChannelList.EMPTY);require(!receiver.signal,"clearing the last channel retained power");receiver.setRedstoneChannels(ChannelList.of(1));require(receiver.signal,"restoring the channel did not regain power");
+        int edges=receiver.edges;RedstoneChannels.beginTransfer(world);try{receiver.setRedstoneChannels(ChannelList.EMPTY);receiver.setRedstoneChannels(ChannelList.of(1));}finally{RedstoneChannels.endTransfer(world);}require(receiver.signal&&receiver.edges==edges,"temporary empty bank leaked a transfer edge");
+        RedstoneChannels.beginTransfer(world);try{receiver.setRedstoneChannels(ChannelList.EMPTY);require(receiver.signal,"empty bank published before transfer completion");}finally{RedstoneChannels.endTransfer(world);}require(!receiver.signal,"final empty bank did not clear at transfer completion");RedstoneChannels.unregister(source);RedstoneChannels.unregister(receiver);
+    }
     private static void orSignals() {
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
         List<Member> members=new ArrayList<>();Random random=new Random(140041);
@@ -147,19 +153,21 @@ final class ChannelListChecks {
         for(Member consumer:members) {
             boolean expected=false;
             for(Member source:members)if(source.on)for(int i=0;i<source.channels.size();i++)expected|=consumer.channels.contains(source.channels.get(i));
-            require(consumer.signal==expected,"multi-channel OR differs after membership/input change");
+            require(consumer.signal==expected,"multi-channel OR differs after membership/input change: channels="+consumer.channels+" expected="+expected+" actual="+consumer.signal);
         }
     }
     private static class Member extends TileEntity implements RedstoneChannelMember {
-        ChannelList channels;boolean on,signal;
+        ChannelList channels;boolean on,signal;int edges;
         Member(NonRenderingChecks.MemoryWorld world,int index,ChannelList channels){setWorld(world);setPos(new BlockPos(index,100,0));this.channels=channels;world.tiles.put(getPos(),this);}
         public TileEntity channelTile(){return this;}
         public int getRedstoneChannel(){return channels.first();}
         public ChannelList getRedstoneChannels(){return channels;}
+        public ChannelList transmittedChannels(){return channels;}
+        public int transmissionRange(){return 0;}
         public void setRedstoneChannel(int value){setRedstoneChannels(ChannelList.of(value));}
         public void setRedstoneChannels(ChannelList next){ChannelList old=channels;channels=next;RedstoneChannels.channelChanged(this,old);}
         public boolean hasLocalRedstoneSignal(){return on;}
-        public void setChannelSignal(boolean value){signal=value;}
+        public void setChannelSignal(boolean value){if(signal!=value)edges++;signal=value;}
     }
     private static final class Latch extends Member implements RedstoneChannelLatch {
         ChannelList active=ChannelList.EMPTY;

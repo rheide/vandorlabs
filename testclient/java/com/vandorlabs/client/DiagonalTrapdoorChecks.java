@@ -247,8 +247,9 @@ final class DiagonalTrapdoorChecks {
             settings.setInteger(ProgrammableSettings.WALL_TEXTURE,7);settings.setInteger(ProgrammableSettings.CHANNEL,18);require(ProgrammableSettings.apply(world,base,settings),"group copy failed");
             for(BlockPos p:cells){TileEntityProgrammableDiagonalTrapdoor tile=(TileEntityProgrammableDiagonalTrapdoor)world.getTileEntity(p);require(tile.getHousingTexture()==7 && tile.getRedstoneChannel()==18 && tile.group().size()==4,"copy broke group");}
             ItemStack crafted=ProgrammableSettings.applyToItem(new ItemStack(item),settings);require(!crafted.isEmpty() && crafted.getSubCompound("BlockEntityTag").getInteger("TrapdoorPosition")==mode,"crafted geometry lost");
-            TileEntityProgrammableDiagonalTrapdoor sender=place(world,base.east(10),mode,EnumFacing.NORTH,false,false,0);sender.setRedstoneChannel(18);
-            world.setBlockState(sender.getPos().down(),Blocks.REDSTONE_BLOCK.getDefaultState(),2);sender.localInputChanged();for(BlockPos p:cells)require(open(world,p),"virtual power failed");sender.invalidate();
+            BlockPos senderPos=base.east(10);world.setBlockState(senderPos,new BlockWirelessRedstone(true).getDefaultState().withProperty(BlockWirelessRedstone.FACING,EnumFacing.DOWN),2);
+            TileEntityWirelessRedstone sender=(TileEntityWirelessRedstone)world.getTileEntity(senderPos);sender.setRedstoneChannel(18);
+            world.setBlockState(sender.getPos().down(),Blocks.REDSTONE_BLOCK.getDefaultState(),2);sender.sampleInput();for(BlockPos p:cells)require(open(world,p),"virtual power failed");sender.invalidate();
         }
     }
     private static void continuedSurfaces() {

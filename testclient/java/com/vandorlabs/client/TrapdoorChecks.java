@@ -323,6 +323,10 @@ final class TrapdoorChecks {
         TileEntityWirelessRedstone sender=(TileEntityWirelessRedstone)world.getTileEntity(senderPos);sender.setRedstoneChannel(7);
         world.setBlockState(senderPos.down(),Blocks.REDSTONE_BLOCK.getDefaultState(),2);sender.sampleInput();
         for(BlockPos cell:cells)require(open(world,cell),"virtual channel failed to open square");
+        for(TileEntityProgrammableTrapdoor leaf:first.group())leaf.setRedstoneChannels(com.vandorlabs.redstone.ChannelList.EMPTY);
+        for(BlockPos cell:cells)require(!open(world,cell),"clearing the last channel retained trapdoor power");
+        for(TileEntityProgrammableTrapdoor leaf:first.group())leaf.setRedstoneChannel(7);
+        for(BlockPos cell:cells)require(open(world,cell),"restored channel did not reopen trapdoor");
         world.setBlockState(senderPos.down(),Blocks.AIR.getDefaultState(),2);sender.sampleInput();for(BlockPos cell:cells)require(!open(world,cell),"virtual channel removal failed");
         for(TileEntityProgrammableTrapdoor leaf:first.group())leaf.configure(3,2,false,SpaceDoorData.TRIGGER_REDSTONE_OFF,7);
         for(BlockPos cell:cells)require(open(world,cell),"inverse redstone trigger failed");

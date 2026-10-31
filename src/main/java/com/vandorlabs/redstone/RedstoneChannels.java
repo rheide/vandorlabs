@@ -146,7 +146,7 @@ public final class RedstoneChannels {
         private final Map<RedstoneChannelMember,ChannelList> outputs=new IdentityHashMap<>();
         private final Map<Integer,Index> indexes=new java.util.HashMap<>();
         private final Map<Integer,Recipients> recipients=new java.util.HashMap<>();
-        private final Set<RedstoneChannelMember> affected=identitySet();
+        private final Set<RedstoneChannelMember> affected=identitySet(),pendingClears=identitySet();
         private final Map<Integer,Integer> powerSources=new java.util.HashMap<>();
         private final Map<RedstoneChannelMember,int[]> delivered=new IdentityHashMap<>();
         private static ChannelList union(ChannelList a,ChannelList b){return a.equals(b)?a:a.isEmpty()?b:b.isEmpty()?a:a.union(b);}
@@ -155,11 +155,11 @@ public final class RedstoneChannels {
             ChannelList next=union(member.getRedstoneChannels(),member.transmittedChannels()),previous=subscriptions.get(member);if(next.equals(previous))return;
             Set<Integer> changed=previous==null?channels(next):channels(union(previous,next));
             if(previous!=null)for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.positions.isEmpty())recipients.remove(c);}}
-            if(next.isEmpty()){subscriptions.remove(member);delivered.remove(member);}else {subscriptions.put(member,next);for(int c:channels(next)){members.computeIfAbsent(c,k->identitySet()).add(member);recipients.computeIfAbsent(c,k->new Recipients(stats)).put(member,member.channelPosition());}affected.add(member);}
+            if(next.isEmpty()){subscriptions.remove(member);delivered.remove(member);pendingClears.add(member);}else {pendingClears.remove(member);subscriptions.put(member,next);for(int c:channels(next)){members.computeIfAbsent(c,k->identitySet()).add(member);recipients.computeIfAbsent(c,k->new Recipients(stats)).put(member,member.channelPosition());}affected.add(member);}
             if(isLatch(member)&&member.transmissionRange()>=0){RedstoneChannelLatch latch=(RedstoneChannelLatch)member;Map<Integer,Integer> levels=new java.util.HashMap<>();ChannelList list=member.getRedstoneChannels();for(int i=0;i<list.size();i++){int channel=list.get(i),value=latch.latchedLevel(channel);Set<RedstoneChannelMember> set=members.get(channel);boolean found=false;int maximum=0;if(set!=null)for(RedstoneChannelMember other:set)if(other!=member&&isLatch(other)&&other.isChannelMemberActive()&&other.transmittedChannels().contains(channel)&&inside(other.channelPosition(),member.channelPosition(),other.transmissionRange())){found=true;maximum=Math.max(maximum,((RedstoneChannelLatch)other).latchedLevel(channel));}levels.put(channel,found?maximum:value);}latch.applyLinkedLevels(levels);}
             refresh(member);settle(changed);
         }
-        void unregister(RedstoneChannelMember member){ChannelList previous=subscriptions.remove(member);ChannelList old=outputs.remove(member);if(old!=null)for(int c:channels(old)){Index index=indexes.get(c);if(index!=null){affect(c,index.all.get(member));index.remove(member);}}delivered.remove(member);if(previous==null)return;for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.positions.isEmpty())recipients.remove(c);}}settle(channels(previous));}
+        void unregister(RedstoneChannelMember member){pendingClears.remove(member);ChannelList previous=subscriptions.remove(member);ChannelList old=outputs.remove(member);if(old!=null)for(int c:channels(old)){Index index=indexes.get(c);if(index!=null){affect(c,index.all.get(member));index.remove(member);}}delivered.remove(member);if(previous==null)return;for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.positions.isEmpty())recipients.remove(c);}}settle(channels(previous));}
         private void refresh(RedstoneChannelMember member){
             ChannelList previous=outputs.remove(member);if(previous!=null)for(int c:channels(previous)){Index index=indexes.get(c);if(index!=null){affect(c,index.all.get(member));index.remove(member);}}
             ChannelList list=member.transmittedChannels();if(member.transmissionRange()<0||!member.isChannelMemberActive())return;
@@ -179,6 +179,8 @@ public final class RedstoneChannels {
         private void settle(Set<Integer> changed){
             if(transferDepth>0){transferChannels.addAll(changed);return;}
             SignalUpdateBatch.apply(()->{Set<RedstoneChannelMember> notify=identitySet();notify.addAll(affected);affected.clear();for(int c:changed){Index index=indexes.get(c);int maximum=index==null?0:index.maximum();if(index!=null&&index.all.isEmpty())indexes.remove(c);if(maximum==0)powerSources.remove(c);else powerSources.put(c,maximum);Set<RedstoneChannelMember> set=members.get(c);if(set!=null&&set.isEmpty())members.remove(c);}
+                Set<RedstoneChannelMember> clear=identitySet();clear.addAll(pendingClears);pendingClears.clear();
+                for(RedstoneChannelMember member:clear)if(!subscriptions.containsKey(member)&&member.isChannelMemberActive()){stats.deliveries++;member.setChannelLevel(0);}
                 for(RedstoneChannelMember member:notify)if(subscriptions.containsKey(member)&&member.isChannelMemberActive()){int value=0;ChannelList list=member.getRedstoneChannels();int[] previous=delivered.get(member);boolean changedBank=previous==null||previous.length!=list.size();if(changedBank){previous=new int[list.size()];delivered.put(member,previous);}for(int i=0;i<list.size();i++){int channelLevel=at(member.channelPosition(),list.get(i));if(previous[i]!=channelLevel)changedBank=true;previous[i]=channelLevel;value=Math.max(value,channelLevel);}if(changedBank){stats.deliveries++;member.setChannelLevel(value);}}
             });
         }

@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Clear stale received redstone power when the last channel is removed, while coalescing temporary channel changes during ownership transfers.
+
 - Avoid redundant updates and cache invalidation when applying unchanged programmable settings, including legacy display aliases and default transmitter settings. Preserve the original saved texture identity on a no-op change.
 
 - Complete matching Classic/Cool/Gold expansion displays and Large City Transit variants; add Door Controller in both heights for every style. Replace five Classic Half animations with dedicated half-height compositions.

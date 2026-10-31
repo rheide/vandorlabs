@@ -22,7 +22,7 @@ final class TextureTierChecks {
                 int target=ScreenHousingTextures.clamp(choice);require(target!=choice,"legacy alias unchanged");
                 require(ScreenHousingTextures.texture(choice).equals(ScreenHousingTextures.texture(target)),"legacy material square texture lost");
                 require(ScreenHousingTextures.fullTexture(choice).equals(ScreenHousingTextures.fullTexture(target)),"legacy face artwork lost");
-                require(!ScreenHousingTextures.visible(choice),"old High still visible");legacyAliases++;
+                require(!ScreenHousingTextures.visible(choice),"legacy alias still visible");if(e.has("detail")&&e.get("detail").getAsInt()==2)legacyAliases++;
             }
             if(e.has("textureFamily") && e.get("detail").getAsInt()==1) {
                 String family=e.get("textureFamily").getAsString();int small=ScreenHousingTextures.sizedTextureIndex(family,0);
