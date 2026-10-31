@@ -91,6 +91,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   -Dvandorlabs.documentationDoorGif="${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" \
   -Dvandorlabs.documentationAnimations="${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" \
   -Dvandorlabs.documentationAnimationFilter="${VANDOR_LABS_DOCUMENTATION_ANIMATION_FILTER:-}" \
+  -Dvandorlabs.trapdoorFrameRegressionOnly="${VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY:-false}" \
   -Dvandorlabs.trapdoorChecksOnly="${VANDOR_LABS_TRAPDOOR_CHECKS_ONLY:-false}" \
   -Dvandorlabs.lightPickerChecksOnly="${VANDOR_LABS_LIGHT_PICKER_CHECKS_ONLY:-false}" \
   -Dvandorlabs.lightChecksOnly="${VANDOR_LABS_LIGHT_CHECKS_ONLY:-false}" \

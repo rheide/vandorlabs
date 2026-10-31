@@ -639,6 +639,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.trapdoorFrameRegressionOnly")){try{TrapdoorFrameChecks.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Trapdoor frame regression",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.pbrMaterialChecksOnly")){try{PbrMaterialRuntimeChecks.run(mc);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("PBR material resources",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.materialFinishChecksOnly")){try{if(MaterialFinishRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Material finish picker",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.duplifierDirectionChecksOnly")){try{if(DuplifierDirectionLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Duplifier direction",failure);}return;}

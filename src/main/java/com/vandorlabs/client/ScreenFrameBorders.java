@@ -27,7 +27,7 @@ final class ScreenFrameBorders {
     }
     private static double[] load(int choice){
         if(choice<0)return new double[4];
-        if(!FrameAppearance.border(choice))return new double[]{1D/16,1D/16,1D/16,1D/16};
+        if(!FrameAppearance.valid(choice)||!FrameAppearance.border(choice))return new double[]{1D/16,1D/16,1D/16,1D/16};
         ResourceLocation sprite=new ResourceLocation(ScreenHousingTextures.texture(choice));
         ResourceLocation file=new ResourceLocation(sprite.getResourceDomain(),"textures/"+sprite.getResourcePath()+".png");
         try(java.io.InputStream stream=Minecraft.getMinecraft().getResourceManager().getResource(file).getInputStream()){

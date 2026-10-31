@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
-unset VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
+unset VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
@@ -126,6 +126,9 @@ case "${1:-}" in
         elif [ "$TARGET" = cockpit ]; then
             PREFIX=cockpit_
             export VANDOR_LABS_COCKPIT_CHECKS_ONLY=true
+        elif [ "$TARGET" = trapdoor-frames ]; then
+            PREFIX=trapdoor_
+            export VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY=true
         elif [ "$TARGET" = door-appearance ]; then
             PREFIX=door_
             export VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY=true
@@ -448,6 +451,12 @@ if [ "$MODE" = focus ]; then
         grep -q 'cockpit-wall-canopy PASS cases=6' "$RUN_OUT/client.log"
         grep -q 'cockpit-focused PASS' "$RUN_OUT/client.log"
         echo "Live cockpit checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = trapdoor-frames ]; then
+        grep -q "trapdoor-solid-materials PASS" "$RUN_OUT/client.log"
+        grep -q "trapdoor-frame-aperture PASS" "$RUN_OUT/client.log"
+        echo "Live trapdoor material and cutout checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = door-appearance ]; then

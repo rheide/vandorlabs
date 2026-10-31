@@ -22,6 +22,7 @@ import org.lwjgl.opengl.GL11;
 /** Emitted triangles must leave the aperture open and connect both sides at authored inner edges. */
 final class TrapdoorFrameChecks {
  static void run(Minecraft mc,File output)throws Exception{
+  solidMaterials(mc);
   int choice=ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1"),cases=0;
   TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice));
   for(boolean diagonal:new boolean[]{false,true})for(int position=0;position<3;position++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean inverted:new boolean[]{false,true})for(boolean sliding:new boolean[]{false,true})for(int layout=0;layout<3;layout++){
@@ -45,6 +46,24 @@ final class TrapdoorFrameChecks {
    }
   }
   System.out.println("[vandorlabs][reprolab] trapdoor-frame-aperture PASS cases="+cases+" regular diagonal all mounts facings inversions hinge/slide closed/moving/open all layouts inner-walls");
+ }
+ private static void solidMaterials(Minecraft mc){
+  LinkedHashSet<Integer> choices=new LinkedHashSet<>();choices.add(ScreenHousingTextures.screenIndex("cargo_doors/low/reinforced_leaf"));
+  for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i)&&(!FrameAppearance.valid(i)||!FrameAppearance.border(i)))choices.add(i);
+  require(ScreenHousingTextures.texture(choices.iterator().next()).endsWith("door_reinforced_leaf_low_half"),"reported virtual Reinforced Leaf sprite missing");
+  int cases=0;for(int choice:choices){require(choice>=0,"reported Reinforced Leaf choice missing");
+   TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));require(sprite!=mc.getTextureMapBlocks().getMissingSprite(),"solid leaf sprite missing: "+choice);
+   for(boolean diagonal:new boolean[]{false,true})for(int position=0;position<3;position++){
+    Block block=Block.getBlockFromName(diagonal?"vandorlabs:programmable_diagonal_trapdoor":"vandorlabs:programmable_trapdoor");IBlockState state=block.getDefaultState();
+    TileEntityProgrammableTrapdoor seed=diagonal?new TileEntityProgrammableDiagonalTrapdoor():new TileEntityProgrammableTrapdoor();seed.configure(choice,position,false,0,0);
+    VehicleWorld world=new VehicleWorld(mc.world,VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,state,seed.writeToNBT(new NBTTagCompound())))));
+    TileEntityProgrammableTrapdoor tile=(TileEntityProgrammableTrapdoor)world.getTileEntity(BlockPos.ORIGIN);BufferBuilder b=new BufferBuilder(4096);b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());TEProgrammableTrapdoor.drawConfiguredLeaf(b,sprite,tile,state,0,0xf000f0);b.finishDrawing();
+    double[][] corners=diagonal?BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,0):tile.corners(state,0),transform=inverse(corners),uv=TEProgrammableTrapdoor.materialCoordinates(tile,state);int component=diagonal&&position!=2?1:2,u=axis(uv,0),v=axis(uv,component),depth=3-u-v,stride=BlockSurfaceFormat.get().getNextOffset();boolean[] covered=new boolean[2];ByteBuffer bytes=b.getByteBuffer();
+    for(int vertex=0;vertex<b.getVertexCount();vertex+=4){double[][] q=new double[4][3];for(int j=0;j<4;j++)for(int a=0;a<3;a++){q[j][a]=transform[a][3];for(int k=0;k<3;k++)q[j][a]+=transform[a][k]*bytes.getFloat((vertex+j)*stride+k*4);}for(int side=0;side<2;side++){boolean plane=true;for(double[] point:q)plane&=Math.abs(point[depth]-side)<1e-4;if(plane&&(inside(q[0],q[1],q[2],u,v)||inside(q[0],q[2],q[3],u,v)))covered[side]=true;}}
+    require(covered[0]&&covered[1],"ordinary material leaf must cover its center on both sides, choice="+choice+" diagonal="+diagonal+" position="+position+" vertices="+b.getVertexCount());cases++;
+   }
+  }
+  System.out.println("[vandorlabs][reprolab] trapdoor-solid-materials PASS cases="+cases+" exact reported Reinforced Leaf virtual-half sprite, all visible non-cutout catalog choices regular/diagonal all positions solid leaf centers");
  }
  private static boolean inside(double[] a,double[] b,double[] c,int u,int v){double area=cross(a,b,c,u,v);if(Math.abs(area)<1e-8)return false;double[] p=new double[3];p[u]=.473;p[v]=.519;double x=cross(p,b,c,u,v)/area,y=cross(a,p,c,u,v)/area,z=cross(a,b,p,u,v)/area;return x>1e-5&&y>1e-5&&z>1e-5;}
  private static double cross(double[] a,double[] b,double[] c,int u,int v){return (b[u]-a[u])*(c[v]-a[v])-(b[v]-a[v])*(c[u]-a[u]);}

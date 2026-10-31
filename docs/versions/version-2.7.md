@@ -38,9 +38,10 @@ case and accepts multiple words. Clearing the search restores the current
 category view; filtering keeps the selected material and supports wheel scrolling
 and scrollbar dragging. Escape closes the dialog normally.
 
-Trapdoor leaf pickers also offer the authored Frame artwork. Transparent frame
-regions retain a solid metal backing. These choices apply the existing image to
-the leaf surface; they do not introduce another frame assembly or new textures.
+Trapdoor leaf pickers also offer the authored Frame artwork. Border frames
+have open centers with opaque inner walls through the leaf depth. Ordinary
+materials and frame background finishes retain a complete leaf surface; virtual
+door sprites are sampled from the atlas without being opened as PNG files.
 
 Artwork pickers use short company names and explicit Full/Half frame labels,
 with the current selection revealed when switching tabs. Glass and unsplit

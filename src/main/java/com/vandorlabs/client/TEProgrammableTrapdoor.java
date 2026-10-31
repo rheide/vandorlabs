@@ -50,7 +50,8 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
             boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
             boolean tiled=materialCoordinates(tile,state,group,scratch.closed,scratch.uv,UnifiedTextureSprites.aspect(sprite));
             TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
-            if(com.vandorlabs.tiles.FrameAppearance.border(tile.getHousingTexture())) {
+            // Only authored Frame choices have an aperture. Ordinary/virtual door sprites are solid leaves.
+            if(tile.getHousingTexture()>=0 && com.vandorlabs.tiles.FrameAppearance.valid(tile.getHousingTexture()) && com.vandorlabs.tiles.FrameAppearance.border(tile.getHousingTexture())) {
                 TrapdoorFrameMesh.draw(buffer,sprite,edge,scratch.moving,scratch.uv,scratch.frame,light,tile.getHousingTexture(),first,tiled);
                 return;
             }

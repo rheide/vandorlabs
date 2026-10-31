@@ -2,6 +2,8 @@
 
 ## 2.7 (in development)
 
+- Keep ordinary programmable trapdoor materials solid and restrict open-center extrusion to Frame artwork; avoid reading virtual door sprites as PNG files while rendering.
+
 - Reduce repeated Canopy settings/connection work and skip empty Opaque glass passes; retain measured vanilla/Canopy CPU, allocation and geometry comparisons in the performance guide.
 - Give regular and Large White Glass, Dark Glass and Slim Glass doors a Glass material picker with native shades, general materials, tint/layout controls and Original reset. Preserve finishes through saves, configured items and Duplifier copying.
 - Add opaque inner reveal walls to Slim Glass openings and apply Interior finishes to glass-door leaf reveals. Keep Front finishes separate and tile square frame materials at their world pixel scale.
