@@ -64,7 +64,7 @@ final class ArmPayloadRenderer {
     }
     private static Vec3d inverse(Vec3d point,Vec3d origin,Vec3d a,Vec3d b,Vec3d c){Vec3d p=point.subtract(origin);return new Vec3d(p.dotProduct(a),p.dotProduct(b),p.dotProduct(c));}
     static void render(GearTileEntity arm,double progress,double x,double y,double z,float partial){
-        ArmPayload payload=arm.payload();if(payload==null||payload.materialized()||payload.hasOwnershipJournal())return;
+        ArmPayload payload=arm.payload();if(payload==null)return;boolean surfaceHandoff=payload.materialized()&&com.vandorlabs.client.SurfaceArmHandoff.fallback(arm);if(payload.materialized()&&!surfaceHandoff||!surfaceHandoff&&payload.hasOwnershipJournal())return;if(surfaceHandoff)progress=arm.progress();
         Vec3d origin=payload.transform(arm,progress,0,0,0),a=payload.transform(arm,progress,1,0,0).subtract(origin),b=payload.transform(arm,progress,0,1,0).subtract(origin),c=payload.transform(arm,progress,0,0,1).subtract(origin);
         TileEntityRendererDispatcher dispatcher=TileEntityRendererDispatcher.instance;
         double oldX=dispatcher.entityX,oldY=dispatcher.entityY,oldZ=dispatcher.entityZ;net.minecraft.world.World old=dispatcher.world;int oldPass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
@@ -81,13 +81,13 @@ final class ArmPayloadRenderer {
             for(int pass=0;pass<2;pass++){
                 net.minecraftforge.client.ForgeHooksClient.setRenderPass(pass);
                 for(BlockRenderLayer layer:BlockRenderLayer.values())if((layer==BlockRenderLayer.TRANSLUCENT)==(pass==1)){
-                    VertexBuffer buffer=mesh.buffers.get(layer);if(buffer==null)continue;
+                    if(surfaceHandoff)continue;VertexBuffer buffer=mesh.buffers.get(layer);if(buffer==null)continue;
                     GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.enableTexture2D();Minecraft.getMinecraft().getTextureManager().bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.color(1,1,1,1);
                     if(pass==1){GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.depthMask(false);}else{GlStateManager.disableBlend();GlStateManager.depthMask(true);}
                     net.minecraftforge.client.ForgeHooksClient.setRenderLayer(layer);BlockMeshVbo.draw(buffer,mesh.format,layer);
                 }
                 GlStateManager.depthMask(true);net.minecraftforge.client.ForgeHooksClient.setRenderLayer(null);
-                for(TileEntity tile:tiles)if(tile.shouldRenderInPass(pass)){
+                for(TileEntity tile:tiles)if(tile.shouldRenderInPass(pass)&&(!surfaceHandoff||tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)){
                     TileEntitySpecialRenderer renderer=dispatcher.getRenderer(tile);if(renderer==null)continue;BlockPos p=tile.getPos();GlStateManager.pushMatrix();try{renderer.render(tile,p.getX(),p.getY(),p.getZ(),partial,-1,1);}finally{GlStateManager.popMatrix();}
                 }
             }

@@ -67,6 +67,17 @@ public final class ArmPayload {
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.origin=arm.getPos().add(offset);for(TileEntity tile:view.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).carriedArm=arm;}return view;}
     BlockPos materializedOrigin(GearTileEntity arm){return arm.getPos().add(placedOffset);}
     Set<BlockPos> placedSurfaceCells(GearTileEntity arm){Set<BlockPos> result=new HashSet<>();BlockPos origin=materializedOrigin(arm);for(VehicleStructure.Cell cell:placed().cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)result.add(origin.add(cell.pos));return result;}
+    public Set<BlockPos> surfaceEndpointCells(GearTileEntity arm){
+        if(materialized)return placedSurfaceCells(arm);
+        return surfaceCellsAt(arm,arm.progress());
+    }
+    Set<BlockPos> surfaceHandoffCells(GearTileEntity arm){
+        Set<BlockPos> result=surfaceCellsAt(arm,0);result.addAll(surfaceCellsAt(arm,1));return result;
+    }
+    private Set<BlockPos> surfaceCellsAt(GearTileEntity arm,double progress){
+        Endpoint endpoint=endpoint(arm,progress);Set<BlockPos> result=new HashSet<>();if(endpoint==null)return result;
+        for(VehicleStructure.Cell cell:blocks.cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)result.add(endpoint.placed(arm.getPos().add(offset).add(cell.pos)));return result;
+    }
     public boolean materialized(){return materialized;}
     public boolean isSurfaceLayer(){for(VehicleStructure.Cell cell:blocks.cells)if(!(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface))return false;return !blocks.cells.isEmpty();}
     static void validateSyncBudget(byte[] encoded)throws java.io.IOException{

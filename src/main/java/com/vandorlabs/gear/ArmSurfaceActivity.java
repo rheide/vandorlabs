@@ -11,13 +11,13 @@ public final class ArmSurfaceActivity {
     private static final Map<GearTileEntity,Registration> registrations=new IdentityHashMap<>();
     private static final class Registration {
         final World world;final ArmPayload payload;final Object assembly;final BlockPos origin;final Set<BlockPos> positions;
-        Registration(GearTileEntity arm,boolean discover){world=arm.getWorld();payload=arm.payload();assembly=arm.assembly();origin=payload==null?arm.getPos():payload.materializedOrigin(arm);positions=discover?ArmPayload.attachedSurfaceCells(arm):payload==null?Collections.emptySet():payload.placedSurfaceCells(arm);}
+        Registration(GearTileEntity arm,boolean discover){world=arm.getWorld();payload=arm.payload();assembly=arm.assembly();origin=payload==null?arm.getPos():payload.materializedOrigin(arm);positions=payload!=null&&!payload.materialized()?(world.isRemote?payload.surfaceHandoffCells(arm):payload.surfaceEndpointCells(arm)):discover?ArmPayload.attachedSurfaceCells(arm):payload==null?Collections.emptySet():payload.placedSurfaceCells(arm);}
     }
     public static synchronized void refresh(GearTileEntity arm){refresh(arm,false);}
     public static synchronized void discover(GearTileEntity arm){if(arm.getWorld()!=null&&arm.getWorld().isBlockLoaded(arm.getPos())&&arm.getWorld().getTileEntity(arm.getPos())==arm)refresh(arm,true);}
     private static void refresh(GearTileEntity arm,boolean discover){
         ArmPayload payload=arm.payload();Registration old=registrations.get(arm);
-        boolean nativeCells=arm.getWorld()!=null&&!(arm.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)&&!arm.isInvalid()&&!arm.isFixedMount()&&arm.isController()&&(payload==null?arm.progress()==1:payload.materialized());
+        boolean nativeCells=arm.getWorld()!=null&&!(arm.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)&&!arm.isInvalid()&&!arm.isFixedMount()&&arm.isController()&&(payload==null?arm.progress()==1:payload.materialized()||arm.getWorld().isRemote||arm.progress()==0||arm.progress()==1);
         if(!discover&&old!=null&&nativeCells&&old.assembly==arm.assembly()&&old.world==arm.getWorld()&&old.payload==payload&&old.origin.equals(payload==null?arm.getPos():payload.materializedOrigin(arm)))return;
         remove(arm);
         if(nativeCells){Registration next=new Registration(arm,discover);registrations.put(arm,next);Map<BlockPos,GearTileEntity> map=cells.computeIfAbsent(next.world,w->new HashMap<>());for(BlockPos p:next.positions)map.put(p,arm);}
@@ -39,11 +39,11 @@ public final class ArmSurfaceActivity {
     }
     public static synchronized void remove(GearTileEntity arm){Registration old=registrations.remove(arm);if(old==null)return;Map<BlockPos,GearTileEntity> map=cells.get(old.world);if(map!=null){for(BlockPos p:old.positions)map.remove(p,arm);if(map.isEmpty())cells.remove(old.world);}}
     public static synchronized void unload(World world){cells.remove(world);registrations.entrySet().removeIf(e->e.getValue().world==world);}
-    public static synchronized Boolean activity(TileEntityTurntableSurface surface){
+    public static synchronized GearTileEntity owner(TileEntityTurntableSurface surface){
         GearTileEntity arm=surface.carriedArm;
         if(arm==null){Map<BlockPos,GearTileEntity> map=cells.get(surface.getWorld());arm=map==null?null:map.get(surface.getPos());}
-        if(arm==null||arm.isInvalid())return null;
-        return arm.surfaceActive();
+        return arm==null||arm.isInvalid()?null:arm;
     }
+    public static Boolean activity(TileEntityTurntableSurface surface){GearTileEntity arm=owner(surface);return arm==null?null:arm.surfaceActive();}
     private ArmSurfaceActivity(){}
 }

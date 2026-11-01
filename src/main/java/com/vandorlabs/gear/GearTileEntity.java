@@ -183,6 +183,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private double progress = 1.0;
     private boolean surfaceDepartureActive=true,surfaceDepartureSaved=true,surfaceDepartureTarget=true;
     /** Only reaching an endpoint changes the surface appearance, including on reversal. */
+    public transient Object surfaceVisualHandoff;
     public boolean surfaceActive(){rememberSurfaceEndpoint();return surfaceDepartureActive;}
     private void rememberSurfaceEndpoint(){if(surfaceDepartureTarget!=deployedTarget){surfaceDepartureTarget=deployedTarget;surfaceDepartureSaved=true;}if(progress==0||progress==1){surfaceDepartureActive=progress==1;surfaceDepartureSaved=true;}}
     private double previousProgress = 1.0;

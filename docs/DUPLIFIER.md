@@ -139,3 +139,7 @@ The separate **Switch Rotation** option controls copying floor/ceiling rotation.
 Sneak-right-click a vanilla solid block to sample its material, including metadata variants such as wool colors and log types. Applying transfers the sampled material to compatible programmable surfaces without copying inventories, channels or other settings.
 
 Stair copies can independently include **Stair step size** and **Stair orientation** in the Blocks options.
+
+## Modular arms and tracks
+
+**Arm / Track Settings** copies authored motion and load options, including **Join Arms** and its neighbour range. Copying or applying through a member section uses its controller. Current motion progress, deployed state, mounting orientation and carried block ownership remain with the target. Apply geometry changes while the target is fully deployed.

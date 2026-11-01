@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Keep arm-mounted Surface decals visible through native endpoint tile publication, suppress duplicate decals during packet handoff, and retain mined endpoint edits.
+
 - Show animated glass-material playback and speed directly in the Glass tab for programmable Glass and Portholes, including diagonal variants.
 
 - Copy modular arm and track settings, including Join Arms and its range, through controller or member sections without copying live pose or payload ownership.

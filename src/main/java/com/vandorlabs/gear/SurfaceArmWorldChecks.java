@@ -13,12 +13,16 @@ import net.minecraftforge.fml.relauncher.*;
 /** Saved horizontal Surface pad on a wall-mounted arm and four independent supports. */
 @SideOnly(Side.CLIENT)
 public final class SurfaceArmWorldChecks {
-    private static int stage,ticks;
+    private static int stage,ticks;private static boolean handoffChecked;
     private static final BlockPos ROTATING=new BlockPos(1248,73,-12126),EXTENDER=new BlockPos(1250,69,-12138);
     private static void require(boolean value,String why){if(!value)throw new IllegalStateException("surface-arm world stage="+stage+" tick="+ticks+": "+why);}
     public static boolean tick(Minecraft mc)throws Exception{
         mc.playerController.setGameType(GameType.CREATIVE);mc.displayGuiScreen(null);
         boolean clear=true;if(stage==4)for(int x=1242;x<=1244;x++)for(int z=-12127;z<=-12125;z++)if(!mc.world.isAirBlock(new BlockPos(x,73,z))||mc.world.getTileEntity(new BlockPos(x,73,z))!=null)clear=false;
+        if(stage==3&&!handoffChecked){TileEntity client=mc.world.getTileEntity(ROTATING);if(client instanceof GearTileEntity){GearTileEntity root=((GearTileEntity)client).loadedController();if(root!=null&&root.progress()==1&&root.payload()!=null&&root.payload().materialized()){
+            boolean ready=true;for(BlockPos p:root.payload().surfaceEndpointCells(root)){TileEntity t=mc.world.getTileEntity(p);if(!(t instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)||!((com.vandorlabs.tiles.TileEntityTurntableSurface)t).appearanceReady())ready=false;}
+            if(ready){com.vandorlabs.client.SurfaceArmHandoffChecks.run(root);handoffChecked=true;}
+        }}}
         final boolean clientClear=clear;
         return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0),clientClear)).get();
     }
@@ -43,7 +47,7 @@ public final class SurfaceArmWorldChecks {
             java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> partial=new java.util.ArrayList<>();for(com.vandorlabs.vehicle.VehicleStructure.Cell cell:arm.payload().blocks.cells)if(cell.pos.getX()<2)partial.add(cell);require(partial.size()==6,"partial pad negative control");
             com.vandorlabs.vehicle.VehicleWorld view=new com.vandorlabs.vehicle.VehicleWorld(world,com.vandorlabs.vehicle.VehicleStructure.display(partial));for(TileEntity tile:view.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)require(((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).appearanceLayout().size==1,"partial carried pad may not draw a stale 3x3 face over missing cells");for(int x=1242;x<=1244;x++)for(int z=-12127;z<=-12125;z++)require(world.isAirBlock(new BlockPos(x,73,z)),"no native Surface remains beneath the original decal");stage=4;ticks=0;return false;}
         if(stage==4){if(!clientClear)return false;arm.target(true);stage=3;ticks=0;return false;}
-        if(stage==3){if(arm.progress()!=1||arm.payload()==null||!arm.payload().materialized())return false;require(arm.payload().blocks.cells.size()==9,"all 9 Surfaces return");load(world,player,"extender");stage=10;ticks=0;return false;}
+        if(stage==3){if(!handoffChecked||arm.progress()!=1||arm.payload()==null||!arm.payload().materialized())return false;require(arm.payload().blocks.cells.size()==9,"all 9 Surfaces return");load(world,player,"extender");stage=10;ticks=0;return false;}
         if(stage==10){if(ticks<30)return false;require(!arm.joinEnabled()&&arm.columns().size()==1,"saved four supports are independent");arm.target(false);stage=11;ticks=0;return false;}
         if(stage==11){if(ticks<70)return false;require(arm.progress()==1&&arm.target()&&arm.error().contains("Join Arms"),"independent supports refuse safely");for(int x:new int[]{1250,1254})for(int z:new int[]{-12138,-12134}){GearTileEntity support=arm(world,new BlockPos(x,69,z));NBTTagCompound settings=support.settings();settings.setBoolean("JoinArms",true);support.configure(settings);}stage=12;ticks=0;return false;}
         if(stage==12){if(ticks<30)return false;require(arm.columns().size()==4,"enabled four matching supports join");arm.target(false);stage=13;ticks=0;return false;}
