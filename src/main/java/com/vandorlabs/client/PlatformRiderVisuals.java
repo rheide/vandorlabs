@@ -16,7 +16,7 @@ public final class PlatformRiderVisuals {
     private static final PlatformMotionSmoothing MOTION=new PlatformMotionSmoothing();
     private static EntityPlayer owner,rendered;
     private static double ox,oy,oz;
-    private static net.minecraft.util.math.BlockPos arm;private static int surface,received;
+    private static net.minecraft.util.math.BlockPos arm;private static int surface,received;private static double supportProgress;
     private static final double[] SAVED=new double[9];
     private static double time(){return CLOCK.sample(System.nanoTime(),Minecraft.getMinecraft().isGamePaused());}
     public static void receive(MessagePlatformMotion message){
@@ -29,7 +29,7 @@ public final class PlatformRiderVisuals {
             player.prevPosX+=dx;player.prevPosY+=dy;player.prevPosZ+=dz;
             player.lastTickPosX+=dx;player.lastTickPosY+=dy;player.lastTickPosZ+=dz;
             MOTION.accept(dx,message.verticalDisplacement(),dz,time());
-            arm=message.supportPosition();surface=message.supportSurface();received=player.ticksExisted;
+            arm=message.supportPosition();surface=message.supportSurface();supportProgress=message.supportProgress();received=player.ticksExisted;
         }
     }
     @SubscribeEvent public static void frame(TickEvent.RenderTickEvent event){
@@ -44,16 +44,17 @@ public final class PlatformRiderVisuals {
         if(!(raw instanceof com.vandorlabs.gear.GearTileEntity))return;
         com.vandorlabs.gear.GearTileEntity tile=(com.vandorlabs.gear.GearTileEntity)raw;
         if(!tile.isOperational()||tile.payload()==null||tile.payload().materialized())return;
-        java.util.List<net.minecraft.util.math.AxisAlignedBB> physical=com.vandorlabs.gear.GearGeometry.boxes(tile,tile.progress());
+        java.util.List<net.minecraft.util.math.AxisAlignedBB> physical=com.vandorlabs.gear.GearGeometry.boxes(tile,Double.isNaN(supportProgress)?tile.progress():supportProgress);
         if(surface<0||surface>=physical.size())return;
         net.minecraft.util.math.AxisAlignedBB support=physical.get(surface),body=player.getEntityBoundingBox();
-        if(Math.abs(body.minY-support.maxY)>.5||body.maxX<support.minX||body.minX>support.maxX||body.maxZ<support.minZ||body.minZ>support.maxZ)return;
         double progress=com.vandorlabs.gear.client.GearRenderer.renderedProgress(tile,partial);
         java.util.List<net.minecraft.util.math.AxisAlignedBB> visual=com.vandorlabs.gear.GearGeometry.boxes(tile,progress);
         if(surface>=visual.size())return;
         net.minecraft.util.math.AxisAlignedBB shown=visual.get(surface);
+        net.minecraft.util.math.AxisAlignedBB span=support.union(shown);
+        if(body.minY<Math.min(support.maxY,shown.maxY)-.5||body.minY>Math.max(support.maxY,shown.maxY)+.5||body.maxX<span.minX||body.minX>span.maxX||body.maxZ<span.minZ||body.minZ>span.maxZ)return;
         ox=(shown.minX+shown.maxX-support.minX-support.maxX)/2;
-        oy=shown.maxY-support.maxY;
+        oy=shown.maxY-(player.lastTickPosY+(player.posY-player.lastTickPosY)*partial);
         oz=(shown.minZ+shown.maxZ-support.minZ-support.maxZ)/2;
     }
     private static void offset(EntityPlayer p,double x,double y,double z){

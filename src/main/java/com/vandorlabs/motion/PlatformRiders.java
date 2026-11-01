@@ -20,20 +20,24 @@ public final class PlatformRiders {
     }
     public static boolean coMoving(Entity entity){java.util.Set<Entity> group=CO_MOVING.get();return group!=null&&group.contains(entity);}
     public static void supported(Entity entity){recent(entity).put(entity,new Support(entity));}
-    public static String diagnostic(Entity e){Support s=recent(e).get(e);return s==null?"none":"height="+s.height+" age="+(e.world.getTotalWorldTime()-s.tick)+" eligible="+eligible(e);}
+    public static String diagnostic(Entity e){Support s=recent(e).get(e);return s==null?"none":"height="+s.height+" age="+(e.world.getTotalWorldTime()-s.tick)+" eligible="+eligible(e)+" motionY="+e.motionY+" grounded="+e.onGround;}
     public static boolean vehicle(Entity entity){return entity instanceof com.vandorlabs.vehicle.EntityGroundVehicle||entity instanceof net.minecraft.entity.item.EntityBoat||entity instanceof net.minecraft.entity.item.EntityMinecart;}
-    public static boolean eligible(Entity entity){return !entity.isDead&&!entity.noClip&&!entity.isRiding()&&entity.motionY<=.1&&(!(entity instanceof EntityPlayer)||!((EntityPlayer)entity).capabilities.isFlying);}
+    private static boolean available(Entity entity){return !entity.isDead&&!entity.noClip&&!entity.isRiding()&&(!(entity instanceof EntityPlayer)||!((EntityPlayer)entity).capabilities.isFlying);}
+    public static boolean eligible(Entity entity){return available(entity)&&entity.motionY<=.1;}
     public static void move(Entity entity,double dx,double dy,double dz){move(entity,dx,dy,dz,dy);}
-    public static void move(Entity entity,double dx,double dy,double dz,double supportDy){move(entity,dx,dy,dz,supportDy,null,-1);}
-    public static void move(Entity entity,double dx,double dy,double dz,double supportDy,net.minecraft.util.math.BlockPos support,int surface){
+    public static void move(Entity entity,double dx,double dy,double dz,double supportDy){move(entity,dx,dy,dz,supportDy,null,-1,Double.NaN);}
+    public static void move(Entity entity,double dx,double dy,double dz,double supportDy,net.minecraft.util.math.BlockPos support,int surface,double supportProgress){
         double feet=entity.getEntityBoundingBox().minY;
-        MessagePlatformMotion packet=entity instanceof EntityPlayerMP?new MessagePlatformMotion((EntityPlayer)entity,feet+dy-supportDy,feet+dy).withHorizontal(dx,dz).withArm(support,surface):null;
+        MessagePlatformMotion packet=entity instanceof EntityPlayerMP?new MessagePlatformMotion((EntityPlayer)entity,feet+dy-supportDy,feet+dy).withHorizontal(dx,dz).withArm(support,surface,supportProgress):null;
         entity.setPosition(entity.posX+dx,entity.posY+dy,entity.posZ+dz);entity.onGround=true;entity.fallDistance=0;entity.motionY=0;supported(entity);
         if(packet!=null)PacketHandler.INSTANCE.sendTo(packet,(EntityPlayerMP)entity);
     }
     /** A rising support may be slightly ahead of a rider's last movement packet. */
     public static net.minecraft.util.math.AxisAlignedBB supportCollision(net.minecraft.util.math.AxisAlignedBB box,Entity entity,boolean moving){
         if(!moving||!(entity instanceof EntityPlayer||entity instanceof net.minecraft.entity.item.EntityItem)||!eligible(entity))return box;
+        return clipSupport(box,entity);
+    }
+    private static net.minecraft.util.math.AxisAlignedBB clipSupport(net.minecraft.util.math.AxisAlignedBB box,Entity entity){
         double feet=entity.getEntityBoundingBox().minY;
         if(box.maxY>feet&&box.maxY-feet<=.5){if(box.minY>=feet)return null;return new net.minecraft.util.math.AxisAlignedBB(box.minX,box.minY,box.minZ,box.maxX,feet,box.maxZ);}
         return box;
@@ -45,13 +49,15 @@ public final class PlatformRiders {
         for(net.minecraft.util.math.AxisAlignedBB obstacle:obstacles)z=obstacle.calculateZOffset(body,z);
         return Math.abs(x-delta.x)<1e-6&&Math.abs(y-delta.y)<1e-6&&Math.abs(z-delta.z)<1e-6;
     }
-    /** Keep the final support correction valid when its cells return to ordinary block mode. */
+    /** Keep the final support correction valid when its cells return to ordinary block mode.
+     * Endpoint easing may leave subpixel roundoff. A genuine jump is already above
+     * its proven floor, so clipping that floor does not require a falling velocity. */
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST)
     public static void recentCollision(net.minecraftforge.event.world.GetCollisionBoxesEvent event){
-        Entity entity=event.getEntity();if(entity==null||!eligible(entity))return;Support support=recent(entity).get(entity);if(support==null||support.dimension!=entity.dimension)return;
+        Entity entity=event.getEntity();if(entity==null||!available(entity))return;Support support=recent(entity).get(entity);if(support==null||support.dimension!=entity.dimension)return;
         long age=entity.world.getTotalWorldTime()-support.tick;if(age<0||age>20||Math.abs(entity.posX-support.x)>.75||Math.abs(entity.posZ-support.z)>.75)return;
         java.util.ListIterator<net.minecraft.util.math.AxisAlignedBB> boxes=event.getCollisionBoxesList().listIterator();
-        while(boxes.hasNext()){net.minecraft.util.math.AxisAlignedBB box=boxes.next();if(Math.abs(box.maxY-support.height)>1e-7||support.x<box.minX-.3||support.x>box.maxX+.3||support.z<box.minZ-.3||support.z>box.maxZ+.3)continue;net.minecraft.util.math.AxisAlignedBB clipped=supportCollision(box,entity,true);if(clipped==null)boxes.remove();else if(clipped!=box)boxes.set(clipped);}
+        while(boxes.hasNext()){net.minecraft.util.math.AxisAlignedBB box=boxes.next();if(Math.abs(box.maxY-support.height)>.001||support.x<box.minX-.3||support.x>box.maxX+.3||support.z<box.minZ-.3||support.z>box.maxZ+.3)continue;net.minecraft.util.math.AxisAlignedBB clipped=clipSupport(box,entity);if(clipped==null)boxes.remove();else if(clipped!=box)boxes.set(clipped);}
     }
     private PlatformRiders(){}
 }

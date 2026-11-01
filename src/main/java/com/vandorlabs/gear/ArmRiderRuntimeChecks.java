@@ -74,18 +74,38 @@ public final class ArmRiderRuntimeChecks {
         require(!decoded.apply(player),"duplicate displacement is ignored");
         com.vandorlabs.network.MessagePlatformMotion newer=new com.vandorlabs.network.MessagePlatformMotion(player,100.125,100.25);require(newer.apply(player)&&!original.apply(player),"older displacement is ignored");
         for(int length:new int[]{36,52}){bytes=io.netty.buffer.Unpooled.buffer();bytes.writeInt(player.dimension).writeDouble(player.posX).writeDouble(player.posZ).writeDouble(player.posY).writeDouble(player.posY+.125);if(length==52)bytes.writeDouble(0).writeDouble(0);decoded=new com.vandorlabs.network.MessagePlatformMotion();decoded.fromBytes(bytes);bytes.release();require(decoded.apply(player),"legacy packet length "+length);}
-        for(int length:new int[]{0,35,37,51,53,59,61,4096}){bytes=io.netty.buffer.Unpooled.buffer();bytes.writeZero(length);boolean refused=false;try{new com.vandorlabs.network.MessagePlatformMotion().fromBytes(bytes);}catch(IllegalArgumentException expected){refused=true;}finally{bytes.release();}require(refused,"invalid packet length "+length);}
+        for(int length:new int[]{0,35,37,51,53,59,61,79,81,4096}){bytes=io.netty.buffer.Unpooled.buffer();bytes.writeZero(length);boolean refused=false;try{new com.vandorlabs.network.MessagePlatformMotion().fromBytes(bytes);}catch(IllegalArgumentException expected){refused=true;}finally{bytes.release();}require(refused,"invalid packet length "+length);}
         BlockPos support=new BlockPos(7,120,-9);
-        bytes=io.netty.buffer.Unpooled.buffer();new com.vandorlabs.network.MessagePlatformMotion(player,100,100.125).withArm(support,17).toBytes(bytes);
-        require(bytes.readableBytes()==72,"arm pose reference adds 12 bytes to ordinary 60-byte motion");
+        bytes=io.netty.buffer.Unpooled.buffer();new com.vandorlabs.network.MessagePlatformMotion(player,100,100.125).withArm(support,17,.375).toBytes(bytes);
+        require(bytes.readableBytes()==80,"arm pose reference adds 20 bytes to ordinary 60-byte motion");
         decoded=new com.vandorlabs.network.MessagePlatformMotion();decoded.fromBytes(bytes);
-        require(support.equals(decoded.supportPosition())&&decoded.supportSurface()==17&&Math.abs(decoded.verticalDisplacement()-.125)<1e-9,"arm support position/surface/step round trip");
+        require(support.equals(decoded.supportPosition())&&decoded.supportSurface()==17&&decoded.supportProgress()==.375&&Math.abs(decoded.verticalDisplacement()-.125)<1e-9,"arm support position/surface/step round trip");
         bytes.readerIndex(0);bytes.setInt(68,-1);boolean refusedSurface=false;try{new com.vandorlabs.network.MessagePlatformMotion().fromBytes(bytes);}catch(IllegalArgumentException expected){refusedSurface=true;}finally{bytes.release();}
         require(refusedSurface,"negative arm support surface refused");
+        bytes=io.netty.buffer.Unpooled.buffer();new com.vandorlabs.network.MessagePlatformMotion(player,100,100.125).withArm(support,17).toBytes(bytes);decoded.fromBytes(bytes);bytes.release();require(decoded.supportSurface()==17&&Double.isNaN(decoded.supportProgress()),"legacy72 support packet remains readable without an explicit pose");
         bytes=io.netty.buffer.Unpooled.buffer();original.toBytes(bytes);decoded.fromBytes(bytes);bytes.release();require(decoded.supportPosition()==null&&decoded.supportSurface()==-1,"ordinary packet clears a reused decoder's support reference");
         require(!new com.vandorlabs.network.MessagePlatformMotion(player,player.posY,Double.NaN).apply(player),"nonfinite correction refused");
         require(!new com.vandorlabs.network.MessagePlatformMotion(player,Double.MAX_VALUE,-Double.MAX_VALUE).apply(player),"overflowing support displacement refused");
-        System.out.println("[vandorlabs] platform-motion-packets PASS legacy36/52 ordinary60 arm72 bytes round-trip legacy36/52 duplicate reordered invalid lengths nonfinite");
+        supportFloorChecks(player);
+        System.out.println("[vandorlabs] platform-motion-packets PASS legacy36/52 ordinary60 arm80 bytes round-trip legacy36/52 duplicate reordered invalid lengths nonfinite");
+    }
+    private static void supportFloorChecks(net.minecraft.entity.player.EntityPlayer player){
+        player.setPosition(.5,100-.000077,.5);player.motionY=.42;player.onGround=false;
+        com.vandorlabs.motion.PlatformRiders.supported(player);
+        AxisAlignedBB floor=new AxisAlignedBB(0,99,0,1,100,1),roof=new AxisAlignedBB(0,101,0,1,102,1);
+        java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>(java.util.Arrays.asList(floor,roof));
+        com.vandorlabs.motion.PlatformRiders.recentCollision(new net.minecraftforge.event.world.GetCollisionBoxesEvent(player.world,player,player.getEntityBoundingBox(),boxes));
+        require(boxes.size()==2&&boxes.get(0).maxY==player.getEntityBoundingBox().minY&&boxes.get(1)==roof,"rounded native endpoint floor remains safe during rising movement; overhead obstacle retained");
+        player.setPosition(.5,100.25,.5);boxes=new java.util.ArrayList<>(java.util.Arrays.asList(floor,roof));
+        com.vandorlabs.motion.PlatformRiders.recentCollision(new net.minecraftforge.event.world.GetCollisionBoxesEvent(player.world,player,player.getEntityBoundingBox(),boxes));
+        require(boxes.get(0)==floor&&boxes.get(1)==roof,"genuine jump leaves native floor and ceiling collisions unchanged");
+        player.setPosition(2.5,100-.000077,.5);boxes=new java.util.ArrayList<>(java.util.Arrays.asList(floor));
+        com.vandorlabs.motion.PlatformRiders.recentCollision(new net.minecraftforge.event.world.GetCollisionBoxesEvent(player.world,player,player.getEntityBoundingBox(),boxes));
+        require(boxes.get(0)==floor,"walking away withdraws the recent support exception");
+        player.setPosition(.5,100-.000077,.5);AxisAlignedBB different=new AxisAlignedBB(0,99,0,1,100.01,1);boxes=new java.util.ArrayList<>(java.util.Arrays.asList(different));
+        com.vandorlabs.motion.PlatformRiders.recentCollision(new net.minecraftforge.event.world.GetCollisionBoxesEvent(player.world,player,player.getEntityBoundingBox(),boxes));
+        require(boxes.get(0)==different,"different-height obstruction never aliases the restored floor");
+        System.out.println("[vandorlabs] platform-native-floor PASS subpixel roundoff rising movement genuine jump ceiling obstruction walk-off");
     }
     private ArmRiderRuntimeChecks(){}
 }

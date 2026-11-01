@@ -112,7 +112,7 @@ public final class GearGeometry {
     private static void addArm(List<AxisAlignedBB> out,AxisAlignedBB local,GearMotion.Pose pose,boolean foot,BlockPos at,int scaleX,int scaleZ,double shiftX,double shiftZ){AxisAlignedBB scaled=new AxisAlignedBB(.5+(local.minX-.5)*scaleX,local.minY,.5+(local.minZ-.5)*scaleZ,.5+(local.maxX-.5)*scaleX,local.maxY,.5+(local.maxZ-.5)*scaleZ);List<AxisAlignedBB> one=new ArrayList<>();add(one,scaled,pose,foot,at);out.add(one.get(0).offset(shiftX,0,shiftZ));}
     public static boolean canMove(GearTileEntity root,double before,double next){
         World world=root.getWorld();List<AxisAlignedBB> old=boxes(root,before),after=boxes(root,next);if(old.size()!=after.size())return false;
-        MovePlan riders=plan(world,old,after,null);riders.root=root.getPos();
+        MovePlan riders=plan(world,old,after,null);riders.root=root.getPos();riders.progress=next;
         for(Entity rider:riders.riders)if(com.vandorlabs.motion.PlatformRiders.vehicle(rider)&&!JoinedArms.acceptsVehicle(root,rider,before))return false;
         EXCLUDED.set(root);
         try(com.vandorlabs.motion.PlatformRiders.CollisionScope scope=new com.vandorlabs.motion.PlatformRiders.CollisionScope(riders.riders)){for(int i=0;i<after.size();i++){
@@ -153,10 +153,10 @@ public final class GearGeometry {
         final Set<Entity> riders=Collections.newSetFromMap(new IdentityHashMap<>());
         final Map<Entity,Double> supportSteps=new IdentityHashMap<>();
         final Map<Entity,Integer> supportSurfaces=new IdentityHashMap<>();
-        BlockPos root;
+        BlockPos root;double progress;
         void apply(){for(Map.Entry<Entity,Vec3d> entry:moves.entrySet()){
             Entity entity=entry.getKey();Vec3d move=entry.getValue();if(entity.isDead)continue;
-            if(riders.contains(entity)){com.vandorlabs.motion.PlatformRiders.move(entity,move.x,move.y,move.z,supportSteps.get(entity),root,supportSurfaces.get(entity));continue;}
+            if(riders.contains(entity)){com.vandorlabs.motion.PlatformRiders.move(entity,move.x,move.y,move.z,supportSteps.get(entity),root,supportSurfaces.get(entity),progress);continue;}
             if(entity instanceof net.minecraft.entity.player.EntityPlayerMP)((net.minecraft.entity.player.EntityPlayerMP)entity).connection.setPlayerLocation(entity.posX+move.x,entity.posY+move.y,entity.posZ+move.z,entity.rotationYaw,entity.rotationPitch);
             else entity.setPositionAndUpdate(entity.posX+move.x,entity.posY+move.y,entity.posZ+move.z);
             entity.fallDistance=0;entity.velocityChanged=true;

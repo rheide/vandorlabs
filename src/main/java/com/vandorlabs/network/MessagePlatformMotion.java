@@ -13,8 +13,10 @@ public class MessagePlatformMotion implements IMessage {
     private long sequence;
     private static final java.util.Map<EntityPlayer,Long> SENT=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>()),RECEIVED=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
     private double x,z,before,after,dx,dz;
-    private net.minecraft.util.math.BlockPos support;private int surface=-1;
+    private net.minecraft.util.math.BlockPos support;private int surface=-1;private double supportProgress=Double.NaN;
     public MessagePlatformMotion withArm(net.minecraft.util.math.BlockPos support,int surface){if(support!=null&&surface>=0){this.support=support.toImmutable();this.surface=surface;}return this;}
+    public MessagePlatformMotion withArm(net.minecraft.util.math.BlockPos support,int surface,double progress){withArm(support,surface);if(support!=null){if(!Double.isFinite(progress)||progress<0||progress>1)throw new IllegalArgumentException("Invalid support progress");supportProgress=progress;}return this;}
+    public double supportProgress(){return supportProgress;}
     public net.minecraft.util.math.BlockPos supportPosition(){return support;}
     public int supportSurface(){return surface;}
     public MessagePlatformMotion withHorizontal(double dx,double dz){this.dx=dx;this.dz=dz;return this;}
@@ -23,14 +25,15 @@ public class MessagePlatformMotion implements IMessage {
         sequence=SENT.merge(player,1L,(a,b)->a+b);dimension=player.dimension; x=player.posX; z=player.posZ; this.before=before; this.after=after;
     }
     @Override public void fromBytes(ByteBuf buf) {
-        int length=buf.readableBytes();if(length!=36&&length!=52&&length!=60&&length!=72)throw new IllegalArgumentException("Invalid platform motion length");
-        support=null;surface=-1;sequence=0;dx=dz=0;
+        int length=buf.readableBytes();if(length!=36&&length!=52&&length!=60&&length!=72&&length!=80)throw new IllegalArgumentException("Invalid platform motion length");
+        support=null;surface=-1;supportProgress=Double.NaN;sequence=0;dx=dz=0;
         dimension=buf.readInt(); x=buf.readDouble(); z=buf.readDouble(); before=buf.readDouble(); after=buf.readDouble();
         if(buf.readableBytes()>=16){dx=buf.readDouble();dz=buf.readDouble();}if(buf.readableBytes()>=8)sequence=buf.readLong();
-        if(buf.readableBytes()==12){support=net.minecraft.util.math.BlockPos.fromLong(buf.readLong());surface=buf.readInt();if(surface<0)throw new IllegalArgumentException("Invalid support surface");}
+        if(buf.readableBytes()>=12){support=net.minecraft.util.math.BlockPos.fromLong(buf.readLong());surface=buf.readInt();if(surface<0)throw new IllegalArgumentException("Invalid support surface");}
+        if(buf.readableBytes()==8){supportProgress=buf.readDouble();if(!Double.isFinite(supportProgress)||supportProgress<0||supportProgress>1)throw new IllegalArgumentException("Invalid support progress");}
     }
     @Override public void toBytes(ByteBuf buf) {
-        buf.writeInt(dimension); buf.writeDouble(x); buf.writeDouble(z); buf.writeDouble(before); buf.writeDouble(after);buf.writeDouble(dx);buf.writeDouble(dz);buf.writeLong(sequence);if(support!=null){buf.writeLong(support.toLong());buf.writeInt(surface);}
+        buf.writeInt(dimension); buf.writeDouble(x); buf.writeDouble(z); buf.writeDouble(before); buf.writeDouble(after);buf.writeDouble(dx);buf.writeDouble(dz);buf.writeLong(sequence);if(support!=null){buf.writeLong(support.toLong());buf.writeInt(surface);if(!Double.isNaN(supportProgress))buf.writeDouble(supportProgress);}
     }
     /** Authoritative transport, excluding correction of the client's falling position. */
     public double verticalDisplacement(){return after-before;}
