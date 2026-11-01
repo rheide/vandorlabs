@@ -18,12 +18,12 @@ final class FixedCanopyChunkChecks {
         ++ticks;
         if(ticks%100==0){TileEntityCanopy seen=TileEntityCanopy.at(mc.world,POS);System.out.println("[vandorlabs] chunk fixture stage="+stage+" client="+mc.world.getBlockState(POS)+" tile="+seen+" mesh="+(seen==null?null:seen.chunkMesh)+" mask="+(seen==null?-1:seen.mask())+" player="+mc.player.getPosition());}
         require(ticks<500,"packet/mesh timeout");
-        if(stage==0){mc.gameSettings.pauseOnLostFocus=false;mc.player.closeScreen();mc.getIntegratedServer().addScheduledTask(()->{
+        if(stage==0){CanopyHeldItemChecks.run(mc,output);mc.gameSettings.pauseOnLostFocus=false;mc.player.closeScreen();mc.getIntegratedServer().addScheduledTask(()->{
             net.minecraft.entity.player.EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
             player.setGameType(net.minecraft.world.GameType.CREATIVE);player.capabilities.isFlying=true;player.sendPlayerAbilities();
             player.connection.setPlayerLocation(POS.getX()+.5,POS.getY()+2,POS.getZ()+4,180,20);
             net.minecraft.world.WorldServer world=player.getServerWorld();for(BlockPos at:BlockPos.getAllInBox(POS.add(-2,-1,-3),POS.add(3,2,2)))world.setBlockToAir(at);
-            Block block=Block.getBlockFromName("vandorlabs:regular_canopy_glass");world.setBlockState(POS,block.getDefaultState(),3);world.setBlockState(POS.east(),block.getDefaultState().withProperty(BlockCanopy.FACING,EnumFacing.EAST),3);
+            Block block=Block.getBlockFromName("vandorlabs:regular_canopy_glass");player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new net.minecraft.item.ItemStack(block,4));for(BlockPos at:new BlockPos[]{POS,POS.east()}){world.setBlockState(at.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);player.rotationYaw=at.equals(POS)?0:90;require(player.getHeldItemMainhand().onItemUse(player,world,at.down(),net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"ordinary fixed glass placement");}player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);
         }).get();stage=1;return false;}
         TileEntityCanopy tile=TileEntityCanopy.at(mc.world,POS);if(tile==null||!(tile.chunkMesh instanceof FixedCanopyModel.Mesh))return false;
         if(stage==1){

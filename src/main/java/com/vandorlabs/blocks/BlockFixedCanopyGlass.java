@@ -23,6 +23,7 @@ public final class BlockFixedCanopyGlass extends BlockCanopy {
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){
         TileEntity raw=world.getTileEntity(pos);
         Object mesh=raw instanceof com.vandorlabs.tiles.TileEntityCanopy?((com.vandorlabs.tiles.TileEntityCanopy)raw).chunkMesh:null;
+        if(mesh==null&&raw instanceof com.vandorlabs.tiles.TileEntityCanopy&&com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.canopyAppearanceChanged((com.vandorlabs.tiles.TileEntityCanopy)raw);
         return mesh==null?state:((IExtendedBlockState)state).withProperty(MESH,mesh);
     }
 }

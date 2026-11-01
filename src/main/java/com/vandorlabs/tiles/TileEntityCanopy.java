@@ -17,7 +17,7 @@ import java.util.*;
 public final class TileEntityCanopy extends TileEntity implements ITickable, com.vandorlabs.redstone.RedstoneChannelMember {
     /** Client-published immutable mesh; common code never loads client rendering classes. */
     public volatile Object chunkMesh;
-    public boolean chunkRendered(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&block() instanceof com.vandorlabs.blocks.BlockFixedCanopyGlass;}
+    public boolean chunkRendered(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&getBlockType() instanceof com.vandorlabs.blocks.BlockFixedCanopyGlass;}
     private void appearanceChanged(){if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.canopyAppearanceChanged(this);}
     @Override public boolean shouldRenderInPass(int pass){return !chunkRendered()&&(pass==0||pass==1&&!GlassMaterials.opaque(large.material,large.tint))&&draws();}
     public BlockPos anchor, pair;
