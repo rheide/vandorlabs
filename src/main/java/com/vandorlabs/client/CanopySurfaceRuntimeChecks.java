@@ -7,7 +7,33 @@ import net.minecraft.util.math.Vec3d;
 /** Posed overlap removal must retain the visible union and keep the rear sill continuous. */
 final class CanopySurfaceRuntimeChecks {
     private static double area(List<CanopyMesh.Face> faces){double area=0;for(CanopyMesh.Face f:faces)for(int i=1;i<f.vertices.length-1;i++)area+=f.vertices[i].subtract(f.vertices[0]).crossProduct(f.vertices[i+1].subtract(f.vertices[0])).lengthVector()/2;return area;}
+    static void fixedSideContacts(){
+        int controls=0,checked=0;
+        for(int mask=0;mask<16;mask++)for(int roof=0;roof<16;roof++)if((roof&~mask)==0)for(net.minecraft.util.EnumFacing facing:net.minecraft.util.EnumFacing.HORIZONTALS){
+            List<CanopyMesh.Face> original=CanopyVariants.fixedGlassFaces(mask,roof);
+            List<CanopyMesh.Face> inset=new CanopyRenderGeometry(original).posed("regular_canopy_glass",1,new LargeCanopySettings(),0);
+            List<net.minecraft.client.renderer.block.model.BakedQuad> before=new ArrayList<>(),after=new ArrayList<>();
+            for(CanopyMesh.Face f:original)if(f.vertices.length==4)FixedCanopyModel.add(before,f,new int[]{0,1,2,3},facing,1);
+            for(CanopyMesh.Face f:inset)if(f.vertices.length==4)FixedCanopyModel.add(after,f,new int[]{0,1,2,3},facing,1);
+            controls+=coplanarSides(before);
+            if(coplanarSides(after)!=0)throw new IllegalStateException("fixed canopy emitted a coplanar vanilla contact mask="+mask+" roof="+roof+" facing="+facing);
+            for(net.minecraft.client.renderer.block.model.BakedQuad q:after){int[] data=q.getVertexData();int stride=q.getFormat().getIntegerSize();for(int i=0;i<4;i++)for(int axis:new int[]{0,2}){float v=Float.intBitsToFloat(data[i*stride+axis]);if(v<0||v>1)throw new IllegalStateException("canopy side clearance grew outside its cell");}}
+            checked++;
+        }
+        if(controls==0)throw new IllegalStateException("original canopy/vanilla contact negative control did not reproduce");
+        // A joined pair has at most 1/2048 block separation: < 1/8 pixel
+        // at 256 pixels per block; closer views can resolve the clearance. Shared face corners
+        // use the same affine transform, so individual shells remain sealed.
+        if(2*CanopyRenderGeometry.SIDE_CLEARANCE*256>.125)throw new IllegalStateException("canopy join clearance exceeds 1/8 pixel at 256 pixels per block");
+        System.out.println("[vandorlabs][reprolab] canopy-side-contacts PASS baked-cases="+checked+" original-coplanar="+controls+" inset-no-coplanar all-facings all-mask-roof-subsets join-gap-at-most-1-over-2048-block");
+    }
+    private static int coplanarSides(List<net.minecraft.client.renderer.block.model.BakedQuad> quads){
+        int count=0;
+        for(net.minecraft.client.renderer.block.model.BakedQuad q:quads){int[] data=q.getVertexData();int stride=q.getFormat().getIntegerSize();for(int axis:new int[]{0,2})for(float side:new float[]{0,1}){boolean plane=true;for(int i=0;i<4;i++)plane&=Float.intBitsToFloat(data[i*stride+axis])==side;if(plane)count++;}}
+        return count;
+    }
     static void run(){
+        fixedSideContacts();
         int clipped=0;
         for(boolean joined:new boolean[]{false,true})for(int width=1;width<=3;width++)for(int angle=0;angle<3;angle++)for(int motion=0;motion<2;motion++)for(int mount=0;mount<2;mount++)for(double progress:new double[]{0,.1,.5,1}){
             LargeCanopySettings settings=new LargeCanopySettings();settings.angle=angle;settings.motion=motion;settings.mount=mount;

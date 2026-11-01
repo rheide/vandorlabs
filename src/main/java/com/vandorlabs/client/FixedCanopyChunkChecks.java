@@ -11,7 +11,7 @@ import java.io.File;
 /** Real server packets publish immutable native meshes and invalidate adjacent joins. */
 final class FixedCanopyChunkChecks {
     private static final BlockPos POS=new BlockPos(320,90,320);
-    private static int stage,ticks;
+    private static int stage,ticks,captureWait;
     private static Object joined;
     private static void require(boolean value,String reason){if(!value)throw new IllegalStateException("fixed canopy chunks stage="+stage+": "+reason);}
     static boolean tick(Minecraft mc,File output)throws Exception{
@@ -32,10 +32,25 @@ final class FixedCanopyChunkChecks {
             mc.getIntegratedServer().addScheduledTask(()->{net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);world.setBlockToAir(POS.east());}).get();stage=2;return false;
         }
         if(stage==2){if(tile.mask()!=0||tile.chunkMesh==joined)return false;require(((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile),"stale disconnected mesh");
-            mc.getIntegratedServer().addScheduledTask(()->{net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);TileEntityCanopy server=TileEntityCanopy.at(world,POS);require(server!=null,"server canopy missing state="+world.getBlockState(POS)+" raw="+world.getTileEntity(POS));server.large.tint=com.vandorlabs.tiles.GlassTextures.OPAQUE;server.large.shade=12;server.sync();}).get();stage=3;return false;
+            mc.getIntegratedServer().addScheduledTask(()->{net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);TileEntityCanopy server=TileEntityCanopy.at(world,POS);require(server!=null,"server canopy missing state="+world.getBlockState(POS)+" raw="+world.getTileEntity(POS));world.setBlockState(POS.north(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);server.large.tint=com.vandorlabs.tiles.GlassTextures.OPAQUE;server.large.shade=12;server.sync();}).get();stage=3;return false;
         }
-        if(stage==3){if(tile.large.tint!=com.vandorlabs.tiles.GlassTextures.OPAQUE||!((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile))return false;
+        if(stage==3){if(mc.world.getBlockState(POS.north()).getBlock()!=net.minecraft.init.Blocks.STONE)return false;if(tile.large.tint!=com.vandorlabs.tiles.GlassTextures.OPAQUE||!((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile))return false;
             require(((FixedCanopyModel.Mesh)tile.chunkMesh).glass.isEmpty(),"opaque edit retained translucent layer");Object before=tile.chunkMesh;FixedCanopyChunks.reload();FixedCanopyChunks.flush();require(tile.chunkMesh!=null&&tile.chunkMesh!=before,"reload retained old atlas mesh");
+            CanopySurfaceRuntimeChecks.fixedSideContacts();
+            mc.getIntegratedServer().addScheduledTask(()->{
+                net.minecraft.entity.player.EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);net.minecraft.world.WorldServer world=player.getServerWorld();
+                world.setBlockToAir(POS.north());world.setBlockState(POS.east(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+                TileEntityCanopy server=TileEntityCanopy.at(world,POS);server.large.tint=1;server.large.shade=0;server.sync();
+                player.connection.setPlayerLocation(POS.getX()-1.6,POS.getY()-.2,POS.getZ()+2.6,-135,22);
+            }).get();stage=4;return false;
+        }
+        if(stage==4){
+            if(mc.world.getBlockState(POS.east()).getBlock()!=net.minecraft.init.Blocks.STONE||tile.large.tint!=1||tile.large.shade!=0||!((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile))return false;
+            // Allow complete world renders and asynchronous chunk uploads after
+            // the client observes the contact block, finish and close camera.
+            if(mc.player.getDistanceSq(POS.getX()-1.6,POS.getY()-.2,POS.getZ()+2.6)>.05)return false;
+            if(++captureWait<30)return false;
+            javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"canopy-solid-side-contact.png"));
             CanopyGlassCostChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] fixed-canopy-chunk PASS native packets logical joins removal shade opacity reload two layers no TESR preserved carried benchmark");return true;
         }
         return false;

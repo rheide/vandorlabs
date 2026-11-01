@@ -36,7 +36,7 @@ final class FixedCanopyModel implements IBakedModel {
         boolean matches(TileEntityCanopy tile){return visible==tile.draws()&&centered==tile.centeredPlacement&&source==tile.baseFaces()&&facing==tile.facing()&&settings.equals(tile.large.key());}
         int bytes(){int n=128;for(BakedQuad q:solid)n+=q.getVertexData().length*4+384;for(BakedQuad q:glass)n+=q.getVertexData().length*4+384;for(CanopyMesh.Face f:source)n+=128+f.vertices.length*96;return n;}
     }
-    private static void add(List<BakedQuad> out,CanopyMesh.Face face,int[] indices,EnumFacing facing,float alpha){
+    static void add(List<BakedQuad> out,CanopyMesh.Face face,int[] indices,EnumFacing facing,float alpha){
         VertexFormat format=new VertexFormat(DefaultVertexFormats.BLOCK);
         String name=face.material.contains(":")?face.material:"vandorlabs:blocks/canopy/"+face.material;
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(name);

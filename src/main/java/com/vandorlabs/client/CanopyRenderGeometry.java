@@ -6,7 +6,7 @@ import java.util.*;
 /** Clip each rigid part once; only contacts between moving parts need fresh topology. */
 final class CanopyRenderGeometry {
     private final List<CanopyMesh.Face> source;
-    private List<CanopyMesh.Face> closed,moving;
+    private List<CanopyMesh.Face> closed,moving,fixedClearance;
     private int[][] movingPlanes;
     private List<CanopyMesh.Face> posed;private double lastProgress=Double.NaN;
     private List<CanopyMesh.Face> frontFrame,frontSource;private boolean frontBackAnchored;private int frontDepth;
@@ -29,6 +29,10 @@ final class CanopyRenderGeometry {
         if(posed==null || progress!=lastProgress || backAnchored!=lastBackAnchored){
             boolean separated=(kind.equals("canopy") || kind.equals("long_canopy")) && progress>0;
             List<CanopyMesh.Face> drawing=faces(separated);
+            if(kind.equals("regular_canopy_glass")){
+                if(fixedClearance==null)fixedClearance=insetFixedSides(drawing);
+                drawing=fixedClearance;
+            }
             if(LargeCanopySettings.supports(kind))drawing=rearClearance(drawing,settings.depth,backAnchored);
             posed=CanopyPose.faces(drawing,kind,width,settings,progress);
             if(separated)posed=CanopySurfaces.visibleRigidParts(posed,movingPlanes);
@@ -36,6 +40,20 @@ final class CanopyRenderGeometry {
             lastBackAnchored=backAnchored;
         }
         return posed;
+    }
+    /** Move the authored outer sides inside their cell, using one affine map
+     * for every face so glass, rails and shared corner vertices stay sealed.
+     * The join clearance is render-only, including carried copies. */
+    static final double SIDE_CLEARANCE=1D/4096;
+    static List<CanopyMesh.Face> insetFixedSides(List<CanopyMesh.Face> drawing){
+        List<CanopyMesh.Face> result=new ArrayList<>(drawing.size());
+        for(CanopyMesh.Face original:drawing){
+            CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=new net.minecraft.util.math.Vec3d[original.vertices.length];copy.uv=original.uv;
+            copy.material=original.material;copy.baseMaterial=original.baseMaterial;copy.group=original.group;copy.doubleSided=original.doubleSided;copy.glazing=original.glazing;copy.tiled=original.tiled;
+            for(int i=0;i<copy.vertices.length;i++){net.minecraft.util.math.Vec3d v=original.vertices[i];copy.vertices[i]=new net.minecraft.util.math.Vec3d(SIDE_CLEARANCE+v.x*(1-2*SIDE_CLEARANCE),v.y,SIDE_CLEARANCE+v.z*(1-2*SIDE_CLEARANCE));}
+            result.add(copy);
+        }
+        return result;
     }
     private List<CanopyMesh.Face> rearClearance(List<CanopyMesh.Face> drawing,int depth,boolean backAnchored){
         if(frontFrame!=null&&frontSource==drawing&&frontDepth==depth&&frontBackAnchored==backAnchored)return frontFrame;
