@@ -22,6 +22,10 @@ final class MachineMountClientChecks {
         boolean creative=fixture>=4;
         if(stage==0){
             mc.getIntegratedServer().addScheduledTask(()->{
+                // Retire the previous fixture's retained credential before dismantling,
+                // otherwise its dropped chip can be picked up during the next count check.
+                if(world.getTileEntity(ROOT) instanceof TileEntityConstructor)
+                    ((TileEntityConstructor)world.getTileEntity(ROOT)).takeForDrop();
                 world.setBlockToAir(ROOT);for(BlockPos p:BlockPos.getAllInBox(ROOT.add(-1,-1,-1),ROOT.add(5,5,5)))world.setBlockToAir(p);
                 FrameMachineDesign spec=FrameMachineDesign.get(DESIGNS[fixture%4]);BridgeMachineChecks.frame(world,ROOT,spec,0);BridgeMachineChecks.frame(world,ROOT,spec,2);
                 TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(ROOT);require(tile.assemble(),"fixture assembles "+spec.design);
@@ -44,7 +48,7 @@ final class MachineMountClientChecks {
             Vec3d start=mc.player.getPositionEyes(1);RayTraceResult hit=mc.world.rayTraceBlocks(start,start.add(delta.normalize().scale(5)),false,false,false);require(hit!=null,"visible recess ray reaches model");
             require(mc.playerController.processRightClickBlock(mc.player,mc.world,hit.getBlockPos(),hit.sideHit,hit.hitVec,EnumHand.MAIN_HAND)==EnumActionResult.SUCCESS,"client consumes click on "+DESIGNS[fixture%4]+" point="+point+" hit="+hit.getBlockPos());stage=3;ticks=0;return false;
         }
-        mc.getIntegratedServer().addScheduledTask(()->{TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(ROOT);require(!tile.isEmpty()&&tile.getStackInSlot(0).getMetadata()==4,"chip retained after normal packet on "+DESIGNS[fixture%4]+" point="+point);require(player.getHeldItemMainhand().getCount()==(creative?2:1),"native inventory accounting fixture="+fixture+" point="+point+" creative="+creative+" serverSlot="+player.inventory.currentItem+" serverCount="+player.getHeldItemMainhand().getCount()+" clientSlot="+mc.player.inventory.currentItem+" clientCount="+mc.player.getHeldItemMainhand().getCount());}).get();
+        mc.getIntegratedServer().addScheduledTask(()->{TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(ROOT);require(!tile.isEmpty()&&tile.getStackInSlot(0).getMetadata()==4,"chip retained after normal packet on "+DESIGNS[fixture%4]+" point="+point);require(player.getHeldItemMainhand().getCount()==(creative?2:1),"native inventory accounting mode="+player.interactionManager.getGameType()+" creativeFlag="+player.capabilities.isCreativeMode+" fixture="+fixture+" point="+point+" creative="+creative+" serverSlot="+player.inventory.currentItem+" serverCount="+player.getHeldItemMainhand().getCount()+" clientSlot="+mc.player.inventory.currentItem+" clientCount="+mc.player.getHeldItemMainhand().getCount());}).get();
         if(++point==9){fixture++;stage=0;if(fixture==8)System.out.println("[vandorlabs] machine-mount-client PASS 72 native packet clicks four affected machines survival/creative blank recess center/edges/corners retained chips");}else stage=1;ticks=0;return fixture==8;
     }
 }
