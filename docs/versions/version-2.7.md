@@ -1,302 +1,121 @@
 # Vandor Labs 2.7
 
-Version 2.7 separates display artwork, frame finishes and redstone transmission,
-and expands the controls for moving mechanisms.
+Version 2.7 expands programmable displays, separates artwork from physical frame finishes, and adds more control over redstone, glass and moving mechanisms. Classic, Cool and Gold display libraries now cover matching Full and Half designs, with higher-resolution choices for larger installations.
 
-The programmable display family supports Disabled, Digital and four-band
-Analog redstone artwork, with independent state playback. Console Controls
-remain shared. Trigger blocks use static state textures, with an optional
-Front Only mapping and separate Sides texture. See [redstone display
-artwork](../redstone-displays.md).
+Browse the [complete texture catalog](../texture-browser/index.html), compare the [display styles](../display-matrix.html) and [control panels](../control-matrix.html), or read the [complete changelog](../../CHANGELOG.md).
 
-Wide joined Screens and Flatscreens also offer Half display designs. Matching
-Configurizer and Copifier changes update joins immediately without replacing a
-block. Local redstone activates a whole matching joined display rectangle.
-Mode changes retain artwork and playback; every state picker supports search
-and reveals its selection.
+## Displays and control artwork
 
-Programmable Surface artwork follows its attached arm's endpoints and retains
-the departure texture during motion, reversals and reloads. Arm attachment
-discovery follows the Surface blocks' placed plane; shared pads require joined
-supports.
+**Displays** replaces the Screens category. Classic, Cool and Gold use subject-first names such as **Navigation (Cool/Full)** and **Navigation (Cool/Half)**. Cruiser and ship views live in **Displays/Ship**. Full and Half describe the artwork's aspect ratio; Controls remain a separate, half-height collection.
 
-The **Glass** material picker also includes Displays for Programmable Glass,
-Porthole Wall and related glazing pickers. Glass materials use the display's
-Off/Static/Animated playback controls and speed choices when a Display is selected, alongside the existing tint and texture-layout settings.
+| Navigation | Classic | Cool | Gold |
+| --- | --- | --- | --- |
+| Full | ![Classic Full Navigation](../texture-browser/thumbs/c5f81502d1b0a3cce0fa.png) | ![Cool Full Navigation](../texture-browser/thumbs/2852b6f1c6d3cfb06430.png) | ![Gold Full Navigation](../texture-browser/thumbs/93b3f34bed52c1508f8b.png) |
+| Half | ![Classic Half Navigation](../texture-browser/thumbs/04b2cc2275c96b96e223.png) | ![Cool Half Navigation](../texture-browser/thumbs/1eb5e893635deef6165e.png) | ![Gold Half Navigation](../texture-browser/thumbs/9ae817476e771f54621b.png) |
 
-The standard JAR also includes [shader material maps](../shader-materials.md)
-for every runtime texture. With Complementary's RP Support set to labPBR,
-bare metals, coated panels, glass and fabric have distinct reflective finishes.
-The maps preserve existing diffuse artwork and add no light emission.
+All three styles include the 17 expansion subjects in both heights: Airlock, Life Support, Power Grid Status, City Transit Map, Ship Deck Plan, Power Distribution, Shields, Damage Control, FTL Calibration, Station Berth Control, Industrial Fabrication, Industrial Refinery, Facility Access Control, Boot Sequence, Standby, Access Denied and Signal Lost. These animations have six distinct frames. Door Controller is also available in every style and both heights. Classic adds animated Half Station and Targeting designs and dedicated Half remakes for Medical, Ship Status, Engineering Charts, Starmap and Weapons.
 
-The texture list groups screen artwork under **Displays**. **Gold** and **Cool** use their Bridge artwork for Biology, Communications,
-Medical, Navigation, Radar and Reactor, in both Full and Half layouts. Older
-selections resolve to these designs without changing saved identities. Both styles also offer Gas Giant, Ice Planet, Station, Surface Map, Targeting,
-Terrestrial, Engineering, Pilot, Ship Status, Engineering Charts, Personal Terminal,
-Viewscreen, Science, Starmap and Weapons in both heights.
+Cool and Gold retain their Bridge versions of Biology, Communications, Medical, Navigation, Radar and Reactor as the primary designs. Other additions include planetary views, Station, Surface Map, Targeting, Engineering, Pilot, Ship Status, Engineering Charts, Personal Terminal, Viewscreen, Science, Starmap and Weapons. The [display matrix](../display-matrix.html) shows every subject and its available styles and sizes.
 
-All three styles include 17 expansion subjects in both heights: Airlock, Life Support, Power Grid
-Status, City Transit Map, Ship Deck Plan, Power Distribution, Shields, Damage Control,
-FTL Calibration, Station Berth Control, Industrial Fabrication, Industrial Refinery,
-Facility Access Control, Boot Sequence, Standby, Access Denied and Signal Lost.
-Each animation has six distinct frames and retains the existing playback controls.
-Door Controller is available in all three styles and both heights. Classic uses
-the new Door Controller artwork. Classic Half Medical, Ship Status, Engineering
-Charts, Starmap and Weapons use compositions authored for half-height displays.
+**Large** entries preserve animation and aspect ratio while offering more detail:
 
-**Large** choices appear beside the standard artwork. **Viewscreen (Classic/Full)
-Large** and its Half counterpart use the original 256px-wide animation frames.
-Cool and Gold Viewscreen Large choices use 512px-wide frames, as do all three styles’
-**City Transit Map** Large choices. Full images remain square; Half images are
-half as tall as their width. Standard choices retain their native 128px width.
-Compare all three styles and Large choices in the
-[display matrix](../display-matrix.html). The former root **Engineering Screen
-(Full)** resolves to **Engineering (Classic/Full)**, including existing saves.
-Names place the subject first, such as **Biology (Gold/Full)** or
-**Biology (Gold/Half)**. Saved Vektor choices use Gold; retired Ashiro, Seyr and
-Vandor choices use Cool. Seyr Communications, Navigation and Reactor retain
-their original textures and animations in **Classic**, for both heights.
+| Artwork | Classic | Cool | Gold |
+| --- | --- | --- | --- |
+| Viewscreen Large, Full and Half | 256px wide | 512px wide | 512px wide |
+| City Transit Map Large, Full and Half | 512px wide | 512px wide | 512px wide |
 
-**Displays/Classic** also contains the original Analysis, Bridge, Extra and
-Specialist displays. Specialist Sensors is **Radar (Classic/Full)** or
-**Radar (Classic/Half)** and replaces Bridge Sensors. Cruiser and ship views
-are under **Displays/Ship**. Classic also includes borderless, six-frame animated
-**Station (Classic/Half)** and **Targeting (Classic/Half)**, completing the
-matching Full/Half subject set. All selectable display artwork names identify
-Full or Half height. Tactical Starmap, Science Biology Wide Left/Right and the
-Console Biology/Engineering/Medical/Navigation/Sensors/Signals artwork are
-removed without replacement mappings. Console blocks remain available.
+Standard choices retain their native 128px width. Full frames are square; Half frames are half as tall as their width.
 
-Input controls remain separate under **Controls**. Control names omit the
-redundant **Bottom** suffix in Classic and company folders. **Navigation Controls**
-distinguishes control panels from Navigation displays. Similar company layouts
-share functional names such as **Fader Bank** and **Dial And Sliders** while
-retaining their original artwork. See the [company control comparison](../company-controls.md)
-for shared types and company-specific designs, or compare the actual textures
-in the [control matrix](../control-matrix.html). Classic includes **Keyboard Touchpad**
-and **Keyboard Full**. The former Classic Communications, Dual Keyboard, Medical
-and Reactor controls and the root Communications/Engineering keyboards are removed;
-old native keyboard selections use Keyboard Full. Company controls and their
-Dense variants share company folders directly below Controls. The former
-Half-height folder is **Controls/Classic**. Numeric prefixes are removed from
-control names; names remain unique within each folder. Controls have no
-Full/Half suffix. Saved numeric artwork indices retain their positions.
+**Controls/Classic** contains 20 panels, including Keyboard Touchpad and Keyboard Full. Each of the six company folders contains ten controls, with Dense designs merged into their company folder. Common layouts use consistent names such as Navigation Controls, Fader Bank, Directional Controls and Keypad And Dial, while retaining their own artwork. Numeric prefixes and the redundant Bottom suffix are removed. See the [control matrix](../control-matrix.html) and [company comparison](../company-controls.md).
 
-Root Controls are merged into **Controls/Classic**. Existing Classic artwork wins
-for duplicate names; Biology Controls, Sensor Controls, Science Touchpad and Twin
-Faders Transport join the folder as distinct controls. Classic now contains 20
-choices. Saved root selections remain supported using the retained artwork.
+Texture lists support case-insensitive, multiword search by name, category or identifier. Click the search field or press **Ctrl+F**. Filtering preserves the selected texture; both wheel scrolling and scrollbar dragging remain available. Switching tabs reveals the current selection.
 
-The JAR omits retired and unlisted paired framed screen artwork. Legacy selections
-resolve to listed designs; animation frames and Off-state images belonging to
-listed textures remain available.
+## Joined screens and redstone artwork
 
-The Materials picker includes Satin Silver, Cool Steel and Pale Titanium,
-using their native 128px artwork and matching shader material finishes.
+Programmable Screens, Flatscreens, diagonal screens, inputs and consoles offer **Disabled**, **Digital** and four-band **Analog** activation on Redstone. Digital exposes Off and On artwork; Analog exposes four signal-band tabs. Each state retains its own artwork, Off/Static/Animated playback and speed. Console Controls stay shared while the Display changes. Half Console uses the inclined surface as Display and keeps its flat Controls shared.
 
-Canopy rendering reuses settings and neighbour results and skips empty Opaque
-passes. The [Canopy performance comparison](../performance/canopy-glass.md)
-records CPU submission, allocation and geometry costs against vanilla glass.
+Enabling or switching modes preserves the existing artwork and playback settings where possible. Editing a state updates the whole matching authored display rectangle, including when powered blocks currently show different states. Search and scroll-to-selection work in every state tab. Nearby local redstone activates the whole joined display rather than only the adjacent block. See [redstone display artwork](../redstone-displays.md).
 
-The Duplifier places Connected Matching Blocks and Ignore directionality in
-separate columns. Enable Ignore directionality to include differently oriented
-matching blocks while preserving their placement. Both choices are saved on
-the tool; other configuration differences still separate matching groups.
+Wide joined Screens and Flatscreens offer Half designs when the joined shape suits them, such as a 4×2 group. Single blocks and square groups retain the Full choices. Configurizer and Copifier edits refresh joining without requiring a block to be replaced.
 
-Programmable glass and diagonal glass have separate Front, Interior and
-Exterior finishes on top-level tabs. Portholes use Main artwork for their front,
-with separate Interior and Exterior finishes. Wall and diagonal-wall finish tabs
-are labeled Exterior. Interior and Exterior offer the general material catalog
-alongside frame artwork. Older Interior/Exterior defaults retain their appearance
-until edited. Taxi collision preparation retains exact arm pose precision to
-keep grounded supports in contact during height changes. Interrupted saved Taxi
-height changes can recover
-from shallow support penetration when a clear, loaded exit exists. Parking
-paintings checks the restored blocks and other obstacles while excluding the
-craft being retired; failed transfers retain exactly one painting owner.
+The **Programmable Trigger** retains static Off/On or analog-band artwork. Choose **All Faces** or **Front Only**; Front Only adds a separate Sides texture for the other faces. Displays are selectable there as static artwork.
 
-Texture lists include a quick search field. Click the field or press **Ctrl+F**
-to filter immediately by artwork name, category or identifier. Search ignores
-case and accepts multiple words. Clearing the search restores the current
-category view; filtering keeps the selected material and supports wheel scrolling
-and scrollbar dragging. Escape closes the dialog normally.
+Programmable Input is now named **Programmable Flatscreen**, retaining its saved registry ID. Programmable Light, Half-Input and Flatscreen share a single **Size: Small/Full** toggle. A Small Flatscreen is half a block square, matching Small Programmable Light. Its frame remains individual across gaps; Full Flatscreens retain connected frames. Wall, floor and ceiling mounts keep matching bounds and click surfaces.
 
-Trapdoor leaf pickers also offer the authored Frame artwork. Border frames
-have open centers with opaque inner walls through the leaf depth. Ordinary
-materials and frame background finishes retain a complete leaf surface; virtual
-door sprites are sampled from the atlas without being opened as PNG files.
-Frame side walls keep the same pixel scale as ordinary trapdoors. Shared
-mechanisms remove a border only where another cutout-frame leaf touches it;
-ordinary materials retain the boundary. Tile layout keeps a frame per leaf.
+![Half Console analog artwork settings target Display and retain shared Controls](version-2.7-half-console.png)
 
-Artwork pickers use short company names and explicit Full/Half frame labels,
-with the current selection revealed when switching tabs. Glass and unsplit
-screens offer full-height frames; split screens also support half-height frames.
-Joined glass frames retain their single-block border thickness and extend edge
-pieces while preserving the authored corners, using the same cuts as screen
-frames. Padded and asymmetric frames preserve their borders and glass openings, and
-diagonal half consoles correctly sample native half-height control artwork.
-Carried paintings use the craft’s lighting. Supported integral landing-gear
-height changes can run while driving, with physical collision checks retained.
+## Frames, glazing and doors
 
-Coupled sections recover from interrupted cross-chunk saves and rollbacks while
-retaining exact cargo ownership. Recovery journals and pending latch updates
-remain locked until their disk checkpoints complete. Transmitter editors reject
-discarded vehicle views, and rejected ramp requests preserve channel and analog
-settings. Diagonal frame caches distinguish both selected finishes.
+Frame finishes are independent of display artwork. Choose **Bare** or a separate border, with independent material and layout controls. A joined frame keeps its original border thickness, extends edge pieces and preserves authored corners. Stepped and unequal glass layouts follow their outer contour without internal rectangle rails. Concave corners retain solid frame faces.
 
-Vehicle light discovery retains only the nearest 32 candidates, and valid large
-display snapshots retain their internal lighting. Glass frames keep their outer
-edge beside Bare glass. Rejected arm settings leave the previous configuration
-intact, and rebuilding a transmitter dialog saves pending channel edits.
+Programmable Glass and Diagonal Glass expose **Glass**, **Front**, **Interior** and **Exterior** as top-level tabs. Portholes use **Main** artwork for the front and separate **Glass**, **Interior** and **Exterior** tabs. Walls and diagonal walls label their frame finish **Exterior**. Interior and Exterior offer general materials alongside frame artwork.
 
-Duplifier undo uses a bounded memory budget. If a large operation exceeds it,
-the settings still apply and the player is told that undo is unavailable.
+Glass material lists include Displays. Selecting one reveals Off/Static/Animated and Slow/Normal/Fast directly on **Glass**; ordinary glass hides those controls. Playback is independent of a porthole's Main artwork, and joined images require matching playback settings.
 
-Vehicle light probes are removed when a craft becomes unavailable. Building
-compatibility checks reject overflowing screen dimensions and leave unloaded
-furniture-door neighbors unloaded.
+![Programmable Glass with Display artwork and playback controls on the Glass tab](version-2.7-glass-settings.png)
 
-Transmitting blocks use a built-in **Range** slider with 4, 8, 16, 32, 64, 128 and 256 block settings, plus **Local Redstone: On/Off**. No item insertion is required. Physical output can be disabled while channels remain active. Screen rows and cockpit controls share host settings and keep independent channel targets. [Handheld Redstone Transmitters](../redstone-transmitters.md) remain in creative and retain their original item ranges and use behavior.
+Mild, Normal, Strong and Opaque are separate finishes. General materials use 35%, 65%, 85% and 100% opacity respectively: Strong remains translucent, while Opaque explicitly fills the pane. The policy also applies to portholes and canopies. Cyan and Amber light frames backlight Opaque replacement artwork in programmable Glass and Diagonal Glass; translucent and native glass retain world lighting. Glazing draws back to front, including native Front Canopy Glass behind programmable panes.
 
-Different places can receive different levels on the same channel. A receiver
-uses the strongest signal that reaches it. Linked controls within a transmitter's
-range share their latch state; a distant transmitter can continue supplying an
-ON signal. See the transmitter guide for the overlap rules and upgrade behavior.
+Full-height screens can show separate Half images with **Split display**, **Top** and **Bottom** on Display. Both images share one outer frame. Display Fit supports square joined groups; frame Fit also surrounds rectangular groups at constant border thickness. Frame artwork keeps its native depth and opaque inner surfaces. See [frames and displays](../frames-and-displays.md).
 
-[Frame finishes](../frames-and-displays.md) are independent of display artwork.
-Choose front borders and interior materials from the Frame category, retain a
-single border around a group, and select independent upper and lower images on
-a full-height display. Display Fit supports square groups such as 2×2 and 3×3;
-frame Fit also surrounds rectangular groups with constant border thickness. Screen content reserves the selected border width, and the Frame picker includes Bare. Split controls and Top/Bottom selectors live under Display; both halves share one frame. Frame finishes use 128-pixel artwork, preserve the original glass frame depth and have opaque interior surfaces. The Copifier retains these finishes on configured glass items. Programmable Input is now named
-**Programmable Flatscreen**; its saved registry identifier remains unchanged.
+White Glass, Dark Glass and Slim Glass doors, in regular and Large sizes, have a **Glass** tab with native shades, general materials, tint and layout controls. **Original** restores the supplied pane. Slim Glass includes opaque inner reveal walls; Interior finishes affect the leaf reveals and fixed frame. Front finishes remain separate, and square frame materials tile at world-sized pixels on both door sizes.
 
-Dialogs open on their first tab and use shared tabs, a Vandor logo and consistent
-Redstone and Security pages. Redstone is the last tab, and receiver-only dialogs omit transmitter controls. Built-in range sliders and Local Redstone toggles replace module slots. Existing module settings remain compatible, and previously inserted items stay recoverable through mining. Screen rows share their host range; each row keeps its own channels. Cockpit controls may also use the shared default channel list.
+Programmable Trapdoors and Diagonal Trapdoors accept authored Frame artwork with transparent centers and physical inner borders. Thin side textures retain ordinary trapdoor pixel scale. Joined borders disappear only between two cutout-frame leaves, preserving the boundary beside a regular material. Tile keeps a frame per leaf; joined Fit/Stretch keeps an outer frame.
 
-[Company screen layers](../company-screen-layers.md) add 12 borders and 72
-six-frame animations, grouped by company under Frame and Displays. Transparent
-frame artwork supplies separate opaque edge strips for physical frame interiors.
+Diagonal artwork retains a mapping tradeoff: **Tile** preserves square pixels by repeating artwork, while **Stretch** preserves the complete image and its border. Diagonal trapdoors compensate for slope length in Tile mode; their Fit (aspect) mode also tiles when the image aspect does not fit. Diagonal walls retain their existing complete-image mapping.
 
-[Arms](../joined-arm-platforms.md) can move the connected layer of Programmable
-Surfaces attached at their tips, including overhangs beyond joined Extender supports. Horizontal Extenders offer an optional
-push mode; they leave pushed blocks in place when returning. Rotating Arms offer
-separate Start and End angle sliders in 15-degree steps and retain collision checks against real obstructions. Standing riders follow the same rendered platform pose through reversals and delayed server updates, while collision remains authoritative.
+## Redstone transmission and dialogs
 
-[Ramp Controllers](../landing-ramps.md) can deploy proportionally to redstone
-levels 0–15. Analog mode and start/end offsets persist together when editing channel lists. Stationary full-height attachment faces accept doors. Permitted
-interaction or configuration authorizes later automation, including recovery of
-an existing ramp; the Configurizer uses the same authorization path.
-[Hexagonal Tanks](../multiblocks/hexagonal-tank/README.md) join into complete
-2×2 and 3×3 sections with native storage in each block.
+Transmitting blocks use a built-in **Range** slider: **4, 8, 16, 32, 64, 128 or 256 blocks**. **Local Redstone: On/Off** controls ordinary world output independently of channel output. No transmitter item insertion is required. Screen control rows and cockpit controls share their host's range and local-output settings while retaining independent channel targets.
 
-The Duplifier's **Undo last application** restores one previous block-settings
-application, including connected groups. It checks permissions, loaded chunks
-and subsequent edits before restoring settings. It does not restore inventories.
+[Handheld Redstone Transmitters](../redstone-transmitters.md) remain in creative with their existing manual signals and item ranges, including unlimited same-dimension transmission. Receivers use the strongest signal that reaches their position; different receivers can receive different levels on the same channel. Linked controls share latch state within range, while a distant On source can continue supplying a signal.
 
-Vehicle discovery stops at water, Programmable Surfaces and generated ramp
-sections belonging to another controller. Captured signs display their saved
-text. Carried lamps illuminate the vehicle locally; the optional OptiFine dynamic
-lighting bridge also illuminates nearby terrain when dynamic lights are enabled.
-Static opaque vehicle artwork reuses geometry and drawing order between frames.
+Dialogs use consistent top-level tabs, block titles and the Vandor logo, with Redstone last and no transmitter controls on passive receivers. Persistent Rocker Switches publish their final latch before notifying local redstone, so repeated On/Off toggles update adjacent devices. Powered Wall Sliders retain their analog level across reloads, and solid Programmable Blocks conduct lever power from below across the display family.
 
-Matched wheel or track supports can change vehicle height in Taxi mode when the complete
-result stays on the block grid and has a clear native parking footprint. Stop
-and align the craft first. The feet remain fixed while the chassis lowers or
-rises. Modular wheel and track assemblies retain removed sections in their roots
-and reuse them when raised, including after parking and recapture. Raise a
-shortened parked assembly in Taxi before dismantling it. See the
-[landing-gear guide](../modular-landing-gear.md) for supported layouts.
+Dedicated Redstone pages use the available width on regular and Large arms, thrusters and other receivers. Autopilot combines route selection into General and selects markers from the nine hotbar slots without consuming items.
 
-Native paintings supported entirely by the vehicle retain their artwork and facing through Taxi/Hover movement, rotation and parking. They return as ordinary paintings when parked.
+## Arms, surfaces, ramps and tanks
 
-Company display artwork fills the selected frame opening for single screens and
-square fitted groups. Frame controls include a Framed/Bare button that remembers
-the chosen finish. Top and Bottom split displays retain independent artwork and
-animation playback. Authored frame interiors use their corresponding left, top,
-right and bottom border material instead of stretching the complete hollow image.
+[Extender and Rotating Arms](../joined-arm-platforms.md) discover a connected layer of Programmable Surfaces in its placed plane, including overhangs beyond joined supports. Shared pads spanning several supports require compatible **Join Arms** settings. Regular and Large mechanisms retain all six mounting faces, endpoint edits and safe obstruction checks.
 
-The Redstone Receiver Block now uses `vandorlabs:redstone_receiver_block`. The previous `vandorlabs:redstone_receiver` ID is removed without remapping; old receiver blocks, items and saved assemblies are not migrated. Handheld redstone transmitters retain their separate item ID.
+Surfaces list **Inactive** before **Active**. On an attached arm they use Inactive at the start/retracted endpoint and Active at the end/extended endpoint, keeping the departure artwork until the other endpoint is reached. Reversals and reloads retain that choice. Native endpoint publication keeps the carried decal until all Surface tile data is ready, avoiding a blank or duplicate renderer.
 
-Square artwork on diagonal surfaces keeps a tradeoff between preserving the
-complete image and preserving square pixels. A shallow slope is about 11.8%
-longer than its vertical projection; a 45-degree slope is about 41.4% longer.
-Diagonal trapdoors already account for that length in **Tile** mode, repeating
-the existing artwork without creating textures. **Fit (aspect)** also tiles
-when the complete image would have the wrong aspect. **Stretch** preserves the
-whole image, including authored frame borders, and therefore stretches it to
-the surface. For frame and door artwork, keep Stretch when the complete border
-must remain visible.
+Horizontal Extenders offer optional push mode: the original attachment returns, while newly pushed blocks remain forward. Rotating Arms offer separate Start and End sliders in 15-degree steps and check the complete swept path before changing their Start pose. Blocked or interrupted transfers retain recoverable attachments. Standing riders follow the rendered support pose through delayed updates and reversals while server collision remains authoritative.
 
-Diagonal walls retain their existing complete-image mapping. A general repeat
-mode would need to split geometry at sprite boundaries in both the game and
-Dynmap, including joined walls, fills and inverted pieces. Simply multiplying
-atlas UVs would smear sprite-edge pixels; cropping would remove parts of the
-artwork. No derived textures or automatic crop are introduced.
+The Copifier's **Arm / Track Settings** includes Join Arms, neighbour range, load and motion options. Copying or applying through a member section resolves its controller and preserves the target's mounting orientation, live pose and payload ownership.
 
-Autopilot route markers are selected directly on General from the nine hotbar
-items, preserving block metadata without consuming a stack. General and Redstone
-are the two top-level tabs. Dedicated Redstone pages use their full content width,
-including regular and Large arm controllers and all programmable thruster shapes.
+[Ramp Controllers](../landing-ramps.md) support proportional deployment from redstone levels 0–15, retaining analog mode, offsets and channel lists together. Stationary full-height ramp faces accept doors. Authorized configuration or interaction permits later automation and safe recovery of existing ramps.
 
+[Hexagonal Tanks](../multiblocks/hexagonal-tank/README.md) join into complete **2×2** and **3×3** sections while keeping native storage in each block.
 
-Programmable Blocks, Slabs and Stairs share empty configuration data after loading.
-Stairs also use compact render-state snapshots to reduce chunk-build allocations.
-Custom face choices, stair profiles, fluids and saved block IDs retain their
-existing behavior. These changes reduce memory and state-building costs without
-changing texture resolution or geometry.
+![A completed 3×3 Hexagonal Tank section](../multiblocks/hexagonal-tank/step-4.png)
 
+## Copying and vehicle improvements
 
-Cyan and Amber light frames backlight solid Opaque replacement materials in
-Programmable Glass and Diagonal Glass, including joined layouts. Native and
-translucent glass retain their normal world lighting.
+The Duplifier places **Connected Matching Blocks** and **Ignore directionality** in separate columns. Ignore directionality includes otherwise matching blocks with different orientations without rotating targets. Both choices stay on the tool. **Undo last application** restores one previous settings operation, including connected groups, after checking permissions, loaded chunks and subsequent edits. Undo preserves inventories and has a bounded memory budget; oversized applications report when undo is unavailable. See the [Duplifier guide](../DUPLIFIER.md).
 
+Eligible matched wheel/track supports can change Taxi chassis height while keeping their feet grounded. Stop and align the craft for modular support changes; supported integral landing gear can adjust while driving. Retained modular sections survive parking, rotation and recapture and remain protected until raised before dismantling. See [modular landing gear](../modular-landing-gear.md).
 
-Frame finishes on Programmable Trapdoors and Diagonal Trapdoors have open centers.
-Their inner edges follow the authored frame border through hinged and sliding
-motion. Tiled layouts repeat the frame per leaf; joined Fit/Stretch layouts keep
-an outer border without internal rails. This changes rendering only.
+Native paintings retain their artwork and facing through vehicle movement, rotation and parking. Carried signs retain their text, paintings use the craft's lighting, and lamps illuminate carried blocks. OptiFine dynamic lights can also illuminate nearby terrain when enabled. Vehicle visibility ignores shader shadow-map draws so interior views remain available.
 
+Vehicle discovery respects water, Surface boundaries and ramps owned by another controller. Coupled cargo and arm payloads retain recovery data through interrupted ownership transfers and partial cross-chunk saves. Saved data that cannot be restored safely stays recoverable rather than becoming a partially installed live structure.
 
-Selected Programmable Glass frames follow the outer contour of joined panels,
-including stepped and unequal layouts. Internal borders are suppressed independently
-of the rectangles used to fit pane artwork; concave corners retain solid frame faces.
+## Materials, shaders and rendering costs
 
-Glass finishes offer Mild, Normal, Strong and Opaque. Strong remains translucent;
-Opaque explicitly fills the pane. General materials use 35%, 65%, 85% and 100%
-opacity respectively. The same policy applies to portholes and canopies.
+Materials adds **Satin Silver**, **Cool Steel** and **Pale Titanium** at native 128px resolution. Corporate armor artwork is refreshed, and Surface artwork includes the additional helipads. The [texture browser](../texture-browser/index.html) shows the current selectable catalog.
 
-White Glass, Dark Glass and Slim Glass have a Glass tab on regular and Large
-doors, with native glass shades, general materials, tint and mapping controls.
-Original restores the supplied pane. Slim Glass openings have opaque inner
-reveal walls, and Interior finishes apply to the leaf reveals as well as the
-fixed frame. Front finishes remain separate; square frame artwork tiles at
-world-sized pixels on both door sizes.
+Every runtime texture has a LabPBR specular companion, with shared maps for equivalent finishes. Bare metal, painted machinery, glass, fabric and composite surfaces receive distinct material properties without altering diffuse artwork or adding emission. In Complementary Unbound, select **RP Support: labPBR** and enable specular maps. Atlas companions follow the diffuse sprite's crop and dimensions, including Half displays, avoiding OptiFine startup/reload crashes. See [shader material maps](../shader-materials.md).
 
-### Display playback on glazing and input sizes
+Plain fixed **Canopy Glass** uses Minecraft's solid and translucent chunk meshes while preserving frames, joins, collision, opening-canopy roof contacts and cockpit sharing. Opening and carried canopies retain their existing geometry/render paths. Held Canopy Glass uses ordinary block sizing with a padded inventory icon.
 
-Selecting a Display for Programmable Glass, Diagonal Glass or Porthole glazing
-adds an Animation tab with Off, Static and Animated modes and Slow, Normal and
-Fast speeds. Playback is independent of the porthole wall artwork. Existing glass
-remains Static at Normal speed. Joined images require matching playback settings.
-Translucent glazing renders from back to front so panes behind a screen remain
-visible in the correct order.
+The measured 256-block Normal sheet uses **2 chunk-layer submissions**, compared with **316** on the carried tile-renderer path and **1** for vanilla glass in the same occupied chunk section. Canopy geometry remains more detailed than vanilla glass. These CPU/submission measurements do not establish hardware FPS; see the [full performance comparison](../performance/canopy-glass.md).
 
-Programmable Light, Half-Input and Flatscreen use a single **Size: Small/Full**
-toggle. Small Flatscreens are half a block square, matching Small Programmable
-Lights. Small Flatscreens keep their own frame borders across the gaps between
-adjacent blocks; Full Flatscreens retain connected frames. Wall, floor and ceiling
-mounts retain matching models, bounds and click
-surfaces; changing size preserves artwork and settings.
+Programmable Blocks, Slabs and Stairs share empty face-configuration and fluid data. Stairs build compact render-state snapshots instead of temporary property maps. Unchanged settings avoid unnecessary saves, block updates and cache invalidation. Texture resolution, face overrides, stair profiles, fluids and saved block IDs retain their behavior. Static opaque vehicle artwork also reuses geometry and draw order between frames.
 
-Applying unchanged programmable settings preserves saved texture identities and
-avoids redundant block updates, dirty saves and render-cache invalidation, including
-legacy display aliases and default transmitter settings.
+## Existing worlds and artwork cleanup
 
-Clearing a receiver’s last channel removes its received signal immediately.
-Temporary channel changes inside an ownership transfer publish only the final
-installed signal, avoiding an intermediate Off pulse.
+Saved texture indices remain stable where artwork is renamed or aliased. Former Vektor display choices use Gold; retired Ashiro, Seyr and Vandor company displays use Cool, while original Seyr Communications, Navigation and Reactor remain available in Classic. Root Engineering Screen resolves to Engineering (Classic/Full). Older frame defaults retain their appearance until edited; removed transmitter modules remain recoverable when their blocks are mined.
 
-### Fixed Canopy Glass rendering
+Root Controls are merged into Classic, keeping the existing Classic design for duplicate names. Retired duplicate animations and unlisted paired framed screens are omitted from the JAR; retained animations and Off artwork remain available. Tactical Starmap, Science Biology Wide Left/Right and the old Console display designs were removed without replacement mappings. Console blocks remain available.
 
-Canopy Glass uses normal block sizing in both hands, with a padded inventory icon. Plain fixed Canopy Glass uses chunk rendering, reducing dense-sheet draw calls while retaining its frames, joins, collision and cockpit sharing. Opening and carried canopies keep their existing render paths. See the [measured comparison](../performance/canopy-glass.md).
+The Redstone Receiver Block now uses **`vandorlabs:redstone_receiver_block`**. The old **`vandorlabs:redstone_receiver`** ID has no remap; blocks, items and saved assemblies using it are not migrated. Handheld transmitters retain their separate item IDs. See the [changelog](../../CHANGELOG.md) for the detailed compatibility and recovery fixes.
