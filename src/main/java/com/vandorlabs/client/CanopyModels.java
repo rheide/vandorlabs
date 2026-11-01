@@ -47,8 +47,7 @@ public final class CanopyModels {
                 event.getModelRegistry()
                         .putObject(
                                 new ModelResourceLocation(b.getRegistryName(), "inventory"),
-                                new Icon(
-                                        id.equals("regular_canopy_glass") ? "regular_1x1_00" : id));
+                                new Icon(id));
             }
     }
 
@@ -61,7 +60,7 @@ public final class CanopyModels {
 
         Icon(String id){this(id,null);}
         Icon(String id,com.vandorlabs.canopy.LargeCanopySettings settings) {
-            kind=id;List<CanopyMesh.Face> faces=settings!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(id)?com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.equals("large_front_canopy_glass")?5:3,settings,true):id.equals("long_canopy")?com.vandorlabs.canopy.OpeningCanopyGeometry.faces(1,3,1,false):CanopyMesh.MODELS.get(id);
+            kind=id;if(id.equals("regular_canopy_glass"))id="regular_1x1_00";List<CanopyMesh.Face> faces=settings!=null && com.vandorlabs.canopy.LargeCanopySettings.supports(id)?com.vandorlabs.canopy.LargeCanopyGeometry.faces(id.equals("large_front_canopy_glass")?5:3,settings,true):id.equals("long_canopy")?com.vandorlabs.canopy.OpeningCanopyGeometry.faces(1,3,1,false):CanopyMesh.MODELS.get(id);
             if(settings!=null && (id.equals("canopy") || id.equals("long_canopy")))faces=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(1,id.equals("long_canopy")?3:2,Math.min(id.equals("long_canopy")?3:2,settings.angle),false);
             if(settings!=null)faces=com.vandorlabs.canopy.CanopyFinishes.faces(faces,settings.shade,settings.tint,settings.material,settings.textureLayout(),com.vandorlabs.VandorLabs.proxy.materialAspect(settings.material));
             faces=com.vandorlabs.canopy.CanopyMaterialUv.drawable(com.vandorlabs.canopy.CanopySurfaces.visible(faces));
@@ -88,6 +87,20 @@ public final class CanopyModels {
                             gui,
                             ItemTransformVec3f.DEFAULT,
                             ItemTransformVec3f.DEFAULT);
+            if (kind.equals("regular_canopy_glass")) {
+                // Match ordinary block-in-hand sizing; GUI padding remains geometry-derived.
+                ItemTransformVec3f third = new ItemTransformVec3f(
+                        new Vector3f(75, 45, 0), new Vector3f(0, 2.5F / 16, 0),
+                        new Vector3f(.375F, .375F, .375F));
+                ItemTransformVec3f firstRight = new ItemTransformVec3f(
+                        new Vector3f(0, 45, 0), new Vector3f(0, 0, 0),
+                        new Vector3f(.4F, .4F, .4F));
+                ItemTransformVec3f firstLeft = new ItemTransformVec3f(
+                        new Vector3f(0, 225, 0), new Vector3f(0, 0, 0),
+                        new Vector3f(.4F, .4F, .4F));
+                source = new ItemCameraTransforms(third, third, firstLeft, firstRight,
+                        source.head, source.gui, source.ground, source.fixed);
+            }
             transforms = ControlItemPadding.fit(this, source);
         }
 

@@ -379,6 +379,7 @@ public final class CanopyRuntimeChecks {
             if (stage == 0) {
                 validate(mc);
                 LargeCanopyRuntimeChecks.icons(mc);
+                CanopyHeldItemChecks.run(mc, output);
                 mc.player.noClip = true;
                 mc.player.capabilities.isFlying = true;
                 mc.player.setPosition(8.5, 100 - mc.player.getEyeHeight() + .6, 5);

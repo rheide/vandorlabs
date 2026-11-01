@@ -291,4 +291,4 @@ installed signal, avoiding an intermediate Off pulse.
 
 ### Fixed Canopy Glass rendering
 
-Plain fixed Canopy Glass uses chunk rendering, reducing dense-sheet draw calls while retaining its frames, joins, collision and cockpit sharing. Opening and carried canopies keep their existing render paths. See the [measured comparison](../performance/canopy-glass.md).
+Canopy Glass uses normal block sizing in both hands, with a padded inventory icon. Plain fixed Canopy Glass uses chunk rendering, reducing dense-sheet draw calls while retaining its frames, joins, collision and cockpit sharing. Opening and carried canopies keep their existing render paths. See the [measured comparison](../performance/canopy-glass.md).
