@@ -13,21 +13,29 @@ public class MessagePlatformMotion implements IMessage {
     private long sequence;
     private static final java.util.Map<EntityPlayer,Long> SENT=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>()),RECEIVED=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
     private double x,z,before,after,dx,dz;
+    private net.minecraft.util.math.BlockPos support;private int surface=-1;
+    public MessagePlatformMotion withArm(net.minecraft.util.math.BlockPos support,int surface){if(support!=null&&surface>=0){this.support=support.toImmutable();this.surface=surface;}return this;}
+    public net.minecraft.util.math.BlockPos supportPosition(){return support;}
+    public int supportSurface(){return surface;}
     public MessagePlatformMotion withHorizontal(double dx,double dz){this.dx=dx;this.dz=dz;return this;}
     public MessagePlatformMotion() { }
     public MessagePlatformMotion(EntityPlayer player,double before,double after) {
         sequence=SENT.merge(player,1L,(a,b)->a+b);dimension=player.dimension; x=player.posX; z=player.posZ; this.before=before; this.after=after;
     }
     @Override public void fromBytes(ByteBuf buf) {
-        int length=buf.readableBytes();if(length!=36&&length!=52&&length!=60)throw new IllegalArgumentException("Invalid platform motion length");
+        int length=buf.readableBytes();if(length!=36&&length!=52&&length!=60&&length!=72)throw new IllegalArgumentException("Invalid platform motion length");
+        support=null;surface=-1;sequence=0;dx=dz=0;
         dimension=buf.readInt(); x=buf.readDouble(); z=buf.readDouble(); before=buf.readDouble(); after=buf.readDouble();
         if(buf.readableBytes()>=16){dx=buf.readDouble();dz=buf.readDouble();}if(buf.readableBytes()>=8)sequence=buf.readLong();
+        if(buf.readableBytes()==12){support=net.minecraft.util.math.BlockPos.fromLong(buf.readLong());surface=buf.readInt();if(surface<0)throw new IllegalArgumentException("Invalid support surface");}
     }
     @Override public void toBytes(ByteBuf buf) {
-        buf.writeInt(dimension); buf.writeDouble(x); buf.writeDouble(z); buf.writeDouble(before); buf.writeDouble(after);buf.writeDouble(dx);buf.writeDouble(dz);buf.writeLong(sequence);
+        buf.writeInt(dimension); buf.writeDouble(x); buf.writeDouble(z); buf.writeDouble(before); buf.writeDouble(after);buf.writeDouble(dx);buf.writeDouble(dz);buf.writeLong(sequence);if(support!=null){buf.writeLong(support.toLong());buf.writeInt(surface);}
     }
+    /** Authoritative transport, excluding correction of the client's falling position. */
+    public double verticalDisplacement(){return after-before;}
     public boolean apply(EntityPlayer player) {
-        if(player==null||player.dimension!=dimension||!Double.isFinite(x)||!Double.isFinite(z)||!Double.isFinite(before)||sequence<0)return false;
+        if(player==null||player.dimension!=dimension||!Double.isFinite(x)||!Double.isFinite(z)||!Double.isFinite(before)||!Double.isFinite(after-before)||sequence<0)return false;
         if(sequence>0){Long last=RECEIVED.get(player);if(last!=null&&sequence<=last)return false;RECEIVED.put(player,sequence);}
         if (player==null || player.dimension!=dimension || player.isDead || player.isRiding()
                 || player.noClip || player.capabilities.isFlying || player.motionY>0.1) return false;

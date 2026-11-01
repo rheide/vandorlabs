@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Keep riders aligned with the rendered arm support through delayed updates and reversals, using the same pose for the camera and platform while retaining authoritative collision.
+
 - Preserve exact programmable-block snapshots through Moat retraction and recovery when no legacy transmitter-row migration is needed.
 
 - Keep console item artwork inside its inventory slots, use full image UVs, and replace retired screen/input icon textures with retained catalog artwork.

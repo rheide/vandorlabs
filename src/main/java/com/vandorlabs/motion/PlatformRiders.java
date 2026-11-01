@@ -23,9 +23,11 @@ public final class PlatformRiders {
     public static String diagnostic(Entity e){Support s=recent(e).get(e);return s==null?"none":"height="+s.height+" age="+(e.world.getTotalWorldTime()-s.tick)+" eligible="+eligible(e);}
     public static boolean vehicle(Entity entity){return entity instanceof com.vandorlabs.vehicle.EntityGroundVehicle||entity instanceof net.minecraft.entity.item.EntityBoat||entity instanceof net.minecraft.entity.item.EntityMinecart;}
     public static boolean eligible(Entity entity){return !entity.isDead&&!entity.noClip&&!entity.isRiding()&&entity.motionY<=.1&&(!(entity instanceof EntityPlayer)||!((EntityPlayer)entity).capabilities.isFlying);}
-    public static void move(Entity entity,double dx,double dy,double dz){
+    public static void move(Entity entity,double dx,double dy,double dz){move(entity,dx,dy,dz,dy);}
+    public static void move(Entity entity,double dx,double dy,double dz,double supportDy){move(entity,dx,dy,dz,supportDy,null,-1);}
+    public static void move(Entity entity,double dx,double dy,double dz,double supportDy,net.minecraft.util.math.BlockPos support,int surface){
         double feet=entity.getEntityBoundingBox().minY;
-        MessagePlatformMotion packet=entity instanceof EntityPlayerMP?new MessagePlatformMotion((EntityPlayer)entity,feet,feet+dy).withHorizontal(dx,dz):null;
+        MessagePlatformMotion packet=entity instanceof EntityPlayerMP?new MessagePlatformMotion((EntityPlayer)entity,feet+dy-supportDy,feet+dy).withHorizontal(dx,dz).withArm(support,surface):null;
         entity.setPosition(entity.posX+dx,entity.posY+dy,entity.posZ+dz);entity.onGround=true;entity.fallDistance=0;entity.motionY=0;supported(entity);
         if(packet!=null)PacketHandler.INSTANCE.sendTo(packet,(EntityPlayerMP)entity);
     }

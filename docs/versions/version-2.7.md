@@ -165,13 +165,13 @@ Dialogs open on their first tab and use shared tabs, a Vandor logo and consisten
 Redstone and Security pages. Redstone is the last tab, and receiver-only dialogs omit transmitter controls. Built-in range sliders and Local Redstone toggles replace module slots. Existing module settings remain compatible, and previously inserted items stay recoverable through mining. Screen rows share their host range; each row keeps its own channels. Cockpit controls may also use the shared default channel list.
 
 [Company screen layers](../company-screen-layers.md) add 12 borders and 72
-six-frame animations, grouped by company under Frame and Screens. Transparent
+six-frame animations, grouped by company under Frame and Displays. Transparent
 frame artwork supplies separate opaque edge strips for physical frame interiors.
 
 [Arms](../joined-arm-platforms.md) can move the connected layer of Programmable
 Surfaces attached at their tips, including overhangs beyond joined Extender supports. Horizontal Extenders offer an optional
 push mode; they leave pushed blocks in place when returning. Rotating Arms offer
-separate Start and End angle sliders in 15-degree steps and retain collision checks against real obstructions.
+separate Start and End angle sliders in 15-degree steps and retain collision checks against real obstructions. Standing riders follow the same rendered platform pose through reversals and delayed server updates, while collision remains authoritative.
 
 [Ramp Controllers](../landing-ramps.md) can deploy proportionally to redstone
 levels 0–15. Analog mode and start/end offsets persist together when editing channel lists. Stationary full-height attachment faces accept doors. Permitted

@@ -70,13 +70,22 @@ public final class ArmRiderRuntimeChecks {
         player.setPosition(0,100,0);player.motionY=0;player.noClip=false;player.capabilities.isFlying=false;
         com.vandorlabs.network.MessagePlatformMotion original=new com.vandorlabs.network.MessagePlatformMotion(player,100,100.125).withHorizontal(.1,0);
         io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();original.toBytes(bytes);require(bytes.readableBytes()==60,"sequenced support packet is 60 bytes (previously 52)");
-        com.vandorlabs.network.MessagePlatformMotion decoded=new com.vandorlabs.network.MessagePlatformMotion();decoded.fromBytes(bytes);bytes.release();require(decoded.apply(player)&&Math.abs(player.posY-100.125)<1e-9&&Math.abs(player.posX-.1)<1e-9,"packet round trip preserves displacement");
+        com.vandorlabs.network.MessagePlatformMotion decoded=new com.vandorlabs.network.MessagePlatformMotion();decoded.fromBytes(bytes);bytes.release();require(Math.abs(decoded.verticalDisplacement()-.125)<1e-9&&decoded.apply(player)&&Math.abs(player.posY-100.125)<1e-9&&Math.abs(player.posX-.1)<1e-9,"packet round trip preserves displacement");
         require(!decoded.apply(player),"duplicate displacement is ignored");
         com.vandorlabs.network.MessagePlatformMotion newer=new com.vandorlabs.network.MessagePlatformMotion(player,100.125,100.25);require(newer.apply(player)&&!original.apply(player),"older displacement is ignored");
         for(int length:new int[]{36,52}){bytes=io.netty.buffer.Unpooled.buffer();bytes.writeInt(player.dimension).writeDouble(player.posX).writeDouble(player.posZ).writeDouble(player.posY).writeDouble(player.posY+.125);if(length==52)bytes.writeDouble(0).writeDouble(0);decoded=new com.vandorlabs.network.MessagePlatformMotion();decoded.fromBytes(bytes);bytes.release();require(decoded.apply(player),"legacy packet length "+length);}
         for(int length:new int[]{0,35,37,51,53,59,61,4096}){bytes=io.netty.buffer.Unpooled.buffer();bytes.writeZero(length);boolean refused=false;try{new com.vandorlabs.network.MessagePlatformMotion().fromBytes(bytes);}catch(IllegalArgumentException expected){refused=true;}finally{bytes.release();}require(refused,"invalid packet length "+length);}
+        BlockPos support=new BlockPos(7,120,-9);
+        bytes=io.netty.buffer.Unpooled.buffer();new com.vandorlabs.network.MessagePlatformMotion(player,100,100.125).withArm(support,17).toBytes(bytes);
+        require(bytes.readableBytes()==72,"arm pose reference adds 12 bytes to ordinary 60-byte motion");
+        decoded=new com.vandorlabs.network.MessagePlatformMotion();decoded.fromBytes(bytes);
+        require(support.equals(decoded.supportPosition())&&decoded.supportSurface()==17&&Math.abs(decoded.verticalDisplacement()-.125)<1e-9,"arm support position/surface/step round trip");
+        bytes.readerIndex(0);bytes.setInt(68,-1);boolean refusedSurface=false;try{new com.vandorlabs.network.MessagePlatformMotion().fromBytes(bytes);}catch(IllegalArgumentException expected){refusedSurface=true;}finally{bytes.release();}
+        require(refusedSurface,"negative arm support surface refused");
+        bytes=io.netty.buffer.Unpooled.buffer();original.toBytes(bytes);decoded.fromBytes(bytes);bytes.release();require(decoded.supportPosition()==null&&decoded.supportSurface()==-1,"ordinary packet clears a reused decoder's support reference");
         require(!new com.vandorlabs.network.MessagePlatformMotion(player,player.posY,Double.NaN).apply(player),"nonfinite correction refused");
-        System.out.println("[vandorlabs] platform-motion-packets PASS 52->60 bytes round-trip legacy36/52 duplicate reordered invalid lengths nonfinite");
+        require(!new com.vandorlabs.network.MessagePlatformMotion(player,Double.MAX_VALUE,-Double.MAX_VALUE).apply(player),"overflowing support displacement refused");
+        System.out.println("[vandorlabs] platform-motion-packets PASS legacy36/52 ordinary60 arm72 bytes round-trip legacy36/52 duplicate reordered invalid lengths nonfinite");
     }
     private ArmRiderRuntimeChecks(){}
 }
