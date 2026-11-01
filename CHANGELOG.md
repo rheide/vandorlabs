@@ -22,6 +22,14 @@ See the [illustrated 2.7 showcase](docs/versions/version-2.7.md), [display matri
 
 ### Changed
 
+- Remove obsolete inserted transmitter inventories and module drops. Preserve standalone transmitter blocks and handheld transmitters; saved development-era modules migrate to built-in settings at 64-block range while preserving channels, local-output choices and control state.
+
+- Prevent Canopy Glass side faces from fighting with adjacent solid blocks, including carried copies.
+
+- Keep upper diagonal Half-Console front borders on their reflected artwork plane, including Redstone and Vehicle Status displays.
+
+- Avoid regex processing during animated display selection and preserve joined-display layout caches for unrelated distant block updates. Failed animation resources fall back to static artwork until the next resource reload.
+
 - Rename the visible Screens category to Displays, with Classic/Cool/Gold/Ship folders and subject-first Full/Half names. Retain the six Bridge designs as primary Cool/Gold artwork; preserve original Seyr Communications, Navigation and Reactor in Classic. Root Engineering Screen resolves to Engineering (Classic/Full).
 - Merge Root Controls into Classic, keeping existing Classic designs for duplicate names. Classic contains 20 choices; each of the six company folders contains ten. Flatten Corporate/Dense folders, rename Half-height to Classic, remove numeric prefixes and Bottom suffixes, and standardize related functional names such as Navigation Controls, Fader Bank and Keypad And Dial.
 - Offer Half artwork for wide joined Screens and Flatscreens while retaining Full choices for single blocks and square groups. Configurizer and Copifier edits refresh joins immediately. Signal-band edits apply to the whole authored rectangle, with permission checks for every member.

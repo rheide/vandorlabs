@@ -4,6 +4,8 @@ Version 2.7 expands programmable displays, separates artwork from physical frame
 
 Browse the [complete texture catalog](../texture-browser/index.html), compare the [display styles](../display-matrix.html) and [control panels](../control-matrix.html), or read the [complete changelog](../../CHANGELOG.md).
 
+Animated displays reuse uploaded frame strips. Unrelated distant block updates preserve cached display layouts, and unavailable animation resources fall back to static artwork until resource reload.
+
 ## Displays and control artwork
 
 **Displays** replaces the Screens category. Classic, Cool and Gold use subject-first names such as **Navigation (Cool/Full)** and **Navigation (Cool/Half)**. Cruiser and ship views live in **Displays/Ship**. Full and Half describe the artwork's aspect ratio; Controls remain a separate, half-height collection.
@@ -56,7 +58,7 @@ Glass material lists include Displays. Selecting one reveals Off/Static/Animated
 
 Mild, Normal, Strong and Opaque are separate finishes. General materials use 35%, 65%, 85% and 100% opacity respectively: Strong remains translucent, while Opaque explicitly fills the pane. The policy also applies to portholes and canopies. Cyan and Amber light frames backlight Opaque replacement artwork in programmable Glass and Diagonal Glass; translucent and native glass retain world lighting. Glazing draws back to front, including native Front Canopy Glass behind programmable panes.
 
-Full-height screens can show separate Half images with **Split display**, **Top** and **Bottom** on Display. Both images share one outer frame. Display Fit supports square joined groups; frame Fit also surrounds rectangular groups at constant border thickness. Frame artwork keeps its native depth and opaque inner surfaces. See [frames and displays](../frames-and-displays.md).
+Full-height screens can show separate Half images with **Split display**, **Top** and **Bottom** on Display. Both images share one outer frame. Display Fit spans matching joined rectangles. Split display Fit supports square groups; frame Fit surrounds rectangular groups at constant border thickness. Frame artwork keeps its native depth and opaque inner surfaces. See [frames and displays](../frames-and-displays.md).
 
 White Glass, Dark Glass and Slim Glass doors, in regular and Large sizes, have a **Glass** tab with native shades, general materials, tint and layout controls. **Original** restores the supplied pane. Slim Glass includes opaque inner reveal walls; Interior finishes affect the leaf reveals and fixed frame. Front finishes remain separate, and square frame materials tile at world-sized pixels on both door sizes.
 
@@ -114,8 +116,10 @@ Programmable Blocks, Slabs and Stairs share empty face-configuration and fluid d
 
 ## Existing worlds and artwork cleanup
 
-Saved texture indices remain stable where artwork is renamed or aliased. Former Vektor display choices use Gold; retired Ashiro, Seyr and Vandor company displays use Cool, while original Seyr Communications, Navigation and Reactor remain available in Classic. Root Engineering Screen resolves to Engineering (Classic/Full). Older frame defaults retain their appearance until edited; removed transmitter modules remain recoverable when their blocks are mined.
+Saved texture indices remain stable where artwork is renamed or aliased. Former Vektor display choices use Gold; retired Ashiro, Seyr and Vandor company displays use Cool, while original Seyr Communications, Navigation and Reactor remain available in Classic. Root Engineering Screen resolves to Engineering (Classic/Full). Older frame defaults retain their appearance until edited; development-era inserted transmitter modules migrate to built-in transmission settings without retaining or dropping inventory items.
 
 Root Controls are merged into Classic, keeping the existing Classic design for duplicate names. Retired duplicate animations and unlisted paired framed screens are omitted from the JAR; retained animations and Off artwork remain available. Tactical Starmap, Science Biology Wide Left/Right and the old Console display designs were removed without replacement mappings. Console blocks remain available.
 
 The Redstone Receiver Block now uses **`vandorlabs:redstone_receiver_block`**. The old **`vandorlabs:redstone_receiver`** ID has no remap; blocks, items and saved assemblies using it are not migrated. Handheld transmitters retain their separate item IDs. See the [changelog](../../CHANGELOG.md) for the detailed compatibility and recovery fixes.
+
+Canopy Glass side faces now sit slightly inside their block to prevent flickering against adjacent solid blocks. The render clearance also applies to carried copies; collision and saved layouts remain unchanged.
