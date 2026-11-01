@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Apply redstone-state artwork and playback edits to the whole authored display rectangle, with per-member edit permission checks. Keep Half selections available while changing signal-band designs.
+
 - Preserve display artwork, animation and speed when exposing redstone states, reveal each tab's selected texture and route search to the visible picker. Share nearby local redstone across matching joined display rectangles.
 - Discover arm-mounted Surface pads in the Surface blocks' placed plane, refresh surviving groups after journal publication, and prevent partial carried pads from drawing outside their owned cells. Explain when independent supports require Join Arms.
 

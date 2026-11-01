@@ -13,6 +13,11 @@ Each enabled state has its own material/display choice, Off/Static/Animated
 playback and Slow/Normal/Fast animation speed. Enabling redstone preserves the
 shared artwork, playback and speed. Newly exposed analog bands inherit the
 Digital On settings; previously configured states retain their own choices.
+Editing a state applies its artwork, playback and speed to the whole matching
+joined rectangle. Editing membership uses the shared artwork and placement
+plane, so different signal-band artwork cannot disconnect its own dialog or
+hide Half choices on a wide rectangle.
+
 Changing state tabs clears a stale search filter and reveals the selected
 texture. Search, wheel scrolling and scrollbar dragging work on every state tab. Receiving channels use the
 existing channel selector; leave it blank for local redstone. **Signal: Low**

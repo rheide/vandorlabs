@@ -9,9 +9,9 @@ import java.util.*;
 
 /** Same flat state tabs, picker and playback widgets in every programmable display dialog. */
 final class DisplayActivationPane {
-    private final GuiContainer host;private final TileEntityAnimatedScreenSelector tile;private final boolean input;
+    private final GuiContainer host;private final TileEntityAnimatedScreenSelector tile;private final boolean input,includeHalfDisplays;
     private HousingTextureList picker;private ProgrammableDialogLayout layout;private int selected=-1;private boolean active;private int pickerState=-1,pickerMode=-1;
-    DisplayActivationPane(GuiContainer host,TileEntityAnimatedScreenSelector tile,boolean input){this.host=host;this.tile=tile;this.input=input;}
+    DisplayActivationPane(GuiContainer host,TileEntityAnimatedScreenSelector tile,boolean input){this.host=host;this.tile=tile;this.input=input;this.includeHalfDisplays=ScreenSurfaceGroups.wideDisplay(tile);}
     boolean active(){return active;}
     void init(ProgrammableDialogLayout layout,List<GuiButton> buttons,int page,int redstonePage){
         this.layout=layout;int mode=tile.activationMode();
@@ -32,7 +32,7 @@ final class DisplayActivationPane {
         if(!active)return;
         for(GuiButton b:buttons)if(!(b.id>=90&&b.id<=93||b.id==197||b.id>=650&&b.id<=653||b.id==20||b.id==30||b.id==3004))b.visible=false;
         picker=new HousingTextureList(layout.listX,layout.top+54,layout.listWidth,tile.activationTexture(selected),8,null,
-            value->HousingTextureList.generalTexture(value)||(input?ScreenTextureList.artwork(value,true):HousingTextureList.displayTexture(value)&&(!com.vandorlabs.tiles.ScreenHousingTextures.entry(value).get("source").getAsString().startsWith("console_inputs/")||ScreenSurfaceGroups.wideDisplay(tile))))
+            value->HousingTextureList.generalTexture(value)||(input?ScreenTextureList.artwork(value,true):HousingTextureList.displayTexture(value)&&(!com.vandorlabs.tiles.ScreenHousingTextures.entry(value).get("source").getAsString().startsWith("console_inputs/")||includeHalfDisplays)))
             .visibleRows(layout.rows(true)).keepView(picker).custom(value->save(value,tile.activationPlayback(selected),tile.activationSpeed(selected)));
         if(pickerState!=selected||pickerMode!=mode)picker.revealSelected();
         pickerState=selected;pickerMode=mode;
@@ -50,7 +50,7 @@ final class DisplayActivationPane {
         return false;
     }
     private void save(int texture,int playback,int speed){save(tile.activationMode(),selected,texture,playback,speed);}
-    private void save(int mode,int state,int texture,int playback,int speed){tile.configureActivation(mode,state,texture,playback,speed);PacketHandler.INSTANCE.sendToServer(new MessageDisplayActivation(tile.getPos(),mode,state,texture,playback,speed,tile.isRedstoneInverted()));}
+    private void save(int mode,int state,int texture,int playback,int speed){com.vandorlabs.tiles.DisplayEditGroups.apply(tile,mode,state,texture,playback,speed,tile.isRedstoneInverted(),target->true);PacketHandler.INSTANCE.sendToServer(new MessageDisplayActivation(tile.getPos(),mode,state,texture,playback,speed,tile.isRedstoneInverted()));}
     void click(int x,int y,int button){if(picker.click(x,y,button)&&picker.picked())save(picker.selected(),tile.activationPlayback(selected),tile.activationSpeed(selected));}
     boolean key(char character,int key){return active&&picker.searchKey(character,key);}
     void wheel(int x,int y,int delta){picker.wheel(x,y,delta);}

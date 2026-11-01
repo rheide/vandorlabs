@@ -181,6 +181,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(nativeArtworkKey==null||nativeArtworkInput!=input||!nativeArtworkKey.equals(key)){nativeArtworkKey=key;nativeArtworkInput=input;nativeArtworkChoice=ScreenHousingTextures.clamp(ScreenHousingTextures.screenIndex((input?"console_inputs/":"")+key+"_static"));}
         return nativeArtworkChoice;
     }
+    public int sharedArtworkTexture(){int choice=baseSurfaceTexture(0);return choice==-1?nativeArtworkTexture():choice;}
     public int primaryArtworkTexture(){int choice=getSurfaceTexture(0);return choice==-1?nativeArtworkTexture():choice;}
     public boolean activationOverridesArtwork(){return activation.mode>0&&activation.texture(activationState())>=0;}
     public boolean splitDisplay(){return frameAppearance.split&&!activationOverridesArtwork();}

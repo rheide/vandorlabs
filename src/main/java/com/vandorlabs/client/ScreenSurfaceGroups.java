@@ -22,7 +22,7 @@ final class ScreenSurfaceGroups {
         if(tile.getWorld()==null)return false;
         net.minecraft.block.Block block=tile.getBlockType();
         if(block!=ModBlocks.ANIMATED_SCREEN_SELECTOR&&block!=ModBlocks.PROGRAMMABLE_FULL_INPUT)return false;
-        GlassSurfaceGroups.Layout joined=layout(tile);return joined.columns>joined.rows;
+        return DisplayEditGroups.wide(tile);
     }
     static synchronized GlassSurfaceGroups.Layout layout(TileEntityAnimatedScreenSelector tile){return layout(tile,false);}
     static synchronized GlassSurfaceGroups.Layout frameLayout(TileEntityAnimatedScreenSelector tile){return layout(tile,true);}

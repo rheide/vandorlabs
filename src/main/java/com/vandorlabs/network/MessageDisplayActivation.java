@@ -18,8 +18,12 @@ public final class MessageDisplayActivation implements IMessage {
             if(!m.valid||!p.world.isBlockLoaded(m.pos)||!com.vandorlabs.items.ConfigurationAccess.canConfigure(p)||!(p.openContainer instanceof ContainerAnimatedScreenSelector))return;
             net.minecraft.tileentity.TileEntity raw=p.world.getTileEntity(m.pos);ContainerAnimatedScreenSelector container=(ContainerAnimatedScreenSelector)p.openContainer;
             if(!(raw instanceof TileEntityAnimatedScreenSelector)||container.getTileEntity()!=raw||!container.canInteractWith(p)||!TileEntityAnimatedScreenSelector.supportsActivation(raw.getBlockType()))return;
-            ((TileEntityAnimatedScreenSelector)raw).setRedstoneInverted(m.inverted);
-            ((TileEntityAnimatedScreenSelector)raw).configureActivation(m.mode,m.state,m.texture,m.playback,m.speed);
+            TileEntityAnimatedScreenSelector origin=(TileEntityAnimatedScreenSelector)raw;
+            if(!DisplayEditGroups.apply(origin,m.mode,m.state,m.texture,m.playback,m.speed,m.inverted,target->
+                    p.world.isBlockLoaded(target.getPos(),false)&&p.world.getTileEntity(target.getPos())==target
+                    &&!com.vandorlabs.gear.ArmTransactions.locked(p.world,target.getPos())
+                    &&p.canPlayerEdit(target.getPos(),net.minecraft.util.EnumFacing.UP,p.getHeldItemMainhand())&&p.world.isBlockModifiable(p,target.getPos())))
+                for(TileEntityAnimatedScreenSelector target:DisplayEditGroups.members(origin)){net.minecraft.block.state.IBlockState state=p.world.getBlockState(target.getPos());p.world.notifyBlockUpdate(target.getPos(),state,state,2);}
         });return null;}
     }
 }
