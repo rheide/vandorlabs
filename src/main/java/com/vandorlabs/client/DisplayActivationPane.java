@@ -10,7 +10,7 @@ import java.util.*;
 /** Same flat state tabs, picker and playback widgets in every programmable display dialog. */
 final class DisplayActivationPane {
     private final GuiContainer host;private final TileEntityAnimatedScreenSelector tile;private final boolean input;
-    private HousingTextureList picker;private ProgrammableDialogLayout layout;private int selected=-1;private boolean active;
+    private HousingTextureList picker;private ProgrammableDialogLayout layout;private int selected=-1;private boolean active;private int pickerState=-1,pickerMode=-1;
     DisplayActivationPane(GuiContainer host,TileEntityAnimatedScreenSelector tile,boolean input){this.host=host;this.tile=tile;this.input=input;}
     boolean active(){return active;}
     void init(ProgrammableDialogLayout layout,List<GuiButton> buttons,int page,int redstonePage){
@@ -34,6 +34,8 @@ final class DisplayActivationPane {
         picker=new HousingTextureList(layout.listX,layout.top+54,layout.listWidth,tile.activationTexture(selected),8,null,
             value->HousingTextureList.generalTexture(value)||(input?ScreenTextureList.artwork(value,true):HousingTextureList.displayTexture(value)&&(!com.vandorlabs.tiles.ScreenHousingTextures.entry(value).get("source").getAsString().startsWith("console_inputs/")||ScreenSurfaceGroups.wideDisplay(tile))))
             .visibleRows(layout.rows(true)).keepView(picker).custom(value->save(value,tile.activationPlayback(selected),tile.activationSpeed(selected)));
+        if(pickerState!=selected||pickerMode!=mode)picker.revealSelected();
+        pickerState=selected;pickerMode=mode;
         boolean sharedRows=tile.activation.texture(selected)<0&&tile.baseSurfaceTexture(0)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;
         for(int i=0;i<3;i++){GuiButton b=layout.choice(660+i,i,3,66,new String[]{"Off","Static","Animated"}[i]);b.enabled=!sharedRows&&tile.activationPlayback(selected)!=i;buttons.add(b);b=layout.choice(663+i,i,3,100,new String[]{"Slow","Normal","Fast"}[i]);b.enabled=!sharedRows&&tile.activationSpeed(selected)!=i;buttons.add(b);}
         int resetY=input?(buttons.stream().anyMatch(b->b.id==30&&b.visible)?152:128):148;GuiButton inherit=layout.control(666,resetY,"Use Shared Artwork");inherit.enabled=tile.activation.texture(selected)>=0;buttons.add(inherit);
@@ -50,6 +52,7 @@ final class DisplayActivationPane {
     private void save(int texture,int playback,int speed){save(tile.activationMode(),selected,texture,playback,speed);}
     private void save(int mode,int state,int texture,int playback,int speed){tile.configureActivation(mode,state,texture,playback,speed);PacketHandler.INSTANCE.sendToServer(new MessageDisplayActivation(tile.getPos(),mode,state,texture,playback,speed,tile.isRedstoneInverted()));}
     void click(int x,int y,int button){if(picker.click(x,y,button)&&picker.picked())save(picker.selected(),tile.activationPlayback(selected),tile.activationSpeed(selected));}
+    boolean key(char character,int key){return active&&picker.searchKey(character,key);}
     void wheel(int x,int y,int delta){picker.wheel(x,y,delta);}
     void drag(int y){picker.drag(y);}
     void release(){if(picker!=null)picker.release();}

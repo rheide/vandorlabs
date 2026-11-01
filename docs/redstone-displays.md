@@ -10,7 +10,11 @@ an **Activation** setting on their **Redstone** tab:
 | Analog | 0, 1–5, 6–10, 11–15 | One selection for each signal band |
 
 Each enabled state has its own material/display choice, Off/Static/Animated
-playback and Slow/Normal/Fast animation speed. Receiving channels use the
+playback and Slow/Normal/Fast animation speed. Enabling redstone preserves the
+shared artwork, playback and speed. Newly exposed analog bands inherit the
+Digital On settings; previously configured states retain their own choices.
+Changing state tabs clears a stale search filter and reveals the selected
+texture. Search, wheel scrolling and scrollbar dragging work on every state tab. Receiving channels use the
 existing channel selector; leave it blank for local redstone. **Signal: Low**
 inverts the signal before selecting the artwork state. Right-click a cycling
 option to select its previous value.
@@ -18,6 +22,13 @@ option to select its previous value.
 **Use Shared Artwork** restores a state's inherited selection without removing
 its saved control or split-display setup. An explicit state texture overrides
 the primary shared source; frame finishes and Fit/Tile mapping remain shared.
+
+Local redstone at any member activates the whole matching joined rectangle.
+The highest local strength selects the shared analog band, and removing the
+last source deactivates the whole rectangle. This uses the same authored plane
+and rectangle partition as rendering, including diagonal layouts. Different
+state artwork configurations stay separate; receiving a channel does not turn
+the joined display into a channel repeater.
 
 On Consoles, the secondary Controls artwork stays shared. Redstone artwork
 states change the primary Display surface. Existing saved display gates retain

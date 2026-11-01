@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Preserve display artwork, animation and speed when exposing redstone states, reveal each tab's selected texture and route search to the visible picker. Share nearby local redstone across matching joined display rectangles.
+
 - Reduce plain Canopy Glass to ordinary block sizing in both hands, preserving padded inventory artwork.
 
 - Adapt shader companion maps during atlas loading to match custom sprites while preserving standalone maps and resource-pack priority, fixing OptiFine shader startup crashes on Half displays. Add actual shaderpack startup, upload and atlas-reload checks to the release gate.

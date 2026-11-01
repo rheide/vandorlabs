@@ -416,6 +416,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if(activationPane.key(typedChar,keyCode))return;
         if(rowsPage()&&rowEditors[rowSlot].key(typedChar,keyCode))return;
         if (channelField.getVisible() && channelField.textboxKeyTyped(typedChar,keyCode)) {
             if (channel() >= 0) sendUpdate();
@@ -431,11 +432,13 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         fontRenderer.drawString(I18n.format(console?"gui.vandorlabs.console.title":fullInput?"gui.vandorlabs.full_input.title":diagonalScreen?"gui.vandorlabs.diagonal_screen.title":"gui.vandorlabs.selector.title"),guiLeft+12,guiTop+8,0xFFFFFF);
+        if(!activationPane.active()){
         if(rowsPage())rowEditors[rowSlot].draw();else if(textureTab==0&&!splitPage())screenList.draw(fontRenderer,mouseX,mouseY);
         else if(console && textureTab==1)inputList.draw(fontRenderer,mouseX,mouseY);
         else if(textureTab==(console?2:1))housingList.draw(fontRenderer,mouseX,mouseY);
         if(!rowsPage()&&textureTab<(console?2:1))fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+54,0xDAE8F0);
         if(!rowsPage()&&textureTab<(console?2:1))fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+88,0xDAE8F0);
+        }
         if(textureTab==(console?3:2))receiver.drawLabel();
         if(framePage()||splitPage())framePane.draw(mouseX,mouseY);
         DialogHeader.logo(guiLeft,guiTop,xSize);activationPane.draw(mouseX,mouseY);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();

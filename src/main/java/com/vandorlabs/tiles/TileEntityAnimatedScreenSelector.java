@@ -120,7 +120,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     private long settingsRevision;
     public long getSettingsRevision() { return settingsRevision; }
-    private void settingsChanged() { settingsRevision++;GlassMaterials.changed();markDirty(); }
+    private void settingsChanged() { com.vandorlabs.redstone.JoinedDisplayPower.changed(this);settingsRevision++;GlassMaterials.changed();markDirty(); }
 
     private String selectedScreen = "engineering_screen";
     private boolean redstoneEnabled = false;
@@ -187,7 +187,19 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int activationTexture(int state){int choice=activation.texture(state);return choice>=0?choice:primarySurface>=0?primarySurface:nativeArtworkTexture();}
     public int activationPlayback(int state){int value=activation.playback(state);return value>=0?value:state==0?MODE_OFF:displayMode==MODE_OFF?MODE_ANIMATED:displayMode;}
     public int activationSpeed(int state){int value=activation.speed(state);return value>=0?value:animationSpeedIndex;}
-    public boolean configureActivation(int mode,int state,int texture,int playback,int speed){if(!supportsActivation(getBlockType())||!DisplayActivation.valid(mode,state,texture,playback,speed))return false;activation.configure(mode,state,texture,playback,speed);redstoneEnabled=mode>0;settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState current=world.getBlockState(pos);world.notifyBlockUpdate(pos,current,current,3);world.checkLight(pos);}return true;}
+    public boolean configureActivation(int mode,int state,int texture,int playback,int speed){
+        if(!supportsActivation(getBlockType())||!DisplayActivation.valid(mode,state,texture,playback,speed))return false;
+        int previous=activationMode();boolean transition=activation.mode<0||previous!=mode;
+        int sourceState=previous==1?3:state;
+        int inheritedTexture=previous>0?activationTexture(sourceState):primarySurface>=0?primarySurface:primarySurface==-1?nativeArtworkTexture():-1;
+        if(previous>0&&activation.texture(sourceState)<0&&primarySurface<-1)inheritedTexture=-1;
+        int inheritedPlayback=previous>0?activationPlayback(sourceState):displayMode;
+        int inheritedSpeed=previous>0?activationSpeed(sourceState):animationSpeedIndex;
+        activation.configure(mode,state,texture,playback,speed);
+        if(transition&&mode>0)activation.inheritUnset(inheritedTexture,inheritedPlayback,inheritedSpeed);
+        redstoneEnabled=mode>0;settingsChanged();
+        if(world!=null){net.minecraft.block.state.IBlockState current=world.getBlockState(pos);world.notifyBlockUpdate(pos,current,current,3);world.checkLight(pos);}return true;
+    }
     public int effectiveMode(int slot){return slot==1&&activation.mode>0?displayMode:getEffectiveMode();}
     public int effectiveSpeed(int slot){return slot==1?animationSpeedIndex:getAnimationSpeedIndex();}
     public int baseSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
@@ -209,7 +221,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int redstoneChannel;
     private boolean channelSignal;
     private int channelLevel;
-    public int getSignalLevel(){if(channelLevel==15)return 15;return Math.max(channelLevel,com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos));}
+    public volatile com.vandorlabs.redstone.JoinedDisplayPower.Group joinedDisplayPower;
+    public int getSignalLevel(){if(channelLevel==15)return 15;return Math.max(channelLevel,com.vandorlabs.redstone.JoinedDisplayPower.level(this));}
     @Override public int localSignalLevel(int channel){return com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos);}
     @Override public void setChannelLevel(int level){
         if(channelLevel==level)return;
@@ -405,7 +418,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         settingsChanged();
         RedstoneChannels.channelChanged(this, old);
     }
-    public void localInputChanged() { RedstoneChannels.inputChanged(this); }
+    public void localInputChanged() {if(joinedDisplayPower!=null)joinedDisplayPower.powerChanged();RedstoneChannels.inputChanged(this); }
     @Override public void onLoad() {
         super.onLoad();
         DeferredTileLoad.schedule(this, this::finishLoading);
@@ -417,9 +430,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(primarySurface==-1&&"engineering_screen".equals(selectedScreen)&&frameAppearance.front<0){frameAppearance.migrateLegacyFrame();framed=false;}
         return true;
     }
-    protected void finishLoading() {if(world!=null&&initializeDisplayArtwork(world.getBlockState(pos).getBlock())){markDirty();net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);} RedstoneChannels.register(this);for(RedstoneScreenContents c:controls)if(c!=null)c.finishLoading(); }
-    @Override public void invalidate() { RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.invalidate(); super.invalidate(); }
-    @Override public void onChunkUnload() { RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.onChunkUnload(); super.onChunkUnload(); }
+    protected void finishLoading() {com.vandorlabs.redstone.JoinedDisplayPower.changed(this);if(world!=null&&initializeDisplayArtwork(world.getBlockState(pos).getBlock())){markDirty();net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);} RedstoneChannels.register(this);for(RedstoneScreenContents c:controls)if(c!=null)c.finishLoading(); }
+    @Override public void invalidate() {com.vandorlabs.redstone.JoinedDisplayPower.changed(this);RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.invalidate(); super.invalidate(); }
+    @Override public void onChunkUnload() {com.vandorlabs.redstone.JoinedDisplayPower.changed(this);RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.onChunkUnload(); super.onChunkUnload(); }
 
     public static boolean isValidInputPanel(String id) {
         if (id != null) {
@@ -546,12 +559,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         // it wakes to Animated even when the redstone gate is disabled.
         int mode = ScreenBehavior.clampMode(displayMode);
         if (!redstoneEnabled && mode != MODE_OFF) return mode;
-        boolean powered = channelSignal || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world, pos);
+        boolean powered = channelSignal || com.vandorlabs.redstone.JoinedDisplayPower.level(this)>0;
         return ScreenBehavior.effectiveMode(mode,redstoneEnabled,redstoneEnabled && redstoneInverted ? !powered : powered);
     }
 
     protected boolean isTriggerPowered() {
-        return channelSignal || com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,pos);
+        return channelSignal || com.vandorlabs.redstone.JoinedDisplayPower.level(this)>0;
     }
 
     public boolean isUsableByPlayer(EntityPlayer player) {
@@ -689,7 +702,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         }
         // Tile packets arrive after the unchanged-state block notification. A
         // layout rebuilt between those events must see the newly loaded artwork.
-        settingsRevision++;GlassMaterials.changed();
+        com.vandorlabs.redstone.JoinedDisplayPower.changed(this);settingsRevision++;GlassMaterials.changed();
         portholeRevision++;
         if (world != null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));

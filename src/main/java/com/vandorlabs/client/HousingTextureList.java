@@ -201,6 +201,9 @@ final class HousingTextureList {
         Option option=options.get(selected);if(option!=null){String path=option.category;expanded.add(path);while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));expanded.add(path);}}rebuild();
         int index=rows.indexOf(selected);scroll=Math.max(0,Math.min(maxScroll(),index-count/2));
     }
+    HousingTextureList revealSelected(){
+        query="";if(search!=null)search.setText("");setSelected(selected());return this;
+    }
     private void ensureSelectedVisible(){
         int index=rows.indexOf(selected);
         // The first row is replaced by its pinned category heading.

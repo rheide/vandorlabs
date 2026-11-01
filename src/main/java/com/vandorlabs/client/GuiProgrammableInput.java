@@ -245,16 +245,19 @@ public class GuiProgrammableInput extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
         fontRenderer.drawString(I18n.format("gui.vandorlabs.input.title"),guiLeft+12,guiTop+8,0xFFFFFF);
+        if(!activationPane.active()){
         if(rowsPage())rowEditors[rowSlot].draw();else if(textureTab==0)screenList.draw(fontRenderer,mouseX,mouseY);
         else if(textureTab==1)housingList.draw(fontRenderer,mouseX,mouseY);
         if(!rowsPage()&&textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.display"),layout.controlsX,guiTop+54,0xDAE8F0);
         if(!rowsPage()&&textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+88,0xDAE8F0);
+        }
         if(textureTab==2)receiver.drawLabel();
         if(framePage())framePane.draw(mouseX,mouseY);
         DialogHeader.logo(guiLeft,guiTop,xSize);activationPane.draw(mouseX,mouseY);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {
+        if(activationPane.key(c,key))return;
         if(rowsPage()&&rowEditors[rowSlot].key(c,key))return;
         if (channelField.getVisible() && channelField.textboxKeyTyped(c,key)) { if (channel()>=0) sendUpdate(); }
         else super.keyTyped(c,key);

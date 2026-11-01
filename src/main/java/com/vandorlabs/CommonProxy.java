@@ -9,6 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class CommonProxy {
+    public boolean canSampleDisplayPower(){return true;}
     public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){}
     /** Physical server and integrated-server light reads use only shared APIs. */
     public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return sharedVehicleCombinedLight(world,pos,minimum);}

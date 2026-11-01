@@ -28,16 +28,16 @@ final class DisplayActivationRuntimeChecks {
     private static Block[] blocks(){return new Block[]{ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_console")};}
     private static void require(boolean value,String reason){if(!value)throw new IllegalStateException("display activation fixture="+fixture+" stage="+stage+" slot="+slot+": "+reason);}
     static boolean tick(Minecraft mc,File output)throws Exception{
-        if(done)return true;if(++ticks%10!=0)return false;require(ticks<5000,"bounded fixture");
+        if(done)return true;if(++ticks%10!=0)return false;require(ticks<6000,"bounded fixture");
         if(stage==0){
-            if(fixture==0){packets();joined(mc);}
+            if(fixture==0){if(!JoinedDisplayPowerRuntimeChecks.tick(mc))return false;packets();joined(mc);}
             mc.gameSettings.pauseOnLostFocus=false;mc.player.closeScreen();mc.playerController.setGameType(GameType.CREATIVE);Block block=blocks()[fixture];require(block!=null,"registered family block");
-            server(mc,()->{EntityPlayerMP p=player(mc);p.interactionManager.setGameType(GameType.CREATIVE);p.capabilities.isFlying=true;p.sendPlayerAbilities();p.inventory.currentItem=0;p.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));for(BlockPos at:BlockPos.getAllInBox(POS.add(-2,-1,-2),POS.add(3,2,3)))p.world.setBlockToAir(at);p.world.setBlockState(POS,block.getDefaultState(),3);p.inventoryContainer.detectAndSendChanges();p.connection.setPlayerLocation(POS.getX()+.5,POS.getY()+1,POS.getZ()+3,180,0);});stage=1;return false;
+            server(mc,()->{EntityPlayerMP p=player(mc);p.interactionManager.setGameType(GameType.CREATIVE);p.capabilities.isFlying=true;p.sendPlayerAbilities();p.inventory.currentItem=0;p.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));for(BlockPos at:BlockPos.getAllInBox(POS.add(-2,-1,-2),POS.add(3,2,3)))p.world.setBlockToAir(at);p.world.setBlockState(POS,block.getDefaultState(),3);TileEntityAnimatedScreenSelector seed=(TileEntityAnimatedScreenSelector)p.world.getTileEntity(POS);seed.setDisplayMode(2);seed.setAnimationSpeedIndex(2);p.inventoryContainer.detectAndSendChanges();p.connection.setPlayerLocation(POS.getX()+.5,POS.getY()+1,POS.getZ()+3,180,0);});stage=1;return false;
         }
         if(stage==1){if(mc.world.getBlockState(POS).getBlock()!=blocks()[fixture]||mc.player.getHeldItemMainhand().getItem()!=ModItems.CONFIGURIZER)return false;server(mc,()->{EntityPlayerMP p=player(mc);p.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,p.world,POS.getX(),POS.getY(),POS.getZ());});stage=2;return false;}
         GuiContainer gui=mc.currentScreen instanceof GuiContainer?(GuiContainer)mc.currentScreen:null;
-        if(stage==2){if(gui==null)return false;GuiButton redstone=buttons(gui).stream().filter(b->b.displayString.equals("Redstone")).findFirst().get();click(gui,redstone,0);button(gui,640,0);require(buttons(gui).stream().anyMatch(b->b.id==650)&&buttons(gui).stream().anyMatch(b->b.id==653),"digital tabs missing");button(gui,640,0);button(gui,640,1);button(gui,640,0);layout(mc,gui,output,"redstone");slot=0;stage=3;return false;}
-        if(stage==3){require(gui!=null,"GUI retained");button(gui,650+slot,0);DisplayActivationPane pane=(DisplayActivationPane)field(gui,"activationPane");HousingTextureList picker=(HousingTextureList)field(pane,"picker");pick(gui,picker,slot);button(gui,660+(slot==2?2:slot==0?0:1),0);button(gui,663+slot%3,0);layout(mc,gui,output,"band"+slot);if(++slot==4){button(gui,20,0);stage=4;}return false;}
+        if(stage==2){if(gui==null)return false;GuiButton redstone=buttons(gui).stream().filter(b->b.displayString.equals("Redstone")).findFirst().get();click(gui,redstone,0);TileEntityAnimatedScreenSelector draft=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(POS);int original=draft.primaryArtworkTexture();button(gui,640,0);for(int band:new int[]{0,3})require(draft.activationTexture(band)==original&&draft.activationPlayback(band)==2&&draft.activationSpeed(band)==2,"Digital must preserve native artwork animation and speed");require(buttons(gui).stream().anyMatch(b->b.id==650)&&buttons(gui).stream().anyMatch(b->b.id==653),"digital tabs missing");button(gui,640,0);button(gui,640,1);button(gui,640,0);for(int band=0;band<4;band++)require(draft.activationTexture(band)==original&&draft.activationPlayback(band)==2&&draft.activationSpeed(band)==2,"Analog must preserve artwork animation and speed");layout(mc,gui,output,"redstone");slot=0;stage=3;return false;}
+        if(stage==3){require(gui!=null,"GUI retained");button(gui,650+slot,0);DisplayActivationPane pane=(DisplayActivationPane)field(gui,"activationPane");HousingTextureList picker=(HousingTextureList)field(pane,"picker");require(((String)field(picker,"query")).isEmpty(),"new tab clears stale filter and reveals selection");selectedVisible(picker);pick(gui,picker,slot);button(gui,660+(slot==2?2:slot==0?0:1),0);button(gui,663+slot%3,0);layout(mc,gui,output,"band"+slot);search(gui,(HousingTextureList)field(pane,"picker"));if(slot==0)layout(mc,gui,output,"search");if(++slot==4){button(gui,20,0);stage=4;}return false;}
         if(stage==4){server(mc,()->{
             TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player(mc).world.getTileEntity(POS);assertStates(tile);TileEntityAnimatedScreenSelector loaded=new TileEntityAnimatedScreenSelector();loaded.setWorld(tile.getWorld());loaded.setPos(POS);loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));assertStates(loaded);
             player(mc).world.setBlockState(POS.east(2),blocks()[fixture].getDefaultState(),3);require(ProgrammableSettings.apply(player(mc).world,POS.east(2),ProgrammableSettings.capture(player(mc).world,POS)),"Copifier activation copy");assertStates((TileEntityAnimatedScreenSelector)player(mc).world.getTileEntity(POS.east(2)));
@@ -49,6 +49,24 @@ final class DisplayActivationRuntimeChecks {
             require(tile.baseSurfaceTexture(1)==tile.getSurfaceTexture(1),"console secondary artwork changed");tile.setChannelLevel(0);fixture++;stage=0;if(fixture==blocks().length){done=true;System.out.println("[vandorlabs][reprolab] display-activation PASS seven families actual dialog clicks Digital Analog Disabled right-click 16 levels packet bounds NBT Copifier console controls shared compact/full screenshots immediate tile-packet joins wide picker");}return done;
         }
         return false;
+    }
+    @SuppressWarnings("unchecked") private static void selectedVisible(HousingTextureList picker)throws Exception{
+        List<Integer> rows=(List<Integer>)field(picker,"rows");int index=rows.indexOf((Integer)field(picker,"selected")),scroll=(Integer)field(picker,"scroll"),count=(Integer)field(picker,"count");
+        require(index>scroll&&index<scroll+count,"selected texture must be visible below the pinned heading");
+    }
+    private static void search(GuiContainer gui,HousingTextureList picker)throws Exception{
+        TextureSearchInput.draw(new net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent.Pre(gui,0,0,0));
+        DialogRenderCapture.image(net.minecraft.client.Minecraft.getMinecraft(),gui,gui.width,gui.height);
+        picker=(HousingTextureList)field(field(gui,"activationPane"),"picker");
+        Field visible=TextureSearchInput.class.getDeclaredField("visible");visible.setAccessible(true);List<?> shown=(List<?>)visible.get(null);
+        require(shown.size()==1&&shown.get(0)==picker,"only the visible state picker may receive search input");
+        click(gui,(Integer)field(picker,"x")+6,(Integer)field(picker,"y")-HousingTextureList.ROW_HEIGHT+8,0);
+        for(char c:"gold".toCharArray()){
+            if(gui instanceof GuiAnimatedScreenSelector)((GuiAnimatedScreenSelector)gui).keyTyped(c,0);
+            else if(gui instanceof GuiProgrammableInput)((GuiProgrammableInput)gui).keyTyped(c,0);
+            else ((GuiProgrammableHalfConsole)gui).keyTyped(c,0);
+        }
+        require("gold".equals(field(picker,"query")),"active state picker must consume typed search text");
     }
     private static void assertStates(TileEntityAnimatedScreenSelector tile){require(tile.activationMode()==2,"analog mode saved");for(int i=0;i<4;i++)require(tile.activation.texture(i)==i&&tile.activationPlayback(i)==(i==2?2:i==0?0:1)&&tile.activationSpeed(i)==i%3,"state saved "+i);}
     private static void packets()throws Exception{
