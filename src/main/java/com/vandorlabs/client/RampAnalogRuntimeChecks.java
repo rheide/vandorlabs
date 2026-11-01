@@ -21,6 +21,10 @@ final class RampAnalogRuntimeChecks {
         public TileEntity channelTile(){return this;}
         public boolean isChannelMemberActive(){return world!=null&&!isInvalid();}
         public int getRedstoneChannel(){return 8190;}
+        // Synthetic signal generator: production settings deliberately accept
+        // only actual supported block tiles, never arbitrary test TileEntities.
+        @Override public ChannelList transmittedChannels(){return ChannelList.of(8190);}
+        @Override public int transmissionRange(){return 256;}
         public void setRedstoneChannel(int channel){}
         public boolean hasLocalRedstoneSignal(){return level>0;}
         public int localSignalLevel(int channel){return level;}
@@ -47,8 +51,7 @@ final class RampAnalogRuntimeChecks {
             controller=(TileEntityRampController)world.getTileEntity(root);controller.setOwner(actor);
             require(controller.configureHalfOffsets(actor,0,4,16,true,false,false,EnumFacing.SOUTH,0,false,1,true,false,0,0,false),"configure ordinary three-block platform");
             controller.setRedstoneChannels(ChannelList.of(8190));controller.setAnalogDeployment(true);
-            ItemStack transmitter=new ItemStack(Item.getByNameOrId("vandorlabs:redstone_transmitter"),1,3);
-            com.vandorlabs.items.ItemRedstoneTransmitter.configure(transmitter,ChannelList.of(8190));TransmitterSlots.set(source,transmitter);
+            require(!TransmitterSlots.supported(source),"synthetic source must not widen production settings support");
             source.level(8);ControllerRuntimeChecks.elapsed(controller,controller.durationTicks()+1);
             require(controller.attached()&&!controller.isMoving()&&Math.abs(controller.pose(0)-8/15D)<1e-8,"level 8 stops at its intermediate deployment");
             NBTTagCompound saved=controller.writeToNBT(new NBTTagCompound());require(saved.getBoolean("RampAnalogDeployment")&&Math.abs(saved.getDouble("RampTargetPose")-8/15D)<1e-8,"analog option and target persist");

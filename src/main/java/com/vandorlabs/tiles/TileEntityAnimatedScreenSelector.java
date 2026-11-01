@@ -584,7 +584,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
-        super.writeToNBT(compound);activation.write(compound);com.vandorlabs.redstone.TransmitterSlots.written(compound);frameAppearance.write(compound);glassPlayback.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
+        super.writeToNBT(compound);activation.write(compound);frameAppearance.write(compound);glassPlayback.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);

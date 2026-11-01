@@ -49,7 +49,7 @@ public final class InlineTransmitterWidget {
     }
     private static State layout(GuiContainer gui){
         Minecraft mc=Minecraft.getMinecraft();if(mc.player==null)return null;InlineTransmitters.attach(gui.inventorySlots,mc.player);
-        InlineTransmitters.Binding binding=InlineTransmitters.binding(gui.inventorySlots);if(binding==null)return null;binding.hide();
+        InlineTransmitters.Binding binding=InlineTransmitters.binding(gui.inventorySlots);if(binding==null)return null;
         State state=STATES.computeIfAbsent(gui,g->new State());List<GuiButton> current=buttons(gui);
         Iterator<Map.Entry<GuiButton,Placement>> iterator=state.buttons.entrySet().iterator();while(iterator.hasNext()){Map.Entry<GuiButton,Placement> e=iterator.next();if(!current.contains(e.getKey())){save(gui,e.getValue());state.draft=e.getValue();iterator.remove();}}
         for(Placement p:state.buttons.values())p.shown=false;

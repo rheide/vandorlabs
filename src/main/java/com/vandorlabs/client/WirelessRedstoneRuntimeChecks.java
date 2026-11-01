@@ -24,7 +24,7 @@ final class WirelessRedstoneRuntimeChecks {
             world.getChunkFromBlockCoords(txPos);world.getChunkFromBlockCoords(rxPos);
             world.setBlockState(txPos,transmitter.getDefaultState().withProperty(BlockWirelessRedstone.FACING,port),2);world.setBlockState(rxPos,receiver.getDefaultState().withProperty(BlockWirelessRedstone.FACING,port),2);
             TileEntityWirelessRedstone tx=(TileEntityWirelessRedstone)world.getTileEntity(txPos),rx=(TileEntityWirelessRedstone)world.getTileEntity(rxPos);
-            net.minecraft.item.ItemStack module=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,1,0);com.vandorlabs.items.ItemRedstoneTransmitter.configure(module,ChannelList.of(64801,64802));TransmitterSlots.set(tx,module);rx.setRedstoneChannels(ChannelList.of(64802,64803));RedstoneChannels.register(tx);RedstoneChannels.register(rx);
+            TransmitterSlots.configure(tx,ChannelList.of(64801,64802),16,true);rx.setRedstoneChannels(ChannelList.of(64802,64803));RedstoneChannels.register(tx);RedstoneChannels.register(rx);
             BlockPos source=txPos.offset(port);
             try{
                 world.setBlockState(source,slider.getDefaultState().withProperty(BlockVandorSwitch.FACING,port),2);TileEntitySignalControl control=(TileEntitySignalControl)world.getTileEntity(source);

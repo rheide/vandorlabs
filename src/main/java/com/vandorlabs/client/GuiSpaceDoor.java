@@ -109,7 +109,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
             else glassAppearance=new com.vandorlabs.tiles.DoorGlassAppearance(glassAppearance.material,glassAppearance.shade,button.id==20?GuiOptionCycle.next(glassAppearance.tint,com.vandorlabs.tiles.GlassTextures.TINT_COUNT):glassAppearance.tint,button.id==21?GuiOptionCycle.next(glassAppearance.layout,3):glassAppearance.layout);
             sendGlass();initGui();return;
         }
-        if(settingsPage==1&&framePane!=null&&framePane.action(button))return;if(button.id>=190&&button.id<=194){settingsPage=button.id-190;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(settingsPage==1&&framePane!=null&&framePane.action(button))return;if(button.id>=190&&button.id<=194){settingsPage=button.id-190;initGui();return;}if(button.id==198){return;}
 
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {

@@ -36,7 +36,7 @@ final class GearPushing {
                     if(originals.add(cell.pos)){
                         if(originals.size()>12||state.getBlockHardness(world,cell.pos)<0||state.getBlock().getMobilityFlag(state)!=net.minecraft.block.material.EnumPushReaction.NORMAL||!state.isFullCube()||state.getBlock().hasTileEntity(state)||state.getMaterial().isLiquid())throw new IllegalArgumentException("The complete outward push path must contain at most twelve movable solid blocks");
                         if(actor==null)throw new IllegalArgumentException("Use the Configurizer before pushing blocks");
-                        if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,cell.pos,state,actor)))throw new IllegalArgumentException("A protection rule prevented pushing the block");
+                        if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,cell.pos,state,actor)))throw new IllegalArgumentException("A protection rule prevented pushing the block");
                     }
                     VehicleService.permission(actor,at);VehicleService.permission(actor,at.offset(arm.mountDirection()));
                     pushed.put(at,cell);pending.add(at.offset(arm.mountDirection()));
@@ -71,7 +71,7 @@ final class GearPushing {
             IBlockState state=world.getBlockState(at);if(state.getBlock().isAir(state,world,at))continue;
             if(saved.size()>=12||arm.members().contains(at)||state.getBlockHardness(world,at)<0||state.getBlock().getMobilityFlag(state)!=net.minecraft.block.material.EnumPushReaction.NORMAL||!state.isFullCube()||state.getBlock().hasTileEntity(state)||state.getMaterial().isLiquid())throw new IllegalArgumentException("Push up to twelve ordinary solid blocks; tile entities and immovable blocks stay protected");
             VehicleService.permission(actor,at);VehicleService.permission(actor,at.offset(arm.mountDirection()));
-            if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented pushing the block");
+            if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented pushing the block");
             saved.put(at,new VehicleStructure.Cell(at,state,null));pending.add(at.offset(arm.mountDirection()));
         }
         Set<BlockPos> changed=new LinkedHashSet<>(saved.keySet());for(BlockPos at:saved.keySet())changed.add(at.offset(arm.mountDirection()));

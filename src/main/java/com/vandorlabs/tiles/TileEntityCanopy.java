@@ -511,7 +511,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     @Override public void onChunkUnload(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();appearanceChanged();}
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound n) {
-        super.writeToNBT(n);com.vandorlabs.redstone.TransmitterSlots.written(n);
+        super.writeToNBT(n);
         if (anchor != null) {
             n.setLong("Anchor", anchor.toLong());
             n.setLong("AnchorOffset", anchor.subtract(pos).toLong());

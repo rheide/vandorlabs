@@ -70,7 +70,7 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
     }
     @Override protected void actionPerformed(GuiButton button){
         if(button.id==90||button.id==91){apply();page=button.id-90;initGui();return;}
-        if(button.id==92){apply();PacketHandler.INSTANCE.sendToServer(MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(button.id==92){apply();return;}
         // GuiSlider owns its value callback and drag state. Rebuilding here cancels the drag.
         if(button instanceof GuiSlider)return;
         switch(button.id){

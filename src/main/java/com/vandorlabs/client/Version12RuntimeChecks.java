@@ -96,16 +96,26 @@ final class Version12RuntimeChecks {
                 world.setBlockState(p.east(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);tile.inputChanged();
                 require(!world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"Off mode with power");
                 require(tile.configure(1,731,16),"On mode settings");
-                com.vandorlabs.redstone.RedstoneFixtureTransmitters.equip(tile);
                 require(world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"On mode with power");
                 TileEntityLandingGear restored=new TileEntityLandingGear();restored.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                 require(restored.getSize()==size&&restored.getMode()==1&&restored.getRedstoneChannel()==731&&restored.getExtensionPixels()==16,"gear saved settings");
                 require(!tile.configure(3,0,65)&&!tile.configure(0,0,7),"gear accepted invalid settings or non-half-block length");
-                BlockPos remote=p.add(3,0,0);
+                // Gears are channel receivers. A dedicated supported transmitter
+                // samples the same physical source instead of asking one gear
+                // to rebroadcast its local input into another receiver.
+                BlockPos transmitterPos=p.east(2);
+                BlockWirelessRedstone transmitterBlock=(BlockWirelessRedstone)block("redstone_transmitter_block");
+                world.setBlockState(transmitterPos,transmitterBlock.getDefaultState().withProperty(BlockWirelessRedstone.FACING,EnumFacing.WEST),3);
+                TileEntityWirelessRedstone transmitter=(TileEntityWirelessRedstone)world.getTileEntity(transmitterPos);
+                com.vandorlabs.redstone.TransmitterSlots.configure(transmitter,com.vandorlabs.redstone.ChannelList.of(731),16,false);
+                DeferredTileLoad.flush(world);transmitter.sampleInput();
+                require(!com.vandorlabs.redstone.TransmitterSlots.supported(tile),"landing gear remains a receiver");
+                require(com.vandorlabs.redstone.RedstoneChannels.level(world,p.east(6),731)==15,"real transmitter publishes the powered input");
+                BlockPos remote=p.east(6);
                 world.setBlockState(remote,gear.getDefaultState(),3);
                 TileEntityLandingGear linked=(TileEntityLandingGear)world.getTileEntity(remote);
                 require(linked.configure(1,731,16),"linked gear configuration");
-                require(world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"gear did not receive remote channel signal");
+                require(!com.vandorlabs.redstone.LoadedRedstonePower.isPowered(world,remote)&&world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"gear did not receive isolated remote channel signal");
                 gear.setExtended(world,remote,false);
                 NBTTagCompound linkedSave=linked.writeToNBT(new NBTTagCompound());
                 int linkedMeta=gear.getMetaFromState(world.getBlockState(remote));
@@ -116,12 +126,12 @@ final class Version12RuntimeChecks {
                 require(!world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"channel registration canceled manual retraction");
                 DeferredTileLoad.flush(world);
                 require(!world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"restored channel canceled manual retraction without an input edge");
-                world.setBlockToAir(p.east());tile.inputChanged();
+                world.setBlockToAir(p.east());tile.inputChanged();transmitter.sampleInput();
                 require(!world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"gear channel remained powered");
-                world.setBlockState(p.east(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);tile.inputChanged();
+                world.setBlockState(p.east(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);tile.inputChanged();transmitter.sampleInput();
                 require(world.getBlockState(remote).getValue(BlockTelescopicLandingGear.EXTENDED),"restored channel gear ignored a subsequent power edge");
-                world.setBlockToAir(p.east());tile.inputChanged();
-                world.setBlockToAir(remote);
+                world.setBlockToAir(p.east());tile.inputChanged();transmitter.sampleInput();
+                world.setBlockToAir(remote);world.setBlockToAir(transmitterPos);
 
                 tile.configure(1,0,16);gear.setExtended(world,p,true);
                 require(tile.configure(1,0,24)&&world.getBlockState(p).getValue(BlockTelescopicLandingGear.EXTENDED),"length edit canceled manual extension");

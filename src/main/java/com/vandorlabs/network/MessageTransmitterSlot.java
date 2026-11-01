@@ -7,20 +7,17 @@ import net.minecraftforge.fml.common.network.simpleimpl.*;
 import com.vandorlabs.container.*;
 import com.vandorlabs.redstone.ChannelList;
 
-/** Open/install/edit requests; item movement itself uses vanilla window-click validation. */
+/** Built-in settings and standalone handheld channel requests. */
 public final class MessageTransmitterSlot implements IMessage {
     private int action,selector,window;
     private BlockPos pos=BlockPos.ORIGIN;
-    private String text="",expected="";private int tier;private boolean local;
+    private String text="";private int tier;private boolean local;
     public MessageTransmitterSlot(){}
-    public static MessageTransmitterSlot open(BlockPos pos,int selector){MessageTransmitterSlot m=new MessageTransmitterSlot();m.pos=pos;m.selector=selector;return m;}
-    public static MessageTransmitterSlot edit(int window){MessageTransmitterSlot m=new MessageTransmitterSlot();m.action=1;m.window=window;return m;}
     public static MessageTransmitterSlot save(int window,ChannelList channels){MessageTransmitterSlot m=new MessageTransmitterSlot();m.action=2;m.window=window;m.text=channels.toString();return m;}
-    public static MessageTransmitterSlot hosted(int window,int selector,net.minecraft.item.ItemStack before,ChannelList after){MessageTransmitterSlot m=new MessageTransmitterSlot();m.action=3;m.window=window;m.selector=selector;m.tier=before.getMetadata();m.expected=com.vandorlabs.items.ItemRedstoneTransmitter.channels(before).toString();m.text=after.toString();return m;}
     public static MessageTransmitterSlot settings(int window,int selector,ChannelList channels,int range,boolean local){MessageTransmitterSlot m=new MessageTransmitterSlot();m.action=4;m.window=window;m.selector=selector;m.text=channels.toString();m.tier=range;m.local=local;return m;}
-    @Override public void toBytes(ByteBuf b){b.writeByte(action);b.writeLong(pos.toLong());b.writeInt(selector);b.writeInt(window);ByteBufUtils.writeUTF8String(b,text);if(action==3){b.writeByte(tier);ByteBufUtils.writeUTF8String(b,expected);}if(action==4){b.writeShort(tier);b.writeBoolean(local);}}
+    @Override public void toBytes(ByteBuf b){b.writeByte(action);b.writeLong(pos.toLong());b.writeInt(selector);b.writeInt(window);ByteBufUtils.writeUTF8String(b,text);if(action==4){b.writeShort(tier);b.writeBoolean(local);}}
     private static String bounded(ByteBuf b){int bytes=ByteBufUtils.readVarInt(b,2);if(bytes<0||bytes>ChannelList.MAX_TEXT_LENGTH*3||bytes>b.readableBytes())throw new IllegalArgumentException("Transmitter channel text too long");String text=b.toString(b.readerIndex(),bytes,java.nio.charset.StandardCharsets.UTF_8);b.skipBytes(bytes);if(text.length()>ChannelList.MAX_TEXT_LENGTH)throw new IllegalArgumentException("Transmitter channels too long");return text;}
-    @Override public void fromBytes(ByteBuf b){action=b.readUnsignedByte();pos=BlockPos.fromLong(b.readLong());selector=b.readInt();window=b.readInt();text=bounded(b);if(action==3){tier=b.readUnsignedByte();expected=bounded(b);}if(action==4){tier=b.readUnsignedShort();local=b.readBoolean();if(!com.vandorlabs.redstone.TransmitterSlots.validRange(tier))throw new IllegalArgumentException("Invalid transmission range");}if(b.isReadable()||action>4)throw new IllegalArgumentException("Malformed transmitter request");}
+    @Override public void fromBytes(ByteBuf b){action=b.readUnsignedByte();pos=BlockPos.fromLong(b.readLong());selector=b.readInt();window=b.readInt();text=bounded(b);if(action==4){tier=b.readUnsignedShort();local=b.readBoolean();if(!com.vandorlabs.redstone.TransmitterSlots.validRange(tier))throw new IllegalArgumentException("Invalid transmission range");}if(b.isReadable()||(action!=2&&action!=4))throw new IllegalArgumentException("Malformed transmitter request");}
 
     public static net.minecraft.tileentity.TileEntity openedTile(net.minecraft.inventory.Container container){
         if(container instanceof ContainerRedstoneChannel)return ((ContainerRedstoneChannel)container).member.channelTile();
@@ -33,15 +30,14 @@ public final class MessageTransmitterSlot implements IMessage {
         if(container instanceof com.vandorlabs.plate.PlateContainer)return ((com.vandorlabs.plate.PlateContainer)container).tile;
         if(container instanceof ContainerModularGear)return ((ContainerModularGear)container).currentTile();
         if(container instanceof com.vandorlabs.coupler.ContainerCoupler)return ((com.vandorlabs.coupler.ContainerCoupler)container).tile;
-        if(container instanceof ContainerTransmitterSlot)return ((ContainerTransmitterSlot)container).member.channelTile();
         return null;
     }
     public static final class Handler implements IMessageHandler<MessageTransmitterSlot,IMessage>{public IMessage onMessage(MessageTransmitterSlot m,MessageContext c){net.minecraft.entity.player.EntityPlayerMP p=c.getServerHandler().player;p.getServerWorld().addScheduledTask(()->{
         if(m.action==4){
             com.vandorlabs.redstone.InlineTransmitters.Binding binding=com.vandorlabs.redstone.InlineTransmitters.binding(p.openContainer);
-            if(p.openContainer.windowId!=m.window||binding==null||!binding.usable(p)||!binding.modules.containsKey(m.selector))return;
+            if(p.openContainer.windowId!=m.window||binding==null||!binding.usable(p)||m.selector!=0)return;
             com.vandorlabs.redstone.RedstoneChannelMember member=binding.source(m.selector);ChannelList channels=ChannelList.parse(m.text);
-            if(member==null||!com.vandorlabs.redstone.TransmitterSlots.supported(member)||!ContainerTransmitterSlot.usable(p,member)||channels==null||!com.vandorlabs.redstone.TransmitterSlots.validRange(m.tier))return;
+            if(member==null||!com.vandorlabs.redstone.TransmitterSlots.supported(member)||!com.vandorlabs.redstone.InlineTransmitters.usable(p,member)||channels==null||!com.vandorlabs.redstone.TransmitterSlots.validRange(m.tier))return;
             com.vandorlabs.redstone.TransmitterSlots.configure(member,channels,m.tier,m.local);p.openContainer.detectAndSendChanges();
         }
         else if(m.action==2&&p.openContainer.windowId==m.window&&p.openContainer instanceof ContainerTransmitterItem){ChannelList list=ChannelList.parse(m.text);if(list!=null)((ContainerTransmitterItem)p.openContainer).configure(p,list);}

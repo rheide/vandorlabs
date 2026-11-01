@@ -121,7 +121,7 @@ public class TileEntityLandingGear extends TileEntity implements ITickable, Reds
     public void onChunkUnload(){detached=true;RedstoneChannels.unregister(this);super.onChunkUnload();}
     public void sync(){if(world!=null&&!world.isRemote){IBlockState s=world.getBlockState(pos);world.notifyBlockUpdate(pos,s,s,2);}}
     public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);if(taxiGrounded)tag.setBoolean("TaxiGroundedGear",true);ChannelData.write(tag,channels);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
+        super.writeToNBT(tag);if(taxiGrounded)tag.setBoolean("TaxiGroundedGear",true);ChannelData.write(tag,channels);tag.setFloat("Progress",progress);tag.setInteger("ExtensionPixels",extensionPixels);
         tag.setInteger("GearSize",size);tag.setInteger("RedstoneMode",mode);tag.setInteger("RedstoneChannel",channel);tag.setBoolean("LastSignal",lastSignal);
         if(hasOwner){tag.setBoolean("GearHasOwner",true);tag.setInteger("GearOwnerDistance",ownerDistance);
             tag.setInteger("GearOwnerX",ownerX);tag.setInteger("GearOwnerZ",ownerZ);}return tag;

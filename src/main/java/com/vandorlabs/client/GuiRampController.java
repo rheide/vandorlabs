@@ -122,7 +122,7 @@ public class GuiRampController extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id>=30){page=button.id-30;refresh();return;}
-        if(button.id==23){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(controller.getPos(),0));return;}
+        if(button.id==23){return;}
         if (button.id==1) {
             int mode=GuiOptionCycle.next(moat?6:escalator!=0?escalator+3:elevator?(extendSegments?3:2):(extendSegments?1:0),7);
             moat=mode==6;escalator=mode>=4&&mode<6?mode-3:0;

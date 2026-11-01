@@ -20,7 +20,7 @@ import java.io.File;
 import java.util.List;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-/** Real survival mouse/window packets prove slot ownership and inline editing in the original window. */
+/** Real survival mouse/window packets prove held-item preservation and inline settings in the original window. */
 final class InlineTransmitterLiveChecks {
     private static final BlockPos POS=new BlockPos(2020,160,2090),RX=POS.east(8);
     private static final int CHANNEL=65291;
@@ -34,7 +34,7 @@ final class InlineTransmitterLiveChecks {
     private static TileEntityWirelessRedstone tx(Minecraft mc){return (TileEntityWirelessRedstone)world(mc).getTileEntity(POS);}
     private static boolean server(Minecraft mc,java.util.concurrent.Callable<Boolean> action)throws Exception{return mc.getIntegratedServer().callFromMainThread(action).get();}
     private static void next(){stage++;ticks=0;}
-    private static void owners(Minecraft mc,int expected){EntityPlayerMP actor=actor(mc);int count=0;for(int i=0;i<actor.inventory.getSizeInventory();i++){ItemStack stack=actor.inventory.getStackInSlot(i);if(ItemRedstoneTransmitter.valid(stack))count+=stack.getCount();}ItemStack held=actor.inventory.getItemStack(),installed=TransmitterSlots.get(tx(mc));if(ItemRedstoneTransmitter.valid(held))count+=held.getCount();if(ItemRedstoneTransmitter.valid(installed))count+=installed.getCount();require(count==expected,"module ownership count="+count+" expected="+expected);require(actor.openContainer==serverWindow&&actor.openContainer.windowId==window,"original server container/window retained");require(actor.interactionManager.getGameType()==GameType.SURVIVAL&&actor.inventory.currentItem==0,"authoritative survival mode/selected hotbar retained");}
+    private static void owners(Minecraft mc,int expected){EntityPlayerMP actor=actor(mc);int count=0;for(int i=0;i<actor.inventory.getSizeInventory();i++){ItemStack stack=actor.inventory.getStackInSlot(i);if(ItemRedstoneTransmitter.valid(stack))count+=stack.getCount();}ItemStack held=actor.inventory.getItemStack();if(ItemRedstoneTransmitter.valid(held))count+=held.getCount();require(count==expected,"handheld transmitter count="+count+" expected="+expected);require(actor.openContainer==serverWindow&&actor.openContainer.windowId==window,"original server container/window retained");require(actor.interactionManager.getGameType()==GameType.SURVIVAL&&actor.inventory.currentItem==0,"authoritative survival mode/selected hotbar retained");}
     private static void click(GuiScreen gui,int x,int y)throws Exception{ReflectionHelper.findMethod(GuiScreen.class,"mouseClicked","func_73864_a",int.class,int.class,int.class).invoke(gui,x,y,0);ReflectionHelper.findMethod(GuiScreen.class,"mouseReleased","func_146286_b",int.class,int.class,int.class).invoke(gui,x,y,0);}
     private static void slot(GuiContainer gui,Slot slot)throws Exception{int left=ReflectionHelper.getPrivateValue(GuiContainer.class,gui,"guiLeft","field_147003_i"),top=ReflectionHelper.getPrivateValue(GuiContainer.class,gui,"guiTop","field_147009_r");click(gui,left+slot.xPos+8,top+slot.yPos+8);}
     private static GuiButton button(GuiScreen gui,String label){List<GuiButton> buttons=ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton b:buttons)if(b.visible&&b.displayString.equals(label))return b;throw new IllegalStateException("Missing inline button "+label);}
@@ -54,7 +54,7 @@ final class InlineTransmitterLiveChecks {
             if(redstone.enabled){require(!button(parent,"General").enabled,"native General tab opens first");click(parent,redstone.x+4,redstone.y+4);return false;}
             if(InlineTransmitterWidget.controls(parent).size()!=2)return false;
             server(mc,()->{serverWindow=actor(mc).openContainer;window=serverWindow.windowId;owners(mc,1);require(serverWindow instanceof ContainerWirelessRedstone,"native container retained");return true;});
-            for(InlineTransmitters.ModuleSlot module:InlineTransmitters.binding(parent.inventorySlots).modules.values())require(!module.visible&&!module.isItemValid(mc.player.inventory.getStackInSlot(1)),"no insertable module slots");
+            require(parent.inventorySlots.inventorySlots.isEmpty(),"settings append no module or hotbar inventory slots");
             GuiTextField field=InlineTransmitterWidget.channelsField(parent);require(field!=null&&field.getVisible(),"channels available without an item");
             InlineTransmitterWidget.mouseInput(parent,field.x+4,field.y+4,0);field.setText("");for(char c:Integer.toString(CHANNEL).toCharArray())InlineTransmitterWidget.keyInput(parent,c,0);InlineTransmitterWidget.keyInput(parent,'\n',org.lwjgl.input.Keyboard.KEY_RETURN);next();return false;
         }
@@ -65,7 +65,7 @@ final class InlineTransmitterLiveChecks {
         if(stage==5){if(ticks<4||!server(mc,()->tx(mc).transmissionRange()==8&&((TileEntityWirelessRedstone)world(mc).getTileEntity(RX)).getOutputLevel()==15))return false;
             GuiButton local=InlineTransmitterWidget.controls(parent).get(1);InlineTransmitterWidget.mouseInput(parent,local.x+4,local.y+4,1);next();return false;}
         if(stage==6){if(ticks<4||!server(mc,()->!TransmitterSlots.localRedstone(tx(mc))))return false;
-            server(mc,()->{owners(mc,1);require(TransmitterSlots.get(tx(mc)).isEmpty(),"no module installed or consumed");require(((TileEntityWirelessRedstone)world(mc).getTileEntity(RX)).getOutputLevel()==15,"channels continue with local output disabled");require(world(mc).getBlockState(POS).getWeakPower(world(mc),POS,EnumFacing.WEST)==0,"physical output disabled");return true;});
+            server(mc,()->{owners(mc,1);require(actor(mc).openContainer.inventorySlots.isEmpty(),"built-in settings add no item inventory");require(((TileEntityWirelessRedstone)world(mc).getTileEntity(RX)).getOutputLevel()==15,"channels continue with local output disabled");require(world(mc).getBlockState(POS).getWeakPower(world(mc),POS,EnumFacing.WEST)==0,"physical output disabled");return true;});
             VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_transmission_range_local.png");
             GuiTextField field=InlineTransmitterWidget.channelsField(parent);InlineTransmitterWidget.mouseInput(parent,field.x+4,field.y+4,0);field.setText("");for(char c:Integer.toString(CHANNEL+1).toCharArray())InlineTransmitterWidget.keyInput(parent,c,0);
             parent.initGui();InlineTransmitterWidget.beforeDraw(new net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent.Pre(parent,0,0,0));InlineTransmitterWidget.afterDraw(new net.minecraftforge.client.event.GuiScreenEvent.DrawScreenEvent.Post(parent,0,0,0));

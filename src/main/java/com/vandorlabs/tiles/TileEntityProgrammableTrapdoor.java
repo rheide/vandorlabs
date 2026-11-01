@@ -346,7 +346,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         tag.setInteger("RedstoneChannel",channel);ChannelData.write(tag,channels);return tag;
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);fluids.write(tag);ChannelData.write(tag,channels);tag.merge(itemSettings());
+        super.writeToNBT(tag);fluids.write(tag);ChannelData.write(tag,channels);tag.merge(itemSettings());
         tag.setInteger("TrapdoorSchema",1);tag.setBoolean("ChannelSignal",channelSignal);
         tag.setBoolean("TrapdoorPowerKnown",powerKnown);tag.setBoolean("TrapdoorLastPower",lastPower);
         if(partner!=null)tag.setLong("TrapdoorPartner",partner.toLong());

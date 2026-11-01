@@ -24,7 +24,7 @@ public final class GuiTokenSlot extends GuiContainer {
     String companyLabel(){return CredentialFilterPicker.label(tile.chip(),allowed);}
     private void labels(){for(GuiButton button:buttonList)if(button.id==1)button.displayString=TileEntityTokenSlot.behaviorName(behavior);}
     private void save(){if(com.vandorlabs.redstone.ChannelList.parse(channels.getText())==null){channels.setTextColor(0xff7777);return;}channels.setTextColor(0xffffff);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageTokenSlot(inventorySlots.windowId,behavior,false,allowed,channels.getText()));}
-    @Override protected void actionPerformed(GuiButton button){if(button.id==100||button.id==101){page=button.id-100;initGui();return;}if(button.id==90){save();com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}if(button.id==3){mc.player.closeScreen();return;}behavior=GuiOptionCycle.next(behavior,4);save();labels();}
+    @Override protected void actionPerformed(GuiButton button){if(button.id==100||button.id==101){page=button.id-100;initGui();return;}if(button.id==90){save();return;}if(button.id==3){mc.player.closeScreen();return;}behavior=GuiOptionCycle.next(behavior,4);save();labels();}
     @Override protected void keyTyped(char ch,int key)throws IOException{super.keyTyped(ch,key);}
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1))return;

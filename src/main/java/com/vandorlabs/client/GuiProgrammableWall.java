@@ -254,7 +254,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     @Override protected void actionPerformed(GuiButton button) {
         if(GlassPlaybackPane.action(button,tile.glassPlayback)){sendPortholeSettings();initGui();return;}
-        if(framePage&&framePane!=null&&framePane.action(button))return;if(button.id==213){framePage=false;redstonePage=false;faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}if(button.id>=210&&button.id<=212){if(porthole&&button.id==210)return;frameFace=button.id-210;redstonePage=false;framePage=true;initGui();return;}if(button.id==195||button.id==196||button.id==197){if(porthole&&button.id==195){faceTarget=-1;selected=selectedTexture();textureList=null;}redstonePage=button.id==196;framePage=button.id==197;initGui();return;}if(button.id==198){PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(framePage&&framePane!=null&&framePane.action(button))return;if(button.id==213){framePage=false;redstonePage=false;faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}if(button.id>=210&&button.id<=212){if(porthole&&button.id==210)return;frameFace=button.id-210;redstonePage=false;framePage=true;initGui();return;}if(button.id==195||button.id==196||button.id==197){if(porthole&&button.id==195){faceTarget=-1;selected=selectedTexture();textureList=null;}redstonePage=button.id==196;framePage=button.id==197;initGui();return;}if(button.id==198){return;}
 
 
 

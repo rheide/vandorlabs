@@ -16,6 +16,9 @@ import net.minecraft.world.WorldServer;
 public final class TaxiSettingsRuntimeChecks {
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException("taxi settings: "+message);}
     private static final class Source extends TileEntity implements RedstoneChannelMember {
+        @Override public com.vandorlabs.redstone.ChannelList transmittedChannels(){return getRedstoneChannels();}
+        @Override public int transmissionRange(){return 256;}
+
         public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         boolean high;public TileEntity channelTile(){return this;}public int getRedstoneChannel(){return 5341;}
         public void setRedstoneChannel(int channel){}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean value){}
@@ -26,7 +29,7 @@ public final class TaxiSettingsRuntimeChecks {
         for(float yaw:new float[]{-372,-12,0,12,78,90,102,258,270,282,348,372})require(VehicleRotation.turns(yaw)==Math.floorMod(Math.round(yaw/90),4),"lenient cardinal heading "+yaw);
         for(float yaw:new float[]{13,45,77,103,Float.NaN}){boolean refused=false;try{VehicleRotation.turns(yaw);}catch(IllegalArgumentException expected){refused=true;}require(refused,"noncardinal heading "+yaw);}
         BlockPos at=new BlockPos(320,102,160);world.getChunkFromBlockCoords(at.west(4));world.getChunkFromBlockCoords(at.east(4));
-        Source source=new Source();source.setWorld(world);source.setPos(at.east(5));RedstoneFixtureTransmitters.equip(source);RedstoneChannels.register(source);
+        Source source=new Source();source.setWorld(world);source.setPos(at.east(5));RedstoneChannels.register(source);
         TileEntityVehicleController seat=new TileEntityVehicleController();seat.setWorld(world);seat.setPos(at);seat.setVehicleChannels(ChannelList.of(5341),world);
         try{
             seat.configure(1,0,world);require(seat.poll(world)==-1,"ON initial baseline");source.power(true);require(RedstoneChannels.level(world,at,5341)==15,"equipped source reaches controller");require(seat.poll(world)==1,"ON rising activation");require(seat.poll(world)==-1,"held signal does not retrigger");

@@ -138,7 +138,7 @@ public class GuiRedstoneChannel extends GuiContainer {
 
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==100||button.id==101){page=button.id-100;initGui();return;}
-        if(button.id==90){submit();PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(member.channelTile().getPos(),0));return;}
+        if(button.id==90){submit();return;}
         if(button.id!=1&&button.id!=4)otherEdited=true;
 
         if(button.id==18){pilotMode=GuiOptionCycle.next(pilotMode,3);((RedstoneActivationButton)button).setMode(pilotMode);}

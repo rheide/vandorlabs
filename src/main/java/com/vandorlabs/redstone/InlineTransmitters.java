@@ -1,52 +1,26 @@
 package com.vandorlabs.redstone;
-
 import com.vandorlabs.container.*;
-import com.vandorlabs.items.ItemRedstoneTransmitter;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.*;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.fml.relauncher.*;
+import net.minecraft.util.math.BlockPos;
 import java.lang.ref.WeakReference;
 import java.util.*;
-
-/** Shared settings bindings; old inventory indices remain inert for window compatibility. */
+/** Authenticated built-in transmission settings; no block item inventory. */
 public final class InlineTransmitters {
     private static final Map<Container,Binding> BINDINGS=Collections.synchronizedMap(new WeakHashMap<Container,Binding>());
     private InlineTransmitters(){}
     public static Binding binding(Container container){return BINDINGS.get(container);}
     public static void attach(Container container,EntityPlayer player){
-        if(BINDINGS.containsKey(container)||container instanceof ContainerTransmitterSlot||container instanceof ContainerTransmitterItem)return;
+        if(BINDINGS.containsKey(container)||container instanceof ContainerTransmitterItem)return;
         TileEntity tile=com.vandorlabs.network.MessageTransmitterSlot.openedTile(container);
-        if(tile==null||tile instanceof com.vandorlabs.tiles.TileEntitySecuredDisplay)return;
-        Binding binding=new Binding(container);BINDINGS.put(container,binding);
-        if(tile instanceof RedstoneChannelMember)binding.add(0);
-        if(container instanceof ContainerAnimatedScreenSelector)for(int screen=0;screen<2;screen++)for(int i=0;i<8;i++)binding.add(1+screen*8+i);
-        for(int i=0;i<9;i++){VisibleSlot slot=new VisibleSlot(player.inventory,i);binding.hotbar.add(slot);append(container,slot);}
+        if(tile instanceof RedstoneChannelMember&&!(tile instanceof com.vandorlabs.tiles.TileEntitySecuredDisplay))BINDINGS.put(container,new Binding(container));
     }
-    private static void append(Container container,Slot slot){slot.slotNumber=container.inventorySlots.size();container.inventorySlots.add(slot);container.inventoryItemStacks.add(ItemStack.EMPTY);}
     public static final class Binding {
         private final WeakReference<Container> owner;
-        public final Map<Integer,ModuleSlot> modules=new LinkedHashMap<>();
-        public final List<VisibleSlot> hotbar=new ArrayList<>();
         Binding(Container container){owner=new WeakReference<>(container);}
-        /** Old row slots retain their indices but never alias the shared module inventory. */
-        public RedstoneChannelMember source(int selector){Container container=owner.get();if(container instanceof ContainerAnimatedScreenSelector&&selector>=1&&selector<=16)return null;return container==null?null:ContainerTransmitterSlot.resolve(com.vandorlabs.network.MessageTransmitterSlot.openedTile(container),selector);}
-        public boolean usable(EntityPlayer player){Container container=owner.get();return container!=null&&player.openContainer==container&&container.canInteractWith(player);}
-        void add(int selector){Container container=owner.get();if(container==null)return;ModuleSlot slot=new ModuleSlot(this,selector);modules.put(selector,slot);append(container,slot);}
-        public void hide(){for(ModuleSlot slot:modules.values()){slot.visible=false;slot.xPos=slot.yPos=-10000;}for(VisibleSlot slot:hotbar){slot.visible=false;slot.xPos=slot.yPos=-10000;}}
+        public RedstoneChannelMember source(int selector){Container c=owner.get();TileEntity tile=c==null?null:com.vandorlabs.network.MessageTransmitterSlot.openedTile(c);return selector==0&&tile instanceof RedstoneChannelMember?(RedstoneChannelMember)tile:null;}
+        public boolean usable(EntityPlayer player){Container c=owner.get();return c!=null&&player.openContainer==c&&c.canInteractWith(player);}
     }
-    public static class VisibleSlot extends Slot {
-        public boolean visible;
-        VisibleSlot(IInventory inventory,int index){super(inventory,index,-10000,-10000);}
-        @Override @SideOnly(Side.CLIENT) public boolean isEnabled(){return visible;}
-    }
-    public static final class ModuleSlot extends VisibleSlot {
-        public final int selector;private final Binding binding;
-        ModuleSlot(Binding binding,int selector){super(new InventoryBasic("Transmission settings",false,1),0);this.binding=binding;this.selector=selector;}
-        @Override public int getSlotStackLimit(){return 1;}
-        @Override public boolean isItemValid(ItemStack stack){return false;}
-        @Override public boolean canTakeStack(EntityPlayer player){return false;}
-    }
+    public static boolean usable(EntityPlayer player,RedstoneChannelMember member){TileEntity tile=member.channelTile();if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)tile.getWorld();com.vandorlabs.vehicle.EntityGroundVehicle craft=view.craft;if(craft==null||craft.view!=view||craft.structure==null||craft.isDead||craft.ownershipBlocked||craft.transferInProgress||view.getTileEntity(tile.getPos())!=tile||craft.world!=player.world)return false;net.minecraft.util.math.Vec3d at=craft.toWorld(new net.minecraft.util.math.Vec3d(tile.getPos()).addVector(.5,.5,.5));BlockPos pos=new BlockPos(at);return player.getDistanceSq(at.x,at.y,at.z)<=64&&craft.world.isBlockLoaded(pos)&&craft.world.isBlockModifiable(player,pos)&&player.canPlayerEdit(pos,net.minecraft.util.EnumFacing.UP,player.getHeldItemMainhand())&&!player.isDead&&!player.isSpectator();}return tile.getWorld()!=null&&tile.getWorld().isBlockLoaded(tile.getPos())&&tile.getWorld().getTileEntity(tile.getPos())==tile&&com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,tile.getWorld(),tile.getPos());}
 }

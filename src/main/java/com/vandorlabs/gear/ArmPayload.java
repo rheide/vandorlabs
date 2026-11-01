@@ -51,7 +51,7 @@ public final class ArmPayload {
         for(Map.Entry<Integer,BlockPos> entry:ownershipJournal.entrySet()){
             BlockPos at=entry.getValue();if(!GearAssembly.loaded(world,at)||!matchesCell(world,at,placed().cells.get(entry.getKey())))return false;
             VehicleService.permission(actor,at);
-            if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,world.getBlockState(at),actor)))return false;
+            if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,world.getBlockState(at),actor)))return false;
         }
         Iterator<Map.Entry<Integer,BlockPos>> entries=ownershipJournal.entrySet().iterator();
         while(entries.hasNext()){
@@ -133,7 +133,7 @@ public final class ArmPayload {
                 IBlockState state=world.getBlockState(at);
                 if(state.getMaterial().isLiquid()||state.getBlockHardness(world,at)<0)throw new IllegalArgumentException("Unsupported arm attachment: "+state.getBlock().getLocalizedName());
                 VehicleService.permission(actor,at);
-                if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");
+                if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");
                 TileEntity tile=world.getTileEntity(at);
                 if(tile instanceof net.minecraft.tileentity.TileEntityPiston||state.getBlock().hasTileEntity(state)&&tile==null)throw new IllegalArgumentException("Attachment block data is unavailable or moving");
                 IBlockState rest=state;
@@ -201,7 +201,7 @@ public final class ArmPayload {
             if(!(world instanceof VehicleWorld)){
                 if(actor==null)throw new IllegalArgumentException("Use the Configurizer before moving the attachment");
                 VehicleService.permission(actor,at);
-                if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");
+                if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");
             }
             TileEntity tile=world.getTileEntity(at);
             if(tile instanceof net.minecraft.tileentity.TileEntityPiston)throw new IllegalArgumentException("Wait for the piston to stop before moving it");
@@ -298,7 +298,7 @@ public final class ArmPayload {
             if(state.getBlock().isAir(state,world,at)||state.getMaterial().isLiquid()||state.getBlockHardness(world,at)<0)throw new IllegalArgumentException("Restore the complete attachment before moving it");
             if(!(world instanceof VehicleWorld)){
                 if(actor==null)throw new IllegalArgumentException("Use the Configurizer before moving the changed attachment");VehicleService.permission(actor,at);
-                if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the changed attachment");
+                if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the changed attachment");
             }
             TileEntity tile=world.getTileEntity(at);if(state.getBlock().hasTileEntity(state)&&tile==null||tile instanceof net.minecraft.tileentity.TileEntityPiston)throw new IllegalArgumentException("Attachment tile is unavailable or moving");
             refreshed.add(new VehicleStructure.Cell(old.pos,state,tile==null?null:VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin))));
@@ -319,7 +319,7 @@ public final class ArmPayload {
         if(hasOwnershipJournal())return false;
         if(!materialized)return true;World world=arm.getWorld();BlockPos origin=arm.getPos().add(placedOffset);
         if(!matchesPlaced(arm))throw new IllegalArgumentException("The arm attachment changed; return to its construction pose before replacing it");
-        EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actor(arm);for(VehicleStructure.Cell cell:placed().cells){BlockPos at=origin.add(cell.pos);VehicleService.permission(authorizer,at);if(com.vandorlabs.redstone.TransmitterDrops.protectionProbe(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,world.getBlockState(at),authorizer)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");}
+        EntityPlayerMP authorizer=com.vandorlabs.tiles.WorldActionAuthorization.actor(arm);for(VehicleStructure.Cell cell:placed().cells){BlockPos at=origin.add(cell.pos);VehicleService.permission(authorizer,at);if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,world.getBlockState(at),authorizer)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");}
         Map<VehicleStructure.Cell,TileEntity> rollback=prepareTiles(world,origin,placed());
         MovingBlockSupport.validate(blocks,view(arm));
         ArmStoredSections stored=arm.storedSections;

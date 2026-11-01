@@ -25,6 +25,9 @@ final class SharedCanopyRampRuntimeChecks {
         for(BlockPos at:BlockPos.getAllInBox(RAMP.add(-9,-4,-8),RAMP.add(9,13,12))){world.getChunkFromBlockCoords(at);world.setBlockToAir(at);}
     }
     private static final class Source extends TileEntity implements RedstoneChannelMember {
+        @Override public com.vandorlabs.redstone.ChannelList transmittedChannels(){return getRedstoneChannels();}
+        @Override public int transmissionRange(){return 256;}
+
         public boolean isChannelMemberActive(){return getWorld()!=null&&!isInvalid();}
         boolean high;public TileEntity channelTile(){return this;}public int getRedstoneChannel(){return 801;}public void setRedstoneChannel(int channel){}public boolean hasLocalRedstoneSignal(){return high;}public void setChannelSignal(boolean value){}
         void power(boolean value){high=value;RedstoneChannels.inputChanged(this);}
@@ -33,7 +36,7 @@ final class SharedCanopyRampRuntimeChecks {
     static void run(World world,EntityPlayerMP actor){
         CanopyReservationRuntimeChecks.run(world,actor);
         Vec3d before=actor.getPositionVector();long time=world.getTotalWorldTime();
-        Source source=new Source();source.setWorld(world);source.setPos(RAMP.west(12));com.vandorlabs.redstone.RedstoneFixtureTransmitters.equip(source);
+        Source source=new Source();source.setWorld(world);source.setPos(RAMP.west(12));
         try{for(int order=0;order<3;order++){boolean rampFirst=order==0;source.high=false;RedstoneChannels.register(source);
             clear(world);BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:large_front_canopy_glass");
             LargeCanopySettings settings=new LargeCanopySettings();settings.depth=24;settings.scale=50;settings.hinge=2;settings.openable=true;settings.redstone=true;settings.channels=ChannelList.of(801);

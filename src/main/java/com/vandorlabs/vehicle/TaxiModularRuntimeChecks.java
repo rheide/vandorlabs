@@ -16,6 +16,9 @@ import net.minecraft.world.WorldServer;
 public final class TaxiModularRuntimeChecks {
     private TaxiModularRuntimeChecks(){}
     private static final class Source extends TileEntity implements com.vandorlabs.redstone.RedstoneChannelMember {
+        @Override public com.vandorlabs.redstone.ChannelList transmittedChannels(){return getRedstoneChannels();}
+        @Override public int transmissionRange(){return 256;}
+
         boolean on=true;public TileEntity channelTile(){return this;}public boolean isChannelMemberActive(){return world!=null;}public int getRedstoneChannel(){return 28742;}public void setRedstoneChannel(int value){}public boolean hasLocalRedstoneSignal(){return on;}public void setChannelSignal(boolean value){}
         void set(boolean value){on=value;com.vandorlabs.redstone.RedstoneChannels.inputChanged(this);}
     }
@@ -115,7 +118,7 @@ public final class TaxiModularRuntimeChecks {
                 if(!large&&turns==0){BlockPos obstacle=origin.add(5,3,5);world.setBlockState(obstacle,Blocks.STONE.getDefaultState(),2);NBTTagCompound unchanged=craft.structure.write();roots(craft).get(0).target(false);ModularGearVehicles.tick(craft);require(craft.posY==initial&&unchanged.equals(craft.structure.write()),"occupied final footprint changed the original owner");world.setBlockToAir(obstacle);}
                 if(!large&&turns==0){
                     Source source=new Source();source.setWorld(world);source.setPos(new BlockPos(craft).west(3));
-                    net.minecraft.item.ItemStack module=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,1,3);com.vandorlabs.items.ItemRedstoneTransmitter.configure(module,com.vandorlabs.redstone.ChannelList.of(28742));com.vandorlabs.redstone.TransmitterSlots.set(source,module);
+
                     try{
                         for(GearTileEntity gear:roots(craft)){NBTTagCompound settings=gear.settings();settings.setInteger("Trigger",1);settings.setString("Channels","28742");gear.configure(settings);}
                         source.set(false);settle(craft,false);

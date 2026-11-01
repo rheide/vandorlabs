@@ -171,7 +171,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     /** Actual grip targeting is shared with activation, including from a seated eye. */
     public RayTraceResult controlRay(Vec3d start,Vec3d end){ControlHit hit=controlHitLocal(CockpitData.unrotate(start,facing()),CockpitData.unrotate(end,facing()));return hit==null?null:new RayTraceResult(CockpitData.rotate(hit.point,facing()),EnumFacing.UP,pos);}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);com.vandorlabs.redstone.TransmitterSlots.written(tag);screenLift.write(tag,"CockpitScreenLift");seatSlide.write(tag,"CockpitSeatSlide");tag.setLong("CockpitScreenButton",screenButtonUntil);tag.setLong("CockpitSeatButton",seatButtonUntil);tag.setString("CockpitDesign",design);tag.setInteger("CockpitThrottles",throttleCount);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
+        super.writeToNBT(tag);screenLift.write(tag,"CockpitScreenLift");seatSlide.write(tag,"CockpitSeatSlide");tag.setLong("CockpitScreenButton",screenButtonUntil);tag.setLong("CockpitSeatButton",seatButtonUntil);tag.setString("CockpitDesign",design);tag.setInteger("CockpitThrottles",throttleCount);tag.setInteger("CockpitSideTexture",sideTexture);prepare();
         NBTTagList screens=new NBTTagList();for(Display d:displays)screens.appendTag(d.write());tag.setTag("CockpitDisplays",screens);
         NBTTagList outputs=new NBTTagList();for(Control c:controls)outputs.appendTag(c.write());tag.setTag("CockpitControls",outputs);return tag;
     }

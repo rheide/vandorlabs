@@ -54,7 +54,25 @@ public final class CopyRuntimeChecks {
     }
     public static void transmitterOwnershipFocus(WorldServer world,EntityPlayerMP actor)throws Exception{BlockPos base=new BlockPos(2260,110,2100);boolean creative=actor.capabilities.isCreativeMode;net.minecraft.util.math.Vec3d position=actor.getPositionVector();try{transmitterOwnership(world,actor,base);}finally{actor.capabilities.isCreativeMode=creative;actor.setPositionAndUpdate(position.x,position.y,position.z);if(CopyTransactions.pendingCount(world)==0)clear(world,base);}}
     private static void transmitterOwnership(WorldServer world,EntityPlayerMP actor,BlockPos base)throws Exception{
-        actor.capabilities.isCreativeMode=false;Fixture f=new Fixture(world,actor,base,EnumFacing.NORTH,1);Block transmitter=block("redstone_transmitter_block");world.setBlockState(f.source(),transmitter.getDefaultState(),2);com.vandorlabs.tiles.TileEntityWirelessRedstone source=(com.vandorlabs.tiles.TileEntityWirelessRedstone)world.getTileEntity(f.source());ItemStack module=new ItemStack(com.vandorlabs.items.ModItems.REDSTONE_TRANSMITTER,1,1);com.vandorlabs.items.ItemRedstoneTransmitter.configure(module,ChannelList.of(65286));com.vandorlabs.redstone.TransmitterSlots.set(source,module);DeferredTileLoad.flush(world);TileEntityChest chest=f.supply(new ItemStack(transmitter),module);NBTTagCompound original=source.writeToNBT(new NBTTagCompound());f.tile.requestCopy(actor);require(CopyTransactions.locked(world,f.source()),"actual queued copy locks module source");net.minecraftforge.event.world.BlockEvent.BreakEvent attempt=new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,f.source(),world.getBlockState(f.source()),actor);require(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(attempt),"real queued journal refuses module-host mining");require(original.equals(source.writeToNBT(new NBTTagCompound())),"lock refusal retains exact module snapshot without ejection");CopyTransactions.drainForChecks(world);require(f.tile.error.isEmpty(),"module copy checkpoint completes "+f.tile.error);TileEntity target=world.getTileEntity(f.target());require(target instanceof com.vandorlabs.redstone.RedstoneChannelMember&&ItemStack.areItemStacksEqual(module,com.vandorlabs.redstone.TransmitterSlots.get((com.vandorlabs.redstone.RedstoneChannelMember)target)),"copied host owns exact paid module");require(ItemStack.areItemStacksEqual(module,com.vandorlabs.redstone.TransmitterSlots.get(source))&&((IInventory)world.getTileEntity(f.tile.chest())).isEmpty()&&chest.isEmpty(),"source remains and paid module stock withdrawn exactly once");System.out.println("[vandorlabs][reprolab] redstone-copy-ownership PASS actual-queued-journal lock-refusal exact-source target-module paid-stock one-extra-owner");
+        actor.capabilities.isCreativeMode=false;
+        Fixture f=new Fixture(world,actor,base,EnumFacing.NORTH,1);
+        Block transmitter=block("redstone_transmitter_block");world.setBlockState(f.source(),transmitter.getDefaultState(),2);
+        com.vandorlabs.tiles.TileEntityWirelessRedstone source=(com.vandorlabs.tiles.TileEntityWirelessRedstone)world.getTileEntity(f.source());
+        ChannelList channels=ChannelList.of(65286);
+        com.vandorlabs.redstone.TransmitterSlots.configure(source,channels,32,false);
+        DeferredTileLoad.flush(world);TileEntityChest chest=f.supply(new ItemStack(transmitter));
+        NBTTagCompound original=source.writeToNBT(new NBTTagCompound());f.tile.requestCopy(actor);
+        require(CopyTransactions.locked(world,f.source()),"actual queued copy locks configured source");
+        net.minecraftforge.event.world.BlockEvent.BreakEvent attempt=new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,f.source(),world.getBlockState(f.source()),actor);
+        require(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(attempt),"real queued journal refuses source mining");
+        require(original.equals(source.writeToNBT(new NBTTagCompound())),"lock refusal retains exact source settings");
+        CopyTransactions.drainForChecks(world);require(f.tile.error.isEmpty(),"configured copy checkpoint completes "+f.tile.error);
+        TileEntity target=world.getTileEntity(f.target());require(target instanceof com.vandorlabs.redstone.RedstoneChannelMember,"configured transmitter copied");
+        com.vandorlabs.redstone.RedstoneChannelMember copied=(com.vandorlabs.redstone.RedstoneChannelMember)target;
+        require(com.vandorlabs.redstone.TransmitterSlots.channels(copied).equals(channels)&&com.vandorlabs.redstone.TransmitterSlots.range(copied)==32,"built-in settings survive copy");
+        require(com.vandorlabs.redstone.TransmitterSlots.channels(source).equals(channels)&&chest.isEmpty(),"source settings retained and only block stock withdrawn");
+        require(!target.getTileData().hasKey("VandorTransmitters"),"copy created obsolete module inventory");
+        System.out.println("[vandorlabs][reprolab] redstone-copy-ownership PASS actual-queued-journal lock-refusal exact-source built-in-settings block-only-stock");
     }
     private static void authorization(WorldServer world,EntityPlayerMP actor,BlockPos base)throws Exception{
         actor.capabilities.isCreativeMode=true;Fixture f=new Fixture(world,actor,base,EnumFacing.NORTH,1);

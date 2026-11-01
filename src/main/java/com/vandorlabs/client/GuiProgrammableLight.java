@@ -150,7 +150,7 @@ public final class GuiProgrammableLight extends GuiContainer {
 
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==105){offSelected=-1;send();initGui();return;}
-        if(button.id==106){send();PacketHandler.INSTANCE.sendToServer(com.vandorlabs.network.MessageTransmitterSlot.open(tile.getPos(),0));return;}
+        if(button.id==106){send();return;}
         if(button.id>=90 && button.id<=93){textureTab=button.id-90;editingOff=textureTab==1;initGui();return;}
         if (button.id == 101) {
             join = !join;
