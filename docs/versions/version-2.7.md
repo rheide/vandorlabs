@@ -6,6 +6,18 @@ Browse the [complete texture catalog](../texture-browser/index.html), compare th
 
 Animated displays reuse uploaded frame strips. Unrelated distant block updates preserve cached display layouts, and unavailable animation resources fall back to static artwork until resource reload.
 
+## Developer Notes
+
+This release is about solidifying the direction this mod is going. The big functionality change this time is around Redstone Channels, which are now limited in range. Transmitting blocks can set their range with a slider for now, though I'm still considering what this will look like in the final version in terms of gameplay and balancing. It's super useful though, because having a lower range means you can use the same channels for multiple vehicles without having to remap them (though you can still do that automatically with the Copy Controller as well).
+
+Dialogs are much more consistent now. They all have the same tab design and terminology has been standardized, hopefully. Redstone lives in its own tab. Local redstone can be turned off. The texture editor now has a quick search field. 
+
+I am trying out many new textures to see what will stick. These may disappear in a later version, but for now I want to add as many things as I can think of, just to see what they feel like. This means six new styles for inputs such as keyboard, sliders, knobs etc. - one for each corporation that's a part of this mod. There's a lot more screen animations, and all animations now come in three styles: Classic (pre-existing, now expanded with new screens), Cool and Gold, each catering to half of our fictional corporations. You can customize these further by setting screen border Frames, which I've included a bunch of, both generic and corporation-specific. These Frames can also be used for Portholes, Glass and Trapdoors.  Screen blocks can now be configured to show a different screen on a redstone signal, either on/off or analog for 4 different values.
+
+Everything glass-related has had an overhaul: Canopy Glass is now a lot more performant. Canopy Glass, Programmable Glass, and some of the doors with high transparency can all configure their glass type, and there's now an explicit tint setting for Opaque.
+
+What's next: no promises, but I intend to look more at survival mode and a plausible way to introduce all these fancy new block types. This needs a plausible tech tree that starts off from zero. On the other side of the tech tree, I want to work on making the multiblock machines work. Having my own space dimension is a long term goal, and all of the special propulsion drives, computers etc. will help us get there. One step at a time.
+
 ## Displays and control artwork
 
 **Displays** replaces the Screens category. Classic, Cool and Gold use subject-first names such as **Navigation (Cool/Full)** and **Navigation (Cool/Half)**. Cruiser and ship views live in **Displays/Ship**. Full and Half describe the artwork's aspect ratio; Controls remain a separate, half-height collection.
