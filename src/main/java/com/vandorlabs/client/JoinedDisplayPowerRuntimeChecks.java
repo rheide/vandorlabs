@@ -20,12 +20,17 @@ final class JoinedDisplayPowerRuntimeChecks {
     static boolean tick(Minecraft mc)throws Exception{
         require(++ticks<600,"client/native power update timeout");
         if(stage==0){server(mc,()->{
-            WorldServer world=mc.getIntegratedServer().getWorld(0);matrix(world);
+            WorldServer world=mc.getIntegratedServer().getWorld(0);DisplayLocalReloadChecks.run(world);matrix(world);
             for(BlockPos p:BlockPos.getAllInBox(BASE.add(-3,-2,-3),BASE.add(4,4,3)))world.setBlockToAir(p);
             for(int x=0;x<2;x++)for(int y=0;y<2;y++){BlockPos p=BASE.add(x,y,0);world.setBlockState(p,ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState(),3);configure((TileEntityAnimatedScreenSelector)world.getTileEntity(p));}
             world.setBlockState(BASE.west(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);
             net.minecraft.entity.player.EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);player.capabilities.isFlying=true;player.sendPlayerAbilities();player.connection.setPlayerLocation(620.5,102,624,180,10);
         });stage=1;return false;}
+        if(stage==4){
+            for(int x=0;x<3;x++)for(int y=0;y<3;y++){net.minecraft.tileentity.TileEntity raw=mc.world.getTileEntity(BASE.add(x,y,0));if(!(raw instanceof TileEntityAnimatedScreenSelector))return false;TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)raw;if(tile.getSignalLevel()!=10||tile.activationState()!=2||tile.getSurfaceTexture(0)!=2)return false;}
+            System.out.println("[vandorlabs] display-local-reload-client PASS joined 3x3 Wall Slider physical level 10 saved reload no retrigger");
+            System.out.println("[vandorlabs][reprolab] joined-display-power PASS seven families 16 local levels shared geometry bank isolation native 2x2 client On Off opposite corner no channel feedback");return true;
+        }
         int expected=stage==2?0:15;
         for(int x=0;x<2;x++)for(int y=0;y<2;y++){
             net.minecraft.tileentity.TileEntity raw=mc.world.getTileEntity(BASE.add(x,y,0));if(!(raw instanceof TileEntityAnimatedScreenSelector))return false;
@@ -34,7 +39,7 @@ final class JoinedDisplayPowerRuntimeChecks {
         }
         if(stage==1){server(mc,()->mc.getIntegratedServer().getWorld(0).setBlockToAir(BASE.west()));stage=2;return false;}
         if(stage==2){server(mc,()->mc.getIntegratedServer().getWorld(0).setBlockState(BASE.add(2,1,0),Blocks.REDSTONE_BLOCK.getDefaultState(),3));stage=3;return false;}
-        System.out.println("[vandorlabs][reprolab] joined-display-power PASS seven families 16 local levels shared geometry bank isolation native 2x2 client On Off opposite corner no channel feedback");return true;
+        server(mc,()->DisplayLocalReloadChecks.reloadedScene(mc.getIntegratedServer().getWorld(0),BASE));stage=4;return false;
     }
     private static void configure(TileEntityAnimatedScreenSelector tile){for(int band=0;band<4;band++)require(tile.configureActivation(2,band,band,1,1),"activation fixture configured");}
     private static void matrix(WorldServer world){
