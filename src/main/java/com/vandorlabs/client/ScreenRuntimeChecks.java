@@ -613,9 +613,9 @@ final class ScreenRuntimeChecks {
                             == TileEntityAnimatedScreenSelector.MODE_STATIC
                             && !restored.isFramed()
                             && restored.getAnimationSpeedIndex() == 2
-                            && panel.equals(restored.getInputPanel())
-                            && TileEntityAnimatedScreenSelector.INPUT_PANELS[
-                                    TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1]
+                            && ScreenHousingTextures.canonicalInput(panel).equals(restored.getInputPanel())
+                            && ScreenHousingTextures.canonicalInput(TileEntityAnimatedScreenSelector.INPUT_PANELS[
+                                    TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1])
                                     .equals(restored.getSecondaryInputPanel())
                             && restored.getWallPosition(0) == 1
                             && restored.isCeilingMounted()
@@ -630,7 +630,7 @@ final class ScreenRuntimeChecks {
         }
         TileEntityAnimatedScreenSelector invalid = new TileEntityAnimatedScreenSelector();
         invalid.setInputPanel("not_a_real_texture");
-        require(TileEntityAnimatedScreenSelector.INPUT_PANELS[0]
+        require(ScreenHousingTextures.canonicalInput(TileEntityAnimatedScreenSelector.INPUT_PANELS[0])
                         .equals(invalid.getInputPanel()),
                 "invalid input panel was not rejected");
     }
@@ -707,10 +707,10 @@ final class ScreenRuntimeChecks {
                         && tile.getDisplayMode()
                         == TileEntityAnimatedScreenSelector.MODE_STATIC
                         && !tile.isFramed() && tile.getAnimationSpeedIndex() == 2
-                        && TileEntityAnimatedScreenSelector.INPUT_PANELS[1]
+                        && ScreenHousingTextures.canonicalInput(TileEntityAnimatedScreenSelector.INPUT_PANELS[1])
                         .equals(tile.getInputPanel())
-                        && TileEntityAnimatedScreenSelector.INPUT_PANELS[
-                                TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1]
+                        && ScreenHousingTextures.canonicalInput(TileEntityAnimatedScreenSelector.INPUT_PANELS[
+                                TileEntityAnimatedScreenSelector.INPUT_PANELS.length - 1])
                         .equals(tile.getSecondaryInputPanel())
                         && tile.getWallPosition(0) == 1 && tile.isSmallInput()
                         && tile.getRedstoneChannel() == 4271
@@ -733,7 +733,7 @@ final class ScreenRuntimeChecks {
         MessageSyncScreenSelector restored = new MessageSyncScreenSelector();
         restored.fromBytes(bytes);
         require(pos.equals(restored.getPos())
-                        && com.vandorlabs.tiles.ScreenHousingTextures.canonicalScreen("engineering_screen").equals(restored.getSelectedScreen())
+                        && "engineering_screen".equals(restored.getSelectedScreen())
                         && restored.isRedstoneEnabled()
                         && restored.getDisplayMode()
                         == TileEntityAnimatedScreenSelector.MODE_ANIMATED

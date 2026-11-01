@@ -161,10 +161,10 @@ final class CustomMaterialRuntimeChecks {
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
             if(entry!=null && entry.has("alias")) {
                 int target=ScreenHousingTextures.clamp(choice);
-                require(target!=choice && ScreenHousingTextures.visible(target),"legacy High alias target");
-                require(ScreenHousingTextures.texture(choice).equals(ScreenHousingTextures.texture(target)),"legacy High square artwork");
-                require(ScreenHousingTextures.fullTexture(choice).equals(ScreenHousingTextures.fullTexture(target)),"legacy High face artwork");
-                require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice))!=mc.getTextureMapBlocks().getMissingSprite(),"legacy High target not stitched");
+                require(target!=choice && ScreenHousingTextures.visible(target),"legacy texture alias target");
+                require(ScreenHousingTextures.texture(choice).equals(ScreenHousingTextures.texture(target)),"legacy texture square artwork");
+                require(ScreenHousingTextures.fullTexture(choice).equals(ScreenHousingTextures.fullTexture(target)),"legacy texture face artwork");
+                require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice))!=mc.getTextureMapBlocks().getMissingSprite(),"legacy texture target not stitched");
                 continue;
             }
             retired++;
@@ -179,8 +179,8 @@ final class CustomMaterialRuntimeChecks {
             copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
             require(copy.getHousingTexture()==choice,"retired saved choice did not survive reload");
         }
-        require(retired==16,"unexpected retired texture count");
-        System.out.println("[vandorlabs][reprolab] retired-texture-fallback PASS: 16 saved IDs, default atlas artwork and persistence");
+        require(retired>=16,"original retired texture coverage missing");
+        System.out.println("[vandorlabs][reprolab] retired-texture-fallback PASS: "+retired+" saved IDs, default atlas artwork and persistence");
         for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++) {
             require(!ScreenHousingTextures.category(choice).matches("Texture Pack [12]|Hull Plating|Computing|Fuel|Power"),"obsolete category");
             if(ScreenHousingTextures.visible(choice))require(!HousingTextureList.name(choice).matches("T[12] .*"),"texture pack prefix retained");

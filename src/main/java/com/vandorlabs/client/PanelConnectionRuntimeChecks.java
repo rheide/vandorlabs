@@ -95,13 +95,14 @@ final class PanelConnectionRuntimeChecks {
                         com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
             net.minecraft.client.renderer.BufferBuilder dense = renderedBuffer(world,pos);
             require(dense.getVertexCount()==8,"dense cube should render only exposed top and bottom");
-            int light = com.vandorlabs.blocks.ProgrammableHousingState.neighborLight(world,pos);
             java.nio.ByteBuffer data=dense.getByteBuffer();
             for (int vertex=0;vertex<dense.getVertexCount();vertex++) {
+                EnumFacing face=data.getFloat(vertex*28+4)<.5F?EnumFacing.DOWN:EnumFacing.UP;
+                int light=world.getCombinedLight(pos.offset(face),0);
                 require((data.getShort(vertex*28+24)&65535)==(light&65535),
-                        "dense cube block lighting differs from tile baseline");
+                        "dense cube block lighting differs from its visible face sample");
                 require((data.getShort(vertex*28+26)&65535)==(light>>>16),
-                        "dense cube sky lighting differs from tile baseline");
+                        "dense cube sky lighting differs from its visible face sample");
             }
         } finally {
             for (int x=-1;x<=1;x++) for (int z=-1;z<=1;z++)
