@@ -3,8 +3,10 @@
 The standard mod JAR includes a LabPBR 1.3 specular companion (`_s.png`) for
 every shipped runtime texture. Companions are generated after artwork is
 compacted to its runtime resolution, including animation sheets and alternate
-detail levels. They use the same dimensions and animation metadata as their
-diffuse artwork. Identical maps share packaged PNGs through the existing
+detail levels. They retain their native dimensions and animation metadata. During atlas
+loading, companion images use the same crop and repeated-edge square canvas
+as their diffuse sprites, avoiding OptiFine's square-read crash. Standalone
+textures keep their original maps, and user resource packs retain priority. Identical maps share packaged PNGs through the existing
 resource aliases.
 Uniform painted, matte, satin, fabric and composite finishes share maps across
 different diffuse colors. Mixed bare-metal surfaces keep their artwork-specific
@@ -70,3 +72,16 @@ change the actual result; this is a capacity calculation rather than a
 measurement of additional GPU allocation. Reusing PNG files saves package
 space and generation work, but does not make different atlas regions share
 the same GPU storage.
+
+## Release startup check
+
+`verifyRelease` includes `testShaderStartup`. Set `VANDOR_LABS_TEST_OPTIFINE`
+to the OptiFine JAR and `VANDOR_LABS_TEST_SHADERPACK` to the shaderpack ZIP.
+The same focused check can be run independently with
+`python3 testclient/test_shader_startup.py --optifine <jar> --shaderpack <zip>`.
+It starts the exact standard JAR with specular maps enabled, exercises the
+actual OptiFine atlas-map loader for registered wide sprites, reloads resources
+and renders a native Canopy Glass scene. Shader compilation failures and a
+missing pack fail the check. Linux uses software OpenGL; Windows uses its
+normal graphics driver. Passing establishes startup/reload compatibility on
+that renderer, while hardware visual quality and FPS need a hardware check.

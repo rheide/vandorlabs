@@ -83,6 +83,9 @@ case "${1:-}" in
         elif [ "$TARGET" = transmission ]; then
             PREFIX=transmission_
             export VANDOR_LABS_TRANSMISSION_CHECKS_ONLY=true
+        elif [ "$TARGET" = shader-startup ]; then
+            PREFIX=shader_startup_
+            export VANDOR_LABS_SHADER_STARTUP_CHECKS_ONLY=true
         elif [ "$TARGET" = display-activation ]; then
             PREFIX=activation_
             export VANDOR_LABS_DISPLAY_ACTIVATION_CHECKS_ONLY=true
@@ -242,7 +245,7 @@ fi
 if [ -n "${VANDOR_LABS_TEST_SHADERPACK:-}" ]; then
     mkdir -p "$TEST_RUNTIME_GAME/shaderpacks"
     cp "$VANDOR_LABS_TEST_SHADERPACK" "$TEST_RUNTIME_GAME/shaderpacks/"
-    printf "shaderPack=%s\n" "$(basename "$VANDOR_LABS_TEST_SHADERPACK")" > "$TEST_RUNTIME_GAME/optionsshaders.txt"
+    printf "specularMapEnabled=true\nnormalMapEnabled=true\nshaderPack=%s\n" "$(basename "$VANDOR_LABS_TEST_SHADERPACK")" > "$TEST_RUNTIME_GAME/optionsshaders.txt"
 fi
 # Allow the full software-rendered gallery to finish on a busy host.
 VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout "${VANDOR_LABS_TEST_TIMEOUT:-1200}" testclient/run.sh \
@@ -365,6 +368,12 @@ if [ "$MODE" = focus ]; then
         grep -q "transmission-settings PASS" "$RUN_OUT/client.log"
         grep -q "inline-transmitter-survival PASS" "$RUN_OUT/client.log"
         echo "Transmission settings passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = shader-startup ]; then
+        grep -q "shader-startup PASS" "$RUN_OUT/client.log"
+        if grep -Eiq "error: invalid program|error compiling|failed creating shader|shader.*compile.*failed" "$RUN_OUT/client.log"; then echo "FAIL: shader program compilation failed; see $RUN_OUT/client.log"; exit 1; fi
+        echo "Shader startup checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = display-activation ]; then

@@ -40,6 +40,16 @@ public final class UnifiedTextureSprites {
     static int contentWidth(TextureAtlasSprite sprite){return sprite instanceof Sprite?Math.round(sprite.getIconWidth()*((Sprite)sprite).usedU):sprite.getIconWidth();}
     static int contentHeight(TextureAtlasSprite sprite){return sprite instanceof Sprite?Math.round(sprite.getIconHeight()*((Sprite)sprite).usedV):sprite.getIconHeight();}
     public static float aspect(TextureAtlasSprite sprite){return sprite instanceof Sprite?((Sprite)sprite).usedU/((Sprite)sprite).usedV:(float)sprite.getIconWidth()/sprite.getIconHeight();}
+    private static final class Region {
+        final int x,y,width,height,canvas;
+        Region(int x,int y,int width,int height,int canvas){this.x=x;this.y=y;this.width=width;this.height=height;this.canvas=canvas;}
+        boolean unchanged(int w,int h){return x==0&&y==0&&width==w&&height==h&&canvas==w&&canvas==h;}
+    }
+    private static Region region(int width,int height,boolean crop,boolean half){int x=crop?width/16:0,y=crop?height/32:0,w=width-x,h=height-2*y;if(half){h/=2;y+=h;}int canvas=1;while(canvas<Math.max(w,h))canvas<<=1;return new Region(x,y,w,h,canvas);}
+    private static int[] pixels(BufferedImage image,Region region){int[] result=new int[region.canvas*region.canvas];for(int y=0;y<region.canvas;y++)for(int x=0;x<region.canvas;x++)result[y*region.canvas+x]=image.getRGB(region.x+Math.min(x,region.width-1),region.y+Math.min(y,region.height-1));return result;}
+    private static Region shaderRegion(String name,int width,int height){TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getTextureExtry(name);if(sprite instanceof Sprite){Sprite custom=(Sprite)sprite;return region(width,height,custom.crop,custom.half);}return new Region(0,0,width,height,width>height?width:Math.max(width,height));}
+    static boolean shaderCanvasNeeded(String name,int width,int height){TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getTextureExtry(name);if(!(sprite instanceof Sprite)&&width<=height)return false;return width>0&&height>0&&!shaderRegion(name,width,height).unchanged(width,height);}
+    static BufferedImage shaderCanvas(String name,BufferedImage image){if(!shaderCanvasNeeded(name,image.getWidth(),image.getHeight()))return image;Region r=shaderRegion(name,image.getWidth(),image.getHeight());if(r.unchanged(image.getWidth(),image.getHeight()))return image;BufferedImage output=new BufferedImage(r.canvas,r.canvas,BufferedImage.TYPE_INT_ARGB);output.setRGB(0,0,r.canvas,r.canvas,pixels(image,r),0,r.canvas);return output;}
     private static final class Sprite extends TextureAtlasSprite {
         private final ResourceLocation source;
         private final String diskSource;
@@ -52,13 +62,9 @@ public final class UnifiedTextureSprites {
             try(java.io.InputStream stream=file?java.nio.file.Files.newInputStream(com.vandorlabs.tiles.FilesystemTextures.file(diskSource)):manager.getResource(source).getInputStream()) {
                 BufferedImage image=TextureUtil.readBufferedImage(stream);
                 if(image==null)throw new java.io.IOException("Invalid PNG");
-                int x0=crop?image.getWidth()/16:0,y0=crop?image.getHeight()/32:0;
-                int w=image.getWidth()-x0,h=image.getHeight()-2*y0;
-                if(half){h/=2;y0+=h;}
-                int canvas=1;while(canvas<Math.max(w,h))canvas<<=1;
-                setIconWidth(canvas);setIconHeight(canvas);usedU=(float)w/canvas;usedV=(float)h/canvas;
-                int[] pixels=new int[canvas*canvas];
-                for(int y=0;y<canvas;y++)for(int x=0;x<canvas;x++)pixels[y*canvas+x]=image.getRGB(x0+Math.min(x,w-1),y0+Math.min(y,h-1));
+                Region region=region(image.getWidth(),image.getHeight(),crop,half);
+                setIconWidth(region.canvas);setIconHeight(region.canvas);usedU=(float)region.width/region.canvas;usedV=(float)region.height/region.canvas;
+                int[] pixels=pixels(image,region);
                 int[][] frame=new int[net.minecraft.client.Minecraft.getMinecraft().gameSettings.mipmapLevels+1][];frame[0]=pixels;
                 setFramesTextureData(new ArrayList<>(Collections.singletonList(frame)));return false;
             } catch(java.io.IOException e){

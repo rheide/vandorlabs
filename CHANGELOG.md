@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Adapt shader companion maps during atlas loading to match custom sprites while preserving standalone maps and resource-pack priority, fixing OptiFine shader startup crashes on Half displays. Add actual shaderpack startup, upload and atlas-reload checks to the release gate.
+
 - Add Disabled, Digital and four-band Analog artwork activation to the programmable display family, with independent per-state playback and shared Console Controls. Refresh joins immediately after tile-data edits and offer Half artwork on wide joined Screens and Flatscreens.
 
 - Batch plain fixed Canopy Glass into Minecraft chunk layers with shared immutable geometry, preserving logical joins, opening-canopy roof rails, cockpit sharing and the existing opening/carried render paths.

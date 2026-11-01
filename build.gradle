@@ -920,10 +920,18 @@ check.dependsOn testUtility26Assets
 
 // A release must validate the packaged JAR in a real client, including visible
 // diagonal frame rails; geometry-only tests cannot detect occluded artwork.
+task testShaderStartup(type: Exec) {
+    group = 'verification'
+    description = 'Start the exact JAR with required OptiFine and shaderpack, then reload the atlas'
+    dependsOn jar
+    doFirst { environment 'VANDOR_LABS_TEST_JAR', jar.archivePath.absolutePath }
+    commandLine pythonExecutable, 'testclient/test_shader_startup.py'
+}
+
 task verifyRelease {
     group = 'verification'
     description = 'Validate a standard release JAR with geometry and live rendering/gameplay regressions'
-    dependsOn build, testDiagonalJoins, testNonRendering
+    dependsOn build, testDiagonalJoins, testNonRendering, testShaderStartup
     doLast {
         def releaseJar = file("$buildDir/libs/vandorlabs-${version}.jar")
         def digest = { java.security.MessageDigest.getInstance('SHA-256').digest(releaseJar.bytes).encodeHex().toString() }
