@@ -15,6 +15,10 @@ existing channel selector; leave it blank for local redstone. **Signal: Low**
 inverts the signal before selecting the artwork state. Right-click a cycling
 option to select its previous value.
 
+**Use Shared Artwork** restores a state's inherited selection without removing
+its saved control or split-display setup. An explicit state texture overrides
+the primary shared source; frame finishes and Fit/Tile mapping remain shared.
+
 On Consoles, the secondary Controls artwork stays shared. Redstone artwork
 states change the primary Display surface. Existing saved display gates retain
 their previous behavior until their activation settings are edited.

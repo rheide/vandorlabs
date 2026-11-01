@@ -175,7 +175,7 @@ public class BlockAnimatedScreenSelector extends BlockContainer {
             return 11;
         }
         TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)te;
-        if(screen.hasRedstoneScreen(0) || screen.hasRedstoneScreen(1))return 11;
+        if(screen.getSurfaceTexture(0)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || screen.getSurfaceTexture(1)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)return 11;
         // Brighter than the stock screens (7): keeps the wall-textured
         // housing readable in dark rooms next to the fullbright face.
         return ((TileEntityAnimatedScreenSelector) te).getEffectiveMode()

@@ -30,16 +30,19 @@ final class DisplayActivationPane {
         }
         if(page==redstonePage){for(GuiButton b:buttons)if(b.id==0){b.visible=false;GuiButton activation=new net.minecraftforge.fml.client.config.GuiButtonExt(640,b.x,b.y,b.width-84,20,"Activation: "+new String[]{"Disabled","Digital","Analog"}[mode]);buttons.add(activation);buttons.add(new GuiButton(641,b.x+b.width-80,b.y,80,20,tile.isRedstoneInverted()?"Signal: Low":"Signal: High"));break;}}
         if(!active)return;
-        for(GuiButton b:buttons)if(!(b.id>=90&&b.id<=93||b.id==197||b.id>=650&&b.id<=653||b.id==20||b.id==30||b.id==3004||b.id==3007))b.visible=false;
+        for(GuiButton b:buttons)if(!(b.id>=90&&b.id<=93||b.id==197||b.id>=650&&b.id<=653||b.id==20||b.id==30||b.id==3004))b.visible=false;
         picker=new HousingTextureList(layout.listX,layout.top+54,layout.listWidth,tile.activationTexture(selected),8,null,
             value->HousingTextureList.generalTexture(value)||(input?ScreenTextureList.artwork(value,true):HousingTextureList.displayTexture(value)&&(!com.vandorlabs.tiles.ScreenHousingTextures.entry(value).get("source").getAsString().startsWith("console_inputs/")||ScreenSurfaceGroups.wideDisplay(tile))))
             .visibleRows(layout.rows(true)).keepView(picker).custom(value->save(value,tile.activationPlayback(selected),tile.activationSpeed(selected)));
-        for(int i=0;i<3;i++){GuiButton b=layout.choice(660+i,i,3,66,new String[]{"Off","Static","Animated"}[i]);b.enabled=tile.activationPlayback(selected)!=i;buttons.add(b);b=layout.choice(663+i,i,3,100,new String[]{"Slow","Normal","Fast"}[i]);b.enabled=tile.activationSpeed(selected)!=i;buttons.add(b);}
+        boolean sharedRows=tile.activation.texture(selected)<0&&tile.baseSurfaceTexture(0)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;
+        for(int i=0;i<3;i++){GuiButton b=layout.choice(660+i,i,3,66,new String[]{"Off","Static","Animated"}[i]);b.enabled=!sharedRows&&tile.activationPlayback(selected)!=i;buttons.add(b);b=layout.choice(663+i,i,3,100,new String[]{"Slow","Normal","Fast"}[i]);b.enabled=!sharedRows&&tile.activationSpeed(selected)!=i;buttons.add(b);}
+        int resetY=input?(buttons.stream().anyMatch(b->b.id==30&&b.visible)?152:128):148;GuiButton inherit=layout.control(666,resetY,"Use Shared Artwork");inherit.enabled=tile.activation.texture(selected)>=0;buttons.add(inherit);
     }
     boolean action(GuiButton button){
         if(button.id>=650&&button.id<=653){selected=button.id-650;return true;}
         if(button.id==641){tile.setRedstoneInverted(!tile.isRedstoneInverted());save(tile.activationMode(),0,tile.activation.texture(0),tile.activation.playback(0),tile.activation.speed(0));return true;}
         if(button.id==640){int mode=GuiOptionCycle.next(tile.activationMode(),3);save(mode,0,tile.activation.texture(0),tile.activation.playback(0),tile.activation.speed(0));if(mode==0)selected=-1;return true;}
+        if(button.id==666){save(-1,tile.activationPlayback(selected),tile.activationSpeed(selected));return true;}
         if(button.id>=660&&button.id<=662){save(tile.activation.texture(selected),button.id-660,tile.activationSpeed(selected));return true;}
         if(button.id>=663&&button.id<=665){save(tile.activation.texture(selected),tile.activationPlayback(selected),button.id-663);return true;}
         return false;

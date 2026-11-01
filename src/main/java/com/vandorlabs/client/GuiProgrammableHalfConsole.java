@@ -189,7 +189,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if(activationPane.action(button)){if(button.id>=650&&button.id<=653)textureTab=0;redstoneEnabled=te.isRedstoneEnabled();redstoneInverted=te.isRedstoneInverted();initGui();return;}
+        if(activationPane.action(button)){if(button.id>=650&&button.id<=653){textureTab=0;rowSlot=-1;}redstoneEnabled=te.isRedstoneEnabled();redstoneInverted=te.isRedstoneInverted();initGui();return;}
         if(button.id==198)return;
 
         if(button.id==580&&rowsPage()){rowEditors[rowSlot].save();rowSlot=-1;initGui();return;}

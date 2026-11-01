@@ -31,7 +31,7 @@ public final class RedstoneScreenInteractions {
             int action=statusAction(state,tile,slot,eye,end);if(action<0)continue;
             if(!world.isRemote)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,player,action);return true;
         }
-        for(int slot=0;slot<2;slot++)if(tile.hasRedstoneScreen(slot) && supportsSlot(state.getBlock(),slot)){
+        for(int slot=0;slot<2;slot++)if(tile.getSurfaceTexture(slot)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE && supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);
             int row=hitRow(state,tile,slot,eye,end,contents.rows().size());
             if(row>=0){

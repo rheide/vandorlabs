@@ -613,8 +613,8 @@ public class TEAnimatedScreenSelector
                 ?ScreenSurface.Kind.CONSOLE:state.getBlock() instanceof BlockProgrammableDiagonalScreen
                 ?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
         ScreenSurface.Quad quad=ScreenSurface.quad(surface,diagonalInverted);
-        if(te.frameAppearance.displayFit&&!te.frameAppearance.split){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);{float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.columns-group.column)*du;uMin+=(group.columns-group.column-1)*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
-        if(te.frameAppearance.split){drawSplitScreen(te,FrameSurfaceRenderer.content(te,quad),buf);}else drawScreenQuad(buf,FrameSurfaceRenderer.content(te,quad),uMin,uMax,vTop,vBottom,false);
+        if(te.frameAppearance.displayFit&&!te.splitDisplay()){GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(te);{float du=(uMax-uMin)/group.columns,dv=((float)vBottom-(float)vTop)/group.rows;uMax=uMin+(group.columns-group.column)*du;uMin+=(group.columns-group.column-1)*du;vBottom=vTop+(group.rows-group.row)*dv;vTop+=(group.rows-group.row-1)*dv;}}
+        if(te.splitDisplay()){drawSplitScreen(te,FrameSurfaceRenderer.content(te,quad),buf);}else drawScreenQuad(buf,FrameSurfaceRenderer.content(te,quad),uMin,uMax,vTop,vBottom,false);
         if (surface==ScreenSurface.Kind.DIAGONAL) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(-4.0F,-4.0F);
@@ -688,7 +688,7 @@ public class TEAnimatedScreenSelector
         bindAtlas();
         renderHousingBox(wall,layout.housing.x0,layout.housing.y0,layout.housing.z0,
                 layout.housing.x1,layout.housing.y1,layout.housing.z1,te.getSurfaceTextureLayout());
-        if(!redstoneFace(te,0)){if(te.frameAppearance.split){BufferBuilder split=Tessellator.getInstance().getBuffer();split.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawSplitScreen(te,FrameSurfaceRenderer.content(te,ScreenSurface.input(layout.surface)),split);Tessellator.getInstance().draw();}else drawInputSurface(te,layout.surface,bindScreenSurface(te));}FrameSurfaceRenderer.screen(te,ScreenSurface.input(layout.surface));
+        if(!redstoneFace(te,0)){if(te.splitDisplay()){BufferBuilder split=Tessellator.getInstance().getBuffer();split.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawSplitScreen(te,FrameSurfaceRenderer.content(te,ScreenSurface.input(layout.surface)),split);Tessellator.getInstance().draw();}else drawInputSurface(te,layout.surface,bindScreenSurface(te));}FrameSurfaceRenderer.screen(te,ScreenSurface.input(layout.surface));
     }
 
     /** Bind a regular full-height programmable animation and return its V range. */
@@ -741,7 +741,7 @@ public class TEAnimatedScreenSelector
 
     private static boolean redstoneFace(TileEntityAnimatedScreenSelector tile,int slot){
         if(tile.hasVehicleStatus(slot)){RedstoneScreenRenderer.drawVehicle(tile,tile.getWorld().getBlockState(tile.getPos()),slot);return true;}
-        if(!tile.hasRedstoneScreen(slot))return false;
+        if(tile.getSurfaceTexture(slot)!=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)return false;
         RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;
     }
     private static void drawSplitScreen(TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,BufferBuilder buffer){
