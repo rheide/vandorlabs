@@ -71,8 +71,8 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         super.initGui();buttonList.clear();buttonList.add(new GuiButton(198,redstoneX,layout.top+130,redstoneWidth,20,"Transmitter..."));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
-        buttonList.add(layout.fullTab(90,0,5,"Bottom"));
-        buttonList.add(layout.fullTab(91,1,5,"Top"));
+        buttonList.add(layout.fullTab(90,0,5,"Controls"));
+        buttonList.add(layout.fullTab(91,1,5,"Display"));
         buttonList.add(layout.fullTab(92,2,5,"Sides"));
         buttonList.add(layout.fullTab(93,4,5,"Redstone"));buttonList.add(layout.fullTab(197,3,5,"Frame"));
         left=right=layout.listX;top=guiTop+54;
@@ -189,7 +189,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if(activationPane.action(button)){if(button.id>=650&&button.id<=653){textureTab=0;rowSlot=-1;}redstoneEnabled=te.isRedstoneEnabled();redstoneInverted=te.isRedstoneInverted();initGui();return;}
+        if(activationPane.action(button)){if(button.id>=650&&button.id<=653){textureTab=te.activationSurfaceSlot();rowSlot=-1;}redstoneEnabled=te.isRedstoneEnabled();redstoneInverted=te.isRedstoneInverted();initGui();return;}
         if(button.id==198)return;
 
         if(button.id==580&&rowsPage()){rowEditors[rowSlot].save();rowSlot=-1;initGui();return;}

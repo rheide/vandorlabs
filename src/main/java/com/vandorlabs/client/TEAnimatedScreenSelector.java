@@ -796,7 +796,7 @@ public class TEAnimatedScreenSelector
     private static double[] bindSurface(TileEntityAnimatedScreenSelector te,int slot) {
         int choice=te.getSurfaceTexture(slot);
         if("Screens".equals(ScreenHousingTextures.category(choice)))return bindDisplay(te,choice,te.effectiveMode(slot)!=TileEntityAnimatedScreenSelector.MODE_OFF,te.effectiveMode(slot)==TileEntityAnimatedScreenSelector.MODE_ANIMATED,te.effectiveSpeed(slot));
-        if(slot==0&&te.activation.mode>0&&te.effectiveMode(slot)==TileEntityAnimatedScreenSelector.MODE_OFF)return bindDisplay(te,choice,false,false,1);
+        if(slot==te.activationSurfaceSlot()&&te.activation.mode>0&&te.effectiveMode(slot)==TileEntityAnimatedScreenSelector.MODE_OFF)return bindDisplay(te,choice,false,false,1);
         bindAtlas();TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));
         setWorldLight(te);double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(te.getSurfaceTexture(slot)))engineeringBody(uv);else if(unpairedInputChoice(te.getSurfaceTexture(slot)))insetBody(uv,1D/32);return uv;
     }

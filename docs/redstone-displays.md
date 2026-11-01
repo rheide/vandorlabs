@@ -26,17 +26,16 @@ option to select its previous value.
 
 **Use Shared Artwork** restores a state's inherited selection without removing
 its saved control or split-display setup. An explicit state texture overrides
-the primary shared source; frame finishes and Fit/Tile mapping remain shared.
+the selected display’s shared source; frame finishes and Fit/Tile mapping remain shared.
 
 Local redstone at any member activates the whole matching joined rectangle.
 The highest local strength selects the shared analog band, and removing the
 last source deactivates the whole rectangle. This uses the same authored plane
 and rectangle partition as rendering, including diagonal layouts. Different
 state artwork configurations stay separate; receiving a channel does not turn
-the joined display into a channel repeater.
+the joined display into a channel repeater. Powered local controls retain their saved level after reload. Solid Programmable Blocks can conduct a lever’s strong power from the support beneath any display family.
 
-On Consoles, the secondary Controls artwork stays shared. Redstone artwork
-states change the primary Display surface. Existing saved display gates retain
+On regular Consoles, redstone artwork changes the upright Display while the flat Controls stay shared. On Half Console, it changes the inclined Display; the flat Controls stay shared. Its dialog labels these surfaces **Display** and **Controls**. Diagonal Half Console changes its single inclined display. Existing saved display gates retain
 their previous behavior until their activation settings are edited.
 
 Programmable Screen and Flatscreen pickers include Half display designs when

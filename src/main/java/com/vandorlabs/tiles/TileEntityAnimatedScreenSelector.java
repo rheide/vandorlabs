@@ -175,25 +175,28 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int activationMode(){return activation.mode<0?(redstoneEnabled?1:0):activation.mode;}
     public int activationState(){int level=getSignalLevel();if(redstoneInverted)level=15-level;return activationMode()==2?(level==0?0:level<=5?1:level<=10?2:3):level>0?3:0;}
     private String nativeArtworkKey;private boolean nativeArtworkInput;private int nativeArtworkChoice;
-    private int nativeArtworkTexture(){
+    public int activationSurfaceSlot(){return getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole?1:0;}
+    private int nativeArtworkTexture(){return nativeArtworkTexture(0);}
+    private int nativeArtworkTexture(int slot){
         net.minecraft.block.Block block=getBlockType();boolean input=block instanceof com.vandorlabs.blocks.BlockProgrammableInput&&!(block instanceof com.vandorlabs.blocks.BlockProgrammableFullInput)||block instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole||block instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole;
-        String key=input?getInputPanel():getSelectedScreen();
+        String key=input?(slot==1&&block instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole?getSecondaryInputPanel():getInputPanel()):getSelectedScreen();
         if(nativeArtworkKey==null||nativeArtworkInput!=input||!nativeArtworkKey.equals(key)){nativeArtworkKey=key;nativeArtworkInput=input;nativeArtworkChoice=ScreenHousingTextures.clamp(ScreenHousingTextures.screenIndex((input?"console_inputs/":"")+key+"_static"));}
         return nativeArtworkChoice;
     }
-    public int sharedArtworkTexture(){int choice=baseSurfaceTexture(0);return choice==-1?nativeArtworkTexture():choice;}
+    public int sharedArtworkTexture(){int slot=activationSurfaceSlot(),choice=baseSurfaceTexture(slot);return choice==-1?nativeArtworkTexture(slot):choice;}
     public int primaryArtworkTexture(){int choice=getSurfaceTexture(0);return choice==-1?nativeArtworkTexture():choice;}
     public boolean activationOverridesArtwork(){return activation.mode>0&&activation.texture(activationState())>=0;}
     public boolean splitDisplay(){return frameAppearance.split&&!activationOverridesArtwork();}
-    public int activationTexture(int state){int choice=activation.texture(state);return choice>=0?choice:primarySurface>=0?primarySurface:nativeArtworkTexture();}
+    public int activationTexture(int state){int choice=activation.texture(state),slot=activationSurfaceSlot(),shared=slot==1?secondarySurface:primarySurface;return choice>=0?choice:shared>=0?shared:nativeArtworkTexture(slot);}
     public int activationPlayback(int state){int value=activation.playback(state);return value>=0?value:state==0?MODE_OFF:displayMode==MODE_OFF?MODE_ANIMATED:displayMode;}
     public int activationSpeed(int state){int value=activation.speed(state);return value>=0?value:animationSpeedIndex;}
     public boolean configureActivation(int mode,int state,int texture,int playback,int speed){
         if(!supportsActivation(getBlockType())||!DisplayActivation.valid(mode,state,texture,playback,speed))return false;
         int previous=activationMode();boolean transition=activation.mode<0||previous!=mode;
         int sourceState=previous==1?3:state;
-        int inheritedTexture=previous>0?activationTexture(sourceState):primarySurface>=0?primarySurface:primarySurface==-1?nativeArtworkTexture():-1;
-        if(previous>0&&activation.texture(sourceState)<0&&primarySurface<-1)inheritedTexture=-1;
+        int shared=activationSurfaceSlot()==1?secondarySurface:primarySurface;
+        int inheritedTexture=previous>0?activationTexture(sourceState):shared>=0?shared:shared==-1?nativeArtworkTexture(activationSurfaceSlot()):-1;
+        if(previous>0&&activation.texture(sourceState)<0&&shared<-1)inheritedTexture=-1;
         int inheritedPlayback=previous>0?activationPlayback(sourceState):displayMode;
         int inheritedSpeed=previous>0?activationSpeed(sourceState):animationSpeedIndex;
         activation.configure(mode,state,texture,playback,speed);
@@ -201,12 +204,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         redstoneEnabled=mode>0;settingsChanged();
         if(world!=null){net.minecraft.block.state.IBlockState current=world.getBlockState(pos);world.notifyBlockUpdate(pos,current,current,3);world.checkLight(pos);}return true;
     }
-    public int effectiveMode(int slot){return slot==1&&activation.mode>0?displayMode:getEffectiveMode();}
-    public int effectiveSpeed(int slot){return slot==1?animationSpeedIndex:getAnimationSpeedIndex();}
+    public int effectiveMode(int slot){return slot!=activationSurfaceSlot()&&activation.mode>0?displayMode:getEffectiveMode();}
+    public int effectiveSpeed(int slot){return slot!=activationSurfaceSlot()?animationSpeedIndex:getAnimationSpeedIndex();}
     public int baseSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
     public int baseAnimationSpeed(){return animationSpeedIndex;}
     private int primarySurface=-1,secondarySurface=-1;
-    public int getSurfaceTexture(int slot){if(slot==0&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==0&&primarySurface!=VEHICLE_SURFACE&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
+    public int getSurfaceTexture(int slot){if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&(slot==1?secondarySurface:primarySurface)!=VEHICLE_SURFACE&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
     public void setSurfaceTexture(int slot,int choice) {
         if(choice==REDSTONE_SURFACE){
             // The row control is the active surface, replacing Vehicle Status.

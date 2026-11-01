@@ -15,12 +15,12 @@ final class DisplayActivationPane {
     boolean active(){return active;}
     void init(ProgrammableDialogLayout layout,List<GuiButton> buttons,int page,int redstonePage){
         this.layout=layout;int mode=tile.activationMode();
-        active=mode>0&&page==0;
+        active=mode>0&&page==tile.activationSurfaceSlot();
         if(active&&(selected<0||mode==1&&selected!=0&&selected!=3))selected=mode==1?3:0;
         List<GuiButton> tabs=new ArrayList<>();for(GuiButton b:buttons)if(b.id>=90&&b.id<=93||b.id==197)tabs.add(b);
         tabs.sort(Comparator.comparingInt(b->b.x));buttons.removeAll(tabs);
         List<GuiButton> all=new ArrayList<>();
-        for(GuiButton tab:tabs)if(tab.id==90&&mode>0){for(int s=0;s<4;s++)if(mode==2||s==0||s==3){GuiButton b=new DialogTabButton(650+s,0,0,0,18,mode==1?(s==0?"Off":"On"):new String[]{"0","1-5","6-10","11-15"}[s]);b.enabled=!active||s!=selected;all.add(b);}}else all.add(tab);
+        for(GuiButton tab:tabs)if(tab.id==90+tile.activationSurfaceSlot()&&mode>0){for(int s=0;s<4;s++)if(mode==2||s==0||s==3){GuiButton b=new DialogTabButton(650+s,0,0,0,18,mode==1?(s==0?"Off":"On"):new String[]{"0","1-5","6-10","11-15"}[s]);b.enabled=!active||s!=selected;all.add(b);}}else all.add(tab);
         if(mode==0)buttons.addAll(all);
         else {
             int available=layout.width-24-2*(all.size()-1),minimum=0;int[] widths=new int[all.size()];
@@ -36,7 +36,7 @@ final class DisplayActivationPane {
             .visibleRows(layout.rows(true)).keepView(picker).custom(value->save(value,tile.activationPlayback(selected),tile.activationSpeed(selected)));
         if(pickerState!=selected||pickerMode!=mode)picker.revealSelected();
         pickerState=selected;pickerMode=mode;
-        boolean sharedRows=tile.activation.texture(selected)<0&&tile.baseSurfaceTexture(0)==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;
+        boolean sharedRows=tile.activation.texture(selected)<0&&tile.baseSurfaceTexture(tile.activationSurfaceSlot())==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE;
         for(int i=0;i<3;i++){GuiButton b=layout.choice(660+i,i,3,66,new String[]{"Off","Static","Animated"}[i]);b.enabled=!sharedRows&&tile.activationPlayback(selected)!=i;buttons.add(b);b=layout.choice(663+i,i,3,100,new String[]{"Slow","Normal","Fast"}[i]);b.enabled=!sharedRows&&tile.activationSpeed(selected)!=i;buttons.add(b);}
         int resetY=input?(buttons.stream().anyMatch(b->b.id==30&&b.visible)?152:128):148;GuiButton inherit=layout.control(666,resetY,"Use Shared Artwork");inherit.enabled=tile.activation.texture(selected)>=0;buttons.add(inherit);
     }
