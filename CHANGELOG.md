@@ -4,7 +4,7 @@
 
 - Preserve exact programmable-block snapshots through Moat retraction and recovery when no legacy transmitter-row migration is needed.
 
-- Keep console item artwork inside its inventory slots, use full image UVs, and replace retired icon textures with retained catalog artwork.
+- Keep console item artwork inside its inventory slots, use full image UVs, and replace retired screen/input icon textures with retained catalog artwork.
 
 - Clear stale received redstone power when the last channel is removed, while coalescing temporary channel changes during ownership transfers.
 
@@ -21,14 +21,14 @@
 
 - Merge root Controls into Classic, retain existing Classic artwork for ten duplicate names, and move four unique controls into Classic. Remove the Root Controls matrix column while preserving old saved selections through shared artwork aliases.
 
-- Expand Gold with 15 animated subjects in Full and Half height and six Bridge alternatives per height, preserving the original Gold designs, saved choices and native six-frame artwork. Include both styles’ alternatives in the display comparison matrix.
+- Expand Gold with 15 additional display subjects in Full and Half height, preserving native six-frame artwork and saved choices.
 
 - Give Programmable Trigger On/Off and analog bands independent Displays artwork, Off/Static/Animated modes and playback speeds, with flat state tabs. Preserve legacy Static defaults, saved settings, Duplifier copying and configured items.
 - Offer Displays in the shared Glass material picker, including Programmable Glass and Porthole Wall glazing.
 
-- Add a visual display matrix comparing Classic, Cool and Gold, with native Full/Half previews and the new Bridge alternatives alongside existing Cool artwork.
+- Add a visual display matrix comparing Classic, Cool and Gold, with native Full/Half previews and Large variants.
 
-- Expand Cool with 15 animated display subjects in Full and Half height, plus Bridge alternatives for Biology, Communications, Medical, Navigation, Radar and Reactor. Preserve the original Cool designs and every authored pixel across all six animation frames.
+- Expand Cool with 15 additional display subjects in Full and Half height, preserving every authored pixel across all six animation frames.
 
 - Name Classic/root keypad-and-dial panels Keypad And Dial and the root six-fader panel Fader Bank. Add a visual control matrix comparing Classic, every company and root artwork.
 

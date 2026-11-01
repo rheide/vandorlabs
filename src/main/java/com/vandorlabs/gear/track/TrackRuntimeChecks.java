@@ -41,7 +41,7 @@ public final class TrackRuntimeChecks {
                 world.setBlockState(foot,TrackRegistry.COMPACT.getDefaultState(),2);
                 world.setBlockState(foot.south(),TrackRegistry.COMPACT.getDefaultState(),2);
                 GearTileEntity host;
-                if(mountedArm){world.setBlockState(root,GearRegistry.GEAR_SWING_ARM.getDefaultState(),2);host=(GearTileEntity)world.getTileEntity(root);host.operator(actor);require(host.rebuild(),"Track dialog mounted fixture");NBTTagCompound custom=host.settings();custom.setInteger("Trigger",0);custom.setString("Channels","51,73");custom.setBoolean("Deployed",true);custom.setDouble("ActiveAngle",37);custom.setDouble("ActiveExtension",2);host.configure(custom);}
+                if(mountedArm){world.setBlockState(root,GearRegistry.GEAR_SWING_ARM.getDefaultState(),2);host=(GearTileEntity)world.getTileEntity(root);host.operator(actor);require(host.rebuild(),"Track dialog mounted fixture");NBTTagCompound custom=host.settings();custom.setInteger("Trigger",0);custom.setString("Channels","51,73");custom.setBoolean("Deployed",true);custom.setDouble("ActiveAngle",45);custom.setDouble("ActiveExtension",2);host.configure(custom);}
                 else{world.setBlockState(foot.east(),Blocks.STONE_SLAB.getDefaultState(),2);host=(TrackTile)world.getTileEntity(foot);}
                 TrackTile track=(TrackTile)world.getTileEntity(foot);TrackWorld.rebuild(track);
                 require(track.error().isEmpty(),"valid standalone/rooted Track has no spurious unassembled gear error");

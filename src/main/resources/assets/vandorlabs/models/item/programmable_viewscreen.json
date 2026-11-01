@@ -1,8 +1,27 @@
 {
   "parent": "block/orientable",
   "textures": {
-    "front": "vandorlabs:blocks/engineering_screen_static",
+    "front": "vandorlabs:blocks/unified/screen_bridge_bare_engineering_static",
     "side": "vandorlabs:blocks/programmable_glass/door_side",
     "top": "vandorlabs:blocks/programmable_glass/door_side"
+  },
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    }
   }
 }

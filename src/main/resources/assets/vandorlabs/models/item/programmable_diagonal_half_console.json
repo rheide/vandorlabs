@@ -2,7 +2,7 @@
   "parent": "block/block",
   "textures": {
     "wall": "vandorlabs:blocks/programmable_glass/door_side",
-    "input": "vandorlabs:blocks/console_inputs/input_surfaces_keyboard_touchpad_item",
+    "input": "vandorlabs:blocks/unified/screen_console_inputs_input_surfaces_keyboard_touchpad_static",
     "particle": "vandorlabs:blocks/programmable_glass/door_side"
   },
   "elements": [
@@ -19,7 +19,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#input"
+          "texture": "#input",
+          "uv": [
+            0,
+            14,
+            16,
+            16
+          ]
         },
         "down": {
           "texture": "#wall"
@@ -51,7 +57,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#input"
+          "texture": "#input",
+          "uv": [
+            0,
+            12,
+            16,
+            14
+          ]
         },
         "down": {
           "texture": "#wall"
@@ -83,7 +95,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#input"
+          "texture": "#input",
+          "uv": [
+            0,
+            10,
+            16,
+            12
+          ]
         },
         "down": {
           "texture": "#wall"
@@ -115,7 +133,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#input"
+          "texture": "#input",
+          "uv": [
+            0,
+            8,
+            16,
+            10
+          ]
         },
         "down": {
           "texture": "#wall"
@@ -147,7 +171,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#input"
+          "texture": "#input",
+          "uv": [
+            0,
+            6,
+            16,
+            8
+          ]
         },
         "down": {
           "texture": "#wall"
@@ -179,7 +209,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#input"
+          "texture": "#input",
+          "uv": [
+            0,
+            4,
+            16,
+            6
+          ]
         },
         "down": {
           "texture": "#wall"
@@ -211,7 +247,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#input"
+          "texture": "#input",
+          "uv": [
+            0,
+            2,
+            16,
+            4
+          ]
         },
         "down": {
           "texture": "#wall"
@@ -243,7 +285,13 @@
       ],
       "faces": {
         "up": {
-          "texture": "#input"
+          "texture": "#input",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
         },
         "down": {
           "texture": "#wall"
@@ -262,5 +310,24 @@
         }
       }
     }
-  ]
+  ],
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        1.5,
+        1,
+        0
+      ],
+      "scale": [
+        0.625,
+        0.625,
+        0.625
+      ]
+    }
+  }
 }
