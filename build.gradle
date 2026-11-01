@@ -89,6 +89,15 @@ task testNonRendering(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+task testGlazingOrder(type: JavaExec) {
+    group = 'verification'
+    description = 'Preserve occlusion constraints around cyclic glazing and large scenes'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.render.OcclusionOrderChecks'
+}
+check.dependsOn testGlazingOrder
+
 task testDedicatedServerLinkage(type: JavaExec) {
     group = 'verification'
     description = 'Reject shared-code references to client-only Minecraft and Forge APIs'
