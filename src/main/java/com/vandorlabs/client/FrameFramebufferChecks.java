@@ -44,7 +44,23 @@ final class FrameFramebufferChecks {
             BufferedImage single=capture(mc,one),tile=capture(mc,square);Fixture visibilityControl=new Fixture(mc,1,1,dark);try{require(difference(single,capture(mc,visibilityControl),8,8,248,248)>10000,"selected display textures are hidden by housing or the camera sees the rear");}finally{visibilityControl.close();}square.appearance(-1,false,true);GlassSurfaceGroups.Layout group=ScreenSurfaceGroups.layout(square.tiles.get(0));require(group.columns==2&&group.rows==2,"2x2 grouping failed: "+group.key()+" tiles="+square.tiles.size()+" positions="+square.world.tiles.keySet());BufferedImage fit=capture(mc,square);ImageIO.write(single,"png",new File(output,"shot_frames_reference.png"));ImageIO.write(tile,"png",new File(output,"shot_frames_display_tile_2x2.png"));ImageIO.write(fit,"png",new File(output,"shot_frames_display_fit_2x2.png"));
             require(difference(single,fit,5,5,251,251)<180,"2x2 display Fit does not match one continuous image");
             require(difference(tile,fit,5,5,251,251)>300,"2x2 display Fit did not change repeated artwork");
-            for(Fixture rectangular:new Fixture[]{rectangle,row}){BufferedImage before=capture(mc,rectangular);rectangular.appearance(-1,false,true);BufferedImage after=capture(mc,rectangular);require(difference(before,after,4,4,252,252)==0,"non-square display Fit stretched a rectangular group");}
+            // Redstone display artwork added Fit across complete rectangles, including wide Half designs.
+            // Normalize the projection to the same framebuffer to compare the complete source image.
+            for(Fixture rectangular:new Fixture[]{rectangle,row}){
+                BufferedImage before=capture(mc,rectangular);rectangular.appearance(-1,false,true);BufferedImage after=capture(mc,rectangular);
+                GlassSurfaceGroups.Layout layout=ScreenSurfaceGroups.layout(rectangular.tiles.get(0));
+                require(layout.columns==rectangular.columns&&layout.rows==rectangular.rows,"rectangular display grouping failed: "+layout.key());
+                require(difference(single,after,5,5,251,251)<180,"rectangular display Fit does not match one continuous image: "+layout.key());
+                require(difference(before,after,5,5,251,251)>300,"rectangular display Fit retained repeated artwork: "+layout.key());
+                ImageIO.write(after,"png",new File(output,"shot_frames_display_fit_"+rectangular.columns+"x"+rectangular.rows+".png"));
+            }
+            Fixture mixedArtwork=new Fixture(mc,2,1,pattern);
+            try{
+                mixedArtwork.tiles.get(0).setSurfaceTexture(0,dark);GlassMaterials.changed();BufferedImage tiled=capture(mc,mixedArtwork);
+                mixedArtwork.appearance(-1,false,true);BufferedImage fitted=capture(mc,mixedArtwork);
+                for(TileEntityAnimatedScreenSelector member:mixedArtwork.tiles){GlassSurfaceGroups.Layout layout=ScreenSurfaceGroups.layout(member);require(layout.columns==1&&layout.rows==1,"different artwork joined one fitted rectangle");}
+                require(difference(tiled,fitted,4,4,252,252)==0,"mixed artwork changed when rectangular Fit was enabled");
+            }finally{mixedArtwork.close();}
             square.appearance(-1,false,false);BufferedImage bare=capture(mc,square);square.appearance(bolted,true,false);BufferedImage repeated=capture(mc,square);square.appearance(bolted,false,false);BufferedImage perimeter=capture(mc,square);ImageIO.write(perimeter,"png",new File(output,"shot_frames_border_fit_2x2.png"));ImageIO.write(repeated,"png",new File(output,"shot_frames_border_tile_2x2.png"));
             int repeatedSeam=difference(bare,repeated,120,24,136,232),fitSeam=difference(bare,perimeter,120,24,136,232);
             require(repeatedSeam>100&&fitSeam<repeatedSeam/3,"frame Fit retained an interior vertical rail");
@@ -56,7 +72,7 @@ final class FrameFramebufferChecks {
             ImageIO.write(fit,"png",new File(output,"shot_frames_display_fit_2x2.png"));ImageIO.write(perimeter,"png",new File(output,"shot_frames_border_fit_2x2.png"));ImageIO.write(repeated,"png",new File(output,"shot_frames_border_tile_2x2.png"));ImageIO.write(splitImage,"png",new File(output,"shot_frames_split_display.png"));
             coupledLayouts(mc,output,pattern,dark,bolted,splitImage);
             reportedBorders(mc,output,pattern);framePersistence(mc);companyDisplays(mc,output);opaqueInterior(mc,output);joinedGlassFrames(mc,output);frameDialog(mc,output,one.tiles.get(0));screenRedstoneDialog(mc,output,one.tiles.get(0));pickerDialogs(mc,output);TextureSearchRuntimeChecks.run(mc,output);
-            System.out.println("[vandorlabs][reprolab] frame-framebuffer PASS square-display-fit rectangular-rejection independent-frame-fit mixed-artwork-and-frame-negative-controls split-fit-2x2-and-3x3 opaque-interior");
+            System.out.println("[vandorlabs][reprolab] frame-framebuffer PASS square-and-rectangular-display-fit independent-frame-fit mixed-artwork-and-frame-negative-controls split-fit-2x2-and-3x3 opaque-interior");
         }finally{one.close();square.close();rectangle.close();row.close();}
     }
     private static void reportedBorders(Minecraft mc,File output,int material)throws Exception{
@@ -254,6 +270,7 @@ final class FrameFramebufferChecks {
         GlassSurfaceGroups.unload(joinedWorld);
         VehicleWorld lightWorld=new VehicleWorld(mc.world,VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,glassBlock.getDefaultState(),tile.writeToNBT(new NBTTagCompound())))));
         TileEntityProgrammableGlass lightTile=(TileEntityProgrammableGlass)lightWorld.getTileEntity(BlockPos.ORIGIN);lightTile.frameAppearance.front=-1;lightTile.frameAppearance.interior=-1;lightTile.frameAppearance.tile=true;require(!glassBlock.getActualState(lightWorld.getBlockState(BlockPos.ORIGIN),lightWorld,BlockPos.ORIGIN).getValue(com.vandorlabs.blocks.BlockGlassWall.TOP),"Original Tile frame must suppress the joined baked frame");lightTile.frameAppearance.read(tile.writeToNBT(new NBTTagCompound()));require(glassBlock.getLightValue(lightWorld.getBlockState(BlockPos.ORIGIN),lightWorld,BlockPos.ORIGIN)==3,"lit inner frame must emit faint level three");lightTile.setAppearance(1,false);require(glassBlock.getLightValue(lightWorld.getBlockState(BlockPos.ORIGIN),lightWorld,BlockPos.ORIGIN)==0,"Bare frame retained invisible frame light");
+        tile.setJoin(false); // This isolated frame-side render has no world neighbors.
         Framebuffer frame=new Framebuffer(SIZE,SIZE,true);projection(0,16,0,16);
         try(TurntableRenderState saved=new TurntableRenderState()){
             prepare(mc,frame);GlStateManager.rotate(90,0,1,0);mc.getTextureManager().bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);

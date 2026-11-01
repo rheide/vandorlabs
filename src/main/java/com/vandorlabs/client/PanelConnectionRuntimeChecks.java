@@ -96,12 +96,13 @@ final class PanelConnectionRuntimeChecks {
             net.minecraft.client.renderer.BufferBuilder dense = renderedBuffer(world,pos);
             require(dense.getVertexCount()==8,"dense cube should render only exposed top and bottom");
             java.nio.ByteBuffer data=dense.getByteBuffer();
+            int stride=dense.getVertexFormat().getNextOffset(),lightOffset=dense.getVertexFormat().getUvOffsetById(1);
             for (int vertex=0;vertex<dense.getVertexCount();vertex++) {
-                EnumFacing face=data.getFloat(vertex*28+4)<.5F?EnumFacing.DOWN:EnumFacing.UP;
+                EnumFacing face=data.getFloat(vertex*stride+4)<.5F?EnumFacing.DOWN:EnumFacing.UP;
                 int light=world.getCombinedLight(pos.offset(face),0);
-                require((data.getShort(vertex*28+24)&65535)==(light&65535),
+                require((data.getShort(vertex*stride+lightOffset)&65535)==(light&65535),
                         "dense cube block lighting differs from its visible face sample");
-                require((data.getShort(vertex*28+26)&65535)==(light>>>16),
+                require((data.getShort(vertex*stride+lightOffset+2)&65535)==(light>>>16),
                         "dense cube sky lighting differs from its visible face sample");
             }
         } finally {

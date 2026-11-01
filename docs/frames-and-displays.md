@@ -18,9 +18,10 @@ inner sides remain opaque. Borders with amber or cyan lights emit a faint
 level-three block light when used on glass, walls or doors.
 
 The screen, Flatscreen and diagonal screen **Display** page provides
-**Texture: Tile / Fit**. Fit spreads one display over a complete square group,
-including 2×2 and 3×3 arrangements. Rectangular groups such as 2×3 or 3×1
-retain individual display images. The frame's Fit layout is independent and
+**Texture: Tile / Fit**. Fit spreads one display over a complete matching rectangle,
+including 2×2, 3×3, 2×3 and 3×1 arrangements. Tile repeats the artwork
+on individual displays. Wide Screens and Flatscreens offer Half designs when
+the joined shape suits them, including 4×2 groups. The frame's Fit layout is independent and
 can surround a rectangular group, including neighboring displays with different artwork or playback settings. Display Fit can join matching displays with different frame finishes. Diagonal display artwork reaches both side
 edges, allowing adjacent displays to meet without a housing-colored stripe.
 

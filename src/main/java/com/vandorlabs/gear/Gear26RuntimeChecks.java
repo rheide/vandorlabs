@@ -27,7 +27,12 @@ public final class Gear26RuntimeChecks {
             GearTileEntity tile=arm(world,actor,root,GearRegistry.LARGE_GEAR_EXTENDER,face,4);tile.operator(actor);
             BlockPos home=root.offset(face),extended=root.offset(face,4),contact=root.offset(face,3).up(),target=root.offset(face,5).up();
             net.minecraft.block.Block surface=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface");
-            world.setBlockState(extended,surface.getDefaultState(),2);world.setBlockState(extended.up(),surface.getDefaultState(),2);tile.target(false);
+            // The attached wall pad must share the mounting plane, not form stacked floor layers.
+            net.minecraft.block.state.IBlockState surfaceState=surface.getDefaultState().withProperty(com.vandorlabs.blocks.BlockTurntableSurface.FACING,face);
+            world.setBlockState(extended,surfaceState,2);world.setBlockState(extended.up(),surfaceState,2);
+            ArmPayload selected=ArmPayload.discover(tile,actor);
+            require(selected!=null&&selected.blocks.cells.size()==2,"push fixture captures both coplanar Surface cells "+face);
+            tile.target(false);
             for(int tick=0;tick<60;tick++)for(BlockPos member:new java.util.ArrayList<>(tile.members())){TileEntity raw=world.getTileEntity(member);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
             require(tile.progress()==0&&world.getBlockState(home).getBlock()==surface&&world.getBlockState(home.up()).getBlock()==surface,"original attachment retracts before enabling pushing "+face+" "+tile.error());
             NBTTagCompound settings=tile.settings();settings.setBoolean("PushBlocks",true);tile.configure(settings);
@@ -86,7 +91,8 @@ public final class Gear26RuntimeChecks {
             GearTileEntity tile=arm(world,actor,root,block,face,1);tile.operator(actor);
             if(tile.isSwingArmController()){NBTTagCompound settings=tile.settings();settings.setBoolean("RotatePayload",rotate);tile.configure(settings);}
             BlockPos tip=root.offset(face),across=tip.add(ArmOrientation.vector(face,new BlockPos(1,0,0))),layer=tip.offset(face);
-            world.setBlockState(tip,surface.getDefaultState(),2);world.setBlockState(across,surface.getDefaultState(),2);world.setBlockState(layer,surface.getDefaultState(),2);
+            net.minecraft.block.state.IBlockState surfaceState=surface.getDefaultState().withProperty(com.vandorlabs.blocks.BlockTurntableSurface.FACING,face);
+            world.setBlockState(tip,surfaceState,2);world.setBlockState(across,surfaceState,2);world.setBlockState(layer,surfaceState,2);
             ArmPayload selected=ArmPayload.discover(tile,actor);
             require(selected!=null&&selected.blocks.cells.size()==2,"implicit connected surface selects only tip layer "+block+" "+face);
             require(selected.placedCells(tile).contains(tip)&&selected.placedCells(tile).contains(across)&&!selected.placedCells(tile).contains(layer),"stacked surface stays outside payload "+face);

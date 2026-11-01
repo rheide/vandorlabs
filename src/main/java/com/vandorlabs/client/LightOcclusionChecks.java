@@ -14,11 +14,32 @@ import java.util.*;
 
 /** A convex light assembly must not rely on depth precision to hide its interior. */
 final class LightOcclusionChecks {
+    private static int readinessTicks;
+    private static BlockPos origin(Minecraft mc){BlockPos player=new BlockPos(mc.player);return new BlockPos((player.getX()>>4)*16+8,240,(player.getZ()>>4)*16+8);}
+    /** Default WorldClient isBlockLoaded allows its placeholder EmptyChunk. */
+    static boolean ready(Minecraft mc){
+        BlockPos origin=origin(mc);boolean loaded=true;
+        for(int x=-2;x<=2;x++)for(int y=-2;y<=2;y++)for(int z=-2;z<=2;z++)loaded&=mc.world.isBlockLoaded(origin.add(x,y,z),false);
+        if(loaded){
+            readinessTicks=0;
+            // Negative control: the default query accepts an absent client
+            // chunk, while the strict query must refuse that same cell.
+            BlockPos absent=new BlockPos(16000000,240,16000000);
+            if(mc.world.getChunkProvider().getLoadedChunk(absent.getX()>>4,absent.getZ()>>4)==null
+                &&(!mc.world.isBlockLoaded(absent)||mc.world.isBlockLoaded(absent,false)))throw new IllegalStateException("Light fixture EmptyChunk readiness negative control failed");
+            return true;
+        }
+        if(++readinessTicks>600){
+            net.minecraft.entity.player.EntityPlayerMP server=mc.getIntegratedServer()==null?null:mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());
+            throw new IllegalStateException("Light fixture chunk readiness timeout stage=before-render player="+mc.player.getPosition()+" fixture="+origin+" clientChunk="+mc.world.getChunkProvider().getLoadedChunk(origin.getX()>>4,origin.getZ()>>4)+" serverPlayer="+(server==null?"missing":server.getPosition()));
+        }
+        return false;
+    }
     static void run(File output) {
         Minecraft mc=Minecraft.getMinecraft();
         // Keep every panel orientation in the current loaded client chunk. Earlier
         // runtime fixtures can leave the old fixed chunk outside the view distance.
-        BlockPos player=new BlockPos(mc.player);BlockPos origin=new BlockPos((player.getX()>>4)*16+8,240,(player.getZ()>>4)*16+8);
+        BlockPos player=new BlockPos(mc.player);BlockPos origin=origin(mc);
         Framebuffer target=new Framebuffer(256,256,true);
         List<BlockPos> positions=new ArrayList<>();
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
@@ -32,7 +53,7 @@ final class LightOcclusionChecks {
                     BlockPos pos=origin.offset(plane.right,col).offset(plane.up,row);positions.add(pos);
                     net.minecraft.tileentity.TileEntity raw=null;
                     for(int attempt=0;attempt<3&&!(raw instanceof TileEntityProgrammableLight);attempt++) {
-                        if(!mc.world.isBlockLoaded(pos))throw new IllegalStateException("Light occlusion requires loaded client fixture cell "+pos+" player="+player);
+                        if(!mc.world.isBlockLoaded(pos,false))throw new IllegalStateException("Light occlusion requires loaded client fixture cell "+pos+" player="+player);
                         mc.world.setBlockToAir(pos);
                         if(!mc.world.setBlockState(pos,ModBlocks.PROGRAMMABLE_LIGHT.getDefaultState()
                                 .withProperty(BlockAnimatedScreenSelector.FACING,facing),2))throw new IllegalStateException("Light occlusion fixture placement failed "+pos);
@@ -77,7 +98,7 @@ final class LightOcclusionChecks {
                 }
                 for(BlockPos pos:positions)mc.world.setBlockToAir(pos);positions.clear();
             }
-            System.out.println("[vandorlabs][reprolab] light-hidden-faces PASS (Forge batch: six facings, Porthole/Logo, single/joined, front/back, reversed draw order without depth)");
+            System.out.println("[vandorlabs][reprolab] light-hidden-faces PASS (Forge batch: strict loaded-cell readiness/EmptyChunk negative control, six facings, Porthole/Logo, single/joined, front/back, reversed draw order without depth)");
         } catch(java.io.IOException e){throw new IllegalStateException(e);}
         finally {
             for(BlockPos pos:positions)mc.world.setBlockToAir(pos);

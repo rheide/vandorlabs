@@ -29,11 +29,15 @@ final class GearPushRecoveryChecks {
             for(BlockPos at:BlockPos.getAllInBox(ROOT.add(-1,-1,-1),ROOT.add(6,3,1))){world.removeTileEntity(at);world.setBlockToAir(at);}
             for(int n=0;n<4;n++){BlockPos at=ROOT.east(n);world.setBlockState(at,GearRegistry.GEAR_EXTENDER.getDefaultState(),2);GearTileEntity tile=(GearTileEntity)world.getTileEntity(at);tile.setMountDirection(EnumFacing.EAST);tile.operator(actor);}
             GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);require(arm.rebuild(),"native arm forms");
-            net.minecraft.block.Block surface=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface");world.setBlockState(ROOT.east(4),surface.getDefaultState(),2);world.setBlockState(ROOT.east(4).up(),surface.getDefaultState(),2);arm.target(false);
+            net.minecraft.block.Block surface=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface");
+            // This wall-mounted pad is one coplanar Surface layer, not two stacked floor layers.
+            net.minecraft.block.state.IBlockState surfaceState=surface.getDefaultState().withProperty(com.vandorlabs.blocks.BlockTurntableSurface.FACING,EnumFacing.EAST);
+            world.setBlockState(ROOT.east(4),surfaceState,2);world.setBlockState(ROOT.east(4).up(),surfaceState,2);arm.target(false);
             try(AutoCloseable matrix=ArmTransactions.matrix()){
                 require(arm.preparePayloadMotion(),"capture source baseline");NBTTagCompound saved=arm.writeToNBT(new NBTTagCompound());saved.setBoolean("ArmRetractingStroke",true);arm.readFromNBT(saved);arm.captureProgress(0);arm.operator(actor);require(arm.payload().restore(arm,0),"native retracted payload baseline");
                 NBTTagCompound settings=arm.settings();settings.setBoolean("PushBlocks",true);arm.configure(settings);arm.target(true);require(arm.preparePayloadMotion(),"retained moving Surface baseline");arm.captureProgress(.37);
             }
+            require(arm.payload()!=null&&!arm.payload().materialized()&&arm.payload().blocks.cells.size()==2,"wall-mounted baseline captures both coplanar Surface cells");
             world.setBlockState(SOURCE,Blocks.IRON_BLOCK.getDefaultState(),2);arm.markDirty();checkpoint=new TransferCheckpoint(world,Arrays.asList(world.getChunkFromBlockCoords(ROOT),world.getChunkFromBlockCoords(TARGET)));stage=1;return false;
         }
         if(stage==1){if(!checkpoint.step())return false;checkpoint=null;ArmTransactions.testFault=point->{
@@ -44,6 +48,6 @@ final class GearPushRecoveryChecks {
                 new java.util.concurrent.CountDownLatch(1).await();
             }catch(Exception failure){throw new IllegalStateException(failure);}
         };stage=2;}
-        GearPushing.prepare((GearTileEntity)world.getTileEntity(ROOT),.5);return false;
+        require(!GearPushing.prepare((GearTileEntity)world.getTileEntity(ROOT),.5),"moving Surface must contact the native iron block and await its durable push journal");return false;
     }
 }

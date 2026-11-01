@@ -920,6 +920,7 @@ public class ReproLab {
                     openLightPicker(mc);state=19;holdTicks=GUI_SETTLE_TICKS;break;
                 }
                 if(!Boolean.getBoolean("vandorlabs.diagonalJoinChecksOnly") && !Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly")) {
+                if(!LightOcclusionChecks.ready(mc))break;
                 LightOcclusionChecks.run(outDir);
                 PilotSeatRuntimeChecks.check(mc);
                 if(Boolean.getBoolean("vandorlabs.lightChecksOnly")){mc.shutdown();return;}
