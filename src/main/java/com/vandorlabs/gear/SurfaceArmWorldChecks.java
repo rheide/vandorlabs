@@ -35,7 +35,7 @@ public final class SurfaceArmWorldChecks {
     private static GearTileEntity arm(WorldServer world,BlockPos p){return ((GearTileEntity)world.getTileEntity(p)).loadedController();}
     private static boolean run(WorldServer world,EntityPlayerMP player,boolean clientClear)throws Exception{
         require(++ticks<600,"bounded saved-world fixture");
-        if(stage==0){load(world,player,"rotating");stage=1;ticks=0;return false;}
+        if(stage==0){ArmCopifierChecks.run(world,player);load(world,player,"rotating");stage=1;ticks=0;return false;}
         GearTileEntity arm=arm(world,stage<10?ROTATING:EXTENDER);require(arm!=null,"saved controller retained");
         if(ArmTransactions.locked(world,arm.getPos()))return false;
         if(stage==1){if(ticks<30)return false;ArmPayload.Endpoint endpoint=ArmPayload.endpoint(arm,1);require(endpoint!=null,"saved native endpoint");ArmPayload found=endpoint.capture(player);require(found!=null&&found.blocks.cells.size()==9,"horizontal 3x3 pad must capture all 9 Surfaces, got "+(found==null?0:found.blocks.cells.size()));arm.target(false);stage=2;ticks=0;return false;}

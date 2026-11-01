@@ -28,6 +28,8 @@ import net.minecraft.world.World;
 
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
+    public static final String MODULAR_ARM_SETTINGS="modular_arm_settings";
+    private static final String[] ARM_KEYS={"Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","ActiveExtension","TrackStyle"};
     public static final String BLOCK_CONFIGURATION="block_configuration";
     public static final String SIGNAL_SETTINGS="signal_settings";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";
@@ -159,7 +161,11 @@ public final class ProgrammableSettings {
             if(channels.size()<=1)out.setInteger(CHANNEL,channels.first());
             else out.setIntArray(CHANNEL,channels.toArray());
         }
-        if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
+        if(tile instanceof com.vandorlabs.gear.GearTileEntity){
+            NBTTagCompound settings=((com.vandorlabs.gear.GearTileEntity)tile).settings(),copied=new NBTTagCompound();
+            for(String key:ARM_KEYS)if(settings.hasKey(key))copied.setTag(key,settings.getTag(key).copy());
+            copied.setBoolean("LegacyAnyChannels",settings.getBoolean("LegacyAnyChannels"));out.setTag(MODULAR_ARM_SETTINGS,copied);out.setInteger(TRIGGER,settings.getInteger("Trigger"));
+        }else if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
             out.setInteger(GLASS_SHADE,canopy.large.shade);out.setInteger(GLASS_TINT,canopy.large.tint);
             out.setInteger(GLASS_MATERIAL,canopy.large.material);
@@ -401,7 +407,16 @@ public final class ProgrammableSettings {
             try{transmissionChannels=ChannelList.of(transmission.getIntArray("Channels"));}catch(IllegalArgumentException invalid){return false;}
         }
         boolean applicable = false;
-        if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
+        if(tile instanceof com.vandorlabs.gear.GearTileEntity){
+            com.vandorlabs.gear.GearTileEntity arm=(com.vandorlabs.gear.GearTileEntity)tile;
+            if(values.hasKey(MODULAR_ARM_SETTINGS,10)||values.hasKey(TRIGGER)||values.hasKey(CHANNEL)){
+                NBTTagCompound settings=arm.settings(),copied=values.getCompoundTag(MODULAR_ARM_SETTINGS);
+                for(String key:ARM_KEYS)if(copied.hasKey(key))settings.setTag(key,copied.getTag(key).copy());
+                if(values.hasKey(TRIGGER,3))settings.setInteger("Trigger",values.getInteger(TRIGGER));
+                if(values.hasKey(CHANNEL)){settings.setString("Channels",channels(values,arm).toString());if(copied.hasKey("LegacyAnyChannels",1))settings.setBoolean("LegacyAnyChannels",copied.getBoolean("LegacyAnyChannels"));}
+                try{if(!settings.equals(arm.settings()))arm.configure(settings);}catch(IllegalArgumentException refused){return false;}if(player instanceof net.minecraft.entity.player.EntityPlayerMP)arm.operator((net.minecraft.entity.player.EntityPlayerMP)player);applicable=true;
+            }
+        }else if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
             com.vandorlabs.tiles.TileEntityCanopy canopy=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();
             com.vandorlabs.blocks.BlockCanopy canopyBlock=(com.vandorlabs.blocks.BlockCanopy)block;
             boolean configurable=com.vandorlabs.canopy.LargeCanopySettings.supports(canopyBlock.kind) || canopyBlock.opening();

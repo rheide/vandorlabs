@@ -101,7 +101,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.STAIR_TREAD, "Stair step size", 2),
             option(ProgrammableSettings.STAIR_ROLL, "Stair orientation", 2),
             option("FrameAppearance", "Frame Finishes", 0),
-            option(ProgrammableSettings.DOOR_GLASS,"Door Glass",3)
+            option(ProgrammableSettings.DOOR_GLASS,"Door Glass",3),
+            option(ProgrammableSettings.MODULAR_ARM_SETTINGS,"Arm / Track Settings",2)
     };
 
     /** Legacy API covers the original first word; option indices are append-only. */

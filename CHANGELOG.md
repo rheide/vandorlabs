@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Copy modular arm and track settings, including Join Arms and its range, through controller or member sections without copying live pose or payload ownership.
+
 - Apply redstone-state artwork and playback edits to the whole authored display rectangle, with per-member edit permission checks. Keep Half selections available while changing signal-band designs.
 
 - Preserve display artwork, animation and speed when exposing redstone states, reveal each tab's selected texture and route search to the visible picker. Share nearby local redstone across matching joined display rectangles.

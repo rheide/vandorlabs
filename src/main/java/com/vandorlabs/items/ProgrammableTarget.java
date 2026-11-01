@@ -13,6 +13,8 @@ public final class ProgrammableTarget {
     public static BlockPos settingsPos(World world, BlockPos clicked) {
         BlockPos owner=MovingDeviceConfiguration.ownerAt(world,clicked);if(!owner.equals(clicked))return owner;
         IBlockState state = world.getBlockState(clicked);
+        net.minecraft.tileentity.TileEntity raw=world.getTileEntity(clicked);
+        if(raw instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)raw).loadedController();if(root!=null)return root.getPos();}
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy){
             com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(world,clicked);
             if(tile!=null)return tile.owner().getPos();
