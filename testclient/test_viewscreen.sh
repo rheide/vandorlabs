@@ -59,6 +59,9 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-riders ]; then
             PREFIX=arm_riders_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_RIDER_ONLY=true
+        elif [ "$TARGET" = surface-arms ]; then
+            PREFIX=surface_arm_
+            export VANDOR_LABS_SURFACE_ARM_CHECKS_ONLY=true
         elif [ "$TARGET" = arm-endpoints ]; then
             PREFIX=arm_endpoint_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_JOINED_ONLY=true VANDOR_LABS_ARM_ENDPOINT_ONLY=true
@@ -324,6 +327,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-push ]; then
         grep -q "arm-push PASS" "$RUN_OUT/client.log"
         echo "Incremental arm push checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = surface-arms ]; then
+        grep -q "surface-arm-world PASS" "$RUN_OUT/client.log"
+        echo "Saved Surface arm checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-endpoints ]; then

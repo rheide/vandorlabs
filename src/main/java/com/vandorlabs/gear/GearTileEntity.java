@@ -181,6 +181,10 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     }
 
     private double progress = 1.0;
+    private boolean surfaceDepartureActive=true,surfaceDepartureSaved=true,surfaceDepartureTarget=true;
+    /** Only reaching an endpoint changes the surface appearance, including on reversal. */
+    public boolean surfaceActive(){rememberSurfaceEndpoint();return surfaceDepartureActive;}
+    private void rememberSurfaceEndpoint(){if(surfaceDepartureTarget!=deployedTarget){surfaceDepartureTarget=deployedTarget;surfaceDepartureSaved=true;}if(progress==0||progress==1){surfaceDepartureActive=progress==1;surfaceDepartureSaved=true;}}
     private double previousProgress = 1.0;
     private int motionRevision;
     public transient int clientUpdates;
@@ -192,7 +196,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(revision!=motionRevision||tick<=lastMotionTick||!isOperational())return false;
         lastMotionTick=tick;deployedTarget=isFixedMount()||target;motionBlocked=blocked;return true;
     }
-    public void correctProgress(double value){previousProgress=progress;progress=isFixedMount()?1:Math.max(0,Math.min(1,value));boxesAt=Double.NaN;}
+    public void correctProgress(double value){rememberSurfaceEndpoint();if(value!=progress)surfaceDepartureSaved=true;previousProgress=progress;progress=isFixedMount()?1:Math.max(0,Math.min(1,value));boxesAt=Double.NaN;}
     // A cached group may be temporarily suspended while required chunks are
     // absent. Its saved membership, target and exact progress are preserved.
     private boolean operational = true,motionBlocked,configured;
@@ -208,7 +212,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private void clearPoses(){poses.clear();poseBoxes=0;boxesAt=Double.NaN;}
     private java.util.List<AxisAlignedBB> cachedBoxes=java.util.Collections.emptyList();
     public java.util.List<AxisAlignedBB> collisionBoxes(){if(!isOperational())return java.util.Collections.emptyList();if(boxesAt!=progress){cachedBoxes=GearGeometry.boxes(this,progress);boxesAt=progress;}return cachedBoxes;}
-    public void captureProgress(double next){previousProgress=progress;progress=isFixedMount()?1:Math.max(0,Math.min(1,next));boxesAt=Double.NaN;}
+    public void captureProgress(double next){rememberSurfaceEndpoint();if(next!=progress)surfaceDepartureSaved=true;previousProgress=progress;progress=isFixedMount()?1:Math.max(0,Math.min(1,next));boxesAt=Double.NaN;}
 
     private int rebuildDelay = -1;
     private boolean retryUnavailable;
@@ -295,7 +299,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override public void setWorld(World world){super.setWorld(world);rebuildMemberCache();clearPoses();}
 
     @Override
-    public void onLoad() {com.vandorlabs.tiles.WorldActionAuthorization.resumed(this); firstServerTick=true;if(world!=null&&!world.isRemote)com.vandorlabs.tiles.DeferredTileLoad.schedule(this,()->{rebuildMemberCache();GearGeometry.register(this);});else clientGeometryPending=true; }
+    public void onLoad() {com.vandorlabs.tiles.WorldActionAuthorization.resumed(this); firstServerTick=true;if(world!=null&&!world.isRemote)com.vandorlabs.tiles.DeferredTileLoad.schedule(this,()->{rebuildMemberCache();GearGeometry.register(this);ArmSurfaceActivity.discover(this);});else clientGeometryPending=true; }
     @Override public void invalidate(){com.vandorlabs.tiles.WorldActionAuthorization.revoke(this);GearGeometry.remove(this);super.invalidate();}
     @Override public void onChunkUnload(){com.vandorlabs.tiles.WorldActionAuthorization.unloaded(this);GearGeometry.remove(this);super.onChunkUnload();}
 
@@ -336,7 +340,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override
     public void update() {
         if (world == null) return;
-        if(clientGeometryPending&&world.isRemote&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this){clientGeometryPending=false;rebuildMemberCache();GearGeometry.register(this);}
+        if(clientGeometryPending&&world.isRemote&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this){clientGeometryPending=false;rebuildMemberCache();GearGeometry.register(this);ArmSurfaceActivity.discover(this);}
         if(isFixedMount()){deployedTarget=true;progress=1;}
         if(failedStoredSections!=null)return;
         if(ArmRecoveryRuntimeChecks.paused(this)||ArmTransactions.blocked(this)||com.vandorlabs.tiles.WorldActionAuthorization.awaitingLoad(this))return;
@@ -411,7 +415,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 motionBlocked=true;lastError="Motion blocked; attachment snapshot retained for recovery";sync();com.vandorlabs.network.MessageGearMotion.send(this);return;
             }
             if(blocked!=motionBlocked){motionBlocked=blocked;sync();com.vandorlabs.network.MessageGearMotion.send(this);}
-            if(!blocked&&next!=before){lastError="";boolean riders=riderPlan!=null&&!riderPlan.riders.isEmpty();progress=next;boxesAt=Double.NaN;if(riders)com.vandorlabs.network.MessageGearMotion.send(this);GearGeometry.pushEntities(this);markDirty();if(progress==0||progress==1){if(progress==1)scheduleRebuild();restorePayloadEndpoint();finishStartAdjustment();com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(!riders&&(before==0||before==1||world.getTotalWorldTime()%3==0))com.vandorlabs.network.MessageGearMotion.send(this);}
+            if(!blocked&&next!=before){lastError="";boolean riders=riderPlan!=null&&!riderPlan.riders.isEmpty();rememberSurfaceEndpoint();surfaceDepartureSaved=true;progress=next;rememberSurfaceEndpoint();boxesAt=Double.NaN;if(riders)com.vandorlabs.network.MessageGearMotion.send(this);GearGeometry.pushEntities(this);markDirty();if(progress==0||progress==1){if(progress==1)scheduleRebuild();restorePayloadEndpoint();finishStartAdjustment();com.vandorlabs.network.MessageGearMotion.send(this);if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);}else if(!riders&&(before==0||before==1||world.getTotalWorldTime()%3==0))com.vandorlabs.network.MessageGearMotion.send(this);}
         }
     }
 
@@ -542,7 +546,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             tile.setAssembled(true);
             tile.sync();
         }
-        boxesAt=Double.NaN;GearGeometry.register(this);sync();
+        boxesAt=Double.NaN;GearGeometry.register(this);ArmSurfaceActivity.discover(this);sync();
         return true;
     }
 
@@ -661,6 +665,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     }
 
     public void sync() {
+        rememberSurfaceEndpoint();ArmSurfaceActivity.refresh(this);
         clearPoses();if(payload!=null)GearGeometry.register(this);
         markDirty();
         if (world != null && !world.isRemote && GearAssembly.loaded(world, pos)) {
@@ -691,6 +696,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         tag.setString("GearDirection", direction.name());
         tag.setBoolean("GearTargetDeployed", deployedTarget);tag.setBoolean("GearSignalKnown",signalKnown);tag.setBoolean("GearLastSignal",lastSignal);tag.setBoolean("GearLegacyAnyChannels",legacyAnyChannels);
         tag.setDouble("GearProgress", progress);
+        rememberSurfaceEndpoint();if(surfaceDepartureSaved&&progress>0&&progress<1)tag.setBoolean("SurfaceDepartureActive",surfaceDepartureActive);else tag.removeTag("SurfaceDepartureActive");
         tag.setBoolean("GearOperational", operational);
         tag.setBoolean("GearController", assembly != null);
         if (assembly != null) {
@@ -735,6 +741,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         deployedTarget = !tag.hasKey("GearTargetDeployed") || tag.getBoolean("GearTargetDeployed");signalKnown=tag.getBoolean("GearSignalKnown");lastSignal=tag.getBoolean("GearLastSignal");legacyAnyChannels=tag.getBoolean("GearLegacyAnyChannels");
         double savedProgress = tag.hasKey("GearProgress") ? tag.getDouble("GearProgress") : 1.0;
         progress = previousProgress = Double.isFinite(savedProgress) ? Math.max(0, Math.min(1, savedProgress)) : 1.0;
+        surfaceDepartureTarget=deployedTarget;surfaceDepartureSaved=tag.hasKey("SurfaceDepartureActive",1);surfaceDepartureActive=surfaceDepartureSaved?tag.getBoolean("SurfaceDepartureActive"):progress>=1||progress>0&&!deployedTarget;rememberSurfaceEndpoint();
         operational = !tag.hasKey("GearOperational") || tag.getBoolean("GearOperational");
         assembly = null;
         if (tag.getBoolean("GearController")) {
@@ -758,7 +765,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         taxiClearPending=false;taxiState=tag.hasKey(GearTaxiState.KEY,10)?tag.getCompoundTag(GearTaxiState.KEY).copy():null;
         if(taxiState!=null)try{validateTaxiState(taxiState);}catch(RuntimeException invalid){operational=false;lastError="Taxi arm recovery data retained: "+invalid.getMessage();}
         if(failedStoredSections!=null||failedPayload!=null||payload!=null&&payload.hasOwnershipJournal())operational=false;
-        rebuildMemberCache();GearGeometry.register(this);
+        rebuildMemberCache();GearGeometry.register(this);if(world!=null&&world.isRemote)clientGeometryPending=true;
     }
 
     private static <T extends Enum<T>> T parseEnum(Class<T> type, String value, T fallback) {

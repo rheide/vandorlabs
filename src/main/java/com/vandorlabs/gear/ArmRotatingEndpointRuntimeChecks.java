@@ -100,11 +100,25 @@ public final class ArmRotatingEndpointRuntimeChecks {
             if(arm.progress()!=(rotates()?1:0))return false;require(arm.payload()==null,"empty move creates no payload");
             if(!rotates()){arm.target(true);stage=11;ticks=0;return false;}
         }else if(stage==11&&arm.progress()!=1)return false;
-        require(arm.payload()==null&&arm.progress()==1,"empty arm returns at original length");
+        if(stage==10||stage==11){
+            require(arm.payload()==null&&arm.progress()==1,"empty arm returns at original length");
+            for(int x=0;x<=(joined()?2:0);x++)world.setBlockState(at(x,-2,0),net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState().withProperty(com.vandorlabs.blocks.BlockTurntableSurface.FACING,face().getOpposite()),3);
+            stage=12;ticks=0;return false;
+        }
+        if(stage==12){if(ticks<20)return false;for(int x=0;x<=(joined()?2:0);x++)require(((com.vandorlabs.tiles.TileEntityTurntableSurface)world.getTileEntity(at(x,-2,0))).active(),"new rotating Surface uses active artwork before capture");arm.target(false);stage=13;ticks=0;return false;}
+        if(stage==13){
+            if(arm.progress()!=0||arm.payload()==null)return false;
+            require(!arm.payload().materialized(),"rotated tile surfaces retain the existing captured representation");surfaceActivity(arm,false);
+            NBTTagCompound saved=arm.writeToNBT(new NBTTagCompound());BlockPos controller=arm.getPos();world.removeTileEntity(controller);GearTileEntity reloaded=new GearTileEntity();reloaded.readFromNBT(saved);world.setTileEntity(controller,reloaded);reloaded.operator(player);reloaded.onLoad();stage=14;ticks=0;return false;
+        }
+        if(stage==14){if(ticks<20)return false;require(arm.progress()==0&&arm.payload()!=null,"rotating surface reload retains endpoint");surfaceActivity(arm,false);arm.target(true);stage=15;ticks=0;return false;}
+        if(stage==15){if(arm.progress()!=1||arm.payload()==null||!arm.payload().materialized())return false;for(BlockPos p:arm.payload().placedCells(arm)){require(((com.vandorlabs.tiles.TileEntityTurntableSurface)world.getTileEntity(p)).active(),"returned native Surface switches active");require(player.interactionManager.tryHarvestBlock(p),"native Surface remains mineable");}stage=16;ticks=0;return false;}
+        if(ticks<8)return false;require(arm.payload()==null,"removed rotating surface snapshot retires");
         System.out.println("[vandorlabs] rotating-endpoint case PASS fixture="+fixture+" face="+face()+" joined="+joined()+" rotates="+rotates()+" size="+block().sizeClass());
         fixture++;stage=ticks=0;clicked=false;
         if(fixture>=48)System.out.println("[vandorlabs] arm-wall PASS saved independent joined and "+(48-START)+" selected live endpoint combinations edits inventory reverse empty motion");
         return fixture>=48;
     }
+    private static void surfaceActivity(GearTileEntity arm,boolean expected){int count=0;for(net.minecraft.tileentity.TileEntity tile:arm.payload().view(arm).tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface){require(((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).active()==expected,"carried Surface artwork follows endpoint");count++;}require(count==(joined()?3:1),"all carried Surface tiles retain appearance links");}
     private ArmRotatingEndpointRuntimeChecks(){}
 }

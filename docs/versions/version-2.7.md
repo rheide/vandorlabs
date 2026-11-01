@@ -10,8 +10,16 @@ Front Only mapping and separate Sides texture. See [redstone display
 artwork](../redstone-displays.md).
 
 Wide joined Screens and Flatscreens also offer Half display designs. Matching
-Configurator and Copifier changes update joins immediately without replacing a
-block. 
+Configurizer and Copifier changes update joins immediately without replacing a
+block. Local redstone activates a whole matching joined display rectangle.
+Mode changes retain artwork and playback; every state picker supports search
+and reveals its selection.
+
+Programmable Surface artwork follows its attached arm's endpoints and retains
+the departure texture during motion, reversals and reloads. Arm attachment
+discovery follows the Surface blocks' placed plane; shared pads require joined
+supports.
+
 The **Glass** material picker also includes Displays for Programmable Glass,
 Porthole Wall and related glazing pickers. Glass materials use the display's
 Off/Static/Animated playback controls and speed choices when a Display is selected, alongside the existing tint and texture-layout settings.

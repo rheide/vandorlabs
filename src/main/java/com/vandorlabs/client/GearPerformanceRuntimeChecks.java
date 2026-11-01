@@ -32,7 +32,7 @@ final class GearPerformanceRuntimeChecks {
         require(!copy.acceptMotion(copy.motionRevision(),100,false,true),"duplicate tick rejected");
         require(!copy.acceptMotion(copy.motionRevision()+1,101,false,true),"different topology revision rejected");
         copy.correctProgress(.25);require(Math.abs(copy.renderProgress(0)-saved)<1e-9&&Math.abs(copy.renderProgress(1)-.25)<1e-9,"correction preserves interpolation endpoints");
-        VehicleStructure.Cell before=baseline.at(root.getPos());NBTTagCompound animated=before.tileData();animated.setDouble("GearProgress",.375);animated.setBoolean("GearBlocked",true);animated.setInteger("GearRevision",100);
+        VehicleStructure.Cell before=baseline.at(root.getPos());NBTTagCompound animated=before.tileData();animated.setDouble("GearProgress",.375);animated.setBoolean("GearBlocked",true);animated.setInteger("GearRevision",100);animated.setBoolean("SurfaceDepartureActive",true);
         VehicleStructure.Cell pose=new VehicleStructure.Cell(before.pos,before.state,animated);
         require(before.sameGearConfiguration(pose),"pose and revision preserve baked hull geometry");animated.setString("GearDirection","EAST".equals(animated.getString("GearDirection"))?"WEST":"EAST");
         require(!before.sameGearConfiguration(new VehicleStructure.Cell(before.pos,before.state,animated)),"configuration still invalidates geometry");

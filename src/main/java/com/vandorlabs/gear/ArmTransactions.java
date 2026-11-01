@@ -117,7 +117,7 @@ public final class ArmTransactions {
         hold.applied=true;hold.recovering=false;
     }
     private static void publish(Hold hold,BlockPos pos){
-        if(!CopyWorld.frozen(hold.world,pos))return;
+        if(CopyWorld.frozen(hold.world,pos)){
         CopyWorld.publish(hold.world,pos);
         // The earlier block update can be sent while a frozen journal proxy
         // owns this cell. It has no tile update packet, so the client may have
@@ -125,6 +125,14 @@ public final class ArmTransactions {
         // tile's data after durable completion, even when its state is unchanged.
         IBlockState state=hold.world.getBlockState(pos);
         hold.world.notifyBlockUpdate(pos,state,state,2);
+        }
+        // Source removal uses flag 2 while ownership is journaled. Refresh surviving
+        // artwork only after publication, including AIR cells that have no proxy.
+        for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.values()){
+            BlockPos next=pos.offset(face);if(!hold.world.isBlockLoaded(next,false))continue;
+            net.minecraft.tileentity.TileEntity tile=hold.world.getTileEntity(next);
+            if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).scheduleGroup();
+        }
     }
     private static void step(Hold hold)throws Exception{
         if(hold.error!=null)return;if(!hold.harvestPublished)ArmPayloadHarvest.hold(hold.world,hold.record);for(BlockPos pos:hold.cells)if(!pos.equals(hold.root)&&hold.world.isBlockLoaded(pos,false))freeze(hold,pos);if(!hold.loaded())return;if(hold.io!=null){if(!hold.io.isDone())return;try{hold.io.get();}catch(Exception failure){if(rejectPreparation(hold,failure))return;throw failure;}hold.io=null;hold.durable=true;if(hold.retiring){for(BlockPos pos:hold.cells)if(!pos.equals(hold.root))publish(hold,pos);HOLDS.get(hold.world).remove(hold.root);return;}}

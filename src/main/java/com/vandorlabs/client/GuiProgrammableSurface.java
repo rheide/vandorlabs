@@ -10,13 +10,13 @@ import java.io.IOException;
 /** Surface-local active/inactive artwork uses the standard material picker and scrolling behavior. */
 public final class GuiProgrammableSurface extends GuiMaterialPicker {
     private final TileEntityTurntableSurface tile;
-    private String on,off;private int layout;private boolean active=true;
+    private String on,off;private int layout;private boolean active=false;
     private HousingTextureList textures;
     public GuiProgrammableSurface(ContainerSurface container){super(container);tile=container.tile;on=tile.surfaceOn;off=tile.surfaceOff;layout=tile.textureLayout;}
     @Override protected HousingTextureList materialPicker(){return textures;}
     @Override public void initGui(){ProgrammableDialogLayout positions=new ProgrammableDialogLayout(width,height);xSize=positions.width;ySize=positions.height;super.initGui();buttonList.clear();
         textures=new HousingTextureList(positions.listX,guiTop+54,positions.listWidth,TurntableTextures.materialChoice(active?on:off),8).visibleRows(positions.rows(true)).keepView(textures).custom(this::choose);
-        GuiButton onTab=positions.tab(90,0,2,"Active"),offTab=positions.tab(91,1,2,"Inactive");onTab.enabled=!active;offTab.enabled=active;buttonList.add(onTab);buttonList.add(offTab);
+        GuiButton onTab=positions.tab(90,1,2,"Active"),offTab=positions.tab(91,0,2,"Inactive");onTab.enabled=!active;offTab.enabled=active;buttonList.add(onTab);buttonList.add(offTab);
         buttonList.add(new GuiButton(1,positions.controlsX,guiTop+30,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(layout)));
         buttonList.add(new GuiButton(3,positions.controlsX,guiTop+54,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Custom..."));
         buttonList.add(new GuiButton(2,positions.controlsX,guiTop+ySize-26,ProgrammableDialogLayout.CONTROLS_WIDTH,20,"Done"));

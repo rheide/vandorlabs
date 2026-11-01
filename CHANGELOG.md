@@ -3,12 +3,13 @@
 ## 2.7
 
 - Preserve display artwork, animation and speed when exposing redstone states, reveal each tab's selected texture and route search to the visible picker. Share nearby local redstone across matching joined display rectangles.
+- Discover arm-mounted Surface pads in the Surface blocks' placed plane, refresh surviving groups after journal publication, and prevent partial carried pads from drawing outside their owned cells. Explain when independent supports require Join Arms.
 
 - Reduce plain Canopy Glass to ordinary block sizing in both hands, preserving padded inventory artwork.
 
-- Adapt shader companion maps during atlas loading to match custom sprites while preserving standalone maps and resource-pack priority, fixing OptiFine shader startup crashes on Half displays. Add actual shaderpack startup, upload and atlas-reload checks to the release gate.
-
 - Add Disabled, Digital and four-band Analog artwork activation to the programmable display family, with independent per-state playback and shared Console Controls. Refresh joins immediately after tile-data edits and offer Half artwork on wide joined Screens and Flatscreens.
+- Put Inactive before Active in the Programmable Surface picker. Attached arm surfaces follow the retracted/extended endpoint, retain the departure artwork through motion and reversals, and preserve that choice through reload.
+- Adapt shader companion maps during atlas loading to match custom sprites while preserving standalone maps and resource-pack priority, fixing OptiFine shader startup crashes on Half displays. Add actual shaderpack startup, upload and atlas-reload checks to the release gate.
 
 - Batch plain fixed Canopy Glass into Minecraft chunk layers with shared immutable geometry, preserving logical joins, opening-canopy roof rails, cockpit sharing and the existing opening/carried render paths.
 

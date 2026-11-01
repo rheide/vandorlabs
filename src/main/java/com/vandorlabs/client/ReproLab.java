@@ -640,6 +640,7 @@ public class ReproLab {
             return;
         }
         if(Boolean.getBoolean("vandorlabs.trapdoorFrameRegressionOnly")){try{TrapdoorFrameChecks.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Trapdoor frame regression",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.surfaceArmChecksOnly")){try{if(com.vandorlabs.gear.SurfaceArmWorldChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Surface arm saved-world checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.shaderStartupChecksOnly")){try{if(ShaderStartupChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Shader startup checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.displayActivationChecksOnly")){try{if(DisplayActivationRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Display activation live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.displayMaterialChecksOnly")){try{if(DisplayMaterialRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Display material live checks",failure);}return;}

@@ -15,6 +15,8 @@ import java.util.*;
 
 /** Saved surface appearance belongs to the pad; controller claims never replace its selected artwork. */
 public final class TileEntityTurntableSurface extends TileEntity implements net.minecraft.util.ITickable {
+    /** Inert carried-view link, excluded from saves and ownership comparisons. */
+    public com.vandorlabs.gear.GearTileEntity carriedArm;
     public BlockPos owner;
     public UUID ownerKey;
     public String surfaceOn=TurntableTextures.IDS[1],surfaceOff=TurntableTextures.IDS[0];
@@ -41,7 +43,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     public void release(){owner=null;ownerKey=null;setGroup(SquareLayout.single(pos,normal()));changed();scheduleGroup();}
     public boolean appearanceConfigured(){return configured;}
     public void migrateLegacy(String on,String off){if(configured)return;surfaceOn=TurntableTextures.normalize(on,true);surfaceOff=TurntableTextures.normalize(off,false);textureLayout=0;configured=true;changed();}
-    public boolean active(){SurfaceController controller=claimedOwner();return controller!=null&&controller.surfaceActive(pos);}
+    public boolean active(){SurfaceController controller=claimedOwner();if(controller!=null)return controller.surfaceActive(pos);if(owner!=null||ownerKey!=null)return false;Boolean arm=com.vandorlabs.gear.ArmSurfaceActivity.activity(this);return Boolean.TRUE.equals(arm);}
     public String selectedTexture(){return active()?surfaceOn:surfaceOff;}
     private EnumFacing normal(){return world!=null&&world.isBlockLoaded(pos)&&world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface?world.getBlockState(pos).getValue(BlockTurntableSurface.FACING):EnumFacing.UP;}
     public SquareLayout appearanceLayout(){
@@ -55,7 +57,19 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
         }
         return availableRoot(cachedGroup);
     }
+    private SquareLayout checkedSnapshotGroup,snapshotAppearance;private int checkedSnapshotRevision=-1;
     private SquareLayout availableRoot(SquareLayout layout){
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld&&layout.size>1){
+            if(checkedSnapshotGroup!=layout||checkedSnapshotRevision!=((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision){
+                checkedSnapshotRevision=((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision;checkedSnapshotGroup=layout;snapshotAppearance=layout;
+                for(int u=0;u<layout.size;u++)for(int v=0;v<layout.size;v++){
+                    BlockPos at=layout.cell(u,v,0);IBlockState state=world.getBlockState(at);
+                    if(!(state.getBlock() instanceof BlockTurntableSurface)||state.getValue(BlockTurntableSurface.FACING)!=layout.normal
+                            ||!(world.getTileEntity(at) instanceof TileEntityTurntableSurface))snapshotAppearance=SquareLayout.single(pos,normal());
+                }
+            }
+            return snapshotAppearance;
+        }
         // A removal packet may arrive before the replacement group data. Never
         // depend on a missing shared renderer while that update is in flight.
         if(world!=null&&!pos.equals(layout.root)&&world.isBlockLoaded(layout.root)&&!(world.getTileEntity(layout.root) instanceof TileEntityTurntableSurface))return SquareLayout.single(pos,normal());
@@ -93,6 +107,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
         }
         for(com.vandorlabs.copier.CopyControllerTile copier:copiers)copier.surfaceChanged();
         SquareLayout layout=null;try{layout=SquareLayout.of(members,normal());}catch(IllegalArgumentException irregular){}
+        com.vandorlabs.gear.ArmSurfaceActivity.surfaceChanged(world,members);
         for(BlockPos cell:members){TileEntity raw=world.getTileEntity(cell);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface surface=(TileEntityTurntableSurface)raw;surface.groupPending=false;surface.setGroup(layout==null?SquareLayout.single(cell,normal()):layout);}}
     }
     public void configure(String on,String off,int mode,net.minecraft.entity.player.EntityPlayerMP actor){
@@ -102,11 +117,12 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
         for(TileEntityTurntableSurface surface:surfaces){surface.surfaceOn=on;surface.surfaceOff=off;surface.textureLayout=mode;surface.configured=true;surface.setGroup(layout);surface.changed();}
     }
     private void changed(){markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}}
-    @Override public void onLoad(){super.onLoad();cachedGroup=null;scheduleGroup();}
+    private void appearanceChanged(){if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.surfaceAppearanceChanged(this);}
+    @Override public void onLoad(){super.onLoad();appearanceChanged();cachedGroup=null;scheduleGroup();}
     @Override public void update(){if(world!=null&&!world.isRemote&&world.getTotalWorldTime()%20==0&&owner!=null&&world.isBlockLoaded(owner)&&claimedOwner()==null)release();}
     @Override public boolean shouldRefresh(World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);if(owner!=null&&ownerKey!=null){tag.setLong("Owner",owner.toLong());tag.setUniqueId("OwnerKey",ownerKey);}else{tag.removeTag("Owner");tag.removeTag("OwnerKeyMost");tag.removeTag("OwnerKeyLeast");}tag.setString("SurfaceOn",surfaceOn);tag.setString("SurfaceOff",surfaceOff);tag.setInteger("SurfaceLayout",textureLayout);tag.setBoolean("SurfaceAppearanceConfigured",configured);tag.setLong("SurfaceGroupOffset",groupOffset.toLong());tag.setInteger("SurfaceGroupSize",groupSize);tag.setInteger("SurfaceGroupNormal",groupNormal);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);appearanceReady=true;owner=tag.hasKey("Owner",4)?BlockPos.fromLong(tag.getLong("Owner")):null;ownerKey=tag.hasUniqueId("OwnerKey")?tag.getUniqueId("OwnerKey"):null;surfaceOn=TurntableTextures.normalize(tag.getString("SurfaceOn"),true);surfaceOff=TurntableTextures.normalize(tag.getString("SurfaceOff"),false);textureLayout=tag.hasKey("SurfaceLayout",3)?Math.max(0,Math.min(2,tag.getInteger("SurfaceLayout"))):2;configured=tag.getBoolean("SurfaceAppearanceConfigured");groupOffset=BlockPos.fromLong(tag.getLong("SurfaceGroupOffset"));groupSize=Math.max(1,Math.min(16,tag.getInteger("SurfaceGroupSize")));groupNormal=Math.max(0,Math.min(5,tag.hasKey("SurfaceGroupNormal",3)?tag.getInteger("SurfaceGroupNormal"):1));if(Math.abs(groupOffset.getX())>16||Math.abs(groupOffset.getY())>16||Math.abs(groupOffset.getZ())>16){groupOffset=BlockPos.ORIGIN;groupSize=1;}cachedGroup=null;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);appearanceReady=true;owner=tag.hasKey("Owner",4)?BlockPos.fromLong(tag.getLong("Owner")):null;ownerKey=tag.hasUniqueId("OwnerKey")?tag.getUniqueId("OwnerKey"):null;surfaceOn=TurntableTextures.normalize(tag.getString("SurfaceOn"),true);surfaceOff=TurntableTextures.normalize(tag.getString("SurfaceOff"),false);textureLayout=tag.hasKey("SurfaceLayout",3)?Math.max(0,Math.min(2,tag.getInteger("SurfaceLayout"))):2;configured=tag.getBoolean("SurfaceAppearanceConfigured");groupOffset=BlockPos.fromLong(tag.getLong("SurfaceGroupOffset"));groupSize=Math.max(1,Math.min(16,tag.getInteger("SurfaceGroupSize")));groupNormal=Math.max(0,Math.min(5,tag.hasKey("SurfaceGroupNormal",3)?tag.getInteger("SurfaceGroupNormal"):1));if(Math.abs(groupOffset.getX())>16||Math.abs(groupOffset.getY())>16||Math.abs(groupOffset.getZ())>16){groupOffset=BlockPos.ORIGIN;groupSize=1;}cachedGroup=null;appearanceChanged();}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,1,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());if(world!=null)world.markBlockRangeForRenderUpdate(pos,pos);}

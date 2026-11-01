@@ -53,9 +53,9 @@ public final class GearGeometry {
     }
     public static boolean excluded(GearTileEntity root){return EXCLUDED.get()==root;}
     public static List<AxisAlignedBB> foreign(World world,GearTileEntity root,AxisAlignedBB box){EXCLUDED.set(root);try{return world.getCollisionBoxes(null,box);}finally{EXCLUDED.remove();}}
-    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld||!world.isBlockLoaded(tile.getPos(),false))return;Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){roots.add(tile);index.put(tile);}else{roots.remove(tile);index.remove(tile);}}
-    public static void remove(GearTileEntity tile){Set<GearTileEntity> roots=ROOTS.get(tile.getWorld());if(roots!=null)roots.remove(tile);SpatialIndex index=INDICES.get(tile.getWorld());if(index!=null)index.remove(tile);}
-    @SubscribeEvent public static void unload(WorldEvent.Unload event){ROOTS.remove(event.getWorld());INDICES.remove(event.getWorld());}
+    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld||!world.isBlockLoaded(tile.getPos(),false))return;ArmSurfaceActivity.refresh(tile);Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){roots.add(tile);index.put(tile);}else{roots.remove(tile);index.remove(tile);}}
+    public static void remove(GearTileEntity tile){ArmSurfaceActivity.remove(tile);Set<GearTileEntity> roots=ROOTS.get(tile.getWorld());if(roots!=null)roots.remove(tile);SpatialIndex index=INDICES.get(tile.getWorld());if(index!=null)index.remove(tile);}
+    @SubscribeEvent public static void unload(WorldEvent.Unload event){ArmSurfaceActivity.unload(event.getWorld());ROOTS.remove(event.getWorld());INDICES.remove(event.getWorld());}
     public static java.util.List<GearTileEntity> roots(World world){Set<GearTileEntity> found=ROOTS.get(world);return found==null?Collections.emptyList():new ArrayList<>(found);}
     /** A full-size loose wheel reaches below its four reserved source cells. */
     public static List<AxisAlignedBB> looseWheelBoxes(GearTileEntity tile){

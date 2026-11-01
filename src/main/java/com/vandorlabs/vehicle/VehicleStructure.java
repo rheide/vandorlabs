@@ -13,7 +13,7 @@ import java.util.*;
 public final class VehicleStructure {
     public static final int MAX_BLOCKS=32768, MAX_AXIS=64, MAX_NBT_BYTES=4*1024*1024;
     public static final int SCHEMA=1;
-    private static final Set<String> GEAR_POSE_KEYS=new HashSet<>(Arrays.asList("GearProgress","GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal","GearRevision"));
+    private static final Set<String> GEAR_POSE_KEYS=new HashSet<>(Arrays.asList("GearProgress","GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal","GearRevision","SurfaceDepartureActive"));
     private static final Set<String> TAXI_POSE_KEYS=new HashSet<>(Arrays.asList("Level","Expand","Settle"));
     private static boolean sameGearField(String key,NBTBase before,NBTBase after){
         if(!key.equals(com.vandorlabs.gear.GearTaxiState.KEY)||!(before instanceof NBTTagCompound)||!(after instanceof NBTTagCompound))return Objects.equals(before,after);

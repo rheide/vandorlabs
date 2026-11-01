@@ -1,6 +1,6 @@
 # Turntables
 
-New Programmable Surfaces use **Fit** mapping. Their Active and Inactive texture tabs match the Programmable Screen family; sneak-right-click or use the Configurizer on a Surface to configure its artwork, including after a controller claims it.
+New Programmable Surfaces use **Fit** mapping. Their Inactive and Active texture tabs match the Programmable Screen family; sneak-right-click or use the Configurizer on a Surface to configure its artwork, including after a controller claims it.
 
 Place **Programmable Surface** blocks as a filled square, from 1×1 to 16×16. The face
 you click when placing each block becomes its active face. Every connected
@@ -157,3 +157,17 @@ An isolated server fixture with 128 captured walls above 256 floor blocks measur
 Rigid opaque wall artwork now compiles within the shared mesh budget; translucent and interactive surfaces continue to render live. The renderer sorts only surfaces needing the translucent pass, and platform bounds reuse a precomputed extent. Smooth interpolation remains enabled: lowering its visual rate would leave server obstacle queries and collision work unchanged. For a remaining slowdown, first compare the diagnostic sections in the affected save; consider spatial collision indexing or batching remaining live renderers when measurements identify either as the dominant cost.
 
 Automation authorization is stored separately at the controller’s world position. Configure or manually operate the controller to authorize it. Copying its complete configuration preserves the saved settings and operator fields, while the copied controller receives the actual copying player’s authorization. Pasting tile NBT or replacing the controller requires configuration again; portable operator UUIDs do not grant permissions.
+
+## Arm-mounted artwork
+
+A Surface attached to a Rotating Arm or Extender Arm uses **Inactive** at the start/retracted endpoint and **Active** at the end/extended endpoint. It keeps its departure texture while moving, including a mid-stroke reversal, and switches only upon reaching an endpoint. Saves retain that departure choice. The association is automatic and does not replace a Turntable or Copy Controller claim.
+
+### Arm attachment discovery
+
+An arm captures the connected Surface layer in the direction those Surface
+blocks were placed, including a horizontal pad on a wall-mounted Rotating Arm.
+Neighbours must share the Surface facing and plane; stacked layers and Surface
+blocks facing another direction do not join implicitly. All supports beneath
+a shared pad must have **Join Arms** enabled with matching settings to move
+together. Independent supports safely refuse rather than moving through one
+another. Partial carried pads render only the Surface cells they actually own.
