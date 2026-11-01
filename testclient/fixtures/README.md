@@ -124,3 +124,7 @@ JARs to place adjacent unlinked panes on a vehicle. It checks four parked headin
 exact tile data, saved vehicle reload and recapture. A transient native reactor
 link must refuse capture before modifying the source. The same shared fixture
 runs on a physical server with `test_server_startup.py --reactor-glass`.
+
+## Perpendicular programmable glazing
+
+`glass-perpendicular-2.7.nbt` retains 72 saved glazing cells, including two disjoint perpendicular programmable-glass panels and nearby diagonal glass, including their original panel depths, frame settings and Normal/Strong finishes. The `glass-display-order` focus compares explicit rear-to-front references with both Forge tile orders at five camera angles, then repeats with Front Canopy Glass behind the foreground panel.

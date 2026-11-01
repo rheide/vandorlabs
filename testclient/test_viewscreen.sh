@@ -383,6 +383,7 @@ if [ "$MODE" = focus ]; then
     fi
     if [ "$TARGET" = shader-startup ]; then
         grep -q "shader-startup PASS" "$RUN_OUT/client.log"
+        grep -q "glass-native-scene PASS" "$RUN_OUT/client.log"
         if grep -Eiq "error: invalid program|error compiling|failed creating shader|shader.*compile.*failed" "$RUN_OUT/client.log"; then echo "FAIL: shader program compilation failed; see $RUN_OUT/client.log"; exit 1; fi
         echo "Shader startup checks passed: $RUN_OUT"
         exit 0

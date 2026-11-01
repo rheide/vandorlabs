@@ -14,7 +14,7 @@ final class ShaderStartupChecks {
     private static boolean done;
     private static final net.minecraft.util.math.BlockPos POS=new net.minecraft.util.math.BlockPos(96,80,96);
     static boolean tick(Minecraft mc,File output)throws Exception{
-        if(done)return true;if(++ticks<20)return false;
+        if(done)return GlassNativeSceneChecks.tick(mc,output);if(++ticks<20)return false;
         Class<?> shaders=Class.forName("net.optifine.shaders.Shaders");
         if(!shaders.getField("shaderPackLoaded").getBoolean(null))throw new IllegalStateException("Required shaderpack did not load");
         String name=(String)shaders.getMethod("getShaderPackName").invoke(null);
@@ -38,7 +38,7 @@ final class ShaderStartupChecks {
         for(int y=frame.getHeight()/2-120;y<frame.getHeight()/2+120;y++)for(int x=frame.getWidth()/2-160;x<frame.getWidth()/2+160;x++){int a=frame.getRGB(x,y),b=frame.getRGB(x+1,y);if(Math.abs((a&255)-(b&255))+Math.abs((a>>8&255)-(b>>8&255))+Math.abs((a>>16&255)-(b>>16&255))>90)edges++;}
         if(edges<80)return false;
         int count=rectangles(mc);ImageIO.write(frame,"png",new File(output,"shader-startup-world.png"));
-        done=true;System.out.println("[vandorlabs][reprolab] shader-startup PASS pack="+name+" rectangular-OptiFine-uploads="+count+" initial-atlas resource-reload native-canopy-world-frame renderer="+org.lwjgl.opengl.GL11.glGetString(org.lwjgl.opengl.GL11.GL_RENDERER));return true;
+        done=true;System.out.println("[vandorlabs][reprolab] shader-startup PASS pack="+name+" rectangular-OptiFine-uploads="+count+" initial-atlas resource-reload native-canopy-world-frame renderer="+org.lwjgl.opengl.GL11.glGetString(org.lwjgl.opengl.GL11.GL_RENDERER));return false;
     }
     private static net.minecraft.client.renderer.chunk.RenderChunk chunk(net.minecraft.client.renderer.ViewFrustum frustum)throws Exception{
         for(Method method:net.minecraft.client.renderer.ViewFrustum.class.getDeclaredMethods())if(method.getReturnType()==net.minecraft.client.renderer.chunk.RenderChunk.class&&java.util.Arrays.equals(method.getParameterTypes(),new Class[]{net.minecraft.util.math.BlockPos.class})){method.setAccessible(true);return (net.minecraft.client.renderer.chunk.RenderChunk)method.invoke(frustum,POS);}throw new IllegalStateException("Missing native chunk lookup");

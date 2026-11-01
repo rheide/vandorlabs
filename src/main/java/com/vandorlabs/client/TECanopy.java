@@ -47,6 +47,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
             float partial,
             int stage,
             float alpha) {
+        if(GlazingRenderOrder.handle(tile,x,y,z,partial,stage,alpha))return;
         renderPass(tile,x,y,z,partial,stage,alpha,net.minecraftforge.client.MinecraftForgeClient.getRenderPass());
     }
 

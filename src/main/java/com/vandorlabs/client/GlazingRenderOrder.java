@@ -12,7 +12,7 @@ final class GlazingRenderOrder {
     private static World world;private static boolean flushing,flushed;
     private static final Map<TileEntity,Draw> visible=new IdentityHashMap<>();
     private static final class Draw {
-        TileEntity tile;double x,y,z;float partial,alpha;int stage;double depth;
+        TileEntity tile;double x,y,z;float partial,alpha;int stage,axis;double depth,plane;
         void set(TileEntity tile,double x,double y,double z,float partial,int stage,float alpha){this.tile=tile;this.x=x;this.y=y;this.z=z;this.partial=partial;this.stage=stage;this.alpha=alpha;}
     }
     private static final List<Draw> pool=new ArrayList<>(),ordered=new ArrayList<>();
@@ -36,8 +36,9 @@ final class GlazingRenderOrder {
         if(flushed)return true;
         TileEntityRendererDispatcher dispatcher=TileEntityRendererDispatcher.instance;
         matrix.clear();org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_MODELVIEW_MATRIX,matrix);
-        for(Draw draw:ordered)draw.depth=depth(draw.tile,dispatcher.entityX,dispatcher.entityY,dispatcher.entityZ,matrix);
+        for(Draw draw:ordered)draw.depth=depth(draw,dispatcher.entityX,dispatcher.entityY,dispatcher.entityZ,matrix);
         ordered.sort((a,b)->{int distance=Double.compare(a.depth,b.depth);return distance!=0?distance:a.tile.getPos().compareTo(b.tile.getPos());});
+        finitePlanes(dispatcher.entityX,dispatcher.entityZ);
         flushing=true;
         try(TurntableRenderState saved=new TurntableRenderState()){
             for(Draw draw:ordered)if(world.getTileEntity(draw.tile.getPos())==draw.tile&&draw.tile.shouldRenderInPass(1))
@@ -45,7 +46,8 @@ final class GlazingRenderOrder {
         }finally{flushing=false;flushed=true;}
         return true;
     }
-    private static double depth(TileEntity tile,double cx,double cy,double cz,java.nio.FloatBuffer matrix){
+    private static double depth(Draw draw,double cx,double cy,double cz,java.nio.FloatBuffer matrix){
+        TileEntity tile=draw.tile;
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         int axis=-1;double plane=0,offset=0;
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableGlass&&com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos())==null){
@@ -59,9 +61,43 @@ final class GlazingRenderOrder {
                 plane=(axis==0?tile.getPos().getX():tile.getPos().getZ())+.5-(axis==0?facing.getFrontOffsetX():facing.getFrontOffsetZ())*offset;
             }
         }
+        draw.axis=axis;draw.plane=plane;
         // Sort joined parallel planes as a whole, rather than interleaving their tiles at oblique angles.
         if(axis>=0){double normal=matrix.get(axis==0?2:10);if(Math.abs(normal)>1e-6)return (plane-(axis==0?cx:cz))/normal;}
         return (tile.getPos().getX()+.5-cx)*matrix.get(2)+(tile.getPos().getY()+.5-cy)*matrix.get(6)+(tile.getPos().getZ()+.5-cz)*matrix.get(10);
+    }
+    private static final class Plane {
+        final int axis;final double coordinate;final List<Draw> draws=new ArrayList<>();
+        double minX=Double.POSITIVE_INFINITY,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxZ=maxX;
+        Plane(Draw d){axis=d.axis;coordinate=d.plane;}
+        void add(Draw d){draws.add(d);net.minecraft.util.math.AxisAlignedBB b=new net.minecraft.util.math.AxisAlignedBB(d.tile.getPos());if(d.tile instanceof com.vandorlabs.tiles.TileEntityCanopy){java.util.List<net.minecraft.util.math.AxisAlignedBB> boxes=((com.vandorlabs.tiles.TileEntityCanopy)d.tile).boxes();if(!boxes.isEmpty()){b=boxes.get(0);for(int i=1;i<boxes.size();i++)b=b.union(boxes.get(i));}}minX=Math.min(minX,b.minX);minZ=Math.min(minZ,b.minZ);maxX=Math.max(maxX,b.maxX);maxZ=Math.max(maxZ,b.maxZ);}
+    }
+    /** Infinite-plane ray depths are ambiguous for disjoint perpendicular panes. Respect
+     * their finite extents first, then retain view depth for intersecting/ambiguous sets. */
+    private static void finitePlanes(double cx,double cz){
+        List<Plane> planes=new ArrayList<>();Map<String,Plane> flat=new HashMap<>();
+        Plane last=null;
+        for(Draw d:ordered){Plane p=d.axis>=0&&last!=null&&last.axis==d.axis&&last.coordinate==d.plane?last:d.axis<0?null:flat.get(d.axis+":"+d.plane);if(p==null){p=new Plane(d);planes.add(p);if(planes.size()>128)return;if(d.axis>=0)flat.put(d.axis+":"+d.plane,p);}p.add(d);last=p;}
+        int n=planes.size();boolean[][] edge=new boolean[n][n];int[] incoming=new int[n];boolean[] done=new boolean[n];
+        for(int i=0;i<n;i++)for(int j=i+1;j<n;j++){
+            int a=relation(planes.get(i),planes.get(j),cx,cz),b=-relation(planes.get(j),planes.get(i),cx,cz);
+            if(a!=0&&b!=0&&a!=b)continue;int direction=a!=0?a:b;if(direction==0)continue;
+            int from=direction<0?i:j,to=direction<0?j:i;edge[from][to]=true;incoming[to]++;
+        }
+        ordered.clear();
+        for(int step=0;step<n;step++){
+            int selected=-1;for(int i=0;i<n;i++)if(!done[i]&&incoming[i]==0){selected=i;break;}
+            // Intersecting polygons can form cycles; choose the existing depth order deterministically.
+            if(selected<0)for(int i=0;i<n;i++)if(!done[i]){selected=i;break;}
+            done[selected]=true;ordered.addAll(planes.get(selected).draws);for(int j=0;j<n;j++)if(edge[selected][j])incoming[j]--;
+        }
+    }
+    /** A behind B's plane sorts first; only wholly separated finite bounds establish an edge. */
+    private static int relation(Plane a,Plane b,double cx,double cz){
+        if(b.axis<0)return 0;double camera=b.axis==0?cx:cz,lo=b.axis==0?a.minX:a.minZ,hi=b.axis==0?a.maxX:a.maxZ;
+        if(camera>b.coordinate+1e-5){if(hi<=b.coordinate-1e-5)return -1;if(lo>=b.coordinate+1e-5)return 1;}
+        else if(camera<b.coordinate-1e-5){if(lo>=b.coordinate+1e-5)return -1;if(hi<=b.coordinate-1e-5)return 1;}
+        return 0;
     }
     private GlazingRenderOrder(){}
 }

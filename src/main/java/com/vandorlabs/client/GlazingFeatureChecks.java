@@ -28,6 +28,7 @@ final class GlazingFeatureChecks {
     private static GuiButton button(GuiScreen gui,int id){for(GuiButton b:buttons(gui))if(b.id==id&&b.visible)return b;throw new IllegalStateException("Missing dialog button "+id+" fixture="+fixture);}
     private static void click(GuiScreen gui,int id,int mouse)throws Exception{GuiButton b=button(gui,id);if(gui instanceof GuiAnimatedScreenSelector)((GuiAnimatedScreenSelector)gui).mouseClicked(b.x+4,b.y+4,mouse);else if(gui instanceof GuiProgrammableInput)((GuiProgrammableInput)gui).mouseClicked(b.x+4,b.y+4,mouse);else if(gui instanceof GuiProgrammableGlass)((GuiProgrammableGlass)gui).mouseClicked(b.x+4,b.y+4,mouse);else ((GuiProgrammableWall)gui).mouseClicked(b.x+4,b.y+4,mouse);}
     static boolean tick(Minecraft mc,File output)throws Exception{
+        if(fixture>=BLOCKS.length)return true;
         mc.gameSettings.pauseOnLostFocus=false;require(ticks<1200,"fixture timeout="+fixture+" stage="+phase+" mode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" position="+mc.player.getPosition());if(++ticks%12!=0)return false;
         if(phase==0){
             mc.player.closeScreen();mc.playerController.setGameType(GameType.CREATIVE);

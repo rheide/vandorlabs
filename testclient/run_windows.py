@@ -296,6 +296,8 @@ def main():
         raise SystemExit('Existing world did not complete its load check: '+str(output/'client.log'))
     if args.turntable_position and 'existing-turntable PASS' not in client_log:
         raise SystemExit('Existing turntable did not complete its rotation/return check: '+str(output/'client.log'))
+    if args.focus == 'shader-startup' and 'glass-native-scene PASS' not in client_log:
+        raise SystemExit('Shader glass scene did not complete; inspect '+str(output/'client.log'))
     if args.focus == 'shader-startup' and re.search(r'error: invalid program|error compiling|failed creating shader|shader.*compile.*failed', client_log, re.I):
         raise SystemExit('Shader program compilation failed; inspect '+str(output/'client.log'))
     if args.focus:
