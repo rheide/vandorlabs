@@ -58,6 +58,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private final boolean console;
     private final boolean diagonalScreen;
     private final boolean fullInput;
+    private final boolean includeHalfDisplays;
 
     private ModBlocks.ScreenOption selectedOption;
     private boolean framed;
@@ -106,13 +107,14 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 .getBlock() instanceof BlockProgrammableDiagonalScreen;
         this.fullInput = te.getWorld() != null && te.getWorld().getBlockState(pos)
                 .getBlock() instanceof BlockProgrammableFullInput;
+        this.includeHalfDisplays=ScreenSurfaceGroups.wideDisplay(te);
         this.xSize = 420;
         this.ySize = 240;
         this.redstoneEnabled = te.isRedstoneEnabled();
         redstoneInverted=te.isRedstoneInverted();
         this.smallInput = te.isSmallInput();
         this.displayMode = te.getDisplayMode();
-        this.speedIndex = te.getAnimationSpeedIndex();
+        this.speedIndex = te.baseAnimationSpeed();
         this.inputPanel = te.getInputPanel();
         this.housingTexture = te.getHousingTexture();
         for (ModBlocks.ScreenOption option : ModBlocks.SCREEN_OPTIONS) {
@@ -180,6 +182,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private FrameAppearancePane framePane;
     private boolean splitPage(){return textureTab==0&&!rowsPage()&&framePane!=null&&framePane.splitDisplay();}
     private boolean framePage(){return textureTab==10;}
+    private DisplayActivationPane activationPane;
     private ReceiverPane receiver;
     @Override public void initGui() {
         String receiverDraft=channelField==null?ChannelFields.text(te.getRedstoneChannels()):channelField.getText();
@@ -195,7 +198,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         listLeft=layout.listX;listTop=guiTop+54;listRight=listLeft+layout.listWidth;listBottom=listTop+rows*HousingTextureList.ROW_HEIGHT;
         String[] ids=new String[entries.size()],labels=new String[entries.size()];
         for(int i=0;i<ids.length;i++){ids[i]=entries.get(i).option.bareId;labels[i]=entries.get(i).name;}
-        screenList=new ScreenTextureList(listLeft,listTop,layout.listWidth,8,activeId(),ids,labels,false).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList,0)).redstone(pos,0,()->openRows(0));
+        screenList=new ScreenTextureList(listLeft,listTop,layout.listWidth,8,activeId(),ids,labels,false,includeHalfDisplays).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList,0)).redstone(pos,0,()->openRows(0));
         if(console)inputList=new ScreenTextureList(listLeft,listTop,layout.listWidth,8,inputPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(inputList,1)).redstone(pos,1,()->openRows(1));
         housingList=new HousingTextureList(listLeft,listTop,layout.listWidth,housingTexture)
                 .visibleRows(rows).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
@@ -214,6 +217,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         channelField.setText(receiverDraft);
         buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.init(54,buttonList);}else if(rowsPage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);rowEditors[rowSlot].init(buttonList);}
         if(textureTab==0&&!rowsPage()){if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.initDisplay(buttonList);}
+        if(activationPane==null)activationPane=new DisplayActivationPane(this,te,false);activationPane.init(layout,buttonList,textureTab,console?3:2);
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=(console?93:92))b.enabled=b.id-90!=textureTab;}
 
@@ -254,6 +258,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
+        if(activationPane.action(button)){if(button.id>=650&&button.id<=653)textureTab=0;redstoneEnabled=te.isRedstoneEnabled();redstoneInverted=te.isRedstoneInverted();initGui();return;}
         if(button.id==198)return;
 
         if(button.id==580&&rowsPage()){rowEditors[rowSlot].save();rowSlot=-1;initGui();return;}
@@ -344,6 +349,10 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,mouseButton,this::actionPerformed,640,641))return;
+        if(mouseButton==0)for(GuiButton option:new java.util.ArrayList<>(buttonList))if((option.id==640||option.id==641)&&option.visible&&option.mousePressed(mc,mouseX,mouseY)){option.playPressSound(mc.getSoundHandler());actionPerformed(option);return;}
+        if(activationPane.active()){activationPane.click(mouseX,mouseY,mouseButton);super.mouseClicked(mouseX,mouseY,mouseButton);return;}
+
         if(rowsPage()){if(!rowEditors[rowSlot].click(mouseX,mouseY,mouseButton))super.mouseClicked(mouseX,mouseY,mouseButton);return;}
         if(textureTab==0&&!rowsPage()&&!splitPage()&&framePane.click(mouseX,mouseY,mouseButton))return;
         if(framePage()||splitPage()){if(!framePane.click(mouseX,mouseY,mouseButton))super.mouseClicked(mouseX,mouseY,mouseButton);return;}
@@ -363,7 +372,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
-        if(framePane!=null)framePane.release();
+        activationPane.release();if(framePane!=null)framePane.release();
         screenList.release();if(inputList!=null)inputList.release();
         draggingScrollbar = false;
         if (housingList != null) housingList.release();
@@ -374,6 +383,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton,
             long timeSinceLastClick) {
+        if(activationPane.active()){activationPane.drag(mouseY);return;}
         if(framePage()||splitPage()){framePane.drag(mouseY);return;}
         if (housingList != null && housingList.drag(mouseY)) return;
         if(screenList.drag(mouseY) || inputList!=null && inputList.drag(mouseY))return;
@@ -397,7 +407,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int wheel = Mouse.getEventDWheel();if(rowsPage()){rowEditors[rowSlot].wheel(wheel);return;}if(framePage()||splitPage()){framePane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}
+        int wheel = Mouse.getEventDWheel();if(activationPane.active()){activationPane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}if(rowsPage()){rowEditors[rowSlot].wheel(wheel);return;}if(framePage()||splitPage()){framePane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}
         if (textureTab==(console?2:1) && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         int mx=Mouse.getEventX()*width/mc.displayWidth,my=height-Mouse.getEventY()*height/mc.displayHeight-1;
@@ -428,7 +438,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         if(!rowsPage()&&textureTab<(console?2:1))fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+88,0xDAE8F0);
         if(textureTab==(console?3:2))receiver.drawLabel();
         if(framePage()||splitPage())framePane.draw(mouseX,mouseY);
-        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);activationPane.draw(mouseX,mouseY);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();
     }
 
     @Override public void updateScreen() { super.updateScreen(); channelField.updateCursorCounter(); }

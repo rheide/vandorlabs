@@ -83,6 +83,9 @@ case "${1:-}" in
         elif [ "$TARGET" = transmission ]; then
             PREFIX=transmission_
             export VANDOR_LABS_TRANSMISSION_CHECKS_ONLY=true
+        elif [ "$TARGET" = display-activation ]; then
+            PREFIX=activation_
+            export VANDOR_LABS_DISPLAY_ACTIVATION_CHECKS_ONLY=true
         elif [ "$TARGET" = display-materials ]; then
             PREFIX=display-material_
             export VANDOR_LABS_DISPLAY_MATERIAL_CHECKS_ONLY=true
@@ -362,6 +365,11 @@ if [ "$MODE" = focus ]; then
         grep -q "transmission-settings PASS" "$RUN_OUT/client.log"
         grep -q "inline-transmitter-survival PASS" "$RUN_OUT/client.log"
         echo "Transmission settings passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = display-activation ]; then
+        grep -q "display-activation PASS" "$RUN_OUT/client.log"
+        echo "Display activation live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = display-materials ]; then

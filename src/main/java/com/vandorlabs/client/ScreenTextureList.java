@@ -7,19 +7,23 @@ import net.minecraft.client.gui.FontRenderer;
 /** Shared materials plus Screens; authored artwork retains its animation identity. */
 final class ScreenTextureList {
     private final String[] ids;
-    private final boolean input;
+    private final boolean input,includeHalf;
     private final HousingTextureList list;
     private boolean framed;
     ScreenTextureList(int x,int y,int width,int rows,String selected,String[] ids,String[] labels,boolean input) {
-        this.ids=ids;this.input=input;
+        this(x,y,width,rows,selected,ids,labels,input,false);
+    }
+    ScreenTextureList(int x,int y,int width,int rows,String selected,String[] ids,String[] labels,boolean input,boolean includeHalf){
+        this.ids=ids;this.input=input;this.includeHalf=includeHalf;
         int choice=ScreenHousingTextures.screenIndex((input?"console_inputs/":"")+selected+"_static");
         framed=false;
         list=new HousingTextureList(x,y,width,canonical(choice),rows,null,
-                value->HousingTextureList.generalTexture(value) || artwork(value,input) && canonical(value)==value,
+                value->HousingTextureList.generalTexture(value) || selectableArtwork(value) && canonical(value)==value,
                 value->{com.google.gson.JsonObject entry=ScreenHousingTextures.entry(value);return entry!=null&&entry.has("menuGroup")?ScreenHousingTextures.menuCategory(value):"Screens".equals(ScreenHousingTextures.category(value))?(input?"Controls":"Displays"):ScreenHousingTextures.menuCategory(value);},
-                value->artwork(value,input)?HousingTextureList.name(value).replaceAll("\\b(Bare|Framed)\\s+",""):HousingTextureList.name(value));
+                value->selectableArtwork(value)?HousingTextureList.name(value).replaceAll("\\b(Bare|Framed)\\s+",""):HousingTextureList.name(value));
         setFramed(framed);
     }
+    private boolean selectableArtwork(int choice){return artwork(choice,input)||includeHalf&&!input&&HousingTextureList.displayTexture(choice);}
     static boolean artwork(int choice,boolean input) {
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
         return entry!=null && (("Screens".equals(ScreenHousingTextures.category(choice))
@@ -30,14 +34,14 @@ final class ScreenTextureList {
     ScreenTextureList restore(int choice){
         if(choice>=0 || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE) {
             if(choice>=0&&ScreenHousingTextures.validChoice(choice))choice=ScreenHousingTextures.clamp(choice);
-            if(artwork(choice,input))framed=false;
+            if(selectableArtwork(choice))framed=false;
             list.setSelected(canonical(choice));setFramed(framed);
         }
         return this;
     }
     static boolean isFramed(int choice){com.google.gson.JsonObject e=ScreenHousingTextures.entry(choice);return e!=null && (e.get("source").getAsString().matches(".*(?:^|/|_)framed_.*") || ModBlocks.DISPLAY_FRAMED_IDS.contains(e.get("source").getAsString().replaceFirst("_static$","")));}
     private int counterpart(int choice,boolean frame) {
-        if(!artwork(choice,input))return choice;
+        if(!selectableArtwork(choice))return choice;
         String source=ScreenHousingTextures.entry(choice).get("source").getAsString();
         String replaced=source.replace("_bare_","_framed_");
         if(source.startsWith("bare_"))replaced="framed_"+source.substring(5);
@@ -49,10 +53,10 @@ final class ScreenTextureList {
         int other=ScreenHousingTextures.screenIndex(replaced);return other==0?choice:other;
     }
     private int canonical(int choice){return counterpart(choice,false);}
-    boolean hasPair(){return artwork(choice(),input) && counterpart(choice(),true)!=counterpart(choice(),false);}
+    boolean hasPair(){return selectableArtwork(choice()) && counterpart(choice(),true)!=counterpart(choice(),false);}
     ScreenTextureList setFramed(boolean value) {
         framed=false;value=false;
-        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(artwork(i,input) && canonical(i)==i)
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(selectableArtwork(i) && canonical(i)==i)
             list.thumbnail(i,ScreenHousingTextures.fullTexture(counterpart(i,value)));
         return this;
     }

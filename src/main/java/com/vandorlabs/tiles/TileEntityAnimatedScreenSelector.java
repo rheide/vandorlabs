@@ -170,8 +170,22 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
     }
     private boolean smallInput = false;
+    public final DisplayActivation activation=new DisplayActivation();
+    public static boolean supportsActivation(net.minecraft.block.Block block){return block==com.vandorlabs.blocks.ModBlocks.ANIMATED_SCREEN_SELECTOR||block instanceof com.vandorlabs.blocks.BlockProgrammableInput||block instanceof com.vandorlabs.blocks.BlockProgrammableConsole||block instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole||block instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole||block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalScreen;}
+    public int activationMode(){return activation.mode<0?(redstoneEnabled?1:0):activation.mode;}
+    public int activationState(){int level=getSignalLevel();if(redstoneInverted)level=15-level;return activationMode()==2?(level==0?0:level<=5?1:level<=10?2:3):level>0?3:0;}
+    public int activationTexture(int state){int choice=activation.texture(state);if(choice>=0)return choice;if(primarySurface>=0)return primarySurface;
+        boolean input=getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableInput&&!(getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableFullInput)||getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole||getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole;
+        return ScreenHousingTextures.clamp(ScreenHousingTextures.screenIndex((input?"console_inputs/"+inputPanel:getSelectedScreen())+"_static"));}
+    public int activationPlayback(int state){int value=activation.playback(state);return value>=0?value:state==0?MODE_OFF:displayMode==MODE_OFF?MODE_ANIMATED:displayMode;}
+    public int activationSpeed(int state){int value=activation.speed(state);return value>=0?value:animationSpeedIndex;}
+    public boolean configureActivation(int mode,int state,int texture,int playback,int speed){if(!supportsActivation(getBlockType())||!DisplayActivation.valid(mode,state,texture,playback,speed))return false;activation.configure(mode,state,texture,playback,speed);redstoneEnabled=mode>0;settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState current=world.getBlockState(pos);world.notifyBlockUpdate(pos,current,current,3);world.checkLight(pos);}return true;}
+    public int effectiveMode(int slot){return slot==1&&activation.mode>0?displayMode:getEffectiveMode();}
+    public int effectiveSpeed(int slot){return slot==1?animationSpeedIndex:getAnimationSpeedIndex();}
+    public int baseSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
+    public int baseAnimationSpeed(){return animationSpeedIndex;}
     private int primarySurface=-1,secondarySurface=-1;
-    public int getSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
+    public int getSurfaceTexture(int slot){if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==0&&primarySurface!=VEHICLE_SURFACE&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
     public void setSurfaceTexture(int slot,int choice) {
         if(choice==REDSTONE_SURFACE){
             // The row control is the active surface, replacing Vehicle Status.
@@ -180,7 +194,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         }
         if(controls[slot]!=null)controls[slot].setEnabled(false);
         int next=choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
-        if(getSurfaceTexture(slot)==next)return;
+        if((slot==1?secondarySurface:primarySurface)==next)return;
         if(slot==1)secondarySurface=next;else primarySurface=next;
         settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
     }
@@ -191,7 +205,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override public int localSignalLevel(int channel){return com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos);}
     @Override public void setChannelLevel(int level){
         if(channelLevel==level)return;
-        channelLevel=level;setChannelSignal(level>0);
+        channelLevel=level;GlassMaterials.changed();setChannelSignal(level>0);
         if(world!=null && !world.isRemote){
             world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);
             world.checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK,pos);
@@ -368,7 +382,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override public void setChannelSignal(boolean powered) {
         if(!powered)channelLevel=0;else if(channelLevel==0)channelLevel=15;
         if (channelSignal == powered) return;
-        channelSignal = powered;
+        channelSignal = powered;GlassMaterials.changed();
         if (world != null && !world.isRemote) {
             net.minecraft.block.state.IBlockState state = world.getBlockState(pos);
             world.notifyBlockUpdate(pos, state, state, 2);
@@ -468,6 +482,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public void setRedstoneEnabled(boolean redstoneEnabled) {
+        if(activation.mode>=0)activation.mode=redstoneEnabled?Math.max(1,activation.mode):0;
         if(this.redstoneEnabled==redstoneEnabled)return;
         this.redstoneEnabled = redstoneEnabled;
         settingsChanged();
@@ -495,6 +510,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public int getAnimationSpeedIndex() {
+        if(activation.mode>0)return activationSpeed(activationState());
         return animationSpeedIndex;
     }
 
@@ -506,7 +522,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     public int getAnimationSpeedTicks() {
-        return ScreenBehavior.animationTicks(animationSpeedIndex);
+        return ScreenBehavior.animationTicks(getAnimationSpeedIndex());
     }
 
     /**
@@ -516,6 +532,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
      * animated, mirroring the sequenced displays' wake-only behavior.
      */
     public int getEffectiveMode() {
+        if(activation.mode==0)return displayMode;
+        if(activation.mode>0)return activationPlayback(activationState());
         // Ungated Static/Animated do not depend on power. Off deliberately does:
         // it wakes to Animated even when the redstone gate is disabled.
         int mode = ScreenBehavior.clampMode(displayMode);
@@ -541,7 +559,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
-        super.writeToNBT(compound);com.vandorlabs.redstone.TransmitterSlots.written(compound);frameAppearance.write(compound);glassPlayback.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
+        super.writeToNBT(compound);activation.write(compound);com.vandorlabs.redstone.TransmitterSlots.written(compound);frameAppearance.write(compound);glassPlayback.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
@@ -595,7 +613,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousPortholeJoin=joinPortholes;
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
-        super.readFromNBT(compound);frameAppearance.read(compound);glassPlayback.read(compound);
+        super.readFromNBT(compound);activation.read(compound);frameAppearance.read(compound);glassPlayback.read(compound);
         for(int i=0;i<2;i++){
             String key=i==0?"RedstonePrimary":"RedstoneSecondary";
             if(compound.hasKey(key,10))redstoneScreen(i).readFromNBT(compound.getCompoundTag(key));
@@ -613,7 +631,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 "engineering_screen", INPUT_PANELS[0],
                 TileEntityAnimatedScreenSelector::isValidInputPanel);
         selectedScreen = data.selectedScreen;
-        redstoneEnabled = data.redstoneEnabled;
+        redstoneEnabled = activation.mode<0?data.redstoneEnabled:activation.mode>0;
         redstoneInverted=compound.getBoolean("RedstoneInverted");
         displayMode = data.displayMode;
         framed = data.framed;
@@ -661,6 +679,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
             else world.markBlockRangeForRenderUpdate(pos,pos);
         }
+        // Tile packets arrive after the unchanged-state block notification. A
+        // layout rebuilt between those events must see the newly loaded artwork.
+        settingsRevision++;GlassMaterials.changed();
         portholeRevision++;
         if (world != null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));

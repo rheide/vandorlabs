@@ -18,6 +18,12 @@ final class ScreenSurfaceGroups {
         @Override public void markBlockRangeForRenderUpdate(int a,int b,int c,int d,int e,int f){clear();}
     }
     private static final Map<World,Cache> CACHES=new WeakHashMap<>();
+    static boolean wideDisplay(TileEntityAnimatedScreenSelector tile){
+        if(tile.getWorld()==null)return false;
+        net.minecraft.block.Block block=tile.getBlockType();
+        if(block!=ModBlocks.ANIMATED_SCREEN_SELECTOR&&block!=ModBlocks.PROGRAMMABLE_FULL_INPUT)return false;
+        GlassSurfaceGroups.Layout joined=layout(tile);return joined.columns>joined.rows;
+    }
     static synchronized GlassSurfaceGroups.Layout layout(TileEntityAnimatedScreenSelector tile){return layout(tile,false);}
     static synchronized GlassSurfaceGroups.Layout frameLayout(TileEntityAnimatedScreenSelector tile){return layout(tile,true);}
     private static GlassSurfaceGroups.Layout layout(TileEntityAnimatedScreenSelector tile,boolean frame){

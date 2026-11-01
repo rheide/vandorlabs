@@ -27,6 +27,12 @@ public final class MessageProgrammableTrigger implements IMessage {
         return invalidChannels?null:channels!=null?channels:ChannelList.of(Math.max(0,channel));
     }
 
+    private Boolean frontOnly;
+    private Integer sidesTexture;
+    public MessageProgrammableTrigger withFaces(boolean front,int sides){
+        if(!ScreenHousingTextures.validChoice(sides))throw new IllegalArgumentException("Invalid trigger side texture");
+        frontOnly=front;sidesTexture=sides;return this;
+    }
     private int[] modes,speeds;
     public MessageProgrammableTrigger withArtwork(int[] modes,int[] speeds){
         if(!TileEntityProgrammableTrigger.validArtwork(modes,speeds))throw new IllegalArgumentException("Invalid trigger playback");
@@ -42,17 +48,19 @@ public final class MessageProgrammableTrigger implements IMessage {
         this.pos = pos; this.off = off; this.on = on; this.channel = channel;
     }
     @Override public void fromBytes(ByteBuf buf) {
-        invalidChannels=true;modes=null;speeds=null;
+        invalidChannels=true;modes=null;speeds=null;frontOnly=null;sidesTexture=null;
         if(buf.readableBytes()<33)return;
         pos=BlockPos.fromLong(buf.readLong());off=buf.readInt();on=buf.readInt();channel=buf.readInt();
         states=buf.readBoolean();exact=buf.readInt();low=buf.readInt();medium=buf.readInt();
         channels=ChannelData.readField(buf,channel);
         if(channels==null||exact< -1||exact>15||!ScreenHousingTextures.validChoice(low)||!ScreenHousingTextures.validChoice(medium))return;
         if(buf.isReadable()){
-            if(buf.readableBytes()!=9||buf.readUnsignedByte()!=1)return;
+            int size=buf.readableBytes(),version=buf.readUnsignedByte();
+            if(!(size==9&&version==1||size==14&&version==2))return;
             modes=new int[4];speeds=new int[4];
             for(int i=0;i<4;i++){modes[i]=buf.readUnsignedByte();speeds[i]=buf.readUnsignedByte();}
             if(!TileEntityProgrammableTrigger.validArtwork(modes,speeds))return;
+            if(version==2){int front=buf.readUnsignedByte();if(front>1)return;frontOnly=front==1;sidesTexture=buf.readInt();if(!ScreenHousingTextures.validChoice(sidesTexture))return;}
         }
         invalidChannels=false;
     }
@@ -62,7 +70,7 @@ public final class MessageProgrammableTrigger implements IMessage {
 
         buf.writeBoolean(states);buf.writeInt(exact);buf.writeInt(low);buf.writeInt(medium);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
-        if(modes!=null){buf.writeByte(1);for(int i=0;i<4;i++){buf.writeByte(modes[i]);buf.writeByte(speeds[i]);}}
+        if(modes!=null||frontOnly!=null){buf.writeByte(frontOnly==null?1:2);for(int i=0;i<4;i++){buf.writeByte(modes==null?1:modes[i]);buf.writeByte(speeds==null?1:speeds[i]);}if(frontOnly!=null){buf.writeBoolean(frontOnly);buf.writeInt(sidesTexture);}}
 
     }
 
@@ -87,7 +95,7 @@ public final class MessageProgrammableTrigger implements IMessage {
                 if (!(raw instanceof TileEntityProgrammableTrigger)
                         || container.getTileEntity() != raw
                         || !container.canInteractWith(player)) return;
-                ((TileEntityProgrammableTrigger) raw).configureArtwork(msg.off,msg.on,msg.states,msg.exact,msg.low,msg.medium,msg.getRedstoneChannels(),msg.modes,msg.speeds);
+                ((TileEntityProgrammableTrigger) raw).configureArtwork(msg.off,msg.on,msg.states,msg.exact,msg.low,msg.medium,msg.getRedstoneChannels(),msg.modes,msg.speeds,msg.frontOnly,msg.sidesTexture);
             });
             return null;
         }

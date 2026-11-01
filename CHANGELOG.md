@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Add Disabled, Digital and four-band Analog artwork activation to the programmable display family, with independent per-state playback and shared Console Controls. Refresh joins immediately after tile-data edits and offer Half artwork on wide joined Screens and Flatscreens.
+
 - Batch plain fixed Canopy Glass into Minecraft chunk layers with shared immutable geometry, preserving logical joins, opening-canopy roof rails, cockpit sharing and the existing opening/carried render paths.
 
 - Keep riders aligned with the rendered arm support through delayed updates and reversals, using the same pose for the camera and platform while retaining authoritative collision. Keep the restored native floor collision-safe across subpixel endpoint roundoff.
@@ -27,7 +29,7 @@
 
 - Expand Gold with 15 additional display subjects in Full and Half height, preserving native six-frame artwork and saved choices.
 
-- Give Programmable Trigger On/Off and analog bands independent Displays artwork, Off/Static/Animated modes and playback speeds, with flat state tabs. Preserve legacy Static defaults, saved settings, Duplifier copying and configured items.
+- Give Programmable Trigger flat static Off/On or analog artwork tabs, selectable Displays, and All Faces / Front Only mapping with a separate static Sides texture. Retain legacy saved playback data without animating Trigger artwork.
 - Offer Displays in the shared Glass material picker, including Programmable Glass and Porthole Wall glazing.
 
 - Add a visual display matrix comparing Classic, Cool and Gold, with native Full/Half previews and Large variants.

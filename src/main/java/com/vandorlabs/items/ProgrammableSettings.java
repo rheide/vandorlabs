@@ -202,7 +202,7 @@ public final class ProgrammableSettings {
             TileEntityProgrammableTrigger trigger = (TileEntityProgrammableTrigger) tile;
             out.setInteger(WALL_TEXTURE, trigger.getHousingTexture());
             out.setInteger(TRIGGER_ON_TEXTURE, trigger.getOnTexture());
-            NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("States",trigger.isLevelStates());signal.setInteger("Exact",trigger.getExactLevel());signal.setInteger("Low",trigger.getLowTexture());signal.setInteger("Medium",trigger.getMediumTexture());
+            NBTTagCompound signal=new NBTTagCompound();signal.setBoolean("FrontOnly",trigger.isFrontOnly());signal.setInteger("Sides",trigger.getSidesTexture());signal.setBoolean("States",trigger.isLevelStates());signal.setInteger("Exact",trigger.getExactLevel());signal.setInteger("Low",trigger.getLowTexture());signal.setInteger("Medium",trigger.getMediumTexture());
             int[] modes=new int[4],speeds=new int[4];for(int i=0;i<4;i++){modes[i]=trigger.getArtworkMode(i);speeds[i]=trigger.getArtworkSpeed(i);}signal.setIntArray("Modes",modes);signal.setIntArray("Speeds",speeds);out.setTag(SIGNAL_SETTINGS,signal);
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
             TileEntityAnimatedScreenSelector screen = (TileEntityAnimatedScreenSelector) tile;
@@ -217,14 +217,14 @@ public final class ProgrammableSettings {
                 out.setTag(FACE_TEXTURES, faces);
             }
             if (isDisplay(block)) {
-                out.setInteger(PRIMARY_SURFACE,screen.getSurfaceTexture(0));out.setInteger(SECONDARY_SURFACE,screen.getSurfaceTexture(1));
+                out.setInteger(PRIMARY_SURFACE,screen.baseSurfaceTexture(0));out.setInteger(SECONDARY_SURFACE,screen.baseSurfaceTexture(1));NBTTagCompound activation=new NBTTagCompound();screen.activation.write(activation);out.setTag("display_activation",activation);
                 out.setString(PRIMARY_KIND, "screen");
                 out.setString(PRIMARY_TEXTURE, screen.getSelectedScreen());
                 out.setInteger(TRIGGER, screen.isRedstoneEnabled()
                         ? (screen.isRedstoneInverted()?SpaceDoorData.TRIGGER_REDSTONE_OFF:SpaceDoorData.TRIGGER_REDSTONE_ON)
                         : SpaceDoorData.TRIGGER_DISABLED);
                 out.setInteger(DISPLAY_MODE, screen.getDisplayMode());
-                out.setInteger(ANIMATION_SPEED, screen.getAnimationSpeedIndex());
+                out.setInteger(ANIMATION_SPEED, screen.baseAnimationSpeed());
                 out.setBoolean(FRAMED, screen.isFramed());
                 out.setString(INPUT_PANEL, screen.getInputPanel());
                 out.setString(SECONDARY_INPUT_PANEL, screen.getSecondaryInputPanel());
@@ -517,7 +517,7 @@ public final class ProgrammableSettings {
                 for(int i=0;i<4;i++){modes[i]=trigger.getArtworkMode(i);speeds[i]=trigger.getArtworkSpeed(i);}
                 if(signal.hasKey("Modes",11))modes=signal.getIntArray("Modes");if(signal.hasKey("Speeds",11))speeds=signal.getIntArray("Speeds");
                 if(!trigger.configureArtwork(number(values,WALL_TEXTURE,trigger.getHousingTexture()),number(values,TRIGGER_ON_TEXTURE,trigger.getOnTexture()),
-                        flag(signal,"States",trigger.isLevelStates()),number(signal,"Exact",trigger.getExactLevel()),number(signal,"Low",trigger.getLowTexture()),number(signal,"Medium",trigger.getMediumTexture()),channels(values,trigger),modes,speeds))return false;
+                        flag(signal,"States",trigger.isLevelStates()),number(signal,"Exact",trigger.getExactLevel()),number(signal,"Low",trigger.getLowTexture()),number(signal,"Medium",trigger.getMediumTexture()),channels(values,trigger),modes,speeds,flag(signal,"FrontOnly",trigger.isFrontOnly()),number(signal,"Sides",trigger.getSidesTexture())))return false;
                 applicable=true;
             }
         } else if (tile instanceof TileEntityAnimatedScreenSelector) {
@@ -538,6 +538,7 @@ public final class ProgrammableSettings {
                 applicable = true;
             }
             if (isDisplay(block)) {
+                if(values.hasKey("display_activation",10)){screen.activation.read(values.getCompoundTag("display_activation"));applicable=true;}
                 if(values.hasKey(PRIMARY_SURFACE,3)){screen.setSurfaceTexture(0,values.getInteger(PRIMARY_SURFACE));applicable=true;}
                 if(values.hasKey(SECONDARY_SURFACE,3)){screen.setSurfaceTexture(1,values.getInteger(SECONDARY_SURFACE));applicable=true;}
                 if ("screen".equals(values.getString(PRIMARY_KIND))

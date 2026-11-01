@@ -45,7 +45,7 @@ public class GuiProgrammableInput extends GuiContainer {
         this.te = te;
         this.selected = te.getInputPanel();
         this.displayMode = te.getDisplayMode();
-        this.speedIndex = te.getAnimationSpeedIndex();
+        this.speedIndex = te.baseAnimationSpeed();
         this.redstoneEnabled = te.isRedstoneEnabled();
         redstoneInverted=te.isRedstoneInverted();
         this.smallInput = te.isSmallInput();
@@ -60,6 +60,7 @@ public class GuiProgrammableInput extends GuiContainer {
     private void openRows(int slot){te.setSurfaceTexture(slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(te.getPos(),slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE));rowSlot=slot;if(rowEditors[slot]==null)rowEditors[slot]=new NativeRedstoneRowsPane(this,te,slot);initGui();}
     private FrameAppearancePane framePane;
     private boolean framePage(){return textureTab==10;}
+    private DisplayActivationPane activationPane;
     private ReceiverPane receiver;
     @Override public void initGui() {
         String receiverDraft=channelField==null?ChannelFields.text(te.getRedstoneChannels()):channelField.getText();
@@ -90,6 +91,7 @@ public class GuiProgrammableInput extends GuiContainer {
         housingList=new HousingTextureList(layout.listX,guiTop+54,layout.listWidth,housingTexture)
                 .visibleRows(rows).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
         buttonList.add(layout.done(20));refreshButtons();refreshTabs();if(framePage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);if(framePane==null)framePane=new FrameAppearancePane(this,te);framePane.init(54,buttonList);}else if(rowsPage()){for(GuiButton b:buttonList)if(b.id!=20&&b.id!=197&&(b.id<90||b.id>93))b.visible=false;channelField.setVisible(false);rowEditors[rowSlot].init(buttonList);}
+        if(activationPane==null)activationPane=new DisplayActivationPane(this,te,true);activationPane.init(layout,buttonList,textureTab,2);
     }
     private void refreshTabs(){for(GuiButton b:buttonList)if(b.id==197)b.enabled=!framePage();for(GuiButton b:buttonList)if(b.id>=90 && b.id<=92)b.enabled=b.id-90!=textureTab;}
 
@@ -152,6 +154,10 @@ public class GuiProgrammableInput extends GuiContainer {
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int button) throws IOException {
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,640,641))return;
+        if(button==0)for(GuiButton option:new java.util.ArrayList<>(buttonList))if((option.id==640||option.id==641)&&option.visible&&option.mousePressed(mc,mouseX,mouseY)){option.playPressSound(mc.getSoundHandler());actionPerformed(option);return;}
+        if(activationPane.active()){activationPane.click(mouseX,mouseY,button);super.mouseClicked(mouseX,mouseY,button);return;}
+
         if(rowsPage()){if(!rowEditors[rowSlot].click(mouseX,mouseY,button))super.mouseClicked(mouseX,mouseY,button);return;}
         if(framePage()){if(!framePane.click(mouseX,mouseY,button))super.mouseClicked(mouseX,mouseY,button);return;}
         if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,0,4,30,32))return;
@@ -169,7 +175,7 @@ public class GuiProgrammableInput extends GuiContainer {
 
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int state) {
-        if(framePane!=null)framePane.release();
+        activationPane.release();if(framePane!=null)framePane.release();
         screenList.release();
         draggingScrollbar = false;
         if (housingList != null) housingList.release();
@@ -179,6 +185,7 @@ public class GuiProgrammableInput extends GuiContainer {
     @Override
     protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton,
             long timeSinceLastClick) {
+        if(activationPane.active()){activationPane.drag(mouseY);return;}
         if(framePage()){framePane.drag(mouseY);return;}
         if (housingList != null && housingList.drag(mouseY)) return;
         if(screenList.drag(mouseY))return;
@@ -203,6 +210,7 @@ public class GuiProgrammableInput extends GuiContainer {
 
     @Override
     protected void actionPerformed(GuiButton button) {
+        if(activationPane.action(button)){if(button.id>=650&&button.id<=653)textureTab=0;redstoneEnabled=te.isRedstoneEnabled();redstoneInverted=te.isRedstoneInverted();initGui();return;}
         if(button.id==198)return;
 
         if(button.id==580&&rowsPage()){rowEditors[rowSlot].save();rowSlot=-1;initGui();return;}
@@ -226,7 +234,7 @@ public class GuiProgrammableInput extends GuiContainer {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int wheel = Mouse.getEventDWheel();if(rowsPage()){rowEditors[rowSlot].wheel(wheel);return;}if(framePage()){framePane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}
+        int wheel = Mouse.getEventDWheel();if(activationPane.active()){activationPane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}if(rowsPage()){rowEditors[rowSlot].wheel(wheel);return;}if(framePage()){framePane.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);return;}
         if (textureTab==1 && housingList.wheel(Mouse.getEventX() * width / mc.displayWidth,
                 height - Mouse.getEventY() * height / mc.displayHeight - 1, wheel)) return;
         if(textureTab==0)screenList.wheel(Mouse.getEventX()*width/mc.displayWidth,height-Mouse.getEventY()*height/mc.displayHeight-1,wheel);
@@ -243,7 +251,7 @@ public class GuiProgrammableInput extends GuiContainer {
         if(!rowsPage()&&textureTab<1)fontRenderer.drawString(I18n.format("gui.vandorlabs.selector.speed"),layout.controlsX,guiTop+88,0xDAE8F0);
         if(textureTab==2)receiver.drawLabel();
         if(framePage())framePane.draw(mouseX,mouseY);
-        DialogHeader.logo(guiLeft,guiTop,xSize);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();
+        DialogHeader.logo(guiLeft,guiTop,xSize);activationPane.draw(mouseX,mouseY);super.drawScreen(mouseX,mouseY,partialTicks);DialogOverlay.prepare();channelField.drawTextBox();
     }
 
     @Override protected void keyTyped(char c,int key) throws IOException {
