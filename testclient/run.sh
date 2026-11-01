@@ -66,6 +66,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   -Dvandorlabs.displayMaterialChecksOnly="${VANDOR_LABS_DISPLAY_MATERIAL_CHECKS_ONLY:-false}" \
   -Dvandorlabs.screenCatalogChecksOnly="${VANDOR_LABS_SCREEN_CATALOG_CHECKS_ONLY:-false}" \
   -Dvandorlabs.glassDisplayOrderOnly="${VANDOR_LABS_GLASS_DISPLAY_ORDER_ONLY:-false}" \
+  -Dvandorlabs.glassExistingScene="${VANDOR_LABS_TEST_EXISTING_GLASS_SCENE:-false}" \
   -Dvandorlabs.displayExpansionChecksOnly="${VANDOR_LABS_DISPLAY_EXPANSION_CHECKS_ONLY:-false}" \
   -Dvandorlabs.classicControlsChecksOnly="${VANDOR_LABS_CLASSIC_CONTROLS_CHECKS_ONLY:-false}" \
   -Dvandorlabs.pbrMaterialChecksOnly="${VANDOR_LABS_PBR_MATERIAL_CHECKS_ONLY:-false}" \

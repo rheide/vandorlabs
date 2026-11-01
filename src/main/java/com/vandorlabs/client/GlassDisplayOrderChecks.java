@@ -26,7 +26,7 @@ import org.lwjgl.opengl.GL11;
 
 /** Reported joined Normal screen in front of Strong solid-material glass, opposite tile orders. */
 final class GlassDisplayOrderChecks {
-    static final double CAMERA_X=8.647,CAMERA_Z=15.993;
+    static final double CAMERA_X=12.438,CAMERA_Z=15.623;
     private static final BlockPos ROOT=new BlockPos(3,3,3);private static final int SIZE=320;
     private static VehicleWorld fixture(Minecraft mc,int width,boolean framed){
         List<VehicleStructure.Cell> cells=new ArrayList<>();cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,ModBlocks.PILOT_SEAT.getDefaultState(),null));
@@ -79,26 +79,57 @@ final class GlassDisplayOrderChecks {
         if(canopy){BlockPos pos=new BlockPos(4,3,10);TileEntityCanopy tile=new TileEntityCanopy();tile.setPos(pos);tile.anchor=pos;tile.large.depth=16;tile.large.scale=71;tile.large.shade=14;tile.large.tint=1;NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());tile.large.write(tag);cells.add(new VehicleStructure.Cell(pos,Block.getBlockFromName("vandorlabs:front_canopy_glass").getDefaultState().withProperty(BlockCanopy.FACING,EnumFacing.NORTH),tag));}
         return new VehicleWorld(mc.world,VehicleStructure.display(cells));
     }
-    private static BufferedImage perpendicularDraw(Minecraft mc,VehicleWorld world,int yaw,int mode){
+    private static BufferedImage perpendicularDraw(Minecraft mc,VehicleWorld world,float yaw,int mode){
         int passBefore=net.minecraftforge.client.MinecraftForgeClient.getRenderPass(),fboBefore=GL11.glGetInteger(org.lwjgl.opengl.EXTFramebufferObject.GL_FRAMEBUFFER_BINDING_EXT);
-        TileEntityRendererDispatcher d=TileEntityRendererDispatcher.instance;net.minecraft.world.World before=d.world;double x=d.entityX,y=d.entityY,z=d.entityZ;TurntableRenderState state=new TurntableRenderState();Framebuffer fbo=new Framebuffer(640,360,true);
-        GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();org.lwjgl.util.glu.GLU.gluPerspective(70,16F/9F,.1F,80);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
+        TileEntityRendererDispatcher d=TileEntityRendererDispatcher.instance;net.minecraft.world.World before=d.world;double x=d.entityX,y=d.entityY,z=d.entityZ;TurntableRenderState state=new TurntableRenderState();Framebuffer fbo=new Framebuffer(640,400,true);
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();org.lwjgl.util.glu.GLU.gluPerspective(95,1.6F,.1F,80);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try{
             if(mode==1||mode==2)GlazingRenderOrder.begin(world);fbo.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.depthMask(true);GlStateManager.clearColor(.1F,.16F,.23F,1);GlStateManager.clear(16640);GlStateManager.enableDepth();GlStateManager.disableLighting();GlStateManager.disableFog();GlStateManager.enableTexture2D();GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);GlStateManager.color(1,1,1,1);mc.entityRenderer.disableLightmap();
-            d.world=world;d.entityX=CAMERA_X;d.entityY=4.62;d.entityZ=CAMERA_Z;GlStateManager.rotate(yaw+180,0,1,0);GlStateManager.translate(-CAMERA_X,-4.62,-CAMERA_Z);
-            List<VehicleStructure.Cell> cells=new ArrayList<>(world.structure.cells);cells.sort((a,b)->{int plane=Integer.compare(a.pos.getZ()==14?1:0,b.pos.getZ()==14?1:0);return plane!=0?plane:a.pos.compareTo(b.pos);});if(mode==2)Collections.reverse(cells);
-            for(int pass=0;pass<2;pass++){ForgeHooksClient.setRenderPass(pass);for(VehicleStructure.Cell c:cells){if(mode==3&&c.pos.getZ()==14||mode==4&&c.pos.getZ()!=14)continue;TileEntity tile=world.getTileEntity(c.pos);if(tile.shouldRenderInPass(pass))d.render(tile,c.pos.getX(),c.pos.getY(),c.pos.getZ(),1);}}
-            GL11.glFinish();return ScreenShotHelper.createScreenshot(640,360,fbo);
+            d.world=world;d.entityX=CAMERA_X;d.entityY=3;d.entityZ=CAMERA_Z;GlStateManager.rotate(yaw+180,0,1,0);GlStateManager.translate(-CAMERA_X,-4.62,-CAMERA_Z);
+            List<VehicleStructure.Cell> cells=new ArrayList<>(world.structure.cells);cells.sort((a,b)->{int plane=Integer.compare(a.pos.getZ()==14?1:0,b.pos.getZ()==14?1:0);
+                if(plane!=0)return plane;
+                if(a.pos.getZ()==14&&b.pos.getZ()==14){int depth=Integer.compare(PanelDepth.offset(a.state.getValue(BlockGlassWall.DEPTH)),PanelDepth.offset(b.state.getValue(BlockGlassWall.DEPTH)));if(depth!=0)return depth;}
+                return a.pos.compareTo(b.pos);});if(mode==2)Collections.reverse(cells);
+            for(int pass=0;pass<(mode==0?1:2);pass++){ForgeHooksClient.setRenderPass(pass);for(VehicleStructure.Cell c:cells){if(mode==3&&c.pos.getZ()==14||mode==4&&c.pos.getZ()!=14)continue;TileEntity tile=world.getTileEntity(c.pos);if(tile.shouldRenderInPass(pass))d.render(tile,c.pos.getX(),c.pos.getY(),c.pos.getZ(),1);}}
+            if(mode==0){
+                // Known separated layers: independently order each layer, explicitly
+                // finish the rear layer before allowing any foreground pane to draw.
+                // This does not assume arbitrary tile order is correct at panel seams.
+                for(int layer=0;layer<2;layer++){
+                    GlazingRenderOrder.begin(world);ForgeHooksClient.setRenderPass(0);
+                    for(VehicleStructure.Cell c:cells)if((c.pos.getZ()==14)==(layer==1)){
+                        TileEntity tile=world.getTileEntity(c.pos);GlazingRenderOrder.handle(tile,c.pos.getX(),c.pos.getY(),c.pos.getZ(),1,-1,1);
+                    }
+                    ForgeHooksClient.setRenderPass(1);
+                    for(VehicleStructure.Cell c:cells)if((c.pos.getZ()==14)==(layer==1)){
+                        TileEntity tile=world.getTileEntity(c.pos);if(tile.shouldRenderInPass(1))d.render(tile,c.pos.getX(),c.pos.getY(),c.pos.getZ(),1);
+                    }
+                    GlazingRenderOrder.end();
+                }
+            }
+            GL11.glFinish();return ScreenShotHelper.createScreenshot(640,400,fbo);
         }finally{GlazingRenderOrder.end();ForgeHooksClient.setRenderPass(passBefore);d.world=before;d.entityX=x;d.entityY=y;d.entityZ=z;GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER,fboBefore);state.close();fbo.deleteFramebuffer();}
     }
     private static void perpendicularCheck(Minecraft mc,File output)throws Exception{
-        for(boolean canopy:new boolean[]{false,true}){VehicleWorld world=perpendicular(mc,canopy);
+        Map<String,BufferedImage> uncluttered=new HashMap<>();
+        for(boolean clutter:new boolean[]{false,true})for(boolean canopy:new boolean[]{false,true}){VehicleWorld world=perpendicular(mc,canopy);
+        if(clutter){
+            List<VehicleStructure.Cell> cells=new ArrayList<>(world.structure.cells);
+            for(int i=0;i<129;i++){
+                BlockPos pos=i<90?new BlockPos(30+i,100,30):new BlockPos(120,100,30+i-90);TileEntityProgrammableGlass tile=new TileEntityProgrammableGlass();tile.setPos(pos);
+                cells.add(new VehicleStructure.Cell(pos,Block.getBlockFromName("vandorlabs:programmable_glass").getDefaultState().withProperty(BlockGlassWall.ROTATED,i<90),tile.writeToNBT(new NBTTagCompound())));
+            }
+            world=new VehicleWorld(mc.world,VehicleStructure.display(cells));
+        }
         BufferedImage rear=perpendicularDraw(mc,world,110,3),front=perpendicularDraw(mc,world,110,4),both=perpendicularDraw(mc,world,110,0);
         ImageIO.write(rear,"png",new File(output,"glass-display-order_rear_only_"+canopy+".png"));System.out.println("[vandorlabs] glass rear-layer canopy="+canopy+" visible-composite="+difference(front,both));
-        for(int yaw:new int[]{94,85,100,110,125,140}){
+        for(float yaw:new float[]{90.5F,89.9F,90,90.1F,94,85,100,110,125,140}){
             BufferedImage ref=perpendicularDraw(mc,world,yaw,0),forward=perpendicularDraw(mc,world,yaw,1),reverse=perpendicularDraw(mc,world,yaw,2);
-            ImageIO.write(ref,"png",new File(output,"glass-display-order_perpendicular_"+canopy+"_"+yaw+"_reference.png"));ImageIO.write(forward,"png",new File(output,"glass-display-order_perpendicular_"+canopy+"_"+yaw+"_sorted.png"));
-            int a=difference(ref,forward),b=difference(ref,reverse);System.out.println("[vandorlabs] glass-perpendicular canopy="+canopy+" yaw="+yaw+" forward="+a+" reverse="+b);if(a>16||b>16)throw new IllegalStateException("Finite glass planes yaw="+yaw+" mismatch="+a+"/"+b);
+            ImageIO.write(ref,"png",new File(output,"glass-display-order_perpendicular_"+clutter+"_"+canopy+"_"+yaw+"_reference.png"));ImageIO.write(forward,"png",new File(output,"glass-display-order_perpendicular_"+clutter+"_"+canopy+"_"+yaw+"_sorted.png"));
+            String key=canopy+":"+yaw;
+            if(!clutter)uncluttered.put(key,ref);
+            else if(difference(uncluttered.get(key),ref)>16||difference(uncluttered.get(key),forward)>16)throw new IllegalStateException("Off-camera glazing changed visible composition "+key);
+            int a=difference(ref,forward),b=difference(ref,reverse);System.out.println("[vandorlabs] glass-perpendicular clutter="+clutter+" canopy="+canopy+" yaw="+yaw+" forward="+a+" reverse="+b);if(a>16||b>16)throw new IllegalStateException("Finite glass planes yaw="+yaw+" mismatch="+a+"/"+b);
         }}
     }
     static void run(Minecraft mc,File output)throws Exception{

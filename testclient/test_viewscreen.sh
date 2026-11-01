@@ -399,8 +399,13 @@ if [ "$MODE" = focus ]; then
         exit 0
     fi
     if [ "$TARGET" = glass-display-order ]; then
-        grep -q "glass-display-order PASS" "$RUN_OUT/client.log"
-        echo "Glass display ordering checks passed: $RUN_OUT"
+        if [ "${VANDOR_LABS_TEST_EXISTING_GLASS_SCENE:-false}" = true ]; then
+            grep -q "glass-native-scene CAPTURE" "$RUN_OUT/client.log"
+            echo "Existing native glass scene captured (requires visual review): $RUN_OUT"
+        else
+            grep -q "glass-display-order PASS" "$RUN_OUT/client.log"
+            echo "Glass display ordering checks passed: $RUN_OUT"
+        fi
         exit 0
     fi
     if [ "$TARGET" = display-expansion ]; then

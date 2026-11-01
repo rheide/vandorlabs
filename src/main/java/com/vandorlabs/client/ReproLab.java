@@ -717,7 +717,7 @@ public class ReproLab {
         }
         if(Boolean.getBoolean("vandorlabs.doorAppearanceChecksOnly")){try{if(DoorAppearanceLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception e){throw new IllegalStateException("door appearance checks",e);}return;}
         if(Boolean.getBoolean("vandorlabs.glassDisplayOrderOnly")) {
-            try {if(GlazingFeatureChecks.tick(mc,outDir)&&GlassNativeSceneChecks.tick(mc,outDir)){GlassDisplayOrderChecks.run(mc,outDir);mc.shutdown();}}
+            try {if((Boolean.getBoolean("vandorlabs.glassExistingScene")||GlazingFeatureChecks.tick(mc,outDir))&&GlassNativeSceneChecks.tick(mc,outDir)){if(!Boolean.getBoolean("vandorlabs.glassExistingScene"))GlassDisplayOrderChecks.run(mc,outDir);mc.shutdown();}}
             catch(Exception failure){throw new IllegalStateException("glass display order checks",failure);}return;
         }
         if(Boolean.getBoolean("vandorlabs.glassAppearanceChecksOnly")) {
