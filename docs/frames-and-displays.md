@@ -31,7 +31,7 @@ The outer frame continues to surround the complete display. Turning splitting
 off retains the selections for later reuse.
 
 Display artwork and playback controls stay on the **Display** or **Controls**
-page. Housing artwork and its layout controls are on **Sides**. Channel trigger
+page. Programmable Glass and Portholes, including diagonal variants, show playback and speed directly on **Glass** when Display artwork is selected; plain glass hides these controls. Housing artwork and its layout controls are on **Sides**. Channel trigger
 controls are on **Redstone**. Transmitter slots appear only on transmitting controls; passive blocks, lights, doors and ordinary displays do not need them. Door access-card filtering
 and panel security settings are on **Security**.
 

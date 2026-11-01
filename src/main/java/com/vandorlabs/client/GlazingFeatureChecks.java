@@ -43,7 +43,7 @@ final class GlazingFeatureChecks {
             mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=player(mc);p.openGui(VandorLabs.instance,fixture==2?GuiHandler.GUI_PROGRAMMABLE_GLASS:GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,p.world,POS.getX(),POS.getY(),POS.getZ());}).get();phase++;return false;
         }
         GuiScreen gui=mc.currentScreen;require(gui!=null,"open dialog stage="+phase);
-        if(phase==2){if(fixture>=2)click(gui,fixture==2?200:214,0);phase++;return false;}
+        if(phase==2){if(fixture==3||fixture==4)click(gui,213,0);if(fixture>=2){for(GuiButton b:buttons(gui))require(!"Animation".equals(b.displayString),"separate animation tab");button(gui,702);button(gui,710);}phase++;return false;}
         if(phase==3){
             capture(mc,gui,output,"before");click(gui,fixture<2?30:702,0);if(fixture>=2)click(gui,710,0);phase++;return false;
         }
@@ -51,7 +51,7 @@ final class GlazingFeatureChecks {
             verify(mc,true);capture(mc,gui,output,"after");
             if(fixture<2)click(gui,30,1);else{click(gui,701,0);click(gui,711,0);}phase++;return false;
         }
-        verify(mc,false);mc.player.closeScreen();if(++fixture==BLOCKS.length){geometry(mc);packets();icons(mc,output);System.out.println("[vandorlabs][reprolab] glazing-features PASS six-dialogs real-clicks server-roundtrip save-reload Small-Full left-right playback-mode-speed geometry packets");return true;}phase=0;return false;
+        verify(mc,false);if(fixture>=2){if(gui instanceof GuiProgrammableGlass)((GuiProgrammableGlass)gui).choose(HousingTextureList.CANOPY_GLASS_BASE);else ((GuiProgrammableWall)gui).choose(HousingTextureList.CANOPY_GLASS_BASE);for(GuiButton b:buttons(gui))require(b.id<700||b.id>712,"playback shown for plain glass");capture(mc,gui,output,"plain");}mc.player.closeScreen();if(++fixture==BLOCKS.length){geometry(mc);packets();icons(mc,output);System.out.println("[vandorlabs][reprolab] glazing-features PASS six-dialogs real-clicks server-roundtrip save-reload Small-Full left-right playback-mode-speed geometry packets");return true;}phase=0;return false;
     }
     private static void verify(Minecraft mc,boolean changed)throws Exception{
         mc.getIntegratedServer().addScheduledTask(()->{

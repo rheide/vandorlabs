@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Show animated glass-material playback and speed directly in the Glass tab for programmable Glass and Portholes, including diagonal variants.
+
 - Copy modular arm and track settings, including Join Arms and its range, through controller or member sections without copying live pose or payload ownership.
 
 - Apply redstone-state artwork and playback edits to the whole authored display rectangle, with per-member edit permission checks. Keep Half selections available while changing signal-band designs.
