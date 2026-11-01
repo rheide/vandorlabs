@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Preserve exact programmable-block snapshots through Moat retraction and recovery when no legacy transmitter-row migration is needed.
+
 - Keep console item artwork inside its inventory slots, use full image UVs, and replace retired icon textures with retained catalog artwork.
 
 - Clear stale received redstone power when the last channel is removed, while coalescing temporary channel changes during ownership transfers.

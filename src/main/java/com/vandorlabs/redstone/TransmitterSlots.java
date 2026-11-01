@@ -67,16 +67,20 @@ public final class TransmitterSlots {
     private static NBTTagCompound sharedScreen(NBTTagCompound source){
         NBTTagCompound originalForge=source.getCompoundTag("ForgeData");
         if(originalForge.getBoolean("VandorSharedScreenTransmitter"))return source;
-        NBTTagCompound result=source.copy(),forge=result.getCompoundTag("ForgeData");forge.setBoolean("VandorSharedScreenTransmitter",true);result.setTag("ForgeData",forge);
-        NBTTagCompound old=forge.getCompoundTag(KEY);
-        if(old.hasKey("main",10))return result;
+        NBTTagCompound old=originalForge.getCompoundTag(KEY);
         String best=null;int range=-2;
         for(String key:new java.util.TreeSet<>(old.getKeySet()))if(key.startsWith("row_")){
             ItemStack item=new ItemStack(old.getCompoundTag(key));int candidate=ItemRedstoneTransmitter.range(item);if(candidate==0)candidate=Integer.MAX_VALUE;
             if(ItemRedstoneTransmitter.valid(item)&&candidate>range){best=key;range=candidate;}
         }
-        if(best==null)return result;
-        old.setTag("main",old.getTag(best));old.removeTag(best);return result;
+        // Ordinary programmable tiles have no legacy row inventory. Keep their
+        // exact saved data stable through copy and native endpoint restoration.
+        if(best==null)return source;
+        NBTTagCompound result=source.copy(),forge=result.getCompoundTag("ForgeData");
+        forge.setBoolean("VandorSharedScreenTransmitter",true);result.setTag("ForgeData",forge);
+        old=forge.getCompoundTag(KEY);
+        if(!old.hasKey("main",10)){old.setTag("main",old.getTag(best));old.removeTag(best);}
+        return result;
     }
     private static void migrateSlot(NBTTagCompound slots,String key,ChannelList channels){
         if(channels.isEmpty()||slots.hasKey(key,10))return;

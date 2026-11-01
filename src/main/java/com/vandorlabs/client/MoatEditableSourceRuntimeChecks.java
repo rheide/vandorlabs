@@ -35,7 +35,7 @@ final class MoatEditableSourceRuntimeChecks {
             require(part!=null&&part.sourceTileTags.get(seed).equals(changed),"activation journals the edited finish and genuine source NBT");
             ramp.setChannelSignal(false);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
             require(!ramp.attached()&&world.getBlockState(seed.up()).getBlock()==ModBlocks.PROGRAMMABLE_BLOCK,"inactive retraction releases original blocks");
-            require(world.getTileEntity(seed).writeToNBT(new NBTTagCompound()).equals(changed),"retraction restores exact edited source NBT");
+            require(world.getTileEntity(seed).writeToNBT(new NBTTagCompound()).equals(changed),"retraction restores exact edited source NBT expected="+changed+" actual="+world.getTileEntity(seed).writeToNBT(new NBTTagCompound()));
             world.setBlockToAir(seed.up());
             ramp.setChannelSignal(true);ControllerRuntimeChecks.elapsed(ramp,ramp.durationTicks()+1);
             require(ramp.vehicleSources().size()==1,"next activation rescans shortened source tower");

@@ -27,6 +27,9 @@ public final class TransmitterMigrationChecks {
         NBTTagCompound partial=original.copy();partial.removeTag("x");require(!TransmitterSlots.normalize(partial).hasKey(TransmitterSlots.SCHEMA),"portable partial settings are not old placed tiles");
         VehicleStructure.Cell cell=new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),old);require(cell.tileData().equals(migrated),"previous snapshot canonicalizes before exact own-field comparison");
         require(VehicleTileData.translated(old,BlockPos.ORIGIN).equals(migrated),"copy/rotation translation shares canonical migration");
+        NBTTagCompound ordinary=freshSave.copy();ordinary.setString("id","vandorlabs:programmable_viewscreen");
+        NBTTagCompound ordinaryBefore=ordinary.copy();
+        require(TransmitterSlots.normalize(ordinary)==ordinary&&ordinary.equals(ordinaryBefore),"ordinary programmable tiles without old row modules retain exact snapshot data");
         NBTTagCompound screen=original.copy();screen.setString("id","vandorlabs:programmable_viewscreen");screen.setInteger("RedstoneChannel",0);ChannelData.write(screen,ChannelList.EMPTY);NBTTagCompound surface=new NBTTagCompound();NBTTagList rows=new NBTTagList();for(int channel:new int[]{51,52}){NBTTagCompound row=new NBTTagCompound();ChannelData.write(row,ChannelList.of(channel));rows.appendTag(row);}surface.setTag("Rows",rows);screen.setTag("RedstonePrimary",surface);
         NBTTagCompound screenSlots=TransmitterSlots.normalize(screen).getCompoundTag("ForgeData").getCompoundTag("VandorTransmitters");require(screenSlots.getKeySet().size()==2&&ItemRedstoneTransmitter.channels(new ItemStack(screenSlots.getCompoundTag("row_0_1"))).equals(ChannelList.of(52)),"each separate legacy screen row keeps its own configured module");
         NBTTagCompound shared=TransmitterSlots.normalize(screen);shared.getCompoundTag("ForgeData").getCompoundTag("VandorTransmitters").removeTag("main");
