@@ -7,6 +7,9 @@ import net.minecraft.nbt.NBTTagCompound;
 final class FrameAppearanceRuntimeChecks {
     private static boolean done;
     static void run(){if(done)return;done=true;
+        ScreenSurfaceGroups.checkInvalidation();
+        checkDiagonalFramePlane();
+        AnimationFallbackRuntimeChecks.run();
         int frames=0,lit=0;for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("Frame".equals(ScreenHousingTextures.category(i))){frames++;require(!HousingTextureList.generalTexture(i),"frame leaked into ordinary material picker");FrameAppearance a=new FrameAppearance();a.front=i;if(a.light()>0)lit++;require(a.rail("").length()>0,"missing rail texture");require(!net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(a.rail("")).getIconName().contains("missingno"),"unstitched packaged frame rail");}
         require(frames==70&&lit>0,"frame catalog coverage");
         TileEntityProgrammableGlass glass=new TileEntityProgrammableGlass();glass.readFromNBT(new NBTTagCompound());require(glass.frameAppearance.front==-1&&glass.frameAppearance.interior==-1,"old glass changes appearance");
@@ -60,6 +63,24 @@ final class FrameAppearanceRuntimeChecks {
         net.minecraft.item.ItemStack glassCopy=com.vandorlabs.items.ProgrammableSettings.applyToItem(new net.minecraft.item.ItemStack(net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass")),copiedSettings);
         require(!glassCopy.isEmpty()&&glassCopy.getSubCompound("ProgrammableGlassSettings").getInteger("FrameFront")==bolted&&glassCopy.getSubCompound("ProgrammableGlassSettings").getBoolean("FrameTile"),"Copifier glass placement settings lost frame finishes");
         System.out.println("[vandorlabs][reprolab] configurable-frames PASS frames="+frames+" lit="+lit+" legacy-NBT split-NBT fixed-packet split-geometry");
+    }
+    /** Test actual emitted border vertices against the reflected artwork plane. */
+    private static void checkDiagonalFramePlane(){
+        com.vandorlabs.render.ScreenSurface.Quad q=com.vandorlabs.render.ScreenSurface.quad(com.vandorlabs.render.ScreenSurface.Kind.DIAGONAL,false);
+        net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
+        for(boolean ceiling:new boolean[]{false,true}){
+            net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(1024);
+            buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
+            FrameSurfaceRenderer.region(buffer,q,sprite,true,ceiling,1,0,0,1,1,0,0,1,1);
+            buffer.finishDrawing();java.nio.ByteBuffer data=buffer.getByteBuffer();int stride=buffer.getVertexFormat().getNextOffset();
+            require(buffer.getVertexCount()==4,"diagonal frame must emit a quad");
+            for(int i=0;i<4;i++){
+                com.vandorlabs.render.ScreenSurface.Vertex v=q.vertices[i];
+                double expectedY=ceiling?32-v.y:v.y,normalY=ceiling?-q.ny:q.ny;
+                require(Math.abs(data.getFloat(i*stride+4)-(expectedY+normalY*.06))<.00001,"diagonal frame is on the wrong upper/lower artwork plane");
+                require(Math.abs(data.getFloat(i*stride+8)-(v.z+q.nz*.06))<.00001,"diagonal frame has wrong slope/depth");
+            }
+        }
     }
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException(message);}
 }

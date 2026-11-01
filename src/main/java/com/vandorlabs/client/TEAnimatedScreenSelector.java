@@ -345,7 +345,8 @@ public class TEAnimatedScreenSelector
             }
             return new AnimData(texture, compact.frameCount);
         } catch (Exception e) {
-            throw new IllegalStateException("Cannot load Vandor Labs animation " + cacheName, e);
+            org.apache.logging.log4j.LogManager.getLogger("vandorlabs").warn("Cannot load animation {}; using static artwork until resource reload", cacheName, e);
+            return new AnimData(new ResourceLocation(VandorLabs.MODID,pathRoot+"_static.png"),1);
         }
     }
 
@@ -485,6 +486,7 @@ public class TEAnimatedScreenSelector
             GlStateManager.pushMatrix();GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
             bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wallSprite(te))),ceiling);
             if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)){
+                FrameSurfaceRenderer.screen(te,ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,false),ceiling);
                 GlStateManager.popMatrix();redstoneFace(te,0);GlStateManager.enableLighting();endLocalTransform();return;
             }
             double[] uv=bindInput(te,te.getInputPanel());
@@ -493,7 +495,7 @@ public class TEAnimatedScreenSelector
             drawDiagonalInputQuad(b,FrameSurfaceRenderer.content(te,q),uv,ceiling);
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-4,-4);
             Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
-            FrameSurfaceRenderer.screen(te,q);
+            FrameSurfaceRenderer.screen(te,q,ceiling);
             GlStateManager.popMatrix();GlStateManager.enableLighting();endLocalTransform();return;
         }
         if (state.getBlock() instanceof BlockProgrammableHalfConsole) {
@@ -803,12 +805,17 @@ public class TEAnimatedScreenSelector
     static double[] bindCockpit(com.vandorlabs.tiles.TileEntityCockpit tile,com.vandorlabs.tiles.TileEntityCockpit.Display screen){
         return bindDisplay(tile,screen.texture,screen.active,screen.animated,screen.speed);
     }
+    private static String animationId(String source) {
+        int start=source.startsWith("console_inputs/")?15:0;
+        int end=source.endsWith("_static")?source.length()-7:source.length();
+        return source.substring(start,end);
+    }
     static double[] bindDisplay(net.minecraft.tileentity.TileEntity tile,int texture,boolean active,boolean animated,int speed){
         if(texture>=0)texture=ScreenHousingTextures.clamp(texture);
         if(texture<0 || !active){Minecraft.getMinecraft().getTextureManager().bindTexture(ScreenTextureLocations.off(false));return new double[]{0,1,0,1};}
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(texture);
         if(animated && entry!=null && "Screens".equals(ScreenHousingTextures.category(texture))){
-            String source=entry.get("source").getAsString(),id=source.replaceFirst("^console_inputs/","").replaceFirst("_static$","");
+            String source=entry.get("source").getAsString(),id=animationId(source);
             boolean input=source.startsWith("console_inputs/");
             if(input && TileEntityAnimatedScreenSelector.getInputFrameCount(id)>1 || !input && ModBlocks.DISPLAY_SCREEN_IDS.contains(id)){
                 AnimData data=input?inputAnimData(id):animData(id);int frame=AnimationFrames.frame(CockpitVisualMotion.animationTick(tile),com.vandorlabs.animation.ScreenBehavior.animationTicks(speed),data.frameCount);

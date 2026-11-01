@@ -25,6 +25,9 @@ final class FrameSurfaceRenderer {
         return c.quad;
     }
     static void screen(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad){
+        screen(tile,quad,false);
+    }
+    static void screen(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,boolean ceiling){
         FrameAppearance frame=tile.frameAppearance;
         if(!frame.hasFront()||suppressBorders)return;
         float oldBlock=OpenGlHelper.lastBrightnessX,oldSky=OpenGlHelper.lastBrightnessY;
@@ -42,16 +45,16 @@ final class FrameSurfaceRenderer {
         GlStateManager.disableCull();
         for(int row=0;row<3;row++)for(int col=0;col<3;col++)if(row!=1||col!=1){
             double x0=ScreenFrameBorders.cut(col,l,r),x1=ScreenFrameBorders.cut(col+1,l,r),y0=ScreenFrameBorders.cut(row,t,d),y1=ScreenFrameBorders.cut(row+1,t,d);
-            if(x1>x0&&y1>y0)region(b,quad,sprite,input,FrameAppearance.aspect(frame.front),x0,y0,x1,y1,ScreenFrameBorders.cut(col,border[0],border[1]),ScreenFrameBorders.cut(row,border[2],border[3]),ScreenFrameBorders.cut(col+1,border[0],border[1]),ScreenFrameBorders.cut(row+1,border[2],border[3]));
+            if(x1>x0&&y1>y0)region(b,quad,sprite,input,ceiling,FrameAppearance.aspect(frame.front),x0,y0,x1,y1,ScreenFrameBorders.cut(col,border[0],border[1]),ScreenFrameBorders.cut(row,border[2],border[3]),ScreenFrameBorders.cut(col+1,border[0],border[1]),ScreenFrameBorders.cut(row+1,border[2],border[3]));
         }
         Tessellator.getInstance().draw();GL11.glPolygonOffset(0,0);GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldBlock,oldSky);
     }
-    private static void region(BufferBuilder b,ScreenSurface.Quad quad,TextureAtlasSprite sprite,boolean input,double aspect,double left,double top,double right,double bottom,double u0,double v0,double u1,double v1){
+    static void region(BufferBuilder b,ScreenSurface.Quad quad,TextureAtlasSprite sprite,boolean input,boolean ceiling,double aspect,double left,double top,double right,double bottom,double u0,double v0,double u1,double v1){
         for(int i=0;i<4;i++){
             boolean rightVertex=i==1||i==2;double x=rightVertex?right:left,y=i<2?top:bottom;
             double px=quad.topLeft.x+(quad.topRight.x-quad.topLeft.x)*x+quad.nx*.06,py=quad.topLeft.y+(quad.bottomLeft.y-quad.topLeft.y)*y+quad.ny*.06,pz=quad.topLeft.z+(quad.bottomLeft.z-quad.topLeft.z)*y+quad.nz*.06;
             double u=rightVertex?u1:u0,v=i<2?v0:v1;if(!input)u=1-u;
-            WorldSurface.vertex(b,px,py,pz,sprite.getInterpolatedU(u*16),sprite.getInterpolatedV(v*16/aspect),quad.nx,quad.ny,quad.nz);
+            WorldSurface.vertex(b,px,ceiling?32-py:py,pz,sprite.getInterpolatedU(u*16),sprite.getInterpolatedV(v*16/aspect),quad.nx,ceiling?-quad.ny:quad.ny,quad.nz);
         }
     }
 
