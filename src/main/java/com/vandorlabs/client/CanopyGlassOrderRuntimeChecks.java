@@ -57,7 +57,8 @@ final class CanopyGlassOrderRuntimeChecks {
         int oldFramebuffer=GL11.glGetInteger(0x8CA6); // GL_FRAMEBUFFER_BINDING
         int oldActive=GL11.glGetInteger(org.lwjgl.opengl.GL13.GL_ACTIVE_TEXTURE),oldClient=GL11.glGetInteger(org.lwjgl.opengl.GL13.GL_CLIENT_ACTIVE_TEXTURE),oldMatrix=GL11.glGetInteger(GL11.GL_MATRIX_MODE);
         int previousPass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass(),oldTexture=GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
-        GL11.glPushClientAttrib(GL11.GL_CLIENT_PIXEL_STORE_BIT|GL11.GL_CLIENT_VERTEX_ARRAY_BIT);GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glPushClientAttrib(GL11.GL_CLIENT_PIXEL_STORE_BIT|GL11.GL_CLIENT_VERTEX_ARRAY_BIT);TurntableRenderState savedState=new TurntableRenderState();
+        lightmap(mc);GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         Framebuffer fbo=new Framebuffer(SIZE,SIZE,true);TileEntityRendererDispatcher d=TileEntityRendererDispatcher.instance;net.minecraft.world.World oldWorld=d.world;double ox=d.entityX,oy=d.entityY,oz=d.entityZ;
         clean("FBO creation "+checkpoint);GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-width*.75,width*.75,-width*.75,width*.75,-40,40);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try{fbo.bindFramebuffer(true);GL11.glEnable(GL11.GL_DEPTH_TEST);GL11.glEnable(GL11.GL_CULL_FACE);GL11.glDepthMask(true);GlStateManager.enableDepth();GlStateManager.enableTexture2D();GlStateManager.enableCull();GlStateManager.disableLighting();GL11.glDisable(GL11.GL_LIGHTING);GlStateManager.depthMask(true);GlStateManager.clearColor(.08F,.12F,.18F,1);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);GlStateManager.loadIdentity();GlStateManager.rotate(8,1,0,0);GlStateManager.rotate(right?162:198,0,1,0);GlStateManager.translate(-ROOT.getX()-width/2D,-ROOT.getY()-width/2D,-ROOT.getZ()-.5);
@@ -75,7 +76,7 @@ final class CanopyGlassOrderRuntimeChecks {
                     GlStateManager.translate(table.posX,table.posY,table.posZ);GlStateManager.rotate(90,0,1,0);GlStateManager.translate(-table.posX,-table.posY,-table.posZ);
                 }
                 GlStateManager.translate(cx,cy,cz);
-                try{turntableRenderer.doRender(table,table.posX-cx,table.posY-cy,table.posZ-cz,0,1);}
+                try{for(int warm=0;warm<64;warm++){lightmap(mc);GlStateManager.depthMask(true);GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT|GL11.GL_DEPTH_BUFFER_BIT);RenderTurntable.beginFrame();turntableRenderer.doRender(table,table.posX-cx,table.posY-cy,table.posZ-cz,0,1);}}
                 finally{table.setDead();RenderTurntable.clear();}
             }
             else if(mode==5){
@@ -94,7 +95,11 @@ final class CanopyGlassOrderRuntimeChecks {
         }finally{ForgeHooksClient.setRenderPass(previousPass);d.world=oldWorld;d.entityX=ox;d.entityY=oy;d.entityZ=oz;GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);clean("matrix cleanup "+checkpoint);GL11.glPopClientAttrib();clean("client attribute restore "+checkpoint);
             // Attribute stacks include the window's draw/read buffer selection.
             // GL_BACK/FRONT is invalid while our offscreen FBO remains bound.
-            OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER,oldFramebuffer);clean("original framebuffer restore "+checkpoint);GL11.glPopAttrib();clean("server attribute restore "+checkpoint);OpenGlHelper.setClientActiveTexture(oldClient);OpenGlHelper.setActiveTexture(oldActive);GlStateManager.setActiveTexture(oldActive);GL11.glEnable(GL11.GL_DEPTH_TEST);GL11.glEnable(GL11.GL_CULL_FACE);GL11.glEnable(GL11.GL_LIGHTING);GL11.glDepthMask(true);GL11.glColor4f(1,1,1,1);GlStateManager.enableDepth();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.depthMask(true);GlStateManager.color(1,1,1,1);fbo.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER,oldFramebuffer);GlStateManager.bindTexture(oldTexture);GlStateManager.matrixMode(oldMatrix);clean("FBO and texture cleanup "+checkpoint);}
+            OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER,oldFramebuffer);clean("original framebuffer restore "+checkpoint);savedState.close();clean("server attribute restore "+checkpoint);OpenGlHelper.setClientActiveTexture(oldClient);OpenGlHelper.setActiveTexture(oldActive);GlStateManager.setActiveTexture(oldActive);GL11.glEnable(GL11.GL_DEPTH_TEST);GL11.glEnable(GL11.GL_CULL_FACE);GL11.glEnable(GL11.GL_LIGHTING);GL11.glDepthMask(true);GL11.glColor4f(1,1,1,1);GlStateManager.enableDepth();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.depthMask(true);GlStateManager.color(1,1,1,1);fbo.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER,oldFramebuffer);GlStateManager.bindTexture(oldTexture);GlStateManager.matrixMode(oldMatrix);clean("FBO and texture cleanup "+checkpoint);}
+    }
+    private static void lightmap(Minecraft mc){
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);GlStateManager.bindTexture(0);
+        mc.entityRenderer.enableLightmap();
     }
     private static int differences(BufferedImage a,BufferedImage b,int threshold){int changed=0;for(int y=0;y<SIZE;y++)for(int x=0;x<SIZE;x++){int p=a.getRGB(x,y),q=b.getRGB(x,y);int diff=Math.max(Math.abs((p>>16&255)-(q>>16&255)),Math.max(Math.abs((p>>8&255)-(q>>8&255)),Math.abs((p&255)-(q&255))));if(diff>threshold)changed++;}return changed;}
     static void run(Minecraft mc,File output)throws Exception{
@@ -105,7 +110,7 @@ final class CanopyGlassOrderRuntimeChecks {
             if(width==3&&material<0&&(bg.equals("wall")||bg.equals("screen"))){
                 BufferedImage vehicle=draw(mc,fixture,width,right,5);javax.imageio.ImageIO.write(vehicle,"png",new File(output,"shot_canopy_glass_vehicle_"+name+".png"));int changed=differences(reference,vehicle,2);require(changed<=16,"actual vehicle renderer retains same glazing/background "+name+" mismatch="+changed);
             }
-            for(int capturedMode:new int[]{6,7}){BufferedImage turntable=draw(mc,fixture,width,right,capturedMode);javax.imageio.ImageIO.write(turntable,"png",new File(output,"shot_canopy_glass_turntable_"+capturedMode+"_"+name+".png"));int turntableMismatch=differences(reference,turntable,2);require(turntableMismatch<=16,"captured turntable retains glazing/background "+name+" mode="+capturedMode+" mismatch="+turntableMismatch);}
+            for(int capturedMode:new int[]{6,7}){BufferedImage turntable=draw(mc,fixture,width,right,capturedMode);javax.imageio.ImageIO.write(turntable,"png",new File(output,"shot_canopy_glass_turntable_"+capturedMode+"_"+name+".png"));int turntableMismatch=differences(reference,turntable,2);if(turntableMismatch>16)javax.imageio.ImageIO.write(reference,"png",new File(output,"shot_canopy_glass_reference_"+name+".png"));require(turntableMismatch<=16,"captured turntable retains glazing/background "+name+" mode="+capturedMode+" mismatch="+turntableMismatch);}
             BufferedImage montage=new BufferedImage(SIZE*4,SIZE,BufferedImage.TYPE_INT_RGB);Graphics2D g=montage.createGraphics();g.drawImage(base,0,0,null);g.drawImage(reference,SIZE,0,null);
             for(int mode=2;mode<4&&!bg.equals("porthole");mode++){BufferedImage actual=draw(mc,fixture,width,right,mode);g.drawImage(actual,SIZE*mode,0,null);int changed=differences(reference,actual,2);if(changed>16){g.dispose();javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_canopy_glass_order_"+name+".png"));require(false,"parked Forge passes preserve tint "+name+" order="+mode+" mismatch="+changed+" visible="+visible);}}
             g.dispose();javax.imageio.ImageIO.write(montage,"png",new File(output,"shot_canopy_glass_order_"+name+".png"));cases++;

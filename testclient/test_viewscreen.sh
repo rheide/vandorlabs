@@ -170,6 +170,9 @@ case "${1:-}" in
         elif [ "$TARGET" = large-canopies ]; then
             PREFIX=large_
             export VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY=true
+        elif [ "$TARGET" = canopy-glass-order ]; then
+            PREFIX=canopy_glass_
+            export VANDOR_LABS_CANOPY_GLASS_ORDER_CHECKS_ONLY=true
         elif [ "$TARGET" = canopy-cost ]; then
             PREFIX=canopy_
             export VANDOR_LABS_CANOPY_GLASS_COST_CHECKS_ONLY=true
@@ -546,6 +549,11 @@ if [ "$MODE" = focus ]; then
         for name in icons facings mounted; do test -s "$RUN_OUT/shot_pilot_seat_$name.png"; done
         python3 testclient/analyze_pilot_seat.py "$RUN_OUT"
         echo "Live Pilot Seat checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = canopy-glass-order ]; then
+        grep -q "canopy-glass-order PASS" "$RUN_OUT/client.log"
+        echo "Canopy glass order checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = canopy-cost ]; then

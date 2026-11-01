@@ -700,6 +700,7 @@ public class ReproLab {
             return;
         }
         if(Boolean.getBoolean("vandorlabs.canopyGlassOrderChecksOnly")) {
+            if(++holdTicks<40)return; // Initialize the normal world lightmap before offscreen captures.
             try {CanopyGlassOrderRuntimeChecks.run(mc,outDir);mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("captured glass live checks",failure);}
             return;
