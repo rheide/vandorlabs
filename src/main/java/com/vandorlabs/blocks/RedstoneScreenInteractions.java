@@ -48,7 +48,7 @@ public final class RedstoneScreenInteractions {
         return false;
     }
     public static boolean supports(net.minecraft.block.Block block){
-        return block==ModBlocks.ANIMATED_SCREEN_SELECTOR || block instanceof BlockProgrammableDiagonalScreen
+        return block!=null&&block.getClass()==BlockAnimatedScreenSelector.class || block instanceof BlockProgrammableDiagonalScreen
             || block instanceof BlockProgrammableConsole || block instanceof BlockProgrammableInput
             || block instanceof BlockProgrammableHalfConsole || block instanceof BlockDiagonalHalfConsole;
     }

@@ -248,8 +248,10 @@ public class BlockVandorSwitch extends BlockVandor {
                 return true;
             }
             boolean on = !state.getValue(ON);
-            world.setBlockState(pos, state.withProperty(ON, on), 3);
+            // Publish native neighbours only after the tile output agrees with the toggle.
+            world.setBlockState(pos, state.withProperty(ON, on), 2);
             if (tile != null) tile.setLocalOn(on);
+            world.notifyNeighborsOfStateChange(pos, this, false);
             world.checkLight(pos);
             // Re-notify the support block too: setBlockState only reaches the
             // switch's direct neighbors, so without this a lamp sitting on the

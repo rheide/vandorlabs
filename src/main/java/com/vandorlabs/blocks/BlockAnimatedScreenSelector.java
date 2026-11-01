@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
  */
 public class BlockAnimatedScreenSelector extends BlockContainer {
     @Override public boolean isSideSolid(net.minecraft.block.state.IBlockState state,net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing side){return state.getMaterial().isOpaque()&&isFullCube(state);}
-    @Override public boolean canProvidePower(net.minecraft.block.state.IBlockState state){return true;}
+    @Override public boolean canProvidePower(net.minecraft.block.state.IBlockState state){return RedstoneScreenInteractions.supports(this);}
     @Override public int getWeakPower(net.minecraft.block.state.IBlockState state,net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing side){return com.vandorlabs.redstone.TransmitterSlots.localOutput(world,pos);}
     @Override public int getStrongPower(net.minecraft.block.state.IBlockState state,net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing side){return getWeakPower(state,world,pos,side);}
 
