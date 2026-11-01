@@ -2,6 +2,8 @@
 
 ## 2.7
 
+- Batch plain fixed Canopy Glass into Minecraft chunk layers with shared immutable geometry, preserving logical joins, opening-canopy roof rails, cockpit sharing and the existing opening/carried render paths.
+
 - Keep riders aligned with the rendered arm support through delayed updates and reversals, using the same pose for the camera and platform while retaining authoritative collision. Keep the restored native floor collision-safe across subpixel endpoint roundoff.
 
 - Preserve exact programmable-block snapshots through Moat retraction and recovery when no legacy transmitter-row migration is needed.

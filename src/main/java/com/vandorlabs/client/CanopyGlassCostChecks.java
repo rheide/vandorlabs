@@ -32,7 +32,8 @@ final class CanopyGlassCostChecks {
     private static Field field(Class<?> type,String name){try{Field f=type.getDeclaredField(name);f.setAccessible(true);return f;}catch(Exception e){throw new IllegalStateException(e);}}
     private static final class Scene implements AutoCloseable {
         final VehicleWorld world;final int side,count;final List<TileEntityCanopy> tiles=new ArrayList<>();final IBlockState state;
-        VertexBuffer vanilla;int vertices,calls;
+        VertexBuffer vanilla;int vertices,calls;boolean chunked;
+        final Map<BlockRenderLayer,VertexBuffer> chunks=new EnumMap<>(BlockRenderLayer.class);
         Scene(Minecraft mc,int side,Block block,int shade,int tint,int material){
             this.side=side;count=side*side;state=block.getDefaultState();List<VehicleStructure.Cell> cells=new ArrayList<>();
             for(int x=0;x<side;x++)for(int z=0;z<side;z++){
@@ -48,6 +49,17 @@ final class CanopyGlassCostChecks {
             }
         }
         void prepare(Minecraft mc){
+            if(chunked){
+                for(VertexBuffer v:chunks.values())v.deleteGlBuffers();chunks.clear();vertices=0;calls=0;
+                Map<String,FixedCanopyModel.Mesh> shared=new HashMap<>();
+                for(TileEntityCanopy tile:tiles){String key=tile.mask()+":"+tile.roofMask()+":"+tile.facing()+":"+tile.large.key();FixedCanopyModel.Mesh mesh=shared.get(key);if(mesh==null){mesh=new FixedCanopyModel.Mesh(tile);shared.put(key,mesh);}tile.chunkMesh=mesh;}
+                BlockRenderLayer previous=net.minecraftforge.client.MinecraftForgeClient.getRenderLayer();
+                try{for(BlockRenderLayer layer:new BlockRenderLayer[]{BlockRenderLayer.SOLID,BlockRenderLayer.TRANSLUCENT}){
+                    ForgeHooksClient.setRenderLayer(layer);BufferBuilder buffer=new BufferBuilder(1<<20);buffer.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
+                    for(TileEntityCanopy tile:tiles)mc.getBlockRendererDispatcher().renderBlock(state,tile.getPos(),world,buffer);
+                    buffer.finishDrawing();if(buffer.getVertexCount()>0){VertexBuffer v=new VertexBuffer(new VertexFormat(DefaultVertexFormats.BLOCK));v.bufferData(buffer.getByteBuffer());chunks.put(layer,v);vertices+=buffer.getVertexCount();calls++;}
+                }}finally{ForgeHooksClient.setRenderLayer(previous);}return;
+            }
             if(!tiles.isEmpty()){draw();return;}
             BufferBuilder buffer=new BufferBuilder(1<<20);buffer.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
             net.minecraft.util.BlockRenderLayer previous=net.minecraftforge.client.MinecraftForgeClient.getRenderLayer();
@@ -57,11 +69,12 @@ final class CanopyGlassCostChecks {
             buffer.finishDrawing();vertices=buffer.getVertexCount();if(vertices==0)throw new IllegalStateException("Empty vanilla control mesh");vanilla=new VertexBuffer(new VertexFormat(DefaultVertexFormats.BLOCK));vanilla.bufferData(buffer.getByteBuffer());calls=1;
         }
         void draw(){
+            if(chunked){for(Map.Entry<BlockRenderLayer,VertexBuffer> entry:chunks.entrySet()){boolean glass=entry.getKey()==BlockRenderLayer.TRANSLUCENT;if(glass){GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);}else GlStateManager.disableBlend();GlStateManager.depthMask(!glass);BlockMeshVbo.draw(entry.getValue(),DefaultVertexFormats.BLOCK,entry.getKey());}GlStateManager.depthMask(true);return;}
             if(tiles.isEmpty()){BlockMeshVbo.draw(vanilla,DefaultVertexFormats.BLOCK,state.getBlock().getBlockLayer());return;}
             for(int pass=0;pass<2;pass++)for(TileEntityCanopy tile:tiles)if(tile.shouldRenderInPass(pass))RENDERER.renderPass(tile,tile.getPos().getX(),0,tile.getPos().getZ(),1,-1,1,pass);
         }
         @SuppressWarnings("unchecked") void stats()throws Exception{
-            if(tiles.isEmpty())return;vertices=0;calls=0;Map<TileEntityCanopy,?> cache=(Map<TileEntityCanopy,?>)CACHE.get(null);
+            if(tiles.isEmpty()||chunked)return;vertices=0;calls=0;Map<TileEntityCanopy,?> cache=(Map<TileEntityCanopy,?>)CACHE.get(null);
             for(TileEntityCanopy tile:tiles){Object p=cache.get(tile);if(p==null)throw new IllegalStateException("Missing prepared canopy");
                 for(String name:new String[]{"opaque","glass"}){
                     List<?> faces=(List<?>)field(p.getClass(),name).get(p);if(!faces.isEmpty())calls++;
@@ -69,7 +82,7 @@ final class CanopyGlassCostChecks {
                 }
             }
         }
-        public void close(){if(vanilla!=null)vanilla.deleteGlBuffers();TECanopy.invalidate();TEAnimatedScreenSelector.unloadGroups(world);}
+        public void close(){for(VertexBuffer v:chunks.values())v.deleteGlBuffers();if(vanilla!=null)vanilla.deleteGlBuffers();TECanopy.invalidate();TEAnimatedScreenSelector.unloadGroups(world);}
     }
     private static long[] sample(Runnable work,int loops){
         long[] times=new long[11],alloc=new long[11];
@@ -88,16 +101,19 @@ final class CanopyGlassCostChecks {
             try(Scene warm=new Scene(mc,8,Block.getBlockFromName("vandorlabs:regular_canopy_glass"),0,1,-1)){
                 dispatcher.world=warm.world;target.bindFramebuffer(true);warm.prepare(mc);for(int i=0;i<160;i++)warm.draw();GL11.glFinish();
             }
-            for(int side:new int[]{1,8,16})for(int variant=0;variant<11;variant++){
-                boolean canopy=variant>=2;int shade=variant==6?12:0,tint=variant<2?1:variant<=5?variant-2:variant==6?1:variant-7,material=variant>=7?0:-1;
+            for(int side:new int[]{1,8,16})for(int variant=0;variant<20;variant++){
+                boolean canopy=variant>=2,chunked=variant>=11;int finish=chunked?variant-9:variant;int shade=finish==6?12:0,tint=finish<2?1:finish<=5?finish-2:finish==6?1:finish-7,material=finish>=7?0:-1;
                 Block block=variant==0?Blocks.GLASS:variant==1?Blocks.STAINED_GLASS:Block.getBlockFromName("vandorlabs:regular_canopy_glass");
                 try(Scene scene=new Scene(mc,side,block,shade,tint,material)){
-                    dispatcher.world=scene.world;dispatcher.entityX=side/2D;dispatcher.entityY=8;dispatcher.entityZ=-8;
+                    scene.chunked=chunked;dispatcher.world=scene.world;dispatcher.entityX=side/2D;dispatcher.entityY=8;dispatcher.entityZ=-8;
                     target.bindFramebuffer(true);GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.loadIdentity();GlStateManager.ortho(-1,side+1,-side-1,1,-100,100);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.loadIdentity();GlStateManager.rotate(90,1,0,0);
                     GlStateManager.disableLighting();GlStateManager.disableFog();GlStateManager.enableTexture2D();GlStateManager.enableDepth();GlStateManager.color(1,1,1,1);mc.entityRenderer.disableLightmap();mc.getTextureManager().bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
                     GL11.glFinish();long start=System.nanoTime();scene.prepare(mc);double cold=(System.nanoTime()-start)/1e6;
                     for(int warm=0;warm<24;warm++)scene.draw();
                     long[] hot=sample(scene::draw,3),base={0,0};scene.stats();
+                    if((variant==3||variant==12)&&(side==1||side==16)){
+                        Framebuffer capture=new Framebuffer(256,256,true);try{capture.bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.depthFunc(GL11.GL_LEQUAL);GlStateManager.clearColor(.12F,.18F,.24F,1);GlStateManager.clear(16640);scene.draw();java.awt.image.BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(256,256,capture);int ink=0;for(int rgb:image.getRGB(0,0,256,256,null,0,256))if((rgb&0xffffff)!=0x1e2d3d)ink++;javax.imageio.ImageIO.write(image,"png",new File(output,"canopy-cost-"+(chunked?"chunk":"carried")+"-"+side+".png"));}finally{capture.deleteFramebuffer();target.bindFramebuffer(true);}
+                    }
                     if(scene.calls==0||scene.vertices==0)throw new IllegalStateException("Empty measured canopy mesh");
                     if(canopy){base=sample(()->{for(TileEntityCanopy tile:scene.tiles)tile.baseFaces();},Math.max(3,1000/scene.count));}
                     int vertices=scene.vertices,calls=scene.calls;double shadeChange=-1,opacityChange=-1;
@@ -105,18 +121,18 @@ final class CanopyGlassCostChecks {
                         long[] shades=new long[5],tints=new long[5];
                         for(int i=0;i<5;i++){
                             for(TileEntityCanopy tile:scene.tiles)tile.large.shade=(i&1)==0?12:0;
-                            GL11.glFinish();start=System.nanoTime();scene.draw();shades[i]=System.nanoTime()-start;
+                            GL11.glFinish();start=System.nanoTime();if(chunked)scene.prepare(mc);else scene.draw();shades[i]=System.nanoTime()-start;
                             for(TileEntityCanopy tile:scene.tiles)tile.large.tint=(i&1)==0?GlassTextures.OPAQUE:1;
-                            GL11.glFinish();start=System.nanoTime();scene.draw();tints[i]=System.nanoTime()-start;
+                            GL11.glFinish();start=System.nanoTime();if(chunked)scene.prepare(mc);else scene.draw();tints[i]=System.nanoTime()-start;
                         }
                         Arrays.sort(shades);Arrays.sort(tints);shadeChange=shades[2]/1e6;opacityChange=tints[2]/1e6;
                     }
-                    String kind=variant==0?"vanilla_glass":variant==1?"vanilla_stained_glass":"canopy_glass";int stride=canopy?DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL.getNextOffset():DefaultVertexFormats.BLOCK.getNextOffset();
+                    String kind=variant==0?"vanilla_glass":variant==1?"vanilla_stained_glass":chunked?"canopy_chunk":"canopy_glass";int stride=canopy&&!chunked?DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL.getNextOffset():DefaultVertexFormats.BLOCK.getNextOffset();
                     report.printf(java.util.Locale.ROOT,"%s,%d,%d,%d,%d,%d,%d,%d,%.6f,%.6f,%d,%d,%d,%.6f,%.6f%n",kind,scene.count,shade,tint,material,calls,vertices,vertices*stride,cold,hot[0]/1e6,hot[1],base[0]/scene.count,base[1]/scene.count,shadeChange,opacityChange);report.flush();cases++;
                 }
             }
         }finally{dispatcher.world=prior;dispatcher.entityX=ex;dispatcher.entityY=ey;dispatcher.entityZ=ez;TECanopy.invalidate();GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);target.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
-        System.out.println("[vandorlabs][reprolab] canopy-glass-cost PASS cases="+cases+" 1/64/256 blocks clear/stained vanilla chunk VBO versus real canopy TESR native shades four tints replacement material cold/warm/edit costs CPU allocation geometry counts; not hardware FPS");
+        System.out.println("[vandorlabs][reprolab] canopy-glass-cost PASS cases="+cases+" fixed chunk versus preserved carried TESR 1/64/256 blocks clear/stained vanilla chunk VBO versus real canopy TESR native shades four tints replacement material cold/warm/edit costs CPU allocation geometry counts; not hardware FPS");
     }
     private CanopyGlassCostChecks(){}
 }

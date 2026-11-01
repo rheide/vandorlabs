@@ -524,7 +524,7 @@ if [ "$MODE" = focus ]; then
         exit 0
     fi
     if [ "$TARGET" = canopy-cost ]; then
-        grep -q 'canopy-glass-cost PASS cases=33' "$RUN_OUT/client.log"
+        grep -q 'canopy-glass-cost PASS cases=60' "$RUN_OUT/client.log"
         echo "Canopy Glass cost comparison passed: $RUN_OUT"
         exit 0
     fi

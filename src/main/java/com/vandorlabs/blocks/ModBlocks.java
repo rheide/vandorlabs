@@ -295,7 +295,7 @@ public class ModBlocks {
             case "PlateBlock": return new com.vandorlabs.plate.PlateBlock();
             case "BlockCoupler": return new com.vandorlabs.coupler.BlockCoupler();
             case "BlockCouplerSlab": return new com.vandorlabs.coupler.BlockCouplerSlab();
-            case "BlockCanopy": return new BlockCanopy(id);
+            case "BlockCanopy": return id.equals("regular_canopy_glass")?new BlockFixedCanopyGlass(id):new BlockCanopy(id);
             case "BlockDiagonalPorthole": return new BlockProgrammableWall(id, BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE);
             case "BlockDiagonalHalfConsole": return new BlockDiagonalHalfConsole(id);
             case "BlockConnectedSeat": return new BlockConnectedSeat(id);

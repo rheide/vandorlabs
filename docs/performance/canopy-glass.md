@@ -1,11 +1,39 @@
 # Canopy Glass rendering costs
 
-A Canopy Glass block costs substantially more to draw than vanilla glass.
-Its frame, bevels and glass are rendered as tile geometry. Vanilla glass is
-baked into a chunk-layer mesh and drawn together with its neighbours.
-Changing the glass shade or choosing Mild, Normal or Strong does not add
-geometry. Opaque removes the translucent submission, but retains the frame
-and pane geometry.
+Plain fixed Canopy Glass now joins Minecraft's solid and translucent chunk
+meshes. Opening canopies and carried canopies retain their tile renderers.
+The existing frame geometry, logical joins, retained roof rail next to an
+opening canopy, collision and cockpit sharing are preserved. Fixed glass
+remains non-opaque to neighbouring blocks, including with Opaque tint.
+
+## Fixed glass chunk rendering
+
+The same 256-block Normal sheet measures:
+
+| Path | Draw calls | Vertices | VBO bytes | CPU submission | Bytes allocated/frame |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Vanilla glass | 1 | 2,304 | 64,512 | 0.027 ms | 0 |
+| Carried Canopy Glass, unchanged | 316 | 23,264 | 651,392 | 1.099 ms | 127,344 |
+| Fixed Canopy Glass, chunk mesh | 2 | 23,264 | 651,392 | 0.164 ms | 80 |
+
+The chunk benchmark's 80 bytes come from its two-layer submission loop;
+Minecraft submits the normal chunk layers. This reduces measured submission
+CPU by about 85%, without reducing geometry to vanilla glass complexity.
+Draw counts describe one occupied chunk section; multiple sections and
+render passes naturally require more submissions. These software OpenGL
+measurements do not establish hardware FPS or shader-pack acceptance.
+
+Immutable atlas quads are shared through an 8 MiB weighted cache and published
+on the client thread. Chunk workers consume snapshots without scanning
+neighbours. Topology, material edits, chunk loading, atlas reload and vertex
+format changes invalidate the appropriate snapshots. Lighting and translucent
+quad sorting use Minecraft's chunk renderer. The tile remains for gameplay,
+settings, reservations, collision and saved-data compatibility. Only the
+fixed native block changes renderer; there is no block-state palette change.
+
+The complete comparison is in [chunk.csv](canopy-glass/chunk.csv).
+
+## Earlier tile-renderer optimization
 
 ## Dense joined example
 
@@ -48,11 +76,9 @@ before reuse; channel, layout, geometry, shade and opacity changes invalidate
 it. This adds a small fixed settings snapshot per instance; the allocation
 figures above measure transient allocation, not retained heap size.
 
-Canopy still uses many more submissions than vanilla. Batching stationary
-Canopies into a shared mesh could address that difference, but would need
-correct invalidation for opening mechanisms, connections, carried vehicles,
-light changes and translucent ordering. This change does not introduce such
-a shared mesh or claim vanilla rendering cost.
+Opening and carried canopies still use more submissions than vanilla. Their
+moving geometry and per-tile transparency handling remain on the existing
+path; the chunk optimization applies only to native fixed Canopy Glass.
 
 ## Method and limits
 

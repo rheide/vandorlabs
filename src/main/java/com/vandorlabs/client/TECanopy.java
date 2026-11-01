@@ -52,6 +52,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
 
     /** Vehicle rendering uses the same phases inside its local world transform. */
     void renderPass(TileEntityCanopy tile,double x,double y,double z,float partial,int stage,float alpha,int pass) {
+        if(tile.chunkRendered())return;
         if(pass==1&&com.vandorlabs.tiles.GlassMaterials.opaque(tile.large.material,tile.large.tint))return;
         if (tile.block() == null || !tile.draws()) return;
         double progress =

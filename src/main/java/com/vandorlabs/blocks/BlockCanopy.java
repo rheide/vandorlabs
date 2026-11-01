@@ -18,7 +18,7 @@ import net.minecraft.world.*;
 import java.util.*;
 
 /** Each occupied cell points to its constituent anchor; narrow shells can join sideways. */
-public final class BlockCanopy extends Block {
+public class BlockCanopy extends Block {
     public static final PropertyDirection FACING = BlockHorizontal.FACING;
     public final String kind;
     public final int width, length, height;

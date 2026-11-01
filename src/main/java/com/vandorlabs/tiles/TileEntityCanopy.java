@@ -15,7 +15,11 @@ import net.minecraft.world.*;
 import java.util.*;
 
 public final class TileEntityCanopy extends TileEntity implements ITickable, com.vandorlabs.redstone.RedstoneChannelMember {
-    @Override public boolean shouldRenderInPass(int pass){return (pass==0||pass==1&&!GlassMaterials.opaque(large.material,large.tint))&&draws();}
+    /** Client-published immutable mesh; common code never loads client rendering classes. */
+    public volatile Object chunkMesh;
+    public boolean chunkRendered(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&block() instanceof com.vandorlabs.blocks.BlockFixedCanopyGlass;}
+    private void appearanceChanged(){if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.canopyAppearanceChanged(this);}
+    @Override public boolean shouldRenderInPass(int pass){return !chunkRendered()&&(pass==0||pass==1&&!GlassMaterials.opaque(large.material,large.tint))&&draws();}
     public BlockPos anchor, pair;
     public boolean centeredPlacement,hollowPlacement;
     public final com.vandorlabs.canopy.LargeCanopySettings large=new com.vandorlabs.canopy.LargeCanopySettings();
@@ -502,9 +506,9 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         markDirty();
         boolean next=powered==large.activateOnPower;if(next!=targetOpen){targetOpen=next;reservationGeometryChanged();com.vandorlabs.canopy.CanopyReservations.targetChanged(this);sync();}
     }
-    @Override public void onLoad(){super.onLoad();reservationGeometryChanged();DeferredTileLoad.schedule(this,()->{com.vandorlabs.redstone.RedstoneChannels.register(this);com.vandorlabs.canopy.CanopyReservations.loaded(this);});}
-    @Override public void invalidate(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();}
-    @Override public void onChunkUnload(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();}
+    @Override public void onLoad(){super.onLoad();appearanceChanged();reservationGeometryChanged();DeferredTileLoad.schedule(this,()->{com.vandorlabs.redstone.RedstoneChannels.register(this);com.vandorlabs.canopy.CanopyReservations.loaded(this);});}
+    @Override public void invalidate(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();appearanceChanged();}
+    @Override public void onChunkUnload(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();appearanceChanged();}
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound n) {
         super.writeToNBT(n);com.vandorlabs.redstone.TransmitterSlots.written(n);
@@ -551,6 +555,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         float savedProgress=n.getFloat("Progress");
         progress = previous = Float.isFinite(savedProgress)?Math.max(0, Math.min(1, savedProgress)):0;
         cachedKey = null;
+        appearanceChanged();
     }
 
     @Override

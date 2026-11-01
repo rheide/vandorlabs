@@ -286,3 +286,7 @@ legacy display aliases and default transmitter settings.
 Clearing a receiver’s last channel removes its received signal immediately.
 Temporary channel changes inside an ownership transfer publish only the final
 installed signal, avoiding an intermediate Off pulse.
+
+### Fixed Canopy Glass rendering
+
+Plain fixed Canopy Glass uses chunk rendering, reducing dense-sheet draw calls while retaining its frames, joins, collision and cockpit sharing. Opening and carried canopies keep their existing render paths. See the [measured comparison](../performance/canopy-glass.md).

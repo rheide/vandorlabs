@@ -39,9 +39,11 @@ public final class CanopyModels {
     public void bake(ModelBakeEvent event) {
         Icon.CONFIGURED.clear();
         TECanopy.invalidate();
+        FixedCanopyChunks.reload();
         for (net.minecraft.block.Block b : ModBlocks.BLOCKS)
             if (b instanceof BlockCanopy) {
                 String id = ((BlockCanopy) b).kind;
+                if(b instanceof BlockFixedCanopyGlass){ModelResourceLocation key=new ModelResourceLocation(b.getRegistryName(),"normal");event.getModelRegistry().putObject(key,new FixedCanopyModel(event.getModelRegistry().getObject(key)));}
                 event.getModelRegistry()
                         .putObject(
                                 new ModelResourceLocation(b.getRegistryName(), "inventory"),
