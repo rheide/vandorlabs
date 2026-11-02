@@ -10,6 +10,7 @@ import net.minecraftforge.client.MinecraftForgeClient;
 final class GlazingRenderOrder {
     private static final int LIMIT=16384;
     static String diagnostics="";static int lateDraws;static long sortNanos;
+    static boolean batchPanes=true;
     private static final org.lwjgl.util.vector.Matrix4f inverse=new org.lwjgl.util.vector.Matrix4f();
     private static World world;private static boolean flushing,flushed;
     private static final Map<TileEntity,Draw> visible=new IdentityHashMap<>();
@@ -23,7 +24,7 @@ final class GlazingRenderOrder {
     private static final java.nio.IntBuffer viewport=org.lwjgl.BufferUtils.createIntBuffer(16);
     private static final java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);
     private static void clear(){for(Draw draw:ordered)draw.tile=null;ordered.clear();visible.clear();}
-    static void begin(World view){end();world=view;lateDraws=0;}
+    static void begin(World view){end();world=view;lateDraws=0;GlassPaneBatch.panes=GlassPaneBatch.draws=0;}
     static void end(){clear();world=null;flushing=false;flushed=false;}
     static boolean handle(TileEntity tile,double x,double y,double z,float partial,int stage,float alpha){
         if(flushing||world==null||tile.getWorld()!=world||stage>=0||VehicleRenderPass.shadow())return false;
@@ -60,9 +61,12 @@ final class GlazingRenderOrder {
         finitePlanes(cx,cy,cz);
         sortNanos=System.nanoTime()-started;
         flushing=true;
-        try(TurntableRenderState saved=new TurntableRenderState()){
-            for(Draw draw:ordered)if(world.getTileEntity(draw.tile.getPos())==draw.tile&&draw.tile.shouldRenderInPass(1))
+        try(TurntableRenderState saved=new TurntableRenderState();GlassPaneBatch batch=new GlassPaneBatch()){
+            for(Draw draw:ordered)if(world.getTileEntity(draw.tile.getPos())==draw.tile&&draw.tile.shouldRenderInPass(1)){
+                if(batchPanes&&batch.append(draw.tile,draw.x,draw.y,draw.z))continue;
+                batch.flush();
                 dispatcher.render(draw.tile,draw.x,draw.y,draw.z,draw.partial,draw.stage,draw.alpha);
+            }
         }finally{flushing=false;flushed=true;}
         return true;
     }

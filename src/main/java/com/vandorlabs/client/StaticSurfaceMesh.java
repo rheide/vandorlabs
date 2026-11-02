@@ -316,6 +316,17 @@ final class StaticSurfaceMesh {
         return aa.compareTo(bb)<0?aa+"/"+bb:bb+"/"+aa;
     }
 
+    /** Apply the standard horizontal housing transform while appending to Forge's shared buffer. */
+    void drawPlaced(BufferBuilder buffer,double x,double y,double z,int rotation,int light){
+        boolean normals=buffer.getVertexFormat().hasNormal();
+        for(int i=0;i<vertices.length;i+=8){
+            double a=vertices[i]/16D,b=vertices[i+1]/16D,c=vertices[i+2]/16D,rx=a,rz=c;
+            float nx=vertices[i+5],ny=vertices[i+6],nz=vertices[i+7],fx=nx,fz=nz;
+            switch(rotation){case 1:rx=c;rz=1-a;fx=nz;fz=-nx;break;case 2:rx=1-a;rz=1-c;fx=-nx;fz=-nz;break;case 3:rx=1-c;rz=a;fx=-nz;fz=nx;break;default:break;}
+            buffer.pos(x+rx,y+b,z+rz).color(255,255,255,255).tex(vertices[i+3],vertices[i+4]).lightmap(light>>>16,light&65535);
+            if(normals)buffer.normal(fx,ny,fz);buffer.endVertex();
+        }
+    }
     void draw(BufferBuilder buffer,int lightmapA,int lightmapB) {
         for(int i=0;i<vertices.length;i+=8)
             buffer.pos(vertices[i],vertices[i+1],vertices[i+2]).color(255,255,255,255)

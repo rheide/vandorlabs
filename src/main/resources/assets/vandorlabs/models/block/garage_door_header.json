@@ -1,0 +1,41 @@
+{
+  "textures": {
+    "panel": "vandorlabs:blocks/garage/garage_panel",
+    "edge": "vandorlabs:blocks/programmable_glass/metal_side",
+    "particle": "vandorlabs:blocks/garage/garage_panel"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        14,
+        6
+      ],
+      "to": [
+        16,
+        16,
+        10
+      ],
+      "faces": {
+        "up": {
+          "texture": "#edge"
+        },
+        "down": {
+          "texture": "#edge"
+        },
+        "north": {
+          "texture": "#edge"
+        },
+        "south": {
+          "texture": "#edge"
+        },
+        "east": {
+          "texture": "#edge"
+        },
+        "west": {
+          "texture": "#edge"
+        }
+      }
+    }
+  ]
+}

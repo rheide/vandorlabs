@@ -20,6 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public void garageAppearanceChanged(com.vandorlabs.garage.GarageDoorTile tile){com.vandorlabs.client.garage.GarageDoorChunks.changed(tile);}
     @Override public boolean canSampleDisplayPower(){return net.minecraft.client.Minecraft.getMinecraft().isCallingFromMinecraftThread();}
     @Override public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){com.vandorlabs.client.SurfaceArmClients.changed(tile);}
     @Override public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){com.vandorlabs.client.FixedCanopyChunks.changed(tile);}
@@ -112,6 +113,7 @@ public class ClientProxy extends CommonProxy {
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntitySpaceDoor.class, new TESlidingDoor());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableGlass.class,
                 new com.vandorlabs.client.TEProgrammableGlass());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.garage.GarageDoorTile.class,new com.vandorlabs.client.garage.GarageDoorRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityControlledRamp.class, new TEControlledRamp());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityAnimatedScreenSelector.class, new TEAnimatedScreenSelector());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityHexTank.class,new com.vandorlabs.client.TEHexTank());

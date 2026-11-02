@@ -23,6 +23,11 @@ public final class DynmapRendererChecks {
                     args.length==15?new double[]{(Double)args[9],(Double)args[10],(Double)args[11],(Double)args[12],(Double)args[11],(Double)args[12]}:new double[]{0,1,0,1,0,1};
             return new Patch((Integer)args[args.length-1],points,limits);
         }
+        if(method.getName().equals("getRotatedPatch")){
+            Patch source=(Patch)args[0];double[] points=source.coordinates.clone();double angle=Math.toRadians(((Number)args[2]).doubleValue()),sin=Math.sin(angle),cos=Math.cos(angle);
+            for(int i=0;i<9;i+=3){double x=points[i]-.5,z=points[i+2]-.5;points[i]=.5+x*cos-z*sin;points[i+2]=.5+x*sin+z*cos;}
+            return new Patch((Integer)args[4],points,source.limits);
+        }
         throw new AssertionError("Unexpected factory call "+method);
     });
     private static final class Context implements MapDataContext {
@@ -70,9 +75,20 @@ public final class DynmapRendererChecks {
         require(variants>0,"Frame trapdoor palette exercised");
         System.out.println("Frame trapdoor Dynmap PASS variants="+variants+" regular/diagonal all-facings halves positions open/closed opaque-backing");
     }
+    private static void garage(){
+        GarageDoorMapRenderer renderer=new GarageDoorMapRenderer();
+        for(int height:new int[]{1,5,32})for(int row=0;row<height;row++)for(boolean open:new boolean[]{false,true})for(String facing:new String[]{"north","east","south","west"}){
+            Context context=new Context("vandorlabs:garage_door","facing="+facing);context.data.put("GarageTopOffset",row);context.data.put("GarageHeight",height);context.data.put("GarageOpen",(byte)(open?1:0));
+            RenderPatch[] mesh=valid(renderer,context);require(mesh.length==(row==0?12:6),"Garage segment and top header patch count");
+            double min=Double.POSITIVE_INFINITY,max=-min;for(int i=0;i<6;i++)for(double[] p:((Patch)mesh[i]).corners()){min=Math.min(min,p[1]-row);max=Math.max(max,p[1]-row);}
+            if(open)require(min>=1-com.vandorlabs.garage.GarageDoorGeometry.HALF_THICKNESS-1e-8&&max<=1+com.vandorlabs.garage.GarageDoorGeometry.HALF_THICKNESS+1e-8,"Garage overhead panels retain column height");
+            else require(min>=-row-1e-8&&max<=1-row+1e-8,"Garage closed panel remains in native cell");
+        }
+        System.out.println("Garage Dynmap PASS heights=1,5,32 all-sections closed/open root-headers");
+    }
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();
-        surfaces();trapdoorFrames();
+        surfaces();trapdoorFrames();garage();
         FrameMachineMapChecks.run();
         UtilityMapChecks.run();SurfaceMapChecks.run();HexThrusterMapChecks.run();
         ProgrammableSlabRenderer slab=new ProgrammableSlabRenderer();

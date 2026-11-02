@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.8 (development)
+
+See the [2.8 guide](docs/versions/version-2.8.md) and [Garage Door construction guide](docs/garage-doors.md).
+
+- Add linked overhead Garage Doors with Redstone Channels, a shared Configurizer/right-click dialog, bounded topology queries and original panel artwork.
+- Bake settled closed garage panels into terrain; batch moving panels and cache reusable pose geometry. Preserve server collision and saved motion independently of cosmetic animation and chunk upload timing.
+- Batch unclaimed single Surface blocks, ordinary planar glazing and opaque diagonal wall fallback meshes. Tighten Surface visibility bounds.
+- Cache stationary opaque ramp endpoint VBOs, with state, lighting, vertex-format and resource invalidation.
+- Index loaded canopy and moved-door collision owners; avoid unrelated entity scans when no turntables exist.
+- Scope Complementary rain wind beneath fixed Canopy Glass roofs without changing world lighting.
+- Add focused density, weather, native garage interaction and many-door renderer comparisons. Full release validation and hardware shader acceptance remain deferred.
+
 ## 2.7
 
 See the [illustrated 2.7 showcase](docs/versions/version-2.7.md), [display matrix](docs/display-matrix.html) and [control matrix](docs/control-matrix.html).

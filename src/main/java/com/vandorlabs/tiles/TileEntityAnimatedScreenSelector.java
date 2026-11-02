@@ -73,6 +73,10 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override public boolean hasFastRenderer() {
         if (world == null) return false;
         net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
+        if(block instanceof com.vandorlabs.blocks.BlockProgrammableWall){
+            com.vandorlabs.blocks.BlockProgrammableWall wall=(com.vandorlabs.blocks.BlockProgrammableWall)block;
+            return wall.isDiagonalShape()&&!wall.isPortholeShape()&&!(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)&&!fluids.any();
+        }
         return block instanceof com.vandorlabs.blocks.BlockProgrammableTrigger
                 || block.getClass()==com.vandorlabs.blocks.BlockProgrammableLight.class && !isSmallInput();
     }

@@ -9,6 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class CommonProxy {
+    public void garageAppearanceChanged(com.vandorlabs.garage.GarageDoorTile tile){}
     public boolean canSampleDisplayPower(){return true;}
     public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){}
     public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){}

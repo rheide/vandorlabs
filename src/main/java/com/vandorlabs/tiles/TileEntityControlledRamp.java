@@ -28,6 +28,8 @@ import java.util.LinkedHashMap;
 
 /** Non-ticking occupied/next-step cell. Carries its own recovery journal and timeline. */
 public class TileEntityControlledRamp extends TileEntity {
+    public transient long renderRevision;
+    @Override public void markDirty(){renderRevision++;super.markDirty();}
     /** World geometry follows loaded terrain visibility, like diagonal walls. */
     @Override public double getMaxRenderDistanceSquared() { return Double.MAX_VALUE; }
     @Override public boolean shouldRenderInPass(int pass) {
@@ -481,6 +483,7 @@ public class TileEntityControlledRamp extends TileEntity {
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
+        renderRevision++;
         tag=com.vandorlabs.ramp.RampCopyData.relocated(tag);
         moatGeometryRevision=Math.max(0,Math.min(2,tag.getInteger("MoatGeometryRevision")));vehicleFrozen=tag.getBoolean("VehicleRampFrozen");moat=tag.getBoolean("MoatMode");verticalMoatSources=tag.getBoolean("MoatVerticalSources");
         super.readFromNBT(tag);cachedBeltDistance=Double.NaN;beltMaterials.clear();

@@ -21078,6 +21078,8 @@ customblock:id=%survey_dish_core,state=*,class=com.vandorlabs.dynmap.FrameMachin
 customblock:id=%constructor_part,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
 # End Core machine maps
 
+customblock:id=%garage_door,state=*,class=com.vandorlabs.dynmap.GarageDoorMapRenderer
+
 # Generated tile-aware material palette
 customblock:id=%turntable_surface,state=*,class=com.vandorlabs.dynmap.ProgrammableSurfaceRenderer
 customblock:id=%turntable_controller,state=*,class=com.vandorlabs.dynmap.SurfaceControllerRenderer

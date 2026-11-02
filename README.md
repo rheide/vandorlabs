@@ -2,6 +2,8 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
+Development: **2.8** — [dense builds and garage doors](docs/versions/version-2.8.md).
+
 Latest release: **2.7** — [displays, programmable glass, redstone and mechanisms](docs/versions/version-2.7.md).
 
 See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables and programmable surfaces](docs/turntables.md), [copying](docs/copy-controller.md), [pressure plates](docs/programmable-pressure-plate.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Previous release highlights: [copying, programmable surfaces, pressure plates, programmers, arms, tracks and Core assemblies](docs/versions/version-2.6.md). See the [2.5 vehicle compatibility fix](docs/versions/version-2.5.md), [2.4 stability and network changes](docs/versions/version-2.4.md), [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).

@@ -21,6 +21,22 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
     @SubscribeEvent public static void stitched(TextureStitchEvent.Post event){RenderTurntable.clear();SurfaceTextureMesh.clear();}
     @SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)Minecraft.getMinecraft().addScheduledTask(()->{RenderTurntable.clear();SurfaceTextureMesh.clear();});}
     @Override public boolean isGlobalRenderer(TileEntityTurntableSurface tile){SquareLayout layout=tile.appearanceLayout();return layout.size>1&&tile.getPos().equals(layout.root);}
+    /** Single native tiles share Forge's atlas buffer. Moving/shared pads keep their ordered decal path. */
+    @Override public void renderTileEntityFast(TileEntityTurntableSurface tile,double x,double y,double z,float partial,int destroy,float alpha,BufferBuilder buffer){
+        if(!tile.appearanceReady()||SurfaceArmHandoff.hideNative(tile))return;
+        SquareLayout layout=tile.appearanceLayout();
+        if(layout.size!=1||!tile.getPos().equals(layout.root))return;
+        TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
+        TextureAtlasSprite sprite=atlas.getAtlasSprite(TurntableTextures.texture(tile.selectedTexture(),false));
+        TextureAtlasSprite black=atlas.getAtlasSprite("minecraft:blocks/concrete_black");
+        int light=tile.getWorld().getCombinedLight(tile.getPos().offset(layout.normal),0);
+        double px=x-tile.getPos().getX()+layout.pivot.x,py=y-tile.getPos().getY()+layout.pivot.y,pz=z-tile.getPos().getZ()+layout.pivot.z;
+        // There is no native model face behind a formed surface. Separate the
+        // backing and artwork physically so batching needs no per-tile GL bias.
+        buffer.setTranslation(0,0,0);
+        SurfaceTextureMesh.get(black,1,0,false).draw(buffer,layout.basis,black,.001,light,px,py,pz);
+        SurfaceTextureMesh.get(sprite,1,tile.textureLayout,false).draw(buffer,layout.basis,sprite,.002,light,px,py,pz);
+    }
     @Override public void render(TileEntityTurntableSurface tile,double x,double y,double z,float partial,int destroy,float alpha){
         if(!tile.appearanceReady()||SurfaceArmHandoff.hideNative(tile))return;
         SquareLayout layout=tile.appearanceLayout();if(!tile.getPos().equals(layout.root))return;

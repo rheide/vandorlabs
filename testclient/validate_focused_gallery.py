@@ -101,8 +101,9 @@ if target == 'redstone-dialogs':
     require('signal-control-runtime PASS')
     require('signal-control-models PASS')
     require('signal-control-visuals PASS')
-require('custom-materials-runtime PASS')
-require('imported-materials-runtime PASS')
+if target != 'door-selection':
+    require('custom-materials-runtime PASS')
+    require('imported-materials-runtime PASS')
 if target == 'dialogs':
     for marker in ('landing-gear-reload PASS', 'diagonal-screen-item-runtime PASS', 'short-trapdoor-labels PASS', 'industrial-category-runtime PASS'):
         require(marker)

@@ -36,7 +36,9 @@ final class SurfaceTextureMesh {
         found=new SurfaceTextureMesh(Collections.unmodifiableList(triangles));CACHE.put(key,found);return found;
     }
     private static List<V> clip(List<V> source,int axis,double plane,boolean lower){List<V> result=new ArrayList<>();if(source.isEmpty())return result;V last=source.get(source.size()-1);boolean before=lower?last.at(axis)>=plane:last.at(axis)<=plane;for(V next:source){boolean after=lower?next.at(axis)>=plane:next.at(axis)<=plane;if(before!=after)result.add(last.between(next,(plane-last.at(axis))/(next.at(axis)-last.at(axis))));if(after)result.add(next);last=next;before=after;}return result;}
-    void draw(BufferBuilder buffer,TurntableGeometry.Face face,TextureAtlasSprite sprite,double depth,int light){for(V[] triangle:triangles)for(int index:ORDER){
-        V v=triangle[index];buffer.pos(face.ux*v.x+face.vx*v.y+face.x*depth,face.uy*v.x+face.vy*v.y+face.y*depth,face.uz*v.x+face.vz*v.y+face.z*depth).color(1F,1F,1F,1F).tex(sprite.getInterpolatedU(v.u*16),sprite.getInterpolatedV(v.v*16)).lightmap(light&65535,light>>>16).normal(face.x,face.y,face.z).endVertex();
+    void draw(BufferBuilder buffer,TurntableGeometry.Face face,TextureAtlasSprite sprite,double depth,int light){draw(buffer,face,sprite,depth,light,0,0,0);}
+    void draw(BufferBuilder buffer,TurntableGeometry.Face face,TextureAtlasSprite sprite,double depth,int light,double x,double y,double z){for(V[] triangle:triangles)for(int index:ORDER){
+        V v=triangle[index];buffer.pos(x+face.ux*v.x+face.vx*v.y+face.x*depth,y+face.uy*v.x+face.vy*v.y+face.y*depth,z+face.uz*v.x+face.vz*v.y+face.z*depth).color(1F,1F,1F,1F).tex(sprite.getInterpolatedU(v.u*16),sprite.getInterpolatedV(v.v*16)).lightmap(light&65535,light>>>16);
+        if(buffer.getVertexFormat().hasNormal())buffer.normal(face.x,face.y,face.z);buffer.endVertex();
     }}
 }

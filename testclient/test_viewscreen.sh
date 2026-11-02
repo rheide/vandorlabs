@@ -6,6 +6,8 @@ unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHE
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
 unset VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
+unset VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY VANDOR_LABS_GARAGE_DOOR_BENCHMARK_ONLY VANDOR_LABS_GARAGE_DOOR_CHECKS_ONLY
+unset VANDOR_LABS_DENSE_RENDER_CHECKS_ONLY
 unset VANDOR_LABS_ARTWORK27_CHECKS_ONLY
 unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
@@ -173,6 +175,18 @@ case "${1:-}" in
         elif [ "$TARGET" = canopy-glass-order ]; then
             PREFIX=canopy_glass_
             export VANDOR_LABS_CANOPY_GLASS_ORDER_CHECKS_ONLY=true
+        elif [ "$TARGET" = garage-tall ]; then
+            PREFIX=garage_tall_
+            export VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY=true
+        elif [ "$TARGET" = garage-benchmark ]; then
+            PREFIX=garage_
+            export VANDOR_LABS_GARAGE_DOOR_BENCHMARK_ONLY=true
+        elif [ "$TARGET" = garage-door ]; then
+            PREFIX=garage_
+            export VANDOR_LABS_GARAGE_DOOR_CHECKS_ONLY=true
+        elif [ "$TARGET" = render-density ]; then
+            PREFIX=density_
+            export VANDOR_LABS_DENSE_RENDER_CHECKS_ONLY=true
         elif [ "$TARGET" = canopy-cost ]; then
             PREFIX=canopy_
             export VANDOR_LABS_CANOPY_GLASS_COST_CHECKS_ONLY=true
@@ -237,6 +251,9 @@ cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
 cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     "$TEST_RUNTIME_GAME/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"
 cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
+# Exact optional reference renderers for the garage comparison, isolated from production.
+if [ -n "${VANDOR_LABS_TEST_MALISIS_CORE:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_CORE" "$TEST_RUNTIME_GAME/mods/"; fi
+if [ -n "${VANDOR_LABS_TEST_MALISIS_DOORS:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_DOORS" "$TEST_RUNTIME_GAME/mods/"; fi
 # Optional Mekanism fixtures for supported block rotation, enabled explicitly.
 if [ -n "${VANDOR_LABS_TEST_MEKANISM:-}" ]; then
     cp "$VANDOR_LABS_TEST_MEKANISM" "$TEST_RUNTIME_GAME/mods/"
@@ -261,6 +278,26 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = garage-tall ]; then
+        grep -q "garage-tall PASS" "$RUN_OUT/client.log"
+        echo "Tall garage checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = garage-benchmark ]; then
+        grep -q "garage-benchmark PASS" "$RUN_OUT/client.log"
+        echo "Garage reference benchmark passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = garage-door ]; then
+        grep -q "garage-door PASS" "$RUN_OUT/client.log"
+        echo "Garage door checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = render-density ]; then
+        grep -q "dense-render PASS" "$RUN_OUT/client.log"
+        echo "Dense rendering checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = arm-docs ]; then
         grep -q "joined-arm-docs PASS" "$RUN_OUT/client.log"
         echo "Joined arm documentation captured: $RUN_OUT"

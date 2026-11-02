@@ -376,6 +376,14 @@ public class TEAnimatedScreenSelector
     @Override
     public void renderTileEntityFast(TileEntityAnimatedScreenSelector tile, double x, double y,
             double z, float partialTicks, int destroyStage, float alpha, BufferBuilder buffer) {
+        IBlockState state=tile.getWorld().getBlockState(tile.getPos());
+        if(state.getBlock() instanceof BlockProgrammableWall){
+            TextureAtlasSprite wall=wallSprite(tile),metal=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side"));
+            StaticSurfaceMesh mesh=DiagonalWallMeshCache.get(tile,state,wall,metal,null);
+            if(tile.getMainTextureLayout()!=0)mesh=GlassSurfaceMapping.map(mesh,wall,GlassSurfaceGroups.mainLayout(tile),false,0,0,tile.getMainTextureLayout());
+            int rotation=((int)(180-state.getValue(BlockProgrammableWall.FACING).getHorizontalAngle())/90)&3;
+            buffer.setTranslation(0,0,0);mesh.drawPlaced(buffer,x,y,z,rotation,tile.getWorld().getCombinedLight(tile.getPos(),0));return;
+        }
         ProgrammableSolidRenderer.emit(tile, x, y, z, buffer);
     }
 

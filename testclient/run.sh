@@ -23,6 +23,10 @@ lines = [line for line in lines if not line.startswith(('soundCategory_master:',
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
 CAPTURE_JVM=("-Dvandorlabs.reactorGlassChecksOnly=${VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.garageDoorBenchmarkOnly=${VANDOR_LABS_GARAGE_DOOR_BENCHMARK_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.garageTallChecksOnly=${VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.garageDoorChecksOnly=${VANDOR_LABS_GARAGE_DOOR_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.denseRenderChecksOnly=${VANDOR_LABS_DENSE_RENDER_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.foreignBuildingChecksOnly=${VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.legacyVehicleFixture=$PWD/../fixtures/legacy-vehicle-controller-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.taxiVisibilityChecksOnly=${VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY:-false}")

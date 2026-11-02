@@ -903,3 +903,5 @@ gui.vandorlabs.console.input.door27_gold_half_controller=Door Controller (Gold/H
 tile.vandorlabs.door27_classic_full_controller.name=Door Controller (Classic/Full)
 tile.vandorlabs.door27_cool_full_controller.name=Door Controller (Cool/Full)
 tile.vandorlabs.door27_gold_full_controller.name=Door Controller (Gold/Full)
+
+tile.vandorlabs.garage_door.name=Sectional Garage Door

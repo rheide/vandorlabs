@@ -184,6 +184,7 @@ public class ModBlocks {
         add(new com.vandorlabs.copier.CopyControllerBlock());
         add(new BlockTurntableController());
         add(new BlockTurntableSurface());
+        add(new com.vandorlabs.garage.GarageDoorBlock());
         for(com.vandorlabs.gear.track.TrackBlock track:com.vandorlabs.gear.track.TrackRegistry.BLOCKS)add(track);
         add(com.vandorlabs.gear.GearRegistry.LANDING_PLATE);
         add(com.vandorlabs.gear.GearRegistry.LANDING_SKI);

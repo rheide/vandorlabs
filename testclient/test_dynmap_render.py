@@ -147,6 +147,15 @@ def place_frame_machines(command, labels, root):
                     labels.append({'x':px,'y':12+y,'z':pz,'block':'constructor_part','owner':spec['block'],'facing':facing})
 
 
+def place_garage_doors(command, labels):
+    for index,facing in enumerate(('north','east','south','west')):
+        for opened in (False,True):
+            x=10+index*5;z=72+(8 if opened else 0)
+            for row in range(5):
+                command(f'setblock {x} {12+row} {z} vandorlabs:garage_door facing={facing} replace {{GarageTopOffset:{4-row},GarageHeight:5,GarageFormed:1b,GarageOpen:{int(opened)}b,GarageFrom:{float(opened)}d,GarageLocalRedstone:0b}}')
+                labels.append(dict(x=x,y=12+row,z=z,block='garage_door',facing=facing,opened=opened,row=row))
+
+
 def validate_fixture_matrix(labels):
     """Fail before launching a map if any authored group or drive state is absent."""
     from collections import Counter
@@ -163,6 +172,8 @@ def validate_fixture_matrix(labels):
         for facing in ('north','east','south','west'):
             for active in (False,True):
                 assert drives[(family,facing,active)]==1, (family,facing,active)
+    garages=Counter((v.get("facing"),v.get("opened")) for v in labels if v["block"]=="garage_door")
+    assert len(garages)==8 and all(n==5 for n in garages.values()), "Garage endpoint/facing coverage missing"
     positions=[(label['x'],label['y'],label['z']) for label in labels]
     assert len(set(positions))==len(positions), 'Overlapping Dynmap fixtures hide coverage'
     assert all((x-24)**2+(z-24)**2<=64**2 for x,_,z in positions), 'Fixture outside map radius'
@@ -241,6 +252,7 @@ def main():
                     place_utility_models(command,labels)
                     place_frame_machines(command,labels,root)
                     place_material_finishes(command,labels,args.jar)
+                    place_garage_doors(command,labels)
                     validate_fixture_matrix(labels)
                     command('save-all flush');command('say VANDOR_DYNMAP_FIXTURE_SAVED');wait('VANDOR_DYNMAP_FIXTURE_SAVED')
                     content=logpath.read_text(errors='replace')

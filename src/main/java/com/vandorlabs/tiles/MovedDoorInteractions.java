@@ -15,6 +15,7 @@ import java.util.*;
 
 /** Find moved leaves in loaded chunks even when their destination cells contain air. */
 public final class MovedDoorInteractions {
+    public static final com.vandorlabs.world.LoadedTileIndex<TileEntitySpaceDoor> INDEX=new com.vandorlabs.world.LoadedTileIndex<>(TileEntitySpaceDoor.class);
     public static final MovedDoorInteractions INSTANCE=new MovedDoorInteractions();
     private MovedDoorInteractions() { }
 
@@ -40,15 +41,8 @@ public final class MovedDoorInteractions {
         List<TileEntitySpaceDoor> result=new ArrayList<>();
         // Leaves extend at most three blocks vertically or sideways from the assembly.
         AxisAlignedBB owners=query.grow(5);
-        for(int x=MathHelper.floor(owners.minX)>>4;x<=MathHelper.floor(owners.maxX)>>4;x++)
-            for(int z=MathHelper.floor(owners.minZ)>>4;z<=MathHelper.floor(owners.maxZ)>>4;z++) {
-                Chunk chunk=world.getChunkProvider().getLoadedChunk(x,z);if(chunk==null)continue;
-                for(TileEntity tile:chunk.getTileEntityMap().values())if(tile instanceof TileEntitySpaceDoor) {
-                    TileEntitySpaceDoor door=(TileEntitySpaceDoor)tile;
-                    if(owners.intersects(new AxisAlignedBB(door.getPos())) && isMoved(world,door.getPos())
-                            && (door instanceof TileEntityLargeProgrammableDoor?((TileEntityLargeProgrammableDoor)door).isAnchor():world.getBlockState(door.getPos()).getValue(BlockVandorDoor.HALF)==BlockDoor.EnumDoorHalf.LOWER))result.add(door);
-                }
-            }
+        for(TileEntitySpaceDoor door:INDEX.query(world,owners))if(isMoved(world,door.getPos())
+                &&(door instanceof TileEntityLargeProgrammableDoor?((TileEntityLargeProgrammableDoor)door).isAnchor():world.getBlockState(door.getPos()).getValue(BlockVandorDoor.HALF)==BlockDoor.EnumDoorHalf.LOWER))result.add(door);
         return result;
     }
     public static RayTraceResult trace(World world,Vec3d start,Vec3d end) {

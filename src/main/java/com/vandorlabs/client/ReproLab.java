@@ -639,6 +639,11 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.movedDoorChecksOnly")){if(++holdTicks>=40)MovedDoorRuntimeChecks.tick(mc,outDir);return;}
+        if(Boolean.getBoolean("vandorlabs.garageDoorBenchmarkOnly")){if(++holdTicks==40)try{GarageDoorBenchmark.contracts(mc,outDir);GarageDoorBenchmark.run(mc,outDir);System.out.println("[vandorlabs][reprolab] garage-benchmark PASS");mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Garage reference benchmark",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.garageTallChecksOnly")){if(++holdTicks>=40)try{if(GarageTallChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Tall garage check",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.garageDoorChecksOnly")){if(++holdTicks>=40)try{if(GarageDoorChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Garage door checks",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.denseRenderChecksOnly")){if(++holdTicks==40)try{DenseRenderChecks.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Dense rendering checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.trapdoorFrameRegressionOnly")){try{TrapdoorFrameChecks.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Trapdoor frame regression",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.surfaceArmChecksOnly")){try{if(com.vandorlabs.gear.SurfaceArmWorldChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Surface arm saved-world checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.shaderStartupChecksOnly")){try{if(ShaderStartupChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Shader startup checks",failure);}return;}

@@ -39,8 +39,9 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
     private void renderMaterial(TileEntityControlledRamp te,double x,double y,double z,float partial) {
         if (te.getWorld()==null) return;
         if(te.moat&&!te.usesNativeMoatGeometry()){renderMoat(te,x,y,z,partial);return;}
-        java.util.List<RampGeometry.Box> geometry=te.geometry(partial);
-        if (geometry.isEmpty()) return;
+        boolean cached=RampRenderMeshes.eligible(te,partial);
+        java.util.List<RampGeometry.Box> geometry=cached?null:te.geometry(partial);
+        if(!cached&&geometry.isEmpty())return;
         GlStateManager.pushMatrix();
         GlStateManager.translate(x,y,z);
         bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -49,17 +50,18 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
         int light=te.getWorld().getCombinedLight(te.getPos(),0);
         float oldX=OpenGlHelper.lastBrightnessX,oldY=OpenGlHelper.lastBrightnessY;
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
-        BufferBuilder b=Tessellator.getInstance().getBuffer();
-        b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        FaceEmitter emitter=new FaceEmitter(b);
-        MaterialFaces materialFaces=new MaterialFaces(te);
-        for (RampGeometry.Box box:geometry) materialCuboid(emitter,box,te,partial,materialFaces);
-        Tessellator.getInstance().draw();
+        if(cached)RampRenderMeshes.draw(te,light,partial,b->emitMaterial(te,partial,b,te.geometry(partial)));
+        else{BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());emitMaterial(te,partial,b,geometry);Tessellator.getInstance().draw();}
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldX,oldY);
         GlStateManager.enableCull();
         GlStateManager.enableLighting();
         GlStateManager.color(1,1,1,1);
         GlStateManager.popMatrix();
+    }
+
+    private static void emitMaterial(TileEntityControlledRamp te,float partial,BufferBuilder b,java.util.List<RampGeometry.Box> geometry){
+        FaceEmitter emitter=new FaceEmitter(b);MaterialFaces faces=new MaterialFaces(te);
+        for(RampGeometry.Box box:geometry)materialCuboid(emitter,box,te,partial,faces);
     }
 
     private void renderMoat(TileEntityControlledRamp te,double x,double y,double z,float partial){

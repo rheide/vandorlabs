@@ -506,9 +506,9 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         markDirty();
         boolean next=powered==large.activateOnPower;if(next!=targetOpen){targetOpen=next;reservationGeometryChanged();com.vandorlabs.canopy.CanopyReservations.targetChanged(this);sync();}
     }
-    @Override public void onLoad(){super.onLoad();appearanceChanged();reservationGeometryChanged();DeferredTileLoad.schedule(this,()->{com.vandorlabs.redstone.RedstoneChannels.register(this);com.vandorlabs.canopy.CanopyReservations.loaded(this);});}
-    @Override public void invalidate(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();appearanceChanged();}
-    @Override public void onChunkUnload(){cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();appearanceChanged();}
+    @Override public void onLoad(){super.onLoad();com.vandorlabs.canopy.CanopyInteractions.INDEX.add(this);appearanceChanged();reservationGeometryChanged();DeferredTileLoad.schedule(this,()->{com.vandorlabs.redstone.RedstoneChannels.register(this);com.vandorlabs.canopy.CanopyReservations.loaded(this);});}
+    @Override public void invalidate(){com.vandorlabs.canopy.CanopyInteractions.INDEX.remove(this);cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.invalidate();appearanceChanged();}
+    @Override public void onChunkUnload(){com.vandorlabs.canopy.CanopyInteractions.INDEX.remove(this);cancelIndex();com.vandorlabs.canopy.CanopyReservations.removed(this);com.vandorlabs.redstone.RedstoneChannels.unregister(this);super.onChunkUnload();appearanceChanged();}
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound n) {
         super.writeToNBT(n);

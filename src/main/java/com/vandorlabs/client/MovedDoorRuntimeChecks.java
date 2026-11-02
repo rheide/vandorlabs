@@ -25,11 +25,14 @@ final class MovedDoorRuntimeChecks {
         try {
             if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
             if(stage==0) {
-                final int index=fixture;
+                final int index=fixture;mc.playerController.setGameType(net.minecraft.world.GameType.SURVIVAL);mc.player.inventory.currentItem=0;
                 pending=mc.getIntegratedServer().addScheduledTask(()->build(mc,index));stage=1;ticks=0;return;
             }
             if(++ticks<15)return;
             if(stage==1) {
+                if(mc.playerController.getCurrentGameType()!=net.minecraft.world.GameType.SURVIVAL||mc.player.inventory.currentItem!=0||!mc.player.getHeldItemMainhand().isEmpty()||!mc.player.getHeldItemOffhand().isEmpty()){
+                    require(ticks<200,"fixture="+fixture+" stage="+stage+" client-mode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" offhand="+mc.player.getHeldItemOffhand()+" pos="+mc.player.getPosition());return;
+                }
                 IBlockState state=mc.world.getBlockState(ANCHOR);
                 require(state.getValue(BlockVandorDoor.OPEN),"open fixture synchronized");
                 AxisAlignedBB leaf=leaf(mc.world,fixture);
@@ -69,6 +72,9 @@ final class MovedDoorRuntimeChecks {
         net.minecraft.world.World world=mc.getIntegratedServer().getEntityWorld();
         EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
         for(BlockPos pos:BlockPos.getAllInBox(ANCHOR.add(-7,-5,-7),ANCHOR.add(8,8,8)))if(world.isBlockLoaded(pos))world.setBlockToAir(pos);
+        // Clearing a previous native large door drops its item. Remove fixture
+        // debris before survival pickup can change the synchronized empty hand.
+        for(net.minecraft.entity.item.EntityItem item:world.getEntitiesWithinAABB(net.minecraft.entity.item.EntityItem.class,new AxisAlignedBB(ANCHOR).grow(16)))item.setDead();
         boolean large=index<40 || index>=64;int local=index>=64?(index-64)/4*10+4:large?index:index-40;
         EnumFacing facing=EnumFacing.getHorizontal(large?local/10:local/6);
         BlockConfigurableSpaceDoor block=(BlockConfigurableSpaceDoor)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",large?"large_programmable_door":"programmable_door"));
@@ -90,8 +96,10 @@ final class MovedDoorRuntimeChecks {
             TileEntitySpaceDoor root=(TileEntitySpaceDoor)world.getTileEntity(ANCHOR);root.configure(2,1,true,0,false,false,true,0,false);root.setPlacementDepth(local%3);
         }
         AxisAlignedBB leaf=leaf(world,index);Vec3d start=start(world,leaf,target(world,leaf,index),index);
-        player.setSneaking(false);player.noClip=true;player.capabilities.isFlying=true;player.setPositionAndUpdate(start.x,start.y-player.getEyeHeight(),start.z);
-        player.setHeldItem(EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);
+        player.setGameType(net.minecraft.world.GameType.SURVIVAL);player.inventory.currentItem=0;player.setHeldItem(EnumHand.OFF_HAND,net.minecraft.item.ItemStack.EMPTY);
+        player.setSneaking(false);player.noClip=true;player.capabilities.allowFlying=true;player.capabilities.isFlying=true;player.setPositionAndUpdate(start.x,start.y-player.getEyeHeight(),start.z);
+        player.setHeldItem(EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);player.sendPlayerAbilities();player.sendContainerToPlayer(player.inventoryContainer);
+        require(MovedDoorInteractions.INDEX.query(world,new AxisAlignedBB(ANCHOR).grow(5)).contains(world.getTileEntity(ANCHOR)),"server owner missing from loaded index");
     }
     private static AxisAlignedBB leaf(net.minecraft.world.World world,int index) {
         if(index>=40 && index<64)return world.getBlockState(ANCHOR).getBoundingBox(world,ANCHOR).offset(ANCHOR);

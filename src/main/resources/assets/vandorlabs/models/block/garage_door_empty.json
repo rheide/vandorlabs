@@ -1,0 +1,8 @@
+{
+  "textures": {
+    "panel": "vandorlabs:blocks/garage/garage_panel",
+    "edge": "vandorlabs:blocks/programmable_glass/metal_side",
+    "particle": "vandorlabs:blocks/garage/garage_panel"
+  },
+  "elements": []
+}

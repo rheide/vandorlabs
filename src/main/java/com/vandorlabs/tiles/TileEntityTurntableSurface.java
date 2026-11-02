@@ -126,6 +126,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,1,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());if(world!=null)world.markBlockRangeForRenderUpdate(pos,pos);}
-    @Override public AxisAlignedBB getRenderBoundingBox(){SquareLayout layout=appearanceLayout();return pos.equals(layout.root)?new AxisAlignedBB(layout.pivot.x-17,layout.pivot.y-17,layout.pivot.z-17,layout.pivot.x+17,layout.pivot.y+17,layout.pivot.z+17):new AxisAlignedBB(pos);}
+    @Override public boolean hasFastRenderer(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&owner==null&&ownerKey==null&&groupSize==1&&groupOffset.equals(BlockPos.ORIGIN);}
+    @Override public AxisAlignedBB getRenderBoundingBox(){SquareLayout layout=appearanceLayout();if(!pos.equals(layout.root))return new AxisAlignedBB(pos);double r=layout.size*.5+.004;return new AxisAlignedBB(layout.pivot.x-(layout.normal.getAxis()==EnumFacing.Axis.X?.004:r),layout.pivot.y-(layout.normal.getAxis()==EnumFacing.Axis.Y?.004:r),layout.pivot.z-(layout.normal.getAxis()==EnumFacing.Axis.Z?.004:r),layout.pivot.x+(layout.normal.getAxis()==EnumFacing.Axis.X?.004:r),layout.pivot.y+(layout.normal.getAxis()==EnumFacing.Axis.Y?.004:r),layout.pivot.z+(layout.normal.getAxis()==EnumFacing.Axis.Z?.004:r));}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
 }

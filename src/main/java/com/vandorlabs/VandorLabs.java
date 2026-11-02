@@ -22,7 +22,7 @@ public class VandorLabs {
 
     public static final String MODID = "vandorlabs";
     public static final String NAME = "Vandor Labs";
-    public static final String VERSION = "2.7";
+    public static final String VERSION = "2.8";
     /** Bump on every test build so logs identify the exact binary. */
     public static final String BUILD_ID = "t246";
 
@@ -66,6 +66,7 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(TileEntitySlidingDoor.class, "vandorlabs:sliding_door");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityProgrammableGlass.class, "vandorlabs:programmable_glass");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityLargeProgrammableDoor.class,"vandorlabs:large_programmable_door");
+        GameRegistry.registerTileEntity(com.vandorlabs.garage.GarageDoorTile.class,"vandorlabs:garage_door");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntitySpaceDoor.class, "vandorlabs:programmable_door");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityRampController.class, "vandorlabs:programmable_ramp");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityControlledRamp.class, "vandorlabs:controlled_ramp");

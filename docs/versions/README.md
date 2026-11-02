@@ -2,6 +2,7 @@
 
 Release highlights, feature explanations and illustrated examples, newest first. For detailed changes, see the [changelog](../../CHANGELOG.md). Older guides describe their release; use the current feature documentation for present-day behavior.
 
+- [Vandor Labs 2.8 development: dense builds and garage doors](version-2.8.md)
 - [Vandor Labs 2.7: artwork, configuration and mechanisms](version-2.7.md)
 - [Vandor Labs 2.6: copying, programmable surfaces, programmers, arms and Core assemblies](version-2.6.md)
 - [Vandor Labs 2.5: bridge machines, construction guides and compatibility](version-2.5.md)
