@@ -66,7 +66,10 @@ final class ProgrammableDialogRuntimeChecks {
                 }
                 if(gui instanceof GuiSpaceDoor || gui instanceof GuiProgrammableTrapdoor) {
                     int sizeId=gui instanceof GuiSpaceDoor?11:9;
-                    require(buttons.stream().noneMatch(b->b.id==sizeId),"obsolete texture size button");
+                    for(GuiButton button:buttons)if(button.id==sizeId){
+                        Field owner=gui.getClass().getDeclaredField("tile");owner.setAccessible(true);
+                        require(gui instanceof GuiProgrammableTrapdoor&&owner.get(gui) instanceof com.vandorlabs.tiles.TileEntityProgrammableDiagonalTrapdoor&&button.displayString.startsWith("Rotation: "),"obsolete texture size button");
+                    }
                 }
                 // Exercise tabs through the actual mouse path, then restore the original tab.
                 Field tab=null;try{tab=gui.getClass().getDeclaredField("textureTab");tab.setAccessible(true);}catch(NoSuchFieldException ignored){}

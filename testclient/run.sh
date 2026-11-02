@@ -12,6 +12,10 @@ TROVE_JAR=$(rg --files "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/
 # Thaumcraft uses Forge's Scala runtime during client model baking.
 SCALA_JAR=$(rg --files "$HOME/.gradle/caches/modules-2/files-2.1/org.scala-lang/scala-library/2.11.1" | rg '/scala-library-2.11.1.jar$' | head -n 1)
 CP="$CP:$TROVE_JAR:$SCALA_JAR"
+if [ -n "${VANDOR_LABS_TEST_EXTRA_LIBRARIES:-}" ]; then
+  EXTRA_CP=$(rg --files -uuu "$VANDOR_LABS_TEST_EXTRA_LIBRARIES" -g "*.jar" | LC_ALL=C sort | paste -sd:)
+  CP="$CP:$EXTRA_CP"
+fi
 BENCH_GAME_DIR=${VANDOR_LABS_TEST_GAME_DIR:-"$PWD/game"}
 mkdir -p "$BENCH_GAME_DIR"
 python3 - "$BENCH_GAME_DIR/options.txt" <<'PY'
@@ -22,7 +26,8 @@ lines = p.read_text().splitlines() if p.exists() else []
 lines = [line for line in lines if not line.startswith(('soundCategory_master:', 'pauseOnLostFocus:'))]
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
-CAPTURE_JVM=("-Dvandorlabs.reactorGlassChecksOnly=${VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY:-false}")
+CAPTURE_JVM=("-Dvandorlabs.largeBenchmarkTerrain=${VANDOR_LABS_BENCH_TERRAIN:-false}" "-Dvandorlabs.largeBenchmarkMovingSamples=${VANDOR_LABS_BENCH_MOVING_SAMPLES:-${VANDOR_LABS_BENCH_SAMPLES:-60}}" "-Dvandorlabs.largeBenchmarkCompare=${VANDOR_LABS_BENCH_COMPARE:-false}" "-Dvandorlabs.largeBenchmarkSamples=${VANDOR_LABS_BENCH_SAMPLES:-60}" "-Dvandorlabs.largeBenchmarkWarmFrames=${VANDOR_LABS_BENCH_WARM_FRAMES:-50}" "-Dvandorlabs.largeVehicleBenchmark=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.vehicleDiagnostics=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.reactorGlassChecksOnly=${VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.vehicleRenderCostChecksOnly=${VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.garageDoorBenchmarkOnly=${VANDOR_LABS_GARAGE_DOOR_BENCHMARK_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.garageTallChecksOnly=${VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.garageDoorChecksOnly=${VANDOR_LABS_GARAGE_DOOR_CHECKS_ONLY:-false}")

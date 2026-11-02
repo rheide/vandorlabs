@@ -423,7 +423,7 @@ public final class VehicleService {
     }
     @SubscribeEvent public static void collision(net.minecraftforge.event.world.GetCollisionBoxesEvent event) {
         if(event.getWorld() instanceof VehicleWorld)return;
-        for(EntityGroundVehicle craft:VehicleLookup.near(event.getWorld(),event.getAabb())) {
+        for(EntityGroundVehicle craft:VehicleLookup.near(event.getWorld(),event.getAabb(),event.getEntity() instanceof EntityGroundVehicle?(EntityGroundVehicle)event.getEntity():null)) {
             if(!craft.getEntityBoundingBox().intersects(event.getAabb()))continue;
             if(com.vandorlabs.motion.PlatformRiders.coMoving(craft)||craft==event.getEntity() || craft.collision==null || craft.isPassenger(event.getEntity()))continue;
             for(VehicleCollision.OrientedBox box:craft.collision.pose(craft.rotationYaw)) {

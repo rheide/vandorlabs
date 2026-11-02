@@ -35,5 +35,41 @@ Set `VANDOR_LABS_WORLD_RELOAD=true` to repeat each camera after a renderer reloa
 stale geometry; moving entities, animation and clouds can change independently.
 
 The comparison baselines are `release_1.3` (`9c433a63`) and the original
-`1.4-alpha` tag (`2d18b157`), before diagonal chunk rendering. Current development
-uses version `1.4`; identify newer results by commit and artifact hash.
+`1.4-alpha` tag (`2d18b157`), before diagonal chunk rendering. Identify newer comparisons by their version, commit and artifact hash.
+
+## Large Vehicle Controller benchmark
+
+`benchmark_large_vehicle.sh JAR WORLD OUTPUT` uses an extracted area containing
+its original large controller assembly. Its opt-in preset visits the hall and
+controller, converts the actual saved blocks to Taxi mode through
+`VehicleService.screenMode`, boards the original Pilot Seat and uses normal forward/reverse input within a
+short clear stretch. The integrated server must record at least half a block
+of travel and five moving ticks during the sampling window.
+The captured structure is retained as compressed NBT in the output, including
+previous-version tile data. The input fixture is private and is never committed.
+
+Package the copied world metadata, complete region files, dimension metadata,
+`data/` and player data with the corresponding `mods/`, `config/` and `Flan/`
+folders. Take that copy only after the source server has saved and stopped.
+The launcher creates a fresh game directory and never operates the source server.
+Provide `VANDOR_LABS_BENCH_LIBRARIES` when the modpack requires additional Forge
+library JARs. Python's `nbtlib` is required to adjust only the disposable spawn.
+
+`VANDOR_LABS_BENCH_OPTIFINE` and `VANDOR_LABS_BENCH_SHADERPACK` select the optional
+renderer and shader archive. An adjacent shader `.zip.txt` settings file is copied
+as well. `VANDOR_LABS_BENCH_COMPARE=true` adds a stationary reference stage with
+the previous broad canopy collision search and cubic terrain grid, then enables
+the conservative bounds and adaptive terrain sections
+in the same loaded world. This switch is confined to the diagnostic process.
+`VANDOR_LABS_BENCH_SAMPLES` and `VANDOR_LABS_BENCH_WARM_FRAMES` control sample and
+minimum warm-up counts; `VANDOR_LABS_BENCH_MOVING_SAMPLES` can extend the
+movement-only profile; every stage also waits at least eight seconds.
+
+The CSV includes completed rendering, render-thread CPU and allocation,
+integrated-server tick time, full frame intervals and measured craft travel.
+Full intervals include client ticks between draws. They matter when a slow shader
+frame causes several prediction ticks to run before the next draw. Record both
+metrics; rendering time alone can miss that feedback. Retain the artifact hash,
+matching pack/settings and screenshots. Run benchmarks sequentially without
+concurrent builds. Mesa timings establish comparisons in this test environment;
+they do not establish hardware FPS or owner acceptance of a shader pack.

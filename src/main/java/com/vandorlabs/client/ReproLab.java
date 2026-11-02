@@ -580,6 +580,7 @@ public class ReproLab {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public void onDocumentationRender(TickEvent.RenderTickEvent event) {
+        if(LargeVehicleBenchmark.enabled()){LargeVehicleBenchmark.render(event);return;}
         if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.render(event);return;}
         if(event.phase==TickEvent.Phase.END && enabled)renderedFrames++;
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.taxiVisibilityChecksOnly"))try{TaxiVisibilityClientChecks.captureFrame(Minecraft.getMinecraft());}catch(Exception failure){throw new IllegalStateException("Taxi natural main-frame capture",failure);}
@@ -592,12 +593,16 @@ public class ReproLab {
 
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
+    public void onBenchmarkServerTick(TickEvent.ServerTickEvent event){if(LargeVehicleBenchmark.enabled())LargeVehicleBenchmark.serverTick(event);}
+
+    @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent ev) {
         if (ev.phase != TickEvent.Phase.END || !enabled) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
         if(!gpuReported){gpuReported=true;System.out.println("[vandorlabs][reprolab] OpenGL renderer="+org.lwjgl.opengl.GL11.glGetString(org.lwjgl.opengl.GL11.GL_RENDERER)+" vendor="+org.lwjgl.opengl.GL11.glGetString(org.lwjgl.opengl.GL11.GL_VENDOR));}
+        if(LargeVehicleBenchmark.enabled()){LargeVehicleBenchmark.tick(mc,outDir);return;}
         if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.tick(mc,outDir);return;}
         if(Boolean.getBoolean("vandorlabs.vehicleNetworkChecksOnly")) {
             try {if(VehicleNetworkRuntimeChecks.tick(mc,outDir))mc.shutdown();}
@@ -639,6 +644,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.vehicleRenderCostChecksOnly")){if(++holdTicks==40){VehicleRenderRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] vehicle-render-cost PASS");mc.shutdown();}return;}
         if(Boolean.getBoolean("vandorlabs.movedDoorChecksOnly")){if(++holdTicks>=40)MovedDoorRuntimeChecks.tick(mc,outDir);return;}
         if(Boolean.getBoolean("vandorlabs.garageDoorBenchmarkOnly")){if(++holdTicks==40)try{GarageDoorBenchmark.contracts(mc,outDir);GarageDoorBenchmark.run(mc,outDir);System.out.println("[vandorlabs][reprolab] garage-benchmark PASS");mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Garage reference benchmark",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.garageTallChecksOnly")){if(++holdTicks>=40)try{if(GarageTallChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Tall garage check",failure);}return;}

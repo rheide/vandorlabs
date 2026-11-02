@@ -109,6 +109,17 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         }
         if(regions.structure!=null)for(VehicleStructure.Cell cell:regions.structure.cells)if(e.structure.at(cell.pos)==null)
             for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.values())dirty.add(section(cell.pos.offset(side)));
+        // TILE packets can mutate an existing tile without changing tileRevision;
+        // adjacent non-tile edits also change wall contact geometry. Invalidate
+        // the affected section meshes independently of tile-list membership.
+        if(!dirty.isEmpty()){
+            regions.opaqueTiles.delete();
+            for(BlockPos changed:dirty){
+                VehicleOpaqueTileBatch batch=regions.opaqueBatches.get(changed);if(batch!=null)batch.delete();
+                int x=changed.getX()*8,y=changed.getY()*8,z=changed.getZ()*8;
+                DiagonalWallMeshCache.invalidate(e.view,x-1,y-1,z-1,x+8,y+8,z+8);
+            }
+        }
         for(VehicleStructure.Cell cell:e.structure.cells) {
             if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockWheel){if(cell.state.getValue(com.vandorlabs.blocks.BlockWheel.PART)==0)regions.wheels.add(cell);continue;}
             List<VehicleStructure.Cell>[] lists=groups.computeIfAbsent(section(cell.pos),k->new List[]{new ArrayList<>(),new ArrayList<>()});
@@ -141,7 +152,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         }
         regions.opaque.sort(Comparator.comparing(draw->draw.tile.getPos()));
         Map<BlockPos,List<TileEntity>> batches=new LinkedHashMap<>();
-        for(TileDraw draw:regions.opaque)if(VehicleOpaqueTileCache.eligible(draw.tile,draw.renderer))batches.computeIfAbsent(section(draw.tile.getPos()),key->new ArrayList<>()).add(draw.tile);else regions.unbatchedOpaque.add(draw);
+        for(TileDraw draw:regions.opaque)if(VehicleOpaqueTileBatch.eligible(draw.tile,draw.renderer))batches.computeIfAbsent(section(draw.tile.getPos()),key->new ArrayList<>()).add(draw.tile);else regions.unbatchedOpaque.add(draw);
         for(Map.Entry<BlockPos,List<TileEntity>> entry:batches.entrySet())regions.opaqueBatches.put(entry.getKey(),new VehicleOpaqueTileBatch(entry.getValue()));
         regions.tileStructure=craft.structure;
         regions.tileRevision=craft.view.tileRevision;
@@ -252,7 +263,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         // Opaque artwork has a stable order until tile membership changes. Only
         // transparent ramp faces need a camera-dependent sort each frame.
         List<TileDraw> orderedTiles=reuseTileOrder?regions.glazing:new ArrayList<>(regions.tiles);
-        boolean batched=batchOpaqueTiles&&BlockSurfaceFormat.get().getNextOffset()==32;
+        boolean batched=batchOpaqueTiles&&OpenGlHelper.useVbo();
         List<TileDraw> opaque=batched?regions.unbatchedOpaque:regions.opaque;
         int opaqueCount=reuseTileOrder?opaque.size():0;
         orderedTiles.sort((a,b)->{

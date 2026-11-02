@@ -13,6 +13,8 @@ import java.util.*;
 
 /** Only inspect loaded chunk tile maps; moving shells may occupy air cells. */
 public final class CanopyInteractions {
+    /** Paired isolated-world diagnostics; normal gameplay always keeps this enabled. */
+    public static volatile boolean localCollisionBounds=true;
     public static final com.vandorlabs.world.LoadedTileIndex<TileEntityCanopy> INDEX=new com.vandorlabs.world.LoadedTileIndex<>(TileEntityCanopy.class);
     public static double distanceSq(Vec3d point,AxisAlignedBB box){double x=MathHelper.clamp(point.x,box.minX,box.maxX),y=MathHelper.clamp(point.y,box.minY,box.maxY),z=MathHelper.clamp(point.z,box.minZ,box.maxZ);return point.squareDistanceTo(new Vec3d(x,y,z));}
 
@@ -33,7 +35,7 @@ public final class CanopyInteractions {
 
     @SubscribeEvent
     public void collision(GetCollisionBoxesEvent event) {
-        for (TileEntityCanopy t : owners(event.getWorld(), event.getAabb()))
+        for (TileEntityCanopy t : INDEX.query(event.getWorld(),event.getAabb().grow(12),tile->tile.mayIntersectCollision(event.getAabb())))
             t.addCollisionBoxes(event.getAabb(),event.getCollisionBoxesList());
     }
 

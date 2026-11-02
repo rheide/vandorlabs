@@ -26,7 +26,7 @@ public final class WaterloggedSurfaceMesh {
     private static final class Source {
         final WaterloggedParts.Volume volume;final FluidStack[] fluids;final List<Region> regions=new ArrayList<>();final List<Surface> surfaces=new ArrayList<>();boolean splitRegions;
         Source(World world,BlockPos pos){this(world,pos,false);}
-        Source(World world,BlockPos pos,boolean detached){volume=detached?(WaterloggedParts.panel(world.getBlockState(pos))||OpeningFluids.supports(world.getBlockState(pos))?null:WaterloggedParts.uncachedVolume(world,pos)):WaterloggedParts.volume(world,pos);fluids=new FluidStack[]{WaterloggedParts.fluid(world,pos,0),WaterloggedParts.fluid(world,pos,1)};}
+        Source(World world,BlockPos pos,boolean detached){volume=WaterloggedParts.panel(world.getBlockState(pos))||OpeningFluids.supports(world.getBlockState(pos))?null:detached?WaterloggedParts.uncachedVolume(world,pos):WaterloggedParts.volume(world,pos);fluids=new FluidStack[]{WaterloggedParts.fluid(world,pos,0),WaterloggedParts.fluid(world,pos,1)};}
     }
     static final class Entry {
         final Object[] volumes;final FluidStack[] fluids;final List<Surface> mesh;

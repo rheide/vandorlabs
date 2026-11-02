@@ -35,3 +35,62 @@ Canopy and moved-door collision queries use nearby loaded-owner buckets. They ch
 ## Shader rain
 
 Fixed Canopy Glass already stops native precipitation columns. The Complementary integration scopes its skylight-derived rain-wind uniform while the camera is beneath a confirmed fixed-glass roof, then restores the previous value. Native height, roof removal and exception-safe shader-state restoration are checked. The reported visual result remains subject to manual verification with Complementary Unbound on a hardware client.
+
+## Large carried builds
+
+The saved-world benchmark contains a 3,325-block craft with 3,032 tiles. Its
+714 flat and diagonal walls previously bypassed the carried-wall display-list
+cache when shaders selected extended vertex records. Opaque wall sections now
+retain VBOs with immutable formats and each component's original shader material
+payload. Combined CPU/GPU vertex retention is limited to 64 MiB, with an 8 MiB
+geometry payload limit per section. Light-only updates refresh retained
+lightmap fields while preserving geometry, tangents and material IDs. A
+64-wall comparison reduced update submission from 182 µs to 46 µs and
+allocation from 134 KB to 7 KB, with exact fresh-build record parity. Resource,
+format, artwork and neighbouring-geometry changes invalidate the
+relevant data. Native TILE updates that preserve tile identity and adjacent
+non-tile placement/removal have dedicated cache regressions. The 64-wall driver
+comparison reduces 64 submissions to one, with identical pixels for all four
+facings and three depths.
+
+The craft contains no canopies, but its surrounding fixed-glass roof contributed
+to repeated collision work. Fixed glass can reject a missed unit cell before
+reading connection masks or constructing posed geometry. Authored variants and
+all four mounts are checked against that conservative bound; legacy paired
+glass retains the broad search. Fixed native glass also skips its unnecessary
+client mechanism tick. Server membership checks and opening mechanisms remain
+active. Loaded canopy, moved-door and offset-trapdoor queries use spatial
+indices. Primitive section keys avoid boxing in hot lookups. Nearby-vehicle
+queries exclude the querying craft before allocating candidates and retain exact
+multiple-craft and negative-coordinate behavior.
+
+Large, relatively flat hulls use 16×4×16 collision-cache regions. Smaller and
+tall structures retain 8×8×8 regions. In the extracted world, a six-pose
+forward/reverse collision comparison reduced median step CPU from approximately
+3.0 ms to 2.3 ms, and allocation from 2.22 MB to 1.35 MB. The adaptive selection
+produced the same query counts as the selected fixed grid. Every pose retained
+its original three-axis movement result. These are CPU collision-step timings,
+not frame rates. Terrain reuse ends with its synchronous physics/replay batch,
+so later world changes are queried again.
+
+Complete frame intervals also include client prediction ticks between draws.
+In a paired Complementary Unbound scene, conservative fixed-glass collision
+bounds and adaptive terrain regions reduced stationary median intervals from
+442 ms to 257 ms; sustained movement measured 261 ms. Completed rendering stayed
+near 210 ms. Sustained shader render allocation fell from approximately 7.8 MB
+to 4.3 MB per frame after light-only wall refresh. This explains why reducing draw submissions alone
+could leave a large shader slowdown: expensive catch-up ticks delayed the next
+frame. The benchmark uses the actual saved controller and Pilot Seat, retains
+old tile NBT, and requires authoritative movement during the sampling window.
+Mesa software-rendered measurements establish comparisons in that environment;
+hardware FPS and owner shader acceptance require the hardware client.
+
+## Contained fluids
+
+Contained-fluid physics uses compact runs along the most subdivided axis. A
+26-case comparison against the previous Cartesian partition reduced 2,284,318
+fluid cells to 19,100 with identical ownership at every original grid cell.
+Voxel faces are created only when requested, preserving their previous masks and
+order. Panel and door rendering already uses analytic surfaces and now avoids
+constructing the unused voxel volume. This reduces both cold construction work
+and retained geometry without changing stored fluid sides or opening behavior.

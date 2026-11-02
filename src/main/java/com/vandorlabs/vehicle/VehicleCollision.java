@@ -303,6 +303,16 @@ public final class VehicleCollision {
         return true;
     }
     private Terrain terrain,replayTerrain;
+    private int terrainHorizontalBits=-1,terrainVerticalBits=-1;
+    /** Isolated before/after measurements only; gameplay uses adaptive sections. */
+    public static volatile boolean legacyTerrainGrid;
+    /** Isolated comparison of equivalent broadphase partitions; never saved or networked. */
+    public void withTerrainSections(int horizontalBits,int verticalBits,Runnable action){
+        if(horizontalBits< -1||horizontalBits>4||verticalBits< -1||verticalBits>4)throw new IllegalArgumentException("Terrain section size");
+        int oldHorizontal=terrainHorizontalBits,oldVertical=terrainVerticalBits;Terrain old=terrain,oldReplay=replayTerrain;
+        terrainHorizontalBits=horizontalBits;terrainVerticalBits=verticalBits;terrain=replayTerrain=null;
+        try{action.run();}finally{terrainHorizontalBits=oldHorizontal;terrainVerticalBits=oldVertical;terrain=old;replayTerrain=oldReplay;}
+    }
     public int terrainQueries,candidateBoxes;
     /** Synchronous prediction only: world obstacles cannot tick between replayed inputs. */
     public void withTerrainCache(World world,net.minecraft.entity.Entity entity,Runnable replay){
@@ -313,18 +323,23 @@ public final class VehicleCollision {
     public void end(){terrain=null;}
     private final class Terrain {
         final World world;final net.minecraft.entity.Entity entity;
+        final double span=Math.max(bounds.maxX-bounds.minX,bounds.maxZ-bounds.minZ);
+        final boolean flat=!legacyTerrainGrid&&span>=32&&(bounds.maxY-bounds.minY)*2<=span;
+        final int horizontalBits=terrainHorizontalBits>=0?terrainHorizontalBits:flat?4:3,
+                verticalBits=terrainVerticalBits>=0?terrainVerticalBits:flat?2:3,
+                horizontal=1<<horizontalBits,vertical=1<<verticalBits;
         final Map<BlockPos,List<AxisAlignedBB>> sections=new HashMap<>();
         Terrain(World world,net.minecraft.entity.Entity entity){this.world=world;this.entity=entity;}
         Collection<AxisAlignedBB> obstacles(AxisAlignedBB swept) {
             Set<AxisAlignedBB> found=new HashSet<>();
-            // Query only eight-block sections touched by actual hull sweeps, never a hollow hull's full volume.
-            for(int x=MathHelper.floor(swept.minX)>>3;x<=MathHelper.floor(swept.maxX)>>3;x++)
-                for(int y=MathHelper.floor(swept.minY)>>3;y<=MathHelper.floor(swept.maxY)>>3;y++)
-                    for(int z=MathHelper.floor(swept.minZ)>>3;z<=MathHelper.floor(swept.maxZ)>>3;z++) {
+            // Query only bounded sections touched by actual hull sweeps, never a hollow hull's full volume.
+            for(int x=MathHelper.floor(swept.minX)>>horizontalBits;x<=MathHelper.floor(swept.maxX)>>horizontalBits;x++)
+                for(int y=MathHelper.floor(swept.minY)>>verticalBits;y<=MathHelper.floor(swept.maxY)>>verticalBits;y++)
+                    for(int z=MathHelper.floor(swept.minZ)>>horizontalBits;z<=MathHelper.floor(swept.maxZ)>>horizontalBits;z++) {
                         BlockPos key=new BlockPos(x,y,z);
                         List<AxisAlignedBB> candidates=sections.get(key);
-                        if(candidates==null) {
-                            candidates=world.getCollisionBoxes(entity,new AxisAlignedBB(x*8,y*8,z*8,x*8+8,y*8+8,z*8+8).grow(1e-6));
+                        if(candidates==null){
+                            candidates=world.getCollisionBoxes(entity,new AxisAlignedBB(x*horizontal,y*vertical,z*horizontal,x*horizontal+horizontal,y*vertical+vertical,z*horizontal+horizontal).grow(1e-6));
                             sections.put(key,candidates);terrainQueries++;candidateBoxes+=candidates.size();
                         }
                         for(AxisAlignedBB box:candidates)if(box.intersects(swept))found.add(box);

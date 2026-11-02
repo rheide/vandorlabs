@@ -382,6 +382,10 @@ public class TEAnimatedScreenSelector
             StaticSurfaceMesh mesh=DiagonalWallMeshCache.get(tile,state,wall,metal,null);
             if(tile.getMainTextureLayout()!=0)mesh=GlassSurfaceMapping.map(mesh,wall,GlassSurfaceGroups.mainLayout(tile),false,0,0,tile.getMainTextureLayout());
             int rotation=((int)(180-state.getValue(BlockProgrammableWall.FACING).getHorizontalAngle())/90)&3;
+            if(!((BlockProgrammableWall)state.getBlock()).isDiagonalShape()&&((BlockProgrammableWall)state.getBlock()).flatCorner(state,tile.getWorld(),tile.getPos())==null){
+                double offset=com.vandorlabs.blocks.PanelDepth.offset(state.getValue(BlockProgrammableWall.DEPTH))/16D;
+                switch(rotation){case 0:z+=offset;break;case 1:x+=offset;break;case 2:z-=offset;break;default:x-=offset;break;}
+            }
             buffer.setTranslation(0,0,0);mesh.drawPlaced(buffer,x,y,z,rotation,tile.getWorld().getCombinedLight(tile.getPos(),0));return;
         }
         ProgrammableSolidRenderer.emit(tile, x, y, z, buffer);

@@ -120,6 +120,8 @@ public final class NonRenderingChecks {
         TrapdoorScratchChecks.run();
         GroupCacheLifetimeChecks.run();
         TrapdoorSectionPresenceChecks.run();
+        FluidVolumeCompactionChecks.run();
+        VehicleLookupChecks.run();
         ScreenTextureLocationChecks.run();
         DiagonalChunkChecks.run();
     }

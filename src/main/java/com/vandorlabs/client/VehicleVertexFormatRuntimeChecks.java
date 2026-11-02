@@ -26,6 +26,8 @@ final class VehicleVertexFormatRuntimeChecks {
         javax.imageio.ImageIO.write(reference,"png",new File(output,"vehicle-vbo-vanilla.png"));javax.imageio.ImageIO.write(wide,"png",new File(output,"vehicle-vbo-extended.png"));javax.imageio.ImageIO.write(old,"png",new File(output,"vehicle-vbo-old-stride.png"));
         BufferBuilder batch=new BufferBuilder(512);batch.begin(GL11.GL_QUADS,extended);int[][] parts={new int[56],new int[56]};for(int p=0;p<2;p++)for(int i=0;i<parts[p].length;i++)parts[p][i]=p*1000+i;
         BlockMeshVbo.merge(batch,java.util.Arrays.asList(parts),extended);int[] merged=batch.getVertexState().getRawBuffer();require(merged.length==112,"complete extended records merged");for(int i=0;i<merged.length;i++)require(merged[i]==parts[i/56][i%56],"shader payload changed while batching");batch.finishDrawing();
+        WallLightRecords light=WallLightRecords.forFormat(extended);require(light!=null,"extended lightmap format supported");int[] original=merged.clone();int[] levels={0x00310072,0x00600090};light.update(merged,new int[]{0,56,112},new int[]{0,0},levels);
+        for(int i=0;i<merged.length;i++)require(merged[i]==(i%light.stride==light.word?light.packed(levels[i/56]):original[i]),"shader payload changed while relighting");
         System.out.println("[vandorlabs][reprolab] vehicle-vertex-format-live PASS vanilla/56-byte GPU pixel parity, old-stride negative control, immutable format snapshots and preserved shader payload; shader-pack hardware acceptance separate");
     }
     private static BufferedImage capture(Minecraft mc,VertexFormat format,boolean old){

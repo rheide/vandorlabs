@@ -33,7 +33,8 @@ public final class WaterloggedParts {
     public static final class Volume {
         final List<AxisAlignedBB> solid;
         public final List<Cell> cells=new ArrayList<>();
-        public final List<Face> faces=new ArrayList<>();
+        private final DeferredFaces deferred=new DeferredFaces();
+        public final List<Face> faces=deferred;
         Volume(List<AxisAlignedBB> solid){this.solid=solid;}
         public boolean hasSide(int side){for(Cell c:cells)if(c.side==side)return true;return false;}
     }
@@ -63,18 +64,57 @@ public final class WaterloggedParts {
         if(cached&&data!=null&&data.geometry!=null&&data.geometry.solid.equals(local)&&data.geometryState==state&&data.geometryMapping==mapping&&pos.equals(data.geometryPos)){data.geometryTick=tick;return data.geometry;}
         Volume result=new Volume(local);double[][] cuts=new double[3][];
         for(int axis=0;axis<3;axis++){TreeSet<Double> points=new TreeSet<>();points.add(0D);points.add(1D);if(OpeningFluids.supports(state)){points.add(.5);double[] plane=OpeningFluids.plane(world,pos);if(Math.abs(plane[axis])>.999)for(int end=3;end<5;end++){double cut=plane[end]/plane[axis];if(cut>0&&cut<1)points.add(cut);}}for(AxisAlignedBB b:local){points.add(axis==0?b.minX:axis==1?b.minY:b.minZ);points.add(axis==0?b.maxX:axis==1?b.maxY:b.maxZ);}cuts[axis]=points.stream().mapToDouble(Double::doubleValue).toArray();}
-        int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;int[][][] owners=new int[nx][ny][nz];
-        for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++){
-            AxisAlignedBB box=new AxisAlignedBB(cuts[0][x],cuts[1][y],cuts[2][z],cuts[0][x+1],cuts[1][y+1],cuts[2][z+1]);Vec3d center=new Vec3d((box.minX+box.maxX)*.5,(box.minY+box.maxY)*.5,(box.minZ+box.maxZ)*.5);int side=side(world,pos,center);for(AxisAlignedBB b:local)if(b.contains(center)){side=-1;break;}owners[x][y][z]=side;if(side>=0)result.cells.add(new Cell(box,side));
+        int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;
+        double[] aperture=OpeningFluids.supports(state)?OpeningFluids.plane(world,pos):null;
+        int[] sizes={nx,ny,nz};int axis=2;for(int d=0;d<2;d++)if(sizes[d]>sizes[axis])axis=d;
+        int a=(axis+1)%3,b=(axis+2)%3;double[] low=new double[3],high=new double[3],center=new double[3];
+        for(int i=0;i<sizes[a];i++)for(int j=0;j<sizes[b];j++){
+            low[a]=cuts[a][i];high[a]=cuts[a][i+1];center[a]=(low[a]+high[a])*.5;
+            low[b]=cuts[b][j];high[b]=cuts[b][j+1];center[b]=(low[b]+high[b])*.5;
+            int run=-1;double start=0;
+            for(int k=0;k<sizes[axis];k++){
+                center[axis]=(cuts[axis][k]+cuts[axis][k+1])*.5;double cx=center[0],cy=center[1],cz=center[2];
+                int side=aperture==null?side(world,pos,new Vec3d(cx,cy,cz))
+                        :cx*aperture[0]+cy*aperture[1]+cz*aperture[2]<(aperture[3]+aperture[4])/2?0:1;
+                for(AxisAlignedBB box:local)if(cx>box.minX&&cx<box.maxX&&cy>box.minY&&cy<box.maxY&&cz>box.minZ&&cz<box.maxZ){side=-1;break;}
+                if(side!=run){if(run>=0)addFluidRun(result.cells,low,high,axis,start,cuts[axis][k],run);run=side;start=cuts[axis][k];}
+            }
+            if(run>=0)addFluidRun(result.cells,low,high,axis,start,cuts[axis][sizes[axis]],run);
+        }
+        List<Cell> fluidCells=result.cells;result.deferred.source=()->volumeFaces(fluidCells,cuts);
+        if(cached&&data!=null){data.geometry=result;data.geometryPos=pos.toImmutable();data.geometryTick=tick;data.geometryState=state;data.geometryMapping=mapping;}return result;
+    }
+    private static void addFluidRun(List<Cell> cells,double[] low,double[] high,int axis,double start,double end,int side){
+        low[axis]=start;high[axis]=end;cells.add(new Cell(new AxisAlignedBB(low[0],low[1],low[2],high[0],high[1],high[2]),side));
+    }
+    /** Physics uses cells only. Retain the exact face order without allocating
+     * millions of vertices until a renderer actually requests voxel faces. */
+    private static final class DeferredFaces extends AbstractList<Face> {
+        java.util.function.Supplier<List<Face>> source;
+        private List<Face> value;
+        private synchronized List<Face> value(){if(value==null){value=source==null?Collections.emptyList():source.get();source=null;}return value;}
+        @Override public Face get(int index){return value().get(index);}
+        @Override public int size(){return value().size();}
+        @Override public Iterator<Face> iterator(){return value().iterator();}
+        @Override public void add(int index,Face face){value().add(index,face);}
+        @Override public Face set(int index,Face face){return value().set(index,face);}
+        @Override public Face remove(int index){return value().remove(index);}
+    }
+    private static List<Face> volumeFaces(List<Cell> cells,double[][] cuts){
+        int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;List<Face> faces=new ArrayList<>();
+        byte[][][] owners=new byte[nx][ny][nz];
+        for(byte[][] plane:owners)for(byte[] row:plane)Arrays.fill(row,(byte)-1);
+        for(Cell cell:cells){int x0=Arrays.binarySearch(cuts[0],cell.box.minX),x1=Arrays.binarySearch(cuts[0],cell.box.maxX),y0=Arrays.binarySearch(cuts[1],cell.box.minY),y1=Arrays.binarySearch(cuts[1],cell.box.maxY),z0=Arrays.binarySearch(cuts[2],cell.box.minZ),z1=Arrays.binarySearch(cuts[2],cell.box.maxZ);
+            for(int x=x0;x<x1;x++)for(int y=y0;y<y1;y++)Arrays.fill(owners[x][y],z0,z1,(byte)cell.side);
         }
         for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++)if(owners[x][y][z]>=0){
             int side=owners[x][y][z];double a=cuts[0][x],b=cuts[0][x+1],c=cuts[1][y],d=cuts[1][y+1],e=cuts[2][z],f=cuts[2][z+1];
             for(EnumFacing face:EnumFacing.values()){int xx=x+face.getFrontOffsetX(),yy=y+face.getFrontOffsetY(),zz=z+face.getFrontOffsetZ();if(xx>=0&&xx<nx&&yy>=0&&yy<ny&&zz>=0&&zz<nz&&owners[xx][yy][zz]==side)continue;
                 Vec3d[] vertices;switch(face){case DOWN:vertices=new Vec3d[]{new Vec3d(a,c,e),new Vec3d(b,c,e),new Vec3d(b,c,f),new Vec3d(a,c,f)};break;case UP:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(a,d,f),new Vec3d(b,d,f),new Vec3d(b,d,e)};break;case WEST:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(a,c,e),new Vec3d(a,c,f),new Vec3d(a,d,f)};break;case EAST:vertices=new Vec3d[]{new Vec3d(b,d,e),new Vec3d(b,d,f),new Vec3d(b,c,f),new Vec3d(b,c,e)};break;case NORTH:vertices=new Vec3d[]{new Vec3d(a,d,e),new Vec3d(b,d,e),new Vec3d(b,c,e),new Vec3d(a,c,e)};break;default:vertices=new Vec3d[]{new Vec3d(a,d,f),new Vec3d(a,c,f),new Vec3d(b,c,f),new Vec3d(b,d,f)};}
-                result.faces.add(new Face(vertices,side,face.getAxis()==EnumFacing.Axis.X?0:face.getAxis()==EnumFacing.Axis.Y?1:2));
+                faces.add(new Face(vertices,side,face.getAxis()==EnumFacing.Axis.X?0:face.getAxis()==EnumFacing.Axis.Y?1:2));
             }
         }
-        if(cached&&data!=null){data.geometry=result;data.geometryPos=pos.toImmutable();data.geometryTick=tick;data.geometryState=state;data.geometryMapping=mapping;}return result;
+        return faces;
     }
     public static List<AxisAlignedBB> gaps(IBlockAccess access,BlockPos pos){if(!(access instanceof World))return Collections.emptyList();List<AxisAlignedBB> boxes=new ArrayList<>();for(Cell cell:volume((World)access,pos).cells)boxes.add(cell.box.offset(pos));return boxes;}
     private static Material material(FluidStack fluid){return fluid.getFluid().getBlock()==null?Material.WATER:fluid.getFluid().getBlock().getDefaultState().getMaterial();}

@@ -10,6 +10,7 @@ import java.util.*;
 
 /** Offset leaves retain their owning block for interaction, without occupying the shaft cell. */
 public final class OffsetTrapdoorInteractions {
+    public static final com.vandorlabs.world.LoadedTileIndex<TileEntityProgrammableTrapdoor> INDEX=new com.vandorlabs.world.LoadedTileIndex<>(TileEntityProgrammableTrapdoor.class);
     public static final OffsetTrapdoorInteractions INSTANCE=new OffsetTrapdoorInteractions();
     private OffsetTrapdoorInteractions() { }
 
@@ -38,16 +39,28 @@ public final class OffsetTrapdoorInteractions {
         addCollisions(event.getWorld(),event.getAabb(),event.getCollisionBoxesList());
     }
     public static void addCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
+        Class<?> type=world.getClass();
+        if(type==net.minecraft.world.WorldServer.class||type==net.minecraft.world.WorldServerMulti.class
+                ||type.getName().equals("net.minecraft.client.multiplayer.WorldClient")
+                ||world instanceof com.vandorlabs.vehicle.VehicleWorld){
+            List<TileEntityProgrammableTrapdoor> candidates=INDEX.query(world,query.grow(2,1,2));
+            // Preserve getAllInBoxMutable's X-fastest traversal order.
+            if(candidates.size()>1)candidates.sort((a,b)->{int z=Integer.compare(a.getPos().getZ(),b.getPos().getZ());if(z!=0)return z;int y=Integer.compare(a.getPos().getY(),b.getPos().getY());return y!=0?y:Integer.compare(a.getPos().getX(),b.getPos().getX());});
+            for(TileEntityProgrammableTrapdoor tile:candidates)addLeafCollision(world,tile.getPos(),query,boxes);
+            return;
+        }
         int x0=MathHelper.floor(query.minX-2),y0=MathHelper.floor(query.minY-1),z0=MathHelper.floor(query.minZ-2);
         int x1=MathHelper.floor(query.maxX+2),y1=MathHelper.floor(query.maxY+1),z1=MathHelper.floor(query.maxZ+2);
         if(!TrapdoorSectionPresence.mayContain(world,x0,y0,z0,x1,y1,z1))return;
         scanCollisions(world,query,boxes);
     }
+    private static void addLeafCollision(World world,BlockPos pos,AxisAlignedBB query,List<AxisAlignedBB> boxes){
+        TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null||!leaf.isSliding()&&!leaf.isCover()&&!leaf.isSlideOverSurface())return;
+        AxisAlignedBB box=bounds(leaf);if(box.intersects(query)&&!boxes.contains(box))boxes.add(box);
+    }
     private static void scanCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
         for(BlockPos pos:BlockPos.getAllInBoxMutable(new BlockPos(query.minX-2,query.minY-1,query.minZ-2),new BlockPos(query.maxX+2,query.maxY+1,query.maxZ+2))) {
-            TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null || !leaf.isSliding() && !leaf.isCover() && !leaf.isSlideOverSurface())continue;
-            AxisAlignedBB box=bounds(leaf);
-            if(box.intersects(query) && !boxes.contains(box))boxes.add(box);
+            addLeafCollision(world,pos,query,boxes);
         }
     }
 }

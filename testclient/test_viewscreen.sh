@@ -7,7 +7,7 @@ unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
 unset VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
 unset VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY VANDOR_LABS_GARAGE_DOOR_BENCHMARK_ONLY VANDOR_LABS_GARAGE_DOOR_CHECKS_ONLY
-unset VANDOR_LABS_DENSE_RENDER_CHECKS_ONLY
+unset VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY VANDOR_LABS_DENSE_RENDER_CHECKS_ONLY
 unset VANDOR_LABS_ARTWORK27_CHECKS_ONLY
 unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
@@ -175,6 +175,9 @@ case "${1:-}" in
         elif [ "$TARGET" = canopy-glass-order ]; then
             PREFIX=canopy_glass_
             export VANDOR_LABS_CANOPY_GLASS_ORDER_CHECKS_ONLY=true
+        elif [ "$TARGET" = vehicle-render-cost ]; then
+            PREFIX=vehicle_render_
+            export VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY=true
         elif [ "$TARGET" = garage-tall ]; then
             PREFIX=garage_tall_
             export VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY=true
@@ -278,6 +281,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = vehicle-render-cost ]; then
+        grep -q "vehicle-render-cost PASS" "$RUN_OUT/client.log"
+        echo "Vehicle render cost checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = garage-tall ]; then
         grep -q "garage-tall PASS" "$RUN_OUT/client.log"
         echo "Tall garage checks passed: $RUN_OUT"

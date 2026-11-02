@@ -384,13 +384,13 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     }
     protected void reconnectLoadedGroup() { }
     @Override public void onLoad() {
-        super.onLoad();DeferredTileLoad.schedule(this,()->{
+        super.onLoad();OffsetTrapdoorInteractions.INDEX.add(this);DeferredTileLoad.schedule(this,()->{
             repairLinks();reconnectLoadedGroup();
             RedstoneChannels.register(this);evaluatePower(false);
         });
     }
-    @Override public void invalidate(){RedstoneChannels.unregister(this);super.invalidate();}
-    @Override public void onChunkUnload(){RedstoneChannels.unregister(this);super.onChunkUnload();}
+    @Override public void invalidate(){OffsetTrapdoorInteractions.INDEX.remove(this);RedstoneChannels.unregister(this);super.invalidate();}
+    @Override public void onChunkUnload(){OffsetTrapdoorInteractions.INDEX.remove(this);RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override public boolean shouldRefresh(World world,BlockPos p,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}

@@ -8,7 +8,10 @@ See the [2.8 guide](docs/versions/version-2.8.md) and [Garage Door construction 
 - Bake settled closed garage panels into terrain; batch moving panels and cache reusable pose geometry. Preserve server collision and saved motion independently of cosmetic animation and chunk upload timing.
 - Batch unclaimed single Surface blocks, ordinary planar glazing and opaque diagonal wall fallback meshes. Tighten Surface visibility bounds.
 - Cache stationary opaque ramp endpoint VBOs, with state, lighting, vertex-format and resource invalidation.
-- Index loaded canopy and moved-door collision owners; avoid unrelated entity scans when no turntables exist.
+- Index loaded canopy, moved-door and offset-trapdoor collision owners; reject fixed-glass misses before neighbour geometry queries and avoid unrelated entity scans when no turntables exist.
+- Batch carried opaque wall sections in shader-safe VBOs with immutable formats, preserved block material IDs and byte-limited retention. Refresh lightmap fields without rebuilding geometry; rebuild affected sections after carried artwork updates or neighbouring block edits.
+- Tune collision regions for large flat craft, use primitive spatial-index keys and avoid allocating nearby-craft candidates for self-collision. Skip unused fixed-glass client mechanism ticks.
+- Compact contained-fluid cells along the most subdivided axis; defer voxel faces until requested and avoid unused panel/door volumes during rendering.
 - Scope Complementary rain wind beneath fixed Canopy Glass roofs without changing world lighting.
 - Add focused density, weather, native garage interaction and many-door renderer comparisons. Full release validation and hardware shader acceptance remain deferred.
 

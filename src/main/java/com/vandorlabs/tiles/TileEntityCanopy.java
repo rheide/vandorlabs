@@ -262,6 +262,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     @Override
     public void update() {
         if(world==null || removing)return;
+        if(world.isRemote&&chunkRendered())return; // Fixed native glass has no client mechanism to advance.
         if(block()==null) {
             // A failed older teardown may have left a tile on air/another block.
             // Remove only this orphan tile; never erase its replacement block.
@@ -378,7 +379,24 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     }
     private void cancelIndex(){if(pendingIndex!=null){pendingIndex.cancel(false);if(pendingIndex instanceof Runnable)INDEX_WORKER.remove((Runnable)pendingIndex);pendingIndex=null;}}
     /** Exact region query for small entities and particles; geometry and ordering are unchanged. */
+    /** Every authored fixed-glass variant and its rotated form stays in its cell.
+     * Finishes preserve vertices; padding encloses the thin collision surface.
+     * This rejection needs no connection mask, neighbour lookup or mesh creation. */
+    private Boolean fixedCollisionCell;
+    public boolean mayIntersectCollision(AxisAlignedBB query){
+        if(!com.vandorlabs.canopy.CanopyInteractions.localCollisionBounds)return true;
+        if(fixedCollisionCell==null){
+            if(world==null||!world.isBlockLoaded(pos))return true;
+            fixedCollisionCell=getBlockType() instanceof com.vandorlabs.blocks.BlockFixedCanopyGlass;
+        }
+        if(!fixedCollisionCell||pair!=null)return true;
+        double pad=.0020001;
+        return pos.getX()+1+pad>query.minX&&pos.getX()-pad<query.maxX
+                &&pos.getY()+1+pad>query.minY&&pos.getY()-pad<query.maxY
+                &&pos.getZ()+1+pad>query.minZ&&pos.getZ()-pad<query.maxZ;
+    }
     public int addCollisionBoxes(AxisAlignedBB query,List<AxisAlignedBB> output){
+        if(!mayIntersectCollision(query))return 0;
         if(!draws()||block()==null)return 0;
         // A miss should not tessellate collision geometry just to reject it.
         AxisAlignedBB geometry=geometryBounds();if(geometry==null||!geometry.grow(resizable()?1D/16+.0020001:.0020001).intersects(query))return 0;

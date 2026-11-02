@@ -38,7 +38,17 @@ final class VehicleRenderRuntimeChecks {
             for(long[] sample:samples)Arrays.sort(sample);
             System.out.println("[vandorlabs][reprolab] vehicle-wall-render PASS walls=64 uncached-us="+samples[0][12]/1000+" cached-us="+samples[1][12]/1000+" builds="+cache.builds+" hits="+cache.hits);
         }finally{VehicleOpaqueTileCache.enabled=true;cache.delete();GlStateManager.popMatrix();}
-        if(BlockSurfaceFormat.get().getNextOffset()==32)VehicleOpaqueBatchChecks.run(mc,structure,view);
+        if(BlockSurfaceFormat.get().getNextOffset()==32){
+            VehicleOpaqueBatchChecks.run(mc,structure,view);
+            for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int depth=0;depth<3;depth++){
+                if(facing==EnumFacing.NORTH&&depth==0)continue;
+                List<VehicleStructure.Cell> configured=new ArrayList<>();
+                for(VehicleStructure.Cell cell:cells)configured.add(cell.pos.equals(structure.seat)?cell:new VehicleStructure.Cell(cell.pos,cell.state.withProperty(com.vandorlabs.blocks.BlockProgrammableWall.FACING,facing).withProperty(com.vandorlabs.blocks.BlockProgrammableWall.DEPTH,depth),cell.tileData()));
+                VehicleStructure variant=new VehicleStructure(configured,structure.seat,EnumFacing.NORTH,1);
+                VehicleOpaqueBatchChecks.run(mc,variant,new VehicleWorld(mc.world,variant));
+            }
+            System.out.println("[vandorlabs][reprolab] vehicle-opaque-depths PASS all-four-facings three-depths");
+        }
         EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);craft.install(structure);craft.setPosition(0,200,0);
         RenderGroundVehicle renderer=new RenderGroundVehicle(mc.getRenderManager());long[][] ordering=new long[2][24];
         try{
@@ -50,6 +60,34 @@ final class VehicleRenderRuntimeChecks {
             for(long[] sample:ordering)Arrays.sort(sample);
             System.out.println("[vandorlabs][reprolab] vehicle-tile-order PASS walls=64 samples=24 previous-us="+ordering[0][12]/1000+" retained-us="+ordering[1][12]/1000+" opaque-list-copies/frame=64->0 opaque-sort-items/frame=64->0");
         }finally{RenderGroundVehicle.reuseTileOrder=true;RenderGroundVehicle.batchOpaqueTiles=true;RenderGroundVehicle.reload();}
+        invalidation(mc,structure);
         if(cache.size()!=0)throw new IllegalStateException("vehicle wall cache retains GPU resources after deletion");
+    }    @SuppressWarnings("unchecked") private static void invalidation(Minecraft mc,VehicleStructure structure){
+        EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);craft.install(structure);craft.setPosition(0,200,0);
+        RenderGroundVehicle renderer=new RenderGroundVehicle(mc.getRenderManager());
+        GlStateManager.pushMatrix();GlStateManager.translate(0,-10000,0);
+        try{
+            renderer.doRender(craft,0,0,0,0,0);
+            java.lang.reflect.Field meshes=RenderGroundVehicle.class.getDeclaredField("meshes");meshes.setAccessible(true);Object regions=((Map<?,?>)meshes.get(null)).get(craft);
+            java.lang.reflect.Field batches=regions.getClass().getDeclaredField("opaqueBatches"),cacheField=regions.getClass().getDeclaredField("opaqueTiles");batches.setAccessible(true);cacheField.setAccessible(true);
+            VehicleOpaqueTileBatch batch=((Map<BlockPos,VehicleOpaqueTileBatch>)batches.get(regions)).get(BlockPos.ORIGIN);VehicleOpaqueTileCache cache=(VehicleOpaqueTileCache)cacheField.get(regions);
+            batch.draw(cache,craft.structure,0);int builds=batch.builds,revision=craft.view.tileRevision;
+            TileEntity original=craft.view.getTileEntity(BlockPos.ORIGIN);TileEntityAnimatedScreenSelector changed=new TileEntityAnimatedScreenSelector();changed.readFromNBT(original.writeToNBT(new NBTTagCompound()));changed.setHousingTexture(15);
+            VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.TILE);packet.origin=BlockPos.ORIGIN;packet.sequence=net.minecraft.block.Block.getStateId(craft.view.getBlockState(BlockPos.ORIGIN));java.io.ByteArrayOutputStream encoded=new java.io.ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(changed.writeToNBT(new NBTTagCompound()),encoded);packet.data=encoded.toByteArray();VehicleSignals.apply(craft,packet);
+            if(((TileEntityAnimatedScreenSelector)original).getHousingTexture()!=15)throw new IllegalStateException("wall fixture TILE packet did not apply artwork");
+            if(craft.view.getTileEntity(BlockPos.ORIGIN)!=original||craft.view.tileRevision!=revision)throw new IllegalStateException("wall invalidation fixture must update an existing carried tile");
+            renderer.doRender(craft,0,0,0,0,0);
+            if(batch.ready(cache)&&batch.builds==builds)throw new IllegalStateException("Carried wall VBO retained old artwork after native TILE update");
+            batch.draw(cache,craft.structure,0);builds=batch.builds;
+            List<VehicleStructure.Cell> attached=new ArrayList<>(craft.structure.cells);BlockPos neighbor=new BlockPos(8,0,0);attached.add(new VehicleStructure.Cell(neighbor,net.minecraft.init.Blocks.STONE.getDefaultState(),null));
+            craft.updateSettings(new VehicleStructure(attached,structure.seat,structure.facing,structure.gearCount));renderer.doRender(craft,0,0,0,0,0);
+            if(batch.ready(cache)&&batch.builds==builds)throw new IllegalStateException("Carried wall VBO retained old contact geometry after adjacent stone placement");
+            batch.draw(cache,craft.structure,0);builds=batch.builds;attached.removeIf(cell->cell.pos.equals(neighbor));craft.updateSettings(new VehicleStructure(attached,structure.seat,structure.facing,structure.gearCount));renderer.doRender(craft,0,0,0,0,0);
+            if(batch.ready(cache)&&batch.builds==builds)throw new IllegalStateException("Carried wall VBO retained old contact geometry after adjacent stone removal");
+            batch.draw(cache,craft.structure,0);
+            System.out.println("[vandorlabs][reprolab] vehicle-wall-invalidation PASS native-TILE artwork update adjacent-section stone placement/removal retained tile identity");
+        }catch(ReflectiveOperationException|java.io.IOException failure){throw new IllegalStateException("Vehicle wall cache regression fixture",failure);}
+        finally{GlStateManager.popMatrix();RenderGroundVehicle.reload();}
     }
+
 }

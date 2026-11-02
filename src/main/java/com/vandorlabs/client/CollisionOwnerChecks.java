@@ -24,6 +24,12 @@ final class CollisionOwnerChecks {
     }
     private static long sample(Runnable action){long[] n=new long[7];for(int k=0;k<7;k++){long start=System.nanoTime();for(int i=0;i<2000;i++)action.run();n[k]=(System.nanoTime()-start)/2000;}Arrays.sort(n);return n[3];}
     static void run(Minecraft mc,File out)throws Exception{
+        for(Map.Entry<String,List<com.vandorlabs.canopy.CanopyMesh.Face>> model:com.vandorlabs.canopy.CanopyMesh.MODELS.entrySet())if(model.getKey().startsWith("regular_1x1_"))
+            for(int mount=0;mount<4;mount++){
+                com.vandorlabs.canopy.LargeCanopySettings settings=new com.vandorlabs.canopy.LargeCanopySettings();settings.mount=mount;
+                for(com.vandorlabs.canopy.CanopyMesh.Face face:com.vandorlabs.canopy.CanopyPose.faces(model.getValue(),"regular_canopy_glass",1,settings,0))for(Vec3d vertex:face.vertices)
+                    require(vertex.x>=0&&vertex.x<=1&&vertex.y>=0&&vertex.y<=1&&vertex.z>=0&&vertex.z<=1,"fixed glass leaves conservative cell: "+model.getKey()+" mount="+mount);
+            }
         World world=mc.world;BlockPos base=new BlockPos((mc.player.getPosition().getX()>>4)*16,140,(mc.player.getPosition().getZ()>>4)*16),owner=base.add(16,-65,16);
         List<BlockPos> background=new ArrayList<>();
         try{
@@ -37,6 +43,18 @@ final class CollisionOwnerChecks {
             TileEntityCanopy tile=(TileEntityCanopy)world.getTileEntity(owner);require(tile!=null,"native tile missing");
             AxisAlignedBB near=new AxisAlignedBB(owner).grow(.2),particle=new AxisAlignedBB(owner.down(24)).grow(.1);
             require(CanopyInteractions.owners(world,near).contains(tile),"native onLoad not indexed");
+            for(net.minecraft.util.EnumFacing side:net.minecraft.util.EnumFacing.VALUES){
+                AxisAlignedBB edge=new AxisAlignedBB(owner.offset(side)).grow(.001);
+                require(tile.mayIntersectCollision(edge),"thin boundary collision prematurely rejected "+side);
+            }
+            AxisAlignedBB separated=new AxisAlignedBB(owner.down(8)).grow(.1);
+            require(!tile.mayIntersectCollision(separated),"fixed glass far query retained");
+            tile.pair=owner;require(tile.mayIntersectCollision(separated),"legacy paired glass must retain broad bounds");tile.pair=null;
+            java.lang.reflect.Field posed=TileEntityCanopy.class.getDeclaredField("posedFaces");posed.setAccessible(true);
+            Object oldGeometry=posed.get(tile);
+            List<AxisAlignedBB> missed=new ArrayList<>();new CanopyInteractions().collision(new net.minecraftforge.event.world.GetCollisionBoxesEvent(world,null,separated,missed));
+            require(missed.isEmpty()&&posed.get(tile)==oldGeometry,"far collision built or changed fixed roof geometry");
+            require(CanopyInteractions.INDEX.query(world,separated.grow(12),t->t.mayIntersectCollision(separated)).isEmpty(),"far roof retained in collision broadphase");
             for(AxisAlignedBB q:new AxisAlignedBB[]{near,particle,new AxisAlignedBB(owner.east(10)).grow(.1),new AxisAlignedBB(owner.north(13)).grow(.1)})require(new HashSet<>(reference(world,q)).equals(new HashSet<>(CanopyInteractions.owners(world,q))),"owner broadphase changed "+q);
             tile.onChunkUnload();require(!CanopyInteractions.owners(world,near).contains(tile),"unloaded tile retained");tile.onLoad();require(CanopyInteractions.owners(world,near).contains(tile),"reload missing owner");
             List<AxisAlignedBB> direct=new ArrayList<>(),event=new ArrayList<>();tile.addCollisionBoxes(near,direct);new CanopyInteractions().collision(new net.minecraftforge.event.world.GetCollisionBoxesEvent(world,null,near,event));require(event.containsAll(direct),"indexed collision lost geometry");
@@ -45,7 +63,7 @@ final class CollisionOwnerChecks {
             world.setBlockToAir(owner);require(!CanopyInteractions.owners(world,near).contains(tile),"removed tile retained");
             List<AxisAlignedBB> expected=world.getEntitiesWithinAABB(com.vandorlabs.turntable.EntityTurntable.class,particle.grow(32)).isEmpty()?Collections.emptyList():null;
             if(expected!=null){List<AxisAlignedBB> actual=new ArrayList<>();com.vandorlabs.turntable.TurntableEvents.collisions(new net.minecraftforge.event.world.GetCollisionBoxesEvent(world,null,particle,actual));require(actual.isEmpty(),"empty turntable observer returned collision");}
-            System.out.println("[vandorlabs][reprolab] collision-owner PASS tiles="+background.size()+" before-ns="+before+" after-ns="+after+" exact-candidates geometry removal chunk-unload reload empty-turntables");
+            System.out.println("[vandorlabs][reprolab] collision-owner PASS tiles="+background.size()+" before-ns="+before+" after-ns="+after+" exact-candidates geometry removal chunk-unload reload empty-turntables fixed-glass-early-rejection authored-bounds thin-boundaries");
         }finally{
             world.setBlockToAir(owner);
             for(BlockPos p:background){Chunk c=world.getChunkProvider().getLoadedChunk(p.getX()>>4,p.getZ()>>4);if(c!=null)c.getTileEntityMap().remove(p);}
