@@ -24,6 +24,8 @@ public final class LegacyBlockStates {
     public static IBlockState decode(String encoded) {
         try {
             BlockStateReference reference=BlockStateReference.parse(encoded);
+            int retired=RetiredCockpitGlass.variant(reference.id);
+            if(retired>=0)return reference.properties.isEmpty()?RetiredCockpitGlass.state(retired):null;
             Block block=Block.REGISTRY.getObject(new ResourceLocation(reference.id));
             if (block==null) return null;
             IBlockState state=block.getDefaultState();

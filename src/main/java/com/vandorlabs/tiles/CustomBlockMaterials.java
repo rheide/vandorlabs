@@ -10,7 +10,10 @@ public final class CustomBlockMaterials {
     private CustomBlockMaterials(){ }
     public static boolean isCustom(int id){return id>=ID_BASE && id<FilesystemTextures.ID_BASE;}
     public static int identifier(Block block,int metadata) {
-        CRC32 crc=new CRC32();try{crc.update((block.getRegistryName()+"@"+metadata).getBytes("UTF-8"));}catch(java.io.UnsupportedEncodingException e){throw new AssertionError(e);}
+        return identifier(block.getRegistryName().toString(),metadata);
+    }
+    public static int identifier(String registryName,int metadata){
+        CRC32 crc=new CRC32();try{crc.update((registryName+"@"+metadata).getBytes("UTF-8"));}catch(java.io.UnsupportedEncodingException e){throw new AssertionError(e);}
         return ID_BASE | ((int)crc.getValue() & 0x1fffffff);
     }
     public static Block block(ItemStack stack) {

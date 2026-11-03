@@ -373,7 +373,7 @@ public final class VehicleTransfer {
     public static void recover(WorldServer world)throws Exception {
         if(!pending(world))return;
         NBTTagCompound tag;
-        try(InputStream in=Files.newInputStream(journal(world))){tag=CompressedStreamTools.readCompressed(in);}
+        try(InputStream in=Files.newInputStream(journal(world))){tag=com.vandorlabs.persistence.RetiredCockpitGlass.itemData(CompressedStreamTools.readCompressed(in));}
         if(tag.getInteger("Schema")!=1)throw new IOException("Unknown vehicle recovery schema");
         rollback(world,tag);
     }

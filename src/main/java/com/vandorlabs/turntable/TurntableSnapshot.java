@@ -110,7 +110,7 @@ public final class TurntableSnapshot {
         int height=tag.getInteger("Height");NBTTagList list=tag.getTagList("Entities",10);
         if(tag.getInteger("Schema")!=1 || height<1 || height>16 || list.tagCount()>MAX_ENTITIES)throw new IllegalArgumentException("Invalid turntable snapshot");
         List<FrozenEntity> entities=new ArrayList<>();Set<UUID> ids=new HashSet<>();
-        for(int i=0;i<list.tagCount();i++){NBTTagCompound e=list.getCompoundTagAt(i);if(!e.hasUniqueId("Entity") || !e.hasKey("Data",10) || !ids.add(e.getUniqueId("Entity")))throw new IllegalArgumentException("Invalid captured entity");entities.add(new FrozenEntity(e.getUniqueId("Entity"),e.hasUniqueId("Parent")?e.getUniqueId("Parent"):null,e.getCompoundTag("Data")));}
+        for(int i=0;i<list.tagCount();i++){NBTTagCompound e=list.getCompoundTagAt(i);if(!e.hasUniqueId("Entity") || !e.hasKey("Data",10) || !ids.add(e.getUniqueId("Entity")))throw new IllegalArgumentException("Invalid captured entity");entities.add(new FrozenEntity(e.getUniqueId("Entity"),e.hasUniqueId("Parent")?e.getUniqueId("Parent"):null,com.vandorlabs.persistence.RetiredCockpitGlass.itemData(e.getCompoundTag("Data"))));}
         for(FrozenEntity e:entities)if(e.parent!=null && (!ids.contains(e.parent) || e.parent.equals(e.id)))throw new IllegalArgumentException("Invalid captured mount");
         Map<UUID,UUID> parents=new HashMap<>();for(FrozenEntity e:entities)parents.put(e.id,e.parent);
         for(FrozenEntity e:entities){Set<UUID> seen=new HashSet<>();UUID at=e.id;while(at!=null){if(!seen.add(at))throw new IllegalArgumentException("Cyclic captured mount");at=parents.get(at);}}

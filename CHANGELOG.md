@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Retire Clear, Pale Cyan and Smoked Cockpit Glass and their recipes. Migrate placed blocks, items and saved designs to vanilla glass, cyan stained glass and gray stained glass.
+
 See the [2.8 guide](docs/versions/version-2.8.md) and [Garage Door construction guide](docs/garage-doors.md).
 
 - Slice vehicle discovery and preflight across ticks, reuse rotation checks for repeated block states and show conversion activity on Vehicle Status screens.

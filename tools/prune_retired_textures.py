@@ -28,6 +28,7 @@ def retired():
             if 'design' in entry:
                 paths.add('unified/' + entry['id'] + '_half')
         (unused if entry.get('hidden') else used).update(paths)
+    unused.update({"clear_cockpit_glass", "pale_cyan_cockpit_glass", "smoked_cockpit_glass"})
     return unused - used
 
 

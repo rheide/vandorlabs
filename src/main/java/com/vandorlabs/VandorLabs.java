@@ -39,6 +39,7 @@ public class VandorLabs {
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         logger = event.getModLog();
+        com.vandorlabs.persistence.RetiredCockpitGlass.install();
         com.vandorlabs.config.BlockAvailability.initialize(event.getModConfigurationDirectory());
         com.vandorlabs.tiles.FilesystemTextures.initialize(event.getModConfigurationDirectory().toPath().resolve("vandorlabs/textures"));
         proxy.preInit(event);
@@ -103,7 +104,11 @@ public class VandorLabs {
     }
 
     @EventHandler
+    public void serverAboutToStart(net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent event){com.vandorlabs.persistence.RetiredCockpitGlass.begin(event.getServer());}
+
+    @EventHandler
     public void serverStarted(net.minecraftforge.fml.common.event.FMLServerStartedEvent event){
+        if(!System.getProperty("vandorlabs.retiredGlassCheck","").isEmpty())try{com.vandorlabs.persistence.RetiredGlassChecks.run(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0),System.getProperty("vandorlabs.retiredGlassCheck"));}catch(Exception failure){throw new IllegalStateException("Retired glass migration checks",failure);}
         if(Boolean.getBoolean("vandorlabs.reactorGlassChecks")){
             net.minecraft.world.WorldServer world=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
             try{com.vandorlabs.vehicle.MekanismReactorGlassChecks.run(world,net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(world));}catch(Exception failure){throw new IllegalStateException("Reactor glass checks",failure);}

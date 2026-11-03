@@ -30,8 +30,7 @@ final class RampGlassRuntimeChecks {
     static void run(World world,EntityPlayerMP owner){
         List<IBlockState> materials=new ArrayList<>();materials.add(Blocks.GLASS.getDefaultState());
         materials.addAll(Blocks.STAINED_GLASS.getBlockState().getValidStates());
-        for(Block block:Block.REGISTRY)if(block instanceof BlockCockpitGlass)materials.addAll(block.getBlockState().getValidStates());
-        require(materials.size()>=20,"plain, sixteen stained and three cockpit variants registered");
+        require(materials.size()==17,"plain and sixteen vanilla stained glass variants registered");
         require(!RampMaterials.isFullGlass(Blocks.GLASS_PANE.getDefaultState())&&!RampMaterials.isFullGlass(Blocks.STAINED_GLASS_PANE.getDefaultState()),"panes retain their distinct geometry");
         BlockPos root=new BlockPos(110,45,110);double x=owner.posX,y=owner.posY,z=owner.posZ;
         try{

@@ -36,7 +36,7 @@ public final class TurntableTransfer {
         Files.move(temp,path,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
     }
     private static void flush(WorldServer world)throws Exception{if(TurntableTransactions.current()!=null)return;world.saveAllChunks(true,null);net.minecraft.world.storage.ThreadedFileIOBase.getThreadedIOInstance().waitForFinish();}
-    static NBTTagCompound read(Path path)throws IOException{try(InputStream stream=Files.newInputStream(path)){return CompressedStreamTools.readCompressed(stream);}}
+    static NBTTagCompound read(Path path)throws IOException{try(InputStream stream=Files.newInputStream(path)){return com.vandorlabs.persistence.RetiredCockpitGlass.itemData(CompressedStreamTools.readCompressed(stream));}}
     private static void journal(WorldServer world,EntityTurntable entity,boolean captured)throws Exception{journal(world,entity,captured,null);}
     private static void journal(WorldServer world,EntityTurntable entity,boolean captured,TurntableSnapshot target)throws Exception{
         if(world.disableLevelSaving)throw new IOException("World saving is disabled");

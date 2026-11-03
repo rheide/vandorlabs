@@ -703,6 +703,7 @@ public class ReproLab {
             return;
         }
         if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){if(++holdTicks>=40)RedstoneScreenRuntimeChecks.tick(mc,outDir);return;}
+        if(Boolean.getBoolean("vandorlabs.retiredGlassClientOnly")){if(++holdTicks==40)try{MoatVisualChecks.retiredGlass(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Retired glass client checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.screenChipChecksOnly")){try{if(ScreenChipLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Screen chip live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleDesignChecksOnly")){try{if(VehicleDesignRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle design live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleControllerChecksOnly")) {
@@ -2608,7 +2609,7 @@ public class ReproLab {
                 BlockPos at=new BlockPos(GALLERY_X-2+i*2,GALLERY_Y+1,-18);
                 int finish=java.util.Arrays.asList(
                         com.vandorlabs.tiles.ScreenHousingTextures.IDS).indexOf(ids[i]);
-                world.setBlockState(at,finish<0?block(ids[i]).getDefaultState()
+                world.setBlockState(at,finish<0?(com.vandorlabs.persistence.RetiredCockpitGlass.variant("vandorlabs:"+ids[i])>=0?com.vandorlabs.persistence.RetiredCockpitGlass.state(com.vandorlabs.persistence.RetiredCockpitGlass.variant("vandorlabs:"+ids[i])):block(ids[i]).getDefaultState())
                         :ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),3);
                 if (finish>=0) ((TileEntityAnimatedScreenSelector)world.getTileEntity(at))
                         .setHousingTexture(finish);
@@ -2823,8 +2824,9 @@ public class ReproLab {
             for (int i = 0; i < ids.length; i++) {
                 int finish = java.util.Arrays.asList(
                         com.vandorlabs.tiles.ScreenHousingTextures.IDS).indexOf(ids[i]);
-                Block block = finish >= 0 ? ModBlocks.PROGRAMMABLE_BLOCK : block(ids[i]);
-                IBlockState state = block.getDefaultState();
+                int glass=com.vandorlabs.persistence.RetiredCockpitGlass.variant("vandorlabs:"+ids[i]);
+                Block block = finish >= 0 ? ModBlocks.PROGRAMMABLE_BLOCK : glass>=0?com.vandorlabs.persistence.RetiredCockpitGlass.state(glass).getBlock():block(ids[i]);
+                IBlockState state = glass>=0?com.vandorlabs.persistence.RetiredCockpitGlass.state(glass):block.getDefaultState();
                 if (state.getProperties().containsKey(BlockVandorDirectional.FACING))
                     state = state.withProperty(BlockVandorDirectional.FACING,
                             EnumFacing.NORTH);

@@ -499,7 +499,7 @@ public class TileEntityControlledRamp extends TileEntity {
                 :BlockPos.fromLong(tag.getLong(SaveSchema.Ramp.CONTROLLER));
         source=tag.hasKey(SaveSchema.Ramp.SOURCE_STATE)
                 ?LegacyBlockStates.decode(tag.getString(SaveSchema.Ramp.SOURCE_STATE)):null;
-        if (source==null) source=NBTUtil.readBlockState(tag.getCompoundTag(SaveSchema.Ramp.SOURCE));
+        if (source==null) source=com.vandorlabs.persistence.RetiredCockpitGlass.readState(tag.getCompoundTag(SaveSchema.Ramp.SOURCE));
         RampCellData data=RampCellData.read(new NbtPrimitiveData(tag));
         sourceY=data.sourceY; row=moat&&tag.hasKey(SaveSchema.Ramp.ROW,3)?Math.max(-64,Math.min(64,tag.getInteger(SaveSchema.Ramp.ROW))):data.row; length=data.length; drop=data.drop;
         segments=data.segments; duration=data.duration; low=data.low; high=data.high;

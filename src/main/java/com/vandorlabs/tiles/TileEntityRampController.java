@@ -1312,7 +1312,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         original=tag.hasKey(SaveSchema.Ramp.ORIGINAL_STATE)
                 ?LegacyBlockStates.decode(tag.getString(SaveSchema.Ramp.ORIGINAL_STATE)):null;
         if (original==null) original=tag.hasKey(SaveSchema.Ramp.ORIGINAL)
-                ?NBTUtil.readBlockState(tag.getCompoundTag(SaveSchema.Ramp.ORIGINAL))
+                ?com.vandorlabs.persistence.RetiredCockpitGlass.readState(tag.getCompoundTag(SaveSchema.Ramp.ORIGINAL))
                 :Blocks.AIR.getDefaultState();
         owner=readOwner(tag);
         sources.clear(); NBTTagList list=tag.getTagList(SaveSchema.Ramp.SOURCES,10);

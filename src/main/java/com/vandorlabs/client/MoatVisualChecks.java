@@ -30,6 +30,11 @@ final class MoatVisualChecks {
         done=false;
         mc.getIntegratedServer().addScheduledTask(()->{MoatRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));RampGlassRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));StairRampRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));}).get();
     }
+    static void retiredGlass(Minecraft mc,File output)throws Exception{
+        for(int i=0;i<3;i++){int old=CustomBlockMaterials.identifier("vandorlabs:"+com.vandorlabs.persistence.RetiredCockpitGlass.IDS[i],0);net.minecraft.block.state.IBlockState state=com.vandorlabs.persistence.RetiredCockpitGlass.state(i);int current=CustomBlockMaterials.identifier(state.getBlock(),state.getBlock().getMetaFromState(state));require(CustomBlockTextures.sprite(old,false)==CustomBlockTextures.sprite(current,false),"retired sampled glass artwork does not resolve to vanilla");}
+        System.out.println("[vandorlabs][reprolab] retired-glass-artwork PASS three legacy sampled-material identities use vanilla models");
+        mc.getIntegratedServer().addScheduledTask(()->RampGlassRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();glass(mc,output);System.out.println("[vandorlabs][reprolab] retired-glass-client PASS vanilla ramp materials transmission tint and legacy sampled artwork");
+    }
     private static VehicleWorld fixture(Minecraft mc,EnumFacing face,double pose,int start,int end){
         return fixture(mc,face,pose,start,end,null);
     }

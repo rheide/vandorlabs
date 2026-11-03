@@ -1422,24 +1422,6 @@
     "item": true
   },
   {
-    "id": "clear_cockpit_glass",
-    "type": "cockpit_glass",
-    "class": "BlockCockpitGlass",
-    "item": true
-  },
-  {
-    "id": "pale_cyan_cockpit_glass",
-    "type": "cockpit_glass",
-    "class": "BlockCockpitGlass",
-    "item": true
-  },
-  {
-    "id": "smoked_cockpit_glass",
-    "type": "cockpit_glass",
-    "class": "BlockCockpitGlass",
-    "item": true
-  },
-  {
     "id": "rocket_thruster",
     "type": "propulsion_light",
     "class": "BlockConnectedPropulsionLight",

@@ -11,8 +11,7 @@ public final class RampMaterials {
     /** These families have an entire cube of glazing; panes and programmable panels do not. */
     public static boolean isFullGlass(net.minecraft.block.state.IBlockState state) {
         net.minecraft.block.Block block=state.getBlock();
-        return block==net.minecraft.init.Blocks.GLASS || block==net.minecraft.init.Blocks.STAINED_GLASS
-                || block instanceof com.vandorlabs.blocks.BlockCockpitGlass;
+        return block==net.minecraft.init.Blocks.GLASS || block==net.minecraft.init.Blocks.STAINED_GLASS;
     }
     public static boolean isIESlab(World world, BlockPos pos) {
         TileEntity tile=world.getTileEntity(pos);

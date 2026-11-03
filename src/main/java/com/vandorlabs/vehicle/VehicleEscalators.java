@@ -34,7 +34,7 @@ public final class VehicleEscalators {
     private static BlockPos position(NBTTagCompound tag){return tag.hasKey(SaveSchema.Ramp.X)?new BlockPos(tag.getInteger(SaveSchema.Ramp.X),tag.getInteger(SaveSchema.Ramp.Y),tag.getInteger(SaveSchema.Ramp.Z)):BlockPos.fromLong(tag.getLong(SaveSchema.Ramp.POSITION));}
     public static List<VehicleStructure.Cell> originals(TileEntityRampController ramp){
         NBTTagCompound tag=ramp.writeToNBT(new NBTTagCompound());IBlockState state=LegacyBlockStates.decode(tag.getString(SaveSchema.Ramp.ORIGINAL_STATE));
-        if(state==null)state=NBTUtil.readBlockState(tag.getCompoundTag(SaveSchema.Ramp.ORIGINAL));
+        if(state==null)state=com.vandorlabs.persistence.RetiredCockpitGlass.readState(tag.getCompoundTag(SaveSchema.Ramp.ORIGINAL));
         Map<BlockPos,NBTTagCompound> tiles=new HashMap<>();NBTTagList data=tag.getTagList("RampSourceTiles",10);
         for(int n=0;n<data.tagCount();n++){NBTTagCompound entry=data.getCompoundTagAt(n);tiles.put(position(entry),entry.getCompoundTag("Tile").copy());}
         List<VehicleStructure.Cell> cells=new ArrayList<>();for(BlockPos p:ramp.vehicleSources()){

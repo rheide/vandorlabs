@@ -105,7 +105,7 @@ public final class CopyMaterials {
     private static BlockPos position(NBTTagCompound tag){return tag.hasKey("X",99)?new BlockPos(tag.getInteger("X"),tag.getInteger("Y"),tag.getInteger("Z")):BlockPos.fromLong(tag.getLong("Pos"));}
     private static void ramp(VehicleStructure outer,VehicleWorld view,VehicleStructure.Cell controller,List<Need> needs,int depth){
         NBTTagCompound data=controller.tileData();NBTTagList sources=data.getTagList("Sources",10),tiles=data.getTagList("RampSourceTiles",10);if(sources.tagCount()==0)return;
-        IBlockState original=NBTUtil.readBlockState(data.getCompoundTag("Original"));Map<BlockPos,NBTTagCompound> saved=new HashMap<>();for(int i=0;i<tiles.tagCount();i++)saved.put(position(tiles.getCompoundTagAt(i)),tiles.getCompoundTagAt(i).getCompoundTag("Tile"));
+        IBlockState original=com.vandorlabs.persistence.RetiredCockpitGlass.readState(data.getCompoundTag("Original"));Map<BlockPos,NBTTagCompound> saved=new HashMap<>();for(int i=0;i<tiles.tagCount();i++)saved.put(position(tiles.getCompoundTagAt(i)),tiles.getCompoundTagAt(i).getCompoundTag("Tile"));
         for(int i=0;i<sources.tagCount();i++){BlockPos at=position(sources.getCompoundTagAt(i));VehicleStructure.Cell live=outer.at(at);if(live!=null&&live.state==original)continue;NBTTagCompound tile=saved.get(at);VehicleStructure nested=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,original,tile==null?null:VehicleTileData.translated(tile,BlockPos.ORIGIN.subtract(at)))));VehicleWorld local=new VehicleWorld(view.parent,nested);MovingBlockSupport.validate(nested,local);collect(nested,local,needs,depth+1);}
     }
 }

@@ -18,8 +18,6 @@ texture:id=ion_off,filename=assets/vandorlabs/textures/blocks/thrusters/ion_off.
 texture:id=top,filename=assets/vandorlabs/textures/blocks/thrusters/top.png,xcount=1,ycount=1
 texture:id=ion_on,filename=assets/vandorlabs/textures/blocks/thrusters/ion_on.png,xcount=1,ycount=1
 texture:id=industrial_power_lever,filename=assets/vandorlabs/textures/blocks/industrial_power_lever.png,xcount=1,ycount=1
-texture:id=clear_cockpit_glass,filename=assets/vandorlabs/textures/blocks/clear_cockpit_glass.png,xcount=1,ycount=1
-texture:id=pale_cyan_cockpit_glass,filename=assets/vandorlabs/textures/blocks/pale_cyan_cockpit_glass.png,xcount=1,ycount=1
 texture:id=bridge_chair_atlas,filename=assets/vandorlabs/textures/blocks/bridge_chair_atlas.png,xcount=1,ycount=1
 texture:id=metal_floor,filename=assets/vandorlabs/textures/blocks/metal_floor.png,xcount=1,ycount=1
 texture:id=rocket_off,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_off.png,xcount=1,ycount=1
@@ -51,7 +49,6 @@ texture:id=ramp_elevator_controller_top_off,filename=assets/vandorlabs/textures/
 texture:id=ramp_elevator_controller_right_off,filename=assets/vandorlabs/textures/block/ramp_elevator_controller_right_off.png,xcount=1,ycount=1
 texture:id=ramp_elevator_controller_front_off,filename=assets/vandorlabs/textures/block/ramp_elevator_controller_front_off.png,xcount=1,ycount=1
 texture:id=slatted_lamp_off,filename=assets/vandorlabs/textures/blocks/slatted_lamp_off.png,xcount=1,ycount=1
-texture:id=smoked_cockpit_glass,filename=assets/vandorlabs/textures/blocks/smoked_cockpit_glass.png,xcount=1,ycount=1
 texture:id=tritanium_hull,filename=assets/vandorlabs/textures/blocks/tritanium_hull.png,xcount=1,ycount=1
 texture:id=slatted_lamp_on,filename=assets/vandorlabs/textures/blocks/slatted_lamp_on.png,xcount=1,ycount=1
 texture:id=border_base_left,filename=assets/vandorlabs/textures/blocks/border_base_left.png,xcount=1,ycount=1
@@ -5171,8 +5168,6 @@ block:id=%programmable_half_input,state=facing:west/keyboard:false/upper:false,t
 block:id=%programmable_half_input,state=facing:south/keyboard:false/upper:true,transparency=TRANSPARENT,stdrot=true,patch0=0:dark_wall_panel
 block:id=%programmable_half_input,state=facing:north/keyboard:false/upper:true,transparency=TRANSPARENT,stdrot=true,patch0=0:dark_wall_panel
 block:id=%programmable_half_input,state=facing:west/keyboard:true/upper:false,transparency=TRANSPARENT,stdrot=true,patch0=0:dark_wall_panel
-block:id=%clear_cockpit_glass,patch0=0:clear_cockpit_glass,patch1=0:clear_cockpit_glass,patch2=0:clear_cockpit_glass,patch3=0:clear_cockpit_glass,patch4=0:clear_cockpit_glass,patch5=0:clear_cockpit_glass,transparency=TRANSPARENT,stdrot=true
-block:id=%pale_cyan_cockpit_glass,patch0=0:pale_cyan_cockpit_glass,patch1=0:pale_cyan_cockpit_glass,patch2=0:pale_cyan_cockpit_glass,patch3=0:pale_cyan_cockpit_glass,patch4=0:pale_cyan_cockpit_glass,patch5=0:pale_cyan_cockpit_glass,transparency=TRANSPARENT,stdrot=true
 block:id=%plasma_vent_wedge,state=facing:west/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
 block:id=%plasma_vent_wedge,state=facing:north/particles:true/powered:true,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_stream
 block:id=%plasma_vent_wedge,state=facing:north/particles:false/powered:false,transparency=TRANSPARENT,stdrot=true,patch0=0:side,patch1=0:rear,patch2=0:plasma_off
@@ -10229,7 +10224,6 @@ block:id=%programmable_input,state=facing:west/keyboard:false/upper:false,transp
 block:id=%programmable_input,state=facing:south/keyboard:false/upper:true,transparency=TRANSPARENT,stdrot=true,patch0=0:dark_wall_panel
 block:id=%programmable_input,state=facing:north/keyboard:false/upper:true,transparency=TRANSPARENT,stdrot=true,patch0=0:dark_wall_panel
 block:id=%programmable_input,state=facing:west/keyboard:true/upper:false,transparency=TRANSPARENT,stdrot=true,patch0=0:dark_wall_panel
-block:id=%smoked_cockpit_glass,patch0=0:smoked_cockpit_glass,patch1=0:smoked_cockpit_glass,patch2=0:smoked_cockpit_glass,patch3=0:smoked_cockpit_glass,patch4=0:smoked_cockpit_glass,patch5=0:smoked_cockpit_glass,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:west,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:up,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_half_console,state=facing:down,patch0=0:dark_wall_panel,transparency=TRANSPARENT,stdrot=true

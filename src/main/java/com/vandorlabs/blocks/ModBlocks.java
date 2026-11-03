@@ -313,8 +313,6 @@ public class ModBlocks {
                         (BlockDetailedDoor) byId.get(e.get("paired_model").getAsString()));
             case "BlockVandor":
                 return new BlockVandor(id);
-            case "BlockCockpitGlass":
-                return new BlockCockpitGlass(id);
             case "BlockGlassWall":
                 return new BlockGlassWall(id);
             case "BlockVandorDirectional":
@@ -421,6 +419,9 @@ public class ModBlocks {
     public static void onMissingDisplayBlocks(RegistryEvent.MissingMappings<Block> event) {
         for (RegistryEvent.MissingMappings.Mapping<Block> mapping : event.getMappings()) {
             if (!VandorLabs.MODID.equals(mapping.key.getResourceDomain())) continue;
+            int retired=com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString());
+            if(retired>=0){com.vandorlabs.persistence.RetiredCockpitGlass.remember(mapping.id,retired);mapping.remap(com.vandorlabs.persistence.RetiredCockpitGlass.state(retired).getBlock());continue;}
+
             // The handheld transmitter retains the old item ID; only the placed
             // block moved to a separate registry name in 2.7.
             String replacement = "redstone_transmitter".equals(mapping.key.getResourcePath())
@@ -435,9 +436,15 @@ public class ModBlocks {
     }
 
     @SubscribeEvent
+    public static void onMissingGlassRecipes(RegistryEvent.MissingMappings<net.minecraft.item.crafting.IRecipe> event){for(RegistryEvent.MissingMappings.Mapping<net.minecraft.item.crafting.IRecipe> mapping:event.getMappings())if(com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString())>=0)mapping.ignore();}
+
+    @SubscribeEvent
     public static void onMissingDisplayItems(RegistryEvent.MissingMappings<Item> event) {
         for (RegistryEvent.MissingMappings.Mapping<Item> mapping : event.getMappings()) {
             if (!VandorLabs.MODID.equals(mapping.key.getResourceDomain())) continue;
+            int retired=com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString());
+            if(retired>=0){mapping.remap(Item.getItemFromBlock(com.vandorlabs.persistence.RetiredCockpitGlass.state(retired).getBlock()));continue;}
+
             String replacement = replacementBlockId(mapping.key.getResourcePath());
             if (replacement != null) {
                 Item item = Item.REGISTRY.getObject(

@@ -152,11 +152,10 @@ An octagonal porthole also makes a recessed machinery panel. This joined 3 × 3 
 | Hull | ![Hull finishes](../images/gallery/building/hull.png) |
 | Padding | ![Padding finishes](../images/gallery/building/padding.png) |
 | Wall pipes and vent | ![Pipe finishes](../images/gallery/building/pipes.png) |
-| Cockpit glass | ![Cockpit glass types](../images/gallery/building/glass.png) |
 
 Hull includes Light Alloy, Dark Gunmetal, and Midnight Satin. Padding includes Seamed, Ribbed, and Stitched. Wall Pipes and Framed Wall Pipes are finishes in the programmable selection rather than separate blocks. Choose them on a full block, slab, or another supported form.
 
-Clear, Pale Cyan, and Smoked Cockpit Glass are separate transparent blocks. Their recipes use eight matching vanilla glass blocks and one Industrial Alloy Ingot to make nine blocks: ordinary glass for Clear, cyan stained glass for Pale Cyan, and gray stained glass for Smoked.
+Clear, Pale Cyan and Smoked Cockpit Glass were retired in 2.8. Existing blocks and items become vanilla glass, cyan stained glass and gray stained glass respectively. Use the vanilla blocks for new builds; the old alloy recipes are removed.
 
 Programmable Glass provides Small or Large detail, nineteen finishes in one **Glass** category, the regular material catalog including trapdoor artwork, a Mild / Normal / Strong tint selector, and Bare / Framed edges. Programmable Diagonal Glass has the same finish, tint and frame choices alongside its slope, size, fill and joining controls.
 

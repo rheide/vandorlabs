@@ -373,31 +373,7 @@ final class ItemRuntimeChecks {
 
     private static void checkCockpitGlassRecipes(InventoryCrafting grid,
             EntityPlayer player) {
-        String[] names = {"smoked_cockpit_glass", "pale_cyan_cockpit_glass",
-                "clear_cockpit_glass"};
-        int[] stainedMetadata = {7, 9, -1};
-        for (int variant = 0; variant < names.length; variant++) {
-            ResourceLocation id = new ResourceLocation("vandorlabs", names[variant]);
-            IRecipe recipe = CraftingManager.REGISTRY.getObject(id);
-            require(recipe != null, "missing cockpit glass recipe: " + id);
-            for (int slot = 0; slot < 9; slot++)
-                grid.setInventorySlotContents(slot, slot == 4
-                        ? new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT)
-                        : stainedMetadata[variant] < 0 ? new ItemStack(Blocks.GLASS)
-                        : new ItemStack(Blocks.STAINED_GLASS, 1, stainedMetadata[variant]));
-            require(recipe.matches(grid, player.world), "cockpit glass recipe does not match: " + id);
-            ItemStack crafted = CraftingManager.findMatchingResult(grid, player.world);
-            require(crafted.getItem() == Item.getItemFromBlock(Block.REGISTRY.getObject(id))
-                            && crafted.getCount() == 9,
-                    "cockpit glass recipe yields wrong blocks: " + id);
-            grid.setInventorySlotContents(0, new ItemStack(Blocks.STAINED_GLASS, 1,
-                    stainedMetadata[variant] == 7 ? 9 : 7));
-            require(!recipe.matches(grid, player.world),
-                    "cockpit glass recipe accepts wrong glass color: " + id);
-            grid.setInventorySlotContents(4, new ItemStack(Items.IRON_INGOT));
-            require(!recipe.matches(grid, player.world),
-                    "cockpit glass recipe accepts iron instead of alloy: " + id);
-        }
+        for(String id:com.vandorlabs.persistence.RetiredCockpitGlass.IDS){require(CraftingManager.REGISTRY.getObject(new ResourceLocation("vandorlabs",id))==null,"retired cockpit glass recipe remains: "+id);for(Block block:ModBlocks.BLOCKS)require(!block.getRegistryName().getResourcePath().equals(id),"retired glass remains registered");}
     }
 
     private static void checkTriggerBlockRecipe(InventoryCrafting grid,
