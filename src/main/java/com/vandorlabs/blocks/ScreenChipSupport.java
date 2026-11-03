@@ -30,13 +30,13 @@ public final class ScreenChipSupport {
     public static TileEntityTokenSlot reader(TileEntityAnimatedScreenSelector tile){return integrated(tile.getBlockType())?tile.ownedChipReader():groupReader(tile);}
     private static TileEntityTokenSlot groupReader(TileEntityAnimatedScreenSelector tile){if(tile.getBlockType().getClass()!=BlockAnimatedScreenSelector.class)return null;ScreenChipGroups.Group group=ScreenChipGroups.group(tile);return group==null?null:group.reader;}
     public static ItemStack stack(TileEntityAnimatedScreenSelector tile){TileEntityTokenSlot reader=reader(tile);return reader==null?ItemStack.EMPTY:reader.getStackInSlot(0);}
-    /** All built-in readers insert along local X, sideways across the console. */
+    /** Console openings face the player; the full Diagonal Screen retains its sideways opening. */
     public static MachineMountSurface localMount(IBlockState state,TileEntityAnimatedScreenSelector tile){
         Block block=state.getBlock();Vec3d center,normal;
         if(block instanceof BlockDiagonalHalfConsole){boolean upper=state.getValue(BlockDiagonalHalfConsole.UPPER);center=new Vec3d(.5,upper?.937:.063,.25);normal=new Vec3d(0,upper?-1:1,0);}
         else if(block instanceof BlockProgrammableHalfConsole||block instanceof BlockProgrammableConsole){center=new Vec3d(.22,.068,.24+(tile.isCeilingMounted()?com.vandorlabs.render.InputSurfaceLayout.ceilingStart(16,tile.getCeilingPosition(1))/16:0));normal=new Vec3d(0,1,0);}
         else{boolean upper=state.getValue(BlockProgrammableDiagonalScreen.INVERTED);center=new Vec3d(.5,upper?.86:.14,.14);normal=new Vec3d(0,upper?-1:1,-1).normalize();}
-        Vec3d v=new Vec3d(1,0,0),u=normal.crossProduct(v);return new MachineMountSurface(center,u,v,normal,.34,.34);
+        Vec3d v=block instanceof BlockProgrammableDiagonalScreen?new Vec3d(1,0,0):new Vec3d(0,0,-1),u=normal.crossProduct(v);return new MachineMountSurface(center,u,v,normal,.34,.34);
     }
     private static final java.util.Map<IBlockState,MachineMountSurface[]> FRAMES=new java.util.HashMap<>();
     public static synchronized MachineMountSurface mount(IBlockState state,TileEntityAnimatedScreenSelector tile){int slot=state.getBlock() instanceof BlockProgrammableHalfConsole&&tile.isCeilingMounted()?tile.getCeilingPosition(1):1;MachineMountSurface[] frames=FRAMES.computeIfAbsent(state,key->new MachineMountSurface[3]);if(frames[slot]==null){MachineMountSurface local=localMount(state,tile);EnumFacing facing=RedstoneScreenInteractions.facing(state);frames[slot]=new MachineMountSurface(rotate(local.center,facing),direction(local.u,facing),direction(local.v,facing),direction(local.normal,facing),local.width,local.height);}return frames[slot];}

@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Point the Console, Half Console and Diagonal Half Screen chip openings toward the player at the bottom. Keep the full Diagonal Screen reader sideways.
+
 - Rename Programmable Diagonal Half Console to Programmable Diagonal Half Screen, including the block/item ID. Existing placements, inventory stacks and saved designs retain their data through migration.
 
 - Prevent client crashes when removing joined Chip screens: stale tile render-bound queries no longer enter group discovery after removal or replacement.
