@@ -77,8 +77,8 @@ final class HousingTextureList {
         return forDisplay(x,y,width,selected,rows,false);
     }
     static HousingTextureList forDisplay(int x,int y,int width,int selected,int rows,boolean nativeArtwork){
-        List<Option> entries=new ArrayList<>();entries.add(new Option(NAVIGATION_BLACK,"Black","Display","minecraft:blocks/concrete_black"));
-        if(nativeArtwork)entries.add(new Option(MODEL_ARTWORK,"Model artwork","Display","minecraft:blocks/concrete_gray"));
+        List<Option> entries=new ArrayList<>();entries.add(new Option(NAVIGATION_BLACK,"Black","Displays","minecraft:blocks/concrete_black"));
+        if(nativeArtwork)entries.add(new Option(MODEL_ARTWORK,"Model artwork","Displays","minecraft:blocks/concrete_gray"));
         for(int i=0;i<ScreenHousingTextures.IDS.length;i++){
             int choice=ScreenHousingTextures.choiceAt(i);
             if(ScreenHousingTextures.visible(i)&&com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice))entries.add(new Option(choice,name(choice),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));

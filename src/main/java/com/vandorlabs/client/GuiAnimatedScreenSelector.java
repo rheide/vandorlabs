@@ -191,7 +191,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         super.initGui();buttonList.clear();buttonList.add(new GuiButton(198,redstoneX,layout.top+130,redstoneWidth,20,"Transmitter..."));Keyboard.enableRepeatEvents(true);
         int tabs=console?5:4,rows=layout.rows(true);
-        buttonList.add(layout.fullTab(90,0,tabs,"Display"));
+        buttonList.add(layout.fullTab(90,0,tabs,"Displays"));
         if(console)buttonList.add(layout.fullTab(91,1,tabs,"Controls"));
         buttonList.add(layout.fullTab(console?92:91,console?2:1,tabs,"Sides"));
         buttonList.add(layout.fullTab(console?93:92,tabs-1,tabs,"Redstone"));buttonList.add(layout.fullTab(197,tabs-2,tabs,"Frame"));

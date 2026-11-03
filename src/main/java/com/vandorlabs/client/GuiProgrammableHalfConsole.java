@@ -72,7 +72,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         super.initGui();buttonList.clear();buttonList.add(new GuiButton(198,redstoneX,layout.top+130,redstoneWidth,20,"Transmitter..."));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
         buttonList.add(layout.fullTab(90,1,5,"Controls"));
-        buttonList.add(layout.fullTab(91,0,5,"Display"));
+        buttonList.add(layout.fullTab(91,0,5,"Displays"));
         buttonList.add(layout.fullTab(92,2,5,"Sides"));
         buttonList.add(layout.fullTab(93,4,5,"Redstone"));buttonList.add(layout.fullTab(197,3,5,"Frame"));
         left=right=layout.listX;top=guiTop+54;

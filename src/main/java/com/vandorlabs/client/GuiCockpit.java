@@ -32,7 +32,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
     public GuiCockpit(ContainerCockpit container){super(container);cockpit=container;tile=container.tile;page=0;for(int category=0;category<5;category++){java.util.List<Integer> candidates=categoryPages(category);if(!candidates.isEmpty()){page=candidates.get(0);break;}}xSize=580;ySize=280;}
     @Override public void initGui(){
         xSize=Math.min(580,width-12);ySize=Math.min(280,height-12);super.initGui();buttonList.clear();fields.clear();textures=null;receiverPane=null;rowsPane=null;org.lwjgl.input.Keyboard.enableRepeatEvents(true);
-        String[] categories={"Screen","Touch","Throttle","Pilot","Casing","Redstone"};
+        String[] categories={"Displays","Touch","Throttle","Pilot","Casing","Redstone"};
         int tabX=guiLeft+12,selected=category();
         for(int i=0;i<6;i++){if(i!=5&&categoryPages(i).isEmpty())continue;int tabWidth=fontRenderer.getStringWidth(categories[i])+7;GuiButton tab=new DialogTabButton(200+i,tabX,guiTop+28,tabWidth,20,categories[i]);tabX+=tabWidth+2;tab.enabled=selected!=i;buttonList.add(tab);}
         java.util.List<Integer> children=categoryPages(selected);int childWidth=children.isEmpty()?70:Math.min(110,(xSize-24)/children.size());
@@ -54,7 +54,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
             buttonList.add(new CockpitButton(34,x,guiTop+ySize-26,110,20,"Default casing"));
         }else if(d<tile.displays.size()){
             TileEntityCockpit.Display screen=tile.displays.get(d);boolean input="touch".equals(screen.role);int controlW=Math.min(154,(xSize-30)/2),cx=guiLeft+xSize-controlW-12;
-            GuiButton displayTab=new DialogTabButton(400,x,guiTop+74,76,18,"Display"),receiveTab=new DialogTabButton(401,x+160,guiTop+74,84,18,"Redstone"),controlsTab=new DialogTabButton(402,x+80,guiTop+74,76,18,"Controls");displayTab.enabled=surfaceRedstone||surfaceControls;receiveTab.enabled=!surfaceRedstone;controlsTab.enabled=!surfaceControls;buttonList.add(displayTab);buttonList.add(receiveTab);buttonList.add(controlsTab);
+            GuiButton displayTab=new DialogTabButton(400,x,guiTop+74,76,18,"Displays"),receiveTab=new DialogTabButton(401,x+160,guiTop+74,84,18,"Redstone"),controlsTab=new DialogTabButton(402,x+80,guiTop+74,76,18,"Controls");displayTab.enabled=surfaceRedstone||surfaceControls;receiveTab.enabled=!surfaceRedstone;controlsTab.enabled=!surfaceControls;buttonList.add(displayTab);buttonList.add(receiveTab);buttonList.add(controlsTab);
             if(surfaceControls){net.minecraft.nbt.NBTTagList values=new net.minecraft.nbt.NBTTagList();for(int row=0;row<screen.rows;row++)values.appendTag(tile.control(screen.id+"/"+row).write());final int display=d;rowsPane=new RedstoneRowsPane(fontRenderer,screen.maxRows(),values,rows->applyRows(display,rows));rowsPane.layout(x,guiTop+98,w,ySize-124,buttonList);}
             else if(surfaceRedstone){receiverPane=new ReceiverPane(40,32,fontRenderer,x,guiTop+104,Math.min(240,w),screen.receiveChannels(),screen.activation());buttonList.add(receiverPane.button());}
             else{

@@ -69,7 +69,7 @@ public class GuiProgrammableInput extends GuiContainer {
         receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         super.initGui();buttonList.clear();buttonList.add(new GuiButton(198,redstoneX,layout.top+130,redstoneWidth,20,"Transmitter..."));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
-        buttonList.add(layout.fullTab(90,0,4,te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole?"Display":"Controls"));
+        buttonList.add(layout.fullTab(90,0,4,te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole?"Displays":"Controls"));
         buttonList.add(layout.fullTab(91,1,4,"Sides"));
         buttonList.add(layout.fullTab(92,3,4,"Redstone"));buttonList.add(layout.fullTab(197,2,4,"Frame"));
         listX=layout.listX;listY=guiTop+54;

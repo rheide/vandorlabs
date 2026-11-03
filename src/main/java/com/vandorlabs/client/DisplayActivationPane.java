@@ -56,5 +56,5 @@ final class DisplayActivationPane {
     void wheel(int x,int y,int delta){picker.wheel(x,y,delta);}
     void drag(int y){picker.drag(y);}
     void release(){if(picker!=null)picker.release();}
-    void draw(int x,int y){if(!active)return;Gui.drawRect(layout.left+8,layout.top+51,layout.left+layout.width-8,layout.top+120,0xff101012);picker.draw(Minecraft.getMinecraft().fontRenderer,x,y);Minecraft.getMinecraft().fontRenderer.drawString("Display",layout.controlsX,layout.top+54,0xdae8f0);Minecraft.getMinecraft().fontRenderer.drawString("Speed",layout.controlsX,layout.top+88,0xdae8f0);}
+    void draw(int x,int y){if(!active)return;Gui.drawRect(layout.left+8,layout.top+51,layout.left+layout.width-8,layout.top+120,0xff101012);picker.draw(Minecraft.getMinecraft().fontRenderer,x,y);Minecraft.getMinecraft().fontRenderer.drawString("Displays",layout.controlsX,layout.top+54,0xdae8f0);Minecraft.getMinecraft().fontRenderer.drawString("Speed",layout.controlsX,layout.top+88,0xdae8f0);}
 }

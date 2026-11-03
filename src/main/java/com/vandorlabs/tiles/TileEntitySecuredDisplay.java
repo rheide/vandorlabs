@@ -24,7 +24,7 @@ public abstract class TileEntitySecuredDisplay extends TileEntityTokenSlot {
     protected boolean inputPowered(boolean aggregate){return aggregate;}
     @Override public boolean isItemValidForSlot(int slot,net.minecraft.item.ItemStack stack){return super.isItemValidForSlot(slot,stack);}
     public int surfaceCount(){return 1;}
-    public String surfaceLabel(int slot){return "Screen";}
+    public String surfaceLabel(int slot){return "Displays";}
     public int surfaceChoice(int slot){return screenSettings().texture;}
     public boolean nativeArtwork(){return false;}
     protected final boolean authoritative(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world).isRemote;}
