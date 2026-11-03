@@ -323,6 +323,16 @@ public final class VehicleCollision {
     }
     public void begin(World world,net.minecraft.entity.Entity entity){terrain=replayTerrain!=null&&replayTerrain.world==world&&replayTerrain.entity==entity?replayTerrain:new Terrain(world,entity);terrainQueries=candidateBoxes=0;}
     public void end(){terrain=null;}
+    /** Diagnostic reference path for exact clipping/allocation comparisons. */
+    public static boolean legacyObstacleOffsets;
+    static boolean relativeIntersects(OrientedBox box,AxisAlignedBB b,double x,double y,double z){
+        if(legacyObstacleOffsets||b.getClass()!=AxisAlignedBB.class)return box.intersects(b.offset(-x,-y,-z));
+        return box.intersects(b.minX+-x,b.minY+-y,b.minZ+-z,b.maxX+-x,b.maxY+-y,b.maxZ+-z);
+    }
+    static double relativeClip(OrientedBox box,AxisAlignedBB b,double x,double y,double z,double amount,int axis){
+        if(legacyObstacleOffsets||b.getClass()!=AxisAlignedBB.class)return box.clip(b.offset(-x,-y,-z),amount,axis);
+        return box.clip(b.minX+-x,b.minY+-y,b.minZ+-z,b.maxX+-x,b.maxY+-y,b.maxZ+-z,amount,axis);
+    }
     private final class Terrain {
         final World world;final net.minecraft.entity.Entity entity;
         final double span=Math.max(bounds.maxX-bounds.minX,bounds.maxZ-bounds.minZ);
@@ -376,7 +386,7 @@ public final class VehicleCollision {
                 AxisAlignedBB sweep=new OrientedBox(cluster.bounds,pivotX,pivotZ,cos,sin).broad.offset(x,y,z).shrink(1e-6);
                 Collection<AxisAlignedBB> obstacles=obstacles(world,entity,sweep);if(obstacles.isEmpty())continue;
                 for(AxisAlignedBB local:cluster.boxes){OrientedBox box=new OrientedBox(local,pivotX,pivotZ,cos,sin);AxisAlignedBB query=box.broad.offset(x,y,z).shrink(1e-6);
-                    for(AxisAlignedBB obstacle:obstacles)if(query.intersects(obstacle)&&box.intersects(obstacle.offset(-x,-y,-z))){blocked=true;break;}
+                    for(AxisAlignedBB obstacle:obstacles)if(query.intersects(obstacle)&&relativeIntersects(box,obstacle,x,y,z)){blocked=true;break;}
                     if(blocked)break;
                 }if(blocked)break;
             }
@@ -394,7 +404,7 @@ public final class VehicleCollision {
             boolean blocked=false;
             for(OrientedBox box:pose(next)) {
                 for(AxisAlignedBB obstacle:obstacles(world,entity,box.broad.offset(x,y,z).shrink(1e-6)))
-                    if(box.intersects(obstacle.offset(-x,-y,-z))){blocked=true;break;}
+                    if(relativeIntersects(box,obstacle,x,y,z)){blocked=true;break;}
                 if(blocked)break;
             }
             if(blocked)break;accepted=next;
@@ -409,7 +419,7 @@ public final class VehicleCollision {
             AxisAlignedBB swept=new OrientedBox(cluster.bounds,pivotX,pivotZ,cos,sin).broad.offset(x,y,z).expand(axis==0?amount:0,axis==1?amount:0,axis==2?amount:0);
             Collection<AxisAlignedBB> obstacles=obstacles(world,entity,swept);if(obstacles.isEmpty())continue;
             for(AxisAlignedBB local:cluster.boxes){OrientedBox box=new OrientedBox(local,pivotX,pivotZ,cos,sin);AxisAlignedBB query=box.broad.offset(x,y,z).expand(axis==0?amount:0,axis==1?amount:0,axis==2?amount:0);
-                for(AxisAlignedBB obstacle:obstacles)if(query.intersects(obstacle))result=box.clip(obstacle.offset(-x,-y,-z),result,axis);
+                for(AxisAlignedBB obstacle:obstacles)if(query.intersects(obstacle))result=relativeClip(box,obstacle,x,y,z,result,axis);
             }
         }return result;
     }
@@ -419,7 +429,7 @@ public final class VehicleCollision {
         for(OrientedBox box:pose(yaw)) {
             AxisAlignedBB swept=box.broad.offset(x,y,z).expand(axis==0?amount:0,axis==1?amount:0,axis==2?amount:0);
             for(AxisAlignedBB obstacle:obstacles(world,entity,swept))
-                result=box.clip(obstacle.offset(-x,-y,-z),result,axis);
+                result=relativeClip(box,obstacle,x,y,z,result,axis);
         }
         return result;
     }
@@ -435,24 +445,26 @@ public final class VehicleCollision {
             broad=new AxisAlignedBB(cx-rx,minY,cz-rz,cx+rx,maxY,cz+rz);
         }
         private double radius(double x,double z){return hx*Math.abs(cos*x+sin*z)+hz*Math.abs(-sin*x+cos*z);}
-        private boolean horizontal(AxisAlignedBB b) {
-            double bx=(b.minX+b.maxX)/2,bz=(b.minZ+b.maxZ)/2,bhx=(b.maxX-b.minX)/2,bhz=(b.maxZ-b.minZ)/2;
+        private boolean horizontal(double minX,double minZ,double maxX,double maxZ) {
+            double bx=(minX+maxX)/2,bz=(minZ+maxZ)/2,bhx=(maxX-minX)/2,bhz=(maxZ-minZ)/2;
             for(int n=0;n<4;n++) {
                 double ax=n==0?1:n==1?0:n==2?cos:-sin,az=n==0?0:n==1?1:n==2?sin:cos;
                 if(Math.abs((cx-bx)*ax+(cz-bz)*az)>=radius(ax,az)+bhx*Math.abs(ax)+bhz*Math.abs(az)-1e-7)return false;
             }
             return true;
         }
-        public boolean intersects(AxisAlignedBB b){return maxY>b.minY+1e-7 && minY<b.maxY-1e-7 && horizontal(b);}
-        double clip(AxisAlignedBB b,double amount,int axis) {
+        public boolean intersects(AxisAlignedBB b){return intersects(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);}
+        boolean intersects(double left,double bottom,double back,double right,double top,double front){return maxY>bottom+1e-7 && minY<top-1e-7 && horizontal(left,back,right,front);}
+        double clip(AxisAlignedBB b,double amount,int axis){return clip(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ,amount,axis);}
+        double clip(double left,double bottom,double back,double right,double top,double front,double amount,int axis) {
             if(axis==1) {
-                if(!horizontal(b))return amount;
-                if(amount>0 && maxY<=b.minY+1e-7)return Math.min(amount,Math.max(0,b.minY-maxY));
-                if(amount<0 && minY>=b.maxY-1e-7)return Math.max(amount,Math.min(0,b.maxY-minY));
+                if(!horizontal(left,back,right,front))return amount;
+                if(amount>0 && maxY<=bottom+1e-7)return Math.min(amount,Math.max(0,bottom-maxY));
+                if(amount<0 && minY>=top-1e-7)return Math.max(amount,Math.min(0,top-minY));
                 return amount;
             }
-            if(maxY<=b.minY+1e-7 || minY>=b.maxY-1e-7)return amount;
-            double bx=(b.minX+b.maxX)/2,bz=(b.minZ+b.maxZ)/2,bhx=(b.maxX-b.minX)/2,bhz=(b.maxZ-b.minZ)/2;
+            if(maxY<=bottom+1e-7 || minY>=top-1e-7)return amount;
+            double bx=(left+right)/2,bz=(back+front)/2,bhx=(right-left)/2,bhz=(front-back)/2;
             double enter=Double.NEGATIVE_INFINITY,exit=Double.POSITIVE_INFINITY;
             for(int n=0;n<4;n++) {
                 double ax=n==0?1:n==1?0:n==2?cos:-sin,az=n==0?0:n==1?1:n==2?sin:cos;

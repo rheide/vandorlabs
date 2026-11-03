@@ -65,7 +65,7 @@ public final class VehicleTaxiRuntimeChecks {
     }
     private static Block required(String id){Block block=Block.getBlockFromName(id);require(block!=null,"fixture installed: "+id);return block;}
     private static void setup(Minecraft mc) throws Exception {
-        WorldServer w=world(mc);TaxiSettingsRuntimeChecks.run(w);EntityPlayerMP p=player(mc);p.dismountRidingEntity();p.setSneaking(false);p.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+        WorldServer w=world(mc);VehicleObstacleChecks.run();TaxiSettingsRuntimeChecks.run(w);EntityPlayerMP p=player(mc);p.dismountRidingEntity();p.setSneaking(false);p.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
         p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();
         for(BlockPos pos:BlockPos.getAllInBox(origin.add(-12,-1,-12),origin.add(20,-1,20)))w.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
         Block gear=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear && !(b instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear)){gear=b;break;}
