@@ -20381,21 +20381,21 @@ block:id=%landing_gear,state=facing:south/extended:false/lower:false,patch0=0:v1
 block:id=%landing_gear,state=facing:south/extended:true/lower:false,patch0=0:v12_blocks_landing_gear_rubber,patch1=0:v12_blocks_landing_gear_metal,patch2=0:v12_blocks_landing_gear_panel,patch3=0:v12_blocks_programmable_glass_metal_side,patch4=0:v12_blocks_landing_gear_hub,transparency=TRANSPARENT,stdrot=true
 block:id=%landing_gear,state=facing:west/extended:false/lower:false,patch0=0:v12_blocks_landing_gear_rubber,patch1=0:v12_blocks_landing_gear_metal,patch2=0:v12_blocks_landing_gear_panel,patch3=0:v12_blocks_programmable_glass_metal_side,patch4=0:v12_blocks_landing_gear_hub,transparency=TRANSPARENT,stdrot=true
 block:id=%landing_gear,state=facing:west/extended:true/lower:false,patch0=0:v12_blocks_landing_gear_rubber,patch1=0:v12_blocks_landing_gear_metal,patch2=0:v12_blocks_landing_gear_panel,patch3=0:v12_blocks_programmable_glass_metal_side,patch4=0:v12_blocks_landing_gear_hub,transparency=TRANSPARENT,stdrot=true
-block:id=%programmable_diagonal_half_console,state=facing:north/upper:false,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
+block:id=%programmable_diagonal_half_screen,state=facing:north/upper:false,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_diagonal_porthole,state=facing:north/inverted:false/depth:0,patch0=0:v12_blocks_dark_wall_panel,transparency=TRANSPARENT,stdrot=true
-block:id=%programmable_diagonal_half_console,state=facing:north/upper:true,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
+block:id=%programmable_diagonal_half_screen,state=facing:north/upper:true,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_diagonal_porthole,state=facing:north/inverted:true/depth:0,patch0=0:v12_blocks_dark_wall_panel,transparency=TRANSPARENT,stdrot=true
-block:id=%programmable_diagonal_half_console,state=facing:east/upper:false,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
+block:id=%programmable_diagonal_half_screen,state=facing:east/upper:false,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_diagonal_porthole,state=facing:east/inverted:false/depth:0,patch0=0:v12_blocks_dark_wall_panel,transparency=TRANSPARENT,stdrot=true
-block:id=%programmable_diagonal_half_console,state=facing:east/upper:true,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
+block:id=%programmable_diagonal_half_screen,state=facing:east/upper:true,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_diagonal_porthole,state=facing:east/inverted:true/depth:0,patch0=0:v12_blocks_dark_wall_panel,transparency=TRANSPARENT,stdrot=true
-block:id=%programmable_diagonal_half_console,state=facing:south/upper:false,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
+block:id=%programmable_diagonal_half_screen,state=facing:south/upper:false,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_diagonal_porthole,state=facing:south/inverted:false/depth:0,patch0=0:v12_blocks_dark_wall_panel,transparency=TRANSPARENT,stdrot=true
-block:id=%programmable_diagonal_half_console,state=facing:south/upper:true,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
+block:id=%programmable_diagonal_half_screen,state=facing:south/upper:true,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_diagonal_porthole,state=facing:south/inverted:true/depth:0,patch0=0:v12_blocks_dark_wall_panel,transparency=TRANSPARENT,stdrot=true
-block:id=%programmable_diagonal_half_console,state=facing:west/upper:false,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
+block:id=%programmable_diagonal_half_screen,state=facing:west/upper:false,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_diagonal_porthole,state=facing:west/inverted:false/depth:0,patch0=0:v12_blocks_dark_wall_panel,transparency=TRANSPARENT,stdrot=true
-block:id=%programmable_diagonal_half_console,state=facing:west/upper:true,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
+block:id=%programmable_diagonal_half_screen,state=facing:west/upper:true,patch0=0:v12_blocks_dark_wall_panel,patch1=0:v12_blocks_console_inputs_input_surfaces_keyboard_touchpad_item,transparency=TRANSPARENT,stdrot=true
 block:id=%programmable_diagonal_porthole,state=facing:west/inverted:true/depth:0,patch0=0:v12_blocks_dark_wall_panel,transparency=TRANSPARENT,stdrot=true
 
 

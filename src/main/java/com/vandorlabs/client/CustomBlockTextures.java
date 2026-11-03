@@ -14,7 +14,7 @@ public final class CustomBlockTextures {
     private static final Map<Integer,IBlockState> STATES=new HashMap<>();
     private static boolean loaded;
     private static synchronized IBlockState state(int choice) {
-        if(!loaded){loaded=true;for(String id:com.vandorlabs.persistence.RetiredCockpitGlass.IDS)for(int meta=0;meta<16;meta++)STATES.put(CustomBlockMaterials.identifier("vandorlabs:"+id,meta),com.vandorlabs.persistence.RetiredCockpitGlass.state(com.vandorlabs.persistence.RetiredCockpitGlass.variant("vandorlabs:"+id)));for(Block block:Block.REGISTRY)for(int meta=0;meta<16;meta++)try{STATES.putIfAbsent(CustomBlockMaterials.identifier(block,meta),block.getStateFromMeta(meta));}catch(RuntimeException invalidMetadata){ }}
+        if(!loaded){loaded=true;Block renamed=Block.getBlockFromName(com.vandorlabs.persistence.RenamedBlocks.NEW);if(renamed!=null)for(int meta=0;meta<16;meta++)STATES.put(CustomBlockMaterials.identifier(com.vandorlabs.persistence.RenamedBlocks.OLD,meta),renamed.getStateFromMeta(meta));for(String id:com.vandorlabs.persistence.RetiredCockpitGlass.IDS)for(int meta=0;meta<16;meta++)STATES.put(CustomBlockMaterials.identifier("vandorlabs:"+id,meta),com.vandorlabs.persistence.RetiredCockpitGlass.state(com.vandorlabs.persistence.RetiredCockpitGlass.variant("vandorlabs:"+id)));for(Block block:Block.REGISTRY)for(int meta=0;meta<16;meta++)try{STATES.putIfAbsent(CustomBlockMaterials.identifier(block,meta),block.getStateFromMeta(meta));}catch(RuntimeException invalidMetadata){ }}
         return STATES.get(choice);
     }
     public static boolean isDoor(int choice){IBlockState state=state(choice);return state!=null && state.getBlock() instanceof BlockDoor;}

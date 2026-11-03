@@ -22,10 +22,14 @@ public final class RetiredCockpitGlass {
     public static int variant(String name){for(int i=0;i<IDS.length;i++)if(NAMES[i].equals(name))return i;return -1;}
     public static IBlockState state(int variant){if(variant<0||variant>2)throw new IllegalArgumentException("Invalid retired glass variant");return variant==0?Blocks.GLASS.getDefaultState():Blocks.STAINED_GLASS.getStateFromMeta(variant==1?9:7);}
     public static void install(){
-        ModFixs fixes=FMLCommonHandler.instance().getDataFixer().init("vandorlabs",1);
+        ModFixs fixes=FMLCommonHandler.instance().getDataFixer().init("vandorlabs",2);
         for(FixTypes type:new FixTypes[]{FixTypes.CHUNK,FixTypes.PLAYER,FixTypes.ENTITY,FixTypes.BLOCK_ENTITY,FixTypes.ITEM_INSTANCE})fixes.registerFix(type,new IFixableData(){
             public int getFixVersion(){return 1;}
             public NBTTagCompound fixTagCompound(NBTTagCompound tag){if(type==FixTypes.CHUNK)migrateChunk(tag,oldIds);migrateItems(tag);return tag;}
+        });
+        for(FixTypes type:new FixTypes[]{FixTypes.CHUNK,FixTypes.PLAYER,FixTypes.ENTITY,FixTypes.BLOCK_ENTITY,FixTypes.ITEM_INSTANCE})fixes.registerFix(type,new IFixableData(){
+            public int getFixVersion(){return 2;}
+            public NBTTagCompound fixTagCompound(NBTTagCompound tag){RenamedBlocks.migrateItems(tag);return tag;}
         });
     }
     /** Runs before world registry injection. Keep the original IDs even after level.dat drops retired names. */
@@ -84,14 +88,14 @@ public final class RetiredCockpitGlass {
         return false;
     }
     public static NBTTagCompound stateTag(NBTTagCompound saved){
-        int variant=variant(saved.getString("Name"));if(variant<0)return saved;
+        int variant=variant(saved.getString("Name"));if(variant<0)return RenamedBlocks.stateTag(saved);
         if(saved.hasKey("Properties")&&!saved.hasKey("Properties",10)||!saved.getCompoundTag("Properties").hasNoTags()||saved.getKeySet().stream().anyMatch(key->!key.equals("Name")&&!key.equals("Properties")))throw new IllegalArgumentException("Unknown retired glass properties");
         return NBTUtil.writeBlockState(new NBTTagCompound(),state(variant));
     }
     public static IBlockState readState(NBTTagCompound saved){return NBTUtil.readBlockState(stateTag(saved));}
     /** Normalize owned ramp state fields and nested arm snapshots before lossless tile round trips. */
     public static NBTTagCompound tileData(NBTTagCompound saved){
-        NBTTagCompound result=itemData(saved);if(result==null||!result.getString("id").startsWith("vandorlabs:")||!(result.hasKey("ArmPayload",10)||result.hasKey("Original",10)||result.hasKey("Source",10)||result.hasKey("OriginalState",8)||result.hasKey("SourceState",8)))return result;
+        NBTTagCompound result=RenamedBlocks.tileData(itemData(saved));if(result==null||!result.getString("id").startsWith("vandorlabs:")||!(result.hasKey("ArmPayload",10)||result.hasKey("Original",10)||result.hasKey("Source",10)||result.hasKey("OriginalState",8)||result.hasKey("SourceState",8)))return result;
         if(!walkStates(result,false))return result;if(result==saved)result=saved.copy();walkStates(result,true);return result;
     }
     private static boolean walkStates(NBTTagCompound root,boolean change){
@@ -106,5 +110,5 @@ public final class RetiredCockpitGlass {
             }else if(value instanceof NBTTagList){NBTTagList list=(NBTTagList)value;for(int i=0;i<list.tagCount();i++){NBTBase child=list.get(i);if(child instanceof NBTTagCompound||child instanceof NBTTagList)pending.add(child);}}
         }return false;
     }
-    public static NBTTagCompound itemData(NBTTagCompound saved){if(saved==null||!walkItems(saved,false))return saved;NBTTagCompound copy=saved.copy();migrateItems(copy);return copy;}
+    public static NBTTagCompound itemData(NBTTagCompound saved){saved=RenamedBlocks.itemData(saved);if(saved==null||!walkItems(saved,false))return saved;NBTTagCompound copy=saved.copy();migrateItems(copy);return copy;}
 }

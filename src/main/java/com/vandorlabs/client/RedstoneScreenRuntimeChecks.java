@@ -153,7 +153,7 @@ final class RedstoneScreenRuntimeChecks {
         if(shape>=14){
             if(shape<=21){boolean full=shape<=16;return (full?ModBlocks.PROGRAMMABLE_FULL_INPUT:ModBlocks.PROGRAMMABLE_INPUT).getDefaultState()
                 .withProperty(BlockProgrammableInput.FACING,EnumFacing.NORTH).withProperty(BlockProgrammableInput.KEYBOARD,shape==15 || shape==16 || shape==20 || shape==21).withProperty(BlockProgrammableInput.UPPER,shape==19 || shape==16 || shape==21);}
-            if(shape<=23)return net.minecraft.block.Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","programmable_diagonal_half_console")).getDefaultState().withProperty(BlockDiagonalHalfConsole.UPPER,shape==23);
+            if(shape<=23)return net.minecraft.block.Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","programmable_diagonal_half_screen")).getDefaultState().withProperty(BlockDiagonalHalfConsole.UPPER,shape==23);
             return (shape<=25?ModBlocks.PROGRAMMABLE_CONSOLE:ModBlocks.PROGRAMMABLE_HALF_CONSOLE).getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.NORTH);
         }
         if(shape==0 || shape>=3 && shape<=7){

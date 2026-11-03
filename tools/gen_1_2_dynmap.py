@@ -118,10 +118,10 @@ for name in ['programmable_light_frame','programmable_light_slab']:
 
 for face,rot in [('north',0),('east',90),('south',180),('west',270)]:
     for upper in [False,True]:
-        data=load_model('programmable_diagonal_half_console',True)
+        data=load_model('programmable_diagonal_half_screen',True)
         if upper:
             for e in data['elements']:e['from'][1],e['to'][1]=16-e['to'][1],16-e['from'][1]
-        emit('programmable_diagonal_half_console',f'facing:{face}/upper:{str(upper).lower()}',data,rot)
+        emit('programmable_diagonal_half_screen',f'facing:{face}/upper:{str(upper).lower()}',data,rot)
         elements=[]
         for y in range(16):
             z=6*(15-y if upper else y)/16

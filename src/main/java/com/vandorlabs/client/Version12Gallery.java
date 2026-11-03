@@ -180,7 +180,7 @@ final class Version12Gallery {
         } else if (scene.equals("half_console")) {
             for (int i=0;i<4;i++) {
                 BlockPos p=origin.add(i*2,0,0);
-                world.setBlockState(p,block("programmable_diagonal_half_console").getDefaultState().withProperty(BlockDiagonalHalfConsole.UPPER,i>=2),3);
+                world.setBlockState(p,block("programmable_diagonal_half_screen").getDefaultState().withProperty(BlockDiagonalHalfConsole.UPPER,i>=2),3);
                 world.setBlockState(p.south(),ModBlocks.PROGRAMMABLE_SLAB.getDefaultState().withProperty(BlockProgrammableSlab.HALF,
                         i>=2?net.minecraft.block.BlockSlab.EnumBlockHalf.TOP:net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM),3);
             }

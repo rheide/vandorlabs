@@ -2,7 +2,7 @@
 
 Select **Chip** from the **Display** texture list, immediately below Vehicle Status:
 
-- **Programmable Diagonal Half Console:** adds a small front tray and a sideways chip reader in front of the incline.
+- **Programmable Diagonal Half Screen:** adds a small front tray and a sideways chip reader in front of the incline.
 - **Programmable Diagonal Screen:** adds a sideways reader below the display. The display keeps its original area.
 - **Programmable Console:** adds a sideways chip reader at the right of the lower deck, cropping the remaining controls at their original scale.
 - **Programmable Half Console:** adds a sideways reader at the right of the lower deck. The left part of the original controls texture is cropped at its original scale. Display is the first tab, followed by Controls.

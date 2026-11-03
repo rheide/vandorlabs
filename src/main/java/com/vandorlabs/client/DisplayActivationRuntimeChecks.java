@@ -25,7 +25,7 @@ import javax.imageio.ImageIO;
 final class DisplayActivationRuntimeChecks {
     private static final BlockPos POS=new BlockPos(300,100,300);
     private static int stage,fixture,ticks,slot;private static boolean done;
-    private static Block[] blocks(){return new Block[]{ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_console")};}
+    private static Block[] blocks(){return new Block[]{ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_screen")};}
     private static void require(boolean value,String reason){if(!value)throw new IllegalStateException("display activation fixture="+fixture+" stage="+stage+" slot="+slot+": "+reason);}
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(done)return true;if(++ticks%10!=0)return false;require(ticks<6000,"bounded fixture");

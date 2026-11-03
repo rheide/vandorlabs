@@ -19,7 +19,7 @@ final class DisplayLocalReloadChecks {
     private static void require(boolean value,String reason){if(!value)throw new IllegalStateException("Local display reload: "+reason);}
     static void run(WorldServer world){
         int count=0;
-        Block[] families={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_console")};
+        Block[] families={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_screen")};
         for(Block block:families)for(int step=1;step<=3;step++)for(boolean sourceFirst:new boolean[]{false,true}){
             scenario(world,block,step,sourceFirst,BASE);count++;
         }

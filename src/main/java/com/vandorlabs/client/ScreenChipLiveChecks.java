@@ -27,7 +27,7 @@ import org.lwjgl.opengl.GL11;
 /** Actual GUI choice, Survival packets, ownership and rendered sideways readers. */
 final class ScreenChipLiveChecks {
     private static final BlockPos POS=new BlockPos(88,110,88);
-    private static final String[] IDS={"programmable_diagonal_half_console","programmable_diagonal_screen","programmable_half_console","programmable_console"};
+    private static final String[] IDS={"programmable_diagonal_half_screen","programmable_diagonal_screen","programmable_half_console","programmable_console"};
     private static int ticks,stage,kind,wait;
     private static EntityPlayerMP player(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);}
     private static void server(Minecraft mc,Runnable work)throws Exception{mc.getIntegratedServer().addScheduledTask(work).get();}

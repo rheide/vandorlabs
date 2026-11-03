@@ -20,6 +20,8 @@ import org.lwjgl.opengl.GL11;
 final class ScreenChipJoinedChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("joined chip: "+why);}
     static void run(Minecraft mc,File output)throws Exception{
+        Block renamed=Block.getBlockFromName(com.vandorlabs.persistence.RenamedBlocks.NEW);require(renamed!=null&&renamed.getLocalizedName().equals("Programmable Diagonal Half Screen"),"renamed screen registry and display name");for(int meta=0;meta<16;meta++){int old=CustomBlockMaterials.identifier(com.vandorlabs.persistence.RenamedBlocks.OLD,meta),current=CustomBlockMaterials.identifier(renamed,meta);require(CustomBlockTextures.sprite(old,false)==CustomBlockTextures.sprite(current,false),"renamed sampled artwork metadata "+meta);}
+
         for(int speed=0;speed<3;speed++){Object owner=new Object();require(VehicleShapeRenderer.angleAt(owner,100,speed)==0,"rotation origin");double angle=VehicleShapeRenderer.angleAt(owner,110,speed);require(Math.abs(angle-6*(1<<speed))<1e-9,"slow/normal/fast rotation rates");require(VehicleShapeRenderer.angleAt(owner,110,(speed+1)%3)==angle,"speed change/paused frame jumped phase");}
         BlockPos base=new BlockPos(120,120,120);Block block=Block.getBlockFromName("vandorlabs:programmable_viewscreen");
         for(BlockPos at:BlockPos.getAllInBox(base.add(-1,-1,-1),base.add(4,4,1)))mc.world.setBlockToAir(at);

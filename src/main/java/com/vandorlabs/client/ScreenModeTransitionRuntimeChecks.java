@@ -32,7 +32,7 @@ public final class ScreenModeTransitionRuntimeChecks {
     private static int slot(){return slots.get(scenario);}
     public static void begin(Minecraft mc)throws Exception{
         scenario=stage=frame=total=0;blocks.clear();slots.clear();
-        Block[] variants={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_console")};
+        Block[] variants={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_screen")};
         for(Block block:variants)for(int slot=0;slot<2;slot++)if(RedstoneScreenInteractions.supportsSlot(block,slot)){blocks.add(block);slots.add(slot);}
         mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer w=world(mc);for(int i=0;i<blocks.size();i++){

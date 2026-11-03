@@ -67,7 +67,7 @@ final class GlazingFeatureChecks {
     }
     private static void icons(Minecraft mc,File output)throws Exception{
         int old=org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.EXTFramebufferObject.GL_FRAMEBUFFER_BINDING_EXT);TurntableRenderState saved=new TurntableRenderState();
-        String[] items={"programmable_console","programmable_half_console","programmable_viewscreen","programmable_diagonal_screen","programmable_half_input","programmable_input","programmable_diagonal_half_console"};
+        String[] items={"programmable_console","programmable_half_console","programmable_viewscreen","programmable_diagonal_screen","programmable_half_input","programmable_input","programmable_diagonal_half_screen"};
         net.minecraft.client.shader.Framebuffer frame=new net.minecraft.client.shader.Framebuffer(256,512,true);
         net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_PROJECTION);net.minecraft.client.renderer.GlStateManager.pushMatrix();net.minecraft.client.renderer.GlStateManager.loadIdentity();net.minecraft.client.renderer.GlStateManager.ortho(0,64,128,0,-1000,1000);net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_MODELVIEW);net.minecraft.client.renderer.GlStateManager.pushMatrix();
         try{

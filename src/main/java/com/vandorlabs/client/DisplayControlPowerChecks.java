@@ -19,7 +19,7 @@ final class DisplayControlPowerChecks {
     static void run(WorldServer world,EntityPlayerMP player){
         List<String> failures=new ArrayList<>();boolean sneaking=player.isSneaking();player.setSneaking(false);int cases=0;
         try{
-            Block[] families={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_console")};
+            Block[] families={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_screen")};
             for(Block block:families)for(Block support:new Block[]{Blocks.STONE,ModBlocks.PROGRAMMABLE_BLOCK})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(EnumFacing side:EnumFacing.HORIZONTALS){
                 String context=block+" support="+support+" facing="+facing+" lever="+side;
                 try{conduction(world,player,block,support,facing,side);}catch(IllegalStateException failure){failures.add(context+": "+failure.getMessage());}cases++;

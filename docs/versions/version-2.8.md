@@ -14,7 +14,7 @@ When a mount is missing, the Vehicle tab explains how to attach a Data Chip Moun
 
 ## Screen chip readers
 
-[Screen chip readers](../screen-chip-readers.md) add a Display-only Chip choice to Programmable Diagonal Half Consoles, Diagonal Screens, Half Consoles and regular Consoles. Their built-in slots animate sideways and disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Display before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens share an attached Data Chip Mount across their joined rectangle. Chip contents stretch across the whole display. Slow/Normal/Fast controls Vehicle Chip rotation, immutable shape geometry is cached, and company Master Data Chips display their Corp logos.
+[Screen chip readers](../screen-chip-readers.md) add a Display-only Chip choice to Programmable Diagonal Half Screens, Diagonal Screens, Half Consoles and regular Consoles. Their built-in slots animate sideways and disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Display before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens share an attached Data Chip Mount across their joined rectangle. Chip contents stretch across the whole display. Slow/Normal/Fast controls Vehicle Chip rotation, immutable shape geometry is cached, and company Master Data Chips display their Corp logos.
 
 Data Chip Mounts and Access Card Mounts now share the Thruster Lever's base height, tilt and tilt direction controls. Configure these on the Security tab; right-click a button to cycle backwards. The inserted token follows the mount pose.
 
@@ -53,3 +53,7 @@ The main 2.8 performance candidate passed the Java 8 release gate, including sha
 Programmable Surfaces now support up to 32 blocks on each side. Copy Controllers accept filled rectangles with matching input/output dimensions; Turntables retain filled squares. Screen artwork retains its previous 1,024-cell scan cutoff. Snapshot, capture-height and payload limits remain independent.
 
 The Sectional Door keeps its existing registry ID and default artwork. Its Textures tab includes general materials, Trapdoors, Doors and Large Doors. Original and light grey Sectional Panels are also available in the general Industrial category.
+
+## Diagonal Half Screen rename
+
+**Programmable Diagonal Half Console** is now **Programmable Diagonal Half Screen**, with block and item ID `vandorlabs:programmable_diagonal_half_screen`. Existing `vandorlabs:programmable_diagonal_half_console` placements and item stacks remap to the new ID. Facing, upper/lower placement, selected artwork, controls and stored chips are preserved. Saved Vehicle Chips, vehicle/turntable snapshots and retained arm/ramp references also accept the old ID. The tile-entity ID and block metadata format are unchanged.

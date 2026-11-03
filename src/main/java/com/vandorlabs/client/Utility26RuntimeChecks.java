@@ -59,7 +59,7 @@ final class Utility26RuntimeChecks {
     private static void devicePlacement(WorldServer world,net.minecraft.entity.player.EntityPlayerMP actor,BlockPos at){
         world.getChunkFromBlockCoords(at);int dark=ScreenHousingTextures.screenIndex("door_inner");
         require(dark>0&&ScreenHousingTextures.texture(dark).equals("vandorlabs:blocks/programmable_glass/door_side"),"Door Interior Dark resolves its actual native material rather than fallback zero");
-        for(String id:new String[]{"programmable_viewscreen","programmable_diagonal_screen","programmable_half_input","programmable_input","programmable_half_console","programmable_console","programmable_diagonal_half_console"}){
+        for(String id:new String[]{"programmable_viewscreen","programmable_diagonal_screen","programmable_half_input","programmable_input","programmable_half_console","programmable_console","programmable_diagonal_half_screen"}){
             Block block=Block.getBlockFromName("vandorlabs:"+id);require(block instanceof BlockAnimatedScreenSelector,"registered device "+id);
             net.minecraft.item.ItemBlock item=(net.minecraft.item.ItemBlock)net.minecraft.item.Item.getItemFromBlock(block);
             for(int mode=0;mode<4;mode++)try{

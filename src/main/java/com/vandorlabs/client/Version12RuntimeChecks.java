@@ -211,7 +211,7 @@ final class Version12RuntimeChecks {
                 require(TEAnimatedScreenSelector.portholeGroup(a,world.getBlockState(p)).columns==1,"disabled porthole join");
                 world.setBlockToAir(p.east());world.setBlockToAir(p);
             }
-            Block half=block("programmable_diagonal_half_console");
+            Block half=block("programmable_diagonal_half_screen");
             for (boolean upper:new boolean[]{false,true}) {
                 world.setBlockState(p.south(),ModBlocks.PROGRAMMABLE_SLAB.getDefaultState().withProperty(BlockProgrammableSlab.HALF,
                         upper?net.minecraft.block.BlockSlab.EnumBlockHalf.TOP:net.minecraft.block.BlockSlab.EnumBlockHalf.BOTTOM),3);
@@ -239,7 +239,7 @@ final class Version12RuntimeChecks {
         RecipeCopiedSettings recipe=new RecipeCopiedSettings();
         for (Block block:new Block[]{ModBlocks.PROGRAMMABLE_BLOCK,ModBlocks.PROGRAMMABLE_SLAB,ModBlocks.PROGRAMMABLE_WALL,
                 ModBlocks.PROGRAMMABLE_LIGHT,ModBlocks.PROGRAMMABLE_TRIGGER_BLOCK,
-                block("programmable_diagonal_porthole"),block("programmable_diagonal_half_console")}) {
+                block("programmable_diagonal_porthole"),block("programmable_diagonal_half_screen")}) {
             grid.setInventorySlotContents(0,tool);grid.setInventorySlotContents(1,new ItemStack(block,64));
             ItemStack output=recipe.getCraftingResult(grid);
             // A chair has no housing setting, but can still receive the shared channel.

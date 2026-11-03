@@ -3480,7 +3480,7 @@
     "item": true
   },
   {
-    "id": "programmable_diagonal_half_console",
+    "id": "programmable_diagonal_half_screen",
     "type": "diagonal_half_console",
     "class": "BlockDiagonalHalfConsole",
     "item": true

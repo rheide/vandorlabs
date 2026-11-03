@@ -43,7 +43,7 @@ final class JoinedDisplayPowerRuntimeChecks {
     }
     private static void configure(TileEntityAnimatedScreenSelector tile){for(int band=0;band<4;band++)require(tile.configureActivation(2,band,band,1,1),"activation fixture configured");}
     private static void matrix(WorldServer world){
-        Block[] blocks={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_console")};
+        Block[] blocks={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_screen")};
         BlockPos origin=BASE.add(20,0,0);
         for(Block block:blocks){
             for(BlockPos p:BlockPos.getAllInBox(origin.add(-4,-3,-4),origin.add(5,5,5)))world.setBlockToAir(p);

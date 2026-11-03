@@ -421,7 +421,7 @@ tile.vandorlabs.glass_frame_inner.name=Glass Frame Interior
 tile.vandorlabs.door_inner.name=Door Interior (Dark)
 tile.vandorlabs.luxury_seat.name=Luxury Seat
 tile.vandorlabs.military_seat.name=Military Seat
-tile.vandorlabs.programmable_diagonal_half_console.name=Programmable Diagonal Half Console
+tile.vandorlabs.programmable_diagonal_half_screen.name=Programmable Diagonal Half Screen
 tile.vandorlabs.programmable_diagonal_porthole.name=Programmable Diagonal Porthole
 
 tile.vandorlabs.programmable_stairs.name=Programmable Stairs

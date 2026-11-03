@@ -141,7 +141,7 @@ final class RedstoneScreenChecks {
     }
     private static void integratedSurfaces(){
         NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos pos=new BlockPos(0,100,0);
-        net.minecraft.block.Block halfDiagonal=new BlockDiagonalHalfConsole("programmable_diagonal_half_console_check");
+        net.minecraft.block.Block halfDiagonal=new BlockDiagonalHalfConsole("programmable_diagonal_half_screen_check");
         for(net.minecraft.block.Block block:new net.minecraft.block.Block[]{ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,halfDiagonal}){
             for(IBlockState state:block.getBlockState().getValidStates())for(int small=0;small<2;small++)for(int ceiling=-1;ceiling<3;ceiling++){
                 world.setBlockState(pos,state,2);TileEntityAnimatedScreenSelector owner=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);owner.setSmallInput(small!=0);owner.setCeilingMounted(ceiling>=0);if(ceiling>=0)owner.setCeilingPosition(ceiling);

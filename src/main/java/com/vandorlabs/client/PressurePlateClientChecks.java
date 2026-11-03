@@ -40,7 +40,7 @@ public final class PressurePlateClientChecks {
     private static void deviceItems(Minecraft mc){
         String dark=ScreenHousingTextures.texture(ScreenHousingTextures.screenIndex("door_inner"));
         require(dark.equals("vandorlabs:blocks/programmable_glass/door_side"),"Door Interior Dark resolves independently verified native artwork");
-        for(String id:new String[]{"programmable_viewscreen","programmable_diagonal_screen","programmable_half_input","programmable_input","programmable_half_console","programmable_console","programmable_diagonal_half_console"}){
+        for(String id:new String[]{"programmable_viewscreen","programmable_diagonal_screen","programmable_half_input","programmable_input","programmable_half_console","programmable_console","programmable_diagonal_half_screen"}){
             Block block=Block.getBlockFromName("vandorlabs:"+id);require(block!=null&&block!=net.minecraft.init.Blocks.AIR,"registered device "+id);
             net.minecraft.util.NonNullList<net.minecraft.item.ItemStack> items=net.minecraft.util.NonNullList.create();net.minecraft.item.Item.getItemFromBlock(block).getSubItems(net.minecraft.creativetab.CreativeTabs.SEARCH,items);require(items.size()==1,"one fresh creative device "+id);
             IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(items.get(0),mc.world,mc.player);int housing=0;
