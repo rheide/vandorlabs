@@ -99,14 +99,19 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor){((com.vandorlabs.blocks.BlockConfigurableSpaceDoor)state.getBlock()).updateRedstoneState(world,pos,state);BlockPos other=mate();if(other!=null){net.minecraft.block.state.IBlockState paired=world.getBlockState(other);if(paired.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor)((com.vandorlabs.blocks.BlockConfigurableSpaceDoor)paired.getBlock()).updateRedstoneState(world,other,paired);}}
         world.notifyBlockUpdate(pos,state,state,2);
     }
-    public boolean holdingCredential(net.minecraft.entity.player.EntityPlayer player,net.minecraft.util.EnumHand hand){return keyReader().accepts(player.getHeldItem(hand))||hand==net.minecraft.util.EnumHand.MAIN_HAND&&keyReader().accepts(player.getHeldItemOffhand());}
+    public boolean holdingCredential(net.minecraft.entity.player.EntityPlayer player,net.minecraft.util.EnumHand hand){return keyReader().accepts(player.getHeldItem(hand))||inventoryCredential(player,keyReader())!=null;}
+    private net.minecraft.item.ItemStack inventoryCredential(net.minecraft.entity.player.EntityPlayer player,TileEntityTokenSlot reader){
+        for(net.minecraft.item.ItemStack stack:player.inventory.mainInventory)if(reader.authorized(stack))return stack;
+        net.minecraft.item.ItemStack off=player.getHeldItemOffhand();return reader.authorized(off)?off:null;
+    }
     public boolean useSecurity(net.minecraft.entity.player.EntityPlayer player,net.minecraft.util.EnumHand hand){return useSecurity(player,hand,0);}
     public boolean useSecurity(net.minecraft.entity.player.EntityPlayer player,net.minecraft.util.EnumHand hand,int side){
         if(world.isRemote)return true;TileEntityTokenSlot reader=keyReader(side);if(!reader.isUsableByPlayer(player))return true;net.minecraft.item.ItemStack held=player.getHeldItem(hand);
-        if(hand==net.minecraft.util.EnumHand.MAIN_HAND&&!reader.accepts(held)&&reader.accepts(player.getHeldItemOffhand()))return false;
-        if(held.isEmpty()){if(reader.isEmpty())reader.cycleLogo();else{net.minecraft.item.ItemStack item=reader.removeStackFromSlot(0);if(!player.inventory.addItemStackToInventory(item)&&!item.isEmpty())player.dropItem(item,false);}return true;}
-        if(!reader.accepts(held))return true;if(!reader.authorized(held)){reader.reject();return true;}if(!reader.isEmpty()||!reader.isUsableByPlayer(player))return true;
-        if(reader.behavior>=2)reader.insertToggle(player,held);else{net.minecraft.item.ItemStack inserted=held.copy();inserted.setCount(1);reader.setInventorySlotContents(0,inserted);if(!player.capabilities.isCreativeMode)held.shrink(1);}return true;
+        if(reader.isEmpty()&&!reader.authorized(held)){net.minecraft.item.ItemStack found=inventoryCredential(player,reader);if(found!=null)held=found;}
+        if(held.isEmpty()){if(reader.isEmpty())reader.cycleLogo();else{net.minecraft.item.ItemStack item=reader.removeStackFromSlot(0);if(!player.inventory.addItemStackToInventory(item)&&!item.isEmpty())player.dropItem(item,false);}player.inventory.markDirty();player.inventoryContainer.detectAndSendChanges();return true;}
+        if(!reader.accepts(held))return true;if(!reader.authorized(held)){reader.reject();return true;}if(!reader.isEmpty())return true;
+        if(reader.behavior>=2)reader.insertToggle(player,held);else{net.minecraft.item.ItemStack inserted=held.copy();inserted.setCount(1);reader.setInventorySlotContents(0,inserted);if(!player.capabilities.isCreativeMode)held.shrink(1);}
+        player.inventory.markDirty();player.inventoryContainer.detectAndSendChanges();return true;
     }
     private void writeSecurity(NBTTagCompound tag,boolean contents){tag.setInteger("DoorPanelMode",panelMode());tag.setInteger("DoorSecurityMode",securityMode);if(contents)tag.setBoolean("DoorSecurityToggled",securityToggled);tag.setInteger("DoorSecurityAllowed",keyReader.effectiveAllowed());if(contents){tag.setTag("DoorKeyReader",keyReader.writeToNBT(new NBTTagCompound()));tag.setTag("DoorRearKeyReader",rearKeyReader.writeToNBT(new NBTTagCompound()));}}
     private void readSecurity(NBTTagCompound tag){panelMode=tag.hasKey("DoorPanelMode",3)?Math.max(0,Math.min(2,tag.getInteger("DoorPanelMode"))):panel?1:0;securityMode=Math.max(0,Math.min(4,tag.getInteger("DoorSecurityMode")));securityToggled=tag.getBoolean("DoorSecurityToggled");if(tag.hasKey("DoorKeyReader",10))keyReader.readFromNBT(tag.getCompoundTag("DoorKeyReader"));else keyReader.configure(false,tag.hasKey("DoorSecurityAllowed",3)?tag.getInteger("DoorSecurityAllowed")&127:127,securityBehavior(securityMode));if(tag.hasKey("DoorRearKeyReader",10))rearKeyReader.readFromNBT(tag.getCompoundTag("DoorRearKeyReader"));else rearKeyReader.configure(false,tag.hasKey("DoorSecurityAllowed",3)?tag.getInteger("DoorSecurityAllowed")&127:127,securityBehavior(securityMode));keyReader.configure(false,singleCompany(keyReader.effectiveAllowed()),securityBehavior(securityMode));rearKeyReader.configure(false,singleCompany(rearKeyReader.effectiveAllowed()),securityBehavior(securityMode));}
@@ -284,6 +289,8 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     @Override public boolean shouldRenderInPass(int pass) {
         return pass==1&&world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this)||isLowerDoor() && (pass == 0 || pass == 1 && hasGlass() && !opaqueGlass());
     }
+    /** Keep frames and moving leaves visible throughout the loaded chunk render distance. */
+    @Override public double getMaxRenderDistanceSquared(){return Double.MAX_VALUE;}
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
         return slideDirection==0?super.getRenderBoundingBox():
                 new net.minecraft.util.math.AxisAlignedBB(pos.add(-1,-2,-1),pos.add(2,4,2));

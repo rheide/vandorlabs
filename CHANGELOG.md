@@ -2,6 +2,12 @@
 
 ## 2.8
 
+- Allow Taxi without propulsion at a 0.23-block/tick cap, with no Sprint boost. Powered Taxi remains 0.28; Hover still requires propulsion and lift. Apply the same rule to controller/seat entry, waypoint departure and coupling.
+
+- Mirror Custom block artwork across paired and Large Programmable Door leaves; preserve single-door orientation.
+- Insert an accepted Access Card from inventory when right-clicking an empty secured door reader, using its existing security behavior.
+- Match Programmable Glass and normal/Large Door rendering distance to Walls and Portholes.
+
 - Keep differently textured Programmable Surface pads separate during discovery, so touching pads can each join and retain their own artwork.
 
 - Colour Vehicle Chip model previews by company: Pinnacle gold, Ashiro coral, Paladyne green, Vektor violet, Seyr orange and Vandor cyan; generic chips use silver.

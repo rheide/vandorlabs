@@ -13,6 +13,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     public final FrameAppearance frameAppearance=new FrameAppearance();
     public final GlassPlayback glassPlayback=new GlassPlayback(this);
 
+    /** World geometry follows loaded chunks and the view frustum, like Programmable Walls. */
+    @Override public double getMaxRenderDistanceSquared(){return Double.MAX_VALUE;}
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox(){
         net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
         return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;

@@ -16,20 +16,22 @@ final class XDoorMeshes {
         DoorRenderModels.Entry entry=DoorRenderModels.get(state.getBlock(),tile.metadata(true,right,part));
         int choice=part==1?tile.getFaceTexture():-1;
         double scale=tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?1.5:1;IBakedModel model=part==2?DoorGlassModel.get(entry.model,tile,scale):FrameDoorModel.applies(tile.frameAppearance,part)?entry.framed(tile.frameAppearance,scale):entry.model;
-        Key key=new Key(model,right,choice,tile.getTextureLayout(),scale);
+        boolean mirror=right&&com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)&&(state.getValue(com.vandorlabs.blocks.BlockConnectingDetailedDoor.PAIRED)||scale>1);
+        Key key=new Key(model,right,choice,tile.getTextureLayout(),scale,mirror);
         StaticSurfaceMesh[] panels=CACHE.getIfPresent(key);if(panels!=null)return panels;
         TextureAtlasSprite sprite=choice<0?null:Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(choice));
-        panels=build(model,right,choice,tile.getTextureLayout(),sprite,part==1,scale);
+        panels=build(model,right,choice,tile.getTextureLayout(),sprite,part==1,scale,mirror);
         CACHE.put(key,panels);
         return panels;
     }
     static StaticSurfaceMesh[] build(IBakedModel model,boolean right,int choice,boolean tiled,TextureAtlasSprite sprite,boolean caps) {
-        return build(model,right,choice,tiled?1:0,sprite,caps,1);
+        return build(model,right,choice,tiled?1:0,sprite,caps,1,false);
     }
-    private static StaticSurfaceMesh[] build(IBakedModel model,boolean right,int choice,int layout,TextureAtlasSprite sprite,boolean caps,double scale) {
+    private static StaticSurfaceMesh[] build(IBakedModel model,boolean right,int choice,int layout,TextureAtlasSprite sprite,boolean caps,double scale,boolean mirror) {
         SelectedDoorGeometry selected=choice<0?null:new SelectedDoorGeometry(model);
         StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();
         if(selected!=null){double aspect=UnifiedTextureSprites.aspect(sprite);boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,(selected.bounds[3]-selected.bounds[0])*scale,(selected.bounds[4]-selected.bounds[1])*scale,aspect);if(fit)SelectedDoorFaceCache.emit(capture,selected.bounds,sprite,choice,false,0);else DoorFaceTextureMesh.draw(capture,sprite,selected.bounds,0,aspect,scale);}
+        if(selected!=null&&mirror){StaticSurfaceMesh mirrored=capture.finish().mirrorX(selected.bounds[0]+selected.bounds[3]);capture=StaticSurfaceMesh.capture();mirrored.draw(capture,0,0);}
         IBakedModel source=selected==null?model:selected;
         for(int side=-1;side<6;side++)for(BakedQuad quad:source.getQuads(null,side<0?null:EnumFacing.getFront(side),42)) {
             int[] data=quad.getVertexData();int stride=data.length/4;
@@ -43,9 +45,9 @@ final class XDoorMeshes {
         StaticSurfaceMesh full=capture.finish();return full.xPanels(right?1:0,caps);
     }
     private static final class Key {
-        final IBakedModel model;final boolean right;final int choice,layout;final double scale;
-        Key(IBakedModel model,boolean right,int choice,int layout,double scale){this.model=model;this.right=right;this.choice=choice;this.layout=layout;this.scale=scale;}
-        public int hashCode(){return Objects.hash(System.identityHashCode(model),right,choice,layout,scale);}
-        public boolean equals(Object other){if(!(other instanceof Key))return false;Key k=(Key)other;return model==k.model&&right==k.right&&choice==k.choice&&layout==k.layout&&scale==k.scale;}
+        final IBakedModel model;final boolean right,mirror;final int choice,layout;final double scale;
+        Key(IBakedModel model,boolean right,int choice,int layout,double scale,boolean mirror){this.mirror=mirror;this.model=model;this.right=right;this.choice=choice;this.layout=layout;this.scale=scale;}
+        public int hashCode(){return Objects.hash(System.identityHashCode(model),right,choice,layout,scale,mirror);}
+        public boolean equals(Object other){if(!(other instanceof Key))return false;Key k=(Key)other;return model==k.model&&right==k.right&&choice==k.choice&&layout==k.layout&&scale==k.scale&&mirror==k.mirror;}
     }
 }

@@ -25,7 +25,7 @@ final class DoorAppearanceLiveChecks {
  static boolean tick(Minecraft mc,File output)throws Exception{
   mc.gameSettings.pauseOnLostFocus=false;if(Boolean.getBoolean("vandorlabs.doorRenderChecksOnly"))fixture=6;if(++ticks%20!=0)return false;
   boolean large=(fixture&1)!=0;int design=fixture<2?15:fixture<4?16:29;
-  if(fixture==6){DoorAppearanceRuntimeChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] door-appearance-live PASS real containers packets normal/large White/Dark/Slim paired frame independence glass native/general four tints reverse-cycle Original save/item compact/normal dialogs");return true;}
+  if(fixture==6){if(!DoorInventoryCardLiveChecks.tick(mc))return false;DoorAppearanceRuntimeChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] door-appearance-live PASS real containers packets normal/large White/Dark/Slim paired frame independence glass native/general four tints reverse-cycle Original save/item compact/normal dialogs");return true;}
   GuiSpaceDoor gui=mc.currentScreen instanceof GuiSpaceDoor?(GuiSpaceDoor)mc.currentScreen:null;
   if(phase==0){front=ScreenHousingTextures.screenIndex("frames/frames-door-window/vandor_bg");inside=ScreenHousingTextures.screenIndex("light_alloy_hull");mc.player.closeScreen();setup(mc,large,design);}
   else if(phase==1){mc.playerController.setGameType(GameType.CREATIVE);mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=player(mc);p.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_SPACE_DOOR,p.world,POS.getX(),POS.getY(),POS.getZ());}).get();}

@@ -12,11 +12,15 @@ The controller’s Security tab enables security and explains the attached mount
 
 When a mount is missing, the Vehicle tab explains how to attach a Data Chip Mount to write vehicle data, and the Security tab explains that an Access Card Mount enables security.
 
+Taxi also works without a propulsion block at 0.23 blocks per tick, about 18% below the powered 0.28 speed, with no Sprint boost. Hover retains its propulsion and lift requirements.
+
 ## Screen chip readers
 
 [Screen chip readers](../screen-chip-readers.md) add a Display-only Chip choice to Programmable Diagonal Half Screens, Diagonal Screens, Half Consoles and regular Consoles. Console slots open toward the player at the bottom; the Diagonal Screen slot animates sideways. The slots disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Display before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens share an attached Data Chip Mount across their joined rectangle. Chip contents stretch across the whole display. Vehicle Chip previews use their company colours (gold for Pinnacle, cyan for Vandor, silver for generic chips). Slow/Normal/Fast controls Vehicle Chip rotation, immutable shape geometry is cached, and company Master Data Chips display their Corp logos.
 
 Data Chip Mounts and Access Card Mounts now share the Thruster Lever's base height, tilt and tilt direction controls. Configure these on the Security tab; right-click a button to cycle backwards. The inserted token follows the mount pose.
+
+Programmable Doors can insert an accepted Access Card from inventory without changing the selected hotbar item. Custom block artwork mirrors across double and Large door leaves. Programmable Glass and doors now follow the Wall/Porthole loaded-chunk render range.
 
 ## Retired cockpit glass
 

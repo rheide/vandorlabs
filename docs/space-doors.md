@@ -231,3 +231,9 @@ so it has more leaf geometry than White/Dark Glass.
 Measurement data: [lookup before](performance/door-materials/lookup-before.csv),
 [lookup after](performance/door-materials/lookup-after.csv),
 [per-leaf geometry](performance/door-materials/geometry.csv).
+
+Custom block artwork mirrors horizontally across opposite leaves of double Programmable Doors and Large Programmable Doors, including tiled layouts and X-split panels. Single doors keep their existing texture orientation.
+
+Right-clicking a secured door also searches your inventory for an accepted Access Card when the reader is empty. One matching card is inserted, preserving its name and data, without changing your selected hotbar item. The reader uses the configured stay-inserted, pulse or return behavior. Wrong-company cards remain in your inventory. Empty-hand interaction with an occupied reader still removes its card.
+
+Programmable Doors and Large Programmable Doors follow the same loaded-chunk and view-frustum render range as Programmable Walls, as do Programmable Glass and Portholes.

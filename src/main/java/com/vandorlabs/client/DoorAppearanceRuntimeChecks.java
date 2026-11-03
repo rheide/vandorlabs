@@ -22,9 +22,10 @@ import org.lwjgl.opengl.GL11;
 final class DoorAppearanceRuntimeChecks {
  static final class Fixture {
   final VehicleWorld world;final TileEntitySpaceDoor tile;final IBlockState state;final int width,height;
-  Fixture(Minecraft mc,boolean large,int design){
-   Block block=Block.getBlockFromName(large?"vandorlabs:large_programmable_door":"vandorlabs:programmable_door");width=large?3:1;height=large?3:2;
-   state=block.getDefaultState().withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH).withProperty(BlockVandorDoor.HALF,BlockDoor.EnumDoorHalf.LOWER).withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.RIGHT).withProperty(BlockConnectingDetailedDoor.PAIRED,large);
+  Fixture(Minecraft mc,boolean large,int design){this(mc,large,design,false);}
+  Fixture(Minecraft mc,boolean large,int design,boolean pair){
+   Block block=Block.getBlockFromName(large?"vandorlabs:large_programmable_door":"vandorlabs:programmable_door");width=large?3:pair?2:1;height=large?3:2;
+   state=block.getDefaultState().withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH).withProperty(BlockVandorDoor.HALF,BlockDoor.EnumDoorHalf.LOWER).withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.RIGHT).withProperty(BlockConnectingDetailedDoor.PAIRED,large||pair);
    List<VehicleStructure.Cell> cells=new ArrayList<>();for(int x=0;x<width;x++)for(int y=0;y<height;y++){
     TileEntitySpaceDoor t=large?new TileEntityLargeProgrammableDoor():new TileEntitySpaceDoor();t.setPos(new BlockPos(x,y,0));t.configure(design,1,true,0,true,true,false,0,false);if(large)((TileEntityLargeProgrammableDoor)t).assign(BlockPos.ORIGIN);
     cells.add(new VehicleStructure.Cell(t.getPos(),state.withProperty(BlockVandorDoor.HALF,y==0?BlockDoor.EnumDoorHalf.LOWER:BlockDoor.EnumDoorHalf.UPPER),t.writeToNBT(new NBTTagCompound())));
@@ -35,6 +36,8 @@ final class DoorAppearanceRuntimeChecks {
  }
  static void run(Minecraft mc,File output)throws Exception{
   benchmarkCaches(output);
+  customMirror(mc,output);
+  worldGeometryDistance(mc);
   int bg=ScreenHousingTextures.screenIndex("frames/frames-door-window/vandor_bg"),inside=ScreenHousingTextures.screenIndex("materials/cool_steel"),cases=0;
   try(PrintWriter report=new PrintWriter(new File(output,"door-render-costs.csv"))){report.println("size,design,frame_quads_per_leaf,leaf_quads_per_leaf,glass_quads_per_leaf,assembly_tiles,opaque_batch_available");
    for(boolean large:new boolean[]{false,true})for(int design:new int[]{2,15,16,29}){
@@ -75,6 +78,23 @@ final class DoorAppearanceRuntimeChecks {
   }
   System.out.println("[vandorlabs][reprolab] door-appearance-render PASS cases="+cases+" native normal/large Standard Light/Dark independent frame finishes square material native glass4 tints moving/X split batch parity");
  }
+ private static void worldGeometryDistance(Minecraft mc){
+  for(String id:new String[]{"programmable_wall","programmable_glass","programmable_porthole_wall","programmable_porthole_block","programmable_diagonal_glass","programmable_door","large_programmable_door"}){
+   Block block=Block.getBlockFromName("vandorlabs:"+id);require(block!=null,"distance fixture registry "+id);IBlockState state=block.getDefaultState();net.minecraft.tileentity.TileEntity fresh=block.createTileEntity(mc.world,state);require(fresh!=null,"distance fixture tile "+id);fresh.setPos(BlockPos.ORIGIN);VehicleWorld view=new VehicleWorld(mc.world,VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,state,fresh.writeToNBT(new NBTTagCompound())))));net.minecraft.tileentity.TileEntity tile=view.getTileEntity(BlockPos.ORIGIN);require(tile.getMaxRenderDistanceSquared()==Double.MAX_VALUE,"world geometry retains tile distance cutoff "+id);
+  }
+  System.out.println("[vandorlabs][reprolab] world-geometry-distance PASS walls glass flat/diagonal portholes normal/large doors chunk/frustum visibility no64-block-cutoff");
+ }
+ private static void customMirror(Minecraft mc,File output)throws Exception{
+  int count=0;java.lang.reflect.Field data=StaticSurfaceMesh.class.getDeclaredField("vertices");data.setAccessible(true);
+  for(boolean large:new boolean[]{false,true})for(int mode=0;mode<3;mode++)for(Block material:new Block[]{net.minecraft.init.Blocks.OAK_DOOR,net.minecraft.init.Blocks.FURNACE}){
+   Fixture f=new Fixture(mc,large,2,!large);try{int choice=CustomBlockMaterials.choice(material==net.minecraft.init.Blocks.OAK_DOOR?new net.minecraft.item.ItemStack(net.minecraft.init.Items.OAK_DOOR):new net.minecraft.item.ItemStack(material));require(CustomBlockMaterials.isCustom(choice),"fixture must select a real custom block item "+material.getRegistryName());f.tile.setFaceTexture(choice);f.tile.setTextureLayout(mode);
+    for(boolean right:new boolean[]{false,true}){SelectedDoorGeometry geometry=DoorRenderModels.get(f.state.getBlock(),f.tile.metadata(true,right,1)).selected();StaticSurfaceMesh original=SelectedDoorFaceCache.get(geometry,choice,mode,large?1.5:1,false),mirror=SelectedDoorFaceCache.get(geometry,choice,mode,large?1.5:1,true);float[] a=(float[])data.get(original),b=(float[])data.get(mirror);require(a.length==b.length&&a.length>0,"mirrored material geometry missing");double sum=geometry.bounds[0]+geometry.bounds[3];for(int q=0;q<a.length;q+=32)for(int v=0;v<4;v++){int x=q+v*8,y=q+(3-v)*8;require(Math.abs(b[x]-(sum-a[y]))<1e-6&&b[x+1]==a[y+1]&&b[x+2]==a[y+2]&&b[x+3]==a[y+3]&&b[x+4]==a[y+4],"custom artwork must reflect across leaf including split upper/lower door sprites");}require(SelectedDoorFaceCache.get(geometry,choice,mode,large?1.5:1,true)==mirror,"mirrored mesh cache reused");count++;}
+    BufferedImage image=capture(mc,f,false,0,false);ImageIO.write(image,"png",new File(output,"door-custom-mirrored-"+(large?"large":"paired")+"-"+material.getRegistryName().getResourcePath()+"-"+mode+".png"));
+    if(material==net.minecraft.init.Blocks.OAK_DOOR&&mode==0){int different=0,total=0;for(int y=40;y<344;y++)for(int x=40;x<174;x++){int a=image.getRGB(x,y),b=image.getRGB(image.getWidth()-1-x,y);int delta=Math.abs((a>>16&255)-(b>>16&255))+Math.abs((a>>8&255)-(b>>8&255))+Math.abs((a&255)-(b&255));if(delta>30)different++;total++;}require(different<total/15,"actual paired/large custom door pixels must mirror around centre: "+different+"/"+total);}
+   }finally{f.close();}
+  }
+  System.out.println("[vandorlabs][reprolab] door-custom-mirror PASS cases="+count+" normal/large both-hands Fit/Tile/Auto asymmetric-block/vanilla-door split-sprites cached-geometry");
+ }
  private static volatile Object benchmarkSink;
  private static void benchmarkCaches(File output)throws Exception{
   Block block=Block.getBlockFromName("vandorlabs:programmable_door");int metadata=TileEntitySpaceDoor.metadata(2,1,true,false,false,0,true);FrameAppearance frame=new FrameAppearance();frame.front=ScreenHousingTextures.screenIndex("frames/frames-door-window/vandor_bg");frame.interior=ScreenHousingTextures.screenIndex("light_alloy_hull");
@@ -92,7 +112,7 @@ final class DoorAppearanceRuntimeChecks {
    // Chunk batches inherit the world atlas binding; creating an FBO binds its own texture.
    mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
    if(batch){BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);OpaqueDoorBatch.draw(f.tile,f.state,progress,0,0,0,b);Tessellator.getInstance().draw();}
-   else TESlidingDoor.renderSpaceDoor(f.tile,f.state,EnumFacing.SOUTH,progress,0,0,0);
+   else {TESlidingDoor.renderSpaceDoor(f.tile,f.state,EnumFacing.SOUTH,progress,0,0,0);if(f.width==2)TESlidingDoor.renderSpaceDoor(f.tile,f.state.withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.LEFT),EnumFacing.SOUTH,progress,1,0,0);}
    if(f.tile.hasGlass()&&!f.tile.opaqueGlass()){ForgeHooksClient.setRenderPass(1);TESlidingDoor.renderSpaceDoor(f.tile,f.state,EnumFacing.SOUTH,progress,0,0,0);}
    GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(size,size,target);
   }finally{ForgeHooksClient.setRenderPass(previous);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);target.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}

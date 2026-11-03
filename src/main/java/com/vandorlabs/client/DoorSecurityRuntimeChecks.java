@@ -21,6 +21,7 @@ final class DoorSecurityRuntimeChecks {
         BlockPos pos=new BlockPos(430,180,430);world.getChunkFromBlockCoords(pos);player.setPosition(pos.getX()+.5,pos.getY(),pos.getZ()+1);player.capabilities.isCreativeMode=false;
         BlockConfigurableSpaceDoor block=(BlockConfigurableSpaceDoor)Block.getBlockFromName("vandorlabs:programmable_door");
         try{for(EnumFacing facing:EnumFacing.HORIZONTALS){
+            player.inventory.clear();
             world.setBlockState(pos.down(),Blocks.STONE.getDefaultState(),2);
             IBlockState state=block.getDefaultState().withProperty(BlockDoor.FACING,facing).withProperty(BlockDoor.HALF,BlockDoor.EnumDoorHalf.LOWER);
             world.setBlockState(pos,state,2);world.setBlockState(pos.up(),state.withProperty(BlockDoor.HALF,BlockDoor.EnumDoorHalf.UPPER),2);

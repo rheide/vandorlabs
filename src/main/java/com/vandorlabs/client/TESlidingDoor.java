@@ -245,7 +245,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             if(part==1 && tile.getFaceTexture()>=0) {
                 GlStateManager.disableLighting();
                 DoorRenderModels.Entry selected=DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,1));
-                renderSelectedDoorFace(tile,light,selected.selected(),size);
+                renderSelectedDoorFace(tile,light,selected.selected(),size,right&&(paired||size>1));
                 GlStateManager.translate(.5,.5,.5);DoorItemRenderer.baked(renderer,selected,selected.selected());
                 GlStateManager.enableLighting();GlStateManager.popMatrix();continue;
             }
@@ -302,11 +302,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         GlStateManager.enableLighting();
     }
 
-    private static void renderSelectedDoorFace(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int light,SelectedDoorGeometry geometry,double scale) {
+    private static void renderSelectedDoorFace(com.vandorlabs.tiles.TileEntitySpaceDoor tile,int light,SelectedDoorGeometry geometry,double scale,boolean mirror) {
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
         buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        SelectedDoorFaceCache.get(geometry,tile.getFaceTexture(),tile.getTextureLayout(),scale)
+        SelectedDoorFaceCache.get(geometry,tile.getFaceTexture(),tile.getTextureLayout(),scale,mirror&&com.vandorlabs.tiles.CustomBlockMaterials.isCustom(tile.getFaceTexture()))
                 .draw(buffer,light>>>16,light&65535);
         Tessellator.getInstance().draw();
     }
