@@ -24,15 +24,16 @@ public final class GuiCopyController extends GuiContainer {
         buttonList.add(new RedstoneActivationButton(0,guiLeft+12,guiTop+104,xSize-24,mode));
         int w=(xSize-28)/3;for(int i=0;i<3;i++)buttonList.add(new GuiButton(i+1,guiLeft+12+i*(w+2),guiTop+202,w,20,new String[]{"Copy","Check areas","Done"}[i]));
         heightSlider=new net.minecraftforge.fml.client.config.GuiSlider(10,guiLeft+12,guiTop+22,xSize-24,20,"Height: ","",1,16,scanHeight,false,true,slider->{int next=slider.getValueInt();slider.setValue(next);if(next!=scanHeight){scanHeight=next;submit(0);}});buttonList.add(heightSlider);
+        buttonList.add(new GuiButton(11,guiLeft+12,guiTop+46,xSize-24,18,""));
         labels();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
     }
-    private void labels(){((RedstoneActivationButton)buttonList.get(0)).setMode(mode);for(GuiButton button:buttonList)if(button.id!=3)button.enabled=!tile.busy();increment.setEnabled(!tile.busy());channels.setEnabled(!tile.busy());}
+    private void labels(){((RedstoneActivationButton)buttonList.get(0)).setMode(mode);for(GuiButton button:buttonList){if(button.id!=3)button.enabled=!tile.busy();if(button.id==11){button.displayString="Source: "+(tile.useChip?"Vehicle Chip":"Input Surface");button.visible=tile.useChip||com.vandorlabs.vehicle.VehicleMounts.find(tile.getWorld(),tile.getPos(),true)!=null;}}increment.setEnabled(!tile.busy());channels.setEnabled(!tile.busy());}
     private void submit(int operation){try{int h=scanHeight,delta=Integer.parseInt(increment.getText());ChannelList list=ChannelList.parse(channels.getText());if(h<1||h>16||delta < -65534||delta > 65534||list==null)throw new IllegalArgumentException();error="";PacketHandler.INSTANCE.sendToServer(new CopyMessage(inventorySlots.windowId,operation,h,delta,mode,list));}catch(IllegalArgumentException invalid){error="Channel increment must be -65534 to 65534";}}
-    @Override protected void actionPerformed(GuiButton button){if(button.id==10)return;if(button.id==3){mc.player.closeScreen();return;}if(button.id==0){mode=GuiOptionCycle.next(mode,3);submit(0);labels();}else submit(button.id);}
+    @Override protected void actionPerformed(GuiButton button){if(button.id==10)return;if(button.id==11){submit(3);return;}if(button.id==3){mc.player.closeScreen();return;}if(button.id==0){mode=GuiOptionCycle.next(mode,3);submit(0);labels();}else submit(button.id);}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee18212c);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString("Copy Controller",12,8,0xffffff);
-        fontRenderer.drawString("Input: left     Output: right     Chest: behind",12,49,0xcdd7e4);
+
         fontRenderer.drawString("Redstone Channel Increment On Copy",12,65,0xcdd7e4);
         fontRenderer.drawString("Receive channels (blank = local)",12,131,0xcdd7e4);
         drawRect(10,172,xSize-10,196,0xff101722);

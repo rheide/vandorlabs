@@ -27,6 +27,7 @@ lines = [line for line in lines if not line.startswith(('soundCategory_master:',
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
 CAPTURE_JVM=("-Dvandorlabs.largeBenchmarkTerrain=${VANDOR_LABS_BENCH_TERRAIN:-false}" "-Dvandorlabs.largeBenchmarkMovingSamples=${VANDOR_LABS_BENCH_MOVING_SAMPLES:-${VANDOR_LABS_BENCH_SAMPLES:-60}}" "-Dvandorlabs.largeBenchmarkCompare=${VANDOR_LABS_BENCH_COMPARE:-false}" "-Dvandorlabs.largeBenchmarkSamples=${VANDOR_LABS_BENCH_SAMPLES:-60}" "-Dvandorlabs.largeBenchmarkWarmFrames=${VANDOR_LABS_BENCH_WARM_FRAMES:-50}" "-Dvandorlabs.largeVehicleBenchmark=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.vehicleDiagnostics=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.reactorGlassChecksOnly=${VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.vehicleDesignChecksOnly=${VANDOR_LABS_VEHICLE_DESIGN_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleRenderCostChecksOnly=${VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.garageDoorBenchmarkOnly=${VANDOR_LABS_GARAGE_DOOR_BENCHMARK_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.garageTallChecksOnly=${VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY:-false}")

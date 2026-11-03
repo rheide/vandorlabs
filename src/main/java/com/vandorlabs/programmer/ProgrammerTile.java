@@ -17,7 +17,7 @@ import net.minecraftforge.fml.relauncher.*;
 /** Three retained physical stacks; programming consumes the input and leaves an immutable result in output. */
 public final class ProgrammerTile extends TileEntity implements IInventory, ITickable, ProgrammerHost {
     private final NonNullList<ItemStack> stacks=NonNullList.withSize(3,ItemStack.EMPTY);
-    public boolean journal;
+    public boolean journal,vehicle;
     public String title="";
     public final String[] pages=new String[ChipJournal.MAX_PAGES];
     private int writing,complete;
@@ -55,6 +55,11 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
         if(world!=null&&world.isRemote||!canCopy())return false;
         ItemStack result=stacks.get(1).copy();result.setCount(1);stacks.set(2,result);writing=20;complete=0;changed();return true;
     }
+    public boolean programVehicle(){
+        if(world!=null&&world.isRemote||!canProgram(true)||!ChipJournal.isChip(stacks.get(1)))return false;
+        ItemStack result=stacks.get(1).copy();result.setCount(1);com.vandorlabs.vehicle.VehicleChip.blank(result);
+        stacks.set(1,ItemStack.EMPTY);stacks.set(2,result);readDraft(ItemStack.EMPTY);writing=20;complete=0;changed();return true;
+    }
     public boolean editableJournal(){return ChipJournal.isChip(stacks.get(1))&&journal;}
     public ProgrammerJournalView journalDisplay(){
         if(displayDirty){ProgrammerJournalView next=ProgrammerJournalView.from(this);String key=next==null?null:next.key;if(!java.util.Objects.equals(key,displayKey))displayPage=0;displayKey=key;display=next;displayDirty=false;}
@@ -77,7 +82,7 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
         ItemStack input=stacks.get(1);if(!ChipJournal.isChip(input))return;
         String nextTitle=ChipJournal.bounded(text,ChipJournal.TITLE_LIMIT);boolean different=journal!=type||!title.equals(nextTitle);journal=type;title=nextTitle;for(int i=0;i<pages.length;i++){String next=ChipJournal.bounded(i<contents.length?contents[i]:"",ChipJournal.PAGE_LIMIT);different|=!pages[i].equals(next);pages[i]=next;}if(different)changed();
     }
-    private void readDraft(ItemStack input){journal=ChipJournal.isChip(input)&&ChipJournal.journal(input);title=ChipJournal.title(input);for(int i=0;i<pages.length;i++)pages[i]=ChipJournal.page(input,i);}
+    private void readDraft(ItemStack input){vehicle=com.vandorlabs.vehicle.VehicleChip.isVehicle(input);journal=ChipJournal.isChip(input)&&ChipJournal.journal(input);title=ChipJournal.title(input);for(int i=0;i<pages.length;i++)pages[i]=ChipJournal.page(input,i);}
     /** A socket click exchanges one actual physical token without opening a dialog. */
     public boolean interactSocket(EntityPlayer player,EnumHand hand,int slot){
         if(slot<0||slot>=3||!usable(player))return false;
@@ -96,8 +101,8 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
     @Override public EnumFacing getProgrammerFacing(){return world!=null&&world.getBlockState(pos).getBlock() instanceof ProgrammerBlock?world.getBlockState(pos).getValue(ProgrammerBlock.FACING):EnumFacing.NORTH;}
     @Override public BlockPos getProgrammerOrigin(){EnumFacing f=getProgrammerFacing();return f==EnumFacing.SOUTH?pos.west():f==EnumFacing.WEST?pos.north():pos;}
     @Override @SideOnly(Side.CLIENT) public AxisAlignedBB getRenderBoundingBox(){BlockPos p=getProgrammerOrigin();EnumFacing f=getProgrammerFacing();return new AxisAlignedBB(p.getX(),p.getY(),p.getZ(),p.getX()+(f.getAxis()==EnumFacing.Axis.Z?2:1),p.getY()+2,p.getZ()+(f.getAxis()==EnumFacing.Axis.Z?1:2));}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ItemStackHelper.saveAllItems(tag,stacks);tag.setBoolean("Journal",journal);tag.setString("Title",title);NBTTagList list=new NBTTagList();for(String page:pages)list.appendTag(new NBTTagString(page));tag.setTag("Pages",list);tag.setInteger("Writing",writing);tag.setInteger("Complete",complete);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);stacks.clear();ItemStackHelper.loadAllItems(tag,stacks);journal=ChipJournal.isChip(stacks.get(1))&&tag.getBoolean("Journal");title=ChipJournal.bounded(tag.getString("Title"),ChipJournal.TITLE_LIMIT);NBTTagList list=tag.getTagList("Pages",8);for(int i=0;i<pages.length;i++)pages[i]=ChipJournal.bounded(i<list.tagCount()?list.getStringTagAt(i):"",ChipJournal.PAGE_LIMIT);writing=Math.max(0,Math.min(20,tag.getInteger("Writing")));complete=Math.max(0,Math.min(60,tag.getInteger("Complete")));displayDirty=true;displayKey=null;journalDisplay();displayPage=display==null?0:Math.max(0,Math.min(tag.getInteger("JournalDisplayPage"),display.pages.size()-1));}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);ItemStackHelper.saveAllItems(tag,stacks);if(vehicle)tag.setBoolean("Vehicle",true);tag.setBoolean("Journal",journal);tag.setString("Title",title);NBTTagList list=new NBTTagList();for(String page:pages)list.appendTag(new NBTTagString(page));tag.setTag("Pages",list);tag.setInteger("Writing",writing);tag.setInteger("Complete",complete);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);stacks.clear();ItemStackHelper.loadAllItems(tag,stacks);vehicle=ChipJournal.isChip(stacks.get(1))&&tag.getBoolean("Vehicle");journal=ChipJournal.isChip(stacks.get(1))&&tag.getBoolean("Journal");title=ChipJournal.bounded(tag.getString("Title"),ChipJournal.TITLE_LIMIT);NBTTagList list=tag.getTagList("Pages",8);for(int i=0;i<pages.length;i++)pages[i]=ChipJournal.bounded(i<list.tagCount()?list.getStringTagAt(i):"",ChipJournal.PAGE_LIMIT);writing=Math.max(0,Math.min(20,tag.getInteger("Writing")));complete=Math.max(0,Math.min(60,tag.getInteger("Complete")));displayDirty=true;displayKey=null;journalDisplay();displayPage=display==null?0:Math.max(0,Math.min(tag.getInteger("JournalDisplayPage"),display.pages.size()-1));}
     @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.setInteger("JournalDisplayPage",journalDisplayPage());return tag;}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){NBTTagCompound tag;if(fullUpdate){tag=getUpdateTag();fullUpdate=false;}else{tag=new NBTTagCompound();tag.setBoolean("VisualOnly",true);tag.setInteger("Writing",writing);tag.setInteger("Complete",complete);tag.setInteger("JournalDisplayPage",journalDisplayPage());}return new SPacketUpdateTileEntity(pos,0,tag);}
     @Override @SideOnly(Side.CLIENT) public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){applyUpdateTag(packet.getNbtCompound());}

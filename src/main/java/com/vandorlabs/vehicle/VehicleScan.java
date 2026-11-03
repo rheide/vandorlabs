@@ -37,6 +37,15 @@ public final class VehicleScan {
     private Double gearBottomY;
     public BlockPos origin;
     public VehicleStructure result;
+    private VehicleStructure candidate;
+    private VehicleRotation.Validation validation;
+    private boolean validated,holdRequested;
+    private VehicleTransfer.SourceHold hold;
+    private List<VehicleStructure.Cell> refreshed;
+    private int refreshIndex;
+    public void holdSource(){holdRequested=true;}
+    public void releaseSource(){if(hold!=null){hold.close();hold=null;}}
+
     public final Set<BlockPos> airBoundary=new HashSet<>();
     public String error;
     public VehicleScan(World world, BlockPos start) {this(world,start,false,Collections.emptySet());}
@@ -267,10 +276,32 @@ public final class VehicleScan {
         }
         return Collections.emptyList();
     }
+    private NBTTagCompound capture(BlockPos p,TileEntity tile){
+        NBTTagCompound data=tile==null?null:tile.writeToNBT(new NBTTagCompound());
+        if(VehicleEscalators.active(tile))data=VehicleEscalators.paused(data);
+        if(tile instanceof TileEntityControlledRamp) {
+            TileEntity owner=world.getTileEntity(((TileEntityControlledRamp)tile).controller);
+            require(owner instanceof TileEntityRampController && ((TileEntityRampController)owner).owns((TileEntityControlledRamp)tile),"Ramp ownership changed; inspect again.");
+            data=VehicleEscalators.paused(data);data.setDouble("EscalatorDistance",((TileEntityRampController)owner).beltDistance(0));
+        }
+        return data;
+    }
     public boolean step(int budget) {
+        long deadline=System.nanoTime()+2_000_000L;
         if(error!=null || result!=null) return true;
         try {
-            for(int i=0;i<budget && !queue.isEmpty();i++) {
+            if(candidate!=null){
+                if(holdRequested&&hold==null&&world instanceof net.minecraft.world.WorldServer){hold=new VehicleTransfer.SourceHold((net.minecraft.world.WorldServer)world,candidate,origin);refreshed=new ArrayList<>();return false;}
+                if(refreshed!=null){
+                    int count=0;while(refreshIndex<candidate.cells.size()&&count++<budget){VehicleStructure.Cell cell=candidate.cells.get(refreshIndex++);BlockPos at=origin.add(cell.pos);require(world.isBlockLoaded(at)&&world.getBlockState(at)==cell.state,"Vehicle changed during inspection");NBTTagCompound data=capture(at,world.getTileEntity(at));refreshed.add(new VehicleStructure.Cell(cell.pos,cell.state,data==null?null:VehicleTileData.translated(data,BlockPos.ORIGIN.subtract(origin))));if(System.nanoTime()>=deadline)break;}
+                    if(refreshIndex<candidate.cells.size())return false;
+                    candidate=new VehicleStructure(refreshed,candidate.seat,candidate.facing,candidate.gearCount);refreshed=null;return false;
+                }
+                if(validation==null){VehicleWorld view=new VehicleWorld(world,candidate);view.origin=origin;validation=new VehicleRotation.Validation(candidate,view);return false;}
+                if(!validated){validated=validation.step(budget,deadline);return false;}
+                candidate.encode();result=candidate;candidate=null;validation=null;return true;
+            }
+            for(int i=0;i<budget && !queue.isEmpty() && (i==0||System.nanoTime()<deadline);i++) {
                 BlockPos p=queue.removeFirst(); if(!visited.add(p))continue;
                 require(visited.size()<=maxBlocks*7, "Discovery limit exceeded; separate the craft from its surroundings.");
                 require(world.isBlockLoaded(p), "The craft touches an unloaded chunk.");
@@ -293,13 +324,7 @@ public final class VehicleScan {
                 minX=Math.min(minX,p.getX()); minY=Math.min(minY,p.getY()); minZ=Math.min(minZ,p.getZ());
                 maxX=Math.max(maxX,p.getX()); maxY=Math.max(maxY,p.getY()); maxZ=Math.max(maxZ,p.getZ());
                 require(maxX-minX<64 && maxY-minY<64 && maxZ-minZ<64, "Craft exceeds 64 blocks along an axis.");
-                NBTTagCompound data=tile==null?null:tile.writeToNBT(new NBTTagCompound());
-                if(VehicleEscalators.active(tile))data=VehicleEscalators.paused(data);
-                if(tile instanceof TileEntityControlledRamp) {
-                    TileEntity owner=world.getTileEntity(((TileEntityControlledRamp)tile).controller);
-                    require(owner instanceof TileEntityRampController && ((TileEntityRampController)owner).owns((TileEntityControlledRamp)tile),"Ramp ownership changed; inspect again.");
-                    data=VehicleEscalators.paused(data);data.setDouble("EscalatorDistance",((TileEntityRampController)owner).beltDistance(0));
-                }
+                NBTTagCompound data=capture(p,tile);
                 cells.put(p,new VehicleStructure.Cell(p,state,data));
                 if(tile instanceof TileEntityCockpit){
                     TileEntityCockpit cockpit=(TileEntityCockpit)tile;
@@ -455,12 +480,10 @@ public final class VehicleScan {
                 List<VehicleStructure.Cell> local=new ArrayList<>();
                 for(VehicleStructure.Cell cell:ordered)local.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,
                         cell.tileData()==null?null:VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin))));
-                if(attachment)result=VehicleStructure.display(local);
-                else{result=new VehicleStructure(local,pilot.subtract(origin),world.getBlockState(pilot).getValue(BlockPilotSeat.FACING),supportCount());
-                    result=VehicleControlSettings.migratePlaced(world,origin,result);}
-                VehicleWorld view=new VehicleWorld(world,result);view.origin=origin;
-                MovingBlockSupport.validate(result,view);
-                result.encode(); // Enforce the byte limit before a preview or mutation.
+                if(attachment)candidate=VehicleStructure.display(local);
+                else{candidate=new VehicleStructure(local,pilot.subtract(origin),world.getBlockState(pilot).getValue(BlockPilotSeat.FACING),supportCount());
+                    candidate=VehicleControlSettings.migratePlaced(world,origin,candidate);}
+                return false; // Validate and encode in separate bounded server ticks before publication.
             }
         } catch(Exception e) { result=null;error=e.getMessage()==null?"Cannot capture this structure.":e.getMessage(); }
         return error!=null || result!=null;

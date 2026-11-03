@@ -29,6 +29,10 @@ public final class VehicleStatus {
             else if(action==4){if(craft==null)controller.pulseDeparture();else craft.autopilot.pulseDeparture();}
         }catch(IllegalArgumentException denied){VehicleNetwork.error(player,denied.getMessage());}
     }
+    public static com.vandorlabs.tiles.TileEntityVehicleController controller(World world,BlockPos screen){
+        BlockPos at=world instanceof VehicleWorld?VehicleControlSettings.position(((VehicleWorld)world).structure):entry(world,screen).vehicle;
+        TileEntity raw=at==null||!world.isBlockLoaded(at)?null:world.getTileEntity(at);return raw instanceof com.vandorlabs.tiles.TileEntityVehicleController?(com.vandorlabs.tiles.TileEntityVehicleController)raw:null;
+    }
     public static boolean hasController(World world,BlockPos screen){
         if(world instanceof VehicleWorld){VehicleStructure structure=((VehicleWorld)world).structure;return structure!=null&&structure.hasDedicatedController();}
         Entry entry=entry(world,screen);return entry.vehicle!=null&&world.isBlockLoaded(entry.vehicle)&&world.getBlockState(entry.vehicle).getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController;

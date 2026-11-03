@@ -22,7 +22,8 @@ public final class VehicleService {
     private static final Map<UUID,Job> jobs=new HashMap<>();
     private static final Map<String,Long> requests=new HashMap<>();
     private static final Set<World> recovered=Collections.newSetFromMap(new WeakHashMap<World,Boolean>());
-    private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi,screen;int ticks,requestedMode=-1;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);}}
+    private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi,screen,writeChip;com.vandorlabs.tiles.TileEntityVehicleController indicator;int ticks,requestedMode=-1;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);scan.holdSource();indicator=VehicleStatus.controller(world,pos);if(indicator!=null)indicator.setConverting(true);}
+        void finish(){scan.releaseSource();if(indicator!=null&&!indicator.isInvalid())indicator.setConverting(false);}}
     /** Screen clicks use the clicking player, bounded scans and the normal transfer checks. */
     public static void screenMode(EntityPlayerMP player,BlockPos screen,EntityGroundVehicle craft,int mode){
         require(mode>=0&&mode<=2,"Invalid vehicle mode.");
@@ -35,7 +36,7 @@ public final class VehicleService {
         VehicleStructure.Cell controller=craft.structure.controller();require(mode==0||craft.structure.hasDedicatedController(),"Vehicle Controller missing");
         permission(player,new BlockPos(craft.toWorld(new Vec3d(controller==null?craft.structure.seat:controller.pos).addVector(.5,.5,.5))));
         require(mode!=1 || VehicleSkiTraction.allowed(craft),"Taxi requires wheels, or only skis over ice.");
-        if(mode!=0){require(craft.setHover(mode==2),mode==2?"Hover requires three lift blocks and a Vehicle Thruster.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
+        if(mode!=0){VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));require(craft.setHover(mode==2),mode==2?"Hover requires three lift blocks and a Vehicle Thruster.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
         require(!craft.hover || craft.structure.activeNonWheeledGear() || !craft.structure.hasDedicatedController(),"Select Taxi mode before parking as blocks.");
         require(craft.stopped(),"Stop before parking.");
         VehicleTransfer.submit(player.getServerWorld(),()->{
@@ -223,7 +224,7 @@ public final class VehicleService {
         if(!preview.controller){VehicleStructure.Cell seat=preview.structure.at(preview.selected);return singleSeat(seat.state,seat.tileData(),BlockPos.ORIGIN.subtract(preview.selected));}
         return preview.entity==null || !preview.status.isEmpty()?preview.structure:VehicleRotation.plan(preview.entity).structure;
     }
-    private static void open(EntityPlayerMP player,Preview preview){jobs.remove(player.getUniqueID());previews.put(player.getUniqueID(),preview);if(preview.structure==null){VehicleNetwork.controllerInspection(player,preview.origin,preview.status,preview.token,preview.controlData);return;}VehicleNetwork.send(player,display(preview),preview.entity==null?-1:preview.entity.getEntityId(),preview.token,preview.origin,true,preview.entity!=null,preview.status,preview.controller);}
+    private static void open(EntityPlayerMP player,Preview preview){Job previous=jobs.remove(player.getUniqueID());if(previous!=null)previous.finish();previews.put(player.getUniqueID(),preview);if(preview.structure==null){VehicleNetwork.controllerInspection(player,preview.origin,preview.status,preview.token,preview.controlData);return;}VehicleNetwork.send(player,display(preview),preview.entity==null?-1:preview.entity.getEntityId(),preview.token,preview.origin,true,preview.entity!=null,preview.status,preview.controller);}
     private static void standaloneController(EntityPlayerMP player,BlockPos pos,String status){
         try{require(!player.isDead&&!player.isSpectator()&&player.world.isBlockLoaded(pos)&&player.getDistanceSqToCenter(pos)<=64,"Move closer to the Vehicle Controller.");permission(player,pos);
             net.minecraft.tileentity.TileEntity raw=player.world.getTileEntity(pos);require(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController,"Vehicle Controller missing.");
@@ -243,6 +244,7 @@ public final class VehicleService {
             require(preview.entity!=null||packet.sequence!=0,"Craft is already parked as blocks.");
             if(preview.entity==null || packet.sequence==0){confirm(player,packet.token,packet.sequence);return;}
             require(validCaptured(player,preview.entity),"Craft unavailable; inspect it again.");
+            VehicleMounts.requireAllowed(preview.entity.view,VehicleControlSettings.position(preview.entity.structure));
             require(preview.entity.setHover(packet.sequence==2),packet.sequence==2?
                     "Hover requires three lift blocks and a Vehicle Thruster.":
                     "Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");
@@ -372,6 +374,43 @@ public final class VehicleService {
         try{preview=controllerPreview(player,token,entity,selected);require(values!=null && values.length==3 && java.util.Arrays.stream(values).allMatch(java.util.Objects::nonNull),"Invalid mode channels.");com.vandorlabs.tiles.TileEntityPilotSeat seat=editableController(player,preview);for(int i=0;i<3;i++)seat.setModeChannels(i,values[i]);changedSeat(player,preview,seat);}
         catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
+    private static VehicleStructure rememberShape(World world,BlockPos origin,VehicleStructure structure){
+        VehicleStructure.Cell cell=structure.controller();if(cell==null)return structure;
+        net.minecraft.tileentity.TileEntity raw=world.getTileEntity(origin.add(cell.pos));if(!(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController))return structure;
+        com.vandorlabs.tiles.TileEntityVehicleController controller=(com.vandorlabs.tiles.TileEntityVehicleController)raw;
+        controller.shape=VehicleShape.of(structure);controller.markDirty();controller.publishDesign();
+        return VehicleSeatSettings.replaceAt(structure,cell.pos,controller.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),BlockPos.ORIGIN.subtract(origin));
+    }
+    public static void designSettings(EntityPlayerMP player,VehicleNetwork.Packet packet){
+        try{
+            Preview preview=controllerPreview(player,packet.token,packet.entity,packet.origin);
+            com.vandorlabs.tiles.TileEntityVehicleController controller=(com.vandorlabs.tiles.TileEntityVehicleController)editableController(player,preview);
+            if(packet.sequence==1){
+                require(preview.structure!=null,"Inspect a complete vehicle before writing a chip");
+                if(preview.entity==null){
+                    require(!jobs.containsKey(player.getUniqueID())&&jobs.size()<16,"Wait for the current vehicle inspection");
+                    Job job=new Job(player,preview.origin.add(preview.selected));job.writeChip=true;jobs.put(player.getUniqueID(),job);return;
+                }
+                preview.entity.signals.persist();
+                com.vandorlabs.tiles.TileEntityTokenSlot mount=VehicleMounts.find(controller.getWorld(),controller.getPos(),true);
+                require(mount!=null&&!mount.returning(),"Attach a Data Chip Mount to the Vehicle Controller");
+                net.minecraft.item.ItemStack chip=mount.getStackInSlot(0).copy();
+                VehicleChip.write(chip,preview.entity==null?preview.structure:preview.entity.structure,controller.vehicleName);
+                mount.setInventorySlotContents(0,chip);require(net.minecraft.item.ItemStack.areItemStacksEqual(chip,mount.getStackInSlot(0)),"Chip Mount refused the written chip");
+                preview.entity.signals.persist();
+                // Larger retained items exceed a single carried-tile packet; use the bounded snapshot transport.
+                if(chip.getTagCompound().getByteArray("VehicleDesign").length>16000){
+                    java.util.Set<net.minecraft.entity.player.EntityPlayer> viewers=new java.util.HashSet<>(((WorldServer)preview.entity.world).getEntityTracker().getTrackingPlayers(preview.entity));viewers.add(player);
+                    for(net.minecraft.entity.player.EntityPlayer viewer:viewers)if(viewer instanceof EntityPlayerMP)VehicleNetwork.send((EntityPlayerMP)viewer,preview.entity.structure,preview.entity.getEntityId(),preview.entity.getUniqueID(),new BlockPos(preview.entity),false,false);
+                }
+                openCapturedController(player,preview.entity,controller.getPos());
+                return;
+            }
+            require(packet.sequence==0&&packet.forward>=0&&packet.forward<=6,"Invalid vehicle design settings");
+            if(packet.flag)require(VehicleMounts.find(controller.getWorld(),controller.getPos(),false)!=null,"Attach an Access Card Mount before enabling security");
+            controller.designSettings(packet.text,packet.flag,packet.forward);changedSeat(player,preview,controller);
+        }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
+    }
     public static void permission(EntityPlayerMP player,BlockPos p) {
         require(!com.vandorlabs.gear.ArmTransactions.locked(player.world,p),"Wait for the arm attachment save or recovery checkpoint.");
         require(!com.vandorlabs.copier.CopyTransactions.locked(player.world,p),"Wait for the copy area's save or recovery checkpoint.");
@@ -418,7 +457,7 @@ public final class VehicleService {
     @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event) {
         VehicleLookup.unload(event.getWorld());VehicleAutopilot.unload(event.getWorld());
         if(event.getWorld() instanceof WorldServer)VehicleTransfer.unload((WorldServer)event.getWorld());
-        jobs.values().removeIf(job->job.world==event.getWorld());previews.values().removeIf(preview->preview.world==event.getWorld());
+        jobs.values().removeIf(job->{if(job.world!=event.getWorld())return false;job.finish();return true;});previews.values().removeIf(preview->preview.world==event.getWorld());
         signals.removeIf(signal->(signal.craft==null?signal.seat.getWorld():signal.craft.world)==event.getWorld());
     }
     @SubscribeEvent public static void collision(net.minecraftforge.event.world.GetCollisionBoxesEvent event) {
@@ -452,12 +491,31 @@ public final class VehicleService {
             if(job.player.world!=job.world || job.player.isDead || job.player.isSpectator()
                     || job.taxi && (!seatedAt(job.player,job.scan.startPosition()) || !((job.world.getTileEntity(job.scan.startPosition())) instanceof com.vandorlabs.tiles.TileEntityPilotSeat)
                     )
-                    || job.player.connection.netManager.isChannelOpen()==false || ++job.ticks>100){iterator.remove();continue;}
+                    || job.player.connection.netManager.isChannelOpen()==false || ++job.ticks>1200){job.finish();iterator.remove();continue;}
             if(workBudget<=0)break;workBudget-=256;
             if(!job.scan.step(256))continue;iterator.remove();
             if(VehicleDiagnostics.ENABLED)System.out.println("[vandorlabs] vehicle-scan ticks="+job.ticks+" cells="+(job.scan.result==null?0:job.scan.result.cells.size())+" accepted="+(job.scan.error==null));
-            if(job.scan.error!=null){if(!job.signal && !job.taxi)standaloneController(job.player,job.scan.startPosition(),job.scan.error);else VehicleNetwork.error(job.player,job.scan.error);continue;}
-            if(job.signal || job.taxi){VehicleTransfer.submit(world,job.scan.result,job.scan.origin,()->{require(job.player.world==world&&!job.player.isDead&&!job.player.isSpectator()&&job.player.connection.netManager.isChannelOpen(),"Pilot unavailable.");require(!job.taxi||seatedAt(job.player,job.scan.startPosition()),"Pilot left the seat.");assembleSignal(job);},e->VehicleNetwork.error(job.player,(job.taxi?"Taxi Mode: ":"Vehicle Controller signal: ")+e.getMessage()));continue;}
+            if(job.scan.error!=null){job.finish();if(!job.signal && !job.taxi)standaloneController(job.player,job.scan.startPosition(),job.scan.error);else VehicleNetwork.error(job.player,job.scan.error);continue;}
+            if(job.writeChip){
+                try{
+                    VehicleStructure snapshot=job.scan.result;BlockPos at=job.scan.origin.add(snapshot.controller().pos);
+                    permission(job.player,at);require(job.player.getDistanceSqToCenter(at)<=64,"Move closer to the Vehicle Controller");
+                    for(VehicleStructure.Cell cell:snapshot.cells)permission(job.player,job.scan.origin.add(cell.pos));
+                    require(snapshot.matchesExact(world,job.scan.origin),"Vehicle contents changed during the scan; write again");
+                    snapshot=rememberShape(world,job.scan.origin,snapshot);
+                    com.vandorlabs.tiles.TileEntityVehicleController controller=(com.vandorlabs.tiles.TileEntityVehicleController)world.getTileEntity(at);
+                    com.vandorlabs.tiles.TileEntityTokenSlot mount=VehicleMounts.find(world,at,true);require(mount!=null&&!mount.returning(),"Attach a Data Chip Mount");
+                    net.minecraft.item.ItemStack chip=mount.getStackInSlot(0).copy();VehicleChip.write(chip,snapshot,controller.vehicleName);mount.setInventorySlotContents(0,chip);
+                    require(net.minecraft.item.ItemStack.areItemStacksEqual(chip,mount.getStackInSlot(0)),"Chip Mount refused the written chip");
+                    job.finish();
+                    snapshot=VehicleSeatSettings.replaceAt(snapshot,mount.getPos().subtract(job.scan.origin),mount.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),BlockPos.ORIGIN.subtract(job.scan.origin));
+                    Preview written=new Preview(world,snapshot,job.scan.origin,null,"",true,at.subtract(job.scan.origin));written.airBoundary.addAll(job.scan.airBoundary);open(job.player,written);
+                }catch(Exception failure){job.finish();VehicleNetwork.error(job.player,failure.getMessage());}
+                continue;
+            }
+            if(job.signal || job.taxi){job.scan.result=rememberShape(world,job.scan.origin,job.scan.result);VehicleTransfer.submit(world,job.scan.result,job.scan.origin,()->{require(job.player.world==world&&!job.player.isDead&&!job.player.isSpectator()&&job.player.connection.netManager.isChannelOpen(),"Pilot unavailable.");require(!job.taxi||seatedAt(job.player,job.scan.startPosition()),"Pilot left the seat.");assembleSignal(job);job.finish();},e->{job.finish();VehicleNetwork.error(job.player,(job.taxi?"Taxi Mode: ":"Vehicle Controller signal: ")+e.getMessage());});continue;}
+            job.finish();
+            job.scan.result=rememberShape(world,job.scan.origin,job.scan.result);
             Preview preview=new Preview(world,job.scan.result,job.scan.origin,null,"",true,job.scan.startPosition().subtract(job.scan.origin));previews.put(job.player.getUniqueID(),preview);
             preview.airBoundary.addAll(job.scan.airBoundary);
             VehicleNetwork.send(job.player,preview.structure,-1,preview.token,preview.origin,true,false,"",true);

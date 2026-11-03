@@ -1,0 +1,38 @@
+package com.vandorlabs.client;
+
+import com.vandorlabs.animation.VisualClock;
+import com.vandorlabs.vehicle.VehicleShape;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+
+/** Small monochrome solid voxel model. No block models, textures, worlds or tile renderers. */
+public final class VehicleShapeRenderer {
+    private static final java.util.Map<int[],VehicleShape> SHAPES=new java.util.IdentityHashMap<>();
+    public static VehicleShape shape(net.minecraft.nbt.NBTTagCompound tag){if(tag==null)return null;int[] bits=tag.getIntArray("VehicleShape");if(bits.length!=VehicleShape.WORDS)return null;VehicleShape shape=SHAPES.get(bits);if(shape==null){if(SHAPES.size()>=32)SHAPES.clear();shape=VehicleShape.read(tag);SHAPES.put(bits,shape);}return shape;}
+    private static final VisualClock CLOCK=new VisualClock();
+    private VehicleShapeRenderer(){}
+    public static double ticks(){return CLOCK.sample(System.nanoTime(),Minecraft.getMinecraft().isGamePaused());}
+    public static void draw(VehicleShape shape,float cx,float cy,float width,float height){
+        if(shape==null)return;
+        GlStateManager.pushMatrix();try(TurntableRenderState saved=new TurntableRenderState()){
+            GlStateManager.translate(cx,cy,.5);GlStateManager.scale(1,1,.005);
+            float scale=Math.min(width/20,height/20);GlStateManager.scale(scale,-scale,scale);
+            GlStateManager.rotate(22,1,0,0);GlStateManager.rotate((float)(ticks()*1.2),0,1,0);GlStateManager.translate(-shape.centerX,-shape.centerY,-shape.centerZ);
+            GlStateManager.disableTexture2D();GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableDepth();GlStateManager.depthMask(true);
+            BufferBuilder b=Tessellator.getInstance().getBuffer();b.setTranslation(0,0,0);b.begin(7,DefaultVertexFormats.POSITION_COLOR);
+            for(int y=0;y<12;y++)for(int z=0;z<12;z++)for(int x=0;x<12;x++)if(shape.occupied(x,y,z)){
+                if(z==0||!shape.occupied(x,y,z-1))face(b,x,y,z,x,y+1,z,x+1,y+1,z,x+1,y,z,85,140,165);
+                if(z==11||!shape.occupied(x,y,z+1))face(b,x,y,z+1,x+1,y,z+1,x+1,y+1,z+1,x,y+1,z+1,112,181,200);
+                if(x==0||!shape.occupied(x-1,y,z))face(b,x,y,z,x,y,z+1,x,y+1,z+1,x,y+1,z,65,119,150);
+                if(x==11||!shape.occupied(x+1,y,z))face(b,x+1,y,z,x+1,y+1,z,x+1,y+1,z+1,x+1,y,z+1,90,156,180);
+                if(y==11||!shape.occupied(x,y+1,z))face(b,x,y+1,z,x,y+1,z+1,x+1,y+1,z+1,x+1,y+1,z,165,224,230);
+                if(y==0||!shape.occupied(x,y-1,z))face(b,x,y,z,x+1,y,z,x+1,y,z+1,x,y,z+1,50,90,110);
+            }
+            Tessellator.getInstance().draw();
+        }finally{GlStateManager.popMatrix();}
+    }
+    private static void face(BufferBuilder b,double x,double y,double z,double a,double c,double d,double e,double f,double g,double h,double i,double j,int r,int green,int blue){
+        b.pos(x,y,z).color(r,green,blue,255).endVertex();b.pos(a,c,d).color(r,green,blue,255).endVertex();b.pos(e,f,g).color(r,green,blue,255).endVertex();b.pos(h,i,j).color(r,green,blue,255).endVertex();
+    }
+}

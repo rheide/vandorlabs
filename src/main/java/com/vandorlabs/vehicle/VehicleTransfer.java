@@ -43,6 +43,7 @@ public final class VehicleTransfer {
         TransferCheckpoint checkpoint;boolean checkpointReady;
         final ArrayDeque<BlockUpdates> updates=new ArrayDeque<>();
         final java.util.List<net.minecraft.entity.item.EntityPainting> paintings=new java.util.ArrayList<>();
+        com.vandorlabs.tiles.TileEntityVehicleController indicator;
         final Set<TileEntity> pausedTiles=Collections.newSetFromMap(new IdentityHashMap<TileEntity,Boolean>());
         Work(WorldServer world,Action action,java.util.function.Consumer<Exception> failed){this.world=world;this.action=action;this.failed=failed;}
     }
@@ -54,12 +55,19 @@ public final class VehicleTransfer {
         ArrayDeque<Work> queue=WORK.computeIfAbsent(world,k->new ArrayDeque<>());
         if(queue.size()>=16){failed.accept(new IOException("Vehicle transfer queue is full; try again."));return;}
         Work work=new Work(world,action,failed);
+        if(source!=null&&source.controller()!=null){TileEntity raw=world.getTileEntity(origin.add(source.controller().pos));if(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController){work.indicator=(com.vandorlabs.tiles.TileEntityVehicleController)raw;work.indicator.setConverting(true);}}
         if(source!=null)for(VehicleStructure.Cell cell:source.cells){BlockPos pos=origin.add(cell.pos);
             if(!world.isBlockLoaded(pos))continue;TileEntity tile=world.getTileEntity(pos);
             if(tile instanceof net.minecraft.util.ITickable&&work.pausedTiles.add(tile))PAUSED_TILES.put(tile,PAUSED_TILES.getOrDefault(tile,0)+1);
         }
         if(!work.pausedTiles.isEmpty())world.tickableTileEntities.removeIf(work.pausedTiles::contains);
         queue.add(work);
+    }
+    /** Short-lived scan lease, handed over to the durable transfer before release. */
+    static final class SourceHold implements AutoCloseable {
+        private final WorldServer world;private final Set<TileEntity> tiles=Collections.newSetFromMap(new IdentityHashMap<TileEntity,Boolean>());
+        SourceHold(WorldServer world,VehicleStructure source,BlockPos origin){this.world=world;for(VehicleStructure.Cell cell:source.cells){TileEntity tile=world.getTileEntity(origin.add(cell.pos));if(tile instanceof net.minecraft.util.ITickable&&tiles.add(tile))PAUSED_TILES.put(tile,PAUSED_TILES.getOrDefault(tile,0)+1);}world.tickableTileEntities.removeIf(tiles::contains);}
+        public void close(){for(TileEntity tile:tiles){int remaining=PAUSED_TILES.getOrDefault(tile,1)-1;if(remaining>0){PAUSED_TILES.put(tile,remaining);continue;}PAUSED_TILES.remove(tile);if(!tile.isInvalid()&&world.isBlockLoaded(tile.getPos())&&world.getTileEntity(tile.getPos())==tile&&!world.tickableTileEntities.contains(tile))world.tickableTileEntities.add(tile);}tiles.clear();}
     }
     static void unload(WorldServer world){
         ArrayDeque<Work> queue=WORK.remove(world);if(queue==null)return;
@@ -86,6 +94,7 @@ public final class VehicleTransfer {
     private static void hold(Work work,EntityGroundVehicle entity){if(work!=null){if(work.held==null){work.beforeStructure=entity.structure;work.beforeCollision=entity.collision;}work.held=entity;entity.setTransferInProgress(true);}}
     private static void release(Work work){
         TransferCoordinator.release(work.world,work);
+        if(work.indicator!=null)work.indicator.setConverting(false);
         if(work.checkpoint!=null)work.checkpoint.close();if(work.held!=null)work.held.setTransferInProgress(false);if(work.preparation!=null)work.preparation.cancel();
         for(TileEntity tile:work.pausedTiles){int remaining=PAUSED_TILES.getOrDefault(tile,1)-1;
             if(remaining>0){PAUSED_TILES.put(tile,remaining);continue;}PAUSED_TILES.remove(tile);
@@ -211,6 +220,7 @@ public final class VehicleTransfer {
         for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&MekanismTankCompat.reactorGlass(world.getTileEntity(origin.add(cell.pos))))MekanismTankCompat.required(world,origin.add(cell.pos));
         if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
         if(!structure.hasDedicatedController())throw new IllegalArgumentException("Vehicle Controller missing");
+        VehicleMounts.requireAllowed(world,origin.add(structure.controller().pos));
         // Geometry belongs to the native block snapshot used by the player preflight.
         // Captured paintings add controller data, but do not change block collision.
         VehicleStructure geometrySource=structure;

@@ -20,15 +20,20 @@ public final class ProgrammerJournalRenderer {
             (float)a.x(origin.x,origin.z),(float)origin.y,(float)a.z(origin.x,origin.z),1});b.flip();return b;
     });}
     public static void draw(ProgrammerTile tile,double x,double y,double z){
-        ProgrammerJournalView view=tile.journalDisplay();if(view==null)return;int page=tile.journalDisplayPage();
+        net.minecraft.item.ItemStack chip=com.vandorlabs.vehicle.VehicleChip.isVehicle(tile.getStackInSlot(1))?tile.getStackInSlot(1):tile.getStackInSlot(2);boolean vehicle=com.vandorlabs.vehicle.VehicleChip.isVehicle(chip);ProgrammerJournalView view=tile.journalDisplay();if(view==null&&!vehicle)return;int page=tile.journalDisplayPage();
         GlStateManager.pushMatrix();try{
             GlStateManager.translate(x,y,z);FloatBuffer transform=matrix(tile.getProgrammerFacing());transform.rewind();GlStateManager.multMatrix(transform);
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);RedstoneScreenRenderer.bindWhite();
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
             RedstoneScreenRenderer.rect(buffer,0,0,320,136,0,0xff000000);RedstoneScreenRenderer.rect(buffer,3,3,317,20,.01,0xff152330);
-            RedstoneScreenRenderer.rect(buffer,ProgrammerJournalSurface.PREVIOUS_LEFT,116,ProgrammerJournalSurface.PREVIOUS_RIGHT,132,.01,page>0?0xff23465a:0xff121b23);
-            RedstoneScreenRenderer.rect(buffer,ProgrammerJournalSurface.NEXT_LEFT,116,ProgrammerJournalSurface.NEXT_RIGHT,132,.01,page+1<view.pages.size()?0xff23465a:0xff121b23);
+            if(!vehicle)RedstoneScreenRenderer.rect(buffer,ProgrammerJournalSurface.PREVIOUS_LEFT,116,ProgrammerJournalSurface.PREVIOUS_RIGHT,132,.01,page>0?0xff23465a:0xff121b23);
+            if(!vehicle)RedstoneScreenRenderer.rect(buffer,ProgrammerJournalSurface.NEXT_LEFT,116,ProgrammerJournalSurface.NEXT_RIGHT,132,.01,page+1<view.pages.size()?0xff23465a:0xff121b23);
             Tessellator.getInstance().draw();FontRenderer font=Minecraft.getMinecraft().fontRenderer;
+            if(vehicle){
+                VehicleShapeRenderer.draw(VehicleShapeRenderer.shape(chip.getTagCompound()),160,76,280,105);
+                fitted(font,com.vandorlabs.vehicle.VehicleChip.name(chip).isEmpty()?"Blank Vehicle Chip":com.vandorlabs.vehicle.VehicleChip.name(chip),7,8,306,0xc8eeff);
+                GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();return;
+            }
             fitted(font,view.title.isEmpty()?"Untitled Journal":view.title,7,8,306,0xc8eeff);
             java.util.List<String> lines=view.pages.get(page).lines;for(int i=0;i<lines.size();i++)fitted(font,lines.get(i),8,23+i*9,304,0xe2edf5);
             RedstoneScreenRenderer.text(font,"< Previous",12,120,page>0?0xc8eeff:0x697987);RedstoneScreenRenderer.text(font,"Next >",270,120,page+1<view.pages.size()?0xc8eeff:0x697987);

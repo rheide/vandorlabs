@@ -50,16 +50,31 @@ public final class VehicleRotation {
     }
     /** Refuse unsupported private data before conversion; a craft must be parkable at every heading. */
     public static void validate(VehicleStructure source,VehicleWorld view){
-        VehicleForeignCompat.validate(source,view);
-        for(VehicleStructure.Cell cell:source.cells){
-            try{
-                if(!MovingBlockSupport.supported(cell,view.getTileEntity(cell.pos)))throw new IllegalArgumentException("No lossless block-data adapter for "+cell.state.getBlock().getRegistryName()+". Remove this block before moving or copying the structure.");
-                if(cell.state.getMaterial().isLiquid() || cell.state.getBlockHardness(view,cell.pos)<0&&!(cell.state.getBlock() instanceof BlockControlledRamp))throw new IllegalArgumentException("Unsupported moving block: "+cell.state.getBlock().getRegistryName());
-                MovingBlockSupport.requireExactTileData(cell,view.getTileEntity(cell.pos));
-                IBlockState cycle=cell.state;
-                for(int i=0;i<4;i++)cycle=state(cycle,Rotation.CLOCKWISE_90);
-                if(cycle!=cell.state)throw new IllegalArgumentException("Block rotation does not round-trip: "+cell.state.getBlock().getRegistryName());
-            }catch(LinkageError error){VehicleCompatibility.warn(cell.state.getBlock(),"rotation preflight",error);throw new IllegalArgumentException("Cannot safely rotate "+cell.state.getBlock().getRegistryName(),error);}
+        Validation validation=new Validation(source,view);while(!validation.step(Integer.MAX_VALUE,Long.MAX_VALUE)){}
+    }
+    /** Resumable server-thread preflight; repeated block states share the rotation round trip. */
+    public static final class Validation {
+        private final VehicleStructure source;private final VehicleWorld view;private int index;
+        private final Set<IBlockState> rotated=Collections.newSetFromMap(new IdentityHashMap<IBlockState,Boolean>());
+        private final Set<BlockPos> assemblies=new HashSet<>();
+        public Validation(VehicleStructure source,VehicleWorld view){this.source=source;this.view=view;}
+        public boolean step(int budget,long deadline){
+            int count=0;
+            while(index<source.cells.size()&&count++<budget){
+                VehicleStructure.Cell cell=source.cells.get(index++);
+                if(assemblies.add(cell.pos))for(BlockPos member:VehicleForeignCompat.required(view,cell.pos)){
+                    if(source.at(member)==null)throw new IllegalArgumentException("Moving/copy volume cuts an IE assembly; include every native part");assemblies.add(member);
+                }
+                try{
+                    TileEntity tile=view.getTileEntity(cell.pos);
+                    if(!MovingBlockSupport.supported(cell,tile))throw new IllegalArgumentException("No lossless block-data adapter for "+cell.state.getBlock().getRegistryName()+". Remove this block before moving or copying the structure.");
+                    if(cell.state.getMaterial().isLiquid()||cell.state.getBlockHardness(view,cell.pos)<0&&!(cell.state.getBlock() instanceof BlockControlledRamp))throw new IllegalArgumentException("Unsupported moving block: "+cell.state.getBlock().getRegistryName());
+                    MovingBlockSupport.requireExactTileData(cell,tile);
+                    if(rotated.add(cell.state)){IBlockState cycle=cell.state;for(int i=0;i<4;i++)cycle=state(cycle,Rotation.CLOCKWISE_90);if(cycle!=cell.state)throw new IllegalArgumentException("Block rotation does not round-trip: "+cell.state.getBlock().getRegistryName());}
+                }catch(LinkageError error){VehicleCompatibility.warn(cell.state.getBlock(),"rotation preflight",error);throw new IllegalArgumentException("Cannot safely rotate "+cell.state.getBlock().getRegistryName(),error);}
+                if(System.nanoTime()>=deadline)break;
+            }
+            return index==source.cells.size();
         }
     }
     @SuppressWarnings({"rawtypes","unchecked"}) private static IBlockState state(IBlockState source,Rotation rotation) {

@@ -17,6 +17,7 @@ import java.util.*;
 /** Settings stay local; every copy preflights both complete areas before touching materials or blocks. */
 public final class CopyControllerTile extends TileEntity implements ITickable,SurfaceController {
     public UUID key=UUID.randomUUID(),actor;
+    public boolean useChip;
     public int height=4,channelIncrement,triggerMode;
     public ChannelList channels=ChannelList.EMPTY;
     public SquareLayout input,output;
@@ -37,15 +38,15 @@ public final class CopyControllerTile extends TileEntity implements ITickable,Su
     private void refreshPadsChecked(EntityPlayerMP player){
         EnumFacing right=front().rotateYCCW();
         java.util.function.Predicate<BlockPos> leftHalf=p->side(p,right)<0,rightHalf=p->side(p,right)>0;
-        SquareLayout left=SquareLayout.scan(world,pos.offset(right.getOpposite()),leftHalf),target=SquareLayout.scan(world,pos.offset(right),rightHalf);
-        if(left.size!=target.size)throw new IllegalArgumentException("Input and output surfaces must be square and the same size");
-        if(left.normal!=target.normal)throw new IllegalArgumentException("Input and output surfaces must face the same direction");
-        Set<BlockPos> cells=new HashSet<>(left.cells);for(BlockPos p:target.cells)if(!cells.add(p))throw new IllegalArgumentException("Input and output surfaces must be separate");
+        SquareLayout left=useChip?null:SquareLayout.scan(world,pos.offset(right.getOpposite()),leftHalf),target=SquareLayout.scan(world,pos.offset(right),rightHalf);
+        if(left!=null&&left.size!=target.size)throw new IllegalArgumentException("Input and output surfaces must be square and the same size");
+        if(left!=null&&left.normal!=target.normal)throw new IllegalArgumentException("Input and output surfaces must face the same direction");
+        Set<BlockPos> cells=new HashSet<>(left==null?Collections.emptySet():left.cells);for(BlockPos p:target.cells)if(!cells.add(p))throw new IllegalArgumentException("Input and output surfaces must be separate");
         for(BlockPos p:cells){TileEntity raw=world.getTileEntity(p);if(!(raw instanceof TileEntityTurntableSurface)||!((TileEntityTurntableSurface)raw).canClaim(pos,key))throw new IllegalArgumentException("A surface belongs to another controller");if(player!=null)com.vandorlabs.vehicle.VehicleService.permission(player,p);}
         SquareLayout oldInput=input,oldOutput=output;input=left;output=target;
         releaseCells(oldInput,oldOutput,cells);
-        for(SquareLayout area:new SquareLayout[]{input,output})for(BlockPos p:area.cells){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);if(!pos.equals(tile.owner)||!key.equals(tile.ownerKey))tile.bind(pos,key);tile.setGroup(area);}
-        refresh=false;error="";status="Ready: "+left.size+" x "+left.size+", height "+height;changed();
+        for(SquareLayout area:new SquareLayout[]{input,output})if(area!=null)for(BlockPos p:area.cells){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);if(!pos.equals(tile.owner)||!key.equals(tile.ownerKey))tile.bind(pos,key);tile.setGroup(area);}
+        refresh=false;error="";status="Ready: "+target.size+" x "+target.size+", height "+height;changed();
     }
     private int side(BlockPos p,EnumFacing right){return (p.getX()-pos.getX())*right.getFrontOffsetX()+(p.getZ()-pos.getZ())*right.getFrontOffsetZ();}
     /** Invalid geometry stops owning pads immediately; remaining cells regain independent artwork. */
@@ -72,8 +73,8 @@ public final class CopyControllerTile extends TileEntity implements ITickable,Su
         boolean edge=known&&!high&&active;known=true;high=active;if(edge&&actor!=null)try{EntityPlayerMP player=com.vandorlabs.tiles.WorldActionAuthorization.actor(this);if(player==null)throw new IllegalArgumentException("The configuring player must be online to authorize a copy");requestCopy(player);}catch(Exception failure){failure(failure.getMessage());}
     }
     public void changed(){markDirty();if(world!=null&&!world.isRemote&&world.isBlockLoaded(pos)){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setUniqueId("CopyKey",key);if(actor!=null)tag.setUniqueId("CopyActor",actor);tag.setBoolean("CopyBusy",busy());tag.setInteger("CopyActiveTicks",activeTicks);tag.setInteger("CopyHeight",height);tag.setInteger("CopyIncrement",channelIncrement);tag.setInteger("CopyMode",triggerMode);tag.setString("CopyChannels",channels.toString());tag.setBoolean("CopyKnown",known);tag.setBoolean("CopyHigh",high);tag.setString("CopyStatus",status);tag.setString("CopyError",error);if(input!=null)tag.setTag("CopyInput",input.write());if(output!=null)tag.setTag("CopyOutput",output.write());return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){com.vandorlabs.tiles.WorldActionAuthorization.reading(this);super.readFromNBT(tag);clientBusy=tag.getBoolean("CopyBusy");activeTicks=Math.max(0,Math.min(20,tag.getInteger("CopyActiveTicks")));key=tag.hasUniqueId("CopyKey")?tag.getUniqueId("CopyKey"):UUID.randomUUID();actor=tag.hasUniqueId("CopyActor")?tag.getUniqueId("CopyActor"):null;height=Math.max(1,Math.min(16,tag.getInteger("CopyHeight")));channelIncrement=Math.max(-65534,Math.min(65534,tag.getInteger("CopyIncrement")));triggerMode=Math.max(0,Math.min(2,tag.getInteger("CopyMode")));ChannelList parsed=ChannelList.parse(tag.getString("CopyChannels"));channels=parsed==null?ChannelList.EMPTY:parsed;known=tag.getBoolean("CopyKnown");high=tag.getBoolean("CopyHigh");status=tag.getString("CopyStatus");error=tag.getString("CopyError");input=tag.hasKey("CopyInput",10)?SquareLayout.read(tag.getCompoundTag("CopyInput")):null;output=tag.hasKey("CopyOutput",10)?SquareLayout.read(tag.getCompoundTag("CopyOutput")):null;refresh=true;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setUniqueId("CopyKey",key);if(actor!=null)tag.setUniqueId("CopyActor",actor);tag.setBoolean("CopyBusy",busy());tag.setInteger("CopyActiveTicks",activeTicks);if(useChip)tag.setBoolean("CopyUseChip",true);tag.setInteger("CopyHeight",height);tag.setInteger("CopyIncrement",channelIncrement);tag.setInteger("CopyMode",triggerMode);tag.setString("CopyChannels",channels.toString());tag.setBoolean("CopyKnown",known);tag.setBoolean("CopyHigh",high);tag.setString("CopyStatus",status);tag.setString("CopyError",error);if(input!=null)tag.setTag("CopyInput",input.write());if(output!=null)tag.setTag("CopyOutput",output.write());return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){com.vandorlabs.tiles.WorldActionAuthorization.reading(this);super.readFromNBT(tag);useChip=tag.getBoolean("CopyUseChip");clientBusy=tag.getBoolean("CopyBusy");activeTicks=Math.max(0,Math.min(20,tag.getInteger("CopyActiveTicks")));key=tag.hasUniqueId("CopyKey")?tag.getUniqueId("CopyKey"):UUID.randomUUID();actor=tag.hasUniqueId("CopyActor")?tag.getUniqueId("CopyActor"):null;height=Math.max(1,Math.min(16,tag.getInteger("CopyHeight")));channelIncrement=Math.max(-65534,Math.min(65534,tag.getInteger("CopyIncrement")));triggerMode=Math.max(0,Math.min(2,tag.getInteger("CopyMode")));ChannelList parsed=ChannelList.parse(tag.getString("CopyChannels"));channels=parsed==null?ChannelList.EMPTY:parsed;known=tag.getBoolean("CopyKnown");high=tag.getBoolean("CopyHigh");status=tag.getString("CopyStatus");error=tag.getString("CopyError");input=tag.hasKey("CopyInput",10)?SquareLayout.read(tag.getCompoundTag("CopyInput")):null;output=tag.hasKey("CopyOutput",10)?SquareLayout.read(tag.getCompoundTag("CopyOutput")):null;refresh=true;}
     @Override public boolean shouldRefresh(World world,BlockPos pos,net.minecraft.block.state.IBlockState old,net.minecraft.block.state.IBlockState next){return old.getBlock()!=next.getBlock();}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}

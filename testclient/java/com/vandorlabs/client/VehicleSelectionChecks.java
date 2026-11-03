@@ -141,7 +141,7 @@ public final class VehicleSelectionChecks {
             buffer.clear();sent.type=VehicleNetwork.MODE_SELECT;sent.sequence=2;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
             require(received.valid && received.type==VehicleNetwork.MODE_SELECT && received.sequence==2
                     && received.token.equals(sent.token) && received.entity==sent.entity && received.origin.equals(position),"mode selection boundary and authenticated identity codec");
-            for(int unknownType:new int[]{VehicleNetwork.MODE_SELECT+1,255}){
+            for(int unknownType:new int[]{VehicleNetwork.DESIGN+1,255}){
                 buffer.clear();sent.type=unknownType;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
                 require(!received.valid,"unknown interaction packet type rejected: "+unknownType);
             }

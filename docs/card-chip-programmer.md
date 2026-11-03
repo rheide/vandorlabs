@@ -17,3 +17,9 @@ Insert a Journal Chip in **Input** to display its title and contents on the Jour
 Pending input journal edits save automatically after a short pause and before closing with Done, Escape or the inventory key. The console's large physical screen shows the input Journal draft, or the programmed Journal in Output when no input Journal draft is selected. Click **Previous** or **Next** directly on that screen to read it without opening the dialog. Long entries continue across additional screen views. Paging never edits the chips or their contents, and changing the displayed source or contents resets to the first view. With no Journal present the large screen stays black. The keyboard retains the existing artwork and its original proportions.
 
 See [Access Card and Data Chip Mounts](data-mounts.md) for readers used by doors, navigation tables and Core assemblies.
+
+## Vehicle Chips
+
+Select **Type: Vehicle**, put a Data Chip in Input, leave Output empty and click **Program** to create a blank Vehicle Chip. No company Master is required. Attach a Data Chip Mount to a Vehicle Controller, insert that blank chip, name the vehicle and choose **Write Vehicle Chip** in the controller's Vehicle tab. Writing scans the complete craft again and saves its block states, tile data and stored inventories. A written chip holds up to 768 KiB of compressed design data, within the existing 4 MiB vehicle snapshot limit. Keep the craft unchanged while the scan runs; a changed or incomplete craft is refused without replacing the chip.
+
+A written Vehicle Chip in the Programmer shows a rotating simplified model on the physical screen and the dialog's **Vehicle** page. Put it in Input and another Data Chip in Output, then use **Copy** to duplicate its exact saved design and name. Vehicle Chips cannot serve as company Master chips.

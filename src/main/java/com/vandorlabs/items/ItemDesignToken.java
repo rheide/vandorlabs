@@ -28,6 +28,7 @@ public final class ItemDesignToken extends Item {
     }
     @Override public String getItemStackDisplayName(ItemStack stack){
         if(!kind.equals("data_chip"))return super.getItemStackDisplayName(stack);
+        if(com.vandorlabs.vehicle.VehicleChip.isVehicle(stack)){String name=com.vandorlabs.vehicle.VehicleChip.name(stack);return "Vehicle Data Chip"+(name.isEmpty()?" (blank)":" - "+name);}
         if(com.vandorlabs.programmer.ChipJournal.journal(stack)){
             String title=com.vandorlabs.programmer.ChipJournal.title(stack);
             String company=stack.getMetadata()>0&&stack.getMetadata()<DESIGNS.length?DESIGNS[stack.getMetadata()]:"";

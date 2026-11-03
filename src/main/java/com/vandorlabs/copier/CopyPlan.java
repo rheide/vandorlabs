@@ -13,6 +13,7 @@ import net.minecraft.world.WorldServer;
 
 /** Immutable full-volume preflight; source cells and inventory contents are never sampled or approximated. */
 public final class CopyPlan {
+    private CopyControllerTile chipOwner;private net.minecraft.item.ItemStack chip;private BlockPos chipMount;
     public final VehicleStructure original,result;
     public final BlockPos sourceOrigin,targetOrigin,sourceMax,targetMax;
     public final CopySupply supply;
@@ -20,10 +21,14 @@ public final class CopyPlan {
     private CopyPlan(VehicleStructure source,VehicleStructure result,BlockPos sourceOrigin,BlockPos targetOrigin,BlockPos sourceMax,BlockPos targetMax,CopySupply supply,List<CopyMaterials.Need> needs){original=source;this.result=result;this.sourceOrigin=sourceOrigin;this.targetOrigin=targetOrigin;this.sourceMax=sourceMax;this.targetMax=targetMax;this.supply=supply;materials=needs;}
     public static BlockPos[] volume(SquareLayout area,int height){BlockPos a=area.cell(0,0,1),b=area.cell(area.size-1,area.size-1,height);return new BlockPos[]{new BlockPos(Math.min(a.getX(),b.getX()),Math.min(a.getY(),b.getY()),Math.min(a.getZ(),b.getZ())),new BlockPos(Math.max(a.getX(),b.getX()),Math.max(a.getY(),b.getY()),Math.max(a.getZ(),b.getZ()))};}
     public static CopyPlan prepare(CopyControllerTile owner,EntityPlayerMP actor)throws Exception{
-        WorldServer world=(WorldServer)owner.getWorld();authorize(world,actor);if(owner.input==null||owner.output==null)throw new IllegalArgumentException("Complete both square surfaces first");
-        BlockPos[] from=volume(owner.input,owner.height),to=volume(owner.output,owner.height);
-        if(new AxisAlignedBB(from[0].getX(),from[0].getY(),from[0].getZ(),from[1].getX()+1,from[1].getY()+1,from[1].getZ()+1).intersects(new AxisAlignedBB(to[0].getX(),to[0].getY(),to[0].getZ(),to[1].getX()+1,to[1].getY()+1,to[1].getZ()+1)))throw new IllegalArgumentException("Input and output scan volumes overlap");
-        loaded(world,from);loaded(world,to);TurntableBoundaries boundaries=new TurntableBoundaries(world,from[0],from[1]);List<VehicleStructure.Cell> cells=new ArrayList<>();
+        WorldServer world=(WorldServer)owner.getWorld();authorize(world,actor);if((!owner.useChip&&owner.input==null)||owner.output==null)throw new IllegalArgumentException("Complete the required square surfaces first");
+        BlockPos[] to=volume(owner.output,owner.height),from=owner.useChip?new BlockPos[]{BlockPos.ORIGIN,BlockPos.ORIGIN}:volume(owner.input,owner.height);
+        com.vandorlabs.tiles.TileEntityTokenSlot mount=owner.useChip?VehicleMounts.find(world,owner.getPos(),true):null;
+        net.minecraft.item.ItemStack chip=mount==null?net.minecraft.item.ItemStack.EMPTY:mount.getStackInSlot(0).copy();
+        if(!owner.useChip&&new AxisAlignedBB(from[0].getX(),from[0].getY(),from[0].getZ(),from[1].getX()+1,from[1].getY()+1,from[1].getZ()+1).intersects(new AxisAlignedBB(to[0].getX(),to[0].getY(),to[0].getZ(),to[1].getX()+1,to[1].getY()+1,to[1].getZ()+1)))throw new IllegalArgumentException("Input and output scan volumes overlap");
+        if(!owner.useChip)loaded(world,from);loaded(world,to);TurntableBoundaries boundaries=owner.useChip?null:new TurntableBoundaries(world,from[0],from[1]);List<VehicleStructure.Cell> cells=new ArrayList<>();
+        if(owner.useChip){VehicleStructure design=VehicleChip.design(chip);cells.addAll(design.cells);if(design.bounds.maxX>to[1].getX()-to[0].getX()+1||design.bounds.maxY>to[1].getY()-to[0].getY()+1||design.bounds.maxZ>to[1].getZ()-to[0].getZ()+1)throw new IllegalArgumentException("Vehicle Chip design does not fit the output area and height");}
+        else
         for(BlockPos cursor:BlockPos.getAllInBox(from[0],from[1])){
             BlockPos at=cursor.toImmutable();VehicleService.permission(actor,at);IBlockState state=world.getBlockState(at);if(state.getBlock().isAir(state,world,at))continue;
             if(at.equals(owner.getPos())||at.equals(owner.chest()))throw new IllegalArgumentException("Keep the controller and material chest outside the input volume");
@@ -41,9 +46,9 @@ public final class CopyPlan {
         empty(world,to,actor);List<CopyMaterials.Need> needs=CopyMaterials.forSnapshot(source,view,actor.capabilities.isCreativeMode);
         CopySupply supply=actor.capabilities.isCreativeMode?null:CopySupply.prepare(owner,actor,needs);
         result.encode(); // Bound the complete nested NBT before allocating a transaction journal.
-        return new CopyPlan(source,result,from[0],to[0],from[1],to[1],supply,needs);
+        CopyPlan plan=new CopyPlan(source,result,from[0],to[0],from[1],to[1],supply,needs);if(owner.useChip){plan.chipOwner=owner;plan.chip=chip;plan.chipMount=mount.getPos();}return plan;
     }
-    public void validate(WorldServer world,EntityPlayerMP actor){authorize(world,actor);loaded(world,new BlockPos[]{sourceOrigin,sourceMax});loaded(world,new BlockPos[]{targetOrigin,targetMax});if(!original.matchesExact(world,sourceOrigin))throw new IllegalArgumentException("Input blocks or stored contents changed; copy again");empty(world,new BlockPos[]{targetOrigin,targetMax},actor);if(supply!=null)supply.validate(world);}
+    public void validate(WorldServer world,EntityPlayerMP actor){authorize(world,actor);if(chipOwner==null)loaded(world,new BlockPos[]{sourceOrigin,sourceMax});loaded(world,new BlockPos[]{targetOrigin,targetMax});if(chipOwner!=null){com.vandorlabs.tiles.TileEntityTokenSlot mount=VehicleMounts.find(world,chipOwner.getPos(),true);if(!chipOwner.useChip||mount==null||!mount.getPos().equals(chipMount)||!net.minecraft.item.ItemStack.areItemStacksEqual(chip,mount.getStackInSlot(0)))throw new IllegalArgumentException("Vehicle Chip or source settings changed; copy again");}else if(!original.matchesExact(world,sourceOrigin))throw new IllegalArgumentException("Input blocks or stored contents changed; copy again");empty(world,new BlockPos[]{targetOrigin,targetMax},actor);if(supply!=null)supply.validate(world);}
     private static void authorize(WorldServer world,EntityPlayerMP actor){if(actor==null||actor.world!=world||actor.isDead||actor.isSpectator())throw new IllegalArgumentException("The configuring player must remain alive in this dimension to authorize the copy");}
     private static void loaded(WorldServer world,BlockPos[] box){if(box[0].getY()<0||box[1].getY()>=world.getHeight()||!world.getWorldBorder().contains(box[0])||!world.getWorldBorder().contains(box[1])||!world.isAreaLoaded(box[0].add(-1,-1,-1),box[1].add(1,1,1),false))throw new IllegalArgumentException("Load the complete copy areas and their boundaries inside the world");}
     private static void empty(WorldServer world,BlockPos[] box,EntityPlayerMP actor){for(BlockPos at:BlockPos.getAllInBox(box[0],box[1])){VehicleService.permission(actor,at);if(!world.isAirBlock(at)||world.getTileEntity(at)!=null)throw new IllegalArgumentException("Output area is occupied at "+coordinates(at));}AxisAlignedBB bounds=new AxisAlignedBB(box[0].getX(),box[0].getY(),box[0].getZ(),box[1].getX()+1,box[1].getY()+1,box[1].getZ()+1);for(net.minecraft.entity.Entity entity:world.getEntitiesWithinAABBExcludingEntity(null,bounds))if(!entity.isDead)throw new IllegalArgumentException("Clear players and entities from the output area");}

@@ -98,6 +98,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public final VehicleAutopilot autopilot=new VehicleAutopilot(this);
     public double groundClearance(){if(world.getTotalWorldTime()-clearanceAt>=5){clearance=VehicleFlight.clearance(this);clearanceAt=world.getTotalWorldTime();}return clearance;}
     public boolean setHover(boolean value){
+        if(view!=null&&structure!=null&&structure.controller()!=null&&!VehicleMounts.allowed(view,structure.controller().pos))return false;
         if(!value && structure!=null && !VehicleSkiTraction.allowed(this))return false;
         if(value==hover)return true;
         if(value && (!VehicleFlight.canHover(structure)))return false;

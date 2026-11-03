@@ -63,3 +63,15 @@ Ski-only vehicles can Taxi on ice, packed ice and frosted ice while every runner
 A captured vehicle can carry multiple players in separate Pilot Seats, seated cockpits, Advanced Pilot Chairs, and Programmable Chairs. Every Programmable Chair style and height retains its own seating position while the craft translates or rotates. The first occupied pilot-capable seat supplies driving controls; boarding a Programmable Chair as a passenger does not take control. Luxury Seat and Military Seat do not add vehicle passenger places.
 
 Occupied Programmable Chairs transfer their riders during assembly, and parking restores those riders to their saved chair positions. Each seat can hold one player. Seat assignments are synchronized to the driver and other clients.
+
+## Vehicle names, previews and chips
+
+The Vehicle Controller's **Vehicle** tab includes a name field. Valid changes save automatically. Inspecting a complete craft stores a small, untextured shape preview in the controller. The controller dialog and Vehicle Status screens animate that preview, including after the craft has parked as blocks. Status screens show the vehicle name and an animated **Converting...** indicator while scanning or transferring. Discovery and validation run in bounded server work slices; final ownership publication remains atomic.
+
+Attach a Data Chip Mount directly onto any face of the Vehicle Controller. Insert a blank Vehicle Chip prepared in the Card / Chip Programmer. The Vehicle tab gains **Write Vehicle Chip**, which scans and records the complete design, including block states, tile data and inventories, under the vehicle name. The silhouette is only a preview; reconstruction uses the exact saved blocks.
+
+## Vehicle security
+
+Attach an Access Card Mount directly onto the Vehicle Controller and open its **Security** tab. Select the accepted company Access Card, then enable **Security**. The selected card must remain inserted in that mount to allow conversion to Taxi or Hover. Removing it prevents subsequent conversions. Parking remains available, and removing the card does not forcibly stop a moving craft.
+
+Vehicle security uses a retained card. It does not accept a pulse, a remembered toggle, a returned card or a reader merely connected through Redstone Channels. The accepted unbranded card means that specific card variant, rather than any company. Security settings and the selected card survive saving, parking and recapture.

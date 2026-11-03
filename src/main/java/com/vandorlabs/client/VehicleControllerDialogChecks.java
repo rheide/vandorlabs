@@ -24,7 +24,7 @@ final class VehicleControllerDialogChecks {
                 GuiScreen gui=create(complete);mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
                 require((int)field(gui,"page")==0,"new controller dialog must open its leftmost tab");
                 GuiTextField channels=(GuiTextField)field(gui,"channels");require(!channels.getVisible(),"receive channels leaked onto Vehicle page");
-                for(int page=0;page<2;page++){
+                for(int page=0;page<3;page++){
                     Method action=net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(gui.getClass(),"actionPerformed","func_146284_a",GuiButton.class);action.invoke(gui,new GuiButton(90+page,0,0,"Page"));
                     require(channels.getText().equals(((GuiTextField)field(gui,"channels")).getText()),"switching tabs lost channel draft");
                     channels=(GuiTextField)field(gui,"channels");require(channels.getVisible()==(page==1),"receive channels on wrong tab");
@@ -35,7 +35,7 @@ final class VehicleControllerDialogChecks {
                 }
             }
         }finally{mc.displayGuiScreen(previous);mc.player.openContainer=container;}
-        System.out.println("[vandorlabs][reprolab] vehicle-controller-dialog PASS compact320 regular460 centered two-tabs leftmost-open incomplete-mode-guards");
+        System.out.println("[vandorlabs][reprolab] vehicle-controller-dialog PASS compact320 regular460 centered three-tabs leftmost-open incomplete-mode-guards");
     }
     private static GuiScreen create(boolean complete)throws Exception{
         VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.INSPECTION);packet.forward=1;packet.entity=-1;packet.sequence=complete?1:-1;packet.token=UUID.randomUUID();packet.origin=BlockPos.ORIGIN;packet.text="Connect a Pilot Seat and at least three wheel supports before assembling.";

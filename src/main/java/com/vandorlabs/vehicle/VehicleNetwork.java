@@ -12,7 +12,7 @@ import java.util.UUID;
 
 /** Bounded fragments are sent only for previews and newly tracked vehicles. */
 public final class VehicleNetwork {
-    public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16;
+    public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16, DESIGN=17;
     public static final int FRAGMENT=28000;
     public static final class Packet implements IMessage {
         public int type,entity,sequence,total,offset;
@@ -43,15 +43,16 @@ public final class VehicleNetwork {
                 total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());
                 int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())return;
                 data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);
-                valid=!b.isReadable()&&text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH&&type<=MODE_SELECT;
+                valid=!b.isReadable()&&text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH&&type<=DESIGN;
             }catch(Exception malformed){valid=false;}
         }
     }
     public static final class Server implements IMessageHandler<Packet,IMessage> {
         public IMessage onMessage(Packet message,MessageContext ctx) {
-            if(!message.valid || message.data.length!=0 || message.type>CONFIRM && message.type!=INTERACT && message.type!=TAXI && message.type!=SETTINGS && message.type!=HEIGHT && message.type!=FLIGHT && message.type!=MODE_SELECT)return null;
+            if(!message.valid || message.data.length!=0 || message.type>CONFIRM && message.type!=INTERACT && message.type!=TAXI && message.type!=SETTINGS && message.type!=HEIGHT && message.type!=FLIGHT && message.type!=MODE_SELECT && message.type!=DESIGN)return null;
             EntityPlayerMP player=ctx.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
+                if(message.type==DESIGN){VehicleService.designSettings(player,message);return;}
                 if(message.type==MODE_SELECT){VehicleService.selectMode(player,message);return;}
                 if(message.type==HEIGHT){VehicleService.configureHeight(player,message);return;}
                 if(message.type==SETTINGS){VehicleService.configureChannels(player,message);return;}
