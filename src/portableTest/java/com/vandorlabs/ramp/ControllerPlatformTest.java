@@ -27,6 +27,8 @@ public final class ControllerPlatformTest {
         return result;
     }
     public static void main(String[] args) {
+        RampAxisTest.run();
+        VerticalRampGeometryTest.run();
         VerticalPlatformDiscoveryTest.run();
         EscalatorGeometryTest.run();
         DiagonalCornerOutlineTest.run();

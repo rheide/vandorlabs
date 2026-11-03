@@ -75,6 +75,22 @@ public final class ControllerPlatform {
         return found;
     }
 
+    /** Upright panel, allowing the seed anywhere within its bounded height. */
+    public static Set<Cell> discoverPanel(Cell seed,RampGeometry.Direction direction,Predicate<Cell> matches){
+        boolean normalX=direction==RampGeometry.Direction.EAST || direction==RampGeometry.Direction.WEST;
+        Set<Cell> found=new LinkedHashSet<>(),seen=new HashSet<>();ArrayDeque<Cell> queue=new ArrayDeque<>();queue.add(seed);
+        int minY=seed.y,maxY=seed.y,minSide=normalX?seed.z:seed.x,maxSide=minSide;
+        while(!queue.isEmpty()){
+            Cell c=queue.removeFirst();if(!seen.add(c))continue;
+            int side=normalX?c.z:c.x,y0=Math.min(minY,c.y),y1=Math.max(maxY,c.y),s0=Math.min(minSide,side),s1=Math.max(maxSide,side);
+            if((normalX?c.x!=seed.x:c.z!=seed.z)||(long)y1-y0>=MAX_LENGTH||(long)s1-s0>=MAX_WIDTH||!matches.test(c))continue;
+            found.add(c);minY=y0;maxY=y1;minSide=s0;maxSide=s1;
+            queue.add(c.offset(0,1,0));queue.add(c.offset(0,-1,0));
+            if(normalX){queue.add(c.offset(0,0,1));queue.add(c.offset(0,0,-1));}else{queue.add(c.offset(1,0,0));queue.add(c.offset(-1,0,0));}
+        }
+        return found;
+    }
+
     /** First tread is the fixed hinge, last tread reaches the configured drop. */
     public static double drop(int row, int segment, int length, int segments, int height, double pose) {
         double p = Math.max(0, Math.min(1, pose));
