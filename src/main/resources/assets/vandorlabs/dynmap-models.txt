@@ -21056,7 +21056,6 @@ customblock:id=%bogie_track,state=*,class=com.vandorlabs.dynmap.UtilityModelRend
 
 
 
-customblock:id=%garage_door,state=*,class=com.vandorlabs.dynmap.GarageDoorMapRenderer
 
 # Generated joined hexagonal propulsion models
 customblock:id=%rocket_thruster_hexagonal,state=*,class=com.vandorlabs.dynmap.HexThrusterRenderer
@@ -21083,6 +21082,7 @@ customblock:id=%constructor_part,state=*,class=com.vandorlabs.dynmap.FrameMachin
 # End Core machine maps
 
 # Generated tile-aware material palette
+customblock:id=%garage_door,state=*,class=com.vandorlabs.dynmap.GarageDoorMapRenderer
 customblock:id=%turntable_surface,state=*,class=com.vandorlabs.dynmap.ProgrammableSurfaceRenderer
 customblock:id=%turntable_controller,state=*,class=com.vandorlabs.dynmap.SurfaceControllerRenderer
 customblock:id=%copy_controller,state=*,class=com.vandorlabs.dynmap.SurfaceControllerRenderer

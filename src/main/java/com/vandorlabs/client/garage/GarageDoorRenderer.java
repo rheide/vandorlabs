@@ -73,7 +73,7 @@ public final class GarageDoorRenderer extends TileEntitySpecialRenderer<GarageDo
     private void cached(GarageDoorTile tile,double x,double y,double z,BufferBuilder buffer,double progress){
         if(templateFormat==null||!templateFormat.equals(buffer.getVertexFormat())){clearTemplates();templateFormat=new net.minecraft.client.renderer.vertex.VertexFormat(buffer.getVertexFormat());}
         int steps=tile.height*tile.ticksPerSection*6,frame=(int)Math.round(progress*steps);progress=frame/(double)steps;
-        long key=((long)steps<<24)|((long)frame<<8)|((tile.height-1)<<2)|(((int)(180-tile.facing().getHorizontalAngle())/90)&3);
+        long key=((long)(tile.texture+1)<<48)|((long)steps<<24)|((long)frame<<8)|((tile.height-1)<<2)|(((int)(180-tile.facing().getHorizontalAngle())/90)&3);
         Column column=COLUMNS.get(tile);if(column==null){column=new Column(tile);COLUMNS.put(tile,column);}
         COLUMN_LRU.put(column,Boolean.TRUE);
         LightChanges changes=lightChanges(tile.getWorld());long origin=0;int vehicleRevision=0;Object structure=null;
@@ -104,7 +104,7 @@ public final class GarageDoorRenderer extends TileEntitySpecialRenderer<GarageDo
     /** Uncached geometry remains the reference for moving sections and endpoint parity checks. */
     public void renderUncached(GarageDoorTile tile,double x,double y,double z,float partial,BufferBuilder buffer){if(tile.isRoot()&&tile.ready())emit(tile,x,y,z,buffer,GarageDoorVisuals.pose(tile,partial),false);}
     private void emit(GarageDoorTile tile,double x,double y,double z,BufferBuilder b,double progress,boolean capture){
-        TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();TextureAtlasSprite front=atlas.getAtlasSprite("vandorlabs:blocks/garage/garage_panel"),edge=atlas.getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
+        TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();TextureAtlasSprite front=atlas.getAtlasSprite(tile.texture<0?"vandorlabs:blocks/garage/garage_panel":com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(tile.texture)),edge=atlas.getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
         int rotation=((int)(180-tile.facing().getHorizontalAngle())/90)&3;boolean normals=b.getVertexFormat().hasNormal();b.setTranslation(0,0,0);
         for(int row=0;row<tile.height;row++){
             GarageDoorGeometry.section(row,tile.height,progress,section);if(capture)((Capture)b).row=row;int light=capture?0:tile.getWorld().getCombinedLight(lightPos.setPos(tile.getPos().getX(),tile.getPos().getY()-row,tile.getPos().getZ()),0);double sin=section[2],cos=section[3];

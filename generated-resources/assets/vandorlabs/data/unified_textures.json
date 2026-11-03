@@ -6962,5 +6962,17 @@
     "source": "console_inputs/door27_gold_half_controller_static",
     "frames": 6,
     "rectangular": true
+  },
+  {
+    "id": "sectional_door_panel",
+    "label": "Sectional Panel",
+    "category": "Industrial",
+    "source": "garage/garage_panel"
+  },
+  {
+    "id": "sectional_door_panel_light",
+    "label": "Sectional Panel Light Grey",
+    "category": "Industrial",
+    "source": "garage/garage_panel_light"
   }
 ]

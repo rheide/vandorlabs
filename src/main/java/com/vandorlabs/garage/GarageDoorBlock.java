@@ -17,7 +17,8 @@ public final class GarageDoorBlock extends BlockVandorDirectional {
     public static final PropertyBool TOP=PropertyBool.create("top"),BOTTOM=PropertyBool.create("bottom"),BAKED=PropertyBool.create("baked");
     private static final AxisAlignedBB CLOSED=new AxisAlignedBB(0,0,.5-GarageDoorGeometry.HALF_THICKNESS,1,1,.5+GarageDoorGeometry.HALF_THICKNESS);
     public GarageDoorBlock(){super("garage_door");setDefaultState(getDefaultState().withProperty(TOP,true).withProperty(BOTTOM,true).withProperty(BAKED,false));setLightOpacity(0);setHardness(2.5F);}
-    @Override protected BlockStateContainer createBlockState(){return new BlockStateContainer(this,FACING,TOP,BOTTOM,BAKED);}
+    @Override protected BlockStateContainer createBlockState(){return new net.minecraftforge.common.property.ExtendedBlockState(this,new net.minecraft.block.properties.IProperty<?>[]{FACING,TOP,BOTTOM,BAKED},new net.minecraftforge.common.property.IUnlistedProperty<?>[]{com.vandorlabs.blocks.ProgrammableHousingState.FINISH});}
+    @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){TileEntity raw=world.getTileEntity(pos);return state instanceof net.minecraftforge.common.property.IExtendedBlockState?((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(com.vandorlabs.blocks.ProgrammableHousingState.FINISH,raw instanceof GarageDoorTile?((GarageDoorTile)raw).texture:-1):state;}
     @Override public boolean canPlaceBlockAt(World world,BlockPos pos){if(!super.canPlaceBlockAt(world,pos))return false;int height=1;for(EnumFacing side:new EnumFacing[]{EnumFacing.UP,EnumFacing.DOWN})for(BlockPos at=pos.offset(side);world.isBlockLoaded(at)&&world.getBlockState(at).getBlock()==this;at=at.offset(side))if(++height>GarageDoorTile.MAX_HEIGHT)return false;return true;}
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
     @Override public boolean isFullCube(IBlockState state){return false;}
