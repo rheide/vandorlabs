@@ -31,6 +31,17 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     public static final int REDSTONE_SURFACE=-2;
     public static final int VEHICLE_SURFACE=-3;
+    public static final int CHIP_SURFACE=-4;
+    private TileEntityTokenSlot chipReader;
+    public TileEntityTokenSlot ownedChipReader(){if(chipReader==null)chipReader=new TileEntityTokenSlot(true).forScreen(this);chipReader.setWorld(world);chipReader.setPos(pos);return chipReader;}
+    public net.minecraft.item.ItemStack ownedChip(){return chipReader==null?net.minecraft.item.ItemStack.EMPTY:chipReader.getStackInSlot(0);}
+    public boolean hasChipSurface(int slot){return getSurfaceTexture(slot)==CHIP_SURFACE;}
+    public void chipChanged(){chipView=null;chipViewStack=null;chipPage=0;pendingChipPage=0;markDirty();if(world instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)world;if(view.craft!=null)view.craft.signals.changed(pos);}else if(world!=null&&!world.isRemote){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}}
+    private com.vandorlabs.programmer.ProgrammerJournalView chipView;
+    private net.minecraft.item.ItemStack chipViewStack;
+    public int chipPage;private int pendingChipPage;
+    public com.vandorlabs.programmer.ProgrammerJournalView chipDisplay(){net.minecraft.item.ItemStack stack=com.vandorlabs.blocks.ScreenChipSupport.stack(this);if(chipViewStack!=stack){chipViewStack=stack;chipView=com.vandorlabs.programmer.ProgrammerJournalView.from(stack);chipPage=chipView==null?0:Math.max(0,Math.min(pendingChipPage,chipView.pages.size()-1));pendingChipPage=0;}return chipView;}
+
     public boolean hasVehicleStatus(int slot){return getSurfaceTexture(slot)==VEHICLE_SURFACE;}
     private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[2];
     private RedstoneScreenContents[] controls=NO_CONTROLS;
@@ -213,7 +224,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int baseSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
     public int baseAnimationSpeed(){return animationSpeedIndex;}
     private int primarySurface=-1,secondarySurface=-1;
-    public int getSurfaceTexture(int slot){if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&(slot==1?secondarySurface:primarySurface)!=VEHICLE_SURFACE&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
+    public int getSurfaceTexture(int slot){if((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE&&!hasRedstoneScreen(slot))return CHIP_SURFACE;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&(slot==1?secondarySurface:primarySurface)!=VEHICLE_SURFACE&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
     public void setSurfaceTexture(int slot,int choice) {
         if(choice==REDSTONE_SURFACE){
             // The row control is the active surface, replacing Vehicle Status.
@@ -221,7 +232,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             redstoneScreen(slot).setEnabled(true);return;
         }
         if(controls[slot]!=null)controls[slot].setEnabled(false);
-        int next=choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
+        int next=choice==CHIP_SURFACE?CHIP_SURFACE:choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
         if((slot==1?secondarySurface:primarySurface)==next)return;
         if(slot==1)secondarySurface=next;else primarySurface=next;
         settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
@@ -588,7 +599,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
-        super.writeToNBT(compound);activation.write(compound);frameAppearance.write(compound);glassPlayback.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
+        super.writeToNBT(compound);if(primarySurface==CHIP_SURFACE||secondarySurface==CHIP_SURFACE)compound.setInteger("ChipDisplayPage",chipPage);else compound.removeTag("ChipDisplayPage");if(chipReader!=null&&!chipReader.isEmpty())compound.setTag("ScreenChipReader",chipReader.writeEmbedded());else compound.removeTag("ScreenChipReader");activation.write(compound);frameAppearance.write(compound);glassPlayback.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
@@ -642,15 +653,15 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         boolean previousPortholeJoin=joinPortholes;
         boolean previousDiagonalWidth = diagonalFullWidth;
         int oldChannel = redstoneChannel;
-        super.readFromNBT(compound);activation.read(compound);frameAppearance.read(compound);glassPlayback.read(compound);
+        super.readFromNBT(compound);if(compound.hasKey("ScreenChipReader",10)||chipReader!=null)ownedChipReader().readEmbedded(compound.getCompoundTag("ScreenChipReader"));chipView=null;chipViewStack=null;pendingChipPage=Math.max(0,Math.min(256,compound.getInteger("ChipDisplayPage")));chipPage=pendingChipPage;activation.read(compound);frameAppearance.read(compound);glassPlayback.read(compound);
         for(int i=0;i<2;i++){
             String key=i==0?"RedstonePrimary":"RedstoneSecondary";
             if(compound.hasKey(key,10))redstoneScreen(i).readFromNBT(compound.getCompoundTag(key));
             else if(controls[i]!=null)controls[i].readFromNBT(new NBTTagCompound());
         }
         if(controls!=NO_CONTROLS && world!=null && !world.isRemote)DeferredTileLoad.schedule(this,this::finishLoading);
-        primarySurface=compound.getInteger("PrimarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
-        secondarySurface=compound.getInteger("SecondarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
+        primarySurface=compound.getInteger("PrimarySurfaceTexture") ==CHIP_SURFACE?CHIP_SURFACE:compound.getInteger("PrimarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
+        secondarySurface=compound.getInteger("SecondarySurfaceTexture") ==CHIP_SURFACE?CHIP_SURFACE:compound.getInteger("SecondarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
         ceilingMounted=compound.getBoolean("CeilingMounted");
         ceilingPosition=compound.hasKey("CeilingPosition",3)
                 ?Math.max(0,Math.min(2,compound.getInteger("CeilingPosition"))):-1;

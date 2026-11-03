@@ -702,6 +702,8 @@ public class ReproLab {
             try {if(!vehicleStatusStarted){RegularDialogRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(RegularDialogRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Regular right-click dialog live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){if(++holdTicks>=40)RedstoneScreenRuntimeChecks.tick(mc,outDir);return;}
+        if(Boolean.getBoolean("vandorlabs.screenChipChecksOnly")){try{if(ScreenChipLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Screen chip live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleDesignChecksOnly")){try{if(VehicleDesignRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle design live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleControllerChecksOnly")) {
             try {if(VehicleControllerRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle Controller live checks",failure);}

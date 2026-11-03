@@ -28,11 +28,11 @@ final class RedstoneScreenRuntimeChecks {
         if(shape>=28){ScreenCopyAndParticleRuntimeChecks.tick(mc,output);return;}
         if(stage==99)return;
         try{
-            if(++ticks>400)throw new IllegalStateException("screen timeout shape="+shape+" stage="+stage);
+            if(++ticks>400)throw new IllegalStateException("screen timeout shape="+shape+" stage="+stage+" mode="+mc.player.isCreative()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" distance="+mc.player.getDistanceSq(POS)+" gui="+(mc.currentScreen==null?"none":mc.currentScreen.getClass().getName()));
             if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
-            if(stage==0){
+            if(stage==0){mc.playerController.setGameType(net.minecraft.world.GameType.CREATIVE);
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
-                    EntityPlayerMP owner=owner(mc);owner.closeScreen();owner.capabilities.isCreativeMode=true;owner.capabilities.isFlying=true;owner.sendPlayerAbilities();
+                    EntityPlayerMP owner=owner(mc);owner.closeScreen();owner.interactionManager.setGameType(net.minecraft.world.GameType.CREATIVE);owner.capabilities.isCreativeMode=true;owner.capabilities.isFlying=true;owner.sendPlayerAbilities();
                     owner.inventory.clear();owner.inventory.setInventorySlotContents(0,new net.minecraft.item.ItemStack(ModBlocks.ANIMATED_SCREEN_SELECTOR));
                     owner.inventory.setInventorySlotContents(1,new net.minecraft.item.ItemStack(ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN));owner.inventory.currentItem=8;
                     owner.inventoryContainer.detectAndSendChanges();owner.connection.sendPacket(new net.minecraft.network.play.server.SPacketHeldItemChange(8));
@@ -48,9 +48,9 @@ final class RedstoneScreenRuntimeChecks {
                     aim(owner,state,0);
                 });next(20);return;
             }
-            if(stage==20 && ticks>25){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);p.openGui(VandorLabs.instance,GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,p.world,POS.getX(),POS.getY(),POS.getZ());});next(22);return;}
+            if(stage==20 && ticks>25&&mc.player.isCreative()&&mc.player.inventory.currentItem==8&&mc.player.getDistanceSq(POS)<64&&mc.world.getTileEntity(POS) instanceof TileEntityAnimatedScreenSelector){pending=mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);p.openGui(VandorLabs.instance,GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,p.world,POS.getX(),POS.getY(),POS.getZ());});next(22);return;}
             if(stage==22 && ticks>15 && mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainer){capture(mc,output,"picker");chooseRedstone(mc);next(21);return;}
-            if(stage==21 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){((GuiRedstoneScreen)mc.currentScreen).actionPerformed(new GuiButton(4,0,0,"Done"));next(1);return;}
+            if(stage==21 && ticks>15 && inline(mc)!=null){mc.player.closeScreen();next(1);return;}
             if(stage==1 && ticks>25){capture(mc,output,"off");click(mc);next(2);return;}
             if(stage==2 && ticks>15){
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
@@ -69,33 +69,25 @@ final class RedstoneScreenRuntimeChecks {
                 });capture(mc,output,"mixed");next(6);return;
             }
             if(stage==6){open(mc);next(7);return;}
-            if(stage==7 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){
-                GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;
-                gui.actionPerformed(new GuiButton(2,0,0,"Add"));
-                field(gui,"titleField").setText("Bridge controls");field(gui,"labelField").setText("Ramp bank");field(gui,"channelField").setText("14903, 14904");
-                gui.actionPerformed(new GuiButton(5,0,0,"Up"));
-                require(field(gui,"labelField").getText().equals("Ramp bank") && field(gui,"channelField").getText().equals("14903, 14904"),"moving row keeps editor and channel bank");
-                gui.actionPerformed(new GuiButton(6,0,0,"Down"));gui.actionPerformed(new GuiButton(5,0,0,"Up"));
-                gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(8);return;
+            if(stage==7 && ticks>15 && mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainer){
+                if(inline(mc)==null){chooseRedstone(mc);return;}NativeRedstoneRowsPane pane=inline(mc);RedstoneRowsPane rows=rows(pane);
+                // Half panels hold three rows. Exercise delete/add without exceeding that cap.
+                rows.mouseClicked((Integer)member(rows,"x")+4,(Integer)member(rows,"y")+(Integer)member(rows,"listOffset")+44,0);rows.action(new GuiButton(601,0,0,"Del"));rows.action(new GuiButton(600,0,0,"Add"));
+                ((GuiTextField)member(pane,"title")).setText(expectedTitle());rows.labelField().setText("Ramp bank");rows.channelField().setText("14903,14904");rows.action(new GuiButton(602,0,0,"Up"));
+                require(rows.labelField().getText().equals("Ramp bank")&&rows.channelField().getText().replace(" ","").equals("14903,14904"),"inline moving row lost draft");rows.action(new GuiButton(603,0,0,"Down"));require(rows.save(),"inline rows save refused");mc.player.closeScreen();next(8);return;
             }
             if(stage==8 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->{
-                RedstoneScreenContents tile=tile(mc);require(tile.title().equals(expectedTitle()) && tile.rows().size()==4 && tile.rows().get(2).label.equals("Ramp bank") && tile.rows().get(2).channels.equals(ChannelList.of(14903,14904)),"GUI row packet lost edits");
-                RedstoneScreenContents copy=new RedstoneScreenContents(new TileEntityAnimatedScreenSelector(),slot());copy.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.rows().size()==4 && copy.rows().get(2).channels.equals(tile.rows().get(2).channels),"saved rows lost");
+                RedstoneScreenContents tile=tile(mc);require(tile.title().equals(expectedTitle()) && tile.rows().size()==3 && tile.rows().get(2).label.equals("Ramp bank") && tile.rows().get(2).channels.equals(ChannelList.of(14903,14904)),"GUI row packet lost edits");
+                RedstoneScreenContents copy=new RedstoneScreenContents(new TileEntityAnimatedScreenSelector(),slot());copy.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));require(copy.rows().size()==3 && copy.rows().get(2).channels.equals(tile.rows().get(2).channels),"saved rows lost");
             });next(9);return;}
             if(stage==9){open(mc);next(10);return;}
-            if(stage==10 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){
-                capture(mc,output,"dialog");GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;
-                require(field(gui,"titleField").getText().equals(expectedTitle()),"reopened header lost");
-                field(gui,"labelField").setText("WWWWWWWWWWWWWWWWWWWWWWWW");gui.actionPerformed(new GuiButton(4,0,0,"Done"));
-                require(mc.currentScreen==gui,"overwide label saved");field(gui,"labelField").setText("Doors");
-                require(field(gui,"titleField").getVisible()==!RedstoneScreenInteractions.half(fixtureState().getBlock(),slot()),"half-height header field visibility differs");
-                if(!RedstoneScreenInteractions.half(fixtureState().getBlock(),slot())){
-                    field(gui,"titleField").setText("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");gui.actionPerformed(new GuiButton(4,0,0,"Done"));
-                    require(mc.currentScreen==gui,"overwide header saved");field(gui,"titleField").setText("Bridge controls");
-                }
-                gui.actionPerformed(new GuiButton(3,0,0,"Remove"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(11);return;
+            if(stage==10 && ticks>15 && mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainer){
+                if(inline(mc)==null){chooseRedstone(mc);return;}NativeRedstoneRowsPane pane=inline(mc);RedstoneRowsPane rows=rows(pane);
+                rows.labelField().setText("WWWWWWWWWWWWWWWWWWWWWWWW");require(!rows.save(),"overwide inline label accepted");rows.labelField().setText("Doors");
+                GuiTextField title=(GuiTextField)member(pane,"title");require(title.getVisible()==!RedstoneScreenInteractions.half(fixtureState().getBlock(),slot()),"half-height header visibility differs");
+                rows.action(new GuiButton(601,0,0,"Del"));require(rows.save(),"inline removal refused");mc.player.closeScreen();next(11);return;
             }
-            if(stage==11 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().size()==3 && tile(mc).rows().get(0).label.equals("Lights"),"GUI row removal failed"));next(12);return;}
+            if(stage==11 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().size()==2 && tile(mc).rows().get(0).label.equals("Lights"),"GUI row removal failed"));next(12);return;}
             if(stage==12){
                 segment=0;pending=mc.getIntegratedServer().addScheduledTask(()->{
                     RedstoneScreenContents contents=tile(mc);net.minecraft.nbt.NBTTagList rows=new net.minecraft.nbt.NBTTagList();net.minecraft.nbt.NBTTagCompound row=new net.minecraft.nbt.NBTTagCompound();
@@ -111,22 +103,21 @@ final class RedstoneScreenRuntimeChecks {
                 });next(15);return;
             }
             if(stage==15){capture(mc,output,"slider_"+(segment-1));if(segment<4){next(13);return;}capture(mc,output,"slider");open(mc);next(16);return;}
-            if(stage==16 && ticks>15 && mc.currentScreen instanceof GuiRedstoneScreen){
-                GuiRedstoneScreen gui=(GuiRedstoneScreen)mc.currentScreen;
-                int originalWidth=gui.width,originalHeight=gui.height;
-                for(int[] size:new int[][]{{320,240},{460,340},{originalWidth,originalHeight}}){gui.setWorldAndResolution(mc,size[0],size[1]);gui.checkLayout();}
-                require(mc.fontRenderer.getStringWidth(field(gui,"labelField").getText())<=RedstoneScreenContents.SLIDER_LABEL_WIDTH,"longer slider label does not fit");
-                GuiOptionCycleRuntimeChecks.check(mc);
-                capture(mc,output,"slider_gui");
-                gui.actionPerformed(new GuiButton(8,0,0,"Low"));gui.actionPerformed(new GuiButton(9,0,0,"High"));gui.actionPerformed(new GuiButton(4,0,0,"Done"));next(17);return;
+            if(stage==16 && ticks>15 && mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainer){
+                if(inline(mc)==null){chooseRedstone(mc);return;}NativeRedstoneRowsPane pane=inline(mc);RedstoneRowsPane rows=rows(pane);net.minecraft.client.gui.inventory.GuiContainer gui=(net.minecraft.client.gui.inventory.GuiContainer)mc.currentScreen;int oldWidth=gui.width,oldHeight=gui.height;
+                for(int[] size:new int[][]{{320,240},{460,340},{oldWidth,oldHeight}}){gui.setWorldAndResolution(mc,size[0],size[1]);rows=rows(inline(mc));for(GuiButton button:rows.buttons())if(button.visible)require(button.x>=0&&button.y>=0&&button.x+button.width<=gui.width&&button.y+button.height<=gui.height,"inline row control outside viewport");}
+                require(mc.fontRenderer.getStringWidth(rows.labelField().getText())<=RedstoneScreenContents.SLIDER_LABEL_WIDTH,"slider label does not fit");capture(mc,output,"slider_gui");rows.action(new GuiButton(605,0,0,"Low"));rows.action(new GuiButton(606,0,0,"High"));require(rows.save(),"slider range refused");mc.player.closeScreen();next(17);return;
             }
-            if(stage==17 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().get(0).slider && tile(mc).rows().get(0).min==6 && tile(mc).rows().get(0).max==8 && tile(mc).rows().get(0).label.equals("Thruster"),"slider dialog packet lost range"));next(18);return;}
+            if(stage==17 && ticks>15){pending=mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).rows().get(0).slider && tile(mc).rows().get(0).min==6 && tile(mc).rows().get(0).max==8 && tile(mc).rows().get(0).label.equals("Thruster"),"slider dialog packet lost range actual="+tile(mc).rows().get(0).min+".."+tile(mc).rows().get(0).max));next(18);return;}
             if(stage==18){System.out.println("[vandorlabs][reprolab] redstone-slider-runtime PASS shape="+shape);
                 System.out.println("[vandorlabs][reprolab] redstone-screen-runtime PASS shape="+shape);if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){
                 int[] fixtures={0,1,2,3,7,17,21,22,23,25,26,27};int index=0;while(index<fixtures.length && fixtures[index]!=shape)index++;shape=index+1<fixtures.length?fixtures[index+1]:28;
             }else shape++;next(shape<28?0:99);}
         }catch(Exception e){throw new IllegalStateException("redstone-screen live check shape="+shape+" stage="+stage,e);}
     }
+    private static Object member(Object owner,String name)throws ReflectiveOperationException{Field f=owner.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(owner);}
+    private static NativeRedstoneRowsPane inline(Minecraft mc)throws ReflectiveOperationException{if(!(mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainer))return null;Object gui=mc.currentScreen;int selected=(Integer)member(gui,"rowSlot");if(selected!=slot())return null;return ((NativeRedstoneRowsPane[])member(gui,"rowEditors"))[slot()];}
+    private static RedstoneRowsPane rows(NativeRedstoneRowsPane pane)throws ReflectiveOperationException{return (RedstoneRowsPane)member(pane,"rows");}
     private static void next(int value){stage=value;ticks=0;}
     private static EntityPlayerMP owner(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());}
     private static RedstoneScreenContents tile(Minecraft mc){return ((TileEntityAnimatedScreenSelector)owner(mc).world.getTileEntity(POS)).redstoneScreen(slot());}
@@ -144,7 +135,8 @@ final class RedstoneScreenRuntimeChecks {
     }
     private static void chooseRedstone(Minecraft mc)throws Exception{
         Object gui=mc.currentScreen;
-        if(slot()==1){if(gui instanceof GuiAnimatedScreenSelector)((GuiAnimatedScreenSelector)gui).actionPerformed(new GuiButton(91,0,0,"Controls"));else ((GuiProgrammableHalfConsole)gui).actionPerformed(new GuiButton(91,0,0,"Controls"));}
+        if(gui instanceof GuiProgrammableHalfConsole)((GuiProgrammableHalfConsole)gui).actionPerformed(new GuiButton(slot()==1?91:90,0,0,"Surface"));
+        else if(slot()==1){if(gui instanceof GuiAnimatedScreenSelector)((GuiAnimatedScreenSelector)gui).actionPerformed(new GuiButton(91,0,0,"Controls"));else ((GuiProgrammableHalfConsole)gui).actionPerformed(new GuiButton(91,0,0,"Controls"));}
         String fieldName=shape>=26?(slot()==1?"topList":"bottomList"):slot()==1?"inputList":"screenList";
         Field pickerField=gui.getClass().getDeclaredField(fieldName);pickerField.setAccessible(true);ScreenTextureList picker=(ScreenTextureList)pickerField.get(gui);
         Field f=ScreenTextureList.class.getDeclaredField("list");f.setAccessible(true);HousingTextureList list=(HousingTextureList)f.get(picker);

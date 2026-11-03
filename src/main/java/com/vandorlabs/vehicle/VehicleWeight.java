@@ -162,6 +162,7 @@ public final class VehicleWeight {
             if(tile.getClass().getName().equals("mekanism.common.tile.TileEntityGasTank")){Object tank=tile.getClass().getField("gasTank").get(tile);add(Math.max(0,((Number)tank.getClass().getMethod("getStored").invoke(tank)).doubleValue())*.0005/1000D);}
         }
         ContainedFluids contained=WaterloggedParts.data(tile);if(contained!=null)for(int side=0;side<2;side++)fluid(contained.get(side),1);
+        if(tile instanceof TileEntityAnimatedScreenSelector){ItemStack token=((TileEntityAnimatedScreenSelector)tile).ownedChip();if(!token.isEmpty())queue(()->stack(token,1,depth));}
         if(tile instanceof TileEntitySpaceDoor)for(int side=0;side<2;side++){ItemStack token=((TileEntitySpaceDoor)tile).keyReader(side).getStackInSlot(0);if(!token.isEmpty())queue(()->stack(token,1,depth));}
         if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).hasRetainedPayload()){
             NBTTagCompound payload=cell.tileData().getCompoundTag("ArmPayload");if(!payload.getBoolean("Materialized")){

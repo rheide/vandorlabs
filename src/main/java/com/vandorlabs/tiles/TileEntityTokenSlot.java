@@ -22,12 +22,16 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     private int logoDesign;
     private long rejectedUntil;
     private TileEntitySpaceDoor door;
+    private TileEntityAnimatedScreenSelector screen;
+    TileEntityTokenSlot forScreen(TileEntityAnimatedScreenSelector owner){screen=owner;return this;}
+    public NBTTagCompound writeEmbedded(){return writeReaderData(new NBTTagCompound());}
+    public void readEmbedded(NBTTagCompound tag){readReaderData(tag);chip=true;any=true;allowed=127;behavior=0;returnTo=null;}
     private int publishedLevel=-1;
     protected void outputChanged(){world.notifyNeighborsOfStateChange(pos,world.getBlockState(pos).getBlock(),false);}
     private int visualSlot;
     TileEntityTokenSlot forDoor(TileEntitySpaceDoor owner,int side){door=owner;visualSlot=side+1;return this;}
     public int visualSlot(){return visualSlot;}
-    protected boolean installed(){return world!=null&&world.getTileEntity(pos)==(door==null?this:door);}
+    protected boolean installed(){return world!=null&&world.getTileEntity(pos)==(screen!=null?screen:door==null?this:door);}
     protected int returnPulseTicks(){return door==null?20:100;}
     public int logoDesign(){if((effectiveAllowed()&1)!=0)return 0;if((effectiveAllowed()&(1<<logoDesign))!=0)return logoDesign;for(int i=0;i<7;i++)if((effectiveAllowed()&(1<<i))!=0)return i;return 0;}
     public static int singleCompany(int mask){return TileEntitySpaceDoor.singleCompany(mask);}
@@ -63,6 +67,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     // Generic switch or copy callbacks cannot manufacture a token signal.
     @Override public void setLocalOn(boolean ignored){refresh();}
     public void refresh(){
+        if(screen!=null)return;
         if(door!=null){door.securityChanged();return;}
         if(world==null||world.isRemote)return;
         boolean powered=getOutputLevel()>0;super.setLocalOn(powered);
@@ -105,13 +110,13 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
         else if((behavior==1||behavior==3)&&pulseUntil>now)schedule((int)Math.min(20,pulseUntil-now));
     }
     private void changed(boolean inserted){
-        if(world!=null&&!world.isRemote){
+        if(world!=null&&(!world.isRemote||screen!=null&&world instanceof com.vandorlabs.vehicle.VehicleWorld&&!((com.vandorlabs.vehicle.VehicleWorld)world).parent.isRemote)){
             if(inserted){insertStarted=world.getTotalWorldTime();insertionSequence++;}
             if(inserted&&matches()&&behavior==1){pulseUntil=world.getTotalWorldTime()+returnPulseTicks();schedule(returnPulseTicks());}
             if(token.isEmpty()&&behavior==1)pulseUntil=0;
             refresh();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);
         }
-        markDirty();
+        markDirty();if(screen!=null)screen.chipChanged();
     }
     public void configure(boolean any,int allowed,int behavior){
         allowed=singleCompany(any?127:allowed);any=allowed==127;behavior=behavior>=0&&behavior<=3?behavior:0;

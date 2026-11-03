@@ -28,6 +28,9 @@ case "${1:-}" in
         elif [ "$TARGET" = foreign-buildings ]; then
             PREFIX=foreign_building_
             export VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY=true
+        elif [ "$TARGET" = screen-chips ]; then
+            PREFIX=screen_chip_
+            export VANDOR_LABS_SCREEN_CHIP_CHECKS_ONLY=true
         elif [ "$TARGET" = vehicle-design ]; then
             PREFIX=vehicle_design_
             export VANDOR_LABS_VEHICLE_DESIGN_CHECKS_ONLY=true
@@ -327,6 +330,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = foreign-buildings ]; then
         grep -q "foreign-building-live PASS" "$RUN_OUT/client.log"
         echo "Foreign building live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = screen-chips ]; then
+        grep -q "screen-chips PASS" "$RUN_OUT/client.log"
+        echo "Screen chip live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = vehicle-design ]; then

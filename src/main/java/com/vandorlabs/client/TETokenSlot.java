@@ -91,6 +91,14 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
    GlStateManager.translate(-.5,-.5,-.975);if(nativeFrame)frame(true,EnumFacing.NORTH);contents(tile,EnumFacing.NORTH,0,partial);
   }finally{GlStateManager.popMatrix();}
  }
+ /** Sideways/sloped frames use the same pause-aware insertion clock and item path. */
+ public static void orientedMount(TileEntityTokenSlot tile,MachineMountSurface surface,java.nio.FloatBuffer matrix,double x,double y,double z,float partial){
+  GlStateManager.pushMatrix();try(TurntableRenderState saved=new TurntableRenderState()){
+   GlStateManager.translate(x+surface.center.x,y+surface.center.y,z+surface.center.z);matrix.rewind();GlStateManager.multMatrix(matrix);
+   double scale=Math.min(surface.width,surface.height)/TokenSlotGeometry.CHIP_SIZE;GlStateManager.scale(scale,scale,scale);GlStateManager.translate(-.5,-.5,-1);
+   frame(true,EnumFacing.NORTH);contents(tile,EnumFacing.NORTH,0,partial);
+  }finally{GlStateManager.popMatrix();}
+ }
  private static void logoVertex(BufferBuilder b,FaceBasis basis,double x,double y,float u,float v){basis.vertex(b,x,y,.025);b.tex(u,v).color(255,255,255,255).endVertex();}
  private static void panel(BufferBuilder b,FaceBasis basis,double left,double right,double bottom,double top,double depth,int color){
   coloredVertex(b,basis,left,bottom,depth,color);coloredVertex(b,basis,right,bottom,depth,color);coloredVertex(b,basis,right,top,depth,color);coloredVertex(b,basis,left,top,depth,color);

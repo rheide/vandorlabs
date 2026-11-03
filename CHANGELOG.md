@@ -1,12 +1,14 @@
 # Changelog
 
-## 2.8 (development)
+## 2.8
 
 See the [2.8 guide](docs/versions/version-2.8.md) and [Garage Door construction guide](docs/garage-doors.md).
 
 - Slice vehicle discovery and preflight across ticks, reuse rotation checks for repeated block states and show conversion activity on Vehicle Status screens.
 - Add saved vehicle names and rotating shape previews, exact Vehicle Chips, Programmer creation/duplication, output-only Copy Controller chip sources and retained Access Card security.
 - Center copied block designs across output Surfaces, reject oversized chip designs before material handling, and explain chip copying when the Copy Controller has no mount.
+- Add Display-only Chip artwork and sideways built-in readers to Diagonal Half Consoles, Diagonal Screens and Half Consoles. Regular Screens read attached Data Chip Mounts; readers retain their chips through artwork changes, saving and vehicle transfers.
+- Correct the Diagonal Half Console dialog title and put the Half Console Display tab before Controls. Crop the lower controls texture without stretching it.
 - Add shared base height, tilt and tilt-direction controls to Data Chip and Access Card Mounts, including posed contents and configured item preservation.
 - Explain missing Data Chip and Access Card Mounts on the Vehicle Controller's Vehicle and Security tabs.
 - Reuse terrain scratch collections and immutable transfer preflight; let a single scan consume unused shared work slices. Preserve fresh-world terrain, live authorization/hardness checks and durable recovery.

@@ -30,9 +30,10 @@ public final class BlockDiagonalHalfConsole extends BlockAnimatedScreenSelector 
     public boolean isFullCube(IBlockState s) { return false; }
     public int getLightValue(IBlockState s,IBlockAccess world,BlockPos pos) { return 0; }
     public AxisAlignedBB getBoundingBox(IBlockState s,IBlockAccess world,BlockPos pos) {
-        return PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,s.getValue(UPPER)?.5:0,.5,1,s.getValue(UPPER)?1:.5,1),s.getValue(FACING));
+        AxisAlignedBB bounds=PanelPlacement.rotateFromNorth(new AxisAlignedBB(0,s.getValue(UPPER)?.5:0,.5,1,s.getValue(UPPER)?1:.5,1),s.getValue(FACING));net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector&&ScreenChipSupport.selected((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw))bounds=bounds.union(ScreenChipSupport.bounds(s,(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw)).union(ScreenChipSupport.tray(s));return bounds;
     }
     public void addCollisionBoxToList(IBlockState s,World world,BlockPos pos,AxisAlignedBB entityBox,List<AxisAlignedBB> boxes,Entity entity,boolean actual) {
+        net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);if(raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector&&ScreenChipSupport.selected((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw)){addCollisionBoxToList(pos,entityBox,boxes,ScreenChipSupport.bounds(s,(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw));addCollisionBoxToList(pos,entityBox,boxes,ScreenChipSupport.tray(s));}
         for (int i=0;i<8;i++) {
             double h=(i+1)/16D;
             AxisAlignedBB box=new AxisAlignedBB(0,s.getValue(UPPER)?1-h:0,(8+i)/16D,1,s.getValue(UPPER)?1:h,(9+i)/16D);

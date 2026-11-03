@@ -101,7 +101,7 @@ if target == 'redstone-dialogs':
     require('signal-control-runtime PASS')
     require('signal-control-models PASS')
     require('signal-control-visuals PASS')
-if target != 'door-selection':
+if target not in ('door-selection','signals'):
     require('custom-materials-runtime PASS')
     require('imported-materials-runtime PASS')
 if target == 'dialogs':

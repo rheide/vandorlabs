@@ -21,7 +21,7 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
     private static final int ROW_H = 12;
     private static final int ROWS = 8;
     private ProgrammableDialogLayout layout;
-    private int textureTab;
+    private int textureTab=1;
     private final TileEntityAnimatedScreenSelector te;
     private String topPanel;
     private String bottomPanel;
@@ -71,12 +71,12 @@ public class GuiProgrammableHalfConsole extends GuiContainer {
         receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         super.initGui();buttonList.clear();buttonList.add(new GuiButton(198,redstoneX,layout.top+130,redstoneWidth,20,"Transmitter..."));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
-        buttonList.add(layout.fullTab(90,0,5,"Controls"));
-        buttonList.add(layout.fullTab(91,1,5,"Display"));
+        buttonList.add(layout.fullTab(90,1,5,"Controls"));
+        buttonList.add(layout.fullTab(91,0,5,"Display"));
         buttonList.add(layout.fullTab(92,2,5,"Sides"));
         buttonList.add(layout.fullTab(93,4,5,"Redstone"));buttonList.add(layout.fullTab(197,3,5,"Frame"));
         left=right=layout.listX;top=guiTop+54;
-        topList=new ScreenTextureList(left,top,layout.listWidth,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(topList,1)).redstone(te.getPos(),1,()->openRows(1));
+        topList=new ScreenTextureList(left,top,layout.listWidth,8,topPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(topList,1)).redstone(te.getPos(),1,()->openRows(1)).chip(te,1);
         bottomList=new ScreenTextureList(left,top,layout.listWidth,8,bottomPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(bottomList,0)).redstone(te.getPos(),0,()->openRows(0));
         for(int i=0;i<3;i++) {
             buttonList.add(layout.choice(1+i,i,3,66,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));

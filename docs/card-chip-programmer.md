@@ -23,3 +23,7 @@ See [Access Card and Data Chip Mounts](data-mounts.md) for readers used by doors
 Select **Type: Vehicle**, put a Data Chip in Input, leave Output empty and click **Program** to create a blank Vehicle Chip. No company Master is required. Attach a Data Chip Mount to a Vehicle Controller, insert that blank chip, name the vehicle and choose **Write Vehicle Chip** in the controller's Vehicle tab. Writing scans the complete craft again and saves its block states, tile data and stored inventories. A written chip holds up to 768 KiB of compressed design data, within the existing 4 MiB vehicle snapshot limit. Keep the craft unchanged while the scan runs; a changed or incomplete craft is refused without replacing the chip.
 
 A written Vehicle Chip in the Programmer shows a rotating simplified model on the physical screen and the dialog's **Vehicle** page. Put it in Input and another Data Chip in Output, then use **Copy** to duplicate its exact saved design and name. Vehicle Chips cannot serve as company Master chips.
+
+## Displaying a chip elsewhere
+
+[Programmable screen chip readers](screen-chip-readers.md) show Journal pages and Vehicle Chip previews without using a Programmer. Some console/screen blocks include a reader when Chip is selected; a regular Programmable Screen reads a face-attached Data Chip Mount.

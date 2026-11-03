@@ -23,6 +23,9 @@ public final class ProgrammerJournalView {
         }
         key=signature.toString();pages=Collections.unmodifiableList(result);
     }
+    public static ProgrammerJournalView from(ItemStack chip){
+        if(!ChipJournal.journal(chip))return null;String[] entries=new String[ChipJournal.MAX_PAGES];for(int i=0;i<entries.length;i++)entries[i]=ChipJournal.page(chip,i);return new ProgrammerJournalView(ChipJournal.title(chip),"Chip",entries);
+    }
     public static ProgrammerJournalView from(ProgrammerTile tile){
         if(tile.editableJournal())return new ProgrammerJournalView(tile.title,"Input",tile.pages.clone());
         ItemStack output=tile.getStackInSlot(2);if(!ChipJournal.journal(output))return null;

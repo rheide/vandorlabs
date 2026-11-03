@@ -199,7 +199,7 @@ public final class VehicleSignals {
         TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel)return true;
         if(!(raw instanceof TileEntityAnimatedScreenSelector))return false;
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)raw;
-        for(int slot=0;slot<2;slot++)if((tile.hasRedstoneScreen(slot) || tile.hasVehicleStatus(slot)) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return true;
+        for(int slot=0;slot<2;slot++)if((tile.hasRedstoneScreen(slot) || tile.hasVehicleStatus(slot) || tile.hasChipSurface(slot)) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return true;
         return false;
     }
     public boolean click(BlockPos pos,net.minecraft.entity.player.EntityPlayer player){
@@ -210,6 +210,7 @@ public final class VehicleSignals {
         double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());
         Vec3d eye=player.getPositionEyes(1),end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));eye=craft.toLocal(eye).subtract(new Vec3d(pos));end=craft.toLocal(end).subtract(new Vec3d(pos));
         tick();
+        if(ScreenChipSupport.activate(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){dirty.add(pos);flush();return true;}
         for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             int action=RedstoneScreenInteractions.statusAction(state,tile,slot,eye,end);if(action<0)continue;
             VehicleStatus.activate(craft.view,pos,player,action);return true;
@@ -239,7 +240,7 @@ public final class VehicleSignals {
     }
     private void flush(){
         if(dirty.isEmpty())return;
-        Map<BlockPos,NBTTagCompound> saved=new HashMap<>();
+        Map<BlockPos,NBTTagCompound> saved=new HashMap<>();boolean fullSnapshot=false;
         for(BlockPos pos:new ArrayList<>(dirty)){
             TileEntity tile=craft.view.getTileEntity(pos);if(tile==null)continue;
             NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());
@@ -249,7 +250,7 @@ public final class VehicleSignals {
                     && data.equals(craft.structure.at(pos).tileData()))continue;
             saved.put(pos,data);
             try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(data,bytes);
-                if(bytes.size()>VehicleNetwork.FRAGMENT)continue;
+                if(bytes.size()>VehicleNetwork.FRAGMENT){fullSnapshot=true;continue;}
                 VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.TILE);packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.origin=pos;packet.data=bytes.toByteArray();packet.sequence=net.minecraft.block.Block.getStateId(craft.view.getBlockState(pos));
                 com.vandorlabs.network.PacketHandler.INSTANCE.sendToAllTracking(packet,craft);
                 if(craft.getControllingPassenger() instanceof net.minecraft.entity.player.EntityPlayerMP)com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(packet,(net.minecraft.entity.player.EntityPlayerMP)craft.getControllingPassenger());
@@ -262,6 +263,7 @@ public final class VehicleSignals {
             next.inheritEncodedLength(craft.structure);
             craft.updateCanopies(next,false);
         }
+        if(fullSnapshot){java.util.Set<net.minecraft.entity.player.EntityPlayer> viewers=new java.util.HashSet<>(((net.minecraft.world.WorldServer)craft.world).getEntityTracker().getTrackingPlayers(craft));for(net.minecraft.entity.Entity passenger:craft.getPassengers())if(passenger instanceof net.minecraft.entity.player.EntityPlayer)viewers.add((net.minecraft.entity.player.EntityPlayer)passenger);for(net.minecraft.entity.player.EntityPlayer viewer:viewers)if(viewer instanceof net.minecraft.entity.player.EntityPlayerMP)VehicleNetwork.send((net.minecraft.entity.player.EntityPlayerMP)viewer,craft.structure,craft.getEntityId(),craft.getUniqueID(),new BlockPos(craft),false,false);}
         dirty.clear();
     }
     static void save(EntityGroundVehicle craft,BlockPos pos,NBTTagCompound data,IBlockState state){

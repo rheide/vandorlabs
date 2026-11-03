@@ -398,6 +398,7 @@ public class TEAnimatedScreenSelector
             return;
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
+        ScreenChipRenderer.reader(te,state,x,y,z,partialTicks);
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass || state.getBlock() instanceof BlockProgrammableWall&&((BlockProgrammableWall)state.getBlock()).isPortholeShape())if(GlazingRenderOrder.handle(te,x,y,z,partialTicks,destroyStage,alpha))return;
         if(te.initializeDisplayArtwork(state.getBlock()))com.vandorlabs.tiles.GlassMaterials.changed();
         boolean fluidPass=te.isWaterlogged()&&com.vandorlabs.blocks.WaterloggedParts.supports(state)&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1;
@@ -495,9 +496,10 @@ public class TEAnimatedScreenSelector
             beginLocalTransform(x,y,z,state.getValue(BlockAnimatedScreenSelector.FACING));
             GlStateManager.disableLighting();
             boolean ceiling=state.getValue(com.vandorlabs.blocks.BlockDiagonalHalfConsole.UPPER);
+            if(com.vandorlabs.blocks.ScreenChipSupport.selected(te)){bindAtlas();setWorldLight(te);renderHousingBox(wallSprite(te),0,ceiling?15:0,0,16,ceiling?16:1,8,te.getSurfaceTextureLayout());}
             GlStateManager.pushMatrix();GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
             bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wallSprite(te))),ceiling);
-            if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)){
+            if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)||te.hasChipSurface(0)){
                 FrameSurfaceRenderer.screen(te,ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,false),ceiling);
                 GlStateManager.popMatrix();redstoneFace(te,0);GlStateManager.enableLighting();endLocalTransform();return;
             }
@@ -557,8 +559,8 @@ public class TEAnimatedScreenSelector
             setWorldLight(te);
             renderHousingBox(wallSprite(te),0,0,0,16,16,16,te.getSurfaceTextureLayout());
         }
-        if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)){
-            if(te.hasVehicleStatus(0))RedstoneScreenRenderer.drawVehicle(te,state,0);else RedstoneScreenRenderer.draw(te.redstoneScreen(0),state);
+        if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)||te.hasChipSurface(0)){
+            redstoneFace(te,0);
             ScreenSurface.Kind framedSurface=state.getBlock() instanceof BlockProgrammableConsole?ScreenSurface.Kind.CONSOLE:diagonal?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
             FrameSurfaceRenderer.screen(te,ScreenSurface.quad(framedSurface,diagonalInverted));
             GlStateManager.enableLighting();GlStateManager.enableCull();GlStateManager.popMatrix();return;
@@ -749,11 +751,15 @@ public class TEAnimatedScreenSelector
         renderHousingBox(wall,0,0,0,16,1,16,te.getSurfaceTextureLayout());
         drawWallMesh(wall,ScreenHousingMesh.halfConsole().textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
 
-        if(!redstoneFace(te,0))drawInputSurface(te,InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel()));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));
+        if(com.vandorlabs.blocks.ScreenChipSupport.selected(te)){
+            ScreenSurface.Quad deck=com.vandorlabs.blocks.ScreenChipSupport.deck();if(!redstoneFace(te,0)){double[] uv=bindInput(te,te.getInputPanel());double right=uv.length>2?uv[3]:1,left=uv.length>2?uv[2]:0;
+            BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawScreenQuad(b,FrameSurfaceRenderer.content(te,deck),right,left+(right-left)*.40,uv[0],uv[1],false);Tessellator.getInstance().draw();}FrameSurfaceRenderer.screen(te,deck);
+        }else{if(!redstoneFace(te,0))drawInputSurface(te,InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel()));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));}
         if(!redstoneFace(te,1))drawInputSurface(te,InputSurfaceLayout.halfConsoleRear(),bindInput(te,te.getSecondaryInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleRear()));
     }
 
     private static boolean redstoneFace(TileEntityAnimatedScreenSelector tile,int slot){
+        if(tile.hasChipSurface(slot)){ScreenChipRenderer.display(tile,tile.getWorld().getBlockState(tile.getPos()),slot);return true;}
         if(tile.hasVehicleStatus(slot)){RedstoneScreenRenderer.drawVehicle(tile,tile.getWorld().getBlockState(tile.getPos()),slot);return true;}
         if(tile.getSurfaceTexture(slot)!=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)return false;
         RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;

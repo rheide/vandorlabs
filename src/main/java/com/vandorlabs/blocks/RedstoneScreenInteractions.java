@@ -27,6 +27,7 @@ public final class RedstoneScreenInteractions {
         // A rotation packet updates yaw/pitch before the server's next head-animation tick.
         // Use those authoritative view angles for a click delivered in the same tick.
         Vec3d end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));
+        if(ScreenChipSupport.activate(tile,player,hand,eye,end))return true;
         for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot)&&supportsSlot(state.getBlock(),slot)){
             int action=statusAction(state,tile,slot,eye,end);if(action<0)continue;
             if(!world.isRemote)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,player,action);return true;
@@ -73,8 +74,8 @@ public final class RedstoneScreenInteractions {
         }
         if(block instanceof BlockDiagonalHalfConsole)return ScreenSurface.halfDiagonal(state.getValue(BlockDiagonalHalfConsole.UPPER));
         if(block instanceof BlockProgrammableConsole)return slot==1?ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()):ScreenSurface.quad(ScreenSurface.Kind.CONSOLE,false);
-        if(block instanceof BlockProgrammableHalfConsole)return ScreenSurface.input(slot==1?InputSurfaceLayout.halfConsoleRear():InputSurfaceLayout.halfConsoleFront());
-        return surface(state);
+        if(block instanceof BlockProgrammableHalfConsole)return slot==0&&tile!=null&&ScreenChipSupport.selected(tile)?ScreenChipSupport.deck():ScreenSurface.input(slot==1?InputSurfaceLayout.halfConsoleRear():InputSurfaceLayout.halfConsoleFront());
+        return ScreenChipSupport.display(state,tile,surface(state));
     }
     public static ScreenSurface.Quad surface(IBlockState state){
         boolean diagonal=state.getBlock() instanceof BlockProgrammableDiagonalScreen;

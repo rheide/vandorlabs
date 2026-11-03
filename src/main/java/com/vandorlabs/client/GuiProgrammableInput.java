@@ -69,11 +69,11 @@ public class GuiProgrammableInput extends GuiContainer {
         receiver=new ReceiverPane(40,0,mc.fontRenderer,redstoneX,layout.top+58,redstoneWidth,te.getRedstoneChannels(),RedstoneActivationButton.mode(redstoneEnabled,redstoneInverted));
         super.initGui();buttonList.clear();buttonList.add(new GuiButton(198,redstoneX,layout.top+130,redstoneWidth,20,"Transmitter..."));Keyboard.enableRepeatEvents(true);
         int cx=layout.controlsX, rows=layout.rows(true);
-        buttonList.add(layout.fullTab(90,0,4,"Controls"));
+        buttonList.add(layout.fullTab(90,0,4,te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole?"Display":"Controls"));
         buttonList.add(layout.fullTab(91,1,4,"Sides"));
         buttonList.add(layout.fullTab(92,3,4,"Redstone"));buttonList.add(layout.fullTab(197,2,4,"Frame"));
         listX=layout.listX;listY=guiTop+54;
-        screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0,()->openRows(0));
+        screenList=new ScreenTextureList(listX,listY,layout.listWidth,8,selected,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList)).redstone(te.getPos(),0,()->openRows(0)).chip(te,0);
         for(int i=0;i<3;i++) {
             buttonList.add(layout.choice(1+i,i,3,66,I18n.format(new String[]{"gui.vandorlabs.selector.off","gui.vandorlabs.selector.static","gui.vandorlabs.selector.animated"}[i])));
             buttonList.add(layout.choice(10+i,i,3,100,I18n.format(new String[]{"gui.vandorlabs.selector.slow","gui.vandorlabs.selector.normal","gui.vandorlabs.selector.fast"}[i])));
@@ -244,7 +244,7 @@ public class GuiProgrammableInput extends GuiContainer {
         drawDefaultBackground();
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+24,0xFF304858);
-        fontRenderer.drawString(I18n.format("gui.vandorlabs.input.title"),guiLeft+12,guiTop+8,0xFFFFFF);
+        fontRenderer.drawString(te.getBlockType() instanceof com.vandorlabs.blocks.BlockDiagonalHalfConsole?te.getBlockType().getLocalizedName():I18n.format("gui.vandorlabs.input.title"),guiLeft+12,guiTop+8,0xFFFFFF);
         if(!activationPane.active()){
         if(rowsPage())rowEditors[rowSlot].draw();else if(textureTab==0)screenList.draw(fontRenderer,mouseX,mouseY);
         else if(textureTab==1)housingList.draw(fontRenderer,mouseX,mouseY);
