@@ -8,13 +8,13 @@ Vehicle Controllers now retain a name and a small rotating shape preview. Vehicl
 
 An attached Data Chip Mount lets the controller write its exact design to a Vehicle Chip. The [Card / Chip Programmer](../card-chip-programmer.md) creates blank Vehicle Chips, previews their shape and duplicates their full saved contents. The [Copy Controller](../copy-controller.md) can build directly from a Vehicle Chip using an output Surface and the usual materials and recovery checks. Copies are centered on the output Surface; oversized designs are refused before spending materials or placing blocks.
 
-The controller’s Security tab accepts a selected Access Card through an attached mount. Leave that card inserted to allow Taxi/Hover conversion; removing it blocks future conversions while parking remains available. See [Vehicle controls](../pilot-seat-taxi.md).
+The controller’s Security tab enables security and explains the attached mount. Configure the accepted Access Card using the Access Card Mount’s standard Security selector. Leave that card inserted to allow Taxi/Hover conversion; removing it blocks future conversions while parking remains available. See [Vehicle controls](../pilot-seat-taxi.md).
 
 When a mount is missing, the Vehicle tab explains how to attach a Data Chip Mount to write vehicle data, and the Security tab explains that an Access Card Mount enables security.
 
 ## Screen chip readers
 
-[Screen chip readers](../screen-chip-readers.md) add a Display-only Chip choice to Programmable Diagonal Half Consoles, Diagonal Screens and Half Consoles. Their built-in slots animate sideways and disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Display before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens can read an attached Data Chip Mount instead.
+[Screen chip readers](../screen-chip-readers.md) add a Display-only Chip choice to Programmable Diagonal Half Consoles, Diagonal Screens, Half Consoles and regular Consoles. Their built-in slots animate sideways and disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Display before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens share an attached Data Chip Mount across their joined rectangle. Chip contents stretch across the whole display. Slow/Normal/Fast controls Vehicle Chip rotation, immutable shape geometry is cached, and company Master Data Chips display their Corp logos.
 
 Data Chip Mounts and Access Card Mounts now share the Thruster Lever's base height, tilt and tilt direction controls. Configure these on the Security tab; right-click a button to cycle backwards. The inserted token follows the mount pose.
 
@@ -47,3 +47,9 @@ Fixed glass already stops native rain columns. Complementary's wind effect can t
 Large vehicles reuse opaque wall sections with shader-sized vertex records, including per-block material IDs. Fixed Canopy Glass misses no longer rebuild neighbour geometry during collision searches, and loaded trapdoors use owner indices. Large flat hulls query shallower, wider collision regions. Geometry caches respond to carried artwork updates and neighbouring edits. Contained-fluid cells are compacted, and rendering skips unused voxel volumes. See the [performance notes](../render-performance.md) for measured comparisons and test conditions, and the [performance summary](../performance/2.8-summary.md) for the next priorities.
 
 The main 2.8 performance candidate passed the Java 8 release gate, including shader startup, rendering, glass and fluid contacts, shared surfaces, arm motion and saved Vehicle/Taxi regressions. Later screen readers, mount adjustments and Copy Controller refinements use focused live checks and dedicated-server linkage; the full release gate was not rerun for these changes. Hardware shader acceptance remains a separate manual check. The [vehicle follow-up measurements](../performance/2.8-followup.md) distinguish scan latency, terrain allocation and remaining shader/publication costs.
+
+## Larger joined areas and Sectional Door artwork
+
+Programmable Surfaces now support up to 32 blocks on each side. Copy Controllers accept filled rectangles with matching input/output dimensions; Turntables retain filled squares. Joined screen artwork supports up to 4,096 connected blocks. Snapshot, capture-height and payload limits remain independent.
+
+The Sectional Door keeps its existing registry ID and default artwork. Its Textures tab includes general materials, Trapdoors, Doors and Large Doors. Original and light grey Sectional Panels are also available in the general Industrial category.

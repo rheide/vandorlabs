@@ -24,7 +24,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     private boolean configured,appearanceReady;
     public boolean appearanceReady(){return world==null||!world.isRemote||appearanceReady;}
     private BlockPos groupOffset=BlockPos.ORIGIN;
-    private int groupSize=1,groupNormal=1;
+    private int groupSize=1,groupHeight=1,groupNormal=1;
     private SquareLayout cachedGroup;
     public SurfaceController claimedOwner(){
         if(world==null||owner==null||ownerKey==null||!world.isBlockLoaded(owner))return null;
@@ -52,17 +52,17 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
             EnumFacing face=EnumFacing.getFront(groupNormal);if(face!=normal())return SquareLayout.single(pos,normal());
             com.vandorlabs.turntable.TurntableGeometry.Face basis=com.vandorlabs.turntable.TurntableGeometry.Face.valueOf(face.name());BlockPos origin=pos.add(groupOffset);Set<BlockPos> cells=new HashSet<>();
             EnumFacing u=EnumFacing.getFacingFromVector(basis.ux,basis.uy,basis.uz),v=EnumFacing.getFacingFromVector(basis.vx,basis.vy,basis.vz);
-            for(int y=0;y<groupSize;y++)for(int x=0;x<groupSize;x++)cells.add(origin.offset(u,x).offset(v,y));
-            try{cachedGroup=SquareLayout.of(cells,face);}catch(IllegalArgumentException invalid){cachedGroup=SquareLayout.single(pos,normal());}
+            for(int y=0;y<groupHeight;y++)for(int x=0;x<groupSize;x++)cells.add(origin.offset(u,x).offset(v,y));
+            try{cachedGroup=SquareLayout.rectangle(cells,face);}catch(IllegalArgumentException invalid){cachedGroup=SquareLayout.single(pos,normal());}
         }
         return availableRoot(cachedGroup);
     }
     private SquareLayout checkedSnapshotGroup,snapshotAppearance;private int checkedSnapshotRevision=-1;
     private SquareLayout availableRoot(SquareLayout layout){
-        if(world instanceof com.vandorlabs.vehicle.VehicleWorld&&layout.size>1){
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld&&layout.cells.size()>1){
             if(checkedSnapshotGroup!=layout||checkedSnapshotRevision!=((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision){
                 checkedSnapshotRevision=((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision;checkedSnapshotGroup=layout;snapshotAppearance=layout;
-                for(int u=0;u<layout.size;u++)for(int v=0;v<layout.size;v++){
+                for(int u=0;u<layout.width;u++)for(int v=0;v<layout.height;v++){
                     BlockPos at=layout.cell(u,v,0);IBlockState state=world.getBlockState(at);
                     if(!(state.getBlock() instanceof BlockTurntableSurface)||state.getValue(BlockTurntableSurface.FACING)!=layout.normal
                             ||!(world.getTileEntity(at) instanceof TileEntityTurntableSurface))snapshotAppearance=SquareLayout.single(pos,normal());
@@ -77,8 +77,8 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     }
     private boolean groupPending;
     public void setGroup(SquareLayout layout){
-        BlockPos next=layout.cell(0,0,0).subtract(pos);boolean different=!next.equals(groupOffset)||groupSize!=layout.size||groupNormal!=layout.normal.getIndex();
-        groupOffset=next;groupSize=layout.size;groupNormal=layout.normal.getIndex();cachedGroup=layout;if(different)changed();
+        BlockPos next=layout.cell(0,0,0).subtract(pos);boolean different=!next.equals(groupOffset)||groupSize!=layout.width||groupHeight!=layout.height||groupNormal!=layout.normal.getIndex();
+        groupOffset=next;groupSize=layout.width;groupHeight=layout.height;groupNormal=layout.normal.getIndex();cachedGroup=layout;if(different)changed();
     }
     public void scheduleGroup(){if(world==null||world.isRemote||groupPending)return;groupPending=true;DeferredTileLoad.schedule(this,()->{if(groupPending){groupPending=false;refreshGroup();}});}
     public void refreshGroup(){
@@ -121,12 +121,12 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     @Override public void onLoad(){super.onLoad();appearanceChanged();cachedGroup=null;scheduleGroup();}
     @Override public void update(){if(world!=null&&!world.isRemote&&world.getTotalWorldTime()%20==0&&owner!=null&&world.isBlockLoaded(owner)&&claimedOwner()==null)release();}
     @Override public boolean shouldRefresh(World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);if(owner!=null&&ownerKey!=null){tag.setLong("Owner",owner.toLong());tag.setUniqueId("OwnerKey",ownerKey);}else{tag.removeTag("Owner");tag.removeTag("OwnerKeyMost");tag.removeTag("OwnerKeyLeast");}tag.setString("SurfaceOn",surfaceOn);tag.setString("SurfaceOff",surfaceOff);tag.setInteger("SurfaceLayout",textureLayout);tag.setBoolean("SurfaceAppearanceConfigured",configured);tag.setLong("SurfaceGroupOffset",groupOffset.toLong());tag.setInteger("SurfaceGroupSize",groupSize);tag.setInteger("SurfaceGroupNormal",groupNormal);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);appearanceReady=true;owner=tag.hasKey("Owner",4)?BlockPos.fromLong(tag.getLong("Owner")):null;ownerKey=tag.hasUniqueId("OwnerKey")?tag.getUniqueId("OwnerKey"):null;surfaceOn=TurntableTextures.normalize(tag.getString("SurfaceOn"),true);surfaceOff=TurntableTextures.normalize(tag.getString("SurfaceOff"),false);textureLayout=tag.hasKey("SurfaceLayout",3)?Math.max(0,Math.min(2,tag.getInteger("SurfaceLayout"))):2;configured=tag.getBoolean("SurfaceAppearanceConfigured");groupOffset=BlockPos.fromLong(tag.getLong("SurfaceGroupOffset"));groupSize=Math.max(1,Math.min(16,tag.getInteger("SurfaceGroupSize")));groupNormal=Math.max(0,Math.min(5,tag.hasKey("SurfaceGroupNormal",3)?tag.getInteger("SurfaceGroupNormal"):1));if(Math.abs(groupOffset.getX())>16||Math.abs(groupOffset.getY())>16||Math.abs(groupOffset.getZ())>16){groupOffset=BlockPos.ORIGIN;groupSize=1;}cachedGroup=null;appearanceChanged();}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);if(owner!=null&&ownerKey!=null){tag.setLong("Owner",owner.toLong());tag.setUniqueId("OwnerKey",ownerKey);}else{tag.removeTag("Owner");tag.removeTag("OwnerKeyMost");tag.removeTag("OwnerKeyLeast");}tag.setString("SurfaceOn",surfaceOn);tag.setString("SurfaceOff",surfaceOff);tag.setInteger("SurfaceLayout",textureLayout);tag.setBoolean("SurfaceAppearanceConfigured",configured);tag.setLong("SurfaceGroupOffset",groupOffset.toLong());tag.setInteger("SurfaceGroupSize",groupSize);if(groupHeight!=groupSize)tag.setInteger("SurfaceGroupHeight",groupHeight);else tag.removeTag("SurfaceGroupHeight");tag.setInteger("SurfaceGroupNormal",groupNormal);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);appearanceReady=true;owner=tag.hasKey("Owner",4)?BlockPos.fromLong(tag.getLong("Owner")):null;ownerKey=tag.hasUniqueId("OwnerKey")?tag.getUniqueId("OwnerKey"):null;surfaceOn=TurntableTextures.normalize(tag.getString("SurfaceOn"),true);surfaceOff=TurntableTextures.normalize(tag.getString("SurfaceOff"),false);textureLayout=tag.hasKey("SurfaceLayout",3)?Math.max(0,Math.min(2,tag.getInteger("SurfaceLayout"))):2;configured=tag.getBoolean("SurfaceAppearanceConfigured");groupOffset=BlockPos.fromLong(tag.getLong("SurfaceGroupOffset"));groupSize=Math.max(1,Math.min(com.vandorlabs.surface.SquareLayout.MAX_SIZE,tag.getInteger("SurfaceGroupSize")));groupHeight=tag.hasKey("SurfaceGroupHeight",3)?Math.max(1,Math.min(SquareLayout.MAX_SIZE,tag.getInteger("SurfaceGroupHeight"))):groupSize;groupNormal=Math.max(0,Math.min(5,tag.hasKey("SurfaceGroupNormal",3)?tag.getInteger("SurfaceGroupNormal"):1));if(Math.abs(groupOffset.getX())>com.vandorlabs.surface.SquareLayout.MAX_SIZE||Math.abs(groupOffset.getY())>com.vandorlabs.surface.SquareLayout.MAX_SIZE||Math.abs(groupOffset.getZ())>com.vandorlabs.surface.SquareLayout.MAX_SIZE){groupOffset=BlockPos.ORIGIN;groupSize=groupHeight=1;}cachedGroup=null;appearanceChanged();}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,1,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());if(world!=null)world.markBlockRangeForRenderUpdate(pos,pos);}
-    @Override public boolean hasFastRenderer(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&owner==null&&ownerKey==null&&groupSize==1&&groupOffset.equals(BlockPos.ORIGIN);}
-    @Override public AxisAlignedBB getRenderBoundingBox(){SquareLayout layout=appearanceLayout();if(!pos.equals(layout.root))return new AxisAlignedBB(pos);double r=layout.size*.5+.004;return new AxisAlignedBB(layout.pivot.x-(layout.normal.getAxis()==EnumFacing.Axis.X?.004:r),layout.pivot.y-(layout.normal.getAxis()==EnumFacing.Axis.Y?.004:r),layout.pivot.z-(layout.normal.getAxis()==EnumFacing.Axis.Z?.004:r),layout.pivot.x+(layout.normal.getAxis()==EnumFacing.Axis.X?.004:r),layout.pivot.y+(layout.normal.getAxis()==EnumFacing.Axis.Y?.004:r),layout.pivot.z+(layout.normal.getAxis()==EnumFacing.Axis.Z?.004:r));}
+    @Override public boolean hasFastRenderer(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&owner==null&&ownerKey==null&&groupSize==1&&groupHeight==1&&groupOffset.equals(BlockPos.ORIGIN);}
+    @Override public AxisAlignedBB getRenderBoundingBox(){SquareLayout layout=appearanceLayout();if(!pos.equals(layout.root))return new AxisAlignedBB(pos);double x=Math.abs(layout.basis.ux)*layout.width*.5+Math.abs(layout.basis.vx)*layout.height*.5+.004,y=Math.abs(layout.basis.uy)*layout.width*.5+Math.abs(layout.basis.vy)*layout.height*.5+.004,z=Math.abs(layout.basis.uz)*layout.width*.5+Math.abs(layout.basis.vz)*layout.height*.5+.004;return new AxisAlignedBB(layout.pivot.x-x,layout.pivot.y-y,layout.pivot.z-z,layout.pivot.x+x,layout.pivot.y+y,layout.pivot.z+z);}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
 }

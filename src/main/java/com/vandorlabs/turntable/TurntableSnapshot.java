@@ -15,7 +15,7 @@ import java.util.*;
 
 /** Immutable contents of the selected prism; entity NBT is frozen until restored. */
 public final class TurntableSnapshot {
-    public static final int MAX_BYTES=8*1024*1024,MAX_ENTITIES=256;
+    public static final int MAX_BYTES=8*1024*1024,MAX_ENTITIES=256,MAX_BLOCKS=4096;
     public final TurntableSurfaceLayout layout;
     public final BlockPos origin;
     public final VehicleStructure blocks;
@@ -42,6 +42,7 @@ public final class TurntableSnapshot {
         TurntableBoundaries boundaries=new TurntableBoundaries(world,min,max);
         for(BlockPos mutable:BlockPos.getAllInBox(min,max)){
             BlockPos pos=mutable.toImmutable();if(world.isAirBlock(pos))continue;
+            if(cells.size()>=MAX_BLOCKS)throw new IllegalArgumentException("Turntables can capture at most 4096 blocks; reduce the scan height or contents");
             VehicleService.permission(actor,pos);
             if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(world,pos,world.getBlockState(pos),actor)))throw new IllegalArgumentException("A protection rule prevented scanning at "+pos);
             TileEntity tile=world.getTileEntity(pos);
@@ -115,7 +116,7 @@ public final class TurntableSnapshot {
         Map<UUID,UUID> parents=new HashMap<>();for(FrozenEntity e:entities)parents.put(e.id,e.parent);
         for(FrozenEntity e:entities){Set<UUID> seen=new HashSet<>();UUID at=e.id;while(at!=null){if(!seen.add(at))throw new IllegalArgumentException("Cyclic captured mount");at=parents.get(at);}}
         VehicleStructure blocks=VehicleStructure.readDisplay(tag.getCompoundTag("Blocks"));
-        if(blocks.cells.size()>4096)throw new IllegalArgumentException("Oversize turntable snapshot");
+        if(blocks.cells.size()>MAX_BLOCKS)throw new IllegalArgumentException("Oversize turntable snapshot");
         return new TurntableSnapshot(TurntableSurfaceLayout.read(tag.getCompoundTag("Surface")),BlockPos.fromLong(tag.getLong("Origin")),blocks,entities,height);
     }
     public synchronized byte[] encode()throws IOException{

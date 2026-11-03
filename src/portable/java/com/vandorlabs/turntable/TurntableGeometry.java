@@ -51,6 +51,6 @@ public final class TurntableGeometry {
     }
     public static boolean square(int minU,int minV,int maxU,int maxV,int cells){
         long width=(long)maxU-minU+1,height=(long)maxV-minV+1;
-        return width>0 && width<=16 && width==height && width*height==cells;
+        return width>0 && width<=32 && width==height && width*height==cells;
     }
 }

@@ -29,6 +29,7 @@ final class CopySurfaceOrientationChecks {
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(complete)return true;
         if(fixture==24){
+            if(!CopyRectangleLiveChecks.tick(mc,output))return false;
             mc.getIntegratedServer().callFromMainThread(()->{com.vandorlabs.surface.SurfaceRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));return null;}).get();
             SurfaceClientChecks.run(mc,output);
             System.out.println("[vandorlabs] copy-surfaces PASS saved root/member mining 5-to-7 growth mismatch seed/controller removal 24 orientation lifecycles 72 actual opaque faces settled topology shared surface regressions");complete=true;return true;

@@ -19,9 +19,9 @@ public final class CopyPlan {
     public final CopySupply supply;
     public final List<CopyMaterials.Need> materials;
     private CopyPlan(VehicleStructure source,VehicleStructure result,BlockPos sourceOrigin,BlockPos targetOrigin,BlockPos sourceMax,BlockPos targetMax,CopySupply supply,List<CopyMaterials.Need> needs){original=source;this.result=result;this.sourceOrigin=sourceOrigin;this.targetOrigin=targetOrigin;this.sourceMax=sourceMax;this.targetMax=targetMax;this.supply=supply;materials=needs;}
-    public static BlockPos[] volume(SquareLayout area,int height){BlockPos a=area.cell(0,0,1),b=area.cell(area.size-1,area.size-1,height);return new BlockPos[]{new BlockPos(Math.min(a.getX(),b.getX()),Math.min(a.getY(),b.getY()),Math.min(a.getZ(),b.getZ())),new BlockPos(Math.max(a.getX(),b.getX()),Math.max(a.getY(),b.getY()),Math.max(a.getZ(),b.getZ()))};}
+    public static BlockPos[] volume(SquareLayout area,int height){BlockPos a=area.cell(0,0,1),b=area.cell(area.width-1,area.height-1,height);return new BlockPos[]{new BlockPos(Math.min(a.getX(),b.getX()),Math.min(a.getY(),b.getY()),Math.min(a.getZ(),b.getZ())),new BlockPos(Math.max(a.getX(),b.getX()),Math.max(a.getY(),b.getY()),Math.max(a.getZ(),b.getZ()))};}
     public static CopyPlan prepare(CopyControllerTile owner,EntityPlayerMP actor)throws Exception{
-        WorldServer world=(WorldServer)owner.getWorld();authorize(world,actor);if((!owner.useChip&&owner.input==null)||owner.output==null)throw new IllegalArgumentException("Complete the required square surfaces first");
+        WorldServer world=(WorldServer)owner.getWorld();authorize(world,actor);if((!owner.useChip&&owner.input==null)||owner.output==null)throw new IllegalArgumentException("Complete the required rectangular surfaces first");
         BlockPos[] to=volume(owner.output,owner.height),from=owner.useChip?new BlockPos[]{BlockPos.ORIGIN,BlockPos.ORIGIN}:volume(owner.input,owner.height);
         com.vandorlabs.tiles.TileEntityTokenSlot mount=owner.useChip?VehicleMounts.find(world,owner.getPos(),true):null;
         net.minecraft.item.ItemStack chip=mount==null?net.minecraft.item.ItemStack.EMPTY:mount.getStackInSlot(0).copy();

@@ -15,13 +15,16 @@ import java.util.*;
 
 /** Complete loaded component; discovery never binds or changes a surface cell. */
 public class SquareLayout {
+    public static final int MAX_SIZE=32,MAX_CELLS=MAX_SIZE*MAX_SIZE;
     public final EnumFacing normal;
     public final TurntableGeometry.Face basis;
     public final List<BlockPos> cells;
     public final BlockPos root;
-    public final int size,minU,minV,plane;
+    public final int size,width,height,minU,minV,plane;
     public final Vec3d pivot;
-    protected SquareLayout(Collection<BlockPos> members,EnumFacing normal){
+    protected SquareLayout(Collection<BlockPos> members,EnumFacing normal){this(members,normal,false);}
+    private SquareLayout(Collection<BlockPos> members,EnumFacing normal,boolean rectangle){
+        if(members.isEmpty())throw new IllegalArgumentException("Surface area is empty");
         this.normal=normal;basis=TurntableGeometry.Face.valueOf(normal.name());
         List<BlockPos> ordered=new ArrayList<>(members);Collections.sort(ordered);cells=Collections.unmodifiableList(ordered);root=ordered.get(0);
         int lowU=Integer.MAX_VALUE,lowV=lowU,highU=Integer.MIN_VALUE,highV=highU;
@@ -34,13 +37,14 @@ public class SquareLayout {
             minX=Math.min(minX,p.getX());minY=Math.min(minY,p.getY());minZ=Math.min(minZ,p.getZ());
             maxX=Math.max(maxX,p.getX());maxY=Math.max(maxY,p.getY());maxZ=Math.max(maxZ,p.getZ());
         }
-        if(!TurntableGeometry.square(lowU,lowV,highU,highV,ordered.size()))throw new IllegalArgumentException(
-                "Surface must be a filled square (found "+(highU-lowU+1)+" x "+(highV-lowV+1)+", "+ordered.size()+" cells; maximum 16 x 16)");
-        size=highU-lowU+1;minU=lowU;minV=lowV;
+        width=highU-lowU+1;height=highV-lowV+1;
+        if(width<1||height<1||width>MAX_SIZE||height>MAX_SIZE||(long)width*height!=ordered.size()||new java.util.HashSet<>(ordered).size()!=ordered.size()||!rectangle&&width!=height)throw new IllegalArgumentException(
+                "Surface must be a filled "+(rectangle?"rectangle":"square")+" (found "+width+" x "+height+", "+ordered.size()+" cells; maximum 32 x 32)");
+        size=width;minU=lowU;minV=lowV;
         pivot=new Vec3d((minX+maxX+1D)/2+normal.getFrontOffsetX()*.5,
                 (minY+maxY+1D)/2+normal.getFrontOffsetY()*.5,(minZ+maxZ+1D)/2+normal.getFrontOffsetZ()*.5);
     }
-    public SquareLayout reversed(){return new SquareLayout(cells,normal.getOpposite());}
+    public SquareLayout reversed(){return new SquareLayout(cells,normal.getOpposite(),width!=height);}
     public BlockPos cell(int u,int v,int depth){
         double[] p=basis.point(minU+u,minV+v,plane);
         return new BlockPos(p[0],p[1],p[2]).offset(normal,depth);
@@ -49,6 +53,8 @@ public class SquareLayout {
     public static SquareLayout scan(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){
         return new SquareLayout(connected(world,seed,allowed),world.getBlockState(seed).getValue(BlockTurntableSurface.FACING));
     }
+    public static SquareLayout rectangle(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){return new SquareLayout(connected(world,seed,allowed),world.getBlockState(seed).getValue(BlockTurntableSurface.FACING),true);}
+    public static SquareLayout rectangle(Collection<BlockPos> cells,EnumFacing normal){return new SquareLayout(cells,normal,true);}
     public static SquareLayout of(Collection<BlockPos> members,EnumFacing normal){return new SquareLayout(members,normal);}
     public static SquareLayout single(BlockPos pos,EnumFacing normal){return new SquareLayout(Collections.singletonList(pos),normal);}
     public static java.util.Set<BlockPos> connected(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){
@@ -64,7 +70,7 @@ public class SquareLayout {
             if(!world.isBlockLoaded(pos))throw new IllegalArgumentException("Load every surface and its boundary before scanning");
             IBlockState state=world.getBlockState(pos);if(!(state.getBlock() instanceof BlockTurntableSurface))continue;
             if(state.getValue(BlockTurntableSurface.FACING)!=normal)throw new IllegalArgumentException("Connected surfaces must face the same direction");
-            members.add(pos);if(members.size()>256)throw new IllegalArgumentException("Programmable Surfaces are limited to 16 x 16 blocks");
+            members.add(pos);if(members.size()>MAX_CELLS)throw new IllegalArgumentException("Programmable Surfaces are limited to 32 x 32 blocks");
             for(EnumFacing side:new EnumFacing[]{u,u.getOpposite(),v,v.getOpposite()})queue.add(pos.offset(side));
         }
         return Collections.unmodifiableSet(members);
@@ -77,10 +83,12 @@ public class SquareLayout {
         NBTTagList positions=new NBTTagList();for(BlockPos p:cells)positions.appendTag(new NBTTagLong(p.toLong()));
         tag.setTag("Cells",positions);return tag;
     }
-    public static SquareLayout read(NBTTagCompound tag){
+    public static SquareLayout read(NBTTagCompound tag){return read(tag,false);}
+    public static SquareLayout readRectangle(NBTTagCompound tag){return read(tag,true);}
+    private static SquareLayout read(NBTTagCompound tag,boolean rectangle){
         int face=tag.getInteger("Normal");NBTTagList positions=tag.getTagList("Cells",4);
-        if(face<0 || face>5 || positions.tagCount()<1 || positions.tagCount()>256)throw new IllegalArgumentException("Invalid turntable surface data");
+        if(face<0 || face>5 || positions.tagCount()<1 || positions.tagCount()>MAX_CELLS)throw new IllegalArgumentException("Invalid turntable surface data");
         Set<BlockPos> members=new HashSet<>();for(int i=0;i<positions.tagCount();i++)if(!members.add(BlockPos.fromLong(((NBTTagLong)positions.get(i)).getLong())))throw new IllegalArgumentException("Duplicate surface cell");
-        return new SquareLayout(members,EnumFacing.getFront(face));
+        return new SquareLayout(members,EnumFacing.getFront(face),rectangle);
     }
 }

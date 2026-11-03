@@ -20,12 +20,12 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
     @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event){for(String id:TurntableTextures.IDS)for(boolean high:new boolean[]{false,true})event.getMap().registerSprite(new ResourceLocation(TurntableTextures.texture(id,high)));}
     @SubscribeEvent public static void stitched(TextureStitchEvent.Post event){RenderTurntable.clear();SurfaceTextureMesh.clear();}
     @SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)Minecraft.getMinecraft().addScheduledTask(()->{RenderTurntable.clear();SurfaceTextureMesh.clear();});}
-    @Override public boolean isGlobalRenderer(TileEntityTurntableSurface tile){SquareLayout layout=tile.appearanceLayout();return layout.size>1&&tile.getPos().equals(layout.root);}
+    @Override public boolean isGlobalRenderer(TileEntityTurntableSurface tile){SquareLayout layout=tile.appearanceLayout();return layout.cells.size()>1&&tile.getPos().equals(layout.root);}
     /** Single native tiles share Forge's atlas buffer. Moving/shared pads keep their ordered decal path. */
     @Override public void renderTileEntityFast(TileEntityTurntableSurface tile,double x,double y,double z,float partial,int destroy,float alpha,BufferBuilder buffer){
         if(!tile.appearanceReady()||SurfaceArmHandoff.hideNative(tile))return;
         SquareLayout layout=tile.appearanceLayout();
-        if(layout.size!=1||!tile.getPos().equals(layout.root))return;
+        if(layout.cells.size()!=1||!tile.getPos().equals(layout.root))return;
         TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
         TextureAtlasSprite sprite=atlas.getAtlasSprite(TurntableTextures.texture(tile.selectedTexture(),false));
         TextureAtlasSprite black=atlas.getAtlasSprite("minecraft:blocks/concrete_black");
@@ -41,7 +41,7 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
         if(!tile.appearanceReady()||SurfaceArmHandoff.hideNative(tile))return;
         SquareLayout layout=tile.appearanceLayout();if(!tile.getPos().equals(layout.root))return;
         TileEntityTurntableController controller=tile.controller();TurntableGeometry.Face face=layout.basis;
-        TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(TurntableTextures.texture(tile.selectedTexture(),layout.size>1));
+        TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(TurntableTextures.texture(tile.selectedTexture(),layout.cells.size()>1));
         int light=tile.getWorld().getCombinedLight(tile.getPos().offset(layout.normal),0);
         GlStateManager.pushMatrix();
         try(TurntableRenderState state=new TurntableRenderState()){
@@ -60,8 +60,8 @@ public final class TETurntableSurface extends TileEntitySpecialRenderer<TileEnti
         // A real opaque atlas sprite supplies Fit margins and backs material cutouts, including with shaders.
         TextureAtlasSprite black=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("minecraft:blocks/concrete_black");
         GL11.glPolygonOffset(disc?-3F:-1F,disc?-3F:-1F);
-        buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());SurfaceTextureMesh.get(black,layout.size,0,disc).draw(buffer,layout.basis,black,depth-.0001,light);Tessellator.getInstance().draw();
+        buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());SurfaceTextureMesh.get(black,layout.width,layout.height,0,disc).draw(buffer,layout.basis,black,depth-.0001,light);Tessellator.getInstance().draw();
         GL11.glPolygonOffset(disc?-4F:-2F,disc?-4F:-2F);
-        buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());SurfaceTextureMesh.get(sprite,layout.size,mode,disc).draw(buffer,layout.basis,sprite,depth,light);Tessellator.getInstance().draw();
+        buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());SurfaceTextureMesh.get(sprite,layout.width,layout.height,mode,disc).draw(buffer,layout.basis,sprite,depth,light);Tessellator.getInstance().draw();
     }
 }

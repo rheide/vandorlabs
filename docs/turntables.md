@@ -2,7 +2,7 @@
 
 New Programmable Surfaces use **Fit** mapping. Their Inactive and Active texture tabs match the Programmable Screen family; sneak-right-click or use the Configurizer on a Surface to configure its artwork, including after a controller claims it.
 
-Place **Programmable Surface** blocks as a filled square, from 1×1 to 16×16. The face
+Place **Programmable Surface** blocks as a filled square, from 1×1 to 32×32. The face
 you click when placing each block becomes its active face. Every connected
 surface must face the same way. Place a **Turntable Controller** against an edge,
 by clicking a Surface block at its edge; the controller automatically points back toward it. Open the controller by right

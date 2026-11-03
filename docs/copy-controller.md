@@ -2,25 +2,25 @@
 
 The Copy Controller makes a complete block copy between two Programmable Surface pads. It preserves block states, orientation, settings, saved inventories and supported links. The input remains in place. Entities are not copied.
 
-Place the controller between two pads. When placed, its front faces you: the cyan input is on your left and the amber output is on your right. Put the material chest directly behind the controller, away from you. Both pads must be complete squares of the same size, face the same direction, and belong to this controller. Pads can be up to 16 × 16 blocks. Configure their artwork and Stretch, Tile or Fit independently through the Programmable Surface dialog; claiming a pad does not change its artwork.
+Place the controller between two pads. When placed, its front faces you: the cyan input is on your left and the amber output is on your right. Put the material chest directly behind the controller, away from you. Both pads must be complete rectangles with matching width and height, face the same direction, and belong to this controller. Pads can be up to 32 × 32 blocks. Configure their artwork and Stretch, Tile or Fit independently through the Programmable Surface dialog; claiming a pad does not change its artwork.
 
-The controller automatically rechecks the pads as you add or remove Surface blocks. **Check areas** also performs an immediate manual check. Use the **Height** slider, shared with the Turntable Controller, to set the scan height from 1 to 16 blocks. Scanning starts one block outward from each surface, follows its face normal, and includes the entire square at every depth. The copied design is centered by its occupied block bounds across the two Surface axes. Placement stays on whole blocks; an odd spare block remains on one edge. Its position through the scan depth is preserved. The output volume must be empty, including players and other entities. Keep complete doors, machines and other multiblock assemblies inside the input volume.
+The controller automatically rechecks the pads as you add or remove Surface blocks. **Check areas** also performs an immediate manual check. Use the **Height** slider, shared with the Turntable Controller, to set the scan height from 1 to 16 blocks. Scanning starts one block outward from each surface, follows its face normal, and includes the entire rectangle at every depth. The copied design is centered by its occupied block bounds across the two Surface axes. Placement stays on whole blocks; an odd spare block remains on one edge. Its position through the scan depth is preserved. The output volume must be empty, including players and other entities. Keep complete doors, machines and other multiblock assemblies inside the input volume.
 
 Use **Copy** to start a manual operation. Redstone modes can instead trigger a copy on an active edge: powered or unpowered. An empty channel list uses adjacent physical redstone; a configured list requires all listed channels. The configuring player must remain online, alive and in the same dimension so the operation can recheck their building permissions. Loading a world with an already active signal does not trigger a copy.
 
 ## Changing the surface size
 
-Add blocks along the outer edges of each pad until both are filled squares of the
-same size, up to 16 × 16. Keep each pad connected to the Surface block directly
+Add blocks along the outer edges of each pad until both are filled rectangles with matching
+dimensions, up to 32 × 32. Keep each pad connected to the Surface block directly
 beside its side of the controller, and keep every added block facing the same way.
-For example, enlarge both 5 × 5 pads to 7 × 7 by adding two columns and two rows
+For example, enlarge both 5 × 5 pads to 7 × 5 by adding two columns
 on each side's available outer edges. The controller detects the new area once
-both squares are complete; rebuilding the controller is unnecessary.
+both rectangles are complete; rebuilding the controller is unnecessary.
 
 While one side is larger or a pad has holes, copying is unavailable and the dialog
 explains the mismatch. Remaining Surface blocks keep their artwork and stay
 opaque. An incomplete pad displays its blocks independently until it forms a
-complete square again. Removing or replacing blocks preserves the appearance
+complete rectangle again. Removing or replacing blocks preserves the appearance
 settings saved on the remaining surfaces. Finish an active copy before editing
 its protected pads.
 
@@ -53,3 +53,5 @@ Automation authorization is stored separately at the controller’s world positi
 Attach a Data Chip Mount directly onto the Copy Controller, insert a written Vehicle Chip and select **Source: Vehicle Chip** in the dialog. The dialog explains this option when no Data Chip Mount is attached. Only the output Surface is required in this mode. **Source: Input Surface** restores the usual two-pad workflow.
 
 Set the output height and Surface size to contain the entire saved design. The occupied block footprint is centered on the output Surface without rotating the design. If either footprint dimension exceeds the Surface, or the design exceeds the configured height, the entire copy is refused before materials are withdrawn or blocks are placed. **Copy** uses the chip's exact block and tile data, including stored inventories; the rotating silhouette does not determine placement. The material chest, Survival costs, channel increment, empty-output checks and recoverable copy journal work as they do for Surface copies. The chip is retained. Changing or removing it before publication cancels the copy safely. Existing unsupported copying adapters remain refused.
+
+Rectangles may be narrow strips or larger filled areas, with each side from 1 to 32 blocks. A 3 × 5 input requires a 3 × 5 output on the same surface axes; a transposed 5 × 3 output does not match. Holes, disconnected cells and mismatched faces remain invalid. This does not change the Turntable Controller’s square-pad requirement.

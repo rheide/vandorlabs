@@ -14,8 +14,29 @@ import java.util.*;
 
 /** Shared pad discovery, no-overlap claims, controller migration and surface-only settings. */
 public final class SurfaceRuntimeChecks {
+    private static void largePadScans(WorldServer world,EntityPlayerMP actor){
+        BlockPos base=new BlockPos(600,110,180);Block block=Block.getBlockFromName("vandorlabs:turntable_surface");
+        for(int size:new int[]{16,32}){
+            for(int x=-1;x<=size;x++)for(int z=-1;z<=size;z++)world.getChunkFromBlockCoords(base.add(x,0,z));
+            for(int x=0;x<size;x++)for(int z=0;z<size;z++)world.setBlockState(base.add(x,0,z),block.getDefaultState().withProperty(BlockTurntableSurface.FACING,EnumFacing.UP),2);
+            long[] samples=new long[15];for(int run=0;run<samples.length;run++){long start=System.nanoTime();SquareLayout layout=SquareLayout.scan(world,base);samples[run]=System.nanoTime()-start;require(layout.size==size&&layout.cells.size()==size*size,"large live pad scan");}
+            java.util.Arrays.sort(samples);System.out.println("[vandorlabs][reprolab] surface-size-scan size="+size+" cells="+(size*size)+" median-us="+(samples[7]/1000));
+            if(size==32){
+                TurntableSurfaceLayout layout=TurntableSurfaceLayout.scan(world,base);
+                for(int i=0;i<=TurntableSnapshot.MAX_BLOCKS;i++)world.setBlockState(layout.cell(i%32,(i/32)%32,i/1024+1),Blocks.STONE.getDefaultState(),2);
+                boolean refused=false;try{TurntableSnapshot.capture(world,layout,5,actor);}catch(IllegalArgumentException invalid){refused=invalid.getMessage().contains("4096");}catch(java.io.IOException failure){throw new IllegalStateException(failure);}
+                require(refused&&world.getBlockState(layout.cell(0,0,5)).getBlock()==Blocks.STONE,"large pad cannot publish an unreadable oversized turntable snapshot");
+                for(int i=0;i<=TurntableSnapshot.MAX_BLOCKS;i++)world.setBlockToAir(layout.cell(i%32,(i/32)%32,i/1024+1));
+            }
+            for(int x=0;x<size;x++)for(int z=0;z<size;z++)world.setBlockToAir(base.add(x,0,z));
+        }
+    }
     private static void require(boolean value,String why){if(!value)throw new IllegalStateException("Programmable Surface: "+why);}
     public static void run(WorldServer world,EntityPlayerMP actor){
+        for(EnumFacing normal:EnumFacing.values())for(int size:new int[]{17,32,33}){java.util.List<BlockPos> cells=new java.util.ArrayList<>();TurntableGeometry.Face basis=TurntableGeometry.Face.valueOf(normal.name());for(int u=0;u<size;u++)for(int v=0;v<size;v++){double[] p=basis.point(u,v,0);cells.add(new BlockPos(p[0],p[1],p[2]));}boolean refused=false;try{SquareLayout layout=SquareLayout.of(cells,normal);require(size<=32&&SquareLayout.read(layout.write()).size==size,"large pad save round trip");}catch(IllegalArgumentException expected){refused=true;}require(refused==(size==33),"32-block pad bound on every face");}
+
+        for(EnumFacing normal:EnumFacing.values())for(int[] dimensions:new int[][]{{1,32},{32,1},{2,3},{3,2},{32,32}}){java.util.List<BlockPos> cells=new java.util.ArrayList<>();TurntableGeometry.Face basis=TurntableGeometry.Face.valueOf(normal.name());for(int u=0;u<dimensions[0];u++)for(int v=0;v<dimensions[1];v++){double[] at=basis.point(u,v,0);cells.add(new BlockPos(at[0],at[1],at[2]));}SquareLayout area=SquareLayout.rectangle(cells,normal),reload=SquareLayout.readRectangle(area.write());require(reload.width==dimensions[0]&&reload.height==dimensions[1],"rectangle layout reload");boolean refused=false;try{SquareLayout.read(area.write());}catch(IllegalArgumentException invalid){refused=true;}require(refused==(dimensions[0]!=dimensions[1]),"turntable square reader remains strict");}
+        largePadScans(world,actor);
         BlockPos base=new BlockPos(540,110,180);Block surface=Block.getBlockFromName("vandorlabs:turntable_surface");int cases=0;net.minecraft.item.ItemStack oldHeld=actor.getHeldItemMainhand();double oldX=actor.posX,oldY=actor.posY,oldZ=actor.posZ;float oldYaw=actor.rotationYaw,oldPitch=actor.rotationPitch;
         for(String texture:TurntableTextures.IDS)for(int mode=0;mode<3;mode++){TileEntityTurntableSurface fresh=new TileEntityTurntableSurface();fresh.surfaceOn=texture;fresh.textureLayout=mode;NBTTagCompound original=fresh.writeToNBT(new NBTTagCompound());TileEntityTurntableSurface restored=new TileEntityTurntableSurface();restored.readFromNBT(original.copy());require(original.equals(restored.writeToNBT(new NBTTagCompound())),"exact fresh surface NBT round trip "+texture+mode);}
         TileEntityTurntableSurface defaults=new TileEntityTurntableSurface();require(defaults.textureLayout==2,"fresh surface defaults to Fit");defaults.readFromNBT(new NBTTagCompound());require(defaults.textureLayout==2,"missing saved mapping defaults to Fit");
