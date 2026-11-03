@@ -119,6 +119,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
         markDirty();if(screen!=null)screen.chipChanged();
     }
     public void configure(boolean any,int allowed,int behavior){
+        if(com.vandorlabs.vehicle.VehicleMounts.vehicleReader(this))behavior=0;
         allowed=singleCompany(any?127:allowed);any=allowed==127;behavior=behavior>=0&&behavior<=3?behavior:0;
         if(this.any!=any||this.allowed!=allowed||this.behavior!=behavior){pulseUntil=0;toggled=false;}
         this.any=any;this.allowed=allowed;this.behavior=behavior;changed(false);

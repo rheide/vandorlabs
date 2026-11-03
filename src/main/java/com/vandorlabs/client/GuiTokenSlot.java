@@ -15,7 +15,7 @@ public final class GuiTokenSlot extends GuiContainer {
         String text=channels==null?ChannelFields.text(tile.getRedstoneChannels()):channels.getText();xSize=Math.min(308,width-12);ySize=224;super.initGui();org.lwjgl.input.Keyboard.enableRepeatEvents(true);buttonList.clear();
         buttonList.add(new DialogTabButton(100,guiLeft+154,guiTop+34,142,20,"Redstone"));buttonList.add(new DialogTabButton(101,guiLeft+12,guiTop+34,138,20,"Security"));for(GuiButton b:buttonList)b.enabled=b.id!=100+page;
         channels=new GuiTextField(2,fontRenderer,guiLeft+12,guiTop+76,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);channels.setVisible(false);channels.setFocused(false);
-        if(page==0){buttonList.add(new GuiButton(1,guiLeft+12,guiTop+144,xSize-24,20,TileEntityTokenSlot.behaviorName(behavior)));buttonList.add(new GuiButton(90,guiLeft+12,guiTop+74,xSize-24,20,"Redstone Transmitter..."));}
+        if(page==0){if(!com.vandorlabs.vehicle.VehicleMounts.vehicleReader(tile))buttonList.add(new GuiButton(1,guiLeft+12,guiTop+144,xSize-24,20,TileEntityTokenSlot.behaviorName(behavior)));buttonList.add(new GuiButton(90,guiLeft+12,guiTop+74,xSize-24,20,"Redstone Transmitter..."));}
         if(page==1&&standalone()){
             buttonList.add(new GuiButton(4,guiLeft+12,guiTop+114,xSize-24,20,""));
             int half=(xSize-28)/2;buttonList.add(new GuiButton(5,guiLeft+12,guiTop+138,half,20,""));buttonList.add(new GuiButton(6,guiLeft+16+half,guiTop+138,xSize-28-half,20,""));
@@ -43,7 +43,7 @@ public final class GuiTokenSlot extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xff304858);DialogHeader.logo(guiLeft,guiTop,xSize,28);
         if(page==1)CredentialFilterPicker.draw(mc,fontRenderer,guiLeft+12,guiTop+82,tile.chip(),allowed);
     }
-    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getDisplayName().getUnformattedText(),12,10,0xffffff);if(page==1)fontRenderer.drawString("Accepted credential",12,68,0xdae8f0);}
+    @Override protected void drawGuiContainerForegroundLayer(int x,int y){fontRenderer.drawString(tile.getDisplayName().getUnformattedText(),12,10,0xffffff);if(page==1)fontRenderer.drawString("Accepted credential",12,68,0xdae8f0);if(page==0&&com.vandorlabs.vehicle.VehicleMounts.vehicleReader(tile))fontRenderer.drawSplitString("Vehicle access requires the card to stay inserted.",12,110,xSize-24,0xaabbcc);}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);GlStateManager.disableLighting();GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

@@ -19,7 +19,6 @@ public class TileEntityVehicleController extends TileEntityPilotSeat {
     public void designSettings(String name,boolean enabled,int accepted){
         if(accepted<0||accepted>6)throw new IllegalArgumentException("Invalid Access Card");
         vehicleName=com.vandorlabs.programmer.ChipJournal.bounded(name,40);security=enabled;card=accepted;
-        TileEntityTokenSlot reader=VehicleMounts.find(world,pos,false);if(enabled&&reader!=null)reader.configure(false,1<<accepted,0);
         markDirty();publishDesign();
     }
     public void publishDesign(){if(world!=null&&(!world.isRemote||world instanceof VehicleWorld))world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}

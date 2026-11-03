@@ -72,7 +72,7 @@ Attach a Data Chip Mount directly onto any face of the Vehicle Controller. Inser
 
 ## Vehicle security
 
-Attach an Access Card Mount directly onto the Vehicle Controller and open its **Security** tab. Select the accepted company Access Card, then enable **Security**. The selected card must remain inserted in that mount to allow conversion to Taxi or Hover. Removing it prevents subsequent conversions. Parking remains available, and removing the card does not forcibly stop a moving craft.
+Attach an Access Card Mount directly onto the Vehicle Controller. Configure the accepted company using the mount’s standard **Security** selector, then enable **Security** on the Vehicle Controller. Vehicle-mounted readers always use **Stay Inserted** behavior. The selected card must remain inserted in that mount to allow conversion to Taxi or Hover. Removing it prevents subsequent conversions. Parking remains available, and removing the card does not forcibly stop a moving craft.
 
 Vehicle security uses a retained card. It does not accept a pulse, a remembered toggle, a returned card or a reader merely connected through Redstone Channels. The accepted unbranded card means that specific card variant, rather than any company. Security settings and the selected card survive saving, parking and recapture.
 

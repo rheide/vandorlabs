@@ -19,12 +19,20 @@ public final class VehicleMounts {
         }
         return null;
     }
+    /** Vehicle readers always retain their card; company filtering stays in the mount. */
+    public static boolean vehicleReader(TileEntityTokenSlot reader){
+        World world=reader.getWorld();if(world==null||!world.isBlockLoaded(reader.getPos()))return false;
+        IBlockState state=world.getBlockState(reader.getPos());
+        if(!(state.getBlock() instanceof BlockTokenSlot)||((BlockTokenSlot)state.getBlock()).chip)return false;
+        BlockPos at=reader.getPos().offset(state.getValue(BlockTokenSlot.FACING).getOpposite());
+        return world.isBlockLoaded(at)&&world.getTileEntity(at) instanceof TileEntityVehicleController;
+    }
     public static boolean allowed(World world,BlockPos at){
         TileEntity raw=world.getTileEntity(at);if(!(raw instanceof TileEntityVehicleController))return true;
         TileEntityVehicleController controller=(TileEntityVehicleController)raw;if(!controller.security)return true;
         TileEntityTokenSlot reader=find(world,at,false);if(reader==null||reader.returning()||reader.behavior!=0)return false;
         net.minecraft.item.ItemStack card=reader.getStackInSlot(0);
-        return !card.isEmpty()&&card.getItem()==com.vandorlabs.items.ModItems.ACCESS_CARD&&card.getMetadata()==controller.card;
+        return reader.authorized(card);
     }
     public static void requireAllowed(World world,BlockPos at){if(!allowed(world,at))throw new IllegalArgumentException("Insert the accepted Access Card and leave it in the Vehicle Controller mount");}
 }

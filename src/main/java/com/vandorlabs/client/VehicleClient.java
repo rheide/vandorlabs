@@ -286,7 +286,6 @@ public final class VehicleClient {
                 String name=vehicleName==null?settingsData().getString("VehicleName"):vehicleName.getText();vehicleName=new GuiTextField(30,fontRenderer,x,t+76,w/2-4,18);vehicleName.setMaxStringLength(40);vehicleName.setText(name);vehicleName.setVisible(page==0);
                 buttonList.add(new GuiButton(31,x,t+100,w/2-4,20,"Write Vehicle Chip"));
                 buttonList.add(new GuiButton(32,x,t+76,w,20,"Security: "+(security?"ON":"OFF")));
-                buttonList.add(new GuiButton(33,x,t+104,w,20,"Accepted Card"));
                 String draft=channels==null?com.vandorlabs.redstone.ChannelData.read(settingsData(),0).toString():channels.getText();
                 channels=new GuiTextField(0,fontRenderer,x,t+72,w,18);ChannelFields.configure(channels);channels.setText(draft);channels.setVisible(page==1);channels.setFocused(false);
                 buttonList.add(new RedstoneActivationButton(4,x,t+94,w,pilotMode));
@@ -313,7 +312,7 @@ public final class VehicleClient {
         private String designKey(){return vehicleName.getText()+"|"+security+"|"+acceptedCard;}
         private String heightLabel(){return "Height: "+(pilotHeight==0?"Base":"+"+(pilotHeight*2)+" px");}
         @Override public boolean doesGuiPauseGame(){return false;}
-        private void refreshButtons(){for(GuiButton b:buttonList){if(b.id>=10&&b.id<=12){int mode=b.id-10;b.enabled=data.structure!=null&&mode!=data.header.strafe&&!inFlight&&(mode!=0||data.header.sequence!=-1)&&(mode!=1||!data.structure.hasNonWheeledGear);b.visible=page==0;b.displayString=new String[]{"Park","Taxi","Hover"}[mode]+(mode==data.header.strafe?" (current)":"");}if(b.id==4){((RedstoneActivationButton)b).setMode(pilotMode);b.visible=page==1;}if(b.id>=90&&b.id<=92)b.enabled=b.id!=90+page;if(b.id==31){b.visible=page==0&&hasMount(true);b.enabled=data.structure!=null&&!inFlight;}if(b.id==32){b.visible=page==2;b.displayString="Security: "+(security?"ON":"OFF");b.enabled=hasMount(false)||security;}if(b.id==33){b.visible=page==2;b.displayString="Accepted: "+new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.ACCESS_CARD,1,acceptedCard).getDisplayName();b.enabled=hasMount(false);}if(b.id==5)b.displayString=heightLabel();if(b.id==2)b.displayString="Taxi Mode: "+(taxiDraft?"ON":"OFF");}}
+        private void refreshButtons(){for(GuiButton b:buttonList){if(b.id>=10&&b.id<=12){int mode=b.id-10;b.enabled=data.structure!=null&&mode!=data.header.strafe&&!inFlight&&(mode!=0||data.header.sequence!=-1)&&(mode!=1||!data.structure.hasNonWheeledGear);b.visible=page==0;b.displayString=new String[]{"Park","Taxi","Hover"}[mode]+(mode==data.header.strafe?" (current)":"");}if(b.id==4){((RedstoneActivationButton)b).setMode(pilotMode);b.visible=page==1;}if(b.id>=90&&b.id<=92)b.enabled=b.id!=90+page;if(b.id==31){b.visible=page==0&&hasMount(true);b.enabled=data.structure!=null&&!inFlight;}if(b.id==32){b.visible=page==2;b.displayString="Security: "+(security?"ON":"OFF");b.enabled=hasMount(false)||security;}if(b.id==5)b.displayString=heightLabel();if(b.id==2)b.displayString="Taxi Mode: "+(taxiDraft?"ON":"OFF");}}
         private void failed(String message){inFlight=false;error=message;if(vehicleName!=null)sentDesign=designKey();if(controller()&&channels!=null){com.vandorlabs.redstone.ChannelList value=ChannelFields.parse(channels);if(value!=null)sent=key(value);}else sent=pilotHeight!=settingsData().getInteger("PilotHeight")?"H|"+pilotHeight:"T|"+taxiDraft;closing=false;selectedMode=-1;sentModes=modeChannels[0]==null?savedModes():modeChannels[0].getText()+"|"+modeChannels[1].getText()+"|"+modeChannels[2].getText();}
         private void apply(boolean controls){
             if(inFlight||!hasSettings())return;
@@ -349,7 +348,7 @@ public final class VehicleClient {
             else if(!controller())apply(false);
             refreshButtons();if(closing||selectedMode>=0){apply(true);if(!inFlight){if(selectedMode>=0){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.MODE_SELECT);p.token=data.header.token;p.entity=data.header.entity;p.origin=settingsPos();p.sequence=selectedMode;PacketHandler.INSTANCE.sendToServer(p);}mc.displayGuiScreen(null);}}
         }
-        @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,4,5,33))return;super.mouseClicked(x,y,button);if(vehicleName!=null&&page==0)vehicleName.mouseClicked(x,y,button);if(channels!=null&&page==1){channels.mouseClicked(x,y,button);for(GuiTextField f:modeChannels)f.mouseClicked(x,y,button);}}
+        @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,4,5))return;super.mouseClicked(x,y,button);if(vehicleName!=null&&page==0)vehicleName.mouseClicked(x,y,button);if(channels!=null&&page==1){channels.mouseClicked(x,y,button);for(GuiTextField f:modeChannels)f.mouseClicked(x,y,button);}}
         @Override protected void keyTyped(char key,int code)throws java.io.IOException{if(code==1){closing=true;apply(true);return;}boolean used=vehicleName!=null&&page==0&&vehicleName.textboxKeyTyped(key,code);used|=channels!=null&&page==1&&channels.textboxKeyTyped(key,code);if(channels!=null&&page==1)for(GuiTextField f:modeChannels)used|=f.textboxKeyTyped(key,code);if(!used)super.keyTyped(key,code);}
         @Override public void drawScreen(int x,int y,float partial){
             if(controller()){
@@ -368,7 +367,7 @@ public final class VehicleClient {
                     for(int i=0;i<Math.min(lines.size(),Math.max(0,(h-232)/10));i++)fontRenderer.drawString(lines.get(i),l+14,t+174+i*10,0xffdd88);
                 }else if(page==2){
                     fontRenderer.drawString(hasMount(false)?"Access Card Mount attached":"Attach an Access Card Mount to enable security",l+14,t+62,0xdae8f0);
-                    fontRenderer.drawSplitString("Leave the accepted card inserted to allow Taxi / Hover conversion. Removing it blocks new conversions. Park remains available.",l+14,t+134,w-28,0xaabbcc);
+                    fontRenderer.drawSplitString("Configure the accepted card on the attached Access Card Mount. Leave the accepted card inserted to allow Taxi / Hover conversion. Removing it blocks new conversions. Park remains available.",l+14,t+134,w-28,0xaabbcc);
                 }else if(channels!=null){
                     fontRenderer.drawString("Receive: toggle channels (0 = none)",l+14,t+60,0xdae8f0);
                     fontRenderer.drawString("Receive: mode channels (0 = none)",l+14,t+120,0xdae8f0);
@@ -388,7 +387,6 @@ public final class VehicleClient {
             if(button.id>=90&&button.id<=92){page=button.id-90;initGui();return;}
             if(button.id==31&&button.enabled){apply(true);if(!inFlight){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.DESIGN);p.sequence=1;p.token=data.header.token;p.entity=data.header.entity;p.origin=settingsPos();inFlight=true;PacketHandler.INSTANCE.sendToServer(p);}return;}
             if(button.id==32){security=!security;apply(true);refreshButtons();return;}
-            if(button.id==33){acceptedCard=GuiOptionCycle.next(acceptedCard,7);apply(true);refreshButtons();return;}
             if(button.id>=10&&button.id<=12&&button.enabled){selectedMode=button.id-10;return;}
             if(button.id==4)pilotMode=GuiOptionCycle.next(pilotMode,3);else if(button.id==5)pilotHeight=GuiOptionCycle.next(pilotHeight,4);else if(button.id==2)taxiDraft=!taxiDraft;else if(button.id==1)closing=true;
             apply(true);refreshButtons();
