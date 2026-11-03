@@ -6,7 +6,7 @@
 - Configure vehicle card filtering through the attached Access Card Mount. Vehicle readers always retain the card; the controller keeps the security switch and setup notes.
 - Add the built-in chip reader to Programmable Consoles. Joined Screens share an attached reader and stretch one Chip view across the complete rectangle.
 - Apply screen animation speeds to Vehicle Chip rotation, cache immutable preview geometry, and show company Corp logos for Master Data Chips.
-- Increase Programmable Surface limits to 32 blocks per side and joined screen artwork groups to 4,096 blocks. Copy Controllers accept matching rectangles; Turntables keep square pads. Existing payload, height and snapshot limits still apply.
+- Increase Programmable Surface limits to 32 blocks per side. Screen joining retains its previous limit. Copy Controllers accept matching rectangles; Turntables keep square pads. Existing payload, height and snapshot limits still apply.
 - Rename Sectional Garage Door to Sectional Door, add the common material/Trapdoor/Door/Large Door picker, and expose original and light grey sectional panels under Industrial.
 
 - Retire Clear, Pale Cyan and Smoked Cockpit Glass and their recipes. Migrate placed blocks, items and saved designs to vanilla glass, cyan stained glass and gray stained glass.

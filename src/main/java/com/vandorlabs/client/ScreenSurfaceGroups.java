@@ -58,10 +58,10 @@ final class ScreenSurfaceGroups {
         if(!DisplayJoinGeometry.supportsJoining(tile))return new GlassSurfaceGroups.Layout(0,0,1,1);
         DisplayJoinGeometry.Basis basis=DisplayJoinGeometry.basis(tile,state);
         BlockPos[] steps=basis.steps;Set<BlockPos> members=new LinkedHashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(tile.getPos());members.add(tile.getPos());
-        while(!queue.isEmpty()&&members.size()<=4096){BlockPos p=queue.removeFirst();for(BlockPos step:steps){BlockPos next=p.add(step);if(members.contains(next)||!world.isBlockLoaded(next)||world.getBlockState(next)!=state)continue;net.minecraft.tileentity.TileEntity raw=world.getTileEntity(next);if(!(raw instanceof TileEntityAnimatedScreenSelector))continue;TileEntityAnimatedScreenSelector other=(TileEntityAnimatedScreenSelector)raw;if(!matching(tile,other,frame))continue;members.add(next);queue.add(next);if(members.size()>4096)break;}}
+        while(!queue.isEmpty()&&members.size()<1024){BlockPos p=queue.removeFirst();for(BlockPos step:steps){BlockPos next=p.add(step);if(members.contains(next)||!world.isBlockLoaded(next)||world.getBlockState(next)!=state)continue;net.minecraft.tileentity.TileEntity raw=world.getTileEntity(next);if(!(raw instanceof TileEntityAnimatedScreenSelector))continue;TileEntityAnimatedScreenSelector other=(TileEntityAnimatedScreenSelector)raw;if(!matching(tile,other,frame))continue;members.add(next);queue.add(next);if(members.size()>=1024)break;}}
         Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos p:members)cells.put(basis.cell(p),p);
         if(layouts.size()+members.size()>8192)layouts.clear();
-        if(members.size()>4096)for(BlockPos p:members)cache.put(layouts,p,new GlassSurfaceGroups.Layout(0,0,1,1));
+        if(members.size()>=1024)for(BlockPos p:members)cache.put(layouts,p,new GlassSurfaceGroups.Layout(0,0,1,1));
         else for(PortholeRectangles.Rect r:PortholeRectangles.partition(cells.keySet()))for(int row=0;row<r.height;row++)for(int col=0;col<r.width;col++)cache.put(layouts,cells.get(PortholeRectangles.cell(r.x+col,r.y+row)),new GlassSurfaceGroups.Layout(col,row,r.width,r.height));
         return layouts.get(tile.getPos());
     }

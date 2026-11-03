@@ -50,6 +50,6 @@ The main 2.8 performance candidate passed the Java 8 release gate, including sha
 
 ## Larger joined areas and Sectional Door artwork
 
-Programmable Surfaces now support up to 32 blocks on each side. Copy Controllers accept filled rectangles with matching input/output dimensions; Turntables retain filled squares. Joined screen artwork supports up to 4,096 connected blocks. Snapshot, capture-height and payload limits remain independent.
+Programmable Surfaces now support up to 32 blocks on each side. Copy Controllers accept filled rectangles with matching input/output dimensions; Turntables retain filled squares. Screen artwork retains its previous 1,024-cell scan cutoff. Snapshot, capture-height and payload limits remain independent.
 
 The Sectional Door keeps its existing registry ID and default artwork. Its Textures tab includes general materials, Trapdoors, Doors and Large Doors. Original and light grey Sectional Panels are also available in the general Industrial category.
