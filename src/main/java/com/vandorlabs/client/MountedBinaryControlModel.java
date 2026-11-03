@@ -19,17 +19,20 @@ public final class MountedBinaryControlModel implements IBakedModel {
     });
     public MountedBinaryControlModel(IBakedModel base,Block block){this(base,block,0,block instanceof BlockIndustrialLever?((BlockIndustrialLever)block).defaultSize():0);}
     private MountedBinaryControlModel(IBakedModel base,Block block,int mount,int size){this.base=base;this.block=block;itemMount=mount;itemSize=size;}
-    private IBlockState itemPose(){IBlockState state=block.getDefaultState();return block instanceof BlockIndustrialLever?state.withProperty(BlockIndustrialLever.FLOOR,block instanceof BlockTwinPowerLever).withProperty(BlockIndustrialLever.FACING,EnumFacing.NORTH):state.withProperty(BlockVandorSwitch.FACING,EnumFacing.UP);}
+    private IBlockState itemPose(){IBlockState state=block.getDefaultState();return block instanceof BlockIndustrialLever?state.withProperty(BlockIndustrialLever.FLOOR,block instanceof BlockTwinPowerLever).withProperty(BlockIndustrialLever.FACING,EnumFacing.NORTH):state.withProperty(BlockVandorSwitch.FACING,block instanceof BlockTokenSlot?EnumFacing.NORTH:EnumFacing.UP);}
     public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long seed){
         Integer value=state instanceof IExtendedBlockState?((IExtendedBlockState)state).getValue(MountedControlGeometry.MOUNT):null;int mount=value==null?itemMount:value;
         if(mount%16==0)return base.getQuads(state,side,seed);if(side!=null)return Collections.emptyList();
         IBlockState pose=state==null?itemPose():state;int size=state==null?itemSize:MountedControlGeometry.size(state);
         return cache.computeIfAbsent(pose.toString()+"/"+size+"/"+mount,key->{
             SignalControlMount transform=MountedControlGeometry.transform(pose,size,mount);List<BakedQuad> result=new ArrayList<>();
+            Vec3d itemOffset=Vec3d.ZERO;
+            if(state==null&&block instanceof BlockTokenSlot){double back=Double.NEGATIVE_INFINITY;for(EnumFacing face:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(BakedQuad q:base.getQuads(null,face,seed)){int[] raw=q.getVertexData();int stride=raw.length/4;for(int i=0;i<4;i++)back=Math.max(back,Float.intBitsToFloat(raw[i*stride+2]));}itemOffset=new Vec3d(0,0,MountedControlGeometry.nativePose(pose,size).support.maxZ-back);}
+
             for(EnumFacing source:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(BakedQuad quad:base.getQuads(state,source,seed)){
                 int[] data=quad.getVertexData();int stride=data.length/4;Vec3d[] points=new Vec3d[4];boolean bottom=true;
-                for(int i=0;i<4;i++){int at=i*stride;Vec3d p=new Vec3d(Float.intBitsToFloat(data[at]),Float.intBitsToFloat(data[at+1]),Float.intBitsToFloat(data[at+2]));bottom &= Math.abs(transform.depth(p))<1e-6;points[i]=transform.transform(p);}
-                if(bottom){Vec3d[] projected=new Vec3d[4];for(int i=0;i<4;i++)projected[i]=transform.project(points[i]);SignalControlModel.addQuad(result,quad,projected);
+                for(int i=0;i<4;i++){int at=i*stride;Vec3d p=new Vec3d(Float.intBitsToFloat(data[at]),Float.intBitsToFloat(data[at+1]),Float.intBitsToFloat(data[at+2]));p=p.add(itemOffset);bottom &= Math.abs(transform.depth(p))<1e-6;points[i]=transform.transform(p).subtract(itemOffset);}
+                if(bottom){Vec3d[] projected=new Vec3d[4];for(int i=0;i<4;i++)projected[i]=transform.project(points[i].add(itemOffset)).subtract(itemOffset);SignalControlModel.addQuad(result,quad,projected);
                     for(int i=0;i<4;i++){int next=(i+1)%4;SignalControlModel.addQuad(result,quad,new Vec3d[]{points[i],points[next],projected[next],projected[i]});}
                 }else SignalControlModel.addQuad(result,quad,points);
             }

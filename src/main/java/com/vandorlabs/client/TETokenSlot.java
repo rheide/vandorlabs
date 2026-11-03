@@ -14,6 +14,7 @@ import net.minecraft.util.math.Vec3d;
 /** A top-loading reader, using the same geometry and contents for door security. */
 public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityTokenSlot> {
  private static final EnumFacing[] FACES=EnumFacing.values();
+ private static final java.nio.FloatBuffer[][][] MOUNT_MATRICES=new java.nio.FloatBuffer[2][24][64];
  // Immutable face bases and direct matrices are shared by all readers on the render thread.
  private static final FaceBasis[][] BASES=new FaceBasis[6][4];
  private static final java.nio.FloatBuffer[] EMBEDDED_BASES=new java.nio.FloatBuffer[4];
@@ -35,7 +36,13 @@ public final class TETokenSlot extends TileEntitySpecialRenderer<TileEntityToken
  @Override public void render(TileEntityTokenSlot tile,double x,double y,double z,float partial,int stage,float alpha){
   if(!(tile.getBlockType() instanceof BlockTokenSlot))return;
   net.minecraft.block.state.IBlockState state=tile.getBlockType().getActualState(tile.getWorld().getBlockState(tile.getPos()),tile.getWorld(),tile.getPos());
-  GlStateManager.pushMatrix();try{GlStateManager.translate(x,y,z);contents(tile,state.getValue(BlockVandorSwitch.FACING),state.getValue(BlockVandorSwitch.ROTATION),partial);}finally{GlStateManager.popMatrix();}
+  GlStateManager.pushMatrix();try{GlStateManager.translate(x,y,z);java.nio.FloatBuffer mount=mountMatrix(tile,state);if(mount!=null){mount.rewind();GlStateManager.multMatrix(mount);}contents(tile,state.getValue(BlockVandorSwitch.FACING),state.getValue(BlockVandorSwitch.ROTATION),partial);}finally{GlStateManager.popMatrix();}
+ }
+ private static java.nio.FloatBuffer mountMatrix(TileEntityTokenSlot tile,net.minecraft.block.state.IBlockState state){
+  int mount=tile.getBaseHeight()+4*(tile.getBaseTilt()+4*tile.getTiltDirection());if(mount%16==0)return null;
+  int kind=tile.chip()?0:1,side=state.getValue(BlockVandorSwitch.FACING).ordinal()*4+state.getValue(BlockVandorSwitch.ROTATION);java.nio.FloatBuffer cached=MOUNT_MATRICES[kind][side][mount];if(cached!=null)return cached;
+  SignalControlMount transform=MountedControlGeometry.transform(state,0,mount);Vec3d origin=transform.transform(Vec3d.ZERO),u=transform.transform(new Vec3d(1,0,0)).subtract(origin),v=transform.transform(new Vec3d(0,1,0)).subtract(origin),n=transform.transform(new Vec3d(0,0,1)).subtract(origin);
+  java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);matrix.put(new float[]{(float)u.x,(float)u.y,(float)u.z,0,(float)v.x,(float)v.y,(float)v.z,0,(float)n.x,(float)n.y,(float)n.z,0,(float)origin.x,(float)origin.y,(float)origin.z,1}).flip();MOUNT_MATRICES[kind][side][mount]=matrix;return matrix;
  }
  static void frame(boolean chip,EnumFacing facing){
   net.minecraft.block.state.IBlockState state=net.minecraft.block.Block.getBlockFromName("vandorlabs:"+(chip?"data_chip":"access_card")+"_slot").getDefaultState().withProperty(BlockVandorSwitch.FACING,facing);

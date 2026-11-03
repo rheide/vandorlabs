@@ -24,6 +24,7 @@ final class TokenSlotVisualChecks {
         }
     }
     static void gui(Minecraft mc,File output)throws Exception{
+        MountedBinaryControlChecks.checkModels(mc);mountPackets();
         GuiScreen previous=mc.currentScreen;TileEntityTokenSlot tile=(TileEntityTokenSlot)mc.world.getTileEntity(FIRST.add(6,0,0));if(tile==null)throw new IllegalStateException("Mount visual fixture not synchronized");
         int original=tile.behavior;
         try{
@@ -67,6 +68,15 @@ final class TokenSlotVisualChecks {
             }
         }finally{net.minecraft.client.renderer.GlStateManager.popMatrix();net.minecraft.client.renderer.GlStateManager.matrixMode(5889);net.minecraft.client.renderer.GlStateManager.popMatrix();net.minecraft.client.renderer.GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
         System.out.println("[vandorlabs][reprolab] token-insert-animation PASS card and chip six phases approach scan and return");
+    }
+    private static void mountPackets(){
+        for(int mount=-1;mount<64;mount++){
+            com.vandorlabs.network.MessageTokenSlot original=new com.vandorlabs.network.MessageTokenSlot(7,2,false,8,"1,2").withMount(mount>=0,mount<0?0:mount%4,mount<0?0:mount/4%4,mount<0?0:mount/16);
+            io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();original.toBytes(bytes);require(bytes.readableBytes()==(mount<0?11:14),"pose extension must add exactly three bytes");
+            com.vandorlabs.network.MessageTokenSlot decoded=new com.vandorlabs.network.MessageTokenSlot();decoded.fromBytes(bytes);require(decoded.mountHeight()==(mount<0?-1:mount%4)&& (mount<0||decoded.mountTilt()==mount/4%4&&decoded.mountDirection()==mount/16),"mount packet round trip");bytes.release();
+        }
+        for(int extra:new int[]{1,2,4}){io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();new com.vandorlabs.network.MessageTokenSlot(1,0,false,0,"").toBytes(bytes);bytes.writeZero(extra);boolean rejected=false;try{new com.vandorlabs.network.MessageTokenSlot().fromBytes(bytes);}catch(IllegalArgumentException expected){rejected=true;}finally{bytes.release();}require(rejected,"unbounded/trailing mount extension");}
+        System.out.println("[vandorlabs][reprolab] mount-packets PASS legacy=11 pose=14 bytes all 64 poses and malformed extensions");
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException(message);}
 }

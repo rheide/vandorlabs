@@ -21,6 +21,8 @@ final class MountFilterLiveChecks {
         if(t==50){
             if(!(mc.currentScreen instanceof GuiTokenSlot))throw new IllegalStateException("Mount server dialog did not open");GuiTokenSlot gui=(GuiTokenSlot)mc.currentScreen;
             gui.actionPerformed(new net.minecraft.client.gui.GuiButton(101,0,0,"Security"));for(int i=0;i<3;i++)gui.mouseClicked(left(gui)+140,top(gui)+86,0);if(mc.currentScreen!=gui)throw new IllegalStateException("Company selection opened a child dialog");
+            gui.mouseClicked(left(gui)+20,top(gui)+124,0);gui.mouseClicked(left(gui)+20,top(gui)+124,1);gui.mouseClicked(left(gui)+20,top(gui)+124,0);gui.mouseClicked(left(gui)+20,top(gui)+124,0);
+            for(int i=0;i<3;i++)gui.mouseClicked(left(gui)+20,top(gui)+148,0);gui.mouseClicked(left(gui)+190,top(gui)+148,1);
         }
         if(t==70){
             check(mc,chip,8,0,false);GuiTokenSlot gui=(GuiTokenSlot)mc.currentScreen;
@@ -47,7 +49,8 @@ final class MountFilterLiveChecks {
         mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);TileEntityTokenSlot tile=(TileEntityTokenSlot)player.world.getTileEntity(POS);
             if(tile.effectiveAllowed()!=mask||tile.behavior!=mode)throw new IllegalStateException("Mount filter/behavior packet not applied actual="+tile.effectiveAllowed()+"/"+tile.behavior+" expected="+mask+"/"+mode);ItemStack held=player.inventory.getStackInSlot(0);if(held.getCount()!=5||held.getItem()!=(chip?ModItems.DATA_CHIP:ModItems.ACCESS_CARD)||!held.getDisplayName().equals("Live credential sample"))throw new IllegalStateException("Mount filter modified inventory");
             if(channels&&!java.util.Arrays.equals(tile.getRedstoneChannels().toArray(),new int[]{64215,64216}))throw new IllegalStateException("Mount channel packet not applied");
-            TileEntityTokenSlot saved=new TileEntityTokenSlot(chip);saved.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));if(saved.effectiveAllowed()!=mask||saved.behavior!=mode)throw new IllegalStateException("Mount filter persistence");
-        }).get();TileEntityTokenSlot tile=(TileEntityTokenSlot)mc.world.getTileEntity(POS);if(tile.effectiveAllowed()!=mask||tile.behavior!=mode)throw new IllegalStateException("Mount filter synchronization");
+            if(tile.getBaseHeight()!=2||tile.getBaseTilt()!=3||tile.getTiltDirection()!=3)throw new IllegalStateException("Mount pose packets and reverse cycling were not applied");
+            TileEntityTokenSlot saved=new TileEntityTokenSlot(chip);saved.readFromNBT(tile.writeToNBT(new net.minecraft.nbt.NBTTagCompound()));if(saved.effectiveAllowed()!=mask||saved.behavior!=mode)throw new IllegalStateException("Mount filter persistence");if(saved.getBaseHeight()!=2||saved.getBaseTilt()!=3||saved.getTiltDirection()!=3)throw new IllegalStateException("Mount pose persistence");
+        }).get();TileEntityTokenSlot tile=(TileEntityTokenSlot)mc.world.getTileEntity(POS);if(tile.effectiveAllowed()!=mask||tile.behavior!=mode||tile.getBaseHeight()!=2||tile.getBaseTilt()!=3||tile.getTiltDirection()!=3)throw new IllegalStateException("Mount filter/pose synchronization");
     }
 }
