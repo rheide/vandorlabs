@@ -306,6 +306,8 @@ public final class VehicleCollision {
     private int terrainHorizontalBits=-1,terrainVerticalBits=-1;
     /** Isolated before/after measurements only; gameplay uses adaptive sections. */
     public static volatile boolean legacyTerrainGrid;
+    /** Paired diagnostics only; ordinary simulation uses primitive keys and reusable gathering. */
+    public static volatile boolean legacyTerrainCollections;
     /** Isolated comparison of equivalent broadphase partitions; never saved or networked. */
     public void withTerrainSections(int horizontalBits,int verticalBits,Runnable action){
         if(horizontalBits< -1||horizontalBits>4||verticalBits< -1||verticalBits>4)throw new IllegalArgumentException("Terrain section size");
@@ -328,23 +330,34 @@ public final class VehicleCollision {
         final int horizontalBits=terrainHorizontalBits>=0?terrainHorizontalBits:flat?4:3,
                 verticalBits=terrainVerticalBits>=0?terrainVerticalBits:flat?2:3,
                 horizontal=1<<horizontalBits,vertical=1<<verticalBits;
-        final Map<BlockPos,List<AxisAlignedBB>> sections=new HashMap<>();
+        final boolean legacyCollections=legacyTerrainCollections;
+        final Map<BlockPos,List<AxisAlignedBB>> legacySections=legacyCollections?new HashMap<>():null;
+        final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<List<AxisAlignedBB>> sections=legacyCollections?null:new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
+        final it.unimi.dsi.fastutil.objects.ObjectOpenHashSet<AxisAlignedBB> gathered=legacyCollections?null:new it.unimi.dsi.fastutil.objects.ObjectOpenHashSet<>();
+        private int gathering;
+        private long sectionKey(int x,int y,int z){return ((long)x&0x3FFFFFFL)<<38|((long)z&0x3FFFFFFL)<<12|((long)y&0xFFFL);}
+
         Terrain(World world,net.minecraft.entity.Entity entity){this.world=world;this.entity=entity;}
         Collection<AxisAlignedBB> obstacles(AxisAlignedBB swept) {
-            Set<AxisAlignedBB> found=new HashSet<>();
+            boolean scratch=!legacyCollections&&gathering==0;if(!legacyCollections)gathering++;boolean custom=false;
+            Set<AxisAlignedBB> found=scratch?gathered:new HashSet<>();found.clear();
+            try{
             // Query only bounded sections touched by actual hull sweeps, never a hollow hull's full volume.
             for(int x=MathHelper.floor(swept.minX)>>horizontalBits;x<=MathHelper.floor(swept.maxX)>>horizontalBits;x++)
                 for(int y=MathHelper.floor(swept.minY)>>verticalBits;y<=MathHelper.floor(swept.maxY)>>verticalBits;y++)
                     for(int z=MathHelper.floor(swept.minZ)>>horizontalBits;z<=MathHelper.floor(swept.maxZ)>>horizontalBits;z++) {
-                        BlockPos key=new BlockPos(x,y,z);
-                        List<AxisAlignedBB> candidates=sections.get(key);
+                        BlockPos legacyKey=legacyCollections?new BlockPos(x,y,z):null;long key=sectionKey(x,y,z);
+                        List<AxisAlignedBB> candidates=legacyCollections?legacySections.get(legacyKey):sections.get(key);
                         if(candidates==null){
                             candidates=world.getCollisionBoxes(entity,new AxisAlignedBB(x*horizontal,y*vertical,z*horizontal,x*horizontal+horizontal,y*vertical+vertical,z*horizontal+horizontal).grow(1e-6));
-                            sections.put(key,candidates);terrainQueries++;candidateBoxes+=candidates.size();
+                            if(legacyCollections)legacySections.put(legacyKey,candidates);else sections.put(key,candidates);terrainQueries++;candidateBoxes+=candidates.size();
                         }
-                        for(AxisAlignedBB box:candidates)if(box.intersects(swept))found.add(box);
+                        for(AxisAlignedBB box:candidates)if(box.intersects(swept)){found.add(box);custom|=box.getClass()!=AxisAlignedBB.class;}
                     }
-            return found;
+            // Consumers finish pure scalar clipping before the next gather. Keep foreign subclasses
+            // isolated: their overridden offset methods may make a reentrant world query.
+            return scratch&&custom?new HashSet<>(found):found;
+            }finally{if(!legacyCollections)gathering--;}
         }
     }
     private Collection<AxisAlignedBB> obstacles(World world,net.minecraft.entity.Entity entity,AxisAlignedBB swept) {

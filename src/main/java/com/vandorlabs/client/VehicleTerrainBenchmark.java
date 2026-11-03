@@ -30,6 +30,24 @@ final class VehicleTerrainBenchmark {
                 System.out.println("[vandorlabs] terrain-sections PASS size="+(size[0]<0?"auto":(1<<size[0])+"x"+(1<<size[1]))+" wall-us="+times[0][12]/1000+" cpu-us="+times[1][12]/1000+" bytes="+times[2][12]+" queries="+queries/180D);
             });
         }catch(IOException failure){throw new IllegalStateException(failure);}
+        collections(world,craft,output,expected);
+    }
+    private static void collections(World world,EntityGroundVehicle craft,File output,double[][] expected){
+        boolean previous=VehicleCollision.legacyTerrainCollections;
+        try(PrintWriter csv=new PrintWriter(new File(output,"terrain-collections.csv"))){
+            csv.println("legacy,poses,samples,cpu_p50_us,allocated_p50_bytes,queries_per_step");
+            for(boolean legacy:new boolean[]{true,false}){
+                VehicleCollision.legacyTerrainCollections=legacy;long[] times=new long[24],allocations=new long[24];long queries=0;
+                for(int round=-8;round<24;round++){
+                    long cpu=BEAN.getCurrentThreadCpuTime(),bytes=BEAN.getThreadAllocatedBytes(Thread.currentThread().getId());int pose=0;
+                    for(float yaw:new float[]{-25,0,25})for(int direction:new int[]{-1,1}){double[] actual=step(world,craft,yaw,direction);queries+=craft.collision.terrainQueries;for(int axis=0;axis<3;axis++)if(Math.abs(actual[axis]-expected[pose][axis])>1E-9)throw new IllegalStateException("Terrain collections change movement legacy="+legacy+" pose="+pose);pose++;}
+                    if(round>=0){times[round]=(BEAN.getCurrentThreadCpuTime()-cpu)/6;allocations[round]=(BEAN.getThreadAllocatedBytes(Thread.currentThread().getId())-bytes)/6;}
+                }
+                Arrays.sort(times);Arrays.sort(allocations);csv.printf(Locale.ROOT,"%s,6,24,%.3f,%d,%.2f%n",legacy,times[12]/1000D,allocations[12],queries/192D);csv.flush();
+                System.out.println("[vandorlabs] terrain-collections PASS legacy="+legacy+" cpu-us="+times[12]/1000D+" allocated="+allocations[12]+" queries="+queries/192D);
+            }
+        }catch(IOException failure){throw new IllegalStateException(failure);}finally{VehicleCollision.legacyTerrainCollections=previous;}
+
     }
     private static double[] step(World world,EntityGroundVehicle craft,float angle,int direction){
         VehicleCollision collision=craft.collision;float yaw=craft.rotationYaw+angle;double radians=Math.toRadians(yaw),fx=craft.structure.facing.getFrontOffsetX(),fz=craft.structure.facing.getFrontOffsetZ();
