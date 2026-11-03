@@ -10,6 +10,8 @@ An attached Data Chip Mount lets the controller write its exact design to a Vehi
 
 The controller’s Security tab accepts a selected Access Card through an attached mount. Leave that card inserted to allow Taxi/Hover conversion; removing it blocks future conversions while parking remains available. See [Vehicle controls](../pilot-seat-taxi.md).
 
+When a mount is missing, the Vehicle tab explains how to attach a Data Chip Mount to write vehicle data, and the Security tab explains that an Access Card Mount enables security.
+
 ## Garage doors
 
 The new [Garage Door](../garage-doors.md) lifts linked columns and retracts them overhead. It supports ordinary right-click operation, Redstone Channels and the standard Configurizer workflow. A dedicated dialog controls travel time, local redstone and signal polarity.

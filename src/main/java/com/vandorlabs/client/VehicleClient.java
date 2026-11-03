@@ -359,6 +359,7 @@ public final class VehicleClient {
                 VehicleStructure structure=data.structure;
                 if(page==0){
                     fontRenderer.drawString("Vehicle name",l+14,t+63,0xdae8f0);
+                    if(!hasMount(true))fontRenderer.drawSplitString("Attach a Data Chip Mount to write vehicle data.",l+14,t+100,(w-28)/2-4,0xaabbcc);
                     fontRenderer.drawString("Mode: "+new String[]{"Block / Park","Taxi","Hover"}[MathHelper.clamp(data.header.strafe,0,2)],l+14,t+130,0xdae8f0);
                     if(structure!=null){fontRenderer.drawString(structure.cells.size()+" blocks / "+structure.pilotSeats().size()+" Pilot Seats",l+14,t+144,0xc4d0d8);fontRenderer.drawString(fontRenderer.trimStringToWidth(structure.gearCount+" supports / Weight: "+weightLabel,w-28),l+14,t+157,0xc4d0d8);}
                     VehicleShapeRenderer.draw(previewShape,l+w*3/4F,t+100,w/2F-24,72);
@@ -366,7 +367,7 @@ public final class VehicleClient {
                     java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status==null?"Selection unavailable":status,w-28);
                     for(int i=0;i<Math.min(lines.size(),Math.max(0,(h-232)/10));i++)fontRenderer.drawString(lines.get(i),l+14,t+174+i*10,0xffdd88);
                 }else if(page==2){
-                    fontRenderer.drawString(hasMount(false)?"Access Card Mount attached":"Attach an Access Card Mount",l+14,t+62,0xdae8f0);
+                    fontRenderer.drawString(hasMount(false)?"Access Card Mount attached":"Attach an Access Card Mount to enable security",l+14,t+62,0xdae8f0);
                     fontRenderer.drawSplitString("Leave the accepted card inserted to allow Taxi / Hover conversion. Removing it blocks new conversions. Park remains available.",l+14,t+134,w-28,0xaabbcc);
                 }else if(channels!=null){
                     fontRenderer.drawString("Receive: toggle channels (0 = none)",l+14,t+60,0xdae8f0);
