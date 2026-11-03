@@ -2,6 +2,10 @@
 
 ## 2.8
 
+- Keep differently textured Programmable Surface pads separate during discovery, so touching pads can each join and retain their own artwork.
+
+- Colour Vehicle Chip model previews by company: Pinnacle gold, Ashiro coral, Paladyne green, Vektor violet, Seyr orange and Vandor cyan; generic chips use silver.
+
 - Point the Console, Half Console and Diagonal Half Screen chip openings toward the player at the bottom. Keep the full Diagonal Screen reader sideways.
 
 - Rename Programmable Diagonal Half Console to Programmable Diagonal Half Screen, including the block/item ID. Existing placements, inventory stacks and saved designs retain their data through migration.
@@ -17,7 +21,7 @@
 
 - Retire Clear, Pale Cyan and Smoked Cockpit Glass and their recipes. Migrate placed blocks, items and saved designs to vanilla glass, cyan stained glass and gray stained glass.
 
-See the [2.8 guide](docs/versions/version-2.8.md) and [Garage Door construction guide](docs/garage-doors.md).
+See the [2.8 guide](docs/versions/version-2.8.md) and [Sectional Door construction guide](docs/sectional-doors.md).
 
 - Slice vehicle discovery and preflight across ticks, reuse rotation checks for repeated block states and show conversion activity on Vehicle Status screens.
 - Add saved vehicle names and rotating shape previews, exact Vehicle Chips, Programmer creation/duplication, output-only Copy Controller chip sources and retained Access Card security.

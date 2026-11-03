@@ -1,6 +1,6 @@
 # Vandor Labs 2.8
 
-Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and garage doors. Existing block registry IDs and saved designs remain intact.
+Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and sectional doors. Existing block registry IDs and saved designs remain intact.
 
 ## Vehicle designs and security
 
@@ -14,7 +14,7 @@ When a mount is missing, the Vehicle tab explains how to attach a Data Chip Moun
 
 ## Screen chip readers
 
-[Screen chip readers](../screen-chip-readers.md) add a Display-only Chip choice to Programmable Diagonal Half Screens, Diagonal Screens, Half Consoles and regular Consoles. Console slots open toward the player at the bottom; the Diagonal Screen slot animates sideways. The slots disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Display before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens share an attached Data Chip Mount across their joined rectangle. Chip contents stretch across the whole display. Slow/Normal/Fast controls Vehicle Chip rotation, immutable shape geometry is cached, and company Master Data Chips display their Corp logos.
+[Screen chip readers](../screen-chip-readers.md) add a Display-only Chip choice to Programmable Diagonal Half Screens, Diagonal Screens, Half Consoles and regular Consoles. Console slots open toward the player at the bottom; the Diagonal Screen slot animates sideways. The slots disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Display before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens share an attached Data Chip Mount across their joined rectangle. Chip contents stretch across the whole display. Vehicle Chip previews use their company colours (gold for Pinnacle, cyan for Vandor, silver for generic chips). Slow/Normal/Fast controls Vehicle Chip rotation, immutable shape geometry is cached, and company Master Data Chips display their Corp logos.
 
 Data Chip Mounts and Access Card Mounts now share the Thruster Lever's base height, tilt and tilt direction controls. Configure these on the Security tab; right-click a button to cycle backwards. The inserted token follows the mount pose.
 
@@ -22,17 +22,19 @@ Data Chip Mounts and Access Card Mounts now share the Thruster Lever's base heig
 
 Clear Cockpit Glass now becomes vanilla Glass, Pale Cyan Cockpit Glass becomes cyan Stained Glass, and Smoked Cockpit Glass becomes gray Stained Glass. The three mod blocks and their alloy recipes are removed. Existing placed blocks, inventory stacks and saved designs migrate with their colours preserved; names, counts and other item data remain intact.
 
-## Garage doors
+## Sectional doors
 
-The new [Garage Door](../garage-doors.md) lifts linked columns and retracts them overhead. It supports ordinary right-click operation, Redstone Channels and the standard Configurizer workflow. A dedicated dialog controls travel time, local redstone and signal polarity.
+The new [Sectional Door](../sectional-doors.md) lifts linked columns and retracts them overhead. It supports ordinary right-click operation, Redstone Channels and the standard Configurizer workflow. A dedicated dialog controls travel time, local redstone and signal polarity.
 
 Settled closed panels use chunk geometry. Moving and raised panels share a batched renderer and a bounded mesh cache. Client animation tolerates repeated updates, clock corrections and reversals; server collision and saved timelines remain authoritative.
 
-![Nine by five garage door](../images/garage-build-3-closed.png)
+![Nine by five sectional door](../images/garage-build-3-closed.png)
 
 See the [rendering measurements and validation scope](../render-performance.md).
 
 ## Dense rendering
+
+Neighbouring Surfaces with different active/inactive artwork form separate join groups. Matching Copy Controller pads may be rectangles; Turntables still require squares.
 
 Unclaimed single Surface blocks share Forge's atlas batch and use tighter visibility bounds. Joined and controller-owned surfaces retain their established renderer. Ordinary planar translucent glazing batches consecutive compatible panes while preserving glass ordering and special finishes.
 

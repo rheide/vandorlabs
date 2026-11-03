@@ -1,6 +1,6 @@
-# Garage doors
+# Sectional doors
 
-Garage Door sections form a vertically lifting, overhead door. Equal-height neighbouring columns facing the same way operate together. Each column may contain 1–32 sections; a linked door may contain up to 32 columns.
+Sectional Door sections form a vertically lifting, overhead door. Equal-height neighbouring columns facing the same way operate together. Each column may contain 1–32 sections; a linked door may contain up to 32 columns.
 
 ## Construction
 
@@ -14,7 +14,7 @@ Garage Door sections form a vertically lifting, overhead door. Equal-height neig
 
 3. Place adjacent columns to the same height and facing. The example is nine columns wide and five sections high. Columns of a different height remain separate.
 
-   ![Completed nine by five garage door](images/garage-build-3-closed.png)
+   ![Completed nine by five sectional door](images/garage-build-3-closed.png)
 
 4. Right-click a section to toggle the linked door. The panels rise, turn over the header and retract overhead. Once open, use the header to interact with the door.
 
@@ -22,11 +22,11 @@ Garage Door sections form a vertically lifting, overhead door. Equal-height neig
 
 5. Use the Configurizer, or sneak-right-click, to open the same dedicated configuration dialog. The Mechanism tab sets travel time per section and provides Open and Close buttons. Settings apply to the linked door. Right-click an option to cycle backwards.
 
-   ![Garage door mechanism settings](images/garage-mechanism-settings.png)
+   ![Sectional Door mechanism settings](images/garage-mechanism-settings.png)
 
 6. In Redstone, enter the usual channel list and choose whether to accept local redstone. Select whether a powered signal opens or closes the door. Any enabled powered input on the linked door supplies its signal. With local redstone disabled and no channels assigned, use manual operation.
 
-   ![Garage door Redstone Channels](images/garage-redstone-settings.png)
+   ![Sectional Door Redstone Channels](images/garage-redstone-settings.png)
 
 Craft eight sections from six iron ingots, two pistons and one redstone dust. Mining the top section promotes the remaining top section and preserves its column settings. Changing a door requires its complete linked structure to be loaded and editable.
 
