@@ -94,6 +94,8 @@ The unit is a game weight unit, with one full stone block as the reference. Mate
 
 Slabs use half a block's material, stairs three quarters, and thin panels, panes, doors, rails and other small parts use smaller fractions. Ore blocks use a stone-dominated estimate. These are balancing heuristics, rather than engineering densities.
 
+The complete [vanilla block weight reference](vanilla-vehicle-weights.md) lists the current estimates and weight-changing variants.
+
 Inventories add each retained stack's quantity and estimated item weight, including nested supported containers and filled buckets. Nine ordinary metal ingots weigh the same as their storage block. Tank contents use their stored amount and Forge fluid density: 1,000 mB of ordinary water adds 0.4 units. Joined Hex Tanks use per-cell fluid ownership, and supported Mekanism Dynamic Tank caches are counted once per shared ID. A Vehicle Chip's design bytes do not count as physical vehicle cargo.
 
 The calculation runs in resumable scan work and only reads inventory/fluid APIs. It never extracts items or drains tanks. Nesting and work limits prevent unusual containers from blocking preparation indefinitely; an incomplete estimate is marked **partial**. The saved estimator version allows later balancing changes without treating an older estimate as current rules.
