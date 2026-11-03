@@ -27,6 +27,8 @@ public class MessageRampController implements IMessage {
     private BlockPos pos;
     private int interpolation,escalator;
     private boolean moat,analogDeployment;
+    private Boolean verticalLayout;
+    public MessageRampController withVerticalLayout(boolean value){verticalLayout=value;return this;}
     public MessageRampController withAnalogDeployment(boolean value){analogDeployment=value;return this;}
     public MessageRampController withMoat(boolean value){moat=value;return this;}
     public MessageRampController withEscalator(int mode){escalator=mode;return this;}
@@ -86,6 +88,7 @@ public class MessageRampController implements IMessage {
         return packet;
     }
     @Override public void fromBytes(ByteBuf buf) {
+        verticalLayout=null;
         pos=BlockPos.fromLong(buf.readLong()); drop=buf.readInt(); segments=buf.readInt();
         top=buf.readBoolean(); powerOn=buf.readBoolean(); slow=buf.readBoolean(); elevator=buf.readBoolean();
         direction=buf.readInt();
@@ -108,8 +111,8 @@ public class MessageRampController implements IMessage {
         invalidChannels=channels==null;
         analogDeployment=false;
         if(buf.isReadable()){
-            if(buf.readableBytes()!=5||buf.readInt()!=0x414E4C47)invalidChannels=true;
-            else analogDeployment=buf.readBoolean();
+            if((buf.readableBytes()!=5&&buf.readableBytes()!=10)||buf.readInt()!=0x414E4C47)invalidChannels=true;
+            else {analogDeployment=buf.readBoolean();if(buf.isReadable()){if(buf.readInt()!=0x41584953)invalidChannels=true;else verticalLayout=buf.readBoolean();}}
         }
     }
     @Override public void toBytes(ByteBuf buf) {
@@ -125,6 +128,7 @@ public class MessageRampController implements IMessage {
         buf.writeInt(0x4D4F4154);buf.writeBoolean(moat);
         ChannelData.write(buf,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
         buf.writeInt(0x414E4C47);buf.writeBoolean(analogDeployment);
+        if(verticalLayout!=null){buf.writeInt(0x41584953);buf.writeBoolean(verticalLayout);}
     }
     public static class Handler implements IMessageHandler<MessageRampController,IMessage> {
         @Override public IMessage onMessage(MessageRampController message,MessageContext context) {
@@ -143,7 +147,7 @@ public class MessageRampController implements IMessage {
                         || message.interpolation<0 || message.interpolation>2 || message.escalator<0 || message.escalator>2) return;
                 long revision=te.configurationRevision();
                 te.configureHalfOffsets(player,message.startHalfSteps,message.endHalfSteps,message.treadPixels,message.powerOn,message.slow,message.elevator,
-                        net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures,false,message.interpolation,message.escalator,message.moat);
+                        net.minecraft.util.EnumFacing.getHorizontal(message.direction),message.travelAxis,message.extendSegments,message.speed,message.matchTextures,false,message.interpolation,message.escalator,message.moat,message.verticalLayout==null?te.verticalLayout:message.verticalLayout);
                 if(te.configurationRevision()!=revision){
                     te.setRedstoneChannels(message.getRedstoneChannels());
                     te.setAnalogDeployment(message.analogDeployment);

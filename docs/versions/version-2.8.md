@@ -36,6 +36,15 @@ Settled closed panels use chunk geometry. Moving and raised panels share a batch
 
 See the [rendering measurements and validation scope](../render-performance.md).
 
+## Ramp Controller axes
+
+The full and slab Ramp Controllers now have an Axis selector on the Ramp tab.
+East/west side mounts offer X/Y; north/south side mounts offer Z/Y; up/down
+mounts offer X/Z. Y selects an upright source panel and runs tread sections
+up its height, with outward/inward or sideways travel. Existing horizontal
+layouts retain their saved behavior. See [upright source panels](../landing-ramps.md#upright-source-panels)
+for building steps and the mode details.
+
 ## Builder compatibility
 
 Canopy Glass now remains in place when an RFTools Builder fills a Shape Card. Automatic placement initializes the pending canopy tile and its footprint before normal membership repair runs. Ordinary placement and broken-footprint cleanup retain their existing behavior.

@@ -103,7 +103,8 @@ public final class DuplifierApplyOptions {
             option("FrameAppearance", "Frame Finishes", 0),
             option(ProgrammableSettings.DOOR_GLASS,"Door Glass",3),
             option(ProgrammableSettings.MODULAR_ARM_SETTINGS,"Arm / Track Settings",2),
-            option(ProgrammableSettings.CHAIR_ANGLE,"Chair Angle",2)
+            option(ProgrammableSettings.CHAIR_ANGLE,"Chair Angle",2),
+            option(ProgrammableSettings.RAMP_VERTICAL_LAYOUT,"Vertical Ramp Layout",4)
     };
 
     /** Legacy API covers the original first word; option indices are append-only. */

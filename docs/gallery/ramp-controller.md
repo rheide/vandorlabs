@@ -32,17 +32,18 @@ Creative shift-right-click the controller to open its settings, or use the Confi
 ![Ramp Controller settings](../images/gallery/v1.1/ramp-matching-config.png)
 
 1. Choose **Ramp**, **Filled Ramp**, **Lift**, or **Extend**.
-2. Choose **Up/Down** or **Left/Right** travel. Left and right are relative to the selected ramp direction.
-3. Set **Start / off offset** and **End / on offset** from `-16` to `+16` blocks in half-block steps. Positive vertical offsets rise; negative ones descend. Positive horizontal offsets move right. Opposite endpoints can create a 32-block stroke.
-4. Choose whether redstone **On** or **Off** deploys the platform. Physical power and virtual redstone channels are supported.
-5. Set **Match textures** (On by default). Turn it Off to include differently textured Programmable Blocks or Slabs; block type and slab half still must match. Individual finishes are preserved.
-6. Choose **Fast**, **Medium**, or **Slow**. Ramp and Filled Ramp offer **1, 2, 4, 8, or 16 pixel** treads. Lift and Extend have no treads.
+2. Choose **Axis**: X/Y for east/west mounts, Z/Y for north/south mounts, or X/Z for up/down mounts. Y selects an upright source panel.
+3. Choose **Up/Down** or **Left/Right** travel. Y layouts use **Out/In** or **Left/Right**.
+4. Set **Start / off offset** and **End / on offset** from `-16` to `+16` blocks in half-block steps. Positive vertical offsets rise; positive outward offsets move away from the controller; positive sideways offsets move right.
+5. Choose whether redstone **On** or **Off** deploys the platform. Physical power and virtual redstone channels are supported.
+6. Set **Match textures** (On by default). Turn it Off to include differently textured Programmable Blocks or Slabs; block type and slab half still must match. Individual finishes are preserved.
+7. Choose **Fast**, **Medium**, or **Slow**. Ramp and Filled Ramp offer **1, 2, 4, 8, or 16 pixel** treads. Lift and Extend have no treads.
 
 The off endpoint can be displaced too: Start `2`, End `-3` moves from two blocks above the original platform to three below it. Equal endpoints are valid. An edit first resets the previous platform, then evaluates the current signal with the new settings.
 
 ## Direction and tread size
 
-Ramp direction can be north, east, south, or west. Small treads make a smoother slope; large treads form visible steps.
+Axis chooses the source profile direction; Dir chooses its horizontal heading. Y profiles run upward through an upright panel. See the [upright-panel construction steps](../landing-ramps.md#upright-source-panels). Small treads make a smoother slope; large treads form visible steps.
 
 | Direction | Smooth, 2 px | Stairs, 8 px |
 | --- | --- | --- |
@@ -60,7 +61,7 @@ again with the staircase still in place.
 | --- | --- |
 | ![Escalator moving uphill, then stopping while extended](../images/gallery/ramp-controller/escalator-up.gif) | ![Escalator moving downhill, then stopping while extended](../images/gallery/ramp-controller/escalator-down.gif) |
 
-For the examples, build a matching slab platform **2 blocks wide × 4 long**.
+For the examples, build a matching slab platform **2 blocks wide Ã— 4 long**.
 Select **8 px** treads, **Ramp height: 3**, **Medium** speed and **Trigger:
 redstone ON**, then choose the uphill or downhill mode. Place a lever beside the
 controller or use a virtual channel to switch movement. Stand on the steps to
@@ -75,7 +76,7 @@ Set **Ramp height: 0** for a horizontal moving walkway: Escalator Up moves forwa
 | --- | --- |
 | ![Horizontal escalator with scrolling source texture](../images/gallery/ramp-controller/walkway.gif) | ![Escalator using Curve In interpolation](../images/gallery/ramp-controller/escalator-curve-in.gif) |
 
-For a walkway, use a 2×4 slab platform, height 0, 8 px treads and Medium speed. For a curved escalator, use height 3 and select Curve In or Curve Out.
+For a walkway, use a 2Ã—4 slab platform, height 0, 8 px treads and Medium speed. For a curved escalator, use height 3 and select Curve In or Curve Out.
 
 With no player within 32 blocks they stay
 asleep; running stairs stop once all players are beyond 40 blocks. Nearby players

@@ -1,17 +1,16 @@
 # Ramp Controller
 
 The standalone Landing Ramp items have been removed. Use **Ramp Controller**
-beside a horizontal platform made of matching slabs or ordinary
+beside a platform or upright panel made of matching slabs or ordinary
 solid blocks. Look toward the platform while placing the controller: its top
 arrow points to the seed block it will select. Look steeply upward or downward
 to place its active face toward blocks above or below. This changes which side
-is scanned; the ramp still deploys horizontally in the placement heading or
-configured Direction.
+is scanned. The dialog’s Axis selector chooses the source layout.
 
 **Ramp Controller Slab** has the same modes, channels and configuration dialog in
 a horizontal half-height housing. Click the upper half of a side or the underside
 of a block to place a top slab; other placements make a bottom slab. Its active
-scan face can point in all six directions while travel stays horizontal. A top
+scan face can point in all six directions and offers the same Axis choices. A top
 slab does not connect a vehicle to the ground through its empty lower half. The
 slab has newly drawn half-height side panels and the same seven mode indicators.
 Craft three Ramp Controllers in a row to obtain six slabs.
@@ -34,12 +33,18 @@ evaluates the redstone signal using the new settings:
   immediately. For example, start `2`, end `-3` travels from two blocks up to
   three blocks down. Equal endpoints are allowed. Trigger polarity still decides
   which redstone signal selects the end position.
-- **Ramp direction:** north, east, south or west, independent of the controller's
-  arrow. The arrow still selects the adjacent platform, so the controller may
-  sit alongside the ramp. The chosen direction points toward the far treads
-  (the hinge stays at the original position at both endpoints).
+- **Axis:** east/west side mounts offer X or Y; north/south side mounts offer
+  Z or Y. Up/down mounts offer X or Z. X/Z use the existing horizontal platform
+  layout. Y selects an upright panel, with tread cuts and the ramp profile
+  running from its lowest row to its highest row.
+- **Dir:** selects the heading on a horizontal axis. With Y selected, the
+  controller’s active face sets the outward direction. Existing saved layouts
+  and directions stay unchanged until edited.
 - **Travel:** up/down or left/right. Left and right are relative to the selected
   ramp direction. A positive sideways offset goes right; a negative one goes left.
+  Y layouts offer **out/in** instead of up/down: positive offsets move away from
+  the controller and negative offsets move toward it. Keep that path clear,
+  including the controller’s solid housing.
   The first ramp tread stays hinged; lift mode
   moves the whole platform sideways.
 - **Filled ramp / extend** keep each starting surface and fill the space to
@@ -84,14 +89,14 @@ and virtual channels both work.
 Escalators use vertical travel with Linear, Curve In or Curve Out height profiles.
 Start/off offset and sideways travel are disabled in these modes. Height 0
 creates a horizontal walkway; the selected platform must be rectangular with at least two treads.
-The existing 8�16-block selection limit and source material/slab rules apply.
+The existing 8×16-block selection limit and source material/slab rules apply.
 Different programmable finishes are retained when Match textures is Off;
 finishes travel with their source treads. Up and Down refer to physical height,
 so a negative Ramp height reverses the horizontal direction of uphill travel.
 
 | Example | Settings | Result |
 | --- | --- | --- |
-| Entrance escalator | 2 blocks wide � 4 long, height `3`, 8 px, Escalator Up, trigger ON | Redstone ON carries riders toward the raised end; OFF leaves the stairs extended. |
+| Entrance escalator | 2 blocks wide × 4 long, height `3`, 8 px, Escalator Up, trigger ON | Redstone ON carries riders toward the raised end; OFF leaves the stairs extended. |
 | Exit escalator | Same platform, Escalator Down | Riders travel from the raised end back toward the original platform level. |
 | Descending passage | Height `-3`, Escalator Up | Riders travel back from the lower end toward the original level. |
 | Normally running stairs | Escalator Up, trigger OFF | Movement runs without power and stops when power is applied. |
@@ -279,6 +284,31 @@ restores their original blocks and tile data; replacement terrain is preserved.
 
 Steel and aluminum full-height scaffolding from Immersive Engineering can also form ramp platforms, including all three patterns of each metal. Capture and recovery retain the original block variant. Fences and narrow posts are not full-width platforms.
 
+
+## Upright source panels
+
+1. Place a side-facing Ramp Controller beside a matching vertical panel, with
+   its active face pointing into the panel. The seed may be in the middle;
+   selection can grow above and below it, up to 16 blocks high and 8 wide.
+2. Open the Ramp tab and select **Axis: Y**. Blocks through the panel’s depth
+   are outside this selection plane.
+3. Choose the mode. For a first test, use Ramp, Start `0`, End `3`, and 8 px
+   treads. Power the controller to move successive vertical sections outward.
+   Lift translates the panel together; Filled Ramp and Extend fill along the
+   chosen horizontal travel direction. Escalators circulate sections along Y;
+   Up/Down refer to Y travel regardless of the outward offset’s sign.
+4. Remove power to return ordinary modes. Escalators retain their deployed
+   profile and stop their belt. Moat keeps its existing upright tower and
+   drawbridge unfolding behavior.
+
+![Axis selector on the Ramp tab](images/ramp-axis-dialog.png)
+
+![Deployed ramp made from an upright source panel](images/ramp-axis-vertical-panel.png)
+
+Changing Axis restores the previous source blocks before capturing the new
+layout. A blocked restoration retains the previous settings and recovery data;
+clear the original source positions before retrying. The layout survives saves,
+configured controller items, Duplifier settings and vehicle rotation.
 
 ## Analog deployment
 

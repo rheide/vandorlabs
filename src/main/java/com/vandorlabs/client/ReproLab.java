@@ -704,6 +704,7 @@ public class ReproLab {
         }
         if(Boolean.getBoolean("vandorlabs.redstoneScreenFocused")){if(++holdTicks>=40)RedstoneScreenRuntimeChecks.tick(mc,outDir);return;}
         if(Boolean.getBoolean("vandorlabs.retiredGlassClientOnly")){if(++holdTicks==40)try{MoatVisualChecks.retiredGlass(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Retired glass client checks",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.rampAxisChecksOnly")){try{if(RampAxisLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Ramp axis live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.rftoolsBuilderChecksOnly")){try{if(RFToolsBuilderLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("RFTools Builder live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.furnitureChecksOnly")){try{if(FurnitureLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Furniture live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.screenChipChecksOnly")){try{if(ScreenChipLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Screen chip live checks",failure);}return;}

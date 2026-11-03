@@ -223,7 +223,7 @@ public final class VehicleRotation {
         NBTTagList sources=data.getTagList("Sources",10);
         if(data.hasKey("MinAlong",3) && sources.tagCount()>0){
             EnumFacing direction=EnumFacing.getHorizontal(data.getInteger("Facing"));int min=Integer.MAX_VALUE;
-            for(int n=0;n<sources.tagCount();n++){NBTTagCompound entry=sources.getCompoundTagAt(n);min=Math.min(min,entry.getInteger("X")*direction.getFrontOffsetX()+entry.getInteger("Z")*direction.getFrontOffsetZ());}
+            for(int n=0;n<sources.tagCount();n++){NBTTagCompound entry=sources.getCompoundTagAt(n);min=Math.min(min,data.getBoolean("RampVerticalLayout")&&!data.getBoolean("MoatMode")?entry.getInteger("Y"):entry.getInteger("X")*direction.getFrontOffsetX()+entry.getInteger("Z")*direction.getFrontOffsetZ());}
             data.setInteger("MinAlong",min);
         }
     }

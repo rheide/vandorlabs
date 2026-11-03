@@ -101,6 +101,7 @@ public final class ProgrammableSettings {
     public static final String RAMP_SPEED = "ramp_speed";
     public static final String RAMP_LIFT = "ramp_lift";
     public static final String RAMP_EXTEND = "ramp_extend";
+    public static final String RAMP_VERTICAL_LAYOUT="ramp_vertical_layout";
     public static final String RAMP_DIRECTION = "ramp_direction";
     public static final String RAMP_TRAVEL = "ramp_travel";
     public static final String RAMP_MATCH_TEXTURES = "ramp_match_textures";
@@ -315,7 +316,7 @@ public final class ProgrammableSettings {
             out.setInteger(RAMP_END, ramp.endOffset());
             out.setInteger(RAMP_START_HALF, ramp.startHalfSteps());
             out.setInteger(RAMP_END_HALF, ramp.endHalfSteps());
-            out.setBoolean("MoatMode",ramp.moat);out.setInteger(RAMP_TREAD_PIXELS, ramp.treadPixels);
+            out.setBoolean(RAMP_VERTICAL_LAYOUT,ramp.verticalLayout);out.setBoolean("MoatMode",ramp.moat);out.setInteger(RAMP_TREAD_PIXELS, ramp.treadPixels);
             out.setInteger(RAMP_ESCALATOR,ramp.escalator);
             out.setInteger(RAMP_SPEED, ramp.speed);
             out.setInteger(RAMP_INTERPOLATION,ramp.interpolation);
@@ -720,7 +721,7 @@ public final class ProgrammableSettings {
             }
         } else if (tile instanceof TileEntityRampController && player != null) {
             TileEntityRampController ramp = (TileEntityRampController) tile;
-            if (values.hasKey("MoatMode") || values.hasKey(RAMP_ESCALATOR) || values.hasKey(RAMP_START) || values.hasKey(RAMP_END)
+            if (values.hasKey(RAMP_VERTICAL_LAYOUT) || values.hasKey("MoatMode") || values.hasKey(RAMP_ESCALATOR) || values.hasKey(RAMP_START) || values.hasKey(RAMP_END)
                     || values.hasKey(RAMP_START_HALF) || values.hasKey(RAMP_END_HALF)
                     || values.hasKey(RAMP_INTERPOLATION) || values.hasKey(RAMP_TREAD_PIXELS) || values.hasKey(RAMP_SPEED)
                     || values.hasKey(RAMP_LIFT) || values.hasKey(RAMP_EXTEND)
@@ -747,7 +748,7 @@ public final class ProgrammableSettings {
                         flag(values, RAMP_MATCH_TEXTURES, ramp.matchTextures),
                         player.getHeldItemMainhand().getItem() == ModItems.DUPLIFIER
                                 && DuplifierApplyOptions.connected(player.getHeldItemMainhand()),
-                        number(values,RAMP_INTERPOLATION,ramp.interpolation),number(values,RAMP_ESCALATOR,ramp.escalator),flag(values,"MoatMode",ramp.moat));
+                        number(values,RAMP_INTERPOLATION,ramp.interpolation),number(values,RAMP_ESCALATOR,ramp.escalator),flag(values,"MoatMode",ramp.moat),flag(values,RAMP_VERTICAL_LAYOUT,ramp.verticalLayout));
             }
         }
         if(tile instanceof TileEntityAnimatedScreenSelector && com.vandorlabs.blocks.RedstoneScreenInteractions.supports(block) && values.hasKey(REDSTONE_ROWS,10))

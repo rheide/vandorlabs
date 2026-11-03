@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Add mounting-dependent Ramp Controller Axis choices, including upright Y source panels for side mounts, saved settings, generated geometry, collision, recovery and vehicle rotation. Existing horizontal layouts retain their behavior.
+
 - Keep Canopy Glass placed by an automatic RFTools Builder: initialize pending tile ownership during placement before canopy membership repair.
 
 - Add a saved 45-degree Angle slider to Programmable Chairs, including rotated models, configured items, seat mounts and Duplifier support.

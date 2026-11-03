@@ -18,14 +18,14 @@ public class GuiRampController extends GuiContainer {
     private int lastStartHalf,lastEndHalf;
     private GuiTextField channelField;
     private GuiTextField treadField;
-    private boolean analogDeployment,powerOn,elevator,extendSegments,matchTextures,moat;
+    private boolean verticalLayout,analogDeployment,powerOn,elevator,extendSegments,matchTextures,moat;
     private int travelAxis,speed,interpolation,escalator;
     private int lastUpdate,page;
     private net.minecraft.util.EnumFacing direction;
     public GuiRampController(TileEntityRampController controller) {
         super(new ContainerRampController(controller));
         this.controller=controller;
-        analogDeployment=controller.analogDeployment;powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;moat=controller.moat;
+        verticalLayout=controller.verticalLayout;analogDeployment=controller.analogDeployment;powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;moat=controller.moat;
         escalator=controller.escalator;interpolation=controller.interpolation;speed=controller.speed; elevator=controller.elevator;
         travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
         lastUpdate=controller.clientUpdates;
@@ -75,6 +75,7 @@ public class GuiRampController extends GuiContainer {
 
         buttonList.add(new DialogTabButton(30,guiLeft+14,guiTop+30,140,20,"Ramp"));
         buttonList.add(new DialogTabButton(31,guiLeft+164,guiTop+30,142,20,"Redstone"));
+        buttonList.add(new GuiButton(24,guiLeft+164,guiTop+104,64,20,""));
         refresh();
     }
     private void refresh() {
@@ -96,7 +97,7 @@ public class GuiRampController extends GuiContainer {
             startSlider.y=guiTop+54;startSlider.height=18;endSlider.y=guiTop+76;endSlider.height=18;
             treadField.y=guiTop+142;
             for(GuiButton button:buttonList){
-                if(button.id==1||button.id==6){button.y=guiTop+98;button.height=18;}
+                if(button.id==1||button.id==6||button.id==24){button.y=guiTop+98;button.height=18;}
                 if(button.id==4||button.id==17){button.y=guiTop+120;button.height=18;}
                 if(button.id==14||button.id==15){button.y=guiTop+142;button.height=18;}
                 if(button.id==19){button.y=guiTop+164;button.height=18;}
@@ -113,11 +114,12 @@ public class GuiRampController extends GuiContainer {
                     ?(extendSegments?"Mode: extend":"Mode: lift")
                     :(extendSegments?"Mode: filled ramp":"Mode: ramp");
             if (b.id==3) ((RedstoneActivationButton)b).setMode(powerOn?1:2);
-            if (b.id==6) b.displayString="Ramp direction: "+direction.getName().toUpperCase(java.util.Locale.ROOT);
+            if(b.id==6){b.x=guiLeft+232;b.width=74;b.enabled=!verticalLayout;b.displayString="Dir: "+direction.getName().toUpperCase(java.util.Locale.ROOT);}
+            if(b.id==24){b.displayString="Axis: "+(verticalLayout?"Y":direction.getAxis().name());}
             if (b.id==4) b.displayString="Base speed: "+(speed==0?"fast":speed==1?"medium":"slow");
             if (b.id==18) b.displayString="Match textures: "+(matchTextures?"On":"Off");
             if(b.id==19){b.enabled=!elevator;b.displayString="Interpolation: "+new String[]{"Linear","Curve In","Curve Out"}[interpolation];}
-            if (b.id==17) {b.enabled=escalator==0&&!moat;b.displayString="Travel: "+(travelAxis==0?"up / down":"left / right");}
+            if (b.id==17) {b.enabled=escalator==0&&!moat;b.displayString="Travel: "+(travelAxis==0?(verticalLayout?"out / in":"up / down"):"left / right");}
         }
     }
     @Override protected void actionPerformed(GuiButton button) {
@@ -132,7 +134,14 @@ public class GuiRampController extends GuiContainer {
         if(button.id==22)analogDeployment=!analogDeployment;
         if (button.id==3) powerOn=!powerOn;
         if (button.id==4) speed=GuiOptionCycle.next(speed,3);
-        if (button.id==6) direction=GuiOptionCycle.next(direction);
+        if(button.id==6)direction=direction.getOpposite();
+        if(button.id==24){
+            net.minecraft.util.EnumFacing mount=com.vandorlabs.blocks.BlockRampController.scanFacing(controller.getWorld().getBlockState(controller.getPos()));
+            com.vandorlabs.ramp.RampAxis[] choices=com.vandorlabs.ramp.RampAxis.choices(com.vandorlabs.ramp.RampAxis.valueOf(mount.getAxis().name()));
+            com.vandorlabs.ramp.RampAxis selected=verticalLayout?com.vandorlabs.ramp.RampAxis.Y:com.vandorlabs.ramp.RampAxis.valueOf(direction.getAxis().name());
+            com.vandorlabs.ramp.RampAxis next=choices[0]==selected?choices[1]:choices[0];verticalLayout=next==com.vandorlabs.ramp.RampAxis.Y;
+            direction=verticalLayout?mount:net.minecraft.util.EnumFacing.getFacingFromAxis(direction.getAxisDirection(),net.minecraft.util.EnumFacing.Axis.valueOf(next.name()));
+        }
         if(button.id==19) interpolation=GuiOptionCycle.next(interpolation,3);
         if (button.id==18) matchTextures=!matchTextures;
         if (button.id==17) travelAxis=travelAxis==0?2:0;
@@ -159,7 +168,7 @@ public class GuiRampController extends GuiContainer {
                 && ControllerPlatform.validTreadPixels(pixels) && channel()>=0) {
             lastStartHalf=start;lastEndHalf=end;
             PacketHandler.INSTANCE.sendToServer(MessageRampController.halfOffsets(controller.getPos(),start,end,
-                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures).withAnalogDeployment(analogDeployment).withEscalator(escalator).withMoat(moat).withInterpolation(interpolation).withChannels(ChannelFields.parse(channelField)));
+                    pixels,powerOn,speed==2,elevator,direction,channel(),travelAxis,extendSegments,speed,matchTextures).withVerticalLayout(verticalLayout).withAnalogDeployment(analogDeployment).withEscalator(escalator).withMoat(moat).withInterpolation(interpolation).withChannels(ChannelFields.parse(channelField)));
         }
     }
     private int channel() {return ChannelFields.first(channelField);}
@@ -169,7 +178,7 @@ public class GuiRampController extends GuiContainer {
             lastUpdate=controller.clientUpdates;
             if (controller.error) {
                 // A rejected reset retains old server settings; do not display unsaved toggles.
-                analogDeployment=controller.analogDeployment;powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;moat=controller.moat;
+                verticalLayout=controller.verticalLayout;analogDeployment=controller.analogDeployment;powerOn=controller.activateOnPower; matchTextures=controller.matchTextures;moat=controller.moat;
                 escalator=controller.escalator;interpolation=controller.interpolation;speed=controller.speed; elevator=controller.elevator;
                 travelAxis=controller.travelAxis; extendSegments=controller.extendSegments;
                 direction=controller.rampDirection();
@@ -189,7 +198,7 @@ public class GuiRampController extends GuiContainer {
         if (!treadBefore.equals(treadField.getText()) || !channelBefore.equals(channelField.getText())) submit();
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,3,4,6,17,18,19,22))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,3,4,6,17,18,19,22,24))return;
         super.mouseClicked(x,y,button); treadField.mouseClicked(x,y,button); channelField.mouseClicked(x,y,button);
     }
     @Override protected void mouseReleased(int x,int y,int button) {

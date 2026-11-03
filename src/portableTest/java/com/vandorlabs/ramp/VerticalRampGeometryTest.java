@@ -6,6 +6,12 @@ final class VerticalRampGeometryTest {
     private static double volume(RampGeometry.Box b){return (b.maxX-b.minX)*(b.maxY-b.minY)*(b.maxZ-b.minZ);}
     private static boolean inside(RampGeometry.Box a,RampGeometry.Box b){return b.minX>=a.minX-1e-7&&b.minY>=a.minY-1e-7&&b.minZ>=a.minZ-1e-7&&b.maxX<=a.maxX+1e-7&&b.maxY<=a.maxY+1e-7&&b.maxZ<=a.maxZ+1e-7;}
     static void run(){
+        for(int offset:new int[]{-3,3}){
+            require(VerticalRampGeometry.beltSign(true,offset,1)==1,"Y Up climbs for either offset sign");
+            require(VerticalRampGeometry.beltSign(true,offset,2)==-1,"Y Down descends for either offset sign");
+            require(VerticalRampGeometry.beltSign(false,offset,1)==(offset>0?1:-1),"legacy uphill travel retained");
+            require(VerticalRampGeometry.beltSign(false,offset,2)==(offset>0?-1:1),"legacy downhill travel retained");
+        }
         for(RampGeometry.Direction face:RampGeometry.Direction.values()){
             ControllerPlatform.Cell seed=new ControllerPlatform.Cell(0,64,0);
             Set<ControllerPlatform.Cell> panel=ControllerPlatform.discoverPanel(seed,face,c->true);

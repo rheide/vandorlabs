@@ -40,7 +40,7 @@ public final class VehicleTileData {
             }
             if(result.hasKey("MinAlong")) {
                 net.minecraft.util.EnumFacing direction=net.minecraft.util.EnumFacing.getHorizontal(result.getInteger("Facing"));
-                result.setInteger("MinAlong",result.getInteger("MinAlong")+offset.getX()*direction.getFrontOffsetX()+offset.getZ()*direction.getFrontOffsetZ());
+                result.setInteger("MinAlong",result.getInteger("MinAlong")+(result.getBoolean("RampVerticalLayout")&&!result.getBoolean("MoatMode")?offset.getY():offset.getX()*direction.getFrontOffsetX()+offset.getZ()*direction.getFrontOffsetZ()));
             }
         }
         return com.vandorlabs.ramp.RampCopyData.canonicalizeSets(result);

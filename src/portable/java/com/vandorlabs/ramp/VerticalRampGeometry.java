@@ -11,6 +11,10 @@ public final class VerticalRampGeometry {
         public final int step;
         Piece(RampGeometry.Box box,double dx,double dy,double dz,int step){this.box=box;this.dx=dx;this.dy=dy;this.dz=dz;this.step=step;}
     }
+    /** Y belts climb along their profile axis regardless of inward/outward offset sign. */
+    public static int beltSign(boolean verticalLayout,double end,int mode){
+        return (verticalLayout||end>=0?1:-1)*(mode==1?1:-1);
+    }
     public static int dx(RampGeometry.Direction face,int travel){
         if(travel==RampGeometry.VERTICAL)return face==RampGeometry.Direction.EAST?1:face==RampGeometry.Direction.WEST?-1:0;
         int left=face==RampGeometry.Direction.NORTH?-1:face==RampGeometry.Direction.SOUTH?1:0;
@@ -37,7 +41,7 @@ public final class VerticalRampGeometry {
                 double shift=segment-(y-baseY+step*pitch);
                 // Split a tread at the belt seam instead of drawing outside its lane.
                 add(result,face,x,y,z,nativeBox,a,Math.min(b,baseY+length-y-shift),travel,offset,offset,shift,step);
-                if(y+b+shift>baseY+length)add(result,face,x,y,z,nativeBox,Math.max(a,baseY+length-y-shift),b,travel,offset,offset,shift-length,step);
+                if(y+b+shift>baseY+length)add(result,face,x,y,z,nativeBox,Math.max(a,baseY+length-y-shift),b,travel,EscalatorGeometry.height(segment-length,length,pixels,end,interpolation),EscalatorGeometry.height(segment-length,length,pixels,end,interpolation),shift-length,step);
             }else{
                 double initial=ControllerPlatform.offsetPixels(y-baseY,step,length,pixels,start,end,0,lift,fast,interpolation);
                 add(result,face,x,y,z,nativeBox,a,b,travel,fill?Math.min(initial,offset):offset,fill?Math.max(initial,offset):offset,0,step);
@@ -59,7 +63,11 @@ public final class VerticalRampGeometry {
         double lo=Math.min(a,b),hi=Math.max(a,b);
         if(fill){double initial=ControllerPlatform.offsetPixels(y-baseY,step,length,pixels,start,end,0,lift,fast,interpolation);lo=Math.min(lo,initial);hi=Math.max(hi,initial);}
         double y0=y+Math.max(low,lift?0:ControllerPlatform.treadStart(step,pixels)),y1=y+Math.min(high,lift?1:ControllerPlatform.treadEnd(step,pixels));
-        if(belt){lo=Math.min(0,end);hi=Math.max(0,end);y0=baseY;y1=baseY+length;}
+        if(belt){
+            double pitch=pixels/16D,at=y-baseY+ControllerPlatform.treadStart(step,pixels);
+            double first=EscalatorGeometry.height(at-pitch,length,pixels,end,interpolation),last=EscalatorGeometry.height(at+pitch,length,pixels,end,interpolation);
+            lo=Math.min(first,last);hi=Math.max(first,last);y0=y+ControllerPlatform.treadStart(step,pixels);y1=y+ControllerPlatform.treadEnd(step,pixels);
+        }
         if(y1-y0<1e-8)return new RampGeometry.Box(x,y,z,x,y,z);
         int dx=dx(face,travel),dz=dz(face,travel);
         return new RampGeometry.Box(x+(dx>0?lo:dx<0?-hi:0),y0,z+(dz>0?lo:dz<0?-hi:0),x+1+(dx>0?hi:dx<0?-lo:0),Math.max(y0,y1),z+1+(dz>0?hi:dz<0?-lo:0));
