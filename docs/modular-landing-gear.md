@@ -195,6 +195,10 @@ rotates mounting axes, saved links, track connections and attachment snapshots t
 
 ## Tracks
 
+A single Track with a top mount and no connected Track blocks swivels with steering in Vehicle Mode, like a Landing Gear Wheel. Its top mount stays fixed. Connected tread groups, arm-mounted Tracks and Hover mode keep their existing alignment. Tread animation still follows actual travel, including reversing.
+
+![Single top-mounted Track, straight](images/track-top-straight.png) ![Single top-mounted Track, steering](images/track-top-steering.png)
+
 The Creative inventory and item browser contain one **Track** block. Right-click it,
 or use the Configurizer, to select **Compact**, **Armoured** or **Bogie** in its dialog.
 The Track dialog contains style, operating status and Done. Slab-mounted Tracks are

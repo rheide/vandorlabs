@@ -78,6 +78,7 @@ public final class ProgrammableSettings {
     public static final String LIGHT_LEVEL = "light_level";
     public static final String CHAIR_STYLE = "chair_style";
     public static final String CHAIR_HEIGHT = "chair_height";
+    public static final String CHAIR_ANGLE = "chair_angle";
     public static final String DOOR_TILE_TEXTURE="door_tile_texture";
     public static final String DOOR_FACE_TEXTURE="door_face_texture";
     public static final String DOOR_DESIGN = "door_design";
@@ -292,7 +293,7 @@ public final class ProgrammableSettings {
             TileEntityProgrammableChair chair = (TileEntityProgrammableChair) tile;
             if (chair instanceof com.vandorlabs.tiles.TileEntityConnectedSeat)
                 out.setBoolean(JOIN,((com.vandorlabs.tiles.TileEntityConnectedSeat)chair).isJoin());
-            else out.setInteger(CHAIR_STYLE, chair.getStyle());
+            else {out.setInteger(CHAIR_STYLE, chair.getStyle());out.setInteger(CHAIR_ANGLE,chair.getAngle());}
             out.setInteger(CHAIR_HEIGHT, chair.getHeight());
         } else if (tile instanceof TileEntityRedstoneChannel) {
             TileEntityRedstoneChannel switchTile = (TileEntityRedstoneChannel) tile;
@@ -684,6 +685,7 @@ public final class ProgrammableSettings {
             if (!(chair instanceof com.vandorlabs.tiles.TileEntityConnectedSeat) && values.hasKey(CHAIR_STYLE, 3)) {
                 chair.setStyle(values.getInteger(CHAIR_STYLE)); applicable = true;
             }
+            if(!(chair instanceof com.vandorlabs.tiles.TileEntityConnectedSeat)&&values.hasKey(CHAIR_ANGLE,3)){chair.setAngle(values.getInteger(CHAIR_ANGLE));applicable=true;}
             if (values.hasKey(CHAIR_HEIGHT, 3)) {
                 chair.setHeight(values.getInteger(CHAIR_HEIGHT)); applicable = true;
             }

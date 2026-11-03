@@ -16,7 +16,7 @@ Taxi also works without a propulsion block at 0.23 blocks per tick, about 18% be
 
 ## Screen chip readers
 
-[Screen chip readers](../screen-chip-readers.md) add a Display-only Chip choice to Programmable Diagonal Half Screens, Diagonal Screens, Half Consoles and regular Consoles. Console slots open toward the player at the bottom; the Diagonal Screen slot animates sideways. The slots disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Display before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens share an attached Data Chip Mount across their joined rectangle. Chip contents stretch across the whole display. Vehicle Chip previews use their company colours (gold for Pinnacle, cyan for Vandor, silver for generic chips). Slow/Normal/Fast controls Vehicle Chip rotation, immutable shape geometry is cached, and company Master Data Chips display their Corp logos.
+[Screen chip readers](../screen-chip-readers.md) add a Chip choice on the Displays tab to Programmable Diagonal Half Screens, Diagonal Screens, Half Consoles and regular Consoles. Console slots open toward the player at the bottom; the Diagonal Screen slot animates sideways. The slots disappear when another artwork choice is selected. Inserted chips remain stored while hidden. Half Consoles put Displays before Controls and reserve the right edge of the lower controls deck for the slot without stretching its texture. Regular Programmable Screens share an attached Data Chip Mount across their joined rectangle. Chip contents stretch across the whole display. Vehicle Chip previews use their company colours (gold for Pinnacle, cyan for Vandor, silver for generic chips). Slow/Normal/Fast controls Vehicle Chip rotation, immutable shape geometry is cached, and company Master Data Chips display their Corp logos.
 
 Data Chip Mounts and Access Card Mounts now share the Thruster Lever's base height, tilt and tilt direction controls. Configure these on the Security tab; right-click a button to cycle backwards. The inserted token follows the mount pose.
 
@@ -67,3 +67,9 @@ The Sectional Door keeps its existing registry ID and default artwork. Its Textu
 ## Company doors
 
 The Doors texture category now includes six company folders: Pinnacle, Ashiro-Mai, Paladyne, Vektor, Seyr and Vandor. Each contains Standard, Security and Light artwork. The 128×256 textures retain their authored alpha, including the Light designs’ window openings, and work on normal and Large Programmable Doors. Browse the [texture catalog](../texture-browser/) for previews.
+
+## Chair angle and single-Track steering
+
+Programmable Chairs have an Angle slider from 0–315° in 45° steps, relative to their placed facing. Configured items and saved vehicle designs retain the angle; the Duplifier can copy it separately. Lone top-mounted Tracks swivel like Landing Gear Wheels in Vehicle Mode, while their supports remain fixed. Joined and arm-mounted Tracks retain their alignment.
+
+Console and Half Console frame finishes now affect only the Displays surface. Controls retain their original artwork area. Screens, consoles, cockpits, navigation tables and other multiblock display tabs/categories consistently use **Displays**.

@@ -13,6 +13,10 @@ import net.minecraft.util.math.AxisAlignedBB;
 public class TileEntityProgrammableChair extends TileEntity {
     private int style;
     private int height = 1;
+    private int angle;
+    public int getAngle(){return angle;}
+    public int angleDegrees(){return angle*45;}
+    public void setAngle(int value){int next=Math.max(0,Math.min(7,value));if(next!=angle){angle=next;notifyChairChanged();}}
 
     public int getStyle() { return style; }
     public int getHeight() { return height; }
@@ -45,7 +49,7 @@ public class TileEntityProgrammableChair extends TileEntity {
                 double seatY = seatHeight();
                 for (EntityChairSeat seat : world.getEntitiesWithinAABB(
                         EntityChairSeat.class, new AxisAlignedBB(pos).grow(0.25D, 1D, 0.25D)))
-                    if (pos.equals(seat.getChairPos())) seat.setSeatY(seatY);
+                    if (pos.equals(seat.getChairPos())) {seat.setSeatY(seatY);if(state.getBlock() instanceof BlockBridgeChair)seat.rotationYaw=state.getValue(com.vandorlabs.blocks.BlockVandorDirectional.FACING).getHorizontalAngle()+angleDegrees();}
             }
         }
     }
@@ -54,11 +58,13 @@ public class TileEntityProgrammableChair extends TileEntity {
         super.writeToNBT(tag);
         tag.setInteger("ChairStyle", style);
         tag.setInteger("ChairHeight", height);
+        if(angle!=0)tag.setInteger("ChairAngle",angle);else tag.removeTag("ChairAngle");
         return tag;
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
+        angle=Math.max(0,Math.min(7,tag.getInteger("ChairAngle")));
         style = Math.max(0, Math.min(4, tag.getInteger("ChairStyle")));
         height = tag.hasKey("ChairHeight", 3)
                 ? Math.max(0, Math.min(2, tag.getInteger("ChairHeight"))) : 1;

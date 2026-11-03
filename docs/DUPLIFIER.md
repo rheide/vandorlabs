@@ -80,7 +80,7 @@ unrelated texture index is never applied across them. Display mode, animation
 speed, framing, input panels, input size and wall position transfer between
 displays. Light level transfers between lights. Porthole shape and glass shade,
 slab side layout, propulsion shape and particles, glass size, trigger on finish,
-chair style and height, door design and motion settings, and switch mount
+chair style, height and angle, door design and motion settings, and switch mount
 rotation transfer only to targets that expose those settings. Framing and glass
 shade also transfer across block types that share those controls.
 Programmable Trapdoors use **Door / Trapdoor Movement** for Rotating / Sliding, including the diagonal Slide over wall / Slide into wall choice; **Next-block Leaf** copies This block / Next block, and **Trapdoor Hinge Direction** copies the explicit hinge of any individual normal trapdoor, including ordinary sliders. The trapdoor dialog combines movement and next-block placement; these copy filters remain independent so existing tools keep their saved selections. These switches are on the Doors page. The dialog grows to fit every row and temporarily reduces GUI scale when needed, restoring it on close. If your tool has saved application filters, enable each property you want to copy. Next block mounts stay individual when another trapdoor is placed beside them; joined targets retain This block and their assembly hinges.

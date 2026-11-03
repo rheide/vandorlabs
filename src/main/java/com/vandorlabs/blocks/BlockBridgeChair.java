@@ -33,6 +33,9 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * occupied by the backrest so blocks cannot be placed through the model. */
 public class BlockBridgeChair extends BlockVandorDirectional {
 
+    public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> ANGLE=new net.minecraftforge.common.property.IUnlistedProperty<Integer>(){
+        public String getName(){return "chair_angle";}public boolean isValid(Integer value){return value!=null&&value>=0&&value<8;}public Class<Integer> getType(){return Integer.class;}public String valueToString(Integer value){return value.toString();}
+    };
     public static final PropertyBool UPPER = PropertyBool.create("upper");
     public enum Style implements IStringSerializable {
         COMMAND("command", 24, 12), COMPANION("companion", 21, 11),
@@ -71,7 +74,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, UPPER, STYLE, HEIGHT);
+        return new net.minecraftforge.common.property.ExtendedBlockState(this,new net.minecraft.block.properties.IProperty[]{FACING,UPPER,STYLE,HEIGHT},new net.minecraftforge.common.property.IUnlistedProperty[]{ANGLE});
     }
 
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
@@ -92,6 +95,8 @@ public class BlockBridgeChair extends BlockVandorDirectional {
         return state.withProperty(STYLE, Style.byIndex(tile == null ? 0 : tile.getStyle()))
                 .withProperty(HEIGHT, Height.byIndex(tile == null ? 1 : tile.getHeight()));
     }
+
+    @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){TileEntityProgrammableChair tile=settings(world,pos,state);return ((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(ANGLE,tile==null?0:tile.getAngle());}
 
     @Override
     public IBlockState getStateForPlacement(World world, BlockPos pos,
@@ -117,6 +122,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
             if (tile != null && tag != null) {
                 tile.setStyle(tag.getInteger("ChairStyle"));
+                tile.setAngle(tag.getInteger("ChairAngle"));
                 tile.setHeight(tag.hasKey("ChairHeight", 3)
                         ? tag.getInteger("ChairHeight") : 1);
             }
@@ -169,7 +175,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
                 Style.byIndex(tile == null ? 0 : tile.getStyle()).seatY
                         + (tile == null ? 0 : tile.getHeightOffsetPixels() / 16D));
         IBlockState lowerState = world.getBlockState(lower);
-        seat.rotationYaw = lowerState.getValue(FACING).getHorizontalAngle();
+        seat.rotationYaw = lowerState.getValue(FACING).getHorizontalAngle()+(tile==null?0:tile.angleDegrees());
         if (world.spawnEntity(seat)) player.startRiding(seat, true);
         return true;
     }
@@ -221,6 +227,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setInteger("ChairStyle", tile.getStyle());
             tag.setInteger("ChairHeight", tile.getHeight());
+            if(tile.getAngle()!=0)tag.setInteger("ChairAngle",tile.getAngle());
             stack.setTagInfo("BlockEntityTag", tag);
         }
         return stack;
@@ -234,6 +241,7 @@ public class BlockBridgeChair extends BlockVandorDirectional {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setInteger("ChairStyle", tile.getStyle());
             tag.setInteger("ChairHeight", tile.getHeight());
+            if(tile.getAngle()!=0)tag.setInteger("ChairAngle",tile.getAngle());
             stack.setTagInfo("BlockEntityTag", tag);
         }
         drops.add(stack);

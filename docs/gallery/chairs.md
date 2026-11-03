@@ -13,6 +13,10 @@ Programmable Chair includes five sittable designs. Right-click a chair to sit; s
 | Conference | ![Conference Chair](../images/gallery/chairs/conference.png) |
 | Mess Hall | ![Mess Hall Chair](../images/gallery/chairs/mess-hall.png) |
 
+Creative sneak-right-click or the Configurizer opens the chair dialog. **Angle** selects 0–315° in 45° steps relative to the placed facing. The model and seat mount turn together. Style, height and angle survive saving, configured picking/placement and vehicle transfers. The Duplifier offers a separate **Chair Angle** option.
+
+![Chair Angle slider](../images/chair-angle-settings.png)
+
 The chair is a normal placed block; sitting uses a temporary seat entity that is removed when the rider dismounts or the chair breaks.
 
 ## Luxury and Military Seats

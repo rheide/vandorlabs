@@ -60,8 +60,12 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             buffer.setTranslation(0,0,0);
             EnumFacing facing=state.getValue(GearBlock.FACING);int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
             double travel=TrackTreadMotion.sample(craft,tile.getPos(),facing,partialTicks);
-            for(com.vandorlabs.gear.track.TrackParts.Part piece:com.vandorlabs.gear.track.TrackParts.forCell(com.vandorlabs.gear.track.TrackBlock.style(tile.getWorld(),tile.getPos()),facing,com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),tile.getPos())))
-                GearModels.drawTrack("track/"+piece.model.getResourcePath().substring("block/track/".length()),Affine.quarterTurn(piece.quarterTurns),x,y,z,light,buffer,travel);
+            double steering=TrackSteering.angle(craft,tile.getPos());
+            for(com.vandorlabs.gear.track.TrackParts.Part piece:com.vandorlabs.gear.track.TrackParts.forCell(com.vandorlabs.gear.track.TrackBlock.style(tile.getWorld(),tile.getPos()),facing,com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),tile.getPos()))){
+                Affine turn=Affine.quarterTurn(piece.quarterTurns);
+                if(!piece.model.getResourcePath().contains("top_mount"))turn=Affine.yaw(.5,steering).compose(turn);
+                GearModels.drawTrack("track/"+piece.model.getResourcePath().substring("block/track/".length()),turn,x,y,z,light,buffer,travel);
+            }
             return;
         }
         if(!state.getValue(GearBlock.ASSEMBLED)&&((GearBlock)state.getBlock()).sizeClass()==1)return;

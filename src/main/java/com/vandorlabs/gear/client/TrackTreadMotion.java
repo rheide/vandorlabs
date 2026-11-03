@@ -19,7 +19,7 @@ public final class TrackTreadMotion {
             double dx=pose.x-motion.previous.x,dz=pose.z-motion.previous.z;
             if(dx*dx+dz*dz<4&&Math.abs(net.minecraft.util.math.MathHelper.wrapDegrees(pose.yaw-motion.previous.yaw))<45){
                 Vec3d point=new Vec3d(track).addVector(.5,0,.5),before=motion.previous.world(point,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2),after=pose.world(point,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
-                double yaw=Math.toRadians(pose.yaw),c=Math.cos(yaw),s=Math.sin(yaw);
+                double yaw=Math.toRadians(pose.yaw+TrackSteering.angle(craft,track)),c=Math.cos(yaw),s=Math.sin(yaw);
                 motion.distance+=(after.x-before.x)*(facing.getFrontOffsetX()*c-facing.getFrontOffsetZ()*s)+(after.z-before.z)*(facing.getFrontOffsetX()*s+facing.getFrontOffsetZ()*c);
             }
         }

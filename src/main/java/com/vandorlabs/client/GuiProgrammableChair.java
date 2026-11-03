@@ -18,6 +18,7 @@ public final class GuiProgrammableChair extends GuiContainer {
     private final TileEntityProgrammableChair tile;
     private int selected;
     private int height;
+    private int angle;
     private static final String[] HEIGHTS = {"Low (-2 px)", "Middle", "High (+2 px)"};
 
     public GuiProgrammableChair(TileEntityProgrammableChair tile) {
@@ -25,6 +26,7 @@ public final class GuiProgrammableChair extends GuiContainer {
         this.tile = tile;
         this.selected = tile.getStyle();
         this.height = tile.getHeight();
+        this.angle=tile.getAngle();
         xSize = 256;
         ySize = 210;
     }
@@ -37,8 +39,10 @@ public final class GuiProgrammableChair extends GuiContainer {
             buttonList.add(new GuiButton(i, guiLeft + 14, guiTop + 25 + i * 24,
                     126, 20, I18n.format("gui.vandorlabs.chair." + id)));
         }
-        buttonList.add(new GuiButton(11, guiLeft + 14, guiTop + 151, 126, 20,
+        buttonList.add(new GuiButton(11, guiLeft + 14, guiTop + 151, 112, 20,
                 heightLabel()));
+        buttonList.add(new net.minecraftforge.fml.client.config.GuiSlider(12,guiLeft+130,guiTop+151,112,20,"Angle: ","\u00b0",0,7,angle,false,true,slider->{int next=slider.getValueInt();slider.setValue(next);slider.displayString="Angle: "+(next*45)+"\u00b0";if(next!=angle){angle=next;tile.setAngle(angle);sendSettings();}}));
+        buttonList.get(buttonList.size()-1).displayString="Angle: "+(angle*45)+"\u00b0";
         buttonList.add(new GuiButton(10, guiLeft + 154, guiTop + 175, 88, 20,
                 I18n.format("gui.done")));
     }
@@ -47,7 +51,7 @@ public final class GuiProgrammableChair extends GuiContainer {
 
     private void sendSettings() {
         PacketHandler.INSTANCE.sendToServer(new MessageProgrammableChair(
-                tile.getPos(), selected, height));
+                tile.getPos(), selected, height,angle));
     }
 
     @Override protected void actionPerformed(GuiButton button) throws IOException {
@@ -75,6 +79,7 @@ public final class GuiProgrammableChair extends GuiContainer {
         NBTTagCompound data = new NBTTagCompound();
         data.setInteger("ChairStyle", selected);
         data.setInteger("ChairHeight", height);
+        data.setInteger("ChairAngle",angle);
         preview.setTagInfo("BlockEntityTag", data);
         net.minecraft.client.renderer.GlStateManager.pushMatrix();
         net.minecraft.client.renderer.GlStateManager.translate(guiLeft + 169,

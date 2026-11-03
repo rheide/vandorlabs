@@ -14,8 +14,13 @@ final class FrameSurfaceRenderer {
     static boolean suppressBorders;
     private static final java.util.Map<com.vandorlabs.tiles.TileEntityAnimatedScreenSelector,java.util.Map<ScreenSurface.Quad,Content>> CONTENT=new java.util.WeakHashMap<>();
     private static final class Content {double l,r,t,b;ScreenSurface.Quad quad;}
+    static boolean applies(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad){
+        net.minecraft.block.Block block=tile.getBlockType();
+        return !(block instanceof com.vandorlabs.blocks.BlockProgrammableConsole||block instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole)
+            ||quad!=ScreenSurface.input(com.vandorlabs.render.InputSurfaceLayout.halfConsoleFront())&&quad!=com.vandorlabs.blocks.ScreenChipSupport.deck();
+    }
     static ScreenSurface.Quad content(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad){
-        if(!tile.frameAppearance.hasFront())return quad;
+        if(!tile.frameAppearance.hasFront()||!applies(tile,quad))return quad;
         double[] b=ScreenFrameBorders.get(tile.frameAppearance.front);
         GlassSurfaceGroups.Layout layout=tile.frameAppearance.tile?new GlassSurfaceGroups.Layout(0,0,1,1):ScreenSurfaceGroups.frameLayout(tile);
         double l=layout.column==0?b[0]:0,r=layout.column==layout.columns-1?b[1]:0,t=layout.row==layout.rows-1?b[2]:0,d=layout.row==0?b[3]:0;
@@ -29,7 +34,7 @@ final class FrameSurfaceRenderer {
     }
     static void screen(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,boolean ceiling){
         FrameAppearance frame=tile.frameAppearance;
-        if(!frame.hasFront()||suppressBorders)return;
+        if(!frame.hasFront()||suppressBorders||!applies(tile,quad))return;
         float oldBlock=OpenGlHelper.lastBrightnessX,oldSky=OpenGlHelper.lastBrightnessY;
         if(frame.light()>0)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,oldSky);
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);

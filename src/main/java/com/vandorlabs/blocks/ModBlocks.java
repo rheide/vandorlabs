@@ -757,6 +757,8 @@ public class ModBlocks {
         }
 
         for(ModelResourceLocation location:new java.util.ArrayList<>(event.getModelRegistry().getKeys())) {
+            if(VandorLabs.MODID.equals(location.getResourceDomain())&&(location.getResourcePath().equals("programmable_chair")||location.getResourcePath().startsWith("configured/programmable_chair_")))
+                event.getModelRegistry().putObject(location,new com.vandorlabs.client.ChairAngleModel(event.getModelRegistry().getObject(location)));
             if(VandorLabs.MODID.equals(location.getResourceDomain()) && (location.getResourcePath().equals("luxury_seat")||location.getResourcePath().equals("military_seat")))
                 event.getModelRegistry().putObject(location,new com.vandorlabs.client.ConnectedSeatModel(event.getModelRegistry().getObject(location)));
         }
