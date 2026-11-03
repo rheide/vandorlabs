@@ -4,6 +4,24 @@ import net.minecraft.world.WorldServer;
 
 /** Used only by the opt-in client suite to advance deferred transfers in synchronous fixtures. */
 public final class VehicleTransferRuntimeChecks {
+    public static final class PreparationAudit implements AutoCloseable {
+        private final java.util.function.Consumer<String> previous=VehicleTransfer.testFault;
+        private int builds,reuses;
+        public PreparationAudit(){VehicleTransfer.testFault=point->{if(point.equals("assembly-validation-built"))builds++;if(point.equals("assembly-validation-reused"))reuses++;if(previous!=null)previous.accept(point);};}
+        public void assertReused(){if(builds!=1||reuses<1)throw new IllegalStateException("Preparation repeated view validation: builds="+builds+" reuses="+reuses);System.out.println("[vandorlabs][reprolab] vehicle-preparation-reuse PASS builds="+builds+" reuses="+reuses+" real-async-journal");}
+        public void close(){VehicleTransfer.testFault=previous;}
+    }
+    public static void changedHardness(WorldServer world,VehicleStructure source,net.minecraft.util.math.BlockPos origin,net.minecraft.entity.player.EntityPlayerMP actor)throws Exception{
+        java.util.function.Consumer<String> previous=VehicleTransfer.testFault;
+        float hardness=net.minecraft.init.Blocks.IRON_BLOCK.getBlockHardness(net.minecraft.init.Blocks.IRON_BLOCK.getDefaultState(),world,origin);
+        java.util.List<Exception> failures=new java.util.ArrayList<>();boolean[] durable={false};
+        try{
+            VehicleTransfer.testFault=point->{if(point.equals("painting-before-journal"))net.minecraft.init.Blocks.IRON_BLOCK.setHardness(-1);if(previous!=null)previous.accept(point);};
+            VehicleTransfer.submit(world,source,origin,()->VehicleTransfer.assemble(world,source,origin,actor),failure->{durable[0]=VehicleTransfer.pending(world);failures.add(failure);});drain(world);
+            if(!durable[0]||failures.size()!=1||!failures.get(0).getMessage().contains("Unsupported moving block")||!source.matchesExact(world,origin)||VehicleTransfer.pending(world))throw new IllegalStateException("Prepared transfer bypassed changed hardness or changed source ownership");
+        }finally{net.minecraft.init.Blocks.IRON_BLOCK.setHardness(hardness);VehicleTransfer.testFault=previous;}
+        System.out.println("[vandorlabs][reprolab] vehicle-preparation-hardness PASS changed-after-validation refused-after-journal original-source-retained");
+    }
     public static final class LostMarker {
         int saves;
         final net.minecraft.world.chunk.Chunk chunk;

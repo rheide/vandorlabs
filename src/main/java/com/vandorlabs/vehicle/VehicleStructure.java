@@ -168,6 +168,13 @@ public final class VehicleStructure {
         return controller;
     }
     /** Raw ownership comparison for exact copies, without vehicle parking/legacy normalization. */
+    /** Exact immutable comparison without building two complete serialized NBT trees. */
+    public boolean sameSnapshot(VehicleStructure other){
+        if(this==other)return true;
+        if(other==null||displayOnly!=other.displayOnly||gearCount!=other.gearCount||facing!=other.facing||!seat.equals(other.seat)||cells.size()!=other.cells.size())return false;
+        for(int i=0;i<cells.size();i++){Cell a=cells.get(i),b=other.cells.get(i);if(a!=b&&(!a.pos.equals(b.pos)||a.state!=b.state||!a.sameTileData(b)))return false;}
+        return true;
+    }
     public boolean matchesExact(World world,BlockPos origin){
         for(Cell cell:cells){BlockPos at=origin.add(cell.pos);if(!world.isBlockLoaded(at)||world.getBlockState(at)!=cell.state)return false;TileEntity tile=world.getTileEntity(at);
             if(MekanismTankCompat.reactorGlass(tile)&&!MekanismTankCompat.standaloneReactorGlass(tile))return false;

@@ -18,6 +18,7 @@ import java.util.concurrent.*;
  * Transfers bypass break callbacks, which otherwise drop inventories and dismantle owned cells. */
 public final class VehicleTransfer {
     @FunctionalInterface interface Action {void run()throws Exception;}
+    private static final boolean REUSE_ASSEMBLY_PREFLIGHT=!Boolean.getBoolean("vandorlabs.legacyAssemblyPreflight");
     private static final ThreadPoolExecutor IO=new ThreadPoolExecutor(1,1,30,TimeUnit.SECONDS,new ArrayBlockingQueue<Runnable>(16),r->{Thread t=new Thread(r,"Vandor transfer persistence");t.setDaemon(true);return t;},new ThreadPoolExecutor.AbortPolicy());
     private static final Map<WorldServer,ArrayDeque<Work>> WORK=new WeakHashMap<>();
     private static final Map<TileEntity,Integer> PAUSED_TILES=new IdentityHashMap<>();
@@ -35,7 +36,8 @@ public final class VehicleTransfer {
     private static final Deferred DEFERRED=new Deferred();
     private static final class Work {
         final WorldServer world;final Action action;final java.util.function.Consumer<Exception> failed;
-        VehicleStructure geometrySource;VehiclePreparation preparation;VehicleCollision geometry;
+        VehicleStructure geometrySource,validationSource;VehiclePreparation preparation;VehicleCollision geometry;
+        VehicleWorld validationView;boolean validationComplete;int validationBuilds,validationReuses;
         EntityGroundVehicle assembled,held;
         VehicleStructure beforeStructure;VehicleCollision beforeCollision;
         NBTTagCompound undo;VehicleOwnership.Update ownership;Path journal;
@@ -80,7 +82,7 @@ public final class VehicleTransfer {
     static VehicleCollision geometry(World world,VehicleStructure structure){
         Work work=ACTIVE.get();if(work==null)return new VehicleCollision(new VehicleWorld(world,structure));
         if(work.geometrySource==null){work.geometrySource=structure;work.preparation=new VehiclePreparation(new VehicleWorld(world,structure));}
-        else if(work.geometrySource!=structure&&!work.geometrySource.write().equals(structure.write()))throw new IllegalArgumentException("Craft changed while preparing geometry; inspect it again.");
+        else if(!work.geometrySource.sameSnapshot(structure))throw new IllegalArgumentException("Craft changed while preparing geometry; inspect it again.");
         if(work.geometry==null)try{work.geometry=work.preparation.poll();}catch(Exception failure){throw new IllegalStateException("Vehicle geometry preparation failed.",failure);}
         if(work.geometry==null)throw DEFERRED;
         return work.geometry;
@@ -94,6 +96,7 @@ public final class VehicleTransfer {
     private static void hold(Work work,EntityGroundVehicle entity){if(work!=null){if(work.held==null){work.beforeStructure=entity.structure;work.beforeCollision=entity.collision;}work.held=entity;entity.setTransferInProgress(true);}}
     private static void release(Work work){
         TransferCoordinator.release(work.world,work);
+        if(VehicleDiagnostics.ENABLED&&work.validationBuilds>0)System.out.println("[vandorlabs] vehicle-preflight views="+work.validationBuilds+" reused="+work.validationReuses+" cached="+REUSE_ASSEMBLY_PREFLIGHT);
         if(work.indicator!=null)work.indicator.setConverting(false);
         if(work.checkpoint!=null)work.checkpoint.close();if(work.held!=null)work.held.setTransferInProgress(false);if(work.preparation!=null)work.preparation.cancel();
         for(TileEntity tile:work.pausedTiles){int remaining=PAUSED_TILES.getOrDefault(tile,1)-1;
@@ -215,6 +218,34 @@ public final class VehicleTransfer {
     }
     static java.util.function.Consumer<String> testFault;
     private static void fault(String point){if(testFault!=null&&System.getProperty("vandorlabs.reprolab")!=null)testFault.accept(point);}
+    private static VehicleWorld assemblyView(WorldServer world,VehicleStructure structure){
+        Work work=ACTIVE.get();
+        if(REUSE_ASSEMBLY_PREFLIGHT&&work!=null&&work.validationView!=null){
+            if(!work.validationSource.sameSnapshot(structure))throw new IllegalArgumentException("Craft changed while validating its prepared data; inspect it again.");
+            return work.validationView;
+        }
+        VehicleWorld view=new VehicleWorld(world,structure);
+        if(work!=null){work.validationBuilds++;if(REUSE_ASSEMBLY_PREFLIGHT){work.validationView=view;work.validationSource=structure;}}
+        return view;
+    }
+    private static void validateAssembly(VehicleStructure structure,VehicleWorld view){
+        Work work=ACTIVE.get();
+        if(REUSE_ASSEMBLY_PREFLIGHT&&work!=null&&work.validationComplete){
+            // Hardness hooks may consult the physical parent world and change while disk I/O is pending.
+            for(VehicleStructure.Cell cell:structure.cells)try{
+                if(cell.state.getMaterial().isLiquid()||cell.state.getBlockHardness(view,cell.pos)<0&&!(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockControlledRamp))throw new IllegalArgumentException("Unsupported moving block: "+cell.state.getBlock().getRegistryName());
+            }catch(LinkageError error){VehicleCompatibility.warn(cell.state.getBlock(),"prepared hardness preflight",error);throw new IllegalArgumentException("Cannot safely rotate "+cell.state.getBlock().getRegistryName(),error);}
+            work.validationReuses++;fault("assembly-validation-reused");return;
+        }
+        VehicleRotation.validate(structure,view);
+        if(structure.gearCount<3){
+            VehicleScan supports=VehicleScan.attachment(view,structure.seat,Collections.emptySet());
+            while(!supports.step(256)){}
+            if(supports.error!=null||supports.trackSupportCount()<2)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports, or two track blocks.");
+        }
+        if(work!=null&&REUSE_ASSEMBLY_PREFLIGHT)work.validationComplete=true;
+        fault("assembly-validation-built");
+    }
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin)throws Exception {return assemble(world,structure,origin,null);}
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin,net.minecraft.entity.player.EntityPlayer actor)throws Exception {
         for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&MekanismTankCompat.reactorGlass(world.getTileEntity(origin.add(cell.pos))))MekanismTankCompat.required(world,origin.add(cell.pos));
@@ -226,16 +257,11 @@ public final class VehicleTransfer {
         VehicleStructure geometrySource=structure;
         List<net.minecraft.entity.item.EntityPainting> paintings=VehiclePaintings.attached(world,structure,origin);
         structure=VehiclePaintings.capture(structure,origin,paintings);
-        VehicleWorld validationView=new VehicleWorld(world,structure);
+        VehicleWorld validationView=assemblyView(world,structure);
         VehicleFlight.requireThruster(structure);
         boolean forceHover=structure.activeNonWheeledGear()&&!VehicleSkiTraction.canStart(world,structure,origin);
         if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice; other landing gear needs three lift blocks for Hover.");
-        VehicleRotation.validate(structure,validationView);
-        if(structure.gearCount<3){
-            VehicleScan supports=VehicleScan.attachment(new VehicleWorld(world,structure),structure.seat,Collections.emptySet());
-            while(!supports.step(256)){}
-            if(supports.error!=null||supports.trackSupportCount()<2)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports, or two track blocks.");
-        }
+        validateAssembly(structure,validationView);
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         Work work=ACTIVE.get();if(work!=null)VehiclePaintings.hold(work.paintings,paintings);EntityGroundVehicle entity;
         if(work!=null&&work.assembled!=null&&!VehiclePaintings.entries(work.assembled.structure).equals(VehiclePaintings.entries(structure)))throw new IllegalArgumentException("Paintings changed while preparing the vehicle; source retained, please retry");
