@@ -36,6 +36,10 @@ Settled closed panels use chunk geometry. Moving and raised panels share a batch
 
 See the [rendering measurements and validation scope](../render-performance.md).
 
+## Builder compatibility
+
+Canopy Glass now remains in place when an RFTools Builder fills a Shape Card. Automatic placement initializes the pending canopy tile and its footprint before normal membership repair runs. Ordinary placement and broken-footprint cleanup retain their existing behavior.
+
 ## Dense rendering
 
 Neighbouring Surfaces with different active/inactive artwork form separate join groups. Matching Copy Controller pads may be rectangles; Turntables still require squares.

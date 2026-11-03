@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Keep Canopy Glass placed by an automatic RFTools Builder: initialize pending tile ownership during placement before canopy membership repair.
+
 - Add a saved 45-degree Angle slider to Programmable Chairs, including rotated models, configured items, seat mounts and Duplifier support.
 - Swivel isolated top-mounted Tracks with vehicle steering while keeping their top supports fixed; retain normal joined/arm-mounted Track behavior.
 - Apply Console and Half Console frame finishes only to Displays, leaving Controls artwork and controls unchanged.

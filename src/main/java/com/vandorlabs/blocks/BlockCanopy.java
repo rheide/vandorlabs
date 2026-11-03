@@ -157,14 +157,18 @@ public class BlockCanopy extends Block {
     public void onBlockPlacedBy(
             World w, BlockPos p, IBlockState s, EntityLivingBase entity, ItemStack stack) {
         if (w.isRemote) return;
-        TileEntityCanopy root=TileEntityCanopy.at(w,p);
+        // Builders place during tile ticks: freshly created tiles can still be
+        // pending, outside the chunk map used by the read-only rendering lookup.
+        // Placement must initialize that pending tile before membership repair.
+        p = p.toImmutable();
+        TileEntityCanopy root=placementTile(w,p);
         if(root!=null){root.centeredPlacement=com.vandorlabs.canopy.CanopyVariants.centered(kind);root.hollowPlacement=root.resizable();}
         if(root!=null && root.configurable() && stack.hasTagCompound())root.large.read(stack.getTagCompound());
         List<BlockPos> footprint=root==null?cells(p,s.getValue(FACING)):root.cells();
         if(root!=null)root.setFootprint(footprint);
         for (BlockPos cell : footprint) {
             if (!cell.equals(p)) w.setBlockState(cell, s, 2);
-            TileEntityCanopy t = TileEntityCanopy.at(w, cell);
+            TileEntityCanopy t = placementTile(w, cell);
             if (t != null) {
                 t.anchor = p;
                 if(root!=null){t.centeredPlacement=root.centeredPlacement;t.hollowPlacement=root.hollowPlacement;}
@@ -172,9 +176,14 @@ public class BlockCanopy extends Block {
                 t.sync();
             }
         }
-        TileEntityCanopy t = TileEntityCanopy.at(w, p);
+        TileEntityCanopy t = placementTile(w, p);
         if (t != null) t.tryPair();
         w.notifyNeighborsOfStateChange(p, this, false);
+    }
+
+    private static TileEntityCanopy placementTile(World world, BlockPos pos) {
+        net.minecraft.tileentity.TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof TileEntityCanopy && !tile.isInvalid() ? (TileEntityCanopy) tile : null;
     }
 
     @Override
