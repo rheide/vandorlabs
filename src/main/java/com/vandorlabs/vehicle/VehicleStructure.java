@@ -179,7 +179,7 @@ public final class VehicleStructure {
         for(Cell cell:cells){BlockPos at=origin.add(cell.pos);if(!world.isBlockLoaded(at)||world.getBlockState(at)!=cell.state)return false;TileEntity tile=world.getTileEntity(at);
             if(MekanismTankCompat.reactorGlass(tile)&&!MekanismTankCompat.standaloneReactorGlass(tile))return false;
             if(cell.tile==null){if(tile!=null)return false;}
-            else if(tile==null||!cell.tile.equals(VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin))))return false;
+            else if(tile==null||!cell.tile.equals(BuildingBlockCompat.canonical(cell.state,VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin)))))return false;
         }
         return true;
     }
@@ -215,7 +215,7 @@ public final class VehicleStructure {
                 NBTTagCompound saved=cell.tile.copy();
                 // A short pulse can fall while the bounded scan is still running.
                 if(tile instanceof com.vandorlabs.tiles.TileEntityPilotSeat){VehicleSeatSettings.clearSignalEdges(actual);VehicleSeatSettings.clearSignalEdges(saved);}
-                if(!saved.equals(actual))return false;
+                if(!saved.equals(BuildingBlockCompat.canonical(cell.state,actual)))return false;
             }
         }
         return true;

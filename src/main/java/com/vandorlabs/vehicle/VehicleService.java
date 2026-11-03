@@ -516,7 +516,7 @@ public final class VehicleService {
                     VehicleStructure snapshot=job.scan.result;BlockPos at=job.scan.origin.add(snapshot.controller().pos);
                     permission(job.player,at);require(job.player.getDistanceSqToCenter(at)<=64,"Move closer to the Vehicle Controller");
                     for(VehicleStructure.Cell cell:snapshot.cells)permission(job.player,job.scan.origin.add(cell.pos));
-                    require(snapshot.matchesExact(world,job.scan.origin),"Vehicle contents changed during the scan; write again");
+                    require(snapshot.matches(world,job.scan.origin),"Vehicle contents changed during the scan; write again");
                     snapshot=rememberShape(world,job.scan.origin,snapshot,job.scan.weightResult);
                     com.vandorlabs.tiles.TileEntityVehicleController controller=(com.vandorlabs.tiles.TileEntityVehicleController)world.getTileEntity(at);
                     com.vandorlabs.tiles.TileEntityTokenSlot mount=VehicleMounts.find(world,at,true);require(mount!=null&&!mount.returning(),"Attach a Data Chip Mount");

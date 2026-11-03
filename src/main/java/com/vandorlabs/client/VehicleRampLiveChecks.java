@@ -34,7 +34,18 @@ final class VehicleRampLiveChecks {
         return complete;
     }
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("vehicle-ramps: "+why);}
+    private static void savedChipRamps(WorldServer world)throws Exception{
+        NBTTagCompound fixture;try(InputStream in=VehicleRampLiveChecks.class.getResourceAsStream("/assets/vandorlabs/fixtures/vehicle-chip-ramps-2.8.nbt")){fixture=CompressedStreamTools.readCompressed(in);}
+        NBTTagList rows=fixture.getTagList("Cells",10);BlockPos offset=new BlockPos(-1580,40,12340),origin=new BlockPos(1338,66,-12147).add(offset);java.util.List<VehicleStructure.Cell> saved=new java.util.ArrayList<>();
+        for(int i=0;i<rows.tagCount();i++){NBTTagCompound row=rows.getCompoundTagAt(i);BlockPos at=pos(row).add(offset);world.getChunkFromBlockCoords(at);Block block=Block.getBlockFromName(row.getString("Name"));require(block!=null,"saved chip ramp registry");world.setBlockState(at,block.getStateFromMeta(row.getInteger("Meta")),2);world.getTileEntity(at).readFromNBT(VehicleTileData.translated(row.getCompoundTag("Tile"),offset));}
+        for(int i=0;i<rows.tagCount();i++){NBTTagCompound row=rows.getCompoundTagAt(i);BlockPos at=pos(row).add(offset);TileEntity tile=world.getTileEntity(at);NBTTagCompound data=VehicleEscalators.paused(tile.writeToNBT(new NBTTagCompound()));if(tile instanceof TileEntityControlledRamp)data.setDouble("EscalatorDistance",((TileEntityRampController)world.getTileEntity(((TileEntityControlledRamp)tile).controller)).beltDistance(0));saved.add(new VehicleStructure.Cell(at.subtract(origin),world.getBlockState(at),VehicleTileData.translated(data,BlockPos.ORIGIN.subtract(origin))));}
+        VehicleStructure design=VehicleStructure.display(saved);require(!design.matchesExact(world,origin),"saved layouts reproduce raw chip-preflight refusal");require(design.matches(world,origin),"both saved layouts accept unchanged extended ramps");
+        net.minecraft.item.ItemStack chip=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP);VehicleChip.blank(chip);VehicleChip.write(chip,design,"Saved ramps");try(java.io.DataInputStream in=new java.io.DataInputStream(new java.util.zip.GZIPInputStream(new java.io.ByteArrayInputStream(chip.getTagCompound().getByteArray("VehicleDesign"))))){require(VehicleStructure.readDisplay(CompressedStreamTools.read(in,new NBTSizeTracker(16*1024*1024))).sameSnapshot(design),"saved generated ramp cells retain exact compressed chip data");}
+        for(VehicleStructure.Cell cell:saved)world.setBlockToAir(origin.add(cell.pos));
+        System.out.println("[vandorlabs][reprolab] vehicle-chip-saved-ramps PASS both saved layouts reproduce raw refusal and preserve generated cells");
+    }
     private static void run(WorldServer world,EntityPlayerMP actor)throws Exception{
+        savedChipRamps(world);
         NBTTagCompound fixture;try(InputStream in=new FileInputStream(System.getProperty("vandorlabs.vehicleRampFixture"))){fixture=CompressedStreamTools.readCompressed(in);}
         for(BlockPos p:BlockPos.getAllInBox(new BlockPos(-150,82,154),new BlockPos(-128,96,178))){world.getChunkFromBlockCoords(p);world.removeTileEntity(p);world.setBlockToAir(p);}
         NBTTagList cells=fixture.getTagList("Cells",10);
@@ -44,6 +55,15 @@ final class VehicleRampLiveChecks {
         VehicleScan scan=new VehicleScan(world,seat);for(int i=0;i<1000&&!scan.step(256);i++);
         require(scan.error==null&&scan.result!=null,"saved vehicle capture: "+scan.error);
         VehicleStructure captured=scan.result;int parts=0;
+        require(!captured.matchesExact(world,scan.origin),"regression fixture includes frozen ramp fields that differ from live data");
+        require(captured.matches(world,scan.origin),"unchanged extended ramps pass chip-write preflight");
+        net.minecraft.item.ItemStack chip=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP);VehicleChip.blank(chip);VehicleChip.write(chip,captured,"Extended ramps");
+        require(VehicleChip.design(chip).sameSnapshot(captured),"chip preserves every extended ramp block and tile field");
+        VehicleStructure.Cell rampCell=null;for(VehicleStructure.Cell c:captured.cells)if(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockRampController){rampCell=c;break;}
+        require(rampCell!=null,"ramp controller captured");
+        // An ordinary changed tile setting must still be refused, even though scan-only clock freezing is accepted.
+        java.util.List<VehicleStructure.Cell> changedCells=new java.util.ArrayList<>();for(VehicleStructure.Cell c:captured.cells){NBTTagCompound data=c.tileData();if(c==rampCell)data.setString("PreflightMutation","reject");changedCells.add(new VehicleStructure.Cell(c.pos,c.state,data));}
+        require(!new VehicleStructure(changedCells,captured.seat,captured.facing,captured.gearCount).matches(world,scan.origin),"real ramp tile changes remain rejected");
         for(VehicleStructure.Cell cell:captured.cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockControlledRamp)parts++;
         require(parts==56,"all 56 saved ramp cells captured, got "+parts);
         VehicleStructure restored=VehicleStructure.read(captured.write());
