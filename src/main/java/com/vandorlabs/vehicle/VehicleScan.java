@@ -290,9 +290,16 @@ public final class VehicleScan {
         }
         return data;
     }
+    private static final String[] PROFILE_STAGES={"discovery","hold","refresh","view","validation","weight","encoding","connectivity"};
+    private final long[] profileTotals=VehicleDiagnostics.ENABLED?new long[PROFILE_STAGES.length]:null,profileMax=VehicleDiagnostics.ENABLED?new long[PROFILE_STAGES.length]:null;
+    private final int[] profileCounts=VehicleDiagnostics.ENABLED?new int[PROFILE_STAGES.length]:null;
+    private void profile(int stage,long started){if(profileTotals==null)return;long elapsed=System.nanoTime()-started;profileTotals[stage]+=elapsed;profileMax[stage]=Math.max(profileMax[stage],elapsed);profileCounts[stage]++;}
+    public String profile(){if(profileTotals==null)return "disabled";StringBuilder out=new StringBuilder("stages-us[total/max-slice/count]=");for(int i=0;i<PROFILE_STAGES.length;i++)if(profileCounts[i]>0)out.append(PROFILE_STAGES[i]).append(':').append(profileTotals[i]/1000).append('/').append(profileMax[i]/1000).append('/').append(profileCounts[i]).append(';');return out.toString();}
     public boolean step(int budget) {
         long deadline=System.nanoTime()+2_000_000L;
         if(error!=null || result!=null) return true;
+        long started=VehicleDiagnostics.ENABLED?System.nanoTime():0;
+        int stage=candidate==null?0:holdRequested&&hold==null?1:refreshed!=null?2:validation==null?3:!validated?4:weightRequested&&weightResult==null?5:6;
         try {
             if(candidate!=null){
                 if(holdRequested&&hold==null&&world instanceof net.minecraft.world.WorldServer){hold=new VehicleTransfer.SourceHold((net.minecraft.world.WorldServer)world,candidate,origin);refreshed=new ArrayList<>();return false;}
@@ -477,6 +484,7 @@ public final class VehicleScan {
             }
             if(queue.isEmpty()&&expandHigherSupports())return false;
             if(queue.isEmpty()) {
+                if(VehicleDiagnostics.ENABLED){profile(stage,started);stage=7;started=System.nanoTime();}
                 require(!cells.isEmpty(),"The opposing coupler section contains no blocks.");
                 List<VehicleStructure.Cell> ordered=roles();
                 if(!attachment){require(seats>=1, "A craft must contain at least one Pilot Seat.");
@@ -491,6 +499,7 @@ public final class VehicleScan {
                 return false; // Validate and encode in separate bounded server ticks before publication.
             }
         } catch(Exception e) { result=null;error=e.getMessage()==null?"Cannot capture this structure.":e.getMessage(); }
+        finally{profile(stage,started);}
         return error!=null || result!=null;
     }
 }

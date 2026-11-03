@@ -310,7 +310,7 @@ public final class VehicleCollision {
     public static volatile boolean legacyTerrainCollections;
     /** Isolated comparison of equivalent broadphase partitions; never saved or networked. */
     public void withTerrainSections(int horizontalBits,int verticalBits,Runnable action){
-        if(horizontalBits< -1||horizontalBits>4||verticalBits< -1||verticalBits>4)throw new IllegalArgumentException("Terrain section size");
+        if(horizontalBits< -1||horizontalBits>5||verticalBits< -1||verticalBits>4)throw new IllegalArgumentException("Terrain section size");
         int oldHorizontal=terrainHorizontalBits,oldVertical=terrainVerticalBits;Terrain old=terrain,oldReplay=replayTerrain;
         terrainHorizontalBits=horizontalBits;terrainVerticalBits=verticalBits;terrain=replayTerrain=null;
         try{action.run();}finally{terrainHorizontalBits=oldHorizontal;terrainVerticalBits=oldVertical;terrain=old;replayTerrain=oldReplay;}

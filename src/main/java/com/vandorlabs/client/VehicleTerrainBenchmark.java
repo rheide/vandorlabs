@@ -11,7 +11,7 @@ final class VehicleTerrainBenchmark {
     static void run(World world,EntityGroundVehicle craft,File output){
         BEAN.setThreadAllocatedMemoryEnabled(true);BEAN.setThreadCpuTimeEnabled(true);
         double[][] expected={step(world,craft,-25,-1),step(world,craft,-25,1),step(world,craft,0,-1),step(world,craft,0,1),step(world,craft,25,-1),step(world,craft,25,1)};
-        int[][] sizes={{3,3},{4,2},{-1,-1},{3,3}};
+        int[][] sizes={{3,3},{4,2},{4,1},{5,1},{5,2},{4,0},{5,0},{-1,-1},{4,2}};
         try(PrintWriter csv=new PrintWriter(new File(output,"terrain-sections.csv"))){
             csv.println("horizontal,vertical,poses,samples,step_wall_p50_us,step_cpu_p50_us,step_allocated_p50_bytes,queries_per_step");
             for(int[] size:sizes)craft.collision.withTerrainSections(size[0],size[1],()->{

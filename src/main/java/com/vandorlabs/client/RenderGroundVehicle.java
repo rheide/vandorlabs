@@ -222,9 +222,10 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     }
     @Override public void doRender(EntityGroundVehicle e,double x,double y,double z,float yaw,float partial) {
         if(e.structure==null)return;
+        boolean shadowPass=VehicleRenderPass.shadow();long entityStarted=VehicleRenderProfile.start();
         // OptiFine renders entities into the shadow map before the main view.
         // A shadow draw cannot suppress the hidden-origin fallback for the pilot.
-        if(!VehicleRenderPass.shadow())drawn.add(e);
+        if(!shadowPass)drawn.add(e);
         e.view.origin=new BlockPos(e.posX,e.posY,e.posZ);Regions regions=regions(e);List<Mesh> pair=new ArrayList<>();
         for(Mesh[] section:regions.sections.values()){pair.add(section[0]);pair.add(section[1]);}
         // Finish new/changed geometry before refreshing light on already visible regions.
@@ -245,13 +246,17 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.translate(e.structure.bounds.maxX/2,0,e.structure.bounds.maxZ/2);GlStateManager.rotate(-angle,0,1,0);GlStateManager.translate(-e.structure.bounds.maxX/2,0,-e.structure.bounds.maxZ/2);GlStateManager.disableLighting();GlStateManager.enableTexture2D();bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1,1,1,1);
         pair.sort(Comparator.comparingDouble((Mesh mesh)->mesh.cells.isEmpty()?0:-localCamera.squareDistanceTo(new net.minecraft.util.math.Vec3d(section(mesh.cells.get(0).pos)).scale(8).addVector(4,4,4))));
+        long meshStarted=VehicleRenderProfile.start();
         for(BlockRenderLayer layer:BlockRenderLayer.values())for(Mesh mesh:pair)for(int i=0;i<mesh.buffers.size();i++) {
             if(mesh.layers.get(i)!=layer)continue;
             if(mesh.layers.get(i)==BlockRenderLayer.TRANSLUCENT){GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.depthMask(false);}else {GlStateManager.disableBlend();GlStateManager.depthMask(true);}
             BlockMeshVbo.draw(mesh.buffers.get(i),mesh.format,layer);
         }
+        VehicleRenderProfile.end("block-meshes",shadowPass,meshStarted);
         GlStateManager.depthMask(true);GlStateManager.disableBlend();GlStateManager.enableLighting();
+        long fittingsStarted=VehicleRenderProfile.start();
         VehicleWheelRenderer.render(e,regions.wheels,partial);VehiclePaintingRenderer.render(e,partial);
+        VehicleRenderProfile.end("wheels-and-paintings",shadowPass,fittingsStarted);
         // Each vehicle owns a separate World identity, isolating renderer adjacency and animation caches.
         TileEntityRendererDispatcher dispatcher=TileEntityRendererDispatcher.instance;
         double cameraX=dispatcher.entityX,cameraY=dispatcher.entityY,cameraZ=dispatcher.entityZ;
@@ -277,7 +282,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         try {
         dispatcher.world=e.view;dispatcher.entityX=localCamera.x;dispatcher.entityY=localCamera.y;dispatcher.entityZ=localCamera.z;
         TileEntityRendererDispatcher.staticPlayerX=localCamera.x;TileEntityRendererDispatcher.staticPlayerY=localCamera.y;TileEntityRendererDispatcher.staticPlayerZ=localCamera.z;
-        if(batched&&reuseTileOrder)for(VehicleOpaqueTileBatch batch:regions.opaqueBatches.values()){if(batch.bounds!=null&&Double.isFinite(batch.bounds.minX)&&Double.isFinite(batch.bounds.maxX)&&Double.isFinite(batch.bounds.minY)&&Double.isFinite(batch.bounds.maxY)&&Double.isFinite(batch.bounds.minZ)&&Double.isFinite(batch.bounds.maxZ)&&!tileFrustum.isBoundingBoxInFrustum(pose.world(batch.bounds,e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)))continue;GlStateManager.pushMatrix();try{batch.draw(regions.opaqueTiles,e.structure,partial);tileDraws+=batch.size();}finally{GlStateManager.popMatrix();}}
+        if(batched&&reuseTileOrder)for(VehicleOpaqueTileBatch batch:regions.opaqueBatches.values()){if(batch.bounds!=null&&Double.isFinite(batch.bounds.minX)&&Double.isFinite(batch.bounds.maxX)&&Double.isFinite(batch.bounds.minY)&&Double.isFinite(batch.bounds.maxY)&&Double.isFinite(batch.bounds.minZ)&&Double.isFinite(batch.bounds.maxZ)&&!tileFrustum.isBoundingBoxInFrustum(pose.world(batch.bounds,e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)))continue;GlStateManager.pushMatrix();try{long batchStarted=VehicleRenderProfile.start();batch.draw(regions.opaqueTiles,e.structure,partial);VehicleRenderProfile.end("opaque-batches",shadowPass,batchStarted);tileDraws+=batch.size();}finally{GlStateManager.popMatrix();}}
         for(int tileIndex=0;tileIndex<opaqueCount+orderedTiles.size();tileIndex++) {
             TileDraw draw=tileIndex<opaqueCount?opaque.get(tileIndex):orderedTiles.get(tileIndex-opaqueCount);
             TileEntity tile=draw.tile;
@@ -288,7 +293,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
                         && !tileFrustum.isBoundingBoxInFrustum(pose.world(box,e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)))continue;
             }catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(tile.getBlockType(),"tile visibility",error);}
             TileEntitySpecialRenderer<TileEntity> renderer=draw.renderer;
-            if(renderer!=null){BlockPos p=tile.getPos();GlStateManager.pushMatrix();
+            if(renderer!=null){BlockPos p=tile.getPos();GlStateManager.pushMatrix();long tileStarted=VehicleRenderProfile.start();
                 try{
                     if((Object)renderer instanceof TECanopy){
                         canopyGlass.add(draw);
@@ -297,23 +302,24 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
                     tileDraws++;
                 }
                 catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(tile.getBlockType(),"tile renderer",error);}
-                finally{GlStateManager.popMatrix();}
+                finally{VehicleRenderProfile.end(tile.getClass(),shadowPass,tileStarted);GlStateManager.popMatrix();}
             }
         }
             // A later solid screen/wall must never overwrite canopy tint.
             canopyGlass.sort((a,b)->Double.compare(b.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z),a.tile.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z)));
-            for(TileDraw draw:canopyGlass){BlockPos p=draw.tile.getPos();GlStateManager.pushMatrix();
+            for(TileDraw draw:canopyGlass){BlockPos p=draw.tile.getPos();GlStateManager.pushMatrix();long glassStarted=VehicleRenderProfile.start();
                 try{((TECanopy)(Object)draw.renderer).renderPass((com.vandorlabs.tiles.TileEntityCanopy)draw.tile,p.getX(),p.getY(),p.getZ(),partial,-1,1,1);tileDraws++;}
                 catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(draw.tile.getBlockType(),"canopy glass renderer",error);}
-                finally{GlStateManager.popMatrix();}
+                finally{VehicleRenderProfile.end("canopy-glass",shadowPass,glassStarted);GlStateManager.popMatrix();}
             }
             List<TileEntity> liquids=regions.liquids;
             liquids.sort((a,b)->Double.compare(b.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z),a.getPos().distanceSq(localCamera.x,localCamera.y,localCamera.z)));
-            GlStateManager.depthMask(false);
+            GlStateManager.depthMask(false);long fluidStarted=VehicleRenderProfile.start();
             try{for(TileEntity tile:liquids){BlockPos p=tile.getPos();WaterloggedRenderer.render(tile,p.getX(),p.getY(),p.getZ());}}
-            finally{GlStateManager.depthMask(true);}
+            finally{VehicleRenderProfile.end("contained-fluids",shadowPass,fluidStarted);GlStateManager.depthMask(true);}
         }finally{TileEntityRendererDispatcher.staticPlayerX=staticX;TileEntityRendererDispatcher.staticPlayerY=staticY;TileEntityRendererDispatcher.staticPlayerZ=staticZ;dispatcher.world=previousWorld;dispatcher.entityX=cameraX;dispatcher.entityY=cameraY;dispatcher.entityZ=cameraZ;}
         GlStateManager.color(1,1,1,1);GlStateManager.popMatrix();
+        VehicleRenderProfile.end("whole-vehicle",shadowPass,entityStarted);
     }
     private static boolean glassRamp(TileEntity tile){
         return tile instanceof com.vandorlabs.tiles.TileEntityControlledRamp

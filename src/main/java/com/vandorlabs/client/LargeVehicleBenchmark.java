@@ -70,13 +70,14 @@ public final class LargeVehicleBenchmark {
         if(!ENABLED||stage<2||stage>3)return;Minecraft mc=Minecraft.getMinecraft();if(mc.world==null||mc.player==null||scene>=2&&(!boarded||craft(mc.world)==null))return;
         if(event.phase==TickEvent.Phase.START){GL11.glFinish();start=System.nanoTime();interval=lastFrame==0?0:(start-lastFrame)/1E6;lastFrame=start;cpu=BEAN.getCurrentThreadCpuTime();bytes=BEAN.getThreadAllocatedBytes(Thread.currentThread().getId());return;}
         long elapsedCpu=BEAN.getCurrentThreadCpuTime()-cpu,allocated=BEAN.getThreadAllocatedBytes(Thread.currentThread().getId())-bytes;GL11.glFinish();long complete=System.nanoTime()-start;
-        if(stage==2){if(++frames<WARM_FRAMES||System.nanoTime()-settled<8_000_000_000L||!mc.world.isBlockLoaded(CONTROLLER))return;sampledPath=serverPath;sampledTicks=movingTicks;stage=3;System.out.println("[vandorlabs] large-vehicle measuring "+NAMES[scene]);return;}
+        if(stage==2){if(++frames<WARM_FRAMES||System.nanoTime()-settled<8_000_000_000L||!mc.world.isBlockLoaded(CONTROLLER))return;sampledPath=serverPath;sampledTicks=movingTicks;stage=3;VehicleRenderProfile.begin();System.out.println("[vandorlabs] large-vehicle measuring "+NAMES[scene]);return;}
         samples.add(new double[]{complete/1E6,elapsedCpu/1E6,allocated,interval});if(samples.size()<(scene==NAMES.length-1?Integer.getInteger("vandorlabs.largeBenchmarkMovingSamples",SAMPLES):SAMPLES))return;
         double server=0;for(long n:mc.getIntegratedServer().tickTimeArray)server+=n/1E6;server/=mc.getIntegratedServer().tickTimeArray.length;EntityGroundVehicle e=craft(mc.world);
         double travel=e==null?0:Math.hypot(e.posX-moveX,e.posZ-moveZ);
         double measured=scene==NAMES.length-1?serverPath-sampledPath:0;int active=scene==NAMES.length-1?movingTicks-sampledTicks:0;
         if(scene==NAMES.length-1&&(measured<.5||active<5))throw new IllegalStateException("Taxi sampling did not sustain authoritative movement: measured-path="+measured+" moving-ticks="+active+" travel="+travel+" ridden="+mc.player.isRiding()+" craft="+(e==null?"missing":e.posX+","+e.posY+","+e.posZ));
         csv.printf(Locale.ROOT,"%s,%d,%.4f,%.4f,%.4f,%.0f,%.4f,%d,%.4f,%.4f,%.4f,%d%n",NAMES[scene],samples.size(),pct(0,.5),pct(0,.95),pct(1,.5),pct(2,.5),server,e==null?mc.world.loadedTileEntityList.size():e.view.tiles.size(),pct(3,.5),travel,measured,active);csv.flush();
+        try{VehicleRenderProfile.write(output,NAMES[scene],samples.size());}catch(IOException failure){throw new IllegalStateException(failure);}
         net.minecraft.util.ScreenShotHelper.saveScreenshot(output,"large-"+NAMES[scene]+".png",mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
         System.out.println("[vandorlabs] large-vehicle result "+NAMES[scene]+" ms="+pct(0,.5)+" cpu="+pct(1,.5)+" bytes="+pct(2,.5)+" controls="+(e==null?"none":e.diagnostics.summary())+" renderer="+RenderGroundVehicle.profile());stage=4;
     }
