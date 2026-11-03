@@ -19,10 +19,10 @@ import java.util.*;
 @Mod.EventBusSubscriber(modid=VandorLabs.MODID)
 public final class VehicleService {
     private static final Map<UUID,Preview> previews=new HashMap<>();
-    private static final Map<UUID,Job> jobs=new HashMap<>();
+    private static final Map<UUID,Job> jobs=new LinkedHashMap<>();
     private static final Map<String,Long> requests=new HashMap<>();
     private static final Set<World> recovered=Collections.newSetFromMap(new WeakHashMap<World,Boolean>());
-    private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi,screen,writeChip;com.vandorlabs.tiles.TileEntityVehicleController indicator;int ticks,requestedMode=-1;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);scan.holdSource();scan.measureWeight();indicator=VehicleStatus.controller(world,pos);if(indicator!=null)indicator.setConverting(true);}
+    private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi,screen,writeChip;com.vandorlabs.tiles.TileEntityVehicleController indicator;int ticks,requestedMode=-1,slices;long scanNanos,tickNanos,maxTickNanos;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);scan.holdSource();scan.measureWeight();indicator=VehicleStatus.controller(world,pos);if(indicator!=null)indicator.setConverting(true);}
         void finish(){scan.releaseSource();if(indicator!=null&&!indicator.isInvalid())indicator.setConverting(false);}}
     /** Screen clicks use the clicking player, bounded scans and the normal transfer checks. */
     public static void screenMode(EntityPlayerMP player,BlockPos screen,EntityGroundVehicle craft,int mode){
@@ -484,17 +484,28 @@ public final class VehicleService {
             if(owner==world){queued.remove();signal(world,request);}
             else if(owner==null || owner.getMinecraftServer()==null)queued.remove();
         }
-        int workBudget=1024;
-        Iterator<Job> iterator=jobs.values().iterator();
+        // Four 2 ms slices remain shared by all jobs. Let an otherwise idle budget
+        // serve the same scan again, rotating unfinished jobs for fairness next tick.
+        ArrayDeque<Map.Entry<UUID,Job>> active=new ArrayDeque<>();
+        Iterator<Map.Entry<UUID,Job>> iterator=jobs.entrySet().iterator();
         while(iterator.hasNext()) {
-            Job job=iterator.next();if(job.world!=world)continue;
+            Map.Entry<UUID,Job> entry=iterator.next();Job job=entry.getValue();if(job.world!=world)continue;
             if(job.player.world!=job.world || job.player.isDead || job.player.isSpectator()
                     || job.taxi && (!seatedAt(job.player,job.scan.startPosition()) || !((job.world.getTileEntity(job.scan.startPosition())) instanceof com.vandorlabs.tiles.TileEntityPilotSeat)
                     )
                     || job.player.connection.netManager.isChannelOpen()==false || ++job.ticks>1200){job.finish();iterator.remove();continue;}
-            if(workBudget<=0)break;workBudget-=256;
-            if(!job.scan.step(256))continue;iterator.remove();
-            if(VehicleDiagnostics.ENABLED)System.out.println("[vandorlabs] vehicle-scan ticks="+job.ticks+" cells="+(job.scan.result==null?0:job.scan.result.cells.size())+" accepted="+(job.scan.error==null));
+            job.tickNanos=0;active.addLast(entry);
+        }
+        long deadline=System.nanoTime()+8_000_000L;
+        for(int slices=0;slices<4&&!active.isEmpty();slices++) {
+            if(slices>0&&System.nanoTime()>=deadline)break;
+            Map.Entry<UUID,Job> entry=active.removeFirst();Job job=entry.getValue();
+            long started=VehicleDiagnostics.ENABLED?System.nanoTime():0;
+            boolean complete=job.scan.step(256);
+            if(VehicleDiagnostics.ENABLED){long elapsed=System.nanoTime()-started;job.scanNanos+=elapsed;job.tickNanos+=elapsed;job.maxTickNanos=Math.max(job.maxTickNanos,job.tickNanos);job.slices++;}
+            jobs.remove(entry.getKey());
+            if(!complete){jobs.put(entry.getKey(),job);active.addLast(entry);continue;}
+            if(VehicleDiagnostics.ENABLED)System.out.println("[vandorlabs] vehicle-scan ticks="+job.ticks+" cells="+(job.scan.result==null?0:job.scan.result.cells.size())+" accepted="+(job.scan.error==null)+" slices="+job.slices+" work-us="+job.scanNanos/1000+" max-tick-work-us="+job.maxTickNanos/1000);
             if(job.scan.error!=null){job.finish();if(!job.signal && !job.taxi)standaloneController(job.player,job.scan.startPosition(),job.scan.error);else VehicleNetwork.error(job.player,job.scan.error);continue;}
             if(job.writeChip){
                 try{
