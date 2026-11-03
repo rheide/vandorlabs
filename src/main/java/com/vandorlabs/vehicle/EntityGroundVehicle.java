@@ -100,8 +100,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean setHover(boolean value){
         if(view!=null&&structure!=null&&structure.controller()!=null&&!VehicleMounts.allowed(view,structure.controller().pos))return false;
         if(!value && structure!=null && !VehicleSkiTraction.allowed(this))return false;
-        if(value==hover)return true;
         if(value && (!VehicleFlight.canHover(structure)))return false;
+        if(value==hover)return true;
         if(value)try{VehicleFlight.requireThruster(structure);}catch(IllegalArgumentException unavailable){return false;}
         if(!value){clearance=VehicleFlight.clearance(this);clearanceAt=world.getTotalWorldTime();if(clearance>3 || !VehicleLandingGear.extended(this))return false;}
         hover=value;serverInputs.clear();hoverTarget=posY;motionY=0;vertical=0;taxiReturnPending=false;
@@ -114,7 +114,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(getControllingPassenger()!=player || direction< -1 || direction>1 || autopilot.enabled())return;
         recordCurrentCouplingDriver();
         if(toggle&&!structure.hasDedicatedController()){VehicleNetwork.error(player,"Vehicle Controller missing");return;}
-        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.activeNonWheeledGear()?"Taxi requires wheels, or only skis above ice; otherwise select Park near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
+        if(toggle && !setHover(!hover))VehicleNetwork.error(player,hover?(structure.activeNonWheeledGear()?"Taxi requires wheels, or only skis above ice; otherwise select Park near the ground.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi."):VehicleFlight.hoverRequirement(structure));
         vertical=direction;flightSprint=sprint;verticalAt=world.getTotalWorldTime();
     }
     public void autopilotControls(byte f,byte s,boolean b){forward=f;strafe=s;brake=b;}

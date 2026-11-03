@@ -57,6 +57,8 @@ public final class VehicleStructure {
     public final boolean hasThruster,hasNonWheeledGear,hasSkisOnly;
     public final boolean displayOnly;
     private VehicleWorld componentView;
+    VehicleCouplerTopology couplerTopology;
+    VehicleWorld componentView(){return componentView;}
     private Set<BlockPos> activeCells;
     private boolean derivingComponents;
     private final boolean splitComponents;

@@ -139,7 +139,7 @@ public final class VehicleScan {
         return ordered;
     }
     /** Pure bounded ownership graph over a complete immutable snapshot; never captures or mutates. */
-    static Set<BlockPos> activeCells(VehicleWorld view){
+    private static VehicleScan membershipGraph(VehicleWorld view){
         VehicleStructure structure=view.structure;
         VehicleScan graph=new VehicleScan(view,structure.seat,true,Collections.emptySet());graph.membershipOnly=true;
         for(VehicleStructure.Cell cell:structure.cells)graph.cells.put(cell.pos,cell);
@@ -162,7 +162,32 @@ public final class VehicleScan {
                 List<net.minecraft.util.math.AxisAlignedBB> boxes=new ArrayList<>();cell.state.addCollisionBoxToList(view,cell.pos,new net.minecraft.util.math.AxisAlignedBB(cell.pos).grow(2),boxes,null,false);graph.geometryContacts(cell.pos,boxes);
             }
         }
-        graph.roles();return graph.primaryPositions;
+        return graph;
+    }
+    static Set<BlockPos> activeCells(VehicleWorld view){VehicleScan graph=membershipGraph(view);graph.roles();return graph.primaryPositions;}
+    /** Physical sections, cutting mating heads while keeping supported cargo and owned mechanisms rigid. */
+    static List<Set<BlockPos>> couplerSections(VehicleWorld view){
+        VehicleScan graph=membershipGraph(view);Map<BlockPos,Set<BlockPos>> extra=new HashMap<>();
+        for(VehicleStructure.Cell cell:view.structure.cells){
+            TileEntity tile=view.getTileEntity(cell.pos);BlockPos owner=null;
+            if(tile instanceof TileEntityControlledRamp)owner=((TileEntityControlledRamp)tile).controller;
+            else if(tile instanceof TileEntityCanopy)owner=((TileEntityCanopy)tile).constituent().getPos();
+            else if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)tile).loadedController();if(root!=null)owner=root.getPos();}
+            else if(tile instanceof TileEntityConstructorPart)owner=((TileEntityConstructorPart)tile).owner();
+            if(owner!=null&&graph.cells.containsKey(owner)&&!owner.equals(cell.pos)){extra.computeIfAbsent(cell.pos,k->new HashSet<>()).add(owner);extra.computeIfAbsent(owner,k->new HashSet<>()).add(cell.pos);}
+        }
+        List<Set<BlockPos>> result=new ArrayList<>();Set<BlockPos> seen=new HashSet<>();
+        for(BlockPos seed:graph.cells.keySet())if(seen.add(seed)){
+            Set<BlockPos> group=new LinkedHashSet<>();ArrayDeque<BlockPos> pending=new ArrayDeque<>();pending.add(seed);
+            while(!pending.isEmpty()){
+                BlockPos at=pending.removeFirst();group.add(at);IBlockState state=graph.cells.get(at).state;Set<BlockPos> next=new LinkedHashSet<>();
+                for(EnumFacing side:EnumFacing.values()){BlockPos other=at.offset(side);VehicleStructure.Cell cell=graph.cells.get(other);if(cell!=null&&!ownedCoupler(state,cell.state,side)&&touches(view,at,state,side))next.add(other);}
+                next.addAll(graph.contactLinks.getOrDefault(at,Collections.emptySet()));next.addAll(extra.getOrDefault(at,Collections.emptySet()));
+                for(BlockPos other:next)if(graph.cells.containsKey(other)&&seen.add(other))pending.add(other);
+            }
+            result.add(Collections.unmodifiableSet(group));
+        }
+        return result;
     }
     private static boolean ownedCoupler(IBlockState a,IBlockState b,EnumFacing direction){
         if(!(a.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)||!(b.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))return false;

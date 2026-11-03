@@ -36,6 +36,12 @@ Settled closed panels use chunk geometry. Moving and raised panels share a batch
 
 See the [rendering measurements and validation scope](../render-performance.md).
 
+## Coupled vehicle lift
+
+Hover now requires at least three lift blocks in each section connected by
+couplers, including rigid and parallel connections. Taxi does not gain this
+lift requirement. See [Vehicle Couplers](../couplers.md#hover-lift-per-section).
+
 ## Ramp Controller axes
 
 The full and slab Ramp Controllers now have an Axis selector on the Ramp tab.

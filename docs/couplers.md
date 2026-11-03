@@ -14,6 +14,16 @@ An existing Taxi or Hover vehicle can pick up a section that is still made of wo
 
 The player who assembled the vehicle or authorized its carried Coupler dialog, or the current driver, must be online, alive and in the same dimension, with permission to modify the complete section. Older saved vehicles need a driver or one authorized visit to the carried Coupler dialog before automatic transfers are enabled. Copied block settings do not copy another player's building authority. The entire section and its boundaries must be loaded. Leave its seats empty and move other entities clear. A joined vehicle keeps one Vehicle Controller, at most one Autopilot and the configured vehicle block, size and saved-data limits. Unsupported blocks and incomplete assemblies are refused under the same [Vehicle Mode compatibility policy](vehicle-compatibility.md). This operation picks up world blocks; it does not merge two existing vehicle entities.
 
+## Hover lift per section
+
+Each section connected through enabled couplers needs at least three
+Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters before the
+vehicle can enter Hover. Lift in one section cannot support another section.
+This also applies to rigid connections and sections joined by parallel coupler
+pairs. Taxi keeps its existing support requirements and does not require lift
+blocks in every section. An ordinary block bridge makes the adjoining sections
+one rigid body.
+
 ## Releasing a section
 
 Release either half's activation input to request separation. The section remains attached while the controller checks whether it can safely restore the detached part as ordinary blocks. Stop near a cardinal heading, as when parking a vehicle. The detached blocks snap to the parking grid; the retained vehicle keeps its actual position and heading. Terrain, players, other mechanisms and the retained hull must leave enough room for the complete parked geometry.

@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Require three lift blocks in each connected coupler section before entering Hover, including rigid or parallel coupler connections. Taxi remains available without section lift.
+
 - Add mounting-dependent Ramp Controller Axis choices, including upright Y source panels for side mounts, saved settings, generated geometry, collision, recovery and vehicle rotation. Existing horizontal layouts retain their behavior.
 
 - Keep Canopy Glass placed by an automatic RFTools Builder: initialize pending tile ownership during placement before canopy membership repair.

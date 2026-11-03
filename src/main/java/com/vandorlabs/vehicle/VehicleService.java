@@ -39,7 +39,7 @@ public final class VehicleService {
         VehicleStructure.Cell controller=craft.structure.controller();require(mode==0||craft.structure.hasDedicatedController(),"Vehicle Controller missing");
         permission(player,new BlockPos(craft.toWorld(new Vec3d(controller==null?craft.structure.seat:controller.pos).addVector(.5,.5,.5))));
         require(mode!=1 || VehicleSkiTraction.allowed(craft),"Taxi requires wheels, or only skis over ice.");
-        if(mode!=0){VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));require(craft.setHover(mode==2),mode==2?"Hover requires three lift blocks and a Vehicle Thruster.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
+        if(mode!=0){VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));require(craft.setHover(mode==2),mode==2?VehicleFlight.hoverRequirement(craft.structure)+" Hover also needs a Vehicle Thruster.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
         require(!craft.hover || craft.structure.activeNonWheeledGear() || !craft.structure.hasDedicatedController(),"Select Taxi mode before parking as blocks.");
         require(craft.stopped(),"Stop before parking.");
         VehicleTransfer.submit(player.getServerWorld(),()->{
@@ -150,7 +150,7 @@ public final class VehicleService {
         require(job.requestedMode!=1 || VehicleSkiTraction.canStart(world,structure,origin),"Taxi requires wheels, or only skis over ice.");
         require(!job.taxi || VehicleTaxiMode.enabled(structure,job.scan.startPosition().subtract(origin)),"Taxi Mode is disabled on the Pilot Seat.");
         if(job.requestedMode==2)VehicleFlight.requireThruster(structure);
-        require(job.requestedMode!=2 || VehicleFlight.canHover(structure),"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
+        require(job.requestedMode!=2 || VehicleFlight.canHover(structure),VehicleFlight.hoverRequirement(structure));
         require(structure.matches(world,origin),"Blocks or settings changed during signal scan.");
         for(BlockPos boundary:job.scan.airBoundary)require(world.isBlockLoaded(boundary) && world.isAirBlock(boundary),"Craft connections changed during signal scan.");
         require(clearOfPeople(world,VehicleTransfer.geometry(world,structure),origin,assemblyAllowed(world,structure,origin,job.player)),"Another occupant obstructs assembly.");
@@ -284,7 +284,7 @@ public final class VehicleService {
                 require(clearOfPeople(player.world,geometry,preview.origin,assemblyAllowed(player.world,preview.structure,preview.origin,player)),"Another occupant obstructs assembly.");
                 authorizeAssembly(player,preview.structure,preview.origin);
                 require(requestedMode!=1 || (preview.entity==null?VehicleSkiTraction.canStart(preview.world,preview.structure,preview.origin):VehicleSkiTraction.allowed(preview.entity)),"Taxi requires wheels, or only skis over ice.");
-                if(requestedMode==2){require(VehicleFlight.canHover(preview.structure),"Hover requires three lift blocks.");VehicleFlight.requireThruster(preview.structure);}
+                if(requestedMode==2){require(VehicleFlight.canHover(preview.structure),VehicleFlight.hoverRequirement(preview.structure));VehicleFlight.requireThruster(preview.structure);}
                 EntityGroundVehicle assembled=VehicleTransfer.assemble(preview.world,preview.structure,preview.origin,player);
                 if(requestedMode==2)require(assembled.setHover(true),"Unable to select Hover.");
             }

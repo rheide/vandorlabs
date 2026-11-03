@@ -26,8 +26,13 @@ public final class VehicleFlight {
         throw new IllegalArgumentException("Hover requires at least one Rocket Thruster, Ion Drive, Plasma Vent or Impulse Engine.");
     }
     public static boolean canHover(VehicleStructure structure){
-        int count=0;for(VehicleStructure.Cell cell:structure.liftCells)if(structure.isActive(cell.pos)&&++count>=3)return true;return false;
+        if(structure.couplers.isEmpty()){
+            int count=0;for(VehicleStructure.Cell cell:structure.liftCells)if(structure.isActive(cell.pos)&&++count>=3)return true;return false;
+        }
+        VehicleCouplerTopology topology=VehicleCouplerTopology.of(structure);
+        return topology!=null&&topology.sufficientLift(structure);
     }
+    public static String hoverRequirement(VehicleStructure structure){return structure.couplers.isEmpty()?"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.":"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters in each connected coupler section.";}
     public static double clearance(EntityGroundVehicle craft){
         if(craft.collision==null)return Double.POSITIVE_INFINITY;
         AxisAlignedBB box=craft.collision.bounds(craft.rotationYaw).offset(craft.posX,craft.posY,craft.posZ);
