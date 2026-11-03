@@ -107,8 +107,20 @@ final class VehicleDesignRuntimeChecks {
         WorldServer w=world(mc);EntityPlayerMP p=actor(mc);w.setBlockState(COPY,block("copy_controller").getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH),2);
         CopyControllerTile owner=(CopyControllerTile)w.getTileEntity(COPY);owner.useChip=true;owner.height=8;owner.actor=p.getUniqueID();
         for(int x=1;x<=8;x++)for(int z=0;z<8;z++)w.setBlockState(COPY.add(-x,0,-z),block("turntable_surface").getDefaultState().withProperty(BlockTurntableSurface.FACING,EnumFacing.UP),2);
-        mount(w,COPY.south(),EnumFacing.SOUTH,true);((TileEntityTokenSlot)w.getTileEntity(COPY.south())).setInventorySlotContents(0,written.copy());
-        p.setPositionAndUpdate(COPY.getX()+.5,COPY.getY()+2,COPY.getZ()+3);DeferredTileLoad.flush(w);owner.refreshPads(p);require(owner.input==null&&owner.output!=null,"output-only pad accepted");target=CopyPlan.volume(owner.output,owner.height)[0];owner.requestCopy(p);require(owner.busy(),"real queued copy starts");
+        mount(w,COPY.up(),EnumFacing.UP,true);((TileEntityTokenSlot)w.getTileEntity(COPY.up())).setInventorySlotContents(0,written.copy());
+        p.setPositionAndUpdate(COPY.getX()+.5,COPY.getY()+2,COPY.getZ()+3);DeferredTileLoad.flush(w);owner.refreshPads(p);require(owner.input==null&&owner.output!=null,"output-only pad accepted");chipFitRefusals(w,p,owner);target=CopyPlan.volume(owner.output,owner.height)[0].add((owner.output.size-(int)design.bounds.maxX)/2,0,(owner.output.size-(int)design.bounds.maxZ)/2);owner.requestCopy(p);require(owner.busy(),"real queued copy starts");
+    }
+    private static void chipFitRefusals(WorldServer w,EntityPlayerMP p,CopyControllerTile owner)throws Exception{
+        TileEntityTokenSlot mount=VehicleMounts.find(w,owner.getPos(),true);ItemStack chip=mount.getStackInSlot(0).copy();BlockPos[] volume=CopyPlan.volume(owner.output,owner.height);w.setBlockState(owner.chest(),Blocks.CHEST.getDefaultState(),2);TileEntityChest supply=(TileEntityChest)w.getTileEntity(owner.chest());supply.setInventorySlotContents(0,new ItemStack(Blocks.STONE,64));NBTTagCompound before=supply.writeToNBT(new NBTTagCompound());boolean creative=p.capabilities.isCreativeMode;
+        try{p.capabilities.isCreativeMode=false;
+            for(BlockPos outside:new BlockPos[]{new BlockPos(8,0,0),new BlockPos(0,8,0),new BlockPos(0,0,8)}){
+                List<VehicleStructure.Cell> cells=new ArrayList<>(design.cells);cells.add(new VehicleStructure.Cell(outside,Blocks.STONE.getDefaultState(),null));ItemStack oversized=chip.copy();VehicleChip.write(oversized,new VehicleStructure(cells,design.seat,design.facing,design.gearCount),"Too large");mount.setInventorySlotContents(0,oversized);owner.requestCopy(p);CopyTransactions.drainForChecks(w);
+                require(!owner.busy()&&owner.error.contains("does not fit"),"queued undersized Surface/height refusal "+outside+": "+owner.error);
+                require(before.equals(supply.writeToNBT(new NBTTagCompound()))&&ItemStack.areItemStacksEqual(oversized,mount.getStackInSlot(0)),"fit refusal preserves material inventory and chip");
+                for(BlockPos at:BlockPos.getAllInBox(volume[0],volume[1]))require(w.isAirBlock(at)&&w.getTileEntity(at)==null,"fit refusal never publishes partial output");
+            }
+        }finally{p.capabilities.isCreativeMode=creative;mount.setInventorySlotContents(0,chip);}
+        System.out.println("[vandorlabs][reprolab] copy-chip-fit PASS width depth height queued-Survival-refusal intact-supply-and-chip empty-output");
     }
     private static void programmerPreview(Minecraft mc,File output)throws Exception{
         ProgrammerTile tile=new ProgrammerTile();tile.setInventorySlotContents(1,written.copy());mc.displayGuiScreen(new com.vandorlabs.programmer.client.GuiProgrammer(new ProgrammerContainer(mc.player.inventory,tile)));VehicleTaxiRuntimeChecks.button(mc,6);VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_vehicle_design_programmer.png");mc.displayGuiScreen(null);

@@ -27,12 +27,14 @@ public final class GuiCopyController extends GuiContainer {
         buttonList.add(new GuiButton(11,guiLeft+12,guiTop+46,xSize-24,18,""));
         labels();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
     }
-    private void labels(){((RedstoneActivationButton)buttonList.get(0)).setMode(mode);for(GuiButton button:buttonList){if(button.id!=3)button.enabled=!tile.busy();if(button.id==11){button.displayString="Source: "+(tile.useChip?"Vehicle Chip":"Input Surface");button.visible=tile.useChip||com.vandorlabs.vehicle.VehicleMounts.find(tile.getWorld(),tile.getPos(),true)!=null;}}increment.setEnabled(!tile.busy());channels.setEnabled(!tile.busy());}
+    private boolean hasChipMount(){return com.vandorlabs.vehicle.VehicleMounts.find(tile.getWorld(),tile.getPos(),true)!=null;}
+    private void labels(){((RedstoneActivationButton)buttonList.get(0)).setMode(mode);for(GuiButton button:buttonList){if(button.id!=3)button.enabled=!tile.busy();if(button.id==11){button.displayString="Source: "+(tile.useChip?(hasChipMount()?"Vehicle Chip":"Vehicle Chip (attach Data Chip Mount)"):"Input Surface");button.visible=tile.useChip||hasChipMount();}}increment.setEnabled(!tile.busy());channels.setEnabled(!tile.busy());}
     private void submit(int operation){try{int h=scanHeight,delta=Integer.parseInt(increment.getText());ChannelList list=ChannelList.parse(channels.getText());if(h<1||h>16||delta < -65534||delta > 65534||list==null)throw new IllegalArgumentException();error="";PacketHandler.INSTANCE.sendToServer(new CopyMessage(inventorySlots.windowId,operation,h,delta,mode,list));}catch(IllegalArgumentException invalid){error="Channel increment must be -65534 to 65534";}}
     @Override protected void actionPerformed(GuiButton button){if(button.id==10)return;if(button.id==11){submit(3);return;}if(button.id==3){mc.player.closeScreen();return;}if(button.id==0){mode=GuiOptionCycle.next(mode,3);submit(0);labels();}else submit(button.id);}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee18212c);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
         fontRenderer.drawString("Copy Controller",12,8,0xffffff);
+        if(!tile.useChip&&!hasChipMount())fontRenderer.drawSplitString("Attach a Data Chip Mount to copy from a Vehicle Chip.",12,46,xSize-24,0xcdd7e4);
 
         fontRenderer.drawString("Redstone Channel Increment On Copy",12,65,0xcdd7e4);
         fontRenderer.drawString("Receive channels (blank = local)",12,131,0xcdd7e4);

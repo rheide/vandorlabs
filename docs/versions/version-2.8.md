@@ -6,7 +6,7 @@ Version 2.8 focuses on dense builds: programmable Surface floors, glazing, diago
 
 Vehicle Controllers now retain a name and a small rotating shape preview. Vehicle Status screens display the name and conversion activity while bounded scan/preflight work prepares Taxi or Hover mode. Controllers also retain a last-scanned weight estimate, including supported inventory and fluid contents; it is informational and does not change driving or flight.
 
-An attached Data Chip Mount lets the controller write its exact design to a Vehicle Chip. The [Card / Chip Programmer](../card-chip-programmer.md) creates blank Vehicle Chips, previews their shape and duplicates their full saved contents. The [Copy Controller](../copy-controller.md) can build directly from a Vehicle Chip using an output Surface and the usual materials and recovery checks.
+An attached Data Chip Mount lets the controller write its exact design to a Vehicle Chip. The [Card / Chip Programmer](../card-chip-programmer.md) creates blank Vehicle Chips, previews their shape and duplicates their full saved contents. The [Copy Controller](../copy-controller.md) can build directly from a Vehicle Chip using an output Surface and the usual materials and recovery checks. Copies are centered on the output Surface; oversized designs are refused before spending materials or placing blocks.
 
 The controller’s Security tab accepts a selected Access Card through an attached mount. Leave that card inserted to allow Taxi/Hover conversion; removing it blocks future conversions while parking remains available. See [Vehicle controls](../pilot-seat-taxi.md).
 

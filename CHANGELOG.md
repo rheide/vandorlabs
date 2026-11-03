@@ -6,6 +6,7 @@ See the [2.8 guide](docs/versions/version-2.8.md) and [Garage Door construction 
 
 - Slice vehicle discovery and preflight across ticks, reuse rotation checks for repeated block states and show conversion activity on Vehicle Status screens.
 - Add saved vehicle names and rotating shape previews, exact Vehicle Chips, Programmer creation/duplication, output-only Copy Controller chip sources and retained Access Card security.
+- Center copied block designs across output Surfaces, reject oversized chip designs before material handling, and explain chip copying when the Copy Controller has no mount.
 - Explain missing Data Chip and Access Card Mounts on the Vehicle Controller's Vehicle and Security tabs.
 - Reuse terrain scratch collections and immutable transfer preflight; let a single scan consume unused shared work slices. Preserve fresh-world terrain, live authorization/hardness checks and durable recovery.
 - Record informational vehicle weight estimates from material/shape heuristics and retained cargo/fluid contents; persist the estimate and rule version in controllers and Vehicle Chips without changing movement.
