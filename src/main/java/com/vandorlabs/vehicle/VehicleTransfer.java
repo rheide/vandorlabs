@@ -258,8 +258,8 @@ public final class VehicleTransfer {
         List<net.minecraft.entity.item.EntityPainting> paintings=VehiclePaintings.attached(world,structure,origin);
         structure=VehiclePaintings.capture(structure,origin,paintings);
         VehicleWorld validationView=assemblyView(world,structure);
-        VehicleFlight.requireThruster(structure);
         boolean forceHover=structure.activeNonWheeledGear()&&!VehicleSkiTraction.canStart(world,structure,origin);
+        if(forceHover)VehicleFlight.requireThruster(structure);
         if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice; other landing gear needs three lift blocks for Hover.");
         validateAssembly(structure,validationView);
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");

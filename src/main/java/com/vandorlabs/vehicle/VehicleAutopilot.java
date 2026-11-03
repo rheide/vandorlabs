@@ -199,7 +199,7 @@ public final class VehicleAutopilot {
             VehicleStructure.Cell control=scan.result.controller();if(control==null)throw new IllegalArgumentException("Install a Vehicle Controller");
             net.minecraft.entity.player.EntityPlayerMP owner=com.vandorlabs.tiles.WorldActionAuthorization.actor(tile);
             if(owner==null||owner.world!=world){tile.setStatus("Waiting for owner");world.scheduleUpdate(tile.getPos(),tile.getBlockType(),100);return;}
-            VehicleFlight.requireThruster(scan.result);requireRouteBelow(tile,scan.result,scan.origin);
+            requireRouteBelow(tile,scan.result,scan.origin);
             final VehicleScan ready=scan;queuedDepartures.add(tile);
             VehicleTransfer.submit(world,ready.result,ready.origin,()->{
                 if(!owner.getUniqueID().equals(com.vandorlabs.tiles.WorldActionAuthorization.actorId(tile))||world.getTileEntity(tile.getPos())!=tile||!tile.enabled()||owner.world!=world||owner.isDead||owner.isSpectator())throw new IllegalArgumentException("Start cancelled or owner unavailable");
@@ -243,7 +243,7 @@ public final class VehicleAutopilot {
             if(scan.error!=null)throw new IllegalArgumentException(scan.error);
             VehicleStructure.Cell controllerCell=scan.result.at(tile.getPos().subtract(scan.origin));
             if(controllerCell==null||controllerCell.state.getBlock()!=tile.getBlockType())throw new IllegalArgumentException("Waypoint controller moved or was copied");
-            VehicleFlight.requireThruster(scan.result);if(tile.departureMode==2&&!VehicleFlight.canHover(scan.result))throw new IllegalArgumentException("Hover requires three lift blocks");
+            if(tile.departureMode==2)VehicleFlight.requireThruster(scan.result);if(tile.departureMode==2&&!VehicleFlight.canHover(scan.result))throw new IllegalArgumentException("Hover requires three lift blocks");
             final VehicleScan ready=scan;queuedDepartures.add(tile);
             VehicleTransfer.submit(world,ready.result,ready.origin,()->{
             if(!owner.getUniqueID().equals(com.vandorlabs.tiles.WorldActionAuthorization.actorId(tile))||world.getTileEntity(tile.getPos())!=tile||owner.world!=world)throw new IllegalArgumentException("Departure owner or controller unavailable");

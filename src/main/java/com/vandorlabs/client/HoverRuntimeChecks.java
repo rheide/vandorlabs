@@ -20,6 +20,7 @@ final class HoverRuntimeChecks {
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         cells.add(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null));
         cells.add(new VehicleStructure.Cell(SEAT,ModBlocks.PILOT_SEAT.getDefaultState(),null));
+        cells.add(new VehicleStructure.Cell(new BlockPos(4,0,0),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null));
         String[] lift={"antigravity_plate","repulsor_array","vertical_hover_thruster"};
         for(int i=0;i<lifts;i++){Block block=Block.getBlockFromName("vandorlabs:"+lift[i%3]);require(block instanceof BlockPropulsionLight,"lift registered");cells.add(new VehicleStructure.Cell(new BlockPos(i,0,1),block.getDefaultState(),null));}
         if(thrust)cells.add(new VehicleStructure.Cell(new BlockPos(3,0,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),null));

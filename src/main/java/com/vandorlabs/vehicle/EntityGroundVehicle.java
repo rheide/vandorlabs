@@ -91,7 +91,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private byte vertical;
     private boolean flightSprint;
     private int exhaustCursor,liftExhaustCursor;
-    public static final double CRUISE_SPEED=.28,HOVER_SPRINT_SPEED=.56;
+    public static final double CRUISE_SPEED=.28,UNPOWERED_TAXI_SPEED=.23,HOVER_SPRINT_SPEED=.56;
     public void predictFlight(boolean sprint){if(!world.isRemote)return;flightSprint=sprint;verticalAt=world.getTotalWorldTime();}
     private long verticalAt=-100,clearanceAt=-100;
     private double clearance=Double.POSITIVE_INFINITY;
@@ -404,10 +404,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         collision.begin(world,this);
         try { advanceController(active); } finally { collision.end();if(VehicleDiagnostics.ENABLED)diagnostics.step(System.nanoTime()-started,collision.terrainQueries,MathHelper.wrapDegrees(rotationYaw-before)); }
     }
+    public double cruiseSpeed(){return !hover&&!structure.activeThruster()?UNPOWERED_TAXI_SPEED:CRUISE_SPEED;}
     private void advanceController(boolean active) {
-        boolean boost=hover&&active&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10;
+        boolean boost=hover&&structure.activeThruster()&&active&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10;
         if(!world.isRemote)dataManager.set(HOVER_EXHAUST,boost);
-        driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(boost?HOVER_SPRINT_SPEED:CRUISE_SPEED):0,brake||!active?.045:forward==0?.008:boost?.028:.018);
+        driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(boost?HOVER_SPRINT_SPEED:cruiseSpeed()):0,brake||!active?.045:forward==0?.008:boost?.028:.018);
+        if(!hover)driveSpeed=MathHelper.clamp(driveSpeed,-cruiseSpeed(),cruiseSpeed());
         steering=(float)approach(steering,active?strafe:0,.18);
         // Hover can yaw in place; the route controller owns its own turns.
         // Both modes reverse steering while travelling backwards.

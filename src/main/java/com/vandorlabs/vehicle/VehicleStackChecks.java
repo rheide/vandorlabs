@@ -73,7 +73,7 @@ public final class VehicleStackChecks {
         require(!craft.view.getBlockState(childEngine).getValue(BlockPropulsionLight.POWERED),"child native thrust state remains OFF in moving view");
         List<VehicleStructure.Cell> childOnlyThrust=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)if(!cell.pos.equals(outerEngine))childOnlyThrust.add(cell);
         VehicleStructure noOuterEngine=new VehicleStructure(childOnlyThrust,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);new VehicleWorld(world,noOuterEngine);
-        boolean refused=false;try{VehicleFlight.requireThruster(noOuterEngine);}catch(IllegalArgumentException expected){refused=true;}require(refused,"child propulsion cannot satisfy outer Taxi requirement");
+        boolean refused=false;try{VehicleFlight.requireThruster(noOuterEngine);}catch(IllegalArgumentException expected){refused=true;}require(refused&&!noOuterEngine.activeThruster(),"child propulsion cannot satisfy outer Hover requirement or boost Taxi speed");
         require(new VehicleSteering().profile(craft.view).wheels==3,"Taxi wheel profile counts only three active outer wheel assemblies");
         List<VehicleStructure.Cell> childLift=new ArrayList<>(craft.structure.cells);Block lift=Block.getBlockFromName("vandorlabs:antigravity_plate");require(lift!=Blocks.AIR,"native lift fixture exists");
         for(int x=1;x<=3;x++)childLift.add(new VehicleStructure.Cell(child.add(x,2,2).subtract(origin),lift.getDefaultState(),null));

@@ -86,11 +86,11 @@ public final class VehicleStructure {
         for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state)return;if(!cell.sameTileData(old))changed.put(cell.pos,cell.tile);}
         try{encodedLength=before.lengthWithTiles(changed);}catch(IOException invalid){encodedLength=-1;}
     }
-    void componentView(VehicleWorld view){if(componentView==null){componentView=view;activeFootKinds=-1;}}
+    void componentView(VehicleWorld view){if(componentView==null){componentView=view;activeFootKinds=-1;activePropulsion=-1;}}
     void inheritComponents(VehicleStructure before){
         if(before.activeCells==null||before.cells.size()!=cells.size())return;
         for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state||cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&!old.sameGearConfiguration(cell))return;}
-        activeCells=before.activeCells;activeFootKinds=before.activeFootKinds;
+        activeCells=before.activeCells;activeFootKinds=before.activeFootKinds;activePropulsion=before.activePropulsion;
     }
     public boolean isActive(BlockPos pos){
         if(displayOnly||derivingComponents)return byPosition.containsKey(pos);
@@ -102,6 +102,12 @@ public final class VehicleStructure {
         return activeCells.contains(pos);
     }
 
+    private int activePropulsion=-1;
+    public boolean activeThruster(){
+        if(!splitComponents)return hasThruster;
+        if(activePropulsion<0){activePropulsion=0;for(Cell cell:exhaustCells)if(isActive(cell.pos)&&!VehicleFlight.lift(cell.state.getBlock())){activePropulsion=1;break;}}
+        return activePropulsion==1;
+    }
     private int activeFootKinds=-1;
     private int activeFootKinds(){
         if(!splitComponents)return (hasNonWheeledGear?1:0)|(hasSkisOnly?2:0);

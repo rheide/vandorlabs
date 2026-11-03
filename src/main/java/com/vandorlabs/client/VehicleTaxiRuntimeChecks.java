@@ -83,7 +83,7 @@ public final class VehicleTaxiRuntimeChecks {
         }
         IBlockState state=ModBlocks.PILOT_SEAT.getDefaultState();w.setBlockState(seat,state,2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,seat,state,p,new ItemStack(ModBlocks.PILOT_SEAT));
         require(((TileEntityPilotSeat)w.getTileEntity(seat)).isTaxiMode(),"new seats default to Taxi Mode");
-        w.setBlockState(origin.add(1,2,0),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
+        w.setBlockState(origin.add(1,2,0),Blocks.STONE.getDefaultState(),2);
         w.setBlockState(origin.add(1,1,1),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),2);
         TileEntityPilotSeat legacy=new TileEntityPilotSeat();legacy.readFromNBT(new NBTTagCompound());require(legacy.isTaxiMode(),"legacy seats default to Taxi Mode");
         BlockPos furnacePos=origin.add(2,2,0);w.setBlockState(furnacePos,Blocks.FURNACE.getDefaultState().withProperty(net.minecraft.block.BlockFurnace.FACING,EnumFacing.EAST),2);
@@ -141,6 +141,9 @@ public final class VehicleTaxiRuntimeChecks {
         VehicleScan loop=new VehicleScan(w,seat);int slices=0;
         while(!loop.step(1) && ++slices<512);
         require(loop.error==null && loop.result!=null && slices<512,"aligned gear/hull loop finishes within bounded one-cell scan slices: "+loop.error+", slices="+slices);
+        UnpoweredTaxiSpeedChecks.run(w,loop.result);
+        HoverRuntimeChecks.check(w,p);
+        VehicleStackChecks.run(w,p);
         require(loop.result.gearCount==3,"aligned gear roots are each counted once");
         Set<BlockPos> unique=new HashSet<>();
         for(VehicleStructure.Cell cell:loop.result.cells) {
@@ -336,7 +339,7 @@ public final class VehicleTaxiRuntimeChecks {
                 require(((VehicleNetwork.Packet)field(field(mc.currentScreen,"data"),"header")).forward==1,"dedicated controller parking panel");button(mc,10);break;
             case 29:mc.getIntegratedServer().addScheduledTask(()->{require(craft(mc)==null || craft(mc).isDead,"manual Configurizer recovery remains available");require(placements==4,"manual parking preserves full snapshot");MinecraftForge.EVENT_BUS.unregister(audit);com.vandorlabs.redstone.RedstoneChannels.unregister(powered);}).get();
                 javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_vehicle_taxi.png"));
-                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS unified-entry-preview no-save autoapply valid-channels invalid-draft-preserved inline-mode-channels minimum-layout screenshots held-high-baseline stale-preview canonical-list stacked-gear-loop bounded-discovery default-on manual-off actual-boarding 90-270-parking 45-dismount-preserved repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
+                System.out.println("[vandorlabs][reprolab] vehicle-taxi PASS no-thruster-assembly unified-entry-preview no-save autoapply valid-channels invalid-draft-preserved inline-mode-channels minimum-layout screenshots held-high-baseline stale-preview canonical-list stacked-gear-loop bounded-discovery default-on manual-off actual-boarding 90-270-parking 45-dismount-preserved repeated-trips blocked-retry rollback-retry entity-save manual-configurizer full-state-NBT");done=true;return true;
             default:throw new IllegalStateException("Taxi test phase overflow");
         }
         return false;

@@ -149,6 +149,7 @@ public final class VehicleService {
         require(structure.hasDedicatedController(),"Vehicle Controller missing");
         require(job.requestedMode!=1 || VehicleSkiTraction.canStart(world,structure,origin),"Taxi requires wheels, or only skis over ice.");
         require(!job.taxi || VehicleTaxiMode.enabled(structure,job.scan.startPosition().subtract(origin)),"Taxi Mode is disabled on the Pilot Seat.");
+        if(job.requestedMode==2)VehicleFlight.requireThruster(structure);
         require(job.requestedMode!=2 || VehicleFlight.canHover(structure),"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.");
         require(structure.matches(world,origin),"Blocks or settings changed during signal scan.");
         for(BlockPos boundary:job.scan.airBoundary)require(world.isBlockLoaded(boundary) && world.isAirBlock(boundary),"Craft connections changed during signal scan.");
