@@ -40,7 +40,7 @@ public final class ProgrammerJournalRenderer {
             if(!vehicle&&view!=null)RedstoneScreenRenderer.rect(buffer,ProgrammerJournalSurface.NEXT_LEFT,height-20,ProgrammerJournalSurface.NEXT_RIGHT,height-4,.01,page+1<view.pages.size()?0xff23465a:0xff121b23);
             Tessellator.getInstance().draw();FontRenderer font=Minecraft.getMinecraft().fontRenderer;
             if(vehicle){
-                VehicleShapeRenderer.draw(VehicleShapeRenderer.shape(chip.getTagCompound()),160,20+(height-20)/2F,280,height-31,angle);
+                VehicleShapeRenderer.drawChip(VehicleShapeRenderer.shape(chip.getTagCompound()),160,20+(height-20)/2F,280,height-31,angle,chip);
                 fitted(font,com.vandorlabs.vehicle.VehicleChip.name(chip).isEmpty()?"Blank Vehicle Chip":com.vandorlabs.vehicle.VehicleChip.name(chip),7,8,306,0xc8eeff);
                 GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();return;
             }

@@ -34,6 +34,13 @@ final class ScreenChipJoinedChecks {
         int builds=ScreenChipGroups.builds;for(int i=0;i<100;i++)for(TileEntityAnimatedScreenSelector tile:group.members)require(ScreenChipGroups.group(tile)==group,"cached group identity");require(ScreenChipGroups.builds==builds,"per-frame group discovery");
         int before=ScreenChipRenderer.submissions;render(mc,group,new File(output,"screen-chip-joined-vehicle.png"));require(ScreenChipRenderer.submissions-before==1,"2x2 must submit one stretched canvas");
         int meshes=VehicleShapeRenderer.meshBuilds;long start=System.nanoTime();for(int i=0;i<100;i++)render(mc,group,null);long micros=(System.nanoTime()-start)/1000;require(VehicleShapeRenderer.meshBuilds==meshes,"rotation rebuilt immutable voxel geometry");
+        int[] previewColors={0xeeeeee,0xffd34d,0xff6868,0x8aff75,0xa78bff,0xff9b45,0xa5e0e6};
+        for(int company=0;company<7;company++){
+            ItemStack colored=reader.getStackInSlot(0);colored.setItemDamage(company);require(VehicleShapeRenderer.chipColor(colored)==previewColors[company],"preview company palette "+company);
+            File picture=new File(output,"screen-chip-vehicle-color-"+company+".png");render(mc,ScreenChipGroups.group(first),picture);java.awt.image.BufferedImage pixels=ImageIO.read(picture);int matches=0;
+            for(int y=130;y<350;y++)for(int x=130;x<350;x++){int rgb=pixels.getRGB(x,y);boolean close=true;for(int shift:new int[]{0,8,16})if(Math.abs(((rgb>>shift)&255)-((previewColors[company]>>shift)&255))>8)close=false;if(close)matches++;}require(matches>10,"company preview color missing from rendered voxels "+company+" pixels="+matches);
+        }
+        int coloredBuilds=VehicleShapeRenderer.meshBuilds;for(int company=0;company<7;company++){reader.getStackInSlot(0).setItemDamage(company);render(mc,ScreenChipGroups.group(first),null);}require(VehicleShapeRenderer.meshBuilds==coloredBuilds,"company switching rebuilt cached geometry");
         for(int company=1;company<7;company++){ItemStack master=new ItemStack(ModItems.DATA_CHIP,1,company);require(ProgrammerJournalRenderer.companyChoice(master)>=0,"Corp logo for company "+company);reader.setInventorySlotContents(0,master);render(mc,ScreenChipGroups.group(first),new File(output,"screen-chip-company-"+company+".png"));}
         reader.takeForDrop();require(ScreenChipSupport.stack(first).isEmpty(),"removal updates joined source");mc.world.setBlockToAir(mount);require(!ScreenChipSupport.available(first,0),"removed mount invalidates shared lookup");
         orientations(mc,base.up(4),output);
