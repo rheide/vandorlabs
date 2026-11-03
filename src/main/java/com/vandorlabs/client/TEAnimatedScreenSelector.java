@@ -95,6 +95,7 @@ public class TEAnimatedScreenSelector
     /** Release the last rendered world even if no later light or porthole is drawn. */
     static void unloadGroups(World world) {
         ScreenSurfaceGroups.unload(world);
+        VehicleShapeRenderer.clear();
         if(lightCacheWorld==world) {
             LIGHT_GROUPS.clear();lightCacheWorld=null;
             lightCacheTick=Long.MIN_VALUE;lightCacheRevision=Long.MIN_VALUE;
@@ -936,7 +937,9 @@ public class TEAnimatedScreenSelector
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork
         // fills the deck without cropping or atlas-induced aspect changes.
-        if(!redstoneFace(te,1))drawInputSurface(te,InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));
+        if(com.vandorlabs.blocks.ScreenChipSupport.selected(te)){
+            ScreenSurface.Quad deck=com.vandorlabs.blocks.ScreenChipSupport.deck();if(!redstoneFace(te,1)){double[] uv=bindInput(te,te.getInputPanel(),1);double right=uv.length>2?uv[3]:1,left=uv.length>2?uv[2]:0;BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());drawScreenQuad(b,FrameSurfaceRenderer.content(te,deck),right,left+(right-left)*.40,uv[0],uv[1],false);Tessellator.getInstance().draw();}FrameSurfaceRenderer.screen(te,deck);
+        }else{if(!redstoneFace(te,1))drawInputSurface(te,InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));}
     }
 
     private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,
@@ -1645,6 +1648,7 @@ public class TEAnimatedScreenSelector
 
     /** TextureManager caches per ResourceLocation; drop entries on pack reload. */
     public static synchronized void clearCache() {
+        VehicleShapeRenderer.clear();
         for(AnimData data:ANIM_CACHE.values())Minecraft.getMinecraft().getTextureManager().deleteTexture(data.texture);
         ANIM_CACHE.clear();
     }

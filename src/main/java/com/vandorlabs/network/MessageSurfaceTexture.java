@@ -27,7 +27,10 @@ public final class MessageSurfaceTexture implements IMessage {
                     if(c.getTileEntity()!=tile || !c.canInteractWith(player))return;
                     if(!com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),m.slot))return;
                     if(m.choice==TileEntityAnimatedScreenSelector.CHIP_SURFACE&&!com.vandorlabs.blocks.ScreenChipSupport.available((TileEntityAnimatedScreenSelector)tile,m.slot))return;
-                    ((TileEntityAnimatedScreenSelector)tile).setSurfaceTexture(m.slot,m.choice);
+                    TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;
+                    java.util.List<TileEntityAnimatedScreenSelector> targets=(tile.getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&(m.choice==TileEntityAnimatedScreenSelector.CHIP_SURFACE||screen.hasChipSurface(m.slot)))?DisplayEditGroups.members(screen):java.util.Collections.singletonList(screen);
+                    for(TileEntityAnimatedScreenSelector target:targets)if(!com.vandorlabs.blocks.ScreenChipGroups.canEdit(player,target))return;
+                    for(TileEntityAnimatedScreenSelector target:targets)target.setSurfaceTexture(m.slot,m.choice);
 
                 }
             });return null;

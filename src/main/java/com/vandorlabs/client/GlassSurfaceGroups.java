@@ -14,6 +14,9 @@ final class GlassSurfaceGroups {
     static final class Layout {
         final int column,row,columns,rows;
         final boolean flipU,flipV;
+        private Layout mirroredU,mirroredV;
+        Layout mirrorU(){if(mirroredU==null)mirroredU=new Layout(columns-1-column,row,columns,rows,flipU,flipV);return mirroredU;}
+        Layout mirrorV(){if(mirroredV==null)mirroredV=new Layout(column,rows-1-row,columns,rows,flipU,flipV);return mirroredV;}
         Layout(int column,int row,int columns,int rows){this(column,row,columns,rows,false,false);}
         Layout(int column,int row,int columns,int rows,boolean flipU,boolean flipV){this.column=column;this.row=row;this.columns=columns;this.rows=rows;this.flipU=flipU;this.flipV=flipV;}
         String key(){return column+":"+row+":"+columns+":"+rows+":"+flipU+":"+flipV;}

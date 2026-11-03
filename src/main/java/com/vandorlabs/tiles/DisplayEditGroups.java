@@ -18,12 +18,12 @@ public final class DisplayEditGroups {
     }
     public static List<TileEntityAnimatedScreenSelector> members(TileEntityAnimatedScreenSelector first){
         List<TileEntityAnimatedScreenSelector> single=Collections.singletonList(first);World world=first.getWorld();
-        if(world==null||!world.isBlockLoaded(first.getPos(),false)||!TileEntityAnimatedScreenSelector.supportsActivation(first.getBlockType())||!DisplayJoinGeometry.supportsJoining(first)||first.sharedArtworkTexture()<0)return single;
+        if(world==null||!world.isBlockLoaded(first.getPos(),false)||!TileEntityAnimatedScreenSelector.supportsActivation(first.getBlockType())||!DisplayJoinGeometry.supportsJoining(first)||first.sharedArtworkTexture()<0&&first.sharedArtworkTexture()!=TileEntityAnimatedScreenSelector.CHIP_SURFACE)return single;
         IBlockState state=world.getBlockState(first.getPos());DisplayJoinGeometry.Basis basis=DisplayJoinGeometry.basis(first,state);
         Map<BlockPos,TileEntityAnimatedScreenSelector> found=new LinkedHashMap<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();found.put(first.getPos(),first);queue.add(first.getPos());
         while(!queue.isEmpty()){
             BlockPos at=queue.removeFirst();
-            for(BlockPos step:basis.steps){BlockPos next=at.add(step);if(found.containsKey(next)||!world.isBlockLoaded(next,false)||world.getBlockState(next)!=state)continue;TileEntity raw=world.getTileEntity(next);if(!(raw instanceof TileEntityAnimatedScreenSelector)||!matching(first,(TileEntityAnimatedScreenSelector)raw))continue;if(found.size()>=1023)return single;found.put(next,(TileEntityAnimatedScreenSelector)raw);queue.addLast(next);}
+            for(BlockPos step:basis.steps){BlockPos next=at.add(step);if(found.containsKey(next)||!world.isBlockLoaded(next,false)||world.getBlockState(next)!=state)continue;TileEntity raw=world.getTileEntity(next);if(!(raw instanceof TileEntityAnimatedScreenSelector)||!matching(first,(TileEntityAnimatedScreenSelector)raw))continue;if(found.size()>=4096)return single;found.put(next,(TileEntityAnimatedScreenSelector)raw);queue.addLast(next);}
         }
         Map<Long,TileEntityAnimatedScreenSelector> cells=new HashMap<>();for(TileEntityAnimatedScreenSelector tile:found.values())cells.put(basis.cell(tile.getPos()),tile);
         long origin=basis.cell(first.getPos());int x=(int)(origin>>32),y=(int)origin;

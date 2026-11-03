@@ -37,6 +37,8 @@ public class HandlerSyncScreenSelector implements IMessageHandler<MessageSyncScr
                 return;
             }
             if (message.getRedstoneChannel() < 0 || message.getRedstoneChannels()==null) return;
+            java.util.List<TileEntityAnimatedScreenSelector> chipGroup=te.getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&te.hasChipSurface(0)?com.vandorlabs.tiles.DisplayEditGroups.members(te):java.util.Collections.singletonList(te);
+            for(TileEntityAnimatedScreenSelector member:chipGroup)if(!com.vandorlabs.blocks.ScreenChipGroups.canEdit(player,member))return;
             long before=te.getSettingsRevision();
             te.setSelectedScreen(message.getSelectedScreen());
             te.setRedstoneEnabled(message.isRedstoneEnabled());
@@ -44,6 +46,7 @@ public class HandlerSyncScreenSelector implements IMessageHandler<MessageSyncScr
             te.setDisplayMode(message.getDisplayMode());
             te.setFramed(message.isFramed());
             te.setAnimationSpeedIndex(message.getAnimationSpeedIndex());
+            for(TileEntityAnimatedScreenSelector member:chipGroup)if(member!=te&&member.baseAnimationSpeed()!=message.getAnimationSpeedIndex()){member.setAnimationSpeedIndex(message.getAnimationSpeedIndex());player.world.notifyBlockUpdate(member.getPos(),player.world.getBlockState(member.getPos()),player.world.getBlockState(member.getPos()),2);}
             te.setInputPanel(message.getInputPanel());
             te.setSecondaryInputPanel(message.getSecondaryInputPanel());
             te.setRedstoneChannels(message.getRedstoneChannels());

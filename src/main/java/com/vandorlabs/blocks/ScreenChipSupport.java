@@ -15,7 +15,7 @@ public final class ScreenChipSupport {
     private ScreenChipSupport(){}
     private static final ScreenSurface.Quad DECK=ScreenSurface.inset(ScreenSurface.input(com.vandorlabs.render.InputSurfaceLayout.halfConsoleFront()),.40,0,0,0);
     public static ScreenSurface.Quad deck(){return DECK;}
-    public static boolean integrated(Block block){return block instanceof BlockDiagonalHalfConsole||block instanceof BlockProgrammableHalfConsole||block instanceof BlockProgrammableDiagonalScreen;}
+    public static boolean integrated(Block block){return block instanceof BlockDiagonalHalfConsole||block instanceof BlockProgrammableHalfConsole||block instanceof BlockProgrammableConsole||block instanceof BlockProgrammableDiagonalScreen;}
     public static int displaySlot(Block block){return block instanceof BlockProgrammableHalfConsole?1:0;}
     public static boolean selected(TileEntityAnimatedScreenSelector tile){return integrated(tile.getBlockType())&&tile.baseSurfaceTexture(displaySlot(tile.getBlockType()))==TileEntityAnimatedScreenSelector.CHIP_SURFACE;}
     public static TileEntityTokenSlot attached(TileEntityAnimatedScreenSelector tile){
@@ -26,14 +26,15 @@ public final class ScreenChipSupport {
             if(state.getBlock() instanceof BlockTokenSlot&&((BlockTokenSlot)state.getBlock()).chip&&state.getValue(BlockVandorSwitch.FACING)==face){net.minecraft.tileentity.TileEntity raw=tile.getWorld().getTileEntity(at);if(raw instanceof TileEntityTokenSlot)return (TileEntityTokenSlot)raw;}
         }return null;
     }
-    public static boolean available(TileEntityAnimatedScreenSelector tile,int slot){return slot==displaySlot(tile.getBlockType())&&(integrated(tile.getBlockType())||attached(tile)!=null);}
-    public static TileEntityTokenSlot reader(TileEntityAnimatedScreenSelector tile){return integrated(tile.getBlockType())?tile.ownedChipReader():attached(tile);}
+    public static boolean available(TileEntityAnimatedScreenSelector tile,int slot){return slot==displaySlot(tile.getBlockType())&&(integrated(tile.getBlockType())||groupReader(tile)!=null);}
+    public static TileEntityTokenSlot reader(TileEntityAnimatedScreenSelector tile){return integrated(tile.getBlockType())?tile.ownedChipReader():groupReader(tile);}
+    private static TileEntityTokenSlot groupReader(TileEntityAnimatedScreenSelector tile){if(tile.getBlockType().getClass()!=BlockAnimatedScreenSelector.class)return null;ScreenChipGroups.Group group=ScreenChipGroups.group(tile);return group==null?null:group.reader;}
     public static ItemStack stack(TileEntityAnimatedScreenSelector tile){TileEntityTokenSlot reader=reader(tile);return reader==null?ItemStack.EMPTY:reader.getStackInSlot(0);}
     /** All built-in readers insert along local X, sideways across the console. */
     public static MachineMountSurface localMount(IBlockState state,TileEntityAnimatedScreenSelector tile){
         Block block=state.getBlock();Vec3d center,normal;
         if(block instanceof BlockDiagonalHalfConsole){boolean upper=state.getValue(BlockDiagonalHalfConsole.UPPER);center=new Vec3d(.5,upper?.937:.063,.25);normal=new Vec3d(0,upper?-1:1,0);}
-        else if(block instanceof BlockProgrammableHalfConsole){center=new Vec3d(.22,.068,.24+(tile.isCeilingMounted()?com.vandorlabs.render.InputSurfaceLayout.ceilingStart(16,tile.getCeilingPosition(1))/16:0));normal=new Vec3d(0,1,0);}
+        else if(block instanceof BlockProgrammableHalfConsole||block instanceof BlockProgrammableConsole){center=new Vec3d(.22,.068,.24+(tile.isCeilingMounted()?com.vandorlabs.render.InputSurfaceLayout.ceilingStart(16,tile.getCeilingPosition(1))/16:0));normal=new Vec3d(0,1,0);}
         else{boolean upper=state.getValue(BlockProgrammableDiagonalScreen.INVERTED);center=new Vec3d(.5,upper?.86:.14,.14);normal=new Vec3d(0,upper?-1:1,-1).normalize();}
         Vec3d v=new Vec3d(1,0,0),u=normal.crossProduct(v);return new MachineMountSurface(center,u,v,normal,.34,.34);
     }
@@ -58,7 +59,9 @@ public final class ScreenChipSupport {
         int slot=displaySlot(tile.getBlockType());if(!tile.hasChipSurface(slot))return false;
         int row=RedstoneScreenInteractions.hitRow(world.getBlockState(tile.getPos()),tile,slot,eye,end,12);double column=RedstoneScreenInteractions.hitColumn(world.getBlockState(tile.getPos()),tile,slot,eye,end);
         if(row<0||column<0||column>128)return false;
-        com.vandorlabs.programmer.ProgrammerJournalView view=tile.chipDisplay();if(view==null)return false;
-        if(!physical.isRemote){tile.chipPage=Math.max(0,Math.min(view.pages.size()-1,tile.chipPage+(column<64?-1:1)));tile.markDirty();if(world instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld carried=(com.vandorlabs.vehicle.VehicleWorld)world;if(carried.craft!=null)carried.craft.signals.changed(tile.getPos());}else world.notifyBlockUpdate(tile.getPos(),world.getBlockState(tile.getPos()),world.getBlockState(tile.getPos()),2);}return true;
+        TileEntityAnimatedScreenSelector display=tile;
+        if(!integrated(tile.getBlockType())){ScreenChipGroups.Group group=ScreenChipGroups.group(tile);if(group==null)return false;display=group.owner;int col=(int)(DisplayJoinGeometry.basis(tile,world.getBlockState(tile.getPos())).cell(tile.getPos())>>32)-group.minColumn;if(world.getBlockState(tile.getPos()).getValue(BlockAnimatedScreenSelector.FACING)==EnumFacing.UP)col=group.columns-1-col;column=(group.columns-1-col+column/128)*128/group.columns;}
+        com.vandorlabs.programmer.ProgrammerJournalView view=display.chipDisplay();if(view==null)return false;
+        if(!physical.isRemote){display.chipPage=Math.max(0,Math.min(view.pages.size()-1,display.chipPage+(column<64?-1:1)));display.markDirty();if(world instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld carried=(com.vandorlabs.vehicle.VehicleWorld)world;if(carried.craft!=null)carried.craft.signals.changed(display.getPos());}else world.notifyBlockUpdate(display.getPos(),world.getBlockState(display.getPos()),world.getBlockState(display.getPos()),2);}return true;
     }
 }
