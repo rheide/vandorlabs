@@ -39,7 +39,11 @@ public final class VehicleScan {
     public VehicleStructure result;
     private VehicleStructure candidate;
     private VehicleRotation.Validation validation;
-    private boolean validated,holdRequested;
+    private boolean validated,holdRequested,weightRequested;
+    private VehicleWorld candidateView;
+    private VehicleWeight weight;
+    public VehicleWeight.Result weightResult;
+    public void measureWeight(){weightRequested=true;}
     private VehicleTransfer.SourceHold hold;
     private List<VehicleStructure.Cell> refreshed;
     private int refreshIndex;
@@ -297,9 +301,10 @@ public final class VehicleScan {
                     if(refreshIndex<candidate.cells.size())return false;
                     candidate=new VehicleStructure(refreshed,candidate.seat,candidate.facing,candidate.gearCount);refreshed=null;return false;
                 }
-                if(validation==null){VehicleWorld view=new VehicleWorld(world,candidate);view.origin=origin;validation=new VehicleRotation.Validation(candidate,view);return false;}
+                if(validation==null){candidateView=new VehicleWorld(world,candidate);candidateView.origin=origin;validation=new VehicleRotation.Validation(candidate,candidateView);return false;}
                 if(!validated){validated=validation.step(budget,deadline);return false;}
-                candidate.encode();result=candidate;candidate=null;validation=null;return true;
+                if(weightRequested&&weightResult==null){if(weight==null)weight=new VehicleWeight(candidate,candidateView);if(weight.step(4096,deadline))weightResult=weight.result();return false;}
+                candidate.encode();result=candidate;candidate=null;validation=null;candidateView=null;weight=null;return true;
             }
             for(int i=0;i<budget && !queue.isEmpty() && (i==0||System.nanoTime()<deadline);i++) {
                 BlockPos p=queue.removeFirst(); if(!visited.add(p))continue;

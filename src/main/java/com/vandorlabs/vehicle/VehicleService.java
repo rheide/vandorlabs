@@ -22,7 +22,7 @@ public final class VehicleService {
     private static final Map<UUID,Job> jobs=new HashMap<>();
     private static final Map<String,Long> requests=new HashMap<>();
     private static final Set<World> recovered=Collections.newSetFromMap(new WeakHashMap<World,Boolean>());
-    private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi,screen,writeChip;com.vandorlabs.tiles.TileEntityVehicleController indicator;int ticks,requestedMode=-1;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);scan.holdSource();indicator=VehicleStatus.controller(world,pos);if(indicator!=null)indicator.setConverting(true);}
+    private static final class Job {final EntityPlayerMP player;final World world;final VehicleScan scan;boolean signal,taxi,screen,writeChip;com.vandorlabs.tiles.TileEntityVehicleController indicator;int ticks,requestedMode=-1;Job(EntityPlayerMP p,BlockPos pos){player=p;world=p.world;scan=new VehicleScan(p.world,pos);scan.holdSource();scan.measureWeight();indicator=VehicleStatus.controller(world,pos);if(indicator!=null)indicator.setConverting(true);}
         void finish(){scan.releaseSource();if(indicator!=null&&!indicator.isInvalid())indicator.setConverting(false);}}
     /** Screen clicks use the clicking player, bounded scans and the normal transfer checks. */
     public static void screenMode(EntityPlayerMP player,BlockPos screen,EntityGroundVehicle craft,int mode){
@@ -374,11 +374,11 @@ public final class VehicleService {
         try{preview=controllerPreview(player,token,entity,selected);require(values!=null && values.length==3 && java.util.Arrays.stream(values).allMatch(java.util.Objects::nonNull),"Invalid mode channels.");com.vandorlabs.tiles.TileEntityPilotSeat seat=editableController(player,preview);for(int i=0;i<3;i++)seat.setModeChannels(i,values[i]);changedSeat(player,preview,seat);}
         catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
-    private static VehicleStructure rememberShape(World world,BlockPos origin,VehicleStructure structure){
+    private static VehicleStructure rememberShape(World world,BlockPos origin,VehicleStructure structure,VehicleWeight.Result weight){
         VehicleStructure.Cell cell=structure.controller();if(cell==null)return structure;
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(origin.add(cell.pos));if(!(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController))return structure;
         com.vandorlabs.tiles.TileEntityVehicleController controller=(com.vandorlabs.tiles.TileEntityVehicleController)raw;
-        controller.shape=VehicleShape.of(structure);controller.markDirty();controller.publishDesign();
+        controller.shape=VehicleShape.of(structure);if(weight!=null){controller.vehicleWeight=weight.units;controller.vehicleWeightVersion=VehicleWeight.VERSION;controller.vehicleWeightIncomplete=weight.incomplete;}controller.markDirty();controller.publishDesign();
         return VehicleSeatSettings.replaceAt(structure,cell.pos,controller.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),BlockPos.ORIGIN.subtract(origin));
     }
     public static void designSettings(EntityPlayerMP player,VehicleNetwork.Packet packet){
@@ -502,7 +502,7 @@ public final class VehicleService {
                     permission(job.player,at);require(job.player.getDistanceSqToCenter(at)<=64,"Move closer to the Vehicle Controller");
                     for(VehicleStructure.Cell cell:snapshot.cells)permission(job.player,job.scan.origin.add(cell.pos));
                     require(snapshot.matchesExact(world,job.scan.origin),"Vehicle contents changed during the scan; write again");
-                    snapshot=rememberShape(world,job.scan.origin,snapshot);
+                    snapshot=rememberShape(world,job.scan.origin,snapshot,job.scan.weightResult);
                     com.vandorlabs.tiles.TileEntityVehicleController controller=(com.vandorlabs.tiles.TileEntityVehicleController)world.getTileEntity(at);
                     com.vandorlabs.tiles.TileEntityTokenSlot mount=VehicleMounts.find(world,at,true);require(mount!=null&&!mount.returning(),"Attach a Data Chip Mount");
                     net.minecraft.item.ItemStack chip=mount.getStackInSlot(0).copy();VehicleChip.write(chip,snapshot,controller.vehicleName);mount.setInventorySlotContents(0,chip);
@@ -513,9 +513,9 @@ public final class VehicleService {
                 }catch(Exception failure){job.finish();VehicleNetwork.error(job.player,failure.getMessage());}
                 continue;
             }
-            if(job.signal || job.taxi){job.scan.result=rememberShape(world,job.scan.origin,job.scan.result);VehicleTransfer.submit(world,job.scan.result,job.scan.origin,()->{require(job.player.world==world&&!job.player.isDead&&!job.player.isSpectator()&&job.player.connection.netManager.isChannelOpen(),"Pilot unavailable.");require(!job.taxi||seatedAt(job.player,job.scan.startPosition()),"Pilot left the seat.");assembleSignal(job);job.finish();},e->{job.finish();VehicleNetwork.error(job.player,(job.taxi?"Taxi Mode: ":"Vehicle Controller signal: ")+e.getMessage());});continue;}
+            if(job.signal || job.taxi){job.scan.result=rememberShape(world,job.scan.origin,job.scan.result,job.scan.weightResult);VehicleTransfer.submit(world,job.scan.result,job.scan.origin,()->{require(job.player.world==world&&!job.player.isDead&&!job.player.isSpectator()&&job.player.connection.netManager.isChannelOpen(),"Pilot unavailable.");require(!job.taxi||seatedAt(job.player,job.scan.startPosition()),"Pilot left the seat.");assembleSignal(job);job.finish();},e->{job.finish();VehicleNetwork.error(job.player,(job.taxi?"Taxi Mode: ":"Vehicle Controller signal: ")+e.getMessage());});continue;}
             job.finish();
-            job.scan.result=rememberShape(world,job.scan.origin,job.scan.result);
+            job.scan.result=rememberShape(world,job.scan.origin,job.scan.result,job.scan.weightResult);
             Preview preview=new Preview(world,job.scan.result,job.scan.origin,null,"",true,job.scan.startPosition().subtract(job.scan.origin));previews.put(job.player.getUniqueID(),preview);
             preview.airBoundary.addAll(job.scan.airBoundary);
             VehicleNetwork.send(job.player,preview.structure,-1,preview.token,preview.origin,true,false,"",true);

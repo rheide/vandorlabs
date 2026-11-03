@@ -6,6 +6,7 @@ See the [2.8 guide](docs/versions/version-2.8.md) and [Garage Door construction 
 
 - Slice vehicle discovery and preflight across ticks, reuse rotation checks for repeated block states and show conversion activity on Vehicle Status screens.
 - Add saved vehicle names and rotating shape previews, exact Vehicle Chips, Programmer creation/duplication, output-only Copy Controller chip sources and retained Access Card security.
+- Record informational vehicle weight estimates from material/shape heuristics and retained cargo/fluid contents; persist the estimate and rule version in controllers and Vehicle Chips without changing movement.
 - Add linked overhead Garage Doors with Redstone Channels, a shared Configurizer/right-click dialog, bounded topology queries and original panel artwork.
 - Bake settled closed garage panels into terrain; batch moving panels and cache reusable pose geometry. Preserve server collision and saved motion independently of cosmetic animation and chunk upload timing.
 - Batch unclaimed single Surface blocks, ordinary planar glazing and opaque diagonal wall fallback meshes. Tighten Surface visibility bounds.

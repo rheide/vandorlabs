@@ -75,3 +75,25 @@ Attach a Data Chip Mount directly onto any face of the Vehicle Controller. Inser
 Attach an Access Card Mount directly onto the Vehicle Controller and open its **Security** tab. Select the accepted company Access Card, then enable **Security**. The selected card must remain inserted in that mount to allow conversion to Taxi or Hover. Removing it prevents subsequent conversions. Parking remains available, and removing the card does not forcibly stop a moving craft.
 
 Vehicle security uses a retained card. It does not accept a pulse, a remembered toggle, a returned card or a reader merely connected through Redstone Channels. The accepted unbranded card means that specific card variant, rather than any company. Security settings and the selected card survive saving, parking and recapture.
+
+## Estimated vehicle weight
+
+A completed scan stores an informational weight estimate in the Vehicle Controller, alongside its name and last-scanned shape. The Vehicle tab shows the estimate; it survives parking, saving and Vehicle Chip recording. It is the **last scanned** value: changing cargo later updates it on the next scan. It does not affect Hover speed, Taxi acceleration, collision or permissions.
+
+The unit is a game weight unit, with one full stone block as the reference. Material names and block variants are used first, followed by Minecraft's material classification. Selected artwork and custom display names do not change weight.
+
+| Example material | Full-block weight units |
+| --- | ---: |
+| Wood | 0.25 |
+| Dirt or sand | 0.6 |
+| Stone or glass | 1 |
+| Iron or steel | 3 |
+| Copper or bronze | 3.5 |
+| Lead | 4.5 |
+| Gold | 7.5 |
+
+Slabs use half a block's material, stairs three quarters, and thin panels, panes, doors, rails and other small parts use smaller fractions. Ore blocks use a stone-dominated estimate. These are balancing heuristics, rather than engineering densities.
+
+Inventories add each retained stack's quantity and estimated item weight, including nested supported containers and filled buckets. Nine ordinary metal ingots weigh the same as their storage block. Tank contents use their stored amount and Forge fluid density: 1,000 mB of ordinary water adds 0.4 units. Joined Hex Tanks use per-cell fluid ownership, and supported Mekanism Dynamic Tank caches are counted once per shared ID. A Vehicle Chip's design bytes do not count as physical vehicle cargo.
+
+The calculation runs in resumable scan work and only reads inventory/fluid APIs. It never extracts items or drains tanks. Nesting and work limits prevent unusual containers from blocking preparation indefinitely; an incomplete estimate is marked **partial**. The saved estimator version allows later balancing changes without treating an older estimate as current rules.

@@ -11,6 +11,9 @@ public class TileEntityVehicleController extends TileEntityPilotSeat {
     public boolean security;
     public int card;
     public VehicleShape shape;
+    public double vehicleWeight=-1;
+    public int vehicleWeightVersion;
+    public boolean vehicleWeightIncomplete;
     public boolean converting;
     public void setConverting(boolean value){if(converting==value)return;converting=value;publishDesign();}
     public void designSettings(String name,boolean enabled,int accepted){
@@ -40,8 +43,8 @@ public class TileEntityVehicleController extends TileEntityPilotSeat {
         }
         super.update();
     }
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);if(!vehicleName.isEmpty())tag.setString("VehicleName",vehicleName);if(security||card!=0){tag.setBoolean("VehicleSecurity",security);tag.setInteger("VehicleCard",card);}if(shape!=null)shape.write(tag);tag.setBoolean("VehicleControllerControls",initialized);return tag;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);if(!vehicleName.isEmpty())tag.setString("VehicleName",vehicleName);if(security||card!=0){tag.setBoolean("VehicleSecurity",security);tag.setInteger("VehicleCard",card);}if(shape!=null)shape.write(tag);if(Double.isFinite(vehicleWeight)&&vehicleWeight>=0){tag.setDouble("VehicleWeight",vehicleWeight);if(vehicleWeightVersion>0)tag.setInteger("VehicleWeightVersion",vehicleWeightVersion);if(vehicleWeightIncomplete)tag.setBoolean("VehicleWeightIncomplete",true);}tag.setBoolean("VehicleControllerControls",initialized);return tag;}
     @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=super.getUpdateTag();tag.setBoolean("VehicleConverting",converting);return tag;}
     @Override public net.minecraft.network.play.server.SPacketUpdateTileEntity getUpdatePacket(){return new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,getUpdateTag());}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);initialized=tag.getBoolean("VehicleControllerControls");vehicleName=com.vandorlabs.programmer.ChipJournal.bounded(tag.getString("VehicleName"),40);security=tag.getBoolean("VehicleSecurity");card=Math.max(0,Math.min(6,tag.getInteger("VehicleCard")));shape=VehicleShape.read(tag);if(world!=null&&world.isRemote)converting=tag.getBoolean("VehicleConverting");}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);initialized=tag.getBoolean("VehicleControllerControls");vehicleName=com.vandorlabs.programmer.ChipJournal.bounded(tag.getString("VehicleName"),40);security=tag.getBoolean("VehicleSecurity");card=Math.max(0,Math.min(6,tag.getInteger("VehicleCard")));shape=VehicleShape.read(tag);vehicleWeight=tag.hasKey("VehicleWeight",99)&&Double.isFinite(tag.getDouble("VehicleWeight"))&&tag.getDouble("VehicleWeight")>=0?tag.getDouble("VehicleWeight"):-1;vehicleWeightVersion=tag.getInteger("VehicleWeightVersion");vehicleWeightIncomplete=tag.getBoolean("VehicleWeightIncomplete");if(world!=null&&world.isRemote)converting=tag.getBoolean("VehicleConverting");}
 }

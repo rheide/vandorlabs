@@ -244,13 +244,13 @@ public final class VehicleClient {
         RenderGroundVehicle.renderMissing(event.getPartialTicks());
     }
     private static final class Preview extends GuiScreen {
-        final Incoming data;private com.vandorlabs.vehicle.VehicleShape previewShape;private GuiTextField vehicleName;private boolean security;private int acceptedCard;private String sentDesign;
+        final Incoming data;private com.vandorlabs.vehicle.VehicleShape previewShape;private GuiTextField vehicleName;private boolean security;private int acceptedCard;private String sentDesign,weightLabel="";
         private GuiTextField channels;private int pilotMode,pilotHeight;private boolean taxiDraft,inFlight,closing;
         private final GuiTextField[] modeChannels=new GuiTextField[3];private String sentModes;private int selectedMode=-1;
         private String observed,sent,error="";private int delay,page;
         Preview(Incoming data){
             this.data=data;if(!hasSettings())return;
-            net.minecraft.nbt.NBTTagCompound settings=settingsData();previewShape=com.vandorlabs.vehicle.VehicleShape.read(settings);if(previewShape==null&&data.structure!=null)previewShape=com.vandorlabs.vehicle.VehicleShape.of(data.structure);
+            net.minecraft.nbt.NBTTagCompound settings=settingsData();weightLabel=settings.hasKey("VehicleWeight",99)?com.vandorlabs.vehicle.VehicleWeight.label(settings.getDouble("VehicleWeight"))+(settings.getBoolean("VehicleWeightIncomplete")?" (partial)":""):"not scanned";previewShape=com.vandorlabs.vehicle.VehicleShape.read(settings);if(previewShape==null&&data.structure!=null)previewShape=com.vandorlabs.vehicle.VehicleShape.of(data.structure);
             security=settings.getBoolean("VehicleSecurity");acceptedCard=MathHelper.clamp(settings.getInteger("VehicleCard"),0,6);sentDesign=settings.getString("VehicleName")+"|"+security+"|"+acceptedCard;
             pilotHeight=settings.getInteger("PilotHeight");
             pilotMode=settings.hasKey("PilotRedstoneMode",3)?settings.getInteger("PilotRedstoneMode"):1;
@@ -360,7 +360,7 @@ public final class VehicleClient {
                 if(page==0){
                     fontRenderer.drawString("Vehicle name",l+14,t+63,0xdae8f0);
                     fontRenderer.drawString("Mode: "+new String[]{"Block / Park","Taxi","Hover"}[MathHelper.clamp(data.header.strafe,0,2)],l+14,t+130,0xdae8f0);
-                    if(structure!=null){fontRenderer.drawString(structure.cells.size()+" blocks / "+structure.pilotSeats().size()+" Pilot Seats",l+14,t+144,0xc4d0d8);fontRenderer.drawString(structure.gearCount+" supports",l+14,t+157,0xc4d0d8);}
+                    if(structure!=null){fontRenderer.drawString(structure.cells.size()+" blocks / "+structure.pilotSeats().size()+" Pilot Seats",l+14,t+144,0xc4d0d8);fontRenderer.drawString(fontRenderer.trimStringToWidth(structure.gearCount+" supports / Weight: "+weightLabel,w-28),l+14,t+157,0xc4d0d8);}
                     VehicleShapeRenderer.draw(previewShape,l+w*3/4F,t+100,w/2F-24,72);
                     String status=!error.isEmpty()?error:structure==null||data.header.sequence==-1?data.header.text:"Choose Taxi or Hover to assemble. Park restores native blocks.";
                     java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status==null?"Selection unavailable":status,w-28);
