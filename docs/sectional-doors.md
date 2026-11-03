@@ -41,3 +41,5 @@ The server owns collision and the saved motion timeline. Sections remain native 
 ## Panel artwork
 
 Open **Textures** to select general materials, Trapdoors, Doors or Large Doors artwork. Selection applies to every section in the linked door. The original dark slatted panel remains the default; **Industrial → Sectional Panel** and **Sectional Panel Light Grey** expose its two finishes to other programmable blocks too. The original artwork is the standalone `garage/garage_panel.png` texture. Changing artwork preserves the door’s channels, motion and saved section ownership.
+
+![Sectional Door texture selector](images/sectional-texture-settings.png)
