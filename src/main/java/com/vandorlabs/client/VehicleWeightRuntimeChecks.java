@@ -47,7 +47,7 @@ final class VehicleWeightRuntimeChecks {
         a.clear();a.setInventorySlotContents(0,new ItemStack(Items.WATER_BUCKET));double water=estimate(world,cell(BlockPos.ORIGIN,Blocks.CHEST.getDefaultState(),a));a.setInventorySlotContents(0,new ItemStack(Items.BUCKET));close(water-estimate(world,cell(BlockPos.ORIGIN,Blocks.CHEST.getDefaultState(),a)),.4,"carried bucket contents");
         a.clear();a.setInventorySlotContents(0,new ItemStack(Items.IRON_INGOT,9));close(estimate(world,cell(BlockPos.ORIGIN,Blocks.CHEST.getDefaultState(),a))-empty,iron,"nine metal ingots equal their storage block");
         a.setInventorySlotContents(0,new ItemStack(Items.DIAMOND_SWORD));double sword=estimate(world,cell(BlockPos.ORIGIN,Blocks.CHEST.getDefaultState(),a));a.setInventorySlotContents(0,new ItemStack(Items.DIAMOND));require(sword>estimate(world,cell(BlockPos.ORIGIN,Blocks.CHEST.getDefaultState(),a)),"diamond tools are not treated as one loose gem");
-        capability(world,iron);
+        capability(world,iron);optional(world,iron);
         TileEntityVehicleController old=new TileEntityVehicleController();require(!old.writeToNBT(new NBTTagCompound()).hasKey("VehicleWeight"),"legacy default omits annotation");old.vehicleWeight=123.5;old.vehicleWeightVersion=VehicleWeight.VERSION;old.vehicleWeightIncomplete=true;TileEntityVehicleController loaded=new TileEntityVehicleController();loaded.readFromNBT(old.writeToNBT(new NBTTagCompound()));close(loaded.vehicleWeight,123.5,"weight NBT round trip");require(loaded.vehicleWeightVersion==VehicleWeight.VERSION&&loaded.vehicleWeightIncomplete,"estimator version and partial marker persist");
         System.out.println("[vandorlabs][reprolab] vehicle-weight PASS assertions="+assertions+" materials partial-shapes stack-counts double-chest nested-shulker joined-tanks bucket-contents shared-capability no-design-ghost-mass read-only bounded-work NBT");
     }
@@ -55,7 +55,29 @@ final class VehicleWeightRuntimeChecks {
         VehicleStructure source=VehicleStructure.display(Arrays.asList(cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null),cell(BlockPos.ORIGIN.east(),Blocks.STONE.getDefaultState(),null)));VehicleWorld view=new VehicleWorld(world,source);ItemStackHandler handler=new ItemStackHandler(2);handler.setStackInSlot(1,new ItemStack(Blocks.IRON_BLOCK,5));
         for(BlockPos at:new BlockPos[]{BlockPos.ORIGIN,BlockPos.ORIGIN.east()}){TileEntity tile=new TileEntity(){@Override public <T>T getCapability(Capability<T> capability,EnumFacing side){return capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY?(T)handler:null;}};tile.setWorld(view);tile.setPos(at);view.tiles.put(at,tile);}
         VehicleWeight.Result result=estimate(source,view);close(result.units,2+5*iron,"shared inventory handler counted once");require(handler.getStackInSlot(1).getCount()==5,"capability not consumed");
+        net.minecraftforge.fluids.FluidTank shared=new net.minecraftforge.fluids.FluidTank(4000);shared.fill(new FluidStack(FluidRegistry.WATER,1000),true);view.tiles.clear();
+        for(BlockPos at:new BlockPos[]{BlockPos.ORIGIN,BlockPos.ORIGIN.east()}){TileEntity tile=new TileEntity(){@Override public <T>T getCapability(Capability<T> capability,EnumFacing side){return capability==net.minecraftforge.fluids.capability.CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY?(T)shared:null;}};tile.setWorld(view);tile.setPos(at);view.tiles.put(at,tile);}
+        close(estimate(source,view).units,2.4,"shared fluid handler counted once");require(shared.getFluidAmount()==1000,"shared tank is never drained");
         ItemStackHandler oversized=new ItemStackHandler(9000);TileEntity tile=new TileEntity(){@Override public <T>T getCapability(Capability<T> capability,EnumFacing side){return capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY?(T)oversized:null;}};tile.setWorld(view);tile.setPos(BlockPos.ORIGIN);view.tiles.clear();view.tiles.put(BlockPos.ORIGIN,tile);require(estimate(source,view).incomplete,"oversized unknown handler remains bounded and marked partial");
+    }
+    private static void optional(WorldServer world,double iron)throws Exception{
+        if(!net.minecraftforge.fml.common.Loader.isModLoaded("mekanism"))return;
+        Set<String> tested=new HashSet<>();
+        for(Block block:Block.REGISTRY){if(block.getRegistryName()==null||!block.getRegistryName().getResourceDomain().equals("mekanism"))continue;
+            for(int meta=0;meta<16;meta++){
+                IBlockState state;TileEntity tile;try{state=block.getStateFromMeta(meta);tile=block.createTileEntity(world,state);}catch(RuntimeException badState){continue;}
+                if(tile==null)continue;String type=tile.getClass().getName();if(!(type.endsWith(".TileEntityBin")||type.endsWith(".TileEntityFluidTank"))||!tested.add(type))continue;
+                double body=estimate(world,cell(BlockPos.ORIGIN,state,tile));
+                if(type.endsWith(".TileEntityBin")){
+                    tile.getClass().getField("itemType").set(tile,new ItemStack(Blocks.IRON_BLOCK));tile.getClass().getField("cacheCount").setInt(tile,4096);tile.getClass().getField("bottomStack").set(tile,new ItemStack(Blocks.IRON_BLOCK,3));
+                    long count=((Number)tile.getClass().getMethod("getItemCount").invoke(tile)).longValue();require(count>64,"Mekanism bin fixture exceeds extraction stack");close(estimate(world,cell(BlockPos.ORIGIN,state,tile))-body,count*iron,"Mekanism full bin count rather than extraction window");
+                }else{
+                    IFluidTank tank=(IFluidTank)tile.getClass().getField("fluidTank").get(tile);require(tank.fill(new FluidStack(FluidRegistry.WATER,5000),true)==5000,"Mekanism tank fixture filled");close(estimate(world,cell(BlockPos.ORIGIN,state,tile))-body,2,"Mekanism fluid capability contents");
+                }
+            }
+        }
+        require(tested.size()==2,"installed Mekanism bin and fluid tank fixtures present");
+        System.out.println("[vandorlabs][reprolab] vehicle-weight-mekanism PASS full-bin-count fluid-tank read-only exact-NBT");
     }
     private VehicleWeightRuntimeChecks(){}
 }

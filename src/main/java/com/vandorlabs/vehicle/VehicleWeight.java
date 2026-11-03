@@ -34,6 +34,7 @@ public final class VehicleWeight {
     private final Map<Long,Double> items=new HashMap<>();
     private final Set<Object> inventories=Collections.newSetFromMap(new IdentityHashMap<Object,Boolean>());
     private final Set<String> sharedTanks=new HashSet<>();
+    private final Set<Object> fluidHandlers=Collections.newSetFromMap(new IdentityHashMap<Object,Boolean>());
     private final int depth;
     private int cell,work;private double units;private boolean incomplete,done;
     public VehicleWeight(VehicleStructure structure,VehicleWorld view){this(structure,view,0);}
@@ -143,7 +144,7 @@ public final class VehicleWeight {
     }
     private void fluid(FluidStack fluid,double copies){if(fluid==null||fluid.amount<=0)return;double density=Math.max(1,Math.abs((double)fluid.getFluid().getDensity(fluid)));add(copies*.4*fluid.amount/1000D*density/1000D);}
     private void fluid(NBTTagCompound data,double copies){FluidStack fluid=FluidStack.loadFluidStackFromNBT(data);if(fluid!=null)fluid(fluid,copies);else if(data.getInteger("Amount")>0){add(copies*.4*data.getInteger("Amount")/1000D);incomplete=true;}}
-    private void fluids(IFluidHandler handler,double copies){for(IFluidTankProperties tank:handler.getTankProperties())fluid(tank.getContents(),copies);}
+    private void fluids(IFluidHandler handler,double copies){IFluidTankProperties[] tanks=handler.getTankProperties();if(tanks.length>MAX_SLOTS)incomplete=true;for(int i=0;i<Math.min(MAX_SLOTS,tanks.length);i++)fluid(tanks[i].getContents(),copies);}
     private void contained(NBTTagCompound tag,double copies){NBTTagCompound data=tag.getCompoundTag("ContainedFluids");for(int side=0;side<2;side++)if(data.hasKey("Side"+side,10))fluid(data.getCompoundTag("Side"+side),copies);}
     private void contents(VehicleStructure.Cell cell,TileEntity tile,int depth)throws ReflectiveOperationException{
         if(MekanismTankCompat.tank(tile)){
@@ -157,7 +158,7 @@ public final class VehicleWeight {
                 else{IItemHandler handler=tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,null);if(handler==null)for(EnumFacing side:EnumFacing.values()){handler=tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,side);if(handler!=null)break;}if(handler!=null)inventory(handler,handler::getStackInSlot,handler.getSlots(),1,depth);}
             }
             if(tile instanceof TileEntityHexTank)fluid(((TileEntityHexTank)tile).tank.getFluid(),1);
-            else{IFluidHandler handler=tile.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null);if(handler==null)for(EnumFacing side:EnumFacing.values()){handler=tile.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,side);if(handler!=null)break;}if(handler!=null)fluids(handler,1);}
+            else{IFluidHandler handler=tile.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null);if(handler==null)for(EnumFacing side:EnumFacing.values()){handler=tile.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,side);if(handler!=null)break;}if(handler!=null&&fluidHandlers.add(handler))fluids(handler,1);}
             if(tile.getClass().getName().equals("mekanism.common.tile.TileEntityGasTank")){Object tank=tile.getClass().getField("gasTank").get(tile);add(Math.max(0,((Number)tank.getClass().getMethod("getStored").invoke(tank)).doubleValue())*.0005/1000D);}
         }
         ContainedFluids contained=WaterloggedParts.data(tile);if(contained!=null)for(int side=0;side<2;side++)fluid(contained.get(side),1);
