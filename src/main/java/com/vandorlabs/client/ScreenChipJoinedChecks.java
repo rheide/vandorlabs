@@ -40,12 +40,19 @@ final class ScreenChipJoinedChecks {
             File picture=new File(output,"screen-chip-vehicle-color-"+company+".png");render(mc,ScreenChipGroups.group(first),picture);java.awt.image.BufferedImage pixels=ImageIO.read(picture);int matches=0;
             for(int y=130;y<350;y++)for(int x=130;x<350;x++){int rgb=pixels.getRGB(x,y);boolean close=true;for(int shift:new int[]{0,8,16})if(Math.abs(((rgb>>shift)&255)-((previewColors[company]>>shift)&255))>8)close=false;if(close)matches++;}require(matches>10,"company preview color missing from rendered voxels "+company+" pixels="+matches);
         }
+        programmerColors(mc,output,chip,previewColors);
         int coloredBuilds=VehicleShapeRenderer.meshBuilds;for(int company=0;company<7;company++){reader.getStackInSlot(0).setItemDamage(company);render(mc,ScreenChipGroups.group(first),null);}require(VehicleShapeRenderer.meshBuilds==coloredBuilds,"company switching rebuilt cached geometry");
         for(int company=1;company<7;company++){ItemStack master=new ItemStack(ModItems.DATA_CHIP,1,company);require(ProgrammerJournalRenderer.companyChoice(master)>=0,"Corp logo for company "+company);reader.setInventorySlotContents(0,master);render(mc,ScreenChipGroups.group(first),new File(output,"screen-chip-company-"+company+".png"));}
         reader.takeForDrop();require(ScreenChipSupport.stack(first).isEmpty(),"removal updates joined source");mc.world.setBlockToAir(mount);require(!ScreenChipSupport.available(first,0),"removed mount invalidates shared lookup");
         orientations(mc,base.up(4),output);
         removedScreens(mc,base.up(4));
         System.out.println("[vandorlabs][reprolab] screen-chip-joined PASS 2x2 one-canvas four-panel-shared-reader cached-group six-Corp-logos removed-reader mesh-builds-for-100-rotations=0 render-us="+micros);
+    }
+    private static void programmerColors(Minecraft mc,File output,ItemStack chip,int[] colors)throws Exception{
+        for(int company=0;company<colors.length;company++){
+            ItemStack input=chip.copy();input.setItemDamage(company);com.vandorlabs.programmer.ProgrammerTile tile=new com.vandorlabs.programmer.ProgrammerTile();tile.setInventorySlotContents(1,input);com.vandorlabs.programmer.client.GuiProgrammer gui=new com.vandorlabs.programmer.client.GuiProgrammer(new com.vandorlabs.programmer.ProgrammerContainer(mc.player.inventory,tile));mc.displayGuiScreen(gui);VehicleTaxiRuntimeChecks.button(mc,6);gui.setWorldAndResolution(mc,480,400);java.awt.image.BufferedImage pixels=DialogRenderCapture.image(mc,gui,480,400);int matches=0;for(int y=0;y<400;y++)for(int x=0;x<480;x++){int rgb=pixels.getRGB(x,y);boolean close=true;for(int shift:new int[]{0,8,16})if(Math.abs(((rgb>>shift)&255)-((colors[company]>>shift)&255))>8)close=false;if(close)matches++;}require(matches>10,"Programmer dialog preview color "+company+" pixels="+matches);ImageIO.write(pixels,"png",new File(output,"vehicle-chip-programmer-color-"+company+".png"));mc.displayGuiScreen(null);
+        }
+        System.out.println("[vandorlabs][reprolab] vehicle-chip-programmer-colors PASS all-seven-company/generic actual-GUI rendered-pixels");
     }
     private static void orientations(Minecraft mc,BlockPos base,File output)throws Exception{
         Block block=Block.getBlockFromName("vandorlabs:programmable_viewscreen");

@@ -167,7 +167,7 @@ public class GuiProgrammer extends GuiContainer {
         fontRenderer.drawString("Master",15,26,0xcdd7e4);fontRenderer.drawString("Input",105,26,0xcdd7e4);fontRenderer.drawString("Output",195,26,0xcdd7e4);fontRenderer.drawString("Chip:",15,63,0xcdd7e4);
         if(journalPage&&vehicle){
             com.vandorlabs.vehicle.VehicleShape shape=com.vandorlabs.vehicle.VehicleChip.isVehicle(input)?com.vandorlabs.client.VehicleShapeRenderer.shape(input.getTagCompound()):null;
-            com.vandorlabs.client.VehicleShapeRenderer.draw(shape,126,143+extraHeight()/2,210,70);
+            com.vandorlabs.client.VehicleShapeRenderer.drawChip(shape,126,143+extraHeight()/2,210,70,com.vandorlabs.client.VehicleShapeRenderer.ticks()*1.2,input);
             fontRenderer.drawString(fontRenderer.trimStringToWidth(com.vandorlabs.vehicle.VehicleChip.name(input),216),18,108,0xcdd7e4);
         }else if(journalPage){
             fontRenderer.drawString("Title:",15,109,0xcdd7e4);
