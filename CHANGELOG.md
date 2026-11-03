@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Add eighteen company door textures under Doors, with Standard, Security and Light designs in each company submenu.
+
 - Allow Taxi without propulsion at a 0.23-block/tick cap, with no Sprint boost. Powered Taxi remains 0.28; Hover still requires propulsion and lift. Apply the same rule to controller/seat entry, waypoint departure and coupling.
 
 - Mirror Custom block artwork across paired and Large Programmable Door leaves; preserve single-door orientation.

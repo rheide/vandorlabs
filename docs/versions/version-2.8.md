@@ -63,3 +63,7 @@ The Sectional Door keeps its existing registry ID and default artwork. Its Textu
 ## Diagonal Half Screen rename
 
 **Programmable Diagonal Half Console** is now **Programmable Diagonal Half Screen**, with block and item ID `vandorlabs:programmable_diagonal_half_screen`. Existing `vandorlabs:programmable_diagonal_half_console` placements and item stacks remap to the new ID. Facing, upper/lower placement, selected artwork, controls and stored chips are preserved. Saved Vehicle Chips, vehicle/turntable snapshots and retained arm/ramp references also accept the old ID. The tile-entity ID and block metadata format are unchanged.
+
+## Company doors
+
+The Doors texture category now includes six company folders: Pinnacle, Ashiro-Mai, Paladyne, Vektor, Seyr and Vandor. Each contains Standard, Security and Light artwork. The 128×256 textures retain their authored alpha, including the Light designs’ window openings, and work on normal and Large Programmable Doors. Browse the [texture catalog](../texture-browser/) for previews.

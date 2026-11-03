@@ -6974,5 +6974,149 @@
     "label": "Sectional Panel Light Grey",
     "category": "Industrial",
     "source": "garage/garage_panel_light"
+  },
+  {
+    "id": "company_door_pinnacle_standard",
+    "label": "Standard",
+    "category": "Doors",
+    "menuGroup": "Pinnacle",
+    "source": "company_doors/pinnacle/standard",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_pinnacle_security",
+    "label": "Security",
+    "category": "Doors",
+    "menuGroup": "Pinnacle",
+    "source": "company_doors/pinnacle/security",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_pinnacle_light",
+    "label": "Light",
+    "category": "Doors",
+    "menuGroup": "Pinnacle",
+    "source": "company_doors/pinnacle/light",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_ashiro_mai_standard",
+    "label": "Standard",
+    "category": "Doors",
+    "menuGroup": "Ashiro-Mai",
+    "source": "company_doors/ashiro_mai/standard",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_ashiro_mai_security",
+    "label": "Security",
+    "category": "Doors",
+    "menuGroup": "Ashiro-Mai",
+    "source": "company_doors/ashiro_mai/security",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_ashiro_mai_light",
+    "label": "Light",
+    "category": "Doors",
+    "menuGroup": "Ashiro-Mai",
+    "source": "company_doors/ashiro_mai/light",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_paladyne_standard",
+    "label": "Standard",
+    "category": "Doors",
+    "menuGroup": "Paladyne",
+    "source": "company_doors/paladyne/standard",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_paladyne_security",
+    "label": "Security",
+    "category": "Doors",
+    "menuGroup": "Paladyne",
+    "source": "company_doors/paladyne/security",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_paladyne_light",
+    "label": "Light",
+    "category": "Doors",
+    "menuGroup": "Paladyne",
+    "source": "company_doors/paladyne/light",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_vektor_standard",
+    "label": "Standard",
+    "category": "Doors",
+    "menuGroup": "Vektor",
+    "source": "company_doors/vektor/standard",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_vektor_security",
+    "label": "Security",
+    "category": "Doors",
+    "menuGroup": "Vektor",
+    "source": "company_doors/vektor/security",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_vektor_light",
+    "label": "Light",
+    "category": "Doors",
+    "menuGroup": "Vektor",
+    "source": "company_doors/vektor/light",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_seyr_standard",
+    "label": "Standard",
+    "category": "Doors",
+    "menuGroup": "Seyr",
+    "source": "company_doors/seyr/standard",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_seyr_security",
+    "label": "Security",
+    "category": "Doors",
+    "menuGroup": "Seyr",
+    "source": "company_doors/seyr/security",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_seyr_light",
+    "label": "Light",
+    "category": "Doors",
+    "menuGroup": "Seyr",
+    "source": "company_doors/seyr/light",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_vandor_standard",
+    "label": "Standard",
+    "category": "Doors",
+    "menuGroup": "Vandor",
+    "source": "company_doors/vandor/standard",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_vandor_security",
+    "label": "Security",
+    "category": "Doors",
+    "menuGroup": "Vandor",
+    "source": "company_doors/vandor/security",
+    "rectangular": true
+  },
+  {
+    "id": "company_door_vandor_light",
+    "label": "Light",
+    "category": "Doors",
+    "menuGroup": "Vandor",
+    "source": "company_doors/vandor/light",
+    "rectangular": true
   }
 ]

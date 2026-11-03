@@ -37,6 +37,7 @@ final class DoorAppearanceRuntimeChecks {
  static void run(Minecraft mc,File output)throws Exception{
   benchmarkCaches(output);
   customMirror(mc,output);
+  CompanyDoorChecks.run(mc,output);
   worldGeometryDistance(mc);
   int bg=ScreenHousingTextures.screenIndex("frames/frames-door-window/vandor_bg"),inside=ScreenHousingTextures.screenIndex("materials/cool_steel"),cases=0;
   try(PrintWriter report=new PrintWriter(new File(output,"door-render-costs.csv"))){report.println("size,design,frame_quads_per_leaf,leaf_quads_per_leaf,glass_quads_per_leaf,assembly_tiles,opaque_batch_available");
@@ -103,7 +104,7 @@ final class DoorAppearanceRuntimeChecks {
   System.out.println("[vandorlabs][reprolab] door-cache-cost lookups=10000 median-ms="+times[15]+" allocated-bytes="+bytes[15]);
  }
  private static int difference(BufferedImage a,BufferedImage b){int n=0;for(int y=0;y<a.getHeight();y++)for(int x=0;x<a.getWidth();x++){int p=a.getRGB(x,y),q=b.getRGB(x,y);if(Math.abs((p>>16&255)-(q>>16&255))+Math.abs((p>>8&255)-(q>>8&255))+Math.abs((p&255)-(q&255))>15)n++;}return n;}
- private static BufferedImage capture(Minecraft mc,Fixture f,boolean oblique,float progress,boolean batch){
+ static BufferedImage capture(Minecraft mc,Fixture f,boolean oblique,float progress,boolean batch){
   int size=384;Framebuffer target=new Framebuffer(size,size,true);int previous=MinecraftForgeClient.getRenderPass();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();double padding=oblique?.6:.15;GlStateManager.ortho(-padding,f.width+padding,-padding,f.height+padding,-32,32);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
   try(TurntableRenderState saved=new TurntableRenderState()){
    target.bindFramebuffer(true);GlStateManager.loadIdentity();if(oblique){GlStateManager.translate(f.width/2D,f.height/2D,0);GlStateManager.rotate(35,0,1,0);GlStateManager.rotate(-12,1,0,0);GlStateManager.translate(-f.width/2D,-f.height/2D,0);}

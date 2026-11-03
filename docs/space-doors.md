@@ -237,3 +237,9 @@ Custom block artwork mirrors horizontally across opposite leaves of double Progr
 Right-clicking a secured door also searches your inventory for an accepted Access Card when the reader is empty. One matching card is inserted, preserving its name and data, without changing your selected hotbar item. The reader uses the configured stay-inserted, pulse or return behavior. Wrong-company cards remain in your inventory. Empty-hand interaction with an occupied reader still removes its card.
 
 Programmable Doors and Large Programmable Doors follow the same loaded-chunk and view-frustum render range as Programmable Walls, as do Programmable Glass and Portholes.
+
+## Company door artwork
+
+Open the Door texture picker and expand **Doors**, then the company folder. **Pinnacle**, **Ashiro-Mai**, **Paladyne**, **Vektor**, **Seyr** and **Vandor** each offer **Standard**, **Security** and **Light**. These are artwork choices; selecting Security artwork does not enable card security. Light designs retain transparent window openings. The complete 1:2 artwork fits a normal leaf and also works on Large Programmable Doors.
+
+See the [texture browser](texture-browser/) for all eighteen designs.
