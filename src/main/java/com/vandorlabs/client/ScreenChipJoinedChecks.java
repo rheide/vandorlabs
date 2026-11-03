@@ -35,6 +35,7 @@ final class ScreenChipJoinedChecks {
         for(int company=1;company<7;company++){ItemStack master=new ItemStack(ModItems.DATA_CHIP,1,company);require(ProgrammerJournalRenderer.companyChoice(master)>=0,"Corp logo for company "+company);reader.setInventorySlotContents(0,master);render(mc,ScreenChipGroups.group(first),new File(output,"screen-chip-company-"+company+".png"));}
         reader.takeForDrop();require(ScreenChipSupport.stack(first).isEmpty(),"removal updates joined source");mc.world.setBlockToAir(mount);require(!ScreenChipSupport.available(first,0),"removed mount invalidates shared lookup");
         orientations(mc,base.up(4),output);
+        removedScreens(mc,base.up(4));
         System.out.println("[vandorlabs][reprolab] screen-chip-joined PASS 2x2 one-canvas four-panel-shared-reader cached-group six-Corp-logos removed-reader mesh-builds-for-100-rotations=0 render-us="+micros);
     }
     private static void orientations(Minecraft mc,BlockPos base,File output)throws Exception{
@@ -45,6 +46,20 @@ final class ScreenChipJoinedChecks {
             for(int y=0;y<2;y++)for(int x=0;x<2;x++){BlockPos at=base.add(basis.steps[0].getX()*x+basis.steps[2].getX()*y,basis.steps[0].getY()*x+basis.steps[2].getY()*y,basis.steps[0].getZ()*x+basis.steps[2].getZ()*y);mc.world.setBlockState(at,block.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,facing),3);((TileEntityAnimatedScreenSelector)mc.world.getTileEntity(at)).setSurfaceTexture(0,TileEntityAnimatedScreenSelector.CHIP_SURFACE);}
             BlockPos mount=base.offset(facing);mc.world.setBlockState(mount,Block.getBlockFromName("vandorlabs:data_chip_slot").getDefaultState().withProperty(BlockTokenSlot.FACING,facing),3);((TileEntityTokenSlot)mc.world.getTileEntity(mount)).setInventorySlotContents(0,new ItemStack(ModItems.DATA_CHIP,1,1));ScreenChipGroups.Group group=ScreenChipGroups.group(first);require(group.columns==2&&group.rows==2,"joined orientation "+facing);render(mc,group,new File(output,"screen-chip-company-facing-"+facing.getName()+".png"));
         }
+    }
+    private static void removedScreens(Minecraft mc,BlockPos base){
+        Block block=Block.getBlockFromName("vandorlabs:programmable_viewscreen");int cases=0;
+        for(EnumFacing facing:EnumFacing.values())for(boolean removeOwner:new boolean[]{true,false}){
+            for(BlockPos at:BlockPos.getAllInBox(base.add(-3,-3,-3),base.add(3,3,3)))mc.world.setBlockToAir(at);
+            mc.world.setBlockState(base,block.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,facing),3);TileEntityAnimatedScreenSelector first=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(base);DisplayJoinGeometry.Basis basis=DisplayJoinGeometry.basis(first,mc.world.getBlockState(base));
+            for(int y=0;y<2;y++)for(int x=0;x<2;x++){BlockPos at=base.add(basis.steps[0].getX()*x+basis.steps[2].getX()*y,basis.steps[0].getY()*x+basis.steps[2].getY()*y,basis.steps[0].getZ()*x+basis.steps[2].getZ()*y);mc.world.setBlockState(at,block.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,facing),3);((TileEntityAnimatedScreenSelector)mc.world.getTileEntity(at)).setSurfaceTexture(0,TileEntityAnimatedScreenSelector.CHIP_SURFACE);}
+            ScreenChipGroups.Group before=ScreenChipGroups.group(first);TileEntityAnimatedScreenSelector removed=removeOwner?before.owner:before.members.stream().filter(tile->tile!=before.owner).findFirst().get();removed.getRenderBoundingBox();BlockPos at=removed.getPos();mc.world.setBlockToAir(at);
+            // OptiFine can ask for the old tile's bounds while publishing a block removal.
+            removed.getRenderBoundingBox();require(ScreenChipGroups.group(removed)==null,"removed tile retained a Chip group");require(DisplayEditGroups.members(removed).size()==1,"removed tile entered shared display discovery");
+            for(TileEntityAnimatedScreenSelector survivor:before.members)if(survivor!=removed){ScreenChipGroups.Group after=ScreenChipGroups.group(survivor);require(after!=null&&!after.members.contains(removed),"survivors retained removed owner/member");survivor.getRenderBoundingBox();}
+            mc.world.setBlockState(at,block.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,facing),3);TileEntityAnimatedScreenSelector replacement=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(at);replacement.setSurfaceTexture(0,TileEntityAnimatedScreenSelector.CHIP_SURFACE);require(ScreenChipGroups.group(replacement)!=null&&ScreenChipGroups.group(removed)==null,"old tile stole replacement group");removed.getRenderBoundingBox();cases++;
+        }
+        System.out.println("[vandorlabs][reprolab] screen-chip-removal PASS cases="+cases+" all-six-faces old-tile-bounds owner/member removal replacement-identity survivors");
     }
     private static void render(Minecraft mc,ScreenChipGroups.Group group,File output)throws Exception{
         Framebuffer frame=new Framebuffer(480,480,true);GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-1.25,1.25,-1.25,1.25,-10,10);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();

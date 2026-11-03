@@ -36,7 +36,7 @@ public final class ScreenChipGroups {
     public static int builds;
     private static final Map<World,java.lang.ref.WeakReference<Cache>> CACHES=new WeakHashMap<>();
     public static synchronized Group group(TileEntityAnimatedScreenSelector tile){
-        World world=tile.getWorld();if(world==null)return null;java.lang.ref.WeakReference<Cache> reference=CACHES.get(world);Cache cache=reference==null?null:reference.get();if(cache==null){cache=new Cache();CACHES.put(world,new java.lang.ref.WeakReference<>(cache));world.addEventListener(cache);}
+        World world=tile.getWorld();if(!DisplayJoinGeometry.installed(tile)||tile.getBlockType().getClass()!=BlockAnimatedScreenSelector.class)return null;java.lang.ref.WeakReference<Cache> reference=CACHES.get(world);Cache cache=reference==null?null:reference.get();if(cache==null){cache=new Cache();CACHES.put(world,new java.lang.ref.WeakReference<>(cache));world.addEventListener(cache);}
         int revision=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision:-1;if(cache.revision!=revision){cache.groups.clear();cache.revision=revision;}
         Group found=cache.groups.get(tile.getPos());if(found!=null)return found;
         builds++;Group group=new Group(DisplayEditGroups.members(tile));if(cache.groups.size()+group.members.size()>16384)cache.groups.clear();for(TileEntityAnimatedScreenSelector member:group.members)cache.groups.put(member.getPos(),group);return group;

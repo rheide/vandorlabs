@@ -22,6 +22,8 @@ public final class DisplayJoinGeometry {
         }
         public long cell(BlockPos pos){return com.vandorlabs.surface.JoinedRectangles.cell(pos.getX()*right.getFrontOffsetX()+pos.getZ()*right.getFrontOffsetZ(),pos.getX()*up.getFrontOffsetX()+pos.getY()*up.getFrontOffsetY()+pos.getZ()*up.getFrontOffsetZ());}
     }
+    /** Removed/replaced tiles can still be queried by render invalidation callbacks. */
+    public static boolean installed(TileEntityAnimatedScreenSelector tile){net.minecraft.world.World world=tile.getWorld();return world!=null&&!tile.isInvalid()&&world.isBlockLoaded(tile.getPos(),false)&&world.getTileEntity(tile.getPos())==tile&&world.getBlockState(tile.getPos()).getBlock()==tile.getBlockType();}
     public static Basis basis(TileEntityAnimatedScreenSelector tile,IBlockState state){return new Basis(tile,state);}
     public static boolean supportsJoining(TileEntityAnimatedScreenSelector tile){
         return !(tile.getBlockType() instanceof BlockProgrammableHalfConsole||tile.getBlockType() instanceof BlockDiagonalHalfConsole)

@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Prevent client crashes when removing joined Chip screens: stale tile render-bound queries no longer enter group discovery after removal or replacement.
+
 - Fix Vehicle Chip preflight for unchanged extended ramps and migrated display frames, while retaining block, inventory and tile-setting change checks.
 - Configure vehicle card filtering through the attached Access Card Mount. Vehicle readers always retain the card; the controller keeps the security switch and setup notes.
 - Add the built-in chip reader to Programmable Consoles. Joined Screens share an attached reader and stretch one Chip view across the complete rectangle.

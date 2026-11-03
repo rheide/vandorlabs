@@ -172,6 +172,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     }
 
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
+        if(world!=null&&!DisplayJoinGeometry.installed(this))return new net.minecraft.util.math.AxisAlignedBB(pos);
         if(world!=null&&getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&hasChipSurface(0)){com.vandorlabs.blocks.ScreenChipGroups.Group group=com.vandorlabs.blocks.ScreenChipGroups.group(this);if(group!=null)return group.bounds;}
 
         if (world != null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall

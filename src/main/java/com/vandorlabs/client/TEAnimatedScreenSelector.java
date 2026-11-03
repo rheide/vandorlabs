@@ -399,6 +399,7 @@ public class TEAnimatedScreenSelector
             return;
         }
         IBlockState state = te.getWorld().getBlockState(te.getPos());
+        if(te.isInvalid()||state.getBlock()!=te.getBlockType())return;
         ScreenChipRenderer.reader(te,state,x,y,z,partialTicks);
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass || state.getBlock() instanceof BlockProgrammableWall&&((BlockProgrammableWall)state.getBlock()).isPortholeShape())if(GlazingRenderOrder.handle(te,x,y,z,partialTicks,destroyStage,alpha))return;
         if(te.initializeDisplayArtwork(state.getBlock()))com.vandorlabs.tiles.GlassMaterials.changed();

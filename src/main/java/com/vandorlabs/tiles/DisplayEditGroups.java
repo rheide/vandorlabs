@@ -18,7 +18,7 @@ public final class DisplayEditGroups {
     }
     public static List<TileEntityAnimatedScreenSelector> members(TileEntityAnimatedScreenSelector first){
         List<TileEntityAnimatedScreenSelector> single=Collections.singletonList(first);World world=first.getWorld();
-        if(world==null||!world.isBlockLoaded(first.getPos(),false)||!TileEntityAnimatedScreenSelector.supportsActivation(first.getBlockType())||!DisplayJoinGeometry.supportsJoining(first)||first.sharedArtworkTexture()<0&&first.sharedArtworkTexture()!=TileEntityAnimatedScreenSelector.CHIP_SURFACE)return single;
+        if(!DisplayJoinGeometry.installed(first)||!TileEntityAnimatedScreenSelector.supportsActivation(first.getBlockType())||!DisplayJoinGeometry.supportsJoining(first)||first.sharedArtworkTexture()<0&&first.sharedArtworkTexture()!=TileEntityAnimatedScreenSelector.CHIP_SURFACE)return single;
         IBlockState state=world.getBlockState(first.getPos());DisplayJoinGeometry.Basis basis=DisplayJoinGeometry.basis(first,state);
         Map<BlockPos,TileEntityAnimatedScreenSelector> found=new LinkedHashMap<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();found.put(first.getPos(),first);queue.add(first.getPos());
         while(!queue.isEmpty()){
