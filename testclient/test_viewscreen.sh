@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
-unset VANDOR_LABS_GLASS_DISPLAY_ORDER_ONLY VANDOR_LABS_DISPLAY_EXPANSION_CHECKS_ONLY VANDOR_LABS_CLASSIC_CONTROLS_CHECKS_ONLY VANDOR_LABS_DISPLAY_MATERIAL_CHECKS_ONLY VANDOR_LABS_SCREEN_CATALOG_CHECKS_ONLY VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
+unset VANDOR_LABS_FURNITURE_CHECKS_ONLY VANDOR_LABS_RFTOOLS_BUILDER_CHECKS_ONLY VANDOR_LABS_GLASS_DISPLAY_ORDER_ONLY VANDOR_LABS_DISPLAY_EXPANSION_CHECKS_ONLY VANDOR_LABS_CLASSIC_CONTROLS_CHECKS_ONLY VANDOR_LABS_DISPLAY_MATERIAL_CHECKS_ONLY VANDOR_LABS_SCREEN_CATALOG_CHECKS_ONLY VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
@@ -31,6 +31,12 @@ case "${1:-}" in
         elif [ "$TARGET" = glass-migration ]; then
             PREFIX=retired_glass_
             export VANDOR_LABS_RETIRED_GLASS_CHECKS_ONLY=true
+        elif [ "$TARGET" = rftools-builder ]; then
+            PREFIX=rftools_builder_
+            export VANDOR_LABS_RFTOOLS_BUILDER_CHECKS_ONLY=true
+        elif [ "$TARGET" = furniture ]; then
+            PREFIX=furniture_
+            export VANDOR_LABS_FURNITURE_CHECKS_ONLY=true
         elif [ "$TARGET" = screen-chips ]; then
             PREFIX=screen_chip_
             export VANDOR_LABS_SCREEN_CHIP_CHECKS_ONLY=true
@@ -256,6 +262,10 @@ rm -f "$TEST_RUNTIME_GAME"/mods/vandorlabs-*.jar
 sha256sum "$TEST_JAR" > "$RUN_OUT/artifact.sha256"
 git rev-parse HEAD > "$RUN_OUT/source-commit.txt"
 cp "$TEST_JAR" "$TEST_RUNTIME_GAME/mods/vandorlabs-$VERSION.jar"
+if [ -n "${VANDOR_LABS_TEST_RFTOOLS:-}" ]; then
+    cp "$VANDOR_LABS_TEST_RFTOOLS" "$VANDOR_LABS_TEST_MCJTYLIB" "$TEST_RUNTIME_GAME/mods/"
+    if [ -n "${VANDOR_LABS_TEST_REDSTONEFLUX:-}" ]; then cp "$VANDOR_LABS_TEST_REDSTONEFLUX" "$TEST_RUNTIME_GAME/mods/"; fi
+fi
 # Set VANDOR_LABS_COMPAT_MODS to the external test-mod directory when needed.
 COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/.minecraft/mods"}
 cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
@@ -338,6 +348,16 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = glass-migration ]; then
         for marker in retired-glass-client ramp-glass-world moat-glass-render retired-glass-artwork; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
         echo "Retired glass client checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = rftools-builder ]; then
+        grep -q "rftools-builder PASS" "$RUN_OUT/client.log"
+        echo "RFTools Builder live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = furniture ]; then
+        grep -q "furniture-live PASS" "$RUN_OUT/client.log"
+        echo "Furniture live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = screen-chips ]; then
