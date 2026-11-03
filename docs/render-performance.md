@@ -94,3 +94,7 @@ Voxel faces are created only when requested, preserving their previous masks and
 order. Panel and door rendering already uses analytic surfaces and now avoids
 constructing the unused voxel volume. This reduces both cold construction work
 and retained geometry without changing stored fluid sides or opening behavior.
+
+## Current priorities
+
+See the [2.8 performance summary and next priorities](performance/2.8-summary.md) for the consolidated results, Vehicle Mode preparation changes and remaining measured costs.

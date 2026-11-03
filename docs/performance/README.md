@@ -1,5 +1,7 @@
 # Programmable block performance review
 
+For the current development findings and remaining priorities, see the [2.8 performance summary](2.8-summary.md). The measurements and priority list below describe the original review.
+
 2026-09-26. Original production code: `a3962677`. Tests and the first measurement
 harness were committed before optimizations (`71819719`). The tested production
 changes and final diagnostic harness are in `3cbec41c`.
