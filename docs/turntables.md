@@ -171,3 +171,5 @@ blocks facing another direction do not join implicitly. All supports beneath
 a shared pad must have **Join Arms** enabled with matching settings to move
 together. Independent supports safely refuse rather than moving through one
 another. Partial carried pads render only the Surface cells they actually own.
+
+Adjacent Programmable Surfaces join only when both their active and inactive texture selections match. A differently textured neighbouring pad forms its own group, so it does not invalidate a complete square. These boundaries use the saved artwork, regardless of whether the pad is powered. Copy Controller pads use the same boundary rule and may be filled rectangles. Use a picked Surface item to extend a pad with matching artwork.

@@ -44,6 +44,8 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     public boolean appearanceConfigured(){return configured;}
     public void migrateLegacy(String on,String off){if(configured)return;surfaceOn=TurntableTextures.normalize(on,true);surfaceOff=TurntableTextures.normalize(off,false);textureLayout=0;configured=true;changed();}
     public boolean active(){SurfaceController controller=claimedOwner();if(controller!=null)return controller.surfaceActive(pos);if(owner!=null||ownerKey!=null)return false;Boolean arm=com.vandorlabs.gear.ArmSurfaceActivity.activity(this);return Boolean.TRUE.equals(arm);}
+    /** Saved on/off artwork defines boundaries independently of controller power. */
+    public boolean sameArtwork(TileEntity other){return other instanceof TileEntityTurntableSurface&&surfaceOn.equals(((TileEntityTurntableSurface)other).surfaceOn)&&surfaceOff.equals(((TileEntityTurntableSurface)other).surfaceOff);}
     public String selectedTexture(){return active()?surfaceOn:surfaceOff;}
     private EnumFacing normal(){return world!=null&&world.isBlockLoaded(pos)&&world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface?world.getBlockState(pos).getValue(BlockTurntableSurface.FACING):EnumFacing.UP;}
     public SquareLayout appearanceLayout(){
@@ -89,7 +91,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
                 for(EnumFacing side:EnumFacing.values())if(side.getAxis()!=normal().getAxis()){
                     BlockPos next=pos.offset(side);if(!world.isBlockLoaded(next)||!copier.sameSurfaceSide(pos,next))continue;
                     IBlockState state=world.getBlockState(next);TileEntity raw=world.getTileEntity(next);
-                    if(state.getBlock() instanceof BlockTurntableSurface&&state.getValue(BlockTurntableSurface.FACING)==normal()&&raw instanceof TileEntityTurntableSurface&&((TileEntityTurntableSurface)raw).claimedOwner()==null){copier.surfaceChanged();return;}
+                    if(state.getBlock() instanceof BlockTurntableSurface&&state.getValue(BlockTurntableSurface.FACING)==normal()&&raw instanceof TileEntityTurntableSurface&&sameArtwork(raw)&&((TileEntityTurntableSurface)raw).claimedOwner()==null){copier.surfaceChanged();return;}
                 }
             }
             SquareLayout layout=controller.surfaceLayout(pos);if(layout!=null)setGroup(layout);return;
@@ -115,6 +117,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
         SquareLayout layout=appearanceLayout();List<TileEntityTurntableSurface> surfaces=new ArrayList<>();
         for(BlockPos cell:layout.cells){if(!world.isBlockLoaded(cell))throw new IllegalArgumentException("Load the complete surface before configuring it");com.vandorlabs.vehicle.VehicleService.permission(actor,cell);TileEntity raw=world.getTileEntity(cell);if(!(raw instanceof TileEntityTurntableSurface))throw new IllegalArgumentException("Surface layout changed");surfaces.add((TileEntityTurntableSurface)raw);}
         for(TileEntityTurntableSurface surface:surfaces){surface.surfaceOn=on;surface.surfaceOff=off;surface.textureLayout=mode;surface.configured=true;surface.setGroup(layout);surface.changed();}
+        for(TileEntityTurntableSurface surface:surfaces){surface.scheduleGroup();for(EnumFacing face:EnumFacing.values()){BlockPos next=surface.pos.offset(face);if(world.isBlockLoaded(next)){TileEntity raw=world.getTileEntity(next);if(raw instanceof TileEntityTurntableSurface)((TileEntityTurntableSurface)raw).scheduleGroup();}}}
     }
     private void changed(){markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos,pos);}}
     private void appearanceChanged(){if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.surfaceAppearanceChanged(this);}

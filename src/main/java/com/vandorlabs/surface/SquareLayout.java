@@ -61,6 +61,9 @@ public class SquareLayout {
         if(!allowed.test(seed))throw new IllegalArgumentException("Surface is outside the selected pad");
         if(!world.isBlockLoaded(seed) || !(world.getBlockState(seed).getBlock() instanceof BlockTurntableSurface))
             throw new IllegalArgumentException("Place Programmable Surface blocks in front of the controller");
+        net.minecraft.tileentity.TileEntity seedTile=world.getTileEntity(seed);
+        if(!(seedTile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface))throw new IllegalArgumentException("Surface tile is unavailable");
+        com.vandorlabs.tiles.TileEntityTurntableSurface appearance=(com.vandorlabs.tiles.TileEntityTurntableSurface)seedTile;
         EnumFacing normal=world.getBlockState(seed).getValue(BlockTurntableSurface.FACING);
         TurntableGeometry.Face basis=TurntableGeometry.Face.valueOf(normal.name());
         EnumFacing u=EnumFacing.getFacingFromVector(basis.ux,basis.uy,basis.uz),v=EnumFacing.getFacingFromVector(basis.vx,basis.vy,basis.vz);
@@ -69,6 +72,7 @@ public class SquareLayout {
             BlockPos pos=queue.removeFirst();if(!allowed.test(pos)||!visited.add(pos))continue;
             if(!world.isBlockLoaded(pos))throw new IllegalArgumentException("Load every surface and its boundary before scanning");
             IBlockState state=world.getBlockState(pos);if(!(state.getBlock() instanceof BlockTurntableSurface))continue;
+            if(!appearance.sameArtwork(world.getTileEntity(pos)))continue;
             if(state.getValue(BlockTurntableSurface.FACING)!=normal)throw new IllegalArgumentException("Connected surfaces must face the same direction");
             members.add(pos);if(members.size()>MAX_CELLS)throw new IllegalArgumentException("Programmable Surfaces are limited to 32 x 32 blocks");
             for(EnumFacing side:new EnumFacing[]{u,u.getOpposite(),v,v.getOpposite()})queue.add(pos.offset(side));
