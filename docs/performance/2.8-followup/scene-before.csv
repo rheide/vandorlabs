@@ -1,0 +1,5 @@
+scene,frames,complete_p50_ms,complete_p95_ms,render_cpu_p50_ms,allocated_p50_bytes,server_tick_ms,tiles,interval_p50_ms,travel_blocks,measured_path_blocks,moving_server_ticks
+native_north,60,318.2259,344.6979,169.7163,6626464,14.8921,12869,397.2486,0.0000,0.0000,0
+native_controller,60,284.9034,303.4374,145.9918,5285688,14.7653,12643,340.2900,0.0000,0.0000,0
+taxi_stopped,60,251.2853,266.0412,126.3234,3618160,18.5139,3032,337.5489,0.0000,0.0000,0
+taxi_moving,180,254.2178,339.9791,132.0629,4380680,17.5746,3032,342.2646,1.9660,199.1940,1305

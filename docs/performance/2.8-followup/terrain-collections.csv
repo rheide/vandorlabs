@@ -1,0 +1,3 @@
+legacy,poses,samples,cpu_p50_us,allocated_p50_bytes,queries_per_step
+true,6,24,2829.271,1110516,37.17
+false,6,24,2784.307,1030745,37.17
