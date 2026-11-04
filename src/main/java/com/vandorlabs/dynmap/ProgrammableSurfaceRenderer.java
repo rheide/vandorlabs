@@ -31,7 +31,7 @@ public final class ProgrammableSurfaceRenderer extends HousingRenderer {
         int size=Math.max(1,Math.min(32,integer(context.getBlockTileEntityField("SurfaceGroupSize"),1))),mode=integer(context.getBlockTileEntityField("SurfaceLayout"),1);
         int height=Math.max(1,Math.min(32,integer(context.getBlockTileEntityField("SurfaceGroupHeight"),size)));Object offset=context.getBlockTileEntityField("SurfaceGroupOffset");BlockPos relative=offset instanceof Number?BlockPos.fromLong(((Number)offset).longValue()):BlockPos.ORIGIN;
         int col=-basis.u(relative.getX(),relative.getY(),relative.getZ()),row=-basis.v(relative.getX(),relative.getY(),relative.getZ());
-        if(col<0||col>=size||row<0||row>=height){col=0;row=0;size=height=1;}
+        if(mode==2&&size!=height||col<0||col>=size||row<0||row>=height){col=0;row=0;size=height=1;}
         List<RenderPatch> out=new ArrayList<>();int[] sides=new int[6];Arrays.fill(sides,2*ScreenHousingTextures.BUILTIN_COUNT+3);int[] faceSlot={0,1,4,5,2,3};sides[faceSlot[normal.getIndex()]]=-1;addBox(context.getPatchFactory(),out,0,1,0,1,0,1,sides);
         emit(context,out,basis,0,0,1,1,0,0,1,1,.4999,2*ScreenHousingTextures.BUILTIN_COUNT+4);
         double aspect=material<ASPECTS.length?ASPECTS[material]:1,fu=1,fv=1;if(mode==2){fu=Math.min(1,aspect*height/size);fv=Math.min(1,size/(aspect*height));}

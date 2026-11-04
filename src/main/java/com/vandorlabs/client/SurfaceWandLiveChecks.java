@@ -20,7 +20,7 @@ final class SurfaceWandLiveChecks {
         if(stage==0){mc.getIntegratedServer().addScheduledTask(()->{
             for(BlockPos p:BlockPos.getAllInBox(BASE.add(-2,-1,-2),BASE.add(9,2,6)))actor.world.setBlockToAir(p);
             net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface");
-            for(int x=0;x<7;x++)actor.world.setBlockState(BASE.east(x),block.getDefaultState(),3);
+            for(int x=0;x<7;x++){actor.world.setBlockState(BASE.east(x),block.getDefaultState(),3);TileEntityTurntableSurface surface=(TileEntityTurntableSurface)actor.world.getTileEntity(BASE.east(x));surface.textureLayout=0;surface.markDirty();actor.world.notifyBlockUpdate(surface.getPos(),block.getDefaultState(),block.getDefaultState(),3);}
             Item wand=Item.REGISTRY.getObject(new ResourceLocation("betterbuilderswands:wanddiamond"));if(wand==null)wand=Item.REGISTRY.getObject(new ResourceLocation("betterbuilderswands:wandDiamond"));require(wand!=null,"installed wand required");
             actor.setGameType(GameType.CREATIVE);actor.inventory.clear();actor.inventory.currentItem=0;actor.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(wand));actor.capabilities.allowFlying=true;actor.capabilities.isFlying=true;actor.sendPlayerAbilities();actor.connection.setPlayerLocation(BASE.getX()+3.5,BASE.getY()+.5,BASE.getZ()-2,0,(float)Math.toDegrees(Math.atan2(actor.getEyeHeight(),2)));actor.sendContainerToPlayer(actor.inventoryContainer);
         }).get();mc.playerController.setGameType(GameType.CREATIVE);mc.player.inventory.currentItem=0;stage=1;ticks=0;return false;}

@@ -48,7 +48,8 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     public boolean sameArtwork(TileEntity other){return other instanceof TileEntityTurntableSurface&&surfaceOn.equals(((TileEntityTurntableSurface)other).surfaceOn)&&surfaceOff.equals(((TileEntityTurntableSurface)other).surfaceOff);}
     public String selectedTexture(){return active()?surfaceOn:surfaceOff;}
     private EnumFacing normal(){return world!=null&&world.isBlockLoaded(pos)&&world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface?world.getBlockState(pos).getValue(BlockTurntableSurface.FACING):EnumFacing.UP;}
-    public SquareLayout appearanceLayout(){
+    public SquareLayout appearanceLayout(){SquareLayout layout=joinedLayout();return textureLayout==2&&layout.width!=layout.height?SquareLayout.single(pos,normal()):layout;}
+    private SquareLayout joinedLayout(){
         SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled)return SquareLayout.single(pos,normal());SquareLayout claimed=controller==null?null:controller.surfaceLayout(pos);if(claimed!=null)return availableRoot(claimed);
         if(cachedGroup==null){
             EnumFacing face=EnumFacing.getFront(groupNormal);if(face!=normal())return SquareLayout.single(pos,normal());
@@ -114,7 +115,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     }
     public void configure(String on,String off,int mode,net.minecraft.entity.player.EntityPlayerMP actor){
         if(world==null||world.isRemote||mode<0||mode>2||!TurntableTextures.valid(on)||!TurntableTextures.valid(off))throw new IllegalArgumentException("Invalid surface appearance");
-        SquareLayout layout=appearanceLayout();List<TileEntityTurntableSurface> surfaces=new ArrayList<>();
+        SquareLayout layout=joinedLayout();List<TileEntityTurntableSurface> surfaces=new ArrayList<>();
         for(BlockPos cell:layout.cells){if(!world.isBlockLoaded(cell))throw new IllegalArgumentException("Load the complete surface before configuring it");com.vandorlabs.vehicle.VehicleService.permission(actor,cell);TileEntity raw=world.getTileEntity(cell);if(!(raw instanceof TileEntityTurntableSurface))throw new IllegalArgumentException("Surface layout changed");surfaces.add((TileEntityTurntableSurface)raw);}
         for(TileEntityTurntableSurface surface:surfaces){surface.surfaceOn=on;surface.surfaceOff=off;surface.textureLayout=mode;surface.configured=true;surface.setGroup(layout);surface.changed();}
         for(TileEntityTurntableSurface surface:surfaces){surface.scheduleGroup();for(EnumFacing face:EnumFacing.values()){BlockPos next=surface.pos.offset(face);if(world.isBlockLoaded(next)){TileEntity raw=world.getTileEntity(next);if(raw instanceof TileEntityTurntableSurface)((TileEntityTurntableSurface)raw).scheduleGroup();}}}
