@@ -16,12 +16,31 @@ public final class DoorWaterGush {
     public static void schedule(World world,BlockPos pos){
         if(world==null||world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld)return;
         IBlockState state=world.getBlockState(pos);
+        if(state.getBlock() instanceof com.vandorlabs.garage.GarageDoorBlock){world.scheduleUpdate(pos,state.getBlock(),1);return;}
         if(!(state.getBlock() instanceof BlockConfigurableSpaceDoor))return;
         BlockPos lower=state.getValue(BlockVandorDoor.HALF)==BlockDoor.EnumDoorHalf.UPPER?pos.down():pos;
         if(world.isBlockLoaded(lower))world.scheduleUpdate(lower,state.getBlock(),1);
     }
-    public static void opened(World world,BlockPos lower){update(world,lower,false);}
-    public static void stop(World world,BlockPos lower){update(world,lower,true);}
+    public static void opened(World world,BlockPos lower){if(world.getTileEntity(lower) instanceof com.vandorlabs.garage.GarageDoorTile)garage(world,lower,false);else update(world,lower,false);}
+    public static void stop(World world,BlockPos lower){if(world.getTileEntity(lower) instanceof com.vandorlabs.garage.GarageDoorTile)garage(world,lower,true);else update(world,lower,true);}
+    private static void garage(World world,BlockPos pos,boolean stop){
+        if(world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld)return;
+        com.vandorlabs.garage.GarageDoorTile owner=(com.vandorlabs.garage.GarageDoorTile)world.getTileEntity(pos);
+        int previous=owner.waterOutlets,retained=0;boolean supplying=false;
+        if(!stop&&OpeningFluids.open(world,pos)){
+            ContainedFluids data=owner.fluids;FluidStack a=data.get(0),b=data.get(1);int wet=a!=null&&a.getFluid()==FluidRegistry.WATER?0:b!=null&&b.getFluid()==FluidRegistry.WATER?1:-1;
+            if(wet>=0&&data.get(1-wet)==null){supplying=true;double[] plane=OpeningFluids.plane(world,pos);double sign=wet==0?1:-1;
+                for(EnumFacing face:EnumFacing.HORIZONTALS)if(sign*(plane[0]*face.getFrontOffsetX()+plane[2]*face.getFrontOffsetZ())>.5){int bit=1<<face.getHorizontalIndex();BlockPos out=pos.offset(face);
+                    if(!world.isBlockLoaded(out)){retained|=previous&bit;continue;}IBlockState target=world.getBlockState(out);
+                    if(target.getMaterial()==net.minecraft.block.material.Material.WATER){if(target.getValue(BlockLiquid.LEVEL)==0){retained|=previous&bit;continue;}}
+                    else if(target.getMaterial().isLiquid()||!target.getBlock().isReplaceable(world,out))continue;
+                    retained|=bit;world.setBlockState(out,Blocks.FLOWING_WATER.getDefaultState(),3);world.scheduleUpdate(out,Blocks.FLOWING_WATER,Blocks.FLOWING_WATER.tickRate(world));
+                }
+            }
+        }
+        for(EnumFacing face:EnumFacing.HORIZONTALS){int bit=1<<face.getHorizontalIndex();if((previous&bit)==0||(retained&bit)!=0)continue;BlockPos out=pos.offset(face);if(!world.isBlockLoaded(out)){retained|=bit;continue;}IBlockState state=world.getBlockState(out);if(state.getMaterial()==net.minecraft.block.material.Material.WATER&&state.getValue(BlockLiquid.LEVEL)==0){world.setBlockState(out,Blocks.FLOWING_WATER.getDefaultState().withProperty(BlockLiquid.LEVEL,1),3);world.scheduleUpdate(out,Blocks.FLOWING_WATER,Blocks.FLOWING_WATER.tickRate(world));}}
+        if(owner.waterOutlets!=retained){owner.waterOutlets=retained;owner.markDirty();}if(!stop&&(supplying||retained!=0))world.scheduleUpdate(pos,owner.getBlockType(),5);
+    }
     private static void update(World world,BlockPos lower,boolean stop){
         if(world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld)return;
         IBlockState base=world.getBlockState(lower);

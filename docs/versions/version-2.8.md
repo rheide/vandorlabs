@@ -1,5 +1,9 @@
 # Vandor Labs 2.8
 
+Sectional Door now combines motion and artwork controls on **Door**, supports Middle/Near/Far placement and contained water, and keeps opening/glass choices local to each configured section. A row of windows can share a door texture with solid sections below. Visible open panels can close the door; Straight travel retains a one-pixel edge. Surface wand extrusion rebuilds rectangular artwork automatically.
+
+Coupled vehicles use the controller in the piloted segment. Nearly straight trailers may snap to the grid when parking, and articulated movement preserves speed through unobstructed travel. New assemblies support up to eight independently articulated segments; existing longer saves still load. Lone Track steering and filled ramp texture repeats are corrected.
+
 Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and sectional doors. Existing saved designs migrate through explicit block aliases and the cockpit-glass replacements described below.
 
 See the [compatibility and performance review](../release-compatibility-2.8.md) for upgrade boundaries, recovery behavior and remaining performance costs.

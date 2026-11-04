@@ -12,7 +12,8 @@ public final class TrackSteering {
         TrackTile track=(TrackTile)raw;TrackAppearance appearance=track.appearance();
         if(track.hasLoadedController()||track.trackMembers().size()>1||appearance.beltMask!=0||appearance.bridgeMask!=0
                 ||appearance.mount!=TrackAppearance.Mount.TOP&&appearance.mount!=TrackAppearance.Mount.TOP_HIGH)return 0;
-        return com.vandorlabs.client.VehicleWheelMotion.steer(craft,pos);
+        // Track mesh affine yaw uses the opposite convention to wheel steering.
+        return -com.vandorlabs.client.VehicleWheelMotion.steer(craft,pos);
     }
     private TrackSteering(){}
 }

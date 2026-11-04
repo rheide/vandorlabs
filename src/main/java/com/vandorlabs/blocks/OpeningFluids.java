@@ -11,7 +11,7 @@ import net.minecraftforge.fluids.*;
 /** Saved fluid sides are independent of the reversible, temporary opening fill. */
 public final class OpeningFluids {
     private OpeningFluids(){}
-    public static boolean supports(IBlockState state){return state.getBlock() instanceof BlockConfigurableSpaceDoor||state.getBlock() instanceof BlockProgrammableTrapdoor;}
+    public static boolean supports(IBlockState state){return state.getBlock() instanceof com.vandorlabs.garage.GarageDoorBlock||state.getBlock() instanceof BlockConfigurableSpaceDoor||state.getBlock() instanceof BlockProgrammableTrapdoor;}
     public static TileEntity root(TileEntity tile){
         if(!(tile instanceof TileEntitySpaceDoor)||tile.getWorld()==null)return tile;
         World world=tile.getWorld();BlockPos pos=tile.getPos();IBlockState state=world.getBlockState(pos);
@@ -19,10 +19,11 @@ public final class OpeningFluids {
         if(tile instanceof TileEntitySpaceDoor&&state.getBlock() instanceof BlockConfigurableSpaceDoor&&state.getValue(BlockVandorDoor.HALF)==net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER){BlockPos lower=pos.down();return world.isBlockLoaded(lower)?world.getTileEntity(lower):tile;}
         return tile;
     }
-    public static boolean open(World world,BlockPos pos){TileEntity root=root(world.getTileEntity(pos));if(root instanceof TileEntitySpaceDoor)pos=root.getPos();IBlockState state=world.getBlockState(pos);return supports(state)&&state.getValue(state.getBlock() instanceof BlockProgrammableTrapdoor?BlockProgrammableTrapdoor.OPEN:BlockVandorDoor.OPEN);}
+    public static boolean open(World world,BlockPos pos){if(world.getTileEntity(pos) instanceof com.vandorlabs.garage.GarageDoorTile)return !((com.vandorlabs.garage.GarageDoorTile)world.getTileEntity(pos)).closed();TileEntity root=root(world.getTileEntity(pos));if(root instanceof TileEntitySpaceDoor)pos=root.getPos();IBlockState state=world.getBlockState(pos);return supports(state)&&state.getValue(state.getBlock() instanceof BlockProgrammableTrapdoor?BlockProgrammableTrapdoor.OPEN:BlockVandorDoor.OPEN);}
     /** Unit normal and signed near/far planes of the CLOSED leaf, stable through rotation. */
     public static double[] plane(World world,BlockPos pos){
         IBlockState state=world.getBlockState(pos);TileEntity tile=root(world.getTileEntity(pos));if(tile instanceof TileEntitySpaceDoor)state=world.getBlockState(tile.getPos());
+        if(tile instanceof com.vandorlabs.garage.GarageDoorTile){com.vandorlabs.garage.GarageDoorTile door=(com.vandorlabs.garage.GarageDoorTile)tile;EnumFacing f=door.facing();double center=(f.getFrontOffsetX()+f.getFrontOffsetZ())*.5-door.settings.depthOffset();double h=com.vandorlabs.garage.GarageDoorGeometry.HALF_THICKNESS;return new double[]{f.getFrontOffsetX(),0,f.getFrontOffsetZ(),center-h,center+h};}
         if(tile instanceof TileEntityProgrammableTrapdoor){
             double[][] points=tile instanceof TileEntityProgrammableDiagonalTrapdoor?BlockProgrammableDiagonalTrapdoor.corners(state,(TileEntityProgrammableDiagonalTrapdoor)tile,0):((TileEntityProgrammableTrapdoor)tile).corners(state,0);Vec3d origin=v(points[0]);Vec3d[] edges={v(points[1]).subtract(origin),v(points[2]).subtract(origin),v(points[4]).subtract(origin)};int thin=0;for(int i=1;i<3;i++)if(edges[i].lengthSquared()<edges[thin].lengthSquared())thin=i;
             Vec3d normal=edges[(thin+1)%3].crossProduct(edges[(thin+2)%3]).normalize();if(normal.dotProduct(edges[thin])<0)normal=normal.scale(-1);double lo=Double.POSITIVE_INFINITY,hi=Double.NEGATIVE_INFINITY;for(double[] point:points){double d=normal.dotProduct(v(point));lo=Math.min(lo,d);hi=Math.max(hi,d);}return new double[]{normal.x,normal.y,normal.z,lo,hi};

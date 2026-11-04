@@ -329,7 +329,15 @@ public final class BetterBuildersWandsCompat {
         copy.setInteger("x", target.getX());
         copy.setInteger("y", target.getY());
         copy.setInteger("z", target.getZ());
+        if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface){
+            // A wand copies artwork, never the source pad's ownership or renderer root.
+            for(String field:new String[]{"Owner","OwnerKeyMost","OwnerKeyLeast","SurfaceGroupOffset","SurfaceGroupSize","SurfaceGroupHeight","SurfaceGroupNormal"})copy.removeTag(field);
+        }
         tile.readFromNBT(copy);
+        if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface){
+            ((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).scheduleGroup();
+            for(EnumFacing side:EnumFacing.values()){BlockPos adjacent=target.offset(side);if(world.isBlockLoaded(adjacent)){TileEntity other=world.getTileEntity(adjacent);if(other instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)other).scheduleGroup();}}
+        }
         tile.markDirty();
         IBlockState state = world.getBlockState(target);
         world.notifyBlockUpdate(target, state, state, 3);

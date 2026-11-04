@@ -38,7 +38,7 @@ public final class CopyControllerTile extends TileEntity implements ITickable,Su
     private void refreshPadsChecked(EntityPlayerMP player){
         EnumFacing right=front().rotateYCCW();
         java.util.function.Predicate<BlockPos> leftHalf=p->side(p,right)<0,rightHalf=p->side(p,right)>0;
-        SquareLayout left=useChip?null:SquareLayout.rectangle(world,pos.offset(right.getOpposite()),leftHalf),target=SquareLayout.rectangle(world,pos.offset(right),rightHalf);
+        SquareLayout left=useChip?null:scanPad(pos.offset(right.getOpposite()),leftHalf,"Input (left)"),target=scanPad(pos.offset(right),rightHalf,"Output (right)");
         if(left!=null&&(left.width!=target.width||left.height!=target.height))throw new IllegalArgumentException("Input and output surfaces must have matching rectangle dimensions");
         if(left!=null&&left.normal!=target.normal)throw new IllegalArgumentException("Input and output surfaces must face the same direction");
         Set<BlockPos> cells=new HashSet<>(left==null?Collections.emptySet():left.cells);for(BlockPos p:target.cells)if(!cells.add(p))throw new IllegalArgumentException("Input and output surfaces must be separate");
@@ -47,6 +47,9 @@ public final class CopyControllerTile extends TileEntity implements ITickable,Su
         releaseCells(oldInput,oldOutput,cells);
         for(SquareLayout area:new SquareLayout[]{input,output})if(area!=null)for(BlockPos p:area.cells){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);if(!pos.equals(tile.owner)||!key.equals(tile.ownerKey))tile.bind(pos,key);tile.setGroup(area);}
         refresh=false;error="";status="Ready: "+target.width+" x "+target.height+", height "+height;changed();
+    }
+    private SquareLayout scanPad(BlockPos seed,java.util.function.Predicate<BlockPos> half,String label){
+        try{return SquareLayout.rectangle(world,seed,half);}catch(IllegalArgumentException invalid){throw new IllegalArgumentException(label+" pad at "+seed.getX()+", "+seed.getY()+", "+seed.getZ()+": "+invalid.getMessage()+". Place a filled rectangle touching that side of the controller"+(useChip?"":"; input and output dimensions must match (Chip mode needs only output)"));}
     }
     private int side(BlockPos p,EnumFacing right){return (p.getX()-pos.getX())*right.getFrontOffsetX()+(p.getZ()-pos.getZ())*right.getFrontOffsetZ();}
     /** Invalid geometry stops owning pads immediately; remaining cells regain independent artwork. */

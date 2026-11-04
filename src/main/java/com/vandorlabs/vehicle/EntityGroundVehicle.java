@@ -189,7 +189,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private byte[] encoded;
     private VehicleStructure rotationSource,rotatedSnapshot;private int rotationTurns;
     public VehicleStructure rotatedSnapshot(int turns) {
-        articulation.requireAligned();
+        articulation.requireParkable();
         if(turns==0)return structure;
         if(rotationSource!=structure || rotationTurns!=turns){rotatedSnapshot=VehicleRotation.rotate(structure,view,turns);rotationSource=structure;rotationTurns=turns;}
         return rotatedSnapshot;

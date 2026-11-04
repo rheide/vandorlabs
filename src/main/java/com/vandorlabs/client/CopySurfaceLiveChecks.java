@@ -30,6 +30,7 @@ final class CopySurfaceLiveChecks {
     private static SquareLayout stableInput,stableOutput;
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("copy-surfaces fixture="+fixture+" stage="+stage+" tick="+ticks+": "+why);}
     static boolean tick(Minecraft mc,File output)throws Exception{
+        if(!SurfaceWandLiveChecks.tick(mc))return false;
         if(fixture>=2)return CopySurfaceOrientationChecks.tick(mc,output);
         mc.displayGuiScreen(null);
         if(stage==1&&ticks>20&&!clicked&&mc.playerController.getCurrentGameType()==GameType.CREATIVE&&mc.player.inventory.currentItem==0&&mc.player.getHeldItemMainhand().isEmpty()

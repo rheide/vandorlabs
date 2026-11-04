@@ -8,6 +8,8 @@ On Linux, run the standard release checks from the repository:
 
 Use `./tools/verify_release.sh --check` to check dependencies without building or starting Minecraft. The script requires a Java 8 JDK, Python 3 with Pillow, and Xvfb. The existing client harness prepares its Forge runtime as needed.
 
+Allow roughly an hour for the standard gate on a prepared runtime; downloads, graphics and hardware can change that duration. The console and retained log show each completed focus.
+
 The script checks the texture browser, builds the standard JAR and runs `verifyRelease`: portable and non-rendering matrices, dedicated-server linkage, shader startup/reload, rendered regressions and the live gameplay/recovery fixtures. It then runs the isolated exact-JAR Dynmap test with WorldEdit and compares artifact hashes. Mekanism is required by this wrapper so its cold-restart fixture is included. It does not update the production server.
 
 The default dependency location is a sibling `MC-Forge12-2` installation. Override these environment variables for another installation:

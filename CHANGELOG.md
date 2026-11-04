@@ -2,6 +2,11 @@
 
 ## 2.8
 
+- Combine Sectional Door motion and artwork controls on Door; use compact buttons, Slow/Medium/Fast ordering and no dialog Open/Close buttons. Add Middle/Near/Far placement and reversible contained-water flow. Keep openings and glass local to the configured block while artwork and motion remain shared. Preserve transparent Frames at rest, move the border with Slide Direction and keep visible moved segments clickable. Straight travel retains a one-pixel edge.
+- Rebuild rectangular Surface artwork after Better Builder’s Wands extrusion without copying stale renderer roots or controller claims. Identify invalid Copy Controller pads by side and position, expose full errors on hover and accept output-only pads in Vehicle Chip mode.
+- Select a vehicle's controller from its piloted coupler segment; preserve controllers in other sections as ordinary blocks. Allow safe small trailer alignment errors when parking, with bounded cumulative drift, retaining the original joint pose in parking recovery journals. Eliminate false collision stops caused by movement subdivision rounding, reduce articulated collision allocations and limit new assemblies to eight independently articulated segments. Existing longer saved vehicles retain recovery and parking support. Correct lone Track steering direction.
+- Keep filled Ramp Controller texture repeats within their source atlas sprite, including ordinary iron blocks on Y-axis layouts.
+
 - Preserve opaque capability material references during retired-glass snapshot migration. Refuse missing saved material names instead of resolving them to air. Refuse unloaded scan sources before tile reads and avoid leaking pause leases when preparation fails. Extend release checks to the new Sectional Door, articulation, ramp-axis, chip-display and dense-render paths.
 
 - Extend Sectional Door with four slide directions, Straight/Perpendicular motion, shared Speed and Activation selectors, fixed dialog dimensions, Tile/Stretch/Fit artwork, Custom block samples, Frame textures and joined or tiled porthole windows with configurable glass. Repair all headers after Better Builder’s Wands extrusion. Rename Ramp Controller’s Base speed label to Speed.

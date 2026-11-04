@@ -14,7 +14,7 @@ public final class GarageDoorPanels {
     private static int retained;
     private static final class Key {
         final GarageDoorSettings settings;final int texture,column,row,width,height,pass;
-        Key(GarageDoorTile t,int row,int pass){settings=t.settings;texture=t.texture;column=t.column;this.row=row;width=t.columns;height=t.height;this.pass=pass;}
+        Key(GarageDoorTile t,int row,int pass){settings=t.panel(row).settings;texture=t.texture;column=t.column;this.row=row;width=t.columns;height=t.height;this.pass=pass;}
         public int hashCode(){return Objects.hash(settings,texture,column,row,width,height,pass);}
         public boolean equals(Object value){if(!(value instanceof Key))return false;Key k=(Key)value;return settings.equals(k.settings)&&texture==k.texture&&column==k.column&&row==k.row&&width==k.width&&height==k.height&&pass==k.pass;}
     }
@@ -22,7 +22,7 @@ public final class GarageDoorPanels {
     public static int retainedBytes(){return retained;}
     public static void emit(GarageDoorTile tile,int row,int pass,BufferBuilder buffer,double x,double y,double z,double[] pose,int rotation,int light){
         Key key=new Key(tile,row,pass);StaticSurfaceMesh mesh=CACHE.get(key);if(mesh==null){mesh=build(key);int bytes=mesh.vertexCount()*32+128;if(bytes<=MAX_BYTES){while(!CACHE.isEmpty()&&retained+bytes>MAX_BYTES){Iterator<StaticSurfaceMesh> it=CACHE.values().iterator();retained-=it.next().vertexCount()*32+128;it.remove();}CACHE.put(key,mesh);retained+=bytes;}}
-        int alpha=pass==1?Math.round(255*GlassMaterials.opacity(tile.settings.glass.material,tile.settings.glass.tint)):255;mesh.drawSection(buffer,x,y,z,pose,rotation,light,alpha);
+        int alpha=pass==1?Math.round(255*GlassMaterials.opacity(key.settings.glass.material,key.settings.glass.tint)):255;mesh.drawSection(buffer,x,y,z,pose,rotation,light,alpha);
     }
     private static TextureAtlasSprite sprite(int choice,boolean upper){return CustomBlockMaterials.isCustom(choice)?CustomBlockTextures.sprite(choice,upper):Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(choice<0?"vandorlabs:blocks/garage/garage_panel":ScreenHousingTextures.fullTexture(choice));}
     private static StaticSurfaceMesh build(Key k){

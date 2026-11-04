@@ -20,6 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public double garageSelectionPose(com.vandorlabs.garage.GarageDoorTile tile){net.minecraft.world.World physical=tile.getWorld();while(physical instanceof com.vandorlabs.vehicle.VehicleWorld)physical=((com.vandorlabs.vehicle.VehicleWorld)physical).parent;return physical.isRemote?com.vandorlabs.client.garage.GarageDoorVisuals.pose(tile,1):super.garageSelectionPose(tile);}
     @Override public void garageAppearanceChanged(com.vandorlabs.garage.GarageDoorTile tile){com.vandorlabs.client.garage.GarageDoorChunks.changed(tile);}
     @Override public boolean canSampleDisplayPower(){return net.minecraft.client.Minecraft.getMinecraft().isCallingFromMinecraftThread();}
     @Override public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){com.vandorlabs.client.SurfaceArmClients.changed(tile);}

@@ -190,11 +190,16 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
             this.face=face;this.sprite=sprite;this.uShift=uShift;this.vShift=vShift;
             float shade=face==EnumFacing.UP?1:face==EnumFacing.DOWN?.5F:face.getAxis()==EnumFacing.Axis.X?.6F:.8F;
             red=((tint>>16)&255)/255F*shade;green=((tint>>8)&255)/255F*shade;blue=(tint&255)/255F*shade;
-            if(layout<1)CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,this);
+            double minU=(face.getAxis()==EnumFacing.Axis.X?box.minZ:box.minX)+uShift,maxU=(face.getAxis()==EnumFacing.Axis.X?box.maxZ:box.maxX)+uShift;
+            double minV=(face.getAxis()==EnumFacing.Axis.Y?box.minZ:Math.min(vBottom,vTop))+vShift,maxV=(face.getAxis()==EnumFacing.Axis.Y?box.maxZ:Math.max(vBottom,vTop))+vShift;
+            // Atlas sprites do not wrap. Filled native-material extensions can
+            // span several repeats, just like explicitly tiled programmable faces.
+            boolean nativeUv=layout<1&&minU>=-1e-8&&maxU<=1+1e-8&&minV>=-1e-8&&maxV<=1+1e-8;
+            if(nativeUv)CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,this);
             else {
                 java.util.List<double[]> vertices=new java.util.ArrayList<>();
                 CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,(x,y,z,u,v)->vertices.add(new double[]{x,y,z,layoutU(u,uShift,box,face,sprite,layout),layoutV(v,vShift,box,face,sprite,layout,bottom,top)}));
-                for(double[] p:repeatQuads(vertices,layout))write(p[0],p[1],p[2],p[3],p[4]);
+                for(double[] p:repeatQuads(vertices,Math.max(1,layout)))write(p[0],p[1],p[2],p[3],p[4]);
             }
         }
         @Override public void vertex(double x,double y,double z,double u,double v) {

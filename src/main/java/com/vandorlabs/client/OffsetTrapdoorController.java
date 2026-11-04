@@ -33,6 +33,7 @@ final class OffsetTrapdoorController extends PlayerControllerMP {
             net.minecraft.util.math.BlockPos pos,net.minecraft.util.EnumFacing side,
             net.minecraft.util.math.Vec3d hit,net.minecraft.util.EnumHand hand) {
         net.minecraft.tileentity.TileEntity gear=world.getTileEntity(pos);
+        if(hand==net.minecraft.util.EnumHand.MAIN_HAND&&gear instanceof com.vandorlabs.garage.GarageDoorTile&&!(player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)&&!com.vandorlabs.compat.BetterBuildersWandsCompat.isBbwWand(player.getHeldItem(hand))){super.updateController();com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageGarageDoorUse((com.vandorlabs.garage.GarageDoorTile)gear,hit));return net.minecraft.util.EnumActionResult.SUCCESS;}
         if(hand==net.minecraft.util.EnumHand.MAIN_HAND&&gear instanceof com.vandorlabs.gear.GearTileEntity){
             com.vandorlabs.gear.GearTileEntity root=((com.vandorlabs.gear.GearTileEntity)gear).loadedController();
             if(root!=null&&!root.fullyDeployed()){super.updateController();com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageModularGearUse(pos));return net.minecraft.util.EnumActionResult.SUCCESS;}

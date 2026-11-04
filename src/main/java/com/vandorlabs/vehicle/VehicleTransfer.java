@@ -225,7 +225,7 @@ public final class VehicleTransfer {
         tag.setTag("OccupiedPilotSeats",entity.occupiedSeatAssignments());if(entity.taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",entity.taxiReturnSeat.toLong());
         tag.setBoolean("TaxiReturnPending",entity.taxiReturnPending);if(entity.taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",entity.taxiReturnActor);
         if(entity.couplingActor()!=null)tag.setUniqueId("CouplingActor",entity.couplingActor());tag.setTag("AutopilotNavigation",entity.autopilot.write());
-        tag.setFloat("Yaw",entity.rotationYaw);tag.setDouble("X",entity.posX);tag.setDouble("Y",entity.posY);tag.setDouble("Z",entity.posZ);return tag;
+        entity.articulation.write(tag);tag.setFloat("Yaw",entity.rotationYaw);tag.setDouble("X",entity.posX);tag.setDouble("Y",entity.posY);tag.setDouble("Z",entity.posZ);return tag;
     }
     static java.util.function.Consumer<String> testFault;
     private static void fault(String point){if(testFault!=null&&System.getProperty("vandorlabs.reprolab")!=null)testFault.accept(point);}
@@ -273,6 +273,7 @@ public final class VehicleTransfer {
         if(forceHover)VehicleFlight.requireThruster(structure);
         if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice; other landing gear needs three lift blocks for Hover.");
         validateAssembly(structure,validationView);
+        VehicleArticulation.requireAssemblyLimit(structure);
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         Work work=ACTIVE.get();if(work!=null)VehiclePaintings.hold(work.paintings,paintings);EntityGroundVehicle entity;
         if(work!=null&&work.assembled!=null&&!VehiclePaintings.entries(work.assembled.structure).equals(VehiclePaintings.entries(structure)))throw new IllegalArgumentException("Paintings changed while preparing the vehicle; source retained, please retry");
@@ -397,7 +398,7 @@ public final class VehicleTransfer {
             VehicleStructure parked=VehicleStructure.read(undo.getCompoundTag("ParkedCraft"));
             // A publication failure can leave some paintings native. Remove them before their supports.
             VehiclePaintings.remove(world,parked,origin);blocks(world,parked,origin,false);
-            entity.isDead=false;entity.install(work.beforeStructure,work.beforeCollision);
+            entity.isDead=false;entity.install(work.beforeStructure,work.beforeCollision);entity.articulation.read(undo);
             entity.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));entity.taxiReturnPending=undo.getBoolean("TaxiReturnPending");entity.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;entity.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
             entity.couplingActor=undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null;entity.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));entity.rotationYaw=undo.getFloat("Yaw");entity.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));
             if(!world.spawnEntity(entity))throw new IOException("Recovery vehicle spawn canceled; journal retained.");
@@ -430,7 +431,7 @@ public final class VehicleTransfer {
         if(undo.getBoolean("Parking")) {
             VehicleStructure parked=undo.hasKey("ParkedCraft",10)?VehicleStructure.read(undo.getCompoundTag("ParkedCraft")):structure;VehiclePaintings.remove(world,parked,origin);
             blocks(world,parked,origin,false);
-            EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.setUniqueId(id);restored.install(structure);
+            EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.setUniqueId(id);restored.install(structure);restored.articulation.read(undo);
             restored.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));restored.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;
             restored.taxiReturnPending=undo.getBoolean("TaxiReturnPending");restored.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
             restored.couplingActor=undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null;restored.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));

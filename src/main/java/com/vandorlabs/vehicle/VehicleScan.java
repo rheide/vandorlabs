@@ -121,8 +121,13 @@ public final class VehicleScan {
         for(Map.Entry<BlockPos,Double> support:trackBottoms.entrySet()){RoleGroup group=owners.get(support.getKey());if(group!=null){group.tracks++;group.bottom=Math.min(group.bottom,support.getValue());}}
         RoleGroup primary=owners.get(start);require(primary!=null,"The selected vehicle component is unavailable.");
         primaryPositions=Collections.unmodifiableSet(new HashSet<>(primary.positions));
+        // A locked coupler joins ownership, while each physical segment keeps its controls.
+        int connectedControllers=primary.controllers;Set<BlockPos> driven=drivenSection(primary.positions);primary.controllers=0;primary.controller=null;BlockPos selectedPilot=null;
+        for(BlockPos at:driven){IBlockState state=cells.get(at).state;if(state.getBlock() instanceof BlockVehicleController){primary.controllers++;primary.controller=at;}if(state.getBlock() instanceof BlockPilotSeat&&!state.getValue(BlockPilotSeat.UPPER)&&(selectedPilot==null||at.equals(start)))selectedPilot=at;}
+        primary.pilot=selectedPilot;
+        if(!membershipOnly&&!attachment&&connectedControllers>0)require(primary.controllers>0,"The piloted segment needs its own Vehicle Controller.");
         if(!membershipOnly){
-        require(primary.controllers<=1,"A craft can contain at most one Vehicle Controller.");require(primary.autopilots<=1,"A craft can contain at most one Autopilot block.");
+        require(primary.controllers<=1,"The piloted segment can contain at most one Vehicle Controller.");require(primary.autopilots<=1,"A craft can contain at most one Autopilot block.");
         if(!attachment)require(primary.pilot!=null,"The selected vehicle needs its own Pilot Seat.");
         for(RoleGroup group:groups)if(group!=primary&&(group.controllers>0||group.pilots>0||group.autopilots>0)){
             require(primary.controller!=null,"The lower vehicle needs its own Vehicle Controller before carrying another complete vehicle.");
@@ -137,6 +142,14 @@ public final class VehicleScan {
         List<VehicleStructure.Cell> ordered=new ArrayList<>();List<RoleGroup> orderedGroups=new ArrayList<>();orderedGroups.add(primary);for(RoleGroup group:groups)if(group!=primary)orderedGroups.add(group);
         for(RoleGroup group:orderedGroups){if(group.controller!=null)ordered.add(cells.get(group.controller));for(VehicleStructure.Cell cell:group.cells)if(!cell.pos.equals(group.controller))ordered.add(cell);}
         return ordered;
+    }
+    private Set<BlockPos> drivenSection(Set<BlockPos> component){
+        Set<BlockPos> seen=new HashSet<>();ArrayDeque<BlockPos> pending=new ArrayDeque<>();seen.add(start);pending.add(start);
+        while(!pending.isEmpty()){BlockPos at=pending.removeFirst();IBlockState state=cells.get(at).state;
+            for(EnumFacing side:EnumFacing.values()){BlockPos other=at.offset(side);VehicleStructure.Cell cell=cells.get(other);if(cell!=null&&component.contains(other)&&!ownedCoupler(state,cell.state,side)&&!supportCut(at,other)&&touches(world,at,state,side)&&seen.add(other))pending.add(other);}
+            for(BlockPos other:contactLinks.getOrDefault(at,Collections.emptySet()))if(component.contains(other)&&seen.add(other))pending.add(other);
+        }
+        return seen;
     }
     /** Pure bounded ownership graph over a complete immutable snapshot; never captures or mutates. */
     private static VehicleScan membershipGraph(VehicleWorld view){
@@ -189,7 +202,7 @@ public final class VehicleScan {
         }
         return result;
     }
-    private static boolean ownedCoupler(IBlockState a,IBlockState b,EnumFacing direction){
+    static boolean ownedCoupler(IBlockState a,IBlockState b,EnumFacing direction){
         if(!(a.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)||!(b.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))return false;
         EnumFacing first=a.getValue(com.vandorlabs.coupler.BlockCoupler.FACING),second=b.getValue(com.vandorlabs.coupler.BlockCoupler.FACING);
         return first==direction&&second==direction.getOpposite()&&Math.abs(com.vandorlabs.coupler.BlockCoupler.couplingHeight(a)-com.vandorlabs.coupler.BlockCoupler.couplingHeight(b))<.001;

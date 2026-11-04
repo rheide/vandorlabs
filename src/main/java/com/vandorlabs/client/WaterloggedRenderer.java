@@ -9,9 +9,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fluids.*;
 
 /** Cached exposed volume faces use each liquid's atlas artwork, tint and luminosity. */
-final class WaterloggedRenderer {
+public final class WaterloggedRenderer {
     static TextureAtlasSprite sprite(FluidStack stack){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(stack.getFluid().getStill(stack).toString());}
-    static void render(TileEntity tile,double x,double y,double z){
+    public static void render(TileEntity tile,double x,double y,double z){
         ContainedFluids data=WaterloggedParts.data(tile);if(data==null||!RenderFluidPresence.wet(tile))return;
         WaterloggedSurfaceMesh.Entry entry=WaterloggedSurfaceMesh.entry(tile);
         java.util.List<WaterloggedSurfaceMesh.Surface> surfaces=entry.mesh;if(surfaces.isEmpty())return;

@@ -108,7 +108,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
             if(raw instanceof com.vandorlabs.copier.CopyControllerTile&&((com.vandorlabs.copier.CopyControllerTile)raw).surfaceSeed(cell))copiers.add((com.vandorlabs.copier.CopyControllerTile)raw);
         }
         for(com.vandorlabs.copier.CopyControllerTile copier:copiers)copier.surfaceChanged();
-        SquareLayout layout=null;try{layout=SquareLayout.of(members,normal());}catch(IllegalArgumentException irregular){}
+        SquareLayout layout=null;try{layout=SquareLayout.rectangle(members,normal());}catch(IllegalArgumentException irregular){}
         com.vandorlabs.gear.ArmSurfaceActivity.surfaceChanged(world,members);
         for(BlockPos cell:members){TileEntity raw=world.getTileEntity(cell);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface surface=(TileEntityTurntableSurface)raw;surface.groupPending=false;surface.setGroup(layout==null?SquareLayout.single(cell,normal()):layout);}}
     }

@@ -13,6 +13,12 @@ import net.minecraft.util.math.*;
 public final class VehicleArticulation {
     public static final double MAX_ANGLE=75;
     public static final int MAX_JOINTS=VehicleStructure.MAX_BLOCKS/2;
+    public static final int MAX_NEW_SEGMENTS=8;
+    public static void requireAssemblyLimit(VehicleStructure structure){
+        VehicleCouplerTopology topology=VehicleCouplerTopology.of(structure);if(topology==null)return;
+        List<HingeGraph.Edge> edges=new ArrayList<>();for(VehicleCouplerTopology.Link link:topology.links)edges.add(new HingeGraph.Edge(link.first,link.second,link.articulation));
+        if(new HingeGraph(topology.sections.size(),topology.root,edges).bodies>MAX_NEW_SEGMENTS)throw new IllegalArgumentException("Vehicles support at most 8 independently articulated segments; use rigid couplers for additional sections");
+    }
     private final EntityGroundVehicle craft;
     private VehicleStructure observed;
     private long signature=Long.MIN_VALUE;
@@ -139,6 +145,14 @@ public final class VehicleArticulation {
     }
     public boolean aligned(){if(!active())return true;for(int i=0;i<yaw.length;i++)if(Math.abs(yaw[i])>.25||Math.abs(pitch[i])>.25)return false;return true;}
     public void requireAligned(){if(!aligned())throw new IllegalArgumentException("Straighten articulated sections on level ground before parking, coupling or detaching");}
+    public boolean parkable(){
+        if(!active())return true;captureShapes();
+        for(int i=0;i<yaw.length;i++)if(Math.abs(yaw[i])>5||Math.abs(pitch[i])>3)return false;
+        // Bound accumulated drift down a long chain, not just each individual joint.
+        for(int body=1;body<bodyBounds.length;body++){AxisAlignedBB box=bodyBounds[body];if(matrices[body].angle()>7.5)return false;for(int n=0;n<8;n++){double x=(n&1)==0?box.minX:box.maxX,y=(n&2)==0?box.minY:box.maxY,z=(n&4)==0?box.minZ:box.maxZ;double[] p=matrices[body].point(x,y,z);if((p[0]-x)*(p[0]-x)+(p[1]-y)*(p[1]-y)+(p[2]-z)*(p[2]-z)>.75*.75)return false;}}
+        return true;
+    }
+    public void requireParkable(){if(!parkable())throw new IllegalArgumentException("Straighten trailers before parking (within 5 degrees yaw, 3 degrees pitch and 0.75 block of the grid)");}
     public boolean canConfigure(BlockPos at,boolean value){if(value||!active())return true;for(int i=0;i<joints.size();i++){Joint j=joints.get(i);if(at.equals(j.a)||at.equals(j.b)){TileEntity other=craft.view.getTileEntity(at.equals(j.a)?j.b:j.a);if(other instanceof TileCoupler&&((TileCoupler)other).articulation())return true;if(Math.abs(yaw[i])>.25||Math.abs(pitch[i])>.25)return false;}}return true;}
     public boolean begin(){if(!active())return false;captureShapes();base=new Frame(yaw.clone(),pitch.clone(),matrices);baseRoot=root();baseX=craft.posX;baseY=craft.posY;baseZ=craft.posZ;baseYaw=craft.rotationYaw;terrain.clear();return true;}
     private double ground(double x,double y,double z){
@@ -186,7 +200,7 @@ public final class VehicleArticulation {
         double angle=Math.toRadians(yaw),cos=Math.cos(angle),sin=Math.sin(angle),px=craft.structure.bounds.maxX/2,pz=craft.structure.bounds.maxZ/2;
         for(Shape shape:shapes.get(0)){VehicleCollision.OrientedBox box=new VehicleCollision.OrientedBox(shape.box,px,pz,cos,sin);AxisAlignedBB query=box.broad.offset(x,y,z).expand(axis==0?amount:0,axis==1?amount:0,axis==2?amount:0);for(AxisAlignedBB obstacle:obstacles(query))amount=box.clip(obstacle.offset(-x,-y,-z),amount,axis);}
         if(Math.abs(amount)<1e-8)return 0;int steps=Math.max(1,(int)Math.ceil(Math.abs(amount)/.04));double accepted=0;
-        for(int n=1;n<=steps;n++){double next=amount*n/steps;if(propose(root(x+(axis==0?next:0),y+(axis==1?next:0),z+(axis==2?next:0),yaw))==null){double lo=accepted,hi=next;for(int i=0;i<14;i++){double mid=(lo+hi)/2;if(propose(root(x+(axis==0?mid:0),y+(axis==1?mid:0),z+(axis==2?mid:0),yaw))!=null)lo=mid;else hi=mid;}return lo;}accepted=next;}return accepted;
+        for(int n=1;n<=steps;n++){double next=amount*n/steps;if(propose(root(x+(axis==0?next:0),y+(axis==1?next:0),z+(axis==2?next:0),yaw))==null){double lo=accepted,hi=next;for(int i=0;i<14;i++){double mid=(lo+hi)/2;if(propose(root(x+(axis==0?mid:0),y+(axis==1?mid:0),z+(axis==2?mid:0),yaw))!=null)lo=mid;else hi=mid;}return lo;}accepted=next;}return amount;
     }
     public void end(){
         if(base==null)return;Frame accepted=propose(root());double targetX=craft.posX,targetY=craft.posY,targetZ=craft.posZ;float targetYaw=craft.rotationYaw;

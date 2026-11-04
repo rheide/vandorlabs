@@ -68,5 +68,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageDoorGlass.Handler.class,MessageDoorGlass.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageDisplayActivation.Handler.class,MessageDisplayActivation.class,id++,Side.SERVER);
         INSTANCE.registerMessage(com.vandorlabs.garage.GarageDoorMessage.Handler.class,com.vandorlabs.garage.GarageDoorMessage.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageGarageDoorUse.Handler.class,MessageGarageDoorUse.class,id++,Side.SERVER);
     }
 }

@@ -4,7 +4,14 @@ public final class ArticulationGeometryTest {
     private static int checks;
     private static void require(boolean ok,String why){checks++;if(!ok)throw new AssertionError("articulation: "+why);}
     private static void near(double a,double b,String why){require(Math.abs(a-b)<1e-7,why);}
-    public static void main(String[] args){
+    private static void parity(){
+        java.util.Random random=new java.util.Random(282);for(int i=0;i<100000;i++){
+            RigidTransform a=RigidTransform.translation(random.nextDouble()*4,random.nextDouble()*4,random.nextDouble()*4).then(RigidTransform.rotation(random.nextDouble(),random.nextDouble(),random.nextDouble(),random.nextDouble()*180)),b=RigidTransform.translation(random.nextDouble()*4,random.nextDouble()*4,random.nextDouble()*4).then(RigidTransform.rotation(random.nextDouble(),random.nextDouble(),random.nextDouble(),random.nextDouble()*180));
+            OrientedBounds x=new OrientedBounds(-1,-.5,-2,1,.5,2,a),y=new OrientedBounds(-.75,-.25,-1,.75,.25,1,b);
+            require(x.intersects(y)==new ReferenceOrientedBounds(-1,-.5,-2,1,.5,2,a).intersects(new ReferenceOrientedBounds(-.75,-.25,-1,.75,.25,1,b)),"allocation-free SAT matches previous implementation");
+        }
+    }
+    public static void main(String[] args){parity();
         HingeGraph train=new HingeGraph(4,0,Arrays.asList(new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(1,2,true),new HingeGraph.Edge(2,3,true)));require(train.bodies==4&&train.joints.size()==3,"three independent trailer joints");
         HingeGraph parallel=new HingeGraph(3,0,Arrays.asList(new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(1,2,true)));require(parallel.bodies==2&&parallel.joints.size()==1&&parallel.body[0]==parallel.body[1],"parallel pairs lock only their own connection");
         HingeGraph cycle=new HingeGraph(4,0,Arrays.asList(new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(1,2,true),new HingeGraph.Edge(2,0,true),new HingeGraph.Edge(2,3,true)));require(cycle.bodies==2&&cycle.joints.size()==1,"closed loop rigid, free tail still articulated");

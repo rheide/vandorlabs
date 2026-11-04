@@ -15,6 +15,7 @@ final class SectionalDoorChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("sectional-door: "+why);}
     private static EntityPlayerMP actor(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());}
     static boolean tick(Minecraft mc,File output)throws Exception{
+        if(stage==6)return SectionalDoorInteractionChecks.tick(mc);
         mc.gameSettings.pauseOnLostFocus=false;if(++ticks<40)return false;
         if(stage==0){mc.displayGuiScreen(null);mc.getIntegratedServer().addScheduledTask(()->{
             EntityPlayerMP p=actor(mc);WorldServer w=p.getServerWorld();Block door=Block.getBlockFromName("vandorlabs:garage_door");for(BlockPos at:BlockPos.getAllInBox(BASE.add(-2,-1,-2),BASE.add(5,6,3)))w.setBlockToAir(at);
@@ -35,7 +36,7 @@ final class SectionalDoorChecks {
         }
         if(stage==3){if(mc.player.getHeldItemMainhand().getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER||mc.player.inventory.getStackInSlot(2).getItem()!=Item.getItemFromBlock(net.minecraft.init.Blocks.GOLD_BLOCK))return false;mc.playerController.processRightClickBlock(mc.player,mc.world,TOP.up().east(),EnumFacing.UP,new Vec3d(TOP.up().east()).addVector(.5,1,.5),EnumHand.MAIN_HAND);stage=4;wait=0;return false;}
         if(stage==4){if(!(mc.currentScreen instanceof GuiGarageDoor)||++wait<5)return false;SectionalDoorDialogChecks.run(mc,(GuiGarageDoor)mc.currentScreen,output);stage=5;wait=0;return false;}
-        if(stage==5){if(++wait<10)return false;mc.player.closeScreen();mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=actor(mc);GarageDoorTile root=GarageDoorTile.at(p.getServerWorld(),TOP.up().east());require(root.settings.window&&root.settings.shape==3&&root.settings.join&&root.texture==com.vandorlabs.tiles.CustomBlockMaterials.choice(p.inventory.getStackInSlot(2)),"authorized dialog packet did not configure all window/custom fields");SectionalDoorRuntimeChecks.run(p.getServerWorld(),p);}).get();SectionalDoorRenderChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] sectional-door-live PASS actual wand/configuration packets window/glass rendered matrix legacy compatibility");return true;
+        if(stage==5){if(++wait<10)return false;mc.player.closeScreen();mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=actor(mc);GarageDoorTile root=GarageDoorTile.at(p.getServerWorld(),TOP.up().east());require(root.settings.window&&root.settings.shape==3&&root.settings.join&&root.texture==com.vandorlabs.tiles.CustomBlockMaterials.choice(p.inventory.getStackInSlot(2)),"authorized dialog packet did not configure all window/custom fields");SectionalDoorRuntimeChecks.run(p.getServerWorld(),p);}).get();SectionalDoorRenderChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] sectional-door-live PASS actual wand/configuration packets window/glass rendered matrix legacy compatibility");stage=6;return false;
         }return false;
     }
     private SectionalDoorChecks(){}

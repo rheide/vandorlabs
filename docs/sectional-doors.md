@@ -16,15 +16,15 @@ Sectional Door sections form a sliding door with configurable travel. The defaul
 
    ![Completed nine by five sectional door](images/garage-build-3-closed.png)
 
-4. Right-click a section to toggle the linked door. The panels rise, turn over the header and retract overhead. Once open, use the header to interact with the door.
+4. Right-click a section to toggle the linked door. The panels rise, turn over the header and retract overhead. Once open, right-click any visible panel to close the door. The narrow border follows the selected slide edge.
 
    ![Door raised overhead](images/garage-open.png)
 
-5. Use the Configurizer, or sneak-right-click, to open the same dedicated configuration dialog. The Mechanism tab selects **Slide Direction: Up / Down / Left / Right**, **Slide Angle: Perpendicular / Straight**, and **Speed: Fast / Medium / Slow**. Perpendicular turns the panels behind the opening; Straight keeps them in the door plane and moves the complete door clear of the opening. Open and Close buttons are available for manual activation. Settings apply to the linked door. Right-click an option to cycle backwards.
+5. Use the Configurizer, or sneak-right-click, to open the dedicated configuration dialog. **Door** selects **Slide: Up / Down / Left / Right**, **Angle: Perpendicular / Straight**, **Speed: Slow / Medium / Fast**, and **Position: Middle / Near / Far**, beside the artwork picker. Perpendicular turns the panels behind the opening; Straight keeps them in the door plane and leaves a one-pixel edge exposed when open. Artwork, travel, position and activation settings apply to the linked door. Right-click an option to cycle backwards.
 
    ![Sectional Door mechanism settings](images/sectional-mechanism-settings.png)
 
-6. In Redstone, enter the usual channel list and choose whether to accept local redstone. Choose **Activation: Manual / Redstone ON / Redstone OFF**, using the same selector as Programmable Doors. Manual allows hand and dialog operation. Redstone ON opens while any enabled input is powered; Redstone OFF reverses that condition. Both redstone modes block manual opening and closing. Existing saved doors retain their former combined manual/redstone behavior until an activation mode is selected.
+6. In Redstone, enter the usual channel list and choose whether to accept local redstone. Choose **Activation: Manual / Redstone ON / Redstone OFF**, using the same selector as Programmable Doors. Manual allows hand operation. Redstone ON opens while any enabled input is powered; Redstone OFF reverses that condition. Both redstone modes block manual opening and closing. Existing saved doors retain their former combined manual/redstone behavior until an activation mode is selected.
 
    ![Sectional Door Redstone Channels](images/sectional-redstone-settings.png)
 
@@ -46,9 +46,9 @@ Open **Door** to select general materials, Frame, Trapdoors, Doors or Large Door
 
 ## Window segments
 
-1. On **Door**, change **Segment: Solid** to **Window**. Choose **Hexagon**, **Octagon**, **Square** or **Round**, using the same outlines as Programmable Porthole.
-2. Choose **Window: Tile** for a separate opening in each section, or **Fit** for one continuous opening across the linked door. Each panel still moves independently along the selected path.
-3. Open the **Glass** tab to choose the glass shade or replacement material and its tint. The Glass tab appears only for Window segments. All tabs keep the same dialog dimensions.
+1. Configure the specific block you want to change. Opening shape, Window Tile/Fit and glass settings belong to that block; selecting artwork or Texture Tile/Stretch/Fit still applies across the linked door. To make a window row, configure each block in that row. On **Door**, change **Segment: Solid** to **Window**. Choose **Hexagon**, **Octagon**, **Square** or **Round**, using the same outlines as Programmable Porthole.
+2. Choose **Window: Tile** to fit the opening to the selected section, or **Fit** to take that section’s slice of an opening spanning the linked door. Other sections keep their own opening settings. Each panel still moves independently along the selected path.
+3. Open the **Glass** tab to choose the glass shade or replacement material and its tint. The Glass tab appears for Window segments and Frame artwork. Selecting glass for a Frame enables its square opening on the configured block. All tabs keep the same dialog dimensions.
 
 ![Round window fitted across linked sections](images/sectional-round-fit.png)
 
@@ -59,3 +59,7 @@ Open **Door** to select general materials, Frame, Trapdoors, Doors or Large Door
 Keep enough space above, below or beside the opening for Straight travel, and behind the opening for Perpendicular travel. A sideways door travels by its linked width; an upward or downward door travels by its height.
 
 Better Builder’s Wands can extend the top row. Extending the top row updates each column’s height and header while preserving its settings.
+
+## Contained water
+
+Use a filled or empty bucket on either side to store or remove its fluid independently. Stored sides survive saving and door movement. Opening connects water across the aperture and supplies ordinary flowing water on the opposite side; closing drains the outlets created by the door while preserving its stored water. Middle/Near/Far placement also moves the fluid partition. Water remains in the native door cells as the panels retract.
