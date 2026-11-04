@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Make the new-assembly articulation limit configurable with `vehicles.maxArticulationPoints` in `vandorlabs-blocks.cfg`. Default 7 preserves eight independent segments; 0 allows rigid assemblies only. Saved vehicle loading, recovery and parking remain available after lowering the limit.
+
 - Put Segmented Door texture lists on the left; use Pos consistently in dialogs. Copy every segment setting through Duplifier and middle-click placement. Fit windows only across connected Window segments of the same Shape, tile the physical panel edges without stretching and separate square openings from their border rails. Synchronize linked columns on one pause-aware motion clock.
 - Render nonsquare Surface pads as separate blocks in Fit (Aspect), retaining their Copy Controller ownership. Add faint native glass shimmer behind all six company Light door artworks.
 - Index articulated collision shapes to reduce repeated narrow-phase work and bound steering work per step, retaining the last safe pose if the limit is reached. Carried coupler clicks authorize the current player in Taxi and Hover before requesting safe world-block release.

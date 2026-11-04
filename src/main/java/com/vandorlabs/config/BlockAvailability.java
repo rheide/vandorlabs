@@ -11,6 +11,8 @@ import net.minecraftforge.common.config.Configuration;
 public final class BlockAvailability {
     private static final Map<String,Boolean> ENABLED=new HashMap<>();
     private static int vehicleMaxBlocks=4096;
+    private static int vehicleMaxArticulationPoints=7;
+    public static int vehicleMaxArticulationPoints(){return vehicleMaxArticulationPoints;}
     public static int vehicleMaxBlocks(){return vehicleMaxBlocks;}
     private BlockAvailability() {}
     public static void initialize(File directory) {
@@ -23,6 +25,9 @@ public final class BlockAvailability {
         vehicleMaxBlocks=config.getInt("maxBlocks","vehicles",4096,1,
                 com.vandorlabs.vehicle.VehicleStructure.MAX_BLOCKS,
                 "Maximum connected blocks allowed when assembling a vehicle. Existing vehicles remain restorable. The 64-block axis and 4 MiB data limits still apply. Restart required.");
+        vehicleMaxArticulationPoints=config.getInt("maxArticulationPoints","vehicles",7,0,
+                com.vandorlabs.vehicle.VehicleArticulation.MAX_JOINTS,
+                "Maximum independent hinge points allowed in new vehicle assemblies and attachments. Default 7 permits eight articulated segments; 0 allows rigid vehicles only. Rigid/parallel couplers and closed loops do not count. Lowering this does not prevent saved vehicles loading or parking. Other geometry/data limits still apply. Restart required.");
         ENABLED.clear();
         config.setCategoryComment("blocks","Block categories available in creative menus and crafting. Restart required. Existing world blocks and inventory items are preserved. Diagonal variants belong to diagonals, regardless of material/function.");
         for(String category:BlockCategories.IDS)

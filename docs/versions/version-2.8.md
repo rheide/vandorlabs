@@ -2,7 +2,7 @@
 
 Segmented Door now combines motion and artwork controls on **Door**, supports Middle/Near/Far placement and contained water, and keeps opening/glass choices local to each configured section. A row of windows can share a door texture with solid sections below. Visible open panels can close the door; Straight travel retains a one-pixel edge. Surface wand extrusion rebuilds shared artwork automatically. Fit (Aspect) joins square pads only; nonsquare pads render each block independently.
 
-Coupled vehicles use the controller in the piloted segment. Nearly straight trailers may snap to the grid when parking, and articulated movement preserves speed through unobstructed travel. New assemblies support up to eight independently articulated segments; existing longer saves still load. Lone Track steering and filled ramp texture repeats are corrected.
+Coupled vehicles use the controller in the piloted segment. Nearly straight trailers may snap to the grid when parking, and articulated movement preserves speed through unobstructed travel. The `vehicles.maxArticulationPoints` startup setting defaults to seven hinge points (eight independent segments); existing longer saves still load. Lone Track steering and filled ramp texture repeats are corrected.
 
 Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and segmented doors. Existing saved designs migrate through explicit block aliases and the cockpit-glass replacements described below.
 

@@ -13,11 +13,11 @@ import net.minecraft.util.math.*;
 public final class VehicleArticulation {
     public static final double MAX_ANGLE=75;
     public static final int MAX_JOINTS=VehicleStructure.MAX_BLOCKS/2;
-    public static final int MAX_NEW_SEGMENTS=8;
     public static void requireAssemblyLimit(VehicleStructure structure){
         VehicleCouplerTopology topology=VehicleCouplerTopology.of(structure);if(topology==null)return;
         List<HingeGraph.Edge> edges=new ArrayList<>();for(VehicleCouplerTopology.Link link:topology.links)edges.add(new HingeGraph.Edge(link.first,link.second,link.articulation));
-        if(new HingeGraph(topology.sections.size(),topology.root,edges).bodies>MAX_NEW_SEGMENTS)throw new IllegalArgumentException("Vehicles support at most 8 independently articulated segments; use rigid couplers for additional sections");
+        int limit=com.vandorlabs.config.BlockAvailability.vehicleMaxArticulationPoints();
+        if(new HingeGraph(topology.sections.size(),topology.root,edges).joints.size()>limit)throw new IllegalArgumentException("Vehicle exceeds the configured limit of "+limit+" independent articulation points; use rigid couplers for additional sections");
     }
     private final EntityGroundVehicle craft;
     private VehicleStructure observed;
