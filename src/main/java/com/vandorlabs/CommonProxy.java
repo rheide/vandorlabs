@@ -9,8 +9,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class CommonProxy {
-    public double garageSelectionPose(com.vandorlabs.garage.GarageDoorTile tile){return tile.pose(0);}
-    public void garageAppearanceChanged(com.vandorlabs.garage.GarageDoorTile tile){}
+    public double segmentedSelectionPose(com.vandorlabs.segmented.SegmentedDoorTile tile){return tile.pose(0);}
+    public void segmentedAppearanceChanged(com.vandorlabs.segmented.SegmentedDoorTile tile){}
     public boolean canSampleDisplayPower(){return true;}
     public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){}
     public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){}

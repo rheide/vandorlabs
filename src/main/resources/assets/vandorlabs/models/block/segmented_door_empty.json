@@ -1,0 +1,8 @@
+{
+  "textures": {
+    "panel": "vandorlabs:blocks/segmented/segmented_panel",
+    "edge": "vandorlabs:blocks/programmable_glass/metal_side",
+    "particle": "vandorlabs:blocks/segmented/segmented_panel"
+  },
+  "elements": []
+}

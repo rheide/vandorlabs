@@ -73,7 +73,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
     private String hingeLabel(){return "Hinge: "+new String[]{"Auto","Left","Right"}[hingeSide];}
     private String rotationLabel(){return "Rotation: "+(rotationFlipped?"Reverse":"Normal");}
     private String motionLabel(){return diagonal()?(sliding?slideIntoWall?"Slide into wall":"Slide over wall":"Rotating"):cover?(sliding?"Slide into next block":"Rotate into next block"):(sliding?slideOverSurface?"Slide over surface":"Sliding":"Rotating");}
-    private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Position: "+new String[]{"Bottom","Middle","Top"}[position];}
+    private String positionLabel(){return diagonal()?"Width: "+(position==0?"Half":"Full"):"Pos: "+new String[]{"Bottom","Middle","Top"}[position];}
     private String layoutLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
     private String heightLabel(){return "Height: "+(position==2?"Half":"Full");}
     private String facingLabel(){return "Hinge: "+facing.getName();}

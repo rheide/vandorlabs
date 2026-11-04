@@ -901,4 +901,4 @@ tile.vandorlabs.door27_classic_full_controller.name=Door Controller (Classic/Ful
 tile.vandorlabs.door27_cool_full_controller.name=Door Controller (Cool/Full)
 tile.vandorlabs.door27_gold_full_controller.name=Door Controller (Gold/Full)
 
-tile.vandorlabs.garage_door.name=Sectional Door
+tile.vandorlabs.segmented_door.name=Segmented Door

@@ -9,7 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'src/main/resources/assets/vandorlabs'
 MARKER='# Generated tile-aware material palette\n'
 BLOCKS={
-    'garage_door':'GarageDoorMapRenderer',
+    'segmented_door':'SegmentedDoorMapRenderer',
     'turntable_surface':'ProgrammableSurfaceRenderer',
     'turntable_controller':'SurfaceControllerRenderer',
     'copy_controller':'SurfaceControllerRenderer',

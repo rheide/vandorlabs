@@ -107,6 +107,8 @@ public final class ProgrammableSettings {
     public static final String RAMP_MATCH_TEXTURES = "ramp_match_textures";
     public static final String GEAR_SIZE = "gear_size", GEAR_LENGTH = "gear_length", GEAR_MODE = "gear_mode";
 
+    public static final String SEGMENTED_DOOR="segmented_door";
+
     private ProgrammableSettings() { }
 
     private static boolean isPorthole(Block block) {
@@ -163,7 +165,8 @@ public final class ProgrammableSettings {
             if(channels.size()<=1)out.setInteger(CHANNEL,channels.first());
             else out.setIntArray(CHANNEL,channels.toArray());
         }
-        if(tile instanceof com.vandorlabs.gear.GearTileEntity){
+        if(tile instanceof com.vandorlabs.segmented.SegmentedDoorTile){out.setTag(SEGMENTED_DOOR,((com.vandorlabs.segmented.SegmentedDoorTile)tile).configuration());}
+        else if(tile instanceof com.vandorlabs.gear.GearTileEntity){
             NBTTagCompound settings=((com.vandorlabs.gear.GearTileEntity)tile).settings(),copied=new NBTTagCompound();
             for(String key:ARM_KEYS)if(settings.hasKey(key))copied.setTag(key,settings.getTag(key).copy());
             copied.setBoolean("LegacyAnyChannels",settings.getBoolean("LegacyAnyChannels"));out.setTag(MODULAR_ARM_SETTINGS,copied);out.setInteger(TRIGGER,settings.getInteger("Trigger"));
@@ -333,7 +336,7 @@ public final class ProgrammableSettings {
     public static net.minecraft.item.ItemStack applyToItem(net.minecraft.item.ItemStack input, NBTTagCompound values) {
         if (!(input.getItem() instanceof net.minecraft.item.ItemBlock)) return net.minecraft.item.ItemStack.EMPTY;
         Block block = ((net.minecraft.item.ItemBlock)input.getItem()).getBlock();
-        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_") && !(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor) && !(block instanceof com.vandorlabs.blocks.BlockCanopy) && !(block instanceof com.vandorlabs.blocks.BlockPilotSeat) && !(block instanceof com.vandorlabs.blocks.BlockVehicleController) && !(block instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear))
+        if (block.getRegistryName() == null || !block.getRegistryName().getResourcePath().startsWith("programmable_") && !(block instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor) && !(block instanceof com.vandorlabs.blocks.BlockCanopy) && !(block instanceof com.vandorlabs.blocks.BlockPilotSeat) && !(block instanceof com.vandorlabs.blocks.BlockVehicleController) && !(block instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear) && !(block instanceof com.vandorlabs.segmented.SegmentedDoorBlock))
             return net.minecraft.item.ItemStack.EMPTY;
         TileEntity tile = block.createTileEntity(null, block.getStateFromMeta(input.getMetadata()));
         if (tile == null) return net.minecraft.item.ItemStack.EMPTY;
@@ -356,6 +359,7 @@ public final class ProgrammableSettings {
         if (!applied && !(tile instanceof TileEntityRampController)) return net.minecraft.item.ItemStack.EMPTY;
         net.minecraft.item.ItemStack output = input.copy(); output.setCount(1);
         NBTTagCompound data = tile.writeToNBT(new NBTTagCompound());
+        if(tile instanceof com.vandorlabs.segmented.SegmentedDoorTile)data=((com.vandorlabs.segmented.SegmentedDoorTile)tile).itemSettings();
         data.removeTag("x"); data.removeTag("y"); data.removeTag("z"); data.removeTag("id");
         if (tile instanceof com.vandorlabs.tiles.TileEntityProgrammableStorage) data.removeTag("Items");
         if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy){
@@ -409,6 +413,13 @@ public final class ProgrammableSettings {
             try{transmissionChannels=ChannelList.of(transmission.getIntArray("Channels"));}catch(IllegalArgumentException invalid){return false;}
         }
         boolean applicable = false;
+        if(tile instanceof com.vandorlabs.segmented.SegmentedDoorTile && values.hasKey(SEGMENTED_DOOR,10)){
+            com.vandorlabs.segmented.SegmentedDoorTile door=(com.vandorlabs.segmented.SegmentedDoorTile)tile,selected=new com.vandorlabs.segmented.SegmentedDoorTile();selected.applyItemConfiguration(values.getCompoundTag(SEGMENTED_DOOR),channels(values,door));
+            if(world==null)door.applyItemConfiguration(selected.configuration(),selected.getRedstoneChannels());
+            else {if(player==null)return false;door.configurePart(player,selected.getRedstoneChannels(),selected.ticksPerSection,selected.localRedstone,selected.signalOpens,selected.texture,selected.settings);}
+            return true;
+        }
+
         if(tile instanceof com.vandorlabs.gear.GearTileEntity){
             com.vandorlabs.gear.GearTileEntity arm=(com.vandorlabs.gear.GearTileEntity)tile;
             if(values.hasKey(MODULAR_ARM_SETTINGS,10)||values.hasKey(TRIGGER)||values.hasKey(CHANNEL)){

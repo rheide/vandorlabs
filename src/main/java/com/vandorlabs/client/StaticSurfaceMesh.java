@@ -331,7 +331,7 @@ final class StaticSurfaceMesh {
             if(normals)buffer.normal(fx,ny,fz);buffer.endVertex();
         }
     }
-    /** Rigid Sectional Door panel transform; cached atlas vertices stay unchanged. */
+    /** Rigid Segmented Door panel transform; cached atlas vertices stay unchanged. */
     void drawSection(BufferBuilder buffer,double x,double y,double z,double[] pose,int rotation,int light,int alpha){
         boolean vertical=pose[5]!=0,normals=buffer.getVertexFormat().hasNormal();double sin=pose[3],cos=pose[4];
         for(int i=0;i<vertices.length;i+=8){double px=vertices[i]/16D,py=vertices[i+1]/16D-.5,pz=vertices[i+2]/16D,nx=vertices[i+5],ny=vertices[i+6],nz=vertices[i+7],rx,ry,rz,rnx,rny,rnz;

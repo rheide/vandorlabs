@@ -44,7 +44,7 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.INPUT_PANEL, "Input Panel", 1),
             option(ProgrammableSettings.SECONDARY_INPUT_PANEL, "Second Input Panel", 1),
             option(ProgrammableSettings.SMALL_INPUT, "Small Input", 1),
-            option(ProgrammableSettings.WALL_POSITION, "Wall Position", 1),
+            option(ProgrammableSettings.WALL_POSITION, "Wall Pos", 1),
             option(ProgrammableSettings.TRIGGER_ON_TEXTURE, "Trigger On Texture", 1),
 
             option(ProgrammableSettings.PROPULSION_SHAPE, "Thruster Shape", 2),
@@ -79,7 +79,7 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.GEAR_SIZE, "Gear Size", 2),
             option(ProgrammableSettings.GEAR_LENGTH, "Gear Extension", 2),
             option(ProgrammableSettings.GEAR_MODE, "Gear Redstone Mode", 2),
-            option(ProgrammableSettings.TRAPDOOR_POSITION, "Trapdoor Position", 3),
+            option(ProgrammableSettings.TRAPDOOR_POSITION, "Trapdoor Pos", 3),
             option(ProgrammableSettings.TRAPDOOR_COVER, "Next-block Leaf", 3),
             option(ProgrammableSettings.PRIMARY_SURFACE, "Static Surface Texture", 1),
             option(ProgrammableSettings.SECONDARY_SURFACE, "Second Static Texture", 1),
@@ -104,7 +104,8 @@ public final class DuplifierApplyOptions {
             option(ProgrammableSettings.DOOR_GLASS,"Door Glass",3),
             option(ProgrammableSettings.MODULAR_ARM_SETTINGS,"Arm / Track Settings",2),
             option(ProgrammableSettings.CHAIR_ANGLE,"Chair Angle",2),
-            option(ProgrammableSettings.RAMP_VERTICAL_LAYOUT,"Vertical Ramp Layout",4)
+            option(ProgrammableSettings.RAMP_VERTICAL_LAYOUT,"Vertical Ramp Layout",4),
+            option(ProgrammableSettings.SEGMENTED_DOOR,"Segmented Door Settings",3)
     };
 
     /** Legacy API covers the original first word; option indices are append-only. */

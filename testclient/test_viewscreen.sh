@@ -6,7 +6,7 @@ unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHE
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
 unset VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
-unset VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY VANDOR_LABS_GARAGE_DOOR_BENCHMARK_ONLY VANDOR_LABS_GARAGE_DOOR_CHECKS_ONLY
+unset VANDOR_LABS_SEGMENTED_TALL_CHECKS_ONLY VANDOR_LABS_SEGMENTED_DOOR_BENCHMARK_ONLY VANDOR_LABS_SEGMENTED_DOOR_LEGACY_CHECKS_ONLY
 unset VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY VANDOR_LABS_DENSE_RENDER_CHECKS_ONLY
 unset VANDOR_LABS_VEHICLE_DESIGN_CHECKS_ONLY VANDOR_LABS_ARTWORK27_CHECKS_ONLY
 unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
@@ -31,9 +31,9 @@ case "${1:-}" in
         elif [ "$TARGET" = glass-migration ]; then
             PREFIX=retired_glass_
             export VANDOR_LABS_RETIRED_GLASS_CHECKS_ONLY=true
-        elif [ "$TARGET" = sectional-door ]; then
-            PREFIX=sectional_door_
-            export VANDOR_LABS_SECTIONAL_DOOR_CHECKS_ONLY=true
+        elif [ "$TARGET" = segmented-door ]; then
+            PREFIX=segmented_door_
+            export VANDOR_LABS_SEGMENTED_DOOR_CHECKS_ONLY=true
         elif [ "$TARGET" = coupler-articulation ]; then
             PREFIX=coupler_articulation_
             export VANDOR_LABS_COUPLER_ARTICULATION_CHECKS_ONLY=true
@@ -202,15 +202,15 @@ case "${1:-}" in
         elif [ "$TARGET" = vehicle-render-cost ]; then
             PREFIX=vehicle_render_
             export VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY=true
-        elif [ "$TARGET" = garage-tall ]; then
-            PREFIX=garage_tall_
-            export VANDOR_LABS_GARAGE_TALL_CHECKS_ONLY=true
-        elif [ "$TARGET" = garage-benchmark ]; then
-            PREFIX=garage_
-            export VANDOR_LABS_GARAGE_DOOR_BENCHMARK_ONLY=true
-        elif [ "$TARGET" = garage-door ]; then
-            PREFIX=garage_
-            export VANDOR_LABS_GARAGE_DOOR_CHECKS_ONLY=true
+        elif [ "$TARGET" = segmented-door-tall ]; then
+            PREFIX=segmented_tall_
+            export VANDOR_LABS_SEGMENTED_TALL_CHECKS_ONLY=true
+        elif [ "$TARGET" = segmented-benchmark ]; then
+            PREFIX=segmented_
+            export VANDOR_LABS_SEGMENTED_DOOR_BENCHMARK_ONLY=true
+        elif [ "$TARGET" = segmented-door-legacy ]; then
+            PREFIX=segmented_
+            export VANDOR_LABS_SEGMENTED_DOOR_LEGACY_CHECKS_ONLY=true
         elif [ "$TARGET" = render-density ]; then
             PREFIX=density_
             export VANDOR_LABS_DENSE_RENDER_CHECKS_ONLY=true
@@ -284,7 +284,7 @@ cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
 cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     "$TEST_RUNTIME_GAME/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"
 cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
-# Exact optional reference renderers for the garage comparison, isolated from production.
+# Exact optional reference renderers for the segmented comparison, isolated from production.
 if [ -n "${VANDOR_LABS_TEST_MALISIS_CORE:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_CORE" "$TEST_RUNTIME_GAME/mods/"; fi
 if [ -n "${VANDOR_LABS_TEST_MALISIS_DOORS:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_DOORS" "$TEST_RUNTIME_GAME/mods/"; fi
 # Optional Mekanism fixtures for supported block rotation, enabled explicitly.
@@ -316,19 +316,19 @@ if [ "$MODE" = focus ]; then
         echo "Vehicle render cost checks passed: $RUN_OUT"
         exit 0
     fi
-    if [ "$TARGET" = garage-tall ]; then
-        grep -q "garage-tall PASS" "$RUN_OUT/client.log"
-        echo "Tall garage checks passed: $RUN_OUT"
+    if [ "$TARGET" = segmented-door-tall ]; then
+        grep -q "segmented-door-tall PASS" "$RUN_OUT/client.log"
+        echo "Tall segmented checks passed: $RUN_OUT"
         exit 0
     fi
-    if [ "$TARGET" = garage-benchmark ]; then
-        grep -q "garage-benchmark PASS" "$RUN_OUT/client.log"
-        echo "Garage reference benchmark passed: $RUN_OUT"
+    if [ "$TARGET" = segmented-benchmark ]; then
+        grep -q "segmented-benchmark PASS" "$RUN_OUT/client.log"
+        echo "Segmented reference benchmark passed: $RUN_OUT"
         exit 0
     fi
-    if [ "$TARGET" = garage-door ]; then
-        grep -q "garage-door PASS" "$RUN_OUT/client.log"
-        echo "Garage door checks passed: $RUN_OUT"
+    if [ "$TARGET" = segmented-door-legacy ]; then
+        grep -q "segmented-door-legacy PASS" "$RUN_OUT/client.log"
+        echo "Segmented door checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = render-density ]; then
@@ -361,9 +361,9 @@ if [ "$MODE" = focus ]; then
         echo "Retired glass client checks passed: $RUN_OUT"
         exit 0
     fi
-    if [ "$TARGET" = sectional-door ]; then
-        grep -q "sectional-door-live PASS" "$RUN_OUT/client.log"
-        echo "Sectional door checks passed: $RUN_OUT"
+    if [ "$TARGET" = segmented-door ]; then
+        grep -q "segmented-door-live PASS" "$RUN_OUT/client.log"
+        echo "Segmented door checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = coupler-articulation ]; then

@@ -30,7 +30,7 @@ public final class DynmapRendererChecks {
         }
         throw new AssertionError("Unexpected factory call "+method);
     });
-    private static final class Context implements MapDataContext {
+    private static class Context implements MapDataContext {
         final DynmapBlockState state;final Map<String,Object> data=new HashMap<>();
         Context(String block,String properties){state=new DynmapBlockState(null,0,block,properties,"IRON");}
         public RenderPatchFactory getPatchFactory(){return FACTORY;}
@@ -75,23 +75,31 @@ public final class DynmapRendererChecks {
         require(variants>0,"Frame trapdoor palette exercised");
         System.out.println("Frame trapdoor Dynmap PASS variants="+variants+" regular/diagonal all-facings halves positions open/closed opaque-backing");
     }
-    private static void garage(){
-        GarageDoorMapRenderer renderer=new GarageDoorMapRenderer();
+    private static void segmented(){
+        SegmentedDoorMapRenderer renderer=new SegmentedDoorMapRenderer();
         for(int height:new int[]{1,5,32})for(int row=0;row<height;row++)for(boolean open:new boolean[]{false,true})for(String facing:new String[]{"north","east","south","west"}){
-            Context context=new Context("vandorlabs:garage_door","facing="+facing);context.data.put("GarageTopOffset",row);context.data.put("GarageHeight",height);context.data.put("GarageOpen",(byte)(open?1:0));
-            RenderPatch[] mesh=valid(renderer,context);require(mesh.length==(row==0?12:6),"Garage segment and top header patch count");
+            Context context=new Context("vandorlabs:segmented_door","facing="+facing);context.data.put("SegmentedTopOffset",row);context.data.put("SegmentedHeight",height);context.data.put("SegmentedOpen",(byte)(open?1:0));
+            RenderPatch[] mesh=valid(renderer,context);require(mesh.length==(row==0?12:6),"Segmented segment and top header patch count");
             double min=Double.POSITIVE_INFINITY,max=-min;for(int i=0;i<6;i++)for(double[] p:((Patch)mesh[i]).corners()){min=Math.min(min,p[1]-row);max=Math.max(max,p[1]-row);}
-            if(open)require(min>=1-com.vandorlabs.garage.GarageDoorGeometry.HALF_THICKNESS-1e-8&&max<=1+com.vandorlabs.garage.GarageDoorGeometry.HALF_THICKNESS+1e-8,"Garage overhead panels retain column height");
-            else require(min>=-row-1e-8&&max<=1-row+1e-8,"Garage closed panel remains in native cell");
+            if(open)require(min>=1-com.vandorlabs.segmented.SegmentedDoorGeometry.HALF_THICKNESS-1e-8&&max<=1+com.vandorlabs.segmented.SegmentedDoorGeometry.HALF_THICKNESS+1e-8,"Segmented overhead panels retain column height");
+            else require(min>=-row-1e-8&&max<=1-row+1e-8,"Segmented closed panel remains in native cell");
         }
         int variants=0;for(int direction=0;direction<4;direction++)for(boolean straight:new boolean[]{false,true})for(int shape=-1;shape<4;shape++)for(boolean open:new boolean[]{false,true})for(String facing:new String[]{"north","east","south","west"}){
-            Context context=new Context("vandorlabs:garage_door","facing="+facing);context.data.put("GarageTopOffset",1);context.data.put("GarageHeight",3);context.data.put("GarageColumn",1);context.data.put("GarageColumns",3);context.data.put("GarageOpen",(byte)(open?1:0));context.data.put("GarageSlide",direction);context.data.put("GarageStraight",(byte)(straight?1:0));context.data.put("GarageWindow",(byte)(shape>=0?1:0));context.data.put("GarageShape",Math.max(0,shape));context.data.put("GarageJoin",(byte)1);context.data.put("GarageGlassShade",7);context.data.put("GarageGlassTint",2);RenderPatch[] mesh=valid(renderer,context);require(mesh.length>0,"Directional/window Sectional Door map geometry");if(shape>=0){boolean glass=false;for(RenderPatch p:mesh)glass|=p.getTextureIndex()==ScreenHousingTextures.BUILTIN_COUNT*2+21+7*4+2;require(glass,"Native window shade/tint map material");}variants++;
+            Context context=new Context("vandorlabs:segmented_door","facing="+facing);context.data.put("SegmentedTopOffset",1);context.data.put("SegmentedHeight",3);context.data.put("SegmentedColumn",1);context.data.put("SegmentedColumns",3);context.data.put("SegmentedOpen",(byte)(open?1:0));context.data.put("SegmentedSlide",direction);context.data.put("SegmentedStraight",(byte)(straight?1:0));context.data.put("SegmentedWindow",(byte)(shape>=0?1:0));context.data.put("SegmentedShape",Math.max(0,shape));context.data.put("SegmentedJoin",(byte)1);context.data.put("SegmentedGlassShade",7);context.data.put("SegmentedGlassTint",2);RenderPatch[] mesh=valid(renderer,context);require(mesh.length>0,"Directional/window Segmented Door map geometry");if(shape>=0){boolean glass=false;for(RenderPatch p:mesh)glass|=p.getTextureIndex()==ScreenHousingTextures.BUILTIN_COUNT*2+21+7*4+2;require(glass,"Native window shade/tint map material");}variants++;
         }
-        System.out.println("Garage Dynmap PASS heights=1,5,32 all-sections closed/open root-headers directional/window variants="+variants);
+        for(int rotation=0;rotation<4;rotation++){
+            final int rot=rotation,rx=rotation==0?1:rotation==2?-1:0,rz=rotation==1?-1:rotation==3?1:0;
+            Context grouped=new Context("vandorlabs:segmented_door","facing="+new String[]{"north","west","south","east"}[rotation]){
+                @Override public Object getBlockTileEntityFieldAt(String name,int x,int y,int z){int col=1+x*rx+z*rz,row=1-y;if(name.equals("SegmentedWindow")||name.equals("SegmentedJoin"))return (byte)(row==1&&col>=0&&col<3?1:0);if(name.equals("SegmentedShape"))return 2;return null;}
+            };grouped.data.put("SegmentedJoin",(byte)1);grouped.data.put("SegmentedShape",2);
+            require(Arrays.equals(SegmentedDoorMapRenderer.windowGroup(grouped,1,1,3,3,rot),new int[]{1,0,3,1}),"Map window fit excludes surrounding solid rows all facings");
+            grouped.data.put("SegmentedShape",1);require(Arrays.equals(SegmentedDoorMapRenderer.windowGroup(grouped,1,1,3,3,rot),new int[]{0,0,1,1}),"Map window fit excludes different shapes");
+        }
+        System.out.println("Segmented Dynmap PASS heights=1,5,32 all-sections closed/open root-headers directional/window variants="+variants);
     }
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();
-        surfaces();trapdoorFrames();garage();
+        surfaces();trapdoorFrames();segmented();
         FrameMachineMapChecks.run();
         UtilityMapChecks.run();SurfaceMapChecks.run();HexThrusterMapChecks.run();
         ProgrammableSlabRenderer slab=new ProgrammableSlabRenderer();

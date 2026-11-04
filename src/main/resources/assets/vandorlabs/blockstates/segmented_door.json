@@ -1,0 +1,132 @@
+{
+  "variants": {
+    "baked=false,bottom=false,facing=north,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 0
+    },
+    "baked=false,bottom=false,facing=north,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 0
+    },
+    "baked=false,bottom=false,facing=east,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 90
+    },
+    "baked=false,bottom=false,facing=east,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 90
+    },
+    "baked=false,bottom=false,facing=south,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 180
+    },
+    "baked=false,bottom=false,facing=south,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 180
+    },
+    "baked=false,bottom=false,facing=west,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 270
+    },
+    "baked=false,bottom=false,facing=west,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 270
+    },
+    "baked=false,bottom=true,facing=north,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 0
+    },
+    "baked=false,bottom=true,facing=north,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 0
+    },
+    "baked=false,bottom=true,facing=east,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 90
+    },
+    "baked=false,bottom=true,facing=east,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 90
+    },
+    "baked=false,bottom=true,facing=south,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 180
+    },
+    "baked=false,bottom=true,facing=south,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 180
+    },
+    "baked=false,bottom=true,facing=west,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 270
+    },
+    "baked=false,bottom=true,facing=west,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 270
+    },
+    "baked=true,bottom=false,facing=north,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 0
+    },
+    "baked=true,bottom=false,facing=north,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 0
+    },
+    "baked=true,bottom=false,facing=east,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 90
+    },
+    "baked=true,bottom=false,facing=east,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 90
+    },
+    "baked=true,bottom=false,facing=south,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 180
+    },
+    "baked=true,bottom=false,facing=south,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 180
+    },
+    "baked=true,bottom=false,facing=west,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 270
+    },
+    "baked=true,bottom=false,facing=west,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 270
+    },
+    "baked=true,bottom=true,facing=north,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 0
+    },
+    "baked=true,bottom=true,facing=north,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 0
+    },
+    "baked=true,bottom=true,facing=east,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 90
+    },
+    "baked=true,bottom=true,facing=east,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 90
+    },
+    "baked=true,bottom=true,facing=south,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 180
+    },
+    "baked=true,bottom=true,facing=south,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 180
+    },
+    "baked=true,bottom=true,facing=west,top=false": {
+      "model": "vandorlabs:segmented_door_empty",
+      "y": 270
+    },
+    "baked=true,bottom=true,facing=west,top=true": {
+      "model": "vandorlabs:segmented_door_header",
+      "y": 270
+    }
+  }
+}

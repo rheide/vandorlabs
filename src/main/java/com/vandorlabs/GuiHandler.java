@@ -22,7 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
-    public static final int GUI_GARAGE_DOOR=30;
+    public static final int GUI_SEGMENTED_DOOR=30;
     public static final int GUI_TRANSMITTER_ITEM=29;
     public static final int GUI_COPY=26;
     public static final int GUI_SURFACE=28;
@@ -70,7 +70,7 @@ public class GuiHandler implements IGuiHandler {
     @Override
     public Object getServerGuiElement(int ID,EntityPlayer player,World world,int x,int y,int z){Object result=createServerGuiElement(ID,player,world,x,y,z);if(result instanceof net.minecraft.inventory.Container)com.vandorlabs.redstone.InlineTransmitters.attach((net.minecraft.inventory.Container)result,player);return result;}
     private Object createServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-        if(ID==GUI_GARAGE_DOOR){TileEntity raw=world.getTileEntity(new BlockPos(x,y,z));if(!(raw instanceof com.vandorlabs.garage.GarageDoorTile))return null;com.vandorlabs.garage.GarageDoorContainer c=new com.vandorlabs.garage.GarageDoorContainer((com.vandorlabs.garage.GarageDoorTile)raw);return c.canInteractWith(player)?c:null;}
+        if(ID==GUI_SEGMENTED_DOOR){TileEntity raw=world.getTileEntity(new BlockPos(x,y,z));if(!(raw instanceof com.vandorlabs.segmented.SegmentedDoorTile))return null;com.vandorlabs.segmented.SegmentedDoorContainer c=new com.vandorlabs.segmented.SegmentedDoorContainer((com.vandorlabs.segmented.SegmentedDoorTile)raw);return c.canInteractWith(player)?c:null;}
         if(ID==GUI_TRANSMITTER_ITEM){com.vandorlabs.container.ContainerTransmitterItem c=new com.vandorlabs.container.ContainerTransmitterItem(player,x==0?net.minecraft.util.EnumHand.MAIN_HAND:net.minecraft.util.EnumHand.OFF_HAND);return c.canInteractWith(player)?c:null;}
         if(ID>=1000&&ID<2256)return null; // Retired block transmitter-inventory windows.
 
@@ -172,7 +172,7 @@ public class GuiHandler implements IGuiHandler {
     public Object getClientGuiElement(int ID,EntityPlayer player,World world,int x,int y,int z){Object result=createClientGuiElement(ID,player,world,x,y,z);if(result instanceof net.minecraft.client.gui.inventory.GuiContainer)com.vandorlabs.redstone.InlineTransmitters.attach(((net.minecraft.client.gui.inventory.GuiContainer)result).inventorySlots,player);return result;}
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     private Object createClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-        if(ID==GUI_GARAGE_DOOR){TileEntity raw=world.getTileEntity(new BlockPos(x,y,z));return raw instanceof com.vandorlabs.garage.GarageDoorTile?new com.vandorlabs.client.GuiGarageDoor(new com.vandorlabs.garage.GarageDoorContainer((com.vandorlabs.garage.GarageDoorTile)raw)):null;}
+        if(ID==GUI_SEGMENTED_DOOR){TileEntity raw=world.getTileEntity(new BlockPos(x,y,z));return raw instanceof com.vandorlabs.segmented.SegmentedDoorTile?new com.vandorlabs.client.GuiSegmentedDoor(new com.vandorlabs.segmented.SegmentedDoorContainer((com.vandorlabs.segmented.SegmentedDoorTile)raw)):null;}
         if(ID==GUI_TRANSMITTER_ITEM)return new com.vandorlabs.client.GuiTransmitterItem(new com.vandorlabs.container.ContainerTransmitterItem(player,x==0?net.minecraft.util.EnumHand.MAIN_HAND:net.minecraft.util.EnumHand.OFF_HAND));
         if(ID>=1000&&ID<2256)return null; // Retired block transmitter-inventory windows.
 

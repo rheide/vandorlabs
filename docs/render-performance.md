@@ -2,11 +2,11 @@
 
 Dense builds can spend substantial client time submitting many small tile renders and searching unrelated loaded objects. Version 2.8 reduces that work while keeping collision and saved state on the server.
 
-## Garage comparison
+## Segmented comparison
 
-The focused comparison loads MalisisDoors 8.0.0 with MalisisCore 7.0.0 alongside Vandor Labs in an isolated Forge client. Each garage contains nine columns of five sections. The reference JARs match the installed artifacts by SHA-256. Both implementations render their native geometry through the tile dispatcher in the same context. The Vandor scene includes its terrain geometry. Measurements are medians of client rendering time and thread allocation, using Mesa software rendering; they are not hardware FPS or Complementary shader acceptance.
+The focused comparison loads MalisisDoors 8.0.0 with MalisisCore 7.0.0 alongside Vandor Labs in an isolated Forge client. Each door contains nine columns of five sections. The reference JARs match the installed artifacts by SHA-256. Both implementations render their native geometry through the tile dispatcher in the same context. The Vandor scene includes its terrain geometry. Measurements are medians of client rendering time and thread allocation, using Mesa software rendering; they are not hardware FPS or Complementary shader acceptance.
 
-A representative 64-garage run, containing 2,880 sections, produced:
+A representative 64-door run, containing 2,880 sections, produced:
 
 | State | Malisis | Vandor | Relative speed |
 | --- | ---: | ---: | ---: |
@@ -14,11 +14,11 @@ A representative 64-garage run, containing 2,880 sections, produced:
 | Open | 17.28 ms | 1.40 ms | 12.4× |
 | Pose advancing every frame | 17.82 ms | 1.76 ms | 10.1× |
 
-The advancing-pose test measures fresh animation poses, rather than repeatedly drawing one warmed pose. Allocation fell from approximately 37 MB to 14 KB per animated frame in that case. Steady open and closed rendering allocated no memory after warm-up. Small-scene ratios vary: in the same run, a single garage's advancing-pose comparison was 3.9× faster. Timing depends on driver overhead, JVM warm-up, scene size and camera movement.
+The advancing-pose test measures fresh animation poses, rather than repeatedly drawing one warmed pose. Allocation fell from approximately 37 MB to 14 KB per animated frame in that case. Steady open and closed rendering allocated no memory after warm-up. Small-scene ratios vary: in the same run, a single door's advancing-pose comparison was 3.9× faster. Timing depends on driver overhead, JVM warm-up, scene size and camera movement.
 
-Closed garage panels belong to Minecraft's chunk geometry. A column retains identical fallback panels until replacement chunk meshes finish uploading, preventing a late rebuild from leaving a hole or a duplicate animated door. Moving and raised panels share the atlas batch. Pose templates are shared; translated column vertices and lighting are reused while their inputs remain unchanged. Template and column caches have separate byte budgets, invalidate on atlas/vertex-format changes and release world references. Active OptiFine dynamic lights refresh lighting each frame.
+Closed segmented panels belong to Minecraft's chunk geometry. A column retains identical fallback panels until replacement chunk meshes finish uploading, preventing a late rebuild from leaving a hole or a duplicate animated door. Moving and raised panels share the atlas batch. Pose templates are shared; translated column vertices and lighting are reused while their inputs remain unchanged. Template and column caches have separate byte budgets, invalidate on atlas/vertex-format changes and release world references. Active OptiFine dynamic lights refresh lighting each frame.
 
-A native server matrix separately exercises 64 independent garages. One motion command publishes 576 top-owner updates, rather than 2,880 per-section updates. Repeating an unchanged input 6,400 times emits no additional updates. Every section still retains its authoritative saved motion state. The fixture also checks distinct channels and owner replacement from saved NBT.
+A native server matrix separately exercises 64 independent doors. One motion command publishes 576 top-owner updates, rather than 2,880 per-section updates. Repeating an unchanged input 6,400 times emits no additional updates. Every section still retains its authoritative saved motion state. The fixture also checks distinct channels and owner replacement from saved NBT.
 
 Native interaction checks cover ordinary placement, cross-chunk columns, a 32-section door viewed only at its header, configuration through the Configurizer and sneak-right-click, channel operation, reversal, root mining and resource reload during motion. Cached geometry is compared with reference vertex payloads for all four facings and heights 1, 5 and 32.
 
@@ -98,3 +98,5 @@ and retained geometry without changing stored fluid sides or opening behavior.
 ## Current priorities
 
 See the [2.8 performance summary and next priorities](performance/2.8-summary.md) for the consolidated results, Vehicle Mode preparation changes and remaining measured costs.
+
+The optional reference comparison requires the installed comparison block identifier through the JVM property `vandorlabs.referenceDoorBlock` (for example with `JAVA_TOOL_OPTIONS`). Its registry name belongs to the external mod and is not aliased by Vandor Labs.

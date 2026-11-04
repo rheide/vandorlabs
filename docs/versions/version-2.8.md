@@ -1,10 +1,10 @@
 # Vandor Labs 2.8
 
-Sectional Door now combines motion and artwork controls on **Door**, supports Middle/Near/Far placement and contained water, and keeps opening/glass choices local to each configured section. A row of windows can share a door texture with solid sections below. Visible open panels can close the door; Straight travel retains a one-pixel edge. Surface wand extrusion rebuilds rectangular artwork automatically.
+Segmented Door now combines motion and artwork controls on **Door**, supports Middle/Near/Far placement and contained water, and keeps opening/glass choices local to each configured section. A row of windows can share a door texture with solid sections below. Visible open panels can close the door; Straight travel retains a one-pixel edge. Surface wand extrusion rebuilds shared artwork automatically. Fit (Aspect) joins square pads only; nonsquare pads render each block independently.
 
 Coupled vehicles use the controller in the piloted segment. Nearly straight trailers may snap to the grid when parking, and articulated movement preserves speed through unobstructed travel. New assemblies support up to eight independently articulated segments; existing longer saves still load. Lone Track steering and filled ramp texture repeats are corrected.
 
-Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and sectional doors. Existing saved designs migrate through explicit block aliases and the cockpit-glass replacements described below.
+Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and segmented doors. Existing saved designs migrate through explicit block aliases and the cockpit-glass replacements described below.
 
 See the [compatibility and performance review](../release-compatibility-2.8.md) for upgrade boundaries, recovery behavior and remaining performance costs.
 
@@ -34,21 +34,23 @@ Programmable Doors can insert an accepted Access Card from inventory without cha
 
 Clear Cockpit Glass now becomes vanilla Glass, Pale Cyan Cockpit Glass becomes cyan Stained Glass, and Smoked Cockpit Glass becomes gray Stained Glass. The three mod blocks and their alloy recipes are removed. Existing placed blocks, inventory stacks and saved designs migrate with their colours preserved; names, counts and other item data remain intact.
 
-## Sectional doors
+## Segmented doors
 
-The new [Sectional Door](../sectional-doors.md) lifts linked columns and retracts them overhead. It supports ordinary right-click operation, Redstone Channels and the standard Configurizer workflow. A dedicated dialog controls travel time, local redstone and signal polarity.
+The block, item and tile identifiers are now `vandorlabs:segmented_door`. Old door names and fields are deliberately unsupported. Existing doors, items, vehicles and designs containing those identifiers will not load.
+
+The new [Segmented Door](../segmented-doors.md) lifts linked columns and retracts them overhead. It supports ordinary right-click operation, Redstone Channels and the standard Configurizer workflow. A dedicated dialog controls travel time, local redstone and signal polarity.
 
 Settled closed panels use chunk geometry. Moving and raised panels share a batched renderer and a bounded mesh cache. Client animation tolerates repeated updates, clock corrections and reversals; server collision and saved timelines remain authoritative.
 
-![Nine by five sectional door](../images/garage-build-3-closed.png)
+![Nine by five segmented door](../images/segmented-legacy-build-3-closed.png)
 
 See the [rendering measurements and validation scope](../render-performance.md).
 
-## Sectional Door controls and windows
+## Segmented Door controls and windows
 
-Sectional Doors now slide Up, Down, Left or Right and can bend Perpendicularly behind the opening or travel Straight in the door plane. Mechanism speed uses Fast, Medium and Slow, and Ramp Controller uses the same **Speed** label. Manual/Redstone ON/Redstone OFF activation matches Programmable Door; redstone activation disables manual operation.
+Segmented Doors now slide Up, Down, Left or Right and can bend Perpendicularly behind the opening or travel Straight in the door plane. Mechanism speed uses Fast, Medium and Slow, and Ramp Controller uses the same **Speed** label. Manual/Redstone ON/Redstone OFF activation matches Programmable Door; redstone activation disables manual operation.
 
-The fixed-size dialog has a **Door** tab with Tile/Stretch/Fit, inventory-based **Custom...** artwork and the Frame category. Window segments offer Hexagon, Octagon, Square and Round openings, tiled per segment or fitted across the linked door, with a separate Glass tab. Better Builder’s Wands extrusion now repairs every top-row header after copying settings. See the [construction and configuration guide](../sectional-doors.md).
+The fixed-size dialog has a **Door** tab with Tile/Stretch/Fit, inventory-based **Custom...** artwork and the Frame category. Window segments offer Hexagon, Octagon, Square and Round openings, tiled per segment or fitted across connected Window sections of the same Shape, with a separate Glass tab. Better Builder’s Wands extrusion now repairs every top-row header after copying settings. See the [construction and configuration guide](../segmented-doors.md).
 
 ## Coupled vehicle lift
 
@@ -87,11 +89,11 @@ Large vehicles reuse opaque wall sections with shader-sized vertex records, incl
 
 The main 2.8 performance candidate passed the Java 8 release gate, including shader startup, rendering, glass and fluid contacts, shared surfaces, arm motion and saved Vehicle/Taxi regressions. Later screen readers, mount adjustments and Copy Controller refinements use focused live checks and dedicated-server linkage; the full release gate was not rerun for these changes. Hardware shader acceptance remains a separate manual check. The [vehicle follow-up measurements](../performance/2.8-followup.md) distinguish scan latency, terrain allocation and remaining shader/publication costs.
 
-## Larger joined areas and Sectional Door artwork
+## Larger joined areas and Segmented Door artwork
 
 Programmable Surfaces now support up to 32 blocks on each side. Copy Controllers accept filled rectangles with matching input/output dimensions; Turntables retain filled squares. Screen artwork retains its previous 1,024-cell scan cutoff. Snapshot, capture-height and payload limits remain independent.
 
-The Sectional Door keeps its existing registry ID and default artwork. Its Textures tab includes general materials, Trapdoors, Doors and Large Doors. Original and light grey Sectional Panels are also available in the general Industrial category.
+The Segmented Door keeps its existing registry ID and default artwork. Its Textures tab includes general materials, Trapdoors, Doors and Large Doors. Original and light grey Segmented Panels are also available in the general Industrial category.
 
 ## Diagonal Half Screen rename
 
@@ -99,7 +101,7 @@ The Sectional Door keeps its existing registry ID and default artwork. Its Textu
 
 ## Company doors
 
-The Doors texture category now includes six company folders: Pinnacle, Ashiro-Mai, Paladyne, Vektor, Seyr and Vandor. Each contains Standard, Security and Light artwork. The 128×256 textures retain their authored alpha, including the Light designs’ window openings, and work on normal and Large Programmable Doors. Browse the [texture catalog](../texture-browser/) for previews.
+The Doors texture category now includes six company folders: Pinnacle, Ashiro-Mai, Paladyne, Vektor, Seyr and Vandor. Each contains Standard, Security and Light artwork. The 128×256 textures retain their authored alpha, including the Light designs’ window openings with faint native glass shimmer, and work on normal and Large Programmable Doors. Browse the [texture catalog](../texture-browser/) for previews.
 
 ## Chair angle and single-Track steering
 

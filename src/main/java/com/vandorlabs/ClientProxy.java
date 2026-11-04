@@ -20,8 +20,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
-    @Override public double garageSelectionPose(com.vandorlabs.garage.GarageDoorTile tile){net.minecraft.world.World physical=tile.getWorld();while(physical instanceof com.vandorlabs.vehicle.VehicleWorld)physical=((com.vandorlabs.vehicle.VehicleWorld)physical).parent;return physical.isRemote?com.vandorlabs.client.garage.GarageDoorVisuals.pose(tile,1):super.garageSelectionPose(tile);}
-    @Override public void garageAppearanceChanged(com.vandorlabs.garage.GarageDoorTile tile){com.vandorlabs.client.garage.GarageDoorChunks.changed(tile);}
+    @Override public double segmentedSelectionPose(com.vandorlabs.segmented.SegmentedDoorTile tile){net.minecraft.world.World physical=tile.getWorld();while(physical instanceof com.vandorlabs.vehicle.VehicleWorld)physical=((com.vandorlabs.vehicle.VehicleWorld)physical).parent;return physical.isRemote?com.vandorlabs.client.segmented.SegmentedDoorVisuals.pose(tile,1):super.segmentedSelectionPose(tile);}
+    @Override public void segmentedAppearanceChanged(com.vandorlabs.segmented.SegmentedDoorTile tile){com.vandorlabs.client.segmented.SegmentedDoorChunks.changed(tile);}
     @Override public boolean canSampleDisplayPower(){return net.minecraft.client.Minecraft.getMinecraft().isCallingFromMinecraftThread();}
     @Override public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){com.vandorlabs.client.SurfaceArmClients.changed(tile);}
     @Override public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){com.vandorlabs.client.FixedCanopyChunks.changed(tile);}
@@ -114,7 +114,7 @@ public class ClientProxy extends CommonProxy {
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntitySpaceDoor.class, new TESlidingDoor());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityProgrammableGlass.class,
                 new com.vandorlabs.client.TEProgrammableGlass());
-        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.garage.GarageDoorTile.class,new com.vandorlabs.client.garage.GarageDoorRenderer());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.segmented.SegmentedDoorTile.class,new com.vandorlabs.client.segmented.SegmentedDoorRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityControlledRamp.class, new TEControlledRamp());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityAnimatedScreenSelector.class, new TEAnimatedScreenSelector());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityHexTank.class,new com.vandorlabs.client.TEHexTank());

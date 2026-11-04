@@ -1,0 +1,57 @@
+package com.vandorlabs.dynmap;
+
+import com.vandorlabs.segmented.SegmentedDoorGeometry;
+import com.vandorlabs.surface.WindowOutline;
+import com.vandorlabs.tiles.*;
+import net.minecraft.util.math.Vec3d;
+import org.dynmap.renderer.*;
+import java.util.*;
+
+/** Saved endpoints use the same panel path and window contours as native rendering. */
+public final class SegmentedDoorMapRenderer extends HousingRenderer {
+    private static final int GLASS_BASE=2*ScreenHousingTextures.BUILTIN_COUNT+21;
+    @Override protected int getMaximumTextureCount(){return GLASS_BASE+GlassTextures.IDS.length*GlassTextures.TINT_COUNT;}
+    @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"SegmentedPosition","SegmentedTopOffset","SegmentedHeight","SegmentedOpen","SegmentedTexture","SegmentedColumn","SegmentedColumns","SegmentedSlide","SegmentedStraight","SegmentedLayout","SegmentedWindow","SegmentedShape","SegmentedJoin","SegmentedGlassMaterial","SegmentedGlassShade","SegmentedGlassTint","SegmentedGlassLayout"};}
+    private static int defaultTexture(){for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("segmented_door_panel".equals(ScreenHousingTextures.IDS[i]))return i;return 0;}
+    private static int value(Object v,int fallback){return v instanceof Number?((Number)v).intValue():fallback;}
+    @Override public RenderPatch[] getRenderPatchList(MapDataContext context){
+        int row=clamp(context,"SegmentedTopOffset",0,0,31),height=clamp(context,"SegmentedHeight",1,1,32),column=clamp(context,"SegmentedColumn",0,0,31),columns=clamp(context,"SegmentedColumns",1,1,32),direction=clamp(context,"SegmentedSlide",0,0,3);boolean open=booleanValue(context.getBlockTileEntityField("SegmentedOpen")),straight=booleanValue(context.getBlockTileEntityField("SegmentedStraight")),window=booleanValue(context.getBlockTileEntityField("SegmentedWindow"));
+        double[] pose=new double[6];SegmentedDoorGeometry.panel(row,height,column,columns,open?1:0,direction,straight,pose);int position=clamp(context,"SegmentedPosition",0,0,2);double depth=position==1?-13D/32:position==2?13D/32:0;pose[2]+=depth;List<RenderPatch> out=new ArrayList<>();RenderPatchFactory factory=context.getPatchFactory();int selected=integer(context.getBlockTileEntityField("SegmentedTexture"),-1);if(selected<0)selected=defaultTexture();int front=ScreenHousingTextures.BUILTIN_COUNT+texture(selected),edge=2*ScreenHousingTextures.BUILTIN_COUNT+2;
+        int rotation=context.getBlockType().isStateMatch("facing","south")?2:context.getBlockType().isStateMatch("facing","west")?1:context.getBlockType().isStateMatch("facing","east")?3:0;
+        // Retain exact original meshes and patch counts for old saved door settings.
+        if(context.getBlockTileEntityField("SegmentedSlide")==null){double[] old=new double[4];SegmentedDoorGeometry.section(row,height,open?1:0,old);double h=SegmentedDoorGeometry.HALF_THICKNESS;if(open)addBox(factory,out,0,1,row+old[0]-h,row+old[0]+h,old[1]-.5,old[1]+.5,new int[]{front,front,edge,edge,edge,edge});else addBox(factory,out,0,1,row+old[0]-.5,row+old[0]+.5,old[1]-h,old[1]+h,new int[]{edge,edge,edge,edge,front,front});if(row==0)addBox(factory,out,0,1,.875,1,.375,.625,new int[]{edge,edge,edge,edge,edge,edge});RenderPatch[] result=new RenderPatch[out.size()];for(int i=0;i<result.length;i++){RenderPatch p=out.get(i);result[i]=rotation==0?p:factory.getRotatedPatch(p,0,rotation*90,0,p.getTextureIndex());}return result;}
+        int[] group=windowGroup(context,column,row,columns,height,rotation);WindowOutline.Slice slice=null;if(window){boolean join=booleanValue(context.getBlockTileEntityField("SegmentedJoin"));int shape=clamp(context,"SegmentedShape",0,0,3);slice=new WindowOutline(group[2],group[3],shape,0).slice(group[0],group[3]-1-group[1]);}
+        List<double[]> panels=window?slice.frameQuads:Collections.singletonList(new double[]{0,0,16,0,16,16,0,16});int mode=clamp(context,"SegmentedLayout",1,0,2);for(double[] q:panels)for(int side:new int[]{-1,1})face(context,out,q,side*SegmentedDoorGeometry.HALF_THICKNESS,side,front,mode,column,row,columns,height,ProgrammableSurfaceRenderer.materialAspect(selected),pose,rotation);
+        if(window){int material=integer(context.getBlockTileEntityField("SegmentedGlassMaterial"),-1),shade=clamp(context,"SegmentedGlassShade",0,0,18),tint=clamp(context,"SegmentedGlassTint",1,0,3),glass=material<0?GLASS_BASE+shade*4+tint:ScreenHousingTextures.BUILTIN_COUNT+texture(material),glassMode=clamp(context,"SegmentedGlassLayout",1,0,2);for(double[] q:slice.glassQuads)face(context,out,q,0,1,glass,glassMode,group[0],group[1],group[2],group[3],material<0?1:ProgrammableSurfaceRenderer.materialAspect(material),pose,rotation);for(double[] e:slice.hexEdges)edge(context,out,e[2],e[3],e[0],e[1],edge,row,pose,rotation);}
+        for(int side=0;side<4;side++){int axis=side<2?0:1;double boundary=(side&1)==0?0:16;double[] gap=slice==null?null:slice.edgeOpening(axis,boundary);outer(context,out,side,0,gap==null?16:gap[0],edge,row,pose,rotation);if(gap!=null)outer(context,out,side,gap[1],16,edge,row,pose,rotation);}
+        if(direction==0&&row==0||direction==1&&row==height-1||direction==2&&column==0||direction==3&&column==columns-1){List<RenderPatch> header=new ArrayList<>();double x0=direction==2?-.002:direction==3?.877:0,x1=direction==2?.123:direction==3?1.002:1,y0=direction==0?.877:direction==1?-.002:0,y1=direction==0?1.002:direction==1?.123:1;metricBox(context,header,x0,x1,y0,y1,.375+depth,.625+depth,edge);for(RenderPatch p:header)out.add(rotation==0?p:factory.getRotatedPatch(p,0,rotation*90,0,p.getTextureIndex()));}return out.toArray(new RenderPatch[0]);
+    }
+    private static void metricBox(MapDataContext c,List<RenderPatch> out,double x0,double x1,double y0,double y1,double z0,double z1,int texture){
+        double[][][] faces={{{x0,y0,z0},{x1,y0,z0},{x1,y1,z0},{x0,y1,z0}},{{x1,y0,z1},{x0,y0,z1},{x0,y1,z1},{x1,y1,z1}},{{x0,y0,z1},{x0,y0,z0},{x0,y1,z0},{x0,y1,z1}},{{x1,y0,z0},{x1,y0,z1},{x1,y1,z1},{x1,y1,z0}},{{x0,y0,z1},{x1,y0,z1},{x1,y0,z0},{x0,y0,z0}},{{x0,y1,z0},{x1,y1,z0},{x1,y1,z1},{x0,y1,z1}}};
+        for(double[][] face:faces){Vec3d a=new Vec3d(face[0][0],face[0][1],face[0][2]),b=new Vec3d(face[1][0],face[1][1],face[1][2]),d=new Vec3d(face[3][0],face[3][1],face[3][2]);double u=a.distanceTo(b),v=a.distanceTo(d);List<MapSurface.Vertex> vertices=new ArrayList<>();for(int n=0;n<4;n++)vertices.add(new MapSurface.Vertex(new Vec3d(face[n][0],face[n][1],face[n][2]),n==1||n==2?u:0,n>=2?v:0));MapSurface.emitUnclipped(c,out,vertices,texture);}
+    }
+    private static int clamp(MapDataContext c,String key,int fallback,int min,int max){return Math.max(min,Math.min(max,value(c.getBlockTileEntityField(key),fallback)));}
+    private static void face(MapDataContext c,List<RenderPatch> out,double[] q,double z,int side,int texture,int mode,int column,int row,int width,int height,double aspect,double[] pose,int rotation){List<MapSurface.Vertex> vertices=new ArrayList<>();boolean stretch=com.vandorlabs.render.TextureLayoutMode.fit(mode,width,height,aspect);for(int n=0;n<4;n++){int i=side>0?n:3-n;double x=q[2*i]/16,y=q[2*i+1]/16,u=stretch?(column+x)/width:com.vandorlabs.render.TextureLayoutMode.tileU(column+x,aspect),v=stretch?(row+1-y)/height:com.vandorlabs.render.TextureLayoutMode.tileV(row+1-y,aspect);vertices.add(new MapSurface.Vertex(point(x,y,z,row,pose,rotation),u,v));}MapSurface.emitUnclipped(c,out,vertices,texture);}
+    private static Vec3d point(double x,double y,double z,int row,double[] pose,int rotation){double py=y-.5,rx,ry,rz;if(pose[5]!=0){rx=x;ry=pose[1]+pose[4]*py-pose[3]*z;rz=pose[2]+pose[3]*py+pose[4]*z;}else{rx=pose[0]+pose[4]*(x-.5)-pose[3]*z;ry=pose[1]+py;rz=pose[2]+pose[3]*(x-.5)+pose[4]*z;}return new Vec3d(rotation==1?rz:rotation==2?1-rx:rotation==3?1-rz:rx,row+ry,rotation==1?1-rx:rotation==2?1-rz:rotation==3?rx:rz);}
+    private static void outer(MapDataContext c,List<RenderPatch> out,int side,double lo,double hi,int texture,int row,double[] pose,int rot){if(hi-lo<1e-7)return;if(side==0)edge(c,out,0,hi,0,lo,texture,row,pose,rot);if(side==1)edge(c,out,16,lo,16,hi,texture,row,pose,rot);if(side==2)edge(c,out,lo,0,hi,0,texture,row,pose,rot);if(side==3)edge(c,out,hi,16,lo,16,texture,row,pose,rot);}
+    static int[] windowGroup(MapDataContext c,int column,int row,int width,int height,int rotation){
+        if(!booleanValue(c.getBlockTileEntityField("SegmentedJoin")))return new int[]{0,0,1,1};
+        int shape=integer(c.getBlockTileEntityField("SegmentedShape"),0),minC=column,maxC=column,minR=row,maxR=row;
+        int rx=rotation==0?1:rotation==2?-1:0,rz=rotation==1?-1:rotation==3?1:0;
+        Set<Integer> visited=new HashSet<>();ArrayDeque<int[]> queue=new ArrayDeque<>();queue.add(new int[]{column,row});visited.add(row*32+column);
+        while(!queue.isEmpty()){int[] at=queue.removeFirst();minC=Math.min(minC,at[0]);maxC=Math.max(maxC,at[0]);minR=Math.min(minR,at[1]);maxR=Math.max(maxR,at[1]);
+            for(int[] step:new int[][]{{1,0},{-1,0},{0,1},{0,-1}}){int x=at[0]+step[0],y=at[1]+step[1];if(x<0||x>=width||y<0||y>=height||!visited.add(y*32+x))continue;
+                int dx=(x-column)*rx,dy=row-y,dz=(x-column)*rz;DynmapBlockState block=c.getBlockTypeAt(dx,dy,dz);
+                if(block==null||!block.blockName.equals(c.getBlockType().blockName)||!block.isStateMatch("facing",rotation==0?"north":rotation==1?"west":rotation==2?"south":"east"))continue;
+                if(booleanValue(c.getBlockTileEntityFieldAt("SegmentedWindow",dx,dy,dz))&&booleanValue(c.getBlockTileEntityFieldAt("SegmentedJoin",dx,dy,dz))&&integer(c.getBlockTileEntityFieldAt("SegmentedShape",dx,dy,dz),0)==shape)queue.add(new int[]{x,y});
+            }
+        }
+        return new int[]{column-minC,row-minR,maxC-minC+1,maxR-minR+1};
+    }
+    private static void edge(MapDataContext c,List<RenderPatch> out,double ax,double ay,double bx,double by,int texture,int row,double[] pose,int rotation){
+        double h=SegmentedDoorGeometry.HALF_THICKNESS,length=Math.hypot(bx-ax,by-ay)/16;int pieces=Math.max(1,(int)Math.ceil(length));
+        for(int n=0;n<pieces;n++){double t0=(double)n/pieces,t1=(double)(n+1)/pieces,x0=(ax+(bx-ax)*t0)/16,y0=(ay+(by-ay)*t0)/16,x1=(ax+(bx-ax)*t1)/16,y1=(ay+(by-ay)*t1)/16;List<MapSurface.Vertex> v=new ArrayList<>();
+            v.add(new MapSurface.Vertex(point(x0,y0,-h,row,pose,rotation),0,0));v.add(new MapSurface.Vertex(point(x1,y1,-h,row,pose,rotation),length/pieces,0));v.add(new MapSurface.Vertex(point(x1,y1,h,row,pose,rotation),length/pieces,2*h));v.add(new MapSurface.Vertex(point(x0,y0,h,row,pose,rotation),0,2*h));MapSurface.emitUnclipped(c,out,v,texture);
+        }
+    }
+}

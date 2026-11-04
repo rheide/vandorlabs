@@ -6964,16 +6964,16 @@
     "rectangular": true
   },
   {
-    "id": "sectional_door_panel",
-    "label": "Sectional Panel",
+    "id": "segmented_door_panel",
+    "label": "Segmented Panel",
     "category": "Industrial",
-    "source": "garage/garage_panel"
+    "source": "segmented/segmented_panel"
   },
   {
-    "id": "sectional_door_panel_light",
-    "label": "Sectional Panel Light Grey",
+    "id": "segmented_door_panel_light",
+    "label": "Segmented Panel Light Grey",
     "category": "Industrial",
-    "source": "garage/garage_panel_light"
+    "source": "segmented/segmented_panel_light"
   },
   {
     "id": "company_door_pinnacle_standard",

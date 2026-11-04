@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-Development: **2.8** — [dense builds and garage doors](docs/versions/version-2.8.md).
+Development: **2.8** — [dense builds and segmented doors](docs/versions/version-2.8.md).
 
 Latest release: **2.7** — [displays, programmable glass, redstone and mechanisms](docs/versions/version-2.7.md).
 

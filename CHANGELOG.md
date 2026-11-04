@@ -2,14 +2,19 @@
 
 ## 2.8
 
-- Combine Sectional Door motion and artwork controls on Door; use compact buttons, Slow/Medium/Fast ordering and no dialog Open/Close buttons. Add Middle/Near/Far placement and reversible contained-water flow. Keep openings and glass local to the configured block while artwork and motion remain shared. Preserve transparent Frames at rest, move the border with Slide Direction and keep visible moved segments clickable. Straight travel retains a one-pixel edge.
+- Put Segmented Door texture lists on the left; use Pos consistently in dialogs. Copy every segment setting through Duplifier and middle-click placement. Fit windows only across connected Window segments of the same Shape, tile the physical panel edges without stretching and separate square openings from their border rails. Synchronize linked columns on one pause-aware motion clock.
+- Render nonsquare Surface pads as separate blocks in Fit (Aspect), retaining their Copy Controller ownership. Add faint native glass shimmer behind all six company Light door artworks.
+- Index articulated collision shapes to reduce repeated narrow-phase work and bound steering work per step, retaining the last safe pose if the limit is reached. Carried coupler clicks authorize the current player in Taxi and Hover before requesting safe world-block release.
+- Segmented Door now uses `vandorlabs:segmented_door`. Former door block/item/tile names and fields are intentionally unsupported; existing doors and snapshots containing them no longer load.
+
+- Combine Segmented Door motion and artwork controls on Door; use compact buttons, Slow/Medium/Fast ordering and no dialog Open/Close buttons. Add Middle/Near/Far placement and reversible contained-water flow. Keep openings and glass local to the configured block while artwork and motion remain shared. Preserve transparent Frames at rest, move the border with Slide Direction and keep visible moved segments clickable. Straight travel retains a one-pixel edge.
 - Rebuild rectangular Surface artwork after Better Builder’s Wands extrusion without copying stale renderer roots or controller claims. Identify invalid Copy Controller pads by side and position, expose full errors on hover and accept output-only pads in Vehicle Chip mode.
 - Select a vehicle's controller from its piloted coupler segment; preserve controllers in other sections as ordinary blocks. Allow safe small trailer alignment errors when parking, with bounded cumulative drift, retaining the original joint pose in parking recovery journals. Eliminate false collision stops caused by movement subdivision rounding, reduce articulated collision allocations and limit new assemblies to eight independently articulated segments. Existing longer saved vehicles retain recovery and parking support. Correct lone Track steering direction.
 - Keep filled Ramp Controller texture repeats within their source atlas sprite, including ordinary iron blocks on Y-axis layouts.
 
-- Preserve opaque capability material references during retired-glass snapshot migration. Refuse missing saved material names instead of resolving them to air. Refuse unloaded scan sources before tile reads and avoid leaking pause leases when preparation fails. Extend release checks to the new Sectional Door, articulation, ramp-axis, chip-display and dense-render paths.
+- Preserve opaque capability material references during retired-glass snapshot migration. Refuse missing saved material names instead of resolving them to air. Refuse unloaded scan sources before tile reads and avoid leaking pause leases when preparation fails. Extend release checks to the new Segmented Door, articulation, ramp-axis, chip-display and dense-render paths.
 
-- Extend Sectional Door with four slide directions, Straight/Perpendicular motion, shared Speed and Activation selectors, fixed dialog dimensions, Tile/Stretch/Fit artwork, Custom block samples, Frame textures and joined or tiled porthole windows with configurable glass. Repair all headers after Better Builder’s Wands extrusion. Rename Ramp Controller’s Base speed label to Speed.
+- Extend Segmented Door with four slide directions, Straight/Perpendicular motion, shared Speed and Activation selectors, fixed dialog dimensions, Tile/Stretch/Fit artwork, Custom block samples, Frame textures and joined or tiled porthole windows with configurable glass. Repair all headers after Better Builder’s Wands extrusion. Rename Ramp Controller’s Base speed label to Speed.
 
 - Add optional Coupler articulation with independent trailer yaw and pitch, a combined 75-degree limit, hull/terrain collision checks, saved joint poses and section-aware rendering and interaction. Parallel coupling pairs remain rigid.
 - Require three lift blocks in each connected coupler section before entering Hover, including rigid or parallel coupler connections. Taxi remains available without section lift.
@@ -46,11 +51,11 @@
 - Add the built-in chip reader to Programmable Consoles. Joined Screens share an attached reader and stretch one Chip view across the complete rectangle.
 - Apply screen animation speeds to Vehicle Chip rotation, cache immutable preview geometry, and show company Corp logos for Master Data Chips.
 - Increase Programmable Surface limits to 32 blocks per side. Screen joining retains its previous limit. Copy Controllers accept matching rectangles; Turntables keep square pads. Existing payload, height and snapshot limits still apply.
-- Rename Sectional Garage Door to Sectional Door, add the common material/Trapdoor/Door/Large Door picker, and expose original and light grey sectional panels under Industrial.
+- Use Segmented Door throughout code, assets and registry identifiers, without old-name loading support. Add the common material/Trapdoor/Door/Large Door picker, and expose original and light grey segmented panels under Industrial.
 
 - Retire Clear, Pale Cyan and Smoked Cockpit Glass and their recipes. Migrate placed blocks, items and saved designs to vanilla glass, cyan stained glass and gray stained glass.
 
-See the [2.8 guide](docs/versions/version-2.8.md) and [Sectional Door construction guide](docs/sectional-doors.md).
+See the [2.8 guide](docs/versions/version-2.8.md) and [Segmented Door construction guide](docs/segmented-doors.md).
 
 - Slice vehicle discovery and preflight across ticks, reuse rotation checks for repeated block states and show conversion activity on Vehicle Status screens.
 - Add saved vehicle names and rotating shape previews, exact Vehicle Chips, Programmer creation/duplication, output-only Copy Controller chip sources and retained Access Card security.
@@ -61,8 +66,8 @@ See the [2.8 guide](docs/versions/version-2.8.md) and [Sectional Door constructi
 - Explain missing Data Chip and Access Card Mounts on the Vehicle Controller's Vehicle and Security tabs.
 - Reuse terrain scratch collections and immutable transfer preflight; let a single scan consume unused shared work slices. Preserve fresh-world terrain, live authorization/hardness checks and durable recovery.
 - Record informational vehicle weight estimates from material/shape heuristics and retained cargo/fluid contents; persist the estimate and rule version in controllers and Vehicle Chips without changing movement.
-- Add linked overhead Garage Doors with Redstone Channels, a shared Configurizer/right-click dialog, bounded topology queries and original panel artwork.
-- Bake settled closed garage panels into terrain; batch moving panels and cache reusable pose geometry. Preserve server collision and saved motion independently of cosmetic animation and chunk upload timing.
+- Add linked overhead Segmented Doors with Redstone Channels, a shared Configurizer/right-click dialog, bounded topology queries and original panel artwork.
+- Bake settled closed segmented panels into terrain; batch moving panels and cache reusable pose geometry. Preserve server collision and saved motion independently of cosmetic animation and chunk upload timing.
 - Batch unclaimed single Surface blocks, ordinary planar glazing and opaque diagonal wall fallback meshes. Tighten Surface visibility bounds.
 - Cache stationary opaque ramp endpoint VBOs, with state, lighting, vertex-format and resource invalidation.
 - Index loaded canopy, moved-door and offset-trapdoor collision owners; reject fixed-glass misses before neighbour geometry queries and avoid unrelated entity scans when no turntables exist.
@@ -70,7 +75,7 @@ See the [2.8 guide](docs/versions/version-2.8.md) and [Sectional Door constructi
 - Tune collision regions for large flat craft, use primitive spatial-index keys and avoid allocating nearby-craft candidates for self-collision. Skip unused fixed-glass client mechanism ticks.
 - Compact contained-fluid cells along the most subdivided axis; defer voxel faces until requested and avoid unused panel/door volumes during rendering.
 - Scope Complementary rain wind beneath fixed Canopy Glass roofs without changing world lighting.
-- Add focused density, weather, native garage interaction and many-door renderer comparisons. Pass the Java 8 release gate, previous-release world upgrades and restart recovery checks; hardware shader acceptance remains separate.
+- Add focused density, weather, native segmented interaction and many-door renderer comparisons. Pass the Java 8 release gate, previous-release world upgrades and restart recovery checks; hardware shader acceptance remains separate.
 
 ## 2.7
 
