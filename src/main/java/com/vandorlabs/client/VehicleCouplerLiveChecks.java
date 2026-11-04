@@ -7,7 +7,7 @@ final class VehicleCouplerLiveChecks {
         mc.gameSettings.pauseOnLostFocus=false;mc.displayGuiScreen(null);if(++ticks<40)return false;
         mc.getIntegratedServer().addScheduledTask(()->{
             net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
-            try{com.vandorlabs.vehicle.VehicleTrainDriveChecks.run(world);}catch(Exception failure){throw new IllegalStateException(failure);}
+            try{com.vandorlabs.vehicle.VehicleTurningCostChecks.run(world);com.vandorlabs.vehicle.VehicleTrainDriveChecks.run(world);}catch(Exception failure){throw new IllegalStateException(failure);}
             com.vandorlabs.vehicle.VehicleSegmentControllerChecks.run(world,mc.getIntegratedServer().getPlayerList().getPlayers().get(0));
             com.vandorlabs.vehicle.VehicleCouplerSectionChecks.run(world);
             com.vandorlabs.vehicle.VehicleCouplerPhysicsChecks.run(world);

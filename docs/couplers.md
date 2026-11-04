@@ -41,7 +41,7 @@ Trailers remain part of one vehicle owner: they do not duplicate inventories or 
 
 ## Releasing a section
 
-Release either half's activation input to request separation. The section remains attached while the controller checks whether it can safely restore the detached part as ordinary blocks. Stop near a cardinal heading, as when parking a vehicle. The detached blocks snap to the parking grid; the retained vehicle keeps its actual position and heading. Terrain, players, other mechanisms and the retained hull must leave enough room for the complete parked geometry.
+Right-click either carried coupling head, without sneaking or holding the Configurizer, to request separation in Taxi or Hover. Clicking records the current authorized player; there is no need to open the dialog first. The manual choice lasts until the physical/channel input changes. Releasing either half's activation input also requests separation. The section remains attached while the controller checks whether it can safely restore the detached part as ordinary blocks. Stop near a cardinal heading, as when parking a vehicle. The detached blocks snap to the parking grid; the retained vehicle keeps its actual position and heading. Terrain, players, other mechanisms and the retained hull must leave enough room for the complete parked geometry.
 
 The Vehicle Controller, main Pilot Seat, required supports and the equipment needed for the current Taxi or Hover mode must stay with the retained vehicle. Empty seats in the detached section before releasing it. If another block path or active coupler still connects the section to the controller, releasing one head leaves that section on the vehicle.
 

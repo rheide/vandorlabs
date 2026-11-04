@@ -28,6 +28,7 @@ public final class VehicleArticulation {
     private List<Joint> joints=Collections.emptyList();
     private List<List<Shape>> shapes=Collections.emptyList();
     private AxisAlignedBB[] bodyBounds=new AxisAlignedBB[0];
+    private List<ShapeIndex> shapeIndexes=Collections.emptyList();
     private VehicleCollision observedCollision;
     private double[] yaw=new double[0],pitch=new double[0],previousYaw=new double[0],previousPitch=new double[0],targetYaw=new double[0],targetPitch=new double[0];
     private int remoteTicks;
@@ -46,10 +47,49 @@ public final class VehicleArticulation {
     private double baseX,baseY,baseZ;private float baseYaw;
     private VehicleCollision radiusSource;private long radiusTopology;private double radius;
     private Set<BlockPos> rootCells=Collections.emptySet();private double pivotX,pivotZ;
-    public long topologyBuilds,shapeBuilds,poseChecks,terrainQueries;
+    public long topologyBuilds,shapeBuilds,poseChecks,terrainQueries,broadChecks,narrowChecks;
+    public static final int MAX_STEP_WORK=1000000;
+    private int shapeCount,stepWork;private boolean stepLimited;public long budgetStops;public int peakStepWork;
+    private boolean spend(int work){if(base==null)return true;if(stepLimited)return false;if(work>MAX_STEP_WORK-stepWork){stepLimited=true;budgetStops++;return false;}stepWork+=work;peakStepWork=Math.max(peakStepWork,stepWork);return true;}
+    private static final boolean COMPARE_COLLISION=Boolean.getBoolean("vandorlabs.compareArticulationCollision");
     private static final class Shape {
         final AxisAlignedBB box;final BlockPos coupler;
         Shape(AxisAlignedBB box,BlockPos coupler){this.box=box;this.coupler=coupler;}
+    }
+    /** Immutable local-space hierarchy, rebuilt only when collision geometry changes. */
+    private static final class ShapeIndex {
+        final AxisAlignedBB bounds;final ShapeIndex left,right;final int[] indices;
+        ShapeIndex(List<Shape> shapes,Integer[] order,int start,int end){
+            AxisAlignedBB b=shapes.get(order[start]).box;for(int n=start+1;n<end;n++)b=b.union(shapes.get(order[n]).box);bounds=b;
+            if(end-start<=8){indices=new int[end-start];for(int n=start;n<end;n++)indices[n-start]=order[n];left=right=null;}
+            else{indices=null;double dx=b.maxX-b.minX,dy=b.maxY-b.minY,dz=b.maxZ-b.minZ;int axis=dx>=dy&&dx>=dz?0:dy>=dz?1:2;
+                Arrays.sort(order,start,end,Comparator.comparingDouble(i->{AxisAlignedBB q=shapes.get(i).box;return axis==0?q.minX+q.maxX:axis==1?q.minY+q.maxY:q.minZ+q.maxZ;}));int mid=(start+end)/2;left=new ShapeIndex(shapes,order,start,mid);right=new ShapeIndex(shapes,order,mid,end);}
+        }
+    }
+    private final class CollisionPose {
+        final RigidTransform[] transforms;final OrientedBounds[][] exact;final AxisAlignedBB[] bounds;
+        CollisionPose(Frame frame,RigidTransform root){
+            int count=shapes.size();transforms=new RigidTransform[count];exact=new OrientedBounds[count][];bounds=new AxisAlignedBB[count];
+            for(int body=0;body<count;body++){
+                RigidTransform t=transforms[body]=root.then(frame.bodies[body]);double[] r=t.r;List<Shape> members=shapes.get(body);exact[body]=new OrientedBounds[members.size()];
+                double x0=Double.POSITIVE_INFINITY,y0=x0,z0=x0,x1=Double.NEGATIVE_INFINITY,y1=x1,z1=x1;
+                for(Shape shape:members){AxisAlignedBB b=shape.box;double cx=(b.minX+b.maxX)/2,cy=(b.minY+b.maxY)/2,cz=(b.minZ+b.maxZ)/2,hx=Math.max(0,(b.maxX-b.minX)/2-1e-7),hy=Math.max(0,(b.maxY-b.minY)/2-1e-7),hz=Math.max(0,(b.maxZ-b.minZ)/2-1e-7);
+                    double x=t.x+r[0]*cx+r[1]*cy+r[2]*cz,y=t.y+r[3]*cx+r[4]*cy+r[5]*cz,z=t.z+r[6]*cx+r[7]*cy+r[8]*cz,dx=Math.abs(r[0])*hx+Math.abs(r[1])*hy+Math.abs(r[2])*hz,dy=Math.abs(r[3])*hx+Math.abs(r[4])*hy+Math.abs(r[5])*hz,dz=Math.abs(r[6])*hx+Math.abs(r[7])*hy+Math.abs(r[8])*hz;
+                    x0=Math.min(x0,x-dx);y0=Math.min(y0,y-dy);z0=Math.min(z0,z-dz);x1=Math.max(x1,x+dx);y1=Math.max(y1,y+dy);z1=Math.max(z1,z+dz);}
+                if(!members.isEmpty())bounds[body]=new AxisAlignedBB(x0,y0,z0,x1,y1,z1);
+            }
+        }
+        OrientedBounds box(int body,int index){OrientedBounds result=exact[body][index];if(result==null){AxisAlignedBB b=shapes.get(body).get(index).box;exact[body][index]=result=new OrientedBounds(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ,transforms[body]);}return result;}
+    }
+    private static AxisAlignedBB inverseBounds(AxisAlignedBB b,RigidTransform t){
+        double cx=(b.minX+b.maxX)/2-t.x,cy=(b.minY+b.maxY)/2-t.y,cz=(b.minZ+b.maxZ)/2-t.z,hx=(b.maxX-b.minX)/2,hy=(b.maxY-b.minY)/2,hz=(b.maxZ-b.minZ)/2;double[] r=t.r;
+        double x=r[0]*cx+r[3]*cy+r[6]*cz,y=r[1]*cx+r[4]*cy+r[7]*cz,z=r[2]*cx+r[5]*cy+r[8]*cz,dx=Math.abs(r[0])*hx+Math.abs(r[3])*hy+Math.abs(r[6])*hz+1e-6,dy=Math.abs(r[1])*hx+Math.abs(r[4])*hy+Math.abs(r[7])*hz+1e-6,dz=Math.abs(r[2])*hx+Math.abs(r[5])*hy+Math.abs(r[8])*hz+1e-6;
+        return new AxisAlignedBB(x-dx,y-dy,z-dz,x+dx,y+dy,z+dz);
+    }
+    private boolean intersects(ShapeIndex index,AxisAlignedBB query,CollisionPose pose,int body,OrientedBounds other,Shape source){
+        if(index==null)return false;if(!spend(1))return true;broadChecks++;if(!index.bounds.intersects(query))return false;
+        if(index.indices==null)return intersects(index.left,query,pose,body,other,source)||intersects(index.right,query,pose,body,other,source);
+        for(int n:index.indices){Shape shape=shapes.get(body).get(n);if(shape.box.intersects(query)&&(source==null||!exempt(source,shape))){if(!spend(8))return true;narrowChecks++;if(pose.box(body,n).intersects(other))return true;}}return false;
     }
     private static final class Joint {
         final BlockPos a,b;final int parent,child;final double px,py,pz,hx,hz;final double[] axle;
@@ -66,7 +106,7 @@ public final class VehicleArticulation {
         VehicleStructure structure=craft.structure;observed=structure;
         if(structure==null)return;
         boolean enabled=false;for(VehicleStructure.Cell cell:structure.couplers){TileEntity raw=craft.view.getTileEntity(cell.pos);if(raw instanceof TileCoupler&&((TileCoupler)raw).articulation()){enabled=true;break;}}
-        if(!enabled){signature=Long.MIN_VALUE;topologyId=0;topology=structure.couplerTopology;graph=null;shapes=Collections.emptyList();bodyBounds=new AxisAlignedBB[0];observedCollision=null;collisionMatrices=null;cachedCollision=Collections.emptyList();joints=Collections.emptyList();bodyAt=Collections.emptyMap();yaw=pitch=previousYaw=previousPitch=targetYaw=targetPitch=new double[0];matrices=new RigidTransform[]{RigidTransform.IDENTITY};visualMatrices=null;return;}
+        if(!enabled){signature=Long.MIN_VALUE;topologyId=0;topology=structure.couplerTopology;graph=null;shapes=Collections.emptyList();shapeIndexes=Collections.emptyList();shapeCount=0;bodyBounds=new AxisAlignedBB[0];observedCollision=null;collisionMatrices=null;cachedCollision=Collections.emptyList();joints=Collections.emptyList();bodyAt=Collections.emptyMap();yaw=pitch=previousYaw=previousPitch=targetYaw=targetPitch=new double[0];matrices=new RigidTransform[]{RigidTransform.IDENTITY};visualMatrices=null;return;}
         long key=1469598103934665603L;key=mix(key,structure.seat.toLong());key=mix(key,structure.facing.getIndex());
         if(!structure.couplers.isEmpty())for(VehicleStructure.Cell cell:structure.cells){key=mix(key,cell.pos.toLong());key=mix(key,Block.getStateId(cell.state));if(cell.state.getBlock() instanceof BlockCoupler){TileEntity raw=craft.view.getTileEntity(cell.pos);key=mix(key,raw instanceof TileCoupler&&((TileCoupler)raw).articulation()?1:0);}}
         if(key==signature){structure.couplerTopology=topology;return;}
@@ -107,7 +147,7 @@ public final class VehicleArticulation {
             AxisAlignedBB bounds=null;for(Shape shape:result.get(body))if(shape.coupler==null)bounds=bounds==null?shape.box:bounds.union(shape.box);
             if(bounds==null)for(Map.Entry<BlockPos,Integer> entry:bodyAt.entrySet())if(entry.getValue()==body)bounds=bounds==null?new AxisAlignedBB(entry.getKey()):bounds.union(new AxisAlignedBB(entry.getKey()));bodyBounds[body]=bounds;total+=result.get(body).size();
         }
-        if(total>8192)throw new IllegalArgumentException("Articulated collision exceeds 8192 boxes");shapes=result;
+        if(total>8192)throw new IllegalArgumentException("Articulated collision exceeds 8192 boxes");shapeCount=total;shapes=result;List<ShapeIndex> indexes=new ArrayList<>();for(List<Shape> members:result){Integer[] order=new Integer[members.size()];for(int n=0;n<order.length;n++)order[n]=n;indexes.add(order.length==0?null:new ShapeIndex(members,order,0,order.length));}shapeIndexes=indexes;
     }
     private RigidTransform[] build(double[] ys,double[] ps){RigidTransform[] result=new RigidTransform[graph==null?1:graph.bodies];Arrays.fill(result,RigidTransform.IDENTITY);for(int i=0;i<joints.size();i++){Joint j=joints.get(i);result[j.child]=result[j.parent].then(RigidTransform.joint(j.px,j.py,j.pz,j.hx,j.hz,ys[i],ps[i]));}return result;}
     public RigidTransform body(int id,float partial){bind();if(!active()||id==0)return RigidTransform.IDENTITY;if(!craft.world.isRemote||craft.transferInProgress||partial>=1)return matrices[id];if(visualMatrices==null||visualPartial!=partial){double[] y=new double[yaw.length],p=new double[yaw.length];for(int i=0;i<y.length;i++){y[i]=previousYaw[i]+(yaw[i]-previousYaw[i])*Math.max(0,partial);p[i]=previousPitch[i]+(pitch[i]-previousPitch[i])*Math.max(0,partial);}visualMatrices=build(y,p);visualPartial=partial;}return visualMatrices[id];}
@@ -132,8 +172,8 @@ public final class VehicleArticulation {
         return permits(probe,source.structure);
     }
     public boolean permits(VehicleWorld view,VehicleStructure structure){
-        if(!active())return true;captureShapes();List<List<Shape>> old=shapes;AxisAlignedBB[] oldBounds=bodyBounds;
-        try{collectShapes(view,structure);terrain.clear();return safe(new Frame(yaw,pitch,matrices),root());}finally{shapes=old;bodyBounds=oldBounds;terrain.clear();}
+        if(!active())return true;captureShapes();List<List<Shape>> old=shapes;List<ShapeIndex> oldIndexes=shapeIndexes;int oldCount=shapeCount;AxisAlignedBB[] oldBounds=bodyBounds;
+        try{collectShapes(view,structure);terrain.clear();return safe(new Frame(yaw,pitch,matrices),root());}finally{shapes=old;shapeIndexes=oldIndexes;shapeCount=oldCount;bodyBounds=oldBounds;terrain.clear();}
     }
     /** A cached reach bound encloses every intermediate hinge and root-yaw pose. */
     public double renderRadius(){
@@ -154,14 +194,15 @@ public final class VehicleArticulation {
     }
     public void requireParkable(){if(!parkable())throw new IllegalArgumentException("Straighten trailers before parking (within 5 degrees yaw, 3 degrees pitch and 0.75 block of the grid)");}
     public boolean canConfigure(BlockPos at,boolean value){if(value||!active())return true;for(int i=0;i<joints.size();i++){Joint j=joints.get(i);if(at.equals(j.a)||at.equals(j.b)){TileEntity other=craft.view.getTileEntity(at.equals(j.a)?j.b:j.a);if(other instanceof TileCoupler&&((TileCoupler)other).articulation())return true;if(Math.abs(yaw[i])>.25||Math.abs(pitch[i])>.25)return false;}}return true;}
-    public boolean begin(){if(!active())return false;captureShapes();base=new Frame(yaw.clone(),pitch.clone(),matrices);baseRoot=root();baseX=craft.posX;baseY=craft.posY;baseZ=craft.posZ;baseYaw=craft.rotationYaw;terrain.clear();return true;}
+    public boolean begin(){if(!active())return false;captureShapes();stepWork=0;stepLimited=false;base=new Frame(yaw.clone(),pitch.clone(),matrices);baseRoot=root();baseX=craft.posX;baseY=craft.posY;baseZ=craft.posZ;baseYaw=craft.rotationYaw;terrain.clear();return true;}
     private double ground(double x,double y,double z){
         int bx=MathHelper.floor(x),bz=MathHelper.floor(z);if(!craft.world.isBlockLoaded(new BlockPos(bx,MathHelper.clamp((int)y,0,255),bz)))return Double.NaN;double best=Double.NEGATIVE_INFINITY;
         for(AxisAlignedBB box:obstacles(new AxisAlignedBB(x-.15,Math.max(0,y-3),z-.15,x+.15,Math.min(craft.world.getHeight(),y+.5),z+.15)))if(box.maxY<=y+.50001&&box.maxY>=y-3&&box.maxX>x-.15&&box.minX<x+.15&&box.maxZ>z-.15&&box.minZ<z+.15)best=Math.max(best,box.maxY);
         return best==Double.NEGATIVE_INFINITY?y-.04:best;
     }
-    private List<AxisAlignedBB> obstacles(AxisAlignedBB area){Set<AxisAlignedBB> result=new HashSet<>();for(int x=MathHelper.floor(area.minX)>>3;x<=MathHelper.floor(area.maxX)>>3;x++)for(int y=MathHelper.floor(area.minY)>>3;y<=MathHelper.floor(area.maxY)>>3;y++)for(int z=MathHelper.floor(area.minZ)>>3;z<=MathHelper.floor(area.maxZ)>>3;z++){BlockPos key=new BlockPos(x,y,z);List<AxisAlignedBB> boxes=terrain.get(key);if(boxes==null){boxes=craft.world.getCollisionBoxes(craft,new AxisAlignedBB(x*8,y*8,z*8,x*8+8,y*8+8,z*8+8).grow(1e-6));terrain.put(key,boxes);terrainQueries++;}for(AxisAlignedBB b:boxes)if(b.intersects(area))result.add(b);}return new ArrayList<>(result);}
+    private List<AxisAlignedBB> obstacles(AxisAlignedBB area){Set<AxisAlignedBB> result=new HashSet<>();for(int x=MathHelper.floor(area.minX)>>3;x<=MathHelper.floor(area.maxX)>>3;x++)for(int y=MathHelper.floor(area.minY)>>3;y<=MathHelper.floor(area.maxY)>>3;y++)for(int z=MathHelper.floor(area.minZ)>>3;z<=MathHelper.floor(area.maxZ)>>3;z++){BlockPos key=new BlockPos(x,y,z);List<AxisAlignedBB> boxes=terrain.get(key);if(boxes==null){if(!spend(1024))return Collections.singletonList(area);boxes=craft.world.getCollisionBoxes(craft,new AxisAlignedBB(x*8,y*8,z*8,x*8+8,y*8+8,z*8+8).grow(1e-6));terrain.put(key,boxes);terrainQueries++;}for(AxisAlignedBB b:boxes)if(b.intersects(area))result.add(b);}return new ArrayList<>(result);}
     private Frame propose(RigidTransform newRoot){
+        if(!spend(joints.size()*16))return null;
         double[] ys=base.yaw.clone(),ps=base.pitch.clone();RigidTransform[] next=build(ys,ps);
         for(int i=0;i<joints.size();i++){
             Joint j=joints.get(i);RigidTransform parent=newRoot.then(next[j.parent]);double[] pivot=parent.point(j.px,j.py,j.pz),old=baseRoot.then(base.bodies[j.child]).point(j.axle[0],j.axle[1],j.axle[2]),neutral=parent.point(j.axle[0],j.axle[1],j.axle[2]);
@@ -172,13 +213,28 @@ public final class VehicleArticulation {
             double desiredPitch=r<1e-9?base.pitch[i]:Math.toDegrees(Math.asin(MathHelper.clamp((targetY-pivot[1])/r,-1,1))-Math.atan2(a,b));desiredPitch=approach(base.pitch[i],MathHelper.wrapDegrees(desiredPitch),4);double[] limited=RigidTransform.limitedAngles(desiredYaw,desiredPitch,MAX_ANGLE);ys[i]=limited[0];ps[i]=limited[1];next[j.child]=next[j.parent].then(RigidTransform.joint(j.px,j.py,j.pz,j.hx,j.hz,ys[i],ps[i]));
         }
         Frame result=new Frame(ys,ps,next);if(safe(result,newRoot))return result;
-        for(int i=joints.size()-1;i>=0;i--){double ty=ys[i],tp=ps[i];ys[i]=base.yaw[i];ps[i]=base.pitch[i];Frame old=new Frame(ys,ps,build(ys,ps));if(safe(old,newRoot)){double lo=0,hi=1;for(int n=0;n<12;n++){double t=(lo+hi)/2;ys[i]=base.yaw[i]+(ty-base.yaw[i])*t;ps[i]=base.pitch[i]+(tp-base.pitch[i])*t;Frame trial=new Frame(ys,ps,build(ys,ps));if(safe(trial,newRoot))lo=t;else hi=t;}ys[i]=base.yaw[i]+(ty-base.yaw[i])*lo;ps[i]=base.pitch[i]+(tp-base.pitch[i])*lo;return new Frame(ys,ps,build(ys,ps));}ys[i]=ty;ps[i]=tp;}
+        for(int i=joints.size()-1;i>=0;i--){if(stepLimited)return null;double ty=ys[i],tp=ps[i];ys[i]=base.yaw[i];ps[i]=base.pitch[i];Frame old=new Frame(ys,ps,build(ys,ps));if(safe(old,newRoot)){double lo=0,hi=1;for(int n=0;n<12;n++){double t=(lo+hi)/2;ys[i]=base.yaw[i]+(ty-base.yaw[i])*t;ps[i]=base.pitch[i]+(tp-base.pitch[i])*t;Frame trial=new Frame(ys,ps,build(ys,ps));if(safe(trial,newRoot))lo=t;else hi=t;}ys[i]=base.yaw[i]+(ty-base.yaw[i])*lo;ps[i]=base.pitch[i]+(tp-base.pitch[i])*lo;return new Frame(ys,ps,build(ys,ps));}ys[i]=ty;ps[i]=tp;}
         return null;
     }
     private static double approach(double old,double target,double step){return old+MathHelper.clamp(target-old,-step,step);}
     private boolean exempt(Shape a,Shape b){if(a.coupler==null||b.coupler==null)return false;for(Joint j:joints)if(a.coupler.equals(j.a)&&b.coupler.equals(j.b)||a.coupler.equals(j.b)&&b.coupler.equals(j.a))return true;return false;}
     private boolean safe(Frame frame,RigidTransform root){
-        poseChecks++;List<List<OrientedBounds>> boxes=new ArrayList<>();AxisAlignedBB[] bounds=new AxisAlignedBB[shapes.size()];
+        poseChecks++;boolean result=safeIndexed(frame,root);if(COMPARE_COLLISION&&!stepLimited&&result!=safeReference(frame,root))throw new IllegalStateException("Articulated collision broadphase disagrees with exact previous geometry");return result;
+    }
+    private boolean safeIndexed(Frame frame,RigidTransform root){
+        if(!spend(shapeCount+shapes.size()*16))return false;
+        CollisionPose pose=new CollisionPose(frame,root);
+        for(int body=0;body<shapes.size();body++){
+            AxisAlignedBB area=pose.bounds[body];if(area==null)continue;if(area.minY<0||area.maxY>=craft.world.getHeight()||!craft.world.getWorldBorder().contains(new BlockPos(area.minX,area.minY,area.minZ))||!craft.world.getWorldBorder().contains(new BlockPos(area.maxX,area.maxY,area.maxZ)))return false;
+            for(int x=MathHelper.floor(area.minX)>>4;x<=MathHelper.floor(area.maxX)>>4;x++)for(int z=MathHelper.floor(area.minZ)>>4;z<=MathHelper.floor(area.maxZ)>>4;z++)if(!craft.world.isBlockLoaded(new BlockPos(x*16,64,z*16)))return false;
+            for(AxisAlignedBB obstacle:obstacles(area)){OrientedBounds terrainBox=new OrientedBounds(obstacle.minX,obstacle.minY,obstacle.minZ,obstacle.maxX,obstacle.maxY,obstacle.maxZ,RigidTransform.IDENTITY);if(intersects(shapeIndexes.get(body),inverseBounds(obstacle,pose.transforms[body]),pose,body,terrainBox,null))return false;}
+        }
+        for(int a=0;a<shapes.size();a++)for(int b=a+1;b<shapes.size();b++)if(pose.bounds[a]!=null&&pose.bounds[b]!=null&&pose.bounds[a].intersects(pose.bounds[b]))for(int n=0;n<shapes.get(a).size();n++){
+            OrientedBounds box=pose.box(a,n);if(intersects(shapeIndexes.get(b),inverseBounds(broad(box),pose.transforms[b]),pose,b,box,shapes.get(a).get(n)))return false;
+        }
+        return true;
+    }
+    private boolean safeReference(Frame frame,RigidTransform root){List<List<OrientedBounds>> boxes=new ArrayList<>();AxisAlignedBB[] bounds=new AxisAlignedBB[shapes.size()];
         for(int body=0;body<shapes.size();body++){
             List<OrientedBounds> posed=new ArrayList<>();RigidTransform t=root.then(frame.bodies[body]);for(Shape shape:shapes.get(body)){AxisAlignedBB b=shape.box;OrientedBounds box=new OrientedBounds(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ,t);posed.add(box);AxisAlignedBB broad=broad(box);bounds[body]=bounds[body]==null?broad:bounds[body].union(broad);}boxes.add(posed);
             AxisAlignedBB area=bounds[body];if(area==null)continue;if(area.minY<0||area.maxY>=craft.world.getHeight()||!craft.world.getWorldBorder().contains(new BlockPos(area.minX,area.minY,area.minZ))||!craft.world.getWorldBorder().contains(new BlockPos(area.maxX,area.maxY,area.maxZ)))return false;
@@ -203,7 +259,7 @@ public final class VehicleArticulation {
         for(int n=1;n<=steps;n++){double next=amount*n/steps;if(propose(root(x+(axis==0?next:0),y+(axis==1?next:0),z+(axis==2?next:0),yaw))==null){double lo=accepted,hi=next;for(int i=0;i<14;i++){double mid=(lo+hi)/2;if(propose(root(x+(axis==0?mid:0),y+(axis==1?mid:0),z+(axis==2?mid:0),yaw))!=null)lo=mid;else hi=mid;}return lo;}accepted=next;}return amount;
     }
     public void end(){
-        if(base==null)return;Frame accepted=propose(root());double targetX=craft.posX,targetY=craft.posY,targetZ=craft.posZ;float targetYaw=craft.rotationYaw;
+        if(base==null)return;Frame accepted=stepLimited?null:propose(root());double targetX=craft.posX,targetY=craft.posY,targetZ=craft.posZ;float targetYaw=craft.rotationYaw;
         if(accepted==null){craft.rotationYaw=baseYaw;craft.setPosition(baseX,baseY,baseZ);craft.motionX=craft.motionY=craft.motionZ=0;craft.driveSpeed=0;}
         else{
             double distance=0;RigidTransform endRoot=root();

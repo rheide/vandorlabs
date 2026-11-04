@@ -34,6 +34,12 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
     public void toggleManual(net.minecraft.entity.player.EntityPlayer actor){
         net.minecraft.world.World parent=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;
         if(parent==null||parent.isRemote||world.getTileEntity(pos)!=this)return;
+        if(ContainerCoupler.resolve(actor,world,pos)==null)return;
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld){
+            com.vandorlabs.vehicle.EntityGroundVehicle craft=((com.vandorlabs.vehicle.VehicleWorld)world).craft;
+            if(craft==null||!(actor instanceof net.minecraft.entity.player.EntityPlayerMP))return;
+            craft.authorizeCouplingGui((net.minecraft.entity.player.EntityPlayerMP)actor,this);
+        }
         authorize(actor);manualOverride=true;manualRequested=!requested;sample();
     }
     public void sample(){
