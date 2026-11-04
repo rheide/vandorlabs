@@ -181,6 +181,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public AxisAlignedBB getRenderBoundingBox() {
         if(structure==null)return getEntityBoundingBox();
         double x=structure.bounds.maxX/2,z=structure.bounds.maxZ/2,r=Math.hypot(x,z)+2;
+        if(articulation.active()){r=articulation.renderRadius();VehiclePose a=visualPose(0),b=visualPose(1);return new AxisAlignedBB(a.x+x-r,a.y-r,a.z+z-r,a.x+x+r,a.y+r,a.z+z+r).union(new AxisAlignedBB(b.x+x-r,b.y-r,b.z+z-r,b.x+x+r,b.y+r,b.z+z+r));}
         AxisAlignedBB local=new AxisAlignedBB(x-r,-2,z-r,x+r,structure.bounds.maxY+2,z+r);
         return local.offset(posX+correctionX,posY+correctionY,posZ+correctionZ).union(local.offset(prevPosX,prevPosY,prevPosZ)).union(getEntityBoundingBox().grow(1));
     }
@@ -286,7 +287,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public void setDead(){VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
-            Vec3d at=seatPosition(world.isRemote?visualPose(1):new VehiclePose(posX,posY,posZ,rotationYaw),passenger);
+            Vec3d at=seatPosition(world.isRemote?visualPose(1):new VehiclePose(posX,posY,posZ,rotationYaw),passenger,world.isRemote&&articulation.active()?1:0);
             passenger.setPosition(at.x,at.y,at.z);
             if(world.isRemote) {
                 Vec3d before=seatPosition(visualPose(0),passenger,-1);

@@ -10,13 +10,14 @@ import java.io.File;
 /** Exact-JAR rendered comparison: the same cached hull follows independent section poses. */
 final class VehicleCouplerRenderChecks {
     static void run(Minecraft mc,File output)throws Exception{
-        EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);craft.install(VehicleCouplerSectionChecks.train(mc.world,new int[]{3,3,3,3},false,false,false,true,true));craft.setPosition(0,0,0);
+        EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);VehicleStructure train=VehicleCouplerSectionChecks.train(mc.world,new int[]{3,3,3,3},false,false,false,true,true);java.util.List<VehicleStructure.Cell> cells=new java.util.ArrayList<>(train.cells);cells.add(new VehicleStructure.Cell(new net.minecraft.util.math.BlockPos(0,15,0),net.minecraft.init.Blocks.VINE.getDefaultState(),null));craft.install(new VehicleStructure(cells,train.seat,train.facing,train.gearCount));craft.setPosition(0,0,0);
         RenderGroundVehicle renderer=new RenderGroundVehicle(mc.getRenderManager());Framebuffer frame=new Framebuffer(512,320,true);
         GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-17,17,-11,11,-100,100);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try(TurntableRenderState state=new TurntableRenderState()){
             BufferedImage straight=draw(mc,renderer,craft,frame);
             NBTTagCompound saved=new NBTTagCompound();craft.writeToNBT(saved);NBTTagCompound pose=new NBTTagCompound();pose.setInteger("Version",1);net.minecraft.nbt.NBTTagList joints=new net.minecraft.nbt.NBTTagList();
             for(int i=0;i<3;i++){NBTTagCompound j=new NBTTagCompound();j.setLong("A",new net.minecraft.util.math.BlockPos(1,0,i*6+4).toLong());j.setLong("B",new net.minecraft.util.math.BlockPos(1,0,i*6+5).toLong());j.setDouble("Yaw",i==0?-30:12);j.setDouble("Pitch",i==1?8:0);joints.appendTag(j);}pose.setTag("Joints",joints);saved.setTag("CouplerJointPose",pose);craft.articulation.read(saved);
+            net.minecraft.util.math.AxisAlignedBB visibleBounds=craft.getRenderBoundingBox();for(com.vandorlabs.vehicle.VehicleStructure.Cell c:craft.structure.cells)for(int n=0;n<8;n++){net.minecraft.util.math.Vec3d point=craft.toWorld(new net.minecraft.util.math.Vec3d(c.pos).addVector((n&1)==0?0:1,(n&2)==0?0:1,(n&4)==0?0:1),c.pos);if(!visibleBounds.contains(point))throw new IllegalStateException("articulated render reach lost a trailer cell");}
             BufferedImage bent=draw(mc,renderer,craft,frame);int visible=0,different=0;for(int y=0;y<320;y++)for(int x=0;x<512;x++){if((bent.getRGB(x,y)&0xffffff)!=0x203040)visible++;if(straight.getRGB(x,y)!=bent.getRGB(x,y))different++;}
             if(visible<500||different<500)throw new IllegalStateException("articulated rendered hull missing or unchanged visible="+visible+" different="+different);
             javax.imageio.ImageIO.write(straight,"png",new File(output,"shot_vehicle_coupler_straight.png"));javax.imageio.ImageIO.write(bent,"png",new File(output,"shot_vehicle_coupler_articulated.png"));

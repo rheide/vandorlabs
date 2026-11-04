@@ -38,6 +38,7 @@ public final class VehicleArticulation {
     private double turnX,turnZ;
     private float turnYaw;
     private double baseX,baseY,baseZ;private float baseYaw;
+    private VehicleCollision radiusSource;private long radiusTopology;private double radius;
     private Set<BlockPos> rootCells=Collections.emptySet();private double pivotX,pivotZ;
     public long topologyBuilds,shapeBuilds,poseChecks,terrainQueries;
     private static final class Shape {
@@ -127,6 +128,14 @@ public final class VehicleArticulation {
     public boolean permits(VehicleWorld view,VehicleStructure structure){
         if(!active())return true;captureShapes();List<List<Shape>> old=shapes;AxisAlignedBB[] oldBounds=bodyBounds;
         try{collectShapes(view,structure);terrain.clear();return safe(new Frame(yaw,pitch,matrices),root());}finally{shapes=old;bodyBounds=oldBounds;terrain.clear();}
+    }
+    /** A cached reach bound encloses every intermediate hinge and root-yaw pose. */
+    public double renderRadius(){
+        bind();captureShapes();if(radiusSource==craft.collision&&radiusTopology==topologyId)return radius;
+        double[] distance=new double[bodyBounds.length];double[][] anchor=new double[bodyBounds.length][3];anchor[0]=new double[]{pivotX,0,pivotZ};for(Joint j:joints){double[] parent=anchor[j.parent];double dx=j.px-parent[0],dy=j.py-parent[1],dz=j.pz-parent[2];distance[j.child]=distance[j.parent]+Math.sqrt(dx*dx+dy*dy+dz*dz);anchor[j.child]=new double[]{j.px,j.py,j.pz};}
+        AxisAlignedBB[] visible=bodyBounds.clone();for(Map.Entry<BlockPos,Integer> cell:bodyAt.entrySet()){int body=cell.getValue();visible[body]=visible[body].union(new AxisAlignedBB(cell.getKey()));}
+        double reach=0;for(int body=0;body<bodyBounds.length;body++){AxisAlignedBB b=visible[body];double[] at=anchor[body];double dx=Math.max(Math.abs(b.minX-at[0]),Math.abs(b.maxX-at[0])),dy=Math.max(Math.abs(b.minY-at[1]),Math.abs(b.maxY-at[1])),dz=Math.max(Math.abs(b.minZ-at[2]),Math.abs(b.maxZ-at[2]));reach=Math.max(reach,distance[body]+Math.sqrt(dx*dx+dy*dy+dz*dz));}
+        radiusSource=craft.collision;radiusTopology=topologyId;return radius=reach+Math.hypot(pivotX-craft.structure.bounds.maxX/2,pivotZ-craft.structure.bounds.maxZ/2)+2;
     }
     public boolean aligned(){if(!active())return true;for(int i=0;i<yaw.length;i++)if(Math.abs(yaw[i])>.25||Math.abs(pitch[i])>.25)return false;return true;}
     public void requireAligned(){if(!aligned())throw new IllegalArgumentException("Straighten articulated sections on level ground before parking, coupling or detaching");}
