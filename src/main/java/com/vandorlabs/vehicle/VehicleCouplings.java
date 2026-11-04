@@ -20,7 +20,7 @@ public final class VehicleCouplings {
     private static final Map<EntityGroundVehicle,Long> NEXT=new WeakHashMap<>();
     public static void wake(EntityGroundVehicle craft){if(craft!=null)NEXT.remove(craft);}
     private static final class Job {
-        final EntityGroundVehicle craft;final EntityPlayerMP actor;final BlockPos primary;final VehicleStructure before,proposed;final VehicleScan scan;final boolean attach;final double x,y,z;final float yaw;
+        final EntityGroundVehicle craft;final EntityPlayerMP actor;final BlockPos primary;final VehicleStructure before,proposed;final VehicleScan scan;VehicleScan retainedVehicle,detachedVehicle;final boolean attach;final double x,y,z;final float yaw;
         Job(EntityGroundVehicle craft,EntityPlayerMP actor,BlockPos primary,VehicleStructure proposed,VehicleScan scan,boolean attach){this.craft=craft;this.actor=actor;this.primary=primary;before=craft.structure;this.proposed=proposed;this.scan=scan;this.attach=attach;x=craft.posX;y=craft.posY;z=craft.posZ;yaw=craft.rotationYaw;}
     }
     public static boolean matching(IBlockState a,IBlockState b){return a.getBlock() instanceof BlockCoupler&&b.getBlock() instanceof BlockCoupler&&a.getValue(BlockCoupler.FACING)==b.getValue(BlockCoupler.FACING).getOpposite()&&Math.abs(BlockCoupler.couplingHeight(a)-BlockCoupler.couplingHeight(b))<1e-6;}
@@ -44,7 +44,7 @@ public final class VehicleCouplings {
             else if(tile.requested())candidates.add(cell.pos);
         }
         if(release!=null){try{
-            TileCoupler source=tile(craft,release);EntityPlayerMP actor=actor(craft,source);VehicleCouplingPlan.require(craft.stopped(),"Stop the vehicle before detaching; section remains attached");status(craft,release,"Checking safe block parking; section remains attached");craft.signals.persist();
+            TileCoupler source=tile(craft,release);EntityPlayerMP actor=actor(craft,source);VehicleCouplingPlan.require(craft.stopped(),"Stop the vehicle before detaching; section remains attached");status(craft,release,"Checking separated vehicle validity; section remains attached");craft.signals.persist();
             List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells){IBlockState state=cell.state;if(state.getBlock() instanceof BlockCoupler&&hasPair(craft,cell.pos)){TileCoupler coupler=tile(craft,cell.pos);state=state.withProperty(BlockCoupler.LOCKED,coupler!=null&&coupler.requested());}cells.add(new VehicleStructure.Cell(cell.pos,state,cell.tileData()));}
             VehicleStructure proposed=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);VehicleWorld view=new VehicleWorld(craft.world,proposed);view.hover=craft.hover;BlockPos controller=craft.structure.controller()==null?craft.structure.seat:craft.structure.controller().pos;
             JOBS.put(craft,new Job(craft,actor,release,proposed,VehicleScan.attachment(view,controller,Collections.emptySet()),false));
@@ -81,10 +81,14 @@ public final class VehicleCouplings {
         while(iterator.hasNext()&&budget>0){Job job=iterator.next().getValue();if(job.craft.world!=world)continue;budget-=256;
             try{
                 EntityGroundVehicle craft=job.craft;VehicleCouplingPlan.require(!craft.isDead&&!craft.ownershipBlocked&&!craft.transferInProgress&&job.actor.world==world&&!job.actor.isDead&&!job.actor.isSpectator(),"Coupling authorization changed; section retained");craft.signals.persist();VehicleCouplingPlan.require(craft.structure.write().equals(job.before.write())&&craft.posX==job.x&&craft.posY==job.y&&craft.posZ==job.z&&craft.rotationYaw==job.yaw,"Vehicle moved or its blocks, inputs or inventory changed; retrying");
-                if(!job.scan.step(256))continue;iterator.remove();if(job.scan.error!=null)throw new IllegalArgumentException(job.scan.error);
-                if(!job.attach&&job.scan.result.cells.size()==job.before.cells.size()){physical(craft,job.proposed);status(craft,job.primary,"Released coupler; section remains joined through another connection");continue;}
-                VehicleCouplingPlan plan=job.attach?VehicleCouplingPlan.attach(craft,job.actor,job.primary,job.scan):VehicleCouplingPlan.detach(craft,job.actor,job.primary,job.proposed,job.scan);
-                VehicleCouplingTransfer.submit(job.actor,plan,()->status(craft,plan.afterPrimary,plan.attaching?"World section attached":"Section safely restored as world blocks"),failure->status(craft,job.primary,"Coupling recovery: "+failure.getMessage()));
+                if(!job.scan.step(256))continue;if(job.scan.error!=null)throw new IllegalArgumentException(job.scan.error);
+                if(!job.attach&&job.scan.result.cells.size()==job.before.cells.size()){iterator.remove();physical(craft,job.proposed);status(craft,job.primary,"Released coupler; section remains joined through another connection");continue;}
+                if(!job.attach&&job.retainedVehicle==null){Set<BlockPos> kept=new HashSet<>();for(VehicleStructure.Cell cell:job.scan.result.cells)kept.add(cell.pos.add(job.scan.origin));BlockPos seat=null;boolean controller=false;for(VehicleStructure.Cell cell:job.proposed.cells)if(!kept.contains(cell.pos)){if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat&&!cell.state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER)&&seat==null)seat=cell.pos;if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)controller=true;}
+                    if(seat!=null&&controller){VehicleWorld view=new VehicleWorld(world,job.proposed);view.hover=craft.hover;job.retainedVehicle=new VehicleScan(view,craft.structure.seat);job.detachedVehicle=new VehicleScan(view,seat);continue;}
+                }
+                if(job.retainedVehicle!=null){boolean left=job.retainedVehicle.step(128),right=job.detachedVehicle.step(128);if(!left||!right){continue;}VehicleCouplingPlan.require(job.retainedVehicle.result!=null&&job.detachedVehicle.result!=null,"Both halves must remain valid vehicles: "+(job.retainedVehicle.error!=null?job.retainedVehicle.error:job.detachedVehicle.error));}
+                iterator.remove();VehicleCouplingPlan plan=job.attach?VehicleCouplingPlan.attach(craft,job.actor,job.primary,job.scan):job.retainedVehicle!=null?VehicleCouplingPlan.split(craft,job.actor,job.primary,job.proposed,job.retainedVehicle,job.detachedVehicle):VehicleCouplingPlan.detach(craft,job.actor,job.primary,job.proposed,job.scan);
+                VehicleCouplingTransfer.submit(job.actor,plan,()->status(craft,plan.afterPrimary,plan.attaching?"World section attached":plan.split!=null?"Separated into two vehicles":"Section safely restored as world blocks"),failure->status(craft,job.primary,"Coupling recovery: "+failure.getMessage()));
             }catch(Exception failure){if(JOBS.get(job.craft)==job)iterator.remove();status(job.craft,job.primary,"Section retained: "+failure.getMessage());}
         }
     }

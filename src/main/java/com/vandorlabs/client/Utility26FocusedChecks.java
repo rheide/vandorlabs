@@ -5,24 +5,26 @@ import net.minecraft.util.math.BlockPos;
 
 /** Independent focused fixtures report all failures before ending the disposable client. */
 final class Utility26FocusedChecks {
-    private static int ticks;
+    private static int ticks;private static boolean splitLive;
     private interface Check{void run()throws Exception;}
     private static void check(java.util.List<Throwable> failures,String name,Check action){
         try{action.run();}catch(Exception|LinkageError failure){System.err.println("[vandorlabs][reprolab] utility26 fixture FAILED "+name);failure.printStackTrace();failures.add(failure);}
     }
     static boolean tick(Minecraft mc,java.io.File output)throws Exception{
+        if(splitLive){if(!VehicleSplitClientChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;}
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
         if(ticks!=80)return false;
         if(Boolean.getBoolean("vandorlabs.couplingChecksOnly")){
-            mc.getIntegratedServer().callFromMainThread(()->{
+            if(!Boolean.getBoolean("vandorlabs.splitClientOnly"))mc.getIntegratedServer().callFromMainThread(()->{
                 net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
                 net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
                 com.vandorlabs.vehicle.VehicleUpgradeChecks.run(world);
                 com.vandorlabs.vehicle.VehicleCouplingRuntimeChecks.run(world,actor);
                 com.vandorlabs.vehicle.VehicleCouplingTransferChecks.run(world,actor);
+                com.vandorlabs.vehicle.VehicleSplitChecks.run(world,actor);
                 return null;
             }).get();
-            System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;
+            splitLive=true;return false;
         }
         java.util.List<Throwable> failures=mc.getIntegratedServer().callFromMainThread(()->{
             java.util.List<Throwable> problems=new java.util.ArrayList<>();

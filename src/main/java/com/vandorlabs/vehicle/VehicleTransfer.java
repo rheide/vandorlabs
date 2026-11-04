@@ -336,7 +336,7 @@ public final class VehicleTransfer {
         park(world,entity,origin,player,true);
     }
     public static void park(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated)throws Exception {
-        if(entity.hover && !((entity.structure.activeNonWheeledGear()||!entity.structure.hasDedicatedController()) && VehicleLandingGear.extended(entity) && VehicleFlight.clearance(entity)<=3))throw new IOException(entity.structure.activeNonWheeledGear()?"Extend the landing gear and descend near the ground before parking.":"Select Taxi mode before parking as blocks.");
+        if(entity.hover && !VehicleFlight.canParkHover(entity))throw new IOException("Extend the landing gear and descend within three blocks of ground before parking.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         VehicleStructure placed=VehicleRotation.plan(entity).structure;
         // Include newly extended gear cells in the final check before journaling or writing.

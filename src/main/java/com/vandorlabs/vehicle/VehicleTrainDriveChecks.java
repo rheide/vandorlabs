@@ -34,5 +34,9 @@ public final class VehicleTrainDriveChecks {
         require(owners==1&&restored!=null&&!VehicleTransfer.pending(world),"recovery restores exactly one world vehicle and retires journal");require(Math.abs(restored.articulation.jointYaw(0)-2)<1e-8,"partial native parking recovery retains bent trailer pose");for(VehicleStructure.Cell cell:craft.structure.cells)require(world.isAirBlock(origin.add(cell.pos)),"recovery removes partial native ownership");restored.signals.close();world.removeEntityDangerously(restored);restored.setDead();
         System.out.println("[vandorlabs][reprolab] articulated-parking-recovery PASS real durable journal partial native publication exactly-one-owner original joint pose retained");
     }
+    /** Exact saved-world fixture uses the same queued validation/parking path as the controller. */
+    public static void parkRecovered(WorldServer world,EntityGroundVehicle craft,net.minecraft.entity.player.EntityPlayerMP actor,Runnable complete,java.util.function.Consumer<Exception> failure){
+        VehicleRotation.Plan plan=VehicleRotation.plan(craft);VehicleTransfer.submit(world,null,plan.origin,()->{VehicleService.validateParking(actor,craft,plan.origin,true,false);VehicleTransfer.park(world,craft,plan.origin,actor);require(craft.isDead,"parking removes carried owner");for(VehicleStructure.Cell cell:plan.structure.cells)require(world.getBlockState(plan.origin.add(cell.pos))==cell.state,"native blocks restored after leveling");complete.run();},failure);
+    }
     private VehicleTrainDriveChecks(){}
 }

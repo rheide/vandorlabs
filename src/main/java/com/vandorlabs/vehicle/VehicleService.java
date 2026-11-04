@@ -40,7 +40,7 @@ public final class VehicleService {
         permission(player,new BlockPos(craft.toWorld(new Vec3d(controller==null?craft.structure.seat:controller.pos).addVector(.5,.5,.5))));
         require(mode!=1 || VehicleSkiTraction.allowed(craft),"Taxi requires wheels, or only skis over ice.");
         if(mode!=0){VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));require(craft.setHover(mode==2),mode==2?VehicleFlight.hoverRequirement(craft.structure)+" Hover also needs a Vehicle Thruster.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
-        require(!craft.hover || craft.structure.activeNonWheeledGear() || !craft.structure.hasDedicatedController(),"Select Taxi mode before parking as blocks.");
+        require(!craft.hover || VehicleFlight.canParkHover(craft),"Extend the landing gear and descend within three blocks of ground before parking.");
         require(craft.stopped(),"Stop before parking.");
         VehicleTransfer.submit(player.getServerWorld(),()->{
             require(validCaptured(player,craft),"Craft unavailable.");
@@ -425,7 +425,7 @@ public final class VehicleService {
     private static void validateParking(EntityPlayerMP player,EntityGroundVehicle entity,BlockPos origin,boolean events) {validateParking(player,entity,origin,events,true);}
     static void validateParking(EntityPlayerMP player,EntityGroundVehicle entity,BlockPos origin,boolean events,boolean reach) {
         require(!entity.isDead && entity.world==player.world && (!reach || distance(player,entity.getEntityBoundingBox())<=64),"Move closer to the craft.");
-        require(!entity.hover || entity.structure.activeNonWheeledGear() && entity.groundClearance()<=3 && VehicleLandingGear.extended(entity),entity.structure.activeNonWheeledGear()?"Extend the landing gear and descend within three blocks of ground before parking.":"Select Taxi mode before parking as blocks.");
+        require(!entity.hover || VehicleFlight.canParkHover(entity),"Extend the landing gear and descend within three blocks of ground before parking.");
         require(entity.stopped(),"Stop before parking.");
         VehicleRotation.Plan plan=VehicleRotation.plan(entity);
         require(plan.origin.equals(origin),"Craft moved; open a new parking preview.");

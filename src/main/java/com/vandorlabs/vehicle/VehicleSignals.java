@@ -243,7 +243,7 @@ public final class VehicleSignals {
         Map<BlockPos,NBTTagCompound> saved=new HashMap<>();boolean fullSnapshot=false;
         for(BlockPos pos:new ArrayList<>(dirty)){
             TileEntity tile=craft.view.getTileEntity(pos);if(tile==null)continue;
-            NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());
+            VehicleStructure.Cell original=craft.structure.at(pos);NBTTagCompound data=VehicleTileData.retainCapabilities(original==null?null:original.tileData(),tile.writeToNBT(new NBTTagCompound()));
             // Height/settings packets already published this exact seat snapshot.
             // A redundant notification must not invalidate its open preview.
             if(tile instanceof TileEntityPilotSeat && craft.structure.at(pos)!=null
@@ -267,6 +267,7 @@ public final class VehicleSignals {
         dirty.clear();
     }
     static void save(EntityGroundVehicle craft,BlockPos pos,NBTTagCompound data,IBlockState state){
+        VehicleStructure.Cell original=craft.structure.at(pos);data=VehicleTileData.retainCapabilities(original==null?null:original.tileData(),data);
         List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(cell.pos.equals(pos)?new VehicleStructure.Cell(pos,state,data):cell);
         boolean geometry=craft.structure.at(pos).state!=state || craft.view.getTileEntity(pos) instanceof TileEntityLandingGear||craft.view.getTileEntity(pos) instanceof com.vandorlabs.gear.GearTileEntity;
         VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);

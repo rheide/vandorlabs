@@ -20,6 +20,7 @@ public final class VehicleCouplingRecoveryChecks {
         try(TransferCheckpoint checkpoint=new TransferCheckpoint(world,chunks)){long deadline=System.nanoTime()+45000000000L;while(!checkpoint.step()){require(System.nanoTime()<deadline,"partial chunk checkpoint timed out");Thread.sleep(25);}}
     }
     public static boolean run(WorldServer world,EntityPlayerMP actor,String phase)throws Exception{
+        if(phase.contains("coupling-split"))return VehicleSplitChecks.crash(world,actor,phase);
         if(phase.startsWith("verify-"))return verify(world,phase);
         if(phase.contains("latch"))return latchCrash(world,actor,phase);
         // Do not close this fixture: the harness kills the JVM at the barrier.

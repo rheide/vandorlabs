@@ -2,6 +2,11 @@
 
 ## 2.8
 
+- Allow stopped Taxi/Hover vehicles to separate into two complete vehicle entities, preserving their poses, mode, tile data and inventories through durable ownership recovery. Each half needs its own controller, seat and mode equipment; detached seats must be empty and its driver segment level.
+- Let Hover vehicles lift with their current articulated pose when intermediate leveling would catch the ground, then settle horizontal after ascent and descent. Allow stopped Hover vehicles to park directly near the ground with extended gear, preserving the leveled pose through ordinary parking checks. Preserve terrain selection and Survival mining through empty space inside a bent vehicle's enclosing bounds.
+- Preserve opaque carried tile capabilities during state updates and pending latch handoffs.
+- Mirror all company door artworks across paired normal and Large leaves in Fit, Tile and Auto layouts.
+
 - Make the new-assembly articulation limit configurable with `vehicles.maxArticulationPoints` in `vandorlabs-blocks.cfg`. Default 7 preserves eight independent segments; 0 allows rigid assemblies only. Saved vehicle loading, recovery and parking remain available after lowering the limit.
 
 - Put Segmented Door texture lists on the left; use Pos consistently in dialogs. Copy every segment setting through Duplifier and middle-click placement. Fit windows only across connected Window segments of the same Shape, tile the physical panel edges without stretching and separate square openings from their border rails. Synchronize linked columns on one pause-aware motion clock.

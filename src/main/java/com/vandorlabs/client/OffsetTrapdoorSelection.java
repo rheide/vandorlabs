@@ -31,6 +31,7 @@ public final class OffsetTrapdoorSelection {
         Minecraft mc=Minecraft.getMinecraft();Entity view=mc.getRenderViewEntity();
         if(mc.world==null || view==null || mc.player==null || mc.playerController==null)return;
         Vec3d start=view.getPositionEyes(partial),end=start.add(view.getLook(partial).scale(mc.playerController.getBlockReachDistance()));
+        mc.objectMouseOver=VehicleTerrainSelection.restore(mc,view,start,end,mc.objectMouseOver);
         RayTraceResult leaf=OffsetTrapdoorInteractions.trace(mc.world,start,end),vanilla=mc.objectMouseOver;
         RayTraceResult canopy=com.vandorlabs.canopy.CanopyInteractions.trace(mc.world,start,end);
         if(canopy!=null && (leaf==null || start.squareDistanceTo(canopy.hitVec)<start.squareDistanceTo(leaf.hitVec)))leaf=canopy;
@@ -49,7 +50,7 @@ public final class OffsetTrapdoorSelection {
         float partial=event.getPartialTicks();updateTarget(partial);
         RayTraceResult selected=mc.objectMouseOver;
         if(mc.gameSettings.hideGUI || selected==null || selected.typeOfHit!=RayTraceResult.Type.BLOCK)return;
-        TileEntity tile=mc.world.getTileEntity(selected.getBlockPos());if(!isOffset(tile))return;
+        TileEntity tile=mc.world.getTileEntity(selected.getBlockPos());if(!isOffset(tile)){if(VehicleTerrainSelection.restored(selected))mc.renderGlobal.drawSelectionBox(mc.player,selected,0,partial);return;}
         double x=view.lastTickPosX+(view.posX-view.lastTickPosX)*partial,y=view.lastTickPosY+(view.posY-view.lastTickPosY)*partial,z=view.lastTickPosZ+(view.posZ-view.lastTickPosZ)*partial;
         GlStateManager.pushMatrix();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.glLineWidth(2);GlStateManager.disableTexture2D();GlStateManager.depthMask(false);

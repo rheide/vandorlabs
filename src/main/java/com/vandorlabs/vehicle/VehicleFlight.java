@@ -33,6 +33,7 @@ public final class VehicleFlight {
         return topology!=null&&topology.sufficientLift(structure);
     }
     public static String hoverRequirement(VehicleStructure structure){return structure.couplers.isEmpty()?"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.":"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters in each connected coupler section.";}
+    public static boolean canParkHover(EntityGroundVehicle craft){return VehicleLandingGear.extended(craft)&&clearance(craft)<=3;}
     public static double clearance(EntityGroundVehicle craft){
         if(craft.collision==null)return Double.POSITIVE_INFINITY;
         AxisAlignedBB box=craft.articulation.active()?craft.articulation.worldBounds(craft.posX,craft.posY,craft.posZ,craft.rotationYaw):craft.collision.bounds(craft.rotationYaw).offset(craft.posX,craft.posY,craft.posZ);

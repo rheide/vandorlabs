@@ -4,8 +4,10 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 export VANDOR_LABS_TEST_SKIP_BUILD=true
 export VANDOR_LABS_TEST_HEAP=${VANDOR_LABS_TEST_HEAP:-4G}
-for phase in ${VANDOR_LABS_ARM_RECOVERY_CASES:-prepared detach detach-partial restore-partial restore-endpoint-partial detach-endpoint-partial harvest-prepared harvest-partial harvest-committed push-prepared push-partial painting-before-journal painting-assemble-partial painting-park-partial coupling-attach-partial coupling-detach-partial coupling-rollback-partial coupling-latch-committed}; do
-    fixture=$(mktemp -d "$ROOT/testclient/arm-restart.XXXXXX")
+RESTART_ROOT=${VANDOR_LABS_RECOVERY_RUN_ROOT:-$ROOT/testclient}
+mkdir -p "$RESTART_ROOT"
+for phase in ${VANDOR_LABS_ARM_RECOVERY_CASES:-prepared detach detach-partial restore-partial restore-endpoint-partial detach-endpoint-partial harvest-prepared harvest-partial harvest-committed push-prepared push-partial painting-before-journal painting-assemble-partial painting-park-partial coupling-attach-partial coupling-detach-partial coupling-rollback-partial coupling-latch-committed coupling-split-partial coupling-split-rollback-partial coupling-split-committed}; do
+    fixture=$(mktemp -d "$RESTART_ROOT/arm-restart.XXXXXX")
     export VANDOR_LABS_TEST_GAME_DIR="$fixture/game"
     export VANDOR_LABS_ARM_RECOVERY_PHASE="$phase"
     bash testclient/test_viewscreen.sh --focus arm-recovery > "$fixture/crash.log" 2>&1 &

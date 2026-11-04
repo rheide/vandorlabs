@@ -14,6 +14,7 @@ import net.minecraft.world.WorldServer;
 /** A complete, immutable preflight for one world-section ownership change. */
 public final class VehicleCouplingPlan {
     public final EntityGroundVehicle craft;
+    public final VehicleSplitPlan split;
     public final VehicleStructure before,after,fragment;
     public final BlockPos fragmentOrigin,primary,afterPrimary;
     public final boolean attaching;
@@ -24,7 +25,7 @@ public final class VehicleCouplingPlan {
     public final UUID actor;
     private final Set<BlockPos> airBoundary;
     private VehicleCouplingPlan(EntityGroundVehicle craft,EntityPlayerMP actor,VehicleStructure before,List<VehicleStructure.Cell> cells,int supports,boolean requiredSupports,VehicleStructure fragment,BlockPos origin,boolean attach,BlockPos primary,Set<BlockPos> boundary)throws Exception{
-        this.craft=craft;this.actor=actor.getUniqueID();this.before=before;this.fragment=fragment;fragmentOrigin=origin;attaching=attach;this.primary=primary;airBoundary=new HashSet<>(boundary);
+        split=null;this.craft=craft;this.actor=actor.getUniqueID();this.before=before;this.fragment=fragment;fragmentOrigin=origin;attaching=attach;this.primary=primary;airBoundary=new HashSet<>(boundary);
         beforeX=craft.posX;beforeY=craft.posY;beforeZ=craft.posZ;beforeYaw=craft.rotationYaw;
         int minX=0,minY=0,minZ=0;for(VehicleStructure.Cell cell:cells){minX=Math.min(minX,cell.pos.getX());minY=Math.min(minY,cell.pos.getY());minZ=Math.min(minZ,cell.pos.getZ());}
         BlockPos shift=new BlockPos(-minX,-minY,-minZ);List<VehicleStructure.Cell> normalized=new ArrayList<>();int controllers=0,autopilots=0;
@@ -35,6 +36,11 @@ public final class VehicleCouplingPlan {
         double oldX=before.bounds.maxX/2,oldZ=before.bounds.maxZ/2,newX=after.bounds.maxX/2,newZ=after.bounds.maxZ/2,a=Math.toRadians(beforeYaw),c=Math.cos(a),s=Math.sin(a),dx=newX-oldX-shift.getX(),dz=newZ-oldZ-shift.getZ();
         x=beforeX+oldX-newX+c*dx-s*dz;y=beforeY-shift.getY();z=beforeZ+oldZ-newZ+s*dx+c*dz;
         validate(actor);
+    }
+    public static VehicleCouplingPlan split(EntityGroundVehicle craft,EntityPlayerMP actor,BlockPos primary,VehicleStructure proposed,VehicleScan retained,VehicleScan detached)throws Exception{return new VehicleCouplingPlan(new VehicleSplitPlan(craft,actor,primary,proposed,retained,detached));}
+    private VehicleCouplingPlan(VehicleSplitPlan plan){
+        split=plan;craft=plan.craft;actor=plan.actor;before=craft.structure;after=plan.retained;fragment=VehicleStructure.display(plan.detached.cells);fragmentOrigin=BlockPos.ORIGIN;attaching=false;primary=plan.primary;airBoundary=Collections.emptySet();beforeX=craft.posX;beforeY=craft.posY;beforeZ=craft.posZ;beforeYaw=craft.rotationYaw;
+        net.minecraft.nbt.NBTTagList pos=plan.first.getTagList("Pos",6);x=pos.getDoubleAt(0);y=pos.getDoubleAt(1);z=pos.getDoubleAt(2);afterView=new VehicleWorld(craft.world,after);afterCollision=new VehicleCollision(afterView);BlockPos selected=primary.subtract(plan.retainedOrigin);if(after.at(selected)==null)selected=primary.offset(before.at(primary).state.getValue(BlockCoupler.FACING)).subtract(plan.retainedOrigin);afterPrimary=selected;
     }
     public static void require(boolean ok,String error){if(!ok)throw new IllegalArgumentException(error);}
     public static final class Alignment {
@@ -68,6 +74,7 @@ public final class VehicleCouplingPlan {
         return new VehicleCouplingPlan(craft,actor,before,kept,retained.supportCount(),retained.hasRequiredSupports(),VehicleStructure.display(normalized),alignment.origin.add(min),false,primary,Collections.emptySet());
     }
     public void validate(EntityPlayerMP player)throws Exception{
+        if(split!=null){split.validate(player);return;}
         WorldServer world=(WorldServer)craft.world;require(player!=null&&player.getUniqueID().equals(actor)&&player.world==world&&!player.isDead&&!player.isSpectator()&&player.connection!=null&&player.connection.netManager.isChannelOpen(),"The authorizing player must remain online and alive in this dimension");require(!craft.isDead&&craft.structure!=null&&!craft.ownershipBlocked,"Vehicle ownership is unavailable");
         require(craft.structure.write().equals(before.write()),"Vehicle blocks, settings or stored contents changed before coupling");require(Math.abs(craft.posX-beforeX)<1e-6&&Math.abs(craft.posY-beforeY)<1e-6&&Math.abs(craft.posZ-beforeZ)<1e-6&&Math.abs(MathHelper.wrapDegrees(craft.rotationYaw-beforeYaw))<1e-5,"Vehicle pose changed before coupling");
         require(afterCollision.loaded(world,x,y,z,0,0,0,beforeYaw),"Load the complete joined vehicle and its boundary inside the world");

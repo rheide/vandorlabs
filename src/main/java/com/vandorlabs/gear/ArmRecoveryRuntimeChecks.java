@@ -22,6 +22,7 @@ public final class ArmRecoveryRuntimeChecks {
     public static boolean paused(GearTileEntity arm){return System.getProperty("vandorlabs.reprolab")!=null&&!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty()&&arm.getPos().equals(ROOT);}
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Arm recovery: "+why);}
     @SideOnly(Side.CLIENT) public static boolean tick(Minecraft mc)throws Exception{
+        mc.gameSettings.pauseOnLostFocus=false;mc.displayGuiScreen(null);
         if(++ticks<30)return false;require(ticks<1500,"bounded durable checkpoint/restart");String phase=System.getProperty("vandorlabs.armRecoveryPhase","");
         return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0),phase)).get();
     }

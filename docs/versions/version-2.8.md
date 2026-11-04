@@ -2,6 +2,8 @@
 
 Segmented Door now combines motion and artwork controls on **Door**, supports Middle/Near/Far placement and contained water, and keeps opening/glass choices local to each configured section. A row of windows can share a door texture with solid sections below. Visible open panels can close the door; Straight travel retains a one-pixel edge. Surface wand extrusion rebuilds shared artwork automatically. Fit (Aspect) joins square pads only; nonsquare pads render each block independently.
 
+Stopped Taxi/Hover vehicles can separate into two vehicle entities when both halves have complete independent controls and mode equipment. Their poses and inventories remain carried, with durable recovery; see [Releasing a section](../couplers.md#releasing-a-section). Hover sections retain gentle following motion and settle level after ascent and descent. Stopped Hover vehicles can park directly within three blocks of ground with gear extended, without first changing to Taxi. Visible terrain inside a bent vehicle’s empty bounds remains editable.
+
 Coupled vehicles use the controller in the piloted segment. Nearly straight trailers may snap to the grid when parking, and articulated movement preserves speed through unobstructed travel. The `vehicles.maxArticulationPoints` startup setting defaults to seven hinge points (eight independent segments); existing longer saves still load. Lone Track steering and filled ramp texture repeats are corrected.
 
 Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and segmented doors. Existing saved designs migrate through explicit block aliases and the cockpit-glass replacements described below.
@@ -101,7 +103,7 @@ The Segmented Door keeps its existing registry ID and default artwork. Its Textu
 
 ## Company doors
 
-The Doors texture category now includes six company folders: Pinnacle, Ashiro-Mai, Paladyne, Vektor, Seyr and Vandor. Each contains Standard, Security and Light artwork. The 128×256 textures retain their authored alpha, including the Light designs’ window openings with faint native glass shimmer, and work on normal and Large Programmable Doors. Browse the [texture catalog](../texture-browser/) for previews.
+The Doors texture category now includes six company folders: Pinnacle, Ashiro-Mai, Paladyne, Vektor, Seyr and Vandor. Each contains Standard, Security and Light artwork. The 128×256 textures retain their authored alpha, including the Light designs’ window openings with faint native glass shimmer, and work on normal and Large Programmable Doors. All company artworks mirror across paired leaves in Fit, Tile and Auto layouts. Browse the [texture catalog](../texture-browser/) for previews.
 
 ## Chair angle and single-Track steering
 

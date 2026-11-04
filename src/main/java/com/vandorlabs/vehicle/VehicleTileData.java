@@ -6,6 +6,11 @@ import net.minecraft.util.math.BlockPos;
 /** Translate the absolute links used by supported Vandor tiles; relative links remain unchanged. */
 public final class VehicleTileData {
     private VehicleTileData() { }
+    /** Synthetic carried tiles cannot replace opaque capabilities owned by the physical world. */
+    public static NBTTagCompound retainCapabilities(NBTTagCompound original,NBTTagCompound updated){
+        if(original!=null&&original.hasKey("ForgeCaps",10))updated.setTag("ForgeCaps",original.getTag("ForgeCaps").copy());return updated;
+    }
+
     public static NBTTagCompound translated(NBTTagCompound source, BlockPos offset) {
         NBTTagCompound result=com.vandorlabs.redstone.TransmitterSlots.normalize(source.copy());
         result.setInteger("x",source.getInteger("x")+offset.getX());

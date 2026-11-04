@@ -644,6 +644,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.savedHoverChecksOnly")){try{if(SavedVehicleHoverChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved Hover recovery",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleRenderCostChecksOnly")){if(++holdTicks==40){VehicleRenderRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] vehicle-render-cost PASS");mc.shutdown();}return;}
         if(Boolean.getBoolean("vandorlabs.movedDoorChecksOnly")){if(++holdTicks>=40)MovedDoorRuntimeChecks.tick(mc,outDir);return;}
         if(Boolean.getBoolean("vandorlabs.segmentedDoorBenchmarkOnly")){if(++holdTicks==40)try{SegmentedDoorBenchmark.contracts(mc,outDir);SegmentedDoorBenchmark.run(mc,outDir);System.out.println("[vandorlabs][reprolab] segmented-benchmark PASS");mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Segmented reference benchmark",failure);}return;}
