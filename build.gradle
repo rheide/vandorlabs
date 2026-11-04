@@ -346,6 +346,12 @@ task compilePortableTests(type: JavaCompile) {
     options.compilerArgs += ['-Xlint:all', '-Werror']
 }
 
+task testSectionalDoorGeometry(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.garage.SectionalDoorGeometryTest'
+}
+
 task testVehicleArticulation(type: JavaExec) {
     dependsOn compilePortableTests
     classpath = files("$buildDir/portable-tests")
