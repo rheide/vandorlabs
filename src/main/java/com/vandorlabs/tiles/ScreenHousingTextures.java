@@ -2,6 +2,7 @@ package com.vandorlabs.tiles;
 
 /** Shared menu choices and atlas names for programmable housing surfaces. */
 public final class ScreenHousingTextures {
+    public static boolean companyLight(int choice){com.google.gson.JsonObject entry=entry(choice);if(entry==null||!entry.has("source"))return false;String source=entry.get("source").getAsString();return source.startsWith("company_doors/")&&source.endsWith("/light");}
     private static final class Finish {
         final String id;
         final String texture;

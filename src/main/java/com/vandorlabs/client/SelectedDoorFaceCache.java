@@ -11,7 +11,7 @@ final class SelectedDoorFaceCache {
     private static final int LIMIT=256;
     private static final Map<Key,StaticSurfaceMesh> MESHES=new LinkedHashMap<>(64,.75F,true);
     private SelectedDoorFaceCache() { }
-    static void clear() { MESHES.clear(); }
+    static void clear() { MESHES.clear();CompanyDoorGlazing.clear(); }
     static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,boolean tiled) {
         return get(geometry,choice,tiled?1:0);
     }

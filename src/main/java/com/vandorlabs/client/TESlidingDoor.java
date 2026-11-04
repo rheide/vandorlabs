@@ -217,7 +217,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         boolean paired=state.getValue(BlockConnectingDetailedDoor.PAIRED);
         boolean right=state.getValue(BlockVandorDoor.HINGE)==BlockDoor.EnumHingePosition.LEFT;
         boolean glass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1;
-        if (glass && (!tile.hasGlass()||tile.opaqueGlass())) return;
+        if (glass && !tile.hasCompanyGlass() && (!tile.hasGlass()||tile.opaqueGlass())) return;
         RenderItem renderer=Minecraft.getMinecraft().getRenderItem();
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
@@ -242,6 +242,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 }
             }
             GlStateManager.scale(size,size,1);
+            if(glass&&tile.hasCompanyGlass()) {GlStateManager.disableLighting();Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);CompanyDoorGlazing.draw(DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,1)).selected(),light);GlStateManager.enableLighting();GlStateManager.popMatrix();continue;}
             if(part==1 && tile.getFaceTexture()>=0) {
                 GlStateManager.disableLighting();
                 DoorRenderModels.Entry selected=DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,1));
@@ -279,6 +280,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     private static void renderXPanels(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
             EnumFacing facing,float progress,double x,double y,double z,double size,boolean right,int part,int light,boolean glass) {
+        if(glass&&tile.hasCompanyGlass()&&!CompanyDoorGlazing.enabled)return;
         StaticSurfaceMesh[] panels=XDoorMeshes.get(tile,state,right,part);
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);

@@ -114,7 +114,7 @@ final class DoorAppearanceRuntimeChecks {
    mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
    if(batch){BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);OpaqueDoorBatch.draw(f.tile,f.state,progress,0,0,0,b);Tessellator.getInstance().draw();}
    else {TESlidingDoor.renderSpaceDoor(f.tile,f.state,EnumFacing.SOUTH,progress,0,0,0);if(f.width==2)TESlidingDoor.renderSpaceDoor(f.tile,f.state.withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.LEFT),EnumFacing.SOUTH,progress,1,0,0);}
-   if(f.tile.hasGlass()&&!f.tile.opaqueGlass()){ForgeHooksClient.setRenderPass(1);TESlidingDoor.renderSpaceDoor(f.tile,f.state,EnumFacing.SOUTH,progress,0,0,0);}
+   if(f.tile.hasCompanyGlass()||f.tile.hasGlass()&&!f.tile.opaqueGlass()){ForgeHooksClient.setRenderPass(1);TESlidingDoor.renderSpaceDoor(f.tile,f.state,EnumFacing.SOUTH,progress,0,0,0);if(f.width==2)TESlidingDoor.renderSpaceDoor(f.tile,f.state.withProperty(BlockVandorDoor.HINGE,BlockDoor.EnumHingePosition.LEFT),EnumFacing.SOUTH,progress,1,0,0);}
    GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(size,size,target);
   }finally{ForgeHooksClient.setRenderPass(previous);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);target.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
  }

@@ -280,6 +280,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     @Override public void onChunkUnload(){MovedDoorInteractions.INDEX.remove(this);super.onChunkUnload();}
     @Override public void onLoad() { super.onLoad(); MovedDoorInteractions.INDEX.add(this); if(world!=null&&world.isRemote)migrateLegacyMotion();else DeferredTileLoad.schedule(this,()->{com.vandorlabs.blocks.DoorWaterGush.schedule(world,pos);migrateLegacyMotion();if(isLowerDoor()&&securityMode>0)tickReaders();}); }
     public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15 || design==16 || design==29; }
+    public boolean hasCompanyGlass(){return ScreenHousingTextures.companyLight(faceTexture);}
     public boolean hasGlass() { return faceTexture<0 && hasGlassDesign(design); }
     @Override
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
@@ -287,7 +288,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         return !(world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this))&&com.vandorlabs.client.OpaqueDoorBatch.available(this);
     }
     @Override public boolean shouldRenderInPass(int pass) {
-        return pass==1&&world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this)||isLowerDoor() && (pass == 0 || pass == 1 && hasGlass() && !opaqueGlass());
+        return pass==1&&world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this)||isLowerDoor() && (pass == 0 || pass == 1 && (hasCompanyGlass()||hasGlass() && !opaqueGlass()));
     }
     /** Keep frames and moving leaves visible throughout the loaded chunk render distance. */
     @Override public double getMaxRenderDistanceSquared(){return Double.MAX_VALUE;}
