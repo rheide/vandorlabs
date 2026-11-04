@@ -8,8 +8,9 @@ final class VehicleCouplerLiveChecks {
         mc.getIntegratedServer().addScheduledTask(()->{
             net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
             com.vandorlabs.vehicle.VehicleCouplerSectionChecks.run(world);
+            com.vandorlabs.vehicle.VehicleCouplerPhysicsChecks.run(world);
             com.vandorlabs.coupler.CouplerStaticChecks.run(world,new net.minecraft.util.math.BlockPos(900,100,900));
-        }).get();CouplerClientChecks.run(mc,output);
+        }).get();CouplerClientChecks.run(mc,output);VehicleCouplerRenderChecks.run(mc,output);
         System.out.println("[vandorlabs][reprolab] coupler-articulation-live PASS section-Hover gating and full/slab configuration regressions");return true;
     }
     private VehicleCouplerLiveChecks(){}

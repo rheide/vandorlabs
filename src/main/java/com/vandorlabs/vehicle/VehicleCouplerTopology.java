@@ -25,7 +25,7 @@ public final class VehicleCouplerTopology {
             if(!a.state.getValue(BlockCoupler.LOCKED))continue;BlockPos p=a.pos.offset(a.state.getValue(BlockCoupler.FACING));VehicleStructure.Cell b=structure.at(p);
             if(b==null||a.pos.compareTo(p)>=0||!VehicleCouplings.matching(a.state,b.state)||!b.state.getValue(BlockCoupler.LOCKED)||!structure.isActive(a.pos)||!structure.isActive(b.pos))continue;
             int first=ids.get(a.pos),second=ids.get(p);if(first==second)continue;
-            net.minecraft.nbt.NBTTagCompound at=a.tileData(),bt=b.tileData();paired.add(new Link(a.pos,p,first,second,at!=null&&at.getBoolean("CouplerArticulation")||bt!=null&&bt.getBoolean("CouplerArticulation")));
+            net.minecraft.nbt.NBTTagCompound at=a.tileData(),bt=b.tileData();net.minecraft.tileentity.TileEntity firstTile=view.getTileEntity(a.pos),secondTile=view.getTileEntity(p);if(firstTile instanceof com.vandorlabs.coupler.TileCoupler)at=firstTile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());if(secondTile instanceof com.vandorlabs.coupler.TileCoupler)bt=secondTile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());paired.add(new Link(a.pos,p,first,second,at!=null&&at.getBoolean("CouplerArticulation")||bt!=null&&bt.getBoolean("CouplerArticulation")));
         }
         links=Collections.unmodifiableList(paired);
     }

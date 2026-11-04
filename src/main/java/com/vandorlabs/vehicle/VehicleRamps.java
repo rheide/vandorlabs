@@ -23,6 +23,7 @@ public final class VehicleRamps {
     public static boolean signal(EntityGroundVehicle craft,BlockPos at,int level){
         if(level<0||level>15)throw new IllegalArgumentException("Invalid carried ramp signal level");
         TileEntity raw=craft.view.getTileEntity(at);if(!(raw instanceof TileEntityRampController))return false;
+        if(!craft.articulation.aligned())return false;
         craft.signals.persist();
         NBTTagCompound old=raw.writeToNBT(new NBTTagCompound());
         level=Math.max(level,com.vandorlabs.redstone.LoadedRedstonePower.level(craft.view,at));

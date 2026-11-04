@@ -37,6 +37,9 @@ public final class VehicleSelection {
         return local(structure,view,start,end,limitSq,null);
     }
     public static Hit local(VehicleStructure structure, World view, Vec3d start, Vec3d end, double limitSq,BlockPos riderSeat) {
+        return local(structure,view,start,end,limitSq,riderSeat,null);
+    }
+    private static Hit local(VehicleStructure structure, World view, Vec3d start, Vec3d end, double limitSq,BlockPos riderSeat,EntityGroundVehicle craft) {
         if (structure == null || view == null || !finite(start) || !finite(end)
                 || !Double.isFinite(limitSq) || limitSq < 0) return null;
         Hit nearest = null;
@@ -55,18 +58,21 @@ public final class VehicleSelection {
                 if(!tile.draws() || !canopies.add(tile.getPos()))continue;
                 selected=structure.at(tile.getPos());if(selected==null)continue;state=view.getBlockState(selected.pos);
             }
+            Vec3d rayStart=start,rayEnd=end;
+            if(craft!=null&&craft.articulation.active()){rayStart=craft.articulation.inverse(start,selected.pos);rayEnd=craft.articulation.inverse(end,selected.pos);}
             RayTraceResult hit;
             try {
-                hit = state.collisionRayTrace(view, selected.pos, start, end);
+                hit = state.collisionRayTrace(view, selected.pos, rayStart, rayEnd);
             } catch (RuntimeException | LinkageError error) {
                 VehicleCompatibility.warn(state.getBlock(), "selection", error);
                 // Unknown blocks with unavailable selection callbacks retain bounded cell targeting.
-                hit = new AxisAlignedBB(selected.pos).calculateIntercept(start, end);
+                hit = new AxisAlignedBB(selected.pos).calculateIntercept(rayStart, rayEnd);
                 if (hit != null) hit = new RayTraceResult(hit.hitVec, hit.sideHit, selected.pos);
             }
             if (hit == null || !finite(hit.hitVec)) continue;
             if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpitPart){com.vandorlabs.tiles.TileEntityCockpit root=com.vandorlabs.cockpit.CockpitAssembly.root(view,cell.pos);if(root==null)continue;selected=structure.at(root.getPos());if(selected==null)continue;}
-            double distance = start.squareDistanceTo(hit.hitVec);
+            Vec3d posed=craft!=null&&craft.articulation.active()?craft.articulation.point(hit.hitVec,selected.pos,1):hit.hitVec;
+            double distance = start.squareDistanceTo(posed);
             // Terrain at the same distance wins, preventing clicks through a touching wall.
             if (distance < limitSq && (nearest == null || distance < nearest.distanceSq))
                 nearest = new Hit(selected, hit, distance);
@@ -80,7 +86,12 @@ public final class VehicleSelection {
     }
     public static Hit trace(EntityGroundVehicle craft, Vec3d start, Vec3d end, double limitSq,boolean rider) {
         if (craft == null || craft.isDead || craft.structure == null || !finite(start) || !finite(end)) return null;
-        return local(craft.structure, craft.view, craft.toLocal(start), craft.toLocal(end), limitSq,rider?craft.structure.seat:null);
+        return local(craft.structure, craft.view, craft.toLocal(start), craft.toLocal(end), limitSq,rider?craft.structure.seat:null,craft);
+    }
+
+    public static Hit trace(EntityGroundVehicle craft,Vec3d start,Vec3d end,double limitSq,BlockPos seat){
+        if(craft==null||craft.structure==null||craft.isDead)return null;
+        return local(craft.structure,craft.view,craft.toLocal(start),craft.toLocal(end),limitSq,seat,craft);
     }
 
     private static boolean finite(Vec3d point) {

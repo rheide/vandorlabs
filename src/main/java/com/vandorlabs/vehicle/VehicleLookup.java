@@ -65,13 +65,8 @@ public final class VehicleLookup {
         double nearest=terrain==null?36:start.squareDistanceTo(terrain.hitVec);
         EntityGroundVehicle selected=null;
         for(EntityGroundVehicle craft:near(player.world,new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z).grow(.001))) {
-            Vec3d a=craft.toLocal(start),b=craft.toLocal(end);
-            for(VehicleStructure.Cell cell:craft.structure.cells) {
-                RayTraceResult hit=new AxisAlignedBB(cell.pos).calculateIntercept(a,b);
-                if(hit==null)continue;
-                double distance=start.squareDistanceTo(craft.toWorld(hit.hitVec));
-                if(distance<=nearest){nearest=distance;selected=craft;}
-            }
+            VehicleSelection.Hit hit=VehicleSelection.trace(craft,start,end,nearest+1e-9,false);
+            if(hit!=null){nearest=hit.distanceSq;selected=craft;}
         }
         return selected;
     }

@@ -104,7 +104,9 @@ public final class VehicleDoors {
             changed.add(new VehicleStructure.Cell(cell.pos,
                     states.containsKey(cell.pos)?cell.state.withProperty(BlockDoor.OPEN,states.get(cell.pos)):cell.state,data));
         }
-        craft.install(new VehicleStructure(changed,craft.structure.seat,craft.structure.facing,craft.structure.gearCount));
+        VehicleStructure next=new VehicleStructure(changed,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
+        if(!craft.world.isRemote&&craft.articulation.active()&&!craft.articulation.permits(new VehicleWorld(craft.world,next),next))return false;
+        craft.install(next);
         for(BlockPos position:states.keySet())if(malisis(craft.view.getTileEntity(position)))
             craft.view.getTileEntity(position).readFromNBT(craft.structure.at(position).tileData());
         return true;

@@ -73,7 +73,8 @@ public final class VehicleWorld extends World {
     /** Renderer distance arguments are physical world coordinates, including OptiFine's global camera. */
     private double physicalTileDistanceSq(BlockPos at,double x,double y,double z){
         double cx=at.getX()+.5,cy=at.getY()+.5,cz=at.getZ()+.5;
-        if(craft!=null){
+        if(craft!=null&&craft.articulation.active()){net.minecraft.util.math.Vec3d point=craft.toWorld(new net.minecraft.util.math.Vec3d(cx,cy,cz),at);cx=point.x;cy=point.y;cz=point.z;}
+        else if(craft!=null){
             if(distanceYaw!=craft.rotationYaw){distanceYaw=craft.rotationYaw;distanceCos=Math.cos(Math.toRadians(distanceYaw));distanceSin=Math.sin(Math.toRadians(distanceYaw));}
             double px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2,lx=cx-px,lz=cz-pz;
             cx=craft.posX+px+distanceCos*lx-distanceSin*lz;cy+=craft.posY;cz=craft.posZ+pz+distanceSin*lx+distanceCos*lz;

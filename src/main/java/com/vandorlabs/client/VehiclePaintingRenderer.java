@@ -31,7 +31,7 @@ public final class VehiclePaintingRenderer {
             // tile. Its local coordinates need the same transformed lighting
             // view as carried blocks, including lamps inside the craft.
             manager.world=craft.view;
-            for(EntityPainting painting:cache.paintings){painting.world=craft.view;try{manager.renderEntity(painting,painting.posX,painting.posY,painting.posZ,painting.rotationYaw,partial,false);}finally{painting.world=null;}}
+            for(EntityPainting painting:cache.paintings){painting.world=craft.view;try{net.minecraft.client.renderer.GlStateManager.pushMatrix();try{VehicleArticulationRender.apply(craft,painting.getHangingPosition().offset(painting.facingDirection.getOpposite()),partial);manager.renderEntity(painting,painting.posX,painting.posY,painting.posZ,painting.rotationYaw,partial,false);}finally{net.minecraft.client.renderer.GlStateManager.popMatrix();}}finally{painting.world=null;}}
         }finally{manager.world=previousWorld;}
     }
     static void clear(){CACHES.clear();bytes=0;}

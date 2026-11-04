@@ -24,6 +24,21 @@ pairs. Taxi keeps its existing support requirements and does not require lift
 blocks in every section. An ordinary block bridge makes the adjoining sections
 one rigid body.
 
+## Articulated trailers
+
+1. Build each section separately. Put one pair of opposing, enabled coupling heads between the sections; leave room around the hitch for the sections to turn.
+2. Open either head's dialog with sneak-right-click or the Configurizer and select **Articulation: Yes**. Either head enables the hinge. The default **No** retains rigid vehicle behavior.
+3. Join the sections as described above. Additional trailers can have their own single-pair hitches. Each joint follows independently in Taxi and Hover, including vertical changes in terrain or altitude.
+4. Drive forward to straighten the train before parking, attaching or releasing a section. These operations materialize blocks on the world grid and require aligned joints. Carried Ramp Controllers also wait for alignment before rebuilding their endpoints.
+
+A joint cannot exceed a combined angle of 75 degrees. Terrain and the actual collision shapes of the other sections can stop it sooner. Wide hulls need more clearance than narrow drawbars. Two or more coupling pairs between the same sections keep that connection rigid even when Articulation is enabled. A solid block path or a closed loop also prevents the affected joint from bending.
+
+Trailers remain part of one vehicle owner: they do not duplicate inventories or become separate vehicle entities. Saved vehicles retain each joint's pose. Clicking a carried control, boarding a seat and opening a container use its section's current position. Trailer wheels follow their own section rather than steering with the tractor.
+
+![A straight four-section vehicle](images/coupler-straight.png)
+
+![The same sections with independent yaw and pitch](images/coupler-articulated.png)
+
 ## Releasing a section
 
 Release either half's activation input to request separation. The section remains attached while the controller checks whether it can safely restore the detached part as ordinary blocks. Stop near a cardinal heading, as when parking a vehicle. The detached blocks snap to the parking grid; the retained vehicle keeps its actual position and heading. Terrain, players, other mechanisms and the retained hull must leave enough room for the complete parked geometry.

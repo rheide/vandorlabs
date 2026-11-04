@@ -32,10 +32,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public final VehicleDiagnostics diagnostics=new VehicleDiagnostics();
     private final VehicleSteering taxiSteering=new VehicleSteering();
-    VehicleSteering.Profile taxiSteeringProfile(){return taxiSteering.profile(view);}
+    VehicleSteering.Profile taxiSteeringProfile(){return taxiSteering.profile(view,articulation.active()?articulation.rootCells():null);}
     public VehicleStructure structure;
     public VehicleWorld view;
     public VehicleCollision collision;
+    public final VehicleArticulation articulation=new VehicleArticulation(this);
     public final VehicleCollisionCache collisionCache=new VehicleCollisionCache();
     public final VehicleSignals signals=new VehicleSignals(this);
     public long transferEpoch;
@@ -126,13 +127,18 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         Control(int n,byte f,byte s,boolean b,boolean sprint){sequence=n;this.f=f;this.s=s;brake=b;this.sprint=sprint;}
     }
     public Vec3d toWorld(Vec3d local) {
+        return toWorld(local,new BlockPos(local));
+    }
+    public Vec3d toWorld(Vec3d local,BlockPos owner){
         double px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2,c=Math.cos(Math.toRadians(rotationYaw)),s=Math.sin(Math.toRadians(rotationYaw));
+        if(articulation.active())local=articulation.point(local,owner,1);
         double x=local.x-px,z=local.z-pz;return new Vec3d(posX+px+c*x-s*z,posY+local.y,posZ+pz+s*x+c*z);
     }
     public Vec3d toLocal(Vec3d absolute) {
         double px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2,c=Math.cos(Math.toRadians(rotationYaw)),s=Math.sin(Math.toRadians(rotationYaw));
         double x=absolute.x-posX-px,z=absolute.z-posZ-pz;return new Vec3d(px+c*x+s*z,absolute.y-posY,pz-s*x+c*z);
     }
+    public Vec3d toLocal(Vec3d absolute,BlockPos owner){Vec3d local=toLocal(absolute);return articulation.active()?articulation.inverse(local,owner):local;}
     public void setLocalDriver(boolean value) {
         if(localDriver!=value){localDriver=value;pendingInputs.clear();lastAcknowledgement=-1;lastServerTick=Long.MIN_VALUE;nextPrediction=null;correctionX=correctionY=correctionZ=0;correctionYaw=0;previousVisual=currentVisual=null;}
     }
@@ -143,6 +149,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public void authoritative(VehicleNetwork.Packet p) {
         if(p.serverTick<=lastServerTick)return;
+        if(p.jointAngles.length>0)articulation.receive(p.jointTopology,p.jointAngles,localDriver);
         hover=p.flag;if(view!=null)view.hover=hover;hoverTarget=p.y;
         lastServerTick=p.serverTick;
         lastAcknowledgement=p.sequence;
@@ -167,9 +174,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public Vec3d seatPosition(VehiclePose pose,Entity passenger) {return seatPosition(pose,passenger,0);}
     public Vec3d seatPosition(VehiclePose pose,Entity passenger,float partial) {
         BlockPos seat=seatForPassenger(passenger);
-        if(view.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityCockpit){com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)view.getTileEntity(seat);Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.seatLocation(partial),cockpit.facing());return pose.world(new Vec3d(seat.getX()+at.x,seat.getY()+cockpit.seatHeight()+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+at.z),structure.bounds.maxX/2,structure.bounds.maxZ/2);}
-        return pose.world(new Vec3d(seat.getX()+.5,seat.getY()+VehicleSeats.height(view,seat)+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+.5),structure.bounds.maxX/2,structure.bounds.maxZ/2);
+        if(view.getTileEntity(seat) instanceof com.vandorlabs.tiles.TileEntityCockpit){com.vandorlabs.tiles.TileEntityCockpit cockpit=(com.vandorlabs.tiles.TileEntityCockpit)view.getTileEntity(seat);Vec3d at=com.vandorlabs.cockpit.CockpitData.rotate(cockpit.seatLocation(partial),cockpit.facing());return seatWorld(pose,new Vec3d(seat.getX()+at.x,seat.getY()+cockpit.seatHeight()+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+at.z),seat,partial,structure.bounds.maxX/2,structure.bounds.maxZ/2);}
+        return seatWorld(pose,new Vec3d(seat.getX()+.5,seat.getY()+VehicleSeats.height(view,seat)+.35-EntityChairSeat.RIDER_PELVIS_OFFSET+passenger.getYOffset(),seat.getZ()+.5),seat,partial,structure.bounds.maxX/2,structure.bounds.maxZ/2);
     }
+    private Vec3d seatWorld(VehiclePose pose,Vec3d local,BlockPos owner,float partial,double px,double pz){return pose.world(articulation.active()?articulation.point(local,owner,partial<0?0:partial):local,px,pz);}
     @Override public AxisAlignedBB getRenderBoundingBox() {
         if(structure==null)return getEntityBoundingBox();
         double x=structure.bounds.maxX/2,z=structure.bounds.maxZ/2,r=Math.hypot(x,z)+2;
@@ -180,6 +188,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private byte[] encoded;
     private VehicleStructure rotationSource,rotatedSnapshot;private int rotationTurns;
     public VehicleStructure rotatedSnapshot(int turns) {
+        articulation.requireAligned();
         if(turns==0)return structure;
         if(rotationSource!=structure || rotationTurns!=turns){rotatedSnapshot=VehicleRotation.rotate(structure,view,turns);rotationSource=structure;rotationTurns=turns;}
         return rotatedSnapshot;
@@ -217,7 +226,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     /** Preserve live canopy interpolation while publishing an immutable save/parking snapshot. */
     public void updateCanopies(VehicleStructure snapshot,boolean moved){
-        structure=snapshot;view.structure=snapshot;encoded=null;
+        snapshot.inheritComponents(structure);snapshot.componentView(view);structure=snapshot;view.structure=snapshot;encoded=null;
         if(moved){
             long sampled=VehicleAnimationDiagnostics.start(this);
             collision=collisionCache.collision(view);
@@ -241,9 +250,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);buffer.writeBoolean(transferInProgress);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA){if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());VehicleNetwork.request(this);}}
-    @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();if(couplingActor!=null)tag.setUniqueId("CouplingActor",couplingActor);tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
-    @Override protected void readEntityFromNBT(NBTTagCompound tag){dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());couplingActor=tag.hasUniqueId("CouplingActor")?tag.getUniqueId("CouplingActor"):null;hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));autopilot.read(tag.getCompoundTag("AutopilotNavigation"));for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}}catch(Exception | LinkageError e){signals.close();structure=null;view=null;collision=null;encoded=null;rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;loadedTaxiSupportCheck=structure!=null;}
-    @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
+    @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();articulation.write(tag);if(couplingActor!=null)tag.setUniqueId("CouplingActor",couplingActor);tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
+    @Override protected void readEntityFromNBT(NBTTagCompound tag){articulation.retain(tag);dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());couplingActor=tag.hasUniqueId("CouplingActor")?tag.getUniqueId("CouplingActor"):null;hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));articulation.read(tag);autopilot.read(tag.getCompoundTag("AutopilotNavigation"));for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}}catch(Exception | LinkageError e){signals.close();structure=null;view=null;collision=null;encoded=null;rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;loadedTaxiSupportCheck=structure!=null;}
+    @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(articulation!=null&&articulation.active()?articulation.worldBounds(x,y,z,rotationYaw):collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
     public void input(EntityPlayerMP player,int sequence,byte forward,byte strafe,boolean brake) {
         if(transferInProgress || getControllingPassenger()!=player)return;
         if(!(hover?serverInputs.offerLatest(sequence,forward,strafe,brake):serverInputs.offer(sequence,forward,strafe,brake)))return;
@@ -327,6 +336,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private void updateAnimatedVehicle() {
         if(transferInProgress){motionX=motionY=motionZ=0;return;}
         super.onUpdate();rotationPitch=prevRotationPitch=0;
+        if(world.isRemote)articulation.clientTick();
         if(rampGeometryUpgradePending&&!world.isRemote&&structure!=null){rampGeometryUpgradePending=false;VehicleRamps.upgradeLoadedGeometry(this);rampGeometryUpgradePending=false;}
         long animationSample=VehicleAnimationDiagnostics.start(this);
         if(animationSample!=0&&view!=null){int gear=0;for(net.minecraft.tileentity.TileEntity raw:view.tiles.values())if(raw instanceof com.vandorlabs.tiles.TileEntityLandingGear){com.vandorlabs.tiles.TileEntityLandingGear tile=(com.vandorlabs.tiles.TileEntityLandingGear)raw;if(tile.progress!=tile.previous)gear++;}VehicleAnimationDiagnostics.value((world.isRemote?"client/":"server/")+"moving-gear-count",gear);}
@@ -402,7 +412,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private void advance(boolean active) {
         long started=VehicleDiagnostics.ENABLED?System.nanoTime():0;float before=rotationYaw;
         collision.begin(world,this);
-        try { advanceController(active); } finally { collision.end();if(VehicleDiagnostics.ENABLED)diagnostics.step(System.nanoTime()-started,collision.terrainQueries,MathHelper.wrapDegrees(rotationYaw-before)); }
+        boolean articulated=articulation.begin();
+        try { advanceController(active); } finally { if(articulated)articulation.end();collision.end();if(VehicleDiagnostics.ENABLED)diagnostics.step(System.nanoTime()-started,collision.terrainQueries,MathHelper.wrapDegrees(rotationYaw-before)); }
     }
     public double cruiseSpeed(){return !hover&&!structure.activeThruster()?UNPOWERED_TAXI_SPEED:CRUISE_SPEED;}
     private void advanceController(boolean active) {
@@ -416,6 +427,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         float change=VehicleControls.yawChange(steering,driveSpeed,hover,autopilot.enabled(),hover?VehicleSteering.DEFAULT:taxiSteeringProfile(),onGround);
         float turned=collision.turn(world,this,posX,posY,posZ,rotationYaw,change);
         if(hover||!structure.activeSkisOnly()||turned==rotationYaw||VehicleSkiTraction.onIce(this,posX,posY,posZ,turned))rotationYaw=turned;
+        if(articulation.active())articulation.applyTurn();
         EnumFacing front=structure.facing;double angle=Math.toRadians(rotationYaw),c=Math.cos(angle),s=Math.sin(angle);
         motionX=(front.getFrontOffsetX()*c-front.getFrontOffsetZ()*s)*driveSpeed;
         motionZ=(front.getFrontOffsetX()*s+front.getFrontOffsetZ()*c)*driveSpeed;
@@ -424,7 +436,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             hoverTarget=MathHelper.clamp(hoverTarget,1,world.getHeight()-structure.bounds.maxY);
             motionY=MathHelper.clamp((hoverTarget-posY)*.3,-.18,.18);
         }else motionY=Math.max(-.5,motionY-.04);
-        if(!collision.loaded(world,posX,posY,posZ,motionX,motionY,motionZ,rotationYaw)){motionX=motionY=motionZ=0;return;}
+        if(!(articulation.active()?articulation.loaded(posX,posY,posZ,motionX,motionY,motionZ,rotationYaw):collision.loaded(world,posX,posY,posZ,motionX,motionY,motionZ,rotationYaw))){motionX=motionY=motionZ=0;return;}
         double y=collision.clip(world,this,posX,posY,posZ,motionY,1,rotationYaw);
         onGround=motionY<0 && y!=motionY;
         double x=collision.clip(world,this,posX,posY+y,posZ,motionX,0,rotationYaw);

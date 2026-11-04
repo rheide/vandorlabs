@@ -23,6 +23,8 @@ public final class VehicleNetwork {
         public byte[] data=new byte[0];
         public String text="";
         public long serverTick;
+        public long jointTopology;
+        public short[] jointAngles=new short[0];
         public double x,y,z,dy,speed;public float yaw,steering;
         public Packet(){}
         public Packet(int type){this.type=type;}
@@ -31,13 +33,16 @@ public final class VehicleNetwork {
             if(type==STATE){b.writeBoolean(flag);writeState(b);return;}
             b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);
         }
-        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);}
+        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}}
         public void fromBytes(ByteBuf b){
-            valid=false;
+            valid=false;jointAngles=new short[0];jointTopology=0;
             try{
                 type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();
                 if(type==STATE){
                     flag=b.readBoolean();serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();
+                    if(b.isReadable()){
+                        if(b.readableBytes()<14||b.readInt()!=0x4A4F494E)return;jointTopology=b.readLong();int count=b.readUnsignedShort();if(count>VehicleArticulation.MAX_JOINTS||b.readableBytes()!=count*4)return;jointAngles=new short[count*2];for(int i=0;i<jointAngles.length;i++){short angle=b.readShort();if(Math.abs((int)angle)>7500)return;jointAngles[i]=angle;}
+                    }
                     valid=!b.isReadable()&&Double.isFinite(x)&&Double.isFinite(y)&&Double.isFinite(z)&&Double.isFinite(dy)&&Double.isFinite(speed)&&Float.isFinite(yaw)&&Float.isFinite(steering);return;
                 }
                 total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());
@@ -75,6 +80,7 @@ public final class VehicleNetwork {
     public static void state(EntityGroundVehicle e) {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();
         p.flag=e.hover;p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.driveSpeed;p.yaw=e.rotationYaw;p.steering=e.steering;
+        if(e.articulation.active()){p.jointTopology=e.articulation.topologyId();p.jointAngles=e.articulation.network();}
         if(VehicleNetworkLab.state(p,e))return;
         PacketHandler.INSTANCE.sendToAllTracking(p,e);
         if(e.getControllingPassenger() instanceof EntityPlayerMP)PacketHandler.INSTANCE.sendTo(p,(EntityPlayerMP)e.getControllingPassenger());

@@ -151,7 +151,7 @@ public final class VehicleCollisionCache {
         return readyForCanopyPose(view,desired);
     }
     public boolean readyForCanopyPose(VehicleWorld view,Map<BlockPos,? extends Number> desired){
-        long started=VehicleAnimationDiagnostics.start(view.craft);try{return readyPose(view,desired);}finally{VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-total",started);}
+        long started=VehicleAnimationDiagnostics.start(view.craft);try{return readyPose(view,desired)&&(view.craft==null||view.craft.articulation.permitsPose(view,desired));}finally{VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-total",started);}
     }
     private boolean readyPose(VehicleWorld view,Map<BlockPos,? extends Number> desired){
         long described=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);VehicleAnimationDiagnostics.elapsed(view.craft,"cache-readiness-describe",described);if(description==null){description=describe(view,false);uncached=true;if(description==null)return false;}else uncached=false;

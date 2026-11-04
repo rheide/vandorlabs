@@ -375,6 +375,7 @@ public final class VehicleCollision {
         return (terrain==null?new Terrain(world,entity):terrain).obstacles(swept);
     }
     public float turn(World world,net.minecraft.entity.Entity entity,double x,double y,double z,float from,float change) {
+        if(entity instanceof EntityGroundVehicle&&((EntityGroundVehicle)entity).articulation.active())return ((EntityGroundVehicle)entity).articulation.turn(x,y,z,from,change);
         if(boxes.size()<=32)return legacyTurn(world,entity,x,y,z,from,change);
         if(Math.abs(change)<1e-6)return from;
         double radius=Math.hypot(bounds.maxX-pivotX,bounds.maxZ-pivotZ);
@@ -413,6 +414,7 @@ public final class VehicleCollision {
     }
     public double clip(World world,net.minecraft.entity.Entity entity,double x,double y,double z,double amount,int axis){return clip(world,entity,x,y,z,amount,axis,0);}
     public double clip(World world,net.minecraft.entity.Entity entity,double x,double y,double z,double amount,int axis,float yaw) {
+        if(entity instanceof EntityGroundVehicle&&((EntityGroundVehicle)entity).articulation.active())return ((EntityGroundVehicle)entity).articulation.clip(x,y,z,amount,axis,yaw);
         if(boxes.size()<=32)return legacyClip(world,entity,x,y,z,amount,axis,yaw);
         if(amount==0)return 0;double result=amount,radians=Math.toRadians(yaw),cos=Math.cos(radians),sin=Math.sin(radians);
         for(Cluster cluster:clusters){

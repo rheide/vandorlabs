@@ -41,7 +41,7 @@ public final class VehicleCouplingPlan {
         public final int turns;public final BlockPos origin;public final VehicleStructure placed;
         Alignment(EntityGroundVehicle craft,VehicleStructure source){this(craft,source,true);}
         Alignment(EntityGroundVehicle craft,VehicleStructure source,boolean exact){
-            require(craft.stopped(),"Stop the vehicle before coupling or detaching");turns=VehicleRotation.turns(craft.rotationYaw);placed=VehicleRotation.rotate(source,craft.view,turns);
+            craft.articulation.requireAligned();require(craft.stopped(),"Stop the vehicle before coupling or detaching");turns=VehicleRotation.turns(craft.rotationYaw);placed=VehicleRotation.rotate(source,craft.view,turns);
             double cx=craft.posX+source.bounds.maxX/2,cz=craft.posZ+source.bounds.maxZ/2;origin=new BlockPos(Math.round(cx-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(cz-placed.bounds.maxZ/2));
             double angle=Math.toRadians(turns*90),c=Math.cos(angle),s=Math.sin(angle);
             if(exact)for(int n=0;n<8;n++){Vec3d local=new Vec3d((n&1)==0?0:source.bounds.maxX,(n&2)==0?0:source.bounds.maxY,(n&4)==0?0:source.bounds.maxZ);Vec3d actual=craft.toWorld(local);double lx=local.x-source.bounds.maxX/2,lz=local.z-source.bounds.maxZ/2;Vec3d snapped=new Vec3d(origin.getX()+placed.bounds.maxX/2+c*lx-s*lz,origin.getY()+local.y,origin.getZ()+placed.bounds.maxZ/2+s*lx+c*lz);require(actual.squareDistanceTo(snapped)<=.075*.075,"Align the stopped vehicle precisely to the block grid before coupling");}

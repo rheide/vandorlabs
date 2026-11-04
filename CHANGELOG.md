@@ -2,6 +2,7 @@
 
 ## 2.8
 
+- Add optional Coupler articulation with independent trailer yaw and pitch, a combined 75-degree limit, hull/terrain collision checks, saved joint poses and section-aware rendering and interaction. Parallel coupling pairs remain rigid.
 - Require three lift blocks in each connected coupler section before entering Hover, including rigid or parallel coupler connections. Taxi remains available without section lift.
 
 - Add mounting-dependent Ramp Controller Axis choices, including upright Y source panels for side mounts, saved settings, generated geometry, collision, recovery and vehicle rotation. Existing horizontal layouts retain their behavior.

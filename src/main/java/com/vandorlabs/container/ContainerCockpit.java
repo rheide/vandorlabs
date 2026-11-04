@@ -29,7 +29,7 @@ public final class ContainerCockpit extends Container {
     /** Page selection is local UI state and needs no additional network message. */
     public int initialPage(EntityPlayer player){
         if(player==null)return 0;Vec3d start=player.getPositionEyes(1),end=start.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(8));
-        if(craft!=null){start=craft.toLocal(start);end=craft.toLocal(end);}
+        if(craft!=null){start=craft.toLocal(start,tile.getPos());end=craft.toLocal(end,tile.getPos());}
         Vec3d anchor=new Vec3d(tile.getPos());return tile.configurationPage(start.subtract(anchor),end.subtract(anchor));
     }
     @Override public boolean canInteractWith(EntityPlayer player){

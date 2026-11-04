@@ -24,11 +24,13 @@ public final class VehicleSteering {
     private VehicleStructure observed;
     private VehicleWorld observedWorld;
     private int revision;
+    private Set<BlockPos> observedFilter;
     private List<VehicleStructure.Cell> candidates=Collections.emptyList();
     private Profile cached=DEFAULT;
-    public Profile profile(VehicleWorld world){
+    public Profile profile(VehicleWorld world){return profile(world,null);}
+    public Profile profile(VehicleWorld world,Set<BlockPos> filter){
         if(world==null)return DEFAULT;
-        if(observed!=world.structure||observedWorld!=world){observed=world.structure;observedWorld=world;candidates=new ArrayList<>();for(VehicleStructure.Cell cell:observed.cells){Block block=cell.state.getBlock();if(world.structure.isActive(cell.pos)&&(block instanceof BlockLandingGear||block instanceof BlockPropulsionLight&&cell.state.getValue(BlockPropulsionLight.FACING)==EnumFacing.DOWN))candidates.add(cell);}revision=Integer.MIN_VALUE;}
+        if(observed!=world.structure||observedWorld!=world||observedFilter!=filter){observedFilter=filter;observed=world.structure;observedWorld=world;candidates=new ArrayList<>();for(VehicleStructure.Cell cell:observed.cells){Block block=cell.state.getBlock();if((filter==null||filter.contains(cell.pos))&&world.structure.isActive(cell.pos)&&(block instanceof BlockLandingGear||block instanceof BlockPropulsionLight&&cell.state.getValue(BlockPropulsionLight.FACING)==EnumFacing.DOWN))candidates.add(cell);}revision=Integer.MIN_VALUE;}
         if(revision!=world.tileRevision){revision=world.tileRevision;cached=measure(world,candidates);}
         return cached;
     }
