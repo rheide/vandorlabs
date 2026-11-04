@@ -255,9 +255,13 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-2.0.jar`.
+`build/libs/vandorlabs-2.8.jar`.
 
 Keep finished builds there unless a specific destination is requested.
+
+For the standard Linux release gate plus exact-JAR Dynmap checks, run
+`./tools/verify_release.sh`. Use `--check` to validate dependencies first.
+See [running release checks](docs/release-checks.md) for setup, scope and logs.
 
 To check placement settings, diagonal lighting data, render-distance policy,
 and connected Duplifier selection without opening a renderer, run
