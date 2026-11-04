@@ -379,7 +379,7 @@ public final class VehicleService {
         catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
     private static VehicleStructure rememberShape(World world,BlockPos origin,VehicleStructure structure,VehicleWeight.Result weight){
-        VehicleStructure.Cell cell=structure.controller();if(cell==null)return structure;
+        VehicleStructure.Cell cell=structure.controller();if(cell==null||!world.isBlockLoaded(origin.add(cell.pos)))return structure;
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(origin.add(cell.pos));if(!(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController))return structure;
         com.vandorlabs.tiles.TileEntityVehicleController controller=(com.vandorlabs.tiles.TileEntityVehicleController)raw;
         controller.shape=VehicleShape.of(structure);if(weight!=null){controller.vehicleWeight=weight.units;controller.vehicleWeightVersion=VehicleWeight.VERSION;controller.vehicleWeightIncomplete=weight.incomplete;}controller.markDirty();controller.publishDesign();

@@ -15,6 +15,7 @@ marker=out/'.retired-glass-fixture'
 if not marker.exists():
  if (out/'world').exists() or (out/'server.properties').exists():p.error('Refusing an existing server directory without the fixture marker')
  marker.write_text('Isolated retired glass upgrade fixture\n')
+(out/'mods').mkdir(exist_ok=True)
 (out/'eula.txt').write_text('eula=true\n')
 if not (out/'server.properties').exists():
  (out/'server.properties').write_text('server-port=25571\nonline-mode=false\nlevel-name=world\nlevel-type=FLAT\ngenerate-structures=false\nallow-nether=false\nspawn-protection=0\nview-distance=3\nmax-tick-time=-1\n')

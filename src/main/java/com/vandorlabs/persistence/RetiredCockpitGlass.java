@@ -106,7 +106,8 @@ public final class RetiredCockpitGlass {
                     for(String key:new String[]{"Original","Source"})if(tag.hasKey(key,10)&&variant(tag.getCompoundTag(key).getString("Name"))>=0){if(!change)return true;tag.setTag(key,stateTag(tag.getCompoundTag(key)));}
                     for(String key:new String[]{"OriginalState","SourceState"})if(tag.hasKey(key,8)){String encoded=tag.getString(key);int old=-1;for(int i=0;i<NAMES.length;i++)if(encoded.equals(NAMES[i])||encoded.startsWith(NAMES[i])&&encoded.length()>NAMES[i].length()&&encoded.charAt(NAMES[i].length())=='['){old=i;break;}if(old>=0){BlockStateReference reference=BlockStateReference.parse(encoded);if(!reference.properties.isEmpty())throw new IllegalArgumentException("Unknown retired ramp glass properties");if(!change)return true;tag.setString(key,LegacyBlockStates.encode(state(old)));}}
                 }
-                for(String key:tag.getKeySet()){NBTBase child=tag.getTag(key);if(child instanceof NBTTagCompound||child instanceof NBTTagList)pending.add(child);}
+                // Capability state belongs to its provider, not our saved-state schema.
+                for(String key:tag.getKeySet()){if(key.equals("ForgeCaps"))continue;NBTBase child=tag.getTag(key);if(child instanceof NBTTagCompound||child instanceof NBTTagList)pending.add(child);}
             }else if(value instanceof NBTTagList){NBTTagList list=(NBTTagList)value;for(int i=0;i<list.tagCount();i++){NBTBase child=list.get(i);if(child instanceof NBTTagCompound||child instanceof NBTTagList)pending.add(child);}}
         }return false;
     }

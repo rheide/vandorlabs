@@ -3,6 +3,7 @@ import argparse,hashlib,io,json,struct,zlib
 from zipfile import ZipFile
 from PIL import Image
 from import_cool_screens import ROOT,DATA,TEXTURES,digest_ids
+from block_catalog_compatibility import historical_blocks
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--jar');args=p.parse_args()
@@ -13,7 +14,7 @@ def main():
     try:
         for name,count,widths in audits:
             audit=json.loads((ROOT/'tools'/ (name+'.json')).read_text());assert len(audit['entries'])==count
-            for values,key in [(catalog,'Catalog'),(blocks,'Block'),(inputs,'Input')]:
+            for values,key in [(catalog,'Catalog'),(historical_blocks(blocks),'Block'),(inputs,'Input')]:
                 if 'previous'+key+'Count' in audit:assert digest_ids(values[:audit['previous'+key+'Count']])==audit['previous'+key+'IdsSha256']
             for width,number in widths.items():assert sum(e['width']==width for e in audit['entries'])==number
             for expected in audit['entries']:

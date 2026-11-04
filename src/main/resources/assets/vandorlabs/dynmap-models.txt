@@ -21054,9 +21054,6 @@ customblock:id=%armoured_track,state=*,class=com.vandorlabs.dynmap.UtilityModelR
 customblock:id=%bogie_track,state=*,class=com.vandorlabs.dynmap.UtilityModelRenderer
 # End 2.6 utility overview models
 
-
-
-
 # Generated joined hexagonal propulsion models
 customblock:id=%rocket_thruster_hexagonal,state=*,class=com.vandorlabs.dynmap.HexThrusterRenderer
 customblock:id=%ion_drive_hexagonal,state=*,class=com.vandorlabs.dynmap.HexThrusterRenderer

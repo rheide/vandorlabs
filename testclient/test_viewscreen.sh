@@ -253,7 +253,9 @@ esac
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 JAVA8=/usr/lib/jvm/java-8-openjdk-amd64
-RUN_OUT=$(mktemp -d "$ROOT/testclient/render-run.XXXXXX")
+RUN_ROOT=${VANDOR_LABS_TEST_RUN_ROOT:-"$ROOT/testclient"}
+mkdir -p "$RUN_ROOT"
+RUN_OUT=$(mktemp -d "$RUN_ROOT/render-run.XXXXXX")
 
 cd "$ROOT"
 if [ "${TARGET:-}" = arm-live ]; then export VANDOR_LABS_ARM_SECOND_FIXTURE=${VANDOR_LABS_ARM_SECOND_FIXTURE:-"$ROOT/testclient/fixtures/arm-rotating-replacement-2.6.nbt"}; export VANDOR_LABS_ARM_SAVED_FIXTURE=${VANDOR_LABS_ARM_SAVED_FIXTURE:-"$ROOT/testclient/fixtures/arm-pending-detach-2.6.nbt"}; fi

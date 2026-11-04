@@ -21,7 +21,7 @@ public class TileEntityVehicleController extends TileEntityPilotSeat {
         vehicleName=com.vandorlabs.programmer.ChipJournal.bounded(name,40);security=enabled;card=accepted;
         markDirty();publishDesign();
     }
-    public void publishDesign(){if(world!=null&&(!world.isRemote||world instanceof VehicleWorld))world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
+    public void publishDesign(){if(world!=null&&(!world.isRemote||world instanceof VehicleWorld)&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
     private boolean initialized;
     private VehicleScan migration;
     private long retry;

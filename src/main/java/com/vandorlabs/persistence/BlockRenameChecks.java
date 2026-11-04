@@ -25,12 +25,14 @@ public final class BlockRenameChecks {
         TileEntityChest chest=(TileEntityChest)world.getTileEntity(new BlockPos(8,80,10));require(chest!=null,"source chest exists");Block block=Block.getBlockFromName(RenamedBlocks.NEW);require(block!=null&&RenamedBlocks.NEW.equals(block.getRegistryName().toString()),"canonical registered block name");
         for(int i=0;i<META.length;i++){ItemStack stack=chest.getStackInSlot(i);require(stack.getItem()==net.minecraft.item.Item.getItemFromBlock(block)&&stack.getMetadata()==META[i]&&stack.getCount()==13+i,"native inventory metadata/count "+i);require(stack.getDisplayName().equals("Legacy half screen "+META[i])&&stack.getTagCompound().getCompoundTag("Opaque").getInteger("Proof")==28,"named native stack payload "+i);}
         boolean dropped=false;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(entity instanceof EntityItem){ItemStack stack=((EntityItem)entity).getItem();if(stack.getItem()==net.minecraft.item.Item.getItemFromBlock(block)&&stack.getMetadata()==11&&stack.getCount()==3)dropped=true;}require(dropped,"native dropped item rename");
-        probes(world,block);System.out.println("[vandorlabs] block-rename-"+phase+" PASS previous-JAR native metadata inventories inserted-chip dropped-item cold-restart portable-palettes two-chip-codecs nested-payloads unknown-properties");
+        probes(world,block);System.out.println("[vandorlabs] block-rename-"+phase+" PASS previous-JAR native metadata inventories "+(Boolean.getBoolean("vandorlabs.blockRenameLegacyArtwork")?"legacy-artwork":"inserted-chip")+" dropped-item cold-restart portable-palettes two-chip-codecs nested-payloads unknown-properties");
     }
     private static void verify(WorldServer world,int base){
         Block block=Block.getBlockFromName(RenamedBlocks.NEW);
         for(int i=0;i<META.length;i++){BlockPos at=new BlockPos(base+i,80,base);world.getChunkFromBlockCoords(at);IBlockState state=world.getBlockState(at);require(state.getBlock()==block&&block.getMetaFromState(state)==META[i],"native state "+base+" metadata="+META[i]);}
-        TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(new BlockPos(base,80,base));require(tile.hasChipSurface(0)&&ChipJournal.title(tile.ownedChip()).equals("Retained reader"),"inserted chip and selected Chip surface retained");
+        TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(new BlockPos(base,80,base));
+        if(Boolean.getBoolean("vandorlabs.blockRenameLegacyArtwork"))require(tile.baseSurfaceTexture(0)==0&&tile.ownedChip().isEmpty(),"previous-release artwork retained without inventing a chip");
+        else require(tile.hasChipSurface(0)&&ChipJournal.title(tile.ownedChip()).equals("Retained reader"),"inserted chip and selected Chip surface retained");
         require(world.getBlockState(new BlockPos(base+13,80,base)).getBlock()==net.minecraft.init.Blocks.STONE,"vanilla neighbour retained");
     }
     private static void probes(WorldServer world,Block block)throws Exception{

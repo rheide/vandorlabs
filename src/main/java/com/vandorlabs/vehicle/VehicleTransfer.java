@@ -57,7 +57,7 @@ public final class VehicleTransfer {
         ArrayDeque<Work> queue=WORK.computeIfAbsent(world,k->new ArrayDeque<>());
         if(queue.size()>=16){failed.accept(new IOException("Vehicle transfer queue is full; try again."));return;}
         Work work=new Work(world,action,failed);
-        if(source!=null&&source.controller()!=null){TileEntity raw=world.getTileEntity(origin.add(source.controller().pos));if(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController){work.indicator=(com.vandorlabs.tiles.TileEntityVehicleController)raw;work.indicator.setConverting(true);}}
+        if(source!=null&&source.controller()!=null){BlockPos at=origin.add(source.controller().pos);if(world.isBlockLoaded(at)){TileEntity raw=world.getTileEntity(at);if(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController){work.indicator=(com.vandorlabs.tiles.TileEntityVehicleController)raw;work.indicator.setConverting(true);}}}
         if(source!=null)for(VehicleStructure.Cell cell:source.cells){BlockPos pos=origin.add(cell.pos);
             if(!world.isBlockLoaded(pos))continue;TileEntity tile=world.getTileEntity(pos);
             if(tile instanceof net.minecraft.util.ITickable&&work.pausedTiles.add(tile))PAUSED_TILES.put(tile,PAUSED_TILES.getOrDefault(tile,0)+1);
@@ -67,8 +67,19 @@ public final class VehicleTransfer {
     }
     /** Short-lived scan lease, handed over to the durable transfer before release. */
     static final class SourceHold implements AutoCloseable {
-        private final WorldServer world;private final Set<TileEntity> tiles=Collections.newSetFromMap(new IdentityHashMap<TileEntity,Boolean>());
-        SourceHold(WorldServer world,VehicleStructure source,BlockPos origin){this.world=world;for(VehicleStructure.Cell cell:source.cells){TileEntity tile=world.getTileEntity(origin.add(cell.pos));if(tile instanceof net.minecraft.util.ITickable&&tiles.add(tile))PAUSED_TILES.put(tile,PAUSED_TILES.getOrDefault(tile,0)+1);}world.tickableTileEntities.removeIf(tiles::contains);}
+        private final World world;private final Set<TileEntity> tiles=Collections.newSetFromMap(new IdentityHashMap<TileEntity,Boolean>());
+        SourceHold(World world,VehicleStructure source,BlockPos origin){
+            this.world=world;
+            // Discovery spans ticks: a source chunk may have unloaded since it
+            // was scanned. Gather successfully before publishing any leases.
+            for(VehicleStructure.Cell cell:source.cells){
+                BlockPos at=origin.add(cell.pos);
+                if(!world.isBlockLoaded(at))throw new IllegalArgumentException("Vehicle source chunk unloaded during inspection");
+                TileEntity tile=world.getTileEntity(at);if(tile instanceof net.minecraft.util.ITickable)tiles.add(tile);
+            }
+            for(TileEntity tile:tiles)PAUSED_TILES.put(tile,PAUSED_TILES.getOrDefault(tile,0)+1);
+            world.tickableTileEntities.removeIf(tiles::contains);
+        }
         public void close(){for(TileEntity tile:tiles){int remaining=PAUSED_TILES.getOrDefault(tile,1)-1;if(remaining>0){PAUSED_TILES.put(tile,remaining);continue;}PAUSED_TILES.remove(tile);if(!tile.isInvalid()&&world.isBlockLoaded(tile.getPos())&&world.getTileEntity(tile.getPos())==tile&&!world.tickableTileEntities.contains(tile))world.tickableTileEntities.add(tile);}tiles.clear();}
     }
     static void unload(WorldServer world){

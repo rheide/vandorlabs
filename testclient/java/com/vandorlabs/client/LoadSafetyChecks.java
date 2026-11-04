@@ -16,6 +16,8 @@ import java.util.*;
 final class LoadSafetyChecks {
     private static void require(boolean ok,String text){if(!ok)throw new IllegalStateException("load safety: "+text);}
     static void run(){
+        upgradeBoundaries();
+        scanHoldBoundaries();
         com.vandorlabs.VandorLabs.logger=org.apache.logging.log4j.LogManager.getLogger("load-safety");
         List<TileEntity> tiles=Arrays.asList(new TileEntityCanopy(),new TileEntityAutopilot(),new TileEntityCockpit(),new TileEntityTokenSlot(),new TileEntitySpaceDoor());
         int cases=0;
@@ -41,6 +43,69 @@ final class LoadSafetyChecks {
         failedSnapshots();
         recoveryConflicts();
         System.out.println("Load safety PASS deferred-tiles="+cases+" installed-and-stale-callbacks finite-poses retained-failed-snapshots");
+    }
+    private static void upgradeBoundaries(){
+        // An external capability owns its state references, even when its payload
+        // happens to resemble one of our portable snapshots or ramp tiles.
+        NBTTagCompound tile=new NBTTagCompound();tile.setString("id","vandorlabs:programmable_ramp");
+        tile.setString("OriginalState","vandorlabs:smoked_cockpit_glass");
+        NBTTagCompound caps=new NBTTagCompound(),foreign=new NBTTagCompound();
+        foreign.setString("id","vandorlabs:controlled_ramp");foreign.setString("SourceState","vandorlabs:pale_cyan_cockpit_glass");
+        caps.setTag("external:opaque",foreign);tile.setTag("ForgeCaps",caps);
+        NBTTagCompound original=tile.copy(),migrated=com.vandorlabs.persistence.RetiredCockpitGlass.tileData(tile);
+        require(migrated.getCompoundTag("ForgeCaps").equals(caps),"glass upgrade changed opaque ForgeCaps");
+        require(tile.equals(original),"glass upgrade mutated its source");
+        require(migrated.getString("OriginalState").equals("minecraft:stained_glass[color=gray]"),"owned glass material did not migrate");
+        require(com.vandorlabs.persistence.LegacyBlockStates.decode("missing_mod:unavailable_block")==null,"unknown saved material silently became air");
+        require(com.vandorlabs.persistence.LegacyBlockStates.decode("minecraft:stone[unknown=true]")==null,"unknown saved material property accepted");
+        require(com.vandorlabs.persistence.LegacyBlockStates.decode("minecraft:air")==Blocks.AIR.getDefaultState(),"explicit air material refused");
+        System.out.println("Upgrade boundaries PASS opaque capabilities original NBT unknown block/property refusal explicit air");
+    }
+    private static final class HoldWorld extends NonRenderingChecks.MemoryWorld {
+        int unloadedReads;BlockPos failure;
+        HoldWorld(){super(false);chunkLimit=true;}
+        @Override public TileEntity getTileEntity(BlockPos at){
+            if(!isBlockLoaded(at)){unloadedReads++;return null;}
+            if(at.equals(failure))throw new IllegalStateException("injected tile lookup failure");
+            return super.getTileEntity(at);
+        }
+    }
+    private static void scanHoldBoundaries(){
+        try{
+            HoldWorld indicatorWorld=new HoldWorld();TileEntityVehicleController indicator=new TileEntityVehicleController();
+            indicator.setWorld(indicatorWorld);indicator.setPos(new BlockPos(32,80,0));
+            indicator.setConverting(true);indicator.setConverting(false);
+            require(indicatorWorld.stateReads==0&&indicatorWorld.updates==0,"conversion indicator read an unloaded source chunk");
+            indicator.setPos(new BlockPos(0,80,0));indicatorWorld.tiles.put(indicator.getPos(),new TileEntityVehicleController());
+            indicator.setConverting(true);require(indicatorWorld.updates==0,"replaced conversion indicator published through its replacement");
+            Class<?> type=Class.forName("com.vandorlabs.vehicle.VehicleTransfer$SourceHold");
+            java.lang.reflect.Constructor<?> constructor=type.getDeclaredConstructor(net.minecraft.world.World.class,VehicleStructure.class,BlockPos.class);constructor.setAccessible(true);
+            java.lang.reflect.Field pausedField=VehicleTransfer.class.getDeclaredField("PAUSED_TILES");pausedField.setAccessible(true);
+            @SuppressWarnings("unchecked") Map<TileEntity,Integer> paused=(Map<TileEntity,Integer>)pausedField.get(null);
+            for(boolean unloaded:new boolean[]{false,true}){
+                HoldWorld world=new HoldWorld();BlockPos at=new BlockPos(0,80,0),other=unloaded?at.east(32):at.east();
+                TileEntity tile=new net.minecraft.tileentity.TileEntityFurnace();tile.setWorld(world);tile.setPos(at);world.tiles.put(at,tile);world.tickableTileEntities.add(tile);
+                if(!unloaded)world.failure=other;
+                VehicleStructure source=VehicleStructure.display(Arrays.asList(new VehicleStructure.Cell(at,Blocks.FURNACE.getDefaultState(),null),new VehicleStructure.Cell(other,Blocks.STONE.getDefaultState(),null)));
+                boolean refused=false;AutoCloseable hold=null;
+                try{hold=(AutoCloseable)constructor.newInstance(world,source,BlockPos.ORIGIN);}
+                catch(java.lang.reflect.InvocationTargetException expected){require(expected.getCause() instanceof IllegalStateException||expected.getCause() instanceof IllegalArgumentException,"unexpected scan hold failure");refused=true;}
+                finally{if(hold!=null)hold.close();}
+                boolean leaked=paused.containsKey(tile);paused.remove(tile);
+                require(refused&&world.unloadedReads==0,"scan hold read or accepted an unloaded source chunk");
+                require(!leaked&&world.tickableTileEntities.contains(tile),"failed scan hold leaked a paused-tile lease");
+            }
+            HoldWorld world=new HoldWorld();BlockPos at=new BlockPos(0,80,0);
+            TileEntity tile=new net.minecraft.tileentity.TileEntityFurnace();tile.setWorld(world);tile.setPos(at);world.tiles.put(at,tile);world.tickableTileEntities.add(tile);
+            VehicleStructure source=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(at,Blocks.FURNACE.getDefaultState(),null)));
+            AutoCloseable first=(AutoCloseable)constructor.newInstance(world,source,BlockPos.ORIGIN),second=(AutoCloseable)constructor.newInstance(world,source,BlockPos.ORIGIN);
+            try{
+                require(paused.get(tile)==2&&!world.tickableTileEntities.contains(tile),"overlapping scan holds did not pause once");
+                first.close();first.close();require(paused.get(tile)==1&&!world.tickableTileEntities.contains(tile),"one scan hold released another owner's lease");
+                second.close();second.close();require(!paused.containsKey(tile)&&Collections.frequency(world.tickableTileEntities,tile)==1,"completed scan holds did not resume exactly once");
+            }finally{first.close();second.close();}
+            System.out.println("Scan hold safety PASS unloaded source refused without reads tile-lookup failure leaves no pause lease nested leases resume once");
+        }catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}catch(Exception failure){throw new IllegalStateException(failure);}
     }
     private static final class FailingWorld extends NonRenderingChecks.MemoryWorld {
         boolean fail;

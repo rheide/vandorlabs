@@ -3,12 +3,13 @@ import argparse,hashlib,io,json,struct,zlib
 from pathlib import Path
 from zipfile import ZipFile
 from PIL import Image
+from block_catalog_compatibility import historical_blocks
 ROOT=Path(__file__).resolve().parents[1];DATA=ROOT/'generated-resources/assets/vandorlabs/data';TEXTURES=ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks'
 def digest_ids(entries):return hashlib.sha256('\n'.join(e['id'] for e in entries).encode()).hexdigest()
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--jar',type=Path);p.add_argument('--style',choices=('Cool','Gold'),default='Cool');args=p.parse_args();style=args.style;audit=json.loads((ROOT/('tools/'+style.lower()+'_display_sources.json')).read_text())
     catalog=json.loads((DATA/'unified_textures.json').read_text());blocks=json.loads((DATA/'blocks.json').read_text());inputs=json.loads((DATA/'input_surfaces.json').read_text())
-    for entries,key in [(catalog,'Catalog'),(blocks,'Block'),(inputs,'Input')]:assert digest_ids(entries[:audit['previous'+key+'Count']])==audit['previous'+key+'IdsSha256']
+    for entries,key in [(catalog,'Catalog'),(historical_blocks(blocks),'Block'),(inputs,'Input')]:assert digest_ids(entries[:audit['previous'+key+'Count']])==audit['previous'+key+'IdsSha256']
     byid={e['id']:e for e in catalog};byblock={e['id']:e for e in blocks};byinput={e['id']:e for e in inputs}
     assert len(audit['entries'])==42 and len({e['id'] for e in audit['entries']})==42
     for height in ('full','half'):

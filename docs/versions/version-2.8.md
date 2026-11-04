@@ -1,6 +1,8 @@
 # Vandor Labs 2.8
 
-Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and sectional doors. Existing block registry IDs and saved designs remain intact.
+Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and sectional doors. Existing saved designs migrate through explicit block aliases and the cockpit-glass replacements described below.
+
+See the [compatibility and performance review](../release-compatibility-2.8.md) for upgrade boundaries, recovery behavior and remaining performance costs.
 
 ## Vehicle designs and security
 

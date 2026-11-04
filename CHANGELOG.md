@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Preserve opaque capability material references during retired-glass snapshot migration. Refuse missing saved material names instead of resolving them to air. Refuse unloaded scan sources before tile reads and avoid leaking pause leases when preparation fails. Extend release checks to the new Sectional Door, articulation, ramp-axis, chip-display and dense-render paths.
+
 - Extend Sectional Door with four slide directions, Straight/Perpendicular motion, shared Speed and Activation selectors, fixed dialog dimensions, Tile/Stretch/Fit artwork, Custom block samples, Frame textures and joined or tiled porthole windows with configurable glass. Repair all headers after Better Builder’s Wands extrusion. Rename Ramp Controller’s Base speed label to Speed.
 
 - Add optional Coupler articulation with independent trailer yaw and pitch, a combined 75-degree limit, hull/terrain collision checks, saved joint poses and section-aware rendering and interaction. Parallel coupling pairs remain rigid.
@@ -63,7 +65,7 @@ See the [2.8 guide](docs/versions/version-2.8.md) and [Sectional Door constructi
 - Tune collision regions for large flat craft, use primitive spatial-index keys and avoid allocating nearby-craft candidates for self-collision. Skip unused fixed-glass client mechanism ticks.
 - Compact contained-fluid cells along the most subdivided axis; defer voxel faces until requested and avoid unused panel/door volumes during rendering.
 - Scope Complementary rain wind beneath fixed Canopy Glass roofs without changing world lighting.
-- Add focused density, weather, native garage interaction and many-door renderer comparisons. Full release validation and hardware shader acceptance remain deferred.
+- Add focused density, weather, native garage interaction and many-door renderer comparisons. Pass the Java 8 release gate, previous-release world upgrades and restart recovery checks; hardware shader acceptance remains separate.
 
 ## 2.7
 

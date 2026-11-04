@@ -9,6 +9,7 @@ p.add_argument('--output',type=Path,required=True)
 p.add_argument('--jar',type=Path)
 p.add_argument('--old-jar',type=Path,help='Previous standard JAR used to prepare the source world')
 p.add_argument('--prepare',action='store_true')
+p.add_argument('--legacy-artwork',action='store_true',help='Use ordinary artwork when the source JAR predates built-in chip readers')
 p.add_argument('--java',default='java')
 a=p.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
 marker=out/'.block-rename-fixture'
@@ -32,7 +33,7 @@ for phase in phases:
  path=out/(phase+'.log')
  with path.open('w') as log:
   args=[a.java,'-Xmx2G']
-  if not a.prepare:args+=['-Dvandorlabs.blockRenameCheck='+phase]
+  if not a.prepare:args+=['-Dvandorlabs.blockRenameCheck='+phase,'-Dvandorlabs.blockRenameLegacyArtwork='+str(a.legacy_artwork).lower()]
   proc=subprocess.Popen(args+['-jar',str(a.forge.resolve()),'nogui'],cwd=out,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
   def send(command):proc.stdin.write(command+'\n');proc.stdin.flush()
   def wait(marker):
@@ -51,6 +52,7 @@ for phase in phases:
    elif a.prepare:
     base=8 if phase=='prepare-near' else 520
     tile='{PrimarySurfaceTexture:-4,ScreenChipReader:{InsertedToken:{id:"vandorlabs:data_chip",Count:1b,Damage:3s,tag:{ChipType:"journal",JournalTitle:"Retained reader",JournalPages:["Preserved page"]}}}}'
+    if a.legacy_artwork:tile='{PrimarySurfaceTexture:0}'
     for i,name in enumerate(ids):send(f'setblock {base+i} 80 {base} vandorlabs:{name} {metas[i]} replace '+(tile if i==0 else '{}'))
     send(f'setblock {base+13} 80 {base} minecraft:stone')
     if phase=='prepare-near':
