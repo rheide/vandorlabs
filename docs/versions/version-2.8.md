@@ -1,14 +1,32 @@
 # Vandor Labs 2.8
 
-Segmented Door now combines motion and artwork controls on **Door**, supports Middle/Near/Far placement and contained water, and keeps opening/glass choices local to each configured section. A row of windows can share a door texture with solid sections below. Visible open panels can close the door; Straight travel retains a one-pixel edge. Surface wand extrusion rebuilds shared artwork automatically. Fit (Aspect) joins square pads only; nonsquare pads render each block independently.
+Build windowed hangar doors, drive articulated trailers, save a favourite vehicle to a chip and build another from its design. Version 2.8 brings more expressive moving builds, more flexible vehicle controls and faster rendering for dense structures.
 
-Stopped Taxi/Hover vehicles can separate into two vehicle entities when both halves have complete independent controls and mode equipment. Their poses and inventories remain carried, with durable recovery; see [Releasing a section](../couplers.md#releasing-a-section). Hover sections retain gentle following motion and settle level after ascent and descent. Stopped Hover vehicles can park directly within three blocks of ground with gear extended, without first changing to Taxi. Visible terrain inside a bent vehicle’s empty bounds remains editable.
+## Segmented doors in motion
 
-Coupled vehicles use the controller in the piloted segment. Nearly straight trailers may snap to the grid when parking, and articulated movement preserves speed through unobstructed travel. The `vehicles.maxArticulationPoints` startup setting defaults to seven hinge points (eight independent segments); existing longer saves still load. Lone Track steering and filled ramp texture repeats are corrected.
+The new [Segmented Door](../segmented-doors.md) can slide **Up, Down, Left or Right**. Choose **Perpendicular** travel to fold panels behind the opening, or **Straight** travel to keep them in the door plane. Select Slow, Medium or Fast motion, then operate the door by hand or with Redstone Channels.
 
-Version 2.8 adds saved vehicle designs, Vehicle Chips, screen chip readers and mount adjustments, alongside dense-build improvements to programmable Surfaces, glazing, diagonal panels, stationary ramps, collision queries and segmented doors. Existing saved designs migrate through explicit block aliases and the cockpit-glass replacements described below.
+![Upward perpendicular travel with individual round windows](../images/segmented-2.8-up.gif)
 
-See the [compatibility and performance review](../release-compatibility-2.8.md) for upgrade boundaries, recovery behavior and remaining performance costs.
+*Round windows travel with each panel as the door retracts overhead. These loops show the native renderer at evenly spaced motion positions.*
+
+![Leftward straight travel with square windows](../images/segmented-2.8-left.gif)
+
+*Square windows move with the panels during Straight sideways travel.*
+
+Mix solid and window sections, choose Hexagon, Octagon, Square or Round openings, and configure the glass separately. Tile windows per segment or fit them across connected sections of the same shape. Tile, Stretch and Fit artwork, custom block samples, Frame textures and Middle/Near/Far placement let one mechanism suit garages, hangars and interior partitions. Follow the [step-by-step construction guide](../segmented-doors.md).
+
+## Articulated vehicles and independent sections
+
+Enable articulation on a coupler for trailers that follow with independent yaw and pitch, constrained by hull and terrain collision and a combined 75-degree joint limit. Parallel coupling pairs stay rigid. The controller in the piloted section controls the vehicle; controllers in other sections remain available for later separation.
+
+Stopped Taxi or Hover vehicles can separate one clicked coupling pair into two complete vehicle entities, preserving headings, fractional positions, inventories and joint poses. Each half needs its own controller, driver seat and mode equipment, and detached seats must be empty. See [releasing a section](../couplers.md#releasing-a-section).
+
+Taxi now works without propulsion at 0.23 blocks per tick; powered Taxi retains 0.28. Hover still needs propulsion and three lift blocks in **every** connected coupler section. Stopped Hover vehicles can park directly near the ground with extended gear. Gentle vertical trailer motion follows ascent and descent, then settles level.
+
+The configurable articulation limit defaults to seven hinge points, allowing eight independent segments in new assemblies. Lowering it does not prevent saved longer vehicles from loading or parking. Failed vehicle loads preserve both original block data and joint poses for recovery; repeated collision safety queries reuse their array storage.
+
+See the [compatibility and performance review](../release-compatibility-2.8.md) for upgrade boundaries and validation scope.
 
 ## Vehicle designs and security
 
@@ -38,7 +56,7 @@ Clear Cockpit Glass now becomes vanilla Glass, Pale Cyan Cockpit Glass becomes c
 
 ## Segmented doors
 
-The block, item and tile identifiers are now `vandorlabs:segmented_door`. Old door names and fields are deliberately unsupported. Existing doors, items, vehicles and designs containing those identifiers will not load.
+Segmented Door is new in 2.8 and uses `vandorlabs:segmented_door`. Interim development identifiers are unsupported; this is not a change to a block from 2.7.
 
 The new [Segmented Door](../segmented-doors.md) lifts linked columns and retracts them overhead. It supports ordinary right-click operation, Redstone Channels and the standard Configurizer workflow. A dedicated dialog controls travel time, local redstone and signal polarity.
 
@@ -95,7 +113,7 @@ The main 2.8 performance candidate passed the Java 8 release gate, including sha
 
 Programmable Surfaces now support up to 32 blocks on each side. Copy Controllers accept filled rectangles with matching input/output dimensions; Turntables retain filled squares. Screen artwork retains its previous 1,024-cell scan cutoff. Snapshot, capture-height and payload limits remain independent.
 
-The Segmented Door keeps its existing registry ID and default artwork. Its Textures tab includes general materials, Trapdoors, Doors and Large Doors. Original and light grey Segmented Panels are also available in the general Industrial category.
+The new Segmented Door uses `vandorlabs:segmented_door`. Its Door tab includes general materials, Trapdoors, Doors and Large Doors. Original and light grey Segmented Panels are also available in the general Industrial category.
 
 ## Diagonal Half Screen rename
 

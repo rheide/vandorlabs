@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Preserve original articulated joint poses when vehicle loading fails after joint decoding, keeping unavailable vehicles recoverable on the next save. Reuse per-vehicle collision-query arrays instead of allocating them for every candidate pose.
+
 - Detach one clicked coupling pair at a time, choose the detached controller’s own driver seat, and allow a bounded clear settling motion for small suspension tilts. Both separated vehicles retain Taxi/Hover mode at non-cardinal headings and fractional positions.
 
 - Correct the base door artwork orientation for Vektor, Pinnacle, Paladyne and Ashiro-Mai, retaining Seyr/Vandor orientation and paired-leaf mirroring.
@@ -16,7 +18,7 @@
 - Put Segmented Door texture lists on the left; use Pos consistently in dialogs. Copy every segment setting through Duplifier and middle-click placement. Fit windows only across connected Window segments of the same Shape, tile the physical panel edges without stretching and separate square openings from their border rails. Synchronize linked columns on one pause-aware motion clock.
 - Render nonsquare Surface pads as separate blocks in Fit (Aspect), retaining their Copy Controller ownership. Add faint native glass shimmer behind all six company Light door artworks.
 - Index articulated collision shapes to reduce repeated narrow-phase work and bound steering work per step, retaining the last safe pose if the limit is reached. Carried coupler clicks authorize the current player in Taxi and Hover before requesting safe world-block release.
-- Segmented Door now uses `vandorlabs:segmented_door`. Former door block/item/tile names and fields are intentionally unsupported; existing doors and snapshots containing them no longer load.
+- Segmented Door now uses `vandorlabs:segmented_door`. Interim 2.8 development door names and fields are intentionally unsupported; Segmented Door did not exist in 2.7.
 
 - Combine Segmented Door motion and artwork controls on Door; use compact buttons, Slow/Medium/Fast ordering and no dialog Open/Close buttons. Add Middle/Near/Far placement and reversible contained-water flow. Keep openings and glass local to the configured block while artwork and motion remain shared. Preserve transparent Frames at rest, move the border with Slide Direction and keep visible moved segments clickable. Straight travel retains a one-pixel edge.
 - Rebuild rectangular Surface artwork after Better Builder’s Wands extrusion without copying stale renderer roots or controller claims. Identify invalid Copy Controller pads by side and position, expose full errors on hover and accept output-only pads in Vehicle Chip mode.

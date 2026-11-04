@@ -68,12 +68,17 @@ public final class VehicleArticulation {
                 Arrays.sort(order,start,end,Comparator.comparingDouble(i->{AxisAlignedBB q=shapes.get(i).box;return axis==0?q.minX+q.maxX:axis==1?q.minY+q.maxY:q.minZ+q.maxZ;}));int mid=(start+end)/2;left=new ShapeIndex(shapes,order,start,mid);right=new ShapeIndex(shapes,order,mid,end);}
         }
     }
+    // Scratch storage belongs to this vehicle and is reused only by sequential safety queries.
+    private final CollisionPose collisionPose=new CollisionPose();
+    long poseArrayAllocations;
     private final class CollisionPose {
-        final RigidTransform[] transforms;final OrientedBounds[][] exact;final AxisAlignedBB[] bounds;
-        CollisionPose(Frame frame,RigidTransform root){
-            int count=shapes.size();transforms=new RigidTransform[count];exact=new OrientedBounds[count][];bounds=new AxisAlignedBB[count];
+        RigidTransform[] transforms=new RigidTransform[0];OrientedBounds[][] exact=new OrientedBounds[0][];AxisAlignedBB[] bounds=new AxisAlignedBB[0];
+        void reset(Frame frame,RigidTransform root){
+            int count=shapes.size();
+            if(transforms.length!=count){transforms=new RigidTransform[count];exact=new OrientedBounds[count][];bounds=new AxisAlignedBB[count];poseArrayAllocations+=3;}
+            Arrays.fill(bounds,null);
             for(int body=0;body<count;body++){
-                RigidTransform t=transforms[body]=root.then(frame.bodies[body]);double[] r=t.r;List<Shape> members=shapes.get(body);exact[body]=new OrientedBounds[members.size()];
+                RigidTransform t=transforms[body]=root.then(frame.bodies[body]);double[] r=t.r;List<Shape> members=shapes.get(body);if(exact[body]==null||exact[body].length!=members.size()){exact[body]=new OrientedBounds[members.size()];poseArrayAllocations++;}else Arrays.fill(exact[body],null);
                 double x0=Double.POSITIVE_INFINITY,y0=x0,z0=x0,x1=Double.NEGATIVE_INFINITY,y1=x1,z1=x1;
                 for(Shape shape:members){AxisAlignedBB b=shape.box;double cx=(b.minX+b.maxX)/2,cy=(b.minY+b.maxY)/2,cz=(b.minZ+b.maxZ)/2,hx=Math.max(0,(b.maxX-b.minX)/2-1e-7),hy=Math.max(0,(b.maxY-b.minY)/2-1e-7),hz=Math.max(0,(b.maxZ-b.minZ)/2-1e-7);
                     double x=t.x+r[0]*cx+r[1]*cy+r[2]*cz,y=t.y+r[3]*cx+r[4]*cy+r[5]*cz,z=t.z+r[6]*cx+r[7]*cy+r[8]*cz,dx=Math.abs(r[0])*hx+Math.abs(r[1])*hy+Math.abs(r[2])*hz,dy=Math.abs(r[3])*hx+Math.abs(r[4])*hy+Math.abs(r[5])*hz,dz=Math.abs(r[6])*hx+Math.abs(r[7])*hy+Math.abs(r[8])*hz;
@@ -225,7 +230,7 @@ public final class VehicleArticulation {
     }
     private boolean safeIndexed(Frame frame,RigidTransform root){
         if(!spend(shapeCount+shapes.size()*16))return false;
-        CollisionPose pose=new CollisionPose(frame,root);
+        CollisionPose pose=collisionPose;pose.reset(frame,root);
         for(int body=0;body<shapes.size();body++){
             AxisAlignedBB area=pose.bounds[body];if(area==null)continue;if(area.minY<0||area.maxY>=craft.world.getHeight()||!craft.world.getWorldBorder().contains(new BlockPos(area.minX,area.minY,area.minZ))||!craft.world.getWorldBorder().contains(new BlockPos(area.maxX,area.maxY,area.maxZ)))return false;
             for(int x=MathHelper.floor(area.minX)>>4;x<=MathHelper.floor(area.maxX)>>4;x++)for(int z=MathHelper.floor(area.minZ)>>4;z<=MathHelper.floor(area.maxZ)>>4;z++)if(!craft.world.isBlockLoaded(new BlockPos(x*16,64,z*16)))return false;

@@ -30,6 +30,14 @@ public final class VehicleCouplerPhysicsChecks {
             VehicleSelection.Hit selected=VehicleSelection.trace(craft,top,bottom,100,false);require(selected!=null&&craft.articulation.bodyAt(selected.cell.pos)==3,"ray selects actual trailing section");
             require(craft.articulation.collisionBoxes()==craft.articulation.collisionBoxes(),"collision query reuses immutable posed boxes");
             checkNetwork(craft);
+            NBTTagCompound lateFailure=new NBTTagCompound(){@Override public NBTTagCompound getCompoundTag(String key){if("AutopilotNavigation".equals(key))throw new IllegalArgumentException("Injected failure after joint decoding");return super.getCompoundTag(key);}};
+            lateFailure.merge(saved);
+            EntityGroundVehicle late=new EntityGroundVehicle(world);
+            try{late.readFromNBT(lateFailure);require(late.structure==null,"late load failure remains inert");NBTTagCompound output=new NBTTagCompound();late.writeToNBT(output);require(saved.getCompoundTag("Craft").equals(output.getCompoundTag("Craft"))&&saved.getCompoundTag("CouplerJointPose").equals(output.getCompoundTag("CouplerJointPose")),"late load failure retains original craft and articulated pose");}finally{late.setDead();}
+            craft.articulation.validPose();long arrays=craft.articulation.poseArrayAllocations;
+            for(int i=0;i<100;i++)require(craft.articulation.validPose(),"reused collision scratch preserves safe pose");
+            require(arrays==craft.articulation.poseArrayAllocations,"stable geometry must reuse collision pose arrays");
+            System.out.println("[vandorlabs][reprolab] coupler-pose-storage PASS late-load-retention queries=100 pose-array-allocations=0 previous-minimum="+(100*(3+craft.articulation.jointCount()+1)));
             EntityGroundVehicle lifted=new EntityGroundVehicle(world);try{lifted.install(structure);lifted.setPosition(origin.getX(),origin.getY()+1,origin.getZ());lifted.articulation.begin();lifted.setPosition(lifted.posX,lifted.posY+.25,lifted.posZ);lifted.articulation.end();require(Math.abs(lifted.articulation.jointPitch(0))>.1&&lifted.articulation.validPose(),"Taxi hitch follows vertical motion with underbody clearance pitch="+lifted.articulation.jointPitch(0)+" y="+lifted.posY);}finally{lifted.setDead();}
             EntityGroundVehicle rigid=new EntityGroundVehicle(world);try{rigid.install(VehicleCouplerSectionChecks.train(world,new int[]{3,3,3},true,false,false,true,true));require(!rigid.articulation.active(),"parallel native heads stay rigid");rigid.install(VehicleCouplerSectionChecks.train(world,new int[]{3,3,3},false,false,false,true,false));long builds=rigid.articulation.shapeBuilds;require(!rigid.articulation.active()&&rigid.articulation.shapeBuilds==builds,"legacy default bypasses articulated shape collection");}finally{rigid.setDead();}
 
