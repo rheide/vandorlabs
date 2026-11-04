@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Correct the base door artwork orientation for Vektor, Pinnacle, Paladyne and Ashiro-Mai, retaining Seyr/Vandor orientation and paired-leaf mirroring.
+
 - Allow stopped Taxi/Hover vehicles to separate into two complete vehicle entities, preserving their poses, mode, tile data and inventories through durable ownership recovery. Each half needs its own controller, seat and mode equipment; detached seats must be empty and its driver segment level.
 - Let Hover vehicles lift with their current articulated pose when intermediate leveling would catch the ground, then settle horizontal after ascent and descent. Allow stopped Hover vehicles to park directly near the ground with extended gear, preserving the leveled pose through ordinary parking checks. Preserve terrain selection and Survival mining through empty space inside a bent vehicle's enclosing bounds.
 - Preserve opaque carried tile capabilities during state updates and pending latch handoffs.

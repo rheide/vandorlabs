@@ -17,7 +17,7 @@ final class XDoorMeshes {
         DoorRenderModels.Entry entry=DoorRenderModels.get(state.getBlock(),tile.metadata(true,right,part));
         int choice=part==1?tile.getFaceTexture():-1;
         double scale=tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?1.5:1;IBakedModel model=part==2?DoorGlassModel.get(entry.model,tile,scale):FrameDoorModel.applies(tile.frameAppearance,part)?entry.framed(tile.frameAppearance,scale):entry.model;
-        boolean mirror=right&&com.vandorlabs.tiles.ScreenHousingTextures.mirroredDoorArtwork(choice)&&(state.getValue(com.vandorlabs.blocks.BlockConnectingDetailedDoor.PAIRED)||scale>1);
+        boolean mirror=com.vandorlabs.tiles.ScreenHousingTextures.doorArtworkMirror(choice,right&&(state.getValue(com.vandorlabs.blocks.BlockConnectingDetailedDoor.PAIRED)||scale>1));
         Key key=new Key(model,right,choice,tile.getTextureLayout(),scale,mirror);
         StaticSurfaceMesh[] panels=CACHE.getIfPresent(key);if(panels!=null)return panels;
         TextureAtlasSprite sprite=choice<0?null:Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(choice));

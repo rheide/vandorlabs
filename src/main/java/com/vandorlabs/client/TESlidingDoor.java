@@ -308,7 +308,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
         buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        SelectedDoorFaceCache.get(geometry,tile.getFaceTexture(),tile.getTextureLayout(),scale,mirror&&com.vandorlabs.tiles.ScreenHousingTextures.mirroredDoorArtwork(tile.getFaceTexture()))
+        SelectedDoorFaceCache.get(geometry,tile.getFaceTexture(),tile.getTextureLayout(),scale,com.vandorlabs.tiles.ScreenHousingTextures.doorArtworkMirror(tile.getFaceTexture(),mirror))
                 .draw(buffer,light>>>16,light&65535);
         Tessellator.getInstance().draw();
     }
