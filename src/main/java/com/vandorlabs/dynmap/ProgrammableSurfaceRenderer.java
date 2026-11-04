@@ -14,6 +14,7 @@ import org.dynmap.renderer.*;
 /** Surface-local saved artwork keeps square-wide UVs in every map voxel. */
 public final class ProgrammableSurfaceRenderer extends HousingRenderer {
     private static final double[] ASPECTS=load();
+    static double materialAspect(int choice){int index=ScreenHousingTextures.canonicalChoice(choice);return index>=0&&index<ASPECTS.length?ASPECTS[index]:1;}
     private static double[] load(){try(InputStream in=ProgrammableSurfaceRenderer.class.getResourceAsStream("/assets/vandorlabs/data/dynmap_material_aspects.json")){if(in==null)throw new IllegalStateException("Missing map material aspects");return new Gson().fromJson(new InputStreamReader(in,StandardCharsets.UTF_8),double[].class);}catch(IOException error){throw new IllegalStateException(error);}}
     @Override protected int getMaximumTextureCount(){return 2*ScreenHousingTextures.BUILTIN_COUNT+5;}
     @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"SurfaceOn","SurfaceOff","SurfaceLayout","SurfaceGroupOffset","SurfaceGroupSize","SurfaceGroupHeight","SurfaceGroupNormal","Owner","Running","CopyBusy","CopyActiveTicks"};}

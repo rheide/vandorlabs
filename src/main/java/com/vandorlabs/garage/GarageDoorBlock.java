@@ -32,7 +32,7 @@ public final class GarageDoorBlock extends BlockVandorDirectional {
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){super.breakBlock(world,pos,state);changed(world,pos.up());changed(world,pos.down());}
     public static boolean configure(EntityPlayer player,World world,BlockPos pos){if(!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos))return false;if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_GARAGE_DOOR,world,pos.getX(),pos.getY(),pos.getZ());return true;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing face,float x,float y,float z){
-        if(hand!=EnumHand.MAIN_HAND||player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)return false;
+        if(hand!=EnumHand.MAIN_HAND||player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock||com.vandorlabs.compat.BetterBuildersWandsCompat.isBbwWand(player.getHeldItem(hand)))return false;
         if(player.isSneaking()||player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER)return configure(player,world,pos);
         TileEntity tile=world.getTileEntity(pos);if(!world.isRemote&&tile instanceof GarageDoorTile&&world.isBlockModifiable(player,pos))try{((GarageDoorTile)tile).toggle(player);}catch(IllegalArgumentException denied){player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(denied.getMessage()),true);}return true;
     }

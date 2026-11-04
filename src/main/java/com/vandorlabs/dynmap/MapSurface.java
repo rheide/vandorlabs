@@ -14,6 +14,10 @@ final class MapSurface {
     }
     static void emit(MapDataContext context,List<RenderPatch> out,List<Vertex> polygon,int texture){
         for(int axis=0;axis<3;axis++){polygon=clip(polygon,axis,0,true);polygon=clip(polygon,axis,1,false);}
+        emitUnclipped(context,out,polygon,texture);
+    }
+    /** Mechanism panels may extend outside their owning cell at a saved endpoint. */
+    static void emitUnclipped(MapDataContext context,List<RenderPatch> out,List<Vertex> polygon,int texture){
         if(polygon.size()<3)return;
         double minU=Double.POSITIVE_INFINITY,maxU=Double.NEGATIVE_INFINITY,minV=minU,maxV=maxU;
         for(Vertex vertex:polygon){minU=Math.min(minU,vertex.u);maxU=Math.max(maxU,vertex.u);minV=Math.min(minV,vertex.v);maxV=Math.max(maxV,vertex.v);}

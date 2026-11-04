@@ -31,6 +31,9 @@ case "${1:-}" in
         elif [ "$TARGET" = glass-migration ]; then
             PREFIX=retired_glass_
             export VANDOR_LABS_RETIRED_GLASS_CHECKS_ONLY=true
+        elif [ "$TARGET" = sectional-door ]; then
+            PREFIX=sectional_door_
+            export VANDOR_LABS_SECTIONAL_DOOR_CHECKS_ONLY=true
         elif [ "$TARGET" = coupler-articulation ]; then
             PREFIX=coupler_articulation_
             export VANDOR_LABS_COUPLER_ARTICULATION_CHECKS_ONLY=true
@@ -354,6 +357,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = glass-migration ]; then
         for marker in retired-glass-client ramp-glass-world moat-glass-render retired-glass-artwork; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
         echo "Retired glass client checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = sectional-door ]; then
+        grep -q "sectional-door-live PASS" "$RUN_OUT/client.log"
+        echo "Sectional door checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = coupler-articulation ]; then

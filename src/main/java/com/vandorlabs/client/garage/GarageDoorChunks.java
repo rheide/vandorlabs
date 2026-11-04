@@ -52,7 +52,7 @@ public final class GarageDoorChunks {
         try{Iterator<Map.Entry<GarageDoorTile,Pending>> it=ACTIVE.entrySet().iterator();while(it.hasNext()){
             Map.Entry<GarageDoorTile,Pending> entry=it.next();GarageDoorTile root=entry.getKey();if(root.getWorld()!=mc.world||root.isInvalid()||GarageDoorTile.at(mc.world,root.getPos())!=root||!root.isRoot()){it.remove();continue;}
             List<GarageDoorTile> members=new ArrayList<>();boolean complete=true;for(int row=0;row<root.height;row++){GarageDoorTile member=GarageDoorTile.at(mc.world,root.getPos().down(row));if(member==null||!member.ready()||member.topOffset!=row||member.height!=root.height){complete=false;break;}members.add(member);}if(!complete)continue;
-            Pending pending=entry.getValue();boolean wantsBaked=!root.targetOpen&&(root.clientAwaitingChunk||GarageDoorVisuals.pose(root,0)==0);
+            Pending pending=entry.getValue();boolean wantsBaked=root.canBake()&&!root.targetOpen&&(root.clientAwaitingChunk||GarageDoorVisuals.pose(root,0)==0);
             boolean changed=false;for(GarageDoorTile member:members)changed|=member.clientBaked!=wantsBaked;
             if(changed||pending!=null&&(pending.baked!=wantsBaked||!pending.members.equals(members))){pending=new Pending(root,wantsBaked,members);entry.setValue(pending);}
             if(pending!=null){if(!pending.uploaded(mc,rebuild))continue;root.clientAwaitingChunk=false;root.clientSuppressed=pending.baked;if(!pending.baked)GarageDoorVisuals.resume(root);entry.setValue(null);}

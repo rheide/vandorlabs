@@ -148,7 +148,7 @@ public final class BetterBuildersWandsCompat {
         }
     }
 
-    private static boolean isBbwWand(ItemStack stack) {
+    public static boolean isBbwWand(ItemStack stack) {
         if (stack.isEmpty() || stack.getItem().getRegistryName() == null) {
             return false;
         }

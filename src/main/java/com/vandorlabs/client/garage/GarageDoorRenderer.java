@@ -22,8 +22,8 @@ public final class GarageDoorRenderer extends TileEntitySpecialRenderer<GarageDo
         {{1,-.5,-H},{0,-.5,-H},{0,.5,-H},{1,.5,-H}},{{0,-.5,H},{1,-.5,H},{1,.5,H},{0,.5,H}},
         {{0,-.5,-H},{0,-.5,H},{0,.5,H},{0,.5,-H}},{{1,-.5,H},{1,-.5,-H},{1,.5,-H},{1,.5,H}}};
     private static final int[][] NORMALS={{0,-1,0},{0,1,0},{0,0,-1},{0,0,1},{-1,0,0},{1,0,0}};
-    private final double[] section=new double[4];
-    private final Capture capture=new Capture();
+    private final double[] section=new double[6];
+    private Capture capture=new Capture();
     private final net.minecraft.util.math.BlockPos.MutableBlockPos lightPos=new net.minecraft.util.math.BlockPos.MutableBlockPos();
     private static final int CACHE_BYTES=2*1024*1024;
     private static final java.util.Map<Long,Template> TEMPLATES=new java.util.LinkedHashMap<>(32,.75F,true);
@@ -39,9 +39,9 @@ public final class GarageDoorRenderer extends TileEntitySpecialRenderer<GarageDo
         if(active||hadDynamicLights)dynamicRevision++;hadDynamicLights=active;
     }
     public static long lightSamples(){return lightSamples;}
-    public static int retainedBytes(){return retained+columnBytes;}
+    public static int retainedBytes(){return retained+columnBytes+com.vandorlabs.client.GarageDoorPanels.retainedBytes();}
     private static final int COLUMN_BYTES=16*1024*1024;
-    private static final java.util.Map<GarageDoorTile,Column> COLUMNS=new java.util.WeakHashMap<>();
+    private static final java.util.Map<GarageDoorTile,Column[]> COLUMNS=new java.util.WeakHashMap<>();
     private static final java.util.Map<Column,Boolean> COLUMN_LRU=new java.util.LinkedHashMap<>(128,.75F,true);
     private static final java.util.Map<net.minecraft.world.World,LightChanges> LIGHTS=new java.util.IdentityHashMap<>();
     private static final class LightChanges extends com.vandorlabs.world.WorldListener {
@@ -51,7 +51,7 @@ public final class GarageDoorRenderer extends TileEntitySpecialRenderer<GarageDo
     }
     private static final class Column {
         long key=-1,revision=-1,origin,dynamic=-1;int vehicleRevision;java.lang.ref.WeakReference<Object> structure;final java.lang.ref.WeakReference<GarageDoorTile> tile;
-        Column(GarageDoorTile tile){this.tile=new java.lang.ref.WeakReference<>(tile);}double x=Double.NaN,y,z;int[] data;final int[] lights=new int[GarageDoorTile.MAX_HEIGHT];
+        final int pass;Config config;Column(GarageDoorTile tile,int pass){this.tile=new java.lang.ref.WeakReference<>(tile);this.pass=pass;}double x=Double.NaN,y,z;int[] data;final int[] lights=new int[GarageDoorTile.MAX_HEIGHT];
         int bytes(){return data.length*4+384;}
     }
     private static LightChanges lightChanges(net.minecraft.world.World world){
@@ -60,50 +60,61 @@ public final class GarageDoorRenderer extends TileEntitySpecialRenderer<GarageDo
     }
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)Minecraft.getMinecraft().addScheduledTask(()->{LightChanges observer=LIGHTS.remove(event.getWorld());if(observer!=null)event.getWorld().removeEventListener(observer);clearTemplates();});}
 
+    /** Hash lookup plus exact descriptor equality prevents atlas cache aliasing. */
+    private static final class Config {
+        final com.vandorlabs.garage.GarageDoorSettings settings;final int texture,height,column,columns,frame,steps,pass,face;final long key;
+        Config(GarageDoorTile t,int frame,int steps,int pass){settings=t.settings;texture=t.texture;height=t.height;column=t.column;columns=t.columns;this.frame=frame;this.steps=steps;this.pass=pass;face=t.facing().getIndex();long h=1469598103934665603L;for(int value:new int[]{settings.hashCode(),texture,height,column,columns,frame,steps,pass,face})h=(h^value)*1099511628211L;key=h|Long.MIN_VALUE;}
+        boolean matches(GarageDoorTile t,int frame,int steps,int pass){return this.frame==frame&&this.steps==steps&&this.pass==pass&&texture==t.texture&&height==t.height&&column==t.column&&columns==t.columns&&face==t.facing().getIndex()&&settings.equals(t.settings);}
+        public int hashCode(){return (int)(key^(key>>>32));}
+        public boolean equals(Object o){if(!(o instanceof Config))return false;Config c=(Config)o;return key==c.key&&texture==c.texture&&height==c.height&&column==c.column&&columns==c.columns&&frame==c.frame&&steps==c.steps&&pass==c.pass&&face==c.face&&settings.equals(c.settings);}
+    }
     private static final class Capture extends BufferBuilder {
-        int row;final byte[] rows=new byte[GarageDoorTile.MAX_HEIGHT*24];
+        int row;byte[] rows=new byte[GarageDoorTile.MAX_HEIGHT*24];
         Capture(){super(GarageDoorTile.MAX_HEIGHT*24*16);}
-        @Override public void endVertex(){rows[getVertexCount()]=(byte)row;super.endVertex();}
+        @Override public void endVertex(){if(getVertexCount()==rows.length)rows=java.util.Arrays.copyOf(rows,rows.length*2);rows[getVertexCount()]=(byte)row;super.endVertex();}
     }
     private static final class Template {
-        final int[] data;final byte[] rows;final int stride,lightOffset,bytes;
+        final int[] data;final byte[] rows;final int stride,lightOffset,bytes;Config config;
         Template(Capture b){data=b.getVertexState().getRawBuffer();rows=java.util.Arrays.copyOf(b.rows,b.getVertexCount());stride=b.getVertexFormat().getIntegerSize();lightOffset=b.getVertexFormat().getUvOffsetById(1)/4;bytes=data.length*4+rows.length+128;}
     }
-    private static void clearTemplates(){TEMPLATES.clear();templateFormat=null;retained=0;COLUMNS.clear();COLUMN_LRU.clear();columnBytes=0;}
-    private void cached(GarageDoorTile tile,double x,double y,double z,BufferBuilder buffer,double progress){
-        if(templateFormat==null||!templateFormat.equals(buffer.getVertexFormat())){clearTemplates();templateFormat=new net.minecraft.client.renderer.vertex.VertexFormat(buffer.getVertexFormat());}
-        int steps=tile.height*tile.ticksPerSection*6,frame=(int)Math.round(progress*steps);progress=frame/(double)steps;
+    private static void clearTemplates(){com.vandorlabs.client.GarageDoorPanels.clear();TEMPLATES.clear();templateFormat=null;retained=0;COLUMNS.clear();COLUMN_LRU.clear();columnBytes=0;}
+    private void cached(GarageDoorTile tile,double x,double y,double z,BufferBuilder buffer,double progress,int pass){
+        if(templateFormat==null||!templateFormat.equals(buffer.getVertexFormat())){clearTemplates();capture=new Capture();templateFormat=new net.minecraft.client.renderer.vertex.VertexFormat(buffer.getVertexFormat());}
+        boolean nativePanel=tile.settings.nativePanel()&&tile.settings.direction==0&&!tile.settings.straight&&tile.texture<com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT;
+        int steps=(tile.settings.direction<2?tile.height:tile.columns)*tile.ticksPerSection*6,frame=(int)Math.round(progress*steps);progress=frame/(double)steps;
         long key=((long)(tile.texture+1)<<48)|((long)steps<<24)|((long)frame<<8)|((tile.height-1)<<2)|(((int)(180-tile.facing().getHorizontalAngle())/90)&3);
-        Column column=COLUMNS.get(tile);if(column==null){column=new Column(tile);COLUMNS.put(tile,column);}
+        Column[] passes=COLUMNS.get(tile);if(passes==null){passes=new Column[2];COLUMNS.put(tile,passes);}Column column=passes[pass];if(column==null){column=new Column(tile,pass);passes[pass]=column;}
+        boolean features=!nativePanel||pass!=0;Config config=null;if(features){config=column.config;if(config==null||!config.matches(tile,frame,steps,pass)){config=new Config(tile,frame,steps,pass);}key=config.key;}
         COLUMN_LRU.put(column,Boolean.TRUE);
         LightChanges changes=lightChanges(tile.getWorld());long origin=0;int vehicleRevision=0;Object structure=null;
         if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld vehicle=(com.vandorlabs.vehicle.VehicleWorld)tile.getWorld();origin=vehicle.origin.toLong();vehicleRevision=vehicle.tileRevision;structure=vehicle.structure;}
         boolean lighting=column.dynamic!=dynamicRevision||column.revision!=changes.revision||column.origin!=origin||column.vehicleRevision!=vehicleRevision||(column.structure==null?null:column.structure.get())!=structure;
-        boolean geometry=column.key!=key||column.x!=x||column.y!=y||column.z!=z;
+        boolean geometry=column.key!=key||column.x!=x||column.y!=y||column.z!=z||!java.util.Objects.equals(column.config,config);
         Template mesh=null;
         if(geometry){
             mesh=TEMPLATES.get(key);
-            if(mesh==null){capture.begin(GL11.GL_QUADS,templateFormat);emit(tile,0,0,0,capture,progress,true);capture.finishDrawing();mesh=new Template(capture);while(!TEMPLATES.isEmpty()&&retained+mesh.bytes>CACHE_BYTES){java.util.Iterator<Template> it=TEMPLATES.values().iterator();Template old=it.next();it.remove();retained-=old.bytes;}TEMPLATES.put(key,mesh);retained+=mesh.bytes;}
+            if(mesh==null||!java.util.Objects.equals(mesh.config,config)){if(mesh!=null){TEMPLATES.remove(key);retained-=mesh.bytes;}capture.begin(GL11.GL_QUADS,templateFormat);emit(tile,0,0,0,capture,progress,true,pass);capture.finishDrawing();mesh=new Template(capture);mesh.config=config;while(!TEMPLATES.isEmpty()&&retained+mesh.bytes>CACHE_BYTES){java.util.Iterator<Template> it=TEMPLATES.values().iterator();Template old=it.next();it.remove();retained-=old.bytes;}TEMPLATES.put(key,mesh);retained+=mesh.bytes;}
             if(column.data==null||column.data.length!=mesh.data.length){if(column.data!=null)columnBytes-=column.bytes();column.data=new int[mesh.data.length];columnBytes+=column.bytes();lighting=true;}
             System.arraycopy(mesh.data,0,column.data,0,mesh.data.length);
             for(int v=0;v<mesh.rows.length;v++){int at=v*mesh.stride;column.data[at]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(column.data[at])+x));column.data[at+1]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(column.data[at+1])+y));column.data[at+2]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(column.data[at+2])+z));}
-            column.key=key;column.x=x;column.y=y;column.z=z;
+            column.key=key;column.config=config;column.x=x;column.y=y;column.z=z;
         }
         if(lighting){for(int row=0;row<tile.height;row++){lightSamples++;int light=tile.getWorld().getCombinedLight(lightPos.setPos(tile.getPos().getX(),tile.getPos().getY()-row,tile.getPos().getZ()),0);column.lights[row]=light;}column.dynamic=dynamicRevision;column.revision=changes.revision;column.origin=origin;column.vehicleRevision=vehicleRevision;column.structure=structure==null?null:new java.lang.ref.WeakReference<>(structure);}
-        if(geometry||lighting){if(mesh==null)mesh=TEMPLATES.get(key);if(mesh==null){column.key=-1;cached(tile,x,y,z,buffer,progress);return;}for(int v=0;v<mesh.rows.length;v++)column.data[v*mesh.stride+mesh.lightOffset]=column.lights[mesh.rows[v]];}
+        if(geometry||lighting){if(mesh==null)mesh=TEMPLATES.get(key);if(mesh==null){column.key=-1;cached(tile,x,y,z,buffer,progress,pass);return;}for(int v=0;v<mesh.rows.length;v++)column.data[v*mesh.stride+mesh.lightOffset]=column.lights[mesh.rows[v]];}
         buffer.setTranslation(0,0,0);buffer.addVertexData(column.data);
-        while(columnBytes>COLUMN_BYTES){java.util.Iterator<Column> it=COLUMN_LRU.keySet().iterator();Column old=it.next();it.remove();COLUMNS.remove(old.tile.get());columnBytes-=old.bytes();}
+        while(columnBytes>COLUMN_BYTES){java.util.Iterator<Column> it=COLUMN_LRU.keySet().iterator();Column old=it.next();it.remove();Column[] slots=COLUMNS.get(old.tile.get());if(slots!=null){slots[old.pass]=null;if(slots[0]==null&&slots[1]==null)COLUMNS.remove(old.tile.get());}columnBytes-=old.bytes();}
     }
 
     @Override public boolean isGlobalRenderer(GarageDoorTile tile){return tile.isRoot();}
     @Override public void renderTileEntityFast(GarageDoorTile tile,double x,double y,double z,float partial,int destroy,float alpha,BufferBuilder b){
         if(!tile.isRoot()||!tile.ready()||tile.clientSuppressed)return;
         double progress=GarageDoorVisuals.pose(tile,partial);
-        cached(tile,x,y,z,b,progress);
+        cached(tile,x,y,z,b,progress,Math.max(0,net.minecraftforge.client.MinecraftForgeClient.getRenderPass()));
     }
     /** Uncached geometry remains the reference for moving sections and endpoint parity checks. */
-    public void renderUncached(GarageDoorTile tile,double x,double y,double z,float partial,BufferBuilder buffer){if(tile.isRoot()&&tile.ready())emit(tile,x,y,z,buffer,GarageDoorVisuals.pose(tile,partial),false);}
-    private void emit(GarageDoorTile tile,double x,double y,double z,BufferBuilder b,double progress,boolean capture){
+    public void renderUncached(GarageDoorTile tile,double x,double y,double z,float partial,BufferBuilder buffer){if(tile.isRoot()&&tile.ready())emit(tile,x,y,z,buffer,GarageDoorVisuals.pose(tile,partial),false,Math.max(0,net.minecraftforge.client.MinecraftForgeClient.getRenderPass()));}
+    private void emit(GarageDoorTile tile,double x,double y,double z,BufferBuilder b,double progress,boolean capture,int pass){
+        if(!tile.settings.nativePanel()||tile.settings.direction!=0||tile.settings.straight||tile.texture>=com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT||pass!=0){int rotation=((int)(180-tile.facing().getHorizontalAngle())/90)&3;for(int row=0;row<tile.height;row++){if(capture)((Capture)b).row=row;GarageDoorGeometry.panel(row,tile.height,tile.column,tile.columns,progress,tile.settings.direction,tile.settings.straight,section);int light=capture?0:tile.getWorld().getCombinedLight(lightPos.setPos(tile.getPos().getX(),tile.getPos().getY()-row,tile.getPos().getZ()),0);com.vandorlabs.client.GarageDoorPanels.emit(tile,row,pass,b,x,y,z,section,rotation,light);}return;}
         TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();TextureAtlasSprite front=atlas.getAtlasSprite(tile.texture<0?"vandorlabs:blocks/garage/garage_panel":com.vandorlabs.tiles.ScreenHousingTextures.fullTexture(tile.texture)),edge=atlas.getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
         int rotation=((int)(180-tile.facing().getHorizontalAngle())/90)&3;boolean normals=b.getVertexFormat().hasNormal();b.setTranslation(0,0,0);
         for(int row=0;row<tile.height;row++){
@@ -123,7 +134,7 @@ public final class GarageDoorRenderer extends TileEntitySpecialRenderer<GarageDo
     @Override public void render(GarageDoorTile tile,double x,double y,double z,float partial,int destroy,float alpha){
         if(!tile.isRoot()||!tile.ready()||tile.clientSuppressed)return;
         try(com.vandorlabs.client.TurntableRenderState saved=new com.vandorlabs.client.TurntableRenderState()){
-            bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.disableBlend();GlStateManager.depthMask(true);BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);renderTileEntityFast(tile,x,y,z,partial,destroy,alpha,b);Tessellator.getInstance().draw();
+            bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);GlStateManager.disableLighting();GlStateManager.disableCull();if(net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1){GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);GlStateManager.depthMask(false);}else{GlStateManager.disableBlend();GlStateManager.depthMask(true);}BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);renderTileEntityFast(tile,x,y,z,partial,destroy,alpha,b);Tessellator.getInstance().draw();
         }
     }
 }

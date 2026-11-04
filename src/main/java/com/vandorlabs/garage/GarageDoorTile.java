@@ -16,6 +16,8 @@ import java.util.*;
 public final class GarageDoorTile extends TileEntity implements net.minecraft.util.ITickable,RedstoneChannelMember {
     public static final int MAX_HEIGHT=32,MAX_COLUMNS=32;
     public int topOffset,height=1,ticksPerSection=10,texture=-1;
+    public int column,columns=1;
+    public GarageDoorSettings settings=GarageDoorSettings.DEFAULT;
     public boolean targetOpen,localRedstone=true,signalOpens=true,formed,configured;
     public double from;
     public long started,sequence;
@@ -47,12 +49,18 @@ public final class GarageDoorTile extends TileEntity implements net.minecraft.ut
             if(member.formed&&(!source.formed||member.configured&&!source.configured||member.height>source.height))source=member;
         }
         boolean topology=false;for(int i=0;i<members.size();i++)if(!members.get(i).formed||members.get(i).topOffset!=i||members.get(i).height!=members.size())topology=true;
-        if(!topology)return;
+        if(!topology){top.refreshSpan();return;}
         double current=source.pose(0);boolean target=source.targetOpen;long nextSequence=source.sequence+1;UUID id=source.identity;ChannelList selected=source.channels;int speed=source.ticksPerSection;boolean local=source.localRedstone,invert=source.signalOpens,custom=source.configured;
         for(int i=0;i<members.size();i++){
-            GarageDoorTile member=members.get(i);ChannelList old=member.channels;member.topOffset=i;member.height=members.size();member.formed=true;member.from=current;member.targetOpen=target;member.started=world.getTotalWorldTime();member.duration=Math.max(1,(int)Math.ceil(member.height*speed*Math.abs((target?1:0)-current)));member.sequence=nextSequence;member.identity=id;member.channels=selected;member.ticksPerSection=speed;member.localRedstone=local;member.signalOpens=invert;member.configured=custom;member.texture=source.texture;member.markDirty();member.sync();RedstoneChannels.channelChanged(member,old);
+            GarageDoorTile member=members.get(i);ChannelList old=member.channels;member.topOffset=i;member.height=members.size();member.formed=true;member.from=current;member.targetOpen=target;member.started=world.getTotalWorldTime();member.duration=Math.max(1,(int)Math.ceil(member.height*speed*Math.abs((target?1:0)-current)));member.sequence=nextSequence;member.identity=id;member.channels=selected;member.ticksPerSection=speed;member.localRedstone=local;member.signalOpens=invert;member.configured=custom;member.texture=source.texture;member.settings=source.settings;member.markDirty();member.sync();RedstoneChannels.channelChanged(member,old);
         }
+        top.refreshSpan();
     }
+    private void refreshSpan(){
+        List<GarageDoorTile> roots;try{roots=columns();}catch(IllegalArgumentException incomplete){return;}EnumFacing right=facing().rotateY();roots.sort(java.util.Comparator.comparingInt(t->t.pos.getX()*right.getFrontOffsetX()+t.pos.getZ()*right.getFrontOffsetZ()));
+        for(int index=0;index<roots.size();index++){GarageDoorTile root=roots.get(index);for(int row=0;row<root.height;row++){GarageDoorTile member=at(world,root.pos.down(row));if(member!=null&&(member.column!=index||member.columns!=roots.size())){member.column=index;member.columns=roots.size();member.sync();}}}
+    }
+    public boolean canBake(){return settings.nativePanel()&&texture<com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT;}
     public List<GarageDoorTile> columns(){
         GarageDoorTile root=root();if(!root.formed)throw new IllegalArgumentException("Complete the garage column (maximum 32 sections)");LinkedHashSet<GarageDoorTile> result=new LinkedHashSet<>();ArrayDeque<GarageDoorTile> queue=new ArrayDeque<>();result.add(root);queue.add(root);
         while(!queue.isEmpty()){
@@ -66,19 +74,25 @@ public final class GarageDoorTile extends TileEntity implements net.minecraft.ut
     }
     private List<GarageDoorTile> members(List<GarageDoorTile> roots){List<GarageDoorTile> result=new ArrayList<>();for(GarageDoorTile root:roots)for(int row=0;row<root.height;row++){GarageDoorTile member=at(world,root.pos.down(row));if(member==null||member.facing()!=root.facing()||member.height!=root.height||member.topOffset!=row)throw new IllegalArgumentException("Load the complete garage door before changing it");result.add(member);}return result;}
     private void permissions(EntityPlayer player,List<GarageDoorTile> members){for(GarageDoorTile tile:members)if(!world.isBlockModifiable(player,tile.pos)||!player.canPlayerEdit(tile.pos,EnumFacing.UP,player.getHeldItemMainhand()))throw new IllegalArgumentException("Garage door is protected");}
-    public void toggle(EntityPlayer player){List<GarageDoorTile> roots=columns();permissions(player,members(roots));boolean open=!root().targetOpen;for(GarageDoorTile root:roots)root.move(open);}
-    public void operate(EntityPlayer player,boolean open){List<GarageDoorTile> roots=columns();permissions(player,members(roots));for(GarageDoorTile root:roots)root.move(open);}
+    public void toggle(EntityPlayer player){if(root().settings.activation>0)throw new IllegalArgumentException("This door is controlled by redstone");List<GarageDoorTile> roots=columns();permissions(player,members(roots));boolean open=!root().targetOpen;for(GarageDoorTile root:roots)root.move(open);}
+    public void operate(EntityPlayer player,boolean open){if(root().settings.activation>0)throw new IllegalArgumentException("This door is controlled by redstone");List<GarageDoorTile> roots=columns();permissions(player,members(roots));for(GarageDoorTile root:roots)root.move(open);}
     public void configure(EntityPlayer player,ChannelList next,int ticks,boolean local,boolean opens){
         if(ticks<5||ticks>30||next==null)throw new IllegalArgumentException("Invalid garage door settings");
         List<GarageDoorTile> roots=columns(),members=members(roots);permissions(player,members);for(GarageDoorTile root:roots)root.configuring=true;
-        try{for(GarageDoorTile tile:members){ChannelList old=tile.channels;tile.channels=next;tile.ticksPerSection=ticks;tile.localRedstone=local;tile.signalOpens=opens;tile.configured=true;tile.markDirty();tile.sync();RedstoneChannels.channelChanged(tile,old);}}
+        try{for(GarageDoorTile tile:members){ChannelList old=tile.channels;tile.channels=next;tile.ticksPerSection=ticks;tile.localRedstone=local;tile.signalOpens=opens;tile.settings=tile.settings.activation(-1);tile.configured=true;tile.markDirty();tile.sync();RedstoneChannels.channelChanged(tile,old);}}
         finally{for(GarageDoorTile root:roots)root.configuring=false;}
         root().powerRevision++;root().refreshPower();
     }
-    public static boolean validTexture(int choice){return choice==-1||com.vandorlabs.tiles.ScreenHousingTextures.validChoice(choice)&&com.vandorlabs.tiles.ScreenHousingTextures.visible(choice)&&(com.vandorlabs.tiles.ScreenHousingTextures.generalTexture(choice)||"Doors".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice))||"Double Doors".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice)));}
+    public static boolean validTexture(int choice){return choice==-1||com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice)||com.vandorlabs.tiles.ScreenHousingTextures.validChoice(choice)&&com.vandorlabs.tiles.ScreenHousingTextures.visible(choice)&&(com.vandorlabs.tiles.ScreenHousingTextures.generalTexture(choice)||"Doors".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice))||"Double Doors".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice))||"Frames".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice))||"Frame".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(choice)));}
     public void configureTexture(EntityPlayer player,int choice){
         if(!validTexture(choice))throw new IllegalArgumentException("Invalid Sectional Door texture");
         List<GarageDoorTile> all=members(columns());permissions(player,all);for(GarageDoorTile tile:all){tile.texture=choice;tile.configured=true;tile.markDirty();tile.sync();}
+    }
+    public void configureAll(EntityPlayer player,ChannelList channels,int ticks,boolean local,boolean opens,int texture,GarageDoorSettings settings){
+        if(channels==null||ticks<5||ticks>30||!validTexture(texture)||settings==null)throw new IllegalArgumentException("Invalid Sectional Door settings");
+        List<GarageDoorTile> roots=columns(),all=members(roots);permissions(player,all);for(GarageDoorTile root:roots)root.configuring=true;
+        try{for(GarageDoorTile tile:all){ChannelList old=tile.channels;tile.channels=channels;tile.ticksPerSection=ticks;tile.localRedstone=local;tile.signalOpens=opens;tile.texture=texture;tile.settings=settings;tile.configured=true;tile.markDirty();tile.sync();RedstoneChannels.channelChanged(tile,old);}}finally{for(GarageDoorTile root:roots)root.configuring=false;}
+        root().powerRevision++;root().refreshPower();
     }
     private void refreshPower(){
         if(world==null||world.isRemote||configuring)return;
@@ -89,11 +103,12 @@ public final class GarageDoorTile extends TileEntity implements net.minecraft.ut
         List<GarageDoorTile> loaded;try{loaded=members(roots);}catch(IllegalArgumentException incomplete){return;}
         for(GarageDoorTile member:loaded){enabled|=member.localRedstone||!member.channels.isEmpty();signal|=member.channelSignal||member.localRedstone&&world.isBlockPowered(member.pos);}
         for(GarageDoorTile root:roots)root.powerHandledRevision=root.powerRevision;
-        if(enabled){boolean open=signal==root().signalOpens;for(GarageDoorTile root:roots)root.move(open);}
+        int activation=root().settings.activation;if(activation==0)return;
+        if(enabled||activation>0){boolean open=activation<0?signal==root().signalOpens:activation==1?signal:!signal;for(GarageDoorTile root:roots)root.move(open);}
     }
     private void move(boolean open){
         GarageDoorTile root=root();if(root!=this){root.move(open);return;}if(targetOpen==open)return;
-        double current=pose(0);targetOpen=open;from=current;started=world.getTotalWorldTime();duration=Math.max(1,(int)Math.ceil(height*ticksPerSection*Math.abs((open?1:0)-current)));sequence++;
+        double current=pose(0);targetOpen=open;from=current;started=world.getTotalWorldTime();duration=Math.max(1,(int)Math.ceil((settings.direction<2?height:columns)*ticksPerSection*Math.abs((open?1:0)-current)));sequence++;
         mirror();sync();
     }
     private void mirror(){for(int row=0;row<height;row++){GarageDoorTile member=at(world,pos.down(row));if(member==null)continue;member.from=from;member.targetOpen=targetOpen;member.started=started;member.duration=duration;member.sequence=sequence;member.markDirty();}}
@@ -109,18 +124,18 @@ public final class GarageDoorTile extends TileEntity implements net.minecraft.ut
     @Override public boolean hasLocalRedstoneSignal(){return false;}
     @Override public void setChannelSignal(boolean powered){if(channelSignal==powered)return;channelSignal=powered;requestPower();}
     private void sync(){if(world!=null&&!world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);if(texture>=0)tag.setInteger("GarageTexture",texture);ChannelData.write(tag,channels);tag.setInteger("GarageTopOffset",topOffset);tag.setInteger("GarageHeight",height);tag.setInteger("GarageSpeed",ticksPerSection);tag.setBoolean("GarageOpen",targetOpen);tag.setBoolean("GarageLocalRedstone",localRedstone);tag.setBoolean("GarageSignalOpens",signalOpens);tag.setBoolean("GarageFormed",formed);tag.setBoolean("GarageConfigured",configured);tag.setDouble("GarageFrom",from);tag.setLong("GarageStarted",started);tag.setLong("GarageSequence",sequence);tag.setInteger("GarageDuration",duration);tag.setUniqueId("GarageIdentity",identity);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);texture=tag.hasKey("GarageTexture",3)&&validTexture(tag.getInteger("GarageTexture"))?tag.getInteger("GarageTexture"):-1;ready=true;channels=ChannelData.read(tag,0);topOffset=Math.max(0,Math.min(MAX_HEIGHT-1,tag.getInteger("GarageTopOffset")));height=Math.max(1,Math.min(MAX_HEIGHT,tag.getInteger("GarageHeight")));ticksPerSection=Math.max(5,Math.min(30,tag.hasKey("GarageSpeed")?tag.getInteger("GarageSpeed"):10));targetOpen=tag.getBoolean("GarageOpen");localRedstone=!tag.hasKey("GarageLocalRedstone")||tag.getBoolean("GarageLocalRedstone");signalOpens=!tag.hasKey("GarageSignalOpens")||tag.getBoolean("GarageSignalOpens");formed=tag.getBoolean("GarageFormed");configured=tag.getBoolean("GarageConfigured");from=tag.getDouble("GarageFrom");if(!Double.isFinite(from))from=0;from=Math.max(0,Math.min(1,from));started=tag.getLong("GarageStarted");sequence=Math.max(0,tag.getLong("GarageSequence"));duration=Math.max(1,Math.min(960,tag.getInteger("GarageDuration")));if(tag.hasUniqueId("GarageIdentity"))identity=tag.getUniqueId("GarageIdentity");com.vandorlabs.VandorLabs.proxy.garageAppearanceChanged(this);}
-    @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);settings.write(tag);if(!settings.equals(GarageDoorSettings.LEGACY)){tag.setInteger("GarageColumn",column);tag.setInteger("GarageColumns",columns);}if(texture>=0)tag.setInteger("GarageTexture",texture);ChannelData.write(tag,channels);tag.setInteger("GarageTopOffset",topOffset);tag.setInteger("GarageHeight",height);tag.setInteger("GarageSpeed",ticksPerSection);tag.setBoolean("GarageOpen",targetOpen);tag.setBoolean("GarageLocalRedstone",localRedstone);tag.setBoolean("GarageSignalOpens",signalOpens);tag.setBoolean("GarageFormed",formed);tag.setBoolean("GarageConfigured",configured);tag.setDouble("GarageFrom",from);tag.setLong("GarageStarted",started);tag.setLong("GarageSequence",sequence);tag.setInteger("GarageDuration",duration);tag.setUniqueId("GarageIdentity",identity);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);settings=GarageDoorSettings.read(tag);column=Math.max(0,Math.min(MAX_COLUMNS-1,tag.getInteger("GarageColumn")));columns=Math.max(1,Math.min(MAX_COLUMNS,tag.getInteger("GarageColumns")));texture=tag.hasKey("GarageTexture",3)&&validTexture(tag.getInteger("GarageTexture"))?tag.getInteger("GarageTexture"):-1;ready=true;channels=ChannelData.read(tag,0);topOffset=Math.max(0,Math.min(MAX_HEIGHT-1,tag.getInteger("GarageTopOffset")));height=Math.max(1,Math.min(MAX_HEIGHT,tag.getInteger("GarageHeight")));ticksPerSection=Math.max(5,Math.min(30,tag.hasKey("GarageSpeed")?tag.getInteger("GarageSpeed"):10));targetOpen=tag.getBoolean("GarageOpen");localRedstone=!tag.hasKey("GarageLocalRedstone")||tag.getBoolean("GarageLocalRedstone");signalOpens=!tag.hasKey("GarageSignalOpens")||tag.getBoolean("GarageSignalOpens");formed=tag.getBoolean("GarageFormed");configured=tag.getBoolean("GarageConfigured");from=tag.getDouble("GarageFrom");if(!Double.isFinite(from))from=0;from=Math.max(0,Math.min(1,from));started=tag.getLong("GarageStarted");sequence=Math.max(0,tag.getLong("GarageSequence"));duration=Math.max(1,Math.min(960,tag.getInteger("GarageDuration")));if(tag.hasUniqueId("GarageIdentity"))identity=tag.getUniqueId("GarageIdentity");com.vandorlabs.VandorLabs.proxy.garageAppearanceChanged(this);if(world!=null&&!world.isRemote)scheduleRefresh();}
+    @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.setInteger("GarageColumn",column);tag.setInteger("GarageColumns",columns);return tag;}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){NBTTagCompound tag=packet.getNbtCompound();if(tag.hasUniqueId("GarageIdentity")&&identity.equals(tag.getUniqueId("GarageIdentity"))&&tag.getLong("GarageSequence")<sequence)return;handleUpdateTag(tag);}
     @Override public void handleUpdateTag(NBTTagCompound tag){if(ready&&tag.hasUniqueId("GarageIdentity")&&identity.equals(tag.getUniqueId("GarageIdentity"))&&tag.getLong("GarageSequence")<sequence)return;readFromNBT(tag);if(world!=null)world.markBlockRangeForRenderUpdate(pos,pos);}
     @Override public boolean hasFastRenderer(){return true;}
-    @Override public boolean shouldRenderInPass(int pass){return pass==0&&isRoot()&&ready()&&!clientSuppressed;}
+    @Override public boolean shouldRenderInPass(int pass){return (pass==0||pass==1&&settings.window)&&isRoot()&&ready()&&!clientSuppressed;}
     @Override public AxisAlignedBB getRenderBoundingBox(){
-        double minX=-.01,maxX=1.01,minZ=.20,maxZ=height+1.01;
-        switch(facing()){case SOUTH:minZ=-height-.01;maxZ=.80;break;case WEST:minX=.20;maxX=height+1.01;minZ=-.01;maxZ=1.01;break;case EAST:minX=-height-.01;maxX=.80;minZ=-.01;maxZ=1.01;break;default:break;}
-        return new AxisAlignedBB(pos.getX()+minX,pos.getY()+1-height-.01,pos.getZ()+minZ,pos.getX()+maxX,pos.getY()+1.51,pos.getZ()+maxZ);
+        if(settings.direction==0&&!settings.straight){double minX=-.01,maxX=1.01,minZ=.20,maxZ=height+1.01;switch(facing()){case SOUTH:minZ=-height-.01;maxZ=.80;break;case WEST:minX=.20;maxX=height+1.01;minZ=-.01;maxZ=1.01;break;case EAST:minX=-height-.01;maxX=.80;minZ=-.01;maxZ=1.01;break;default:break;}return new AxisAlignedBB(pos.getX()+minX,pos.getY()+1-height-.01,pos.getZ()+minZ,pos.getX()+maxX,pos.getY()+1.51,pos.getZ()+maxZ);}
+        double span=settings.direction<2?height:columns;
+        double reach=span+1.01;return new AxisAlignedBB(pos.getX()-reach,pos.getY()-height-reach,pos.getZ()-reach,pos.getX()+reach+1,pos.getY()+reach+1,pos.getZ()+reach+1);
     }
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean shouldRefresh(World world,BlockPos pos,net.minecraft.block.state.IBlockState before,net.minecraft.block.state.IBlockState after){return before.getBlock()!=after.getBlock();}

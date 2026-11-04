@@ -25,12 +25,12 @@ public final class GarageDoorVisuals {
     public static double pose(GarageDoorTile tile,float partial){return tile.clientAwaitingChunk?0:authored?tile.pose(partial):sample(tile,frame);}
     public static void resume(GarageDoorTile tile){
         double now=frame;sample(tile,now);
-        State state=WORLDS.get(tile.getWorld()).get(tile.getPos());state.from=0;state.started=now;state.sequence=tile.sequence;state.target=tile.targetOpen;state.duration=Math.max(1,tile.height*tile.ticksPerSection);
+        State state=WORLDS.get(tile.getWorld()).get(tile.getPos());state.from=0;state.started=now;state.sequence=tile.sequence;state.target=tile.targetOpen;state.duration=Math.max(1,(tile.settings.direction<2?tile.height:tile.columns)*tile.ticksPerSection);
     }
     public static double sample(GarageDoorTile tile,double now){
         LinkedHashMap<BlockPos,State> states=WORLDS.computeIfAbsent(tile.getWorld(),w->new LinkedHashMap<>(32,.75F,true));State state=states.get(tile.getPos());
-        if(state==null||!tile.identity.equals(state.id)){state=new State();state.id=tile.identity;state.sequence=tile.sequence;state.target=tile.targetOpen;state.from=tile.pose(0);state.started=now;state.duration=Math.max(1,tile.height*tile.ticksPerSection*Math.abs((state.target?1:0)-state.from));states.put(tile.getPos().toImmutable(),state);if(states.size()>1024)states.remove(states.keySet().iterator().next());}
-        else if(tile.sequence>state.sequence){state.from=state.pose(now);state.sequence=tile.sequence;state.target=tile.targetOpen;state.started=now;state.duration=Math.max(1,tile.height*tile.ticksPerSection*Math.abs((state.target?1:0)-state.from));}
+        if(state==null||!tile.identity.equals(state.id)){state=new State();state.id=tile.identity;state.sequence=tile.sequence;state.target=tile.targetOpen;state.from=tile.pose(0);state.started=now;state.duration=Math.max(1,(tile.settings.direction<2?tile.height:tile.columns)*tile.ticksPerSection*Math.abs((state.target?1:0)-state.from));states.put(tile.getPos().toImmutable(),state);if(states.size()>1024)states.remove(states.keySet().iterator().next());}
+        else if(tile.sequence>state.sequence){state.from=state.pose(now);state.sequence=tile.sequence;state.target=tile.targetOpen;state.started=now;state.duration=Math.max(1,(tile.settings.direction<2?tile.height:tile.columns)*tile.ticksPerSection*Math.abs((state.target?1:0)-state.from));}
         return state.pose(now);
     }
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)Minecraft.getMinecraft().addScheduledTask(()->WORLDS.remove(event.getWorld()));}

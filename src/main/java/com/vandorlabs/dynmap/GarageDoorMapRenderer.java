@@ -1,24 +1,34 @@
 package com.vandorlabs.dynmap;
 
 import com.vandorlabs.garage.GarageDoorGeometry;
+import com.vandorlabs.surface.WindowOutline;
+import com.vandorlabs.tiles.*;
+import net.minecraft.util.math.Vec3d;
 import org.dynmap.renderer.*;
 import java.util.*;
 
-/** Map each native section to its closed or overhead endpoint without a live-world lookup. */
+/** Saved endpoints use the same panel path and window contours as native rendering. */
 public final class GarageDoorMapRenderer extends HousingRenderer {
-    @Override protected int getMaximumTextureCount(){return 2*com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT+3;}
-    @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"GarageTopOffset","GarageHeight","GarageOpen","GarageTexture"};}
-    private static int defaultTexture(){for(int i=0;i<com.vandorlabs.tiles.ScreenHousingTextures.IDS.length;i++)if("sectional_door_panel".equals(com.vandorlabs.tiles.ScreenHousingTextures.IDS[i]))return i;return 0;}
+    private static final int GLASS_BASE=2*ScreenHousingTextures.BUILTIN_COUNT+21;
+    @Override protected int getMaximumTextureCount(){return GLASS_BASE+GlassTextures.IDS.length*GlassTextures.TINT_COUNT;}
+    @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"GarageTopOffset","GarageHeight","GarageOpen","GarageTexture","GarageColumn","GarageColumns","GarageSlide","GarageStraight","GarageLayout","GarageWindow","GarageShape","GarageJoin","GarageGlassMaterial","GarageGlassShade","GarageGlassTint","GarageGlassLayout"};}
+    private static int defaultTexture(){for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if("sectional_door_panel".equals(ScreenHousingTextures.IDS[i]))return i;return 0;}
     private static int value(Object v,int fallback){return v instanceof Number?((Number)v).intValue():fallback;}
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context){
-        int row=Math.max(0,Math.min(31,value(context.getBlockTileEntityField("GarageTopOffset"),0))),height=Math.max(1,Math.min(32,value(context.getBlockTileEntityField("GarageHeight"),1)));Object target=context.getBlockTileEntityField("GarageOpen");boolean open=Boolean.TRUE.equals(target)||value(target,0)!=0;
-        double[] pose=new double[4];GarageDoorGeometry.section(row,height,open?1:0,pose);double h=GarageDoorGeometry.HALF_THICKNESS;
-        List<RenderPatch> out=new ArrayList<>();RenderPatchFactory factory=context.getPatchFactory();
-        int front=integer(context.getBlockTileEntityField("GarageTexture"),-1);if(front<0)front=defaultTexture();front=com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT+texture(front);int edge=2*com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT+2;
-        if(open)addBox(factory,out,0,1,row+pose[0]-h,row+pose[0]+h,pose[1]-.5,pose[1]+.5,new int[]{front,front,edge,edge,edge,edge});
-        else addBox(factory,out,0,1,row+pose[0]-.5,row+pose[0]+.5,pose[1]-h,pose[1]+h,new int[]{edge,edge,edge,edge,front,front});
-        if(row==0)addBox(factory,out,0,1,.875,1,.375,.625,new int[]{edge,edge,edge,edge,edge,edge});
-        int angle=context.getBlockType().isStateMatch("facing","south")?180:context.getBlockType().isStateMatch("facing","west")?90:context.getBlockType().isStateMatch("facing","east")?270:0;
-        RenderPatch[] result=new RenderPatch[out.size()];for(int i=0;i<result.length;i++){RenderPatch patch=out.get(i);result[i]=angle==0?patch:factory.getRotatedPatch(patch,0,angle,0,patch.getTextureIndex());}return result;
+        int row=clamp(context,"GarageTopOffset",0,0,31),height=clamp(context,"GarageHeight",1,1,32),column=clamp(context,"GarageColumn",0,0,31),columns=clamp(context,"GarageColumns",1,1,32),direction=clamp(context,"GarageSlide",0,0,3);boolean open=booleanValue(context.getBlockTileEntityField("GarageOpen")),straight=booleanValue(context.getBlockTileEntityField("GarageStraight")),window=booleanValue(context.getBlockTileEntityField("GarageWindow"));
+        double[] pose=new double[6];GarageDoorGeometry.panel(row,height,column,columns,open?1:0,direction,straight,pose);List<RenderPatch> out=new ArrayList<>();RenderPatchFactory factory=context.getPatchFactory();int selected=integer(context.getBlockTileEntityField("GarageTexture"),-1);if(selected<0)selected=defaultTexture();int front=ScreenHousingTextures.BUILTIN_COUNT+texture(selected),edge=2*ScreenHousingTextures.BUILTIN_COUNT+2;
+        int rotation=context.getBlockType().isStateMatch("facing","south")?2:context.getBlockType().isStateMatch("facing","west")?1:context.getBlockType().isStateMatch("facing","east")?3:0;
+        // Retain exact original meshes and patch counts for old saved door settings.
+        if(context.getBlockTileEntityField("GarageSlide")==null){double[] old=new double[4];GarageDoorGeometry.section(row,height,open?1:0,old);double h=GarageDoorGeometry.HALF_THICKNESS;if(open)addBox(factory,out,0,1,row+old[0]-h,row+old[0]+h,old[1]-.5,old[1]+.5,new int[]{front,front,edge,edge,edge,edge});else addBox(factory,out,0,1,row+old[0]-.5,row+old[0]+.5,old[1]-h,old[1]+h,new int[]{edge,edge,edge,edge,front,front});if(row==0)addBox(factory,out,0,1,.875,1,.375,.625,new int[]{edge,edge,edge,edge,edge,edge});RenderPatch[] result=new RenderPatch[out.size()];for(int i=0;i<result.length;i++){RenderPatch p=out.get(i);result[i]=rotation==0?p:factory.getRotatedPatch(p,0,rotation*90,0,p.getTextureIndex());}return result;}
+        WindowOutline.Slice slice=null;if(window){boolean join=booleanValue(context.getBlockTileEntityField("GarageJoin"));int shape=clamp(context,"GarageShape",0,0,3);slice=new WindowOutline(join?columns:1,join?height:1,shape,0).slice(join?column:0,join?height-1-row:0);}
+        List<double[]> panels=window?slice.frameQuads:Collections.singletonList(new double[]{0,0,16,0,16,16,0,16});int mode=clamp(context,"GarageLayout",1,0,2);for(double[] q:panels)for(int side:new int[]{-1,1})face(context,out,q,side*GarageDoorGeometry.HALF_THICKNESS,side,front,mode,column,row,columns,height,ProgrammableSurfaceRenderer.materialAspect(selected),pose,rotation);
+        if(window){int material=integer(context.getBlockTileEntityField("GarageGlassMaterial"),-1),shade=clamp(context,"GarageGlassShade",0,0,18),tint=clamp(context,"GarageGlassTint",1,0,3),glass=material<0?GLASS_BASE+shade*4+tint:ScreenHousingTextures.BUILTIN_COUNT+texture(material),glassMode=clamp(context,"GarageGlassLayout",1,0,2);for(double[] q:slice.glassQuads)face(context,out,q,0,1,glass,glassMode,column,row,columns,height,material<0?1:ProgrammableSurfaceRenderer.materialAspect(material),pose,rotation);for(double[] e:slice.hexEdges)edge(context,out,e[2],e[3],e[0],e[1],edge,row,pose,rotation);}
+        for(int side=0;side<4;side++){int axis=side<2?0:1;double boundary=(side&1)==0?0:16;double[] gap=slice==null?null:slice.edgeOpening(axis,boundary);outer(context,out,side,0,gap==null?16:gap[0],edge,row,pose,rotation);if(gap!=null)outer(context,out,side,gap[1],16,edge,row,pose,rotation);}
+        if(row==0){List<RenderPatch> header=new ArrayList<>();addBox(factory,header,0,1,.875,1,.375,.625,new int[]{edge,edge,edge,edge,edge,edge});for(RenderPatch p:header)out.add(rotation==0?p:factory.getRotatedPatch(p,0,rotation*90,0,p.getTextureIndex()));}return out.toArray(new RenderPatch[0]);
     }
+    private static int clamp(MapDataContext c,String key,int fallback,int min,int max){return Math.max(min,Math.min(max,value(c.getBlockTileEntityField(key),fallback)));}
+    private static void face(MapDataContext c,List<RenderPatch> out,double[] q,double z,int side,int texture,int mode,int column,int row,int width,int height,double aspect,double[] pose,int rotation){List<MapSurface.Vertex> vertices=new ArrayList<>();boolean stretch=com.vandorlabs.render.TextureLayoutMode.fit(mode,width,height,aspect);for(int n=0;n<4;n++){int i=side>0?n:3-n;double x=q[2*i]/16,y=q[2*i+1]/16,u=stretch?(column+x)/width:com.vandorlabs.render.TextureLayoutMode.tileU(column+x,aspect),v=stretch?(row+1-y)/height:com.vandorlabs.render.TextureLayoutMode.tileV(row+1-y,aspect);vertices.add(new MapSurface.Vertex(point(x,y,z,row,pose,rotation),u,v));}MapSurface.emitUnclipped(c,out,vertices,texture);}
+    private static Vec3d point(double x,double y,double z,int row,double[] pose,int rotation){double py=y-.5,rx,ry,rz;if(pose[5]!=0){rx=x;ry=pose[1]+pose[4]*py-pose[3]*z;rz=pose[2]+pose[3]*py+pose[4]*z;}else{rx=pose[0]+pose[4]*(x-.5)-pose[3]*z;ry=pose[1]+py;rz=pose[2]+pose[3]*(x-.5)+pose[4]*z;}return new Vec3d(rotation==1?rz:rotation==2?1-rx:rotation==3?1-rz:rx,row+ry,rotation==1?1-rx:rotation==2?1-rz:rotation==3?rx:rz);}
+    private static void outer(MapDataContext c,List<RenderPatch> out,int side,double lo,double hi,int texture,int row,double[] pose,int rot){if(hi-lo<1e-7)return;if(side==0)edge(c,out,0,hi,0,lo,texture,row,pose,rot);if(side==1)edge(c,out,16,lo,16,hi,texture,row,pose,rot);if(side==2)edge(c,out,lo,0,hi,0,texture,row,pose,rot);if(side==3)edge(c,out,hi,16,lo,16,texture,row,pose,rot);}
+    private static void edge(MapDataContext c,List<RenderPatch> out,double ax,double ay,double bx,double by,int texture,int row,double[] pose,int rotation){double h=GarageDoorGeometry.HALF_THICKNESS;List<MapSurface.Vertex> v=new ArrayList<>();v.add(new MapSurface.Vertex(point(ax/16,ay/16,-h,row,pose,rotation),0,0));v.add(new MapSurface.Vertex(point(bx/16,by/16,-h,row,pose,rotation),1,0));v.add(new MapSurface.Vertex(point(bx/16,by/16,h,row,pose,rotation),1,1));v.add(new MapSurface.Vertex(point(ax/16,ay/16,h,row,pose,rotation),0,1));MapSurface.emitUnclipped(c,out,v,texture);}
 }

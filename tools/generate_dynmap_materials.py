@@ -63,6 +63,8 @@ def palette(full=False,check=False):
 def generate(check=False):
     full=palette(True,check=check)
     paths=palette(check=check)+full+['space_doors/medium/double_frame_metal','space_doors/medium/hinge','programmable_glass/metal_side','turntable/turntable_block_bottom','__minecraft_black__']+[f'copy_controller/{face}' for face in ('bottom','top','left','right','front','back')]+[f'turntable/turntable_controller_{face}' for face in ('bottom','top_off','top_on','left','right','back','front_cw_off','front_ccw_off','front_cw_on','front_ccw_on')]
+    glass_ids=['clear','soft_cyan','soft_dark_grey','white','orange','magenta','light_blue','yellow','lime','pink','grey','light_grey','cyan','purple','blue','brown','green','red','black']
+    paths += ['programmable_glass/low/'+name+suffix for name in glass_ids for suffix in ('_mild','','_strong','_opaque')]
     aspects=[]
     for texture in full:
         relative=Path(texture+'.png')

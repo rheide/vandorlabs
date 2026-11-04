@@ -38,6 +38,12 @@ Settled closed panels use chunk geometry. Moving and raised panels share a batch
 
 See the [rendering measurements and validation scope](../render-performance.md).
 
+## Sectional Door controls and windows
+
+Sectional Doors now slide Up, Down, Left or Right and can bend Perpendicularly behind the opening or travel Straight in the door plane. Mechanism speed uses Fast, Medium and Slow, and Ramp Controller uses the same **Speed** label. Manual/Redstone ON/Redstone OFF activation matches Programmable Door; redstone activation disables manual operation.
+
+The fixed-size dialog has a **Door** tab with Tile/Stretch/Fit, inventory-based **Custom...** artwork and the Frame category. Window segments offer Hexagon, Octagon, Square and Round openings, tiled per segment or fitted across the linked door, with a separate Glass tab. Better Builder’s Wands extrusion now repairs every top-row header after copying settings. See the [construction and configuration guide](../sectional-doors.md).
+
 ## Coupled vehicle lift
 
 Hover now requires at least three lift blocks in each section connected by

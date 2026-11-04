@@ -84,7 +84,10 @@ public final class DynmapRendererChecks {
             if(open)require(min>=1-com.vandorlabs.garage.GarageDoorGeometry.HALF_THICKNESS-1e-8&&max<=1+com.vandorlabs.garage.GarageDoorGeometry.HALF_THICKNESS+1e-8,"Garage overhead panels retain column height");
             else require(min>=-row-1e-8&&max<=1-row+1e-8,"Garage closed panel remains in native cell");
         }
-        System.out.println("Garage Dynmap PASS heights=1,5,32 all-sections closed/open root-headers");
+        int variants=0;for(int direction=0;direction<4;direction++)for(boolean straight:new boolean[]{false,true})for(int shape=-1;shape<4;shape++)for(boolean open:new boolean[]{false,true})for(String facing:new String[]{"north","east","south","west"}){
+            Context context=new Context("vandorlabs:garage_door","facing="+facing);context.data.put("GarageTopOffset",1);context.data.put("GarageHeight",3);context.data.put("GarageColumn",1);context.data.put("GarageColumns",3);context.data.put("GarageOpen",(byte)(open?1:0));context.data.put("GarageSlide",direction);context.data.put("GarageStraight",(byte)(straight?1:0));context.data.put("GarageWindow",(byte)(shape>=0?1:0));context.data.put("GarageShape",Math.max(0,shape));context.data.put("GarageJoin",(byte)1);context.data.put("GarageGlassShade",7);context.data.put("GarageGlassTint",2);RenderPatch[] mesh=valid(renderer,context);require(mesh.length>0,"Directional/window Sectional Door map geometry");if(shape>=0){boolean glass=false;for(RenderPatch p:mesh)glass|=p.getTextureIndex()==ScreenHousingTextures.BUILTIN_COUNT*2+21+7*4+2;require(glass,"Native window shade/tint map material");}variants++;
+        }
+        System.out.println("Garage Dynmap PASS heights=1,5,32 all-sections closed/open root-headers directional/window variants="+variants);
     }
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();

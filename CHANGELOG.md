@@ -2,6 +2,8 @@
 
 ## 2.8
 
+- Extend Sectional Door with four slide directions, Straight/Perpendicular motion, shared Speed and Activation selectors, fixed dialog dimensions, Tile/Stretch/Fit artwork, Custom block samples, Frame textures and joined or tiled porthole windows with configurable glass. Repair all headers after Better Builder’s Wands extrusion. Rename Ramp Controller’s Base speed label to Speed.
+
 - Add optional Coupler articulation with independent trailer yaw and pitch, a combined 75-degree limit, hull/terrain collision checks, saved joint poses and section-aware rendering and interaction. Parallel coupling pairs remain rigid.
 - Require three lift blocks in each connected coupler section before entering Hover, including rigid or parallel coupler connections. Taxi remains available without section lift.
 

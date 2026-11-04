@@ -51,7 +51,7 @@ evaluates the redstone signal using the new settings:
   its current position with the source block material. Retraction removes that
   fill. These modes do not deliberately carry standing entities.
 - **Deploy when redstone is ON / OFF:** choose either signal polarity.
-- **Base speed:** fast, medium or slow. Medium is the previous fast speed;
+- **Speed:** fast, medium or slow. Medium is the previous fast speed;
   new fast takes half as long and moves at a constant rate. Slow takes twice
   as long as medium.
 - **Tread px:** tread width along the ramp, choose **1, 2, 4, 8 or 16 pixels** (16 pixels =
@@ -101,7 +101,7 @@ so a negative Ramp height reverses the horizontal direction of uphill travel.
 | Descending passage | Height `-3`, Escalator Up | Riders travel back from the lower end toward the original level. |
 | Normally running stairs | Escalator Up, trigger OFF | Movement runs without power and stops when power is applied. |
 
-**Base speed** sets both formation speed and the belt's horizontal speed:
+**Speed** sets both formation speed and the belt's horizontal speed:
 Fast is 1 block/second, Medium is 0.5, and Slow is 0.25. Riders follow the
 vertical slope as well. Standing players and other supported entities are
 carried explicitly; walking and camera direction remain available, and jumping
