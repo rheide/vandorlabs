@@ -17,6 +17,7 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
     public void authorize(net.minecraft.entity.player.EntityPlayer actor){net.minecraft.world.World parent=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;if(actor!=null&&!actor.isDead&&!actor.isSpectator()&&actor.world==parent&&!parent.isRemote){operator=actor.getUniqueID();sync();}}
     public String status(){return couplingStatus;}
     public boolean requested(){return requested;}
+    public boolean manualReleaseRequested(){return manualOverride&&!manualRequested&&!requested;}
     public void status(String value){if(!java.util.Objects.equals(couplingStatus,value)){couplingStatus=value;sync();}}
     public boolean articulation(){return articulation;}
     public boolean inverted(){return inverted;}
@@ -40,7 +41,7 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
             if(craft==null||!(actor instanceof net.minecraft.entity.player.EntityPlayerMP))return;
             craft.authorizeCouplingGui((net.minecraft.entity.player.EntityPlayerMP)actor,this);
         }
-        authorize(actor);manualOverride=true;manualRequested=!requested;sample();
+        authorize(actor);manualOverride=true;com.vandorlabs.vehicle.EntityGroundVehicle craft=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).craft:null;boolean paired=com.vandorlabs.vehicle.VehicleCouplings.hasPair(craft,pos);boolean closed=paired&&(connected()&&craft.view.getBlockState(pos.offset(world.getBlockState(pos).getValue(BlockCoupler.FACING))).getValue(BlockCoupler.LOCKED));manualRequested=closed?false:!requested;if(closed)com.vandorlabs.vehicle.VehicleCouplings.requestRelease(craft,pos);sample();
     }
     public void sample(){
         boolean carried=world instanceof com.vandorlabs.vehicle.VehicleWorld;

@@ -2,9 +2,11 @@
 
 ## 2.8
 
+- Detach one clicked coupling pair at a time, choose the detached controller’s own driver seat, and allow a bounded clear settling motion for small suspension tilts. Both separated vehicles retain Taxi/Hover mode at non-cardinal headings and fractional positions.
+
 - Correct the base door artwork orientation for Vektor, Pinnacle, Paladyne and Ashiro-Mai, retaining Seyr/Vandor orientation and paired-leaf mirroring.
 
-- Allow stopped Taxi/Hover vehicles to separate into two complete vehicle entities, preserving their poses, mode, tile data and inventories through durable ownership recovery. Each half needs its own controller, seat and mode equipment; detached seats must be empty and its driver segment level.
+- Allow stopped Taxi/Hover vehicles to separate into two complete vehicle entities, preserving their poses, mode, tile data and inventories through durable ownership recovery. Each half needs its own controller, seat and mode equipment; detached seats must be empty and any small settling motion clear.
 - Let Hover vehicles lift with their current articulated pose when intermediate leveling would catch the ground, then settle horizontal after ascent and descent. Allow stopped Hover vehicles to park directly near the ground with extended gear, preserving the leveled pose through ordinary parking checks. Preserve terrain selection and Survival mining through empty space inside a bent vehicle's enclosing bounds.
 - Preserve opaque carried tile capabilities during state updates and pending latch handoffs.
 - Mirror all company door artworks across paired normal and Large leaves in Fit, Tile and Auto layouts.

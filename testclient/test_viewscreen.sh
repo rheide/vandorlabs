@@ -34,6 +34,9 @@ case "${1:-}" in
         elif [ "$TARGET" = segmented-door ]; then
             PREFIX=segmented_door_
             export VANDOR_LABS_SEGMENTED_DOOR_CHECKS_ONLY=true
+        elif [ "$TARGET" = vehicle-saved-coupling ]; then
+            PREFIX=vehicle_saved_coupling_
+            export VANDOR_LABS_SAVED_COUPLING_CHECKS_ONLY=true
         elif [ "$TARGET" = vehicle-hover-recovery ]; then
             PREFIX=vehicle_hover_recovery_
             export VANDOR_LABS_SAVED_HOVER_CHECKS_ONLY=true
@@ -367,6 +370,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = segmented-door ]; then
         grep -q "segmented-door-live PASS" "$RUN_OUT/client.log"
         echo "Segmented door checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = vehicle-saved-coupling ]; then
+        grep -q "saved-coupling PASS" "$RUN_OUT/client.log"
+        echo "Saved vehicle coupling checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = vehicle-hover-recovery ]; then
