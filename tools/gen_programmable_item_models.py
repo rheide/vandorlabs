@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-java = (root / 'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text()
+java = (root / 'src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java').read_text()
 finishes = re.findall(r'new Finish\("([^"]+)", "([^"]+)"\)', java)
 ids = [entry[0] for entry in finishes]
 textures = [entry[1] for entry in finishes]

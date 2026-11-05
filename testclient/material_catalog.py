@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def choices():
-    source = (ROOT / 'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text()
+    source = (ROOT / 'src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java').read_text()
     original = re.findall(r'new Finish\("([^"]+)",\s*"[^"]+"\)', source)
     menu = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/data/texture_menu.json').read_text())
     extra = json.loads((ROOT / 'generated-resources/assets/vandorlabs/data/unified_textures.json').read_text())

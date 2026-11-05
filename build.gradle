@@ -580,6 +580,7 @@ processResources {
     inputs.file('tools/optimize_runtime_pngs.py')
     inputs.file('tools/generate_pbr_materials.py')
     inputs.file('src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java')
+    inputs.file('src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')
     inputs.property('pythonExecutable', pythonExecutable)
     doFirst {
         // Removed source assets must not survive in an incremental JAR build.

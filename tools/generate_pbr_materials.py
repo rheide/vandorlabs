@@ -40,7 +40,7 @@ def catalog_hints():
     """Retain names of generic imported filenames and all resolution variants."""
     entries = json.loads((ROOT/'generated-resources/assets/vandorlabs/data/unified_textures.json').read_text())
     menu = json.loads((ROOT/'src/main/resources/assets/vandorlabs/data/texture_menu.json').read_text())
-    java = (ROOT/'src/main/java/com/vandorlabs/tiles/ScreenHousingTextures.java').read_text()
+    java = (ROOT/'src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java').read_text()
     entries += [dict(source=source, id=identifier, **menu.get(identifier, {}))
                 for identifier, source in re.findall(r'new Finish\("([^"]+)",\s*"([^"]+)"\)', java)]
     result = {}
