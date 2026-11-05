@@ -1277,6 +1277,7 @@ task testWirelessRedstoneDataAdapters(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.WirelessRedstoneDataChecks'
+    if (project.hasProperty('wirelessExport')) systemProperty 'vandorlabs.wirelessExport', project.property('wirelessExport')
 }
 check.dependsOn testWirelessRedstoneDataAdapters
 task testGlassSettingsDataAdapters(type: JavaExec) {
