@@ -20,7 +20,7 @@ Run `python3 platforms/neoforge-1.21.1/test_matter.py` from the repository root 
 
 ## Focused test artifact retention
 
-Native Python launchers finalize generated game runtimes after the entire check completes, including all save/restart and client phases. Successful runtime payloads are removed. Top-level logs, reports and exact-JAR hashes remain; compact runtime logs, crash reports and screenshots are preserved under each run's `evidence/` directory.
+Native Python launchers finalize generated game runtimes after the entire check completes, including all save/restart and client phases. Successful runtime payloads are removed. Top-level logs, reports and exact-JAR hashes remain; compact runtime logs, crash reports and screenshots are preserved under each run's `evidence/` directory and remain accessible at their original relative paths in thin evidence-only trees.
 
 Failed runs retain at most two runtime payloads, limited to 256 MiB per run and 512 MiB in total. Older or oversized payloads are removed after bounded diagnostics are saved. Active processes and unfinished runs block cleanup. Set `VANDOR_LABS_TEST_KEEP_ARTIFACTS=1` before launching a check to retain its runtime explicitly; that choice also protects it from later automatic pruning.
 

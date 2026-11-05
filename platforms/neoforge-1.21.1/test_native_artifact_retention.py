@@ -46,12 +46,14 @@ class RetentionChecks(unittest.TestCase):
     def test_cleanup_after_final_restart_preserves_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             root = self.fixture(Path(directory))()
-            self.assertFalse((root / 'saved-world').exists())
-            self.assertFalse((root / 'client').exists())
+            self.assertFalse((root / 'saved-world/world/level.dat').exists())
+            self.assertFalse((root / 'client/mods/copied-fixture.jar').exists())
             self.assertEqual((root / 'artifact.sha256').read_text(), 'exact artifact hash\n')
             self.assertTrue((root / 'report.json').is_file())
             self.assertEqual((root / 'evidence/saved-world/logs/latest.log').read_text(), 'phase read PASS\n')
             self.assertTrue((root / 'evidence/client/screenshots/proof.png').is_file())
+            self.assertEqual((root / 'saved-world/logs/latest.log').read_text(), 'phase read PASS\n')
+            self.assertTrue((root / 'client/screenshots/proof.png').is_file())
             self.assertFalse((root / 'evidence/client/mods/copied-fixture.jar').exists())
 
     def test_failures_keep_original_error_and_bounded_payloads(self):
@@ -61,8 +63,8 @@ class RetentionChecks(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'second process phase refused'):
                     self.fixture(Path(directory), failure=True)()
                 roots.append(self.current)
-            self.assertFalse((roots[0] / 'saved-world').exists())
-            self.assertLessEqual(sum((root / 'saved-world').exists() for root in roots), 2)
+            self.assertFalse((roots[0] / 'saved-world/world/level.dat').exists())
+            self.assertLessEqual(sum((root / 'saved-world/world/level.dat').exists() for root in roots), 2)
             for root in roots:
                 self.assertTrue((root / 'evidence/saved-world/logs/latest.log').is_file())
                 self.assertTrue((root / 'artifact.sha256').is_file())
@@ -92,7 +94,7 @@ class RetentionChecks(unittest.TestCase):
                     self.assertTrue((root / 'saved-world/level.dat').is_file())
                 return root
             root = run()
-            self.assertFalse((root / 'saved-world').exists())
+            self.assertFalse((root / 'saved-world/level.dat').exists())
             for index in range(3):
                 self.assertIn('python phase PASS', (root / ('phase%d.log' % index)).read_text())
 
@@ -114,7 +116,7 @@ class RetentionChecks(unittest.TestCase):
                 self.child.terminate()
                 self.child.wait(timeout=5)
             self.run_owner.finish(True)
-            self.assertFalse((root / 'saved-world').exists())
+            self.assertFalse((root / 'saved-world/level.dat').exists())
 
     def test_process_tracking_and_whole_main_status(self):
         calls = []
