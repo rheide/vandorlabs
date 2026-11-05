@@ -13,6 +13,11 @@ import native_test_artifacts as native
 
 
 class RetentionChecks(unittest.TestCase):
+    def setUp(self):
+        policy = patch.dict(os.environ, {'VANDOR_LABS_TEST_KEEP_ARTIFACTS': '0'})
+        policy.start()
+        self.addCleanup(policy.stop)
+
     def fixture(self, base, failure=False):
         @native.retain_artifacts
         def run():
