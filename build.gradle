@@ -1293,3 +1293,12 @@ task testStairStateAdapters(type: JavaExec) {
     main = 'com.vandorlabs.client.StairStateChecks'
 }
 check.dependsOn testStairStateAdapters
+
+task testFluidVolumeCompaction(type: JavaExec) {
+    group = 'verification'
+    description = 'Preserve current compact fluid runs, bitwise cell order, lazy faces and cache ownership'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FluidVolumeCompactionChecks'
+    if (project.hasProperty('fluidVolumeProfile')) systemProperty 'vandorlabs.fluidVolumeProfile', true
+}
