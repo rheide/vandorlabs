@@ -647,6 +647,7 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.materialSpriteChecksOnly")){if(++holdTicks>=40)try{LegacyMaterialSpriteChecks.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Material sprite assessment",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.cubeReferenceExportOnly")){if(++holdTicks>=40)try{LegacyCubeReferenceExport.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Cube reference export",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.cubeJoiningChecksOnly")){if(++holdTicks>=40){JoinedHousingRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] cube-joining-live PASS");mc.shutdown();}return;}
+        if(Boolean.getBoolean("vandorlabs.channelSourceIndexChecksOnly")){if(++holdTicks>=40)try{ChannelSourceIndexRuntimeChecks.run(mc);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Channel source index focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.triggerStateChecksOnly")){ChannelListGuiChecks.tick(mc,outDir);return;}
         if(Boolean.getBoolean("vandorlabs.savedCouplingChecksOnly")){try{if(SavedVehicleCouplingChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved vehicle coupling",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.savedHoverChecksOnly")){try{if(SavedVehicleHoverChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved Hover recovery",failure);}return;}

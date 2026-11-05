@@ -13,7 +13,7 @@ unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VAN
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
-unset VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY VANDOR_LABS_FILESYSTEM_DISCOVERY_CHECKS_ONLY VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY
+unset VANDOR_LABS_CHANNEL_SOURCE_INDEX_CHECKS_ONLY VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY VANDOR_LABS_FILESYSTEM_DISCOVERY_CHECKS_ONLY VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -33,6 +33,9 @@ case "${1:-}" in
         elif [ "$TARGET" = cube-joining ]; then
             PREFIX=joined_cube_
             export VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY=true
+        elif [ "$TARGET" = channel-source-index ]; then
+            PREFIX=channel_source_index_
+            export VANDOR_LABS_CHANNEL_SOURCE_INDEX_CHECKS_ONLY=true
         elif [ "$TARGET" = trigger-state ]; then
             PREFIX=channels_2
             export VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY=true
@@ -358,6 +361,12 @@ if [ "$MODE" = focus ]; then
         grep -q "joined-block-textures PASS 72" "$RUN_OUT/client.log"
         grep -q "cube-joining-live PASS" "$RUN_OUT/client.log"
         echo "Cube joining checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = channel-source-index ]; then
+        grep -q "channel-source-index-range PASS" "$RUN_OUT/client.log"
+        grep -q "channel-source-index-live PASS" "$RUN_OUT/client.log"
+        echo "Channel source index checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = trigger-state ]; then

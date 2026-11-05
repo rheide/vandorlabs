@@ -32,6 +32,7 @@ CAPTURE_JVM+=("-Dvandorlabs.filesystemDiscoveryChecksOnly=${VANDOR_LABS_FILESYST
 CAPTURE_JVM+=("-Dvandorlabs.materialSpriteChecksOnly=${VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.cubeReferenceExportOnly=${VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.cubeJoiningChecksOnly=${VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.channelSourceIndexChecksOnly=${VANDOR_LABS_CHANNEL_SOURCE_INDEX_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.triggerStateChecksOnly=${VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.segmentedDoorChecksOnly=${VANDOR_LABS_SEGMENTED_DOOR_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.savedCouplingChecksOnly=${VANDOR_LABS_SAVED_COUPLING_CHECKS_ONLY:-false}")

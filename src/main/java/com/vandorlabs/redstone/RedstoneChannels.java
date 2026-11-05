@@ -113,7 +113,7 @@ public final class RedstoneChannels {
         n.manual(player.getPosition(),channels,range,on?15:0);
     }
     private static final class Network {
-        private static final class Counters{long receiverBuckets,receiverCandidates,sourceBuckets,sourceCandidates,deliveries;final java.util.ArrayDeque<SourceBucket[]> queryBuffers=new java.util.ArrayDeque<>();}
+        private static final class Counters extends ChannelSourceIndex.QueryContext<RedstoneChannelMember>{long receiverBuckets,receiverCandidates,deliveries;@Override protected boolean active(RedstoneChannelMember member){return member.isChannelMemberActive();}}
         private final Counters stats=new Counters();
         private final World world;
         private final Map<ManualRedstoneData.Entry,RedstoneChannelMember> manualSources=new IdentityHashMap<>();
@@ -129,7 +129,7 @@ public final class RedstoneChannels {
                 if(retained.contains(entry.getKey()))continue;
                 RedstoneChannelMember member=entry.getValue();
                 ChannelList list=outputs.remove(member);
-                if(list!=null)for(int c:channels(list)){Index index=indexes.get(c);if(index!=null){affect(c,index.all.get(member));index.remove(member);}}
+                if(list!=null)for(int c:channels(list)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}
                 iterator.remove();
             }
             for(ManualRedstoneData.Entry entry:ManualRedstoneData.get(world).entries){
@@ -160,9 +160,9 @@ public final class RedstoneChannels {
             if(isLatch(member)&&!member.getRedstoneChannels().isEmpty()&&member.transmissionRange()>=0){RedstoneChannelLatch latch=(RedstoneChannelLatch)member;Map<Integer,Integer> levels=new java.util.HashMap<>();ChannelList list=member.getRedstoneChannels();for(int i=0;i<list.size();i++){int channel=list.get(i),value=latch.latchedLevel(channel);Set<RedstoneChannelMember> set=members.get(channel);boolean found=false;int maximum=0;if(set!=null)for(RedstoneChannelMember other:set)if(other!=member&&isLatch(other)&&other.isChannelMemberActive()&&other.transmittedChannels().contains(channel)&&inside(other.channelPosition(),member.channelPosition(),other.transmissionRange())){found=true;maximum=Math.max(maximum,((RedstoneChannelLatch)other).latchedLevel(channel));}levels.put(channel,found?maximum:value);}latch.applyLinkedLevels(levels);}
             refresh(member);settle(changed);
         }
-        void unregister(RedstoneChannelMember member){pendingClears.remove(member);ChannelList previous=subscriptions.remove(member);ChannelList old=outputs.remove(member);if(old!=null)for(int c:channels(old)){Index index=indexes.get(c);if(index!=null){affect(c,index.all.get(member));index.remove(member);}}delivered.remove(member);if(previous==null)return;for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.positions.isEmpty())recipients.remove(c);}}settle(channels(previous));}
+        void unregister(RedstoneChannelMember member){pendingClears.remove(member);ChannelList previous=subscriptions.remove(member);ChannelList old=outputs.remove(member);if(old!=null)for(int c:channels(old)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}delivered.remove(member);if(previous==null)return;for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.positions.isEmpty())recipients.remove(c);}}settle(channels(previous));}
         private void refresh(RedstoneChannelMember member){
-            ChannelList previous=outputs.remove(member);if(previous!=null)for(int c:channels(previous)){Index index=indexes.get(c);if(index!=null){affect(c,index.all.get(member));index.remove(member);}}
+            ChannelList previous=outputs.remove(member);if(previous!=null)for(int c:channels(previous)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}
             ChannelList list=member.transmittedChannels();if(member.transmissionRange()<0||!member.isChannelMemberActive())return;
             outputs.put(member,list);for(int c:channels(list)){int value=Math.max(0,Math.min(15,member.localSignalLevel(c)));if(value>0){Source source=new Source(member.channelPosition(),member.transmissionRange(),value);indexes.computeIfAbsent(c,k->new Index(stats)).put(member,source);affect(c,source);}}
         }
@@ -179,7 +179,7 @@ public final class RedstoneChannels {
         void manual(net.minecraft.util.math.BlockPos pos,ChannelList selected,int range,int value){SignalUpdateBatch.apply(()->{applyLatch(pos,selected,range,value);ManualRedstoneData.get(world).apply(pos,selected,range,value>0);syncManual();settle(channels(selected));});}
         private void settle(Set<Integer> changed){
             if(transferDepth>0){transferChannels.addAll(changed);return;}
-            SignalUpdateBatch.apply(()->{Set<RedstoneChannelMember> notify=identitySet();notify.addAll(affected);affected.clear();for(int c:changed){Index index=indexes.get(c);int maximum=index==null?0:index.maximum();if(index!=null&&index.all.isEmpty())indexes.remove(c);if(maximum==0)powerSources.remove(c);else powerSources.put(c,maximum);Set<RedstoneChannelMember> set=members.get(c);if(set!=null&&set.isEmpty())members.remove(c);}
+            SignalUpdateBatch.apply(()->{Set<RedstoneChannelMember> notify=identitySet();notify.addAll(affected);affected.clear();for(int c:changed){Index index=indexes.get(c);int maximum=index==null?0:index.maximum();if(index!=null&&index.isEmpty())indexes.remove(c);if(maximum==0)powerSources.remove(c);else powerSources.put(c,maximum);Set<RedstoneChannelMember> set=members.get(c);if(set!=null&&set.isEmpty())members.remove(c);}
                 Set<RedstoneChannelMember> clear=identitySet();clear.addAll(pendingClears);pendingClears.clear();
                 for(RedstoneChannelMember member:clear)if(!subscriptions.containsKey(member)&&member.isChannelMemberActive()){stats.deliveries++;member.setChannelLevel(0);}
                 for(RedstoneChannelMember member:notify)if(subscriptions.containsKey(member)&&member.isChannelMemberActive()){int value=0;ChannelList list=member.getRedstoneChannels();int[] previous=delivered.get(member);boolean changedBank=previous==null||previous.length!=list.size();if(changedBank){previous=new int[list.size()];delivered.put(member,previous);}for(int i=0;i<list.size();i++){int channelLevel=at(member.channelPosition(),list.get(i));if(previous[i]!=channelLevel)changedBank=true;previous[i]=channelLevel;value=Math.max(value,channelLevel);}if(changedBank){stats.deliveries++;member.setChannelLevel(value);}}
@@ -198,35 +198,20 @@ public final class RedstoneChannels {
         private int at(net.minecraft.util.math.BlockPos pos,int channel){Index index=indexes.get(channel);return index==null?0:index.at(pos);}
         private int level(int channel){return powerSources.getOrDefault(channel,0);}
         private static boolean inside(net.minecraft.util.math.BlockPos source,net.minecraft.util.math.BlockPos target,int range){return range==0||ChannelSpatialPolicy.finiteContains(source.getX(),source.getY(),source.getZ(),target.getX(),target.getY(),target.getZ(),range);}
-        private static final class Source {final net.minecraft.util.math.BlockPos pos;final int range,level;Source(net.minecraft.util.math.BlockPos pos,int range,int level){this.pos=pos.toImmutable();this.range=range;this.level=level;}}
-        /** Exact strength banks prevent scanning thousands of equal analog sources. */
-        private static final class SourceBucket {
-            final Set<RedstoneChannelMember>[] levels=new Set[16];int maximum;
-            void add(RedstoneChannelMember member,int level){if(levels[level]==null)levels[level]=identitySet();levels[level].add(member);maximum=Math.max(maximum,level);}
-            void remove(RedstoneChannelMember member,int level){Set<RedstoneChannelMember> set=levels[level];if(set!=null){set.remove(member);if(set.isEmpty())levels[level]=null;}while(maximum>0&&levels[maximum]==null)maximum--;}
+        private static final class Source implements ChannelSourceIndex.SourceSnapshot {
+            final net.minecraft.util.math.BlockPos pos;final int range,level;
+            Source(net.minecraft.util.math.BlockPos pos,int range,int level){this.pos=pos.toImmutable();this.range=range;this.level=level;}
+            public int x(){return pos.getX();}public int y(){return pos.getY();}public int z(){return pos.getZ();}
+            public int range(){return range;}public int level(){return level;}
         }
-        /** At most 81 local buckets and one infinite bank, descending published signal strength. */
-        private static final class Index {
-            final Counters stats;Index(Counters stats){this.stats=stats;}
-            final Map<RedstoneChannelMember,Source> all=new IdentityHashMap<>();final int[] strengths=new int[16];
-            final Map<Long,SourceBucket>[] grids=new Map[]{new java.util.HashMap<>(),new java.util.HashMap<>(),new java.util.HashMap<>()};
-            final SourceBucket infinite=new SourceBucket();
+        /** Preserve the platform snapshot and network-wide query workspace without a delegate index. */
+        private static final class Index extends ChannelSourceIndex<RedstoneChannelMember,Source> {
+            Index(Counters stats){super(stats);}
             static int tier(int range){return ChannelSpatialPolicy.tier(range);}
             static int size(int tier){return ChannelSpatialPolicy.cellSize(tier);}
             static long packed(int x,int y,int z){return ChannelSpatialPolicy.packedCell(x,y,z);}
             static long key(net.minecraft.util.math.BlockPos p,int size){return ChannelSpatialPolicy.key(p.getX(),p.getY(),p.getZ(),size);}
-            void put(RedstoneChannelMember member,Source source){remove(member);all.put(member,source);strengths[source.level]++;if(source.range==0)infinite.add(member,source.level);else {int t=tier(source.range);grids[t].computeIfAbsent(key(source.pos,size(t)),k->new SourceBucket()).add(member,source.level);}}
-            void remove(RedstoneChannelMember member){Source source=all.remove(member);if(source==null)return;strengths[source.level]--;if(source.range==0)infinite.remove(member,source.level);else {int t=tier(source.range);long key=key(source.pos,size(t));SourceBucket bucket=grids[t].get(key);if(bucket!=null){bucket.remove(member,source.level);if(bucket.maximum==0)grids[t].remove(key);}}}
-            int at(net.minecraft.util.math.BlockPos pos){
-                SourceBucket[] candidates=stats.queryBuffers.pollFirst();if(candidates==null)candidates=new SourceBucket[82];int count=0,ceiling=0;
-                try{
-                    if(infinite.maximum>0){candidates[count++]=infinite;ceiling=infinite.maximum;}
-                    for(int t=0;t<3;t++){int size=size(t),x=Math.floorDiv(pos.getX(),size),y=Math.floorDiv(pos.getY(),size),z=Math.floorDiv(pos.getZ(),size);for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++){stats.sourceBuckets++;SourceBucket bucket=grids[t].get(packed(x+dx,y+dy,z+dz));if(bucket!=null){candidates[count++]=bucket;ceiling=Math.max(ceiling,bucket.maximum);}}}
-                    for(int level=ceiling;level>0;level--)for(int i=0;i<count;i++){SourceBucket bucket=candidates[i];if(bucket.maximum<level)continue;Set<RedstoneChannelMember> sources=bucket.levels[level];if(sources==null)continue;for(RedstoneChannelMember member:sources){stats.sourceCandidates++;Source source=all.get(member);if(source!=null&&member.isChannelMemberActive()&&inside(source.pos,pos,source.range))return level;}}
-                    return 0;
-                }finally{java.util.Arrays.fill(candidates,null);if(stats.queryBuffers.size()<8)stats.queryBuffers.addFirst(candidates);}
-            }
-            int maximum(){for(int level=15;level>0;level--)if(strengths[level]>0)return level;return 0;}
+            int at(net.minecraft.util.math.BlockPos pos){return super.at(pos.getX(),pos.getY(),pos.getZ());}
         }
         private static boolean isLatch(RedstoneChannelMember member){return member instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)member).isChannelLatch();}
         private static Set<RedstoneChannelMember> identitySet(){return Collections.newSetFromMap(new IdentityHashMap<RedstoneChannelMember,Boolean>());}

@@ -31,6 +31,27 @@ final class RedstoneRangeRuntimeChecks {
         member.range=radio.isEmpty()?16:ItemRedstoneTransmitter.range(radio)==0?256:ItemRedstoneTransmitter.range(radio);
         RedstoneChannels.channelChanged(member,member.getRedstoneChannels());RedstoneChannels.inputChanged(member);
     }
+    /** Only the existing source-index matrix, with no recipes, vehicles or unrelated gameplay. */
+    static void sourceIndexFocus(WorldServer world){
+        checks=0;BlockPos origin=new BlockPos(2100,160,2100);List<Member> cleanup=new ArrayList<>();
+        try{
+            int channel=65281;Member source=new Member(world,origin,channel);source.output=11;cleanup.add(source);RedstoneChannels.register(source);
+            for(int range:new int[]{4,8,16,32,64,128,256}){
+                source.outputs=ChannelList.of(channel);source.range=range;RedstoneChannels.inputChanged(source);
+                require(RedstoneChannels.level(world,origin.east(range),channel)==11,"inclusive source range="+range);
+                require(RedstoneChannels.level(world,origin.up(range),channel)==11,"vertical source range="+range);
+                require(RedstoneChannels.level(world,origin.east(range+1),channel)==0,"outside source range="+range);
+                require(RedstoneChannels.level(world,origin.add(range,1,0),channel)==0,"spherical source range="+range);
+            }
+            source.close();denseSources(world,origin,channel+3,cleanup);
+            System.out.println("[vandorlabs][reprolab] channel-source-index-range PASS checks="+checks);
+        }finally{for(Member member:cleanup)member.close();}
+    }
+    private static void denseSources(WorldServer world,BlockPos origin,int denseChannel,List<Member> cleanup){
+            for(int i=0;i<1024;i++){Member analog=new Member(world,origin.add(i%5,0,(i/5)%5),denseChannel){public ChannelList getRedstoneChannels(){return ChannelList.EMPTY;}};analog.output=8;cleanup.add(analog);configure(analog,module(0,ChannelList.of(denseChannel)));}
+            Member distantMaximum=new Member(world,origin.east(1024),denseChannel){public ChannelList getRedstoneChannels(){return ChannelList.EMPTY;}};distantMaximum.output=15;cleanup.add(distantMaximum);configure(distantMaximum,module(0,ChannelList.of(denseChannel)));
+            long[] denseBefore=RedstoneChannels.diagnostics(world);long denseStart=System.nanoTime();for(int i=0;i<2048;i++)require(RedstoneChannels.level(world,origin.add(i%7,0,(i/7)%7),denseChannel)==8,"dense analog strongest exact receiver query");long denseNanos=System.nanoTime()-denseStart;long[] denseAfter=RedstoneChannels.diagnostics(world);long denseCandidates=denseAfter[3]-denseBefore[3];require(denseCandidates==2048,"strength banks inspect one candidate for equal overlapping analog sources");System.out.println("[vandorlabs][reprolab] redstone-range-dense-analog sources=1024 distantMaxSource=15 queries=2048 sourceCandidates="+denseCandidates+" previousLinearCandidates=2097152 totalNanos="+denseNanos);
+    }
     static void run(WorldServer world,EntityPlayerMP actor)throws Exception{
         checks=0;int channel=65281;BlockPos origin=new BlockPos(2100,160,2100);List<Member> cleanup=new ArrayList<>();
         Member source=new Member(world,origin,channel);source.output=11;cleanup.add(source);RedstoneChannels.register(source);
@@ -108,9 +129,7 @@ final class RedstoneRangeRuntimeChecks {
             ItemStack configuredHost=new ItemStack(lever);configuredHost.setTagInfo("BlockEntityTag",configured.writeToNBT(new NBTTagCompound()));
             require(com.vandorlabs.copier.CopyMaterials.satisfies(needs.get(0),configuredHost),"built-in channel/range settings do not make a block an inventory carrier");
             require(com.vandorlabs.copier.CopyMaterials.forSnapshot(materialSnapshot,new com.vandorlabs.vehicle.VehicleWorld(world,materialSnapshot),true).isEmpty(),"Creative Copy retains free-copy behavior");
-            int denseChannel=channel+3;for(int i=0;i<1024;i++){Member analog=new Member(world,origin.add(i%5,0,(i/5)%5),denseChannel){public ChannelList getRedstoneChannels(){return ChannelList.EMPTY;}};analog.output=8;cleanup.add(analog);configure(analog,module(0,ChannelList.of(denseChannel)));}
-            Member distantMaximum=new Member(world,origin.east(1024),denseChannel){public ChannelList getRedstoneChannels(){return ChannelList.EMPTY;}};distantMaximum.output=15;cleanup.add(distantMaximum);configure(distantMaximum,module(0,ChannelList.of(denseChannel)));
-            long[] denseBefore=RedstoneChannels.diagnostics(world);long denseStart=System.nanoTime();for(int i=0;i<2048;i++)require(RedstoneChannels.level(world,origin.add(i%7,0,(i/7)%7),denseChannel)==8,"dense analog strongest exact receiver query");long denseNanos=System.nanoTime()-denseStart;long[] denseAfter=RedstoneChannels.diagnostics(world);long denseCandidates=denseAfter[3]-denseBefore[3];require(denseCandidates==2048,"strength banks inspect one candidate for equal overlapping analog sources");System.out.println("[vandorlabs][reprolab] redstone-range-dense-analog sources=1024 distantMaxSource=15 queries=2048 sourceCandidates="+denseCandidates+" previousLinearCandidates=2097152 totalNanos="+denseNanos);
+            denseSources(world,origin,channel+3,cleanup);
             com.vandorlabs.copier.CopyRuntimeChecks.transmitterOwnershipFocus(world,actor);
             WirelessRedstoneRuntimeChecks.run(world);
             System.out.println("[vandorlabs][reprolab] redstone-range PASS checks="+checks+" finite ranges sphere boundaries built-in-settings linked OFF saved item manual world source copy recipe spatial scalability");
