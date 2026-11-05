@@ -323,3 +323,11 @@ tasks.register('testNativeDiagonalGeometry', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.NativeDiagonalGeometryChecks'
     systemProperty 'vandorlabs.diagonalReference', providers.gradleProperty('diagonalReference').getOrElse(rootProject.file('../../build/test-artifacts/diagonal-forge-reference.json').absolutePath)
 }
+
+tasks.register('testNativePanelPlaybackRender', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativePanelPlaybackChecks'
+    maxHeapSize = '1G'
+}

@@ -45,6 +45,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
         event.getModels().replaceAll((id,model) -> {
+            if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_wall")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory"),true),event.getTextureGetter());
             if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_wall")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory")),event.getTextureGetter());
             boolean cube=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"));
             boolean trigger=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_trigger_block"));
@@ -54,6 +55,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
             if(id.getVariant().equals("inventory"))return new UniformHousingItem(model,sprites,margin,null,cube?1:0);
             return new ProgrammableModel(model,sprites,margin,cube);
         });
+        NativePanelPlaybackRenderer.prepare(event.getModelBakery(),wallBake);
     }
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
         if(joining&&state!=null&&state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
