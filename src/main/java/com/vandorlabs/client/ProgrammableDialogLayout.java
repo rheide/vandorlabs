@@ -15,6 +15,7 @@ final class ProgrammableDialogLayout {
         left=shared.left;top=shared.top;width=shared.width;height=shared.height;
         controlsX=shared.controlsX;listX=shared.listX;listWidth=shared.listWidth;doneY=shared.doneY;
     }
+    com.vandorlabs.ui.ProgrammableDialogLayout shared(){return shared;}
     int rows(boolean tabs){return shared.rows(tabs);}
     GuiButton control(int id,int y,String label){return new GuiButton(id,controlsX,top+y,CONTROLS_WIDTH,20,label);}
     GuiButton done(int id){return new GuiButton(id,controlsX,doneY,CONTROLS_WIDTH,20,"Done");}
