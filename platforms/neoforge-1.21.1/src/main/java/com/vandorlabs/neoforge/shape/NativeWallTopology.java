@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class NativeWallTopology {
     public static void refresh(NativeWallEntity host){
         if(!NativeFluidWorld.installed(host))return;Level level=host.getLevel();BlockPos pos=host.getBlockPos();BlockState state=host.getBlockState();
+        if(state.getBlock() instanceof NativeDiagonalWallBlock){NativeDiagonalWallTopology.refresh(host);return;}
         if(!(state.getBlock() instanceof NativeFlatWallBlock))return;
         var corner=corner(level,pos,state);
         var geometry=corner==null?NativeFlatWallGeometry.straight(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH)):NativeFlatWallGeometry.build(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH),corner);

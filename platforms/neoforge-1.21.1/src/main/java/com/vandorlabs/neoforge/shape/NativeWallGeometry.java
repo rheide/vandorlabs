@@ -8,6 +8,7 @@ import net.minecraft.world.phys.AABB;
 /** Immutable wall-family publication. All methods are world-free and safe for section workers. */
 public interface NativeWallGeometry {
     List<AABB> boxes();
+    default List<AABB> fluidBoxes(){return boxes();}
     AABB bounds();
     Direction facing();
     int depth();

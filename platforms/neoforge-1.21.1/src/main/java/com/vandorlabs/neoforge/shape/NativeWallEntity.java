@@ -40,7 +40,8 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         geometry=initialGeometry(state);partition=geometry::side;publishWallAppearance();
     }
     private static FrameSettings defaultFrames(){return new FrameSettings(-1,-1,-2,0,-1,-1,false,false,false,false);}
-    private static NativeFlatWallGeometry.Geometry initialGeometry(BlockState state){
+    private static NativeWallGeometry initialGeometry(BlockState state){
+        if(state.getBlock() instanceof NativeDiagonalWallBlock)return NativeDiagonalWallGeometry.build(NativeDiagonalWallTopology.initial(state,0));
         Direction facing=Direction.NORTH;int depth=0;
         for(Property<?> property:state.getProperties()){
             Comparable<?> value=state.getValue(property);
@@ -106,7 +107,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     }
     @Override public void refreshFluidGeometry(){NativeWallTopology.refresh(this);super.refreshFluidGeometry();}
     @Override protected long fluidGeometryKey(){return geometryGeneration;}
-    @Override protected List<AABB> fluidSolidBoxes(BlockState state,long key){return geometry.boxes();}
+    @Override protected List<AABB> fluidSolidBoxes(BlockState state,long key){return geometry.fluidBoxes();}
     @Override protected NativeFluidVolume.Side fluidSidePartition(){return partition;}
     @Override public NativeFluidRegions fluidSurfaceRegions(){return geometry.fluidRegions(porthole);}
     @Override public boolean acceptsPlacementFluid(int side){return side>=0&&side<2;}

@@ -18,6 +18,7 @@ public final class NativeShapeHighlight {
         var state=level.getBlockState(pos);net.minecraft.world.phys.AABB box;
         if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableStairs)box=FULL;
         else if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeFlatWallBlock)box=com.vandorlabs.neoforge.shape.NativeFlatWallBlock.geometry(state,level,pos).bounds();
+        else if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeDiagonalWallBlock)box=com.vandorlabs.neoforge.shape.NativeDiagonalWallBlock.geometry(state,level,pos).selectionBounds();
         else return;
         event.setCanceled(true);
         var camera=event.getCamera().getPosition();

@@ -84,6 +84,35 @@ public final class NativeFluidRegions {
         return new NativeFluidRegions(regions, surfaces);
     }
 
+    /** Current diagonal bands retain their exact flat-end transitions and filled-side masks. */
+    public static NativeFluidRegions diagonal(Direction facing,boolean inverted,int mode,int fill,double lower,double upper,boolean inset){
+        if(facing.getAxis()==Direction.Axis.Y||mode<0||mode>2||fill<0||fill>3)throw new IllegalArgumentException("Diagonal fluid pose");
+        boolean shallow=mode==2;double[] cuts=!Double.isNaN(lower)||!Double.isNaN(upper)?new double[]{0,.25,.75,1}:new double[]{0,1};
+        List<Region> regions=new ArrayList<>();List<NativeFluidSurface.Surface> surfaces=new ArrayList<>();
+        for(int side=0;side<2;side++)if((fill&(1<<side))==0)for(int band=0;band+1<cuts.length;band++){
+            double lo=cuts[band],hi=cuts[band+1];
+            double a=com.vandorlabs.render.DiagonalWallGeometry.near(mode,inverted,lo,lower,upper),b=com.vandorlabs.render.DiagonalWallGeometry.near(mode,inverted,hi,lower,upper);
+            double depth=(side==0?(inset?1D/16:0):(inset?3D/16:.25))+(side==0?-.001:.001);
+            double slope=(b-a)/(hi-lo),intercept=a-slope*lo+depth+(shallow?com.vandorlabs.render.DiagonalWallGeometry.band(mode,inverted):0);
+            List<Plane> planes=new ArrayList<>(UNIT);
+            planes.add(worldPlane(facing,shallow?new Plane(0,0,-1,-lo):new Plane(0,-1,0,-lo)));
+            planes.add(worldPlane(facing,shallow?new Plane(0,0,1,hi):new Plane(0,1,0,hi)));
+            double sign=side==0?1:-1;Plane divider=worldPlane(facing,shallow?new Plane(0,sign,-sign*slope,sign*intercept):new Plane(0,-sign*slope,sign,sign*intercept));planes.add(divider);regions.add(new Region(side,planes));
+            for(Direction face:Direction.values()){
+                List<double[]> polygon=cube(face);for(Plane plane:planes)polygon=DiagonalMeshClip.plane(polygon,plane.x,plane.y,plane.z,plane.distance);
+                if(NativeFluidSurface.area(polygon)>1e-10)surfaces.add(new NativeFluidSurface.Surface(polygon,side,axis(face),face.get3DDataValue()));
+            }
+            List<double[]> pane=new ArrayList<>();for(double[] v:new double[][]{{0,lo},{1,lo},{1,hi},{0,hi}}){double at=slope*v[1]+intercept;pane.add(worldPoint(facing,shallow?new double[]{v[0],at,v[1]}:new double[]{v[0],v[1],at}));}
+            pane=DiagonalMeshClip.polygon(new double[]{0,0,0,1,1,1},pane.toArray(new double[0][]));
+            if(NativeFluidSurface.area(pane)>1e-10){
+                double nx=0,ny=0,nz=0;for(int j=0;j<pane.size();j++){double[] c=pane.get(j),d=pane.get((j+1)%pane.size());nx+=c[1]*d[2]-c[2]*d[1];ny+=c[2]*d[0]-c[0]*d[2];nz+=c[0]*d[1]-c[1]*d[0];}
+                if(nx*divider.x+ny*divider.y+nz*divider.z<0)Collections.reverse(pane);
+                surfaces.add(new NativeFluidSurface.Surface(pane,side,shallow?1:axis(facing),-1));
+            }
+        }
+        return new NativeFluidRegions(regions,surfaces);
+    }
+
     public static List<double[]> clip(List<double[]> polygon, Region region, int dx, int dy, int dz) {
         for (Plane plane : region.planes) {
             double d = plane.distance + plane.x * dx + plane.y * dy + plane.z * dz;
