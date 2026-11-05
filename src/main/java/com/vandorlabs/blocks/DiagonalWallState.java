@@ -40,20 +40,10 @@ public final class DiagonalWallState {
     /** Numeric predicate shared by chunk construction and the per-frame tile pass. */
     public static boolean baked(net.minecraft.block.Block block,BlockPos pos,int metadata,boolean halfHeight,boolean fullWidth) {
         if(!diagonal(block))return false;
-        int x=pos.getX()&15,y=pos.getY()&15,z=pos.getZ()&15;
-        // Shallow walls have no corner arms; only the slope's vertical end protrudes.
-        if(halfHeight)return (metadata&4)==0?y>0:y<15;
-        // Full-height geometry is vertically contained. Allow for horizontal corner arms.
-        EnumFacing facing=EnumFacing.getHorizontal(metadata&3);
-        if(fullWidth)return x>0 && x<15 && z>0 && z<15;
-        switch(facing) {
-            case NORTH:return x>0 && x<15 && z>0;
-            case SOUTH:return x>0 && x<15 && z<15;
-            case WEST:return z>0 && z<15 && x>0;
-            case EAST:return z>0 && z<15 && x<15;
-            default:return false;
-        }
+        return com.vandorlabs.render.DiagonalChunkPolicy.contained(pos.getX(),pos.getY(),pos.getZ(),
+                EnumFacing.getHorizontal(metadata&3).getIndex(),(metadata&4)!=0,halfHeight,fullWidth);
     }
+
     public DiagonalWallState(IBlockState state,IBlockAccess world,BlockPos pos) {
         TileEntity raw=world.getTileEntity(pos);
         TileEntityAnimatedScreenSelector tile=raw instanceof TileEntityAnimatedScreenSelector?(TileEntityAnimatedScreenSelector)raw:null;
