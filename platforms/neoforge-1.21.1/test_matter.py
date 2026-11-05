@@ -20,8 +20,11 @@ def command(task, *properties):
     wrapper = PLATFORM / ('gradlew.bat' if os.name == 'nt' else 'gradlew')
     arguments = [str(wrapper), task, '--no-daemon', *properties]
     if os.name == 'nt':
-        return [os.environ.get('COMSPEC', 'cmd.exe'), '/d', '/v:off', '/s', '/c',
-                '"' + ' '.join('"' + argument + '"' for argument in arguments) + '"']
+        # cmd.exe needs raw embedded quotes; list2cmdline uses incompatible
+        # backslash escaping when this command is passed as a list.
+        shell = os.environ.get('COMSPEC', 'cmd.exe')
+        return ('"' + shell + '" /d /v:off /s /c "'
+                + ' '.join('"' + argument + '"' for argument in arguments) + '"')
     return arguments
 
 
