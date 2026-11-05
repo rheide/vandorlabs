@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share the current programmable-cube Appearance layout, face controls and picker input rules, retaining reverse cycling and wheel/drag scrolling. Share housing face-plane and packed-light calculations while preserving legacy discovery and light sampling.
+
 - Share Trigger and housing save contracts while preserving legacy missing-field defaults, material migrations, six face overrides and dormant Trigger playback data. Add a focused Trigger dialog regression without running unrelated gameplay fixtures.
 
 - Add the experimental NeoForge plain matter block and matter/alloy ingots with canonical recipes, artwork and native persistence/interaction checks. The programmable block editor and production chain remain under development.

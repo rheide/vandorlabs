@@ -1069,3 +1069,5 @@ task testHousingLightAdapter(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.HousingLightAdapterChecks'
 }
+
+check.dependsOn testHousingLightAdapter

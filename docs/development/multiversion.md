@@ -126,7 +126,7 @@ Acceptance requires identical shared contracts under both JDKs, unchanged focuse
 
 Use the current typed housing save contract before adapting the historical native block entity. Preserve missing-field defaults, side materials, legacy index migration, layout fallback and six local face overrides. Storage supplies its own missing-main default before the shared read; other families may retain their prior value.
 
-Extract the current cube dialog from `GuiProgrammableWall`: its Appearance row begins at `top + 30`, with content at `top + 54` or `top + 78` when face tabs are present. The historical native dialog predates that row and must not define the current layout. Share reverse cycling, scrolling, hit regions and operation IDs before wiring the native menu.
+The current cube dialog now delegates shared layout, state transitions and picker input rules from `GuiProgrammableWall`: its Appearance row begins at `top + 30`, with content at `top + 54` or `top + 78` when face tabs are present. The historical native dialog predates that row and must not define the current layout. The shared contracts retain reverse cycling, scrolling, hit regions and operation IDs for the native menu adapter.
 
 Then integrate current housing plane, joining and lighting policies with the native block/entity, menu, bounded payload and renderer adapters. Accept the slice through cube-specific persistence, permissions, configured item, joining, dialog and rendered checks. Historical multi-family fixture classes must be narrowed to implemented families without weakening their assertions. Preserve unsupported custom-material and carried integration requirements in the inventory.
 
