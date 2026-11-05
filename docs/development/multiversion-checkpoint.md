@@ -8,7 +8,7 @@ Forge 1.12.2 remains the default development target on `master`, at mod version 
 - Shared catalog/material identities, housing persistence, geometry policies, channel indices and latch policies.
 - Shared dialog dimensions, picker input, inventory sampling, option rows, reverse cycling and explicit immediate-versus-confirmed edit behavior.
 - Native matter/materials, programmable cubes and filesystem PNGs; Trigger and handheld transmitters; buttons, rockers, power levers, four-step throttles and Wall Sliders; directional wireless transmitter/receiver blocks.
-- Current glass persistence and dialog policy, stair persistence and exact geometry, and slab placement/merge decisions. Native glass, slabs and stairs are still pending.
+- Current glass persistence and dialog policy, stair persistence and exact geometry, slab placement/merge decisions, and scalar slab/stair artwork selection and UV policy. Native glass, slabs and stairs are still pending.
 - A generation-wide bounded native mounted-model cache, and a regression baseline for the existing compact, lazy fluid geometry.
 
 The [coverage inventory](feature-coverage.md) distinguishes integrated slices from complete family parity. The [architecture](multiversion.md) describes shared ownership boundaries. No automatic whole-world conversion or complete native compatibility is promised.
@@ -17,7 +17,7 @@ The [coverage inventory](feature-coverage.md) distinguishes integrated slices fr
 
 Start from `master`, not the old conversion branch. Use `feature/neoforge-1.21.1` as a historical reference; its slabs, walls, screens and fluid code predate current Forge behavior. Additional historical references are `wip/industrial-table-port` and `wip/wall-item-goldens`. Review and adapt their behavior rather than merging them wholesale.
 
-The next building-family work is current slab/stair texture and UV policy, contained fluids, and then coherent native block/entity/model/dialog adapters. Preserve these audited distinctions:
+The next building-family work is contained fluids and coherent native block/entity/model/dialog adapters. The shared artwork policy preserves current scalar arithmetic without adding per-quad arrays or point wrappers. An opt-in `stair-settings` check (`VANDOR_LABS_SHAPE_TEXTURE_CHECKS=true`) covers 4,920 actual world models and 440 item models, including rectangular artwork, disabled face overrides, unavailable IDs and malformed saved fields; `VANDOR_LABS_SHAPE_TEXTURE_EXPECTED_HASH` checks the emitted reference against a frozen baseline. Preserve these audited distinctions:
 
 - Slab item artwork ignores six-face overrides; stair items honor them and unrolled faces.
 - A stair item with no `BlockEntityTag` differs from one with an empty tag in its layout fallback. Preserve typed raw item layout behavior separately from normalized world settings.

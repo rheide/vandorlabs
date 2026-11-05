@@ -98,7 +98,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
         for (int local = 0; local < 6; local++) {
             EnumFacing worldFace = worldFace(FACE[local], facing);
             if ((visible & (1 << worldFace.getIndex())) == 0) continue;
-            int texture = faces.texture(FACE[local].getIndex(), slab && FACE[local].getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish);
+            int texture = faces.texture(FACE[local].getIndex(), com.vandorlabs.render.HousingTexturePolicy.baseChoice(FACE[local].getIndex(),finish,sideFinish,slab));
             final boolean storageSet = storage && !(faces.enabled && faces.choice(FACE[local].getIndex()) >= 0);
             com.vandorlabs.blocks.HousingFaceLayouts.Plane plane=joined.face(worldFace);
             BakedQuad quad=face(texture,facing,upper,plane==null?tileSides:0,local,storageSet);
@@ -192,14 +192,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
         return new BakedQuad(records,tint,face,sprite,diffuse,format){@Override public int[] getVertexData(){return records;}};
     }
     private static EnumFacing worldFace(EnumFacing face, EnumFacing facing) {
-        int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;
-        if (face.getAxis() == EnumFacing.Axis.Y) return face;
-        switch (rotation) {
-            case 1: return face.rotateYCCW();
-            case 2: return face.getOpposite();
-            case 3: return face.rotateY();
-            default: return face;
-        }
+        return EnumFacing.getFront(com.vandorlabs.render.HousingTexturePolicy.housingWorldFace(face.getIndex(),facing.getIndex()));
     }
 
     @Override public boolean isAmbientOcclusion() { return false; }

@@ -23,7 +23,7 @@ final class TextureLayoutItemModel implements IBakedModel {
             }
             if(width>0 && height>0){
                 double aspect=UnifiedTextureSprites.aspect(sprite);boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(mode,width,height,aspect);
-                for(int i=0;i<4;i++){double x=(u[i]-minU)/Math.max(1e-8,maxU-minU),y=(v[i]-minV)/Math.max(1e-8,maxV-minV);if(!fit){x=com.vandorlabs.render.TextureLayoutMode.tileU(x*width,aspect);y=com.vandorlabs.render.TextureLayoutMode.tileV(y*height,aspect);}data[i*stride+4]=Float.floatToRawIntBits(sprite.getInterpolatedU(x*16));data[i*stride+5]=Float.floatToRawIntBits(sprite.getInterpolatedV(y*16));}
+                for(int i=0;i<4;i++){double x=com.vandorlabs.render.HousingTexturePolicy.itemU(fit,u[i],minU,maxU,width,aspect),y=com.vandorlabs.render.HousingTexturePolicy.itemV(fit,v[i],minV,maxV,height,aspect);data[i*stride+4]=Float.floatToRawIntBits(sprite.getInterpolatedU(x*16));data[i*stride+5]=Float.floatToRawIntBits(sprite.getInterpolatedV(y*16));}
             }
             result.add(new BakedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
         }

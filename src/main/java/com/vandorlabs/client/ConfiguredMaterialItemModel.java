@@ -42,7 +42,7 @@ public final class ConfiguredMaterialItemModel implements IBakedModel {
     };}
     private IBakedModel layout(IBakedModel model,net.minecraft.block.Block block,NBTTagCompound tag){
         if(light || !(block instanceof com.vandorlabs.blocks.BlockProgrammableSlab || block instanceof com.vandorlabs.blocks.BlockProgrammableBlock))return model;
-        int mode=tag.hasKey("MainTextureLayout",3)?tag.getInteger("MainTextureLayout"):!tag.hasKey("SlabTileSides",1) || tag.getBoolean("SlabTileSides")?1:0;
+        int mode=com.vandorlabs.render.HousingTexturePolicy.itemLayout(tag.hasKey("MainTextureLayout",3),tag.getInteger("MainTextureLayout"),tag.hasKey("SlabTileSides",1),tag.getBoolean("SlabTileSides"));
         return new TextureLayoutItemModel(model,mode);
     }
 }

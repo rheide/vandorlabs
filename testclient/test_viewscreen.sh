@@ -312,7 +312,7 @@ fi
 TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$RUN_OUT/game"}
 export VANDOR_LABS_TEST_GAME_DIR="$TEST_RUNTIME_GAME"
 mkdir -p "$TEST_RUNTIME_GAME/mods"
-if [ "${TARGET:-}" = cube-reference ] || [ "${TARGET:-}" = filesystem-discovery ]; then python3 testclient/prepare_cube_reference.py "$TEST_RUNTIME_GAME"; fi
+if [ "${TARGET:-}" = cube-reference ] || [ "${TARGET:-}" = filesystem-discovery ] || [ "${VANDOR_LABS_SHAPE_TEXTURE_CHECKS:-false}" = true ]; then python3 testclient/prepare_cube_reference.py "$TEST_RUNTIME_GAME"; fi
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 TEST_JAR=${VANDOR_LABS_TEST_JAR:-build/libs/vandorlabs-$VERSION.jar}
 rm -f "$TEST_RUNTIME_GAME"/mods/vandorlabs-*.jar
@@ -364,6 +364,7 @@ if [ "$MODE" = focus ]; then
     fi
     if [ "$TARGET" = stair-settings ]; then
         for marker in stair-configuration slab-merge-policy stair-emitted-geometry stair-mesh stair-appearance stair-icons stair-settings-live; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
+        if [ "${VANDOR_LABS_SHAPE_TEXTURE_CHECKS:-false}" = true ]; then grep -q "shape-texture-reference PASS world=4920 items=440" "$RUN_OUT/client.log"; fi
         echo "Stair settings checks passed: $RUN_OUT"
         exit 0
     fi

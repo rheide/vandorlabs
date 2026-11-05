@@ -53,11 +53,9 @@ public final class ProgrammableStairsModel implements IBakedModel {
         for(BakedQuad quad:source) {
             IBlockState orientation=state==null?com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STAIRS.getDefaultState().withProperty(BlockStairs.FACING,EnumFacing.EAST):state;
             EnumFacing textureFace=com.vandorlabs.blocks.ProgrammableStairGeometry.unrolledFace(orientation,stairGeometry>>5,quad.getFace());
-            EnumFacing local=textureFace;
             // Front is the low riser facing the player, opposite the rise direction.
-            if(local.getAxis()!=EnumFacing.Axis.Y)
-                for(int i=0;i<((facing.getOpposite().getHorizontalIndex()+2)&3);i++)local=local.rotateYCCW();
-            int texture=faces.texture(local.getIndex(),ScreenHousingTextures.clamp(local.getAxis()!=EnumFacing.Axis.Y && sideFinish>=0?sideFinish:finish));
+            EnumFacing local=EnumFacing.getFront(com.vandorlabs.render.HousingTexturePolicy.stairLocalFace(textureFace.getIndex(),facing.getIndex()));
+            int texture=faces.texture(local.getIndex(),ScreenHousingTextures.clamp(com.vandorlabs.render.HousingTexturePolicy.baseChoice(local.getIndex(),finish,sideFinish,true)));
             final int key=texture*3+layout;final int mode=layout;
             result.add(cache.computeIfAbsent(quad,q->new java.util.concurrent.ConcurrentHashMap<>())
                     .computeIfAbsent(key,k->retexture(quad,texture,mode,textureFace)));
@@ -82,8 +80,8 @@ public final class ProgrammableStairsModel implements IBakedModel {
         }
         boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,(uhi-ulo)*unitU,(hi-lo)*unitV,aspect);
         for(int i=0;i<4;i++) {
-            double uu=layout==2 && fit && uhi>ulo?(u[i]-ulo)*16/(uhi-ulo):layout==0?u[i]:com.vandorlabs.render.TextureLayoutMode.tileU(u[i],aspect);
-            double vv=fit && hi>lo && (layout==2 || textureFace.getAxis()!=EnumFacing.Axis.Y)?(v[i]-lo)*16/(hi-lo):layout==0?v[i]:com.vandorlabs.render.TextureLayoutMode.tileV(v[i],aspect);
+            double uu=com.vandorlabs.render.HousingTexturePolicy.stairU(layout,fit,u[i],ulo,uhi,aspect);
+            double vv=com.vandorlabs.render.HousingTexturePolicy.stairV(layout,fit,v[i],lo,hi,textureFace.getIndex(),aspect);
             data[i*stride+4]=Float.floatToRawIntBits(next.getInterpolatedU(uu));
             data[i*stride+5]=Float.floatToRawIntBits(next.getInterpolatedV(vv));
         }
@@ -99,7 +97,7 @@ public final class ProgrammableStairsModel implements IBakedModel {
             NBTTagCompound tag=stack.getSubCompound("BlockEntityTag");
             if(tag==null)return original;
             ProgrammableStairsModel model=new ProgrammableStairsModel(base,tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE),
-                    tag.hasKey("SideTexture",3)?tag.getInteger("SideTexture"):-1,new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),tag.hasKey("MainTextureLayout",3)?tag.getInteger("MainTextureLayout"):tag.getBoolean("SlabTileSides")?1:0);
+                    tag.hasKey("SideTexture",3)?tag.getInteger("SideTexture"):-1,new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),com.vandorlabs.render.HousingTexturePolicy.stairItemLayout(tag.hasKey("MainTextureLayout",3),tag.getInteger("MainTextureLayout"),tag.getBoolean("SlabTileSides")));
             int tread=com.vandorlabs.persistence.StairState.readTread(tag.hasKey(com.vandorlabs.persistence.StairState.TREAD,3),tag.getInteger(com.vandorlabs.persistence.StairState.TREAD));
             model.itemGeometry=com.vandorlabs.persistence.StairState.packed(tread,com.vandorlabs.persistence.StairState.readRoll(tag.getInteger(com.vandorlabs.persistence.StairState.ROLL)));
             return model;
