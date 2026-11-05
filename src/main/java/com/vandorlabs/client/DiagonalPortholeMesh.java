@@ -1,90 +1,21 @@
 package com.vandorlabs.client;
 
-import com.vandorlabs.render.DiagonalWallGeometry;
+import com.vandorlabs.render.DiagonalPortholeProjection;
+import com.vandorlabs.render.PanelQuadSink;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-/** Splits porthole surfaces at the same end transitions as solid diagonal walls. */
-final class DiagonalPortholeMesh {
-    final int mode;
-    final boolean inverted;
-    final double lower, upper;
-    final double[] bounds;
-    final com.vandorlabs.blocks.BlockProgrammableWall.Corner corner;
-    DiagonalPortholeMesh(int mode, boolean inverted, double lower, double upper, double[] bounds) {
-        this(mode,inverted,lower,upper,bounds,null);
-    }
-    DiagonalPortholeMesh(int mode, boolean inverted, double lower, double upper, double[] bounds,
-            com.vandorlabs.blocks.BlockProgrammableWall.Corner corner) {
-        this.mode=mode; this.inverted=inverted; this.lower=lower; this.upper=upper; this.bounds=bounds;
-        this.corner=corner;
-    }
-
-    static void quad(BufferBuilder buf, TextureAtlasSprite sprite, boolean textured,
-            DiagonalPortholeMesh mesh, double[]... vertices) {
-        quad(buf,sprite,textured,mesh,false,vertices);
-    }
-
-    static void quad(BufferBuilder buf, TextureAtlasSprite sprite, boolean textured,
-            DiagonalPortholeMesh mesh, boolean reverse, double[]... vertices) {
-        if(mesh==null && vertices.length==4) {
-            WorldSurface.quad(buf,sprite,reverse,vertices);
-            return;
-        }
-        if (mesh==null) { emit(buf,sprite,textured,null,reverse,Arrays.asList(vertices)); return; }
-        double[] cuts=mesh.corner!=null?new double[]{0,2,4,8,12,14,16}:Double.isNaN(mesh.lower) && Double.isNaN(mesh.upper)
-                ? new double[]{0,16} : new double[]{0,4,12,16};
-        // Horizontal rims belong to exactly one band.
-        boolean horizontal=true;
-        for(double[] v:vertices) horizontal &= Math.abs(v[1]-vertices[0][1])<1e-8;
-        if(horizontal) { emit(buf,sprite,textured,mesh,reverse,Arrays.asList(vertices)); return; }
-        for(int i=0;i<cuts.length-1;i++) {
-            List<double[]> polygon=clip(clip(Arrays.asList(vertices),cuts[i],true),cuts[i+1],false);
-            if(polygon.size()>=3) emit(buf,sprite,textured,mesh,reverse,polygon);
-        }
-    }
-
-    private static List<double[]> clip(List<double[]> input,double y,boolean above) {
-        List<double[]> output=new ArrayList<>();
-        if(input.isEmpty()) return output;
-        double[] a=input.get(input.size()-1);
-        for(double[] b:input) {
-            boolean ai=above?a[1]>=y:a[1]<=y, bi=above?b[1]>=y:b[1]<=y;
-            if(ai!=bi) {
-                double t=(y-a[1])/(b[1]-a[1]); double[] v=new double[5];
-                for(int k=0;k<5;k++)v[k]=a[k]+t*(b[k]-a[k]);
-                output.add(v);
-            }
-            if(bi)output.add(b);
-            a=b;
-        }
-        return output;
-    }
-
-    private static void emit(BufferBuilder buf,TextureAtlasSprite sprite,boolean textured,
-            DiagonalPortholeMesh mesh,boolean reverse,List<double[]> polygon) {
-        List<double[]> transformed=new ArrayList<>();
-        for(double[] source:polygon) {
-            double[] v=source.clone();
-            if(mesh!=null) {
-                double y=v[1];
-                double near=16*DiagonalWallGeometry.near(mesh.mode,mesh.inverted,y/16,mesh.lower,mesh.upper);
-                if(mesh.corner!=null) {
-                    double left=mesh.corner.left(near),right=mesh.corner.right(near);
-                    v[0]=left+v[0]*(right-left)/16;
-                }
-                v[2]=near+v[2]-6;
-                if(mesh.mode==2) { v[1]=v[2]+16*DiagonalWallGeometry.band(mesh.mode,mesh.inverted);v[2]=y; }
-            }
-            transformed.add(v);
-        }
-        List<double[]> clipped=com.vandorlabs.render.DiagonalMeshClip.quadsKeepingContactCaps(mesh==null?null:mesh.bounds,
-                transformed.toArray(new double[transformed.size()][]));
-        boolean flipped=reverse ^ (mesh!=null && mesh.mode==2);
-        for(int i=0;i<clipped.size();i+=4)
-            WorldSurface.quad(buf,sprite,flipped,clipped.get(i),clipped.get(i+1),clipped.get(i+2),clipped.get(i+3));
+/** Legacy atlas/normal adapter around the current shared sloped aperture projection. */
+final class DiagonalPortholeMesh extends DiagonalPortholeProjection {
+    private static final PanelQuadSink<BufferBuilder,TextureAtlasSprite> OUTPUT=new PanelQuadSink<BufferBuilder,TextureAtlasSprite>(){
+        public void quad(BufferBuilder buffer,TextureAtlasSprite material,boolean reverse,double[] a,double[] b,double[] c,double[] d){WorldSurface.quad(buffer,material,reverse,a,b,c,d);}
+    };
+    DiagonalPortholeMesh(int mode,boolean inverted,double lower,double upper,double[] bounds){this(mode,inverted,lower,upper,bounds,null);}
+    DiagonalPortholeMesh(int mode,boolean inverted,double lower,double upper,double[] bounds,com.vandorlabs.blocks.BlockProgrammableWall.Corner corner){super(mode,inverted,lower,upper,bounds,corner);}
+    static void quad(BufferBuilder buffer,TextureAtlasSprite material,boolean textured,DiagonalPortholeMesh mesh,double[]... vertices){quad(buffer,material,textured,mesh,false,vertices);}
+    static void quad(BufferBuilder buffer,TextureAtlasSprite material,boolean textured,DiagonalPortholeMesh mesh,boolean reverse,double[]... vertices){
+        // Preserve the existing flat fast path without adding a target varargs array.
+        if(mesh==null&&vertices.length==4){WorldSurface.quad(buffer,material,reverse,vertices);return;}
+        DiagonalPortholeProjection.quad(OUTPUT,buffer,material,mesh,reverse,vertices);
     }
 }

@@ -2,7 +2,7 @@ package com.vandorlabs.render;
 
 /** Current local wall polygons. Hosts retain sprite mapping, normals, clipping and buffer ownership. */
 public final class PanelMeshEmitter {
-    public interface Sink<C,M> {
+    public interface Sink<C,M> extends PanelQuadSink<C,M> {
         void quad(C context,M material,boolean reverse,double[] a,double[] b,double[] c,double[] d);
         void normal(C context,M material,int sign,double halfOffset,double[] clip,double[] a,double[] b,double[] c,double[] d);
     }
