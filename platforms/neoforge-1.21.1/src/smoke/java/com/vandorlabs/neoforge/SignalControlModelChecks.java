@@ -60,6 +60,7 @@ public final class SignalControlModelChecks {
         }
         require(failures==0,"base pose mismatches="+failures+"; see bounded summaries");require(worlds==(baseOnly?192:12288)&&items==(baseOnly?72:4608),"incomplete reference worlds="+worlds+" items="+items);
         if(frozenModel!=null){var old=quads(frozenModel,frozenState,frozenData);require(old.size()==frozenQuads.size(),"old mesh count changed");for(int i=0;i<old.size();i++)require(Arrays.equals(old.get(i).getVertices(),frozenQuads.get(i).getVertices())&&old.get(i).getSprite()==frozenQuads.get(i).getSprite(),"old model changed after reload");require(frozenModel.getParticleIcon(frozenData)==frozenParticle,"old model particle changed after reload");}
+        MountedMeshCacheChecks.report(mc,frozenModel);
         long bytes=NativeMountedControlGeometry.cacheCost();require(bytes<=8*1024*1024,"shape cache over budget "+bytes);System.out.println("[vandorlabs][signal-model] "+(baseOnly?"base matrix":"matrix")+" PASS world="+worlds+" items="+items+" all4IDs facing/rotation/detents/mounts; malformed items; component/wedge collision; GUI; model-owned particles (native API), old snapshots; retained="+bytes);
     }
     private static boolean mountZero(String line){int start=line.indexOf("\"key\":\"")+7,end=line.indexOf('"',start);if(start<7||end<start)throw new IllegalArgumentException("Malformed reference key");return line.substring(start,end).endsWith("/0");}
