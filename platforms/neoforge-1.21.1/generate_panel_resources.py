@@ -20,6 +20,28 @@ def metal(value):
 
 
 
+def diagonal_porthole_projection():
+    """Prepare canonical assets without enabling the inactive registry family."""
+    name = 'programmable_diagonal_porthole'
+    state = metal(converted(json.loads((SOURCE / ('blockstates/' + name + '.json')).read_text())))
+    variants = {}
+    for key, variant in state['variants'].items():
+        key = ','.join(part for part in key.split(',') if not part.startswith('depth='))
+        if key in variants and variants[key] != variant:
+            raise ValueError('Non-identical diagonal porthole depth variants')
+        variants[key] = variant
+    state['variants'] = variants
+    item = metal(converted(json.loads((SOURCE / ('models/item/' + name + '.json')).read_text())))
+    item['textures']['glass'] = 'vandorlabs:glass-palette/clear'
+    recipe = json.loads((SOURCE / ('recipes/' + name + '.json')).read_text())
+    recipe['result']['id'] = recipe['result'].pop('item')
+    return {
+        'assets/vandorlabs/blockstates/' + name + '.json': state,
+        'assets/vandorlabs/models/item/' + name + '.json': item,
+        'data/vandorlabs/recipe/' + name + '.json': recipe,
+    }
+
+
 def main():
     if OUT.exists():
         shutil.rmtree(OUT)
