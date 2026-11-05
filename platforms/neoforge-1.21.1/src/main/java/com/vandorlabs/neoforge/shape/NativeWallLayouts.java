@@ -1,64 +1,66 @@
 package com.vandorlabs.neoforge.shape;
 
 import com.vandorlabs.neoforge.fluid.NativeFluidWorld;
-import com.vandorlabs.surface.JoinedRectangles;
 import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.world.level.Level;
 
 /** Cosmetic client groups. Descriptors live only on loaded tiles and never retain tiles or levels. */
 public final class NativeWallLayouts {
-    private static final int LIMIT=4096;
     static final class Group {
+        final NativePanelGroups.Mode mode;
         final Map<Long,NativePanelLayout> layouts;
         final boolean capped;
         boolean valid=true,queued;
-        Group(Map<Long,NativePanelLayout> layouts,boolean capped){this.layouts=Map.copyOf(layouts);this.capped=capped;}
+        Group(NativePanelGroups.Mode mode,Map<Long,NativePanelLayout> layouts,boolean capped){this.mode=mode;this.layouts=layouts;this.capped=capped;}
     }
     /** Local invalidation is safe during NBT loading and chunk unload; all world work stays deferred. */
-    public static void invalidate(NativeWallEntity host){Group old=host.textureGroup;if(old!=null)old.valid=false;}
+    public static void invalidate(NativeWallEntity host){if(host.textureGroup!=null)host.textureGroup.valid=false;if(host.apertureGroup!=null)host.apertureGroup.valid=false;}
     public static void invalidateAt(Level level,BlockPos pos){if(NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity host)invalidate(host);}
-    static NativePanelLayout layout(NativeWallEntity host){
+    private static Group group(NativeWallEntity host,NativePanelGroups.Mode mode){return mode==NativePanelGroups.Mode.MATERIAL?host.textureGroup:host.apertureGroup;}
+    private static void group(NativeWallEntity host,NativePanelGroups.Mode mode,Group group){if(mode==NativePanelGroups.Mode.MATERIAL)host.textureGroup=group;else host.apertureGroup=group;}
+    static NativePanelLayout layout(NativeWallEntity host){return query(host,NativePanelGroups.Mode.MATERIAL);}
+    static NativePortholeLayout aperture(NativeWallEntity host){
+        int shape=host.wallSettings().portholeShape;
+        NativePanelLayout pane=query(host,NativePanelGroups.Mode.APERTURE);
+        Level level=host.getLevel();
+        if(level==null||!level.isClientSide||!host.isPorthole()||!host.wallSettings().joinPortholes)return NativePortholeLayout.unit(shape);
+        Direction right=host.getBlockState().getValue(NativeFlatWallBlock.FACING).getClockWise();
+        int mask=NativePanelGroups.neighborMask(host.getBlockPos(),right,pos->compatible(host,pos,NativePanelGroups.Mode.APERTURE)!=null);
+        return NativePortholeLayout.contacts(pane,shape,mask);
+    }
+    private static NativePanelLayout query(NativeWallEntity host,NativePanelGroups.Mode mode){
         Level level=host.getLevel();if(level==null||!level.isClientSide)return NativePanelLayout.UNIT;
-        Group old=host.textureGroup;
+        Group old=group(host,mode);
         if(old!=null&&old.valid&&!membershipValid(host,old))old.valid=false;
         if(old!=null&&!old.valid&&!old.queued){old.queued=true;for(long packed:old.layouts.keySet()){BlockPos pos=BlockPos.of(packed);if(NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity member)NativeFluidWorld.queue(member);}}
-        if(host.settings().layout==0){host.textureGroup=null;return NativePanelLayout.UNIT;}
+        if(mode==NativePanelGroups.Mode.MATERIAL?host.settings().layout==0:!host.isPorthole()||!host.wallSettings().joinPortholes){group(host,mode,null);return NativePanelLayout.UNIT;}
         if(old!=null&&old.valid)return old.layouts.getOrDefault(host.getBlockPos().asLong(),NativePanelLayout.UNIT);
-        return capture(host);
+        return capture(host,mode);
     }
     private static boolean membershipValid(NativeWallEntity root,Group group){
         Direction right=root.getBlockState().getValue(NativeFlatWallBlock.FACING).getClockWise();BlockPos pos=root.getBlockPos();
         for(Direction direction:new Direction[]{right,right.getOpposite(),Direction.UP,Direction.DOWN}){
-            BlockPos next=pos.relative(direction);boolean contains=group.layouts.containsKey(next.asLong()),compatible=compatible(root,next)!=null;
+            BlockPos next=pos.relative(direction);boolean contains=group.layouts.containsKey(next.asLong()),compatible=compatible(root,next,group.mode)!=null;
             if(contains&&!compatible||!contains&&compatible&&!group.capped)return false;
         }
         return true;
     }
-    private static NativeWallEntity compatible(NativeWallEntity root,BlockPos pos){
+    private static NativeWallEntity compatible(NativeWallEntity root,BlockPos pos,NativePanelGroups.Mode mode){
         Level level=root.getLevel();if(!NativeFluidWorld.loaded(level,pos))return null;
         var state=level.getBlockState(pos);var base=root.getBlockState();
-        if(state.getBlock()!=base.getBlock()||!(level.getBlockEntity(pos) instanceof NativeWallEntity other)||other.isRemoved())return null;
+        if(!(base.getBlock() instanceof NativeFlatWallBlock)||state.getBlock()!=base.getBlock()||!(level.getBlockEntity(pos) instanceof NativeWallEntity other)||other.isRemoved())return null;
         if(state.getValue(NativeFlatWallBlock.FACING)!=base.getValue(NativeFlatWallBlock.FACING)||!state.getValue(NativeFlatWallBlock.DEPTH).equals(base.getValue(NativeFlatWallBlock.DEPTH)))return null;
-        return other.settings().mainTexture==root.settings().mainTexture&&other.settings().layout==root.settings().layout?other:null;
+        return mode.sameSettings(root.settings().mainTexture,root.settings().layout,root.wallSettings().joinPortholes,root.wallSettings().portholeShape,other.settings().mainTexture,other.settings().layout,other.wallSettings().joinPortholes,other.wallSettings().portholeShape)?other:null;
     }
-    private static NativePanelLayout capture(NativeWallEntity root){
-        Level level=root.getLevel();Direction right=root.getBlockState().getValue(NativeFlatWallBlock.FACING).getClockWise();
-        Map<BlockPos,NativeWallEntity> members=new LinkedHashMap<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();members.put(root.getBlockPos(),root);queue.add(root.getBlockPos());
-        while(!queue.isEmpty()&&members.size()<LIMIT){BlockPos pos=queue.remove();for(Direction direction:new Direction[]{right,right.getOpposite(),Direction.UP,Direction.DOWN}){
-            BlockPos next=pos.relative(direction);if(members.containsKey(next))continue;NativeWallEntity other=compatible(root,next);if(other==null)continue;
-            members.put(next,other);queue.add(next);if(members.size()>=LIMIT)break;
-        }}
-        boolean capped=members.size()>=LIMIT;Map<Long,NativePanelLayout> layouts=new HashMap<>();
-        if(capped)for(BlockPos pos:members.keySet())layouts.put(pos.asLong(),NativePanelLayout.UNIT);
-        else{
-            Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos pos:members.keySet())cells.put(JoinedRectangles.cell(pos.getX()*right.getStepX()+pos.getZ()*right.getStepZ(),pos.getY()),pos);
-            for(var rect:JoinedRectangles.partition(cells.keySet()))for(int y=0;y<rect.height;y++)for(int x=0;x<rect.width;x++){
-                BlockPos pos=cells.get(JoinedRectangles.cell(rect.x+x,rect.y+y));layouts.put(pos.asLong(),new NativePanelLayout(x,y,rect.width,rect.height,false,false));
-            }
+    private static NativePanelLayout capture(NativeWallEntity root,NativePanelGroups.Mode mode){
+        Direction right=root.getBlockState().getValue(NativeFlatWallBlock.FACING).getClockWise();
+        var captured=NativePanelGroups.capture(root.getBlockPos(),right,root,pos->compatible(root,pos,mode));
+        Group group=new Group(mode,captured.layouts(),captured.capped());
+        for(var entry:captured.members().entrySet()){
+            NativeWallEntity member=entry.getValue();group(member,mode,group);
+            if(member!=root)NativeFluidWorld.queue(member);
         }
-        Group group=new Group(layouts,capped);
-        for(var entry:members.entrySet()){NativeWallEntity member=entry.getValue();member.textureGroup=group;if(member!=root)NativeFluidWorld.queue(member);}
         return group.layouts.get(root.getBlockPos().asLong());
     }
     private NativeWallLayouts(){}
