@@ -8,9 +8,12 @@ import com.vandorlabs.redstone.ChannelSourceIndexTest.*;
 /** Explicit warmed comparison; not part of default portable fixtures and not a hardware FPS claim. */
 final class ChannelSourceIndexAllocationCheck {
     private static volatile int sink;
+    // getId is the Java 8 thread identifier API; threadId is unavailable on that target.
+    @SuppressWarnings("deprecation")
+    private static long currentThreadId(){return Thread.currentThread().getId();}
     static void run()throws Exception{
         Object bean=ManagementFactory.getThreadMXBean();Class<?> allocation=Class.forName("com.sun.management.ThreadMXBean");
-        Method enabled=allocation.getMethod("setThreadAllocatedMemoryEnabled",boolean.class),bytes=allocation.getMethod("getThreadAllocatedBytes",long.class);enabled.invoke(bean,true);long thread=Thread.currentThread().getId();
+        Method enabled=allocation.getMethod("setThreadAllocatedMemoryEnabled",boolean.class),bytes=allocation.getMethod("getThreadAllocatedBytes",long.class);enabled.invoke(bean,true);long thread=currentThreadId();
         Context context=new Context();ChannelSourceIndex<Member,Snapshot> current=new ChannelSourceIndex<>(context);FrozenChannelSourceIndex old=new FrozenChannelSourceIndex(new FrozenChannelSourceIndex.Stats());
         for(int i=0;i<1024;i++){Member member=new Member(i);Snapshot snapshot=new Snapshot(i%5,0,(i/5)%5,256,8);old.put(member,snapshot);current.put(member,snapshot);}
         Member far=new Member(1024);Snapshot distant=new Snapshot(1024,0,0,256,15);old.put(far,distant);current.put(far,distant);ChannelSourceIndexTest.trace=null;
