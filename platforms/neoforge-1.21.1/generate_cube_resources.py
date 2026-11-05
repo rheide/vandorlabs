@@ -104,7 +104,7 @@ def main():
     from generate_wireless_resources import generate as generate_wireless
     atlas.extend(generate_wireless(ROOT,OUT))
     write(ASSETS/'data/housing_finishes.json',catalog)
-    write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())))
+    write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())+[dict(type='vandorlabs:frame_edges')]))
     variants={f'facing={face}':dict(model='vandorlabs:block/programmable_block',y=angle) for face,angle in [('north',0),('east',90),('south',180),('west',270),('up',90),('down',90)]}
     write(ASSETS/'blockstates/programmable_block.json',dict(variants=variants))
     write(ASSETS/'models/block/programmable_block.json',dict(parent='minecraft:block/cube_all',textures=dict(all='vandorlabs:housing/dark_wall_panel')))
