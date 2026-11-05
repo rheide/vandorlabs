@@ -15,6 +15,7 @@ public final class SignalControlDataTest {
         }
         for(int low:extremes)for(int high:extremes)for(int value:extremes){require(SignalControlData.levelForStep(value,low,high)==oldLevel(value,low,high)&&SignalControlData.stepForLevel(value,low,high)==oldStep(value,low,high),"unvalidated public inputs preserve overflow behavior");cases++;}
         for(int value:extremes){require(SignalControlData.savedLow(false,value)==5&&SignalControlData.savedHigh(false,value)==15,"absent defaults");require(SignalControlData.savedLow(true,value)==value&&SignalControlData.savedHigh(true,value)==value,"present wrong/numeric host conversion retained");require(SignalControlData.savedStep(value)==(value<0?0:value>3?3:value),"saved step clamp");}
+        require(SignalControlData.validLimits(Integer.MAX_VALUE-1,Integer.MIN_VALUE),"legacy integer-overflow limit predicate remains unchanged");
         require(SignalControlData.stepForLevel(1,5,15)==1,"positive signal must not display off");require(SignalControlData.stepForLevel(7,5,13)==1,"equal-distance tie selects lower detent");
         System.out.println("SignalControlData PASS cases="+cases+" exhaustive valid limits/levels, lower ties, positive floor, extremes and scalar save defaults");
     }
