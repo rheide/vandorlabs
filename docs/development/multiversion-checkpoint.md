@@ -34,4 +34,4 @@ This stopping point freezes the integrated compatibility work for the Forge rele
 
 Build Forge with Java 8 using the root wrapper. Build NeoForge with Java 21 using the wrapper in `platforms/neoforge-1.21.1`. Keep standard output in `build/libs/`; do not publish an original-textures artifact. A change to only the native adapter must not make the root Forge build depend on the modern Gradle plugin or JDK.
 
-Release-gate status for this checkpoint: pending frozen-candidate validation.
+Release-gate status: **PASS** on 2026-11-05 against frozen runtime candidate `c0fa17f64`. The Java 8 `verifyRelease` run completed on its first attempt in 53 minutes, including the shader-startup and all configured live regression suites. Final standard Forge artifact: `vandorlabs-2.9.jar`, SHA-256 `56068103fb3ea1e343bd02f5b3a0b151d6cc73d11307ba7687c62fcc09cbdeef`. This establishes the Forge compatibility checkpoint; native 1.21.1 remains partial. Documentation updates after that candidate do not change its runtime artifact.

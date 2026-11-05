@@ -23,3 +23,5 @@ Native four-step levers and sliders share that dialog and renderer. Throttles re
 Native world transmitters and receivers add six-face analog/digital ports, strongest-input reception and separate On/Off output levels. Their dedicated editor shares the transmission controls, and ordinary dropped items retain the existing plain-item behavior.
 
 Other native families, optional material providers, copy tools, carried assemblies, hardware shader acceptance and matter-production machines remain incomplete. Dedicated-server checks, emitted-model checks and ordinary client interaction checks are separate acceptance requirements; this remains a development build.
+
+The Forge 1.12.2 compatibility checkpoint has passed the full release gate. The [development baseline](../development/multiversion-checkpoint.md) records the validated artifact and the preserved branches for resuming native work; this does not mark the partial 1.21.1 build release-ready.
