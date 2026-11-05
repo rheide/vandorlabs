@@ -35,6 +35,10 @@ public final class NativeDiagonalWallGeometry {
         public AABB bounds(){return bounds;}public AABB selectionBounds(){return selection;}
         public Direction facing(){return pose.facing;}public int depth(){return 0;}public boolean diagonal(){return true;}
         public NativePanelLayout layout(){return pose.layout;}
+        @Override public boolean sameFluidGeometry(NativeWallGeometry other){
+            if(!(other instanceof Geometry diagonal))return false;Pose a=pose,b=diagonal.pose;
+            return a.facing==b.facing&&a.inverted==b.inverted&&a.mode==b.mode&&a.fill==b.fill&&Objects.equals(a.join,b.join)&&Double.compare(a.lowerEnd,b.lowerEnd)==0&&Double.compare(a.upperEnd,b.upperEnd)==0&&a.clip.equals(b.clip);
+        }
         public Geometry withLayout(NativePanelLayout next){if(pose.layout.equals(next))return this;var result=new Geometry(pose.withLayout(next),boxes,fluidBoxes,bounds,selection);result.plainRegions=plainRegions;result.portholeRegions=portholeRegions;return result;}
         public int side(double x,double y,double z){double normal=pose.facing==Direction.EAST?1-x:pose.facing==Direction.SOUTH?1-z:pose.facing==Direction.WEST?x:z;
             double coordinate=normal,mid=DiagonalWallGeometry.near(pose.mode,pose.inverted,y,pose.lowerEnd,pose.upperEnd)+.125;

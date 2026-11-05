@@ -9,6 +9,8 @@ import net.minecraft.world.phys.AABB;
 public interface NativeWallGeometry {
     List<AABB> boxes();
     default List<AABB> fluidBoxes(){return boxes();}
+    /** Cosmetic layout changes must not invalidate the physical fluid volume. */
+    default boolean sameFluidGeometry(NativeWallGeometry other){return equals(other);}
     AABB bounds();
     Direction facing();
     int depth();

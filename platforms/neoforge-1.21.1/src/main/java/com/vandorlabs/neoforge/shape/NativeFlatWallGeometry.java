@@ -17,6 +17,7 @@ public final class NativeFlatWallGeometry {
         public Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth){this(boxes,bounds,facing,depth,null,NativePanelLayout.UNIT);}
         public Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth,Join join){this(boxes,bounds,facing,depth,join,NativePanelLayout.UNIT);}
         public Geometry {boxes=List.copyOf(boxes);java.util.Objects.requireNonNull(layout);}
+        @Override public boolean sameFluidGeometry(NativeWallGeometry other){return other instanceof Geometry flat&&facing==flat.facing&&depth==flat.depth&&boxes.equals(flat.boxes);}
         public Geometry withLayout(NativePanelLayout next){return layout.equals(next)?this:new Geometry(boxes,bounds,facing,depth,join,next);}
         @Override public com.vandorlabs.neoforge.fluid.NativeFluidRegions fluidRegions(boolean porthole){return com.vandorlabs.neoforge.fluid.NativeFluidRegions.flat(facing,depth,porthole);}
         public int side(double x,double y,double z){double normal=facing==Direction.EAST?1-x:facing==Direction.SOUTH?1-z:facing==Direction.WEST?x:z;return normal<PanelDepthPolicy.start(depth)/16D+.125?0:1;}

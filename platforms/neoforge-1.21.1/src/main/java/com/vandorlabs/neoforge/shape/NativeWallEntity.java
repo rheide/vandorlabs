@@ -126,7 +126,8 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public boolean publishGeometry(NativeWallGeometry next,long revision){
         if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Wall geometry requires owning server thread");
         Objects.requireNonNull(next);if(next.equals(geometry))return false;
-        geometry=next;partition=next::side;renderBounds=next.selectionBounds().move(worldPosition);topologyRevision=revision;geometryGeneration++;publishWallAppearance();NativeFluidWorld.queue(this);return true;
+        boolean physical=!geometry.sameFluidGeometry(next),boundsChanged=!geometry.selectionBounds().equals(next.selectionBounds());
+        geometry=next;partition=next::side;if(boundsChanged)renderBounds=next.selectionBounds().move(worldPosition);topologyRevision=revision;if(physical)geometryGeneration++;publishWallAppearance();NativeFluidWorld.queue(this);return true;
     }
     @Override public void refreshFluidGeometry(){NativeWallTopology.refresh(this);super.refreshFluidGeometry();}
     @Override protected long fluidGeometryKey(){return geometryGeneration;}
