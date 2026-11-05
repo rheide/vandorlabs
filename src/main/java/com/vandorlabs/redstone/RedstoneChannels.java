@@ -197,7 +197,7 @@ public final class RedstoneChannels {
         }
         private int at(net.minecraft.util.math.BlockPos pos,int channel){Index index=indexes.get(channel);return index==null?0:index.at(pos);}
         private int level(int channel){return powerSources.getOrDefault(channel,0);}
-        private static boolean inside(net.minecraft.util.math.BlockPos source,net.minecraft.util.math.BlockPos target,int range){return range==0||source.distanceSq(target)<=(double)range*range;}
+        private static boolean inside(net.minecraft.util.math.BlockPos source,net.minecraft.util.math.BlockPos target,int range){return range==0||ChannelSpatialPolicy.finiteContains(source.getX(),source.getY(),source.getZ(),target.getX(),target.getY(),target.getZ(),range);}
         private static final class Source {final net.minecraft.util.math.BlockPos pos;final int range,level;Source(net.minecraft.util.math.BlockPos pos,int range,int level){this.pos=pos.toImmutable();this.range=range;this.level=level;}}
         /** Exact strength banks prevent scanning thousands of equal analog sources. */
         private static final class SourceBucket {
@@ -211,10 +211,10 @@ public final class RedstoneChannels {
             final Map<RedstoneChannelMember,Source> all=new IdentityHashMap<>();final int[] strengths=new int[16];
             final Map<Long,SourceBucket>[] grids=new Map[]{new java.util.HashMap<>(),new java.util.HashMap<>(),new java.util.HashMap<>()};
             final SourceBucket infinite=new SourceBucket();
-            static int tier(int range){return range<=16?0:range<=64?1:2;}
-            static int size(int tier){return tier==0?16:tier==1?64:256;}
-            static long packed(int x,int y,int z){return ((long)x&67108863L)<<38|((long)y&4095L)<<26|((long)z&67108863L);}
-            static long key(net.minecraft.util.math.BlockPos p,int size){return packed(Math.floorDiv(p.getX(),size),Math.floorDiv(p.getY(),size),Math.floorDiv(p.getZ(),size));}
+            static int tier(int range){return ChannelSpatialPolicy.tier(range);}
+            static int size(int tier){return ChannelSpatialPolicy.cellSize(tier);}
+            static long packed(int x,int y,int z){return ChannelSpatialPolicy.packedCell(x,y,z);}
+            static long key(net.minecraft.util.math.BlockPos p,int size){return ChannelSpatialPolicy.key(p.getX(),p.getY(),p.getZ(),size);}
             void put(RedstoneChannelMember member,Source source){remove(member);all.put(member,source);strengths[source.level]++;if(source.range==0)infinite.add(member,source.level);else {int t=tier(source.range);grids[t].computeIfAbsent(key(source.pos,size(t)),k->new SourceBucket()).add(member,source.level);}}
             void remove(RedstoneChannelMember member){Source source=all.remove(member);if(source==null)return;strengths[source.level]--;if(source.range==0)infinite.remove(member,source.level);else {int t=tier(source.range);long key=key(source.pos,size(t));SourceBucket bucket=grids[t].get(key);if(bucket!=null){bucket.remove(member,source.level);if(bucket.maximum==0)grids[t].remove(key);}}}
             int at(net.minecraft.util.math.BlockPos pos){

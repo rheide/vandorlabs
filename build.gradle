@@ -1108,3 +1108,15 @@ task testDialogPanelDimensions(type: JavaExec) {
     main = 'com.vandorlabs.client.DialogPanelDimensionsChecks'
 }
 check.dependsOn testDialogPanelDimensions
+
+task testChannelSpatialPolicy(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.redstone.ChannelSpatialPolicyTest'
+}
+
+task testChannelSpatialAdapters(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ChannelSpatialAdapterChecks'
+}
