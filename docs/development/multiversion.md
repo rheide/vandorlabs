@@ -85,9 +85,9 @@ Keep `onLoad()` local and queue membership through the platform's deferred loade
 
 Run portable contracts under both Java 8 and Java 21, then validate the affected legacy paths and dedicated-server linkage. Native acceptance requires save/reload across separate processes and focused world, dialog, item and interaction checks against immutable compiled outputs. Include negative controls for rendering or interaction claims; compilation alone cannot establish family parity.
 
-## Programmable glass settings (historical branch design)
+## Programmable glass settings
 
-The following glass extraction remains on the historical upgrade branch; it is not integrated native support on master.
+The scalar glass persistence contract is integrated on master. The current Forge tile delegates its glass fields while retaining frame appearance, playback, fluids and world lifecycle in the adapter. A frozen actual-NBT matrix covers fresh and previously edited tiles, typed/missing fields, raw migration state, orientation and adjacent saved settings; focused live glass appearance also passes. This does not establish native glass support.
 
 `ProgrammableGlassSettings` owns glass-specific saved defaults, typed tag reads,
 legacy metadata-size migration and the stored panel orientation. It retains a
@@ -95,11 +95,10 @@ missing texture-layout field separately from its effective Stretch/Tile value.
 The legacy tile delegates persistence to this contract while keeping world
 notifications, fluid lifecycle and placement repair in its Forge adapter.
 
-`GlassDialog` defines the shared labels, option IDs, bounds and forward/reverse
+The historical branch's `GlassDialog` defines shared labels, option IDs, bounds and forward/reverse
 transitions. The editor submits all options immediately, keeps custom-material
 layout while stock glass is selected, and preserves the established detail-zero
-submission without changing the tile merely by opening its editor. Native glass
-must use these same contracts; extracting them does not establish native support.
+submission without changing the tile merely by opening its editor. That historical dialog predates the current frame tabs and playback controls; refresh it against the current Forge editor before integration.
 
 ## Flat panel geometry (historical branch design)
 

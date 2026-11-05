@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share the current programmable-glass save contract while retaining frame appearance, playback, fluids, legacy size migration and typed saved defaults. Verify unchanged Forge save output and focused live glass appearance; native glass and its current dialog remain pending.
+
 - Share wireless transmitter/receiver scalar save defaults and analog/digital level rules across targets. Preserve the existing Forge six-face sampling, strongest-input receiver behavior and separate On/Off settings; native endpoint blocks remain in progress.
 
 - Share four-step throttle and slider output math and saved defaults, preserving existing Forge detent selection, partial channel banks and limit handling. Native four-step control adapters remain in progress.
