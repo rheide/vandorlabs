@@ -1,0 +1,13 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="CC0-1.0"
+[[mods]]
+modId="vandorlabs_copy_smoke"
+version="1"
+displayName="Vandor Labs isolated copy test fixture"
+[[dependencies.vandorlabs_copy_smoke]]
+modId="vandorlabs"
+type="required"
+versionRange="[2.9,)"
+ordering="AFTER"
+side="BOTH"

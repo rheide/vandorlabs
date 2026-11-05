@@ -134,3 +134,23 @@ neoForge.runs.configureEach {
 neoForge.runs.configureEach {
     if(project.hasProperty('sampledMaterialPhase'))systemProperty 'vandorlabs.sampledMaterialPhase',project.property('sampledMaterialPhase')
 }
+
+sourceSets {
+    copySmoke {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+tasks.register('copySmokeJar', Jar) {
+    dependsOn tasks.named('compileCopySmokeJava')
+    archiveClassifier = 'copy-smoke'
+    destinationDirectory = file("$buildDir/test-fixtures")
+    from sourceSets.copySmoke.output
+}
+neoForge.runs.configureEach {
+    if(project.hasProperty('copyJar')) {
+        loadedMods.set([])
+        systemProperty 'vandorlabs.copyJar', project.property('copyJar')
+        systemProperty 'vandorlabs.copySha', project.property('copySha')
+    }
+}
