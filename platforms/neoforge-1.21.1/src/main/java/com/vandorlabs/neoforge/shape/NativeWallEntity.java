@@ -17,11 +17,14 @@ import net.neoforged.neoforge.client.model.data.*;
 
 /** Shared wall save/editor host. Discovery publishes immutable geometry on the owning thread. */
 public class NativeWallEntity extends ProgrammableShapeEntity {
-    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry){
+    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture){
+        public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry){this(base,walls,frames,glass,geometry,NativePortholeLayout.unit(walls==null||walls.portholeShape<0||walls.portholeShape>3?0:walls.portholeShape));}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,NativeWallGeometry geometry){this(base,walls,frames,PanelGlassSettings.fresh(),geometry);}
     }
     public static final ModelProperty<WallAppearance> WALL_APPEARANCE=new ModelProperty<>();
     NativeWallLayouts.Group textureGroup;
+    NativeWallLayouts.Group apertureGroup;
+    private NativePortholeLayout aperture=NativePortholeLayout.unit(0);
     private final boolean porthole;
     private WallSettings walls;
     private FrameSettings frames=defaultFrames();
@@ -48,10 +51,16 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public final WallSettings wallSettings(){return walls;}
     public final FrameSettings frameSettings(){return frames;}
     public final PanelGlassSettings panelGlassSettings(){return glass;}
+    public final NativePortholeLayout apertureLayout(){return aperture;}
+    /** Deferred topology calls this before the owning pass publishes model data. */
+    boolean publishApertureLayout(NativePortholeLayout next){
+        Objects.requireNonNull(next);if(aperture.equals(next))return false;
+        aperture=next;publishWallAppearance();return true;
+    }
     public final WallAppearance wallAppearance(){return wallAppearance;}
     public long modelDataRevision(){return modelRevision;}
     public final long topologyRevision(){return topologyRevision;}
-    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry);}
+    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture);}
     @Override protected void appearancePublished(){publishWallAppearance();}
     public static boolean validFrame(int choice){if(choice==-1)return true;if(!ModernFinishCatalog.validChoice(choice))return false;String category=ModernFinishCatalog.option(choice).category();return category.equals("Frame")||category.startsWith("Frame/");}
     public static boolean validSurface(int choice){return validFrame(choice)||ModernFinishCatalog.validChoice(choice)&&ModernFinishCatalog.option(choice).general();}
