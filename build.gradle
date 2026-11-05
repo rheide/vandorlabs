@@ -1337,3 +1337,11 @@ task testShapeDefaultsLegacy(type: JavaExec) {
     systemProperty 'vandorlabs.shapeDefaultsExport', file(project.findProperty('shapeDefaultsExport') ?: 'build/test-artifacts/shape-defaults-forge.json').absolutePath
 
 }
+
+task testPanelMeshEmitterAdapters(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PanelMeshEmitterChecks'
+}
+check.dependsOn testPanelMeshEmitterAdapters
