@@ -1237,3 +1237,20 @@ task testControlLatchWriteAllocation(type: JavaExec) {
     args 'allocation'
     maxHeapSize = '512m'
 }
+
+task testControlMountGeometry(type: JavaExec) {
+    group = 'verification'
+    description = 'Preserve original exact mounted-control transform, projection, bounds and wedge bits'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ControlMountGeometryChecks'
+}
+check.dependsOn testControlMountGeometry
+
+task measureControlMountAllocations(type: JavaExec) {
+    group = 'verification'
+    description = 'Measure warmed transform allocations and exclusive retained pose layout (not FPS)'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ControlMountAllocationChecks'
+}

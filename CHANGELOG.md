@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share the current supporting-face control transform across targets, retaining exact mounted geometry and item transforms while reducing bounds, wedge and construction allocations.
+
 - Share built-in transmission ranges, typed saved defaults and mounted-control settings between targets. Keep Forge migration, geometry, configured-item fields and hot-path allocation behavior unchanged.
 - Preserve native transmitter-copy crafting: place the source in the center of a 3×3 grid and one target beside it. Copy channels while retaining the target tier and other components, and return the original source. Preserve this rule through native grid cropping and automated-crafter recipe caching.
 
