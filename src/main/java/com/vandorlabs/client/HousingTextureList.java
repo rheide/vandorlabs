@@ -1,5 +1,7 @@
 package com.vandorlabs.client;
 
+import com.vandorlabs.ui.TextureListLayout;
+
 import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -57,10 +59,8 @@ final class HousingTextureList {
         if(nativeOptions)for(Option option:nativeEntries)options.put(option.choice,option);
         else for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i) && include.test(i))options.put(i,new Option(i,label.apply(i),category.apply(i),ScreenHousingTextures.fullTexture(i)));
         for(Option option:options.values())groups.computeIfAbsent(option.category,key->new ArrayList<>()).add(option);
-        Set<String> paths=new HashSet<>(groups.keySet());
-        for(String path:new ArrayList<>(paths))while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));paths.add(path);}
-        categories.addAll(paths);categories.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
-        for(List<Option> group:groups.values())group.sort(Comparator.comparing((Option option)->option.label,String.CASE_INSENSITIVE_ORDER).thenComparingInt(option->option.choice));
+        categories.addAll(TextureListLayout.categories(groups.keySet()));
+        for(List<Option> group:groups.values())group.sort((a,b)->TextureListLayout.compareOptions(a.label,a.choice,b.label,b.choice));
         setSelected(selected);
     }
     void thumbnail(int choice,String texture){Option option=options.get(choice);if(option!=null)option.texture=texture;}
@@ -200,8 +200,8 @@ final class HousingTextureList {
                     && com.vandorlabs.items.ItemProgrammableArmor.validTexture(choice))?choice:-1;
         missing=!nativeOptions && choice>=com.vandorlabs.tiles.FilesystemTextures.ID_BASE && ScreenHousingTextures.localIndex(choice)==0?choice:-1;
         selected=choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE?CHIP_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE?VEHICLE_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE?REDSTONE_ROW:custom>=0?CUSTOM_ROW:nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
-        Option option=options.get(selected);if(option!=null){String path=option.category;expanded.add(path);while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));expanded.add(path);}}rebuild();
-        int index=rows.indexOf(selected);scroll=Math.max(0,Math.min(maxScroll(),index-count/2));
+        Option option=options.get(selected);if(option!=null)TextureListLayout.expandAncestors(expanded,option.category);rebuild();
+        int index=rows.indexOf(selected);scroll=TextureListLayout.centeredScroll(index,count,maxScroll());
     }
     HousingTextureList revealSelected(){
         query="";if(search!=null)search.setText("");setSelected(selected());return this;
@@ -209,11 +209,11 @@ final class HousingTextureList {
     private void ensureSelectedVisible(){
         int index=rows.indexOf(selected);
         // The first row is replaced by its pinned category heading.
-        if(index>=0 && (index<=scroll || index>=scroll+count))scroll=Math.max(0,Math.min(maxScroll(),index-count/2));
+        if(TextureListLayout.needsReveal(index,scroll,count))scroll=TextureListLayout.centeredScroll(index,count,maxScroll());
     }
     private void rebuild() {
         rows.clear();
-        if(query.isEmpty())appendCategories("");
+        if(query.isEmpty())TextureListLayout.appendCategories(rows,categories,groups,expanded,option->option.choice);
         else for(Option option:options.values())if(matches(option))rows.add(option.choice);
         if(customConsumer!=null)rows.add(CUSTOM_ROW);
         if(redstoneAction!=null)rows.add(REDSTONE_ROW);
@@ -221,24 +221,7 @@ final class HousingTextureList {
         if(chipAction!=null)rows.add(CHIP_ROW);
         scroll=Math.min(scroll,maxScroll());
     }
-    private void appendCategories(String parent){
-        for(int c=0;c<categories.size();c++){
-            String category=categories.get(c);
-            int slash=category.lastIndexOf('/');
-            String directParent=slash<0?"":category.substring(0,slash);
-            if(!directParent.equals(parent))continue;
-            rows.add(-200000-c);
-            if(expanded.contains(category)){
-                appendCategories(category);
-                for(Option option:groups.getOrDefault(category,Collections.emptyList()))rows.add(option.choice);
-            }
-        }
-    }
-    private boolean matches(Option option){
-        String text=(option.label+" "+option.category+" "+option.texture).toLowerCase(Locale.ROOT);
-        for(String token:query.split("\\s+"))if(!text.contains(token))return false;
-        return true;
-    }
+    private boolean matches(Option option){return TextureListLayout.matches(query,option.label,option.category,option.texture);}
     private net.minecraft.client.gui.GuiTextField searchField(){
         if(search==null){search=new net.minecraft.client.gui.GuiTextField(0,Minecraft.getMinecraft().fontRenderer,x+2,y-ROW_HEIGHT+2,width+3,18);search.setMaxStringLength(128);search.setText(query);}
         return search;
@@ -254,18 +237,15 @@ final class HousingTextureList {
         net.minecraft.client.gui.GuiTextField search=searchField();
         if(net.minecraft.client.gui.GuiScreen.isCtrlKeyDown() && key==org.lwjgl.input.Keyboard.KEY_F){search.setFocused(true);return true;}
         if(!search.isFocused() || key==org.lwjgl.input.Keyboard.KEY_ESCAPE)return false;
-        if(search.textboxKeyTyped(character,key)){String next=search.getText().trim().toLowerCase(Locale.ROOT);if(!next.equals(query)){query=next;scroll=0;rebuild();}}
+        if(search.textboxKeyTyped(character,key)){String next=TextureListLayout.normalizeQuery(search.getText());if(!next.equals(query)){query=next;scroll=0;rebuild();}}
         return true;
     }
-    private boolean parentsExpanded(String path){
-        while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));if(!expanded.contains(path))return false;}
-        return true;
-    }
-    private static int indent(String path){return Math.min(48,8*(path.length()-path.replace("/", "").length()));}
+    private boolean parentsExpanded(String path){return TextureListLayout.parentsExpanded(expanded,path);}
+    private static int indent(String path){return TextureListLayout.indent(path);}
     /** Pin the category of the first visible texture into the top row. */
     private int visibleChoice(int row) {
         int choice=rows.get(scroll+row);
-        if(query.isEmpty() && count>1 && row==0 && options.containsKey(choice))return -200000-categories.indexOf(options.get(choice).category);
+        if(TextureListLayout.pinCategory(row,count,query.isEmpty())&&options.containsKey(choice))return TextureListLayout.categoryRow(categories.indexOf(options.get(choice).category));
         return choice;
     }
     int selected(){return selected==CHIP_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE:selected==VEHICLE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
@@ -290,7 +270,7 @@ final class HousingTextureList {
         if(choice==REDSTONE_ROW){selected=REDSTONE_ROW;custom=-1;missing=-1;redstoneAction.run();return true;}
         if(choice==CUSTOM_ROW){customInventory();return true;}
         if(options.containsKey(choice)){selected=choice;custom=-1;missing=-1;picked=true;}
-        else {String category=categories.get(-200000-choice);if(!expanded.remove(category))expanded.add(category);rebuild();}
+        else {String category=categories.get(TextureListLayout.categoryIndex(choice));if(!expanded.remove(category))expanded.add(category);rebuild();}
         return true;
     }
     boolean drag(int mouseY) {
@@ -348,7 +328,7 @@ final class HousingTextureList {
                 font.drawStringWithShadow(font.trimStringToWidth(custom>=0?"Custom: "+name(custom):"Custom...",width-(custom>=0?26:6)),x+(custom>=0?23:3),yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);
             }
             else if(!options.containsKey(choice)) {
-                String category=categories.get(-200000-choice);
+                String category=categories.get(TextureListLayout.categoryIndex(choice));
                 font.drawStringWithShadow(font.trimStringToWidth((expanded.contains(category)?"- ":"+ ")+category.substring(category.lastIndexOf('/')+1),width-6-indent(category)),x+3+indent(category),yy+7,0xFFABCFE8);
             } else {
                 com.google.gson.JsonObject metadata=nativeOptions?null:ScreenHousingTextures.entry(ScreenHousingTextures.choiceAt(choice));

@@ -1149,3 +1149,11 @@ task exportLegacyVanillaBlockManifest(type: JavaExec) {
     args file('src/main/resources/assets/vandorlabs/data/legacy_vanilla_blocks.tsv').absolutePath, '--write'
 }
 check.dependsOn testLegacyVanillaBlockManifest
+
+task testMaterialPickerRows(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.MaterialPickerRowsChecks'
+}
+check.dependsOn testMaterialPickerRows
