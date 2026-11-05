@@ -39,7 +39,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private volatile AABB renderBounds;
     public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean porthole){
         super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.porthole=porthole;walls=new WallSettings(false,false,0,0,porthole,0);
-        geometry=initialGeometry(state);partition=geometry::side;renderBounds=geometry.selectionBounds().move(pos);publishWallAppearance();
+        geometry=initialGeometry(state);aperture=NativePortholeLayout.unit(0,geometry.fullDepth()?1:0);partition=geometry::side;renderBounds=geometry.selectionBounds().move(pos);publishWallAppearance();
     }
     private static FrameSettings defaultFrames(){return new FrameSettings(-1,-1,-2,0,-1,-1,false,false,false,false);}
     private static NativeWallGeometry initialGeometry(BlockState state){
@@ -50,7 +50,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
             if(property.getName().equals("facing")&&value instanceof Direction direction&&direction.getAxis()!=Direction.Axis.Y)facing=direction;
             if(property.getName().equals("depth")&&value instanceof Integer number&&number>=0&&number<=2)depth=number;
         }
-        return NativeFlatWallGeometry.straight(facing,depth);
+        return state.getBlock() instanceof NativeFlatWallBlock block&&block.isFullDepth()?NativeFlatWallGeometry.full(facing,depth):NativeFlatWallGeometry.straight(facing,depth);
     }
     public final boolean isPorthole(){return porthole;}
     public final WallSettings wallSettings(){return walls;}

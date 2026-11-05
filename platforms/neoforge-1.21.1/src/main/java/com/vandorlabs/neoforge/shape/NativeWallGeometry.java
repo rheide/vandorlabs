@@ -20,5 +20,6 @@ public interface NativeWallGeometry {
     NativeFluidRegions fluidRegions(boolean porthole);
     default AABB selectionBounds(){return bounds();}
     default boolean diagonal(){return false;}
+    default boolean fullDepth(){return false;}
     default Direction[] placementFaces(){return new Direction[]{facing(),facing().getOpposite()};}
 }

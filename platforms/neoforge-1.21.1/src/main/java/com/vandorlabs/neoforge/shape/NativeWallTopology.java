@@ -14,11 +14,11 @@ public final class NativeWallTopology {
         if(state.getBlock() instanceof NativeDiagonalWallBlock){NativeDiagonalWallTopology.refresh(host);return;}
         if(!(state.getBlock() instanceof NativeFlatWallBlock))return;
         var corner=corner(level,pos,state);
-        var geometry=corner==null?NativeFlatWallGeometry.straight(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH)):NativeFlatWallGeometry.build(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH),corner);
+        var geometry=((NativeFlatWallBlock)state.getBlock()).isFullDepth()?NativeFlatWallGeometry.full(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH)):corner==null?NativeFlatWallGeometry.straight(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH)):NativeFlatWallGeometry.build(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH),corner);
         host.publishGeometry(geometry.withLayout(NativeWallLayouts.layout(host)),host.fluidGeometryRevision()+1);
         host.publishApertureLayout(NativeWallLayouts.aperture(host));
     }
-    private static boolean enabled(Level level,BlockPos pos){return NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity tile&&(!tile.isPorthole()||tile.wallSettings().joinPortholes);}
+    private static boolean enabled(Level level,BlockPos pos){return NativeFluidWorld.loaded(level,pos)&&!(level.getBlockState(pos).getBlock() instanceof NativeFlatWallBlock block&&block.isFullDepth())&&level.getBlockEntity(pos) instanceof NativeWallEntity tile&&(!tile.isPorthole()||tile.wallSettings().joinPortholes);}
     private static PanelCornerGeometry.FlatCorner corner(Level level,BlockPos pos,BlockState state){
         if(!enabled(level,pos))return null;Direction facing=state.getValue(NativeFlatWallBlock.FACING);Double frontArm=null,backArm=null;Boolean frontRight=null,backRight=null;
         for(boolean front:new boolean[]{true,false}){

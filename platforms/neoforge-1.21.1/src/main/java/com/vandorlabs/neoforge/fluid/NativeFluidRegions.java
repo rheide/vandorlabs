@@ -20,6 +20,8 @@ public final class NativeFluidRegions {
             new Plane(-1, 0, 0, 0), new Plane(1, 0, 0, 1),
             new Plane(0, -1, 0, 0), new Plane(0, 1, 0, 1),
             new Plane(0, 0, -1, 0), new Plane(0, 0, 1, 1));
+    private static final NativeFluidRegions EMPTY=new NativeFluidRegions(List.of(),List.of());
+    public static NativeFluidRegions empty(){return EMPTY;}
     private static final NativeFluidRegions[] FLAT = new NativeFluidRegions[36];
     static {
         for (Direction facing : Direction.Plane.HORIZONTAL)

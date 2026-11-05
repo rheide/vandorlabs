@@ -21,13 +21,13 @@ public final class NativeWallLayouts {
     private static void group(NativeWallEntity host,NativePanelGroups.Mode mode,Group group){if(mode==NativePanelGroups.Mode.MATERIAL)host.textureGroup=group;else host.apertureGroup=group;}
     static NativePanelLayout layout(NativeWallEntity host){return host.getBlockState().getBlock() instanceof NativeDiagonalWallBlock?NativeDiagonalLayouts.layout(host):query(host,NativePanelGroups.Mode.MATERIAL);}
     static NativePortholeLayout aperture(NativeWallEntity host){
-        int shape=host.wallSettings().portholeShape;
+        int shape=host.wallSettings().portholeShape,border=host.getBlockState().getBlock() instanceof NativeFlatWallBlock block&&block.isFullDepth()?1:0;
         NativePanelLayout pane=query(host,NativePanelGroups.Mode.APERTURE);
         Level level=host.getLevel();
-        if(level==null||!level.isClientSide||!host.isPorthole()||!host.wallSettings().joinPortholes)return NativePortholeLayout.unit(shape);
+        if(level==null||!level.isClientSide||!host.isPorthole()||!host.wallSettings().joinPortholes)return NativePortholeLayout.unit(shape,border);
         Direction right=host.getBlockState().getValue(NativeFlatWallBlock.FACING).getClockWise();
         int mask=NativePanelGroups.neighborMask(host.getBlockPos(),right,pos->compatible(host,pos,NativePanelGroups.Mode.APERTURE)!=null);
-        return NativePortholeLayout.contacts(pane,shape,mask);
+        return NativePortholeLayout.contacts(pane,shape,mask,border);
     }
     private static NativePanelLayout query(NativeWallEntity host,NativePanelGroups.Mode mode){
         Level level=host.getLevel();if(level==null||!level.isClientSide)return NativePanelLayout.UNIT;

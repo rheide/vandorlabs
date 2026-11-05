@@ -24,6 +24,21 @@ public final class NativeFlatWallGeometryChecks {
                 require(shape.bounds().equals(g.bounds()));require(NativeFlatWallGeometry.collision(g)==shape);count++;
             }
         }
+        var unit=new AABB(0,0,0,1,1,1);
+        for(Direction face:Direction.Plane.HORIZONTAL)for(int depth=0;depth<3;depth++){
+            var full=NativeFlatWallGeometry.full(face,depth);require(full.fullDepth()&&full==NativeFlatWallGeometry.full(face,depth));
+            require(full.boxes().equals(List.of(unit))&&full.bounds().equals(unit)&&full.selectionBounds().equals(unit));
+            require(volume(NativeFlatWallGeometry.collision(full).toAabbs())==1&&full.join()==null);
+            require(full.fluidRegions(true).regions().isEmpty()&&full.fluidRegions(true).surfaces().isEmpty());
+            require(com.vandorlabs.neoforge.fluid.NativeFluidVolume.build(full.fluidBoxes(),full::side).cells().isEmpty());
+            var layout=new com.vandorlabs.neoforge.shape.NativePanelLayout(1,0,2,1,false,false);var mapped=full.withLayout(layout);
+            require(mapped.fullDepth()&&mapped.sameFluidGeometry(full)&&!full.sameFluidGeometry(NativeFlatWallGeometry.straight(face,depth)));
+        }
+        for(int shape=0;shape<4;shape++){
+            var full=com.vandorlabs.neoforge.shape.NativePortholeLayout.unit(shape,1);require(full.extraBorder()==1&&full==com.vandorlabs.neoforge.shape.NativePortholeLayout.unit(shape,1));
+            var slice=NativePanelSlice.get(full);require(slice.frameCount()>0&&slice.glassCount()>0);
+            require(com.vandorlabs.neoforge.shape.NativePortholeLayout.contacts(full.pane(),shape,3,1).extraBorder()==1);
+        }
         var warm=NativeFlatWallGeometry.build(Direction.NORTH,0,null);for(int i=0;i<50000;i++)NativeFlatWallGeometry.collision(warm);
         var bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();long thread=Thread.currentThread().threadId(),before=bean.getThreadAllocatedBytes(thread);
         for(int i=0;i<20000;i++)NativeFlatWallGeometry.collision(warm);
