@@ -31,6 +31,11 @@ public final class TextureListLayoutTest {
         require(TextureListLayout.centeredScroll(8,4,10)==6&&TextureListLayout.centeredScroll(-1,4,10)==0&&TextureListLayout.centeredScroll(20,4,10)==10,"Center clamping");
         require(TextureListLayout.needsReveal(4,4,3)&&!TextureListLayout.needsReveal(5,4,3)&&TextureListLayout.needsReveal(7,4,3)&&!TextureListLayout.needsReveal(-1,4,3),"Pinned heading consumes the first visible selection row");
         require(TextureListLayout.indent("a/b/c")==16&&TextureListLayout.indent("a/b/c/d/e/f/g/h")==48&&TextureListLayout.categoryLabel("a/b/c").equals("c"),"Category presentation helper");
+        require(!TextureListLayout.matches("vand","Blue plate","Materials","vandorlabs:blocks/blue_plate"),"Common mod namespace must not match ordinary searches");
+        require(TextureListLayout.matches("vand","Vandor panel","Materials","vandorlabs:blocks/panel"),"Visible names remain searchable");
+        require(TextureListLayout.matches("vand","Logo","Materials","vandorlabs:blocks/vandor_logo"),"Authored texture paths remain searchable");
+        require(TextureListLayout.matches("vandorlabs:","Blue plate","Materials","vandorlabs:blocks/blue_plate"),"Explicit namespace searches remain available");
+        require(!TextureListLayout.matches("mine","Stone","Materials","minecraft:blocks/stone"),"Other namespaces must not leak into ordinary terms");
         System.out.println("Material picker row policy PASS hierarchy/search order, case ties, collapsed ancestors, negative options, pin/reveal");
     }
 }

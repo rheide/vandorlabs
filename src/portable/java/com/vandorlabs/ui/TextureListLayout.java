@@ -33,7 +33,14 @@ public final class TextureListLayout {
     public static String normalizeQuery(String value){return value.trim().toLowerCase(Locale.ROOT);}
     /** Read current presentation strings when rebuilding, including a host's replaced thumbnail name. */
     public static boolean matches(String query,String label,String category,String texture){
-        String text=(label+" "+category+" "+texture).toLowerCase(Locale.ROOT);for(String token:query.split("\\s+"))if(!text.contains(token))return false;return true;
+        int separator=texture.indexOf(':');
+        String path=separator<0?texture:texture.substring(separator+1);
+        String text=(label+" "+category+" "+path).toLowerCase(Locale.ROOT);
+        for(String token:query.split("\\s+")){
+            // Ordinary words must not match the namespace shared by every mod texture.
+            if(!text.contains(token)&&(token.indexOf(':')<0||!texture.toLowerCase(Locale.ROOT).contains(token)))return false;
+        }
+        return true;
     }
     public static void expandAncestors(Set<String> expanded,String path){expanded.add(path);while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));expanded.add(path);}}
     public static boolean parentsExpanded(Set<String> expanded,String path){while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));if(!expanded.contains(path))return false;}return true;}

@@ -27,3 +27,5 @@ Other native families, optional material providers, copy tools, carried assembli
 The Forge 1.12.2 compatibility checkpoint has passed the full release gate. The [development baseline](../development/multiversion-checkpoint.md) records the validated artifact and the preserved branches for resuming native work; this does not mark the partial 1.21.1 build release-ready.
 
 Mounted controls in the native build use one clean hover selection box, matching Forge. Hovering no longer draws the detailed collision grid or incurs its edge-enumeration cost.
+
+Texture quicksearch excludes the common mod namespace from ordinary words, so searching `vand` finds Vandor artwork instead of every mod texture. Names, categories and texture filenames remain searchable; explicit namespace terms such as `vandorlabs:` are still supported.

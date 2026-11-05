@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Fix texture quicksearch matching the shared mod namespace. Ordinary terms search names, categories and texture filenames; explicitly qualified texture IDs remain searchable.
+
 - Fix native mounted-control hover stalls and excessive selection lines. Buttons, switches, power levers and throttles now use the same single enclosing selection box as Forge; detailed collision shapes remain separate and are not built by hovering.
 
 - Share current slab/stair artwork selection, UV calculations and immediate dialog controls while preserving existing rendered output and saved-value behavior. Add lossless native contained-fluid storage as a prerequisite for building shapes.

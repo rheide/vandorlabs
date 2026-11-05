@@ -25,6 +25,14 @@ public final class MaterialPickerRowsChecks {
         field("query").set(picker,"");picker.setSelected(11);
         @SuppressWarnings("unchecked") Set<String> expanded=(Set<String>)field("expanded").get(picker);expanded.remove("Bridge");rebuild(picker);
         require(!rows(picker).contains(11)&&picker.selected()==11,"Collapsed ancestry changed selection or left child visible");
+        HousingTextureList namespaced=new HousingTextureList(0,0,180,1,8,Arrays.asList(
+                new HousingTextureList.Option(1,"Blue plate","Materials","vandorlabs:blocks/blue_plate"),
+                new HousingTextureList.Option(2,"Vandor panel","Materials","vandorlabs:blocks/panel"),
+                new HousingTextureList.Option(3,"Logo","Materials","vandorlabs:blocks/vandor_logo")));
+        field("query").set(namespaced,"vand");rebuild(namespaced);
+        require(rows(namespaced).equals(Arrays.asList(2,3)),"vand must match branded names/paths, not the common namespace");
+        field("query").set(namespaced,"vandorlabs:");rebuild(namespaced);
+        require(rows(namespaced).equals(Arrays.asList(1,2,3)),"Explicit namespace filter remains supported");
         System.out.println("Legacy material picker rows PASS Original artwork -1, pinned category, input-order search, mutable thumbnails, host action tails, retained collapsed selection");
     }
 }
