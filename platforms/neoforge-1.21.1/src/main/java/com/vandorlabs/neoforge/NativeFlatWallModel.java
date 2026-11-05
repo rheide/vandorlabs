@@ -24,7 +24,7 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
         static final ChunkRenderTypeSet VALUE=ChunkRenderTypeSet.of(RenderType.cutout());
         static final List<RenderType> ITEM=List.of(net.minecraft.client.renderer.Sheets.translucentItemSheet());
     }
-    private record Key(Object geometry,int main,int interior,int mode){}
+    private record Key(Object geometry,int main,int interior,int exterior,int mode){}
     private record ApertureKey(NativeFlatWallGeometry.Geometry geometry,com.vandorlabs.neoforge.shape.NativePortholeLayout aperture,int main,int interior,int exterior,int mode){}
     private record PaneKey(NativeFlatWallGeometry.Geometry geometry,com.vandorlabs.neoforge.shape.NativePortholeLayout aperture,int material,int shade,int tint,int layout,boolean standalone){}
     private record ItemKey(BakedModel source,int main,boolean custom,Direction side){}
@@ -92,7 +92,8 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             int main=index(appearance.base().housing().mainTexture),fallback=appearance.base().sideTexture()<0?-1:index(appearance.base().sideTexture());
             int interior=appearance.frames().interior<0?fallback:index(appearance.frames().interior),exterior=appearance.frames().exteriorChoice()<0?fallback:index(appearance.frames().exteriorChoice()),mode=appearance.base().housing().layout;
             var aperture=appearance.aperture();ApertureKey key=new ApertureKey(geometry,aperture,main,interior,exterior,mode);var found=quads.getIfPresent(key);if(found!=null)return found;
-            found=NativePanelQuads.aperture(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),new NativePanelQuads.Material(surfaces.get(main)),material(interior),material(exterior),mode,geometry.layout(),aperture.hideLeft(),aperture.hideRight(),aperture.hideLower(),aperture.hideUpper());quads.put(key,found);return found;
+            var owner=NativeFlatBarOwner.from(geometry);var wall=new NativePanelQuads.Material(surfaces.get(main));
+            found=owner==null?NativePanelQuads.aperture(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),wall,material(interior),material(exterior),mode,geometry.layout(),aperture.hideLeft(),aperture.hideRight(),aperture.hideLower(),aperture.hideUpper()):NativePanelQuads.barBody(owner,geometry,aperture,wall,material(interior),material(exterior));quads.put(key,found);return found;
         }
         List<BakedQuad> pane(NativeWallEntity.WallAppearance appearance,NativeFlatWallGeometry.Geometry geometry,boolean standalone){
             var glass=appearance.glass();var display=playback(glass.material);int visual=glass.material<0?-1:standalone?ModernFinishCatalog.storedChoice(glass.material):index(glass.material);
@@ -100,15 +101,18 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             NativePanelQuads.Material material=glass.material<0?palette[glass.shade][glass.tint]:new NativePanelQuads.Material(surfaces.get(standalone?0:visual));
             var aperture=appearance.aperture();var layout=glass.material<0?com.vandorlabs.neoforge.shape.NativePanelLayout.UNIT:aperture.pane();
             float opacity=glass.material<0||glass.tint==3?1:glass.tint==0?.35F:glass.tint==1?.65F:.85F;
-            found=NativePanelQuads.pane(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),material,glass.material<0?0:glass.textureLayout(),layout,glass.material<0?0:(2+aperture.extraBorder())/16D,glass.material<0?0:(4+aperture.extraBorder())/16D,opacity,standalone&&display!=null?display.aspect():0);quads.put(key,found);return found;
+            var owner=NativeFlatBarOwner.from(geometry);int mode=glass.material<0?0:glass.textureLayout();double bx=glass.material<0?0:(2+aperture.extraBorder())/16D,by=glass.material<0?0:(4+aperture.extraBorder())/16D,aspect=standalone&&display!=null?display.aspect():0;
+            found=owner==null?NativePanelQuads.pane(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),material,mode,layout,bx,by,opacity,aspect):NativePanelQuads.barPane(owner,aperture,material,mode,layout,bx,by,opacity,aspect);quads.put(key,found);return found;
         }
-        List<BakedQuad> body(NativeWallGeometry geometry,int main,int interior,int mode){
-            int body=index(main),edge=interior<0?-1:index(interior);
+        List<BakedQuad> body(NativeWallGeometry geometry,int main,int interior,int mode){return body(geometry,main,interior,interior,mode);}
+        List<BakedQuad> body(NativeWallGeometry geometry,int main,int interior,int exterior,int mode){
+            var owner=geometry instanceof NativeFlatWallGeometry.Geometry flat?NativeFlatBarOwner.from(flat):null;
+            int body=index(main),edge=interior<0?-1:index(interior),outer=owner==null?edge:exterior<0?-1:index(exterior);
             // Diagonal descriptors do not retain collision lists or lazy fluid tables in mesh keys.
             Object descriptor=geometry instanceof NativeDiagonalWallGeometry.Geometry diagonal?diagonal.pose():geometry;
-            Key key=new Key(descriptor,body,edge,mode);var found=quads.getIfPresent(key);if(found!=null)return found;
+            Key key=new Key(descriptor,body,edge,outer,owner==null?mode:0);var found=quads.getIfPresent(key);if(found!=null)return found;
             var wall=new NativePanelQuads.Material(surfaces.get(body));var metal=edge<0?originalMetal:interiors.get(edge);List<BakedQuad> result;
-            if(geometry instanceof NativeFlatWallGeometry.Geometry flat){var join=flat.join();result=NativePanelQuads.flat(flat.facing(),PanelDepthPolicy.start(flat.depth()),join==null?null:join.corner(),wall,metal,mode,flat.layout());}
+            if(geometry instanceof NativeFlatWallGeometry.Geometry flat){var join=flat.join();result=owner==null?NativePanelQuads.flat(flat.facing(),PanelDepthPolicy.start(flat.depth()),join==null?null:join.corner(),wall,metal,mode,flat.layout()):NativePanelQuads.barBody(owner,flat,null,wall,metal,material(outer));}
             else if(geometry instanceof NativeDiagonalWallGeometry.Geometry diagonal){var pose=diagonal.pose();boolean half=pose.mode()==2;var join=pose.join();
                 result=NativePanelQuads.diagonal(pose.facing(),pose.inverted(),join==null?null:join.corner(),pose.mode()==1?16:8,pose.fill(),half&&pose.inverted()?-8:0,half&&pose.inverted()?8:16,half?(pose.inverted()?8:0):Double.NaN,
                         pose.lowerEnd()*16,pose.upperEnd()*16,pose.hideLower(),pose.hideUpper(),pose.clip().scaled(16),wall,metal,mode,pose.layout());
@@ -133,11 +137,11 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
         if(state.getBlock() instanceof NativeDiagonalWallBlock){
             NativeWallGeometry geometry=appearance!=null&&appearance.geometry() instanceof NativeDiagonalWallGeometry.Geometry?appearance.geometry():NativeDiagonalWallGeometry.build(NativeDiagonalWallTopology.initial(state,0));
             if(appearance!=null&&!appearance.chunkBody())return List.of();
-            return worldQuads(geometry,appearance==null?0:appearance.base().housing().mainTexture,appearance==null?-1:appearance.frames().interior,appearance==null?0:appearance.base().housing().layout);
+            return bake.body(geometry,appearance==null?0:appearance.base().housing().mainTexture,appearance==null?-1:appearance.frames().interior,appearance==null?-1:appearance.frames().exteriorChoice(),appearance==null?0:appearance.base().housing().layout);
         }
         Direction facing=state.getValue(NativeFlatWallBlock.FACING);int depth=state.getValue(NativeFlatWallBlock.DEPTH);Object published=appearance==null?null:appearance.geometry();NativeFlatWallGeometry.Geometry geometry=published instanceof NativeFlatWallGeometry.Geometry value?value:null;if(geometry==null||geometry.facing()!=facing||geometry.depth()!=depth)geometry=NativeFlatWallGeometry.straight(facing,depth);
         if(porthole&&appearance!=null)return bake.aperture(appearance,geometry);
-        return worldQuads(geometry,appearance==null?0:appearance.base().housing().mainTexture,appearance==null?-1:appearance.frames().interior,appearance==null?0:appearance.base().housing().layout);
+        return bake.body(geometry,appearance==null?0:appearance.base().housing().mainTexture,appearance==null?-1:appearance.frames().interior,appearance==null?-1:appearance.frames().exteriorChoice(),appearance==null?0:appearance.base().housing().layout);
     }
     List<BakedQuad> worldQuads(NativeWallGeometry geometry,int main,int interior,int mode){return bake.body(geometry,main,interior,mode);}
     private List<BakedQuad> itemQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){
