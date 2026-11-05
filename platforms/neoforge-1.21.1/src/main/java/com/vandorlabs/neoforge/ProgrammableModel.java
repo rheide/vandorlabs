@@ -42,9 +42,12 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         com.vandorlabs.neoforge.client.NativeBlockMaterials.bake(event.getModels(),resolved.get(0).sprite()).forEach((choice,material)->resolved.put(choice,new MaterialSnapshot(material.lower(),1,1)));
         java.util.Map<Integer,MaterialSnapshot> sprites=java.util.Map.copyOf(resolved);
         TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
+        var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         event.getModels().replaceAll((id,model) -> {
             boolean cube=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"));
             boolean trigger=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_trigger_block"));
+            boolean slab=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_slab")),stairs=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_stairs"));
+            if(slab||stairs)return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(shapeBake.wrap(model,slab,id.getVariant().equals("inventory")),event.getTextureGetter());
             if(!cube&&!trigger)return model;
             if(id.getVariant().equals("inventory"))return new UniformHousingItem(model,sprites,margin,null,cube?1:0);
             return new ProgrammableModel(model,sprites,margin,cube);

@@ -44,7 +44,7 @@ final class NativeHousingQuads {
         for(int i=0;i<4;i++){data[i*stride+4]=Float.floatToRawIntBits(atlas(material,HousingTexturePolicy.stairU(layout,fit,u[i],ulo,uhi,aspect),true));data[i*stride+5]=Float.floatToRawIntBits(atlas(material,HousingTexturePolicy.stairV(layout,fit,v[i],lo,hi,textureFace.get3DDataValue(),aspect),false));}
         return new BakedQuad(data,source.getTintIndex(),source.getDirection(),material.sprite(),source.isShade(),source.hasAmbientOcclusion());
     }
-    private static float atlas(ProgrammableModel.MaterialSnapshot material,double value,boolean u){
+    static float atlas(ProgrammableModel.MaterialSnapshot material,double value,boolean u){
         var sprite=material.sprite();float low=u?sprite.getU0():sprite.getV0(),high=u?sprite.getU1():sprite.getV1(),used=u?material.usedU():material.usedV();
         float contentHigh=low+(high-low)*used;return low+(contentHigh-low)*(float)value/16;
     }

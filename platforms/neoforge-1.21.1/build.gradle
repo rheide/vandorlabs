@@ -225,3 +225,12 @@ tasks.register('testNativeFluidSurface', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.NativeFluidSurfaceChecks'
 }
+
+tasks.register('testNativeShapeModels', JavaExec) {
+    group = 'verification'
+    description = 'Check native housing model and item projections against frozen actual Forge source quads'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeShapeModelChecks'
+    if (project.hasProperty('shapeTextureReference')) systemProperty 'vandorlabs.shapeTextureReference', file(project.property('shapeTextureReference')).absolutePath
+}
