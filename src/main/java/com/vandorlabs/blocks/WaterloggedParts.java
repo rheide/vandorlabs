@@ -1,6 +1,7 @@
 package com.vandorlabs.blocks;
 
 import com.vandorlabs.tiles.*;
+import com.vandorlabs.fluid.FluidRuns;
 import java.util.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -29,6 +30,12 @@ public final class WaterloggedParts {
     public static FluidStack fluid(World world,BlockPos pos,int side){if(OpeningFluids.supports(world.getBlockState(pos)))return OpeningFluids.effective(world,pos,side);ContainedFluids data=data(world.getTileEntity(pos));return data==null?null:data.get(side);}
     public static boolean wet(IBlockAccess world,BlockPos pos){if(!supports(world.getBlockState(pos)))return false;ContainedFluids data=data(world.getTileEntity(pos));return data!=null&&(data.any()||world instanceof World&&OpeningFluids.supports(world.getBlockState(pos))&&OpeningFluids.adjacentWater((World)world,pos)&&(fluid((World)world,pos,0)!=null||fluid((World)world,pos,1)!=null));}
     public static final class Cell {public final AxisAlignedBB box;public final int side;Cell(AxisAlignedBB box,int side){this.box=box;this.side=side;}}
+    private static final FluidRuns<AxisAlignedBB,Cell,World,BlockPos> RUNS=new FluidRuns<AxisAlignedBB,Cell,World,BlockPos>(){
+        protected double minimum(AxisAlignedBB box,int axis){return axis==0?box.minX:axis==1?box.minY:box.minZ;}
+        protected double maximum(AxisAlignedBB box,int axis){return axis==0?box.maxX:axis==1?box.maxY:box.maxZ;}
+        protected Cell createCell(double minX,double minY,double minZ,double maxX,double maxY,double maxZ,int side){return new Cell(new AxisAlignedBB(minX,minY,minZ,maxX,maxY,maxZ),side);}
+        protected int side(World world,BlockPos pos,double[] aperture,double cx,double cy,double cz){return aperture==null?WaterloggedParts.side(world,pos,new Vec3d(cx,cy,cz)):cx*aperture[0]+cy*aperture[1]+cz*aperture[2]<(aperture[3]+aperture[4])/2?0:1;}
+    };
     public static final class Face {public final Vec3d[] vertices;public final int side,axis;Face(Vec3d[] vertices,int side,int axis){this.vertices=vertices;this.side=side;this.axis=axis;}}
     public static final class Volume {
         final List<AxisAlignedBB> solid;
@@ -64,28 +71,10 @@ public final class WaterloggedParts {
         if(cached&&data!=null&&data.geometry!=null&&data.geometry.solid.equals(local)&&data.geometryState==state&&data.geometryMapping==mapping&&pos.equals(data.geometryPos)){data.geometryTick=tick;return data.geometry;}
         Volume result=new Volume(local);double[][] cuts=new double[3][];
         for(int axis=0;axis<3;axis++){TreeSet<Double> points=new TreeSet<>();points.add(0D);points.add(1D);if(OpeningFluids.supports(state)){points.add(.5);double[] plane=OpeningFluids.plane(world,pos);if(Math.abs(plane[axis])>.999)for(int end=3;end<5;end++){double cut=plane[end]/plane[axis];if(cut>0&&cut<1)points.add(cut);}}for(AxisAlignedBB b:local){points.add(axis==0?b.minX:axis==1?b.minY:b.minZ);points.add(axis==0?b.maxX:axis==1?b.maxY:b.maxZ);}cuts[axis]=points.stream().mapToDouble(Double::doubleValue).toArray();}
-        int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;
         double[] aperture=OpeningFluids.supports(state)?OpeningFluids.plane(world,pos):null;
-        int[] sizes={nx,ny,nz};int axis=2;for(int d=0;d<2;d++)if(sizes[d]>sizes[axis])axis=d;
-        int a=(axis+1)%3,b=(axis+2)%3;double[] low=new double[3],high=new double[3],center=new double[3];
-        for(int i=0;i<sizes[a];i++)for(int j=0;j<sizes[b];j++){
-            low[a]=cuts[a][i];high[a]=cuts[a][i+1];center[a]=(low[a]+high[a])*.5;
-            low[b]=cuts[b][j];high[b]=cuts[b][j+1];center[b]=(low[b]+high[b])*.5;
-            int run=-1;double start=0;
-            for(int k=0;k<sizes[axis];k++){
-                center[axis]=(cuts[axis][k]+cuts[axis][k+1])*.5;double cx=center[0],cy=center[1],cz=center[2];
-                int side=aperture==null?side(world,pos,new Vec3d(cx,cy,cz))
-                        :cx*aperture[0]+cy*aperture[1]+cz*aperture[2]<(aperture[3]+aperture[4])/2?0:1;
-                for(AxisAlignedBB box:local)if(cx>box.minX&&cx<box.maxX&&cy>box.minY&&cy<box.maxY&&cz>box.minZ&&cz<box.maxZ){side=-1;break;}
-                if(side!=run){if(run>=0)addFluidRun(result.cells,low,high,axis,start,cuts[axis][k],run);run=side;start=cuts[axis][k];}
-            }
-            if(run>=0)addFluidRun(result.cells,low,high,axis,start,cuts[axis][sizes[axis]],run);
-        }
+        RUNS.append(result.cells,local,cuts,world,pos,aperture);
         List<Cell> fluidCells=result.cells;result.deferred.source=()->volumeFaces(fluidCells,cuts);
         if(cached&&data!=null){data.geometry=result;data.geometryPos=pos.toImmutable();data.geometryTick=tick;data.geometryState=state;data.geometryMapping=mapping;}return result;
-    }
-    private static void addFluidRun(List<Cell> cells,double[] low,double[] high,int axis,double start,double end,int side){
-        low[axis]=start;high[axis]=end;cells.add(new Cell(new AxisAlignedBB(low[0],low[1],low[2],high[0],high[1],high[2]),side));
     }
     /** Physics uses cells only. Retain the exact face order without allocating
      * millions of vertices until a renderer actually requests voxel faces. */
