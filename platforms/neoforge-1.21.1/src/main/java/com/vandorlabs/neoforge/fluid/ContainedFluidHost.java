@@ -4,6 +4,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 /** Platform host boundary: geometry snapshots contain no level references. */
 public interface ContainedFluidHost {
+    /** Sampled only on the owning thread; lighting workers read the auxiliary manager. */
+    default int intrinsicContainedLight(){return 0;}
     default boolean openingFluidVolume(){return false;}
     default net.minecraft.core.Direction[] fluidPlacementFaces(){return new net.minecraft.core.Direction[0];}
     NativeFluidRenderSnapshot fluidRenderSnapshot();
