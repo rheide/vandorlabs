@@ -1529,3 +1529,10 @@ task testFullPortholeLegacy(type: JavaExec) {
     main = 'com.vandorlabs.client.FullPortholeLegacyChecks'
     if (project.hasProperty('fullPortholeExport')) systemProperty 'vandorlabs.fullPortholeExport', file(project.property('fullPortholeExport')).absolutePath
 }
+
+task exportDoorSettingsReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorSettingsLegacyChecks'
+    if (project.hasProperty('doorSettingsExport')) systemProperty 'vandorlabs.doorSettingsExport', file(project.property('doorSettingsExport')).absolutePath
+}
