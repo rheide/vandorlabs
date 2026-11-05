@@ -6,7 +6,7 @@ public final class WallSettings {
             FILL="DiagonalFill", JOIN="DiagonalJoin", PORTHOLES="JoinPortholes", SHAPE="PortholeShape";
     public final boolean fullWidth,halfHeight,joinPortholes;
     public final int fill,join,portholeShape;
-    private WallSettings(boolean full,boolean half,int fill,int join,boolean portholes,int shape){
+    public WallSettings(boolean full,boolean half,int fill,int join,boolean portholes,int shape){
         fullWidth=full;halfHeight=half;this.fill=fill;this.join=join;joinPortholes=portholes;portholeShape=shape;
     }
     public static int fill(int saved){return Math.max(0,Math.min(3,saved));}

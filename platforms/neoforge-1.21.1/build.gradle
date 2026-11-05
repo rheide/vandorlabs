@@ -245,3 +245,7 @@ tasks.register('testNativeBucketContext', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.NativeBucketContextChecks'
 }
+
+neoForge.runs.configureEach {
+    if (project.hasProperty('wallFrameReference')) systemProperty 'vandorlabs.wallFrameReference', file(project.property('wallFrameReference')).absolutePath
+}

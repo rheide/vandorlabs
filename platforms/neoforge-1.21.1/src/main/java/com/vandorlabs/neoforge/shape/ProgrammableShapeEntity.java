@@ -32,7 +32,10 @@ public class ProgrammableShapeEntity extends ProgrammableBlockEntity implements 
     private StairState stairState=new StairState(8,0);
     private volatile Appearance appearance;
     public ProgrammableShapeEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean stair){
-        super(type,pos,state,defaults());this.stair=stair;appearance=new Appearance(settings(),sideTexture(),stairState);
+        this(type,pos,state,stair,defaults());
+    }
+    protected ProgrammableShapeEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean stair,com.vandorlabs.ui.ProgrammableBlockDialog.State initial){
+        super(type,pos,state,initial);this.stair=stair;appearance=new Appearance(settings(),sideTexture(),stairState);
     }
     public final boolean isStair(){return stair;}
     public final StairState stairState(){return stairState;}
