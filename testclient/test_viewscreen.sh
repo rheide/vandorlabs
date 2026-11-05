@@ -340,6 +340,7 @@ fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = material-sprites ]; then
         grep -q "material-sprites] legacy PASS vanilla=254" "$RUN_OUT/client.log"
+        grep -q "inventory-sample-grid-live PASS" "$RUN_OUT/client.log"
         test -s "$RUN_OUT/legacy-material-sprites.json"
         echo "Material sprites assessed: $RUN_OUT"
         exit 0

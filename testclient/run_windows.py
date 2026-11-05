@@ -309,6 +309,7 @@ def main():
                             and os.environ.get('VANDOR_LABS_ARMOR_DUPLIFIER_ONLY', '').lower() == 'true')
         if args.focus == 'filesystem-discovery' and not (output/'material-filesystem-portrait.png').is_file():
             raise SystemExit('Missing filesystem picker capture')
+        if args.focus == 'material-sprites':validate_completion(client_log,'inventory-sample-grid-live PASS')
         if args.focus == 'material-sprites' and not (output/'legacy-material-sprites.json').is_file():
             raise SystemExit('Missing material sprite assessment')
         if args.focus == 'cube-reference' and not (output/'legacy-cube-reference.json').is_file():

@@ -24,6 +24,7 @@ final class LegacyMaterialSpriteChecks {
         return result;
     }
     static void run(Minecraft mc,File output)throws Exception{
+        InventorySampleGridRuntimeChecks.run(mc);
         ItemStack door=new ItemStack(Items.OAK_DOOR,1,13);int choice=CustomBlockMaterials.choice(door);
         if(choice!=0x33011d3d||CustomBlockMaterials.block(door)!=Blocks.OAK_DOOR||!CustomBlockTextures.isDoor(choice))throw new AssertionError("Actual loaded-client door mapping/saved ID");
         if(CustomBlockTextures.sprite(choice,false)==CustomBlockTextures.sprite(choice,true))throw new AssertionError("Door upper/lower artwork collapsed");
