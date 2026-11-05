@@ -19,6 +19,7 @@ public final class NativeMaterialPicker {
     private final Map<net.minecraft.client.renderer.texture.TextureAtlasSprite,CroppedSprite> crops=new IdentityHashMap<>();
     private EditBox search;
     private final List<Integer> options=new ArrayList<>();
+    private final Map<Integer,ModernFinishCatalog.Entry> special=new HashMap<>();
     private final Map<String,List<Integer>> groups=new HashMap<>();
     private final Set<String> expanded=new HashSet<>();
     private List<String> categories=List.of();
@@ -38,12 +39,22 @@ public final class NativeMaterialPicker {
         for(var group:groups.values())group.sort((a,b)->TextureListLayout.compareOptions(ModernFinishCatalog.option(a).label(),a,ModernFinishCatalog.option(b).label(),b));
         reveal();
     }
+    /** The legacy frame sentinel is an actual material row, separate from encoded category rows. */
+    public NativeMaterialPicker originalArtwork(String texture){
+        if(!special.containsKey(-1)){special.put(-1,new ModernFinishCatalog.Entry("original_artwork","Original artwork","Frame",true,false,-1,texture,1,1));options.add(0,-1);groups.computeIfAbsent("Frame",key->new ArrayList<>()).add(-1);}
+        categories=List.copyOf(TextureListLayout.categories(groups.keySet()));
+        for(var group:groups.values())group.sort((a,b)->TextureListLayout.compareOptions(label(a),a,label(b),b));reveal();return this;
+    }
+    private boolean option(int id){return id>=0||special.containsKey(id);}
+    private ModernFinishCatalog.Entry entry(int id){var value=special.get(id);return value==null?ModernFinishCatalog.option(id):value;}
+    private String label(int id){return entry(id).label();}
+    private String category(int id){return entry(id).category();}
     public int selected(){return selected;}
     public int scroll(){return scroll;}
     public List<Integer> rows(){return rows;}
     public EditBox searchField(){return search;}
     public void select(int choice,boolean center){selected=choice;reveal();if(search!=null){rebuildRows();if(center)center();}}
-    private void reveal(){TextureListLayout.expandAncestors(expanded,ModernFinishCatalog.entry(selected).category());}
+    private void reveal(){if(selected<0&&!special.containsKey(selected))return;TextureListLayout.expandAncestors(expanded,special.containsKey(selected)?category(selected):ModernFinishCatalog.entry(selected).category());}
     private void center(){int index=rows.indexOf(com.vandorlabs.tiles.MaterialChoicePolicy.isCustom(selected)?CUSTOM_ROW:selected);if(index>=0)scroll=TextureListLayout.centeredScroll(index,visible(),maximum());}
     public void closeInventory(){inventoryPicker=null;if(search!=null){search.visible=true;search.active=true;}}
     public void layout(int x,int y,int width,int allocatedRows,boolean center){
@@ -55,7 +66,7 @@ public final class NativeMaterialPicker {
     private void choose(int choice){selected=choice;closeInventory();chosen.accept(choice);}
     private void rebuildRows(){List<Integer> next=new ArrayList<>();String query=search==null?"":TextureListLayout.normalizeQuery(search.getValue());
         if(query.isEmpty())TextureListLayout.appendCategories(next,categories,groups,expanded,id->id);
-        else for(int id:options){var entry=ModernFinishCatalog.option(id);if(TextureListLayout.matches(query,entry.label(),entry.category(),entry.texture()))next.add(id);}
+        else for(int id:options){var entry=entry(id);if(TextureListLayout.matches(query,entry.label(),entry.category(),entry.texture()))next.add(id);}
         next.add(CUSTOM_ROW);rows=List.copyOf(next);scroll=Math.max(0,Math.min(maximum(),scroll));
     }
     public int top(){return y+22;}
@@ -64,13 +75,13 @@ public final class NativeMaterialPicker {
     private int maximum(){return DialogInput.maxScroll(rows.size(),visible());}
     private int thumbHeight(){return DialogInput.thumbHeight(height(),visible(),rows.size());}
     private int thumbTop(){return DialogInput.thumbY(top(),height(),thumbHeight(),scroll,maximum());}
-    private int row(int row){int id=rows.get(scroll+row);if(TextureListLayout.pinCategory(row,visible(),search.getValue().trim().isEmpty())&&id>=0)return TextureListLayout.categoryRow(categories.indexOf(ModernFinishCatalog.option(id).category()));return id;}
+    private int row(int row){int id=rows.get(scroll+row);if(TextureListLayout.pinCategory(row,visible(),search.getValue().trim().isEmpty())&&option(id))return TextureListLayout.categoryRow(categories.indexOf(category(id)));return id;}
     private void customInventory(){inventoryPicker=new NativeInventorySamplePicker(x,y,width+7,height()+22,stack->{int value=NativeBlockMaterials.sample(stack);inventoryPicker=null;choose(value);},()->{inventoryPicker=null;search.visible=true;search.active=true;});search.visible=false;search.active=false;}
     public boolean click(double x,double y,int button){
         if(inventoryPicker!=null)return inventoryPicker.click((int)x,(int)y,button);
         if(button==0&&y>=top()&&y<top()+height()){
             if(x>=this.x+width&&x<this.x+width+7&&maximum()>0){dragOffset=y>=thumbTop()&&y<thumbTop()+thumbHeight()?(int)y-thumbTop():thumbHeight()/2;dragging=true;drag(x,y);return true;}
-            if(x>=this.x&&x<this.x+width){int offset=(int)(y-top())/22;if(scroll+offset<rows.size()){int id=row(offset);if(id==CUSTOM_ROW){customInventory();return true;}if(id<0){String category=categories.get(TextureListLayout.categoryIndex(id));if(!expanded.remove(category))expanded.add(category);rebuildRows();}else choose(id);}return true;}
+            if(x>=this.x&&x<this.x+width){int offset=(int)(y-top())/22;if(scroll+offset<rows.size()){int id=row(offset);if(id==CUSTOM_ROW){customInventory();return true;}if(!option(id)){String category=categories.get(TextureListLayout.categoryIndex(id));if(!expanded.remove(category))expanded.add(category);rebuildRows();}else choose(id);}return true;}
         }
         return false;
     }
@@ -84,8 +95,8 @@ public final class NativeMaterialPicker {
             if(id==CUSTOM_ROW){var material=NativeBlockMaterials.material(selected);String label="Custom...";
                 if(com.vandorlabs.tiles.MaterialChoicePolicy.isCustom(selected)){label="Custom: "+(material==null?"Custom (missing block)":material.entry().label());if(material!=null){if(material.door()){graphics.blit(this.x+7,yy+3,0,8,8,material.upper());graphics.blit(this.x+7,yy+11,0,8,8,material.lower());}else graphics.blit(this.x+3,yy+3,0,16,16,material.lower());}}
                 graphics.drawString(font,font.plainSubstrByWidth(label,width-26),this.x+23,yy+7,0xFFABCFE8,false);}
-            else if(id<0){String category=categories.get(TextureListLayout.categoryIndex(id));int indent=TextureListLayout.indent(category);graphics.drawString(font,(expanded.contains(category)?"- ":"+ ")+TextureListLayout.categoryLabel(category),this.x+3+indent,yy+7,0xFFABCFE8,false);}
-            else{var entry=ModernFinishCatalog.option(id);var sprite=minecraft.getTextureAtlas(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS).apply(net.minecraft.resources.ResourceLocation.parse(entry.texture()));int w=16,h=16;if(entry.u()<entry.v())w=Math.max(1,Math.round(16*entry.u()/entry.v()));else h=Math.max(1,Math.round(16*entry.v()/entry.u()));
+            else if(!option(id)){String category=categories.get(TextureListLayout.categoryIndex(id));int indent=TextureListLayout.indent(category);graphics.drawString(font,(expanded.contains(category)?"- ":"+ ")+TextureListLayout.categoryLabel(category),this.x+3+indent,yy+7,0xFFABCFE8,false);}
+            else{var entry=entry(id);var sprite=minecraft.getTextureAtlas(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS).apply(net.minecraft.resources.ResourceLocation.parse(entry.texture()));int w=16,h=16;if(entry.u()<entry.v())w=Math.max(1,Math.round(16*entry.u()/entry.v()));else h=Math.max(1,Math.round(16*entry.v()/entry.u()));
                 graphics.blit(this.x+3+(16-w)/2,yy+3+(16-h)/2,0,w,h,cropped(sprite,entry.u(),entry.v()));graphics.drawString(font,font.plainSubstrByWidth(entry.label(),width-26),this.x+23,yy+7,highlighted?0xFFFFE08A:0xFFD8D8D8,false);}
         }
         if(maximum()>0){graphics.fill(this.x+width,top(),this.x+width+7,top()+height(),0xFF303038);graphics.fill(this.x+width,thumbTop(),this.x+width+7,thumbTop()+thumbHeight(),0xFF808090);}

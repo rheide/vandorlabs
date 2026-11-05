@@ -21,9 +21,12 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     private ProgrammableDialogLayout panel;
     private List<? extends DialogControl> controls=List.of();
     private SlabStairDialog.State shapeState;
+    private PlainWallDialog.State wallState;
     private final boolean stair;
     private NativeIntegerSlider treadSlider;
-    private final NativeMaterialPicker picker;
+    private NativeMaterialPicker picker;
+    private final NativeMaterialPicker mainPicker;
+    private NativeMaterialPicker exteriorPicker;
     public static final int CUSTOM_ROW=NativeMaterialPicker.CUSTOM_ROW;
     public NativeInventorySamplePicker inventoryPicker(){return picker.inventoryPicker();}
     public NativeMaterialPicker activePicker(){return picker;}
@@ -32,34 +35,38 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
         super(menu,inventory,menu.tile instanceof com.vandorlabs.neoforge.shape.ProgrammableShapeEntity?title:Component.literal("Programmable Block"));state=menu.tile.settings();
         stair=menu.tile.getBlockState().getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableStairs;
         if(menu.tile instanceof com.vandorlabs.neoforge.shape.ProgrammableShapeEntity tile&&(stair||tile.getBlockState().getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableSlab)){var appearance=tile.appearance();shapeState=new SlabStairDialog.State(state,appearance.sideTexture(),appearance.stairs().tread,appearance.stairs().roll);}
-        picker=new NativeMaterialPicker(selectedTexture(),id->ModernFinishCatalog.option(id).general(),this::choose);
+        if(menu.tile instanceof com.vandorlabs.neoforge.shape.NativeWallEntity wall)wallState=com.vandorlabs.neoforge.shape.NativeWallDialog.editor(wall.wallAppearance());
+        picker=new NativeMaterialPicker(selectedTexture(),id->ModernFinishCatalog.option(id).general(),this::choose);mainPicker=picker;
     }
     public ProgrammableBlockDialog.State editingState(){return state;}
     public SlabStairDialog.State editingShapeState(){return shapeState;}
-    private int selectedTexture(){return shapeState==null?state.selectedTexture():shapeState.selectedTexture();}
+    public PlainWallDialog.State editingWallState(){return wallState;}
+    private int selectedTexture(){return wallState!=null?wallState.selectedTexture():shapeState==null?state.selectedTexture():shapeState.selectedTexture();}
     public int scroll(){return picker.scroll();}
     public List<Integer> visibleRows(){return picker.rows();}
     public ProgrammableDialogLayout panel(){return panel;}
     @Override protected void init(){super.init();panel=new ProgrammableDialogLayout(width,height);rebuild(true);}
     private void rebuild(boolean center){
-        clearWidgets();controls=shapeState==null?ProgrammableBlockDialog.controls(panel,state,Component.translatable("gui.done").getString()):SlabStairDialog.controls(panel,shapeState,stair,Component.translatable("gui.done").getString());
+        if(wallState!=null&&wallState.exterior){if(exteriorPicker==null)exteriorPicker=new NativeMaterialPicker(selectedTexture(),com.vandorlabs.neoforge.shape.NativeWallDialog::surfaceOption,this::choose).originalArtwork("vandorlabs:frame-default/metal_side");picker=exteriorPicker;}else picker=mainPicker;
+        clearWidgets();controls=wallState!=null?PlainWallDialog.controls(panel,wallState,Component.translatable("gui.done").getString()):shapeState==null?ProgrammableBlockDialog.controls(panel,state,Component.translatable("gui.done").getString()):SlabStairDialog.controls(panel,shapeState,stair,Component.translatable("gui.done").getString());
         for(var control:controls){
             if(control.tab)continue;
             if(shapeState!=null&&control.id==SlabStairDialog.TREAD){treadSlider=new NativeIntegerSlider(control.x,control.y,control.width,control.height,0,3,SlabStairDialog.treadIndex(shapeState.tread),value->Component.literal(SlabStairDialog.treadLabel(shapeState.tread)),value->{shapeState=shapeState.chooseTread(value);state=shapeState.housing;send();treadSlider.setMessage(Component.literal(SlabStairDialog.treadLabel(shapeState.tread)));});addRenderableWidget(treadSlider);continue;}
             Button button=Button.builder(Component.literal(control.label),ignored->action(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();button.active=control.enabled;addRenderableWidget(button);
         }
-        picker.select(selectedTexture(),false);picker.layout(panel.listX,shapeState==null?ProgrammableBlockDialog.listY(panel,state):SlabStairDialog.listY(panel),panel.listWidth,shapeState==null?ProgrammableBlockDialog.listRows(panel,state):SlabStairDialog.listRows(panel),center);addRenderableWidget(picker.searchField());
+        picker.select(selectedTexture(),false);picker.layout(panel.listX,wallState!=null?PlainWallDialog.listY(panel):shapeState==null?ProgrammableBlockDialog.listY(panel,state):SlabStairDialog.listY(panel),wallState!=null?PlainWallDialog.listWidth(panel,wallState):panel.listWidth,wallState!=null?PlainWallDialog.listRows(panel,wallState):shapeState==null?ProgrammableBlockDialog.listRows(panel,state):SlabStairDialog.listRows(panel),center);addRenderableWidget(picker.searchField());
     }
     private void send(){
-        if(shapeState==null)PacketDistributor.sendToServer(new FinishPayload(menu.tile.getBlockPos(),state.mainTexture,state.layout,state.facesEnabled,state.faces()));
+        if(wallState!=null)PacketDistributor.sendToServer(new com.vandorlabs.neoforge.shape.WallAppearancePayload(menu.tile.getBlockPos(),menu.containerId,com.vandorlabs.neoforge.shape.NativeWallDialog.appearance(wallState),wallState.walls,wallState.frames));
+        else if(shapeState==null)PacketDistributor.sendToServer(new FinishPayload(menu.tile.getBlockPos(),state.mainTexture,state.layout,state.facesEnabled,state.faces()));
         else PacketDistributor.sendToServer(new com.vandorlabs.neoforge.shape.ShapeAppearancePayload(menu.tile.getBlockPos(),menu.containerId,new com.vandorlabs.neoforge.shape.ProgrammableShapeEntity.Appearance(state,shapeState.sideTexture,new com.vandorlabs.persistence.StairState(shapeState.tread,shapeState.roll))));
     }
     public void action(int id,int direction){
         picker.closeInventory();if(id==ProgrammableBlockDialog.DONE){onClose();return;}
-        if(shapeState==null)state=state.action(id,direction);else{shapeState=shapeState.action(id,direction);state=shapeState.housing;}
+        if(wallState!=null){wallState=wallState.action(id,direction);state=wallState.base.housing;}else if(shapeState==null)state=state.action(id,direction);else{shapeState=shapeState.action(id,direction);state=shapeState.housing;}
         if(id==ProgrammableBlockDialog.TEXTURE_LAYOUT||id==ProgrammableBlockDialog.FACE_OVERRIDES||id==ProgrammableBlockDialog.INHERIT||shapeState!=null&&(id==SlabStairDialog.RESET_SIDES||id==SlabStairDialog.ORIENTATION))send();rebuild(true);
     }
-    public void choose(int choice){if(shapeState==null)state=state.choose(choice);else{shapeState=shapeState.choose(choice);state=shapeState.housing;}send();rebuild(false);}
+    public void choose(int choice){if(wallState!=null){wallState=wallState.choose(choice);state=wallState.base.housing;}else if(shapeState==null)state=state.choose(choice);else{shapeState=shapeState.choose(choice);state=shapeState.housing;}send();rebuild(false);}
     @Override public boolean mouseClicked(double x,double y,int button){
         if(button==0||button==1)for(var control:controls)if(control.enabled&&(button==0||control.id==ProgrammableBlockDialog.FACE_OVERRIDES||control.id==ProgrammableBlockDialog.TEXTURE_LAYOUT||shapeState!=null&&control.id==SlabStairDialog.ORIENTATION)&&x>=control.x&&x<control.x+control.width&&y>=control.y&&y<control.y+control.height){if(shapeState!=null&&control.id==SlabStairDialog.TREAD)return button==0&&super.mouseClicked(x,y,button);action(control.id,button==1?-1:1);return true;}
         return picker.click(x,y,button)||super.mouseClicked(x,y,button);
