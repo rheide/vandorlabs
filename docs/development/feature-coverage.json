@@ -107,7 +107,7 @@
       "id": "walls_portholes_diagonals",
       "label": "Walls, portholes and diagonals",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_diagonal_glass",
         "programmable_diagonal_porthole",
@@ -117,7 +117,7 @@
         "programmable_wall"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
+        "Complete porthole/diagonal activation and current full-family acceptance; plain wall is enabled",
         "native diagonal wall, porthole and glass adapters and filled/contact matrices",
         "actual disabled-join and wall-specific ordinary/unload/reload GPU matrices",
         "external-material reload and custom block-material sampling",
@@ -140,7 +140,13 @@
         "eight actual Fancy/Fabulous stock/custom pane scenes with native-water background negatives, depth-mask and framebuffer restoration checks",
         "36 actual legacy/native item models and padded raster bounds; intentional icon padding correction on both targets"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Programmable plain wall registered with configured placement/pick/loot, shared editor and captured-material renderer",
+        "Loaded local flat corners, bounded material/aperture grouping and analytic contained-fluid surfaces",
+        "Canonical frame edges regenerate from active resource-pack source artwork",
+        "Shared aperture emission, bounded round slices, exact glass palette and pause-aware playback provider; porthole activation remains pending"
+      ]
     },
     {
       "id": "viewscreens",
