@@ -317,3 +317,9 @@ tasks.register('testNativePanelApertures', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('pickerInputChecks')) systemProperty 'vandorlabs.pickerInputChecks', 'true'
 }
+tasks.register('testNativeDiagonalGeometry', JavaExec) {
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeDiagonalGeometryChecks'
+    systemProperty 'vandorlabs.diagonalReference', providers.gradleProperty('diagonalReference').getOrElse(rootProject.file('../../build/test-artifacts/diagonal-forge-reference.json').absolutePath)
+}

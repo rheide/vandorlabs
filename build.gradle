@@ -1412,3 +1412,10 @@ task exportPanelApertureReference(type: JavaExec) {
     maxHeapSize = '1G'
     systemProperty 'vandorlabs.panelApertureReference', file(project.findProperty('panelApertureReference') ?: 'build/test-artifacts/panel-aperture-forge.jsonl').absolutePath
 }
+
+task testDiagonalGeometryLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalGeometryLegacyChecks'
+    if (project.hasProperty('diagonalExport')) systemProperty 'vandorlabs.diagonalExport', file(project.property('diagonalExport')).absolutePath
+}
