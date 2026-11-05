@@ -23,6 +23,7 @@ public final class CopySmokeMod {
             NeoForge.EVENT_BUS.register(TransmitterCopyRuntimeChecks.class);
             NeoForge.EVENT_BUS.register(CopyServerChecks.class);
             String phase=System.getProperty("vandorlabs.transmitterPhase","");
+            if(phase.equals("control-hover")){NeoForge.EVENT_BUS.register(ControlHoverServer.class);if(net.neoforged.fml.loading.FMLEnvironment.dist==net.neoforged.api.distmarker.Dist.CLIENT)NeoForge.EVENT_BUS.register(Class.forName("com.vandorlabs.copychecks.ControlHoverClient"));}
             if(phase.equals("binary-ui")||phase.equals("power-ui")||phase.equals("signal-ui")||phase.equals("wireless-ui")){
                 if(phase.equals("wireless-ui"))prove(jar,"com.vandorlabs.persistence.WirelessRedstoneData");
                 if(phase.equals("signal-ui"))prove(jar,"com.vandorlabs.persistence.SignalControlData");
