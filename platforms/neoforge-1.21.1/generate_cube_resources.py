@@ -74,6 +74,20 @@ def main():
         bare_index=next((i for i,item in enumerate(entries) if item['source']==bare),0)
         display_selectable=category.startswith('Displays') and (bare==source or bare_index==0 or bare_index==index)
         catalog.append(dict(id=original['id'],label=label,category=category,visible=not original.get('hidden',False),general=general,displaySelectable=display_selectable,canonical=canonical,texture='vandorlabs:'+texture,u=u,v=v))
+        # Preserve authored frame semantics independently of the main selectable artwork.
+        if original.get('category')=='Frame' or any(key in original for key in ['frameRail','frameAspect','frameBorder','frameLight']):
+            rail=original.get('frameRail');rail_id=None
+            if rail:
+                rail_id='vandorlabs:frame-rails/'+rail
+                output=ASSETS/('textures/frame-rails/'+rail+'.png')
+                if not output.exists():
+                    output.parent.mkdir(parents=True,exist_ok=True)
+                    with Image.open(source_texture(rail)) as image:
+                        image=image.convert('RGBA')
+                        if max(image.size)>128:image=image.convert('RGBa').resize((128,128),Image.Resampling.LANCZOS).convert('RGBA')
+                        image.save(output,optimize=True)
+                atlas.append(dict(type='minecraft:single',resource=rail_id))
+            catalog[-1]['frame']=dict(rail=rail_id,aspect=max(1,original.get('frameAspect',1)),border=original.get('frameBorder',True),light=max(0,min(5,original.get('frameLight',0))))
         atlas.append(dict(type='minecraft:single',resource='vandorlabs:'+texture))
     from generate_mounted_control_resources import generate as generate_controls
     atlas.extend(generate_controls(ROOT,OUT))
