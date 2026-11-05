@@ -71,6 +71,10 @@ tasks.register('generateCubeResources', Exec) {
     workingDir projectDir
     commandLine pythonExecutable, 'generate_cube_resources.py'
     inputs.file('generate_cube_resources.py')
+    inputs.file('generate_binary_resources.py')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models') { include 'block/push_button/**', 'block/rocker_switch/**', 'item/push_button.json', 'item/rocker_switch.json' })
+    inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/push_button.json', '../../src/main/resources/assets/vandorlabs/blockstates/rocker_switch.json')
+    inputs.files('../../src/main/resources/assets/vandorlabs/recipes/push_button.json', '../../src/main/resources/assets/vandorlabs/recipes/rocker_switch.json')
     inputs.file('../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')
     inputs.dir('../../texture-packs')
     inputs.file('../../src/main/resources/assets/vandorlabs/data/texture_menu.json')
@@ -129,6 +133,7 @@ tasks.register('generateTransmitterResources', Exec) {
 }
 tasks.named('processResources') { dependsOn 'generateTransmitterResources' }
 neoForge.runs.configureEach {
+    if(project.hasProperty('binaryLegacyReference'))systemProperty 'vandorlabs.binaryLegacyReference',project.property('binaryLegacyReference')
     if(project.hasProperty('transmitterPhase'))systemProperty 'vandorlabs.transmitterPhase',project.property('transmitterPhase')
 }
 neoForge.runs.configureEach {

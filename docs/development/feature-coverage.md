@@ -20,7 +20,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Trapdoors and diagonal trapdoors | pending | unimplemented | non-vehicle first |
 | Programmable lights and propulsion | pending | unimplemented | non-vehicle first |
 | Chairs and seats | pending | unimplemented | non-vehicle first |
-| Triggers, buttons, rockers, levers and throttles | partial (Trigger) | partial | non-vehicle first |
+| Triggers, buttons, rockers, levers and throttles | partial (Trigger, buttons and rockers) | partial | non-vehicle first |
 | Wireless transmitter and receiver | partial (handheld transmitter) | partial | non-vehicle first |
 | Token slots and design tokens | pending | unimplemented | non-vehicle first |
 | Programmable storage | pending | unimplemented | non-vehicle first |
@@ -57,4 +57,8 @@ Native cube inventory samples now use the shared grid without consuming items. O
 
 Optional component-renderer sampling, configuration dispatch to other families, copy tools, carried assemblies and the full production chain remain incomplete. Reloads do not discover new files.
 
-The current control increment adds the native Trigger and four handheld transmitter tiers. Dedicated save/restart and actual chunk unload/reload fixtures cover their channel delivery and saved configuration. Remaining mounted controls, world transmitter/receiver blocks, inline sources and latch families remain explicit work; this increment does not establish complete control-family parity. Focused client dialog, emitted-model/reload and ordinary interaction checks also pass. These are development-classpath/software-rendered results; exact packaged-JAR and hardware shader acceptance remain separate.
+The current control increment adds the native Trigger and four handheld transmitter tiers. Dedicated save/restart and actual chunk unload/reload fixtures cover their channel delivery and saved configuration. Other mounted controls, world transmitter/receiver blocks and additional inline source families remain explicit work; this increment does not establish complete control-family parity. Focused client dialog, emitted-model/reload and ordinary interaction checks also pass. These are development-classpath/software-rendered results; exact packaged-JAR and hardware shader acceptance remain separate.
+
+Native Push Buttons and Rocker Switches now share mount geometry, saved channel-bank policy and dialog rows with Forge. Their inline transmission editor is reusable across native dialogs. Focused checks cover actual Forge NBT inputs, partial latch banks, independent twenty-tick pulses, configured pick/drop/placement, tool requirements, loaded support checks and subsequent-process persistence. Physical neighbor callbacks observe settled banks, and actual world collision and selection use the configured mount.
+
+Binary-control emitted geometry and item transforms match the actual Forge renderer across all mount choices and resource reloads. A separate fixture mod validates the exact standard native JAR through ModDev, including ordinary survival shift-click, Configurizer access, immediate inline edits, Done/Escape drafts, GUI scales 2/3 and installed-world rendering. This is software-rendered acceptance, not a standalone installer test or the full release gate. Copy-tool workflows, other control families and carried integration remain incomplete.

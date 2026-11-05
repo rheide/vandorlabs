@@ -75,6 +75,8 @@ def main():
         display_selectable=category.startswith('Displays') and (bare==source or bare_index==0 or bare_index==index)
         catalog.append(dict(id=original['id'],label=label,category=category,visible=not original.get('hidden',False),general=general,displaySelectable=display_selectable,canonical=canonical,texture='vandorlabs:'+texture,u=u,v=v))
         atlas.append(dict(type='minecraft:single',resource='vandorlabs:'+texture))
+    from generate_binary_resources import generate as generate_binary
+    atlas.extend(generate_binary(ROOT,OUT))
     write(ASSETS/'data/housing_finishes.json',catalog)
     write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())))
     variants={f'facing={face}':dict(model='vandorlabs:block/programmable_block',y=angle) for face,angle in [('north',0),('east',90),('south',180),('west',270),('up',90),('down',90)]}

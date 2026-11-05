@@ -14,4 +14,6 @@ Native cubes also support installed filesystem PNG categories, path-based saved 
 
 The native Trigger adds Off/On or signal-band artwork, exact-level matching and Front Only/Sides choices through shared dialog controls. Cube and Trigger use the same native material picker. Handheld transmitters retain stationary channel sources across saves and unloaded origin chunks; their four ranges use the existing crafting patterns.
 
+Native Push Buttons and Rocker Switches retain configurable mounts, saved channel banks and inline transmission ranges. Both use the same General/Redstone dialog: mount edits commit on Done, while valid transmission edits apply immediately. Their authored shapes, configured items and physical redstone behavior are covered by focused native checks.
+
 Other native families, optional material providers, copy tools, carried assemblies, hardware shader acceptance and matter-production machines remain incomplete. Dedicated-server checks, emitted-model checks and ordinary client interaction checks are separate acceptance requirements; this remains a development build.

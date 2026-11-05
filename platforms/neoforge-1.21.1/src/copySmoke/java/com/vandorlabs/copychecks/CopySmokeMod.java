@@ -22,7 +22,17 @@ public final class CopySmokeMod {
             System.out.println("[vandorlabs][transmitter-copy] packaged-JAR PASS sha256="+sha+" production-code-sources=10 empty-modFolders separate-fixture-mod");
             NeoForge.EVENT_BUS.register(TransmitterCopyRuntimeChecks.class);
             NeoForge.EVENT_BUS.register(CopyServerChecks.class);
-            if(net.neoforged.fml.loading.FMLEnvironment.dist==net.neoforged.api.distmarker.Dist.CLIENT)NeoForge.EVENT_BUS.register(Class.forName("com.vandorlabs.copychecks.CopyClientChecks"));
+            if(System.getProperty("vandorlabs.transmitterPhase","").equals("binary-ui")){
+                for(String name:new String[]{"NativeBinaryControlBlockEntity","NativeMountedSwitchBlock","BinaryControlMenu","BinaryControlPayload","BinaryTransmissionPayload"}){
+                    Class<?> type=Class.forName("com.vandorlabs.neoforge."+name);String source=type.getProtectionDomain().getCodeSource().getLocation().toString();if(!source.contains(jar.getFileName().toString()))throw new IllegalStateException("binary common source fallback: "+name);
+                }
+                NeoForge.EVENT_BUS.register(BinaryGuiServerChecks.class);
+                System.out.println("[vandorlabs][binary-gui] packaged-JAR common PASS exact-hash source-classes=5");
+            }
+            if(net.neoforged.fml.loading.FMLEnvironment.dist==net.neoforged.api.distmarker.Dist.CLIENT){NeoForge.EVENT_BUS.register(Class.forName("com.vandorlabs.copychecks.CopyClientChecks"));if(System.getProperty("vandorlabs.transmitterPhase","").equals("binary-ui")){
+                    for(String name:new String[]{"NativeBinaryControlScreen","NativeInlineTransmissionWidget"}){Class<?> type=Class.forName("com.vandorlabs.neoforge.client."+name);if(!type.getProtectionDomain().getCodeSource().getLocation().toString().contains(jar.getFileName().toString()))throw new IllegalStateException("binary client source fallback: "+name);}
+                    NeoForge.EVENT_BUS.register(Class.forName("com.vandorlabs.copychecks.BinaryGuiClientChecks"));System.out.println("[vandorlabs][binary-gui] packaged-JAR client PASS exact-hash source-classes=2");
+                }}
         }catch(Exception failure){throw new IllegalStateException("Native transmitter copy: packaged fixture bootstrap",failure);}
     }
 }

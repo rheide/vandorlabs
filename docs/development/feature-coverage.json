@@ -374,8 +374,8 @@
         "programmable_pressure_plate"
       ],
       "remaining": [
-        "Integrate buttons, rockers, pressure plates, levers, throttles and wall sliders against current Forge behavior.",
-        "Inline transmitter slots and linked latch/source consumers remain pending.",
+        "Integrate pressure plates, power levers, throttles and wall sliders against current Forge behavior.",
+        "Copy-tool workflows and other inline-source consumers remain pending.",
         "Carried-assembly integration and hardware shader render acceptance."
       ],
       "historical_neoforge_1_21_1": "partial",
@@ -408,16 +408,21 @@
       ],
       "integration_scope": "non_vehicle_first",
       "modern_registered_block_ids": [
-        "programmable_trigger_block"
+        "programmable_trigger_block",
+        "push_button",
+        "rocker_switch"
       ],
       "implemented": [
         "Native Trigger uses shared saved state and dialog policy, with loaded local analog power and positional channel delivery.",
         "Exact-level and band selection, Front Only/Sides, configured items and dormant/opaque saved fields retain current legacy semantics.",
-        "Dedicated two-process persistence, actual chunk unload/reload, emitted-model reload matrices and ordinary client dialog/handheld interaction checks pass."
+        "Dedicated two-process persistence, actual chunk unload/reload, emitted-model reload matrices and ordinary client dialog/handheld interaction checks pass.",
+        "Native push buttons and rockers reuse shared mount geometry, saved banks and dialog rows, with ranged inline transmission, partial latch banks and independent twenty-tick pulses.",
+        "Actual Forge bank inputs, subsequent-process persistence, physical neighbor consistency, configured drops, tool requirements and dynamic mounted collision pass focused checks.",
+        "Authored geometry and padded items match actual Forge output before and after reload; exact packaged-JAR GUI and installed-world interaction pass through ModDev, including GUI scales 2 and 3."
       ],
       "acceptance_limits": [
-        "Focused native development-classpath/software-rendered checks; exact packaged-JAR and hardware shader acceptance remain separate.",
-        "Only the Trigger is integrated from this control family; inline sources and other mounted controls remain pending."
+        "The Trigger uses development-classpath validation; binary controls additionally have exact packaged-JAR GUI/world validation through ModDev. Standalone installer and hardware shader acceptance remain separate.",
+        "Control-family parity remains incomplete; copy tools and other control families are not covered by the binary-control increment."
       ]
     },
     {
@@ -430,8 +435,8 @@
         "redstone_transmitter"
       ],
       "remaining": [
-        "Native world transmitter/receiver blocks and inline host slots.",
-        "Other channel source families, per-channel latch banks and carried-assembly interaction."
+        "Native world transmitter/receiver blocks and additional inline host families.",
+        "Other channel source families and carried-assembly interaction."
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [

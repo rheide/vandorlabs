@@ -11,9 +11,10 @@ public interface NativeChannelLatch extends NativeChannelMember {
     default ChannelList latchedChannels(){return latchOn()?getRedstoneChannels():ChannelList.EMPTY;}
     default int latchedLevel(int channel){return latchedChannels().contains(channel)?15:0;}
     default void applyLinkedChannels(ChannelList active){applyLinkedLatch(!active.isEmpty());}
-    default void applyLinkedLevels(Map<Integer,Integer> levels){
+    static ChannelList activeChannels(Map<Integer,Integer> levels){
         int[] active=new int[levels.size()];int count=0;
         for(var entry:levels.entrySet())if(entry.getValue()>0)active[count++]=entry.getKey();
-        applyLinkedChannels(ChannelList.of(java.util.Arrays.copyOf(active,count)));
+        return ChannelList.of(java.util.Arrays.copyOf(active,count));
     }
+    default void applyLinkedLevels(Map<Integer,Integer> levels){applyLinkedChannels(activeChannels(levels));}
 }

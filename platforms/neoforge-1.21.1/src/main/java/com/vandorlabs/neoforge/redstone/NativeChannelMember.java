@@ -9,6 +9,8 @@ public interface NativeChannelMember {
     BlockEntity channelBlockEntity();
     ChannelList getRedstoneChannels();
     void setChannelLevel(int level);
+    /** Deferred safe-world initialization, invoked only by loaded registration flush. */
+    default void beforeChannelRegistration(){}
     default ChannelList transmittedChannels(){return ChannelList.EMPTY;}
     default int transmissionRange(){return -1;}
     default int localSignalLevel(int channel){return 0;}

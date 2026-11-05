@@ -21,6 +21,7 @@ public final class NativeRedstoneChannels {
     private static <M> Set<M> identities(){return Collections.newSetFromMap(new IdentityHashMap<>());}
     private static void thread(ServerLevel level){if(!level.getServer().isSameThread())throw new IllegalStateException("Channel access requires server thread");}
     private static ServerLevel level(NativeChannelMember member){var reference=member.channelBlockEntity().getLevel();if(reference instanceof ServerLevel level){thread(level);return CLOSED.contains(level)?null:level;}return null;}
+    static boolean open(ServerLevel level){thread(level);return !CLOSED.contains(level);}
     private static Network network(ServerLevel level){thread(level);if(CLOSED.contains(level))throw new IllegalStateException("Channel world is unloaded");return NETWORKS.computeIfAbsent(level,Network::new);}
     public static void queueRegistration(NativeChannelMember member){ServerLevel level=level(member);if(level!=null){thread(level);PENDING.computeIfAbsent(level,unused->identities()).add(member);}}
     public static void channelsChanged(NativeChannelMember member){ServerLevel level=level(member);if(level!=null){thread(level);if(member.isChannelMemberActive()){var n=network(level);n.mutate(()->n.register(member));}}}
@@ -28,7 +29,7 @@ public final class NativeRedstoneChannels {
     public static void positionChanged(NativeChannelMember member){ServerLevel level=level(member);if(level!=null){thread(level);var n=network(level);n.mutate(()->n.positionChanged(member));}}
     public static void latchLevelChanged(NativeChannelLatch member,int value){ServerLevel level=level(member);if(level!=null){thread(level);if(value<0||value>15)return;var n=network(level);n.mutate(()->n.latchChanged(member,value));}}
     /** Coalesce receiver delivery. An unloaded world rejects the batch without running its action.
-     * Derived physical neighbor jobs remain host-owned. */
+     * Derived physical jobs use NativeSignalUpdateBatch after all synchronous banks settle. */
     public static void batch(ServerLevel level,Runnable action){network(level).mutate(action);}
     public static void unregister(NativeChannelMember member){ServerLevel level=level(member);if(level==null)return;thread(level);Set<NativeChannelMember> pending=PENDING.get(level);if(pending!=null){pending.remove(member);if(pending.isEmpty())PENDING.remove(level);}Network n=NETWORKS.get(level);if(n!=null)n.mutate(()->n.remove(member));}
     public static int level(ServerLevel level,BlockPos pos,int channel){thread(level);Network n=NETWORKS.get(level);return n==null?0:n.at(pos,channel);}
@@ -41,10 +42,10 @@ public final class NativeRedstoneChannels {
         final int value=on?15:0;n.mutate(()->n.manual(pos,channels,NativeTransmitterItem.range(stack),value));return true;
     }
     /** Deliberately no registration or neighbor reads in block-entity onLoad. */
-    public static void flush(ServerLevel level){thread(level);if(CLOSED.contains(level))return;Set<NativeChannelMember> ready=PENDING.remove(level);if(ready==null)return;var n=network(level);n.mutate(()->{for(var member:ready)if(level(member)==level&&member.isChannelMemberActive())n.register(member);});}
+    public static void flush(ServerLevel level){thread(level);if(CLOSED.contains(level))return;Set<NativeChannelMember> ready=PENDING.remove(level);if(ready==null)return;var n=network(level);n.mutate(()->{for(var member:ready)if(level(member)==level&&member.isChannelMemberActive()){member.beforeChannelRegistration();if(level(member)==level&&member.isChannelMemberActive())n.register(member);}});}
     @SubscribeEvent public static void tick(LevelTickEvent.Post event){if(event.getLevel() instanceof ServerLevel level)flush(level);}
     @SubscribeEvent public static void load(LevelEvent.Load event){if(event.getLevel() instanceof ServerLevel level){thread(level);CLOSED.remove(level);}}
-    @SubscribeEvent public static void unload(LevelEvent.Unload event){if(event.getLevel() instanceof ServerLevel level){thread(level);CLOSED.add(level);NETWORKS.remove(level);PENDING.remove(level);}}
+    @SubscribeEvent public static void unload(LevelEvent.Unload event){if(event.getLevel() instanceof ServerLevel level){thread(level);CLOSED.add(level);NETWORKS.remove(level);PENDING.remove(level);NativeSignalUpdateBatch.worldUnloaded(level);}}
     private static final class Stats extends ChannelSourceIndex.QueryContext<Object> implements ChannelRecipientIndex.Counters {
         long receiverBuckets,receiverCandidates,deliveries;final Set<ManualSavedData.Entry> manual=identities();
         protected boolean active(Object source){return source instanceof NativeChannelMember member?member.isChannelMemberActive():manual.contains(source);}
@@ -69,7 +70,7 @@ public final class NativeRedstoneChannels {
         final Set<NativeChannelMember> affected=identities(),pendingClears=identities();
         int depth;boolean settling;
         Network(ServerLevel level){data=ManualSavedData.get(level);syncManual();}
-        void mutate(Runnable action){depth++;try{action.run();}finally{if(--depth==0&&!settling)settle();}}
+        void mutate(Runnable action){NativeSignalUpdateBatch.apply(()->{depth++;try{action.run();}finally{if(--depth==0&&!settling)settle();}});}
         int at(BlockPos pos,int channel){var index=sources.get(channel);return index==null?0:index.at(pos.getX(),pos.getY(),pos.getZ());}
         void affect(int channel,ChannelSourceIndex.SourceSnapshot source){if(source==null)return;var grid=recipients.get(channel);if(grid!=null)affected.addAll(grid.find(source instanceof Source tile?tile.pos():((ManualSavedData.Entry)source).pos,source.range()));}
         void withdraw(Object owner,ChannelList previous){if(previous!=null)for(int i=0;i<previous.size();i++){int c=previous.get(i);var index=sources.get(c);if(index!=null){affect(c,index.source(owner));index.remove(owner);if(index.isEmpty())sources.remove(c);}}}

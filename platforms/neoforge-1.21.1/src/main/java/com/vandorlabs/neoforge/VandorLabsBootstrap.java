@@ -30,7 +30,7 @@ public final class VandorLabsBootstrap {
     public static final DeferredHolder<Item, Item> ALLOY_INGOT = ITEMS.register("industrial_alloy_ingot", () -> new Item(new Item.Properties()));
     public static final DeferredHolder<Item,Item> CONFIGURIZER=ITEMS.register("configurizer",()->new Item(new Item.Properties().stacksTo(1)){
         @Override public net.minecraft.world.InteractionResult useOn(net.minecraft.world.item.context.UseOnContext context){
-            return context.getHand()==net.minecraft.world.InteractionHand.MAIN_HAND&&context.getPlayer()!=null&&CubeConfiguration.open(context.getPlayer(),context.getLevel(),context.getClickedPos())
+            return context.getHand()==net.minecraft.world.InteractionHand.MAIN_HAND&&context.getPlayer()!=null&&(CubeConfiguration.open(context.getPlayer(),context.getLevel(),context.getClickedPos())||BinaryControlConfiguration.open(context.getPlayer(),context.getLevel(),context.getClickedPos()))
                 ?net.minecraft.world.InteractionResult.sidedSuccess(context.getLevel().isClientSide):net.minecraft.world.InteractionResult.PASS;
         }
     });
@@ -50,16 +50,22 @@ public final class VandorLabsBootstrap {
     public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<TriggerMenu>> TRIGGER_MENU=MENUS.register("programmable_trigger",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new TriggerMenu(id,inventory,buffer.readBlockPos())));
     public static final DeferredHolder<Item,com.vandorlabs.neoforge.redstone.NativeTransmitterItem> REDSTONE_TRANSMITTER=ITEMS.register("redstone_transmitter",com.vandorlabs.neoforge.redstone.NativeTransmitterItem::new);
     public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<com.vandorlabs.neoforge.redstone.TransmitterMenu>> TRANSMITTER_MENU=MENUS.register("redstone_transmitter",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new com.vandorlabs.neoforge.redstone.TransmitterMenu(id,inventory,buffer.readEnum(net.minecraft.world.InteractionHand.class))));
+    public static final DeferredHolder<Block,NativeMountedSwitchBlock> PUSH_BUTTON=BLOCKS.register("push_button",()->new NativeMountedSwitchBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).noOcclusion().dynamicShape().requiresCorrectToolForDrops().lightLevel(state->state.getValue(NativeMountedSwitchBlock.ON)?5:0),true));
+    public static final DeferredHolder<Block,NativeMountedSwitchBlock> ROCKER_SWITCH=BLOCKS.register("rocker_switch",()->new NativeMountedSwitchBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).noOcclusion().dynamicShape().requiresCorrectToolForDrops().lightLevel(state->state.getValue(NativeMountedSwitchBlock.ON)?5:0),false));
+    public static final DeferredHolder<Item,BlockItem> PUSH_BUTTON_ITEM=ITEMS.register("push_button",()->new BlockItem(PUSH_BUTTON.get(),new Item.Properties()));
+    public static final DeferredHolder<Item,BlockItem> ROCKER_SWITCH_ITEM=ITEMS.register("rocker_switch",()->new BlockItem(ROCKER_SWITCH.get(),new Item.Properties()));
+    public static final DeferredHolder<net.minecraft.world.level.block.entity.BlockEntityType<?>,net.minecraft.world.level.block.entity.BlockEntityType<NativeBinaryControlBlockEntity>> BINARY_CONTROL_ENTITY=ENTITIES.register("redstone_channel",()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(NativeBinaryControlBlockEntity::new,PUSH_BUTTON.get(),ROCKER_SWITCH.get()).build(null));
+    public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<BinaryControlMenu>> BINARY_CONTROL_MENU=MENUS.register("binary_control",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new BinaryControlMenu(id,inventory,buffer.readBlockPos())));
     static {
         TABS.register("vandorlabs", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.vandorlabs"))
             .icon(() -> MATTER_BLOCK_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 for(int tier=0;tier<4;tier++)output.accept(com.vandorlabs.neoforge.redstone.NativeTransmitterItem.variant(REDSTONE_TRANSMITTER.get(),tier));
-                output.accept(PROGRAMMABLE_ITEM.get());output.accept(TRIGGER_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
+                output.accept(PUSH_BUTTON_ITEM.get());output.accept(ROCKER_SWITCH_ITEM.get());output.accept(PROGRAMMABLE_ITEM.get());output.accept(TRIGGER_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
             }).build());
     }
     public VandorLabsBootstrap(IEventBus bus) {
         FilesystemMaterials.initialize();com.vandorlabs.neoforge.redstone.TransmitterCopyRegistration.register(bus);
-        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(FinishPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
+        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(BinaryControlPayload::register);bus.addListener(BinaryTransmissionPayload::register);bus.addListener(FinishPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
     }
 }
