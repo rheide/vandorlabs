@@ -45,8 +45,7 @@ public final class NativeMountedControlGeometry {
     static long cacheCost(){SHAPES.cleanUp();return SHAPES.asMap().values().stream().mapToLong(NativeMountedControlGeometry::retainedCost).sum();}
     static long cachedShapes(){return SHAPES.size();}
     private static int retainedCost(Geometry value){
-        long x=value.shape.getCoords(Direction.Axis.X).size(),y=value.shape.getCoords(Direction.Axis.Y).size(),z=value.shape.getCoords(Direction.Axis.Z).size();
-        return (int)Math.min(Integer.MAX_VALUE,512+FACE_VIEWS+value.boxes.size()*112L+128+16*(x+y+z)+(x*y*z+7)/8);
+        return NativeVoxelShapes.retainedCost(value.shape,value.boxes.size());
     }
     public record Pose(List<List<Vec3>> components,List<AABB> supports,AABB support){}
     private record Geometry(List<AABB> boxes,AABB bounds,VoxelShape shape){}
@@ -98,7 +97,7 @@ public final class NativeMountedControlGeometry {
     }
     private static AABB enclosing(List<AABB> boxes){AABB bounds=boxes.getFirst();for(AABB b:boxes)bounds=bounds.minmax(b);return bounds;}
     private static Geometry assemble(String key,Pose pose,ControlMountTransform<Vec3,AABB> transform,ControlMountSettings mount){
-        List<AABB> boxes=componentBoxes(pose,transform,mount);AABB bounds=enclosing(boxes);VoxelShape shape=union(boxes);Geometry result=new Geometry(List.copyOf(boxes),bounds,shape);SHAPES.put(key,result);return result;
+        List<AABB> boxes=componentBoxes(pose,transform,mount);AABB bounds=enclosing(boxes);VoxelShape shape=NativeVoxelShapes.union(boxes,SHAPE_BUDGET);Geometry result=new Geometry(List.copyOf(boxes),bounds,shape);SHAPES.put(key,result);return result;
     }
     public static Pose signalPose(BlockState state,int rotation){String key="signal:"+NativeSignalControlPoses.key(state,rotation);synchronized(POSES){return POSES.computeIfAbsent(key,k->{
         JsonObject root=json(NativeSignalControlPoses.modelPath(state,rotation));JsonArray values=root.has("elements")?root.getAsJsonArray("elements"):elements(root.get("parent").getAsString(),1);List<List<Vec3>> components=components(values,point->NativeSignalControlPoses.orientPoint(point,state,rotation));
@@ -109,19 +108,6 @@ public final class NativeMountedControlGeometry {
     public static VoxelShape signalShape(BlockState state,ControlMountSettings mount,int rotation){return signalGeometry(state,mount,rotation).shape;}
     public static List<AABB> signalBoxes(BlockState state,ControlMountSettings mount,int rotation){return signalGeometry(state,mount,rotation).boxes;}
     public static AABB signalBounds(BlockState state,ControlMountSettings mount,int rotation){return signalGeometry(state,mount,rotation).bounds;}
-    /** Build the exact component union once, without repeatedly decomposing intermediate unions. */
-    private static VoxelShape union(List<AABB> boxes){
-        List<AABB> active=new ArrayList<>();for(AABB b:boxes)if(b.maxX-b.minX>=1e-7&&b.maxY-b.minY>=1e-7&&b.maxZ-b.minZ>=1e-7)active.add(b);if(active.isEmpty())return Shapes.empty();
-        double[][] axes=new double[3][];for(int axis=0;axis<3;axis++){double[] values=new double[active.size()*2];int n=0;for(AABB b:active){double min=axis==0?b.minX:axis==1?b.minY:b.minZ,max=axis==0?b.maxX:axis==1?b.maxY:b.maxZ;values[n++]=min==0?0:min;values[n++]=max==0?0:max;}Arrays.sort(values);int unique=0;for(double value:values)if(unique==0||value!=values[unique-1])values[unique++]=value;axes[axis]=Arrays.copyOf(values,unique);}
-        int nx=axes[0].length-1,ny=axes[1].length-1,nz=axes[2].length-1;long cells=(long)nx*ny*nz,estimated=512+FACE_VIEWS+boxes.size()*112L+128+16L*(axes[0].length+axes[1].length+axes[2].length)+((long)axes[0].length*axes[1].length*axes[2].length+7)/8;if(cells>Integer.MAX_VALUE||estimated>SHAPE_BUDGET)throw new IllegalStateException("Authored control voxel grid exceeds checked retained-size budget");
-        var bits=new net.minecraft.world.phys.shapes.BitSetDiscreteVoxelShape(nx,ny,nz);
-        for(AABB b:active){int x0=index(axes[0],b.minX),x1=index(axes[0],b.maxX),y0=index(axes[1],b.minY),y1=index(axes[1],b.maxY),z0=index(axes[2],b.minZ),z1=index(axes[2],b.maxZ);for(int x=x0;x<x1;x++)for(int y=y0;y<y1;y++)for(int z=z0;z<z1;z++)bits.fill(x,y,z);}
-        return new ExactUnion(bits,axes[0],axes[1],axes[2]);
-    }
-    private static int index(double[] axis,double value){int index=Arrays.binarySearch(axis,value==0?0:value);if(index<0)throw new IllegalStateException("Missing control voxel coordinate");return index;}
-    private static final class ExactUnion extends net.minecraft.world.phys.shapes.ArrayVoxelShape {
-        ExactUnion(net.minecraft.world.phys.shapes.DiscreteVoxelShape shape,double[] x,double[] y,double[] z){super(shape,x,y,z);}
-    }
     record Authored(JsonArray elements,int x,int y){}
     /** Bake-only owned parse result; never published to section workers or retained in common caches. */
     static Authored authored(BlockState state,int rotation,int size){String[] parts=(state.getBlock() instanceof NativePowerLeverBlock?powerKey(state,size):state.getBlock() instanceof NativeSignalControlPoses.Profile profile?profile.controlKind()+"/facing="+NativeSignalControlPoses.face(state).getSerializedName()+",level="+state.getValue(NativeSignalControlPoses.LEVEL)+",on="+state.getValue(NativeSignalControlBlock.ON)+",rotation="+NativeSignalControlPoses.rotation(state,rotation):key(state,rotation)).split("/",2);var variant=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants").getAsJsonObject(parts[1]);return new Authored(elements(variant.get("model").getAsString(),0),variant.has("x")?variant.get("x").getAsInt():0,variant.has("y")?variant.get("y").getAsInt():0);}

@@ -186,3 +186,11 @@ tasks.register('testNativeFluidVolume', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.NativeFluidVolumeChecks'
 }
+tasks.register('testNativeStairGeometry', JavaExec) {
+    group = 'verification'
+    description = 'Compare native stair collision and face projections with frozen current Forge coordinates'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeStairGeometryChecks'
+}
+tasks.named('check') { dependsOn 'testNativeStairGeometry' }
