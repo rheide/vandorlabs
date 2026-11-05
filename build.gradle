@@ -1272,3 +1272,10 @@ task testSignalControlDataAdapters(type: JavaExec) {
     if (project.hasProperty('signalControlExport')) systemProperty 'vandorlabs.signalControlExport', project.property('signalControlExport')
 }
 check.dependsOn testSignalControlDataAdapters
+
+task testWirelessRedstoneDataAdapters(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.WirelessRedstoneDataChecks'
+}
+check.dependsOn testWirelessRedstoneDataAdapters
