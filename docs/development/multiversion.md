@@ -161,3 +161,9 @@ The shared dialog foundation also serves existing Forge families: panel dimensio
 A missing or mistyped main texture retains the previous selector value without applying catalog migration. An explicit unversioned main index maps the removed grille at index 14 to zero and decrements later indices. Missing or invalid main layouts retain the raw fallback sentinel; `SlabTileSides` still determines the effective layout. Missing or mistyped slab-side booleans retain their previous value. Disabled face overrides retain their six saved choices. Storage keeps its separate existing default injection before delegating to the shared selector.
 
 The write path reuses the screen's primitive adapter and passes one owned face-array copy to the NBT adapter. It creates no housing state object per save. `testHousingSettings` exercises real legacy NBT on the selector, light, storage, trigger and hex tank, including configured item-drop serialization; the portable contracts cover the same migration/default decisions on Java 8 and Java 21.
+
+## Slab, stair and contained-fluid prerequisites
+
+`StairState` shares typed tread defaults, numeric roll clamping, packed geometry keys and valid live edits. Saved tread 16 and roll 2 remain supported even though the current editor offers a narrower set of choices. Forge delegates tile and configured-item decoding without adding a second geometry state or save allocation. Frozen actual-NBT and focused rendered stair checks preserve current behavior.
+
+Native slab/stair parity also requires arbitrary registered contained fluids in the actual empty collision volume, including bucket, sponge, light and immersion behavior. Vanilla waterlogging alone is insufficient. Current Forge fluid volumes coalesce cells into runs and defer face generation; historical native/shared fluid code predates that optimization and must not reintroduce an eager Cartesian geometry graph. World sampling and lifecycle remain platform-owned.

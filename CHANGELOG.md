@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share exact stair tread/roll save and configured-item rules, including legacy 16-pixel treads and saved roll 2. Preserve invalid-edit refusal and unchanged Forge geometry, lighting and padded icons. Native slab/stair adapters remain in progress.
+
 - Share the current glass editor state, four tabs, option rows and reverse cycling. Preserve immediate preview, frame-face and playback panes, hidden legacy control IDs and live framing callbacks.
 
 - Bound native mounted-control transformed meshes once per resource generation, sharing a 16 MiB cache across world states and configured items. Preserve source-model identity, dynamic-model bypass and immutable old reload snapshots.
