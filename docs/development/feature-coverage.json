@@ -431,7 +431,6 @@
       ],
       "remaining": [
         "Native world transmitter/receiver blocks and inline host slots.",
-        "Exact-center transmitter-copy crafting.",
         "Other channel source families, per-channel latch banks and carried-assembly interaction."
       ],
       "historical_neoforge_1_21_1": "partial",
@@ -456,7 +455,8 @@
         "Four native handheld tier variants share one item ID, canonical crafting patterns and bounded persisted integer tier/channel fields.",
         "Stationary dimension-local sources use the shared source/recipient indices and preserve source coordinates across restarts and origin chunk unload.",
         "Dedicated three-process ON/reload/OFF and exact-stack menu authorization checks pass.",
-        "Actual client held-item editor changes channels through its production payload; ordinary main/offhand uses toggle the Trigger and take priority over chest activation."
+        "Actual client held-item editor changes channels through its production payload; ordinary main/offhand uses toggle the Trigger and take priority over chest activation.",
+        "Native transmitter-copy crafting retains the original center-source rule and exact source remainder through cropped inputs and RecipeCache lookups; actual packaged-JAR table pickup/shift-crafting checks pass."
       ]
     },
     {

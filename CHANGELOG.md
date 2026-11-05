@@ -2,6 +2,9 @@
 
 ## 2.9 (development)
 
+- Share built-in transmission ranges, typed saved defaults and mounted-control settings between targets. Keep Forge migration, geometry, configured-item fields and hot-path allocation behavior unchanged.
+- Preserve native transmitter-copy crafting: place the source in the center of a 3×3 grid and one target beside it. Copy channels while retaining the target tier and other components, and return the original source. Preserve this rule through native grid cropping and automated-crafter recipe caching.
+
 - Share the mounted-control height, tilt and direction save contract, preserving old preset migration, malformed-field defaults and caller-specific fallback without changing geometry or live latch state.
 
 - Add the native Programmable Trigger with shared saved state and dialog rules, static Off/On or signal-band artwork, exact-level matching and Front Only/Sides options. Reuse one native material picker for cube and Trigger dialogs, including independent artwork searches, inventory sampling and scrolling.
