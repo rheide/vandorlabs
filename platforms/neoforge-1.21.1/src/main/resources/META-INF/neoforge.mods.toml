@@ -4,8 +4,8 @@ license="CC-BY-4.0"
 [[mods]]
 modId="vandorlabs"
 version="${modVersion}"
-displayName="Vandor Labs (Experimental Bootstrap)"
-description='''Experimental NeoForge build bootstrap and shared contracts. No gameplay content or legacy world conversion is implemented in this target.'''
+displayName="Vandor Labs (Experimental)"
+description='''Experimental NeoForge material slice: plain Programmable Matter Block, matter and alloy ingots. Other features and legacy world conversion are not implemented.'''
 [[dependencies.vandorlabs]]
 modId="neoforge"
 type="required"

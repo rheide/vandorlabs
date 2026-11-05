@@ -7,13 +7,23 @@ version = (file('../../build.gradle').text =~ /(?m)^version\s*=\s*'([^']+)'/)[0]
 base { archivesName = 'vandorlabs-neoforge-1.21.1' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 sourceSets.main.java.srcDir('../../src/portable/java')
+sourceSets.main.resources.srcDir('build/generated/matter-resources')
+sourceSets {
+    smoke {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
 neoForge {
     version = '21.1.264'
     runs {
-        client { client(); gameDirectory = file('run/bootstrap-client') }
+        client {
+            client(); gameDirectory = file(project.findProperty('modernClientRunDirectory') ?: 'run/bootstrap-client')
+            if (project.hasProperty('matterClientPort')) programArguments.addAll '--quickPlayMultiplayer', ('127.0.0.1:' + project.property('matterClientPort')), '--width', '1280', '--height', '720'
+        }
         server { server(); programArgument '--nogui'; gameDirectory = file(project.findProperty('modernServerRunDirectory') ?: 'run/bootstrap-server') }
     }
-    mods { vandorlabs { sourceSet(sourceSets.main) } }
+    mods { vandorlabs { sourceSet(sourceSets.main); sourceSet(sourceSets.smoke) } }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 tasks.named('processResources') {
@@ -36,4 +46,22 @@ configurations.configureEach {
 tasks.named('jar') {
     from('../../LICENSE') { into 'META-INF' }
     from('../../THIRD_PARTY_NOTICES.md') { into 'META-INF' }
+}
+
+tasks.register('generateMatterResources', Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, 'generate_matter_resources.py'
+    inputs.file('generate_matter_resources.py')
+    inputs.file('../../tools/compact_runtime_assets.py')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/recipes')
+    inputs.file('../../generated-resources/assets/vandorlabs/lang/en_us.lang')
+    inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/matter/matter.png')
+    inputs.file('../../texture-packs/default/assets/vandorlabs/textures/items/programmable_matter_ingot.png')
+    inputs.file('../../texture-packs/default/assets/vandorlabs/textures/items/industrial_alloy_ingot.png')
+    outputs.dir('build/generated/matter-resources')
+}
+tasks.named('processResources') { dependsOn 'generateMatterResources' }
+neoForge.runs.configureEach {
+    if (project.hasProperty('matterPhase')) systemProperty 'vandorlabs.matterPhase', project.property('matterPhase')
 }
