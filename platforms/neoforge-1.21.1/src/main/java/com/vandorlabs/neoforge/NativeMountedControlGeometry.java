@@ -20,6 +20,24 @@ public final class NativeMountedControlGeometry {
     // SliceShape/SubShape reference the parent occupancy and coordinate lists. Reserve the full
     // bounded face/edge/corner view closure (6+24+48 wrappers), not seven copies of the3D grid.
     private static final int FACE_VIEWS=80*160;
+    // Selection is the released single enclosing AABB, never the detailed collision voxel grid.
+    private static final int OUTLINE_BUDGET=2*1024*1024;
+    private static final com.google.common.cache.Cache<String,VoxelShape> OUTLINES=com.google.common.cache.CacheBuilder.newBuilder()
+        .maximumWeight(OUTLINE_BUDGET).weigher((String key,VoxelShape value)->1024+FACE_VIEWS+2*key.length()).build();
+    public static VoxelShape outline(BlockState state,ControlMountSettings mount,int variant){
+        boolean power=state.getBlock() instanceof NativePowerLeverBlock,signal=state.getBlock() instanceof NativeSignalControlBlock;
+        String key=(power?powerKey(state,variant):signal?"signal:"+NativeSignalControlPoses.key(state,variant):key(state,variant))+"/"+(mount.height+4*(mount.tilt+4*mount.direction));
+        VoxelShape cached=OUTLINES.getIfPresent(key);if(cached!=null)return cached;
+        Geometry collision=SHAPES.getIfPresent(key);AABB bounds;
+        if(collision!=null)bounds=collision.bounds;
+        else {
+            Pose pose=power?powerPose(state,variant):signal?signalPose(state,variant):pose(state,variant);
+            var transform=power?powerTransform(state,mount,variant):signal?signalTransform(state,mount,variant):transform(state,mount,variant);
+            bounds=enclosing(componentBoxes(pose,transform,mount));
+        }
+        VoxelShape result=Shapes.create(bounds);OUTLINES.put(key,result);return result;
+    }
+
     // Coordinate storage, one occupancy bitset, component boxes, and cached view wrappers.
     private static final com.google.common.cache.Cache<String,Geometry> SHAPES=com.google.common.cache.CacheBuilder.newBuilder()
         .maximumWeight(SHAPE_BUDGET).weigher((String key,Geometry value)->retainedCost(value)).build();
@@ -72,11 +90,15 @@ public final class NativeMountedControlGeometry {
             return assemble(key,pose,transform,mount);
         }
     }
-    private static Geometry assemble(String key,Pose pose,ControlMountTransform<Vec3,AABB> transform,ControlMountSettings mount){
+    private static List<AABB> componentBoxes(Pose pose,ControlMountTransform<Vec3,AABB> transform,ControlMountSettings mount){
         List<AABB> boxes=new ArrayList<>();
         for(List<Vec3> component:pose.components){List<Vec3> points=new ArrayList<>(8);for(Vec3 p:component)points.add(transform.transform(p.x,p.y,p.z));boxes.add(hull(points));}
         if(mount.height+4*mount.tilt>0)for(AABB b:pose.supports)boxes.addAll(transform.wedgeBoxes(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));
-        AABB bounds=boxes.getFirst();for(AABB b:boxes)bounds=bounds.minmax(b);VoxelShape shape=union(boxes);Geometry result=new Geometry(List.copyOf(boxes),bounds,shape);SHAPES.put(key,result);return result;
+        return boxes;
+    }
+    private static AABB enclosing(List<AABB> boxes){AABB bounds=boxes.getFirst();for(AABB b:boxes)bounds=bounds.minmax(b);return bounds;}
+    private static Geometry assemble(String key,Pose pose,ControlMountTransform<Vec3,AABB> transform,ControlMountSettings mount){
+        List<AABB> boxes=componentBoxes(pose,transform,mount);AABB bounds=enclosing(boxes);VoxelShape shape=union(boxes);Geometry result=new Geometry(List.copyOf(boxes),bounds,shape);SHAPES.put(key,result);return result;
     }
     public static Pose signalPose(BlockState state,int rotation){String key="signal:"+NativeSignalControlPoses.key(state,rotation);synchronized(POSES){return POSES.computeIfAbsent(key,k->{
         JsonObject root=json(NativeSignalControlPoses.modelPath(state,rotation));JsonArray values=root.has("elements")?root.getAsJsonArray("elements"):elements(root.get("parent").getAsString(),1);List<List<Vec3>> components=components(values,point->NativeSignalControlPoses.orientPoint(point,state,rotation));
