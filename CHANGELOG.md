@@ -2,6 +2,9 @@
 
 ## 2.9 (development)
 
+- Extend the experimental 1.21.1 build with programmable plain walls, thin porthole walls and diagonal walls. Reuse the housing editor, configured items, frame materials, contained fluids and bounded panel renderer; preserve diagonal sizes, slopes, fills and joins. Portholes support the glass palette and per-block Off/static/animated artwork. Other building variants and full native acceptance remain in progress.
+- Reuse physical fluid volumes when only joined panel artwork coordinates change. Preserve center-owned T-junction materials, stem caps and porthole pane deformation through shared rendering kernels.
+
 - Fix texture quicksearch matching the shared mod namespace. Ordinary terms search names, categories and texture filenames; explicitly qualified texture IDs remain searchable.
 
 - Fix native mounted-control hover stalls and excessive selection lines. Buttons, switches, power levers and throttles now use the same single enclosing selection box as Forge; detailed collision shapes remain separate and are not built by hovering.
@@ -12,7 +15,7 @@
 
 - Reuse current stair collision, exposed surfaces and face mapping across targets, and share slab placement/merge decisions. Preserve exact emitted geometry and configured slab behavior while reducing temporary allocations in dense stair collision construction.
 
-- Share exact stair tread/roll save and configured-item rules, including legacy 16-pixel treads and saved roll 2. Preserve invalid-edit refusal and unchanged Forge geometry, lighting and padded icons. Native slab/stair adapters remain in progress.
+- Share exact stair tread/roll save and configured-item rules, including legacy 16-pixel treads and saved roll 2. Preserve invalid-edit refusal and unchanged Forge geometry, lighting and padded icons. Native slab/stair adapters are registered; broader native acceptance remains in progress.
 
 - Add native directional wireless transmitter and receiver blocks with analog/digital modes, separate On/Off levels and six-face ports. Reuse the channel host and inline transmission controls while preserving receiver maximum aggregation, plain dropped items and loaded-world lifecycle checks.
 

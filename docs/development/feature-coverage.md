@@ -12,7 +12,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | --- | --- | --- | --- |
 | Programmable cube and matter block | partial (cube and plain matter) | partial | non-vehicle first |
 | Slabs and stairs | partial | partial | non-vehicle first |
-| Walls, portholes and diagonals | partial (plain wall enabled) | partial | non-vehicle first |
+| Walls, portholes and diagonals | partial (plain, thin porthole and diagonal walls enabled) | partial | non-vehicle first |
 | Programmable viewscreens | pending | partial | non-vehicle first |
 | Console, input and diagonal screen variants | pending | partial | non-vehicle first |
 | Glass, canopy and cockpit glass | pending | unimplemented | non-vehicle first |
@@ -76,3 +76,5 @@ The endpoint editor reuses the inline transmission widget and integer slider. Ex
 Current slabs/stairs have registered placement, collision, configured item persistence and survival merge behavior. Their dedicated registration check covers fourteen states and sixty-one assertions. Material renderer and same-screen configuration are integrated; these registrations do not establish complete family parity or broader native client acceptance.
 
 The native programmable plain wall is now registered with its shared editor, captured-material world/item renderer, configured items and bounded collision cache. Its dedicated registration check covers twenty-four states, real survival placement, local T-corner collision/rays and model-data publication. Frame atlas checks cover canonical crops and source-only resource-pack overrides. Porthole and diagonal preparation remains distinct from activation; their full family acceptance is pending.
+
+Thin porthole and plain diagonal walls are now registered. Diagonal factory, collision, configured pick/loot, bare versus configured survival placement, coherent neighbour callbacks and failed-stage rollback are covered by the focused registration check. Exact geometry and local topology comparisons cover 3,648 current Forge profiles; the diagonal material comparison covers 1,824 configured draws. Porthole pane shader binding, palette pixels, playback and emitted records have focused checks; broader in-world visual acceptance remains deferred. Center-owned T bodies and panes share the current float transformation and cap kernels, including the saved exterior material. Full-depth and diagonal portholes and glass contacts remain incomplete.

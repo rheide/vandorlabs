@@ -117,7 +117,7 @@
         "programmable_wall"
       ],
       "remaining": [
-        "Complete porthole/diagonal activation and current full-family acceptance; plain wall is enabled",
+        "Complete full-depth and diagonal portholes, diagonal glass, glass contacts and broader native client acceptance",
         "native diagonal wall, porthole and glass adapters and filled/contact matrices",
         "actual disabled-join and wall-specific ordinary/unload/reload GPU matrices",
         "external-material reload and custom block-material sampling",
@@ -145,7 +145,10 @@
         "Programmable plain wall registered with configured placement/pick/loot, shared editor and captured-material renderer",
         "Loaded local flat corners, bounded material/aperture grouping and analytic contained-fluid surfaces",
         "Canonical frame edges regenerate from active resource-pack source artwork",
-        "Shared aperture emission, bounded round slices, exact glass palette and pause-aware playback provider; porthole activation remains pending"
+        "Shared aperture emission, bounded round slices, exact glass palette and pause-aware playback provider; porthole activation remains pending",
+        "Thin porthole and plain diagonal walls registered with shared configuration, configured items and contained-fluid adapters",
+        "Current diagonal collision, local topology and emitted materials compared with actual Forge output; chunk-edge body fallback shares the panel bake",
+        "Center-owned T body/pane projection, independent exterior materials and cap closure use shared float transform kernels"
       ]
     },
     {

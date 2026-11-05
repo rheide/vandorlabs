@@ -29,3 +29,5 @@ The Forge 1.12.2 compatibility checkpoint has passed the full release gate. The 
 Mounted controls in the native build use one clean hover selection box, matching Forge. Hovering no longer draws the detailed collision grid or incurs its edge-enumeration cost.
 
 Texture quicksearch excludes the common mod namespace from ordinary words, so searching `vand` finds Vandor artwork instead of every mod texture. Names, categories and texture filenames remain searchable; explicit namespace terms such as `vandorlabs:` are still supported.
+
+The experimental native build now includes programmable plain walls, thin porthole walls and diagonal walls. Diagonal walls retain the three sizes, slope reversal, inside/outside fills and join settings. Porthole panes use the current glass palette or programmable artwork, including Off/static/animated playback. These blocks share the existing housing editor, frame controls, configured item data and contained-fluid adapters. Full-depth and diagonal portholes, glass neighbours and broader rendered acceptance remain in progress.
