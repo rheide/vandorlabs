@@ -1322,3 +1322,9 @@ task testFluidSlotsLegacy(type: JavaExec) {
     main = 'com.vandorlabs.client.FluidSlotsLegacyChecks'
     systemProperty 'vandorlabs.fluidSlotsReference', file(project.findProperty('fluidSlotsReference') ?: 'build/test-artifacts/fluid-slots-forge.nbt').absolutePath
 }
+
+task testFluidClipMath(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FluidClipMathChecks'
+}
