@@ -19,6 +19,7 @@ public final class PlainWallDialog {
         private final int defaultScreen;
         public State(SlabStairDialog.State base,WallSettings walls,FrameSettings frames,int defaultScreen){this(base,walls,frames,null,defaultScreen,false,false);}
         private State(SlabStairDialog.State base,WallSettings walls,FrameSettings frames,FrameSettings draft,int defaultScreen,boolean exterior,boolean initialized){this.base=base;this.walls=walls;this.frames=frames;frameDraft=draft;this.defaultScreen=defaultScreen;this.exterior=exterior;editorInitialized=initialized;}
+        public State withWalls(WallSettings value){return new State(base,value,frames,frameDraft,defaultScreen,exterior,editorInitialized);}
         public int selectedTexture(){return exterior?frameDraft.interior:base.housing.mainTexture;}
         public State action(int operation,int direction){
             if(operation==EXTERIOR)return new State(base,walls,frames,editorInitialized?frameDraft:frames.editor(false,false,defaultScreen),defaultScreen,true,true);
