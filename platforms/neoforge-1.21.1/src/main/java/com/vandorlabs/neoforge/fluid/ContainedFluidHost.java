@@ -6,6 +6,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 public interface ContainedFluidHost {
     default boolean openingFluidVolume(){return false;}
     default net.minecraft.core.Direction[] fluidPlacementFaces(){return new net.minecraft.core.Direction[0];}
+    NativeFluidRenderSnapshot fluidRenderSnapshot();
+    void publishFluidRenderSnapshot(NativeFluidRenderSnapshot snapshot);
     BlockEntity fluidOwner();
     NativeFluidSlots containedFluids();
     NativeFluidVolume fluidVolumeSnapshot();
