@@ -74,6 +74,9 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     @Override protected long fluidGeometryKey(){return geometryGeneration;}
     @Override protected List<AABB> fluidSolidBoxes(BlockState state,long key){return geometry.boxes();}
     @Override protected NativeFluidVolume.Side fluidSidePartition(){return partition;}
+    @Override public NativeFluidRegions fluidSurfaceRegions(){return NativeFluidRegions.flat(geometry.facing(),geometry.depth(),porthole);}
+    @Override public boolean acceptsPlacementFluid(int side){return side>=0&&side<2;}
+    @Override public Direction[] fluidPlacementFaces(){return new Direction[]{geometry.facing(),geometry.facing().getOpposite()};}
     @Override public int containedFluidSide(double x,double y,double z){return geometry.side(x,y,z);}
     private static int frameLight(int choice){if(choice<0)return 0;var frame=ModernFinishCatalog.option(choice).frame();return frame==null?0:Math.max(0,Math.min(5,frame.light()));}
     @Override public int intrinsicContainedLight(){return Math.max(porthole||frames.bare?0:frameLight(frames.front),Math.max(frameLight(frames.interior),frameLight(frames.exteriorChoice())));}

@@ -83,7 +83,7 @@ public class ProgrammableShapeEntity extends ProgrammableBlockEntity implements 
     @Override public void refreshFluidGeometry(){
         BlockState state=getBlockState();long key=fluidGeometryKey();
         if(volumeState==state&&volumeSettings==key)return;
-        volume=com.vandorlabs.neoforge.fluid.NativeFluidVolume.build(fluidSolidBoxes(state,key),com.vandorlabs.neoforge.fluid.NativeFluidVolume.SINGLE_SIDE);volumeState=state;volumeSettings=key;geometryRevision++;
+        volume=com.vandorlabs.neoforge.fluid.NativeFluidVolume.build(fluidSolidBoxes(state,key),fluidSidePartition());volumeState=state;volumeSettings=key;geometryRevision++;
     }
     @Override public void onLoad(){super.onLoad();com.vandorlabs.neoforge.fluid.NativeFluidWorld.queue(this);}
     @Override public void setRemoved(){com.vandorlabs.neoforge.fluid.NativeFluidWorld.removed(this);super.setRemoved();}
