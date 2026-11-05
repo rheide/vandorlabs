@@ -24,9 +24,15 @@ public final class ManualSavedData extends SavedData {
     public static ManualSavedData get(ServerLevel level){return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(ManualSavedData::new,ManualSavedData::load,null),NAME);}
     public void apply(BlockPos pos,ChannelList channels,int range,boolean on){
         if(!validRange(range))throw new IllegalArgumentException("Invalid transmitter range");
-        int count=entries.size();entries.removeIf(e->channels.contains(e.channel)&&(range==0||ChannelSpatialPolicy.finiteContains(e.x(),e.y(),e.z(),pos.getX(),pos.getY(),pos.getZ(),range)));
+        clearCovered(pos,channels,range);
         if(on)for(int i=0;i<channels.size();i++)entries.add(new Entry(pos,channels.get(i),range));
-        if(on||count!=entries.size())setDirty();
+        if(on)setDirty();
+    }
+    /** Commands clear centers in their own coverage, including built-in ranges not stored by handhelds. */
+    public boolean clearCovered(BlockPos pos,ChannelList channels,int range){
+        if(range<0)throw new IllegalArgumentException("Invalid clearing range");
+        int count=entries.size();entries.removeIf(e->channels.contains(e.channel)&&(range==0||ChannelSpatialPolicy.finiteContains(e.x(),e.y(),e.z(),pos.getX(),pos.getY(),pos.getZ(),range)));
+        boolean changed=count!=entries.size();if(changed)setDirty();return changed;
     }
     public static ManualSavedData load(CompoundTag tag,HolderLookup.Provider registries){
         ManualSavedData result=new ManualSavedData();ListTag list=tag.getList("Sources",Tag.TAG_COMPOUND);
