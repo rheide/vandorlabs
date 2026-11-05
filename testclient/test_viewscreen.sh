@@ -654,6 +654,7 @@ PYIMAGE
     fi
     if [ "$TARGET" = material-finishes ]; then
         grep -q 'material-finishes-live PASS' "$RUN_OUT/client.log"
+        grep -q 'cube-dialog-live PASS' "$RUN_OUT/client.log"
         echo "Live material picker checks passed: $RUN_OUT"
         exit 0
     fi

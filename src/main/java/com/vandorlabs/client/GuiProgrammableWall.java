@@ -96,6 +96,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);
         xSize=layout.width;ySize=layout.height;
         super.initGui();
+        if(cubeDialog()){initCubeLayout();return;}
         buttonList.clear();boolean hasFrame=tile.getBlockType() instanceof BlockProgrammableWall;
         boolean separate=porthole||diagonalGlass;if(porthole&&frameFace==0)frameFace=1;
         if(separate){int count=4;buttonList.add(layout.fullTab(195,0,count,porthole?"Main":"Glass"));if(porthole)buttonList.add(layout.fullTab(213,1,count,"Glass"));String[] names={"Front","Interior","Exterior"};for(int i=porthole?1:0;i<3;i++)buttonList.add(layout.fullTab(210+i,i+1,count,names[i]));}
@@ -185,6 +186,30 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     }
 
+    private boolean cubeDialog(){return tile.getBlockType()==com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK;}
+    private com.vandorlabs.ui.ProgrammableBlockDialog.State cubeState(){return new com.vandorlabs.ui.ProgrammableBlockDialog.State(tile.getHousingTexture(),textureLayout,tile.getFaceTextures().enabled,tile.getFaceTextures().choices(),faceTarget);}
+    private void initCubeLayout(){
+        com.vandorlabs.ui.ProgrammableDialogLayout layout=new com.vandorlabs.ui.ProgrammableDialogLayout(width,height);
+        com.vandorlabs.ui.ProgrammableBlockDialog.State state=cubeState();
+        buttonList.clear();
+        for(com.vandorlabs.ui.ProgrammableBlockDialog.Control c:com.vandorlabs.ui.ProgrammableBlockDialog.controls(layout,state,I18n.format("gui.done"))){
+            GuiButton button=c.tab?new DialogTabButton(c.id,c.x,c.y,c.width,c.height,c.label):new GuiButton(c.id,c.x,c.y,c.width,c.height,c.label);
+            button.enabled=c.enabled;buttonList.add(button);
+        }
+        listX=layout.listX;listY=com.vandorlabs.ui.ProgrammableBlockDialog.listY(layout,state);rows=com.vandorlabs.ui.ProgrammableBlockDialog.listRows(layout,state);
+        textureList=new HousingTextureList(listX,listY,layout.listWidth,selected).visibleRows(rows).custom(this::choose).cubeInput();
+    }
+    private boolean cubeAction(GuiButton button){
+        int id=button.id;
+        if(id==195){initGui();return true;}
+        if(id==100){mc.player.closeScreen();return true;}
+        if(id!=103&&id!=106&&id!=108&&id!=120&&(id<121||id>126))return false;
+        com.vandorlabs.ui.ProgrammableBlockDialog.State before=cubeState(),next=before.action(id,GuiOptionCycle.direction());
+        if(id==103){textureLayout=next.layout;tile.setMainTextureLayout(textureLayout);button.displayString="Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableSlabSides(tile.getPos(),textureLayout));return true;}
+        if(id==106||id==108&&before.target>=0)sendFaces(new com.vandorlabs.tiles.FaceTextures(next.facesEnabled,next.faces()));
+        faceTarget=next.target;selected=next.selectedTexture();initGui();return true;
+    }
+
     private void sendStairs(){PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageStairGeometry(tile.getPos(),tile.stairTread(),tile.stairRoll()));}
     private String shadeLabel() { return "Glass: " + SHADES[shade]; }
     private String joinLabel() { return "Join: " + (join ? "On" : "Off"); }
@@ -220,6 +245,10 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     void choose(int choice) {
         selected = choice;
+        if(cubeDialog()){
+            com.vandorlabs.ui.ProgrammableBlockDialog.State before=cubeState(),next=before.choose(choice);
+            if(before.facesEnabled&&before.target>=0){sendFaces(new com.vandorlabs.tiles.FaceTextures(next.facesEnabled,next.faces()));initGui();return;}
+        }
         if(glassSurface() && textureList!=null && textureList.selected()!=choice)textureList.setSelected(choice);
         if(glassSurface()){if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;tile.setGlassShade(shade);tile.setGlassMaterial(-1);}else tile.setGlassMaterial(choice);sendPortholeSettings();initGui();return;}
         if(faceTarget==-2) {
@@ -253,6 +282,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(cubeDialog()&&cubeAction(button))return;
         if(GlassPlaybackPane.action(button,tile.glassPlayback)){sendPortholeSettings();initGui();return;}
         if(framePage&&framePane!=null&&framePane.action(button))return;if(button.id==213){framePage=false;redstonePage=false;faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}if(button.id>=210&&button.id<=212){if(porthole&&button.id==210)return;frameFace=button.id-210;redstonePage=false;framePage=true;initGui();return;}if(button.id==195||button.id==196||button.id==197){if(porthole&&button.id==195){faceTarget=-1;selected=selectedTexture();textureList=null;}redstonePage=button.id==196;framePage=button.id==197;initGui();return;}if(button.id==198){return;}
 

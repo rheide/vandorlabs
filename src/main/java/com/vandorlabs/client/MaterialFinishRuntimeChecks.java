@@ -23,6 +23,7 @@ final class MaterialFinishRuntimeChecks {
     static boolean tick(Minecraft mc,File output)throws Exception {
         mc.gameSettings.pauseOnLostFocus=false;
         if(++ticks%20!=0)return false;
+        if(phase==4){if(!CubeDialogRuntimeChecks.tick(mc,output,POS))return false;mc.player.closeScreen();System.out.println("[vandorlabs][reprolab] material-finishes-live PASS three Materials picker rows real save packets client synchronization NBT reload nine configured block/slab/stairs models screenshots");return true;}
         if(phase==0){
             PbrMaterialRuntimeChecks.run(mc);
             mc.player.closeScreen();mc.playerController.setGameType(GameType.CREATIVE);
@@ -73,7 +74,7 @@ final class MaterialFinishRuntimeChecks {
         }
         mc.getFramebuffer().bindFramebuffer(true);mc.entityRenderer.setupOverlayRendering();mc.entityRenderer.disableLightmap();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);gui.drawScreen(-1,-1,0);
         ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"material-"+FINISHES[finish]+".png"));
-        if(++finish==FINISHES.length){mc.player.closeScreen();System.out.println("[vandorlabs][reprolab] material-finishes-live PASS three Materials picker rows real save packets client synchronization NBT reload nine configured block/slab/stairs models screenshots");return true;}
+        if(++finish==FINISHES.length){phase=4;return false;}
         phase=2;return false;
     }
     private static EntityPlayerMP player(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);}
