@@ -16,9 +16,10 @@ final class NativePanelQuads {
     private static final class Context {
         final Direction facing;final Material main;final int mode;final NativePanelLayout layout;
         final boolean raw;final double borderX,borderY,zOffset,imageAspect;final int color;
-        final List<BakedQuad> result=new ArrayList<>();final float[] source=new float[32],mapped=new float[32];int used,mappedUsed;Material current;
+        final List<BakedQuad> result;final boolean capture;private float[] captured;private int capturedUsed;private final List<Material> capturedMaterials;final float[] source=new float[32],mapped=new float[32];int used,mappedUsed;Material current;
         Context(Direction facing,Material main,int mode,NativePanelLayout layout){this(facing,main,mode,layout,false,0,0,0,1,0);}
-        Context(Direction facing,Material main,int mode,NativePanelLayout layout,boolean raw,double borderX,double borderY,double zOffset,float opacity,double imageAspect){this.facing=facing;this.main=main;this.mode=mode;this.layout=Objects.requireNonNull(layout);this.raw=raw;this.borderX=borderX;this.borderY=borderY;this.zOffset=zOffset;this.imageAspect=imageAspect;color=((int)(opacity*255)<<24)|0xFFFFFF;}
+        Context(Direction facing,Material main,int mode,NativePanelLayout layout,boolean raw,double borderX,double borderY,double zOffset,float opacity,double imageAspect){this(facing,main,mode,layout,raw,borderX,borderY,zOffset,opacity,imageAspect,false);}
+        Context(Direction facing,Material main,int mode,NativePanelLayout layout,boolean raw,double borderX,double borderY,double zOffset,float opacity,double imageAspect,boolean capture){this.capture=capture;result=capture?null:new ArrayList<>();captured=capture?new float[256]:null;capturedMaterials=capture?new ArrayList<>():List.of();this.facing=facing;this.main=main;this.mode=mode;this.layout=Objects.requireNonNull(layout);this.raw=raw;this.borderX=borderX;this.borderY=borderY;this.zOffset=zOffset;this.imageAspect=imageAspect;color=((int)(opacity*255)<<24)|0xFFFFFF;}
         void source(Material material,double x,double y,double z,double u,double v,float nx,float ny,float nz){
             put(source,used++,x,y,z,u,v,nx,ny,nz);if(used!=4)return;used=0;
             var texture=main.surface;var sprite=texture.sprite();
@@ -31,12 +32,14 @@ final class NativePanelQuads {
         }
         void mapped(Material material,double x,double y,double z,double u,double v,float nx,float ny,float nz){put(mapped,mappedUsed++,x,y,z,u,v,nx,ny,nz);if(mappedUsed==4){mappedUsed=0;append(mapped,material);}}
         void append(float[] points,Material material){
+            if(capture){if(capturedUsed+32>captured.length)captured=Arrays.copyOf(captured,Math.max(captured.length*2,capturedUsed+32));System.arraycopy(points,0,captured,capturedUsed,32);capturedUsed+=32;capturedMaterials.add(material);return;}
             int[] data=new int[32];int turns=facing==Direction.WEST?1:facing==Direction.SOUTH?2:facing==Direction.EAST?3:0;
             int a=(byte)(int)(points[5]*127),b=(byte)(int)(points[6]*127),c=(byte)(int)(points[7]*127),nx=turns==1?c:turns==2?-a:turns==3?-c:a,nz=turns==1?-a:turns==2?-c:turns==3?a:c,normal=(nx&255)|((b&255)<<8)|((nz&255)<<16);
             Direction direction=direction(nx/127F,b/127F,nz/127F);
             for(int v=0;v<4;v++){int at=v*8;double x=points[at]/16D,z=(points[at+2]+zOffset)/16D;data[at]=Float.floatToRawIntBits((float)(turns==1?z:turns==2?1-x:turns==3?1-z:x));data[at+1]=Float.floatToRawIntBits(points[at+1]/16);data[at+2]=Float.floatToRawIntBits((float)(turns==1?1-x:turns==2?1-z:turns==3?x:z));data[at+3]=color;data[at+4]=Float.floatToRawIntBits(points[at+3]);data[at+5]=Float.floatToRawIntBits(points[at+4]);data[at+7]=normal;}
             result.add(new BakedQuad(data,-1,direction,material.surface.sprite(),false,false));int[] back=new int[32];for(int v=0;v<4;v++)System.arraycopy(data,((4-v)&3)*8,back,v*8,8);result.add(new BakedQuad(back,-1,direction,material.surface.sprite(),false,false));
         }
+        Mesh captured(){if(!capture||used!=0||mappedUsed!=0)throw new IllegalStateException("Incomplete captured panel quad");return new Mesh(Arrays.copyOf(captured,capturedUsed),List.copyOf(capturedMaterials));}
         List<BakedQuad> finish(){if(used!=0||mappedUsed!=0)throw new IllegalStateException("Incomplete native panel quad");return List.copyOf(result);}
     }
     private static void put(float[] data,int vertex,double x,double y,double z,double u,double v,float nx,float ny,float nz){int at=vertex*8;data[at]=(float)x;data[at+1]=(float)y;data[at+2]=(float)z;data[at+3]=(float)u;data[at+4]=(float)v;data[at+5]=nx;data[at+6]=ny;data[at+7]=nz;}
@@ -64,6 +67,10 @@ final class NativePanelQuads {
             Material wall,Material metal,Material outer,int mode,NativePanelLayout group,
             boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper,double depthUv){
         Context context=new Context(facing,wall,mode,group,false,0,0,near-6,1,0);
+        aperture(context,opening,wall,metal,outer,hideLeft,hideRight,hideLower,hideUpper,depthUv);
+        return context.finish();
+    }
+    private static void aperture(Context context,NativePanelSlice opening,Material wall,Material metal,Material outer,boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper,double depthUv){
         for(int q=0;q<opening.frameCount();q++)PanelApertureEmitter.panelQuad(APERTURE,context,wall,null,opening.frame(q,0),opening.frame(q,1),opening.frame(q,2),opening.frame(q,3),opening.frame(q,4),opening.frame(q,5),opening.frame(q,6),opening.frame(q,7));
         for(int e=0;e<opening.edgeCount();e++)PanelApertureEmitter.rimSegment(APERTURE,context,metal,null,opening.edge(e,0),opening.edge(e,1),opening.edge(e,2),opening.edge(e,3),depthUv);
         for(int y:new int[]{0,16}){
@@ -76,17 +83,46 @@ final class NativePanelQuads {
             if(Double.isNaN(low))PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,0,16,depthUv);
             else{PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,0,low,depthUv);PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,high,16,depthUv);}
         }
-        return context.finish();
     }
     static List<BakedQuad> pane(Direction facing,double near,NativePanelSlice opening,
             Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity){return pane(facing,near,opening,glass,mode,group,borderX,borderY,opacity,0);}
     static List<BakedQuad> pane(Direction facing,double near,NativePanelSlice opening,
             Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity,double imageAspect){
         Context context=new Context(facing,glass,mode,group,true,borderX,borderY,near-6,opacity,imageAspect);context.current=glass;
+        pane(context,opening);
+        return context.finish();
+    }
+    private static void pane(Context context,NativePanelSlice opening){
         for(int depth:new int[]{7,9})for(int q=0;q<opening.glassCount();q++){
             PanelVertexEmitter.raw(RAW,context,depth==7,opening.glass(q,0),opening.glass(q,1),depth,opening.glass(q,0)/16,1-opening.glass(q,1)/16,opening.glass(q,2),opening.glass(q,3),depth,opening.glass(q,2)/16,1-opening.glass(q,3)/16,opening.glass(q,4),opening.glass(q,5),depth,opening.glass(q,4)/16,1-opening.glass(q,5)/16,opening.glass(q,6),opening.glass(q,7),depth,opening.glass(q,6)/16,1-opening.glass(q,7)/16);
         }
-        return context.finish();
+    }
+    private record Mesh(float[] vertices,List<Material> materials){}
+    private static final PanelTextureMesh.Sink<Context,Material> CAP=new PanelTextureMesh.Sink<>(){
+        public void atlas(Context context,Material material,double x,double y,double z,double u,double v,float nx,float ny,float nz){context.source(material,x,y,z,u,v,nx,ny,nz);}
+        public void pixel(Context context,Material material,double x,double y,double z,double u,double v,float nx,float ny,float nz){context.source(material,x,y,z,NativeHousingQuads.atlas(material.surface,u,true),NativeHousingQuads.atlas(material.surface,v,false),nx,ny,nz);}
+    };
+    private static void part(Context target,Mesh source,int turns,double depth,double left,double width,double barNear,boolean outside){
+        float[] points=PanelMeshTransform.transform(source.vertices,turns,depth,left,width);double[] bounds={barNear,barNear+4,-1,17,-1,17};
+        for(int q=0;q<source.materials.size();q++){target.current=source.materials.get(q);PanelMeshTransform.box(RAW,target,points,q*32,q*32+32,bounds,outside);}
+    }
+    static List<BakedQuad> barBody(com.vandorlabs.neoforge.shape.NativeFlatBarOwner owner,com.vandorlabs.neoforge.shape.NativeFlatWallGeometry.Geometry geometry,
+            com.vandorlabs.neoforge.shape.NativePortholeLayout aperture,Material wall,Material interior,Material exterior){
+        Context stem=new Context(Direction.NORTH,wall,0,NativePanelLayout.UNIT,false,0,0,0,1,0,true),bar=new Context(Direction.NORTH,wall,0,NativePanelLayout.UNIT,false,0,0,0,1,0,true);
+        if(aperture==null){PanelMeshEmitter.flat(EMITTER,stem,wall,interior,owner.panelNear(),geometry.join().corner());PanelMeshEmitter.flat(EMITTER,bar,wall,exterior,6,null);}
+        else{aperture(stem,NativePanelSlice.get(aperture),wall,interior,exterior,aperture.hideLeft(),aperture.hideRight(),aperture.hideLower(),aperture.hideUpper(),4);aperture(bar,NativePanelSlice.get(com.vandorlabs.neoforge.shape.NativePortholeLayout.unit(aperture.shape())),wall,interior,exterior,false,false,false,false,4);}
+        Mesh stemMesh=stem.captured(),barMesh=bar.captured();Context target=new Context(owner.facing(),wall,0,NativePanelLayout.UNIT);
+        double depth=aperture==null?0:owner.panelNear()-6,left=aperture==null?0:owner.stemLeft(),width=aperture==null?1:owner.stemWidth();
+        part(target,stemMesh,0,depth,left,width,owner.barNear(),true);
+        PanelMeshTransform.end(CAP,target,interior,PanelMeshTransform.transform(stemMesh.vertices,0,depth,left,width),owner.stemCut(),owner.panelNear(),owner.leftTail());
+        part(target,barMesh,3,owner.barNear()-6,0,1,owner.barNear(),false);return target.finish();
+    }
+    static List<BakedQuad> barPane(com.vandorlabs.neoforge.shape.NativeFlatBarOwner owner,com.vandorlabs.neoforge.shape.NativePortholeLayout aperture,
+            Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity,double imageAspect){
+        Context stem=new Context(Direction.NORTH,glass,mode,group,true,borderX,borderY,0,opacity,imageAspect,true),bar=new Context(Direction.NORTH,glass,mode,group,true,borderX,borderY,0,opacity,imageAspect,true);stem.current=glass;bar.current=glass;
+        pane(stem,NativePanelSlice.get(aperture));pane(bar,NativePanelSlice.get(com.vandorlabs.neoforge.shape.NativePortholeLayout.unit(aperture.shape())));
+        Context target=new Context(owner.facing(),glass,0,NativePanelLayout.UNIT,false,0,0,0,opacity,0);
+        part(target,stem.captured(),0,owner.panelNear()-6,owner.stemLeft(),owner.stemWidth(),owner.barNear(),true);part(target,bar.captured(),3,owner.barNear()-6,0,1,owner.barNear(),false);return target.finish();
     }
     private NativePanelQuads(){}
 }

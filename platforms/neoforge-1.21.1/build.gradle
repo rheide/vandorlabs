@@ -343,3 +343,12 @@ tasks.register('testNativeDiagonalModel', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('diagonalReference')) systemProperty 'vandorlabs.diagonalReference', file(project.property('diagonalReference')).absolutePath
 }
+
+tasks.register('testNativePanelBars', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativePanelBarChecks'
+    maxHeapSize = '1G'
+    args file(project.findProperty('panelBarReference') ?: '../../build/test-artifacts/panel-bar-forge.jsonl').absolutePath
+}

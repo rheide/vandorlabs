@@ -19,7 +19,7 @@ public final class NativePanelApertureChecks {
     private static final class Sprite extends TextureAtlasSprite{Sprite(SpriteContents contents,int x){super(TextureAtlas.LOCATION_BLOCKS,contents,32,16,x,0);}}
     private static void need(boolean value,String message){checks++;if(!value)throw new AssertionError(message);}
     private static int integer(JsonObject record,String field){return record.get(field).getAsInt();}
-    private static void compare(JsonArray source,List<BakedQuad> nativeQuads,Direction facing,double near,String key){
+    static void compare(JsonArray source,List<BakedQuad> nativeQuads,Direction facing,double near,String key){
         need(source.size()%32==0&&nativeQuads.size()==source.size()/16,key+" complete doubled quad count "+source.size()+"/"+nativeQuads.size());int turns=facing==Direction.WEST?1:facing==Direction.SOUTH?2:facing==Direction.EAST?3:0;
         for(int q=0;q<source.size()/32;q++){
             int[] data=nativeQuads.get(q*2).getVertices(),back=nativeQuads.get(q*2+1).getVertices();for(int v=0;v<4;v++){
@@ -33,6 +33,7 @@ public final class NativePanelApertureChecks {
             need(!nativeQuads.get(q*2).isShade()&&!nativeQuads.get(q*2).hasAmbientOcclusion(),key+" legacy unshaded material");
         }poses++;
     }
+    static long checksCount(){return checks;}
     private static void cacheChecks()throws Exception{
         var source=new WindowOutline(1,1,WindowOutline.HEXAGON).slice(0,0);var owned=new NativePanelSlice(source);double original=owned.frame(0,0);source.frameQuads.getFirst()[0]=Double.NaN;need(owned.frame(0,0)==original,"slice owns source arrays");
         var descriptor=com.vandorlabs.neoforge.shape.NativePortholeLayout.unit(WindowOutline.ROUND);var first=NativePanelSlice.get(descriptor);need(first==NativePanelSlice.get(descriptor),"same cold slice reused");var contact=com.vandorlabs.neoforge.shape.NativePortholeLayout.contacts(com.vandorlabs.neoforge.shape.NativePanelLayout.UNIT,WindowOutline.ROUND,15);need(first==NativePanelSlice.get(contact),"rail contact flags do not duplicate aperture data");
