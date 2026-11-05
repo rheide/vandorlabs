@@ -10,7 +10,7 @@ import javax.imageio.ImageIO;
 
 /** Common-side discovery; texture identifiers depend on relative paths, never list order. */
 public final class FilesystemTextures {
-    public static final int ID_BASE=0x40000000;
+    public static final int ID_BASE=MaterialChoicePolicy.FILESYSTEM_BASE;
     private static final List<JsonObject> entries=new ArrayList<>();
     private static Path root;
     private FilesystemTextures(){ }
