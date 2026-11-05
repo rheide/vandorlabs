@@ -3,7 +3,8 @@ package com.vandorlabs.persistence;
 import java.util.HashMap;
 import java.util.Map;
 
-final class MemoryPrimitiveData implements HousingTags {
+final class MemoryPrimitiveData implements HousingTags,FrameSettings.Tag {
+    @Override public void remove(String key){values.remove(key);}
     private final Map<String,Object> values=new HashMap<>();
     @Override public boolean containsInt(String key) { return values.get(key) instanceof Integer; }
     @Override public boolean containsBoolean(String key) { return values.get(key) instanceof Boolean; }
