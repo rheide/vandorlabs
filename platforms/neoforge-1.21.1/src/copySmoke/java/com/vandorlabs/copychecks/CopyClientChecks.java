@@ -20,6 +20,7 @@ public final class CopyClientChecks {
         CopyServerChecks.require(++ticks<1600,"client timeout stage="+stage+" round="+round+" mode="+mc.gameMode.getPlayerMode()+" selected="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem());
         if(stage==0){
             if(ticks<80||mc.gameMode.getPlayerMode()!=GameType.SURVIVAL||!mc.player.getMainHandItem().isEmpty()||!mc.level.getBlockState(CopyServerChecks.TABLE).is(net.minecraft.world.level.block.Blocks.CRAFTING_TABLE))return;
+            if(round==1)TransmitterCopyRuntimeChecks.cache(mc.level);
             var result=mc.gameMode.useItemOn(mc.player,InteractionHand.MAIN_HAND,new BlockHitResult(new Vec3(.5,80.5,0),Direction.NORTH,CopyServerChecks.TABLE,false));CopyServerChecks.require(result.consumesAction(),"actual table interaction refused");stage=1;at=ticks;
         }else if(stage==1){
             if(!(mc.player.containerMenu instanceof CraftingMenu menu)||menu.getSlot(0).getItem().isEmpty())return;

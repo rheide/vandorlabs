@@ -28,7 +28,17 @@ public final class TransmitterCopyRuntimeChecks {
         Arrays.sort(allocations);System.out.println("[vandorlabs][transmitter-copy] "+phase+" PASS queries="+count+" rounds=5 median-bytes/input="+allocations[2]/(double)count+" cropped="+sink.width()+"x"+sink.height());event.getServer().halt(false);
     }
     private static ItemStack configured(int tier,int channel,String key,int value){ItemStack stack=NativeTransmitterItem.variant(VandorLabsBootstrap.REDSTONE_TRANSMITTER.get(),tier);NativeTransmitterItem.configure(stack,com.vandorlabs.redstone.ChannelList.of(channel));var tag=stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA).copyTag();tag.putInt(key,value);stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(tag));return stack;}
+    public static void cache(net.minecraft.world.level.Level world){
+        ItemStack source=configured(1,7,"Source",23),target=configured(3,9,"Target",31);List<ItemStack> top=new ArrayList<>(Collections.nCopies(9,ItemStack.EMPTY)),middle=new ArrayList<>(Collections.nCopies(9,ItemStack.EMPTY));top.set(0,source);top.set(1,target);middle.set(4,source);middle.set(5,target);
+        CraftingInput invalid=CraftingInput.of(3,3,top),valid=CraftingInput.of(3,3,middle);require(invalid.equals(valid),"cache regression must use vanilla-equal cropped inputs");
+        var negative=new net.minecraft.world.item.crafting.RecipeCache(10);require(negative.get(world,invalid).isEmpty(),"invalid original grid rejected before cachehit");boolean invalidThenValid=negative.get(world,valid).isPresent();
+        var positive=new net.minecraft.world.item.crafting.RecipeCache(10);var result=positive.get(world,valid);require(result.isPresent(),"valid original grid resolves before cachehit");boolean validThenInvalid=positive.get(world,invalid).isEmpty();
+        System.out.println("[vandorlabs][transmitter-copy] cache-results invalid-to-valid="+invalidThenValid+" valid-to-invalid="+validThenInvalid);
+        require(invalidThenValid&&validThenInvalid,"actual vanilla RecipeCache erased original context across cachehit");
+        System.out.println("[vandorlabs][transmitter-copy] cache PASS actual RecipeCache both context orders");
+    }
     private static void recipes(net.minecraft.server.level.ServerLevel world){
+        cache(world);
         var recipe=(net.minecraft.world.item.crafting.CraftingRecipe)world.getRecipeManager().byKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","redstone_transmitter_copy")).orElseThrow().value();
         for(int a=0;a<9;a++)for(int b=0;b<9;b++)if(a!=b){
             ItemStack first=configured(1,7,"FirstUnknown",23),second=configured(3,9,"SecondUnknown",31);List<ItemStack> grid=new ArrayList<>(Collections.nCopies(9,ItemStack.EMPTY));grid.set(a,first);grid.set(b,second);CraftingInput input=CraftingInput.of(3,3,grid);boolean valid=a==4&&(b==3||b==5)||b==4&&(a==3||a==5);
