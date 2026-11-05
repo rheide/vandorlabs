@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share Trigger and housing save contracts while preserving legacy missing-field defaults, material migrations, six face overrides and dormant Trigger playback data. Add a focused Trigger dialog regression without running unrelated gameplay fixtures.
+
 - Add the experimental NeoForge plain matter block and matter/alloy ingots with canonical recipes, artwork and native persistence/interaction checks. The programmable block editor and production chain remain under development.
 - Share saved material-ID validation while retaining unavailable custom and filesystem artwork identities.
 

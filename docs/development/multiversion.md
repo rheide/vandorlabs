@@ -67,7 +67,9 @@ Keep `onLoad()` local and queue membership through the platform's deferred loade
 
 Run portable contracts under both Java 8 and Java 21, then validate the affected legacy paths and dedicated-server linkage. Native acceptance requires save/reload across separate processes and focused world, dialog, item and interaction checks against immutable compiled outputs. Include negative controls for rendering or interaction claims; compilation alone cannot establish family parity.
 
-## Programmable glass settings
+## Programmable glass settings (historical branch design)
+
+The following glass extraction remains on the historical upgrade branch; it is not integrated native support on master.
 
 `ProgrammableGlassSettings` owns glass-specific saved defaults, typed tag reads,
 legacy metadata-size migration and the stored panel orientation. It retains a
@@ -81,7 +83,9 @@ layout while stock glass is selected, and preserves the established detail-zero
 submission without changing the tile merely by opening its editor. Native glass
 must use these same contracts; extracting them does not establish native support.
 
-## Flat panel geometry
+## Flat panel geometry (historical branch design)
+
+The following complete flat-panel extraction remains a reference for later integration; current shared helpers do not establish native wall support.
 
 Flat walls and portholes share `FlatWallTopology`, `FlatWallMesh` and
 `FlatPanelMesh`. `PanelMeshTransform` preserves the legacy float boundaries for
