@@ -29,8 +29,8 @@ final class StaticSurfaceMesh {
             double u=raw?data[i+3]:(data[i+3]-sprite.getMinU())/(sprite.getMaxU()-sprite.getMinU());
             double v=raw?data[i+4]:(data[i+4]-sprite.getMinV())/(sprite.getMaxV()-sprite.getMinV());
             if(layout.flipU)u=1-u;if(layout.flipV)v=1-v;
-            u=(layout.column+u-borderX)/width;v=(layout.rows-1-layout.row+v-borderY)/height;
-            data[i+3]=sprite.getInterpolatedU(Math.max(0,Math.min(1,u))*16);data[i+4]=sprite.getInterpolatedV(Math.max(0,Math.min(1,v))*16);
+            u=com.vandorlabs.render.PanelTextureMapping.stretch(u,layout.column,borderX,width);v=com.vandorlabs.render.PanelTextureMapping.stretch(v,layout.rows-1-layout.row,borderY,height);
+            data[i+3]=sprite.getInterpolatedU(u*16);data[i+4]=sprite.getInterpolatedV(v*16);
         }
         return new StaticSurfaceMesh(data);
     }
@@ -54,8 +54,8 @@ final class StaticSurfaceMesh {
             boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(mode,(layout.columns-2*borderX)*unitU,(layout.rows-2*borderY)*unitV,aspect);
             minU=minV=Double.POSITIVE_INFINITY;maxU=maxV=Double.NEGATIVE_INFINITY;
             for(double[] p:polygon){
-                p[3]=fit?(layout.column+p[3]-borderX)/(layout.columns-2*borderX):com.vandorlabs.render.TextureLayoutMode.tileU((layout.column+p[3])*unitU,aspect);
-                p[4]=fit?(layout.rows-1-layout.row+p[4]-borderY)/(layout.rows-2*borderY):com.vandorlabs.render.TextureLayoutMode.tileV((layout.rows-1-layout.row+p[4])*unitV,aspect);
+                p[3]=com.vandorlabs.render.PanelTextureMapping.u(fit,p[3],layout.column,layout.columns,borderX,unitU,aspect);
+                p[4]=com.vandorlabs.render.PanelTextureMapping.v(fit,p[4],layout.row,layout.rows,borderY,unitV,aspect);
                 if(fit){p[3]=Math.max(0,Math.min(1,p[3]));p[4]=Math.max(0,Math.min(1,p[4]));}
                 minU=Math.min(minU,p[3]);maxU=Math.max(maxU,p[3]);minV=Math.min(minV,p[4]);maxV=Math.max(maxV,p[4]);
             }

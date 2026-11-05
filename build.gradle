@@ -1351,3 +1351,11 @@ task testWallFrameLegacy(type: JavaExec) {
     main = 'com.vandorlabs.client.WallFrameLegacyChecks'
     systemProperty 'vandorlabs.wallFrameExport', file(project.findProperty('wallFrameExport') ?: 'build/test-artifacts/wall-frame-forge.json').absolutePath
 }
+
+task testPanelTextureMappingAdapters(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PanelTextureMappingChecks'
+}
+check.dependsOn testPanelTextureMappingAdapters
