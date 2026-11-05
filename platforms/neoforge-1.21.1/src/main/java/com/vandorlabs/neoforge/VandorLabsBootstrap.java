@@ -63,6 +63,16 @@ public final class VandorLabsBootstrap {
     public static final DeferredHolder<Item,BlockItem> SMALL_POWER_LEVER_ITEM=ITEMS.register("small_power_lever",()->new BlockItem(SMALL_POWER_LEVER.get(),new Item.Properties()));
     public static final DeferredHolder<Item,BlockItem> LARGE_POWER_LEVER_ITEM=ITEMS.register("large_power_lever",()->new BlockItem(LARGE_POWER_LEVER.get(),new Item.Properties()));
     private static NativePowerLeverBlock powerLever(boolean twin,int size){return new NativePowerLeverBlock(BlockBehaviour.Properties.of().mapColor(MapColor.NONE).strength(.5f,.5f).sound(SoundType.METAL).noOcclusion().dynamicShape().pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY),twin,size);}
+    public static final DeferredHolder<Block,NativeSignalControlBlock> THRUSTER_LEVER=BLOCKS.register("thruster_lever",()->signalControl(0,true));
+    public static final DeferredHolder<Item,BlockItem> THRUSTER_LEVER_ITEM=ITEMS.register("thruster_lever",()->new BlockItem(THRUSTER_LEVER.get(),new Item.Properties()));
+    public static final DeferredHolder<Block,NativeSignalControlBlock> AIRLINER_THROTTLE=BLOCKS.register("airliner_throttle",()->signalControl(1,true));
+    public static final DeferredHolder<Item,BlockItem> AIRLINER_THROTTLE_ITEM=ITEMS.register("airliner_throttle",()->new BlockItem(AIRLINER_THROTTLE.get(),new Item.Properties()));
+    public static final DeferredHolder<Block,NativeSignalControlBlock> FIGHTER_THROTTLE=BLOCKS.register("fighter_throttle",()->signalControl(2,true));
+    public static final DeferredHolder<Item,BlockItem> FIGHTER_THROTTLE_ITEM=ITEMS.register("fighter_throttle",()->new BlockItem(FIGHTER_THROTTLE.get(),new Item.Properties()));
+    public static final DeferredHolder<Block,NativeSignalControlBlock> WALL_SLIDER=BLOCKS.register("wall_slider",()->signalControl(0,false));
+    public static final DeferredHolder<Item,BlockItem> WALL_SLIDER_ITEM=ITEMS.register("wall_slider",()->new BlockItem(WALL_SLIDER.get(),new Item.Properties()));
+    private static NativeSignalControlBlock signalControl(int type,boolean selectable){return new NativeSignalControlBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).noOcclusion().dynamicShape().requiresCorrectToolForDrops(),type,selectable);}
+    public static final DeferredHolder<net.minecraft.world.level.block.entity.BlockEntityType<?>,net.minecraft.world.level.block.entity.BlockEntityType<NativeSignalControlBlockEntity>> SIGNAL_CONTROL_ENTITY=ENTITIES.register("signal_control",()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(NativeSignalControlBlockEntity::new,THRUSTER_LEVER.get(),AIRLINER_THROTTLE.get(),FIGHTER_THROTTLE.get(),WALL_SLIDER.get()).build(null));
     public static final DeferredHolder<net.minecraft.world.level.block.entity.BlockEntityType<?>,net.minecraft.world.level.block.entity.BlockEntityType<NativeBinaryControlBlockEntity>> BINARY_CONTROL_ENTITY=ENTITIES.register("redstone_channel",()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(NativeBinaryControlBlockEntity::new,PUSH_BUTTON.get(),ROCKER_SWITCH.get(),INDUSTRIAL_POWER_LEVER.get(),COMPACT_POWER_LEVER.get(),SMALL_POWER_LEVER.get(),LARGE_POWER_LEVER.get()).build(null));
     public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<BinaryControlMenu>> BINARY_CONTROL_MENU=MENUS.register("binary_control",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new BinaryControlMenu(id,inventory,buffer.readBlockPos())));
     static {
@@ -70,11 +80,11 @@ public final class VandorLabsBootstrap {
             .icon(() -> MATTER_BLOCK_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 for(int tier=0;tier<4;tier++)output.accept(com.vandorlabs.neoforge.redstone.NativeTransmitterItem.variant(REDSTONE_TRANSMITTER.get(),tier));
-                output.accept(INDUSTRIAL_POWER_LEVER_ITEM.get());output.accept(SMALL_POWER_LEVER_ITEM.get());output.accept(PUSH_BUTTON_ITEM.get());output.accept(ROCKER_SWITCH_ITEM.get());output.accept(PROGRAMMABLE_ITEM.get());output.accept(TRIGGER_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
+                output.accept(THRUSTER_LEVER_ITEM.get());output.accept(WALL_SLIDER_ITEM.get());output.accept(INDUSTRIAL_POWER_LEVER_ITEM.get());output.accept(SMALL_POWER_LEVER_ITEM.get());output.accept(PUSH_BUTTON_ITEM.get());output.accept(ROCKER_SWITCH_ITEM.get());output.accept(PROGRAMMABLE_ITEM.get());output.accept(TRIGGER_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
             }).build());
     }
     public VandorLabsBootstrap(IEventBus bus) {
         FilesystemMaterials.initialize();com.vandorlabs.neoforge.redstone.TransmitterCopyRegistration.register(bus);
-        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(PowerLeverPayload::register);bus.addListener(BinaryControlPayload::register);bus.addListener(BinaryTransmissionPayload::register);bus.addListener(FinishPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
+        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(SignalControlPayload::register);bus.addListener(PowerLeverPayload::register);bus.addListener(BinaryControlPayload::register);bus.addListener(BinaryTransmissionPayload::register);bus.addListener(FinishPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
     }
 }

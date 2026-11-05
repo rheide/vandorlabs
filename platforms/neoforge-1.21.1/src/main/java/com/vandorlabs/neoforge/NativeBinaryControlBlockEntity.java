@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.data.*;
 
 /** Current mounted rocker/button state; runtime latch data is never copied into ordinary items. */
-public final class NativeBinaryControlBlockEntity extends BlockEntity implements NativeChannelLatch,ControlLatchData.LevelLookup {
+public class NativeBinaryControlBlockEntity extends BlockEntity implements NativeChannelLatch,ControlLatchData.LevelLookup {
     public record Visual(ControlMountSettings mount,int rotation,int size){public Visual(ControlMountSettings mount,int rotation){this(mount,rotation,0);}}
     public static final ModelProperty<Visual> VISUAL=new ModelProperty<>();
     private ChannelList channels=ChannelList.EMPTY,latched=ChannelList.EMPTY,transmission=ChannelList.EMPTY;
@@ -23,7 +23,8 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     private ControlMountSettings mount=ControlMountSettings.of(0,0,0);
     private volatile Visual visual=new Visual(mount,0);
     private CompoundTag retained=new CompoundTag();
-    public NativeBinaryControlBlockEntity(BlockPos pos,BlockState state){super(VandorLabsBootstrap.BINARY_CONTROL_ENTITY.get(),pos,state);visual=new Visual(mount,rotation,visualSize());}
+    public NativeBinaryControlBlockEntity(BlockPos pos,BlockState state){this(VandorLabsBootstrap.BINARY_CONTROL_ENTITY.get(),pos,state);}
+    protected NativeBinaryControlBlockEntity(net.minecraft.world.level.block.entity.BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);visual=new Visual(mount,rotation,visualSize());}
     @Override public boolean isChannelMemberActive(){return getBlockState().getBlock() instanceof NativeMountedControl&&NativeChannelLatch.super.isChannelMemberActive();}
     @Override public BlockEntity channelBlockEntity(){return this;}
     @Override public ChannelList getRedstoneChannels(){return channels;}
@@ -34,6 +35,11 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     public ControlMountSettings mountSettings(){return mount;}
     public int mountRotation(){return rotation;}
     private int visualSize(){return supportsPowerLeverSize()?getPowerLeverSize():0;}
+    public boolean supportsSignalControl(){return false;}
+    public boolean isSelectableControlType(){return false;}
+    public int getControlType(){return 0;}
+    public int getLowLimit(){return 5;}
+    public int getHighLimit(){return 15;}
     public boolean supportsPowerLeverSize(){return getBlockState().getBlock() instanceof NativeMountedControl control&&control.defaultPowerLeverSize()>=0;}
     public boolean isTwinPowerLever(){return getBlockState().getBlock() instanceof NativeMountedControl control&&control.isTwinPowerLever();}
     public int getPowerLeverSize(){if(PowerLeverSize.hasSavedValue(powerLeverSize))return powerLeverSize;return getBlockState().getBlock() instanceof NativeMountedControl control&&control.defaultPowerLeverSize()>=0?control.defaultPowerLeverSize():0;}
@@ -47,11 +53,11 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     public int getOutputLevel(){return ControlLatchData.outputLevel(localOn,channels,this);}
     @Override public boolean isChannelLatch(){return getBlockState().getBlock() instanceof NativeMountedControl block&&!block.isMomentary();}
     @Override public void setChannelLevel(int ignored){} // Received aggregate never becomes an independent local source.
-    private void changed(){
+    protected final void changed(){
         setChanged();visual=new Visual(mount,rotation,visualSize());requestModelDataUpdate();
         if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);
     }
-    private boolean linkedState(){
+    protected boolean linkedState(){
         if(level==null||level.isClientSide||!(getBlockState().getBlock() instanceof NativeMountedControl block)||block.isMomentary())return false;
         BlockState state=getBlockState();if(block.powered(state)==localOn)return false;
         level.setBlock(worldPosition,block.withPowered(state,localOn),2);return true;
@@ -84,14 +90,19 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     private void setChannels(ChannelList next){
         if(channels.equals(next))return;latched=localOn?next:latched.intersect(next);channels=next;changed();
     }
+    protected final void setMountValue(ControlMountSettings next){mount=next;}
+    protected ControlMountSettings readSavedMount(ModernHousingTags tag){return ControlMountSettings.read(tag,mount.height,mount.tilt,mount.direction);}
+    /** Invoked after the new subscriptions are installed, within the existing signal batch. */
+    protected void transmissionChannelsChanged(ChannelList previous,int previousOutput){}
     public boolean configureMount(ControlMountSettings next){if(next==null||level!=null&&!(getBlockState().getBlock() instanceof NativeMountedControl))return false;mount=next;changed();return true;}
     public boolean configureTransmission(ChannelList next,int radius,boolean nativeOutput){
         if(!TransmissionSettings.validConfiguration(next,radius))return false;
         if(next.equals(transmission)&&radius==range&&nativeOutput==local&&next.equals(channels))return true;
         Runnable apply=()->{
+            ChannelList previousChannels=channels;int previousOutput=getOutputLevel();
             if(level instanceof ServerLevel)NativeRedstoneChannels.unregister(this);transmission=next;range=radius;boolean before=local;local=nativeOutput;
             CompoundTag forge=retained.getCompound("ForgeData"),all=forge.getCompound(TransmissionSettings.SETTINGS),settings=new CompoundTag();settings.putIntArray("Channels",next.toArray());settings.putInt("Range",radius);settings.putBoolean("Local",nativeOutput);all.put("main",settings);forge.put(TransmissionSettings.SETTINGS,all);retained.put("ForgeData",forge);
-            setChannels(next);if(level instanceof ServerLevel)NativeRedstoneChannels.channelsChanged(this);changed();if(before!=local)notifyPhysical();
+            setChannels(next);if(level instanceof ServerLevel)NativeRedstoneChannels.channelsChanged(this);if(!previousChannels.equals(channels))transmissionChannelsChanged(previousChannels,previousOutput);changed();if(before!=local)notifyPhysical();
         };
         if(level instanceof ServerLevel server)NativeRedstoneChannels.batch(server,apply);else apply.run();
         return true;
@@ -122,7 +133,7 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.loadAdditional(tag,registries);retained=tag.copy();for(String key:List.of("id","x","y","z","components","NeoForgeData","neoforge:attachments"))retained.remove(key);
         var primitive=new ModernHousingTags(tag);var data=RedstoneData.Source.read(primitive);channels=readChannels(tag,"RedstoneChannels",ChannelList.of(data.channel));localOn=data.localOn;initialized=data.initialized;rotation=data.mountRotation;
-        mount=ControlMountSettings.read(primitive,mount.height,mount.tilt,mount.direction);powerLeverSize=PowerLeverSize.readSaved(tag.contains(PowerLeverSize.KEY,Tag.TAG_INT),tag.getInt(PowerLeverSize.KEY));latched=ControlLatchData.read(primitive,channels,localOn,levels);
+        mount=readSavedMount(primitive);powerLeverSize=PowerLeverSize.readSaved(tag.contains(PowerLeverSize.KEY,Tag.TAG_INT),tag.getInt(PowerLeverSize.KEY));latched=ControlLatchData.read(primitive,channels,localOn,levels);
         CompoundTag configured=tag.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main");
         transmission=TransmissionSettings.readChannels(configured.contains("Channels",Tag.TAG_INT_ARRAY),configured.getIntArray("Channels"),channels);range=TransmissionSettings.readRange(configured.contains("Range",Tag.TAG_INT),configured.getInt("Range"),true);local=TransmissionSettings.readLocal(configured.contains("Local",Tag.TAG_BYTE),configured.getBoolean("Local"),true);
         registrationPending=true;visual=new Visual(mount,rotation,visualSize());requestModelDataUpdate();

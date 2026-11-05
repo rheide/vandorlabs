@@ -18,4 +18,6 @@ Native Push Buttons and Rocker Switches retain configurable mounts, saved channe
 
 Native Industrial and Small Power Levers now use the same mounted-control dialog and channel banks. The Size option retains Compact and Large legacy variants, and configured items preserve their mount and size. Focused save/restart, emitted-model and exact-JAR client checks cover both families.
 
+Native four-step levers and sliders share that dialog and renderer. Throttles retain their three selectable styles; the Redstone page sets the two middle detents. Type, mount and limit edits commit together on Done, while inline transmission remains immediate.
+
 Other native families, optional material providers, copy tools, carried assemblies, hardware shader acceptance and matter-production machines remain incomplete. Dedicated-server checks, emitted-model checks and ordinary client interaction checks are separate acceptance requirements; this remains a development build.

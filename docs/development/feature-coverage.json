@@ -414,7 +414,11 @@
         "compact_power_lever",
         "industrial_power_lever",
         "small_power_lever",
-        "large_power_lever"
+        "large_power_lever",
+        "thruster_lever",
+        "airliner_throttle",
+        "fighter_throttle",
+        "wall_slider"
       ],
       "implemented": [
         "Native Trigger uses shared saved state and dialog policy, with loaded local analog power and positional channel delivery.",
@@ -423,7 +427,8 @@
         "Native push buttons and rockers reuse shared mount geometry, saved banks and dialog rows, with ranged inline transmission, partial latch banks and independent twenty-tick pulses.",
         "Actual Forge bank inputs, subsequent-process persistence, physical neighbor consistency, configured drops, tool requirements and dynamic mounted collision pass focused checks.",
         "Authored geometry and padded items match actual Forge output before and after reload; exact packaged-JAR GUI and installed-world interaction pass through ModDev, including GUI scales 2 and 3.",
-        "Native power lever families reuse the mounted host, actions, dialog and renderer, preserving hidden variants, size defaults, canonical configured items and partial banks. Focused persistence, actual Forge emitted geometry and exact-JAR UI/world checks pass; binary UI also passes on that frozen JAR."
+        "Native power lever families reuse the mounted host, actions, dialog and renderer, preserving hidden variants, size defaults, canonical configured items and partial banks. Focused persistence, actual Forge emitted geometry and exact-JAR UI/world checks pass; binary UI also passes on that frozen JAR.",
+        "Native four-step throttles and Wall Sliders reuse the mounted host, dialog and renderer. Shared scalar persistence and limit/type rows retain four detents, partial banks, canonical configured items and hidden throttle variants; focused persistence and actual emitted model/reload comparisons pass."
       ],
       "acceptance_limits": [
         "Trigger uses development-classpath validation; binary controls and power levers additionally have exact packaged-JAR GUI/world validation through ModDev. Standalone installer and hardware shader acceptance remain separate.",

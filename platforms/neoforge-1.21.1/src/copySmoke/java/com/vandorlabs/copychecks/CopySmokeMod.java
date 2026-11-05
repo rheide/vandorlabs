@@ -23,7 +23,8 @@ public final class CopySmokeMod {
             NeoForge.EVENT_BUS.register(TransmitterCopyRuntimeChecks.class);
             NeoForge.EVENT_BUS.register(CopyServerChecks.class);
             String phase=System.getProperty("vandorlabs.transmitterPhase","");
-            if(phase.equals("binary-ui")||phase.equals("power-ui")){
+            if(phase.equals("binary-ui")||phase.equals("power-ui")||phase.equals("signal-ui")){
+                if(phase.equals("signal-ui"))prove(jar,"com.vandorlabs.persistence.SignalControlData");
                 prove(jar,"com.vandorlabs.neoforge.NativeMountedControlGeometry","com.vandorlabs.neoforge.NativeMountedControlActions","com.vandorlabs.ui.MountedControlDialog","com.vandorlabs.persistence.ControlMountSettings","com.vandorlabs.persistence.PowerLeverSize");
                 if(net.neoforged.fml.loading.FMLEnvironment.dist==net.neoforged.api.distmarker.Dist.CLIENT)prove(jar,"com.vandorlabs.neoforge.NativeMountedControlModel","com.vandorlabs.neoforge.NativeAuthoredControlBake");
                 System.out.println("[vandorlabs][mounted-ui] packaged-JAR shared geometry/dialog/size/mount PASS source-classes=5 renderer-client-guarded");
@@ -34,6 +35,11 @@ public final class CopySmokeMod {
                 }
                 NeoForge.EVENT_BUS.register(BinaryGuiServerChecks.class);
                 System.out.println("[vandorlabs][binary-gui] packaged-JAR common PASS exact-hash source-classes=5");
+            }
+            if(System.getProperty("vandorlabs.transmitterPhase","").equals("signal-ui")){
+                for(String name:new String[]{"NativeSignalControlBlockEntity","NativeSignalControlBlock","NativeSignalControlPoses","BinaryControlMenu","SignalControlPayload"}){Class<?> type=Class.forName("com.vandorlabs.neoforge."+name);if(!type.getProtectionDomain().getCodeSource().getLocation().toString().contains(jar.getFileName().toString()))throw new IllegalStateException("signal common source fallback: "+name);}
+                NeoForge.EVENT_BUS.register(SignalGuiServerChecks.class);System.out.println("[vandorlabs][signal-gui] packaged-JAR common PASS exact-hash source-classes=5");
+                if(net.neoforged.fml.loading.FMLEnvironment.dist==net.neoforged.api.distmarker.Dist.CLIENT){for(String name:new String[]{"NativeBinaryControlScreen","NativeInlineTransmissionWidget"}){Class<?> type=Class.forName("com.vandorlabs.neoforge.client."+name);if(!type.getProtectionDomain().getCodeSource().getLocation().toString().contains(jar.getFileName().toString()))throw new IllegalStateException("signal client source fallback: "+name);}NeoForge.EVENT_BUS.register(Class.forName("com.vandorlabs.copychecks.SignalGuiClientChecks"));System.out.println("[vandorlabs][signal-gui] packaged-JAR client PASS exact-hash source-classes=2");}
             }
             if(System.getProperty("vandorlabs.transmitterPhase","").equals("power-ui")){
                 for(String name:new String[]{"NativeBinaryControlBlockEntity","NativeMountedControl","BinaryControlMenu","PowerLeverPayload","BinaryTransmissionPayload"}){

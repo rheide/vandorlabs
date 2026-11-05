@@ -68,13 +68,25 @@ public final class NativeMountedControlGeometry {
         String key=(size<0?key(state,rotation):powerKey(state,size))+"/"+(mount.height+4*(mount.tilt+4*mount.direction));
         Geometry cached=SHAPES.getIfPresent(key);if(cached!=null)return cached;
         {
-            Pose pose=size<0?pose(state,rotation):powerPose(state,size);ControlMountTransform<Vec3,AABB> transform=size<0?transform(state,mount,rotation):powerTransform(state,mount,size);List<AABB> boxes=new ArrayList<>();
-            for(List<Vec3> component:pose.components){List<Vec3> points=new ArrayList<>(8);for(Vec3 p:component)points.add(transform.transform(p.x,p.y,p.z));boxes.add(hull(points));}
-            if(mount.height+4*mount.tilt>0)for(AABB b:pose.supports)boxes.addAll(transform.wedgeBoxes(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));
-            AABB bounds=boxes.getFirst();for(AABB b:boxes)bounds=bounds.minmax(b);VoxelShape shape=union(boxes);
-            Geometry result=new Geometry(List.copyOf(boxes),bounds,shape);SHAPES.put(key,result);return result;
+            Pose pose=size<0?pose(state,rotation):powerPose(state,size);ControlMountTransform<Vec3,AABB> transform=size<0?transform(state,mount,rotation):powerTransform(state,mount,size);
+            return assemble(key,pose,transform,mount);
         }
     }
+    private static Geometry assemble(String key,Pose pose,ControlMountTransform<Vec3,AABB> transform,ControlMountSettings mount){
+        List<AABB> boxes=new ArrayList<>();
+        for(List<Vec3> component:pose.components){List<Vec3> points=new ArrayList<>(8);for(Vec3 p:component)points.add(transform.transform(p.x,p.y,p.z));boxes.add(hull(points));}
+        if(mount.height+4*mount.tilt>0)for(AABB b:pose.supports)boxes.addAll(transform.wedgeBoxes(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));
+        AABB bounds=boxes.getFirst();for(AABB b:boxes)bounds=bounds.minmax(b);VoxelShape shape=union(boxes);Geometry result=new Geometry(List.copyOf(boxes),bounds,shape);SHAPES.put(key,result);return result;
+    }
+    public static Pose signalPose(BlockState state,int rotation){String key="signal:"+NativeSignalControlPoses.key(state,rotation);synchronized(POSES){return POSES.computeIfAbsent(key,k->{
+        JsonObject root=json(NativeSignalControlPoses.modelPath(state,rotation));JsonArray values=root.has("elements")?root.getAsJsonArray("elements"):elements(root.get("parent").getAsString(),1);List<List<Vec3>> components=components(values,point->NativeSignalControlPoses.orientPoint(point,state,rotation));
+        AABB support=NativeSignalControlPoses.support(state,rotation);return new Pose(List.copyOf(components),List.of(support),support);
+    });}}
+    public static ControlMountTransform<Vec3,AABB> signalTransform(BlockState state,ControlMountSettings mount,int rotation){AABB b=signalPose(state,rotation).support;return new ControlMountTransform<>(NativeSignalControlPoses.face(state).get3DDataValue(),NativeSignalControlPoses.rotation(state,rotation),mount.height,mount.tilt,mount.direction,b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ,NativeMountedControlGeometry::point,AABB::new);}
+    private static Geometry signalGeometry(BlockState state,ControlMountSettings mount,int rotation){String key="signal:"+NativeSignalControlPoses.key(state,rotation)+"/"+(mount.height+4*(mount.tilt+4*mount.direction));Geometry cached=SHAPES.getIfPresent(key);if(cached!=null)return cached;return assemble(key,signalPose(state,rotation),signalTransform(state,mount,rotation),mount);}
+    public static VoxelShape signalShape(BlockState state,ControlMountSettings mount,int rotation){return signalGeometry(state,mount,rotation).shape;}
+    public static List<AABB> signalBoxes(BlockState state,ControlMountSettings mount,int rotation){return signalGeometry(state,mount,rotation).boxes;}
+    public static AABB signalBounds(BlockState state,ControlMountSettings mount,int rotation){return signalGeometry(state,mount,rotation).bounds;}
     /** Build the exact component union once, without repeatedly decomposing intermediate unions. */
     private static VoxelShape union(List<AABB> boxes){
         List<AABB> active=new ArrayList<>();for(AABB b:boxes)if(b.maxX-b.minX>=1e-7&&b.maxY-b.minY>=1e-7&&b.maxZ-b.minZ>=1e-7)active.add(b);if(active.isEmpty())return Shapes.empty();
@@ -90,27 +102,22 @@ public final class NativeMountedControlGeometry {
     }
     record Authored(JsonArray elements,int x,int y){}
     /** Bake-only owned parse result; never published to section workers or retained in common caches. */
-    static Authored authored(BlockState state,int rotation,int size){String[] parts=(state.getBlock() instanceof NativePowerLeverBlock?powerKey(state,size):key(state,rotation)).split("/",2);var variant=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants").getAsJsonObject(parts[1]);return new Authored(elements(variant.get("model").getAsString(),0),variant.has("x")?variant.get("x").getAsInt():0,variant.has("y")?variant.get("y").getAsInt():0);}
+    static Authored authored(BlockState state,int rotation,int size){String[] parts=(state.getBlock() instanceof NativePowerLeverBlock?powerKey(state,size):state.getBlock() instanceof NativeSignalControlPoses.Profile profile?profile.controlKind()+"/facing="+NativeSignalControlPoses.face(state).getSerializedName()+",level="+state.getValue(NativeSignalControlPoses.LEVEL)+",on="+state.getValue(NativeSignalControlBlock.ON)+",rotation="+NativeSignalControlPoses.rotation(state,rotation):key(state,rotation)).split("/",2);var variant=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants").getAsJsonObject(parts[1]);return new Authored(elements(variant.get("model").getAsString(),0),variant.has("x")?variant.get("x").getAsInt():0,variant.has("y")?variant.get("y").getAsInt():0);}
     static Authored authoredItem(String id){return new Authored(elements("vandorlabs:item/"+id,0),0,0);}
+    /** One authored element parser; profiles only add their post-element orientation. */
+    private static List<List<Vec3>> components(JsonArray values,java.util.function.UnaryOperator<Vec3> orientation){
+        List<List<Vec3>> components=new ArrayList<>();for(JsonElement value:values){JsonObject e=value.getAsJsonObject();Vec3 lo=vector(e.getAsJsonArray("from")),hi=vector(e.getAsJsonArray("to"));List<Vec3> points=new ArrayList<>(8);
+            for(double x:new double[]{lo.x,hi.x})for(double y:new double[]{lo.y,hi.y})for(double z:new double[]{lo.z,hi.z}){Vec3 p=new Vec3(x,y,z);if(e.has("rotation")){JsonObject r=e.getAsJsonObject("rotation");p=rotate(p,vector(r.getAsJsonArray("origin")),"xyz".indexOf(r.get("axis").getAsString()),r.get("angle").getAsDouble());}points.add(orientation.apply(p));}components.add(List.copyOf(points));
+        }return List.copyOf(components);
+    }
     private static Pose load(String key,Direction face){
-        String[] parts=key.split("/",2);JsonObject variant=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants").getAsJsonObject(parts[1]);
-        if(variant==null)throw new IllegalStateException("Missing mounted pose "+key);
-        List<List<Vec3>> components=new ArrayList<>();List<AABB> supports=new ArrayList<>();Vec3 normal=new Vec3(face.getStepX(),face.getStepY(),face.getStepZ()),origin=new Vec3(.5,.5,.5).subtract(normal.scale(.5));
-        for(JsonElement value:elements(variant.get("model").getAsString(),0)){
-            JsonObject e=value.getAsJsonObject();Vec3 lo=vector(e.getAsJsonArray("from")),hi=vector(e.getAsJsonArray("to"));List<Vec3> points=new ArrayList<>(8),bottom=new ArrayList<>();
-            for(double x:new double[]{lo.x,hi.x})for(double y:new double[]{lo.y,hi.y})for(double z:new double[]{lo.z,hi.z}){
-                Vec3 p=new Vec3(x,y,z);
-                if(e.has("rotation")){JsonObject r=e.getAsJsonObject("rotation");p=rotate(p,vector(r.getAsJsonArray("origin")),"xyz".indexOf(r.get("axis").getAsString()),r.get("angle").getAsDouble());}
-                // Presence matters: even a zero rotation repeats the legacy subtract/add arithmetic.
-                if(variant.has("x"))p=rotate(p,new Vec3(.5,.5,.5),0,-variant.get("x").getAsDouble());
-                if(variant.has("y"))p=rotate(p,new Vec3(.5,.5,.5),1,-variant.get("y").getAsDouble());
-                points.add(p);if(Math.abs(p.subtract(origin).dot(normal))<1e-6)bottom.add(p);
-            }
-            components.add(List.copyOf(points));if(bottom.size()>=4)supports.add(hull(bottom));
-        }
-        if(supports.isEmpty())throw new IllegalStateException("Control has no support surface "+key);
-        AABB support=supports.getFirst();for(AABB b:supports)support=support.minmax(b);
-        return new Pose(List.copyOf(components),List.copyOf(supports),support);
+        String[] parts=key.split("/",2);JsonObject variant=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants").getAsJsonObject(parts[1]);if(variant==null)throw new IllegalStateException("Missing mounted pose "+key);
+        List<List<Vec3>> components=components(elements(variant.get("model").getAsString(),0),p->{
+            // Presence matters: even a zero rotation repeats the legacy subtract/add arithmetic.
+            if(variant.has("x"))p=rotate(p,new Vec3(.5,.5,.5),0,-variant.get("x").getAsDouble());if(variant.has("y"))p=rotate(p,new Vec3(.5,.5,.5),1,-variant.get("y").getAsDouble());return p;
+        });
+        List<AABB> supports=new ArrayList<>();Vec3 normal=new Vec3(face.getStepX(),face.getStepY(),face.getStepZ()),origin=new Vec3(.5,.5,.5).subtract(normal.scale(.5));for(List<Vec3> points:components){List<Vec3> bottom=new ArrayList<>();for(Vec3 p:points)if(Math.abs(p.subtract(origin).dot(normal))<1e-6)bottom.add(p);if(bottom.size()>=4)supports.add(hull(bottom));}
+        if(supports.isEmpty())throw new IllegalStateException("Control has no support surface "+key);AABB support=supports.getFirst();for(AABB box:supports)support=support.minmax(box);return new Pose(components,List.copyOf(supports),support);
     }
     private static AABB hull(List<Vec3> points){double x=Double.POSITIVE_INFINITY,y=x,z=x,X=Double.NEGATIVE_INFINITY,Y=X,Z=X;for(Vec3 p:points){x=Math.min(x,p.x);y=Math.min(y,p.y);z=Math.min(z,p.z);X=Math.max(X,p.x);Y=Math.max(Y,p.y);Z=Math.max(Z,p.z);}return new AABB(x,y,z,X,Y,Z);}
     private static Vec3 point(double x,double y,double z){return new Vec3(x==0?0:x,y==0?0:y,z==0?0:z);}

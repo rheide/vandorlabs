@@ -5,8 +5,8 @@ from pathlib import Path
 import shutil
 from PIL import Image
 
-FAMILIES=('push_button','rocker_switch','compact_power_lever','industrial_power_lever','small_power_lever','large_power_lever')
-CANONICAL_ITEMS={'compact_power_lever':'industrial_power_lever','large_power_lever':'small_power_lever'}
+FAMILIES=('push_button','rocker_switch','compact_power_lever','industrial_power_lever','small_power_lever','large_power_lever','thruster_lever','airliner_throttle','fighter_throttle','wall_slider')
+CANONICAL_ITEMS={'compact_power_lever':'industrial_power_lever','large_power_lever':'small_power_lever','airliner_throttle':'thruster_lever','fighter_throttle':'thruster_lever'}
 
 
 def generate(root, out):

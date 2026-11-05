@@ -18,18 +18,23 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--jar',type=Path,help='Validate an existing frozen native standard JAR without rebuilding it')
     parser.add_argument('--xvfb',action='store_true')
-    parser.add_argument('--power-levers',action='store_true',help='Exercise both power lever families through the shared mounted screen')
+    family=parser.add_mutually_exclusive_group()
+    family.add_argument('--signal-controls',action='store_true',help='Exercise four-detent type and numeric-limit drafts through the shared mounted screen')
+    family.add_argument('--power-levers',action='store_true',help='Exercise both power lever families through the shared mounted screen')
     args=parser.parse_args()
-    phase='power-ui' if args.power_levers else 'binary-ui';marker='power-gui' if args.power_levers else 'binary-gui'
+    phase='signal-ui' if args.signal_controls else 'power-ui' if args.power_levers else 'binary-ui';marker='signal-gui' if args.signal_controls else 'power-gui' if args.power_levers else 'binary-gui'
     if args.xvfb and os.name=='nt':parser.error('--xvfb is Linux only')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)));env.pop('MOD_CLASSES',None)
-    base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(tempfile.mkdtemp(prefix=('power-lever-dialog-native-' if args.power_levers else 'binary-dialog-native-'),dir=str(base)))
+    base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(tempfile.mkdtemp(prefix=('signal-control-dialog-native-' if args.signal_controls else 'power-lever-dialog-native-' if args.power_levers else 'binary-dialog-native-'),dir=str(base)))
     tasks=('copySmokeJar',) if args.jar else ('jar','copySmokeJar')
     with (output/'build.log').open('w') as log:subprocess.run(command(*tasks),cwd=PLATFORM,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
     production=args.jar.resolve() if args.jar else next((PLATFORM/'build/libs').glob('*.jar'));fixture=next((PLATFORM/'build/test-fixtures').glob('*copy-smoke.jar'))
     sha=hashlib.sha256(production.read_bytes()).hexdigest();(output/'artifact.sha256').write_text(sha+'  '+production.name+'\n')
     with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
-    server_world=output/'server';world(server_world,port);properties=install(server_world,production,fixture);server_log=output/'server.log'
+    server_world=output/'server';world(server_world,port)
+    # The fixture supplies its own mounting floor; random mountain terrain can enclose a survival actor.
+    with (server_world/'server.properties').open('a') as settings:settings.write('level-type=minecraft:flat\nlevel-seed=113\n')
+    properties=install(server_world,production,fixture);server_log=output/'server.log'
     server=launch(command('runServer','-PmodernServerRunDirectory='+str(server_world),'-PtransmitterPhase='+phase,*properties),server_log,env)
     try:
         deadline=time.monotonic()+120
@@ -42,8 +47,10 @@ def main():
         run(launch_client,output/'client.log','[vandorlabs]['+marker+'] client PASS',env)
         check_log(output/'client.log','[vandorlabs]['+marker+'] packaged-JAR client PASS');check_log(server_log,'[vandorlabs]['+marker+'] packaged-JAR common PASS')
         check_log(server_log,'[vandorlabs][mounted-ui] packaged-JAR shared geometry/dialog/size/mount PASS');check_log(output/'client.log','[vandorlabs][mounted-ui] packaged-JAR shared geometry/dialog/size/mount PASS')
+        if marker=='binary-gui':
+            check_log(server_log,'[vandorlabs][binary-gui] actor room server PASS');check_log(output/'client.log','[vandorlabs][binary-gui] actor room client PASS')
         from PIL import Image
-        for name in (['power-lever-dialog-native.png','power-world-native.png'] if args.power_levers else ['binary-dialog-native.png','binary-world-native.png']):
+        for name in (['signal-control-dialog-native.png','signal-world-native.png'] if args.signal_controls else ['power-lever-dialog-native.png','power-world-native.png'] if args.power_levers else ['binary-dialog-native.png','binary-world-native.png']):
             with Image.open(client/'screenshots'/name) as image:
                 if image.size!=(1280,720):raise RuntimeError('Native capture dimensions: '+str(image.size))
                 image.verify()

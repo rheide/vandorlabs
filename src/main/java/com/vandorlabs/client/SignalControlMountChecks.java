@@ -57,6 +57,7 @@ final class SignalControlMountChecks {
                 IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);require(!model.getQuads(null,null,0).isEmpty(),"empty configured item");digest.item(model);icons++;
             }
         }
+        SignalControlReference.export(mc);
         digest.finish("signal-control-mounts","51cfe4625392e694c347f5c4c41fba62e29f165893153271cb8476c7d94ee89e");
         System.out.println("[vandorlabs][reprolab] signal-control-mounts PASS poses="+poses+" icons="+icons+" (all heights, tilts, directions, detents and mounts; solid wedge and component collisions cover artwork; no support penetration)");
     }

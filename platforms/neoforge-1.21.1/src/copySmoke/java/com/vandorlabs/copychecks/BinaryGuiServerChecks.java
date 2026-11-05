@@ -26,6 +26,8 @@ public final class BinaryGuiServerChecks {
         world.setBlock(POS,VandorLabsBootstrap.ROCKER_SWITCH.get().defaultBlockState().setValue(NativeMountedSwitchBlock.FACING,Direction.NORTH),3);world.setBlock(PUSH,VandorLabsBootstrap.PUSH_BUTTON.get().defaultBlockState().setValue(NativeMountedSwitchBlock.FACING,Direction.NORTH),3);
         var tile=(NativeBinaryControlBlockEntity)world.getBlockEntity(POS);tile.configureTransmission(ChannelList.of(81),16,true);tile.configureMount(ControlMountSettings.of(0,0,0));tile.onLoad();((NativeBinaryControlBlockEntity)world.getBlockEntity(PUSH)).onLoad();NativeRedstoneChannels.flush(world);
         BinaryControlScene.setup(world);
+        var actorRoom=new BlockPos(1000,80,997);require(world.isEmptyBlock(actorRoom)&&world.isEmptyBlock(actorRoom.above()),"actor room is not air: "+world.getBlockState(actorRoom)+" / "+world.getBlockState(actorRoom.above()));
+        System.out.println("[vandorlabs][binary-gui] actor room server PASS air feet/head before survival interaction");
         player.setGameMode(GameType.SURVIVAL);player.teleportTo(1000.5,80,997.5);player.setYRot(0);player.setXRot(8);player.getInventory().clearContent();player.getInventory().selected=0;player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));player.inventoryMenu.broadcastChanges();
         VandorLabsBootstrap.ROCKER_SWITCH.get().activate(world.getBlockState(POS),world,POS,player);
         System.out.println("[vandorlabs][binary-gui] client fixture READY survival selected0 Configurizer initialON local lamp");
