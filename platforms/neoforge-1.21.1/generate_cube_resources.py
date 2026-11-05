@@ -38,6 +38,8 @@ def main():
                 if item.get('detail')==0 and (entry.get('design') is not None and entry.get('design')==item.get('design') or entry.get('textureFamily') is not None and entry.get('textureFamily')==item.get('textureFamily')):
                     redirects[index]=target;break
     language={line.split('=',1)[0]:line.split('=',1)[1] for line in (ROOT/'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines() if '=' in line and not line.startswith('#')}
+    from material_playback_resources import PlaybackResources
+    playback=PlaybackResources(ROOT,ASSETS)
     catalog=[];atlas=[];copied={}
     for index,original in enumerate(entries):
         canonical=redirects.get(index,index);entry=entries[canonical]
@@ -74,6 +76,8 @@ def main():
         bare_index=next((i for i,item in enumerate(entries) if item['source']==bare),0)
         display_selectable=category.startswith('Displays') and (bare==source or bare_index==0 or bare_index==index)
         catalog.append(dict(id=original['id'],label=label,category=category,visible=not original.get('hidden',False),general=general,displaySelectable=display_selectable,canonical=canonical,texture='vandorlabs:'+texture,u=u,v=v))
+        timeline=playback.entry(original,entries[canonical])
+        if timeline is not None:catalog[-1]['playback']=timeline
         # Preserve authored frame semantics independently of the main selectable artwork.
         if original.get('category')=='Frame' or any(key in original for key in ['frameRail','frameAspect','frameBorder','frameLight']):
             rail=original.get('frameRail');rail_id=None

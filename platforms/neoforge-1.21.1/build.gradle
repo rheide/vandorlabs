@@ -71,6 +71,8 @@ tasks.register('generateCubeResources', Exec) {
     workingDir projectDir
     commandLine pythonExecutable, 'generate_cube_resources.py'
     inputs.file('generate_cube_resources.py')
+    inputs.file('material_playback_resources.py')
+    inputs.files('../../generated-resources/assets/vandorlabs/data/blocks.json','../../generated-resources/assets/vandorlabs/data/input_surfaces.json')
     inputs.file('frame_edge_pixels.py')
     inputs.file('generate_mounted_control_resources.py')
     inputs.file('generate_wireless_resources.py')
@@ -292,4 +294,11 @@ tasks.register('testNativePanelGroups', JavaExec) {
     dependsOn tasks.named('compileSmokeJava')
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.shape.NativePanelGroupsChecks'
+}
+
+tasks.register('testNativeMaterialPlayback', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava'), tasks.named('generateCubeResources')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.client.MaterialPlaybackChecks'
+    args file('../..').absolutePath, file('build/generated/cube-resources/assets/vandorlabs').absolutePath
 }

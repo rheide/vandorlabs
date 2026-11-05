@@ -9,7 +9,11 @@ import java.util.List;
 /** Generated current canonical catalog; external namespaces remain saved but render with a fallback. */
 public final class ModernFinishCatalog {
     public record Frame(String rail,double aspect,boolean border,int light){}
-    public record Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable,Frame frame){
+    public record Playback(String staticTexture,String offTexture,String animationTexture,int frameCount,double aspect){
+        public Playback(String stationary,String off,String animation,int count){this(stationary,off,animation,count,1);}
+    }
+    public record Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable,Frame frame,Playback playback){
+        public Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable,Frame frame){this(id,label,category,visible,general,canonical,texture,u,v,displaySelectable,frame,null);}
         public Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable){this(id,label,category,visible,general,canonical,texture,u,v,displaySelectable,null);}
         public Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v){this(id,label,category,visible,general,canonical,texture,u,v,false);}
     }
