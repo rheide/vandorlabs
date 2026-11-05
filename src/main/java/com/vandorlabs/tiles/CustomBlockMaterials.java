@@ -2,7 +2,6 @@ package com.vandorlabs.tiles;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.*;
-import java.util.zip.CRC32;
 
 /** Stable registry-name and metadata identities for copied block artwork. */
 public final class CustomBlockMaterials {
@@ -13,8 +12,7 @@ public final class CustomBlockMaterials {
         return identifier(block.getRegistryName().toString(),metadata);
     }
     public static int identifier(String registryName,int metadata){
-        CRC32 crc=new CRC32();try{crc.update((registryName+"@"+metadata).getBytes("UTF-8"));}catch(java.io.UnsupportedEncodingException e){throw new AssertionError(e);}
-        return ID_BASE | ((int)crc.getValue() & 0x1fffffff);
+        return CustomMaterialIdentity.identifier(registryName,metadata);
     }
     public static Block block(ItemStack stack) {
         if(stack.isEmpty())return null;

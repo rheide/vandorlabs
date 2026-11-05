@@ -1122,3 +1122,12 @@ task testChannelSpatialAdapters(type: JavaExec) {
 }
 
 check.dependsOn testDialogInputAdapters, testChannelSpatialAdapters
+
+task testCustomMaterialIdentity(type: JavaExec) {
+    group = 'verification'
+    description = 'Preserve literal custom material saved IDs and legacy item normalization'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CustomMaterialIdentityChecks'
+}
+check.dependsOn testCustomMaterialIdentity
