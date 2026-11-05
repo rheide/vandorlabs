@@ -11,6 +11,7 @@ import com.vandorlabs.blocks.BlockProgrammableBlock;
 import com.vandorlabs.blocks.BlockProgrammableSlab;
 import com.vandorlabs.tiles.ScreenHousingTextures;
 import com.vandorlabs.ui.SlabStairDialog;
+import com.vandorlabs.ui.WallAppearanceDialog;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
@@ -23,12 +24,10 @@ import java.io.IOException;
 
 /** Scrollable finish picker shared by programmable walls and the full block. */
 public class GuiProgrammableWall extends GuiMaterialPicker {
-    private static final String[] JOINS={"Auto","Straight","Front left corner","Front right corner","Back left corner","Back right corner","Front left T","Front right T","Back left T","Back right T","Left cross","Right cross"};
     private int rows = 8;
     private boolean redstonePage,framePage;private int frameFace;private FrameAppearancePane framePane;
     private HousingTextureList textureList;
     private static final String[] SHADES = {"Clear", "Cyan", "Dark Grey"};
-    private static final String[] SHAPES = {"Hexagon", "Octagon", "Square", "Round"};
     private final TileEntityAnimatedScreenSelector tile;
     private final boolean porthole;
     private final boolean fullBlock;
@@ -154,7 +153,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             buttonList.add(new GuiButton(105,controlsX,y,controlsWidth,20,diagonalWidthLabel())); y+=24;
             buttonList.add(new GuiButton(111,controlsX,y,controlsWidth,20,slopeLabel())); y+=24;
             if (!porthole) {
-                GuiButton joinShape=new GuiButton(112,controlsX,y,controlsWidth,20,"Join: "+JOINS[tile.getDiagonalJoin()]);
+                GuiButton joinShape=new GuiButton(112,controlsX,y,controlsWidth,20,WallAppearanceDialog.joinLabel(tile.getDiagonalJoin()));
                 joinShape.enabled=!tile.isDiagonalHalfHeight();buttonList.add(joinShape);y+=24;
                 if(diagonalGlass){
                     buttonList.add(new GuiButton(109,controlsX,y,controlsWidth/2-1,20,"Inside: "+((tile.getDiagonalFill()&1)!=0?"On":"Off")));
@@ -218,8 +217,8 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     private void sendStairs(){PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageStairGeometry(tile.getPos(),tile.stairTread(),tile.stairRoll()));}
     private String shadeLabel() { return "Glass: " + SHADES[shade]; }
-    private String joinLabel() { return "Join: " + (join ? "On" : "Off"); }
-    private String shapeLabel() { return "Shape: " + SHAPES[shape]; }
+    private String joinLabel() { return WallAppearanceDialog.portholeJoinLabel(join); }
+    private String shapeLabel() { return WallAppearanceDialog.shapeLabel(shape); }
     private String slabSidesLabel() { return "Texture: " + com.vandorlabs.render.TextureLayoutMode.label(textureLayout); }
     private String slopeLabel() {
         net.minecraft.block.state.IBlockState state = tile.getWorld().getBlockState(tile.getPos());
@@ -231,8 +230,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     private String diagonalWidthLabel() {
-        return tile.isDiagonalHalfHeight() ? "Size: Wide / half height"
-                : "Size: " + (tile.isDiagonalFullWidth() ? "Full width / height" : "Tall / half width");
+        return WallAppearanceDialog.sizeLabel(tile.isDiagonalHalfHeight(),tile.isDiagonalFullWidth());
     }
 
     private void sendPortholeSettings() {
@@ -300,7 +298,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                     button.id==114?!tile.isGlassFramed():tile.isGlassFramed());
             sendPortholeSettings();initGui();
         }
-        if(button.id==112){tile.setDiagonalJoin(GuiOptionCycle.next(tile.getDiagonalJoin(),JOINS.length));
+        if(button.id==112){tile.setDiagonalJoin(WallAppearanceDialog.nextJoin(tile.getDiagonalJoin(),GuiOptionCycle.direction()));
             int mode=tile.isDiagonalHalfHeight()?2:tile.isDiagonalFullWidth()?1:0;
             PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDiagonalGeometry(tile.getPos(),mode,tile.getDiagonalFill()).withJoin(tile.getDiagonalJoin()));initGui();}
 
@@ -359,7 +357,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                     tile.getPos(), textureLayout));
         }
         if (button.id == 104) {
-            shape = GuiOptionCycle.next(shape,SHAPES.length);
+            shape = WallAppearanceDialog.nextShape(shape,GuiOptionCycle.direction());
             tile.setPortholeShape(shape);
             button.displayString = shapeLabel();
             sendPortholeSettings();
@@ -367,7 +365,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         if (button.id == 105 || button.id == 109 || button.id == 110) {
             int mode=tile.isDiagonalHalfHeight()?2:tile.isDiagonalFullWidth()?1:0;
             int fill=tile.getDiagonalFill();
-            if (button.id==105) mode=GuiOptionCycle.next(mode,3);
+            if (button.id==105) mode=WallAppearanceDialog.nextSize(mode,GuiOptionCycle.direction());
             if (button.id==109) fill^=1;
             if (button.id==110) fill^=2;
             tile.setDiagonalGeometry(mode,fill);
