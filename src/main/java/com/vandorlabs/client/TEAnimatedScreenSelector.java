@@ -1125,6 +1125,13 @@ public class TEAnimatedScreenSelector
         return adjacentPorthole(tile, state, side);
     }
 
+    private static final com.vandorlabs.render.PanelVertexEmitter.PixelSink<BufferBuilder,TextureAtlasSprite> PANEL_VERTEX=new com.vandorlabs.render.PanelVertexEmitter.PixelSink<BufferBuilder,TextureAtlasSprite>(){
+        public void vertex(BufferBuilder buffer,TextureAtlasSprite sprite,double x,double y,double z,double u,double v,float nx,float ny,float nz){
+            buffer.pos(x,y,z).color(255,255,255,255).tex(sprite.getInterpolatedU(u),sprite.getInterpolatedV(v))
+                    .lightmap((int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX).normal(nx,ny,nz).endVertex();
+        }
+    };
+
     /** The diagonal wall uses per-face normals so shader lighting stays stable as the camera moves. */
     private static void normalQuad(BufferBuilder buf, TextureAtlasSprite sprite, int sign, double halfOffset,
             double[] a, double[] b, double[] c, double[] d) {
@@ -1135,30 +1142,7 @@ public class TEAnimatedScreenSelector
             double[] clip, double[] a, double[] b, double[] c, double[] d) {
         if(FrameEdgeTextures.authored(sprite))sprite=FrameEdgeTextures.map(sprite,a,b,c,d);
         if(buf instanceof DiagonalWallQuadCapture)((DiagonalWallQuadCapture)buf).texture(sprite);
-        if (!Double.isNaN(halfOffset)) {
-            // Bake the half-height reflection into positions before shader
-            // tangent/normal generation, preserving outward face winding.
-            for (double[] p : new double[][]{a,b,c,d}) {
-                double y = p[1]; p[1] = p[2] + halfOffset; p[2] = y;
-            }
-            sign = -sign;
-        }
-        // Diagonals retain a triangle when an arm collapses at a slope end.
-        double ux=c[0]-a[0], uy=c[1]-a[1], uz=c[2]-a[2];
-        double vx=d[0]-b[0], vy=d[1]-b[1], vz=d[2]-b[2];
-        double nx=sign*(uy*vz-uz*vy), ny=sign*(uz*vx-ux*vz),
-                nz=sign*(ux*vy-uy*vx);
-        double length=Math.sqrt(nx*nx+ny*ny+nz*nz);
-        if (length<1.0E-7) return;
-        float fx=(float)(nx/length), fy=(float)(ny/length), fz=(float)(nz/length);
-        // Shader integrations may derive normals from winding. Submit the
-        // same orientation as the explicit normal, including the roof faces.
-        for (double[] p : com.vandorlabs.render.DiagonalMeshClip.quadsKeepingContactCaps(clip,
-                sign < 0 ? new double[][]{a,d,c,b} : new double[][]{a,b,c,d}))
-            buf.pos(p[0],p[1],p[2]).color(255,255,255,255)
-                    .tex(sprite.getInterpolatedU(Math.max(0,Math.min(16,p[3]))),sprite.getInterpolatedV(Math.max(0,Math.min(16,p[4]))))
-                    .lightmap((int)OpenGlHelper.lastBrightnessY, (int)OpenGlHelper.lastBrightnessX)
-                    .normal(fx,fy,fz).endVertex();
+        com.vandorlabs.render.PanelVertexEmitter.normal(PANEL_VERTEX,buf,sprite,sign,halfOffset,clip,a,b,c,d);
     }
 
     private static void panelRect(BufferBuilder buf, TextureAtlasSprite sprite, DiagonalPortholeMesh mesh,
