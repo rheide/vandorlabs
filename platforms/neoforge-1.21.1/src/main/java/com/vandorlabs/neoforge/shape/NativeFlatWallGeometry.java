@@ -10,7 +10,11 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 /** Immutable current four-pixel wall geometry. Neighbour discovery is owned by the tile publication path. */
 public final class NativeFlatWallGeometry {
-    public record Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth) {
+    public record Join(Double frontArm,Double backArm,Boolean frontRight,Boolean backRight,boolean straightLeft,boolean straightRight){
+        public PanelCornerGeometry.FlatCorner corner(){return new PanelCornerGeometry.FlatCorner(frontArm,backArm,frontRight,backRight,straightLeft,straightRight);}
+    }
+    public record Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth,Join join) {
+        public Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth){this(boxes,bounds,facing,depth,null);}
         public Geometry {boxes=List.copyOf(boxes);}
         public int side(double x,double y,double z){double normal=facing==Direction.EAST?1-x:facing==Direction.SOUTH?1-z:facing==Direction.WEST?x:z;return normal<PanelDepthPolicy.start(depth)/16D+.125?0:1;}
     }
@@ -25,7 +29,7 @@ public final class NativeFlatWallGeometry {
         if(corner!=null&&corner.frontArm!=null)add(boxes,facing,corner.frontArm,corner.frontArm+4,0,near);
         if(corner!=null&&corner.backArm!=null)add(boxes,facing,corner.backArm,corner.backArm+4,near+4,16);
         AABB bounds=boxes.getFirst();for(AABB box:boxes)bounds=bounds.minmax(box);
-        return new Geometry(boxes,bounds,facing,depth);
+        return new Geometry(boxes,bounds,facing,depth,corner==null?null:new Join(corner.frontArm,corner.backArm,corner.frontRight,corner.backRight,corner.straightLeft,corner.straightRight));
     }
     private static void add(List<AABB> boxes,Direction facing,double x0,double x1,double z0,double z1){
         if(x1-x0<1e-7||z1-z0<1e-7)return;
