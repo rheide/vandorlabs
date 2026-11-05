@@ -367,6 +367,7 @@ tasks.register('testNativeBentPanels', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('diagonalLayoutReference')) systemProperty 'vandorlabs.diagonalLayoutReference', file(project.property('diagonalLayoutReference')).absolutePath
         if (project.hasProperty('diagonalApertureReference')) systemProperty 'vandorlabs.diagonalApertureReference', file(project.property('diagonalApertureReference')).absolutePath
+    if (project.hasProperty('doorSettingsReference')) systemProperty 'vandorlabs.doorSettingsReference', file(project.property('doorSettingsReference')).absolutePath
 }
 tasks.register('testNativeFullPanels', JavaExec) {
     group = 'verification'
