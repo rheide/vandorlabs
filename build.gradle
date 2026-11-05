@@ -1485,3 +1485,12 @@ task exportDiagonalApertureReference(type: JavaExec) {
     main = 'com.vandorlabs.client.DiagonalApertureLegacyChecks'
     if (project.hasProperty('diagonalApertureExport')) systemProperty 'vandorlabs.diagonalApertureExport', file(project.property('diagonalApertureExport')).absolutePath
 }
+
+task exportDiagonalApertureMeshReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalApertureReferenceExport'
+    maxHeapSize = '1G'
+    systemProperty 'vandorlabs.diagonalApertureMeshReference', file(project.findProperty('diagonalApertureMeshReference') ?: 'build/test-artifacts/diagonal-aperture-mesh-forge.jsonl').absolutePath
+}

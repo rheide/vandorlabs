@@ -13,11 +13,14 @@ public final class PanelApertureReferenceExport {
     private static TextureAtlasSprite sprite(String id,int offset){TextureAtlasSprite s=new TextureAtlasSprite(id){};s.setIconWidth(16);s.setIconHeight(16);s.initSprite(32,16,offset,0,false);return s;}
     private static Method method(String name,int count)throws Exception{Class<?>[] parameters=new Class<?>[3+count];parameters[0]=BufferBuilder.class;parameters[1]=TextureAtlasSprite.class;parameters[2]=DiagonalPortholeMesh.class;java.util.Arrays.fill(parameters,3,parameters.length,double.class);Method result=TEAnimatedScreenSelector.class.getDeclaredMethod(name,parameters);result.setAccessible(true);return result;}
     static StaticSurfaceMesh body(PortholeHex.Slice slice,boolean left,boolean right,boolean lower,boolean upper,double depthUv,TextureAtlasSprite outer)throws Exception{
+        return body(slice,left,right,lower,upper,depthUv,outer,null);
+    }
+    static StaticSurfaceMesh body(PortholeHex.Slice slice,boolean left,boolean right,boolean lower,boolean upper,double depthUv,TextureAtlasSprite outer,DiagonalPortholeMesh projection)throws Exception{
         StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();
-        for(double[] q:slice.frameQuads)panel.invoke(null,capture,wall,null,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
-        for(double[] e:slice.hexEdges)rim.invoke(null,capture,metal,null,e[0],e[1],e[2],e[3],depthUv);
-        for(int y:new int[]{0,16}){if(y==0?lower:upper)continue;double[] cut=slice.edgeOpening(1,y);if(cut==null)top.invoke(null,capture,outer,null,(double)y,0D,16D,depthUv);else{top.invoke(null,capture,outer,null,(double)y,0D,cut[0],depthUv);top.invoke(null,capture,outer,null,(double)y,cut[1],16D,depthUv);}}
-        for(int x:new int[]{0,16}){if(x==0?left:right)continue;double[] cut=slice.edgeOpening(0,x);if(cut==null)side.invoke(null,capture,outer,null,(double)x,0D,16D,depthUv);else{side.invoke(null,capture,outer,null,(double)x,0D,cut[0],depthUv);side.invoke(null,capture,outer,null,(double)x,cut[1],16D,depthUv);}}
+        for(double[] q:slice.frameQuads)panel.invoke(null,capture,wall,projection,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
+        for(double[] e:slice.hexEdges)rim.invoke(null,capture,metal,projection,e[0],e[1],e[2],e[3],depthUv);
+        for(int y:new int[]{0,16}){if(y==0?lower:upper)continue;double[] cut=slice.edgeOpening(1,y);if(cut==null)top.invoke(null,capture,outer,projection,(double)y,0D,16D,depthUv);else{top.invoke(null,capture,outer,projection,(double)y,0D,cut[0],depthUv);top.invoke(null,capture,outer,projection,(double)y,cut[1],16D,depthUv);}}
+        for(int x:new int[]{0,16}){if(x==0?left:right)continue;double[] cut=slice.edgeOpening(0,x);if(cut==null)side.invoke(null,capture,outer,projection,(double)x,0D,16D,depthUv);else{side.invoke(null,capture,outer,projection,(double)x,0D,cut[0],depthUv);side.invoke(null,capture,outer,projection,(double)x,cut[1],16D,depthUv);}}
         return capture.finish();
     }
     static void initialize(TextureAtlasSprite body,TextureAtlasSprite inner)throws Exception{panel=method("panelQuad",8);top=method("topRim",4);side=method("sideRim",4);rim=method("rimSegment",5);wall=body;metal=inner;}

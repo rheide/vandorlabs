@@ -14,6 +14,7 @@ final class NativePanelQuads {
         Material mapped(double[][] points){if(edges.isEmpty())return this;int edge=FrameEdgeMapping.edge(points);FrameEdgeMapping.map(edge,points);return new Material(edges.get(edge));}
     }
     private static final class Context {
+        DiagonalPortholeProjection projection;
         final Direction facing;final Material main;final int mode;final NativePanelLayout layout;
         final boolean raw;final double borderX,borderY,zOffset,imageAspect,zScale;final int color;
         final List<BakedQuad> result;final boolean capture;private float[] captured;private int capturedUsed;private final List<Material> capturedMaterials;final float[] source=new float[32],mapped=new float[32];int used,mappedUsed;Material current;
@@ -60,7 +61,7 @@ final class NativePanelQuads {
     };
     static List<BakedQuad> flat(Direction facing,double near,PanelCornerGeometry.FlatCorner corner,Material wall,Material metal,int mode,NativePanelLayout group){Context context=new Context(facing,wall,mode,group);PanelMeshEmitter.flat(EMITTER,context,wall,metal,near,corner);return context.finish();}
     static List<BakedQuad> diagonal(Direction facing,boolean inverted,PanelCornerGeometry.Corner corner,double span,int fill,double low,double high,double halfOffset,double lower,double upper,boolean hideLower,boolean hideUpper,double[] clip,Material wall,Material metal,int mode,NativePanelLayout group){Context context=new Context(facing,wall,mode,group);PanelMeshEmitter.diagonal(EMITTER,context,wall,metal,inverted,corner,span,fill,low,high,halfOffset,lower,upper,hideLower,hideUpper,clip);return context.finish();}
-    private static final PanelApertureEmitter.Sink<Context,Material,Void> APERTURE=(context,material,ignored,reverse,a,b,c,d)->EMITTER.quad(context,material,reverse,a,b,c,d);
+    private static final PanelApertureEmitter.Sink<Context,Material,Void> APERTURE=(context,material,ignored,reverse,a,b,c,d)->{if(context.projection==null)EMITTER.quad(context,material,reverse,a,b,c,d);else DiagonalPortholeProjection.quad(EMITTER,context,material,context.projection,reverse,a,b,c,d);};
     static List<BakedQuad> aperture(Direction facing,double near,NativePanelSlice opening,
             Material wall,Material metal,Material outer,int mode,NativePanelLayout group,
             boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper){return aperture(facing,near,opening,wall,metal,outer,mode,group,hideLeft,hideRight,hideLower,hideUpper,4);}
@@ -73,6 +74,12 @@ final class NativePanelQuads {
         Context context=new Context(facing,wall,mode,group,false,0,0,near-6*zScale,1,0,false,zScale);
         aperture(context,opening,wall,metal,outer,hideLeft,hideRight,hideLower,hideUpper,depthUv);
         return context.finish();
+    }
+    static List<BakedQuad> diagonalAperture(Direction facing,DiagonalPortholeProjection projection,NativePanelSlice opening,
+            Material wall,Material metal,Material outer,int mode,NativePanelLayout group,
+            boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper,double depthUv){
+        Context context=new Context(facing,wall,mode,group);context.projection=Objects.requireNonNull(projection);
+        aperture(context,opening,wall,metal,outer,hideLeft,hideRight,hideLower,hideUpper,depthUv);return context.finish();
     }
     private static void aperture(Context context,NativePanelSlice opening,Material wall,Material metal,Material outer,boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper,double depthUv){
         for(int q=0;q<opening.frameCount();q++)PanelApertureEmitter.panelQuad(APERTURE,context,wall,null,opening.frame(q,0),opening.frame(q,1),opening.frame(q,2),opening.frame(q,3),opening.frame(q,4),opening.frame(q,5),opening.frame(q,6),opening.frame(q,7));
@@ -98,8 +105,15 @@ final class NativePanelQuads {
         pane(context,opening);
         return context.finish();
     }
+    static List<BakedQuad> diagonalPane(Direction facing,DiagonalPortholeProjection projection,NativePanelSlice opening,
+            Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity,double imageAspect){
+        Context context=new Context(facing,glass,mode,group,true,borderX,borderY,0,opacity,imageAspect);context.projection=Objects.requireNonNull(projection);context.current=glass;
+        pane(context,opening);return context.finish();
+    }
+    private static final PanelQuadSink<Context,Material> RAW_PROJECTED=(context,material,reverse,a,b,c,d)->PanelVertexEmitter.raw(RAW,context,reverse,a[0],a[1],a[2],a[3],a[4],b[0],b[1],b[2],b[3],b[4],c[0],c[1],c[2],c[3],c[4],d[0],d[1],d[2],d[3],d[4]);
     private static void pane(Context context,NativePanelSlice opening){
         for(int depth:new int[]{7,9})for(int q=0;q<opening.glassCount();q++){
+            if(context.projection!=null){double[][] vertices=new double[4][5];for(int v=0;v<4;v++){double x=opening.glass(q,v*2),y=opening.glass(q,v*2+1);vertices[v]=new double[]{x,y,depth,x/16,1-y/16};}DiagonalPortholeProjection.quad(RAW_PROJECTED,context,context.current,context.projection,depth==7,vertices);continue;}
             PanelVertexEmitter.raw(RAW,context,depth==7,opening.glass(q,0),opening.glass(q,1),depth,opening.glass(q,0)/16,1-opening.glass(q,1)/16,opening.glass(q,2),opening.glass(q,3),depth,opening.glass(q,2)/16,1-opening.glass(q,3)/16,opening.glass(q,4),opening.glass(q,5),depth,opening.glass(q,4)/16,1-opening.glass(q,5)/16,opening.glass(q,6),opening.glass(q,7),depth,opening.glass(q,6)/16,1-opening.glass(q,7)/16);
         }
     }

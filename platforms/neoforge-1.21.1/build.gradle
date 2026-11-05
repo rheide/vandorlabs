@@ -375,3 +375,12 @@ tasks.register('testNativeFullPanels', JavaExec) {
     maxHeapSize = '1G'
     args file(project.findProperty('panelApertureReference') ?: '../../build/test-artifacts/panel-aperture-forge.jsonl').absolutePath
 }
+
+tasks.register('testNativeDiagonalApertures', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeDiagonalApertureChecks'
+    maxHeapSize = '1G'
+    args project.findProperty('diagonalApertureMeshReference') ?: '../../build/test-artifacts/diagonal-aperture-mesh-forge.jsonl'
+}
