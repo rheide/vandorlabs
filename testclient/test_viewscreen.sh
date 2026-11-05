@@ -21,7 +21,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = material-sprites ]; then
+        if [ "$TARGET" = control-mount-settings ]; then
+            PREFIX=control_mount_
+            export VANDOR_LABS_CONTROL_MOUNT_SETTINGS_CHECKS_ONLY=true
+        elif [ "$TARGET" = material-sprites ]; then
             PREFIX=material_sprites_
             export VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY=true
         elif [ "$TARGET" = filesystem-discovery ]; then
@@ -338,6 +341,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = control-mount-settings ]; then
+        for marker in control-mount-settings-live binary-control-runtime signal-control-mounts binary-control-mounts; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
+        echo "Control mount settings checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = material-sprites ]; then
         grep -q "material-sprites] legacy PASS vanilla=254" "$RUN_OUT/client.log"
         grep -q "inventory-sample-grid-live PASS" "$RUN_OUT/client.log"

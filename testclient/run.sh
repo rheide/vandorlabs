@@ -29,6 +29,7 @@ PY
 CAPTURE_JVM=("-Dvandorlabs.largeBenchmarkFamilies=${VANDOR_LABS_BENCH_FAMILIES:-false}" "-Dvandorlabs.largeBenchmarkTerrain=${VANDOR_LABS_BENCH_TERRAIN:-false}" "-Dvandorlabs.largeBenchmarkMovingSamples=${VANDOR_LABS_BENCH_MOVING_SAMPLES:-${VANDOR_LABS_BENCH_SAMPLES:-60}}" "-Dvandorlabs.largeBenchmarkCompare=${VANDOR_LABS_BENCH_COMPARE:-false}" "-Dvandorlabs.largeBenchmarkSamples=${VANDOR_LABS_BENCH_SAMPLES:-60}" "-Dvandorlabs.largeBenchmarkWarmFrames=${VANDOR_LABS_BENCH_WARM_FRAMES:-50}" "-Dvandorlabs.largeVehicleBenchmark=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.vehicleDiagnostics=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.reactorGlassChecksOnly=${VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.retiredGlassClientOnly=${VANDOR_LABS_RETIRED_GLASS_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.filesystemDiscoveryChecksOnly=${VANDOR_LABS_FILESYSTEM_DISCOVERY_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.controlMountSettingsChecksOnly=${VANDOR_LABS_CONTROL_MOUNT_SETTINGS_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.materialSpriteChecksOnly=${VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.cubeReferenceExportOnly=${VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.cubeJoiningChecksOnly=${VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY:-false}")

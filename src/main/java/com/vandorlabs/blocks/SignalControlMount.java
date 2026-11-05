@@ -5,7 +5,7 @@ import net.minecraft.util.math.*;
 
 /** Shared model and selection transform, measured outward from the supporting face. */
 public final class SignalControlMount {
-    public static boolean valid(int height,int tilt,int direction){return height>=0&&height<=3&&tilt>=0&&tilt<=3&&direction>=0&&direction<4;}
+    public static boolean valid(int height,int tilt,int direction){return com.vandorlabs.persistence.ControlMountSettings.valid(height,tilt,direction);}
     private final Vec3d normal,tangent,origin;
     private final double extra,sin,cos,lift;
     public SignalControlMount(EnumFacing facing,int rotation,int height,int tilt,int direction,AxisAlignedBB original){
@@ -50,7 +50,7 @@ public final class SignalControlMount {
     public static int readTilt(net.minecraft.nbt.NBTTagCompound tag){
         int tilt=tag.getInteger("BaseTilt");
         // Earlier presets were 5/10/15 degrees; non-flat legacy mounts use the first supported tilted option.
-        return !tag.hasKey("ControlMountVersion") && tilt>0 && tilt<=3?1:tilt;
+        return com.vandorlabs.persistence.ControlMountSettings.migratedTilt(tilt,tag.hasKey("ControlMountVersion"));
     }
     private static java.util.List<Vec3d> corners(AxisAlignedBB b){java.util.List<Vec3d> points=new java.util.ArrayList<>();for(double x:new double[]{b.minX,b.maxX})for(double y:new double[]{b.minY,b.maxY})for(double z:new double[]{b.minZ,b.maxZ})points.add(new Vec3d(x,y,z));return points;}
 }

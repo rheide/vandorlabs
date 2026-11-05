@@ -1212,3 +1212,13 @@ task testTransmissionSettings(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.redstone.TransmissionSettingsAdapterChecks'
 }
+check.dependsOn testTransmissionSettings
+
+task testControlMountSettings(type: JavaExec) {
+    group = 'verification'
+    description = 'Preserve frozen legacy mounted-control NBT, item settings and malformed-field defaults'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ControlMountSettingsChecks'
+}
+check.dependsOn testControlMountSettings

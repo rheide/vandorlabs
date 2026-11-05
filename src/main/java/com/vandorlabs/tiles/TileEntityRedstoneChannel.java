@@ -10,6 +10,7 @@ import com.vandorlabs.redstone.RedstoneChannelLatch;
 import com.vandorlabs.redstone.RedstoneChannels;
 import com.vandorlabs.persistence.NbtPrimitiveData;
 import com.vandorlabs.persistence.RedstoneData;
+import com.vandorlabs.persistence.ControlMountSettings;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -64,8 +65,8 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
     }
     public void readMount(NBTTagCompound tag){configureMount(tag.getInteger("BaseHeight"),com.vandorlabs.blocks.SignalControlMount.readTilt(tag),tag.getInteger("TiltDirection"));}
     public NBTTagCompound configuration(){
-        NBTTagCompound tag=new NBTTagCompound();ChannelData.write(tag,channels);tag.setInteger("Channel",channel);tag.setInteger("ControlMountVersion",2);
-        tag.setInteger("BaseHeight",getBaseHeight());tag.setInteger("BaseTilt",getBaseTilt());tag.setInteger("TiltDirection",getTiltDirection());
+        NBTTagCompound tag=new NBTTagCompound();ChannelData.write(tag,channels);tag.setInteger("Channel",channel);
+        ControlMountSettings.write(new NbtPrimitiveData(tag),getBaseHeight(),getBaseTilt(),getTiltDirection());
         if(world!=null && world.getBlockState(pos).getBlock() instanceof BlockIndustrialLever)tag.setInteger("PowerLeverSize",getPowerLeverSize());return tag;
     }
     // Missing tags retain the original size of legacy placed blocks.
@@ -198,9 +199,10 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);ChannelData.write(tag,channels);
-        tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);
+        NbtPrimitiveData primitive=new NbtPrimitiveData(tag);
+        ControlMountSettings.write(primitive,baseHeight,baseTilt,tiltDirection);
         if(powerLeverSize>=0)tag.setInteger("PowerLeverSize",powerLeverSize);
-        new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(new NbtPrimitiveData(tag));
+        new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(primitive);
         int[] savedLevels=new int[channels.size()];for(int i=0;i<savedLevels.length;i++)savedLevels[i]=latchedLevel(channels.get(i));tag.setIntArray("LatchedLevels",savedLevels);
         tag.setIntArray("LatchedChannels",latched.toArray());
         return tag;
@@ -212,10 +214,11 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         int oldRotation = mountRotation;
         int oldSize=getPowerLeverSize();
         super.readFromNBT(tag);
-        int height=tag.getInteger("BaseHeight"),tilt=com.vandorlabs.blocks.SignalControlMount.readTilt(tag),direction=tag.getInteger("TiltDirection");
-        if(com.vandorlabs.blocks.SignalControlMount.valid(height,tilt,direction)){baseHeight=height;baseTilt=tilt;tiltDirection=direction;}
+        NbtPrimitiveData primitive=new NbtPrimitiveData(tag);
+        ControlMountSettings mount=ControlMountSettings.read(primitive,baseHeight,baseTilt,tiltDirection);
+        baseHeight=mount.height;baseTilt=mount.tilt;tiltDirection=mount.direction;
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
-        RedstoneData.Source data=RedstoneData.Source.read(new NbtPrimitiveData(tag));
+        RedstoneData.Source data=RedstoneData.Source.read(primitive);
         channel=data.channel;
         channels=ChannelData.read(tag,channel);channel=channels.first();
         localOn=data.localOn;

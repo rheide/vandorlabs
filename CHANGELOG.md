@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share the mounted-control height, tilt and direction save contract, preserving old preset migration, malformed-field defaults and caller-specific fallback without changing geometry or live latch state.
+
 - Add the native Programmable Trigger with shared saved state and dialog rules, static Off/On or signal-band artwork, exact-level matching and Front Only/Sides options. Reuse one native material picker for cube and Trigger dialogs, including independent artwork searches, inventory sampling and scrolling.
 - Add native handheld transmitter tiers with canonical recipes, stationary per-dimension sources and authenticated channel editing. Preserve exact installed receiver identity through deferred registration and chunk unload/reload. Other control and wireless families remain incomplete.
 

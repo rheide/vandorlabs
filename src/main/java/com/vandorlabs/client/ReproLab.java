@@ -644,6 +644,11 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.controlMountSettingsChecksOnly")){if(++holdTicks>=40)try{
+            mc.getIntegratedServer().addScheduledTask(()->BinaryControlRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
+            SignalControlMountChecks.checkModels(mc);MountedBinaryControlChecks.checkModels(mc);
+            System.out.println("[vandorlabs][reprolab] control-mount-settings-live PASS existing pick/place/copy/collision and mounted model/item matrices");mc.shutdown();
+        }catch(Exception failure){throw new IllegalStateException("Control mount settings focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.materialSpriteChecksOnly")){if(++holdTicks>=40)try{LegacyMaterialSpriteChecks.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Material sprite assessment",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.cubeReferenceExportOnly")){if(++holdTicks>=40)try{LegacyCubeReferenceExport.run(mc,outDir);mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Cube reference export",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.cubeJoiningChecksOnly")){if(++holdTicks>=40){JoinedHousingRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] cube-joining-live PASS");mc.shutdown();}return;}
