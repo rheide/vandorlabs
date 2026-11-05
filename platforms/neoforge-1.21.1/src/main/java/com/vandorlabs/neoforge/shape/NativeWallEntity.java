@@ -17,13 +17,13 @@ import net.neoforged.neoforge.client.model.data.*;
 
 /** Shared wall save/editor host. Discovery publishes immutable geometry on the owning thread. */
 public class NativeWallEntity extends ProgrammableShapeEntity {
-    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,NativeFlatWallGeometry.Geometry geometry){}
+    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,NativeWallGeometry geometry){}
     public static final ModelProperty<WallAppearance> WALL_APPEARANCE=new ModelProperty<>();
     NativeWallLayouts.Group textureGroup;
     private final boolean porthole;
     private WallSettings walls;
     private FrameSettings frames=defaultFrames();
-    private NativeFlatWallGeometry.Geometry geometry;
+    private NativeWallGeometry geometry;
     private NativeFluidVolume.Side partition;
     private long geometryGeneration,topologyRevision,modelRevision;
     private volatile WallAppearance wallAppearance;
@@ -66,7 +66,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         return true;
     }
     /** Derived topology is not saved: no dirty flag or NBT packet is sent here. Equal snapshots do nothing. */
-    public boolean publishGeometry(NativeFlatWallGeometry.Geometry next,long revision){
+    public boolean publishGeometry(NativeWallGeometry next,long revision){
         if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Wall geometry requires owning server thread");
         Objects.requireNonNull(next);if(next.equals(geometry))return false;
         geometry=next;partition=next::side;topologyRevision=revision;geometryGeneration++;publishWallAppearance();NativeFluidWorld.queue(this);return true;
@@ -75,9 +75,9 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     @Override protected long fluidGeometryKey(){return geometryGeneration;}
     @Override protected List<AABB> fluidSolidBoxes(BlockState state,long key){return geometry.boxes();}
     @Override protected NativeFluidVolume.Side fluidSidePartition(){return partition;}
-    @Override public NativeFluidRegions fluidSurfaceRegions(){return NativeFluidRegions.flat(geometry.facing(),geometry.depth(),porthole);}
+    @Override public NativeFluidRegions fluidSurfaceRegions(){return geometry.fluidRegions(porthole);}
     @Override public boolean acceptsPlacementFluid(int side){return side>=0&&side<2;}
-    @Override public Direction[] fluidPlacementFaces(){return new Direction[]{geometry.facing(),geometry.facing().getOpposite()};}
+    @Override public Direction[] fluidPlacementFaces(){return geometry.placementFaces();}
     @Override public int containedFluidSide(double x,double y,double z){return geometry.side(x,y,z);}
     private static int frameLight(int choice){if(choice<0)return 0;var frame=ModernFinishCatalog.option(choice).frame();return frame==null?0:Math.max(0,Math.min(5,frame.light()));}
     @Override public int intrinsicContainedLight(){return Math.max(porthole||frames.bare?0:frameLight(frames.front),Math.max(frameLight(frames.interior),frameLight(frames.exteriorChoice())));}

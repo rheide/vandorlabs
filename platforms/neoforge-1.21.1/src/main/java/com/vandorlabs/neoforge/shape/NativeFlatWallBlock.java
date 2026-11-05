@@ -37,7 +37,7 @@ public final class NativeFlatWallBlock extends HorizontalDirectionalBlock implem
         return defaultBlockState().setValue(FACING,facing).setValue(DEPTH,PanelDepthPolicy.fromHit(facing.get3DDataValue(),(float)hit.x,(float)hit.z));
     }
     public static NativeFlatWallGeometry.Geometry geometry(BlockState state,BlockGetter level,BlockPos pos){
-        if(level.getBlockEntity(pos) instanceof NativeWallEntity host){var g=host.wallAppearance().geometry();if(g!=null&&g.facing()==state.getValue(FACING)&&g.depth()==state.getValue(DEPTH))return g;}
+        if(level.getBlockEntity(pos) instanceof NativeWallEntity host){var g=host.wallAppearance().geometry();if(g instanceof NativeFlatWallGeometry.Geometry flat&&flat.facing()==state.getValue(FACING)&&flat.depth()==state.getValue(DEPTH))return flat;}
         return NativeFlatWallGeometry.straight(state.getValue(FACING),state.getValue(DEPTH));
     }
     @Override protected VoxelShape getShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return NativeFlatWallGeometry.collision(geometry(state,level,pos));}
