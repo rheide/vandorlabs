@@ -26,6 +26,9 @@ public class ProgrammableBlockEntity extends BlockEntity {
     protected ProgrammableBlockDialog.State modelSettings(){return settings;}
     public static ProgrammableBlockDialog.State defaults(){return new ProgrammableBlockDialog.State(0,1,false,new int[]{-1,-1,-1,-1,-1,-1},-1);}
     public ProgrammableBlockDialog.State settings(){return settings;}
+    protected final int sideTexture(){return sideTexture;}
+    /** Family adapters validate the selected finish before changing this shared saved field. */
+    protected final void setSideTexture(int value){sideTexture=value;}
     public JoinedCubeFaces joinedFaces(){return joinedFaces;}
     public boolean publishJoined(JoinedCubeFaces next){
         if(joinedFaces.equals(next))return false;
@@ -37,13 +40,15 @@ public class ProgrammableBlockEntity extends BlockEntity {
         joinedFaces=JoinedCubeFaces.NONE;setChanged();requestModelDataUpdate();
         if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);
     }
-    public void apply(ProgrammableBlockDialog.State value){
+    public void apply(ProgrammableBlockDialog.State value){if(updateSettings(value))refresh();}
+    /** Install housing locally so family adapters can publish an atomic projection before notifying. */
+    protected final boolean updateSettings(ProgrammableBlockDialog.State value){
         int[] faces=value.faces();for(int i=0;i<6;i++)faces[i]=faces[i]<0?-1:ModernFinishCatalog.storedChoice(faces[i]);
         int main=ModernFinishCatalog.storedChoice(value.mainTexture);boolean changed=settings.mainTexture!=main||settings.layout!=value.layout||settings.facesEnabled!=value.facesEnabled;
         for(int i=0;i<6;i++)if(settings.face(i)!=faces[i])changed=true;
-        if(!changed)return;
+        if(!changed)return false;
         if(settings.layout!=value.layout){rawLayout=value.layout;tileSides=value.layout==1;}
-        settings=new ProgrammableBlockDialog.State(main,value.layout,value.facesEnabled,faces,-1);refresh();
+        settings=new ProgrammableBlockDialog.State(main,value.layout,value.facesEnabled,faces,-1);return true;
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.loadAdditional(tag,registries);
@@ -52,9 +57,11 @@ public class ProgrammableBlockEntity extends BlockEntity {
             ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice);
         rawLayout=saved.rawLayout;tileSides=saved.tileSides;sideTexture=saved.sideTexture;
         settings=new ProgrammableBlockDialog.State(saved.mainTexture,saved.layout(),saved.facesEnabled,saved.faces(),-1);
-        joinedFaces=JoinedCubeFaces.NONE;requestModelDataUpdate();
+        joinedFaces=JoinedCubeFaces.NONE;housingLoaded();requestModelDataUpdate();
         if(level!=null&&level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);
     }
+    /** Called after local housing installation and before model/update notification. */
+    protected void housingLoaded(){ }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.saveAdditional(tag,registries);tag.merge(retainedSettings);
         HousingSettings.write(new ModernHousingTags(tag),settings.mainTexture,sideTexture,rawLayout,tileSides,settings.facesEnabled,settings.faces());

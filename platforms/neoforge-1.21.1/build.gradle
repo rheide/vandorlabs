@@ -194,3 +194,7 @@ tasks.register('testNativeStairGeometry', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.NativeStairGeometryChecks'
 }
 tasks.named('check') { dependsOn 'testNativeStairGeometry' }
+neoForge.runs.configureEach {
+    if (project.hasProperty('stairReference')) systemProperty 'vandorlabs.stairReference', file(project.property('stairReference')).absolutePath
+    if (project.hasProperty('shapeDefaultsReference')) systemProperty 'vandorlabs.shapeDefaultsReference', file(project.property('shapeDefaultsReference')).absolutePath
+}
