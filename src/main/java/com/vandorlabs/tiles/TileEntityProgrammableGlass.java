@@ -94,32 +94,20 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
     }
+    public com.vandorlabs.persistence.ProgrammableGlassSettings settings(){
+        return new com.vandorlabs.persistence.ProgrammableGlassSettings(shade,material,textureLayout,stretch,tint,framed,size,join,panelFacing,legacySize);
+    }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);frameAppearance.write(tag);glassPlayback.write(tag);fluids.write(tag);
-        tag.setInteger("GlassShade", shade);
-        tag.setInteger("GlassMaterial",material);
-        tag.setBoolean("GlassStretch",stretch);
-        tag.setInteger("GlassTextureLayout",getTextureLayout());
-        tag.setInteger("GlassTint", tint);
-        tag.setBoolean("GlassFramed", framed);
-        tag.setInteger("GlassSize", size);
-        tag.setBoolean("GlassJoin", join);
-        if(panelFacing>=0)tag.setInteger("GlassPanelFacing",panelFacing);
+        settings().write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);frameAppearance.read(tag);glassPlayback.read(tag);fluids.read(tag);
         restored = true;
-        material=tag.hasKey("GlassMaterial",3)?GlassMaterials.clamp(tag.getInteger("GlassMaterial")):-1;
-        stretch=tag.getBoolean("GlassStretch");
-        textureLayout=tag.hasKey("GlassTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("GlassTextureLayout"))?tag.getInteger("GlassTextureLayout"):-1;
-        tint=tag.hasKey("GlassTint",3)?GlassTextures.clampTint(tag.getInteger("GlassTint")):1;
-        framed=!tag.hasKey("GlassFramed") || tag.getBoolean("GlassFramed");
-        shade = GlassTextures.clamp(tag.getInteger("GlassShade"));
-        legacySize = !tag.hasKey("GlassSize");
-        size = legacySize ? 1 : Math.max(0, Math.min(1, tag.getInteger("GlassSize")));
-        join = !tag.hasKey("GlassJoin") || tag.getBoolean("GlassJoin");
-        panelFacing=tag.hasKey("GlassPanelFacing",3)?Math.floorMod(tag.getInteger("GlassPanelFacing"),4):-1;
+        com.vandorlabs.persistence.ProgrammableGlassSettings saved=com.vandorlabs.persistence.ProgrammableGlassSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag),GlassMaterials::clamp);
+        material=saved.material;stretch=saved.stretch;textureLayout=saved.layout;tint=saved.tint;framed=saved.framed;
+        shade=saved.shade;legacySize=saved.legacySize;size=saved.size;join=saved.join;panelFacing=saved.panelFacing;
     }
     @Override public void onLoad() {
         super.onLoad();
