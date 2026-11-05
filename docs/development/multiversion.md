@@ -47,6 +47,8 @@ Implement independent builds, shared behavior, and dialog extraction separately;
 
 ## Validation and release policy
 
+During the active non-vehicle port, validate each family with focused checks, shared Java 8/21 contracts and ordinary builds. The full release gate is reserved for the frozen candidate after all non-vehicle families meet their acceptance requirements. Native vehicle-mode implementation remains deferred until that checkpoint passes. Existing Forge vehicle regressions still apply when shared changes reach those paths.
+
 Run shared fixtures on Java 8 and 21, the existing Forge dedicated-server linkage check, non-rendering matrices and relevant live client checks. Preserve `verifyRelease` before handing off a release jar. For NeoForge, use disposable worlds, startup and save/reload checks, GUI click/scroll tests, client/server round trips and geometry comparison. Require explicit per-family parity status; scaffolding is not full support. External integrations need native modern equivalents or documented unsupported status and must not silently alter core behavior.
 
 ## Historical adapter design
