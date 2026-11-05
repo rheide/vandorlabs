@@ -1517,3 +1517,9 @@ task testDoorGlassSavedLegacy(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.DoorGlassDataChecks'
 }
+
+task testSpaceDoorDialogLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SpaceDoorDialogLegacyChecks'
+}
