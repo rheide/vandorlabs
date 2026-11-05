@@ -3,8 +3,12 @@ package com.vandorlabs.persistence;
 import java.util.HashMap;
 import java.util.Map;
 
-final class MemoryPrimitiveData implements PrimitiveData {
+final class MemoryPrimitiveData implements HousingTags {
     private final Map<String,Object> values=new HashMap<>();
+    @Override public boolean containsInt(String key) { return values.get(key) instanceof Integer; }
+    @Override public boolean containsBoolean(String key) { return values.get(key) instanceof Boolean; }
+    @Override public int[] getIntArray(String key) { Object value=values.get(key);return value instanceof int[]?((int[])value).clone():new int[0]; }
+    @Override public void putIntArray(String key,int[] value) { values.put(key,value.clone()); }
     @Override public boolean contains(String key) { return values.containsKey(key); }
     @Override public String getString(String key) {
         Object value=values.get(key); return value instanceof String?(String)value:"";

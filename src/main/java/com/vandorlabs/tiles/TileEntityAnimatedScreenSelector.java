@@ -607,10 +607,11 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
+        NbtPrimitiveData primitiveData=new NbtPrimitiveData(compound);
         new ScreenData(selectedScreen, redstoneEnabled, displayMode, framed,
                 animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
                 smallInput, redstoneChannel, channelSignal, housingTexture)
-                .write(new NbtPrimitiveData(compound));
+                .write(primitiveData);
         compound.setInteger("GlassShade", glassShade);
         compound.setInteger("GlassTint",glassTint);
         compound.setInteger("GlassMaterial",glassMaterial);
@@ -618,18 +619,15 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setBoolean("GlassFramed",glassFramed);
         compound.setBoolean("JoinPortholes", joinPortholes);
         compound.setInteger("PortholeShape", portholeShape);
-        compound.setBoolean("FaceTexturesEnabled", faceTextures.enabled);
-        compound.setIntArray("FaceTextures", faceTextures.choices());
-        compound.setInteger("SideTexture",sideTexture);
+        com.vandorlabs.persistence.HousingSettings.write(primitiveData,housingTexture,sideTexture,mainTextureLayout,
+                slabTileSides,faceTextures.enabled,faceTextures.choices());
         fluids.write(compound);
-        compound.setBoolean("SlabTileSides", slabTileSides);
-        compound.setInteger("MainTextureLayout",getMainTextureLayout());compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());compound.setInteger("GlassTextureLayout",getGlassTextureLayout());
+        compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());compound.setInteger("GlassTextureLayout",getGlassTextureLayout());
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
         compound.setBoolean("DiagonalHalfHeight", diagonalHalfHeight);
         compound.setInteger("DiagonalFill", diagonalFill);
         compound.setInteger("DiagonalJoin",diagonalJoin);
-        compound.setInteger("HousingTextureVersion", 1);
         for(int i=0;i<2;i++)if(controls[i]!=null)compound.setTag(i==0?"RedstonePrimary":"RedstoneSecondary",controls[i].writeToNBT(new NBTTagCompound()));
         return compound;
     }
@@ -648,7 +646,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         fluids.read(compound);
         boolean previousSlabSides = slabTileSides;
         int oldMainLayout=getMainTextureLayout(),oldSurfaceLayout=getSurfaceTextureLayout(),oldGlassLayout=getGlassTextureLayout();
-        mainTextureLayout=layoutValue(compound,"MainTextureLayout");surfaceTextureLayout=layoutValue(compound,"SurfaceTextureLayout");glassTextureLayout=layoutValue(compound,"GlassTextureLayout");
+        surfaceTextureLayout=layoutValue(compound,"SurfaceTextureLayout");glassTextureLayout=layoutValue(compound,"GlassTextureLayout");
         boolean previousSurfaceSides=surfaceTileSides;
         surfaceTileSides=!compound.hasKey("SurfaceTileSides",1)||compound.getBoolean("SurfaceTileSides");
         boolean previousHalfHeight = diagonalHalfHeight;
@@ -671,7 +669,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 ?Math.max(0,Math.min(2,compound.getInteger("CeilingPosition"))):-1;
         // NBT is world data, never trust it blindly. The portable codec keeps
         // these defaults identical in every version-specific block entity.
-        ScreenData data = ScreenData.read(new NbtPrimitiveData(compound),
+        NbtPrimitiveData primitiveData=new NbtPrimitiveData(compound);
+        ScreenData data = ScreenData.read(primitiveData,
                 "engineering_screen", INPUT_PANELS[0],
                 TileEntityAnimatedScreenSelector::isValidInputPanel);
         selectedScreen = data.selectedScreen;
@@ -688,14 +687,11 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         channels=ChannelData.read(compound,redstoneChannel);redstoneChannel=channels.first();
         channelSignal = data.channelSignal;
         channelLevel=compound.hasKey("ChannelLevel",3)?Math.max(0,Math.min(15,compound.getInteger("ChannelLevel"))):channelSignal?15:0;
-        int savedHousing = compound.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,3)?data.housingTexture:previousHousing;
-        if (compound.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,3) && !compound.hasKey("HousingTextureVersion", 3)) {
-            // The removed vent grille occupied index 14 in existing worlds.
-            if (savedHousing == 14) savedHousing = 0;
-            else if (savedHousing > 14) savedHousing--;
-        }
-        housingTexture = ScreenHousingTextures.clamp(savedHousing);
-        sideTexture=compound.hasKey("SideTexture",3) && compound.getInteger("SideTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SideTexture")):-1;
+        com.vandorlabs.persistence.HousingSettings housing=com.vandorlabs.persistence.HousingSettings.read(
+                primitiveData,previousHousing,previousSlabSides,
+                ScreenHousingTextures::clamp,ScreenHousingTextures::validChoice);
+        housingTexture=housing.mainTexture;sideTexture=housing.sideTexture;
+        mainTextureLayout=housing.rawLayout;slabTileSides=housing.tileSides;
         glassShade = compound.hasKey("GlassShade", 3)
                 ? GlassTextures.clamp(compound.getInteger("GlassShade")) : 2;
         glassTint=compound.hasKey("GlassTint",3)?GlassTextures.clampTint(compound.getInteger("GlassTint")):1;
@@ -705,10 +701,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)
                 ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
-        faceTextures = FaceTextures.of(compound.getBoolean("FaceTexturesEnabled"),
-                compound.getIntArray("FaceTextures"));
-        if (compound.hasKey("SlabTileSides", 1))
-            slabTileSides = compound.getBoolean("SlabTileSides");
+        faceTextures = FaceTextures.of(housing.facesEnabled,housing.faces());
         diagonalFullWidth = compound.getBoolean("DiagonalFullWidth");
         diagonalHalfHeight = compound.getBoolean("DiagonalHalfHeight");
         diagonalJoin=Math.max(0,Math.min(11,compound.getInteger("DiagonalJoin")));

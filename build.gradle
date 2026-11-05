@@ -1041,3 +1041,12 @@ task testTriggerState(type: JavaExec) {
     classpath = files("$buildDir/portable-tests")
     main = 'com.vandorlabs.persistence.TriggerStateTest'
 }
+
+task testHousingSettings(type: JavaExec) {
+    group = 'verification'
+    description = 'Check legacy housing NBT migration and typed defaults across selector subclasses'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.HousingSettingsChecks'
+}
+check.dependsOn testHousingSettings

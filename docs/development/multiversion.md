@@ -125,3 +125,11 @@ Use the current typed housing save contract before adapting the historical nativ
 Extract the current cube dialog from `GuiProgrammableWall`: its Appearance row begins at `top + 30`, with content at `top + 54` or `top + 78` when face tabs are present. The historical native dialog predates that row and must not define the current layout. Share reverse cycling, scrolling, hit regions and operation IDs before wiring the native menu.
 
 Then integrate current housing plane, joining and lighting policies with the native block/entity, menu, bounded payload and renderer adapters. Accept the slice through cube-specific persistence, permissions, configured item, joining, dialog and rendered checks. Historical multi-family fixture classes must be narrowed to implemented families without weakening their assertions. Preserve unsupported custom-material and carried integration requirements in the inventory.
+
+## Housing save contract
+
+`HousingSettings` owns the existing main/side material, main texture layout, slab-side fallback and six local face overrides. `HousingTags` adds strict integer/boolean and integer-array access to the primitive save adapter. Catalog validation remains supplied by the platform; this extraction does not register a native programmable cube.
+
+A missing or mistyped main texture retains the previous selector value without applying catalog migration. An explicit unversioned main index maps the removed grille at index 14 to zero and decrements later indices. Missing or invalid main layouts retain the raw fallback sentinel; `SlabTileSides` still determines the effective layout. Missing or mistyped slab-side booleans retain their previous value. Disabled face overrides retain their six saved choices. Storage keeps its separate existing default injection before delegating to the shared selector.
+
+The write path reuses the screen's primitive adapter and passes one owned face-array copy to the NBT adapter. It creates no housing state object per save. `testHousingSettings` exercises real legacy NBT on the selector, light, storage, trigger and hex tank, including configured item-drop serialization; the portable contracts cover the same migration/default decisions on Java 8 and Java 21.

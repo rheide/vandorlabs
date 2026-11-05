@@ -3,7 +3,7 @@ package com.vandorlabs.persistence;
 import net.minecraft.nbt.NBTTagCompound;
 
 /** Forge 1.12.2 adapter for the portable primitive save codec. */
-public final class NbtPrimitiveData implements PrimitiveData {
+public final class NbtPrimitiveData implements HousingTags {
     private final NBTTagCompound tag;
 
     public NbtPrimitiveData(NBTTagCompound tag) {
@@ -11,6 +11,10 @@ public final class NbtPrimitiveData implements PrimitiveData {
         this.tag = tag;
     }
 
+    @Override public boolean containsInt(String key) { return tag.hasKey(key, 3); }
+    @Override public boolean containsBoolean(String key) { return tag.hasKey(key, 1); }
+    @Override public int[] getIntArray(String key) { return tag.getIntArray(key); }
+    @Override public void putIntArray(String key, int[] value) { tag.setIntArray(key, value); }
     @Override public boolean contains(String key) { return tag.hasKey(key); }
     @Override public String getString(String key) { return tag.getString(key); }
     @Override public int getInt(String key) { return tag.getInteger(key); }
