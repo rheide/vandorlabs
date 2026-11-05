@@ -1,6 +1,7 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.ui.SpaceDoorDialog;
 
 import com.vandorlabs.container.ContainerSpaceDoor;
 import com.vandorlabs.network.MessageSpaceDoor;
@@ -52,8 +53,8 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int listLeft=layout.listX,listTop=guiTop+54;
         if(settingsPage==4&&!glassDesign())settingsPage=0;
-        int[] pages=glassDesign()?new int[]{0,1,4,3,2}:new int[]{0,1,3,2};String[] labels={"Door","Frame","Redstone","Security","Glass"};
-        for(int at=0;at<pages.length;at++)buttonList.add(layout.fullTab(190+pages[at],at,pages.length,labels[pages[at]]));
+        int[] pages=SpaceDoorDialog.pages(design);
+        for(int at=0;at<pages.length;at++)buttonList.add(layout.fullTab(190+pages[at],at,pages.length,SpaceDoorDialog.pageLabel(pages[at])));
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
                 .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
         motionButton=layout.control(10,54,motion.label);buttonList.add(motionButton);
@@ -77,20 +78,20 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=194){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;if(b.id>=20&&b.id<=22)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);if(!channelField.getVisible())channelField.setFocused(false);}
     private net.minecraft.item.ItemStack companyCard(){return CredentialFilterPicker.sample(false,securityAllowed);}
     String companyLabel(){return CredentialFilterPicker.label(false,securityAllowed);}
-    private String panelLabel(){return "Panel: "+new String[]{"Off","On","Both"}[panelMode];}
+    private String panelLabel(){return SpaceDoorDialog.panelLabel(panelMode);}
     private String securityLabel(){return (securityMode==0?"Security: ":"")+TileEntitySpaceDoor.securityLabel(securityMode);}
     private int channel() {return ChannelFields.first(channelField);}
     private void updateHingeButton() {
-        hingeButton.enabled=!motion.sliding;
-        hingeButton.displayString=!motion.sliding && hinges?"Hinges: On":"Hinges: Off";
+        hingeButton.enabled=SpaceDoorDialog.hingesEnabled(motion);
+        hingeButton.displayString=SpaceDoorDialog.hingesLabel(motion,hinges);
     }
 
-    private boolean glassDesign(){return design==15||design==16||design==29;}
+    private boolean glassDesign(){return SpaceDoorDialog.glassPage(design);}
     void chooseGlass(int choice){int shade=glassAppearance.shade,material=choice;if(choice>=HousingTextureList.CANOPY_GLASS_BASE&&choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}glassAppearance=new com.vandorlabs.tiles.DoorGlassAppearance(material,shade,glassAppearance.tint,glassAppearance.layout);faceTexture=-1;sendUpdate();sendGlass();initGui();}
     private void sendGlass(){tile.setGlassAppearance(glassAppearance);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDoorGlass(tile.getPos(),glassAppearance));}
     private String layoutLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
     private String depthLabel() {
-        return "Pos: " + new String[]{"Middle", "Near", "Far"}[depth];
+        return SpaceDoorDialog.positionLabel(depth);
     }
     private void updateChannelValidity() {
         done.enabled=channel()>=0;
@@ -113,18 +114,17 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
 
         if (button.id==1) { if (channel()>=0) { sendUpdate(); mc.player.closeScreen(); } return; }
         if (button.id==10) {
-            motion=SpaceDoorMotion.values()[GuiOptionCycle.next(motion.ordinal(),SpaceDoorMotion.values().length)];
-            if(motion==SpaceDoorMotion.X_SPLIT && !(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor))motion=SpaceDoorMotion.values()[GuiOptionCycle.next(motion.ordinal(),SpaceDoorMotion.values().length)];
+            motion=SpaceDoorDialog.nextMotion(motion,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor,GuiOptionCycle.direction());
             motionButton.displayString=motion.label;
             updateHingeButton();
         }
         else if (button.id==12) { framed=!framed; button.displayString=framed?"Frame: Framed":"Frame: Bare"; }
-        else if (button.id==13) { depth=GuiOptionCycle.next(depth,3);if(depth!=0&&panelMode==2){panelMode=1;for(GuiButton option:buttonList)if(option.id==17)option.displayString=panelLabel();} button.displayString=depthLabel(); }
+        else if (button.id==13) { depth=GuiOptionCycle.next(depth,3);if(SpaceDoorDialog.panelAfterPosition(panelMode,depth)!=panelMode){panelMode=SpaceDoorDialog.panelAfterPosition(panelMode,depth);for(GuiButton option:buttonList)if(option.id==17)option.displayString=panelLabel();} button.displayString=depthLabel(); }
         else if (button.id==15 && !motion.sliding) { hinges=!hinges; updateHingeButton(); }
         else if (button.id==16) { trigger=GuiOptionCycle.next(trigger,3); ((RedstoneActivationButton)button).setMode(trigger); }
         else if(button.id==18){textureLayout=GuiOptionCycle.next(textureLayout,3);tileTexture=textureLayout==1;tile.setTextureLayout(textureLayout);button.displayString=layoutLabel();}
-        else if (button.id==17) { panelMode=GuiOptionCycle.next(panelMode,depth==0?3:2);panel=panelMode>0;button.displayString=panelLabel(); }
-        else if(button.id==19){int[] modes={0,2,3,4,1};int index=0;while(modes[index]!=securityMode)index++;securityMode=modes[GuiOptionCycle.next(index,5)];button.displayString=securityLabel();}
+        else if (button.id==17) { panelMode=SpaceDoorDialog.nextPanel(panelMode,depth,GuiOptionCycle.direction());panel=panelMode>0;button.displayString=panelLabel(); }
+        else if(button.id==19){securityMode=SpaceDoorDialog.nextSecurity(securityMode,GuiOptionCycle.direction());button.displayString=securityLabel();}
         else return;
         sendUpdate();
     }
