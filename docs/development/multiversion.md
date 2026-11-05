@@ -126,15 +126,19 @@ lighting and render-thread publication.
 
 `SignalControlData` shares four-detent output levels, nearest-step selection and scalar save defaults. Positive external levels never select Off, and equal distances retain the lower detent. Platform adapters retain transitions, channel publication and invalid saved-pair fallback. Network adapters must bound incoming limits to the supported domain before applying the shared spacing predicate; preserving legacy arithmetic does not replace packet validation.
 
-`PowerLeverSize` preserves the distinct existing rules for saved tiles, live edits and item previews. Missing or mistyped saved values retain the registry variant default; typed saved integers clamp to the supported range, while invalid live choices are rejected and invalid item choices retain the original model. The shared Size row uses operation 12 alongside the existing mount rows. Native buttons and rockers already use the common mounted-control host; other profiles can reuse its channel, transmission and menu behavior.
+`PowerLeverSize` preserves the distinct existing rules for saved tiles, live edits and item previews. Missing or mistyped saved values retain the registry variant default; typed saved integers clamp to the supported range, while invalid live choices are rejected and invalid item choices retain the original model. The shared Size row uses operation 12 alongside the existing mount rows. Native buttons, rockers and power levers use the common mounted-control host, activation path, menu and screen. Four-step adapters extend the numeric latch hooks while retaining family-specific step and type transitions.
 
 Keep the existing eleven control registry IDs, including hidden legacy variants. Port power levers and four-step controls through the same channel membership, latch, mount transform and permission adapters used by buttons and rockers. Their differences belong in small profiles rather than independent implementations.
 
 | Profile | Authored states and saved settings | Dialog transaction |
 | --- | --- | --- |
-| Industrial/Compact and Small/Large power levers | Horizontal facing, wall/floor placement, powered state; selected size and shared mount settings | Draft channels, size and mount; commit on Done/Enter, discard on Escape |
-| Thruster Lever, Airliner Throttle and Fighter Throttle | Six mount faces, rotation, four detents; limits, selectable type and shared mount settings | Draft channels, limits, type and mount; commit on Done/Enter, discard on Escape |
-| Wall Slider | Six mount faces, rotation, four detents; limits and shared mount settings; fixed type | Draft channels, limits and mount; commit on Done/Enter, discard on Escape |
+| Industrial/Compact and Small/Large power levers | Horizontal facing, wall/floor placement, powered state; selected size and shared mount settings | Draft size and mount; commit on Done/Enter, discard on Escape |
+| Thruster Lever, Airliner Throttle and Fighter Throttle | Six mount faces, rotation, four detents; limits, selectable type and shared mount settings | Draft limits, type and mount; commit on Done/Enter, discard on Escape |
+| Wall Slider | Six mount faces, rotation, four detents; limits and shared mount settings; fixed type | Draft limits and mount; commit on Done/Enter, discard on Escape |
+
+The inline transmission editor is a separate transaction: valid channel, range and Local edits apply immediately, including flushes before closing or changing tabs. Escape discards the family draft, not already applied inline changes. Enter in the inline channel field flushes that field without committing the General draft.
+
+The native renderer selects authored family poses through one backend. Bake-time float compatibility preserves legacy directional shading; immutable visual data keeps section workers independent of world reads. Static mesh and shape caches are bounded by retained bytes, and dynamic resource-pack models bypass static mesh correction/caching.
 
 Extract settings migration, profile labels, option IDs, cycling and layout into the Java 8 shared sources, and make the Forge implementation delegate to them before wiring the native UI. Preserve typed-key distinctions, old mount migration, canonical configured-item IDs and the current channel-bank behavior. Native storage and payloads translate this shared state; they must retain exact menu/tile identity, held-item Adventure permission, reach and loaded-chunk checks.
 
