@@ -17,7 +17,7 @@ unset VANDOR_LABS_CHANNEL_SOURCE_INDEX_CHECKS_ONLY VANDOR_LABS_MATERIAL_SPRITE_C
 
 unset VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY
 
-unset VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONLY VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY
+unset VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONLY VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -25,7 +25,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = glass-dialog ]; then
+        if [ "$TARGET" = shape-dialog ]; then
+            PREFIX=shape_dialog_
+            export VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY=true
+        elif [ "$TARGET" = glass-dialog ]; then
             PREFIX=glass_dialog_
             export VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY=true
         elif [ "$TARGET" = stair-settings ]; then
@@ -357,6 +360,12 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = shape-dialog ]; then
+        grep -q "shape-dialog legacy PASS" "$RUN_OUT/client.log"
+        grep -q "stair-dialog-live PASS" "$RUN_OUT/client.log"
+        echo "Shape dialog passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = glass-dialog ]; then
         grep -q "glass-dialog legacy PASS" "$RUN_OUT/client.log"
         echo "Glass dialog passed: $RUN_OUT"
