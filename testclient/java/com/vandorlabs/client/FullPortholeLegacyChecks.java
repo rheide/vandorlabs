@@ -1,0 +1,30 @@
+package com.vandorlabs.client;
+import com.google.gson.*;
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
+import java.nio.file.*;
+import java.util.*;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.*;
+/** Actual inherited full-block collision, placement and missing-tag defaults. */
+public final class FullPortholeLegacyChecks {
+ static final String GOLDEN="5f633dae3c566fc19d30e8c87531ada04aeb1e67ec19b3e417d70af6e5b41294";static java.security.MessageDigest digest;static int cases,placements;
+ static void put(long value){for(int i=56;i>=0;i-=8)digest.update((byte)(value>>>i));}
+ static void require(boolean ok,String message){if(!ok)throw new AssertionError(message);}
+ static JsonArray box(AxisAlignedBB b){JsonArray a=new JsonArray();for(double n:new double[]{b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ}){a.add(n);put(Double.doubleToRawLongBits(n));}return a;}
+ public static void main(String[] args)throws Exception{
+  net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,new net.minecraft.util.ResourceLocation("vandorlabs","programmable_viewscreen"));digest=java.security.MessageDigest.getInstance("SHA-256");BlockProgrammablePortholeBlock block=new BlockProgrammablePortholeBlock();BlockProgrammableWall thin=new BlockProgrammableWall("programmable_porthole_wall",BlockProgrammableWall.Shape.PORTHOLE);JsonArray rows=new JsonArray();BlockPos pos=new BlockPos(0,80,0);
+  for(EnumFacing face:EnumFacing.HORIZONTALS)for(int depth=0;depth<3;depth++)for(boolean inverted:new boolean[]{false,true})for(int neighbors=0;neighbors<3;neighbors++){
+   NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);IBlockState state=block.getDefaultState().withProperty(BlockProgrammableWall.FACING,face).withProperty(BlockProgrammableWall.DEPTH,depth).withProperty(BlockProgrammableWall.INVERTED,inverted);world.setBlockState(pos,state,2);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);require(tile.isJoinPortholes(),"factory fresh join");tile.setPortholeShape(cases%4);
+   if(neighbors!=0)for(EnumFacing d:new EnumFacing[]{face,face.getOpposite()}){BlockProgrammableWall other=neighbors==1?thin:block;world.setBlockState(pos.offset(d),other.getDefaultState().withProperty(BlockProgrammableWall.FACING,face.rotateY()),2);}
+   require(block.flatCorner(state,world,pos)==null,"full block must not form thin corner");List<AxisAlignedBB> collision=new ArrayList<>();block.addCollisionBoxToList(state,world,pos,new AxisAlignedBB(pos).grow(2),collision,null,true);require(collision.size()==1&&collision.get(0).equals(new AxisAlignedBB(pos)),"actual unit collision");require(WaterloggedParts.volume(world,pos).cells.isEmpty(),"no physical fluid cells");
+   TEAnimatedScreenSelector.PortholeGroup group=TEAnimatedScreenSelector.portholeGroup(tile,state);require(group.extraBorder==1,"actual one-pixel extra border");JsonObject row=new JsonObject();row.addProperty("facing",face.getIndex());row.addProperty("depth",depth);row.addProperty("inverted",inverted);row.addProperty("neighbors",neighbors);row.addProperty("shape",tile.getPortholeShape());put(face.getIndex());put(depth);put(inverted?1:0);put(neighbors);put(tile.getPortholeShape());row.add("selection",box(block.getBoundingBox(state,world,pos)));row.add("collision",box(collision.get(0).offset(0,-80,0)));put(group.extraBorder);row.addProperty("border",group.extraBorder);rows.add(row);cases++;
+  }
+  NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);EntityArmorStand placer=new EntityArmorStand(world);for(boolean inherit:new boolean[]{false,true})for(EnumFacing side:EnumFacing.values())for(int yaw:new int[]{0,90,180,270})for(float hit:new float[]{.01F,.5F,.99F}){placer.rotationYaw=yaw;BlockPos support=pos.offset(side.getOpposite());world.setBlockState(support,inherit?block.getDefaultState().withProperty(BlockProgrammableWall.FACING,EnumFacing.EAST):net.minecraft.init.Blocks.STONE.getDefaultState(),2);IBlockState placed=block.getStateForPlacement(world,pos,side,hit,.99F,hit,0,placer);require(placed.getValue(BlockProgrammableWall.FACING)==(inherit?EnumFacing.EAST:placer.getHorizontalFacing().getOpposite())&&placed.getValue(BlockProgrammableWall.DEPTH)==0&&!placed.getValue(BlockProgrammableWall.INVERTED),"full placement ignores hit depth/inversion");put(side.getIndex());put(yaw);put(Float.floatToRawIntBits(hit));put(inherit?1:0);put(placed.getValue(BlockProgrammableWall.FACING).getIndex());placements++;}
+  TileEntityAnimatedScreenSelector fresh=(TileEntityAnimatedScreenSelector)block.createNewTileEntity(null,0);NBTTagCompound saved=fresh.writeToNBT(new NBTTagCompound());saved.removeTag("JoinPortholes");TileEntityAnimatedScreenSelector loaded=(TileEntityAnimatedScreenSelector)block.createNewTileEntity(null,0);loaded.readFromNBT(saved);require(!loaded.isJoinPortholes(),"missing saved join remains false");put(fresh.isJoinPortholes()?1:0);put(loaded.isJoinPortholes()?1:0);
+  StringBuilder hash=new StringBuilder();for(byte b:digest.digest())hash.append(String.format("%02x",b&255));if(!GOLDEN.equals(hash.toString()))throw new AssertionError("Actual full porthole changed "+hash);JsonObject root=new JsonObject();root.addProperty("schema",1);root.addProperty("golden",hash.toString());root.add("cases",rows);String output=System.getProperty("vandorlabs.fullPortholeExport");if(output!=null){Path file=Paths.get(output);Files.createDirectories(file.toAbsolutePath().getParent());try(java.io.Writer writer=Files.newBufferedWriter(file)){new Gson().toJson(root,writer);}}System.out.println("Actual Forge full porthole PASS cases="+cases+" placementCases="+placements+" UNIT/no-corners/no-fluid/border1 freshTrue/missingFalse golden="+hash);
+ }
+}

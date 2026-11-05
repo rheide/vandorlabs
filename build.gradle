@@ -1523,3 +1523,9 @@ task testSpaceDoorDialogLegacy(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.SpaceDoorDialogLegacyChecks'
 }
+task testFullPortholeLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FullPortholeLegacyChecks'
+    if (project.hasProperty('fullPortholeExport')) systemProperty 'vandorlabs.fullPortholeExport', file(project.property('fullPortholeExport')).absolutePath
+}

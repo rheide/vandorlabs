@@ -393,3 +393,6 @@ tasks.register('testNativeJoinedDiagonalPortholes', JavaExec) {
     maxHeapSize = '1G'
     args project.findProperty('joinedDiagonalPortholeReference') ?: '../../build/test-artifacts/joined-diagonal-porthole-forge.jsonl'
 }
+neoForge.runs.configureEach {
+    if (project.hasProperty('fullPortholeReference')) systemProperty 'vandorlabs.fullPortholeReference', file(project.property('fullPortholeReference')).absolutePath
+}
