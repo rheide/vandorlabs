@@ -650,7 +650,7 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.stairSettingsChecksOnly")){try{
             if(++holdTicks==40)mc.getIntegratedServer().addScheduledTask(()->mc.getIntegratedServer().getPlayerList().getPlayers().get(0).connection.setPlayerLocation(300.5,42,142.5,0,0)).get();
             if(holdTicks<60||!mc.world.isBlockLoaded(new net.minecraft.util.math.BlockPos(300,40,146)))return;
-            mc.getIntegratedServer().addScheduledTask(()->StairConfigurationChecks.server(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
+            mc.getIntegratedServer().addScheduledTask(()->{StairConfigurationChecks.server(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));SlabMergeRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));}).get();
             StairConfigurationChecks.client(mc);StairIconChecks.run(mc,outDir);
             System.out.println("[vandorlabs][reprolab] stair-settings-live PASS current saved edits, actual model/lighting and padded items");mc.shutdown();
         }catch(Exception failure){throw new IllegalStateException("Stair settings focus",failure);}return;}

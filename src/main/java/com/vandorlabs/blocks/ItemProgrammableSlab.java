@@ -19,7 +19,7 @@ public final class ItemProgrammableSlab extends ItemBlock {
         IBlockState state=world.getBlockState(pos);
         if(state.getBlock()==block) {
             boolean upper=state.getValue(BlockProgrammableSlab.HALF)==BlockSlab.EnumBlockHalf.TOP;
-            if(side==(upper?EnumFacing.DOWN:EnumFacing.UP))return combine(player,world,pos,hand,side);
+            if(com.vandorlabs.render.SlabMergePolicy.directMerge(upper,side.getIndex()))return combine(player,world,pos,hand,side);
         }
         BlockPos adjacent=pos.offset(side);
         if(world.getBlockState(adjacent).getBlock()==block)return combine(player,world,adjacent,hand,side);
@@ -44,7 +44,7 @@ public final class ItemProgrammableSlab extends ItemBlock {
     }
     @Override public boolean canPlaceBlockOnSide(World world,BlockPos pos,EnumFacing side,EntityPlayer player,ItemStack stack) {
         IBlockState state=world.getBlockState(pos);
-        if(state.getBlock()==block && side==(state.getValue(BlockProgrammableSlab.HALF)==BlockSlab.EnumBlockHalf.TOP?EnumFacing.DOWN:EnumFacing.UP))return true;
+        if(state.getBlock()==block && com.vandorlabs.render.SlabMergePolicy.directMerge(state.getValue(BlockProgrammableSlab.HALF)==BlockSlab.EnumBlockHalf.TOP,side.getIndex()))return true;
         return world.getBlockState(pos.offset(side)).getBlock()==block || super.canPlaceBlockOnSide(world,pos,side,player,stack);
     }
 }

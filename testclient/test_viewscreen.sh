@@ -363,7 +363,7 @@ if [ "$MODE" = focus ]; then
         exit 0
     fi
     if [ "$TARGET" = stair-settings ]; then
-        for marker in stair-configuration stair-mesh stair-appearance stair-icons stair-settings-live; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
+        for marker in stair-configuration slab-merge-policy stair-emitted-geometry stair-mesh stair-appearance stair-icons stair-settings-live; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
         echo "Stair settings checks passed: $RUN_OUT"
         exit 0
     fi

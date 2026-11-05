@@ -52,12 +52,13 @@ final class StairConfigurationChecks {
         System.out.println("[vandorlabs][reprolab] stair-configuration PASS cases="+cases+" five step sizes three saved rolls four facings both halves collision selection persistence copied items water volume normal wall placement neighbor face visibility");
     }
     static void client(Minecraft mc)throws Exception{
-        BlockPos pos=new BlockPos(300,40,146);int cases=0;
+        BlockPos pos=new BlockPos(300,40,146);int cases=0;java.security.MessageDigest meshDigest=java.security.MessageDigest.getInstance("SHA-256");
         try{for(int tread:new int[]{1,2,4,8,16})for(int roll=0;roll<3;roll++)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(BlockStairs.EnumHalf half:BlockStairs.EnumHalf.values())for(BlockStairs.EnumShape corner:BlockStairs.EnumShape.values()){
             IBlockState clean=ModBlocks.PROGRAMMABLE_STAIRS.getDefaultState().withProperty(BlockStairs.FACING,facing).withProperty(BlockStairs.HALF,half).withProperty(BlockStairs.SHAPE,corner);
             mc.world.setBlockState(pos,clean,2);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(pos);tile.setStairGeometry(tread,roll);
             IBlockState state=ModBlocks.PROGRAMMABLE_STAIRS.getExtendedState(clean,mc.world,pos);IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(clean);
             List<BakedQuad> quads=new ArrayList<>(model.getQuads(state,null,0));for(EnumFacing face:EnumFacing.values())quads.addAll(model.getQuads(state,face,0));require(!quads.isEmpty(),"rendered geometry");
+            for(BakedQuad quad:quads){meshDigest.update((byte)quad.getFace().getIndex());meshDigest.update((byte)(quad.shouldApplyDiffuseLighting()?1:0));meshDigest.update(quad.getSprite().getIconName().getBytes(java.nio.charset.StandardCharsets.UTF_8));int[] raw=quad.getVertexData();int stride=raw.length/4;for(int vertex=0;vertex<4;vertex++)for(int axis=0;axis<3;axis++){int bits=raw[vertex*stride+axis];for(int shift=24;shift>=0;shift-=8)meshDigest.update((byte)(bits>>>shift));}}
             double volume=0;for(BakedQuad quad:quads){int[] data=quad.getVertexData();int stride=data.length/4;Vec3d[] p=new Vec3d[4];for(int i=0;i<4;i++)p[i]=new Vec3d(Float.intBitsToFloat(data[i*stride]),Float.intBitsToFloat(data[i*stride+1]),Float.intBitsToFloat(data[i*stride+2]));
                 for(int i=1;i<3;i++)volume+=p[0].dotProduct(p[i].crossProduct(p[i+1]))/6;
                 require(!quad.getSprite().getIconName().contains("missingno"),"texture present: "+quad.getSprite().getIconName()+" model="+model.getClass().getName());
@@ -75,6 +76,7 @@ final class StairConfigurationChecks {
             double expected=0;int count=16/tread;for(int x=0;x<count;x++)for(int z=0;z<count;z++)expected+=ProgrammableStairGeometry.height(x,z,count,corner)/(count*count);
             require(Math.abs(volume-expected)<1e-6,"rendered mesh volume matches collision "+tread+"/"+roll+" actual="+volume);cases++;
         }}finally{mc.world.setBlockToAir(pos);}
+        StringBuilder hash=new StringBuilder();for(byte value:meshDigest.digest())hash.append(String.format("%02x",value&255));require(hash.toString().equals("242f4b6ffc83749f034852f084c3741ab7c1ea25c025c3090b651b9d09bfc866"),"frozen emitted geometry changed "+hash);System.out.println("[vandorlabs][reprolab] stair-emitted-geometry PASS SHA256="+hash+" exact vertex float bits/material/direction/shading");
         mountedTextures(mc,pos);StairAppearanceChecks.run(mc,pos);
         System.out.println("[vandorlabs][reprolab] stair-mesh PASS variants="+cases+" outward winding closed surface collision volume parity textures");
     }

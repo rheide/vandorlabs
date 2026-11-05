@@ -57,8 +57,7 @@ public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos,
             EnumFacing side, float hitX, float hitY, float hitZ, int meta,
             EntityLivingBase placer) {
-        BlockSlab.EnumBlockHalf half = side == EnumFacing.DOWN
-                || (side != EnumFacing.UP && hitY > .5F)
+        BlockSlab.EnumBlockHalf half = com.vandorlabs.render.SlabMergePolicy.upperHalf(side.getIndex(),hitY)
                 ? BlockSlab.EnumBlockHalf.TOP : BlockSlab.EnumBlockHalf.BOTTOM;
         return getDefaultState().withProperty(FACING,
                 placementFacing(world, pos, side, placer)).withProperty(HALF, half);
