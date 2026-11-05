@@ -305,3 +305,12 @@ tasks.register('testNativeMaterialPlayback', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.client.MaterialPlaybackChecks'
     args file('../..').absolutePath, file('build/generated/cube-resources/assets/vandorlabs').absolutePath
 }
+
+tasks.register('testNativePanelApertures', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativePanelApertureChecks'
+    maxHeapSize = '1G'
+    args file(project.findProperty('panelApertureReference') ?: '../../build/test-artifacts/panel-aperture-forge.jsonl').absolutePath
+}

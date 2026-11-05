@@ -1404,3 +1404,11 @@ task testGlassPlaybackLegacy(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.GlassPlaybackLegacyChecks'
 }
+task exportPanelApertureReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PanelApertureReferenceExport'
+    maxHeapSize = '1G'
+    systemProperty 'vandorlabs.panelApertureReference', file(project.findProperty('panelApertureReference') ?: 'build/test-artifacts/panel-aperture-forge.jsonl').absolutePath
+}
