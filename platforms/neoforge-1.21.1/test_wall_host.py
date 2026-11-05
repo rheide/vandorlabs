@@ -7,11 +7,11 @@ import tempfile
 from test_transmitter import ROOT,command,run,world,check_log,jdk_home
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--legacy-reference',type=Path);parser.add_argument('--editor-only',action='store_true');args=parser.parse_args();reference=args.legacy_reference.resolve() if args.legacy_reference else None
-    if not args.editor_only and (reference is None or not reference.is_file()):parser.error('Actual Forge testWallFrameLegacy reference required')
-    phase='wall-editor' if args.editor_only else 'wall-host'
+    parser=argparse.ArgumentParser();parser.add_argument('--legacy-reference',type=Path);modes=parser.add_mutually_exclusive_group();modes.add_argument('--editor-only',action='store_true');modes.add_argument('--panel-only',action='store_true');args=parser.parse_args();reference=args.legacy_reference.resolve() if args.legacy_reference else None
+    if not args.editor_only and (reference is None or not reference.is_file()):parser.error('Actual Forge reference required: testPanelGlassLegacy for --panel-only, testWallFrameLegacy otherwise')
+    phase='wall-editor' if args.editor_only else 'panel-glass' if args.panel_only else 'wall-host'
     properties=['-PtransmitterPhase='+phase]
-    if reference:properties.append('-PwallFrameReference='+str(reference))
+    if reference:properties.append(('-PpanelGlassReference=' if args.panel_only else '-PwallFrameReference=')+str(reference))
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
     output=Path(tempfile.mkdtemp(prefix='wall-host-native-',dir=base));saved=output/'saved-world';world(saved,0)
     run(command('runServer','-PmodernServerRunDirectory='+str(saved),*properties),output/'persistence.log','[vandorlabs]['+phase+'] dedicated PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
