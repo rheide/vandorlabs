@@ -15,11 +15,12 @@ final class NativePanelQuads {
     }
     private static final class Context {
         final Direction facing;final Material main;final int mode;final NativePanelLayout layout;
-        final boolean raw;final double borderX,borderY,zOffset,imageAspect;final int color;
+        final boolean raw;final double borderX,borderY,zOffset,imageAspect,zScale;final int color;
         final List<BakedQuad> result;final boolean capture;private float[] captured;private int capturedUsed;private final List<Material> capturedMaterials;final float[] source=new float[32],mapped=new float[32];int used,mappedUsed;Material current;
         Context(Direction facing,Material main,int mode,NativePanelLayout layout){this(facing,main,mode,layout,false,0,0,0,1,0);}
         Context(Direction facing,Material main,int mode,NativePanelLayout layout,boolean raw,double borderX,double borderY,double zOffset,float opacity,double imageAspect){this(facing,main,mode,layout,raw,borderX,borderY,zOffset,opacity,imageAspect,false);}
-        Context(Direction facing,Material main,int mode,NativePanelLayout layout,boolean raw,double borderX,double borderY,double zOffset,float opacity,double imageAspect,boolean capture){this.capture=capture;result=capture?null:new ArrayList<>();captured=capture?new float[256]:null;capturedMaterials=capture?new ArrayList<>():List.of();this.facing=facing;this.main=main;this.mode=mode;this.layout=Objects.requireNonNull(layout);this.raw=raw;this.borderX=borderX;this.borderY=borderY;this.zOffset=zOffset;this.imageAspect=imageAspect;color=((int)(opacity*255)<<24)|0xFFFFFF;}
+        Context(Direction facing,Material main,int mode,NativePanelLayout layout,boolean raw,double borderX,double borderY,double zOffset,float opacity,double imageAspect,boolean capture){this(facing,main,mode,layout,raw,borderX,borderY,zOffset,opacity,imageAspect,capture,1);}
+        Context(Direction facing,Material main,int mode,NativePanelLayout layout,boolean raw,double borderX,double borderY,double zOffset,float opacity,double imageAspect,boolean capture,double zScale){this.zScale=zScale;this.capture=capture;result=capture?null:new ArrayList<>();captured=capture?new float[256]:null;capturedMaterials=capture?new ArrayList<>():List.of();this.facing=facing;this.main=main;this.mode=mode;this.layout=Objects.requireNonNull(layout);this.raw=raw;this.borderX=borderX;this.borderY=borderY;this.zOffset=zOffset;this.imageAspect=imageAspect;color=((int)(opacity*255)<<24)|0xFFFFFF;}
         void source(Material material,double x,double y,double z,double u,double v,float nx,float ny,float nz){
             put(source,used++,x,y,z,u,v,nx,ny,nz);if(used!=4)return;used=0;
             var texture=main.surface;var sprite=texture.sprite();
@@ -36,7 +37,7 @@ final class NativePanelQuads {
             int[] data=new int[32];int turns=facing==Direction.WEST?1:facing==Direction.SOUTH?2:facing==Direction.EAST?3:0;
             int a=(byte)(int)(points[5]*127),b=(byte)(int)(points[6]*127),c=(byte)(int)(points[7]*127),nx=turns==1?c:turns==2?-a:turns==3?-c:a,nz=turns==1?-a:turns==2?-c:turns==3?a:c,normal=(nx&255)|((b&255)<<8)|((nz&255)<<16);
             Direction direction=direction(nx/127F,b/127F,nz/127F);
-            for(int v=0;v<4;v++){int at=v*8;double x=points[at]/16D,z=(points[at+2]+zOffset)/16D;data[at]=Float.floatToRawIntBits((float)(turns==1?z:turns==2?1-x:turns==3?1-z:x));data[at+1]=Float.floatToRawIntBits(points[at+1]/16);data[at+2]=Float.floatToRawIntBits((float)(turns==1?1-x:turns==2?1-z:turns==3?x:z));data[at+3]=color;data[at+4]=Float.floatToRawIntBits(points[at+3]);data[at+5]=Float.floatToRawIntBits(points[at+4]);data[at+7]=normal;}
+            for(int v=0;v<4;v++){int at=v*8;double x=points[at]/16D,z=(points[at+2]*zScale+zOffset)/16D;data[at]=Float.floatToRawIntBits((float)(turns==1?z:turns==2?1-x:turns==3?1-z:x));data[at+1]=Float.floatToRawIntBits(points[at+1]/16);data[at+2]=Float.floatToRawIntBits((float)(turns==1?1-x:turns==2?1-z:turns==3?x:z));data[at+3]=color;data[at+4]=Float.floatToRawIntBits(points[at+3]);data[at+5]=Float.floatToRawIntBits(points[at+4]);data[at+7]=normal;}
             result.add(new BakedQuad(data,-1,direction,material.surface.sprite(),false,false));int[] back=new int[32];for(int v=0;v<4;v++)System.arraycopy(data,((4-v)&3)*8,back,v*8,8);result.add(new BakedQuad(back,-1,direction,material.surface.sprite(),false,false));
         }
         Mesh captured(){if(!capture||used!=0||mappedUsed!=0)throw new IllegalStateException("Incomplete captured panel quad");return new Mesh(Arrays.copyOf(captured,capturedUsed),List.copyOf(capturedMaterials));}
@@ -65,8 +66,11 @@ final class NativePanelQuads {
             boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper){return aperture(facing,near,opening,wall,metal,outer,mode,group,hideLeft,hideRight,hideLower,hideUpper,4);}
     static List<BakedQuad> aperture(Direction facing,double near,NativePanelSlice opening,
             Material wall,Material metal,Material outer,int mode,NativePanelLayout group,
+            boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper,double depthUv){return aperture(facing,near,1,opening,wall,metal,outer,mode,group,hideLeft,hideRight,hideLower,hideUpper,depthUv);}
+    static List<BakedQuad> aperture(Direction facing,double near,double zScale,NativePanelSlice opening,
+            Material wall,Material metal,Material outer,int mode,NativePanelLayout group,
             boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper,double depthUv){
-        Context context=new Context(facing,wall,mode,group,false,0,0,near-6,1,0);
+        Context context=new Context(facing,wall,mode,group,false,0,0,near-6*zScale,1,0,false,zScale);
         aperture(context,opening,wall,metal,outer,hideLeft,hideRight,hideLower,hideUpper,depthUv);
         return context.finish();
     }
@@ -87,8 +91,10 @@ final class NativePanelQuads {
     static List<BakedQuad> pane(Direction facing,double near,NativePanelSlice opening,
             Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity){return pane(facing,near,opening,glass,mode,group,borderX,borderY,opacity,0);}
     static List<BakedQuad> pane(Direction facing,double near,NativePanelSlice opening,
+            Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity,double imageAspect){return pane(facing,near,1,opening,glass,mode,group,borderX,borderY,opacity,imageAspect);}
+    static List<BakedQuad> pane(Direction facing,double near,double zScale,NativePanelSlice opening,
             Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity,double imageAspect){
-        Context context=new Context(facing,glass,mode,group,true,borderX,borderY,near-6,opacity,imageAspect);context.current=glass;
+        Context context=new Context(facing,glass,mode,group,true,borderX,borderY,near-6*zScale,opacity,imageAspect,false,zScale);context.current=glass;
         pane(context,opening);
         return context.finish();
     }

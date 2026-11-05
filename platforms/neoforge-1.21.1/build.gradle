@@ -365,3 +365,11 @@ tasks.register('testNativeBentPanels', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('diagonalLayoutReference')) systemProperty 'vandorlabs.diagonalLayoutReference', file(project.property('diagonalLayoutReference')).absolutePath
 }
+tasks.register('testNativeFullPanels', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeFullPanelChecks'
+    maxHeapSize = '1G'
+    args file(project.findProperty('panelApertureReference') ?: '../../build/test-artifacts/panel-aperture-forge.jsonl').absolutePath
+}
