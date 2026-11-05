@@ -19,7 +19,7 @@ public final class NativeWallLayouts {
     public static void invalidateAt(Level level,BlockPos pos){if(NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity host)invalidate(host);}
     private static Group group(NativeWallEntity host,NativePanelGroups.Mode mode){return mode==NativePanelGroups.Mode.MATERIAL?host.textureGroup:host.apertureGroup;}
     private static void group(NativeWallEntity host,NativePanelGroups.Mode mode,Group group){if(mode==NativePanelGroups.Mode.MATERIAL)host.textureGroup=group;else host.apertureGroup=group;}
-    static NativePanelLayout layout(NativeWallEntity host){return query(host,NativePanelGroups.Mode.MATERIAL);}
+    static NativePanelLayout layout(NativeWallEntity host){return host.getBlockState().getBlock() instanceof NativeDiagonalWallBlock?NativeDiagonalLayouts.layout(host):query(host,NativePanelGroups.Mode.MATERIAL);}
     static NativePortholeLayout aperture(NativeWallEntity host){
         int shape=host.wallSettings().portholeShape;
         NativePanelLayout pane=query(host,NativePanelGroups.Mode.APERTURE);

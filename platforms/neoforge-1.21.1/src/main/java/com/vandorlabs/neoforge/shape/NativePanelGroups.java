@@ -42,24 +42,23 @@ final class NativePanelGroups {
             }
         }
         boolean capped = members.size() >= LIMIT;
-        Map<Long,NativePanelLayout> layouts = new HashMap<>();
-        if (capped) {
-            for (BlockPos pos : members.keySet()) layouts.put(pos.asLong(), NativePanelLayout.UNIT);
-        } else {
-            Map<Long,BlockPos> cells = new HashMap<>();
-            for (BlockPos pos : members.keySet())
-                cells.put(JoinedRectangles.cell(pos.getX() * right.getStepX()
-                        + pos.getZ() * right.getStepZ(), pos.getY()), pos);
-            for (var rect : JoinedRectangles.partition(cells.keySet()))
-                for (int y = 0; y < rect.height; y++)
-                    for (int x = 0; x < rect.width; x++) {
-                        BlockPos pos = cells.get(JoinedRectangles.cell(rect.x + x, rect.y + y));
-                        layouts.put(pos.asLong(), new NativePanelLayout(
-                                x, y, rect.width, rect.height, false, false));
-                    }
-        }
-        return new Capture<>(members, Map.copyOf(layouts), capped);
+        return new Capture<>(members, partition(members.keySet(),right,Direction.UP,capped,pos->false,pos->false), capped);
     }
+    static Map<Long,NativePanelLayout> partition(Set<BlockPos> members,Direction right,Direction up,boolean capped,
+                                                Predicate<BlockPos> flipU,Predicate<BlockPos> flipV) {
+        Map<Long,NativePanelLayout> layouts=new HashMap<>();
+        if(capped){for(BlockPos pos:members)layouts.put(pos.asLong(),NativePanelLayout.UNIT);}
+        else {
+            Map<Long,BlockPos> cells=new HashMap<>();
+            for(BlockPos pos:members)cells.put(JoinedRectangles.cell(axis(pos,right),axis(pos,up)),pos);
+            for(var rect:JoinedRectangles.partition(cells.keySet()))for(int y=0;y<rect.height;y++)for(int x=0;x<rect.width;x++){
+                BlockPos pos=cells.get(JoinedRectangles.cell(rect.x+x,rect.y+y));
+                layouts.put(pos.asLong(),new NativePanelLayout(x,y,rect.width,rect.height,flipU.test(pos),flipV.test(pos)));
+            }
+        }
+        return Map.copyOf(layouts);
+    }
+    private static int axis(BlockPos pos,Direction direction){return pos.getX()*direction.getStepX()+pos.getY()*direction.getStepY()+pos.getZ()*direction.getStepZ();}
     static int neighborMask(BlockPos pos, Direction right, Predicate<BlockPos> compatible) {
         int mask=0;
         if(compatible.test(pos.relative(right.getOpposite())))mask|=1;

@@ -20,7 +20,7 @@ public final class NativeDiagonalWallTopology {
         int mode=mode(level,pos),fill=host.wallSettings().fill;
         double lower=flatEnd(level,pos,state,mode,false),upper=flatEnd(level,pos,state,mode,true);
         var pose=new NativeDiagonalWallGeometry.Pose(state.getValue(NativePanelBlock.FACING),state.getValue(NativeDiagonalWallBlock.INVERTED),mode,fill,corner(level,pos,state,mode),lower,upper,
-                coveredEnd(level,pos,state,mode,false)||fill==0&&!Double.isNaN(lower),coveredEnd(level,pos,state,mode,true)||fill==0&&!Double.isNaN(upper),clip(level,pos,state,mode),NativePanelLayout.UNIT);
+                coveredEnd(level,pos,state,mode,false)||fill==0&&!Double.isNaN(lower),coveredEnd(level,pos,state,mode,true)||fill==0&&!Double.isNaN(upper),clip(level,pos,state,mode),NativeWallLayouts.layout(host));
         if(host.wallAppearance().geometry() instanceof NativeDiagonalWallGeometry.Geometry current&&current.pose().equals(pose))return;
         host.publishGeometry(NativeDiagonalWallGeometry.build(pose),host.fluidGeometryRevision()+1);
     }
