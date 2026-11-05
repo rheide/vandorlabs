@@ -332,3 +332,9 @@ tasks.register('testNativePanelPlaybackRender', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.NativePanelPlaybackChecks'
     maxHeapSize = '1G'
 }
+tasks.register('testNativeDiagonalModel', JavaExec) {
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeDiagonalModelChecks'
+    systemProperty 'vandorlabs.diagonalModelReference', providers.gradleProperty('diagonalModelReference').getOrElse(rootProject.file('../../build/test-artifacts/diagonal-model-forge.jsonl').absolutePath)
+}

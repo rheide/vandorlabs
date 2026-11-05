@@ -1419,3 +1419,11 @@ task testDiagonalGeometryLegacy(type: JavaExec) {
     main = 'com.vandorlabs.client.DiagonalGeometryLegacyChecks'
     if (project.hasProperty('diagonalExport')) systemProperty 'vandorlabs.diagonalExport', file(project.property('diagonalExport')).absolutePath
 }
+
+task exportDiagonalModelReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalModelReferenceExport'
+    if (project.hasProperty('diagonalReference')) systemProperty 'vandorlabs.diagonalReference', file(project.property('diagonalReference')).absolutePath
+    if (project.hasProperty('diagonalModelExport')) systemProperty 'vandorlabs.diagonalModelExport', file(project.property('diagonalModelExport')).absolutePath
+}
