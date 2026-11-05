@@ -62,16 +62,17 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
         BakedModel wrap(BakedModel original,boolean item,boolean porthole){return new NativeFlatWallModel(original,this,item,porthole,null);}
         com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material playback(int material){int index=ModernFinishCatalog.storedChoice(material);return material<0||index>=playback.length?null:playback[index];}
         static final class PaneProjection {
-            private final List<BakedQuad> quads;private final com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material material;private final ProgrammableModel.MaterialSnapshot source;
+            private final List<BakedQuad> quads;private final com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material material;private final ProgrammableModel.MaterialSnapshot source;private final boolean opaque;
             private volatile RenderType[] renderTypes;
-            PaneProjection(List<BakedQuad> quads,com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material material,ProgrammableModel.MaterialSnapshot source){this.quads=quads;this.material=material;this.source=source;}
+            PaneProjection(List<BakedQuad> quads,com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material material,ProgrammableModel.MaterialSnapshot source,boolean opaque){this.quads=quads;this.material=material;this.source=source;this.opaque=opaque;}
             List<BakedQuad> quads(){return quads;}com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material material(){return material;}ProgrammableModel.MaterialSnapshot source(){return source;}
-            RenderType renderType(int mode){var found=renderTypes;if(found==null){synchronized(this){found=renderTypes;if(found==null){boolean opaque=!quads.isEmpty()&&(quads.getFirst().getVertices()[3]>>>24)==255;if(material==null){var atlas=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,opaque);found=new RenderType[]{atlas,atlas,atlas};}else found=new RenderType[]{NativePanelPlaybackRenderer.renderType(material.texture(0),opaque),NativePanelPlaybackRenderer.renderType(material.texture(1),opaque),NativePanelPlaybackRenderer.renderType(material.texture(2),opaque)};renderTypes=found;}}}return found[mode];}
+            boolean opaque(){return opaque;}
+            RenderType renderType(int mode){var found=renderTypes;if(found==null){synchronized(this){found=renderTypes;if(found==null){boolean opaque=opaque();if(material==null){var atlas=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,opaque);found=new RenderType[]{atlas,atlas,atlas};}else found=new RenderType[]{NativePanelPlaybackRenderer.renderType(material.texture(0),opaque),NativePanelPlaybackRenderer.renderType(material.texture(1),opaque),NativePanelPlaybackRenderer.renderType(material.texture(2),opaque)};renderTypes=found;}}}return found[mode];}
         }
         synchronized PaneProjection paneProjection(NativeWallEntity.WallAppearance appearance){
             var found=playbackPanes.get(appearance);if(found!=null)return found;var display=playback(appearance.glass().material);
             if(!(appearance.geometry() instanceof NativeFlatWallGeometry.Geometry geometry))return null;
-            found=new PaneProjection(pane(appearance,geometry,display!=null),display,surfaces.get(0));
+            found=new PaneProjection(pane(appearance,geometry,display!=null),display,surfaces.get(0),com.vandorlabs.render.GlassRenderPolicy.opaque(appearance.glass().tint));
             int cost=3072;for(var quad:found.quads())cost+=96+quad.getVertices().length*4;
             while(playbackBytes+cost>4*1024*1024&&!playbackOrder.isEmpty()){var oldest=playbackOrder.removeFirst();playbackPanes.remove(oldest.key);playbackBytes-=oldest.cost;}
             if(cost<=4*1024*1024){playbackPanes.put(appearance,found);playbackOrder.addLast(new SnapshotEntry(appearance,cost));playbackBytes+=cost;}return found;
@@ -100,7 +101,7 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             PaneKey key=new PaneKey(geometry,appearance.aperture(),visual,glass.shade,glass.tint,glass.material<0?0:glass.textureLayout(),standalone);var found=quads.getIfPresent(key);if(found!=null)return found;
             NativePanelQuads.Material material=glass.material<0?palette[glass.shade][glass.tint]:new NativePanelQuads.Material(surfaces.get(standalone?0:visual));
             var aperture=appearance.aperture();var layout=glass.material<0?com.vandorlabs.neoforge.shape.NativePanelLayout.UNIT:aperture.pane();
-            float opacity=glass.material<0||glass.tint==3?1:glass.tint==0?.35F:glass.tint==1?.65F:.85F;
+            float opacity=com.vandorlabs.render.GlassRenderPolicy.opacity(glass.material,glass.tint);
             var owner=NativeFlatBarOwner.from(geometry);int mode=glass.material<0?0:glass.textureLayout();double bx=glass.material<0?0:(2+aperture.extraBorder())/16D,by=glass.material<0?0:(4+aperture.extraBorder())/16D,aspect=standalone&&display!=null?display.aspect():0;
             found=owner==null?NativePanelQuads.pane(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),material,mode,layout,bx,by,opacity,aspect):NativePanelQuads.barPane(owner,aperture,material,mode,layout,bx,by,opacity,aspect);quads.put(key,found);return found;
         }
