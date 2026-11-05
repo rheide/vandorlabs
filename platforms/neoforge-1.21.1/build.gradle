@@ -180,3 +180,9 @@ tasks.register('testSignalControlPoses', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('fluidSlotsReference')) systemProperty 'vandorlabs.fluidSlotsReference', file(project.property('fluidSlotsReference')).absolutePath
 }
+
+tasks.register('testNativeFluidVolume', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeFluidVolumeChecks'
+}
