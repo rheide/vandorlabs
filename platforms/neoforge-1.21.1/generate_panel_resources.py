@@ -65,21 +65,24 @@ def generate_glass_palette(root, out):
 def main():
     if OUT.exists():
         shutil.rmtree(OUT)
-    paths = ['blockstates/programmable_wall.json', 'models/block/programmable_wall.json', 'models/item/programmable_wall.json']
-    for relative in paths:
-        value = metal(converted(json.loads((SOURCE / relative).read_text())))
-        if relative.startswith('models/item/'):
-            # This unused legacy slot must not request a missing standalone glass sprite.
-            value['textures'].pop('glass', None)
-        target = OUT / 'assets/vandorlabs' / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(value, indent=2) + '\n')
-    recipe=json.loads((SOURCE/'recipes/programmable_wall.json').read_text())
-    recipe['result']['id']=recipe['result'].pop('item')
-    target=OUT/'data/vandorlabs/recipe/programmable_wall.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(recipe)+'\n')
-    loot={'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:programmable_wall','functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]}
-    target=OUT/'data/vandorlabs/loot_table/blocks/programmable_wall.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(loot)+'\n')
-    print('Native plain panel assets: 24 canonical variants, current item geometry; existing housing/metal atlas reused')
+    for name in ['programmable_wall','programmable_porthole_wall']:
+        for relative in ['blockstates/'+name+'.json','models/block/'+name+'.json','models/item/'+name+'.json']:
+            value = metal(converted(json.loads((SOURCE / relative).read_text())))
+            if relative.startswith('models/item/'):
+                if name=='programmable_wall':
+                    # Only the plain item's unused legacy slot is discarded.
+                    value['textures'].pop('glass', None)
+                else:
+                    value['textures']['glass']='vandorlabs:glass-palette/clear'
+            target = OUT / 'assets/vandorlabs' / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps(value, indent=2) + '\n')
+        recipe=json.loads((SOURCE/('recipes/'+name+'.json')).read_text())
+        recipe['result']['id']=recipe['result'].pop('item')
+        target=OUT/('data/vandorlabs/recipe/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(recipe)+'\n')
+        loot={'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]}
+        target=OUT/('data/vandorlabs/loot_table/blocks/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(loot)+'\n')
+    print('Native flat panel assets: 48 canonical variants, current item geometry; existing housing/metal atlas reused')
 
 
 if __name__ == '__main__':

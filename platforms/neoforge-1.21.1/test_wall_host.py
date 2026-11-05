@@ -7,9 +7,9 @@ import tempfile
 from test_transmitter import ROOT,command,run,world,check_log,jdk_home
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--legacy-reference',type=Path);modes=parser.add_mutually_exclusive_group();modes.add_argument('--editor-only',action='store_true');modes.add_argument('--panel-only',action='store_true');args=parser.parse_args();reference=args.legacy_reference.resolve() if args.legacy_reference else None
-    if not args.editor_only and (reference is None or not reference.is_file()):parser.error('Actual Forge reference required: testPanelGlassLegacy for --panel-only, testWallFrameLegacy otherwise')
-    phase='wall-editor' if args.editor_only else 'panel-glass' if args.panel_only else 'wall-host'
+    parser=argparse.ArgumentParser();parser.add_argument('--legacy-reference',type=Path);modes=parser.add_mutually_exclusive_group();modes.add_argument('--editor-only',action='store_true');modes.add_argument('--panel-only',action='store_true');modes.add_argument('--porthole-registration',action='store_true');args=parser.parse_args();reference=args.legacy_reference.resolve() if args.legacy_reference else None
+    if not args.editor_only and not args.porthole_registration and (reference is None or not reference.is_file()):parser.error('Actual Forge reference required: testPanelGlassLegacy for --panel-only, testWallFrameLegacy otherwise')
+    phase='porthole-registration' if args.porthole_registration else 'wall-editor' if args.editor_only else 'panel-glass' if args.panel_only else 'wall-host'
     properties=['-PtransmitterPhase='+phase]
     if reference:properties.append(('-PpanelGlassReference=' if args.panel_only else '-PwallFrameReference=')+str(reference))
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
