@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Fix native mounted-control hover stalls and excessive selection lines. Buttons, switches, power levers and throttles now use the same single enclosing selection box as Forge; detailed collision shapes remain separate and are not built by hovering.
+
 - Share current slab/stair artwork selection, UV calculations and immediate dialog controls while preserving existing rendered output and saved-value behavior. Add lossless native contained-fluid storage as a prerequisite for building shapes.
 
 - Align the Forge runtime version with the 2.9 artifact metadata, and reject mismatched version declarations during the root build.
