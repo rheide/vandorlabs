@@ -285,6 +285,7 @@ tasks.register('generatePanelResources', Exec) {
     inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/programmable_wall.json', '../../src/main/resources/assets/vandorlabs/models/block/programmable_wall.json', '../../src/main/resources/assets/vandorlabs/models/item/programmable_wall.json')
     inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/programmable_porthole_wall.json','../../src/main/resources/assets/vandorlabs/models/block/programmable_porthole_wall.json','../../src/main/resources/assets/vandorlabs/models/item/programmable_porthole_wall.json')
     inputs.files('../../src/main/resources/assets/vandorlabs/recipes/programmable_diagonal_wall.json','../../src/main/resources/assets/vandorlabs/blockstates/programmable_diagonal_wall.json','../../src/main/resources/assets/vandorlabs/models/block/programmable_diagonal_wall.json','../../src/main/resources/assets/vandorlabs/models/item/programmable_diagonal_wall.json')
+    inputs.files('../../src/main/resources/assets/vandorlabs/recipes/programmable_porthole_block.json','../../src/main/resources/assets/vandorlabs/blockstates/programmable_porthole_block.json','../../src/main/resources/assets/vandorlabs/models/block/programmable_porthole_block.json','../../src/main/resources/assets/vandorlabs/models/item/programmable_porthole_block.json')
     outputs.dir('build/generated/panel-resources')
 }
 tasks.named('processResources') { dependsOn 'generatePanelResources' }

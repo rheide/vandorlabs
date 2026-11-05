@@ -23,7 +23,7 @@ def metal(value):
 def main():
     if OUT.exists():
         shutil.rmtree(OUT)
-    for name in ['programmable_wall','programmable_porthole_wall','programmable_diagonal_wall']:
+    for name in ['programmable_wall','programmable_porthole_wall','programmable_diagonal_wall','programmable_porthole_block']:
         for relative in ['blockstates/'+name+'.json','models/block/'+name+'.json','models/item/'+name+'.json']:
             value = metal(converted(json.loads((SOURCE / relative).read_text())))
             if name=='programmable_diagonal_wall' and relative.startswith('blockstates/'):
@@ -36,7 +36,7 @@ def main():
                 value['variants']=variants
             if relative.startswith('models/item/'):
 
-                if name!='programmable_porthole_wall':
+                if name not in ('programmable_porthole_wall','programmable_porthole_block'):
                     # Solid wall items do not use their inherited glass slot.
                     value['textures'].pop('glass', None)
                 else:
@@ -49,7 +49,7 @@ def main():
         target=OUT/('data/vandorlabs/recipe/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(recipe)+'\n')
         loot={'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]}
         target=OUT/('data/vandorlabs/loot_table/blocks/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(loot)+'\n')
-    print('Native panel assets: 56 canonical variants, current item geometry; existing housing/metal atlas reused')
+    print('Native panel assets: 80 canonical variants, current item geometry; existing housing/metal atlas reused')
 
 
 if __name__ == '__main__':

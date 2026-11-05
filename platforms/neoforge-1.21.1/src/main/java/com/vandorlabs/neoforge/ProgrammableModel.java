@@ -45,7 +45,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
         event.getModels().replaceAll((id,model) -> {
-            if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_wall")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory"),true),event.getTextureGetter());
+            if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_wall"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_block")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory"),true),event.getTextureGetter());
             if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_wall"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_diagonal_wall")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory")),event.getTextureGetter());
             boolean cube=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"));
             boolean trigger=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_trigger_block"));
