@@ -1279,3 +1279,9 @@ task testWirelessRedstoneDataAdapters(type: JavaExec) {
     main = 'com.vandorlabs.client.WirelessRedstoneDataChecks'
 }
 check.dependsOn testWirelessRedstoneDataAdapters
+task testGlassSettingsDataAdapters(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassSettingsDataChecks'
+}
+check.dependsOn testGlassSettingsDataAdapters
