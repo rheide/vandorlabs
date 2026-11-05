@@ -14,6 +14,9 @@ public final class PortholeDialogTest {
                 require(PortholeDialog.action(glass,113,-1).tint==(tint+3)%4);require(PortholeDialog.action(glass,115,-1).textureLayout()==(layout+2)%3);for(int shade=0;shade<19;shade++){PanelGlassSettings chosen=PortholeDialog.choose(glass,PortholeDialog.shadeChoice(shade));require(chosen.shade==shade&&chosen.material==-1&&chosen.layout==layout&&chosen.tint==tint);}cases++;
             }
         }
+        for(boolean half:new boolean[]{false,true})for(boolean full:new boolean[]{false,true})for(int facing=2;facing<6;facing++)for(boolean inverted:new boolean[]{false,true})for(int page:new int[]{195,213})for(int material:new int[]{-1,7}){
+            ProgrammableDialogLayout p=new ProgrammableDialogLayout(800,600);WallSettings wall=new WallSettings(full,half,3,7,true,2);PanelGlassSettings glass=new PanelGlassSettings(2,material,2,true,1,true,true);List<DialogControl> rows=PortholeDialog.body(p,page,1,wall,glass,true,facing,inverted);int[] ids=page==195?new int[]{103,102,104,105,111}:material>=0?new int[]{102,104,105,111,113,115}:new int[]{102,104,105,111,113};require(rows.size()==ids.length);for(int i=0;i<ids.length;i++){require(rows.get(i).id==ids[i]&&rows.get(i).y==p.top+54+24*i);require(rows.get(i).id!=112&&rows.get(i).id!=109&&rows.get(i).id!=110);}require(PortholeDialog.playbackY(glass,true)==(material>=0?198:174));DiagonalWallDialog.Geometry next=new DiagonalWallDialog.Geometry(wall,facing,inverted).action(105,-1);require(next.walls.fill==3&&next.walls.join==7&&next.walls.joinPortholes&&next.walls.portholeShape==2);cases++;
+        }
         require(PortholeDialog.choiceShade(-1)==-1&&PortholeDialog.choiceShade(Integer.MIN_VALUE)==-1);System.out.println("Porthole profile PASS cases="+cases+" current tabs/body reverse cycles dormant palette/layout");
     }
 }
