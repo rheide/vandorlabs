@@ -265,7 +265,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int mainTextureLayout=-1,surfaceTextureLayout=-1,glassTextureLayout=-1;
     public int getMainTextureLayout(){return mainTextureLayout<0?(slabTileSides?1:0):mainTextureLayout;}
     public int getSurfaceTextureLayout(){return surfaceTextureLayout<0?(surfaceTileSides?1:0):surfaceTextureLayout;}
-    public int getGlassTextureLayout(){return glassTextureLayout<0?(glassStretch?0:1):glassTextureLayout;}
+    public int getGlassTextureLayout(){return com.vandorlabs.persistence.PanelGlassSettings.textureLayout(glassTextureLayout,glassStretch);}
     public void setMainTextureLayout(int mode){checkLayout(mode);if(getMainTextureLayout()==mode)return;slabTileSides=mode==1;mainTextureLayout=mode;layoutChanged();}
     public void setSurfaceTextureLayout(int mode){checkLayout(mode);if(getSurfaceTextureLayout()==mode)return;surfaceTileSides=mode==1;surfaceTextureLayout=mode;layoutChanged();}
     public void setGlassTextureLayout(int mode){checkLayout(mode);if(getGlassTextureLayout()==mode)return;glassStretch=mode!=1;glassTextureLayout=mode;layoutChanged();}
@@ -612,16 +612,13 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
                 smallInput, redstoneChannel, channelSignal, housingTexture)
                 .write(primitiveData);
-        compound.setInteger("GlassShade", glassShade);
-        compound.setInteger("GlassTint",glassTint);
-        compound.setInteger("GlassMaterial",glassMaterial);
-        compound.setBoolean("GlassStretch",glassStretch);compound.setBoolean("GlassTextureJoin",glassTextureJoin);
-        compound.setBoolean("GlassFramed",glassFramed);
+        com.vandorlabs.persistence.PanelGlassSettings.write(primitiveData,glassShade,glassTint,glassMaterial,
+                glassStretch,glassTextureJoin,glassFramed,glassTextureLayout);
 
         com.vandorlabs.persistence.HousingSettings.write(primitiveData,housingTexture,sideTexture,mainTextureLayout,
                 slabTileSides,faceTextures.enabled,faceTextures.choices());
         fluids.write(compound);
-        compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());compound.setInteger("GlassTextureLayout",getGlassTextureLayout());
+        compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         com.vandorlabs.persistence.WallSettings.write(primitiveData,diagonalFullWidth,diagonalHalfHeight,
                 diagonalFill,diagonalJoin,joinPortholes,portholeShape);
@@ -642,7 +639,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         fluids.read(compound);
         boolean previousSlabSides = slabTileSides;
         int oldMainLayout=getMainTextureLayout(),oldSurfaceLayout=getSurfaceTextureLayout(),oldGlassLayout=getGlassTextureLayout();
-        surfaceTextureLayout=layoutValue(compound,"SurfaceTextureLayout");glassTextureLayout=layoutValue(compound,"GlassTextureLayout");
+        surfaceTextureLayout=layoutValue(compound,"SurfaceTextureLayout");glassTextureLayout=com.vandorlabs.persistence.PanelGlassSettings.rawLayout(compound.hasKey("GlassTextureLayout",3),compound.getInteger("GlassTextureLayout"));
         boolean previousSurfaceSides=surfaceTileSides;
         surfaceTileSides=!compound.hasKey("SurfaceTileSides",1)||compound.getBoolean("SurfaceTileSides");
         boolean previousHalfHeight = diagonalHalfHeight;
@@ -688,12 +685,11 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
                 ScreenHousingTextures::clamp,ScreenHousingTextures::validChoice);
         housingTexture=housing.mainTexture;sideTexture=housing.sideTexture;
         mainTextureLayout=housing.rawLayout;slabTileSides=housing.tileSides;
-        glassShade = compound.hasKey("GlassShade", 3)
-                ? GlassTextures.clamp(compound.getInteger("GlassShade")) : 2;
-        glassTint=compound.hasKey("GlassTint",3)?GlassTextures.clampTint(compound.getInteger("GlassTint")):1;
+        glassShade=com.vandorlabs.persistence.PanelGlassSettings.shade(compound.hasKey("GlassShade",3),compound.getInteger("GlassShade"));
+        glassTint=com.vandorlabs.persistence.PanelGlassSettings.tint(compound.hasKey("GlassTint",3),compound.getInteger("GlassTint"));
         glassMaterial=compound.hasKey("GlassMaterial",3)?GlassMaterials.clamp(compound.getInteger("GlassMaterial")):-1;
-        glassStretch=compound.getBoolean("GlassStretch");glassTextureJoin=!compound.hasKey("GlassTextureJoin") || compound.getBoolean("GlassTextureJoin");
-        glassFramed=!compound.hasKey("GlassFramed")||compound.getBoolean("GlassFramed");
+        glassStretch=compound.getBoolean("GlassStretch");glassTextureJoin=com.vandorlabs.persistence.PanelGlassSettings.flag(compound.hasKey("GlassTextureJoin"),compound.getBoolean("GlassTextureJoin"));
+        glassFramed=com.vandorlabs.persistence.PanelGlassSettings.flag(compound.hasKey("GlassFramed"),compound.getBoolean("GlassFramed"));
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)
                 ? com.vandorlabs.persistence.WallSettings.portholeShape(true,compound.getInteger("PortholeShape")) : 0;
