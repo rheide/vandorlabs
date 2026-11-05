@@ -1471,3 +1471,10 @@ task testDiagonalPortholeProjectionLegacy(type: JavaExec) {
     main = 'com.vandorlabs.client.DiagonalPortholeProjectionLegacyChecks'
     maxHeapSize = '1G'
 }
+
+task exportDiagonalLayoutReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalLayoutLegacyChecks'
+    if (project.hasProperty('diagonalLayoutExport')) systemProperty 'vandorlabs.diagonalLayoutExport', file(project.property('diagonalLayoutExport')).absolutePath
+}

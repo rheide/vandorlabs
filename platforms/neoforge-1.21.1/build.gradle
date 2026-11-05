@@ -361,3 +361,7 @@ tasks.register('testNativeBentPanels', JavaExec) {
     maxHeapSize = '1G'
     args file(project.findProperty('panelBentReference') ?: '../../build/test-artifacts/panel-bent-forge.jsonl').absolutePath
 }
+
+neoForge.runs.configureEach {
+    if (project.hasProperty('diagonalLayoutReference')) systemProperty 'vandorlabs.diagonalLayoutReference', file(project.property('diagonalLayoutReference')).absolutePath
+}
