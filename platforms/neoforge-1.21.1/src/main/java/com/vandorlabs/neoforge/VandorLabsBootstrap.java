@@ -42,15 +42,24 @@ public final class VandorLabsBootstrap {
     public static final DeferredHolder<net.minecraft.world.level.block.entity.BlockEntityType<?>,net.minecraft.world.level.block.entity.BlockEntityType<ProgrammableBlockEntity>> PROGRAMMABLE_ENTITY=ENTITIES.register("programmable_viewscreen",
         ()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(ProgrammableBlockEntity::new,PROGRAMMABLE_BLOCK.get()).build(null));
     public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<ProgrammableMenu>> PROGRAMMABLE_MENU=MENUS.register("programmable_block",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new ProgrammableMenu(id,inventory,buffer.readBlockPos())));
+    public static final DeferredHolder<Block,NativeTriggerBlock> TRIGGER_BLOCK=BLOCKS.register("programmable_trigger_block",
+        ()->new NativeTriggerBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).requiresCorrectToolForDrops()));
+    public static final DeferredHolder<Item,BlockItem> TRIGGER_ITEM=ITEMS.register("programmable_trigger_block",()->new BlockItem(TRIGGER_BLOCK.get(),new Item.Properties()));
+    public static final DeferredHolder<net.minecraft.world.level.block.entity.BlockEntityType<?>,net.minecraft.world.level.block.entity.BlockEntityType<NativeTriggerBlockEntity>> TRIGGER_ENTITY=ENTITIES.register("programmable_trigger_block",
+        ()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(NativeTriggerBlockEntity::new,TRIGGER_BLOCK.get()).build(null));
+    public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<TriggerMenu>> TRIGGER_MENU=MENUS.register("programmable_trigger",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new TriggerMenu(id,inventory,buffer.readBlockPos())));
+    public static final DeferredHolder<Item,com.vandorlabs.neoforge.redstone.NativeTransmitterItem> REDSTONE_TRANSMITTER=ITEMS.register("redstone_transmitter",com.vandorlabs.neoforge.redstone.NativeTransmitterItem::new);
+    public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<com.vandorlabs.neoforge.redstone.TransmitterMenu>> TRANSMITTER_MENU=MENUS.register("redstone_transmitter",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new com.vandorlabs.neoforge.redstone.TransmitterMenu(id,inventory,buffer.readEnum(net.minecraft.world.InteractionHand.class))));
     static {
         TABS.register("vandorlabs", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.vandorlabs"))
             .icon(() -> MATTER_BLOCK_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
-                output.accept(PROGRAMMABLE_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
+                for(int tier=0;tier<4;tier++)output.accept(com.vandorlabs.neoforge.redstone.NativeTransmitterItem.variant(REDSTONE_TRANSMITTER.get(),tier));
+                output.accept(PROGRAMMABLE_ITEM.get());output.accept(TRIGGER_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
             }).build());
     }
     public VandorLabsBootstrap(IEventBus bus) {
         FilesystemMaterials.initialize();
-        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(FinishPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
+        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(FinishPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
     }
 }

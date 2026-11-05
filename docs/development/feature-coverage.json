@@ -358,7 +358,7 @@
       "id": "controls",
       "label": "Triggers, buttons, rockers, levers and throttles",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "airliner_throttle",
         "compact_power_lever",
@@ -374,9 +374,9 @@
         "programmable_pressure_plate"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "expanded mounted-world interaction and shader render acceptance",
-        "carried-assembly integration"
+        "Integrate buttons, rockers, pressure plates, levers, throttles and wall sliders against current Forge behavior.",
+        "Inline transmitter slots and linked latch/source consumers remain pending.",
+        "Carried-assembly integration and hardware shader render acceptance."
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -406,20 +406,33 @@
         "subsequent-process settings and channel-bank recovery, 3584 actual emitted model cases, 768 configured item renders and exact GUI3/2 option cycling/maximum-channel round trips",
         "bounded native shape cache with exact containment pruning and balanced voxel union; hidden variants retain authored models without new creative entries or recipes"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "modern_registered_block_ids": [
+        "programmable_trigger_block"
+      ],
+      "implemented": [
+        "Native Trigger uses shared saved state and dialog policy, with loaded local analog power and positional channel delivery.",
+        "Exact-level and band selection, Front Only/Sides, configured items and dormant/opaque saved fields retain current legacy semantics.",
+        "Dedicated two-process persistence, actual chunk unload/reload, emitted-model reload matrices and ordinary client dialog/handheld interaction checks pass."
+      ],
+      "acceptance_limits": [
+        "Focused native development-classpath/software-rendered checks; exact packaged-JAR and hardware shader acceptance remain separate.",
+        "Only the Trigger is integrated from this control family; inline sources and other mounted controls remain pending."
+      ]
     },
     {
       "id": "wireless_redstone",
       "label": "Wireless transmitter and receiver",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "redstone_receiver",
         "redstone_transmitter"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "carried assembly interaction"
+        "Native world transmitter/receiver blocks and inline host slots.",
+        "Exact-center transmitter-copy crafting.",
+        "Other channel source families, per-channel latch banks and carried-assembly interaction."
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -435,7 +448,16 @@
         "plain pick/drop items and actual default item placement",
         "held-item Adventure support-block permission, canonical metal properties and stone-tool boundary"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "modern_registered_item_ids": [
+        "redstone_transmitter"
+      ],
+      "implemented": [
+        "Four native handheld tier variants share one item ID, canonical crafting patterns and bounded persisted integer tier/channel fields.",
+        "Stationary dimension-local sources use the shared source/recipient indices and preserve source coordinates across restarts and origin chunk unload.",
+        "Dedicated three-process ON/reload/OFF and exact-stack menu authorization checks pass.",
+        "Actual client held-item editor changes channels through its production payload; ordinary main/offhand uses toggle the Trigger and take priority over chest activation."
+      ]
     },
     {
       "id": "security_tokens",

@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 
-public final class ProgrammableBlockEntity extends BlockEntity {
+public class ProgrammableBlockEntity extends BlockEntity {
     public static final ModelProperty<ProgrammableBlockDialog.State> SETTINGS=new ModelProperty<>();
     public static final ModelProperty<JoinedCubeFaces> JOINED=new ModelProperty<>();
     private volatile JoinedCubeFaces joinedFaces=JoinedCubeFaces.NONE;
@@ -19,7 +19,11 @@ public final class ProgrammableBlockEntity extends BlockEntity {
     private int sideTexture=-1,rawLayout=1;
     private boolean tileSides=true;
     private CompoundTag retainedSettings=new CompoundTag();
-    public ProgrammableBlockEntity(BlockPos pos,BlockState state){super(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state);}
+    public ProgrammableBlockEntity(BlockPos pos,BlockState state){this(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state,defaults());}
+    protected ProgrammableBlockEntity(net.minecraft.world.level.block.entity.BlockEntityType<?> type,BlockPos pos,BlockState state,ProgrammableBlockDialog.State initial){
+        super(type,pos,state);settings=initial;rawLayout=initial.layout;tileSides=initial.layout==1;
+    }
+    protected ProgrammableBlockDialog.State modelSettings(){return settings;}
     public static ProgrammableBlockDialog.State defaults(){return new ProgrammableBlockDialog.State(0,1,false,new int[]{-1,-1,-1,-1,-1,-1},-1);}
     public ProgrammableBlockDialog.State settings(){return settings;}
     public JoinedCubeFaces joinedFaces(){return joinedFaces;}
@@ -29,7 +33,7 @@ public final class ProgrammableBlockEntity extends BlockEntity {
         if(level!=null&&level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);
         return true;
     }
-    private void refresh(){
+    protected final void refresh(){
         joinedFaces=JoinedCubeFaces.NONE;setChanged();requestModelDataUpdate();
         if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);
     }
@@ -58,10 +62,10 @@ public final class ProgrammableBlockEntity extends BlockEntity {
     @Override protected void collectImplicitComponents(net.minecraft.core.component.DataComponentMap.Builder components){
         super.collectImplicitComponents(components);
         if(level!=null){CompoundTag saved=saveWithId(level.registryAccess());
-            for(String key:java.util.List.of("x","y","z","ChannelLevel","ChannelSignal","channelSignal","JoinedSignalLevel","LightGroupPowered"))saved.remove(key);
+            for(String key:java.util.List.of("x","y","z","ChannelLevel","TriggerLocalLevel","ChannelSignal","channelSignal","JoinedSignalLevel","LightGroupPowered"))saved.remove(key);
             components.set(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA,net.minecraft.world.item.component.CustomData.of(saved));}
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){return saveWithoutMetadata(registries);}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
-    @Override public ModelData getModelData(){return ModelData.builder().with(SETTINGS,settings).with(JOINED,joinedFaces).build();}
+    @Override public ModelData getModelData(){return ModelData.builder().with(SETTINGS,modelSettings()).with(JOINED,joinedFaces).build();}
 }

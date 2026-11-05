@@ -67,8 +67,13 @@ def main():
         if 'detail' in original:label=re.sub(r' (Small|Medium|Large)$','',label)
         general=not original.get('lightOnly',False) and original.get('detail',0)==0 and original.get('category') not in ['Frame','Screens','Lights','Doors','Double Doors']
         category=original.get('category','Materials')
+        if category=='Screens':category='Controls' if 'menuGroup' not in original and original.get('source','').startswith('console_inputs/') else 'Displays'
         if 'menuGroup' in original:category+='/'+original['menuGroup']
-        catalog.append(dict(id=original['id'],label=label,category=category,visible=not original.get('hidden',False),general=general,canonical=canonical,texture='vandorlabs:'+texture,u=u,v=v))
+        source=original['source'];bare=source.replace('_framed_','_bare_').replace('/framed_','/bare_')
+        if bare.startswith('framed_'):bare='bare_'+bare[7:]
+        bare_index=next((i for i,item in enumerate(entries) if item['source']==bare),0)
+        display_selectable=category.startswith('Displays') and (bare==source or bare_index==0 or bare_index==index)
+        catalog.append(dict(id=original['id'],label=label,category=category,visible=not original.get('hidden',False),general=general,displaySelectable=display_selectable,canonical=canonical,texture='vandorlabs:'+texture,u=u,v=v))
         atlas.append(dict(type='minecraft:single',resource='vandorlabs:'+texture))
     write(ASSETS/'data/housing_finishes.json',catalog)
     write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())))
@@ -82,6 +87,13 @@ def main():
     with Image.open(ROOT/'texture-packs/default/assets/vandorlabs/textures/items/configurizer.png') as image:image.convert('RGBA').resize((128,128),Image.Resampling.LANCZOS).save(output,optimize=True)
     write(ASSETS/'models/item/configurizer.json',dict(parent='minecraft:item/generated',textures=dict(layer0='vandorlabs:item/configurizer')))
     write(OUT/'data/vandorlabs/loot_table/blocks/programmable_block.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:programmable_block','functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
+    trigger='programmable_trigger_block'
+    write(ASSETS/('blockstates/'+trigger+'.json'),dict(variants=variants))
+    write(ASSETS/('models/item/'+trigger+'.json'),item)
+    recipe=json.loads((ROOT/('src/main/resources/assets/vandorlabs/recipes/'+trigger+'.json')).read_text());recipe['result']['id']=recipe['result'].pop('item')
+    write(OUT/('data/vandorlabs/recipe/'+trigger+'.json'),recipe)
+    loot=json.loads((OUT/'data/vandorlabs/loot_table/blocks/programmable_block.json').read_text());loot['pools'][0]['entries'][0]['name']='vandorlabs:'+trigger
+    write(OUT/('data/vandorlabs/loot_table/blocks/'+trigger+'.json'),loot)
     print('Native cube catalog:',len(catalog),'stable choices,',len(copied),'canonical sprites')
 
 if __name__=='__main__':main()

@@ -46,7 +46,7 @@ def main():
         shutil.copy2(ROOT / source, output)
         resized(output, 128)
     lang = {}
-    wanted = ['itemGroup.vandorlabs', 'tile.vandorlabs.programmable_matter_block.name', 'tile.vandorlabs.programmable_block.name', 'item.vandorlabs.configurizer.name'] + [
+    wanted = ['itemGroup.vandorlabs', 'tile.vandorlabs.programmable_matter_block.name', 'tile.vandorlabs.programmable_block.name', 'tile.vandorlabs.programmable_trigger_block.name', 'item.vandorlabs.configurizer.name'] + [
         'item.vandorlabs.' + name + '.name' for name in ids[1:]]
     for line in (ROOT / 'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines():
         key, separator, value = line.partition('=')
@@ -60,7 +60,7 @@ def main():
         value['result']['id'] = value['result'].pop('item')
         write('data/vandorlabs/recipe/' + name + '.json', value)
     for tag in ['mineable/pickaxe', 'needs_stone_tool']:
-        write('data/minecraft/tags/block/' + tag + '.json', {'replace': False, 'values': ['vandorlabs:programmable_matter_block','vandorlabs:programmable_block']})
+        write('data/minecraft/tags/block/' + tag + '.json', {'replace': False, 'values': ['vandorlabs:programmable_matter_block','vandorlabs:programmable_block','vandorlabs:programmable_trigger_block']})
     write('data/vandorlabs/loot_table/blocks/programmable_matter_block.json', {
         'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item',
         'name': 'vandorlabs:programmable_matter_block'}], 'conditions': [{'condition': 'minecraft:survives_explosion'}]}]})

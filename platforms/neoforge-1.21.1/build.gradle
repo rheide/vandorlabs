@@ -77,6 +77,7 @@ tasks.register('generateCubeResources', Exec) {
     inputs.file('../../generated-resources/assets/vandorlabs/data/unified_textures.json')
     inputs.file('../../src/main/resources/assets/vandorlabs/models/item/programmable_block.json')
     inputs.file('../../src/main/resources/assets/vandorlabs/recipes/programmable_block.json')
+    inputs.file('../../src/main/resources/assets/vandorlabs/recipes/programmable_trigger_block.json')
     inputs.file('../../src/main/resources/assets/vandorlabs/recipes/configurizer.json')
     inputs.file('../../generated-resources/assets/vandorlabs/lang/en_us.lang')
     outputs.dir('build/generated/cube-resources')
@@ -116,6 +117,19 @@ tasks.register('testLegacyVanillaMaterialAliases', JavaExec) {
 tasks.named('check') { dependsOn 'testLegacyVanillaMaterialAliases' }
 neoForge.runs.configureEach {
     if(project.hasProperty('materialSpriteAssessment'))systemProperty 'vandorlabs.materialSpriteAssessment',project.property('materialSpriteAssessment')
+}
+
+sourceSets.main.resources.srcDir('build/generated/transmitter-resources')
+tasks.register('generateTransmitterResources', Exec) {
+    commandLine pythonExecutable, 'generate_transmitter_resources.py'
+    inputs.file('generate_transmitter_resources.py')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/recipes') { include 'redstone_transmitter_*.json' })
+    inputs.files('../../texture-packs/additional/assets/vandorlabs/textures/items/redstone_transmitter_short.png', '../../texture-packs/additional/assets/vandorlabs/textures/items/redstone_transmitter_medium.png', '../../texture-packs/additional/assets/vandorlabs/textures/items/redstone_transmitter_long.png', '../../texture-packs/additional/assets/vandorlabs/textures/items/redstone_transmitter_infinite.png')
+    outputs.dir('build/generated/transmitter-resources')
+}
+tasks.named('processResources') { dependsOn 'generateTransmitterResources' }
+neoForge.runs.configureEach {
+    if(project.hasProperty('transmitterPhase'))systemProperty 'vandorlabs.transmitterPhase',project.property('transmitterPhase')
 }
 neoForge.runs.configureEach {
     if(project.hasProperty('sampledMaterialPhase'))systemProperty 'vandorlabs.sampledMaterialPhase',project.property('sampledMaterialPhase')

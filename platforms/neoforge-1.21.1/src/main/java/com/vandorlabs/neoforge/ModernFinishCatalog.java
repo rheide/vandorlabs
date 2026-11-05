@@ -8,7 +8,9 @@ import java.util.List;
 
 /** Generated current canonical catalog; external namespaces remain saved but render with a fallback. */
 public final class ModernFinishCatalog {
-    public record Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v){}
+    public record Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable){
+        public Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v){this(id,label,category,visible,general,canonical,texture,u,v,false);}
+    }
     public static final List<Entry> ENTRIES;
     private static final java.util.Map<Integer,Entry> REGISTERED=new java.util.concurrent.ConcurrentHashMap<>();
     private static volatile java.util.Map<Integer,Entry> CUSTOM=java.util.Map.of();

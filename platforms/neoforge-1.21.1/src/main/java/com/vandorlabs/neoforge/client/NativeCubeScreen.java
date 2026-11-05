@@ -20,99 +20,42 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     private ProgrammableBlockDialog.State state;
     private ProgrammableDialogLayout panel;
     private List<ProgrammableBlockDialog.Control> controls=List.of();
-    private EditBox search;
-    private final List<Integer> options=new ArrayList<>();
-    private final Map<String,List<Integer>> groups=new HashMap<>();
-    private final Set<String> expanded=new HashSet<>();
-    private List<String> categories=List.of();
-    private List<Integer> rows=List.of();
-    private int scroll,dragOffset;
-    private boolean dragging;
-    public static final int CUSTOM_ROW=Integer.MIN_VALUE;
-    private NativeInventorySamplePicker inventoryPicker;
-    public NativeInventorySamplePicker inventoryPicker(){return inventoryPicker;}
+    private final NativeMaterialPicker picker;
+    public static final int CUSTOM_ROW=NativeMaterialPicker.CUSTOM_ROW;
+    public NativeInventorySamplePicker inventoryPicker(){return picker.inventoryPicker();}
+    public NativeMaterialPicker activePicker(){return picker;}
     @SubscribeEvent public static void register(RegisterMenuScreensEvent event){event.register(VandorLabsBootstrap.PROGRAMMABLE_MENU.get(),NativeCubeScreen::new);}
     public NativeCubeScreen(ProgrammableMenu menu,net.minecraft.world.entity.player.Inventory inventory,Component title){
         super(menu,inventory,Component.literal("Programmable Block"));state=menu.tile.settings();
-        for(var choice:ModernFinishCatalog.allChoices()){
-            int index=choice.choice();var entry=choice.entry();
-            if(entry.visible()&&entry.general()){groups.computeIfAbsent(entry.category(),key->new ArrayList<>()).add(index);options.add(index);}
-        }
-        categories=List.copyOf(TextureListLayout.categories(groups.keySet()));
-        for(var group:groups.values())group.sort((a,b)->TextureListLayout.compareOptions(ModernFinishCatalog.option(a).label(),a,ModernFinishCatalog.option(b).label(),b));
-        reveal();
+        picker=new NativeMaterialPicker(state.selectedTexture(),id->ModernFinishCatalog.option(id).general(),this::choose);
     }
     public ProgrammableBlockDialog.State editingState(){return state;}
-    public int scroll(){return scroll;}
-    public List<Integer> visibleRows(){return rows;}
+    public int scroll(){return picker.scroll();}
+    public List<Integer> visibleRows(){return picker.rows();}
     public ProgrammableDialogLayout panel(){return panel;}
-    private void reveal(){var entry=ModernFinishCatalog.entry(state.selectedTexture());TextureListLayout.expandAncestors(expanded,entry.category());}
-    @Override protected void init(){
-        super.init();var previous=panel;var picker=inventoryPicker;inventoryPicker=null;panel=new ProgrammableDialogLayout(width,height);rebuild(true);
-        if(picker!=null&&previous!=null&&previous.left==panel.left&&previous.top==panel.top&&previous.width==panel.width&&previous.height==panel.height){customInventory();inventoryPicker.restoreScroll(picker.scroll());}
-    }
+    @Override protected void init(){super.init();panel=new ProgrammableDialogLayout(width,height);rebuild(true);}
     private void rebuild(boolean center){
-        String query=search==null?"":search.getValue();clearWidgets();controls=ProgrammableBlockDialog.controls(panel,state,Component.translatable("gui.done").getString());
-        for(var control:controls){
-            if(control.tab)continue;
-            Button button=Button.builder(Component.literal(control.label),ignored->action(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();
-            button.active=control.enabled;addRenderableWidget(button);
-        }
-        search=new EditBox(font,panel.listX+2,ProgrammableBlockDialog.listY(panel,state)+2,panel.listWidth+3,18,Component.literal("Search textures"));
-        search.setMaxLength(128);search.setHint(Component.literal("Search textures"));search.setValue(query);search.setResponder(ignored->{scroll=0;rebuildRows();});addRenderableWidget(search);rebuildRows();
-        if(center){int index=rows.indexOf(com.vandorlabs.tiles.MaterialChoicePolicy.isCustom(state.selectedTexture())?CUSTOM_ROW:state.selectedTexture());if(index>=0)scroll=TextureListLayout.centeredScroll(index,visible(),maximum());}
+        clearWidgets();controls=ProgrammableBlockDialog.controls(panel,state,Component.translatable("gui.done").getString());
+        for(var control:controls){if(control.tab)continue;Button button=Button.builder(Component.literal(control.label),ignored->action(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();button.active=control.enabled;addRenderableWidget(button);}
+        picker.select(state.selectedTexture(),false);picker.layout(panel.listX,ProgrammableBlockDialog.listY(panel,state),panel.listWidth,ProgrammableBlockDialog.listRows(panel,state),center);addRenderableWidget(picker.searchField());
     }
-    private void rebuildRows(){List<Integer> next=new ArrayList<>();String query=search==null?"":TextureListLayout.normalizeQuery(search.getValue());
-        if(query.isEmpty())TextureListLayout.appendCategories(next,categories,groups,expanded,id->id);
-        else for(int id:options){var entry=ModernFinishCatalog.option(id);if(TextureListLayout.matches(query,entry.label(),entry.category(),entry.texture()))next.add(id);}
-        next.add(CUSTOM_ROW);rows=List.copyOf(next);scroll=Math.max(0,Math.min(maximum(),scroll));
-    }
-    private int top(){return ProgrammableBlockDialog.listY(panel,state)+22;}
-    private int visible(){return Math.max(1,ProgrammableBlockDialog.listRows(panel,state)-1);}
-    private int height(){return visible()*22;}
-    private int maximum(){return DialogInput.maxScroll(rows.size(),visible());}
-    private int thumbHeight(){return DialogInput.thumbHeight(height(),visible(),rows.size());}
-    private int thumbTop(){return DialogInput.thumbY(top(),height(),thumbHeight(),scroll,maximum());}
-    private int row(int row){int id=rows.get(scroll+row);if(TextureListLayout.pinCategory(row,visible(),search.getValue().trim().isEmpty())&&id>=0)return TextureListLayout.categoryRow(categories.indexOf(ModernFinishCatalog.option(id).category()));return id;}
     private void send(){PacketDistributor.sendToServer(new FinishPayload(menu.tile.getBlockPos(),state.mainTexture,state.layout,state.facesEnabled,state.faces()));}
-    private void customInventory(){inventoryPicker=new NativeInventorySamplePicker(panel.listX,ProgrammableBlockDialog.listY(panel,state),panel.listWidth+7,height()+22,stack->{int value=NativeBlockMaterials.sample(stack);inventoryPicker=null;choose(value);},()->{inventoryPicker=null;search.visible=true;search.active=true;});search.visible=false;search.active=false;}
-    public void action(int id,int direction){inventoryPicker=null;if(id==ProgrammableBlockDialog.DONE){onClose();return;}state=state.action(id,direction);
-        if(id==ProgrammableBlockDialog.TEXTURE_LAYOUT||id==ProgrammableBlockDialog.FACE_OVERRIDES||id==ProgrammableBlockDialog.INHERIT)send();reveal();rebuild(true);}
+    public void action(int id,int direction){picker.closeInventory();if(id==ProgrammableBlockDialog.DONE){onClose();return;}state=state.action(id,direction);
+        if(id==ProgrammableBlockDialog.TEXTURE_LAYOUT||id==ProgrammableBlockDialog.FACE_OVERRIDES||id==ProgrammableBlockDialog.INHERIT)send();rebuild(true);}
     public void choose(int choice){state=state.choose(choice);send();rebuild(false);}
     @Override public boolean mouseClicked(double x,double y,int button){
-        if(inventoryPicker!=null&&inventoryPicker.click((int)x,(int)y,button))return true;
         if(button==0||button==1)for(var control:controls)if(control.enabled&&(button==0||control.id==ProgrammableBlockDialog.FACE_OVERRIDES||control.id==ProgrammableBlockDialog.TEXTURE_LAYOUT)&&x>=control.x&&x<control.x+control.width&&y>=control.y&&y<control.y+control.height){action(control.id,button==1?-1:1);return true;}
-        if(button==0&&y>=top()&&y<top()+height()){
-            if(x>=panel.listX+panel.listWidth&&x<panel.listX+panel.listWidth+7&&maximum()>0){dragOffset=y>=thumbTop()&&y<thumbTop()+thumbHeight()?(int)y-thumbTop():thumbHeight()/2;dragging=true;mouseDragged(x,y,button,0,0);return true;}
-            if(x>=panel.listX&&x<panel.listX+panel.listWidth){int offset=(int)(y-top())/22;if(scroll+offset<rows.size()){int id=row(offset);if(id==CUSTOM_ROW){customInventory();return true;}if(id<0){String category=categories.get(TextureListLayout.categoryIndex(id));if(!expanded.remove(category))expanded.add(category);rebuildRows();}else choose(id);}return true;}
-        }
-        return super.mouseClicked(x,y,button);
+        return picker.click(x,y,button)||super.mouseClicked(x,y,button);
     }
-    @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){if(dragging){scroll=DialogInput.scrollForDrag((int)y,top(),height(),thumbHeight(),maximum(),dragOffset);return true;}return super.mouseDragged(x,y,button,dx,dy);}
-    @Override public boolean mouseReleased(double x,double y,int button){dragging=false;return super.mouseReleased(x,y,button);}
-    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){if(inventoryPicker!=null&&inventoryPicker.wheel((int)x,(int)y,vertical>0?1:vertical<0?-1:0))return true;if(vertical!=0&&x>=panel.listX&&x<panel.listX+panel.listWidth+7&&y>=top()&&y<top()+height()){scroll=DialogInput.wheel(scroll,maximum(),vertical>0?1:-1);return true;}return super.mouseScrolled(x,y,horizontal,vertical);}
+    @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){return picker.drag(x,y)||super.mouseDragged(x,y,button,dx,dy);}
+    @Override public boolean mouseReleased(double x,double y,int button){picker.release();return super.mouseReleased(x,y,button);}
+    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){return picker.wheel(x,y,vertical)||super.mouseScrolled(x,y,horizontal,vertical);}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
     @Override protected void renderBg(GuiGraphics graphics,float partial,int mouseX,int mouseY){
         graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xFF101012);graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+24,0xFF202028);graphics.drawString(font,title,panel.left+8,panel.top+8,0xFFFFFFFF,false);
         if(state.selectedTexture()>=ModernFinishCatalog.ENTRIES.size()&&ModernFinishCatalog.renderChoice(state.selectedTexture())==0)graphics.drawString(font,"Saved artwork unavailable",panel.left+panel.width-font.width("Saved artwork unavailable")-12,panel.top+8,0xFFFFCF70,false);
         for(var control:controls)if(control.tab){graphics.fill(control.x,control.y,control.x+control.width,control.y+control.height,control.enabled?0xFF203540:0xFF365568);graphics.drawCenteredString(font,control.label,control.x+control.width/2,control.y+5,0xFFE0F0FF);}
-        graphics.fill(panel.listX-1,top()-1,panel.listX+panel.listWidth+8,top()+height()+1,0xFF000000);
-        if(inventoryPicker!=null){inventoryPicker.draw(graphics,mouseX,mouseY);return;}
-        for(int offset=0;offset<visible()&&scroll+offset<rows.size();offset++){int id=row(offset),yy=top()+offset*22;boolean selected=id==state.selectedTexture()||id==CUSTOM_ROW&&com.vandorlabs.tiles.MaterialChoicePolicy.isCustom(state.selectedTexture());if(selected)graphics.fill(panel.listX,yy,panel.listX+panel.listWidth,yy+22,0xFF2A4A6A);
-            if(id==CUSTOM_ROW){var material=NativeBlockMaterials.material(state.selectedTexture());String label="Custom...";
-                if(com.vandorlabs.tiles.MaterialChoicePolicy.isCustom(state.selectedTexture())){label="Custom: "+(material==null?"Custom (missing block)":material.entry().label());if(material!=null){if(material.door()){graphics.blit(panel.listX+7,yy+3,0,8,8,material.upper());graphics.blit(panel.listX+7,yy+11,0,8,8,material.lower());}else graphics.blit(panel.listX+3,yy+3,0,16,16,material.lower());}}
-                graphics.drawString(font,font.plainSubstrByWidth(label,panel.listWidth-26),panel.listX+23,yy+7,0xFFABCFE8,false);}
-            else if(id<0){String category=categories.get(TextureListLayout.categoryIndex(id));int indent=TextureListLayout.indent(category);graphics.drawString(font,(expanded.contains(category)?"- ":"+ ")+TextureListLayout.categoryLabel(category),panel.listX+3+indent,yy+7,0xFFABCFE8,false);}
-            else{var entry=ModernFinishCatalog.option(id);var sprite=minecraft.getTextureAtlas(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS).apply(net.minecraft.resources.ResourceLocation.parse(entry.texture()));int w=16,h=16;if(entry.u()<entry.v())w=Math.max(1,Math.round(16*entry.u()/entry.v()));else h=Math.max(1,Math.round(16*entry.v()/entry.u()));
-                graphics.blit(panel.listX+3+(16-w)/2,yy+3+(16-h)/2,0,w,h,new CroppedSprite(sprite,entry.u(),entry.v()));graphics.drawString(font,font.plainSubstrByWidth(entry.label(),panel.listWidth-26),panel.listX+23,yy+7,selected?0xFFFFE08A:0xFFD8D8D8,false);}
-        }
-        if(maximum()>0){graphics.fill(panel.listX+panel.listWidth,top(),panel.listX+panel.listWidth+7,top()+height(),0xFF303038);graphics.fill(panel.listX+panel.listWidth,thumbTop(),panel.listX+panel.listWidth+7,thumbTop()+thumbHeight(),0xFF808090);}
-    }
-    private static final class CroppedSprite extends net.minecraft.client.renderer.texture.TextureAtlasSprite {
-        private final net.minecraft.client.renderer.texture.TextureAtlasSprite original;private final float u,v;
-        CroppedSprite(net.minecraft.client.renderer.texture.TextureAtlasSprite original,float u,float v){super(original.atlasLocation(),original.contents(),1,1,0,0);this.original=original;this.u=u;this.v=v;}
-        @Override public float getU0(){return original.getU0();}@Override public float getU1(){return original.getU0()+(original.getU1()-original.getU0())*u;}
-        @Override public float getV0(){return original.getV0();}@Override public float getV1(){return original.getV0()+(original.getV1()-original.getV0())*v;}
+        picker.render(graphics,mouseX,mouseY);
     }
     @Override protected void renderLabels(GuiGraphics graphics,int mouseX,int mouseY){}
     @Override public boolean isPauseScreen(){return false;}

@@ -49,3 +49,11 @@ Open a cube with the main-hand Configurizer, scroll to **Custom...** at the end 
 Original vanilla saved IDs retain their legacy state interpretation. New samples use current named blocks and default properties with a fixed `flattened-block:` CRC preimage. Known ID collisions are refused; this is domain separation, not a collision-proof mathematical partition. An unavailable raw legacy integer cannot establish its original modded name. It is retained, and unresolved artwork falls back; explicit named provenance and optional component texture providers remain separate work. See [the identity and alias contract](../../docs/development/custom-material-aliases.md).
 
 Run `python3 platforms/neoforge-1.21.1/test_sampled_materials.py --client --xvfb --reference <reference.json>` for dedicated save/restart, configured chest items, survival Configurizer inventory clicks, nested item data, custom face and dormant overrides, resize/back/wheel behavior and missing-source/restore reloads. It checks unchanged old model snapshots independently of the published GUI catalog and can run the independent current-Forge cube/item oracle. The worlds, resource-pack overrides and screenshots are disposable under `build/test-artifacts/`. These are development-classpath/software checks, not an exact-JAR release gate.
+
+## Trigger and handheld transmitter checks
+
+The native Trigger reuses shared saved-state and dialog rules, and the same material picker as the cube. Handheld transmitter sources remain stationary and dimension-local. Other control families, world transmitter/receiver blocks and inline transmitter settings are still pending.
+
+Run `python3 platforms/neoforge-1.21.1/test_trigger.py` for server persistence and actual receiver/origin chunk unload, `test_transmitter.py` for tier recipes and three-process ON/reload/OFF persistence, and `test_trigger_client.py --xvfb` for actual dialog and handheld packets on Linux. Omit `--xvfb` for a normal client window. `test_trigger_models.py` covers emitted Trigger geometry, OFF item previews, particles and reloads; its optional Forge reference compares the existing cube geometry too.
+
+These focused runners use disposable development-classpath instances. They do not establish the full release gate or hardware shader acceptance.

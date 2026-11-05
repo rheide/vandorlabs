@@ -2,6 +2,9 @@
 
 ## 2.9 (development)
 
+- Add the native Programmable Trigger with shared saved state and dialog rules, static Off/On or signal-band artwork, exact-level matching and Front Only/Sides options. Reuse one native material picker for cube and Trigger dialogs, including independent artwork searches, inventory sampling and scrolling.
+- Add native handheld transmitter tiers with canonical recipes, stationary per-dimension sources and authenticated channel editing. Preserve exact installed receiver identity through deferred registration and chunk unload/reload. Other control and wireless families remain incomplete.
+
 - Support installed filesystem PNGs on the native programmable cube, using shared startup discovery and stable saved identifiers. Keep picker selections through missing-file and dimension reloads, refresh world/item UV snapshots coherently, and preserve separate startup-missing-client fallback. New file discovery still requires a restart; the PNG workflow remains separate from inventory block sampling.
 - Share the exact custom block material saved-ID calculation, retaining legacy caller metadata normalization and literal previous-save identity fixtures. Add an actual vanilla 1.12.2 block-registry manifest and strict native data-fixer aliases, preserving requested saved IDs while resolving the actual normalized legacy states.
 

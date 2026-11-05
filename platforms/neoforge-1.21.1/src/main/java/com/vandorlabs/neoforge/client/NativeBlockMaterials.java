@@ -58,7 +58,7 @@ public final class NativeBlockMaterials {
     public static Map<Integer,Material> snapshot(){return active;}
     public static int sample(ItemStack stack){
         if(stack.isEmpty()||!(stack.getItem() instanceof BlockItem item))return -1;
-        if(stack.is(VandorLabsBootstrap.PROGRAMMABLE_ITEM.get())){
+        if(stack.is(VandorLabsBootstrap.PROGRAMMABLE_ITEM.get())||stack.is(VandorLabsBootstrap.TRIGGER_ITEM.get())){
             var data=stack.get(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA);if(data==null)data=stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
             if(data==null)return 0;
             var tag=data.copyTag();if(tag.contains("BlockEntityTag",10))tag=tag.getCompound("BlockEntityTag");

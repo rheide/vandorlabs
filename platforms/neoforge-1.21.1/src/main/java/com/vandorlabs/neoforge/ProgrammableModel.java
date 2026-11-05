@@ -26,10 +26,12 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
     private record MaterialSnapshot(TextureAtlasSprite sprite,float usedU,float usedV) {}
     private final java.util.Map<Integer,MaterialSnapshot> sprites;
     private final TextureAtlasSprite margin;
+    private final boolean joining;
+    private final ProgrammableBlockDialog.State defaults;
     private static final com.vandorlabs.render.HousingFacePlane UNIT=new com.vandorlabs.render.HousingFacePlane(new int[3],new int[]{1,1,1});
     private record QuadKey(Direction face,Direction facing,int material,int layout,int mappedLayout,int x,int y,int z,int sx,int sy,int sz){}
     private final com.google.common.cache.Cache<QuadKey,List<BakedQuad>> worldQuads=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(1024*1024).weigher((QuadKey key,List<BakedQuad> values)->160+values.stream().mapToInt(quad->96+quad.getVertices().length*4).sum()).build();
-    private ProgrammableModel(BakedModel model,java.util.Map<Integer,MaterialSnapshot> sprites,TextureAtlasSprite margin) { super(model);this.sprites=sprites;this.margin=margin; }
+    private ProgrammableModel(BakedModel model,java.util.Map<Integer,MaterialSnapshot> sprites,TextureAtlasSprite margin,boolean joining) { super(model);this.sprites=sprites;this.margin=margin;this.joining=joining;this.defaults=joining?ProgrammableBlockEntity.defaults():NativeTriggerBlockEntity.triggerDefaults(); }
     @SubscribeEvent public static void bake(ModelEvent.ModifyBakingResult event) {
         java.util.Map<Integer,MaterialSnapshot> resolved=new java.util.HashMap<>();
         for(var choice:ModernFinishCatalog.choicesForBake()) {
@@ -41,29 +43,35 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         java.util.Map<Integer,MaterialSnapshot> sprites=java.util.Map.copyOf(resolved);
         TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
         event.getModels().replaceAll((id,model) -> {
-            if(java.util.Set.of(ResourceLocation.parse("vandorlabs:programmable_block")).contains(id.id())&&id.getVariant().equals("inventory"))return new UniformHousingItem(model,sprites,margin,null);
-            return java.util.Set.of(ResourceLocation.parse("vandorlabs:programmable_block")).contains(id.id())&&!id.getVariant().equals("inventory")?new ProgrammableModel(model,sprites,margin):model;
+            boolean cube=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"));
+            boolean trigger=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_trigger_block"));
+            if(!cube&&!trigger)return model;
+            if(id.getVariant().equals("inventory"))return new UniformHousingItem(model,sprites,margin,null,cube?1:0);
+            return new ProgrammableModel(model,sprites,margin,cube);
         });
     }
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
-        if(state!=null&&state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
+        if(joining&&state!=null&&state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
         return data;
     }
+    private static int renderIndex(java.util.Map<Integer,MaterialSnapshot> materials,int choice){int stored=ModernFinishCatalog.storedChoice(choice);return materials.containsKey(stored)?stored:0;}
+    @Override public TextureAtlasSprite getParticleIcon(){return getParticleIcon(ModelData.EMPTY);}
+    @Override public TextureAtlasSprite getParticleIcon(ModelData data){var settings=data.get(ProgrammableBlockEntity.SETTINGS);return sprites.get(renderIndex(sprites,settings==null?defaults.mainTexture:settings.mainTexture)).sprite();}
     @Override public net.neoforged.neoforge.common.util.TriState useAmbientOcclusion(BlockState state,ModelData data,RenderType layer){return net.neoforged.neoforge.common.util.TriState.FALSE;}
     @Override public boolean useAmbientOcclusion() { return false; }
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType renderType) {
         List<BakedQuad> base=originalModel.getQuads(state,side,random,data,renderType);
         if(base.isEmpty())return base;
         ProgrammableBlockDialog.State settings=data.get(ProgrammableBlockEntity.SETTINGS);
-        if(settings==null)settings=ProgrammableBlockEntity.defaults();
+        if(settings==null)settings=defaults;
         List<BakedQuad> result=new ArrayList<>(base.size());
         for(BakedQuad quad:base) {
             int local=localFace(quad.getDirection(),state.getValue(ProgrammableBlock.FACING));
             int choice=settings.facesEnabled&&settings.face(local)>=0?settings.face(local):settings.mainTexture;
-            int stored=ModernFinishCatalog.storedChoice(choice),index=sprites.containsKey(stored)?stored:0;
+            int index=renderIndex(sprites,choice);
             MaterialSnapshot material=sprites.getOrDefault(index,sprites.get(0));
             TextureAtlasSprite sprite=material.sprite();
-            JoinedCubeFaces joined=data.get(ProgrammableBlockEntity.JOINED);
+            JoinedCubeFaces joined=joining?data.get(ProgrammableBlockEntity.JOINED):null;
             var plane=joined==null?null:joined.face(quad.getDirection());
             var actualPlane=settings.layout!=1&&plane!=null?plane:UNIT;
             int mappedLayout=settings.layout!=1&&plane!=null?settings.layout:0;
@@ -85,7 +93,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
             if(input.get("BlockEntityTag")!=null){var nested=ops.getMap(input.get("BlockEntityTag")).result();if(nested.isPresent())input=nested.get();}
             Object main=input.get(com.vandorlabs.persistence.HousingSettings.MAIN),layout=input.get(com.vandorlabs.persistence.HousingSettings.LAYOUT),sides=input.get("SlabTileSides");
             int choice=main instanceof net.minecraft.nbt.NumericTag tag?tag.getAsInt():0;
-            int mode=layout instanceof net.minecraft.nbt.IntTag tag&&TextureLayoutMode.valid(tag.getAsInt())?tag.getAsInt():!(sides instanceof net.minecraft.nbt.ByteTag)||((net.minecraft.nbt.ByteTag)sides).getAsByte()!=0?1:0;
+            int mode=layout instanceof net.minecraft.nbt.IntTag tag&&TextureLayoutMode.valid(tag.getAsInt())?tag.getAsInt():sides instanceof net.minecraft.nbt.ByteTag?(((net.minecraft.nbt.ByteTag)sides).getAsByte()!=0?1:0):-1;
             return com.mojang.serialization.DataResult.success(new Visual(choice,mode));
         }
     };
@@ -94,9 +102,10 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         private final java.util.Map<Integer,MaterialSnapshot> materials;
         private final TextureAtlasSprite margin;
         private final ProgrammableBlockDialog.State settings;
+        private final int defaultLayout;
         private final it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap<BakedModel> resolved=new it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap<>();
         private final com.google.common.cache.Cache<net.minecraft.world.item.component.CustomData,Visual> visualKeys=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(256).build();
-        UniformHousingItem(BakedModel original,java.util.Map<Integer,MaterialSnapshot> materials,TextureAtlasSprite margin,ProgrammableBlockDialog.State settings){super(original);this.materials=materials;this.margin=margin;this.settings=settings;}
+        UniformHousingItem(BakedModel original,java.util.Map<Integer,MaterialSnapshot> materials,TextureAtlasSprite margin,ProgrammableBlockDialog.State settings,int defaultLayout){super(original);this.materials=materials;this.margin=margin;this.settings=settings;this.defaultLayout=defaultLayout;}
         private final java.util.Map<Direction,List<BakedQuad>> quads=new java.util.HashMap<>();
         private final List<BakedModel> passes=List.of(this);
         private final net.minecraft.client.renderer.block.model.ItemOverrides overrides=new net.minecraft.client.renderer.block.model.ItemOverrides(){
@@ -106,16 +115,17 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
                     if(data==null)return UniformHousingItem.this;
                     Visual visual=visualKeys.getIfPresent(data);
                     if(visual==null){visual=data.read(VISUAL).getOrThrow();visualKeys.put(data,visual);}
-                    int stored=ModernFinishCatalog.storedChoice(visual.main),index=materials.containsKey(stored)?stored:0,layout=visual.layout;long key=((long)index<<2)|layout;
-                    var result=resolved.getAndMoveToLast(key);if(result==null){result=new UniformHousingItem(originalModel,materials,margin,new ProgrammableBlockDialog.State(index,layout,false,new int[]{-1,-1,-1,-1,-1,-1},-1));resolved.putAndMoveToLast(key,result);if(resolved.size()>256)resolved.removeFirst();}return result;
+                    int index=renderIndex(materials,visual.main),layout=visual.layout<0?defaultLayout:visual.layout;long key=((long)index<<2)|layout;
+                    var result=resolved.getAndMoveToLast(key);if(result==null){result=new UniformHousingItem(originalModel,materials,margin,new ProgrammableBlockDialog.State(index,layout,false,new int[]{-1,-1,-1,-1,-1,-1},-1),defaultLayout);resolved.putAndMoveToLast(key,result);if(resolved.size()>256)resolved.removeFirst();}return result;
                 }
             };
+        @Override public TextureAtlasSprite getParticleIcon(){return materials.get(renderIndex(materials,settings==null?0:settings.mainTexture)).sprite();}
+        @Override public TextureAtlasSprite getParticleIcon(ModelData data){return getParticleIcon();}
         @Override public net.minecraft.client.renderer.block.model.ItemOverrides getOverrides(){return overrides;}
         @Override public List<BakedQuad> getQuads(BlockState state,Direction face,RandomSource random){
             if(quads.containsKey(face))return quads.get(face);
             List<BakedQuad> canonical=originalModel.getQuads(state,face,random),result=new ArrayList<>(canonical.size());
-            int stored=settings==null?0:ModernFinishCatalog.storedChoice(settings.mainTexture);
-            MaterialSnapshot material=materials.getOrDefault(stored,materials.get(0));
+            MaterialSnapshot material=materials.get(renderIndex(materials,settings==null?0:settings.mainTexture));
             for(BakedQuad source:canonical){
                 int[] data=source.getVertices().clone();int stride=data.length/4;double[][] uv=new double[4][2];double[] min={Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY},max={Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};
                 for(int vertex=0;vertex<4;vertex++)for(int axis=0;axis<2;axis++){

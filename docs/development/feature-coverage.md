@@ -20,8 +20,8 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Trapdoors and diagonal trapdoors | pending | unimplemented | non-vehicle first |
 | Programmable lights and propulsion | pending | unimplemented | non-vehicle first |
 | Chairs and seats | pending | unimplemented | non-vehicle first |
-| Triggers, buttons, rockers, levers and throttles | pending | partial | non-vehicle first |
-| Wireless transmitter and receiver | pending | partial | non-vehicle first |
+| Triggers, buttons, rockers, levers and throttles | partial (Trigger) | partial | non-vehicle first |
+| Wireless transmitter and receiver | partial (handheld transmitter) | partial | non-vehicle first |
 | Token slots and design tokens | pending | unimplemented | non-vehicle first |
 | Programmable storage | pending | unimplemented | non-vehicle first |
 | Constructors, matter infuser, battery and tank | pending | unimplemented | non-vehicle first |
@@ -56,3 +56,5 @@ Native cubes support installed filesystem PNG discovery at startup, stable saved
 Native cube inventory samples now use the shared grid without consuming items. Original vanilla material IDs resolve through actual legacy metadata normalization and Minecraft data fixers; new default-state samples use a fixed identity preimage domain, with all known collisions rejected. Door previews retain both halves. Dedicated restart, configured item/NBT, custom face/dormant overrides, survival menu input and immutable model reload checks remain distinct from exact packaged-JAR acceptance.
 
 Optional component-renderer sampling, configuration dispatch to other families, copy tools, carried assemblies and the full production chain remain incomplete. Reloads do not discover new files.
+
+The current control increment adds the native Trigger and four handheld transmitter tiers. Dedicated save/restart and actual chunk unload/reload fixtures cover their channel delivery and saved configuration. Remaining mounted controls, world transmitter/receiver blocks, inline sources and latch families remain explicit work; this increment does not establish complete control-family parity. Focused client dialog, emitted-model/reload and ordinary interaction checks also pass. These are development-classpath/software-rendered results; exact packaged-JAR and hardware shader acceptance remain separate.
