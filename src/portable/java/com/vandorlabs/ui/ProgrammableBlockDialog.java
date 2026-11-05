@@ -45,14 +45,19 @@ public final class ProgrammableBlockDialog {
     public static int listY(ProgrammableDialogLayout panel,State state){return panel.top+(state.facesEnabled?78:54);}
     /** Includes the search row; the picker displays one fewer artwork row. */
     public static int listRows(ProgrammableDialogLayout panel,State state){return Math.max(2,(panel.height-(state.facesEnabled?108:84))/ProgrammableDialogLayout.ROW_HEIGHT);}
+    /** Uncompacted common housing rows; family adapters choose their surrounding tabs and rows. */
+    public static List<Control> appearanceControls(int x,int y,int width,State s){
+        List<Control> result=new ArrayList<Control>();
+        result.add(new Control(FACE_OVERRIDES,x,y,width,20,"Face overrides: "+(s.facesEnabled?"On":"Off"),false,true));y+=24;
+        if(s.facesEnabled){result.add(new Control(INHERIT,x,y,width,20,s.target<0?"Select a face":s.face(s.target)<0?"Using main texture":"Use main texture",false,s.target>=0&&s.face(s.target)>=0));y+=24;}
+        result.add(new Control(TEXTURE_LAYOUT,x,y,width,20,"Texture: "+TextureLayoutMode.label(s.layout),false,true));
+        return Collections.unmodifiableList(result);
+    }
     public static List<Control> controls(ProgrammableDialogLayout p,State s,String doneLabel){
         List<Control> result=new ArrayList<Control>();
         result.add(new Control(APPEARANCE,p.left+12,p.top+30,p.width-24,18,"Appearance",true,false));
         if(s.facesEnabled){int span=p.width-24,w=span/7;for(int i=0;i<7;i++)result.add(new Control(i==0?MAIN:FIRST_FACE+i-1,p.listX+i*w,p.top+54,i==6?span-i*w-2:w-2,18,i==0?"Main":FACE_NAMES[i-1],true,s.target!=i-1));}
-        int y=listY(p,s);
-        result.add(new Control(FACE_OVERRIDES,p.controlsX,y,154,20,"Face overrides: "+(s.facesEnabled?"On":"Off"),false,true));y+=24;
-        if(s.facesEnabled){result.add(new Control(INHERIT,p.controlsX,y,154,20,s.target<0?"Select a face":s.face(s.target)<0?"Using main texture":"Use main texture",false,s.target>=0&&s.face(s.target)>=0));y+=24;}
-        result.add(new Control(TEXTURE_LAYOUT,p.controlsX,y,154,20,"Texture: "+TextureLayoutMode.label(s.layout),false,true));
+        result.addAll(appearanceControls(p.controlsX,listY(p,s),154,s));
         result.add(new Control(DONE,p.controlsX,p.doneY,154,20,doneLabel,false,true));
         SortedSet<Integer> positions=new TreeSet<Integer>();for(Control c:result)if(!c.tab&&c.id!=DONE)positions.add(c.y);
         if(!positions.isEmpty()&&positions.last()+20>p.top+p.height-30){
