@@ -1387,5 +1387,14 @@ task measurePanelMeshAllocations(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.PanelMeshAllocationChecks'
     systemProperty 'vandorlabs.panelFrameOnly', project.hasProperty('panelFrameOnly')
+    systemProperty 'vandorlabs.panelApertureOnly', project.hasProperty('panelApertureOnly')
     maxHeapSize = '1G'
 }
+
+task testPanelApertureAdapters(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PanelApertureEmitterChecks'
+}
+check.dependsOn testPanelApertureAdapters
