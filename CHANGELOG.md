@@ -4,7 +4,7 @@
 
 - Support installed filesystem PNGs on the native programmable cube, using shared startup discovery and stable saved identifiers. Keep picker selections through missing-file and dimension reloads, refresh world/item UV snapshots coherently, and preserve separate startup-missing-client fallback. New file discovery still requires a restart; custom block sampling remains separate.
 
-- Share the current programmable-cube Appearance layout, face controls and picker input rules, retaining reverse cycling and wheel/drag scrolling. Share housing face-plane and packed-light calculations while preserving legacy discovery and light sampling.
+- Share programmable dialog panel dimensions and material-picker scrolling across block families and both targets. Cube Appearance and Trigger tabs, labels and edit transitions use common control descriptors while retaining their existing layouts, reverse cycling and immediate submissions. Share housing face-plane and packed-light calculations while preserving legacy discovery and light sampling.
 
 - Share Trigger and housing save contracts while preserving legacy missing-field defaults, material migrations, six face overrides and dormant Trigger playback data. Add a focused Trigger dialog regression without running unrelated gameplay fixtures.
 

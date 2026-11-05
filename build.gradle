@@ -1120,3 +1120,5 @@ task testChannelSpatialAdapters(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.ChannelSpatialAdapterChecks'
 }
+
+check.dependsOn testDialogInputAdapters, testChannelSpatialAdapters
