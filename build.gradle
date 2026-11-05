@@ -1445,3 +1445,12 @@ task exportPanelBarReference(type: JavaExec) {
     maxHeapSize = '1G'
     systemProperty 'vandorlabs.panelBarReference', file(project.findProperty('panelBarReference') ?: 'build/test-artifacts/panel-bar-forge.jsonl').absolutePath
 }
+
+task testPanelBoxEmitterAdapters(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PanelBoxEmitterChecks'
+    systemProperty 'vandorlabs.panelBoxAllocation', project.hasProperty('panelBoxAllocation')
+}
+check.dependsOn testPanelBoxEmitterAdapters

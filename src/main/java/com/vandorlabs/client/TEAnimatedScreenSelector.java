@@ -905,6 +905,8 @@ public class TEAnimatedScreenSelector
         drawWallMesh(sprite,ScreenHousingMesh.box(x0,y0,z0,x1,y1,z1).textureLayout(layout,UnifiedTextureSprites.aspect(sprite)));
     }
 
+    private static final com.vandorlabs.render.PanelBoxEmitter.Sink<BufferBuilder,TextureAtlasSprite> BOX_MESH=(buffer,sprite,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3)->spriteQuad(buffer,sprite,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3,0,0,16,16);
+
     /** Broad faces use the selected wall art; exposed thickness uses frame metal. */
     private static void renderWallBox(TextureAtlasSprite face, TextureAtlasSprite side,
             boolean faceAlongZ, double x0, double y0, double z0,
@@ -918,14 +920,7 @@ public class TEAnimatedScreenSelector
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder b = tess.getBuffer();
         b.begin(GL11.GL_QUADS, BlockSurfaceFormat.get());
-        spriteQuad(b, side, x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1, 0,0,16,16);
-        spriteQuad(b, side, x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0, 0,0,16,16);
-        TextureAtlasSprite xFace = faceAlongZ ? side : face;
-        TextureAtlasSprite zFace = faceAlongZ ? face : side;
-        spriteQuad(b, xFace, x0,y1,z0, x0,y1,z1, x0,y0,z1, x0,y0,z0, 0,0,16,16);
-        spriteQuad(b, xFace, x1,y1,z1, x1,y1,z0, x1,y0,z0, x1,y0,z1, 0,0,16,16);
-        if (front) spriteQuad(b, zFace, x1,y1,z0, x0,y1,z0, x0,y0,z0, x1,y0,z0, 0,0,16,16);
-        spriteQuad(b, zFace, x0,y1,z1, x1,y1,z1, x1,y0,z1, x0,y0,z1, 0,0,16,16);
+        com.vandorlabs.render.PanelBoxEmitter.box(BOX_MESH,b,face,side,faceAlongZ,x0,y0,z0,x1,y1,z1,front);
         tess.draw();
     }
 
