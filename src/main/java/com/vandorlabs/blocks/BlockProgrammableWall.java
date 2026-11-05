@@ -202,7 +202,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
         if (!(raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)) return 0;
         com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
                 (com.vandorlabs.tiles.TileEntityAnimatedScreenSelector) raw;
-        return tile.isDiagonalHalfHeight() ? 2 : tile.isDiagonalFullWidth() ? 1 : 0;
+        return com.vandorlabs.persistence.WallSettings.geometry(tile.isDiagonalHalfHeight(),tile.isDiagonalFullWidth());
     }
 
     int placementGeometry(World world, BlockPos support, net.minecraft.item.ItemStack stack) {

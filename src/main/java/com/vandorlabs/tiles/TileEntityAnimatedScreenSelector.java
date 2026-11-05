@@ -379,7 +379,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int getDiagonalFill() { return diagonalFill; }
     public void setDiagonalGeometry(int mode, int fill) {
         boolean halfHeight=mode==2,fullWidth=mode==1 || mode==2;
-        int nextFill=Math.max(0,Math.min(3,fill));
+        int nextFill=com.vandorlabs.persistence.WallSettings.fill(fill);
         if(diagonalHalfHeight==halfHeight && diagonalFullWidth==fullWidth && diagonalFill==nextFill)return;
         diagonalHalfHeight=halfHeight;
         diagonalFullWidth=fullWidth;
@@ -617,17 +617,14 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         compound.setInteger("GlassMaterial",glassMaterial);
         compound.setBoolean("GlassStretch",glassStretch);compound.setBoolean("GlassTextureJoin",glassTextureJoin);
         compound.setBoolean("GlassFramed",glassFramed);
-        compound.setBoolean("JoinPortholes", joinPortholes);
-        compound.setInteger("PortholeShape", portholeShape);
+
         com.vandorlabs.persistence.HousingSettings.write(primitiveData,housingTexture,sideTexture,mainTextureLayout,
                 slabTileSides,faceTextures.enabled,faceTextures.choices());
         fluids.write(compound);
         compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());compound.setInteger("GlassTextureLayout",getGlassTextureLayout());
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
-        compound.setBoolean("DiagonalFullWidth", diagonalFullWidth);
-        compound.setBoolean("DiagonalHalfHeight", diagonalHalfHeight);
-        compound.setInteger("DiagonalFill", diagonalFill);
-        compound.setInteger("DiagonalJoin",diagonalJoin);
+        com.vandorlabs.persistence.WallSettings.write(primitiveData,diagonalFullWidth,diagonalHalfHeight,
+                diagonalFill,diagonalJoin,joinPortholes,portholeShape);
         for(int i=0;i<2;i++)if(controls[i]!=null)compound.setTag(i==0?"RedstonePrimary":"RedstoneSecondary",controls[i].writeToNBT(new NBTTagCompound()));
         return compound;
     }
@@ -699,12 +696,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         glassFramed=!compound.hasKey("GlassFramed")||compound.getBoolean("GlassFramed");
         joinPortholes = compound.getBoolean("JoinPortholes");
         portholeShape = compound.hasKey("PortholeShape",3)
-                ? Math.max(0,Math.min(3,compound.getInteger("PortholeShape"))) : 0;
+                ? com.vandorlabs.persistence.WallSettings.portholeShape(true,compound.getInteger("PortholeShape")) : 0;
         faceTextures = FaceTextures.of(housing.facesEnabled,housing.faces());
         diagonalFullWidth = compound.getBoolean("DiagonalFullWidth");
         diagonalHalfHeight = compound.getBoolean("DiagonalHalfHeight");
-        diagonalJoin=Math.max(0,Math.min(11,compound.getInteger("DiagonalJoin")));
-        diagonalFill = Math.max(0, Math.min(3, compound.getInteger("DiagonalFill")));
+        diagonalJoin=com.vandorlabs.persistence.WallSettings.join(compound.getInteger("DiagonalJoin"));
+        diagonalFill = com.vandorlabs.persistence.WallSettings.fill(compound.getInteger("DiagonalFill"));
         if (world != null && world.isRemote
                 && (previousStair!=stairGeometry() || oldMainLayout!=getMainTextureLayout() || oldSurfaceLayout!=getSurfaceTextureLayout() || oldGlassLayout!=getGlassTextureLayout() || !previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
