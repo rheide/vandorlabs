@@ -271,3 +271,19 @@ tasks.register('testNativeFluidPublication', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.fluid.NativeFluidPublicationChecks'
 }
+
+sourceSets.main.resources.srcDir('build/generated/panel-resources')
+tasks.register('generatePanelResources', Exec) {
+    commandLine pythonExecutable, 'generate_panel_resources.py'
+    inputs.files('generate_panel_resources.py', 'generate_shape_resources.py')
+    inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/programmable_wall.json', '../../src/main/resources/assets/vandorlabs/models/block/programmable_wall.json', '../../src/main/resources/assets/vandorlabs/models/item/programmable_wall.json')
+    outputs.dir('build/generated/panel-resources')
+}
+tasks.named('processResources') { dependsOn 'generatePanelResources' }
+
+tasks.register('testNativeFlatWallModels', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeFlatWallModelChecks'
+}
