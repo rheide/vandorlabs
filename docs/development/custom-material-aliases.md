@@ -1,0 +1,30 @@
+# Custom block material identities
+
+A saved custom material choice is the legacy CRC-32/ISO-HDLC of the UTF-8 string `registry-name@metadata`, masked to 29 bits and combined with `MaterialChoicePolicy.CUSTOM_BASE`. `CustomMaterialIdentity` preserves this calculation. Metadata normalization belongs to the platform caller: the legacy inventory path masks ordinary block metadata to four bits and uses zero for door items. Loading a saved choice must preserve its integer even when its source block is unavailable.
+
+## Vanilla flattening manifest
+
+`src/main/resources/assets/vandorlabs/data/legacy_vanilla_blocks.tsv` contains only Minecraft 1.12.2 vanilla **block** registry IDs and names, sorted by numeric ID, plus sixteen per-requested-metadata normalization slots. Each slot records `getMetaFromState(getStateFromMeta(requestedMetadata))`, or `-1` if the legacy state lookup rejects that metadata. Export also asserts that the normalized metadata reconstructs the exact original state. The vanilla registry has 4064 requested slots: 2263 normalize to another metadata value, 151 are unsupported and 3913 resolve. For example, stone metadata 7–15 becomes stone metadata 0; piston metadata 6 and wheat metadata 8 throw and remain unresolved. It is exported from the actual `Block.REGISTRY` after vanilla bootstrap, rather than inferred from item IDs or maintained as a handwritten flattening table. Item IDs differ: the wooden door block is 64, while its item is 324.
+
+Regenerate with Java 8:
+
+```sh
+./gradlew exportLegacyVanillaBlockManifest --no-daemon
+./gradlew testLegacyVanillaBlockManifest --no-daemon
+```
+
+The check is part of `check`. Exporting does not scan modded registries or establish modded numeric-ID compatibility.
+
+## Native alias adapter
+
+`LegacyVanillaMaterialAliases` resolves an original saved CRC through the original registry name and metadata to the actual normalized numeric vanilla state. The saved CRC still uses the originally requested metadata. Unsupported legacy slots remain unresolved, matching the legacy lookup rather than guessing a default. Minecraft's `BlockStateData.getTag(blockId << 4 | normalizedMetadata)` supplies the authoritative flattening state. This packing belongs to the data-fixer table; it is not the legacy `Block.getStateId` packing. The block-state data fixer advances that state from version 1451 to the running Minecraft version, including later changes such as `oak_bark` to `oak_wood`, `grass_path` to `dirt_path`, and `grass` to `short_grass`.
+
+The adapter validates the manifest and metadata range before calling Minecraft's utility, whose default for unknown numeric IDs is AIR. Unknown saved IDs remain unresolved. A known non-AIR block unexpectedly mapping to AIR fails explicitly. The cache has at most 4096 fixed state slots, returns copied tags and retains no worlds, players or item stacks. No client API is involved. `testLegacyVanillaMaterialAliases` checks the actual data fixers, literal previous saved IDs, orientation properties, unavailable IDs and cache isolation.
+
+This adapter is a prerequisite and is not connected to native material discovery or rendering. It does not convert worlds, palettes, tiles or items.
+
+## Native sampling boundary
+
+A new native block-item sample should use its current named block and default block-state properties, retaining a stable `current-registry-name@0` identity. It must not choose an arbitrary inverse legacy metadata alias: flattening is many-to-one, and invalid or unused legacy metadata can map to defaults.
+
+When a current name also existed in 1.12.2, its `name@0` saved ID already has a legacy interpretation. Before enabling sampling, compare the actual legacy selected sprite with the native default-state selected sprite. Door materials require both lower and upper halves; other materials follow the existing component/particle selection policy. A facing difference alone does not establish either an artwork match or a mismatch. Preserve the legacy interpretation and explicitly handle or refuse genuine conflicts. Missing modded blocks retain their saved ID and fallback; this manifest does not supply a universal modded migration map.

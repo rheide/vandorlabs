@@ -1131,3 +1131,21 @@ task testCustomMaterialIdentity(type: JavaExec) {
     main = 'com.vandorlabs.client.CustomMaterialIdentityChecks'
 }
 check.dependsOn testCustomMaterialIdentity
+
+task testLegacyVanillaBlockManifest(type: JavaExec) {
+    group = 'verification'
+    description = 'Check saved-material alias provenance against the actual vanilla 1.12.2 block registry'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LegacyVanillaBlockManifestChecks'
+    args file('src/main/resources/assets/vandorlabs/data/legacy_vanilla_blocks.tsv').absolutePath
+}
+task exportLegacyVanillaBlockManifest(type: JavaExec) {
+    group = 'development'
+    description = 'Regenerate the vanilla-only numeric block/name alias manifest from Minecraft 1.12.2'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LegacyVanillaBlockManifestChecks'
+    args file('src/main/resources/assets/vandorlabs/data/legacy_vanilla_blocks.tsv').absolutePath, '--write'
+}
+check.dependsOn testLegacyVanillaBlockManifest

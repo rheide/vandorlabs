@@ -3,7 +3,7 @@
 ## 2.9 (development)
 
 - Support installed filesystem PNGs on the native programmable cube, using shared startup discovery and stable saved identifiers. Keep picker selections through missing-file and dimension reloads, refresh world/item UV snapshots coherently, and preserve separate startup-missing-client fallback. New file discovery still requires a restart; custom block sampling remains separate.
-- Share the exact custom block material saved-ID calculation, retaining legacy caller metadata normalization and literal previous-save identity fixtures. Native custom block sampling remains deferred.
+- Share the exact custom block material saved-ID calculation, retaining legacy caller metadata normalization and literal previous-save identity fixtures. Add an actual vanilla 1.12.2 block-registry manifest and strict native data-fixer alias prerequisite; native custom block sampling remains deferred.
 
 - Share programmable dialog panel dimensions and material-picker scrolling across block families and both targets. Cube Appearance and Trigger tabs, labels and edit transitions use common control descriptors while retaining their existing layouts, reverse cycling and immediate submissions. Share housing face-plane and packed-light calculations while preserving legacy discovery and light sampling.
 

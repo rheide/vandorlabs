@@ -101,3 +101,16 @@ neoForge.runs.configureEach {
     if(project.hasProperty('filesystemPhase'))systemProperty 'vandorlabs.filesystemPhase',project.property('filesystemPhase')
     if(project.hasProperty('filesystemPeer'))systemProperty 'vandorlabs.filesystemPeer',project.property('filesystemPeer')
 }
+
+// Only this compatibility manifest is shared; do not import the legacy resource tree.
+tasks.named('processResources') {
+    from('../../src/main/resources') { include 'assets/vandorlabs/data/legacy_vanilla_blocks.tsv' }
+}
+tasks.register('testLegacyVanillaMaterialAliases', JavaExec) {
+    group = 'verification'
+    description = 'Check saved material aliases using actual Minecraft flattening and current data fixers'
+    dependsOn 'smokeClasses'
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.LegacyVanillaMaterialAliasChecks'
+}
+tasks.named('check') { dependsOn 'testLegacyVanillaMaterialAliases' }
