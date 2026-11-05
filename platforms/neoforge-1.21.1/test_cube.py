@@ -118,10 +118,11 @@ def main():
         client = output / 'client'
         client.mkdir()
         (client / 'options.txt').write_text('guiScale:1\ntutorialStep:none\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nentityShadows:false\nonboardAccessibility:false\n')
-        launch_client = command('runClient', '-PcubePhase=client', '-PmatterClientPort=' + str(port), '-PmodernClientRunDirectory=' + str(client))
+        client_properties = ['-PcubePhase=client', '-PmatterClientPort=' + str(port), '-PmodernClientRunDirectory=' + str(client)]
         if args.reference:
-            launch_client.append('-PcubeReference=' + str(args.reference.resolve()))
+            client_properties.append('-PcubeReference=' + str(args.reference.resolve()))
             env['VANDOR_CUBE_REFERENCE'] = str(args.reference.resolve())
+        launch_client = command('runClient', *client_properties)
         if args.xvfb:
             launch_client = ['xvfb-run', '-a', '-s', '-screen 0 1280x720x24'] + launch_client
             env['LIBGL_ALWAYS_SOFTWARE'] = '1'
