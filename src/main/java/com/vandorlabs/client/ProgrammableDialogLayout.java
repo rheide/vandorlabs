@@ -4,18 +4,18 @@ import net.minecraft.client.gui.GuiButton;
 
 /** Shared dimensions for a tall texture list and a compact settings column. */
 final class ProgrammableDialogLayout {
-    static final int CONTROLS_WIDTH=154;
+    static final int CONTROLS_WIDTH=com.vandorlabs.ui.ProgrammableDialogLayout.CONTROLS_WIDTH;
     final int left,top,width,height,controlsX,listX,listWidth,doneY;
+    private final com.vandorlabs.ui.ProgrammableDialogLayout shared;
     ProgrammableDialogLayout(int screenWidth,int screenHeight) {
         this(screenWidth,screenHeight,460,332);
     }
     ProgrammableDialogLayout(int screenWidth,int screenHeight,int maxWidth,int maxHeight) {
-        width=Math.min(maxWidth,screenWidth-8);height=Math.min(maxHeight,screenHeight-8);
-        left=(screenWidth-width)/2;top=(screenHeight-height)/2;
-        controlsX=left+width-CONTROLS_WIDTH-12;listX=left+12;
-        listWidth=controlsX-listX-19;doneY=top+height-26;
+        shared=new com.vandorlabs.ui.ProgrammableDialogLayout(screenWidth,screenHeight,maxWidth,maxHeight);
+        left=shared.left;top=shared.top;width=shared.width;height=shared.height;
+        controlsX=shared.controlsX;listX=shared.listX;listWidth=shared.listWidth;doneY=shared.doneY;
     }
-    int rows(boolean tabs){return Math.max(2,(height-(tabs?60:38))/HousingTextureList.ROW_HEIGHT);}
+    int rows(boolean tabs){return shared.rows(tabs);}
     GuiButton control(int id,int y,String label){return new GuiButton(id,controlsX,top+y,CONTROLS_WIDTH,20,label);}
     GuiButton done(int id){return new GuiButton(id,controlsX,doneY,CONTROLS_WIDTH,20,"Done");}
     GuiButton tab(int id,int index,int count,String label){int w=(listWidth+2)/count;return new DialogTabButton(id,listX+index*w,top+30,w-2,18,net.minecraft.client.Minecraft.getMinecraft().fontRenderer.trimStringToWidth(label,w-6));}

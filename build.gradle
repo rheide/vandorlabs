@@ -1099,3 +1099,12 @@ task testDialogInputAdapters(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.DialogInputAdapterChecks'
 }
+
+task testDialogPanelDimensions(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare shared dialog panels with the actual legacy wrapper and widget bounds'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DialogPanelDimensionsChecks'
+}
+check.dependsOn testDialogPanelDimensions
