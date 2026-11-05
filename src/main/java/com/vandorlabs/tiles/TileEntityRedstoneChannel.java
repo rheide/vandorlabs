@@ -11,6 +11,7 @@ import com.vandorlabs.redstone.RedstoneChannels;
 import com.vandorlabs.persistence.NbtPrimitiveData;
 import com.vandorlabs.persistence.RedstoneData;
 import com.vandorlabs.persistence.ControlMountSettings;
+import com.vandorlabs.persistence.ControlLatchData;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -19,17 +20,13 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 
 /** Channel, local latch, and flat-mount orientation for switches and levers. */
-public class TileEntityRedstoneChannel extends TileEntity implements RedstoneChannelLatch {
+public class TileEntityRedstoneChannel extends TileEntity implements RedstoneChannelLatch, ControlLatchData.LevelLookup {
     private ChannelList channels=ChannelList.EMPTY;
     private ChannelList latched=ChannelList.EMPTY;
     private final java.util.Map<Integer,Integer> levels=new java.util.HashMap<>();
-    @Override public int latchedLevel(int channel){return levels.getOrDefault(channel,latched.contains(channel)?15:0);}
-    @Override public int localSignalLevel(int channel){return isChannelLatch()?latchedLevel(channel):localOn?15:0;}
-    public int getOutputLevel(){
-        if(!localOn)return 0;
-        int level=15;for(int i=0;i<channels.size();i++)level=Math.min(level,latchedLevel(channels.get(i)));
-        return level;
-    }
+    @Override public int latchedLevel(int channel){return ControlLatchData.level(levels,latched,channel);}
+    @Override public int localSignalLevel(int channel){return ControlLatchData.localLevel(isChannelLatch(),localOn,this,channel);}
+    public int getOutputLevel(){return ControlLatchData.outputLevel(localOn,channels,this);}
     @Override public void applyLinkedLevels(java.util.Map<Integer,Integer> value){
         int previousOutput=getOutputLevel();
         boolean changed=!levels.equals(value);levels.clear();levels.putAll(value);
@@ -203,8 +200,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         ControlMountSettings.write(primitive,baseHeight,baseTilt,tiltDirection);
         if(powerLeverSize>=0)tag.setInteger("PowerLeverSize",powerLeverSize);
         new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(primitive);
-        int[] savedLevels=new int[channels.size()];for(int i=0;i<savedLevels.length;i++)savedLevels[i]=latchedLevel(channels.get(i));tag.setIntArray("LatchedLevels",savedLevels);
-        tag.setIntArray("LatchedChannels",latched.toArray());
+        ControlLatchData.write(primitive,channels,latched,this);
         return tag;
     }
 
@@ -222,8 +218,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         channel=data.channel;
         channels=ChannelData.read(tag,channel);channel=channels.first();
         localOn=data.localOn;
-        latched=ChannelData.read(tag,"LatchedChannels",localOn?channels:ChannelList.EMPTY).intersect(channels);
-        levels.clear();int[] savedLevels=tag.getIntArray("LatchedLevels");for(int i=0;i<Math.min(savedLevels.length,channels.size());i++)levels.put(channels.get(i),Math.max(0,Math.min(15,savedLevels[i])));
+        latched=ControlLatchData.read(primitive,channels,localOn,levels);
         initialized=data.initialized;
         mountRotation=data.mountRotation;
         powerLeverSize=tag.hasKey("PowerLeverSize",3)?Math.max(0,Math.min(1,tag.getInteger("PowerLeverSize"))):-1;
