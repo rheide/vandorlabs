@@ -28,6 +28,7 @@ p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:fa
 PY
 CAPTURE_JVM=("-Dvandorlabs.largeBenchmarkFamilies=${VANDOR_LABS_BENCH_FAMILIES:-false}" "-Dvandorlabs.largeBenchmarkTerrain=${VANDOR_LABS_BENCH_TERRAIN:-false}" "-Dvandorlabs.largeBenchmarkMovingSamples=${VANDOR_LABS_BENCH_MOVING_SAMPLES:-${VANDOR_LABS_BENCH_SAMPLES:-60}}" "-Dvandorlabs.largeBenchmarkCompare=${VANDOR_LABS_BENCH_COMPARE:-false}" "-Dvandorlabs.largeBenchmarkSamples=${VANDOR_LABS_BENCH_SAMPLES:-60}" "-Dvandorlabs.largeBenchmarkWarmFrames=${VANDOR_LABS_BENCH_WARM_FRAMES:-50}" "-Dvandorlabs.largeVehicleBenchmark=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.vehicleDiagnostics=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.reactorGlassChecksOnly=${VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.retiredGlassClientOnly=${VANDOR_LABS_RETIRED_GLASS_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.cubeReferenceExportOnly=${VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.cubeJoiningChecksOnly=${VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.triggerStateChecksOnly=${VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.segmentedDoorChecksOnly=${VANDOR_LABS_SEGMENTED_DOOR_CHECKS_ONLY:-false}")
