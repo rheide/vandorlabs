@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Reuse current stair collision, exposed surfaces and face mapping across targets, and share slab placement/merge decisions. Preserve exact emitted geometry and configured slab behavior while reducing temporary allocations in dense stair collision construction.
+
 - Share exact stair tread/roll save and configured-item rules, including legacy 16-pixel treads and saved roll 2. Preserve invalid-edit refusal and unchanged Forge geometry, lighting and padded icons. Native slab/stair adapters remain in progress.
 
 - Share the current glass editor state, four tabs, option rows and reverse cycling. Preserve immediate preview, frame-face and playback panes, hidden legacy control IDs and live framing callbacks.
