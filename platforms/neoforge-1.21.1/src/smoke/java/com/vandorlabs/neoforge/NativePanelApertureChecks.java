@@ -33,16 +33,23 @@ public final class NativePanelApertureChecks {
             need(!nativeQuads.get(q*2).isShade()&&!nativeQuads.get(q*2).hasAmbientOcclusion(),key+" legacy unshaded material");
         }poses++;
     }
+    private static void cacheChecks()throws Exception{
+        var source=new WindowOutline(1,1,WindowOutline.HEXAGON).slice(0,0);var owned=new NativePanelSlice(source);double original=owned.frame(0,0);source.frameQuads.getFirst()[0]=Double.NaN;need(owned.frame(0,0)==original,"slice owns source arrays");
+        var descriptor=com.vandorlabs.neoforge.shape.NativePortholeLayout.unit(WindowOutline.ROUND);var first=NativePanelSlice.get(descriptor);need(first==NativePanelSlice.get(descriptor),"same cold slice reused");var contact=com.vandorlabs.neoforge.shape.NativePortholeLayout.contacts(com.vandorlabs.neoforge.shape.NativePanelLayout.UNIT,WindowOutline.ROUND,15);need(first==NativePanelSlice.get(contact),"rail contact flags do not duplicate aperture data");
+        var executor=java.util.concurrent.Executors.newFixedThreadPool(4);try{List<java.util.concurrent.Future<NativePanelSlice>> futures=new ArrayList<>();for(int n=0;n<32;n++)futures.add(executor.submit(()->NativePanelSlice.get(descriptor)));for(var future:futures)need(future.get()==first,"atomic shared cold publication");}finally{executor.shutdownNow();}
+        for(int row=0;row<1400;row++)NativePanelSlice.get(new com.vandorlabs.neoforge.shape.NativePortholeLayout(new NativePanelLayout(0,row,1,4095,false,false),WindowOutline.ROUND,0,false,false,false,false));
+        long retained=NativePanelSlice.retainedBytes();need(retained<=2*1024*1024,"slice retained weighted budget");System.out.println("[vandorlabs][panel-aperture-cache] PASS owned arrays, contact-independent keys, concurrent reuse, thin4095 eviction retainedBytes="+retained);
+    }
     public static void main(String[] args)throws Exception{
         Path input=Path.of(args[0]);var wallContents=new SpriteContents(ResourceLocation.fromNamespaceAndPath("vandorlabs","aperture-reference"),new FrameSize(16,16),new NativeImage(16,16,false),ResourceMetadata.EMPTY);var metalContents=new SpriteContents(ResourceLocation.fromNamespaceAndPath("vandorlabs","aperture-metal"),new FrameSize(16,16),new NativeImage(16,16,false),ResourceMetadata.EMPTY);
         try{
             var wall=new NativePanelQuads.Material(new ProgrammableModel.MaterialSnapshot(new Sprite(wallContents,0),1,1));var metal=new NativePanelQuads.Material(new ProgrammableModel.MaterialSnapshot(new Sprite(metalContents,16),1,1));int records=0;
-            try(var lines=Files.lines(input)){for(var line:(Iterable<String>)lines::iterator){JsonObject record=JsonParser.parseString(line).getAsJsonObject();int columns=integer(record,"columns"),rows=integer(record,"rows"),column=integer(record,"column"),row=integer(record,"row"),border=integer(record,"border"),mode=integer(record,"mode"),flips=integer(record,"flips");var slice=new WindowOutline(columns,rows,integer(record,"shape"),border).slice(column,row);var layout=new NativePanelLayout(column,row,columns,rows,(flips&1)!=0,(flips&2)!=0);
+            try(var lines=Files.lines(input)){for(var line:(Iterable<String>)lines::iterator){JsonObject record=JsonParser.parseString(line).getAsJsonObject();int columns=integer(record,"columns"),rows=integer(record,"rows"),column=integer(record,"column"),row=integer(record,"row"),border=integer(record,"border"),mode=integer(record,"mode"),flips=integer(record,"flips");var slice=new NativePanelSlice(WindowOutline.localSlice(columns,rows,integer(record,"shape"),border,column,row));var layout=new NativePanelLayout(column,row,columns,rows,(flips&1)!=0,(flips&2)!=0);
                 for(Direction facing:new Direction[]{Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST})for(double near:new double[]{0,6,12}){
                     String key="record"+records+" "+facing+" near"+near+" mode"+mode;compare(record.getAsJsonArray("body"),NativePanelQuads.aperture(facing,near,slice,wall,metal,metal,mode,layout,column>0,column<columns-1,row>0,row<rows-1),facing,near,key+" body");compare(record.getAsJsonArray("pane"),NativePanelQuads.pane(facing,near,slice,wall,mode,layout,(2+border)/16D,(4+border)/16D,1),facing,near,key+" pane");
                 }records++;
             }}
-            need(records==3456,"complete actual legacy reference profiles");System.out.println("[vandorlabs][panel-aperture] CPU PASS legacyRecords="+records+" nativePoses="+poses+" checks="+checks+" raw geometry/normal/winding and atlasUV tolerance3e-6; no client/world");
+            need(records==3456,"complete actual legacy reference profiles");cacheChecks();System.out.println("[vandorlabs][panel-aperture] CPU PASS legacyRecords="+records+" nativePoses="+poses+" checks="+checks+" raw geometry/normal/winding and atlasUV tolerance3e-6; no client/world");
         }finally{wallContents.close();metalContents.close();}
     }
 }

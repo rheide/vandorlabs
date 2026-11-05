@@ -57,29 +57,29 @@ final class NativePanelQuads {
     static List<BakedQuad> flat(Direction facing,double near,PanelCornerGeometry.FlatCorner corner,Material wall,Material metal,int mode,NativePanelLayout group){Context context=new Context(facing,wall,mode,group);PanelMeshEmitter.flat(EMITTER,context,wall,metal,near,corner);return context.finish();}
     static List<BakedQuad> diagonal(Direction facing,boolean inverted,PanelCornerGeometry.Corner corner,double span,int fill,double low,double high,double halfOffset,double lower,double upper,boolean hideLower,boolean hideUpper,double[] clip,Material wall,Material metal,int mode,NativePanelLayout group){Context context=new Context(facing,wall,mode,group);PanelMeshEmitter.diagonal(EMITTER,context,wall,metal,inverted,corner,span,fill,low,high,halfOffset,lower,upper,hideLower,hideUpper,clip);return context.finish();}
     private static final PanelApertureEmitter.Sink<Context,Material,Void> APERTURE=(context,material,ignored,reverse,a,b,c,d)->EMITTER.quad(context,material,reverse,a,b,c,d);
-    static List<BakedQuad> aperture(Direction facing,double near,com.vandorlabs.surface.WindowOutline.Slice opening,
+    static List<BakedQuad> aperture(Direction facing,double near,NativePanelSlice opening,
             Material wall,Material metal,Material outer,int mode,NativePanelLayout group,
             boolean hideLeft,boolean hideRight,boolean hideLower,boolean hideUpper){
         Context context=new Context(facing,wall,mode,group,false,0,0,near-6,1);
-        for(double[] q:opening.frameQuads)PanelApertureEmitter.panelQuad(APERTURE,context,wall,null,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
-        for(double[] e:opening.hexEdges)PanelApertureEmitter.rimSegment(APERTURE,context,metal,null,e[0],e[1],e[2],e[3],16);
+        for(int q=0;q<opening.frameCount();q++)PanelApertureEmitter.panelQuad(APERTURE,context,wall,null,opening.frame(q,0),opening.frame(q,1),opening.frame(q,2),opening.frame(q,3),opening.frame(q,4),opening.frame(q,5),opening.frame(q,6),opening.frame(q,7));
+        for(int e=0;e<opening.edgeCount();e++)PanelApertureEmitter.rimSegment(APERTURE,context,metal,null,opening.edge(e,0),opening.edge(e,1),opening.edge(e,2),opening.edge(e,3),16);
         for(int y:new int[]{0,16}){
-            if(y==0?hideLower:hideUpper)continue;double[] cut=opening.edgeOpening(1,y);
-            if(cut==null)PanelApertureEmitter.topRim(APERTURE,context,outer,null,y,0,16,16);
-            else{PanelApertureEmitter.topRim(APERTURE,context,outer,null,y,0,cut[0],16);PanelApertureEmitter.topRim(APERTURE,context,outer,null,y,cut[1],16,16);}
+            if(y==0?hideLower:hideUpper)continue;double low=opening.opening(1,y==0?0:1,0),high=opening.opening(1,y==0?0:1,1);
+            if(Double.isNaN(low))PanelApertureEmitter.topRim(APERTURE,context,outer,null,y,0,16,16);
+            else{PanelApertureEmitter.topRim(APERTURE,context,outer,null,y,0,low,16);PanelApertureEmitter.topRim(APERTURE,context,outer,null,y,high,16,16);}
         }
         for(int x:new int[]{0,16}){
-            if(x==0?hideLeft:hideRight)continue;double[] cut=opening.edgeOpening(0,x);
-            if(cut==null)PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,0,16,16);
-            else{PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,0,cut[0],16);PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,cut[1],16,16);}
+            if(x==0?hideLeft:hideRight)continue;double low=opening.opening(0,x==0?0:1,0),high=opening.opening(0,x==0?0:1,1);
+            if(Double.isNaN(low))PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,0,16,16);
+            else{PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,0,low,16);PanelApertureEmitter.sideRim(APERTURE,context,outer,null,x,high,16,16);}
         }
         return context.finish();
     }
-    static List<BakedQuad> pane(Direction facing,double near,com.vandorlabs.surface.WindowOutline.Slice opening,
+    static List<BakedQuad> pane(Direction facing,double near,NativePanelSlice opening,
             Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity){
         Context context=new Context(facing,glass,mode,group,true,borderX,borderY,near-6,opacity);context.current=glass;
-        for(int depth:new int[]{7,9})for(double[] q:opening.glassQuads){
-            PanelVertexEmitter.raw(RAW,context,depth==7,q[0],q[1],depth,q[0]/16,1-q[1]/16,q[2],q[3],depth,q[2]/16,1-q[3]/16,q[4],q[5],depth,q[4]/16,1-q[5]/16,q[6],q[7],depth,q[6]/16,1-q[7]/16);
+        for(int depth:new int[]{7,9})for(int q=0;q<opening.glassCount();q++){
+            PanelVertexEmitter.raw(RAW,context,depth==7,opening.glass(q,0),opening.glass(q,1),depth,opening.glass(q,0)/16,1-opening.glass(q,1)/16,opening.glass(q,2),opening.glass(q,3),depth,opening.glass(q,2)/16,1-opening.glass(q,3)/16,opening.glass(q,4),opening.glass(q,5),depth,opening.glass(q,4)/16,1-opening.glass(q,5)/16,opening.glass(q,6),opening.glass(q,7),depth,opening.glass(q,6)/16,1-opening.glass(q,7)/16);
         }
         return context.finish();
     }
