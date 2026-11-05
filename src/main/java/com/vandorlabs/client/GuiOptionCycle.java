@@ -12,7 +12,7 @@ public final class GuiOptionCycle {
     private GuiOptionCycle(){}
     public interface Action {void run(GuiButton button)throws IOException;}
     public static int direction(){return step;}
-    public static int next(int value,int count){return Math.floorMod(value+step,count);}
+    public static int next(int value,int count){return com.vandorlabs.ui.DialogInput.cycle(value,count,step);}
     public static int next(int value,int low,int high){return low+next(value-low,high-low+1);}
     public static EnumFacing next(EnumFacing facing){return step<0?facing.rotateYCCW():facing.rotateY();}
     public static boolean rightClick(Minecraft mc,List<GuiButton> buttons,int x,int y,int mouse,Action action,int... ids)throws IOException {
