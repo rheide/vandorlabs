@@ -19,10 +19,10 @@ import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import java.util.*;
 
-/** Model-owned mounted meshes; section workers consume only immutable visual model data. */
+/** Generation-owned mounted meshes; section workers consume only immutable visual model data. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeMountedControlModel extends BakedModelWrapper<BakedModel> {
-    private record Key(BlockState state,int height,int tilt,int direction,int rotation,int size){}
+    private record Key(BakedModel source,BlockState state,int height,int tilt,int direction,int rotation,int size){}
     private record Sources(List<Block> blocks,List<BakedModel> items){}
     private final Block block;
     private final ControlMountSettings itemMount;
@@ -31,9 +31,13 @@ public final class NativeMountedControlModel extends BakedModelWrapper<BakedMode
     private final BlockState listedState;
     private final Map<BlockState,BakedModel> poses;
     private final Sources sources;
-    private final com.google.common.cache.Cache<Key,List<BakedQuad>> meshes=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(1024*1024)
-        .weigher((Key key,List<BakedQuad> quads)->160+quads.stream().mapToInt(q->96+q.getVertices().length*4).sum()).build();
-    private NativeMountedControlModel(BakedModel base,Block block,ControlMountSettings itemMount,int itemSize,Map<BlockState,BakedModel> poses,Sources sources,BlockState listedState){super(base);this.block=block;this.itemMount=itemMount;this.itemSize=itemSize;this.poses=poses;this.sources=sources;this.listedState=listedState;}
+    private static final int MESH_BUDGET=16*1024*1024;
+    // One budget for every listed state and configured item in this resource generation.
+    // Source identity separates item/world artwork and resource-pack models with the same pose.
+    private final com.google.common.cache.Cache<Key,List<BakedQuad>> meshes;
+    private static com.google.common.cache.Cache<Key,List<BakedQuad>> meshCache(){return com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(MESH_BUDGET)
+        .weigher((Key key,List<BakedQuad> quads)->168+quads.stream().mapToInt(q->96+q.getVertices().length*4).sum()).build();}
+    private NativeMountedControlModel(BakedModel base,Block block,ControlMountSettings itemMount,int itemSize,Map<BlockState,BakedModel> poses,Sources sources,BlockState listedState,com.google.common.cache.Cache<Key,List<BakedQuad>> meshes){super(base);this.meshes=meshes;this.block=block;this.itemMount=itemMount;this.itemSize=itemSize;this.poses=poses;this.sources=sources;this.listedState=listedState;}
     private static int defaultSize(Block block){return block instanceof NativePowerLeverBlock lever?lever.defaultSize():block instanceof NativeSignalControlBlock signal&&signal.hasSelectableType()?signal.controlType():0;}
     @SubscribeEvent public static void bake(ModelEvent.ModifyBakingResult event){
         List<Block> blocks=List.of(VandorLabsBootstrap.PUSH_BUTTON.get(),VandorLabsBootstrap.ROCKER_SWITCH.get(),VandorLabsBootstrap.COMPACT_POWER_LEVER.get(),VandorLabsBootstrap.INDUSTRIAL_POWER_LEVER.get(),VandorLabsBootstrap.SMALL_POWER_LEVER.get(),VandorLabsBootstrap.LARGE_POWER_LEVER.get(),VandorLabsBootstrap.THRUSTER_LEVER.get(),VandorLabsBootstrap.AIRLINER_THROTTLE.get(),VandorLabsBootstrap.FIGHTER_THROTTLE.get(),VandorLabsBootstrap.WALL_SLIDER.get());
@@ -43,7 +47,8 @@ public final class NativeMountedControlModel extends BakedModelWrapper<BakedMode
         }
         Map<BlockState,BakedModel> poses=Map.copyOf(resolved);Map<Block,Sources> sources=new HashMap<>();
         for(Block block:blocks){Block small=block,large=block;if(block instanceof NativePowerLeverBlock lever){small=lever.isTwin()?VandorLabsBootstrap.SMALL_POWER_LEVER.get():VandorLabsBootstrap.COMPACT_POWER_LEVER.get();large=lever.isTwin()?VandorLabsBootstrap.LARGE_POWER_LEVER.get():VandorLabsBootstrap.INDUSTRIAL_POWER_LEVER.get();}if(block instanceof NativeSignalControlBlock signal&&signal.hasSelectableType()){List<Block> family=List.of(VandorLabsBootstrap.THRUSTER_LEVER.get(),VandorLabsBootstrap.AIRLINER_THROTTLE.get(),VandorLabsBootstrap.FIGHTER_THROTTLE.get());sources.put(block,new Sources(family,family.stream().map(itemModels::get).toList()));}else sources.put(block,new Sources(List.of(small,large),List.of(itemModels.get(small),itemModels.get(large))));}
-        event.getModels().replaceAll((id,model)->{Block block=supported.get(id.id());return block==null?model:new NativeMountedControlModel(states.containsKey(id)?poses.get(states.get(id)):itemModels.get(block),block,ControlMountSettings.of(0,0,0),defaultSize(block),poses,sources.get(block),states.get(id));});
+        var meshes=meshCache();
+        event.getModels().replaceAll((id,model)->{Block block=supported.get(id.id());return block==null?model:new NativeMountedControlModel(states.containsKey(id)?poses.get(states.get(id)):itemModels.get(block),block,ControlMountSettings.of(0,0,0),defaultSize(block),poses,sources.get(block),states.get(id),meshes);});
     }
     private BlockState sourcePose(BlockState state,int size,int rotation){
         if(block instanceof NativePowerLeverBlock)return sources.blocks.get(size).defaultBlockState().setValue(NativePowerLeverBlock.FACING,state.getValue(NativePowerLeverBlock.FACING)).setValue(NativePowerLeverBlock.FLOOR,state.getValue(NativePowerLeverBlock.FLOOR)).setValue(NativePowerLeverBlock.POWERED,state.getValue(NativePowerLeverBlock.POWERED));
@@ -68,7 +73,7 @@ public final class NativeMountedControlModel extends BakedModelWrapper<BakedMode
         BlockState sourcePose=sourcePose(pose,size,rotation);if(!power)pose=sourcePose;BakedModel sourceModel=state==null?originalModel:poses.get(sourcePose);
         if(mount.height==0&&mount.tilt==0)return sourceModel.getQuads(state==null?null:sourcePose,side,random,data,layer);
         if(side!=null)return List.of();
-        Key key=new Key(pose,mount.height,mount.tilt,mount.direction,rotation,size);
+        Key key=new Key(sourceModel,pose,mount.height,mount.tilt,mount.direction,rotation,size);
         boolean cacheable=NativeAuthoredControlBake.isStatic(sourceModel);List<BakedQuad> cached=cacheable?meshes.getIfPresent(key):null;if(cached!=null)return cached;
         var transform=power?NativeMountedControlGeometry.powerTransform(pose,mount,size):signal?NativeMountedControlGeometry.signalTransform(pose,mount,rotation):NativeMountedControlGeometry.transform(pose,mount,rotation);List<BakedQuad> result=new ArrayList<>();
         for(Direction source:faces())for(BakedQuad quad:sourceModel.getQuads(state==null?null:sourcePose,source,random,data,layer)){
@@ -103,7 +108,7 @@ public final class NativeMountedControlModel extends BakedModelWrapper<BakedMode
             // Hidden siblings keep their authored style; invalid mounts retain that selected flat model.
             int size=signal?(block==VandorLabsBootstrap.THRUSTER_LEVER.get()?Math.max(0,Math.min(2,visual.controlType)):defaultSize(block)):PowerLeverSize.itemChoice(visual.typedSize,visual.size,defaultSize(block));if(!signal&&!PowerLeverSize.valid(size))return NativeMountedControlModel.this;
             if(mount.height==0&&mount.tilt==0&&size==itemSize)return NativeMountedControlModel.this;
-            int key=mount.height+4*(mount.tilt+4*mount.direction)+64*size;BakedModel model=items.getIfPresent(key);if(model==null){BakedModel base=sources.items.get(size);model=new NativeMountedControlModel(base,signal?sources.blocks.get(size):block,mount,size,poses,sources,null);items.put(key,model);}return model;
+            int key=mount.height+4*(mount.tilt+4*mount.direction)+64*size;BakedModel model=items.getIfPresent(key);if(model==null){BakedModel base=sources.items.get(size);model=new NativeMountedControlModel(base,signal?sources.blocks.get(size):block,mount,size,poses,sources,null,meshes);items.put(key,model);}return model;
         }
     };
     @Override public ItemOverrides getOverrides(){return overrides;}

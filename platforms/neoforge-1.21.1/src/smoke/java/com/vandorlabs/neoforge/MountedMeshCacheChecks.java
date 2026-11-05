@@ -21,6 +21,11 @@ final class MountedMeshCacheChecks {
         }
         int children=children(current,items);Stats now=stats(current,meshes);Set<BakedModel> retained=Collections.newSetFromMap(new IdentityHashMap<>());retained.addAll(current);if(retainedOldModel!=null)retained.add(retainedOldModel);children(retained,items);Stats all=stats(retained,meshes);
         System.out.println("[vandorlabs][mounted-cache] measured listed="+listed+" itemRoots="+itemRoots+" resolvedChildren="+children+" currentWrappers="+current.size()+" currentCaches="+now.caches+" currentEntries="+now.entries+" currentWeightedBytes="+now.bytes+" cachesIncludingOld="+all.caches+" entriesIncludingOld="+all.entries+" weightedBytesIncludingOld="+all.bytes+" keyBytes="+keyBytes());
+        if("true".equals(System.getenv("VANDOR_MOUNTED_SHARED_CACHE"))){
+            long budget=16L*1024*1024;if(now.caches!=1||now.bytes>budget)throw new IllegalStateException("Mounted cache is not bounded once per generation: "+now);
+            if(all.caches!=(retainedOldModel!=null&&!current.contains(retainedOldModel)?2:1))throw new IllegalStateException("Reload reused or lost the old generation cache");
+            if(all.bytes>budget*all.caches)throw new IllegalStateException("Retained generations exceed their combined budgets");
+        }
         if(listed!=928||itemRoots!=10)throw new IllegalStateException("Incomplete mounted model cache population");
     }
     private static int children(Set<BakedModel> models,Field items)throws IllegalAccessException{int before=models.size();ArrayDeque<BakedModel> queue=new ArrayDeque<>(models);while(!queue.isEmpty()){var model=queue.removeFirst();if(model instanceof NativeMountedControlModel)for(Object child:((Cache<?,?>)items.get(model)).asMap().values())if(child instanceof BakedModel baked&&models.add(baked))queue.addLast(baked);}return models.size()-before;}
