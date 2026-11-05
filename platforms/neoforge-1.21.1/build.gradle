@@ -240,3 +240,8 @@ tasks.register('testNativeFlatWallGeometry', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.NativeFlatWallGeometryChecks'
 }
+tasks.register('testNativeBucketContext', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeBucketContextChecks'
+}

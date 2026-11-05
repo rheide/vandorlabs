@@ -1,0 +1,10 @@
+package com.vandorlabs.neoforge;
+import com.vandorlabs.neoforge.fluid.NativeBucketContext;
+import net.minecraft.core.BlockPos;
+public final class NativeBucketContextChecks {
+ private static void require(boolean ok,String why){if(!ok)throw new AssertionError(why);}
+ public static void main(String[] args)throws Exception{Object first=new Object(),second=new Object(),payload=new Object();BlockPos a=new BlockPos(-3,80,7),b=a.above();require(!NativeBucketContext.permits(first,a),"initial leak");
+  int result=NativeBucketContext.with(first,a,payload,()->{require(NativeBucketContext.incoming()==payload,"payload projection");require(NativeBucketContext.permits(first,a)&&!NativeBucketContext.permits(first,b)&&!NativeBucketContext.permits(second,a),"identity/position boundary");try{NativeBucketContext.with(second,b,()->{require(NativeBucketContext.permits(second,b)&&!NativeBucketContext.permits(first,a),"nested scope");throw new IllegalStateException("expected");});}catch(IllegalStateException expected){require(expected.getMessage().equals("expected"),"wrong exception");}require(NativeBucketContext.permits(first,a),"restore outer scope");java.util.concurrent.atomic.AtomicReference<Throwable> failure=new java.util.concurrent.atomic.AtomicReference<>();Thread thread=new Thread(()->{try{require(!NativeBucketContext.permits(first,a)&&NativeBucketContext.incoming()==null,"cross thread scope leak");}catch(Throwable problem){failure.set(problem);}});thread.start();try{thread.join();}catch(InterruptedException interrupted){throw new RuntimeException(interrupted);}require(failure.get()==null,"cross-thread failure "+failure.get());require(NativeBucketContext.incoming()==payload,"payload restored");return 7;});
+  require(result==7&&!NativeBucketContext.permits(first,a)&&NativeBucketContext.incoming()==null,"return/final cleanup");try{NativeBucketContext.with(first,a,()->{throw new AssertionError("failure");});}catch(AssertionError expected){}require(!NativeBucketContext.permits(first,a),"Error cleanup");System.out.println("Native bucket context PASS exact owner/position, nested exception restore, thread isolation, Error cleanup");
+ }
+}

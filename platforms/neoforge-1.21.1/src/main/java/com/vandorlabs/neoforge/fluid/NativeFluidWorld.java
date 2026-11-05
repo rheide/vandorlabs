@@ -108,14 +108,17 @@ public final class NativeFluidWorld {
         for(int x=x0;x<x1;x++)for(int y=y0;y<y1;y++)for(int z=z0;z<z1;z++){pos.set(x,y,z);var host=contacts.get(pos.asLong());if(host==null||!installed(host))continue;var data=host.containedFluids().snapshot();for(var cell:host.fluidVolumeSnapshot().cells()){var type=data.side(cell.side()).fluidType();if(type==null)continue;var b=cell.box();if(bounds.maxX>x+b.minX&&bounds.minX<x+b.maxX&&bounds.maxY>y+b.minY&&bounds.minY<y+b.maxY&&bounds.maxZ>z+b.minZ&&bounds.minZ<z+b.maxZ)heights.merge(type,y+b.maxY-bounds.minY,Math::max);}}
         heights.forEach(consumer);
     }
+    /** Null preserves unrelated vanilla targets; false protects an occupied or unavailable host from replacement fallback. */
+    public static Boolean bucketTarget(Level level,BlockPos pos,FluidStack incoming){if(!open(level)||!loaded(level,pos))return false;if(!(level.getBlockEntity(pos) instanceof ContainedFluidHost host))return null;host.refreshFluidGeometry();return installed(host)&&canFill(host,0,incoming);}
+    private static FluidStack incoming(net.minecraft.world.level.material.Fluid fluid){Object value=NativeBucketContext.incoming();return value instanceof FluidStack stack?stack:new FluidStack(fluid,1000);}
     /** Vanilla bucket/dispenser adapters for the current single-sided slab/stair hosts. */
     public static boolean canPlaceLiquid(BlockGetter getter,BlockPos pos,net.minecraft.world.level.material.Fluid fluid){
-        if(!(getter instanceof Level level)||!loaded(level,pos)||!(level.getBlockEntity(pos) instanceof ContainedFluidHost host))return false;
-        return canFill(host,0,new FluidStack(fluid,1000));
+        if(!(getter instanceof Level level)||!open(level)||!NativeBucketContext.permits(level,pos)||!loaded(level,pos)||!(level.getBlockEntity(pos) instanceof ContainedFluidHost host))return false;
+        host.refreshFluidGeometry();if(!installed(host))return false;FluidStack incoming=incoming(fluid);return incoming.is(fluid)&&canFill(host,0,incoming);
     }
     public static boolean placeLiquid(net.minecraft.world.level.LevelAccessor accessor,BlockPos pos,FluidState fluid){
-        if(!(accessor instanceof Level level)||!loaded(level,pos)||!(level.getBlockEntity(pos) instanceof ContainedFluidHost host))return false;
-        FluidStack incoming=fromState(fluid);if(!canFill(host,0,incoming))return false;
+        if(!(accessor instanceof Level level)||!open(level)||!NativeBucketContext.permits(level,pos)||!loaded(level,pos)||!(level.getBlockEntity(pos) instanceof ContainedFluidHost host))return false;
+        host.refreshFluidGeometry();if(!installed(host))return false;FluidStack incoming=incoming(fluid.getType());if(!canFill(host,0,incoming))return false;
         return level.isClientSide||set(host,0,incoming);
     }
     public static ItemStack pickupBlock(net.minecraft.world.level.LevelAccessor accessor,BlockPos pos){
@@ -127,7 +130,7 @@ public final class NativeFluidWorld {
     }
     @SubscribeEvent(priority=EventPriority.LOWEST) public static void bucket(PlayerInteractEvent.RightClickBlock event){
         var player=event.getEntity();Level level=player.level();BlockPos pos=event.getPos();if(!loaded(level,pos)||!(level.getBlockEntity(pos) instanceof ContainedFluidHost host))return;
-        ItemStack held=player.getItemInHand(event.getHand()),single=held.copyWithCount(1);var optional=FluidUtil.getFluidHandler(single);if(optional.isEmpty())return;var container=optional.get();Direction face=event.getHitVec().getDirection();
+        host.refreshFluidGeometry();if(!installed(host))return;ItemStack held=player.getItemInHand(event.getHand()),single=held.copyWithCount(1);var optional=FluidUtil.getFluidHandler(single);if(optional.isEmpty())return;var container=optional.get();Direction face=event.getHitVec().getDirection();
         if(!player.isAlive()||player.isSpectator()||!level.mayInteract(player,pos)||!player.mayUseItemAt(pos,face,held))return;
         Vec3 hit=event.getHitVec().getLocation().subtract(pos.getX(),pos.getY(),pos.getZ()).add(face.getStepX()*.001,face.getStepY()*.001,face.getStepZ()*.001);int side=host.containedFluidSide(hit.x,hit.y,hit.z);if(side<0||side>1)return;
         FluidStack incoming=container.drain(1000,IFluidHandler.FluidAction.SIMULATE),stored=host.containedFluids().get(side);boolean fill=!incoming.isEmpty();event.setCanceled(true);event.setCancellationResult(InteractionResult.FAIL);
@@ -141,8 +144,8 @@ public final class NativeFluidWorld {
     }
     @SubscribeEvent(priority=EventPriority.LOWEST) public static void placed(BlockEvent.EntityPlaceEvent event){
         if(!(event.getLevel() instanceof Level level)||level.isClientSide)return;
-        var snapshots=event instanceof BlockEvent.EntityMultiPlaceEvent multi?multi.getReplacedBlockSnapshots():java.util.List.of(event.getBlockSnapshot());Map<ContainedFluidHost,Placement> fills=new IdentityHashMap<>();
-        for(var snapshot:snapshots){BlockPos pos=snapshot.getPos();if(!loaded(level,pos)||!(level.getBlockEntity(pos) instanceof ContainedFluidHost host))continue;var fill=fills.computeIfAbsent(host,key->new Placement());FluidStack replaced=fromState(snapshot.getState().getFluidState());if(!replaced.isEmpty()&&!gaseous(replaced)&&fill.fallback.isEmpty())fill.fallback=replaced;
+        var snapshots=event instanceof BlockEvent.EntityMultiPlaceEvent multi?multi.getReplacedBlockSnapshots():java.util.List.of(event.getBlockSnapshot());Set<ContainedFluidHost> hosts=Collections.newSetFromMap(new IdentityHashMap<>());for(var snapshot:snapshots){BlockPos pos=snapshot.getPos();if(loaded(level,pos)&&level.getBlockEntity(pos) instanceof ContainedFluidHost host)hosts.add(host);}for(var host:hosts)if(installed(host))host.refreshFluidGeometry();Map<ContainedFluidHost,Placement> fills=new IdentityHashMap<>();
+        for(var snapshot:snapshots){BlockPos pos=snapshot.getPos();if(!loaded(level,pos)||!(level.getBlockEntity(pos) instanceof ContainedFluidHost host)||!hosts.contains(host))continue;var fill=fills.computeIfAbsent(host,key->new Placement());FluidStack replaced=fromState(snapshot.getState().getFluidState());if(!replaced.isEmpty()&&!gaseous(replaced)&&fill.fallback.isEmpty())fill.fallback=replaced;
             for(Direction direction:host.fluidPlacementFaces()){BlockPos next=pos.relative(direction);if(!loaded(level,next))continue;FluidStack adjacent=fromState(level.getFluidState(next));if(adjacent.isEmpty()||gaseous(adjacent))continue;int side=host.containedFluidSide(.5+direction.getStepX()*.51,.5+direction.getStepY()*.51,.5+direction.getStepZ()*.51);if(side>=0&&side<2)fill.sides[side]=adjacent;}}
         for(var entry:fills.entrySet()){var host=entry.getKey();var fill=entry.getValue();if(!installed(host))continue;boolean boundary=!fill.sides[0].isEmpty()||!fill.sides[1].isEmpty();for(int side=0;side<2;side++){FluidStack fluid=boundary?fill.sides[side]:fill.fallback;if(!fluid.isEmpty()&&!host.containedFluids().occupied(side)&&(host.openingFluidVolume()||host.fluidVolumeSnapshot().hasSide(side)))set(host,side,fluid);}}
     }
