@@ -43,6 +43,7 @@ public final class DiagonalHostChecks {
         for(int offset:new int[]{12,13,14,15,16}){var invalid=encoded.clone();invalid[offset]=(byte)(offset==12?3:offset==13?4:offset==14?12:offset==15?6:2);reject(event.getServer().registryAccess(),invalid);}
         var buffer=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(encoded),event.getServer().registryAccess());try{var decoded=DiagonalGeometryPayload.CODEC.decode(buffer);require(decoded.valid()&&decoded.mode()==2&&decoded.fill()==3&&decoded.join()==11&&decoded.facing()==Direction.EAST&&decoded.inverted(),"Exact geometry packet roundtrip");}finally{buffer.release();}
         if(System.getProperty("vandorlabs.diagonalReference")!=null)try{NativeDiagonalTopologyChecks.run(block,porthole,VandorLabsBootstrap.PROGRAMMABLE_WALL.get());}catch(Exception failure){throw new IllegalStateException("Actual Forge diagonal topology replay",failure);}
+        if(System.getProperty("vandorlabs.diagonalLayoutReference")!=null)try{NativeDiagonalLayoutChecks.run(block,porthole);}catch(Exception failure){throw new IllegalStateException("Actual Forge diagonal artwork grouping replay",failure);}
         System.out.println("[vandorlabs][diagonal-host] dedicated PASS checks="+checks+" local staged state/refusal projection chunk routing cached late bounds; placed-state callbacks deferred");event.getServer().halt(false);
     }
 }

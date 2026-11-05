@@ -31,6 +31,6 @@ public final class NativeDiagonalLayoutChecks {
     if(scene.get("profile").getAsString().startsWith("cap/")){int size=access.members.size();need(capture.capped()==(size>=4096)&&capture.members().size()==Math.min(size,4096),"4096 cap boundary");if(capture.capped())for(var layout:capture.layouts().values())need(layout.equals(NativePanelLayout.UNIT),"capped unit fallback");}
    }
    Member root=access.members.values().stream().filter(m->access.loaded(m.pos)).findFirst().orElseThrow();int before=access.reads;access.closed=true;try{NativeDiagonalLayouts.capture(access,root.pos,root);throw new AssertionError("closed root accepted");}catch(IllegalArgumentException expected){}need(access.reads==before,"closed discovery never reads state/members/settings");scenes++;
-  }}need(scenes==2121&&capped==18&&flipped>0,"complete profiles/cap/flips scenes="+scenes+" capped="+capped+" flipped="+flipped);System.out.println("[vandorlabs][diagonal-layout] dedicated PASS actualForgeScenes="+scenes+" queries="+queries+" checks="+checks+" capped="+capped+" flipped="+flipped+" exact artwork rectangles/UVflips and loaded guards; map replay only");
+  }}need(scenes==2121&&queries==18587&&capped==18&&flipped==2648,"complete profiles/cap/flips scenes="+scenes+" capped="+capped+" flipped="+flipped);System.out.println("[vandorlabs][diagonal-layout] dedicated PASS actualForgeScenes="+scenes+" queries="+queries+" checks="+checks+" capped="+capped+" flipped="+flipped+" exact artwork rectangles/UVflips and loaded guards; map replay only");
  }
 }
