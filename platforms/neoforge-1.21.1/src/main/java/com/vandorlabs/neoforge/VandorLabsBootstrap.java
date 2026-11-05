@@ -51,6 +51,6 @@ public final class VandorLabsBootstrap {
     }
     public VandorLabsBootstrap(IEventBus bus) {
         FilesystemMaterials.initialize();
-        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(FinishPayload::register);
+        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(FinishPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
     }
 }

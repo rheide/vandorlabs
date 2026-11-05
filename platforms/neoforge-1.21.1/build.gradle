@@ -117,3 +117,6 @@ tasks.named('check') { dependsOn 'testLegacyVanillaMaterialAliases' }
 neoForge.runs.configureEach {
     if(project.hasProperty('materialSpriteAssessment'))systemProperty 'vandorlabs.materialSpriteAssessment',project.property('materialSpriteAssessment')
 }
+neoForge.runs.configureEach {
+    if(project.hasProperty('sampledMaterialPhase'))systemProperty 'vandorlabs.sampledMaterialPhase',project.property('sampledMaterialPhase')
+}

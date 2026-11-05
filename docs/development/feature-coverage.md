@@ -34,7 +34,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Industrial table | pending | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials only) | partial | non-vehicle first |
 | Programmable armor | pending | unimplemented | non-vehicle first |
-| Filesystem and custom material workflows | partial (cube PNGs) | partial | non-vehicle first |
+| Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
 | Compatibility integrations | pending | unimplemented | non-vehicle first |
 | Segmented Doors | pending | unimplemented | non-vehicle first |
 | Copy Controllers and shared surfaces | pending | unimplemented | non-vehicle first |
@@ -53,4 +53,6 @@ The integrated native material slice provides the plain matter block, matter/all
 
 Native cubes support installed filesystem PNG discovery at startup, stable saved IDs, known-file fallback and same-open-picker portrait/wide reloads with immutable world/item model snapshots. Separate clients cover startup-missing entries and rediscovery after restart. The cube portrait oracle remains a separate smoke-only geometry fixture.
 
-Custom block sampling, configuration dispatch to other families, copy tools, carried assemblies and the full production chain remain incomplete. Reloads do not discover new files.
+Native cube inventory samples now use the shared grid without consuming items. Original vanilla material IDs resolve through actual legacy metadata normalization and Minecraft data fixers; new default-state samples use a fixed identity preimage domain, with all known collisions rejected. Door previews retain both halves. Dedicated restart, configured item/NBT, custom face/dormant overrides, survival menu input and immutable model reload checks remain distinct from exact packaged-JAR acceptance.
+
+Optional component-renderer sampling, configuration dispatch to other families, copy tools, carried assemblies and the full production chain remain incomplete. Reloads do not discover new files.

@@ -32,7 +32,7 @@
         "programmable_matter_block"
       ],
       "remaining": [
-        "Custom block material definitions and sampling",
+        "Optional component-renderer material providers and other family sampling",
         "Complete creative/search configuration across the remaining native families",
         "Carried-assembly joined faces and hardware shader-pack acceptance"
       ],
@@ -68,7 +68,7 @@
       ],
       "acceptance_limits": [
         "Development-classpath software-rendered checks; exact packaged-JAR runtime and hardware shader acceptance remain pending.",
-        "Custom block sampling, other family integration and carried assemblies remain deferred. Installed-PNG reload acceptance is separate from the test-only cube portrait oracle.",
+        "Optional component-renderer sampling, other family integration and carried assemblies remain deferred. Installed-PNG reload acceptance is separate from the test-only cube portrait oracle.",
         "Matter production and other programmable families are not implemented by this slice."
       ]
     },
@@ -757,7 +757,7 @@
       "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "remaining": [
-        "custom block sample definitions and native sampling/rendering",
+        "optional component-renderer sample providers and explicit named provenance for unknown external identities",
         "external materials across remaining block families",
         "full resource-pack and shader acceptance"
       ],
@@ -772,10 +772,12 @@
       "implemented": [
         "Shared startup-only filesystem discovery and stable saved identities used by the native cube.",
         "Installed native PNG resource pack, known-file missing fallback, same-open-picker dimension refresh and coherent immutable model snapshots.",
-        "Dedicated save/read/missing-file processes, more than 256 installed entries, real picker row/wheel/drag input, separate startup-missing-peer and restored-file restart checks."
+        "Dedicated save/read/missing-file processes, more than 256 installed entries, real picker row/wheel/drag input, separate startup-missing-peer and restored-file restart checks.",
+        "Non-consuming native cube inventory samples use the shared grid, retained normalized vanilla aliases and a fixed new-sample identity preimage; all known ID collisions are rejected.",
+        "Dedicated saved IDs and configured items, actual survival menu input, nested item NBT, custom face/dormant overrides, both door preview halves, immutable model reload and seven conflicting legacy/default material cases."
       ],
       "acceptance_limits": [
-        "Cube-only PNG workflow; custom block sampling and other family adapters remain pending.",
+        "Cube-only PNG and default-state inventory sampling; optional component providers and other family adapters remain pending.",
         "New entries require restart; reload only rereads accepted startup paths. Development-classpath software rendering does not establish exact-JAR or hardware shader acceptance."
       ]
     },

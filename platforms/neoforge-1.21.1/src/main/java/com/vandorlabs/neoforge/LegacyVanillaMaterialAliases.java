@@ -18,6 +18,7 @@ public final class LegacyVanillaMaterialAliases {
     private static final String RESOURCE="/assets/vandorlabs/data/legacy_vanilla_blocks.tsv";
     private final Map<Integer,String> names;
     private final Map<Integer,Source> choices;
+    private final Set<Integer> reserved;
     private final int[][] normalized=new int[256][];
     // Exactly one fixed-size slot per possible legacy vanilla state; no caller-controlled growth.
     private final CompoundTag[] upgraded=new CompoundTag[4096];
@@ -25,7 +26,7 @@ public final class LegacyVanillaMaterialAliases {
     public LegacyVanillaMaterialAliases(){
         var stream=LegacyVanillaMaterialAliases.class.getResourceAsStream(RESOURCE);
         if(stream==null)throw new IllegalStateException("Missing legacy vanilla block manifest");
-        var parsed=new HashMap<Integer,String>();var aliases=new HashMap<Integer,Source>();
+        var parsed=new HashMap<Integer,String>();var aliases=new HashMap<Integer,Source>();var reservedIds=new HashSet<Integer>();
         try(var reader=new BufferedReader(new InputStreamReader(stream,StandardCharsets.UTF_8))){
             for(String line;(line=reader.readLine())!=null;){
                 if(line.isBlank()||line.startsWith("#"))continue;
@@ -40,16 +41,20 @@ public final class LegacyVanillaMaterialAliases {
                     int canonical=Integer.parseInt(slots[metadata]);
                     if(canonical< -1||canonical>15)throw new IllegalStateException("Invalid canonical legacy metadata");
                     normalized[block][metadata]=canonical;
-                    if(canonical<0)continue;
                     int choice=CustomMaterialIdentity.identifier(fields[1],metadata);
+                    if(!reservedIds.add(choice))throw new IllegalStateException("Reserved legacy saved material CRC collision");
+                    if(canonical<0)continue;
                     if(aliases.putIfAbsent(choice,new Source(block,fields[1],metadata))!=null)throw new IllegalStateException("Legacy saved material CRC collision");
                 }
             }
         }catch(IOException|NumberFormatException failure){throw new IllegalStateException("Unreadable legacy vanilla block manifest",failure);}
         if(parsed.size()!=254||!"minecraft:air".equals(parsed.get(0)))throw new IllegalStateException("Incomplete legacy vanilla block manifest");
-        names=Map.copyOf(parsed);choices=Map.copyOf(aliases);
+        names=Map.copyOf(parsed);choices=Map.copyOf(aliases);reserved=Set.copyOf(reservedIds);
     }
     public int size(){return choices.size();}
+    public Set<Integer> choices(){return choices.keySet();}
+    /** Also reserves unsupported old metadata slots: a new native sample must not steal their IDs. */
+    public Set<Integer> reservedChoices(){return reserved;}
     public boolean contains(int savedChoice){return choices.containsKey(savedChoice);}
     /** Unknown IDs return null; callers retain their original saved integer and show a fallback. */
     public CompoundTag state(int savedChoice){

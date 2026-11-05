@@ -2,14 +2,15 @@
 
 ## 2.9 (development)
 
-- Support installed filesystem PNGs on the native programmable cube, using shared startup discovery and stable saved identifiers. Keep picker selections through missing-file and dimension reloads, refresh world/item UV snapshots coherently, and preserve separate startup-missing-client fallback. New file discovery still requires a restart; custom block sampling remains separate.
-- Share the exact custom block material saved-ID calculation, retaining legacy caller metadata normalization and literal previous-save identity fixtures. Add an actual vanilla 1.12.2 block-registry manifest and strict native data-fixer alias prerequisite; native custom block sampling remains deferred.
+- Support installed filesystem PNGs on the native programmable cube, using shared startup discovery and stable saved identifiers. Keep picker selections through missing-file and dimension reloads, refresh world/item UV snapshots coherently, and preserve separate startup-missing-client fallback. New file discovery still requires a restart; the PNG workflow remains separate from inventory block sampling.
+- Share the exact custom block material saved-ID calculation, retaining legacy caller metadata normalization and literal previous-save identity fixtures. Add an actual vanilla 1.12.2 block-registry manifest and strict native data-fixer aliases, preserving requested saved IDs while resolving the actual normalized legacy states.
 
 - Share programmable dialog panel dimensions and material-picker scrolling across block families and both targets. Cube Appearance and Trigger tabs, labels and edit transitions use common control descriptors while retaining their existing layouts, reverse cycling and immediate submissions. Share housing face-plane and packed-light calculations while preserving legacy discovery and light sampling.
 
 - Share Trigger and housing save contracts while preserving legacy missing-field defaults, material migrations, six face overrides and dormant Trigger playback data. Add a focused Trigger dialog regression without running unrelated gameplay fixtures.
 
-- Add the experimental NeoForge plain matter block and matter/alloy ingots with canonical recipes, artwork and native persistence/interaction checks. Add the native programmable cube editor with built-in material search, six face overrides, all three layouts, bounded joined images and configuration-preserving items. Creative shift-click and the main-hand Configurizer share its authenticated menu. Custom block sampling, other families and the production chain remain incomplete.
+- Add the experimental NeoForge plain matter block and matter/alloy ingots with canonical recipes, artwork and native persistence/interaction checks. Add the native programmable cube editor with built-in material search, six face overrides, all three layouts, bounded joined images and configuration-preserving items. Creative shift-click and the main-hand Configurizer share its authenticated menu. Other programmable families and the production chain remain incomplete.
+- Add native cube inventory sampling with the shared non-consuming grid, default-state block artwork and both door preview halves. New samples use a fixed `flattened-block:` identity preimage; old vanilla aliases keep their saved appearance. Preserve configured item and face settings through reopen, restart, unavailable artwork and resource reloads. Optional component-renderer adapters remain deferred.
 - Share saved material-ID validation while retaining unavailable custom and filesystem artwork identities.
 
 - Share existing layout, porthole geometry, category and glass/light material definitions between the independent Java 8 and Java 21 builds without changing their legacy behavior.

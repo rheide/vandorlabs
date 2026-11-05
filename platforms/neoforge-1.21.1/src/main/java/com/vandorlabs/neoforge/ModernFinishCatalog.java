@@ -11,6 +11,8 @@ public final class ModernFinishCatalog {
     public record Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v){}
     public static final List<Entry> ENTRIES;
     private static final java.util.Map<Integer,Entry> REGISTERED=new java.util.concurrent.ConcurrentHashMap<>();
+    private static volatile java.util.Map<Integer,Entry> CUSTOM=java.util.Map.of();
+    public static void publishCustom(java.util.Map<Integer,Entry> entries){CUSTOM=java.util.Map.copyOf(entries);}
     private static volatile java.util.Map<Integer,Entry> FILESYSTEM=java.util.Map.of();
     static {
         var stream=ModernFinishCatalog.class.getResourceAsStream("/assets/vandorlabs/data/housing_finishes.json");
@@ -44,7 +46,7 @@ public final class ModernFinishCatalog {
     public static Entry option(int choice){return choice>=0&&choice<ENTRIES.size()?ENTRIES.get(choice):entry(choice);}
     public static boolean validChoice(int choice){return MaterialChoicePolicy.valid(choice,ENTRIES.size());}
     public static int storedChoice(int choice){return choice>=MaterialChoicePolicy.CUSTOM_BASE?choice:choice>=0&&choice<ENTRIES.size()?ENTRIES.get(choice).canonical():0;}
-    public static int renderChoice(int choice){int value=storedChoice(choice);return value<ENTRIES.size()||REGISTERED.containsKey(value)||FILESYSTEM.containsKey(value)?value:0;}
-    public static Entry entry(int choice){int index=renderChoice(choice);return FILESYSTEM.getOrDefault(index,REGISTERED.getOrDefault(index,ENTRIES.get(index<ENTRIES.size()?index:0)));}
+    public static int renderChoice(int choice){int value=storedChoice(choice);return value<ENTRIES.size()||REGISTERED.containsKey(value)||FILESYSTEM.containsKey(value)||CUSTOM.containsKey(value)?value:0;}
+    public static Entry entry(int choice){int index=renderChoice(choice);return CUSTOM.getOrDefault(index,FILESYSTEM.getOrDefault(index,REGISTERED.getOrDefault(index,ENTRIES.get(index<ENTRIES.size()?index:0))));}
     private ModernFinishCatalog(){}
 }
