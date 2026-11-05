@@ -30,6 +30,11 @@ def main():
         target = OUT / 'assets/vandorlabs' / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(value, indent=2) + '\n')
+    recipe=json.loads((SOURCE/'recipes/programmable_wall.json').read_text())
+    recipe['result']['id']=recipe['result'].pop('item')
+    target=OUT/'data/vandorlabs/recipe/programmable_wall.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(recipe)+'\n')
+    loot={'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:programmable_wall','functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]}
+    target=OUT/'data/vandorlabs/loot_table/blocks/programmable_wall.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(loot)+'\n')
     print('Native plain panel assets: 24 canonical variants, current item geometry; existing housing/metal atlas reused')
 
 
