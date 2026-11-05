@@ -5,8 +5,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.BlockPos;
-final class StairDialogLiveChecks {
-    private static final BlockPos POS=new BlockPos(300,40,146);private static int ticks;
+public final class StairDialogLiveChecks {
+    private static final BlockPos POS=new BlockPos(300,40,146);private static int ticks;private static boolean captured;
     @SuppressWarnings("unchecked") private static java.util.List<GuiButton> buttons(GuiProgrammableWall gui){try{java.lang.reflect.Field field=net.minecraftforge.fml.relauncher.ReflectionHelper.findField(net.minecraft.client.gui.GuiScreen.class,"buttonList","field_146292_n");return (java.util.List<GuiButton>)field.get(gui);}catch(IllegalAccessException failure){throw new IllegalStateException(failure);}}
     private static GuiButton button(GuiProgrammableWall gui,int id){return buttons(gui).stream().filter(b->b.id==id).findFirst().orElseThrow(()->new IllegalStateException("Missing stair control "+id));}
     static boolean tick(Minecraft mc,java.io.File output)throws Exception{
@@ -27,12 +27,25 @@ final class StairDialogLiveChecks {
         }
         if(ticks==70){
             check(mc,1,1);GuiProgrammableWall gui=(GuiProgrammableWall)mc.currentScreen;
-            mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();gui.drawScreen(-1,-1,0);
-            javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new java.io.File(output,"stair-size-sideways-dialog.png"));
-            GuiButton orientation=button(gui,131);gui.mouseClicked(orientation.x+4,orientation.y+8,1);
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new Capture(output));
+        }
+        if(ticks==72){
+            if(!captured)throw new IllegalStateException("Stair dialog normal rendered frame was not captured");
+            GuiProgrammableWall gui=(GuiProgrammableWall)mc.currentScreen;GuiButton orientation=button(gui,131);gui.mouseClicked(orientation.x+4,orientation.y+8,1);
         }
         if(ticks==90){check(mc,1,0);GuiProgrammableWall gui=(GuiProgrammableWall)mc.currentScreen;GuiButton slider=button(gui,130);gui.mouseClicked(slider.x+slider.width-4,slider.y+10,0);gui.mouseReleased(slider.x+slider.width-4,slider.y+10,0);}
         if(ticks==110){check(mc,8,0);mc.player.closeScreen();System.out.println("[vandorlabs][reprolab] stair-dialog-live PASS real server container slider packet left/right orientation updates synchronized geometry");return true;}return ticks>110;
+    }
+    public static final class Capture {
+        private final java.io.File output;
+        Capture(java.io.File output){this.output=output;}
+        @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public void rendered(net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent event){
+            if(event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END)return;
+            Minecraft mc=Minecraft.getMinecraft();if(!(mc.currentScreen instanceof GuiProgrammableWall))return;
+            try{javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new java.io.File(output,"stair-size-sideways-dialog.png"));captured=true;}
+            catch(java.io.IOException failure){throw new IllegalStateException("Stair dialog rendered capture",failure);}
+            finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(this);}
+        }
     }
     private static void check(Minecraft mc,int tread,int roll)throws Exception{
         mc.getIntegratedServer().addScheduledTask(()->{
