@@ -27,19 +27,23 @@ public class ProgrammableShapeEntity extends ProgrammableBlockEntity implements 
     private static final com.vandorlabs.neoforge.fluid.NativeFluidVolume EMPTY_VOLUME=com.vandorlabs.neoforge.fluid.NativeFluidVolume.build(java.util.List.of(new net.minecraft.world.phys.AABB(0,0,0,1,1,1)),com.vandorlabs.neoforge.fluid.NativeFluidVolume.SINGLE_SIDE);
     private volatile com.vandorlabs.neoforge.fluid.NativeFluidVolume volume=EMPTY_VOLUME;
     private volatile com.vandorlabs.neoforge.fluid.NativeFluidRenderSnapshot fluidRender=com.vandorlabs.neoforge.fluid.NativeFluidRenderSnapshot.EMPTY;
-    private BlockState volumeState;private int volumeStairs;private long geometryRevision;
+    private BlockState volumeState;private long volumeSettings,geometryRevision;
     private final boolean stair;
     private StairState stairState=new StairState(8,0);
     private volatile Appearance appearance;
     public ProgrammableShapeEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean stair){
-        super(type,pos,state,defaults());this.stair=stair;publishAppearance();
+        super(type,pos,state,defaults());this.stair=stair;appearance=new Appearance(settings(),sideTexture(),stairState);
     }
     public final boolean isStair(){return stair;}
     public final StairState stairState(){return stairState;}
     /** Owned slots; gameplay mutations and publication use the contained-fluid service. */
     public final com.vandorlabs.neoforge.fluid.NativeFluidSlots containedFluids(){return fluids;}
     public final Appearance appearance(){return appearance;}
-    private void publishAppearance(){appearance=new Appearance(settings(),sideTexture(),stairState);}
+    private void publishAppearance(){appearance=new Appearance(settings(),sideTexture(),stairState);appearancePublished();}
+    /** Subclasses publish their own immutable projection here, before any notification. Never called by this constructor. */
+    protected void appearancePublished(){ }
+    /** End a family transaction after all of its local fields have been installed. */
+    protected final void publishShapeChange(){publishAppearance();refresh();com.vandorlabs.neoforge.fluid.NativeFluidWorld.queue(this);}
     /** Only the authenticated server handler may invoke live edits. No saved-value normalization here. */
     public boolean applyShape(Appearance next){
         if(next==null||!next.valid())return false;
@@ -49,7 +53,7 @@ public class ProgrammableShapeEntity extends ProgrammableBlockEntity implements 
         setSideTexture(side);
         if(stairState.tread!=next.stairs.tread||stairState.roll!=next.stairs.roll)stairState=next.stairs;
         boolean housingChanged=updateSettings(next.housing);
-        if(changed||housingChanged){publishAppearance();refresh();com.vandorlabs.neoforge.fluid.NativeFluidWorld.queue(this);}
+        if(changed||housingChanged)publishShapeChange();
         return true;
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
@@ -66,11 +70,16 @@ public class ProgrammableShapeEntity extends ProgrammableBlockEntity implements 
     @Override public long fluidGeometryRevision(){return geometryRevision;}
     @Override public int containedFluidSide(double x,double y,double z){return 0;}
     @Override public void containedFluidsChanged(){refresh();}
+    /** A local key; topology-aware families include their prepared topology revision here. */
+    protected long fluidGeometryKey(){return stairState.packed();}
+    /** Called on the deferred owning thread; returned solids must be local unit-cell geometry. */
+    protected java.util.List<net.minecraft.world.phys.AABB> fluidSolidBoxes(BlockState state,long key){
+        return state.getBlock() instanceof NativeProgrammableSlab?NativeProgrammableSlab.solidBoxes(state):state.getBlock() instanceof NativeProgrammableStairs?NativeProgrammableStairs.solidBoxes(state,(int)key):EMPTY_VOLUME.solids();
+    }
     @Override public void refreshFluidGeometry(){
-        BlockState state=getBlockState();int packed=stairState.packed();
-        if(volumeState==state&&volumeStairs==packed)return;
-        java.util.List<net.minecraft.world.phys.AABB> solid=state.getBlock() instanceof NativeProgrammableSlab?NativeProgrammableSlab.solidBoxes(state):state.getBlock() instanceof NativeProgrammableStairs?NativeProgrammableStairs.solidBoxes(state,packed):java.util.List.of(new net.minecraft.world.phys.AABB(0,0,0,1,1,1));
-        volume=com.vandorlabs.neoforge.fluid.NativeFluidVolume.build(solid,com.vandorlabs.neoforge.fluid.NativeFluidVolume.SINGLE_SIDE);volumeState=state;volumeStairs=packed;geometryRevision++;
+        BlockState state=getBlockState();long key=fluidGeometryKey();
+        if(volumeState==state&&volumeSettings==key)return;
+        volume=com.vandorlabs.neoforge.fluid.NativeFluidVolume.build(fluidSolidBoxes(state,key),com.vandorlabs.neoforge.fluid.NativeFluidVolume.SINGLE_SIDE);volumeState=state;volumeSettings=key;geometryRevision++;
     }
     @Override public void onLoad(){super.onLoad();com.vandorlabs.neoforge.fluid.NativeFluidWorld.queue(this);}
     @Override public void setRemoved(){com.vandorlabs.neoforge.fluid.NativeFluidWorld.removed(this);super.setRemoved();}
