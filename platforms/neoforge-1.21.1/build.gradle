@@ -397,3 +397,7 @@ tasks.register('testNativeJoinedDiagonalPortholes', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('fullPortholeReference')) systemProperty 'vandorlabs.fullPortholeReference', file(project.property('fullPortholeReference')).absolutePath
 }
+
+neoForge.runs.configureEach {
+    if (project.hasProperty('diagonalPortholeReference')) systemProperty 'vandorlabs.diagonalPortholeReference', file(project.property('diagonalPortholeReference')).absolutePath
+}
