@@ -21,6 +21,16 @@ public final class PanelMeshTransform {
         }
         return !body;
     }
+    /** Remove shared caps while retaining input identity when no complete quad is removed. */
+    public static float[] withoutPlane(float[] vertices,int axis,float plane){
+        float[] result=new float[vertices.length];int used=0;
+        for(int offset=0;offset<vertices.length;offset+=32) {
+            boolean onPlane=true;
+            for(int v=0;v<4;v++)onPlane &= Math.abs(vertices[offset+v*8+axis]-plane)<1E-5;
+            if(!onPlane){System.arraycopy(vertices,offset,result,used,32);used+=32;}
+        }
+        return used==vertices.length?vertices:Arrays.copyOf(result,used);
+    }
     public static float[] transform(float[] vertices,int turns,double depth,double left,double width){
         float[] data=vertices.clone();
         for(int i=0;i<data.length;i+=8) {

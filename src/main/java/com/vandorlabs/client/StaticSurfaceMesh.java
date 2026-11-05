@@ -85,13 +85,7 @@ final class StaticSurfaceMesh {
 
     /** Remove a shared cap once when caching joined transparent panel geometry. */
     StaticSurfaceMesh withoutPlane(int axis,float plane) {
-        float[] result=new float[vertices.length];int used=0;
-        for(int offset=0;offset<vertices.length;offset+=32) {
-            boolean onPlane=true;
-            for(int v=0;v<4;v++)onPlane &= Math.abs(vertices[offset+v*8+axis]-plane)<1E-5;
-            if(!onPlane){System.arraycopy(vertices,offset,result,used,32);used+=32;}
-        }
-        return used==vertices.length?this:new StaticSurfaceMesh(Arrays.copyOf(result,used));
+        float[] result=com.vandorlabs.render.PanelMeshTransform.withoutPlane(vertices,axis,plane);return result==vertices?this:new StaticSurfaceMesh(result);
     }
 
     /** One-pixel rails on the pane faces, using the regular glass frame artwork. */

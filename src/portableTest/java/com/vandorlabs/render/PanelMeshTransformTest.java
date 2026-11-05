@@ -18,6 +18,7 @@ public final class PanelMeshTransformTest {
             float[] connector=central.clone();connector[2]+=3;need(Arrays.equals(connector,PanelMeshTransform.diagonalArms(connector,mode,inverted,Double.NaN,Double.NaN)),"one outside vertex retains whole original quad including UV and normals");
             float[] snapshot=connector.clone();PanelMeshTransform.diagonalArms(connector,mode,inverted,Double.NaN,Double.NaN);need(Arrays.equals(connector,snapshot),"connector source stays immutable");
         }
+        need(PanelMeshTransform.withoutPlane(source,2,6).length==0,"complete planar quad removed");need(PanelMeshTransform.withoutPlane(source,2,7)==source,"absent cap preserves source identity");float[] bent=source.clone();bent[2]=6.00002F;need(PanelMeshTransform.withoutPlane(bent,2,6)==bent,"one vertex outside strict tolerance preserves whole quad");
         System.out.println("PASS: panel donor transforms, UV ownership, float surface partition and exact opaque-stem closure");
     }
     private static void need(boolean value,String message){if(!value)throw new AssertionError(message);}

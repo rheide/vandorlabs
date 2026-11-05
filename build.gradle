@@ -1543,6 +1543,7 @@ task testDiagonalGlassFrameAdapters(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.DiagonalGlassFrameChecks'
     systemProperty 'vandorlabs.diagonalFrameProfile', project.hasProperty('diagonalFrameProfile')
+    if (project.hasProperty('diagonalGlassReference')) systemProperty 'vandorlabs.diagonalGlassReference', file(project.property('diagonalGlassReference')).absolutePath
     maxHeapSize = '1G'
 }
 check.dependsOn testDiagonalGlassFrameAdapters
