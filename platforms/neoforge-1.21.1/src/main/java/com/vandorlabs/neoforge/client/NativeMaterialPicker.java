@@ -26,6 +26,7 @@ public final class NativeMaterialPicker {
     private List<Integer> rows=List.of();
     private int scroll,dragOffset;
     private boolean dragging;
+    private boolean sampling=true;
     public static final int CUSTOM_ROW=Integer.MIN_VALUE;
     private NativeInventorySamplePicker inventoryPicker;
     public NativeInventorySamplePicker inventoryPicker(){return inventoryPicker;}
@@ -40,11 +41,16 @@ public final class NativeMaterialPicker {
         reveal();
     }
     /** The legacy frame sentinel is an actual material row, separate from encoded category rows. */
-    public NativeMaterialPicker originalArtwork(String texture){
-        if(!special.containsKey(-1)){special.put(-1,new ModernFinishCatalog.Entry("original_artwork","Original artwork","Frame",true,false,-1,texture,1,1));options.add(0,-1);groups.computeIfAbsent("Frame",key->new ArrayList<>()).add(-1);}
+    public NativeMaterialPicker originalArtwork(String texture){return specialMaterial(-1,"Original artwork","Frame",texture);}
+    /** UI-only negative choices retain insertion/search order and never become category rows. */
+    public NativeMaterialPicker specialMaterial(int id,String label,String category,String texture){
+        if(id>=0||id<=-200000)throw new IllegalArgumentException("Special material ID overlaps category domain");
+        if(!special.containsKey(id)){special.put(id,new ModernFinishCatalog.Entry("picker_"+id,label,category,true,false,-1,texture,1,1));options.add(special.size()-1,id);groups.computeIfAbsent(category,key->new ArrayList<>()).add(id);}
         categories=List.copyOf(TextureListLayout.categories(groups.keySet()));
         for(var group:groups.values())group.sort((a,b)->TextureListLayout.compareOptions(label(a),a,label(b),b));reveal();return this;
     }
+    /** Glass finish lists intentionally omit the inventory sampler in the current editor. */
+    public NativeMaterialPicker sampling(boolean enabled){sampling=enabled;if(!enabled)closeInventory();if(search!=null)rebuildRows();return this;}
     private boolean option(int id){return id>=0||special.containsKey(id);}
     private ModernFinishCatalog.Entry entry(int id){var value=special.get(id);return value==null?ModernFinishCatalog.option(id):value;}
     private String label(int id){return entry(id).label();}
@@ -67,7 +73,7 @@ public final class NativeMaterialPicker {
     private void rebuildRows(){List<Integer> next=new ArrayList<>();String query=search==null?"":TextureListLayout.normalizeQuery(search.getValue());
         if(query.isEmpty())TextureListLayout.appendCategories(next,categories,groups,expanded,id->id);
         else for(int id:options){var entry=entry(id);if(TextureListLayout.matches(query,entry.label(),entry.category(),entry.texture()))next.add(id);}
-        next.add(CUSTOM_ROW);rows=List.copyOf(next);scroll=Math.max(0,Math.min(maximum(),scroll));
+        if(sampling)next.add(CUSTOM_ROW);rows=List.copyOf(next);scroll=Math.max(0,Math.min(maximum(),scroll));
     }
     public int top(){return y+22;}
     public int visible(){return Math.max(1,allocatedRows-1);}
