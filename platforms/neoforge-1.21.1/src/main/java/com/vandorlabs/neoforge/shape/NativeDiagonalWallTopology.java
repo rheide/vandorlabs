@@ -44,6 +44,11 @@ public final class NativeDiagonalWallTopology {
         if(host.wallAppearance().geometry() instanceof NativeDiagonalWallGeometry.Geometry current&&current.pose().equals(pose))return;
         host.publishGeometry(NativeDiagonalWallGeometry.build(pose),host.fluidGeometryRevision()+1);
     }
+    static boolean solid(Level level,BlockPos pos,BlockState state){return solid(new LevelAccess(level),pos,state);}
+    static boolean solid(Access access,BlockPos pos,BlockState state){
+        if(!(state.getBlock() instanceof NativeDiagonalWallBlock block)||!block.isPorthole()||mode(access,pos)!=1||settings(access,pos).join!=0)return false;
+        var join=corner(access,pos,state,1);return join!=null&&join.frontRight()!=null&&join.backRight()!=null&&!join.frontRight().equals(join.backRight())&&join.straightLeft()!=join.straightRight();
+    }
     private static boolean flat(BlockState state){return state.getBlock() instanceof NativeFlatWallBlock;}
     private static boolean diagonal(BlockState state){return state.getBlock() instanceof NativeDiagonalWallBlock;}
     private static boolean plainDiagonal(BlockState state){return state.getBlock() instanceof NativeDiagonalWallBlock block&&!block.isPorthole();}

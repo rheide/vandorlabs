@@ -18,6 +18,7 @@ final class NativeDiagonalLayouts {
         com.vandorlabs.persistence.WallSettings settings(M member);
         int mainTexture(M member);
         int textureLayout(M member);
+        boolean solid(BlockPos pos,M member);
     }
     private record LevelAccess(Level level) implements Access<NativeWallEntity> {
         public boolean loaded(BlockPos pos){return NativeFluidWorld.loaded(level,pos);}
@@ -27,38 +28,51 @@ final class NativeDiagonalLayouts {
         public com.vandorlabs.persistence.WallSettings settings(NativeWallEntity host){return host.wallSettings();}
         public int mainTexture(NativeWallEntity host){return host.settings().mainTexture;}
         public int textureLayout(NativeWallEntity host){return host.settings().layout;}
+        public boolean solid(BlockPos pos,NativeWallEntity host){return NativeDiagonalWallTopology.solid(level,pos,host.getBlockState());}
     }
     record Capture<M>(Map<BlockPos,M> members,Map<Long,NativePanelLayout> layouts,boolean capped) {}
     private static <M> int mode(Access<M> access,M member){var settings=access.settings(member);return com.vandorlabs.persistence.WallSettings.geometry(settings.halfHeight,settings.fullWidth);}
 
-    static NativePanelLayout layout(NativeWallEntity root){
+    static NativePanelLayout layout(NativeWallEntity root){return query(root,NativePanelGroups.Mode.MATERIAL);}
+    private static NativeWallLayouts.Group group(NativeWallEntity host,NativePanelGroups.Mode mode){return mode==NativePanelGroups.Mode.MATERIAL?host.textureGroup:host.apertureGroup;}
+    private static void group(NativeWallEntity host,NativePanelGroups.Mode mode,NativeWallLayouts.Group group){if(mode==NativePanelGroups.Mode.MATERIAL)host.textureGroup=group;else host.apertureGroup=group;}
+    static NativePortholeLayout aperture(NativeWallEntity root){
+        Level level=root.getLevel();int shape=root.wallSettings().portholeShape;
+        if(level==null||!level.isClientSide)return NativePortholeLayout.unit(shape);
+        var access=new LevelAccess(level);boolean solid=access.solid(root.getBlockPos(),root);
+        NativePanelLayout pane=query(root,NativePanelGroups.Mode.APERTURE);
+        if(solid)return NativePortholeLayout.solidUnit(shape);
+        return NativePortholeLayout.contacts(pane,shape,contacts(access,root.getBlockPos(),root),0);
+    }
+    private static NativePanelLayout query(NativeWallEntity root,NativePanelGroups.Mode queryMode){
         Level level=root.getLevel();if(level==null||!level.isClientSide)return NativePanelLayout.UNIT;
-        var old=root.textureGroup;
+        var old=group(root,queryMode);
         if(old!=null&&old.valid&&!membershipValid(root,old))old.valid=false;
         if(old!=null&&!old.valid&&!old.queued){old.queued=true;for(long packed:old.layouts.keySet()){BlockPos pos=BlockPos.of(packed);if(NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity member)NativeFluidWorld.queue(member);}}
-        if(root.settings().layout==0){root.textureGroup=null;return NativePanelLayout.UNIT;}
+        if(queryMode==NativePanelGroups.Mode.MATERIAL?root.settings().layout==0:!root.wallSettings().joinPortholes||new LevelAccess(level).solid(root.getBlockPos(),root)){group(root,queryMode,null);return NativePanelLayout.UNIT;}
         if(old!=null&&old.valid)return old.layouts.getOrDefault(root.getBlockPos().asLong(),NativePanelLayout.UNIT);
-        var captured=capture(new LevelAccess(level),root.getBlockPos(),root);
+        var captured=capture(new LevelAccess(level),root.getBlockPos(),root,queryMode);
         Map<BlockPos,NativeWallEntity> members=captured.members();Map<Long,NativePanelLayout> layouts=captured.layouts();
-        var group=new NativeWallLayouts.Group(NativePanelGroups.Mode.MATERIAL,layouts,captured.capped());
+        var group=new NativeWallLayouts.Group(queryMode,layouts,captured.capped());
         for(var entry:members.entrySet()){
-            NativeWallEntity member=entry.getValue();var previous=member.textureGroup;
+            NativeWallEntity member=entry.getValue();var previous=group(member,queryMode);
             if(previous!=null&&previous!=group){previous.valid=false;for(long packed:previous.layouts.keySet()){BlockPos pos=BlockPos.of(packed);if(!members.containsKey(pos)&&NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity excluded)NativeFluidWorld.queue(excluded);}}
-            member.textureGroup=group;if(member!=root)NativeFluidWorld.queue(member);
+            group(member,queryMode,group);if(member!=root)NativeFluidWorld.queue(member);
         }
         return layouts.getOrDefault(root.getBlockPos().asLong(),NativePanelLayout.UNIT);
     }
     private static boolean membershipValid(NativeWallEntity root,NativeWallLayouts.Group group){
         var access=new LevelAccess(root.getLevel());
-        for(BlockPos next:candidates(access,root.getBlockPos(),root)){boolean contains=group.layouts.containsKey(next.asLong()),matches=compatible(access,root.getBlockPos(),root,next)!=null;if(contains&&!matches||!contains&&matches&&!group.capped)return false;}return true;
+        for(BlockPos next:candidates(access,root.getBlockPos(),root)){boolean contains=group.layouts.containsKey(next.asLong()),matches=compatible(access,root.getBlockPos(),root,next,group.mode)!=null;if(contains&&!matches||!contains&&matches&&!group.capped)return false;}return true;
     }
-    static <M> Capture<M> capture(Access<M> access,BlockPos origin,M root){
+    static <M> Capture<M> capture(Access<M> access,BlockPos origin,M root){return capture(access,origin,root,NativePanelGroups.Mode.MATERIAL);}
+    static <M> Capture<M> capture(Access<M> access,BlockPos origin,M root,NativePanelGroups.Mode queryMode){
         if(!access.loaded(origin))throw new IllegalArgumentException("Loaded diagonal artwork root required");
         Map<BlockPos,M> members=new LinkedHashMap<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();members.put(origin,root);queue.add(origin);
-        while(!queue.isEmpty()&&members.size()<NativePanelGroups.LIMIT){
+        while((queryMode==NativePanelGroups.Mode.MATERIAL||access.settings(root).joinPortholes&&!access.solid(origin,root))&&!queue.isEmpty()&&members.size()<NativePanelGroups.LIMIT){
             BlockPos current=queue.removeFirst();M member=members.get(current);
             for(BlockPos next:candidates(access,current,member)){
-                if(members.containsKey(next))continue;M other=compatible(access,current,member,next);if(other==null)continue;members.put(next,other);queue.add(next);if(members.size()>=NativePanelGroups.LIMIT)break;
+                if(members.containsKey(next))continue;M other=compatible(access,current,member,next,queryMode);if(other==null)continue;members.put(next,other);queue.add(next);if(members.size()>=NativePanelGroups.LIMIT)break;
             }
         }
         BlockPos first=Collections.min(members.keySet());Direction basis=access.localState(members.get(first)).getValue(NativePanelBlock.FACING),right=basis.getClockWise();boolean half=mode(access,root)==2;Direction up=half?basis.getOpposite():Direction.UP;
@@ -66,6 +80,7 @@ final class NativeDiagonalLayouts {
         Map<Long,NativePanelLayout> layouts=NativePanelGroups.partition(members.keySet(),right,up,capped,
                 pos->access.localState(members.get(pos)).getValue(NativePanelBlock.FACING).getClockWise()!=right,
                 pos->half&&access.localState(members.get(pos)).getValue(NativePanelBlock.FACING).getOpposite()!=up);
+        if(capped&&queryMode==NativePanelGroups.Mode.APERTURE){Map<Long,NativePanelLayout> reflected=new HashMap<>();for(var entry:members.entrySet()){var state=access.localState(entry.getValue());Direction face=state.getValue(NativePanelBlock.FACING);reflected.put(entry.getKey().asLong(),new NativePanelLayout(0,0,1,1,face.getClockWise()!=right,half&&face.getOpposite()!=up));}layouts=Map.copyOf(reflected);}
         return new Capture<>(Collections.unmodifiableMap(members),layouts,capped);
     }
     private static <M> List<BlockPos> candidates(Access<M> access,BlockPos pos,M host){
@@ -73,16 +88,23 @@ final class NativeDiagonalLayouts {
         List<BlockPos> result=new ArrayList<>(8);result.add(pos.relative(right));result.add(pos.relative(right.getOpposite()));Direction row=mode==2?facing.getOpposite():Direction.UP,normal=mode==2?Direction.UP:facing.getOpposite();
         for(boolean positive:new boolean[]{false,true})for(int offset=-1;offset<=1;offset++)result.add(pos.relative(row,positive?1:-1).relative(normal,offset));return result;
     }
-    private static <M> M compatible(Access<M> access,BlockPos rootPos,M root,BlockPos next){
+    private static <M> M compatible(Access<M> access,BlockPos rootPos,M root,BlockPos next,NativePanelGroups.Mode queryMode){
         if(!access.loaded(next))return null;BlockState a=access.localState(root),b=access.state(next);
         if(a.getBlock()!=b.getBlock())return null;M other=access.member(next);if(other==null)return null;
-        if(access.mainTexture(root)!=access.mainTexture(other)||access.textureLayout(root)!=access.textureLayout(other)||access.settings(root).fill!=access.settings(other).fill)return null;
+        if(queryMode==NativePanelGroups.Mode.MATERIAL){if(access.mainTexture(root)!=access.mainTexture(other)||access.textureLayout(root)!=access.textureLayout(other)||access.settings(root).fill!=access.settings(other).fill)return null;}
+        else{var ar=access.settings(root);var br=access.settings(other);if(!ar.joinPortholes||!br.joinPortholes||ar.portholeShape!=br.portholeShape||ar.halfHeight!=br.halfHeight||ar.fullWidth!=br.fullWidth||access.solid(rootPos,root)||access.solid(next,other))return null;}
         Direction af=a.getValue(NativePanelBlock.FACING),bf=b.getValue(NativePanelBlock.FACING);if(af.getAxis()!=bf.getAxis())return null;
         int mode=mode(access,root);if(mode!=mode(access,other))return null;
         BlockPos delta=next.subtract(rootPos);boolean ai=a.getValue(NativeDiagonalWallBlock.INVERTED),bi=b.getValue(NativeDiagonalWallBlock.INVERTED);double normal=NativeDiagonalWallTopology.axis(delta,af.getOpposite());
         if(DiagonalPanelContact.samePlane(mode,ai,bi,bf!=af,delta.getY(),normal))return other;
         int row=NativeDiagonalWallTopology.axis(delta,mode==2?af.getOpposite():Direction.UP);
         return Math.abs(row)==1&&NativeDiagonalWallTopology.axis(delta,af.getClockWise())==0&&DiagonalPanelContact.endsMeet(mode,ai,bi,bf!=af,delta.getY(),normal,row>0)?other:null;
+    }
+    static <M> int contacts(Access<M> access,BlockPos origin,M root){
+        Direction facing=access.localState(root).getValue(NativePanelBlock.FACING),right=facing.getClockWise(),row=mode(access,root)==2?facing.getOpposite():Direction.UP,normal=mode(access,root)==2?Direction.UP:facing.getOpposite();int mask=0;
+        if(compatible(access,origin,root,origin.relative(right.getOpposite()),NativePanelGroups.Mode.APERTURE)!=null)mask|=1;
+        if(compatible(access,origin,root,origin.relative(right),NativePanelGroups.Mode.APERTURE)!=null)mask|=2;
+        for(boolean upper:new boolean[]{false,true})for(int offset=-1;offset<=1;offset++)if(compatible(access,origin,root,origin.relative(row,upper?1:-1).relative(normal,offset),NativePanelGroups.Mode.APERTURE)!=null){mask|=upper?8:4;break;}return mask;
     }
     private NativeDiagonalLayouts(){}
 }

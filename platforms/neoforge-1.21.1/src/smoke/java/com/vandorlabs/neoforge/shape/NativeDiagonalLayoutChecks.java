@@ -22,6 +22,7 @@ public final class NativeDiagonalLayoutChecks {
   public WallSettings settings(Member m){check(m.pos);return m.settings;}
   public int mainTexture(Member m){check(m.pos);return m.art;}
   public int textureLayout(Member m){check(m.pos);return m.layout;}
+  public boolean solid(BlockPos p,Member m){throw new AssertionError("Material query must not inspect aperture topology");}
  }
  public static void run(NativeDiagonalWallBlock plain,NativeDiagonalWallBlock port)throws Exception{
   int scenes=0;try(var lines=Files.lines(Paths.get(System.getProperty("vandorlabs.diagonalLayoutReference")))){for(String line:(Iterable<String>)lines::iterator){JsonObject scene=JsonParser.parseString(line).getAsJsonObject();key="scene"+scenes+" "+scene.get("profile");MapAccess access=new MapAccess();access.limited=scene.get("chunkLimited").getAsBoolean();
