@@ -101,6 +101,8 @@ def main():
     metal.parent.mkdir(parents=True,exist_ok=True)
     shutil.copy2(source_texture('programmable_glass/metal_side'),metal)
     atlas.append(dict(type='minecraft:single',resource='vandorlabs:frame-default/metal_side'))
+    from generate_panel_resources import generate_glass_palette
+    atlas.extend(generate_glass_palette(ROOT,OUT))
     from generate_mounted_control_resources import generate as generate_controls
     atlas.extend(generate_controls(ROOT,OUT))
     from generate_shape_gameplay_resources import generate as generate_shapes
