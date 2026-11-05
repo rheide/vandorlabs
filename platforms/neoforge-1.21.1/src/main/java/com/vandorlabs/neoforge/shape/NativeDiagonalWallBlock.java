@@ -27,13 +27,20 @@ public final class NativeDiagonalWallBlock extends NativePanelBlock {
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,INVERTED);}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeWallEntity(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state,porthole);}
     private boolean continuation(BlockState other){return other.is(this)||!porthole&&other.getBlock() instanceof NativeDiagonalWallBlock block&&!block.porthole;}
-    private int placementMode(BlockPlaceContext context,BlockPos support,BlockState previous){
-        ItemStack stack=context.getItemInHand();var data=stack.get(DataComponents.BLOCK_ENTITY_DATA);if(data==null)data=stack.get(DataComponents.CUSTOM_DATA);
-        if(data!=null){var tag=data.copyTag();if(tag.contains("BlockEntityTag",10))tag=tag.getCompound("BlockEntityTag");return WallSettings.geometry(tag.getBoolean(WallSettings.HALF),tag.getBoolean(WallSettings.FULL));}
+    static boolean configured(ItemStack stack){
+        if(stack.has(DataComponents.BLOCK_ENTITY_DATA))return true;
+        var custom=stack.get(DataComponents.CUSTOM_DATA);return custom!=null&&custom.copyTag().contains("BlockEntityTag",10);
+    }
+    public int placementMode(BlockPlaceContext context){
+        BlockPos support=context.getClickedPos().relative(context.getClickedFace().getOpposite());BlockState previous=context.getLevel().getBlockState(support);
+        ItemStack stack=context.getItemInHand();var data=stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        if(data!=null){var tag=data.copyTag();return WallSettings.geometry(tag.getBoolean(WallSettings.HALF),tag.getBoolean(WallSettings.FULL));}
+        var custom=stack.get(DataComponents.CUSTOM_DATA);
+        if(custom!=null){var tag=custom.copyTag();if(tag.contains("BlockEntityTag",10)){tag=tag.getCompound("BlockEntityTag");return WallSettings.geometry(tag.getBoolean(WallSettings.HALF),tag.getBoolean(WallSettings.FULL));}}
         return continuation(previous)?NativeDiagonalWallTopology.mode(context.getLevel(),support):0;
     }
     @Override public BlockState getStateForPlacement(BlockPlaceContext context){
-        BlockPos pos=context.getClickedPos(),support=pos.relative(context.getClickedFace().getOpposite());var level=context.getLevel();BlockState previous=level.getBlockState(support);int mode=placementMode(context,support,previous);
+        BlockPos pos=context.getClickedPos(),support=pos.relative(context.getClickedFace().getOpposite());var level=context.getLevel();BlockState previous=level.getBlockState(support);int mode=placementMode(context);
         if(continuation(previous)&&NativeDiagonalWallTopology.mode(level,support)==mode){
             Direction old=previous.getValue(FACING);for(Direction facing:new Direction[]{old,old.getOpposite()})for(boolean inverted:new boolean[]{false,true}){
                 if(DiagonalPanelContact.samePlane(mode,previous.getValue(INVERTED),inverted,facing!=old,pos.getY()-support.getY(),NativeDiagonalWallTopology.axis(pos.subtract(support),old.getOpposite())))return defaultBlockState().setValue(FACING,facing).setValue(INVERTED,inverted);
