@@ -82,7 +82,6 @@
         "programmable_stairs"
       ],
       "remaining": [
-        "Complete and expose same-screen native shape configuration and material renderer integration",
         "Broader native client and external-material reload acceptance across shape and item variants",
         "Installed third-party fluid and shader render acceptance"
       ],
@@ -100,7 +99,8 @@
       "implemented": [
         "Registered current slab/stair blocks and items with the existing programmable_viewscreen block-entity ID",
         "Native placement, half and saved custom-stair collision; configured pick/loot and survival slab merge retain placed settings",
-        "Immutable appearance and contained-fluid storage, deferred geometry, and native rendering prerequisites integrated"
+        "Immutable appearance and contained-fluid storage, deferred geometry, and native rendering prerequisites integrated",
+        "Shared native housing screen, bounded fixed-size configuration payloads and captured-material world/item renderer integrated"
       ]
     },
     {
