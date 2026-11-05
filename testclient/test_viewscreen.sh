@@ -15,13 +15,18 @@ unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LAB
 
 unset VANDOR_LABS_CHANNEL_SOURCE_INDEX_CHECKS_ONLY VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY VANDOR_LABS_FILESYSTEM_DISCOVERY_CHECKS_ONLY VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY
 
+unset VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY
+
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
     --full) MODE=full; PREFIX= ;;
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = control-mount-settings ]; then
+        if [ "$TARGET" = control-latch-levels ]; then
+            PREFIX=control_latch_
+            export VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY=true
+        elif [ "$TARGET" = control-mount-settings ]; then
             PREFIX=control_mount_
             export VANDOR_LABS_CONTROL_MOUNT_SETTINGS_CHECKS_ONLY=true
         elif [ "$TARGET" = material-sprites ]; then
@@ -341,6 +346,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = control-latch-levels ]; then
+        grep -q "control-latch-levels-live PASS" "$RUN_OUT/client.log"
+        echo "Control latch levels passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = control-mount-settings ]; then
         for marker in control-mount-settings-live binary-control-runtime signal-control-mounts binary-control-mounts; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
         echo "Control mount settings checks passed: $RUN_OUT"
