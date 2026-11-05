@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share startup filesystem texture discovery without changing saved IDs, categories, sample artwork or scan/failure behavior. Keep native filesystem reload and custom block sampling explicitly separate from the initial cube implementation.
+
 - Share the current programmable-cube Appearance layout, face controls and picker input rules, retaining reverse cycling and wheel/drag scrolling. Share housing face-plane and packed-light calculations while preserving legacy discovery and light sampling.
 
 - Share Trigger and housing save contracts while preserving legacy missing-field defaults, material migrations, six face overrides and dormant Trigger playback data. Add a focused Trigger dialog regression without running unrelated gameplay fixtures.

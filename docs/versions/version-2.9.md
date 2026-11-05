@@ -8,4 +8,6 @@ Historical native implementations are integration references. Each family still 
 
 The previous feature overview remains available in [Vandor Labs 2.8](version-2.8.md).
 
-The experimental native build now includes the plain matter block, matter/alloy ingots and their recipes. Shared material identity rules preserve saved custom and filesystem choices even when artwork is unavailable. This material slice does not yet provide programmable cube configuration or the matter-production machines.
+The experimental native build includes the plain matter block, matter/alloy ingots, programmable cubes and the Configurizer for cube editing. Cubes retain configured items, face overrides, texture layouts and joined artwork, using the shared current Appearance controls and saved-data rules. Native geometry is compared with the actual Forge renderer.
+
+Shared startup filesystem discovery preserves saved IDs, categories and existing failure behavior. Native filesystem artwork reload, custom block sampling and the matter-production machines remain under development. Saved external material IDs are retained even when artwork is unavailable.
