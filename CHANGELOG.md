@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share mounted-control per-channel persistence and output rules without changing Forge latch transitions. Add the native ranged-output and latch host for subsequent control families, preserving partial banks, independent pulses and unloaded-world cleanup.
+
 - Share the current supporting-face control transform across targets, retaining exact mounted geometry and item transforms while reducing bounds, wedge and construction allocations.
 
 - Share built-in transmission ranges, typed saved defaults and mounted-control settings between targets. Keep Forge migration, geometry, configured-item fields and hot-path allocation behavior unchanged.
