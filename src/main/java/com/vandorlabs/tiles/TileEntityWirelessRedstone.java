@@ -2,6 +2,7 @@ package com.vandorlabs.tiles;
 
 import com.vandorlabs.blocks.BlockWirelessRedstone;
 import com.vandorlabs.redstone.*;
+import com.vandorlabs.persistence.WirelessRedstoneData;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -16,16 +17,16 @@ public final class TileEntityWirelessRedstone extends TileEntityRedstoneChannel 
     public int onLevel(){return onLevel;}
     public int offLevel(){return offLevel;}
     public EnumFacing port(){return world.getBlockState(pos).getValue(BlockWirelessRedstone.FACING);}
-    @Override public NBTTagCompound configuration(){NBTTagCompound tag=super.configuration();tag.setBoolean("WirelessAnalog",analog);tag.setInteger("WirelessOn",onLevel);tag.setInteger("WirelessOff",offLevel);return tag;}
+    @Override public NBTTagCompound configuration(){NBTTagCompound tag=super.configuration();tag.setBoolean(WirelessRedstoneData.ANALOG,analog);tag.setInteger(WirelessRedstoneData.ON,onLevel);tag.setInteger(WirelessRedstoneData.OFF,offLevel);return tag;}
     @Override public boolean isChannelLatch(){return false;}
     @Override public boolean hasLocalRedstoneSignal(){return transmitter()&&inputLevel>0;}
     @Override public boolean hasLocalRedstoneSignal(int channel){return hasLocalRedstoneSignal();}
-    @Override public int localSignalLevel(int channel){return transmitter()?(analog?inputLevel:inputLevel>0?15:0):0;}
-    @Override public int getOutputLevel(){return transmitter()?0:receivedLevel>0?(analog?receivedLevel:onLevel):offLevel;}
+    @Override public int localSignalLevel(int channel){return transmitter()?WirelessRedstoneData.sourceLevel(analog,inputLevel):0;}
+    @Override public int getOutputLevel(){return transmitter()?0:WirelessRedstoneData.outputLevel(analog,receivedLevel,onLevel,offLevel);}
     @Override public void setLocalOn(boolean ignored){}
     @Override public void setChannelSignal(boolean value){setChannelLevel(value?15:0);}
-    @Override public void setChannelLevel(int value){int before=getOutputLevel();receivedLevel=Math.max(0,Math.min(15,value));if(before!=getOutputLevel())changed(true);}
-    public void configure(boolean analog,int on,int off){int before=getOutputLevel();this.analog=analog;onLevel=Math.max(0,Math.min(15,on));offLevel=Math.max(0,Math.min(15,off));if(transmitter()){sampleInput();RedstoneChannels.inputChanged(this);}changed(before!=getOutputLevel());}
+    @Override public void setChannelLevel(int value){int before=getOutputLevel();receivedLevel=WirelessRedstoneData.level(value);if(before!=getOutputLevel())changed(true);}
+    public void configure(boolean analog,int on,int off){int before=getOutputLevel();this.analog=analog;onLevel=WirelessRedstoneData.level(on);offLevel=WirelessRedstoneData.level(off);if(transmitter()){sampleInput();RedstoneChannels.inputChanged(this);}changed(before!=getOutputLevel());}
     public void sampleInput(){
         if(world==null||world.isRemote||!transmitter())return;
         EnumFacing side=port();BlockPos source=pos.offset(side);int level=0;
@@ -35,7 +36,7 @@ public final class TileEntityWirelessRedstone extends TileEntityRedstoneChannel 
                 for(EnumFacing direction:EnumFacing.values()){BlockPos neighbor=source.offset(direction);if(world.isBlockLoaded(neighbor))level=Math.max(level,world.getBlockState(neighbor).getStrongPower(world,neighbor,direction));}
             }else level=state.getWeakPower(world,source,side);
         }
-        level=Math.max(0,Math.min(15,level));if(level==inputLevel)return;inputLevel=level;changed(true);RedstoneChannels.inputChanged(this);
+        level=WirelessRedstoneData.level(level);if(level==inputLevel)return;inputLevel=level;changed(true);RedstoneChannels.inputChanged(this);
     }
     private void changed(boolean output){
         markDirty();if(world==null||world.isRemote)return;IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);
@@ -43,6 +44,6 @@ public final class TileEntityWirelessRedstone extends TileEntityRedstoneChannel 
     }
     public void rotatePort(EnumFacing facing){if(world==null)return;world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockWirelessRedstone.FACING,facing),3);sampleInput();changed(true);}
     @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,()->{sampleInput();changed(true);});}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean("WirelessAnalog",analog);tag.setInteger("WirelessOn",onLevel);tag.setInteger("WirelessOff",offLevel);tag.setInteger("WirelessInput",inputLevel);tag.setInteger("WirelessReceived",receivedLevel);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);analog=!tag.hasKey("WirelessAnalog")||tag.getBoolean("WirelessAnalog");onLevel=tag.hasKey("WirelessOn",3)?Math.max(0,Math.min(15,tag.getInteger("WirelessOn"))):15;offLevel=Math.max(0,Math.min(15,tag.getInteger("WirelessOff")));inputLevel=Math.max(0,Math.min(15,tag.getInteger("WirelessInput")));receivedLevel=Math.max(0,Math.min(15,tag.getInteger("WirelessReceived")));}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean(WirelessRedstoneData.ANALOG,analog);tag.setInteger(WirelessRedstoneData.ON,onLevel);tag.setInteger(WirelessRedstoneData.OFF,offLevel);tag.setInteger(WirelessRedstoneData.INPUT,inputLevel);tag.setInteger(WirelessRedstoneData.RECEIVED,receivedLevel);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);analog=WirelessRedstoneData.savedAnalog(tag.hasKey(WirelessRedstoneData.ANALOG),tag.getBoolean(WirelessRedstoneData.ANALOG));onLevel=WirelessRedstoneData.savedOn(tag.hasKey(WirelessRedstoneData.ON,3),tag.getInteger(WirelessRedstoneData.ON));offLevel=WirelessRedstoneData.level(tag.getInteger(WirelessRedstoneData.OFF));inputLevel=WirelessRedstoneData.level(tag.getInteger(WirelessRedstoneData.INPUT));receivedLevel=WirelessRedstoneData.level(tag.getInteger(WirelessRedstoneData.RECEIVED));}
 }
