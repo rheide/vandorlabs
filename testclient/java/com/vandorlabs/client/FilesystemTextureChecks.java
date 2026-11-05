@@ -15,6 +15,17 @@ public final class FilesystemTextureChecks {
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,new net.minecraft.util.ResourceLocation("minecraft:vandorlabs_filesystem_check"));
         Path root=Files.createTempDirectory("vandorlabs-textures-");
         try {
+            if(args.length>0 && args[0].equals("failure")) {
+                Path blocked=root.resolve("blocked");Files.write(blocked,new byte[]{1});
+                FilesystemTextures.initialize(blocked);
+                require(FilesystemTextures.entries().isEmpty(),"failed initialization published entries");
+                Files.delete(blocked);Files.createDirectories(blocked);
+                ImageIO.write(new BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB),"PNG",blocked.resolve("later.png").toFile());
+                FilesystemTextures.initialize(root.resolve("different-root"));
+                require(FilesystemTextures.entries().isEmpty(),"failed startup unexpectedly retried discovery");
+                require(FilesystemTextures.file("later.png").equals(blocked.resolve("later.png")),"failed startup changed selected root");
+                System.out.println("PASS: filesystem initialization failure retains root and does not retry");return;
+            }
             if(args.length>0 && args[0].equals("bootstrap")) {
                 FilesystemTextures.initialize(root);
                 require(Files.isRegularFile(root.resolve("Example/sample_panel.png")),"first-run sample");
@@ -48,7 +59,12 @@ public final class FilesystemTextureChecks {
             TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setHousingTexture(absent);tile.setSurfaceTexture(0,blue);
             NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityAnimatedScreenSelector restored=new TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);
             require(restored.getHousingTexture()==absent && restored.getSurfaceTexture(0)==blue,"NBT retained absent peer choices");
-            HousingTextureList list=new HousingTextureList(0,0,120,absent);require(list.selected()==absent,"opening a missing selection replaced its identity");list.click(10,1,0);require(list.selected()==absent,"expanding a category replaced a missing selection");
+            HousingTextureList list=new HousingTextureList(0,0,120,absent);require(list.selected()==absent,"opening a missing selection replaced its identity");
+            // Headless category dispatch never draws/focuses the search box; initialize it without a client font.
+            java.lang.reflect.Field search=HousingTextureList.class.getDeclaredField("search");search.setAccessible(true);
+            net.minecraft.client.gui.GuiTextField unfocused=new net.minecraft.client.gui.GuiTextField(0,null,2,-HousingTextureList.ROW_HEIGHT+2,123,18);
+            unfocused.setCanLoseFocus(false);search.set(list,unfocused);
+            list.click(10,1,0);require(list.selected()==absent,"expanding a category replaced a missing selection");
             HousingTextureList nested=new HousingTextureList(0,0,180,red);
             java.lang.reflect.Field cat=HousingTextureList.class.getDeclaredField("categories"),rows=HousingTextureList.class.getDeclaredField("rows"),exp=HousingTextureList.class.getDeclaredField("expanded");
             cat.setAccessible(true);rows.setAccessible(true);exp.setAccessible(true);

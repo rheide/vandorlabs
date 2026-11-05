@@ -13,7 +13,7 @@ unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VAN
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
-unset VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY
+unset VANDOR_LABS_FILESYSTEM_DISCOVERY_CHECKS_ONLY VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -21,7 +21,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = cube-reference ]; then
+        if [ "$TARGET" = filesystem-discovery ]; then
+            PREFIX=material_filesystem_
+            export VANDOR_LABS_FILESYSTEM_DISCOVERY_CHECKS_ONLY=true
+        elif [ "$TARGET" = cube-reference ]; then
             PREFIX=cube_reference_
             export VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY=true
         elif [ "$TARGET" = cube-joining ]; then
@@ -284,7 +287,7 @@ fi
 TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$RUN_OUT/game"}
 export VANDOR_LABS_TEST_GAME_DIR="$TEST_RUNTIME_GAME"
 mkdir -p "$TEST_RUNTIME_GAME/mods"
-if [ "${TARGET:-}" = cube-reference ]; then python3 testclient/prepare_cube_reference.py "$TEST_RUNTIME_GAME"; fi
+if [ "${TARGET:-}" = cube-reference ] || [ "${TARGET:-}" = filesystem-discovery ]; then python3 testclient/prepare_cube_reference.py "$TEST_RUNTIME_GAME"; fi
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 TEST_JAR=${VANDOR_LABS_TEST_JAR:-build/libs/vandorlabs-$VERSION.jar}
 rm -f "$TEST_RUNTIME_GAME"/mods/vandorlabs-*.jar
@@ -329,6 +332,12 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = filesystem-discovery ]; then
+        grep -q "filesystem-discovery-live PASS" "$RUN_OUT/client.log"
+        test -s "$RUN_OUT/material-filesystem-portrait.png"
+        echo "Filesystem discovery checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = cube-reference ]; then
         grep -q "cube-reference-export PASS world=432" "$RUN_OUT/client.log"
         test -s "$RUN_OUT/legacy-cube-reference.json"
