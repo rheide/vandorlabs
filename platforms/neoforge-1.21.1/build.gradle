@@ -176,3 +176,7 @@ tasks.register('testSignalControlPoses', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.SignalControlPosesChecks'
 }
+
+neoForge.runs.configureEach {
+    if (project.hasProperty('fluidSlotsReference')) systemProperty 'vandorlabs.fluidSlotsReference', file(project.property('fluidSlotsReference')).absolutePath
+}
