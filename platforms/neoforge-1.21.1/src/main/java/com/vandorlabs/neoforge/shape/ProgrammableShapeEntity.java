@@ -76,6 +76,7 @@ public class ProgrammableShapeEntity extends ProgrammableBlockEntity implements 
     protected java.util.List<net.minecraft.world.phys.AABB> fluidSolidBoxes(BlockState state,long key){
         return state.getBlock() instanceof NativeProgrammableSlab?NativeProgrammableSlab.solidBoxes(state):state.getBlock() instanceof NativeProgrammableStairs?NativeProgrammableStairs.solidBoxes(state,(int)key):EMPTY_VOLUME.solids();
     }
+    protected com.vandorlabs.neoforge.fluid.NativeFluidVolume.Side fluidSidePartition(){return com.vandorlabs.neoforge.fluid.NativeFluidVolume.SINGLE_SIDE;}
     @Override public void refreshFluidGeometry(){
         BlockState state=getBlockState();long key=fluidGeometryKey();
         if(volumeState==state&&volumeSettings==key)return;

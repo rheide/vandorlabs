@@ -234,3 +234,9 @@ tasks.register('testNativeShapeModels', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.NativeShapeModelChecks'
     if (project.hasProperty('shapeTextureReference')) systemProperty 'vandorlabs.shapeTextureReference', file(project.property('shapeTextureReference')).absolutePath
 }
+
+tasks.register('testNativeFlatWallGeometry', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeFlatWallGeometryChecks'
+}
