@@ -6,7 +6,7 @@ import shutil
 import sys
 import tempfile
 from PIL import Image
-from generate_panel_resources import generate_glass_palette
+from glass_palette_resources import generate_glass_palette
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools'))

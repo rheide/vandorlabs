@@ -72,7 +72,7 @@ tasks.register('generateCubeResources', Exec) {
     commandLine pythonExecutable, 'generate_cube_resources.py'
     inputs.file('generate_cube_resources.py')
     inputs.file('material_playback_resources.py')
-    inputs.file('generate_panel_resources.py')
+    inputs.file('glass_palette_resources.py')
     inputs.file('../../src/portable/java/com/vandorlabs/tiles/GlassTextures.java')
     inputs.files(fileTree('../../texture-packs') { include '**/programmable_glass/low/*.png', '**/programmable_glass/medium/*.png' })
     inputs.files('../../generated-resources/assets/vandorlabs/data/blocks.json','../../generated-resources/assets/vandorlabs/data/input_surfaces.json')
