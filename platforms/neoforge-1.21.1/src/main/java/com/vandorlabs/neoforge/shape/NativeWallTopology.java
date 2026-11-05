@@ -14,7 +14,7 @@ public final class NativeWallTopology {
         if(!(state.getBlock() instanceof NativeFlatWallBlock))return;
         var corner=corner(level,pos,state);
         var geometry=corner==null?NativeFlatWallGeometry.straight(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH)):NativeFlatWallGeometry.build(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH),corner);
-        host.publishGeometry(geometry,host.fluidGeometryRevision()+1);
+        host.publishGeometry(geometry.withLayout(NativeWallLayouts.layout(host)),host.fluidGeometryRevision()+1);
     }
     private static boolean enabled(Level level,BlockPos pos){return NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity tile&&(!tile.isPorthole()||tile.wallSettings().joinPortholes);}
     private static PanelCornerGeometry.FlatCorner corner(Level level,BlockPos pos,BlockState state){

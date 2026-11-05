@@ -13,9 +13,11 @@ public final class NativeFlatWallGeometry {
     public record Join(Double frontArm,Double backArm,Boolean frontRight,Boolean backRight,boolean straightLeft,boolean straightRight){
         public PanelCornerGeometry.FlatCorner corner(){return new PanelCornerGeometry.FlatCorner(frontArm,backArm,frontRight,backRight,straightLeft,straightRight);}
     }
-    public record Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth,Join join) {
-        public Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth){this(boxes,bounds,facing,depth,null);}
-        public Geometry {boxes=List.copyOf(boxes);}
+    public record Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth,Join join,NativePanelLayout layout) {
+        public Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth){this(boxes,bounds,facing,depth,null,NativePanelLayout.UNIT);}
+        public Geometry(List<AABB> boxes,AABB bounds,Direction facing,int depth,Join join){this(boxes,bounds,facing,depth,join,NativePanelLayout.UNIT);}
+        public Geometry {boxes=List.copyOf(boxes);java.util.Objects.requireNonNull(layout);}
+        public Geometry withLayout(NativePanelLayout next){return layout.equals(next)?this:new Geometry(boxes,bounds,facing,depth,join,next);}
         public int side(double x,double y,double z){double normal=facing==Direction.EAST?1-x:facing==Direction.SOUTH?1-z:facing==Direction.WEST?x:z;return normal<PanelDepthPolicy.start(depth)/16D+.125?0:1;}
     }
     private static final int BUDGET=8*1024*1024;

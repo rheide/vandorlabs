@@ -19,6 +19,7 @@ import net.neoforged.neoforge.client.model.data.*;
 public class NativeWallEntity extends ProgrammableShapeEntity {
     public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,NativeFlatWallGeometry.Geometry geometry){}
     public static final ModelProperty<WallAppearance> WALL_APPEARANCE=new ModelProperty<>();
+    NativeWallLayouts.Group textureGroup;
     private final boolean porthole;
     private WallSettings walls;
     private FrameSettings frames=defaultFrames();
@@ -60,6 +61,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         if(wallChanged)walls=nextWalls;if(frameChanged)frames=nextFrames;
         Appearance before=appearance();super.applyShape(base);
         if((wallChanged||frameChanged)&&appearance()==before)publishShapeChange();
+        if(wallChanged||frameChanged||appearance()!=before)NativeWallLayouts.invalidate(this);
         return true;
     }
     /** Derived topology is not saved: no dirty flag or NBT packet is sent here. Equal snapshots do nothing. */
@@ -76,11 +78,14 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private static int frameLight(int choice){if(choice<0)return 0;var frame=ModernFinishCatalog.option(choice).frame();return frame==null?0:Math.max(0,Math.min(5,frame.light()));}
     @Override public int intrinsicContainedLight(){return Math.max(porthole||frames.bare?0:frameLight(frames.front),Math.max(frameLight(frames.interior),frameLight(frames.exteriorChoice())));}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
+        NativeWallLayouts.invalidate(this);
         walls=WallSettings.read(new ModernHousingTags(tag));frames=FrameSettings.read(new ModernHousingTags(tag),NativeWallEntity::validFrame,NativeWallEntity::validSurface,ModernFinishCatalog::validChoice);
         super.loadAdditional(tag,registries);
     }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.saveAdditional(tag,registries);var data=new ModernHousingTags(tag);WallSettings.write(data,walls.fullWidth,walls.halfHeight,walls.fill,walls.join,walls.joinPortholes,walls.portholeShape);frames.write(data);
     }
+    @Override public void setRemoved(){NativeWallLayouts.invalidate(this);super.setRemoved();}
+    @Override public void onChunkUnloaded(){NativeWallLayouts.invalidate(this);super.onChunkUnloaded();}
     @Override public ModelData getModelData(){return super.getModelData().derive().with(WALL_APPEARANCE,wallAppearance).build();}
 }

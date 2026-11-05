@@ -48,8 +48,8 @@ public final class NativeFlatWallBlock extends HorizontalDirectionalBlock implem
     @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return NativeFluidWorld.light(level,pos);}
     @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return player.isShiftKeyDown()&&CubeConfiguration.open(player,level,pos)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.PASS;}
     @Override public ItemStack getCloneItemStack(BlockState state,HitResult hit,LevelReader level,BlockPos pos,Player player){ItemStack item=new ItemStack(this);if(level.getBlockEntity(pos) instanceof NativeWallEntity tile)tile.saveToItem(item,level.registryAccess());return item;}
-    @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block block,BlockPos from,boolean moving){NativeFluidWorld.queueAt(level,pos);}
-    @Override protected BlockState updateShape(BlockState state,Direction side,BlockState neighbor,LevelAccessor level,BlockPos pos,BlockPos other){NativeFluidWorld.queueAt(level,pos);return state;}
+    @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block block,BlockPos from,boolean moving){NativeWallLayouts.invalidateAt(level,pos);NativeFluidWorld.queueAt(level,pos);}
+    @Override protected BlockState updateShape(BlockState state,Direction side,BlockState neighbor,LevelAccessor level,BlockPos pos,BlockPos other){if(level instanceof Level actual)NativeWallLayouts.invalidateAt(actual,pos);NativeFluidWorld.queueAt(level,pos);return state;}
     @Override public boolean canPlaceLiquid(Player player,BlockGetter level,BlockPos pos,BlockState state,Fluid fluid){return NativeFluidWorld.canPlaceLiquid(level,pos,fluid);}
     @Override public boolean placeLiquid(LevelAccessor level,BlockPos pos,BlockState state,FluidState fluid){return NativeFluidWorld.placeLiquid(level,pos,fluid);}
     @Override public ItemStack pickupBlock(Player player,LevelAccessor level,BlockPos pos,BlockState state){return NativeFluidWorld.pickupBlock(level,pos);}
