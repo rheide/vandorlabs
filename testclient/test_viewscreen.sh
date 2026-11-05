@@ -305,12 +305,24 @@ RUN_ROOT=${VANDOR_LABS_TEST_RUN_ROOT:-"$ROOT/testclient"}
 mkdir -p "$RUN_ROOT"
 RUN_OUT=$(mktemp -d "$RUN_ROOT/render-run.XXXXXX")
 
+# Claim only this fresh run and its generated default game directory. Custom
+# VANDOR_LABS_TEST_GAME_DIR paths are never registered for deletion.
+ARTIFACT_LEASE=$(python3 "$ROOT/tools/test_artifacts.py" begin --run-dir "$RUN_OUT" --pid "$$" --disposable game)
+finish_test_artifacts() {
+    local result=$?
+    trap - EXIT
+    python3 "$ROOT/tools/test_artifacts.py" finish --run-dir "$RUN_OUT" --lease "$ARTIFACT_LEASE" --exit-code "$result" || \
+        echo "Artifact retention could not finish safely; preserved run: $RUN_OUT" >&2
+    exit "$result"
+}
+trap finish_test_artifacts EXIT
+
 cd "$ROOT"
 if [ "${TARGET:-}" = arm-live ]; then export VANDOR_LABS_ARM_SECOND_FIXTURE=${VANDOR_LABS_ARM_SECOND_FIXTURE:-"$ROOT/testclient/fixtures/arm-rotating-replacement-2.6.nbt"}; export VANDOR_LABS_ARM_SAVED_FIXTURE=${VANDOR_LABS_ARM_SAVED_FIXTURE:-"$ROOT/testclient/fixtures/arm-pending-detach-2.6.nbt"}; fi
 BUILD_ARGS=(build --no-daemon)
 if [ "${VANDOR_LABS_TEST_OFFLINE:-false}" = true ]; then BUILD_ARGS+=(--offline); fi
 if [ "${VANDOR_LABS_TEST_SKIP_BUILD:-false}" != true ]; then
-    JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew "${BUILD_ARGS[@]}"
+    JAVA_HOME="$JAVA8" PATH="$JAVA8/bin:$PATH" ./gradlew "${BUILD_ARGS[@]}" 2>&1 | tee "$RUN_OUT/build.log"
 fi
 TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$RUN_OUT/game"}
 export VANDOR_LABS_TEST_GAME_DIR="$TEST_RUNTIME_GAME"
@@ -353,7 +365,8 @@ if [ -n "${VANDOR_LABS_TEST_SHADERPACK:-}" ]; then
     printf "specularMapEnabled=true\nnormalMapEnabled=true\nshaderPack=%s\n" "$(basename "$VANDOR_LABS_TEST_SHADERPACK")" > "$TEST_RUNTIME_GAME/optionsshaders.txt"
 fi
 # Allow the full software-rendered gallery to finish on a busy host.
-VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout "${VANDOR_LABS_TEST_TIMEOUT:-1200}" testclient/run.sh \
+VANDOR_LABS_REPRO_OUT="$RUN_OUT" python3 "$ROOT/tools/test_artifacts.py" run --run-dir "$RUN_OUT" --lease "$ARTIFACT_LEASE" -- \
+    timeout "${VANDOR_LABS_TEST_TIMEOUT:-1200}" testclient/run.sh \
     > "$RUN_OUT/client.log" 2>&1
 if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/client.log"; then
     echo "FAIL: missing or invalid baked model; see $RUN_OUT/client.log"
