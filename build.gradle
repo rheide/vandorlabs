@@ -1314,3 +1314,11 @@ task testFluidVolumeCompaction(type: JavaExec) {
     main = 'com.vandorlabs.client.FluidVolumeCompactionChecks'
     if (project.hasProperty('fluidVolumeProfile')) systemProperty 'vandorlabs.fluidVolumeProfile', true
 }
+
+// Actual Forge opaque two-slot save oracle for the native persistence adapter.
+task testFluidSlotsLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FluidSlotsLegacyChecks'
+    systemProperty 'vandorlabs.fluidSlotsReference', file(project.findProperty('fluidSlotsReference') ?: 'build/test-artifacts/fluid-slots-forge.nbt').absolutePath
+}
