@@ -1536,3 +1536,13 @@ task exportDoorSettingsReference(type: JavaExec) {
     main = 'com.vandorlabs.client.DoorSettingsLegacyChecks'
     if (project.hasProperty('doorSettingsExport')) systemProperty 'vandorlabs.doorSettingsExport', file(project.property('doorSettingsExport')).absolutePath
 }
+
+task testDiagonalGlassFrameAdapters(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalGlassFrameChecks'
+    systemProperty 'vandorlabs.diagonalFrameProfile', project.hasProperty('diagonalFrameProfile')
+    maxHeapSize = '1G'
+}
+check.dependsOn testDiagonalGlassFrameAdapters
