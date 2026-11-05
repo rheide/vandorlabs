@@ -1203,3 +1203,12 @@ task testChannelRecipientIndexAdapters(type: JavaExec) {
     main = 'com.vandorlabs.client.ChannelRecipientIndexAdapterChecks'
 }
 check.dependsOn testChannelRecipientIndexAdapters
+
+// Exact current Forge tag/default behavior for the portable built-in transmission policy.
+task testTransmissionSettings(type: JavaExec) {
+    group = 'verification'
+    description = 'Check typed built-in transmission settings and unchanged Forge save schema'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.redstone.TransmissionSettingsAdapterChecks'
+}

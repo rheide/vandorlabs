@@ -5,8 +5,8 @@ import net.minecraft.tileentity.TileEntity;
 
 /** Built-in range, channel and local-output settings; blocks have no transmitter inventory. */
 public final class TransmitterSlots {
-    private static final String SETTINGS="VandorTransmission";
-    public static final int[] RANGES={4,8,16,32,64,128,256};
+    private static final String SETTINGS=TransmissionSettings.SETTINGS;
+    public static final int[] RANGES=TransmissionSettings.RANGES;
     private static final java.lang.reflect.Field CUSTOM_DATA=net.minecraftforge.fml.relauncher.ReflectionHelper.findField(TileEntity.class,"customTileData");
     private static final NBTTagCompound NO_DATA=new NBTTagCompound();
     private TransmitterSlots(){}
@@ -63,7 +63,7 @@ public final class TransmitterSlots {
     private static final java.util.Map<RedstoneChannelMember,SavedChannels> CONFIG_CACHE=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<RedstoneChannelMember,SavedChannels>());
     private static final class SavedChannels {
         final NBTTagCompound identity;final ChannelList channels;
-        SavedChannels(NBTTagCompound tag){identity=tag;channels=ChannelData.read(tag,"Channels",ChannelList.EMPTY);}
+        SavedChannels(NBTTagCompound tag){identity=tag;channels=TransmissionSettings.readChannels(tag.hasKey(TransmissionSettings.CHANNELS,11),tag.getIntArray(TransmissionSettings.CHANNELS),ChannelList.EMPTY);}
     }
     public static boolean supported(RedstoneChannelMember member){
         return outputOnly(member)||member instanceof com.vandorlabs.tiles.TileEntityCockpit
@@ -74,21 +74,21 @@ public final class TransmitterSlots {
     public static ChannelList channels(RedstoneChannelMember member){
         NBTTagCompound configured=configuration(member);
         if(configured.hasKey("Channels",11)){SavedChannels cached=CONFIG_CACHE.get(member);if(cached==null||cached.identity!=configured){cached=new SavedChannels(configured);CONFIG_CACHE.put(member,cached);}return cached.channels;}
-        return outputOnly(member)?member.getRedstoneChannels():ChannelList.EMPTY;
+        boolean output=outputOnly(member);return TransmissionSettings.defaultChannels(output,output?member.getRedstoneChannels():ChannelList.EMPTY);
     }
-    public static boolean validRange(int range){for(int allowed:RANGES)if(range==allowed)return true;return false;}
+    public static boolean validRange(int range){return TransmissionSettings.validRange(range);}
     public static int range(RedstoneChannelMember member){
         NBTTagCompound configured=configuration(member);
-        if(configured.hasKey("Range",3)){int value=configured.getInteger("Range");return validRange(value)?value:16;}
-        return supported(member)?16:-1;
+        boolean present=configured.hasKey(TransmissionSettings.RANGE,3);
+        return TransmissionSettings.readRange(present,present?configured.getInteger(TransmissionSettings.RANGE):0,present||supported(member));
     }
     public static boolean localRedstone(TileEntity tile){
         NBTTagCompound configured=savedSettings(tile,"main");
-        if(configured.hasKey("Local",1))return configured.getBoolean("Local");
+        boolean present=configured.hasKey(TransmissionSettings.LOCAL,1);
         // Enabling new physical outputs must be deliberate in existing worlds.
-        return !(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+        return TransmissionSettings.readLocal(present,present&&configured.getBoolean(TransmissionSettings.LOCAL),present||!(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
                 ||tile instanceof com.vandorlabs.tiles.TileEntityCockpit
-                ||tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter());
+                ||tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter()));
     }
     /** Combined physical output for hosts with several independent controls. */
     public static int localOutput(net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos){
@@ -104,11 +104,11 @@ public final class TransmitterSlots {
     public static boolean localRedstone(net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos){TileEntity tile=world.getTileEntity(pos);return tile==null||localRedstone(tile);}
     /** Configure the built-in transmitter without consuming or storing an item. */
     public static void configure(RedstoneChannelMember member,ChannelList channels,int range,boolean local){
-        if(channels==null||!validRange(range)||!supported(member))throw new IllegalArgumentException("Invalid transmission settings");
+        if(!TransmissionSettings.validConfiguration(channels,range)||!supported(member))throw new IllegalArgumentException("Invalid transmission settings");
         if(channels.equals(channels(member))&&range==range(member)&&local==localRedstone(member.channelTile())
                 &&(!outputOnly(member)||channels.equals(member.getRedstoneChannels())))return;
         TileEntity tile=member.channelTile();boolean previousLocal=localRedstone(tile);NBTTagCompound data=tile.getTileData(),all=data.getCompoundTag(SETTINGS),next=new NBTTagCompound();
-        next.setIntArray("Channels",channels.toArray());next.setInteger("Range",range);next.setBoolean("Local",local);
+        next.setIntArray(TransmissionSettings.CHANNELS,channels.toArray());next.setInteger(TransmissionSettings.RANGE,range);next.setBoolean(TransmissionSettings.LOCAL,local);
         all.setTag(member.transmitterSlot(),next);data.setTag(SETTINGS,all);
         settingsChanged(member);
         if(previousLocal!=local)notifyLocalOutput(tile);
