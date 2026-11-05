@@ -1175,3 +1175,11 @@ task testChannelSourceIndexAdapters(type: JavaExec) {
     main = 'com.vandorlabs.client.ChannelSourceIndexAdapterChecks'
 }
 check.dependsOn testChannelSourceIndexAdapters
+
+task testInventorySampleGrid(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.InventorySampleGridChecks'
+}
+check.dependsOn testInventorySampleGrid
