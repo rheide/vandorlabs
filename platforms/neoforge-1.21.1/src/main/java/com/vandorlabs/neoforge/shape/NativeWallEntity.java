@@ -103,6 +103,20 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         if(changed||wallChanged||playbackChanged){NativeWallLayouts.invalidate(this);publishShapeChange();}
         return true;
     }
+    /** Stage without neighbour/client notification so the complete projection is published first. */
+    protected boolean stageDiagonalState(BlockState next){if(level==null){setBlockState(next);return true;}return level.setBlock(worldPosition,next,net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE);}
+    public boolean configureDiagonal(int mode,int fill,int join,Direction facing,boolean inverted){
+        var beforeState=getBlockState();if(!(beforeState.getBlock() instanceof NativeDiagonalWallBlock)||mode<0||mode>2||fill<0||fill>3||join<0||join>11||facing==null||facing.getAxis()==Direction.Axis.Y||level!=null&&(level.isClientSide||level.getServer()==null||!level.getServer().isSameThread()||!level.hasChunkAt(worldPosition)||level.getBlockEntity(worldPosition)!=this))return false;
+        WallSettings before=walls,next=new WallSettings(mode!=0,mode==2,fill,join,before.joinPortholes,before.portholeShape);var nextState=beforeState.setValue(NativeDiagonalWallBlock.FACING,facing).setValue(NativeDiagonalWallBlock.INVERTED,inverted);boolean changed=!same(before,next),stateChanged=beforeState!=nextState;if(!changed&&!stateChanged)return true;
+        walls=next;
+        if(stateChanged){
+            boolean staged;try{staged=stageDiagonalState(nextState);}catch(RuntimeException failure){walls=before;if(level==null)setBlockState(beforeState);throw failure;}
+            if(!staged||level!=null&&level.getBlockEntity(worldPosition)!=this){walls=before;if(level==null)setBlockState(beforeState);else if(level.getBlockEntity(worldPosition)==this&&level.getBlockState(worldPosition)!=beforeState)level.setBlock(worldPosition,beforeState,net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE);return false;}
+        }
+        NativeWallLayouts.invalidate(this);
+        if(stateChanged){publishWallAppearance();setChanged();requestModelDataUpdate();NativeFluidWorld.queue(this);if(level!=null)level.markAndNotifyBlock(worldPosition,level.getChunkAt(worldPosition),beforeState,nextState,net.minecraft.world.level.block.Block.UPDATE_ALL,512);}
+        else publishShapeChange();return true;
+    }
     /** Derived topology is not saved: no dirty flag or NBT packet is sent here. Equal snapshots do nothing. */
     public boolean publishGeometry(NativeWallGeometry next,long revision){
         if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Wall geometry requires owning server thread");
