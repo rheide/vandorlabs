@@ -24,7 +24,7 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     private volatile Visual visual=new Visual(mount,0);
     private CompoundTag retained=new CompoundTag();
     public NativeBinaryControlBlockEntity(BlockPos pos,BlockState state){super(VandorLabsBootstrap.BINARY_CONTROL_ENTITY.get(),pos,state);}
-    @Override public boolean isChannelMemberActive(){return getBlockState().getBlock() instanceof NativeMountedSwitchBlock&&NativeChannelLatch.super.isChannelMemberActive();}
+    @Override public boolean isChannelMemberActive(){return getBlockState().getBlock() instanceof NativeMountedControl&&NativeChannelLatch.super.isChannelMemberActive();}
     @Override public BlockEntity channelBlockEntity(){return this;}
     @Override public ChannelList getRedstoneChannels(){return channels;}
     @Override public ChannelList transmittedChannels(){return transmission;}
@@ -39,16 +39,16 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     @Override public int latchedLevel(int channel){return ControlLatchData.level(levels,latched,channel);}
     @Override public int localSignalLevel(int channel){return ControlLatchData.localLevel(isChannelLatch(),localOn,this,channel);}
     public int getOutputLevel(){return ControlLatchData.outputLevel(localOn,channels,this);}
-    @Override public boolean isChannelLatch(){return getBlockState().getBlock() instanceof NativeMountedSwitchBlock block&&!block.isMomentary();}
+    @Override public boolean isChannelLatch(){return getBlockState().getBlock() instanceof NativeMountedControl block&&!block.isMomentary();}
     @Override public void setChannelLevel(int ignored){} // Received aggregate never becomes an independent local source.
     private void changed(){
         setChanged();visual=new Visual(mount,rotation);requestModelDataUpdate();
         if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);
     }
     private boolean linkedState(){
-        if(level==null||level.isClientSide||!(getBlockState().getBlock() instanceof NativeMountedSwitchBlock block)||block.isMomentary())return false;
-        BlockState state=getBlockState();if(state.getValue(NativeMountedSwitchBlock.ON)==localOn)return false;
-        level.setBlock(worldPosition,state.setValue(NativeMountedSwitchBlock.ON,localOn),2);return true;
+        if(level==null||level.isClientSide||!(getBlockState().getBlock() instanceof NativeMountedControl block)||block.isMomentary())return false;
+        BlockState state=getBlockState();if(block.powered(state)==localOn)return false;
+        level.setBlock(worldPosition,block.withPowered(state,localOn),2);return true;
     }
     public void notifyPhysical(){if(NativeSignalUpdateBatch.isActive())NativeSignalUpdateBatch.afterSignals(this,this::emitPhysical);else NativeSignalUpdateBatch.apply(()->NativeSignalUpdateBatch.afterSignals(this,this::emitPhysical));}
     private void emitPhysical(){
@@ -78,7 +78,7 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     private void setChannels(ChannelList next){
         if(channels.equals(next))return;latched=localOn?next:latched.intersect(next);channels=next;changed();
     }
-    public boolean configureMount(ControlMountSettings next){if(next==null||level!=null&&!(getBlockState().getBlock() instanceof NativeMountedSwitchBlock))return false;mount=next;changed();return true;}
+    public boolean configureMount(ControlMountSettings next){if(next==null||level!=null&&!(getBlockState().getBlock() instanceof NativeMountedControl))return false;mount=next;changed();return true;}
     public boolean configureTransmission(ChannelList next,int radius,boolean nativeOutput){
         if(!TransmissionSettings.validConfiguration(next,radius))return false;
         if(next.equals(transmission)&&radius==range&&nativeOutput==local&&next.equals(channels))return true;
@@ -101,11 +101,11 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     }
     @Override public void beforeChannelRegistration(){
         if(!registrationPending||!(level instanceof ServerLevel server))return;registrationPending=false;
-        BlockState state=server.getBlockState(worldPosition);if(!(state.getBlock() instanceof NativeMountedSwitchBlock block))return;
-        BlockPos support=worldPosition.relative(state.getValue(NativeMountedSwitchBlock.FACING).getOpposite());
+        BlockState state=server.getBlockState(worldPosition);if(!(state.getBlock() instanceof NativeMountedControl block))return;
+        BlockPos support=worldPosition.relative(block.supportDirection(state));
         if(server.hasChunkAt(support)&&!state.canSurvive(server,worldPosition)){block.dropUnsupported(state,server,worldPosition);return;}
-        if(!initialized){localOn=state.getValue(NativeMountedSwitchBlock.ON);latched=localOn?channels:ChannelList.EMPTY;initialized=true;setChanged();}
-        if(block.isMomentary()&&state.getValue(NativeMountedSwitchBlock.ON))server.scheduleTick(worldPosition,block,20);
+        if(!initialized){localOn=block.powered(state);latched=localOn?channels:ChannelList.EMPTY;initialized=true;setChanged();}
+        if(block.isMomentary()&&block.powered(state))server.scheduleTick(worldPosition,state.getBlock(),20);
     }
     @Override public void onLoad(){super.onLoad();registrationPending=true;if(level!=null&&!level.isClientSide)NativeRedstoneChannels.queueRegistration(this);}
     @Override public void setRemoved(){NativeRedstoneChannels.unregister(this);super.setRemoved();}

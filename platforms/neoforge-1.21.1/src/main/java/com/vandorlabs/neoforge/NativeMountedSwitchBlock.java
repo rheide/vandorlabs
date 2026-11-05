@@ -24,7 +24,7 @@ import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.*;
 
 /** Current push button and split rocker semantics, with authored mounted component collision. */
-public final class NativeMountedSwitchBlock extends DirectionalBlock implements EntityBlock {
+public final class NativeMountedSwitchBlock extends DirectionalBlock implements EntityBlock,NativeMountedControl {
     public static final BooleanProperty ON=BooleanProperty.create("on");
     public static final IntegerProperty ROTATION=IntegerProperty.create("rotation",0,3);
     public static final MapCodec<NativeMountedSwitchBlock> CODEC=RecordCodecBuilder.mapCodec(instance->instance.group(propertiesCodec(),Codec.BOOL.fieldOf("momentary").forGetter(NativeMountedSwitchBlock::isMomentary)).apply(instance,NativeMountedSwitchBlock::new));
@@ -32,6 +32,9 @@ public final class NativeMountedSwitchBlock extends DirectionalBlock implements 
     private final boolean momentary;
     public NativeMountedSwitchBlock(BlockBehaviour.Properties properties,boolean momentary){super(properties);this.momentary=momentary;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(ON,false).setValue(ROTATION,0));}
     public boolean isMomentary(){return momentary;}
+    @Override public boolean powered(BlockState state){return state.getValue(ON);}
+    @Override public BlockState withPowered(BlockState state,boolean value){return state.setValue(ON,value);}
+    @Override public Direction supportDirection(BlockState state){return state.getValue(FACING).getOpposite();}
     @Override protected MapCodec<? extends DirectionalBlock> codec(){return CODEC;}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,ON,ROTATION);}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeBinaryControlBlockEntity(pos,state);}
