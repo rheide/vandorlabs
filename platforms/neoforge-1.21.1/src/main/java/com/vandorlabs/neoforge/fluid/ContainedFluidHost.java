@@ -8,6 +8,8 @@ public interface ContainedFluidHost {
     NativeFluidSlots containedFluids();
     NativeFluidVolume fluidVolumeSnapshot();
     long fluidGeometryRevision();
+    /** Deferred owning-thread rebuild, after loaded identity is checked. */
+    void refreshFluidGeometry();
     int containedFluidSide(double x,double y,double z);
     /** Host marks persistence/model data dirty; lifecycle publication remains deferred. */
     void containedFluidsChanged();
