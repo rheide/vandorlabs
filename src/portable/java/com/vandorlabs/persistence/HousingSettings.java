@@ -36,7 +36,7 @@ public final class HousingSettings {
         return new HousingSettings(main,side,layout,tileSides,data.getBoolean(FACES_ENABLED),faces);
     }
     public void write(HousingTags data) {
-        write(data,mainTexture,sideTexture,rawLayout,tileSides,facesEnabled,faces);
+        write(data,mainTexture,sideTexture,rawLayout,tileSides,facesEnabled,faces());
     }
     /** The caller supplies its owned array copy; the adapter must not mutate it. */
     public static void write(HousingTags data,int main,int side,int rawLayout,boolean tileSides,boolean facesEnabled,int[] faces) {

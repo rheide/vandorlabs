@@ -22,6 +22,15 @@ public final class HousingSettingsChecks {
             @SuppressWarnings("unchecked") java.util.Map<net.minecraft.block.Block,net.minecraft.item.Item> mapping=(java.util.Map<net.minecraft.block.Block,net.minecraft.item.Item>)map.get(null);mapping.put(block,item);
         }catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}
         if(blocksLocked)blocks.freeze();if(itemsLocked)items.freeze();
+        NBTTagCompound snapshotInput=new NBTTagCompound();
+        snapshotInput.setIntArray("FaceTextures",new int[]{1,2,3,4,5,6});
+        com.vandorlabs.persistence.HousingSettings snapshot=com.vandorlabs.persistence.HousingSettings.read(
+                new com.vandorlabs.persistence.NbtPrimitiveData(snapshotInput),0,false,
+                ScreenHousingTextures::clamp,ScreenHousingTextures::validChoice);
+        NBTTagCompound snapshotOutput=new NBTTagCompound();
+        snapshot.write(new com.vandorlabs.persistence.NbtPrimitiveData(snapshotOutput));
+        snapshotOutput.getIntArray("FaceTextures")[0]=7;
+        require(snapshot.faces()[0]==1,"serialized NBT must not alias immutable housing snapshot");
         int count=0;
         for(Supplier<TileEntityAnimatedScreenSelector> factory:factories){
             TileEntityAnimatedScreenSelector tile=factory.get();
