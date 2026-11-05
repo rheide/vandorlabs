@@ -27,6 +27,12 @@ public final class TriggerState {
     }
     public int[] artworkModes(){return modes.clone();}
     public int[] artworkSpeeds(){return speeds.clone();}
+    /** Validate retained playback fields without normalizing or changing caller-owned arrays. */
+    public static boolean validArtwork(int[] modes,int[] speeds){
+        if(modes==null||speeds==null||modes.length!=4||speeds.length!=4)return false;
+        for(int i=0;i<4;i++)if(modes[i]<ScreenBehavior.OFF||modes[i]>ScreenBehavior.ANIMATED||!ScreenBehavior.validSpeedIndex(speeds[i]))return false;
+        return true;
+    }
     public static int visibleSlot(boolean bands,int exact,int signal){
         if(exact>=0&&signal!=exact)return 0;
         if(!bands)return exact>=0||signal>0?3:0;

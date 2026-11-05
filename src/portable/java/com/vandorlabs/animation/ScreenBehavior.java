@@ -7,6 +7,7 @@ public final class ScreenBehavior {
     private ScreenBehavior() { }
 
     public static int clampMode(int mode) { return Math.max(OFF,Math.min(ANIMATED,mode)); }
+    public static boolean validSpeedIndex(int index) { return index>=0&&index<SPEED_TICKS.length; }
     public static int clampSpeedIndex(int index) { return Math.max(0,Math.min(SPEED_TICKS.length-1,index)); }
     public static int animationTicks(int speedIndex) { return SPEED_TICKS[clampSpeedIndex(speedIndex)]; }
     public static int effectiveMode(int configured,boolean redstoneEnabled,boolean powered) {

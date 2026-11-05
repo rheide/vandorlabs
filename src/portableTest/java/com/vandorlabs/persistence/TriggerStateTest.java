@@ -46,6 +46,20 @@ public final class TriggerStateTest {
             int expected=exact>=0&&signal!=exact?0:band==0?(exact>=0||signal>0?3:0):(signal==0?0:signal<6?1:signal<11?2:3);
             check(TriggerState.visibleSlot(band==1,exact,signal)==expected,"selection exact="+exact+" signal="+signal+" bands="+band);
         }
-        System.out.println("TriggerState contracts PASS");
+        check(!TriggerState.validArtwork(null,null)&&!TriggerState.validArtwork(null,new int[4])&&!TriggerState.validArtwork(new int[4],null),"playback arrays must both be present");
+        for(int length:new int[]{0,1,3,5,8})check(!TriggerState.validArtwork(new int[length],new int[4])&&!TriggerState.validArtwork(new int[4],new int[length]),"playback array length "+length);
+        for(int slot=0;slot<4;slot++)for(int invalid:new int[]{Integer.MIN_VALUE,-1,3,Integer.MAX_VALUE}){
+            int[] modes={1,1,1,1},speeds={1,1,1,1};modes[slot]=invalid;
+            check(!TriggerState.validArtwork(modes,speeds),"invalid mode slot="+slot);
+            modes[slot]=1;speeds[slot]=invalid;check(!TriggerState.validArtwork(modes,speeds),"invalid speed slot="+slot);
+        }
+        for(int vector=0;vector<6561;vector++){
+            int[] modes=new int[4],speeds=new int[4];int digits=vector;
+            for(int slot=0;slot<4;slot++){modes[slot]=digits%9/3;speeds[slot]=digits%3;digits/=9;}
+            int[] beforeModes=modes.clone(),beforeSpeeds=speeds.clone();
+            check(TriggerState.validArtwork(modes,speeds),"valid playback vector "+vector);
+            check(Arrays.equals(modes,beforeModes)&&Arrays.equals(speeds,beforeSpeeds),"validation mutated retained playback");
+        }
+        System.out.println("TriggerState contracts PASS playback-vectors=6561 null-length-boundary-rejection immutable-inputs");
     }
 }

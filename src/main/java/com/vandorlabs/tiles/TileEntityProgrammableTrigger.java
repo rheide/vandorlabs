@@ -21,9 +21,7 @@ public final class TileEntityProgrammableTrigger extends TileEntityAnimatedScree
     public int getArtworkMode(int slot){return MODE_STATIC;}
     public int getArtworkSpeed(int slot){return 1;}
     public static boolean validArtwork(int[] modes,int[] speeds){
-        if(modes==null||speeds==null||modes.length!=4||speeds.length!=4)return false;
-        for(int i=0;i<4;i++)if(modes[i]<MODE_OFF||modes[i]>MODE_ANIMATED||speeds[i]<0||speeds[i]>=ANIMATION_SPEEDS.length)return false;
-        return true;
+        return TriggerState.validArtwork(modes,speeds);
     }
     /** Publish all fields together; legacy packets omit playback and retain its settings. */
     public boolean configureArtwork(int off,int on,boolean states,int exact,int low,int medium,
