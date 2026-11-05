@@ -16,7 +16,7 @@ final class NativePanelSlice {
         for(int axis=0;axis<2;axis++)for(int side=0;side<2;side++){double[] opening=source.edgeOpening(axis,side*16);if(opening!=null){int at=(axis*2+side)*2;openings[at]=opening[0];openings[at+1]=opening[1];}}
     }
     static NativePanelSlice get(NativePortholeLayout descriptor){
-        var pane=descriptor.pane();Key key=new Key(pane.columns(),pane.rows(),pane.column(),pane.row(),descriptor.shape(),descriptor.extraBorder());var found=CACHE.getIfPresent(key);if(found!=null)return found;
+        var pane=descriptor.pane();Key key=new Key(pane.columns(),pane.rows(),pane.flipU()?pane.columns()-1-pane.column():pane.column(),pane.flipV()?pane.rows()-1-pane.row():pane.row(),descriptor.shape(),descriptor.extraBorder());var found=CACHE.getIfPresent(key);if(found!=null)return found;
         try{return CACHE.get(key,()->new NativePanelSlice(WindowOutline.localSlice(key.columns,key.rows,key.shape,key.border,key.column,key.row)));}
         catch(java.util.concurrent.ExecutionException failure){throw new IllegalStateException("Aperture construction failed",failure.getCause());}
     }
