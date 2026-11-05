@@ -1,6 +1,7 @@
 package com.vandorlabs.tiles;
 
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.persistence.SignalControlData;
 import com.vandorlabs.redstone.RedstoneChannels;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.block.state.IBlockState;
@@ -35,17 +36,15 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
     private void writeMount(NBTTagCompound tag){tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",baseHeight);tag.setInteger("BaseTilt",baseTilt);tag.setInteger("TiltDirection",tiltDirection);}
     public int getLowLimit(){return low;}
     public int getHighLimit(){return high;}
-    public static boolean validLimits(int low,int high){return low>=1 && high<=15 && high-low>=2;}
-    public static int levelForStep(int value,int low,int high){return value==0?0:value==1?low:value==2?(low+high+1)/2:high;}
+    public static boolean validLimits(int low,int high){return SignalControlData.validLimits(low,high);}
+    public static int levelForStep(int value,int low,int high){return SignalControlData.levelForStep(value,low,high);}
     public int levelForStep(int value){return levelForStep(value,low,high);}
     public int getStep(){
         if(getRedstoneChannels().isEmpty())return step;
         return stepForLevel(getOutputLevel(),low,high);
     }
     public static int stepForLevel(int level,int low,int high){
-        int nearest=0,distance=16;
-        for(int i=level>0?1:0;i<4;i++){int d=Math.abs(level-levelForStep(i,low,high));if(d<distance){nearest=i;distance=d;}}
-        return nearest;
+        return SignalControlData.stepForLevel(level,low,high);
     }
     @Override public int getOutputLevel(){return getRedstoneChannels().isEmpty()?levelForStep(step):super.getOutputLevel();}
     public void configureLimits(int low,int high){
@@ -80,17 +79,17 @@ public class TileEntitySignalControl extends TileEntityRedstoneChannel {
         else if(previous>0)RedstoneChannels.latchLevelChanged(this,previous);
     }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
-        super.writeToNBT(tag);writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);tag.setInteger("ControlStep",step);return tag;
+        super.writeToNBT(tag);writeMount(tag);tag.setInteger(SignalControlData.LOW,low);tag.setInteger(SignalControlData.HIGH,high);tag.setInteger(SignalControlData.STEP,step);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag){
         super.readFromNBT(tag);
         int h=tag.getInteger("BaseHeight"),t=com.vandorlabs.blocks.SignalControlMount.readTilt(tag),d=tag.getInteger("TiltDirection");
         baseHeight=baseTilt=tiltDirection=0;
         if(com.vandorlabs.blocks.SignalControlMount.valid(h,t,d)){baseHeight=h;baseTilt=t;tiltDirection=d;}
-        int savedLow=tag.hasKey("LowLimit")?tag.getInteger("LowLimit"):5,savedHigh=tag.hasKey("HighLimit")?tag.getInteger("HighLimit"):15;
+        int savedLow=SignalControlData.savedLow(tag.hasKey(SignalControlData.LOW),tag.getInteger(SignalControlData.LOW)),savedHigh=SignalControlData.savedHigh(tag.hasKey(SignalControlData.HIGH),tag.getInteger(SignalControlData.HIGH));
         if(validLimits(savedLow,savedHigh)){low=savedLow;high=savedHigh;}
-        step=Math.max(0,Math.min(3,tag.getInteger("ControlStep")));
+        step=SignalControlData.savedStep(tag.getInteger(SignalControlData.STEP));
         if(world!=null && world.isRemote)world.markBlockRangeForRenderUpdate(pos,pos);
     }
-    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).hasSelectableType())tag.setInteger("ControlType",getControlType());writeMount(tag);tag.setInteger("LowLimit",low);tag.setInteger("HighLimit",high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
+    public NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();if(world!=null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockSignalControl && ((com.vandorlabs.blocks.BlockSignalControl)world.getBlockState(pos).getBlock()).hasSelectableType())tag.setInteger("ControlType",getControlType());writeMount(tag);tag.setInteger(SignalControlData.LOW,low);tag.setInteger(SignalControlData.HIGH,high);com.vandorlabs.redstone.ChannelData.write(tag,getRedstoneChannels());return tag;}
 }
