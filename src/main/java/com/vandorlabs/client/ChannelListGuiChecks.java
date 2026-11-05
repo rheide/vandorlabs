@@ -23,20 +23,27 @@ final class ChannelListGuiChecks {
     private static final String[] METHODS={"submit","send","send","sendUpdate","send","submit","sendUpdate","submit","submit","submit","submit","submit","submit","submit","submit","submit","submit"};
     private static final ChannelList EXPECTED=ChannelList.of(14861,14862,14863);
     private static final BlockPos POS=new BlockPos(8,80,8);
-    private static int index,stage,ticks;
+    private static final boolean TRIGGER_ONLY=Boolean.getBoolean("vandorlabs.triggerStateChecksOnly");
+    private static int index=TRIGGER_ONLY?2:0,stage,ticks;
     private static com.google.common.util.concurrent.ListenableFuture<?> pending;
     static void tick(Minecraft mc,File output) {
         if(stage==9)return;
         if(stage==0 && index==0 && Boolean.getBoolean("vandorlabs.controlIconsOnly")){checkControlModels(mc);index=9;}
+        if(TRIGGER_ONLY&&stage==6){
+            if(++ticks>20){try{capture(mc,output,"trigger_state_world");}catch(java.io.IOException failure){throw new IllegalStateException("Trigger world capture",failure);}System.out.println("[vandorlabs][reprolab] trigger-state-live PASS saved-front-sides-playback static-artwork exact-band-packets reopened-menu world-capture");stage=9;mc.shutdown();}
+            return;
+        }
         if(stage>=6){captureControls(mc,output);return;}
         try {
-            if(++ticks>400)throw new IllegalStateException("channel GUI timeout index="+index+" stage="+stage);
+            if(++ticks>400)throw new IllegalStateException("channel GUI timeout index="+index+" stage="+stage+" client-mode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" pos="+mc.player.getPosition());
             if(pending!=null){if(!pending.isDone())return;pending.get();pending=null;}
             if(stage==0){
+                if(TRIGGER_ONLY){mc.player.closeScreen();mc.displayGuiScreen(null);mc.setIngameFocus();mc.gameSettings.hideGUI=false;mc.playerController.setGameType(net.minecraft.world.GameType.CREATIVE);mc.player.inventory.currentItem=0;}
                 pending=mc.getIntegratedServer().addScheduledTask(()->{
                     EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());
+                    if(TRIGGER_ONLY){owner.interactionManager.setGameType(net.minecraft.world.GameType.CREATIVE);owner.inventory.currentItem=0;owner.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.CONFIGURIZER));owner.inventoryContainer.detectAndSendChanges();}
                     owner.closeScreen();owner.capabilities.isCreativeMode=true;owner.capabilities.isFlying=true;owner.sendPlayerAbilities();
-                    owner.setPositionAndUpdate(POS.getX()+.5,POS.getY(),POS.getZ()-2);
+                    if(TRIGGER_ONLY)owner.connection.setPlayerLocation(POS.getX()+.5,POS.getY(),POS.getZ()-2,0,25);else owner.setPositionAndUpdate(POS.getX()+.5,POS.getY(),POS.getZ()-2);
                     for(BlockPos p:BlockPos.getAllInBox(POS.add(-2,-2,-2),POS.add(2,3,2)))owner.world.setBlockToAir(p);
                     owner.world.setBlockState(POS.down(),Blocks.STONE.getDefaultState(),3);
                     Block block=index==16?Block.getBlockFromName("vandorlabs:push_button"):index==14?Block.getBlockFromName("vandorlabs:industrial_power_lever"):index==15?Block.getBlockFromName("vandorlabs:rocker_switch"):index==13?Block.getBlockFromName("vandorlabs:small_power_lever"):index>=9 && index<13?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs",SignalControlRuntimeChecks.IDS[index-9])):index==0?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:rocker_switch")):
@@ -45,16 +52,34 @@ final class ChannelListGuiChecks {
                         index==5?ModBlocks.PROGRAMMABLE_RAMP:index==8?Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:ion_drive")):Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+(index==6?"programmable_door":"landing_gear")));
                     owner.world.setBlockState(POS,block instanceof BlockVandorSwitch?block.getDefaultState().withProperty(BlockVandorSwitch.FACING,net.minecraft.util.EnumFacing.UP):block instanceof BlockIndustrialLever?block.getDefaultState().withProperty(BlockIndustrialLever.FLOOR,true):block.getDefaultState(),3);
                     if(block instanceof BlockVandorDoor)owner.world.setBlockState(POS.up(),block.getDefaultState().withProperty(BlockVandorDoor.HALF,BlockDoor.EnumDoorHalf.UPPER),3);
+                    if(TRIGGER_ONLY){
+                        com.vandorlabs.tiles.TileEntityProgrammableTrigger trigger=(com.vandorlabs.tiles.TileEntityProgrammableTrigger)owner.world.getTileEntity(POS);
+                        require(trigger.configureArtwork(4,5,false,-1,6,7,ChannelList.EMPTY,new int[]{0,2,1,2},new int[]{2,0,1,2},true,7),"trigger seed refused");
+                        net.minecraft.nbt.NBTTagCompound saved=trigger.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+                        com.vandorlabs.tiles.TileEntityProgrammableTrigger restored=new com.vandorlabs.tiles.TileEntityProgrammableTrigger();restored.readFromNBT(saved);
+                        require(saved.equals(restored.writeToNBT(new net.minecraft.nbt.NBTTagCompound())),"trigger saved fields changed on reload");
+                        require(restored.isFrontOnly()&&restored.getSidesTexture()==7&&restored.getArtworkMode(0)==1&&restored.getArtworkSpeed(0)==1,"trigger saved/static projection");
+                    }
                     if(!(owner.world.getTileEntity(POS) instanceof RedstoneChannelMember))throw new IllegalStateException("missing GUI fixture "+index);
                 });stage=1;ticks=0;return;
             }
-            if(stage==1 && ticks>20){if(index==0)checkControlModels(mc);open(mc);stage=2;ticks=0;return;}
+            if(stage==1 && ticks>20){
+                if(TRIGGER_ONLY&&(mc.playerController.getCurrentGameType()!=net.minecraft.world.GameType.CREATIVE||mc.player.inventory.currentItem!=0||mc.player.getHeldItemMainhand().getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER||mc.player.getDistanceSq(POS)>16||!(mc.world.getTileEntity(POS) instanceof com.vandorlabs.tiles.TileEntityProgrammableTrigger)))return;
+                if(index==0)checkControlModels(mc);open(mc);stage=2;ticks=0;return;}
             if(stage==2 && ticks>15 && mc.currentScreen!=null){
                 GuiTextField field=field(mc);
                 field.setText("14861,");require(ChannelFields.parse(field)==null,"incomplete list accepted");
                 field.setText("14863, 14861, 14862, 14861");require(EXPECTED.equals(ChannelFields.parse(field)),"GUI rejects comma list");
                 if(index==1)for(int i=0;i<3;i++)((GuiProgrammableLight)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(102,0,0,"Signal brightness"));
-                if(index==2){((GuiProgrammableTrigger)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(101,0,0,"Signal bands"));((GuiProgrammableTrigger)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(102,0,0,"Exact level"));}
+                if(index==2){
+                    if(TRIGGER_ONLY){
+                        triggerClick(mc,111,0);triggerClick(mc,103,0);triggerClick(mc,103,1);
+                        triggerClick(mc,101,0);triggerClick(mc,102,0);
+                        triggerClick(mc,102,1);
+                        Field exact=GuiProgrammableTrigger.class.getDeclaredField("exact");exact.setAccessible(true);require(exact.getInt(mc.currentScreen)==-1,"Trigger right-click previous value");
+                        triggerClick(mc,102,0);require(exact.getInt(mc.currentScreen)==0,"Trigger left-click restores exact zero");
+                    }else{((GuiProgrammableTrigger)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(101,0,0,"Signal bands"));((GuiProgrammableTrigger)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(102,0,0,"Exact level"));}
+                }
                 if(index==8){((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(5,0,0,"Signal brightness"));((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(6,0,0,"Threshold"));}
                 if(index>=9){for(int id:new int[]{9,9,9,10,10,10,11})((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(id,0,0,"Mount"));}
                 if(index>=9 && index<13){((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(7,0,0,"Low"));((GuiRedstoneChannel)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(8,0,0,"High"));}
@@ -72,6 +97,7 @@ final class ChannelListGuiChecks {
                     if(index==13)require(((com.vandorlabs.tiles.TileEntityRedstoneChannel)member).getPowerLeverSize()==1,"size packet did not apply");
                     require(member!=null && EXPECTED.equals(member.getRedstoneChannels()),"server lost submitted list index="+index);
                     if(index==1)require(((com.vandorlabs.tiles.TileEntityProgrammableLight)member).isSignalBrightness(),"light brightness packet");
+                    if(TRIGGER_ONLY){com.vandorlabs.tiles.TileEntityProgrammableTrigger trigger=(com.vandorlabs.tiles.TileEntityProgrammableTrigger)member;require(trigger.isFrontOnly()&&trigger.getSidesTexture()==7,"trigger front/sides packet");}
                     if(index==2)require(((com.vandorlabs.tiles.TileEntityProgrammableTrigger)member).isLevelStates() && ((com.vandorlabs.tiles.TileEntityProgrammableTrigger)member).getExactLevel()==0,"trigger levels packet");
                     if(index==8)require(((com.vandorlabs.tiles.TileEntityRedstoneLight)member).isSignalBrightness() && ((com.vandorlabs.tiles.TileEntityRedstoneLight)member).getParticleThreshold()==9,"propulsion levels packet");
                 });mc.player.closeScreen();stage=4;ticks=0;return;
@@ -87,7 +113,9 @@ final class ChannelListGuiChecks {
                 require(EXPECTED.toString().equals(field(mc).getText()),"reopened GUI lost list index="+index);
                 ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_channels_"+index+".png"));
                 System.out.println("[vandorlabs][reprolab] channel-gui PASS "+mc.currentScreen.getClass().getSimpleName());
-                mc.player.closeScreen();index++;stage=0;ticks=0;
+                mc.player.closeScreen();
+                if(TRIGGER_ONLY){stage=6;ticks=0;return;}
+                index++;stage=0;ticks=0;
                 if(index==IDS.length){stage=6;System.out.println("[vandorlabs][reprolab] channel-gui-runtime PASS");}
             }
         }catch(Exception e){throw new IllegalStateException("channel dialog regression index="+index+" stage="+stage,e);}
@@ -253,6 +281,11 @@ final class ChannelListGuiChecks {
             for(net.minecraft.client.gui.GuiButton button:buttons)if(button.enabled&&"Redstone".equals(button.displayString)){if(gui instanceof GuiAnimatedScreenSelector)((GuiAnimatedScreenSelector)gui).actionPerformed(button);else if(gui instanceof GuiProgrammableInput)((GuiProgrammableInput)gui).actionPerformed(button);else if(gui instanceof GuiProgrammableHalfConsole)((GuiProgrammableHalfConsole)gui).actionPerformed(button);else ((GuiSpaceDoor)gui).actionPerformed(button);break;}
         }
         Field field=mc.currentScreen.getClass().getDeclaredField(index==7?"channel":"channelField");field.setAccessible(true);return (GuiTextField)field.get(mc.currentScreen);
+    }
+    private static void triggerClick(Minecraft mc,int id,int mouse)throws java.io.IOException{
+        java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,mc.currentScreen,"buttonList","field_146292_n");
+        for(net.minecraft.client.gui.GuiButton button:buttons)if(button.id==id){((GuiProgrammableTrigger)mc.currentScreen).mouseClicked(button.x+2,button.y+2,mouse);return;}
+        throw new IllegalStateException("Missing Trigger option "+id);
     }
     private static void open(Minecraft mc){pending=mc.getIntegratedServer().addScheduledTask(()->{
         EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());

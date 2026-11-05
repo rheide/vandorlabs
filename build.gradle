@@ -1035,3 +1035,9 @@ task testArmJournalLimits(type: JavaExec) {
     main = 'com.vandorlabs.gear.ArmJournalLimitsChecks'
 }
 check.dependsOn testArmJournalLimits
+
+task testTriggerState(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.persistence.TriggerStateTest'
+}
