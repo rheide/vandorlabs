@@ -55,7 +55,7 @@ Run shared fixtures on Java 8 and 21, the existing Forge dedicated-server linkag
 
 ## Integrated channel lookup
 
-`ChannelSourceIndex` owns the current identity-based source banks and spatial lookup. Forge keeps its original immutable position snapshots and delegates through scalar accessors. Every channel in a network shares one query-buffer pool; reentrant queries borrow separate buffers and clear references on completion. The extraction preserves query order, activity checks, diagnostic counts and allocation behavior. Registration, recipient discovery, delivery, latch state and deferred lifecycle remain in the platform network.
+`ChannelSourceIndex` owns the current identity-based source banks and spatial lookup. Forge keeps its original immutable position snapshots and delegates through scalar accessors. Every channel in a network shares one query-buffer pool; reentrant queries borrow separate buffers and clear references on completion. The extraction preserves query order, activity checks, diagnostic counts and allocation behavior. `ChannelRecipientIndex` likewise owns identity-based recipient spatial lookup, retaining each adapter's immutable position snapshots and exact bucket/candidate accounting. Registration, delivery, latch state and deferred lifecycle remain in the platform network.
 
 Native controls must use these current range semantics. The historical global channel implementation is not a substitute for spatial lookup or per-recipient levels. Keep loaded-world and exact tile identity checks in the platform adapter, and validate source removal and receiver replacement through the focused channel fixture.
 
