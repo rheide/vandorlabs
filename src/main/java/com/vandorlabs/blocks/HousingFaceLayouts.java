@@ -8,10 +8,7 @@ public final class HousingFaceLayouts {
     private final Plane[] planes;
     public HousingFaceLayouts(Plane[] planes){this.planes=planes.clone();}
     public Plane face(EnumFacing face){return planes[face.getIndex()];}
-    public static final class Plane {
-        private final int[] min,size;
-        public Plane(int[] min,int[] size){this.min=min.clone();this.size=size.clone();}
-        public int min(int axis){return min[axis];}public int size(int axis){return size[axis];}
-        @Override public String toString(){return java.util.Arrays.toString(min)+java.util.Arrays.toString(size);}
+    public static final class Plane extends com.vandorlabs.render.HousingFacePlane {
+        public Plane(int[] min,int[] size){super(min,size);}
     }
 }

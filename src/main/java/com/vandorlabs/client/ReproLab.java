@@ -644,6 +644,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.cubeJoiningChecksOnly")){if(++holdTicks>=40){JoinedHousingRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] cube-joining-live PASS");mc.shutdown();}return;}
         if(Boolean.getBoolean("vandorlabs.triggerStateChecksOnly")){ChannelListGuiChecks.tick(mc,outDir);return;}
         if(Boolean.getBoolean("vandorlabs.savedCouplingChecksOnly")){try{if(SavedVehicleCouplingChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved vehicle coupling",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.savedHoverChecksOnly")){try{if(SavedVehicleHoverChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved Hover recovery",failure);}return;}

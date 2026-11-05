@@ -13,7 +13,7 @@ unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VAN
 
 unset VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
-unset VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY
+unset VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -21,7 +21,10 @@ case "${1:-}" in
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = trigger-state ]; then
+        if [ "$TARGET" = cube-joining ]; then
+            PREFIX=joined_cube_
+            export VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY=true
+        elif [ "$TARGET" = trigger-state ]; then
             PREFIX=channels_2
             export VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY=true
         elif [ "$TARGET" = vehicle-signs ]; then
@@ -322,6 +325,13 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = cube-joining ]; then
+        grep -q "joined-fit-vanilla-appearance PASS cases=15" "$RUN_OUT/client.log"
+        grep -q "joined-block-textures PASS 72" "$RUN_OUT/client.log"
+        grep -q "cube-joining-live PASS" "$RUN_OUT/client.log"
+        echo "Cube joining checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = trigger-state ]; then
         grep -q "channel-gui PASS GuiProgrammableTrigger" "$RUN_OUT/client.log"
         grep -q "trigger-state-live PASS" "$RUN_OUT/client.log"

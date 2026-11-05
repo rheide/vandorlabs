@@ -1050,3 +1050,9 @@ task testHousingSettings(type: JavaExec) {
     main = 'com.vandorlabs.client.HousingSettingsChecks'
 }
 check.dependsOn testHousingSettings
+
+task testHousingFacePlane(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.HousingFacePlaneTest'
+}
