@@ -20,7 +20,7 @@ public final class WallHostChecks {
     public static final class Counting extends NativeWallEntity {
         int dirty,models;boolean observe;
         Counting(boolean porthole){super(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),BlockPos.ZERO,VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get().defaultBlockState(),porthole);observe=true;}
-        private void projection(){if(observe){var snapshot=wallAppearance();require(snapshot!=null&&snapshot.base()==appearance()&&snapshot.walls()==wallSettings()&&snapshot.frames()==frameSettings(),"complete derived snapshot before notification");require(getModelData().get(WALL_APPEARANCE)==snapshot,"model data exposes immutable wall snapshot");}}
+        private void projection(){if(observe){var snapshot=wallAppearance();require(snapshot!=null&&snapshot.base()==appearance()&&snapshot.walls()==wallSettings()&&snapshot.frames()==frameSettings()&&snapshot.glass()==panelGlassSettings()&&snapshot.aperture()==apertureLayout()&&snapshot.playback()==panelPlayback(),"complete derived snapshot before notification");require(getModelData().get(WALL_APPEARANCE)==snapshot,"model data exposes immutable wall snapshot");}}
         @Override public void setChanged(){dirty++;projection();super.setChanged();}
         @Override public void requestModelDataUpdate(){models++;projection();super.requestModelDataUpdate();}
         void reset(){dirty=0;models=0;}

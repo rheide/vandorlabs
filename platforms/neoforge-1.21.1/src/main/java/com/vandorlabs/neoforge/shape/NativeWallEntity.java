@@ -17,7 +17,8 @@ import net.neoforged.neoforge.client.model.data.*;
 
 /** Shared wall save/editor host. Discovery publishes immutable geometry on the owning thread. */
 public class NativeWallEntity extends ProgrammableShapeEntity {
-    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture){
+    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback){
+        public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture){this(base,walls,frames,glass,geometry,aperture,PanelPlayback.DEFAULT);}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry){this(base,walls,frames,glass,geometry,NativePortholeLayout.unit(walls==null||walls.portholeShape<0||walls.portholeShape>3?0:walls.portholeShape));}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,NativeWallGeometry geometry){this(base,walls,frames,PanelGlassSettings.fresh(),geometry);}
     }
@@ -29,6 +30,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private WallSettings walls;
     private FrameSettings frames=defaultFrames();
     private PanelGlassSettings glass=PanelGlassSettings.fresh();
+    private PanelPlayback playback=PanelPlayback.DEFAULT;
     private NativeWallGeometry geometry;
     private NativeFluidVolume.Side partition;
     private long geometryGeneration,topologyRevision,modelRevision;
@@ -51,6 +53,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public final WallSettings wallSettings(){return walls;}
     public final FrameSettings frameSettings(){return frames;}
     public final PanelGlassSettings panelGlassSettings(){return glass;}
+    public final PanelPlayback panelPlayback(){return playback;}
     public final NativePortholeLayout apertureLayout(){return aperture;}
     /** Deferred topology calls this before the owning pass publishes model data. */
     boolean publishApertureLayout(NativePortholeLayout next){
@@ -60,7 +63,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public final WallAppearance wallAppearance(){return wallAppearance;}
     public long modelDataRevision(){return modelRevision;}
     public final long topologyRevision(){return topologyRevision;}
-    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture);}
+    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture,playback);}
     @Override protected void appearancePublished(){publishWallAppearance();}
     public static boolean validFrame(int choice){if(choice==-1)return true;if(!ModernFinishCatalog.validChoice(choice))return false;String category=ModernFinishCatalog.option(choice).category();return category.equals("Frame")||category.startsWith("Frame/");}
     public static boolean validSurface(int choice){return validFrame(choice)||ModernFinishCatalog.validChoice(choice)&&ModernFinishCatalog.option(choice).general();}
@@ -81,8 +84,9 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public static boolean validPanelGlass(PanelGlassSettings value){return value!=null&&com.vandorlabs.tiles.GlassTextures.valid(value.shade)&&com.vandorlabs.tiles.GlassTextures.validTint(value.tint)&&(value.material==-1||ModernFinishCatalog.validChoice(value.material))&&(value.layout==-1||com.vandorlabs.render.TextureLayoutMode.valid(value.layout));}
     private static int panelMaterial(int value){return value==-1||ModernFinishCatalog.validChoice(value)?value:-1;}
     /** Atomic equivalent of the current panel appearance/layout setter order. */
-    public boolean configurePanelGlass(PanelGlassSettings next,boolean joinPortholes,int portholeShape){
-        if(!validPanelGlass(next)||portholeShape<0||portholeShape>3||level!=null&&(level.isClientSide||level.getServer()==null||!level.getServer().isSameThread()))return false;
+    public boolean configurePanelGlass(PanelGlassSettings next,boolean joinPortholes,int portholeShape){return configurePanelGlass(next,playback,joinPortholes,portholeShape);}
+    public boolean configurePanelGlass(PanelGlassSettings next,PanelPlayback nextPlayback,boolean joinPortholes,int portholeShape){
+        if(nextPlayback==null||!validPanelGlass(next)||portholeShape<0||portholeShape>3||level!=null&&(level.isClientSide||level.getServer()==null||!level.getServer().isSameThread()))return false;
         int raw=glass.layout;boolean stretch=next.stretch;
         if(glass.stretch!=stretch||glass.textureJoin!=next.textureJoin)raw=-1;
         int layout=next.textureLayout();if(PanelGlassSettings.textureLayout(raw,stretch)!=layout){raw=layout;stretch=layout!=1;}
@@ -90,7 +94,8 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         boolean wallChanged=walls.joinPortholes!=joinPortholes||walls.portholeShape!=portholeShape;
         if(changed)glass=new PanelGlassSettings(next.shade,next.material,raw,stretch,next.tint,next.framed,next.textureJoin);
         if(wallChanged)walls=new WallSettings(walls.fullWidth,walls.halfHeight,walls.fill,walls.join,joinPortholes,portholeShape);
-        if(changed||wallChanged){NativeWallLayouts.invalidate(this);publishShapeChange();}
+        boolean playbackChanged=!playback.equals(nextPlayback);if(playbackChanged)playback=nextPlayback;
+        if(changed||wallChanged||playbackChanged){NativeWallLayouts.invalidate(this);publishShapeChange();}
         return true;
     }
     /** Derived topology is not saved: no dirty flag or NBT packet is sent here. Equal snapshots do nothing. */
@@ -111,12 +116,13 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     @Override public int intrinsicContainedLight(){return Math.max(porthole||frames.bare?0:frameLight(frames.front),Math.max(frameLight(frames.interior),frameLight(frames.exteriorChoice())));}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         NativeWallLayouts.invalidate(this);
+        playback=PanelPlayback.read(tag);
         glass=PanelGlassSettings.read(new ModernHousingTags(tag),NativeWallEntity::panelMaterial);
         walls=WallSettings.read(new ModernHousingTags(tag));frames=FrameSettings.read(new ModernHousingTags(tag),NativeWallEntity::validFrame,NativeWallEntity::validSurface,ModernFinishCatalog::validChoice);
         super.loadAdditional(tag,registries);
     }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        super.saveAdditional(tag,registries);var data=new ModernHousingTags(tag);WallSettings.write(data,walls.fullWidth,walls.halfHeight,walls.fill,walls.join,walls.joinPortholes,walls.portholeShape);frames.write(data);glass.write(data);
+        super.saveAdditional(tag,registries);var data=new ModernHousingTags(tag);WallSettings.write(data,walls.fullWidth,walls.halfHeight,walls.fill,walls.join,walls.joinPortholes,walls.portholeShape);frames.write(data);glass.write(data);playback.write(tag);
     }
     @Override public void setRemoved(){NativeWallLayouts.invalidate(this);super.setRemoved();}
     @Override public void onChunkUnloaded(){NativeWallLayouts.invalidate(this);super.onChunkUnloaded();}
