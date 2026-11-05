@@ -126,17 +126,19 @@ Generate native resources by following the canonical blockstate and item-model d
 
 Acceptance requires identical shared contracts under both JDKs, unchanged focused Forge dialog pixels and behavior, native detent/latch/configured-item save/reload checks, actual mounted models and padded item renders, and actual menu interactions at both GUI scales. Test invalid settings, reverse cycling, cancelled drafts, type/size changes and partial channel overlap. Moving-assembly and shader requirements remain separately visible in feature coverage.
 
-## Next programmable cube integration
+## Programmable cube integration
 
-Use the current typed housing save contract before adapting the historical native block entity. Preserve missing-field defaults, side materials, legacy index migration, layout fallback and six local face overrides. Storage supplies its own missing-main default before the shared read; other families may retain their prior value.
+The native cube uses the current typed housing save contract, preserving missing-field defaults, side materials, legacy index migration, layout fallback and six local face overrides. Other families must use their current defaults when adapting this contract: storage supplies its own missing-main default before the shared read, while other selectors may retain their prior value.
 
 The current cube dialog now delegates shared layout, state transitions and picker input rules from `GuiProgrammableWall`: its Appearance row begins at `top + 30`, with content at `top + 54` or `top + 78` when face tabs are present. The historical native dialog predates that row and must not define the current layout. The shared contracts retain reverse cycling, scrolling, hit regions and operation IDs for the native menu adapter.
 
-Then integrate current housing plane, joining and lighting policies with the native block/entity, menu, bounded payload and renderer adapters. Accept the slice through cube-specific persistence, permissions, configured item, joining, dialog and rendered checks. Historical multi-family fixture classes must be narrowed to implemented families without weakening their assertions. Preserve unsupported custom-material and carried integration requirements in the inventory.
+Current housing plane, joining and lighting policies are integrated with the native block/entity, menu, bounded payload and renderer adapters. Focused checks cover persistence, permissions, configured items, joining, dialogs and emitted geometry against the current Forge exporter. Installed filesystem PNGs also retain their IDs across missing-file and dimension reloads. Custom block sampling, carried integration and exact packaged-JAR runtime acceptance remain outstanding; historical multi-family fixtures do not establish those capabilities.
+
+The shared dialog foundation also serves existing Forge families: panel dimensions and picker scrolling are common policies, and cube and Trigger controls share immutable descriptors. `TriggerDialog` owns current tab order, labels, enabled states and edit transitions; the legacy adapter keeps its channel draft, packet transport and immediate submissions. Mounted-control draft transactions remain separate.
 
 ## Housing save contract
 
-`HousingSettings` owns the existing main/side material, main texture layout, slab-side fallback and six local face overrides. `HousingTags` adds strict integer/boolean and integer-array access to the primitive save adapter. Catalog validation remains supplied by the platform; this extraction does not register a native programmable cube.
+`HousingSettings` owns the existing main/side material, main texture layout, slab-side fallback and six local face overrides. `HousingTags` adds strict integer/boolean and integer-array access to the primitive save adapter. Catalog validation and native registration remain platform-owned.
 
 A missing or mistyped main texture retains the previous selector value without applying catalog migration. An explicit unversioned main index maps the removed grille at index 14 to zero and decrements later indices. Missing or invalid main layouts retain the raw fallback sentinel; `SlabTileSides` still determines the effective layout. Missing or mistyped slab-side booleans retain their previous value. Disabled face overrides retain their six saved choices. Storage keeps its separate existing default injection before delegating to the shared selector.
 
