@@ -20,6 +20,8 @@ public interface ContainedFluidHost {
     NativeFluidSlots containedFluids();
     NativeFluidVolume fluidVolumeSnapshot();
     long fluidGeometryRevision();
+    /** Cosmetic snapshot publication is independent of physical/fluid neighbor changes. */
+    default long modelDataRevision(){return fluidGeometryRevision();}
     /** Deferred owning-thread rebuild, after loaded identity is checked. */
     void refreshFluidGeometry();
     int containedFluidSide(double x,double y,double z);

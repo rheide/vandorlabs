@@ -266,3 +266,8 @@ tasks.register('testNativeFluidLight', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('panelGlassReference')) systemProperty 'vandorlabs.panelGlassReference', file(project.property('panelGlassReference')).absolutePath
 }
+tasks.register('testNativeFluidPublication', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.fluid.NativeFluidPublicationChecks'
+}

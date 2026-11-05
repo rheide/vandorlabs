@@ -40,7 +40,12 @@ public final class NativeFluidWorld {
     private static final Map<Level,Set<Long>> CHUNK_PENDING=Collections.synchronizedMap(new IdentityHashMap<>());
     private static final Map<Level,Long> CHUNK_INVALIDATIONS=Collections.synchronizedMap(new IdentityHashMap<>());
     private static final Map<Level,it.unimi.dsi.fastutil.longs.Long2ObjectMap<ContainedFluidHost>> CONTACTS=Collections.synchronizedMap(new IdentityHashMap<>());
-    private record Revision(long fluid,long geometry){}
+    record Revision(long fluid,long geometry,long model){
+        boolean neighborsChanged(Revision before){
+            return before==null||fluid!=before.fluid||geometry!=before.geometry;
+        }
+        boolean modelChanged(Revision before){return before==null||model!=before.model;}
+    }
     private static final Map<ContainedFluidHost,Revision> PUBLISHED=Collections.synchronizedMap(new IdentityHashMap<>());
     private static final Set<Level> CLOSED=Collections.synchronizedSet(Collections.newSetFromMap(new java.util.WeakHashMap<>()));
     private NativeFluidWorld(){}
@@ -83,9 +88,10 @@ public final class NativeFluidWorld {
     public static long chunkInvalidations(Level level){return CHUNK_INVALIDATIONS.getOrDefault(level,0L);}
     @SubscribeEvent public static void unload(LevelEvent.Unload event){if(event.getLevel() instanceof Level level)CLOSED.add(level);PENDING.remove(event.getLevel());CONTACTS.remove(event.getLevel());CHUNK_PENDING.remove(event.getLevel());CHUNK_INVALIDATIONS.remove(event.getLevel());PUBLISHED.keySet().removeIf(host->host.fluidOwner().getLevel()==event.getLevel());}
     public static void changed(ContainedFluidHost host){if(!installed(host))return;host.refreshFluidGeometry();if(!installed(host))return;contact(host);BlockEntity owner=host.fluidOwner();Level level=owner.getLevel();
-        Revision next=new Revision(host.containedFluids().revision(),host.fluidGeometryRevision());
-        if(!next.equals(PUBLISHED.put(host,next)))queueNeighbors(level,owner.getBlockPos());
-        int light=Math.max(0,Math.min(15,host.intrinsicContainedLight()));for(int side=0;side<2;side++){var fluid=host.containedFluids().get(side);if(!fluid.isEmpty())light=Math.max(light,fluid.getFluidType().getLightLevel(fluid));}var manager=level.getAuxLightManager(owner.getBlockPos());if(manager!=null&&manager.getLightAt(owner.getBlockPos())!=light){manager.setLightAt(owner.getBlockPos(),light);}if(level.isClientSide)net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new NativeFluidEvents.Updated(host));}
+        Revision next=new Revision(host.containedFluids().revision(),host.fluidGeometryRevision(),host.modelDataRevision());
+        Revision before=PUBLISHED.put(host,next);
+        if(next.neighborsChanged(before))queueNeighbors(level,owner.getBlockPos());
+        int light=Math.max(0,Math.min(15,host.intrinsicContainedLight()));for(int side=0;side<2;side++){var fluid=host.containedFluids().get(side);if(!fluid.isEmpty())light=Math.max(light,fluid.getFluidType().getLightLevel(fluid));}var manager=level.getAuxLightManager(owner.getBlockPos());if(manager!=null&&manager.getLightAt(owner.getBlockPos())!=light){manager.setLightAt(owner.getBlockPos(),light);}if(level.isClientSide)net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new NativeFluidEvents.Updated(host,next.modelChanged(before)));}
     /** Block callbacks only enqueue an already-installed loaded host. */
     public static void queueAt(net.minecraft.world.level.LevelAccessor accessor,BlockPos pos){if(accessor instanceof Level level&&loaded(level,pos)&&level.getBlockEntity(pos) instanceof ContainedFluidHost host)queue(host);}
     public static void blockChanged(Level level,BlockPos pos){if(!open(level))return;queueAt(level,pos);queueNeighbors(level,pos);}
