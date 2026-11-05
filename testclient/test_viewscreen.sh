@@ -17,7 +17,7 @@ unset VANDOR_LABS_CHANNEL_SOURCE_INDEX_CHECKS_ONLY VANDOR_LABS_MATERIAL_SPRITE_C
 
 unset VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY
 
-unset VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY
+unset VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONLY VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -28,6 +28,9 @@ case "${1:-}" in
         if [ "$TARGET" = glass-dialog ]; then
             PREFIX=glass_dialog_
             export VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY=true
+        elif [ "$TARGET" = stair-settings ]; then
+            PREFIX=stair_settings_
+            export VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONLY=true
         elif [ "$TARGET" = mounted-control-dialog ]; then
             PREFIX=mounted_control_dialog_
             export VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY=true
@@ -357,6 +360,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = glass-dialog ]; then
         grep -q "glass-dialog legacy PASS" "$RUN_OUT/client.log"
         echo "Glass dialog passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = stair-settings ]; then
+        for marker in stair-configuration stair-mesh stair-appearance stair-icons stair-settings-live; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
+        echo "Stair settings checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = mounted-control-dialog ]; then

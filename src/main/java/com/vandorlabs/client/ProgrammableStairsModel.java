@@ -100,8 +100,8 @@ public final class ProgrammableStairsModel implements IBakedModel {
             if(tag==null)return original;
             ProgrammableStairsModel model=new ProgrammableStairsModel(base,tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE),
                     tag.hasKey("SideTexture",3)?tag.getInteger("SideTexture"):-1,new FaceTextures(tag.getBoolean("FaceTexturesEnabled"),tag.getIntArray("FaceTextures")),tag.hasKey("MainTextureLayout",3)?tag.getInteger("MainTextureLayout"):tag.getBoolean("SlabTileSides")?1:0);
-            int tread=tag.hasKey("StairTread",3)?tag.getInteger("StairTread"):8;
-            model.itemGeometry=(com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)?tread:8)|(Math.max(0,Math.min(2,tag.getInteger("StairRoll")))<<5);
+            int tread=com.vandorlabs.persistence.StairState.readTread(tag.hasKey(com.vandorlabs.persistence.StairState.TREAD,3),tag.getInteger(com.vandorlabs.persistence.StairState.TREAD));
+            model.itemGeometry=com.vandorlabs.persistence.StairState.packed(tread,com.vandorlabs.persistence.StairState.readRoll(tag.getInteger(com.vandorlabs.persistence.StairState.ROLL)));
             return model;
         }
     };}

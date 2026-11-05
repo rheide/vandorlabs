@@ -1286,3 +1286,10 @@ task testGlassSettingsDataAdapters(type: JavaExec) {
     main = 'com.vandorlabs.client.GlassSettingsDataChecks'
 }
 check.dependsOn testGlassSettingsDataAdapters
+
+task testStairStateAdapters(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.StairStateChecks'
+}
+check.dependsOn testStairStateAdapters

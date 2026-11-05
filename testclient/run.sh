@@ -32,6 +32,7 @@ CAPTURE_JVM+=("-Dvandorlabs.mountedControlDialogChecksOnly=${VANDOR_LABS_MOUNTED
 CAPTURE_JVM+=("-Dvandorlabs.controlLatchLevelsChecksOnly=${VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.retiredGlassClientOnly=${VANDOR_LABS_RETIRED_GLASS_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.filesystemDiscoveryChecksOnly=${VANDOR_LABS_FILESYSTEM_DISCOVERY_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.stairSettingsChecksOnly=${VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.controlMountSettingsChecksOnly=${VANDOR_LABS_CONTROL_MOUNT_SETTINGS_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.materialSpriteChecksOnly=${VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.cubeReferenceExportOnly=${VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY:-false}")

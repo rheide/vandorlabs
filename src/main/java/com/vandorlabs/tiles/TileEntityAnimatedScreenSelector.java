@@ -346,9 +346,9 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private int stairTread=8,stairRoll;
     public int stairTread(){return stairTread;}
     public int stairRoll(){return stairRoll;}
-    public int stairGeometry(){return stairTread|(stairRoll<<5);}
+    public int stairGeometry(){return com.vandorlabs.persistence.StairState.packed(stairTread,stairRoll);}
     public void setStairGeometry(int tread,int roll){
-        if(!com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)||roll<0||roll>2)return;
+        if(!com.vandorlabs.persistence.StairState.valid(tread,roll))return;
         if(stairTread==tread&&stairRoll==roll)return;
         stairTread=tread;stairRoll=roll;fluids.invalidateGeometry();settingsChanged();
         if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}
@@ -602,12 +602,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        compound.setInteger("StairTread",stairTread);compound.setInteger("StairRoll",stairRoll);
+        NbtPrimitiveData primitiveData=new NbtPrimitiveData(compound);
+        com.vandorlabs.persistence.StairState.write(primitiveData,stairTread,stairRoll);
         super.writeToNBT(compound);if(primarySurface==CHIP_SURFACE||secondarySurface==CHIP_SURFACE)compound.setInteger("ChipDisplayPage",chipPage);else compound.removeTag("ChipDisplayPage");if(chipReader!=null&&!chipReader.isEmpty())compound.setTag("ScreenChipReader",chipReader.writeEmbedded());else compound.removeTag("ScreenChipReader");activation.write(compound);frameAppearance.write(compound);glassPlayback.write(compound);compound.setBoolean("RedstoneInverted",redstoneInverted);compound.setInteger("ChannelLevel",channelLevel);ChannelData.write(compound,channels);
         compound.setInteger("PrimarySurfaceTexture",primarySurface);compound.setInteger("SecondarySurfaceTexture",secondarySurface);
         compound.setBoolean("CeilingMounted",ceilingMounted);
         if (ceilingPosition>=0) compound.setInteger("CeilingPosition",ceilingPosition);
-        NbtPrimitiveData primitiveData=new NbtPrimitiveData(compound);
         new ScreenData(selectedScreen, redstoneEnabled, displayMode, framed,
                 animationSpeedIndex, inputPanel, secondaryInputPanel, wallPosition,
                 smallInput, redstoneChannel, channelSignal, housingTexture)
@@ -636,9 +636,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void readFromNBT(NBTTagCompound compound) {compound=com.vandorlabs.redstone.TransmitterSlots.normalize(compound);
         if(FrameAppearance.needsLegacyScreen(compound)){compound=compound.copy();FrameAppearance.migrateLegacyScreen(compound);}
         int previousStair=stairGeometry();
-        int tread=compound.hasKey("StairTread",3)?compound.getInteger("StairTread"):8;
-        stairTread=com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(tread)?tread:8;
-        stairRoll=Math.max(0,Math.min(2,compound.getInteger("StairRoll")));if(previousStair!=stairGeometry())fluids.invalidateGeometry();
+        stairTread=com.vandorlabs.persistence.StairState.readTread(compound.hasKey(com.vandorlabs.persistence.StairState.TREAD,3),compound.getInteger(com.vandorlabs.persistence.StairState.TREAD));
+        stairRoll=com.vandorlabs.persistence.StairState.readRoll(compound.getInteger(com.vandorlabs.persistence.StairState.ROLL));if(previousStair!=stairGeometry())fluids.invalidateGeometry();
         ChannelList previousChannels=channels;
         FaceTextures previousFaces = faceTextures;
         int previousHousing = housingTexture;
