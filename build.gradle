@@ -1367,3 +1367,9 @@ task testFrameEdgePixels(type: JavaExec) {
     workingDir = projectDir
     if (project.hasProperty('frameEdgeExpected')) systemProperty 'vandorlabs.frameEdgeExpected', project.property('frameEdgeExpected')
 }
+task testFlatFluidSurfaceLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FlatFluidSurfaceLegacyChecks'
+    if (project.hasProperty('flatFluidExport')) systemProperty 'vandorlabs.flatFluidExport', file(project.property('flatFluidExport')).absolutePath
+}
