@@ -124,5 +124,27 @@ final class NativePanelQuads {
         Context target=new Context(owner.facing(),glass,0,NativePanelLayout.UNIT,false,0,0,0,opacity,0);
         part(target,stem.captured(),0,owner.panelNear()-6,owner.stemLeft(),owner.stemWidth(),owner.barNear(),true);part(target,bar.captured(),3,owner.barNear()-6,0,1,owner.barNear(),false);return target.finish();
     }
+    private static final PanelBoxEmitter.Sink<Context,Material> BOX=(context,material,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3)->EMITTER.quad(context,material,true,new double[]{x0,y0,z0,0,0},new double[]{x1,y1,z1,16,0},new double[]{x2,y2,z2,16,16},new double[]{x3,y3,z3,0,16});
+    private static void draw(Context target,Mesh source,int turns,double depth,double left,double width){
+        float[] points=PanelMeshTransform.transform(source.vertices,turns,depth,left,width);
+        for(int q=0;q<source.materials.size();q++){target.current=source.materials.get(q);for(int v=0;v<4;v++){int at=q*32+v*8;RAW.vertex(target,points[at],points[at+1],points[at+2],points[at+3],points[at+4],points[at+5],points[at+6],points[at+7]);}}
+    }
+    /** Non-T joined window center; arm faces retain their own immediate full-face artwork policy. */
+    static List<BakedQuad> bentBody(com.vandorlabs.neoforge.shape.NativeFlatWallGeometry.Geometry geometry,com.vandorlabs.neoforge.shape.NativePortholeLayout aperture,
+            Material wall,Material interior,Material exterior,int mode){
+        if(geometry.join()==null)return aperture(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),wall,interior,exterior,mode,geometry.layout(),aperture.hideLeft(),aperture.hideRight(),aperture.hideLower(),aperture.hideUpper());
+        var corner=geometry.join().corner();double near=PanelDepthPolicy.start(geometry.depth());
+        Context center=new Context(Direction.NORTH,wall,mode,geometry.layout(),false,0,0,0,1,0,true);aperture(center,NativePanelSlice.get(aperture),wall,interior,exterior,aperture.hideLeft(),aperture.hideRight(),aperture.hideLower(),aperture.hideUpper(),4);
+        Context target=new Context(geometry.facing(),wall,0,NativePanelLayout.UNIT);draw(target,center.captured(),0,near-6,corner.left(),(corner.right()-corner.left())/16);
+        if(corner.frontArm!=null)PanelBoxEmitter.box(BOX,target,wall,interior,false,corner.frontArm,0,0,corner.frontArm+4,16,near,false);
+        if(corner.backArm!=null)PanelBoxEmitter.box(BOX,target,wall,interior,false,corner.backArm,0,near+4,corner.backArm+4,16,16,false);
+        return target.finish();
+    }
+    static List<BakedQuad> bentPane(com.vandorlabs.neoforge.shape.NativeFlatWallGeometry.Geometry geometry,com.vandorlabs.neoforge.shape.NativePortholeLayout aperture,
+            Material glass,int mode,NativePanelLayout group,double borderX,double borderY,float opacity,double imageAspect){
+        if(geometry.join()==null)return pane(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),glass,mode,group,borderX,borderY,opacity,imageAspect);
+        var corner=geometry.join().corner();Context center=new Context(Direction.NORTH,glass,mode,group,true,borderX,borderY,0,opacity,imageAspect,true);center.current=glass;pane(center,NativePanelSlice.get(aperture));
+        Context target=new Context(geometry.facing(),glass,0,NativePanelLayout.UNIT,false,0,0,0,opacity,0);draw(target,center.captured(),0,PanelDepthPolicy.offset(geometry.depth()),corner.left(),(corner.right()-corner.left())/16);return target.finish();
+    }
     private NativePanelQuads(){}
 }
