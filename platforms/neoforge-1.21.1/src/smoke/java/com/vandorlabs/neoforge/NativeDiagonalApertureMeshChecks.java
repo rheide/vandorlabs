@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceMetadata;
 
 /** Independent actual Forge vertex/atlas comparison for the sloped aperture adapter. */
-public final class NativeDiagonalApertureChecks {
+public final class NativeDiagonalApertureMeshChecks {
     private static final class Sprite extends TextureAtlasSprite{Sprite(SpriteContents c,int x){super(TextureAtlas.LOCATION_BLOCKS,c,32,16,x,0);}}
     private static final List<SpriteContents> CONTENTS=new ArrayList<>();
     private static NativePanelQuads.Material material(String id,int x){var c=new SpriteContents(ResourceLocation.fromNamespaceAndPath("vandorlabs",id),new FrameSize(16,16),new NativeImage(16,16,false),ResourceMetadata.EMPTY);CONTENTS.add(c);return new NativePanelQuads.Material(new ProgrammableModel.MaterialSnapshot(new Sprite(c,x),1,1));}
