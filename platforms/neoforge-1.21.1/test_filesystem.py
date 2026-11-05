@@ -39,9 +39,10 @@ def client_run(output, peer, args, env):
         client=output/(('missing' if peer=='restored' else peer)+'-client')
         if peer!='restored':client.mkdir();fixtures(client,present=peer=='installed')
         (client/'options.txt').write_text('guiScale:2\ntutorialStep:none\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nentityShadows:false\nonboardAccessibility:false\n')
-        launch_client=command('runClient','-PfilesystemPhase=client','-PfilesystemPeer='+peer,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client))
+        client_properties=['-PfilesystemPhase=client','-PfilesystemPeer='+peer,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client)]
         if args.reference:
-            launch_client.append('-PcubeReference='+str(args.reference.resolve()));env=dict(env,VANDOR_CUBE_REFERENCE=str(args.reference.resolve()))
+            client_properties.append('-PcubeReference='+str(args.reference.resolve()));env=dict(env,VANDOR_CUBE_REFERENCE=str(args.reference.resolve()))
+        launch_client=command('runClient',*client_properties)
         if args.xvfb:launch_client=['xvfb-run','-a','-s','-screen 0 1280x720x24']+launch_client;env=dict(env,LIBGL_ALWAYS_SOFTWARE='1')
         run(launch_client,output/(peer+'-client.log'),'[vandorlabs][filesystem] client-'+peer+' PASS',env)
     finally:stop(server)
@@ -57,7 +58,7 @@ def main():
     parser.add_argument('--client-only',action='store_true');parser.add_argument('--peer',choices=['both','installed','missing'],default='both')
     args=parser.parse_args()
     if args.client_only:args.client=True
-    if args.xvfb and not args.client:parser.error('--xvfb requires --client')
+    if args.xvfb and (not args.client or os.name=='nt'):parser.error('--xvfb requires --client on Linux')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(tempfile.mkdtemp(prefix='filesystem-native-',dir=str(base)))
     if not args.client_only:
