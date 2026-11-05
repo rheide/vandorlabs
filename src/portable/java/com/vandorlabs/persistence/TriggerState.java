@@ -32,7 +32,10 @@ public final class TriggerState {
         if(!bands)return exact>=0||signal>0?3:0;
         return signal==0?0:signal<=5?1:signal<=10?2:3;
     }
-    public void write(Tag tag){
+    public void write(Tag tag){write(tag,on,bands,exact,low,medium,frontOnly,sides,modes,speeds);}
+    /** Snapshot writer: only nondefault arrays need an ownership copy for the target tag. */
+    public static void write(Tag tag,int on,boolean bands,int exact,int low,int medium,
+            boolean frontOnly,int sides,int[] modes,int[] speeds){
         tag.putInt("TriggerOnTexture",on);
         if(frontOnly)tag.putBoolean("TriggerFrontOnly",true);else tag.remove("TriggerFrontOnly");
         if(sides!=0)tag.putInt("TriggerSidesTexture",sides);else tag.remove("TriggerSidesTexture");

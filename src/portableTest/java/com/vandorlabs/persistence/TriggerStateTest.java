@@ -38,6 +38,10 @@ public final class TriggerStateTest {
         saved=read(old);check(Arrays.equals(saved.artworkModes(),new int[]{1,1,1,1})&&Arrays.equals(saved.artworkSpeeds(),new int[]{1,1,1,1}),"malformed arrays reset wholly to legacy defaults");
         new TriggerState(0,false,-1,0,0,false,0,new int[]{1,1,1,1},new int[]{1,1,1,1}).write(output);
         check(!output.values.containsKey("TriggerFrontOnly")&&!output.values.containsKey("TriggerSidesTexture")&&!output.values.containsKey("TriggerArtworkModes")&&!output.values.containsKey("TriggerArtworkSpeeds"),"default writes remove stale optional fields");
+        int[] callerModes={0,2,1,2},callerSpeeds={2,0,1,2};
+        TriggerState.write(output,5,true,0,6,7,true,8,callerModes,callerSpeeds);
+        callerModes[0]=2;callerSpeeds[0]=0;
+        check(output.getIntArray("TriggerArtworkModes")[0]==0&&output.getIntArray("TriggerArtworkSpeeds")[0]==2,"static writer copies only published arrays without retaining caller ownership");
         for(int exact=-1;exact<=15;exact++)for(int signal=0;signal<=15;signal++)for(int band=0;band<2;band++){
             int expected=exact>=0&&signal!=exact?0:band==0?(exact>=0||signal>0?3:0):(signal==0?0:signal<6?1:signal<11?2:3);
             check(TriggerState.visibleSlot(band==1,exact,signal)==expected,"selection exact="+exact+" signal="+signal+" bands="+band);

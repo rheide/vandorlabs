@@ -84,8 +84,8 @@ public final class TileEntityProgrammableTrigger extends TileEntityAnimatedScree
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
-        new TriggerState(onTexture,levelStates,exactLevel,lowTexture,mediumTexture,
-                frontOnly,sidesTexture,artworkModes,artworkSpeeds).write(new NbtTriggerData(tag));
+        TriggerState.write(new NbtTriggerData(tag),onTexture,levelStates,exactLevel,lowTexture,mediumTexture,
+                frontOnly,sidesTexture,artworkModes,artworkSpeeds);
         return tag;
     }
 
