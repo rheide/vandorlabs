@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share existing layout, porthole geometry, category and glass/light material definitions between the independent Java 8 and Java 21 builds without changing their legacy behavior.
+
 - Begin incremental integration of the historical NeoForge 1.21.1 target while preserving Forge 1.12.2 as the default and behavioral reference. Native feature parity and release readiness remain pending.
 - Track current-master families and historical native implementations separately. Prioritize non-vehicle parity, including standalone mechanisms, Copy Controllers and shared turntable infrastructure; defer vehicle-specific integration.
 

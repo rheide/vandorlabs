@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-ids = re.search(r'IDS=\{([^}]+)', (ROOT / 'src/main/java/com/vandorlabs/tiles/GlassTextures.java').read_text())[1]
+ids = re.search(r'IDS=\{([^}]+)', (ROOT / 'src/portable/java/com/vandorlabs/tiles/GlassTextures.java').read_text())[1]
 ids = re.findall(r'"([^"]+)"', ids)
 out = ROOT / 'src/main/resources/assets/vandorlabs/models/item/configured'
 for diagonal in (False, True):
