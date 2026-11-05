@@ -37,12 +37,9 @@ public final class ProgrammableBlockDialog {
             return new State(choice,layout,facesEnabled,faces,target);
         }
     }
-    public static final class Control {
-        public final int id,x,y,width,height;
-        public final String label;
-        public final boolean tab,enabled;
+    public static final class Control extends DialogControl {
         private Control(int id,int x,int y,int width,int height,String label,boolean tab,boolean enabled){
-            this.id=id;this.x=x;this.y=y;this.width=width;this.height=height;this.label=label;this.tab=tab;this.enabled=enabled;
+            super(id,x,y,width,height,label,tab,enabled);
         }
     }
     public static int listY(ProgrammableDialogLayout panel,State state){return panel.top+(state.facesEnabled?78:54);}
