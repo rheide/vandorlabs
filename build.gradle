@@ -1345,3 +1345,9 @@ task testPanelMeshEmitterAdapters(type: JavaExec) {
     main = 'com.vandorlabs.client.PanelMeshEmitterChecks'
 }
 check.dependsOn testPanelMeshEmitterAdapters
+task testWallFrameLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.WallFrameLegacyChecks'
+    systemProperty 'vandorlabs.wallFrameExport', file(project.findProperty('wallFrameExport') ?: 'build/test-artifacts/wall-frame-forge.json').absolutePath
+}
