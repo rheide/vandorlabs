@@ -11,7 +11,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Family | Integration on master | Historical native status | Scope |
 | --- | --- | --- | --- |
 | Programmable cube and matter block | partial (cube and plain matter) | partial | non-vehicle first |
-| Slabs and stairs | pending | partial | non-vehicle first |
+| Slabs and stairs | partial | partial | non-vehicle first |
 | Walls, portholes and diagonals | pending | partial | non-vehicle first |
 | Programmable viewscreens | pending | partial | non-vehicle first |
 | Console, input and diagonal screen variants | pending | partial | non-vehicle first |
@@ -72,3 +72,5 @@ The four-step candidate also passes exact standard-JAR real-player dialog/world 
 Native world transmitters and receivers retain the current `_block` registry IDs, six-face ports, analog/digital modes and plain ordinary pick/drop items. Dedicated save/restart checks include current Forge tags, closed/unloaded world refusal and physical observers during removal inside a signal batch. Mixed slider/rocker fixtures verify receiver maximum output while mounted controls retain their partial-bank minimum. Canonical cube models, arrow orientation, textures and padded item transforms use ordinary native models. Other source families, copy-tool and carried integration remain incomplete.
 
 The endpoint editor reuses the inline transmission widget and integer slider. Exact standard-JAR checks cover ordinary and sneaking Configurizer access, all ports and ranges, receiver channels and immediate levels, invalid drafts, disabled analog On controls and repeated slider values. The binary-control dialog regression passes on the same candidate. These are focused ModDev/software checks; ordinary endpoint pick/drop remains unconfigured, and preview payloads do not establish configured placement.
+
+Current slabs/stairs have registered placement, collision, configured item persistence and survival merge behavior. Their dedicated registration check covers fourteen states and sixty-one assertions. Material renderer and same-screen configuration wiring are in progress; these registrations do not establish complete family parity or broader native client acceptance.

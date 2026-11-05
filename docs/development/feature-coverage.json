@@ -76,17 +76,15 @@
       "id": "slabs_stairs",
       "label": "Slabs and stairs",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_slab",
         "programmable_stairs"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "custom block material definitions and sampling",
-        "external-material reload acceptance across shape and item variants",
-        "carried-assembly integration",
-        "installed third-party fluid and shader render acceptance"
+        "Complete and expose same-screen native shape configuration and material renderer integration",
+        "Broader native client and external-material reload acceptance across shape and item variants",
+        "Installed third-party fluid and shader render acceptance"
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -98,7 +96,12 @@
         "slab previews retain dormant face settings; stair previews apply saved side and per-face materials",
         "64 cross-family actual item-renderer cases and raster padding checks include slab/stair side and legacy Fit/Tile settings"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Registered current slab/stair blocks and items with the existing programmable_viewscreen block-entity ID",
+        "Native placement, half and saved custom-stair collision; configured pick/loot and survival slab merge retain placed settings",
+        "Immutable appearance and contained-fluid storage, deferred geometry, and native rendering prerequisites integrated"
+      ]
     },
     {
       "id": "walls_portholes_diagonals",
