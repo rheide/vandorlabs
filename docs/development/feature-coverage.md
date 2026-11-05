@@ -10,7 +10,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 
 | Family | Integration on master | Historical native status | Scope |
 | --- | --- | --- | --- |
-| Programmable cube and matter block | partial (plain matter only) | partial | non-vehicle first |
+| Programmable cube and matter block | partial (cube and plain matter) | partial | non-vehicle first |
 | Slabs and stairs | pending | partial | non-vehicle first |
 | Walls, portholes and diagonals | pending | partial | non-vehicle first |
 | Programmable viewscreens | pending | partial | non-vehicle first |
@@ -49,4 +49,6 @@ Every integrated family requires shared policy, native persistence and permissio
 
 See [the architecture and sequence](multiversion.md) for build isolation and ownership boundaries. Build orchestration is a planned integration capability until the corresponding tool and both targets are present and validated.
 
-The integrated native material slice provides the plain matter block, matter/alloy ingots, three recipes and canonical artwork. Dedicated save/restart and live client placement/mining, emitted-model and item-padding checks cover this slice. These are development-runtime checks; exact packaged-JAR and hardware acceptance remain pending. Programmable cube settings, configuration tools and the full production chain remain unimplemented.
+The integrated native material slice provides the plain matter block, matter/alloy ingots, three recipes and canonical artwork. Dedicated save/restart and live client placement/mining, emitted-model and item-padding checks cover this slice. These are development-runtime checks; exact packaged-JAR and hardware acceptance remain pending. The native programmable cube now uses the current shared housing and Appearance contracts, built-in material search, six face overrides, all three texture layouts and bounded joined images. Creative shift-click and the main-hand Configurizer share its dedicated authenticated menu. Actual native geometry and item transforms are compared with the current Forge exporter; native save/restart, configured placement/survival mining, GUI scales 2/3/320, cache bounds and resource/world unload are covered by focused checks.
+
+Filesystem/custom material discovery and sampling, configuration dispatch to other families, copy tools, carried assemblies and the full production chain remain incomplete. The portrait reference fixture is a smoke-only registered asset, not acceptance of the external-file workflow.

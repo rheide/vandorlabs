@@ -8,6 +8,7 @@ base { archivesName = 'vandorlabs-neoforge-1.21.1' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 sourceSets.main.java.srcDir('../../src/portable/java')
 sourceSets.main.resources.srcDir('build/generated/matter-resources')
+sourceSets.main.resources.srcDir('build/generated/cube-resources')
 sourceSets {
     smoke {
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
@@ -65,3 +66,34 @@ tasks.named('processResources') { dependsOn 'generateMatterResources' }
 neoForge.runs.configureEach {
     if (project.hasProperty('matterPhase')) systemProperty 'vandorlabs.matterPhase', project.property('matterPhase')
 }
+
+tasks.register('generateCubeResources', Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, 'generate_cube_resources.py'
+    inputs.file('generate_cube_resources.py')
+    inputs.file('../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')
+    inputs.dir('../../texture-packs')
+    inputs.file('../../src/main/resources/assets/vandorlabs/data/texture_menu.json')
+    inputs.file('../../generated-resources/assets/vandorlabs/data/unified_textures.json')
+    inputs.file('../../src/main/resources/assets/vandorlabs/models/item/programmable_block.json')
+    inputs.file('../../src/main/resources/assets/vandorlabs/recipes/programmable_block.json')
+    inputs.file('../../src/main/resources/assets/vandorlabs/recipes/configurizer.json')
+    inputs.file('../../generated-resources/assets/vandorlabs/lang/en_us.lang')
+    outputs.dir('build/generated/cube-resources')
+}
+tasks.named('processResources') { dependsOn 'generateCubeResources' }
+neoForge.runs.configureEach {
+    if(project.hasProperty('cubePhase'))systemProperty 'vandorlabs.cubePhase',project.property('cubePhase')
+}
+
+neoForge.runs.configureEach {
+    if(project.hasProperty('cubeReference'))systemProperty 'vandorlabs.cubeReference',project.property('cubeReference')
+}
+sourceSets.smoke.resources.srcDir('build/generated/cube-smoke-resources')
+tasks.register('generateCubeSmokeResources', Exec) {
+    commandLine pythonExecutable, 'generate_cube_smoke_resources.py'
+    inputs.file('generate_cube_smoke_resources.py')
+    if(project.hasProperty('cubeReference'))inputs.file(project.property('cubeReference'))
+    outputs.upToDateWhen { false }
+}
+tasks.named('processSmokeResources') { dependsOn 'generateCubeSmokeResources' }

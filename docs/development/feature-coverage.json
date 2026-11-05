@@ -32,10 +32,9 @@
         "programmable_matter_block"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "custom block material definitions and sampling",
-        "complete creative/search catalog configuration",
-        "carried-assembly joined faces and shader render acceptance"
+        "Filesystem material discovery/reload and custom block material definitions/sampling",
+        "Complete creative/search configuration across the remaining native families",
+        "Carried-assembly joined faces and hardware shader-pack acceptance"
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -59,11 +58,17 @@
       "integration_scope": "non_vehicle_first",
       "implemented": [
         "Native plain programmable_matter_block, programmable_matter_ingot and industrial_alloy_ingot with canonical artwork, three recipes, tool requirements and loot.",
-        "Disposable dedicated save/restart checks and native client placement/mining, emitted artwork and padded item rendering checks."
+        "Disposable dedicated save/restart checks and native client placement/mining, emitted artwork and padded item rendering checks.",
+        "Native programmable cube uses current shared housing migration/defaults and Appearance controls, categorized search, wheel/drag scrolling, six face overrides and all three layouts.",
+        "Main-hand Configurizer and creative shift-click share the dedicated server-owned menu, including survival and Adventure authorization.",
+        "Native configured item placement, survival mining, pick/drop components, subsequent-process saved states and retained unknown configuration fields.",
+        "Bounded loaded-world joining preserves the current centered Fit crop; actual emitted geometry and item transforms match the independent current Forge model exporter.",
+        "Weighted world-quad caches, bounded item geometry, weak scalar visual projections, settled idle queues and resource/world unload checks."
       ],
       "acceptance_limits": [
-        "Development runtime checks; exact packaged-JAR runtime and hardware shader acceptance remain pending.",
-        "Programmable cube settings, configuration/copy tools and the production chain are not implemented by this material slice."
+        "Development-classpath software-rendered checks; exact packaged-JAR runtime and hardware shader acceptance remain pending.",
+        "Filesystem/custom material workflows and carried assemblies remain deferred. A test-only portrait asset verifies UV mapping without claiming discovery support.",
+        "Matter production and other programmable families are not implemented by this slice."
       ]
     },
     {
@@ -691,7 +696,6 @@
       "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
         "full Configurizer dispatch to every family",
         "Duplifier connected copy/application",
         "matter production/core crafting chain",
@@ -714,11 +718,12 @@
       "integration_scope": "non_vehicle_first",
       "implemented": [
         "Native plain programmable_matter_block, programmable_matter_ingot and industrial_alloy_ingot with canonical artwork, three recipes, tool requirements and loot.",
-        "Disposable dedicated save/restart checks and native client placement/mining, emitted artwork and padded item rendering checks."
+        "Disposable dedicated save/restart checks and native client placement/mining, emitted artwork and padded item rendering checks.",
+        "Native Configurizer uses canonical artwork/recipe and configures the programmable cube through the same dedicated menu as creative shift-click."
       ],
       "acceptance_limits": [
-        "Development runtime checks; exact packaged-JAR runtime and hardware shader acceptance remain pending.",
-        "Programmable cube settings, configuration/copy tools and the production chain are not implemented by this material slice."
+        "Development runtime checks; exact packaged-JAR runtime and hardware acceptance remain pending.",
+        "Configurator dispatch to other families, copy tools and the production chain remain incomplete."
       ]
     },
     {

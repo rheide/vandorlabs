@@ -5,7 +5,7 @@ license="CC-BY-4.0"
 modId="vandorlabs"
 version="${modVersion}"
 displayName="Vandor Labs (Experimental)"
-description='''Experimental NeoForge material slice: plain Programmable Matter Block, matter and alloy ingots. Other features and legacy world conversion are not implemented.'''
+description='''Experimental NeoForge building slices: plain Programmable Block, Configurizer and matter ingredients. Other families, custom-material workflows and legacy world conversion remain incomplete.'''
 [[dependencies.vandorlabs]]
 modId="neoforge"
 type="required"
