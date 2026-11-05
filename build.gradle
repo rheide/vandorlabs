@@ -1056,3 +1056,16 @@ task testHousingFacePlane(type: JavaExec) {
     classpath = files("$buildDir/portable-tests")
     main = 'com.vandorlabs.render.HousingFacePlaneTest'
 }
+
+
+task testHousingLightPolicy(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.HousingLightPolicyTest'
+}
+
+task testHousingLightAdapter(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.HousingLightAdapterChecks'
+}
