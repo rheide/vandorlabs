@@ -14,6 +14,7 @@ PLATFORM = Path(__file__).resolve().parent
 ROOT = PLATFORM.parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
 from check_portable_boundary import jdk_home
+from native_test_artifacts import artifact_directory, retain_artifacts, track_process
 
 
 def command(task, *properties):
@@ -49,7 +50,12 @@ def launch(args, log, env):
     output = log.open('w')
     options = {'creationflags': subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == 'nt' else {'start_new_session': True}
     try:
-        return subprocess.Popen(args, cwd=PLATFORM, env=env, stdout=output, stderr=subprocess.STDOUT, **options)
+        process = subprocess.Popen(args, cwd=PLATFORM, env=env, stdout=output, stderr=subprocess.STDOUT, **options)
+        try:
+            return track_process(process, log)
+        except BaseException:
+            stop(process)
+            raise
     finally:
         output.close()
 
@@ -80,11 +86,12 @@ def world(directory, port):
         'server-ip=127.0.0.1\nserver-port=%d\nonline-mode=false\nmax-tick-time=0\nview-distance=2\nsimulation-distance=2\n' % port)
 
 
+@retain_artifacts
 def main():
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
     base=ROOT/'build/test-artifacts'
     base.mkdir(parents=True,exist_ok=True)
-    output=Path(tempfile.mkdtemp(prefix='transmitter-native-',dir=str(base)))
+    output=Path(artifact_directory(prefix='transmitter-native-',dir=str(base)))
     saved=output/'saved-world'
     world(saved,0)
     for phase in ['write','read','off']:

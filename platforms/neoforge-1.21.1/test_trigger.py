@@ -6,13 +6,15 @@ import subprocess
 import sys
 import tempfile
 from test_transmitter import ROOT, command, world, run, check_log, jdk_home
+from native_test_artifacts import artifact_directory, retain_artifacts
 
 
+@retain_artifacts
 def main():
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
     base=ROOT/'build/test-artifacts'
     base.mkdir(parents=True,exist_ok=True)
-    output=Path(tempfile.mkdtemp(prefix='trigger-native-',dir=str(base)))
+    output=Path(artifact_directory(prefix='trigger-native-',dir=str(base)))
     saved=output/'saved-world'
     world(saved,0)
     for phase in ['write','read']:

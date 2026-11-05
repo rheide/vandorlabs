@@ -11,6 +11,7 @@ import sys
 import tempfile
 import time
 from test_cube import PLATFORM,ROOT,command,world,run,launch,stop,check_log,jdk_home
+from native_test_artifacts import artifact_directory, retain_artifacts
 
 
 def install(game,production,fixture):
@@ -21,6 +22,7 @@ def install(game,production,fixture):
     return ['-PcopyJar='+str(target),'-PcopySha='+sha]
 
 
+@retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--jar',type=Path,help='Exact existing native standard JAR to validate, without rebuilding it')
@@ -30,7 +32,7 @@ def main():
     if args.xvfb and (not args.client or os.name=='nt'):parser.error('--xvfb requires --client on Linux')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)));env.pop('MOD_CLASSES',None)
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
-    output=Path(tempfile.mkdtemp(prefix='transmitter-copy-native-',dir=str(base)))
+    output=Path(artifact_directory(prefix='transmitter-copy-native-',dir=str(base)))
     tasks=('copySmokeJar',) if args.jar else ('jar','copySmokeJar')
     with (output/'build.log').open('w') as log:subprocess.run(command(*tasks),cwd=PLATFORM,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
     production=args.jar.resolve() if args.jar else next((PLATFORM/'build/libs').glob('*.jar'))

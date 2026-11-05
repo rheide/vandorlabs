@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import tempfile
 from test_cube import ROOT, command, run, jdk_home
+from native_test_artifacts import artifact_directory, retain_artifacts
 
 
 def compare(legacy_path, native_path):
@@ -24,6 +25,7 @@ def compare(legacy_path, native_path):
     for name in conflicts:print('Conflict: '+name,flush=True)
 
 
+@retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--legacy-reference',required=True,type=Path)
@@ -33,7 +35,7 @@ def main():
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
     if args.native_report:compare(args.legacy_reference,args.native_report);return
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
-    output=Path(tempfile.mkdtemp(prefix='material-sprites-',dir=base));game=output/'client';game.mkdir()
+    output=Path(artifact_directory(prefix='material-sprites-',dir=base));game=output/'client';game.mkdir()
     (game/'options.txt').write_text('onboardAccessibility:false\ntutorialStep:none\nrenderDistance:2\nmaxFps:60\n')
     report=output/'native-material-sprites.json'
     launch=command('runClient','-PmaterialSpriteAssessment='+str(report),'-PmodernClientRunDirectory='+str(game))

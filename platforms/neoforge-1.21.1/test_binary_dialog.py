@@ -12,8 +12,10 @@ import tempfile
 import time
 from test_cube import PLATFORM,ROOT,command,world,run,launch,stop,check_log,jdk_home
 from test_transmitter_copy import install
+from native_test_artifacts import artifact_directory, retain_artifacts
 
 
+@retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--jar',type=Path,help='Validate an existing frozen native standard JAR without rebuilding it')
@@ -26,7 +28,7 @@ def main():
     phase='wireless-ui' if args.wireless_endpoints else 'signal-ui' if args.signal_controls else 'power-ui' if args.power_levers else 'binary-ui';marker='wireless-gui' if args.wireless_endpoints else 'signal-gui' if args.signal_controls else 'power-gui' if args.power_levers else 'binary-gui'
     if args.xvfb and os.name=='nt':parser.error('--xvfb is Linux only')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)));env.pop('MOD_CLASSES',None)
-    base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(tempfile.mkdtemp(prefix=('wireless-dialog-native-' if args.wireless_endpoints else 'signal-control-dialog-native-' if args.signal_controls else 'power-lever-dialog-native-' if args.power_levers else 'binary-dialog-native-'),dir=str(base)))
+    base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(artifact_directory(prefix=('wireless-dialog-native-' if args.wireless_endpoints else 'signal-control-dialog-native-' if args.signal_controls else 'power-lever-dialog-native-' if args.power_levers else 'binary-dialog-native-'),dir=str(base)))
     tasks=('copySmokeJar',) if args.jar else ('jar','copySmokeJar')
     with (output/'build.log').open('w') as log:subprocess.run(command(*tasks),cwd=PLATFORM,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
     production=args.jar.resolve() if args.jar else next((PLATFORM/'build/libs').glob('*.jar'));fixture=next((PLATFORM/'build/test-fixtures').glob('*copy-smoke.jar'))

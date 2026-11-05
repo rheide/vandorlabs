@@ -8,8 +8,10 @@ import tempfile
 import time
 from test_cube import ROOT, command, run, launch, stop, check_log, jdk_home
 from test_sampled_materials import fixture_world
+from native_test_artifacts import artifact_directory, retain_artifacts
 
 
+@retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb',action='store_true')
@@ -17,7 +19,7 @@ def main():
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
-    output=Path(tempfile.mkdtemp(prefix='trigger-client-',dir=base))
+    output=Path(artifact_directory(prefix='trigger-client-',dir=base))
     with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
     saved=output/'server';fixture_world(saved,port);server_log=output/'server.log'
     server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=trigger-client'),server_log,env)

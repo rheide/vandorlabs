@@ -7,6 +7,7 @@ import socket
 import tempfile
 import time
 from test_cube import ROOT, command, run, launch, stop, check_log, world, jdk_home
+from native_test_artifacts import artifact_directory, retain_artifacts
 
 
 def fixture_world(path,port):
@@ -14,6 +15,7 @@ def fixture_world(path,port):
     with (path/'server.properties').open('a') as stream:stream.write('level-type=minecraft:flat\ngenerate-structures=false\nlevel-seed=0\ngenerator-settings={"layers":[{"block":"minecraft:bedrock","height":1}],"biome":"minecraft:plains","features":false,"lakes":false}\n')
 
 
+@retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--client',action='store_true');parser.add_argument('--client-only',action='store_true')
@@ -22,7 +24,7 @@ def main():
     if args.client_only:args.client=True
     if args.xvfb and (not args.client or os.name=='nt'):parser.error('--xvfb requires Linux --client')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
-    base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(tempfile.mkdtemp(prefix='sampled-material-',dir=base))
+    base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(artifact_directory(prefix='sampled-material-',dir=base))
     if not args.client_only:
         saved=output/'saved-world';fixture_world(saved,0)
         for phase in ['write','read']:

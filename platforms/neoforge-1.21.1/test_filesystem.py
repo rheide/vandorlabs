@@ -8,6 +8,7 @@ import tempfile
 import time
 from PIL import Image
 from test_cube import ROOT, PLATFORM, command, run, launch, stop, check_log, world, jdk_home
+from native_test_artifacts import artifact_directory, retain_artifacts
 
 
 def pattern(path, width=32, height=64, phase=0):
@@ -52,6 +53,7 @@ def client_run(output, peer, args, env):
     check_log(server_log,'[vandorlabs][filesystem] server-client-actions PASS')
 
 
+@retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--client',action='store_true');parser.add_argument('--xvfb',action='store_true');parser.add_argument('--reference',type=Path)
@@ -60,7 +62,7 @@ def main():
     if args.client_only:args.client=True
     if args.xvfb and (not args.client or os.name=='nt'):parser.error('--xvfb requires --client on Linux')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
-    base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(tempfile.mkdtemp(prefix='filesystem-native-',dir=str(base)))
+    base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);output=Path(artifact_directory(prefix='filesystem-native-',dir=str(base)))
     if not args.client_only:
         saved=output/'saved-world';world(saved,0);root=fixtures(saved)
         for phase in ['write','read','missing']:

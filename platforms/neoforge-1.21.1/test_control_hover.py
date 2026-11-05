@@ -4,13 +4,15 @@ import argparse,hashlib,os,socket,subprocess,tempfile,time
 from pathlib import Path
 from test_cube import ROOT,PLATFORM,command,world,run,launch,stop,check_log,jdk_home
 from test_transmitter_copy import install
+from native_test_artifacts import artifact_directory, retain_artifacts
 
+@retain_artifacts
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--jar',type=Path);p.add_argument('--xvfb',action='store_true');p.add_argument('--bounded',action='store_true');a=p.parse_args()
  if a.xvfb and os.name=='nt':p.error('--xvfb requires Linux')
  env=dict(os.environ,JAVA_HOME=str(jdk_home(21)));env.pop('MOD_CLASSES',None)
  if a.bounded:env['VANDOR_HOVER_BOUNDED']='true'
- base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(tempfile.mkdtemp(prefix='control-hover-',dir=base))
+ base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='control-hover-',dir=base))
  with (out/'build.log').open('w') as log:subprocess.run(command(*(('copySmokeJar',) if a.jar else ('jar','copySmokeJar'))),cwd=PLATFORM,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
  jar=a.jar.resolve() if a.jar else next((PLATFORM/'build/libs').glob('*.jar'));fixture=next((PLATFORM/'build/test-fixtures').glob('*copy-smoke.jar'));sha=hashlib.sha256(jar.read_bytes()).hexdigest();(out/'artifact.sha256').write_text(sha+'  '+jar.name+'\n')
  with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]

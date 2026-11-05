@@ -5,8 +5,10 @@ import os
 from pathlib import Path
 import tempfile
 from test_cube import ROOT, command, run, jdk_home
+from native_test_artifacts import artifact_directory, retain_artifacts
 
 
+@retain_artifacts
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb', action='store_true')
@@ -15,7 +17,7 @@ def main():
         parser.error('--xvfb requires Linux')
     base = ROOT / 'build/test-artifacts'
     base.mkdir(parents=True, exist_ok=True)
-    output = Path(tempfile.mkdtemp(prefix='panel-shader-', dir=base))
+    output = Path(artifact_directory(prefix='panel-shader-', dir=base))
     game = output / 'client'
     game.mkdir()
     (game / 'options.txt').write_text('onboardAccessibility:false\ntutorialStep:none\nrenderDistance:2\nmaxFps:60\n')
