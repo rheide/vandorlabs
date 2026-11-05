@@ -2,6 +2,8 @@
 
 Vandor Labs scans PNG textures once during mod startup. The textures appear in the same categorized picker used by programmable blocks, trapdoors, doors, lights, static screen/control surfaces and programmable armor. Armor retains its separate slot-filtered **Armor** category.
 
+The experimental NeoForge 1.21.1 target supports this PNG workflow on the plain Programmable Block. Other native families and custom block sampling remain under development; the Forge family list above remains the behavioral reference.
+
 ## First launch
 
 Start Minecraft with the mod installed. Inside that Minecraft instance's directory, the mod creates:

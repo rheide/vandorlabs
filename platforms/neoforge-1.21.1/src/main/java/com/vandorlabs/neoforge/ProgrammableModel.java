@@ -32,7 +32,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
     private ProgrammableModel(BakedModel model,java.util.Map<Integer,MaterialSnapshot> sprites,TextureAtlasSprite margin) { super(model);this.sprites=sprites;this.margin=margin; }
     @SubscribeEvent public static void bake(ModelEvent.ModifyBakingResult event) {
         java.util.Map<Integer,MaterialSnapshot> resolved=new java.util.HashMap<>();
-        for(var choice:ModernFinishCatalog.allChoices()) {
+        for(var choice:ModernFinishCatalog.choicesForBake()) {
             var entry=choice.entry();
             var sprite=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse(entry.texture())));
             resolved.put(choice.choice(),new MaterialSnapshot(sprite,entry.u(),entry.v()));

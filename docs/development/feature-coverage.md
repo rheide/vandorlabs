@@ -34,7 +34,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Industrial table | pending | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials only) | partial | non-vehicle first |
 | Programmable armor | pending | unimplemented | non-vehicle first |
-| Filesystem and custom material workflows | pending | partial | non-vehicle first |
+| Filesystem and custom material workflows | partial (cube PNGs) | partial | non-vehicle first |
 | Compatibility integrations | pending | unimplemented | non-vehicle first |
 | Segmented Doors | pending | unimplemented | non-vehicle first |
 | Copy Controllers and shared surfaces | pending | unimplemented | non-vehicle first |
@@ -47,8 +47,10 @@ Current master adds Segmented Doors, Copy Controllers, tracks and expanded stand
 
 Every integrated family requires shared policy, native persistence and permissions, bounded server-authoritative round trips, subsequent-process reload, and inspected client geometry/dialog/animation output. Ownership transfers additionally require durable recovery and abrupt-restart/partial-save checks. Use focused Forge regressions as changes land; preserve the final exact-artifact release gate. Dual-JDK contracts and modern startup checks remain distinct from runtime and visual acceptance. Compatibility integrations need native equivalents or an explicit unsupported status.
 
-See [the architecture and sequence](multiversion.md) for build isolation and ownership boundaries. Build orchestration is a planned integration capability until the corresponding tool and both targets are present and validated.
+See [the architecture and sequence](multiversion.md) for build isolation and ownership boundaries. The root build orchestrator runs the independent Java 8 and Java 21 targets with their own Gradle processes and collects standard artifacts. Shared contracts, target builds and focused runtime checks remain distinct; orchestration success does not establish complete family parity or a full release gate.
 
 The integrated native material slice provides the plain matter block, matter/alloy ingots, three recipes and canonical artwork. Dedicated save/restart and live client placement/mining, emitted-model and item-padding checks cover this slice. These are development-runtime checks; exact packaged-JAR and hardware acceptance remain pending. The native programmable cube now uses the current shared housing and Appearance contracts, built-in material search, six face overrides, all three texture layouts and bounded joined images. Creative shift-click and the main-hand Configurizer share its dedicated authenticated menu. Actual native geometry and item transforms are compared with the current Forge exporter; native save/restart, configured placement/survival mining, GUI scales 2/3/320, cache bounds and resource/world unload are covered by focused checks.
 
-Filesystem/custom material discovery and sampling, configuration dispatch to other families, copy tools, carried assemblies and the full production chain remain incomplete. The portrait reference fixture is a smoke-only registered asset, not acceptance of the external-file workflow.
+Native cubes support installed filesystem PNG discovery at startup, stable saved IDs, known-file fallback and same-open-picker portrait/wide reloads with immutable world/item model snapshots. Separate clients cover startup-missing entries and rediscovery after restart. The cube portrait oracle remains a separate smoke-only geometry fixture.
+
+Custom block sampling, configuration dispatch to other families, copy tools, carried assemblies and the full production chain remain incomplete. Reloads do not discover new files.

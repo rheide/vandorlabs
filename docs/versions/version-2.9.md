@@ -8,6 +8,8 @@ Historical native implementations are integration references. Each family still 
 
 The previous feature overview remains available in [Vandor Labs 2.8](version-2.8.md).
 
-The experimental native build includes the plain matter block, matter/alloy ingots, programmable cubes and the Configurizer for cube editing. Cubes retain configured items, face overrides, texture layouts and joined artwork, using the shared current Appearance controls and saved-data rules. Native geometry is compared with the actual Forge renderer.
+The experimental native build includes the plain matter block, matter/alloy ingots, and the programmable cube with its Appearance editor, six face overrides and bounded joined images. Creative shift-click and the main-hand Configurizer share the authenticated cube dialog. Configured items retain their settings, and native geometry is compared with the actual Forge renderer.
 
-Shared startup filesystem discovery preserves saved IDs, categories and existing failure behavior. Native filesystem artwork reload, custom block sampling and the matter-production machines remain under development. Saved external material IDs are retained even when artwork is unavailable.
+Native cubes also support installed filesystem PNG categories, path-based saved identities and reloads of already discovered files. Open pickers keep their selection while portrait or wide artwork changes dimensions. A missing client entry preserves its saved ID and returns when the file is installed at the same path and Minecraft restarts. New entries still require a restart; PNG reloads do not implement custom block sampling.
+
+Other native families, custom block sampling, copy tools, carried assemblies, hardware shader acceptance and matter-production machines remain incomplete.

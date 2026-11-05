@@ -4,7 +4,7 @@ This independent Java 21 target provides the plain Programmable Matter Block, Pr
 
 The plain Programmable Block now uses the current shared saved housing and dialog contracts. Its built-in materials, six face overrides, Stretch/Tile/Fit layouts, configuration-preserving item drops/picks and bounded joined images are supported. Creative shift-click and a main-hand Configurizer open the same dedicated dialog; survival and held-item Adventure permissions are enforced by the server. The Configurizer currently configures this cube only.
 
-This remains a partial port, not a legacy world migration tool. Filesystem/custom material discovery, custom block sampling, copy tools, carried assemblies, other programmable families and the production chain remain deferred. Saved external material IDs are retained and unavailable artwork renders with a visible fallback; this does not implement the custom-material workflow. Do not open existing Vandor Labs worlds with this target.
+This remains a partial port, not a legacy world migration tool. Custom block sampling, copy tools, carried assemblies, other programmable families and the production chain remain deferred. Installed filesystem PNGs are supported on the native programmable cube. Saved external material IDs are retained and unavailable artwork renders with a visible fallback; this does not implement the custom-material workflow. Do not open existing Vandor Labs worlds with this target.
 
 Run `python3 tools/build_all.py --target neoforge-1.21.1` from the repository root. Set `VANDOR_JAVA21_HOME` to a Java 21 JDK when automatic discovery does not find one. The orchestration script runs shared contracts on the selected target’s JDK (both JDKs when building both targets), then builds the selected target and places its standard JAR under the root `build/libs/`. Java 8 and Java 21 builds run in separate Gradle processes. The legacy root Gradle target remains independent.
 
@@ -29,3 +29,14 @@ For an independent current-Forge geometry oracle, first run the legacy `cube-ref
 Joined traversal samples loaded native client worlds on the client thread and publishes immutable planes for section workers. It preserves the current centered Fit crop, a 256-member limit and 16×16 image spans. Worker requests carry positions and a generation token, with a bounded queue cleared on world unload. World-quad caches are bounded by estimated retained bytes, configured item models by a fixed geometry count, and visual-key projections use bounded weak identity keys so large opaque saved data is not retained or copied on every icon draw. Model replacement clears render caches on resource reload.
 
 These are development-classpath checks with software rendering. They do not establish exact packaged-JAR startup, hardware FPS, shader-pack acceptance, production-world migration or complete family parity.
+
+
+## Installed PNG materials on native cubes
+
+The native cube uses the same [filesystem texture setup](../../docs/filesystem-textures.md) and shared startup discovery as Forge: categories under `config/vandorlabs/textures`, static PNGs up to 2048 pixels per dimension, path-based saved identifiers, and the same hidden example rule. Adding or renaming files requires a restart. F3+T rereads only files accepted at startup; it does not discover new entries.
+
+A known file that disappears during reload uses the neutral dark fallback while retaining its picker row and saved ID. An ID absent from a client's startup catalog uses the default wall material; restoring that missing entry requires a restart. Already-open cube pickers retain their selected ID while thumbnails, world models and configured item previews adopt successful dimension changes after reload.
+
+Resource loading pins dimensions per pack generation without retaining image caches. New model snapshots receive the matching atlas UV ranges; picker metadata publishes after atlas/model application. Old model and item UV records remain immutable. Filesystem catalog identities are persistent discovery entries rather than entries in the bounded transient native-asset cache.
+
+Run `python3 platforms/neoforge-1.21.1/test_filesystem.py --client --xvfb` for the dedicated save/read/missing-file processes, installed-file reload matrix, real picker selection and scrolling, and separate missing-peer/restart clients. `--reference <reference.json>` also runs the independent current-Forge cube geometry/item oracle on the changed resource-bake path. The fixtures use their own PNGs and worlds under `build/test-artifacts/`. This establishes cube PNG behavior only; custom block sampling, other block families, shader packs and exact packaged-JAR runtime remain outside this slice.

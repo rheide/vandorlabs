@@ -31,13 +31,13 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     @SubscribeEvent public static void register(RegisterMenuScreensEvent event){event.register(VandorLabsBootstrap.PROGRAMMABLE_MENU.get(),NativeCubeScreen::new);}
     public NativeCubeScreen(ProgrammableMenu menu,net.minecraft.world.entity.player.Inventory inventory,Component title){
         super(menu,inventory,Component.literal("Programmable Block"));state=menu.tile.settings();
-        for(int index=0;index<ModernFinishCatalog.ENTRIES.size();index++){
-            var entry=ModernFinishCatalog.ENTRIES.get(index);
+        for(var choice:ModernFinishCatalog.allChoices()){
+            int index=choice.choice();var entry=choice.entry();
             if(entry.visible()&&entry.general()){groups.computeIfAbsent(entry.category(),key->new ArrayList<>()).add(index);options.add(index);}
         }
         Set<String> paths=new HashSet<>(groups.keySet());for(String path:new ArrayList<>(paths))while(path.contains("/")){path=path.substring(0,path.lastIndexOf('/'));paths.add(path);}
         List<String> ordered=new ArrayList<>(paths);ordered.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));categories=List.copyOf(ordered);
-        for(var group:groups.values())group.sort(Comparator.comparing((Integer id)->ModernFinishCatalog.ENTRIES.get(id).label(),String.CASE_INSENSITIVE_ORDER).thenComparingInt(Integer::intValue));
+        for(var group:groups.values())group.sort(Comparator.comparing((Integer id)->ModernFinishCatalog.option(id).label(),String.CASE_INSENSITIVE_ORDER).thenComparingInt(Integer::intValue));
         reveal();
     }
     public ProgrammableBlockDialog.State editingState(){return state;}
@@ -59,7 +59,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     }
     private void rebuildRows(){List<Integer> next=new ArrayList<>();String query=search==null?"":search.getValue().trim().toLowerCase(Locale.ROOT);
         if(query.isEmpty())appendCategories("",next);
-        else for(int id:options){var entry=ModernFinishCatalog.ENTRIES.get(id);String text=(entry.label()+" "+entry.category()+" "+entry.texture()).toLowerCase(Locale.ROOT);boolean matches=true;for(String token:query.split("\\s+"))if(!text.contains(token))matches=false;if(matches)next.add(id);}
+        else for(int id:options){var entry=ModernFinishCatalog.option(id);String text=(entry.label()+" "+entry.category()+" "+entry.texture()).toLowerCase(Locale.ROOT);boolean matches=true;for(String token:query.split("\\s+"))if(!text.contains(token))matches=false;if(matches)next.add(id);}
         rows=List.copyOf(next);scroll=Math.max(0,Math.min(maximum(),scroll));
     }
     private void appendCategories(String parent,List<Integer> target){for(int index=0;index<categories.size();index++){String category=categories.get(index);int slash=category.lastIndexOf('/');if(!(slash<0?"":category.substring(0,slash)).equals(parent))continue;
@@ -70,7 +70,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     private int maximum(){return DialogInput.maxScroll(rows.size(),visible());}
     private int thumbHeight(){return DialogInput.thumbHeight(height(),visible(),rows.size());}
     private int thumbTop(){return DialogInput.thumbY(top(),height(),thumbHeight(),scroll,maximum());}
-    private int row(int row){int id=rows.get(scroll+row);if(search.getValue().trim().isEmpty()&&visible()>1&&row==0&&id>=0)return -200000-categories.indexOf(ModernFinishCatalog.ENTRIES.get(id).category());return id;}
+    private int row(int row){int id=rows.get(scroll+row);if(search.getValue().trim().isEmpty()&&visible()>1&&row==0&&id>=0)return -200000-categories.indexOf(ModernFinishCatalog.option(id).category());return id;}
     private void send(){PacketDistributor.sendToServer(new FinishPayload(menu.tile.getBlockPos(),state.mainTexture,state.layout,state.facesEnabled,state.faces()));}
     public void action(int id,int direction){if(id==ProgrammableBlockDialog.DONE){onClose();return;}state=state.action(id,direction);
         if(id==ProgrammableBlockDialog.TEXTURE_LAYOUT||id==ProgrammableBlockDialog.FACE_OVERRIDES||id==ProgrammableBlockDialog.INHERIT)send();reveal();rebuild(true);}
@@ -94,7 +94,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
         graphics.fill(panel.listX-1,top()-1,panel.listX+panel.listWidth+8,top()+height()+1,0xFF000000);
         for(int offset=0;offset<visible()&&scroll+offset<rows.size();offset++){int id=row(offset),yy=top()+offset*22;boolean selected=id==state.selectedTexture();if(selected)graphics.fill(panel.listX,yy,panel.listX+panel.listWidth,yy+22,0xFF2A4A6A);
             if(id<0){String category=categories.get(-200000-id);int indent=Math.min(48,8*(category.length()-category.replace("/","").length()));graphics.drawString(font,(expanded.contains(category)?"- ":"+ ")+category.substring(category.lastIndexOf('/')+1),panel.listX+3+indent,yy+7,0xFFABCFE8,false);}
-            else{var entry=ModernFinishCatalog.ENTRIES.get(id);var sprite=minecraft.getTextureAtlas(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS).apply(net.minecraft.resources.ResourceLocation.parse(entry.texture()));int w=16,h=16;if(entry.u()<entry.v())w=Math.max(1,Math.round(16*entry.u()/entry.v()));else h=Math.max(1,Math.round(16*entry.v()/entry.u()));
+            else{var entry=ModernFinishCatalog.option(id);var sprite=minecraft.getTextureAtlas(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS).apply(net.minecraft.resources.ResourceLocation.parse(entry.texture()));int w=16,h=16;if(entry.u()<entry.v())w=Math.max(1,Math.round(16*entry.u()/entry.v()));else h=Math.max(1,Math.round(16*entry.v()/entry.u()));
                 graphics.blit(panel.listX+3+(16-w)/2,yy+3+(16-h)/2,0,w,h,new CroppedSprite(sprite,entry.u(),entry.v()));graphics.drawString(font,font.plainSubstrByWidth(entry.label(),panel.listWidth-26),panel.listX+23,yy+7,selected?0xFFFFE08A:0xFFD8D8D8,false);}
         }
         if(maximum()>0){graphics.fill(panel.listX+panel.listWidth,top(),panel.listX+panel.listWidth+7,top()+height(),0xFF303038);graphics.fill(panel.listX+panel.listWidth,thumbTop(),panel.listX+panel.listWidth+7,thumbTop()+thumbHeight(),0xFF808090);}

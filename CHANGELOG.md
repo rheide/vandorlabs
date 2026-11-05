@@ -2,13 +2,13 @@
 
 ## 2.9 (development)
 
-- Share startup filesystem texture discovery without changing saved IDs, categories, sample artwork or scan/failure behavior. Keep native filesystem reload and custom block sampling explicitly separate from the initial cube implementation.
+- Support installed filesystem PNGs on the native programmable cube, using shared startup discovery and stable saved identifiers. Keep picker selections through missing-file and dimension reloads, refresh world/item UV snapshots coherently, and preserve separate startup-missing-client fallback. New file discovery still requires a restart; custom block sampling remains separate.
 
 - Share the current programmable-cube Appearance layout, face controls and picker input rules, retaining reverse cycling and wheel/drag scrolling. Share housing face-plane and packed-light calculations while preserving legacy discovery and light sampling.
 
 - Share Trigger and housing save contracts while preserving legacy missing-field defaults, material migrations, six face overrides and dormant Trigger playback data. Add a focused Trigger dialog regression without running unrelated gameplay fixtures.
 
-- Add the experimental NeoForge plain matter block and matter/alloy ingots with canonical recipes, artwork and native persistence/interaction checks. Add the native programmable cube editor with built-in material search, six face overrides, all three layouts, bounded joined images and configuration-preserving items. Creative shift-click and the main-hand Configurizer share its authenticated menu. External-material workflows, other families and the production chain remain incomplete.
+- Add the experimental NeoForge plain matter block and matter/alloy ingots with canonical recipes, artwork and native persistence/interaction checks. Add the native programmable cube editor with built-in material search, six face overrides, all three layouts, bounded joined images and configuration-preserving items. Creative shift-click and the main-hand Configurizer share its authenticated menu. Custom block sampling, other families and the production chain remain incomplete.
 - Share saved material-ID validation while retaining unavailable custom and filesystem artwork identities.
 
 - Share existing layout, porthole geometry, category and glass/light material definitions between the independent Java 8 and Java 21 builds without changing their legacy behavior.

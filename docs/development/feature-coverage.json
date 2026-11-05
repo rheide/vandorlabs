@@ -32,7 +32,7 @@
         "programmable_matter_block"
       ],
       "remaining": [
-        "Filesystem material discovery/reload and custom block material definitions/sampling",
+        "Custom block material definitions and sampling",
         "Complete creative/search configuration across the remaining native families",
         "Carried-assembly joined faces and hardware shader-pack acceptance"
       ],
@@ -63,11 +63,12 @@
         "Main-hand Configurizer and creative shift-click share the dedicated server-owned menu, including survival and Adventure authorization.",
         "Native configured item placement, survival mining, pick/drop components, subsequent-process saved states and retained unknown configuration fields.",
         "Bounded loaded-world joining preserves the current centered Fit crop; actual emitted geometry and item transforms match the independent current Forge model exporter.",
-        "Weighted world-quad caches, bounded item geometry, weak scalar visual projections, settled idle queues and resource/world unload checks."
+        "Weighted world-quad caches, bounded item geometry, weak scalar visual projections, settled idle queues and resource/world unload checks.",
+        "Installed filesystem PNG categories, stable identities, missing-file and portrait/wide reloads while a picker stays open, with immutable world/item UV snapshots and separate startup-missing-peer/restart checks."
       ],
       "acceptance_limits": [
         "Development-classpath software-rendered checks; exact packaged-JAR runtime and hardware shader acceptance remain pending.",
-        "Filesystem/custom material workflows and carried assemblies remain deferred. A test-only portrait asset verifies UV mapping without claiming discovery support.",
+        "Custom block sampling, other family integration and carried assemblies remain deferred. Installed-PNG reload acceptance is separate from the test-only cube portrait oracle.",
         "Matter production and other programmable families are not implemented by this slice."
       ]
     },
@@ -753,10 +754,9 @@
       "id": "material_workflows",
       "label": "Filesystem and custom material workflows",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
         "custom block sample definitions and native sampling/rendering",
         "external materials across remaining block families",
         "full resource-pack and shader acceptance"
@@ -768,7 +768,16 @@
         "native resource pack and missing-file appearance matching the legacy fallback",
         "cube and full viewscreen open-picker portrait/wide reload and saved-ID retention"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Shared startup-only filesystem discovery and stable saved identities used by the native cube.",
+        "Installed native PNG resource pack, known-file missing fallback, same-open-picker dimension refresh and coherent immutable model snapshots.",
+        "Dedicated save/read/missing-file processes, more than 256 installed entries, real picker row/wheel/drag input, separate startup-missing-peer and restored-file restart checks."
+      ],
+      "acceptance_limits": [
+        "Cube-only PNG workflow; custom block sampling and other family adapters remain pending.",
+        "New entries require restart; reload only rereads accepted startup paths. Development-classpath software rendering does not establish exact-JAR or hardware shader acceptance."
+      ]
     },
     {
       "id": "integrations",

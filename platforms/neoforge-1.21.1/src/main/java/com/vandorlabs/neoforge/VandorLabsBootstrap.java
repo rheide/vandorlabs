@@ -50,6 +50,7 @@ public final class VandorLabsBootstrap {
             }).build());
     }
     public VandorLabsBootstrap(IEventBus bus) {
+        FilesystemMaterials.initialize();
         BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(FinishPayload::register);
     }
 }

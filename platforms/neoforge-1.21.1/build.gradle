@@ -97,3 +97,7 @@ tasks.register('generateCubeSmokeResources', Exec) {
     outputs.upToDateWhen { false }
 }
 tasks.named('processSmokeResources') { dependsOn 'generateCubeSmokeResources' }
+neoForge.runs.configureEach {
+    if(project.hasProperty('filesystemPhase'))systemProperty 'vandorlabs.filesystemPhase',project.property('filesystemPhase')
+    if(project.hasProperty('filesystemPeer'))systemProperty 'vandorlabs.filesystemPeer',project.property('filesystemPeer')
+}
