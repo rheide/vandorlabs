@@ -14,12 +14,12 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 /** Test-only registered type, no placed diagonal family; local publication/refusal contracts. */
 @EventBusSubscriber(modid="vandorlabs")
 public final class DiagonalHostChecks {
-    private static NativeDiagonalWallBlock block;private static BlockEntityType<NativeWallEntity> type;private static int checks;
+    private static NativeDiagonalWallBlock block,porthole;private static BlockEntityType<NativeWallEntity> type;private static int checks;
     private static boolean enabled(){return System.getProperty("vandorlabs.transmitterPhase","").equals("diagonal-host");}
     private static void require(boolean value,String message){checks++;if(!value)throw new AssertionError("Diagonal host: "+message);}
     @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
     public static final class Registration {
-        @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled())return;event.register(Registries.BLOCK,helper->{block=new NativeDiagonalWallBlock(BlockBehaviour.Properties.of().dynamicShape(),false);helper.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","diagonal_host_fixture"),block);});event.register(Registries.BLOCK_ENTITY_TYPE,helper->{type=BlockEntityType.Builder.of((pos,state)->new NativeWallEntity(type,pos,state,false),block).build(null);helper.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","diagonal_host_fixture"),type);});}
+        @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled())return;event.register(Registries.BLOCK,helper->{block=new NativeDiagonalWallBlock(BlockBehaviour.Properties.of().dynamicShape(),false);helper.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","diagonal_host_fixture"),block);porthole=new NativeDiagonalWallBlock(BlockBehaviour.Properties.of().dynamicShape(),true);helper.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","diagonal_porthole_topology_fixture"),porthole);});event.register(Registries.BLOCK_ENTITY_TYPE,helper->{type=BlockEntityType.Builder.of((pos,state)->new NativeWallEntity(type,pos,state,false),block).build(null);helper.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","diagonal_host_fixture"),type);});}
     }
     private static final class Counting extends NativeWallEntity {
         int dirty,models,refusal;boolean observe;
@@ -42,6 +42,7 @@ public final class DiagonalHostChecks {
         for(int size=0;size<=18;size++){if(size==17)continue;reject(event.getServer().registryAccess(),java.util.Arrays.copyOf(encoded,size));}
         for(int offset:new int[]{12,13,14,15,16}){var invalid=encoded.clone();invalid[offset]=(byte)(offset==12?3:offset==13?4:offset==14?12:offset==15?6:2);reject(event.getServer().registryAccess(),invalid);}
         var buffer=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(encoded),event.getServer().registryAccess());try{var decoded=DiagonalGeometryPayload.CODEC.decode(buffer);require(decoded.valid()&&decoded.mode()==2&&decoded.fill()==3&&decoded.join()==11&&decoded.facing()==Direction.EAST&&decoded.inverted(),"Exact geometry packet roundtrip");}finally{buffer.release();}
+        if(System.getProperty("vandorlabs.diagonalReference")!=null)try{NativeDiagonalTopologyChecks.run(block,porthole,VandorLabsBootstrap.PROGRAMMABLE_WALL.get());}catch(Exception failure){throw new IllegalStateException("Actual Forge diagonal topology replay",failure);}
         System.out.println("[vandorlabs][diagonal-host] dedicated PASS checks="+checks+" local staged state/refusal projection chunk routing cached late bounds; placed-state callbacks deferred");event.getServer().halt(false);
     }
 }
