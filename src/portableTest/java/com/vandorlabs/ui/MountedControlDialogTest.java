@@ -9,6 +9,10 @@ public final class MountedControlDialogTest {
             if(controls.size()!=3)throw new AssertionError("three mount controls");int[] ids={9,10,11},xs={left+14,left+14,left+144},ys={top+92,top+116,top+116},widths={252,122,122};String[] labels={heights[height],tilts[tilt],directions[direction]};
             for(int i=0;i<3;i++){DialogControl c=controls.get(i);if(c.id!=ids[i]||c.x!=xs[i]||c.y!=ys[i]||c.width!=widths[i]||c.height!=20||!c.enabled||c.tab||!c.label.equals(labels[i]))throw new AssertionError("frozen mount descriptor");}cases++;
         }
+        for(boolean twin:new boolean[]{false,true})for(int size=0;size<2;size++)for(int left:new int[]{-20,0,100})for(int top:new int[]{-20,0,100}){
+            String[] labels=twin?new String[]{"Size: Small","Size: Large"}:new String[]{"Size: Compact","Size: Industrial"};DialogControl c=MountedControlDialog.sizeControl(left,top,twin,size);
+            if(c.id!=12||c.x!=left+14||c.y!=top+64||c.width!=252||c.height!=20||!c.enabled||c.tab||!c.label.equals(labels[size]))throw new AssertionError("frozen current Size12 row");
+        }
         System.out.println("MountedControlDialog PASS cases="+cases+" exact IDs labels dimensions offsets centered small panels");
     }
 }

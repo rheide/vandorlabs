@@ -101,7 +101,7 @@ public class MessageRedstoneChannel implements IMessage {
         controlMount=buf.readBoolean();baseHeight=buf.readInt();baseTilt=buf.readInt();tiltDirection=buf.readInt();
         powerLever=buf.readBoolean();powerLeverSize=buf.readUnsignedByte();
         controlTypeUpdate=buf.readBoolean();controlType=buf.readUnsignedByte();
-        channels=ChannelData.read(buf,channel);invalidChannels=controlTypeUpdate && controlType>2 || channels==null || particleLevel>3 || powerLever && powerLeverSize>1;
+        channels=ChannelData.read(buf,channel);invalidChannels=controlTypeUpdate && controlType>2 || channels==null || particleLevel>3 || powerLever && !com.vandorlabs.persistence.PowerLeverSize.valid(powerLeverSize);
         invalidChannels|=controlMount && !com.vandorlabs.blocks.SignalControlMount.valid(baseHeight,baseTilt,tiltDirection);
         invalidChannels|=threshold<0 || threshold>15 || controlLimits && !com.vandorlabs.tiles.TileEntitySignalControl.validLimits(lowLimit,highLimit);
     }

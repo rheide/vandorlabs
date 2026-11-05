@@ -1,6 +1,7 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockTwinPowerLever;
+import com.vandorlabs.persistence.PowerLeverSize;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -22,8 +23,8 @@ public final class PowerLeverModel implements IBakedModel {
     public ItemCameraTransforms getItemCameraTransforms(){return sizes[itemSize].getItemCameraTransforms();}
     public ItemOverrideList getOverrides(){return new ItemOverrideList(Collections.emptyList()){
         @Override public IBakedModel handleItemState(IBakedModel original,net.minecraft.item.ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity){
-            net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("RedstoneChannelSettings");int size=tag!=null && tag.hasKey("PowerLeverSize",3)?tag.getInteger("PowerLeverSize"):itemSize;
-            return size<0 || size>1?original:new PowerLeverModel(sizes[0],sizes[1],size);
+            net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("RedstoneChannelSettings");boolean typed=tag!=null && tag.hasKey(PowerLeverSize.KEY,3);int size=PowerLeverSize.itemChoice(typed,typed?tag.getInteger(PowerLeverSize.KEY):0,itemSize);
+            return !PowerLeverSize.valid(size)?original:new PowerLeverModel(sizes[0],sizes[1],size);
         }
     };}
 }

@@ -353,6 +353,7 @@ fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = mounted-control-dialog ]; then
         grep -q "mounted-control-dialog legacy PASS" "$RUN_OUT/client.log"
+        grep -q "power-lever-size-dialog PASS" "$RUN_OUT/client.log"
         echo "Mounted control dialog passed: $RUN_OUT"
         exit 0
     fi

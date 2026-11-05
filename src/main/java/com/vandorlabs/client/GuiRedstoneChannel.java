@@ -111,7 +111,7 @@ public class GuiRedstoneChannel extends GuiContainer {
             if(thruster){housingList=new HousingTextureList(layout.listX,guiTop+64,layout.listWidth,sideTexture).visibleRows(Math.max(2,(ySize-98)/HousingTextureList.ROW_HEIGHT)).custom(value->{sideTexture=value;submit();});particleButton=layout.control(2,64,particleLabel());buttonList.add(particleButton);if(programmableThruster)buttonList.add(layout.control(4,88,shapeLabel()));refreshJoinButton();}
             if(adjustableBase)for(com.vandorlabs.ui.DialogControl control:MountedControlDialog.controls(guiLeft,guiTop,baseHeight,baseTilt,tiltDirection))buttonList.add(new GuiButton(control.id,control.x,control.y,control.width,control.height,control.label));
             if(selectableType)buttonList.add(new GuiButton(13,guiLeft+14,guiTop+64,252,20,typeLabel()));
-            if(powerLever)buttonList.add(new GuiButton(12,guiLeft+14,guiTop+64,252,20,sizeLabel()));
+            if(powerLever){com.vandorlabs.ui.DialogControl control=MountedControlDialog.sizeControl(guiLeft,guiTop,twinPowerLever(),powerLeverSize);buttonList.add(new GuiButton(control.id,control.x,control.y,control.width,control.height,control.label));}
             if(pilotSeat){buttonList.add(new GuiButton(15,guiLeft+14,guiTop+64,252,20,"Taxi Mode: "+(taxiMode?"ON":"OFF")));buttonList.add(new GuiButton(19,guiLeft+14,guiTop+88,252,20,pilotHeightLabel()));if(!inspectionStatus.isEmpty()){GuiButton assemble=new GuiButton(20,guiLeft+14,guiTop+236,252,20,"Assemble (inspection required)");assemble.enabled=false;buttonList.add(assemble);}}
         }
         buttonList.add(new GuiButton(1,guiLeft+xSize-166,guiTop+ySize-26,154,20,pilotSeat?"Close":"Done"));
@@ -182,7 +182,8 @@ public class GuiRedstoneChannel extends GuiContainer {
     private int baseControlsY(){return signalControl?selectableType?146:122:powerLever?96:66;}
     private String dialogTitle(){return member.channelTile().getBlockType().getLocalizedName();}
     private String typeLabel(){return "Type: "+new String[]{"Standard","Twin","Grip"}[controlType];}
-    private String sizeLabel(){boolean twin=member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever;return "Size: "+(twin?(powerLeverSize==0?"Small":"Large"):(powerLeverSize==0?"Compact":"Industrial"));}
+    private boolean twinPowerLever(){return member.channelTile().getWorld().getBlockState(member.channelTile().getPos()).getBlock() instanceof com.vandorlabs.blocks.BlockTwinPowerLever;}
+    private String sizeLabel(){return MountedControlDialog.sizeLabel(twinPowerLever(),powerLeverSize);}
     private String heightLabel(){return MountedControlDialog.heightLabel(baseHeight);}
     private String tiltLabel(){return MountedControlDialog.tiltLabel(baseTilt);}
     private String directionLabel(){return MountedControlDialog.directionLabel(tiltDirection);}

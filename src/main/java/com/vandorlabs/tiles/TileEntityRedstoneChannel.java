@@ -4,6 +4,7 @@ import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.redstone.ChannelData;
 
 import com.vandorlabs.blocks.BlockIndustrialLever;
+import com.vandorlabs.persistence.PowerLeverSize;
 import com.vandorlabs.blocks.BlockVandorSwitch;
 import com.vandorlabs.redstone.RedstoneChannelMember;
 import com.vandorlabs.redstone.RedstoneChannelLatch;
@@ -67,13 +68,13 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         if(world!=null && world.getBlockState(pos).getBlock() instanceof BlockIndustrialLever)tag.setInteger("PowerLeverSize",getPowerLeverSize());return tag;
     }
     // Missing tags retain the original size of legacy placed blocks.
-    private int powerLeverSize=-1;
+    private int powerLeverSize=PowerLeverSize.UNSPECIFIED;
     public int getPowerLeverSize(){
-        if(powerLeverSize>=0)return powerLeverSize;
+        if(PowerLeverSize.hasSavedValue(powerLeverSize))return powerLeverSize;
         return world!=null && world.getBlockState(pos).getBlock() instanceof BlockIndustrialLever?((BlockIndustrialLever)world.getBlockState(pos).getBlock()).defaultSize():0;
     }
     public void setPowerLeverSize(int size){
-        if(size<0 || size>1 || powerLeverSize==size)return;
+        if(!PowerLeverSize.valid(size) || powerLeverSize==size)return;
         powerLeverSize=size;markDirty();sync();
         if(world!=null)world.markBlockRangeForRenderUpdate(pos,pos);
     }
@@ -198,7 +199,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         super.writeToNBT(tag);ChannelData.write(tag,channels);
         NbtPrimitiveData primitive=new NbtPrimitiveData(tag);
         ControlMountSettings.write(primitive,baseHeight,baseTilt,tiltDirection);
-        if(powerLeverSize>=0)tag.setInteger("PowerLeverSize",powerLeverSize);
+        if(PowerLeverSize.hasSavedValue(powerLeverSize))tag.setInteger(PowerLeverSize.KEY,powerLeverSize);
         new RedstoneData.Source(channel,localOn,initialized,mountRotation).write(primitive);
         ControlLatchData.write(primitive,channels,latched,this);
         return tag;
@@ -221,7 +222,7 @@ public class TileEntityRedstoneChannel extends TileEntity implements RedstoneCha
         latched=ControlLatchData.read(primitive,channels,localOn,levels);
         initialized=data.initialized;
         mountRotation=data.mountRotation;
-        powerLeverSize=tag.hasKey("PowerLeverSize",3)?Math.max(0,Math.min(1,tag.getInteger("PowerLeverSize"))):-1;
+        powerLeverSize=PowerLeverSize.readSaved(tag.hasKey(PowerLeverSize.KEY,3),tag.getInteger(PowerLeverSize.KEY));
         if(world!=null && world.isRemote && oldSize!=getPowerLeverSize())world.markBlockRangeForRenderUpdate(pos,pos);
         if (world!=null && world.isRemote && oldRotation!=mountRotation)
             world.markBlockRangeForRenderUpdate(pos,pos);

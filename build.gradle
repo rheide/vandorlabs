@@ -1255,3 +1255,12 @@ task measureControlMountAllocations(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.ControlMountAllocationChecks'
 }
+
+task testPowerLeverSize(type: JavaExec) {
+    group = 'verification'
+    description = 'Preserve frozen lever size save, live edit, item and registry default behavior'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PowerLeverSizeChecks'
+}
+check.dependsOn testPowerLeverSize

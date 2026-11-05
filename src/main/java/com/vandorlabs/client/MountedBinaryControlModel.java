@@ -47,7 +47,7 @@ public final class MountedBinaryControlModel implements IBakedModel {
         @Override public IBakedModel handleItemState(IBakedModel original,net.minecraft.item.ItemStack stack,net.minecraft.world.World world,net.minecraft.entity.EntityLivingBase entity){
             net.minecraft.nbt.NBTTagCompound tag=stack.getSubCompound("RedstoneChannelSettings");if(tag==null)return original;
             int h=tag.getInteger("BaseHeight"),t=SignalControlMount.readTilt(tag),d=tag.getInteger("TiltDirection"),size=tag.hasKey("PowerLeverSize",3)?tag.getInteger("PowerLeverSize"):itemSize;
-            if(!SignalControlMount.valid(h,t,d) || size<0 || size>1)return original;
+            if(!SignalControlMount.valid(h,t,d) || !com.vandorlabs.persistence.PowerLeverSize.valid(size))return original;
             IBakedModel selected=base.getOverrides().handleItemState(base,stack,world,entity);return new MountedBinaryControlModel(selected,block,h+4*(t+4*d),size);
         }
     };}
