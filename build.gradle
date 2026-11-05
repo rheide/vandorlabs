@@ -1269,5 +1269,6 @@ task testSignalControlDataAdapters(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.SignalControlDataChecks'
+    if (project.hasProperty('signalControlExport')) systemProperty 'vandorlabs.signalControlExport', project.property('signalControlExport')
 }
 check.dependsOn testSignalControlDataAdapters
