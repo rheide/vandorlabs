@@ -1494,3 +1494,12 @@ task exportDiagonalApertureMeshReference(type: JavaExec) {
     maxHeapSize = '1G'
     systemProperty 'vandorlabs.diagonalApertureMeshReference', file(project.findProperty('diagonalApertureMeshReference') ?: 'build/test-artifacts/diagonal-aperture-mesh-forge.jsonl').absolutePath
 }
+
+task testDiagonalArmFilter(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalArmFilterChecks'
+}
+
+check.dependsOn testDiagonalArmFilter
