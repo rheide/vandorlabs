@@ -314,3 +314,6 @@ tasks.register('testNativePanelApertures', JavaExec) {
     maxHeapSize = '1G'
     args file(project.findProperty('panelApertureReference') ?: '../../build/test-artifacts/panel-aperture-forge.jsonl').absolutePath
 }
+neoForge.runs.configureEach {
+    if (project.hasProperty('pickerInputChecks')) systemProperty 'vandorlabs.pickerInputChecks', 'true'
+}

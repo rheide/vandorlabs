@@ -71,6 +71,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
         if(button==0||button==1)for(var control:controls)if(control.enabled&&(button==0||control.id==ProgrammableBlockDialog.FACE_OVERRIDES||control.id==ProgrammableBlockDialog.TEXTURE_LAYOUT||shapeState!=null&&control.id==SlabStairDialog.ORIENTATION)&&x>=control.x&&x<control.x+control.width&&y>=control.y&&y<control.y+control.height){if(shapeState!=null&&control.id==SlabStairDialog.TREAD)return button==0&&super.mouseClicked(x,y,button);action(control.id,button==1?-1:1);return true;}
         return picker.click(x,y,button)||super.mouseClicked(x,y,button);
     }
+    @Override public boolean keyPressed(int key,int scan,int modifiers){return picker.keyPressed(key,scan,modifiers)||super.keyPressed(key,scan,modifiers);}
     @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){return picker.drag(x,y)||super.mouseDragged(x,y,button,dx,dy);}
     @Override public boolean mouseReleased(double x,double y,int button){picker.release();return super.mouseReleased(x,y,button);}
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){return picker.wheel(x,y,vertical)||super.mouseScrolled(x,y,horizontal,vertical);}

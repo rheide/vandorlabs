@@ -91,6 +91,11 @@ public final class NativeMaterialPicker {
         }
         return false;
     }
+    /** Focused text owns shortcuts before AbstractContainerScreen handles inventory/hotbar keys. */
+    public boolean keyPressed(int key,int scan,int modifiers){
+        if(inventoryPicker!=null||search==null||!search.visible||!search.canConsumeInput()||key==org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE)return false;
+        search.keyPressed(key,scan,modifiers);return true;
+    }
     public boolean drag(double x,double y){if(dragging){scroll=DialogInput.scrollForDrag((int)y,top(),height(),thumbHeight(),maximum(),dragOffset);return true;}return false;}
     public void release(){dragging=false;}
     public boolean wheel(double x,double y,double vertical){if(inventoryPicker!=null&&inventoryPicker.wheel((int)x,(int)y,vertical>0?1:vertical<0?-1:0))return true;if(vertical!=0&&x>=this.x&&x<this.x+width+7&&y>=top()&&y<top()+height()){scroll=DialogInput.wheel(scroll,maximum(),vertical>0?1:-1);return true;}return false;}

@@ -66,7 +66,7 @@ public final class NativeTriggerScreen extends AbstractContainerScreen<TriggerMe
     @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){var picker=activePicker();return picker!=null&&picker.drag(x,y)||super.mouseDragged(x,y,button,dx,dy);}
     @Override public boolean mouseReleased(double x,double y,int button){for(var picker:artwork)picker.release();sides.release();return super.mouseReleased(x,y,button);}
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){var picker=activePicker();return picker!=null&&picker.wheel(x,y,vertical)||super.mouseScrolled(x,y,horizontal,vertical);}
-    @Override public boolean keyPressed(int key,int scan,int modifiers){if(key==257||key==335){if(send())onClose();return true;}return super.keyPressed(key,scan,modifiers);}
+    @Override public boolean keyPressed(int key,int scan,int modifiers){var picker=activePicker();if(picker!=null&&picker.keyPressed(key,scan,modifiers))return true;if(key==257||key==335){if(send())onClose();return true;}return super.keyPressed(key,scan,modifiers);}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
     @Override protected void renderBg(GuiGraphics graphics,float partial,int mouseX,int mouseY){
         graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xFF101012);graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+24,0xFF202028);graphics.drawString(font,title,panel.left+12,panel.top+8,0xFFFFFFFF,false);
