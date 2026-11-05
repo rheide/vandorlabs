@@ -11,14 +11,12 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BiomeColors;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
@@ -59,7 +57,7 @@ public final class NativeFluidClient {
                 if(mc.level.getBlockEntity(next) instanceof ContainedFluidHost other){var data=other.containedFluids().snapshot();neighbors[direction.get3DDataValue()]=new NativeFluidSurface.Neighbor(other.fluidVolumeSnapshot(),FluidStack.isSameFluidSameComponents(fluid,data.side(0).fluid()),FluidStack.isSameFluidSameComponents(fluid,data.side(1).fluid()),hidden);}else neighbors[direction.get3DDataValue()]=new NativeFluidSurface.Neighbor(null,false,false,hidden);}
             var extension=IClientFluidTypeExtensions.of(fluid.getFluidType());ResourceLocation texture=extension.getStillTexture(fluid);if(texture==null)texture=MissingTextureAtlasSprite.getLocation();int color=fluid.is(net.minecraft.world.level.material.Fluids.WATER)?0xFF000000|BiomeColors.getAverageWaterColor(mc.level,pos):extension.getTintColor(fluid);
             double a=corner(mc,pos,fluid,0,0),b=corner(mc,pos,fluid,0,1),c=corner(mc,pos,fluid,1,1),d=corner(mc,pos,fluid,1,0);var surfaces=NativeFluidSurface.surfaces(host.fluidVolumeSnapshot(),side,neighbors,kind(fluid)==0?null:(x,z)->NativeFluidSurface.height(a,b,c,d,x,z));
-            for(var surface:surfaces){float shade=(float)(surface.nx*surface.nx*.6+surface.ny*surface.ny*(surface.ny<0?.5:1)+surface.nz*surface.nz*.8);int shaded=(color&0xFF000000)|((int)((color>>16&255)*shade)<<16)|((int)((color>>8&255)*shade)<<8)|(int)((color&255)*shade);BlockPos sample=surface.boundary<0||surface.boundary==1?pos:pos.relative(Direction.from3DDataValue(surface.boundary));if(!NativeFluidWorld.loaded(mc.level,sample))sample=pos;int light=LightTexture.pack(mc.level.getBrightness(LightLayer.BLOCK,sample),mc.level.getBrightness(LightLayer.SKY,sample));BlockPos above=sample.above();if(NativeFluidWorld.loaded(mc.level,above))light=com.vandorlabs.render.HousingLightPolicy.max(light,LightTexture.pack(mc.level.getBrightness(LightLayer.BLOCK,above),mc.level.getBrightness(LightLayer.SKY,above)));light=com.vandorlabs.render.HousingLightPolicy.max(light,LightTexture.pack(fluid.getFluidType().getLightLevel(fluid),0));emit(faces,surface,texture,shaded,light,false);if(surface.boundary==1||surface.boundary>=2&&kind(fluid)!=0&&kind(fluid)==cameraMaterial)emit(faces,surface,texture,shaded,light,true);}
+            int light=NativeFluidRenderSnapshot.emissionLight(fluid.getFluidType().getLightLevel(fluid));for(var surface:surfaces){float shade=(float)(surface.nx*surface.nx*.6+surface.ny*surface.ny*(surface.ny<0?.5:1)+surface.nz*surface.nz*.8);int shaded=(color&0xFF000000)|((int)((color>>16&255)*shade)<<16)|((int)((color>>8&255)*shade)<<8)|(int)((color&255)*shade);emit(faces,surface,texture,shaded,light,false);if(surface.boundary==1||surface.boundary>=2&&kind(fluid)!=0&&kind(fluid)==cameraMaterial)emit(faces,surface,texture,shaded,light,true);}
         }
         var previous=host.fluidRenderSnapshot();
         if(previous.faces.equals(faces))faces=previous.faces;

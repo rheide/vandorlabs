@@ -9,6 +9,8 @@ import net.neoforged.neoforge.client.model.data.ModelProperty;
 public final class NativeFluidRenderSnapshot {
  public static final ModelProperty<NativeFluidRenderSnapshot> DATA=new ModelProperty<>();
  public static final NativeFluidRenderSnapshot EMPTY=new NativeFluidRenderSnapshot(List.of(),null);
+ /** World light is supplied by the current chunk mesh; retain only local emission. */
+ public static int emissionLight(int level){return Math.max(0,Math.min(15,level))<<4;}
  public record Face(List<Vec3> vertices,ResourceLocation texture,int argb,int packedLight,int facing,float nx,float ny,float nz,int axis){public Face{vertices=List.copyOf(vertices);if(vertices.size()!=4)throw new IllegalArgumentException("Fluid quad must have four vertices");}}
  /** Shares the immutable volume, retaining only precomputed native fluid identities; no NBT on workers. */
  public static final class Contact {
