@@ -12,7 +12,9 @@ public final class ControlMountSettingsTest {
         data.putString("BaseHeight","3");data.putString("BaseTilt","3");data.putString("TiltDirection","2");fields(ControlMountSettings.read(data,2,3,1),0,0,0,"wrong scalar fields retain legacy zero-read behavior");
         int boundaries=0;
         for(int h=-2;h<6;h++)for(int t=-2;t<6;t++)for(int d=-2;d<6;d++){
-            boolean expected=h>=0&&h<4&&t>=0&&t<4&&d>=0&&d<4;require(ControlMountSettings.valid(h,t,d)==expected,"mount boundary "+h+","+t+","+d);boundaries++;
+            boolean expected=h>=0&&h<4&&t>=0&&t<4&&d>=0&&d<4;require(ControlMountSettings.valid(h,t,d)==expected,"mount boundary "+h+","+t+","+d);if(expected)fields(ControlMountSettings.of(h,t,d),h,t,d,"validated factory preserves exact requested mount");
+            else try{ControlMountSettings.of(h,t,d);throw new AssertionError("factory accepted out-of-range mount");}catch(IllegalArgumentException correct){}
+            boundaries++;
         }
         for(int tilt=-2;tilt<=5;tilt++){
             require(ControlMountSettings.migratedTilt(tilt,true)==tilt,"versioned tilt must not be clamped");int[] old={-2,-1,0,1,1,1,4,5};require(ControlMountSettings.migratedTilt(tilt,false)==old[tilt+2],"literal legacy tilt mapping");

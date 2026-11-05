@@ -5,6 +5,10 @@ public final class ControlMountSettings {
     public static final String VERSION="ControlMountVersion",HEIGHT="BaseHeight",TILT="BaseTilt",DIRECTION="TiltDirection";
     public final int height,tilt,direction;
     private ControlMountSettings(int height,int tilt,int direction){this.height=height;this.tilt=tilt;this.direction=direction;}
+    public static ControlMountSettings of(int height,int tilt,int direction){
+        if(!valid(height,tilt,direction))throw new IllegalArgumentException("Invalid control mount");
+        return new ControlMountSettings(height,tilt,direction);
+    }
     public static boolean valid(int height,int tilt,int direction){return height>=0&&height<=3&&tilt>=0&&tilt<=3&&direction>=0&&direction<4;}
     /** Earlier positive 5/10/15-degree presets migrate to the first supported tilted option. */
     public static int migratedTilt(int tilt,boolean versionPresent){return !versionPresent&&tilt>0&&tilt<=3?1:tilt;}
