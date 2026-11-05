@@ -25,7 +25,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private FrameSettings frames=defaultFrames();
     private NativeFlatWallGeometry.Geometry geometry;
     private NativeFluidVolume.Side partition;
-    private long geometryGeneration,topologyRevision;
+    private long geometryGeneration,topologyRevision,modelRevision;
     private volatile WallAppearance wallAppearance;
     public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean porthole){
         super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.porthole=porthole;walls=new WallSettings(false,false,0,0,porthole,0);
@@ -45,8 +45,9 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public final WallSettings wallSettings(){return walls;}
     public final FrameSettings frameSettings(){return frames;}
     public final WallAppearance wallAppearance(){return wallAppearance;}
+    public long modelDataRevision(){return modelRevision;}
     public final long topologyRevision(){return topologyRevision;}
-    private void publishWallAppearance(){wallAppearance=new WallAppearance(appearance(),walls,frames,geometry);}
+    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,geometry);}
     @Override protected void appearancePublished(){publishWallAppearance();}
     public static boolean validFrame(int choice){if(choice==-1)return true;if(!ModernFinishCatalog.validChoice(choice))return false;String category=ModernFinishCatalog.option(choice).category();return category.equals("Frame")||category.startsWith("Frame/");}
     public static boolean validSurface(int choice){return validFrame(choice)||ModernFinishCatalog.validChoice(choice)&&ModernFinishCatalog.option(choice).general();}
