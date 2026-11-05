@@ -1296,6 +1296,7 @@ task testStairStateAdapters(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.StairStateChecks'
+    if (project.hasProperty('stairExport')) systemProperty 'vandorlabs.stairExport', project.property('stairExport')
 }
 check.dependsOn testStairStateAdapters
 
@@ -1327,4 +1328,12 @@ task testFluidClipMath(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.FluidClipMathChecks'
+}
+
+task testShapeDefaultsLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ShapeDefaultsLegacyChecks'
+    systemProperty 'vandorlabs.shapeDefaultsExport', file(project.findProperty('shapeDefaultsExport') ?: 'build/test-artifacts/shape-defaults-forge.json').absolutePath
+
 }
