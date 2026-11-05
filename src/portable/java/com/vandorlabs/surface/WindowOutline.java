@@ -90,6 +90,145 @@ public class WindowOutline {
         return outline.toArray(new double[outline.size()][]);
     }
 
+    /** Caller-owned local geometry without constructing an assembly-sized ROUND graph.
+     * Clipping retains the original global vertex order and floating-point operations. */
+    public static Slice localSlice(int columns, int rows, int shape, int extraBorder,
+            int column, int row) {
+        if (columns < 1 || rows < 1 || columns > Integer.MAX_VALUE / 16
+                || rows > Integer.MAX_VALUE / 16 || column < 0 || column >= columns
+                || row < 0 || row >= rows || !validShape(shape)
+                || extraBorder < 0 || extraBorder > 1)
+            throw new IllegalArgumentException("invalid porthole slice");
+        if (shape != ROUND) return new WindowOutline(columns, rows, shape, extraBorder).slice(column, row);
+        EllipseStream ellipse = new EllipseStream(columns, rows, extraBorder, column, row);
+        double[] lastX = new double[3], lastY = new double[3];
+        List<double[]> polygon = new ArrayList<double[]>();
+        // Each clip stage starts at the last output of its preceding stage, exactly
+        // as the list implementation. Earlier passes find those three scalars.
+        for (int stages = 1; stages <= 4; stages++) {
+            ClipStream clip = new ClipStream(stages, ellipse, lastX, lastY,
+                    stages == 4 ? polygon : null);
+            ellipse.emit(clip);
+            if (!clip.emitted) { polygon.clear(); break; }
+            if (stages < 4) { lastX[stages - 1] = clip.lastX; lastY[stages - 1] = clip.lastY; }
+        }
+        if (polygon.size() < 3 || Math.abs(area(polygon)) < EPS)
+            polygon = Collections.emptyList();
+        EdgeStream edges = new EdgeStream();
+        ellipse.emit(edges);
+        edges.segment(edges.previousX, edges.previousY, edges.firstX, edges.firstY);
+        return new Slice(polygon, bandQuads(polygon, false), edges.edges, bandQuads(polygon, true));
+    }
+
+    private interface PointSink { void point(double x, double y); }
+
+    /** Replays pixelEllipse's exact sequence using scalar row spans, not row arrays. */
+    private static final class EllipseStream {
+        final int x0, x1, y0, y1, rows;
+        final double cx, cy, rx, ry, offsetX, offsetY;
+        EllipseStream(int columns, int rows, int border, int column, int row) {
+            x0 = 2 + border; x1 = columns * 16 - x0;
+            y0 = 4 + border; y1 = rows * 16 - y0; this.rows = y1 - y0;
+            cx = (x0 + x1) / 2D; cy = (y0 + y1) / 2D;
+            rx = (x1 - x0) / 2D; ry = this.rows / 2D;
+            offsetX = column * 16D; offsetY = row * 16D;
+        }
+        double reach(int row) {
+            double dy = (y0 + row + .5D - cy) / ry;
+            return rx * Math.sqrt(Math.max(0, 1 - dy * dy));
+        }
+        int left(int row) { return Math.max(x0, (int)Math.ceil(cx - reach(row) - .5D)); }
+        int right(int row) { return Math.min(x1, (int)Math.floor(cx + reach(row) - .5D) + 1); }
+        double lastX() { return left(0) - offsetX; }
+        double lastY() { return y0 + 1 - offsetY; }
+        void point(PointSink sink, int x, int y) { sink.point(x - offsetX, y - offsetY); }
+        void emit(PointSink sink) {
+            point(sink, left(0), y0); point(sink, right(0), y0);
+            int right = right(0);
+            for (int row = 0; row < rows; row++) {
+                point(sink, right, y0 + row + 1);
+                if (row + 1 < rows) {
+                    int next = right(row + 1);
+                    if (next != right) point(sink, next, y0 + row + 1);
+                    right = next;
+                }
+            }
+            int left = left(rows - 1);
+            point(sink, left, y1);
+            for (int row = rows - 1; row >= 0; row--) {
+                // The final duplicate closing vertex is removed by pixelEllipse.
+                if (row != 0) point(sink, left, y0 + row);
+                if (row > 0) {
+                    int next = left(row - 1);
+                    if (next != left) point(sink, next, y0 + row);
+                    left = next;
+                }
+            }
+        }
+    }
+
+    private static final class ClipStream implements PointSink {
+        final int stages;
+        final double[] previousX = new double[4], previousY = new double[4];
+        final boolean[] previousInside = new boolean[4];
+        final List<double[]> output;
+        boolean emitted;
+        double lastX, lastY;
+        ClipStream(int stages, EllipseStream ellipse, double[] lastX, double[] lastY,
+                List<double[]> output) {
+            this.stages = stages; this.output = output;
+            for (int stage = 0; stage < stages; stage++) {
+                previousX[stage] = stage == 0 ? ellipse.lastX() : lastX[stage - 1];
+                previousY[stage] = stage == 0 ? ellipse.lastY() : lastY[stage - 1];
+                previousInside[stage] = inside(value(stage, previousX[stage], previousY[stage]),
+                        boundary(stage), (stage & 1) == 0);
+            }
+        }
+        private static double value(int stage, double x, double y) { return stage < 2 ? x : y; }
+        private static double boundary(int stage) { return (stage & 1) == 0 ? 0 : 16; }
+        public void point(double x, double y) { point(0, x, y); }
+        private void point(int stage, double x, double y) {
+            if (stage == stages) {
+                emitted = true; lastX = x; lastY = y;
+                if (output != null) output.add(new double[] {x, y});
+                return;
+            }
+            double current = value(stage, x, y);
+            boolean currentInside = inside(current, boundary(stage), (stage & 1) == 0);
+            if (currentInside != previousInside[stage]) {
+                double fraction = (boundary(stage) - value(stage, previousX[stage], previousY[stage]))
+                        / (current - value(stage, previousX[stage], previousY[stage]));
+                point(stage + 1,
+                        previousX[stage] + fraction * (x - previousX[stage]),
+                        previousY[stage] + fraction * (y - previousY[stage]));
+            }
+            if (currentInside) point(stage + 1, x, y);
+            previousX[stage] = x; previousY[stage] = y;
+            previousInside[stage] = currentInside;
+        }
+    }
+
+    private static final class EdgeStream implements PointSink {
+        final List<double[]> edges = new ArrayList<double[]>();
+        final double[] t = new double[2];
+        double previousX, previousY, firstX, firstY;
+        boolean first = true;
+        public void point(double x, double y) {
+            if (first) { first = false; firstX = x; firstY = y; }
+            else segment(previousX, previousY, x, y);
+            previousX = x; previousY = y;
+        }
+        void segment(double x0, double y0, double x1, double y1) {
+            double dx = x1 - x0, dy = y1 - y0;
+            t[0] = 0; t[1] = 1;
+            if (!clipTest(-dx, x0, t) || !clipTest(dx, 16 - x0, t)
+                    || !clipTest(-dy, y0, t) || !clipTest(dy, 16 - y0, t)
+                    || t[1] - t[0] < EPS) return;
+            edges.add(new double[] {x0 + t[0] * dx, y0 + t[0] * dy,
+                    x0 + t[1] * dx, y0 + t[1] * dy});
+        }
+    }
+
     public Slice slice(int column, int row) {
         double[][] local = new double[vertices.length][2];
         for (int i = 0; i < vertices.length; i++) {
