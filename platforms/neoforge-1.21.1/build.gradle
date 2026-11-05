@@ -198,3 +198,14 @@ neoForge.runs.configureEach {
     if (project.hasProperty('stairReference')) systemProperty 'vandorlabs.stairReference', file(project.property('stairReference')).absolutePath
     if (project.hasProperty('shapeDefaultsReference')) systemProperty 'vandorlabs.shapeDefaultsReference', file(project.property('shapeDefaultsReference')).absolutePath
 }
+
+sourceSets.main.resources.srcDir('build/generated/shape-resources')
+tasks.register('generateShapeResources', Exec) {
+    commandLine pythonExecutable, 'generate_shape_resources.py'
+    inputs.file('generate_shape_resources.py')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/blockstates') { include 'programmable_slab.json', 'programmable_stairs.json' })
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/block') { include 'programmable_slab.json', 'programmable_stairs_*.json' })
+    inputs.files('../../src/main/resources/assets/vandorlabs/models/item/programmable_stairs.json', '../../src/main/resources/assets/vandorlabs/models/item/configured/programmable_slab_dark_wall_panel_tile.json')
+    outputs.dir('build/generated/shape-resources')
+}
+tasks.named('processResources') { dependsOn 'generateShapeResources' }
