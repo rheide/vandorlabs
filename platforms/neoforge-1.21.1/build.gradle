@@ -384,3 +384,12 @@ tasks.register('testNativeDiagonalApertures', JavaExec) {
     maxHeapSize = '1G'
     args project.findProperty('diagonalApertureMeshReference') ?: '../../build/test-artifacts/diagonal-aperture-mesh-forge.jsonl'
 }
+
+tasks.register('testNativeJoinedDiagonalPortholes', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeJoinedDiagonalPortholeChecks'
+    maxHeapSize = '1G'
+    args project.findProperty('joinedDiagonalPortholeReference') ?: '../../build/test-artifacts/joined-diagonal-porthole-forge.jsonl'
+}

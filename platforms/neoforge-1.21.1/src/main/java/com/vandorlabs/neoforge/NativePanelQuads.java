@@ -61,6 +61,15 @@ final class NativePanelQuads {
     };
     static List<BakedQuad> flat(Direction facing,double near,PanelCornerGeometry.FlatCorner corner,Material wall,Material metal,int mode,NativePanelLayout group){Context context=new Context(facing,wall,mode,group);PanelMeshEmitter.flat(EMITTER,context,wall,metal,near,corner);return context.finish();}
     static List<BakedQuad> diagonal(Direction facing,boolean inverted,PanelCornerGeometry.Corner corner,double span,int fill,double low,double high,double halfOffset,double lower,double upper,boolean hideLower,boolean hideUpper,double[] clip,Material wall,Material metal,int mode,NativePanelLayout group){Context context=new Context(facing,wall,mode,group);PanelMeshEmitter.diagonal(EMITTER,context,wall,metal,inverted,corner,span,fill,low,high,halfOffset,lower,upper,hideLower,hideUpper,clip);return context.finish();}
+    static List<BakedQuad> diagonalArms(com.vandorlabs.neoforge.shape.NativeDiagonalWallGeometry.Pose pose,Material wall,Material outer,int mode,NativePanelLayout group){
+        boolean half=pose.mode()==2;var join=pose.join();Context capture=new Context(pose.facing(),wall,0,NativePanelLayout.UNIT,false,0,0,0,1,0,true);
+        PanelMeshEmitter.diagonal(EMITTER,capture,wall,outer,pose.inverted(),join==null?null:join.corner(),pose.mode()==1?16:8,pose.fill(),half&&pose.inverted()?-8:0,half&&pose.inverted()?8:16,half?(pose.inverted()?8:0):Double.NaN,pose.lowerEnd()*16,pose.upperEnd()*16,pose.hideLower(),pose.hideUpper(),pose.clip().scaled(16));
+        Mesh source=capture.captured();Context target=new Context(pose.facing(),wall,mode,group);
+        for(int q=0;q<source.vertices.length;q+=32)if(PanelMeshTransform.diagonalArm(source.vertices,q,pose.mode(),pose.inverted(),pose.lowerEnd(),pose.upperEnd())){
+            Material material=source.materials.get(q/32);for(int v=0;v<4;v++){int p=q+v*8;target.source(material,source.vertices[p],source.vertices[p+1],source.vertices[p+2],source.vertices[p+3],source.vertices[p+4],source.vertices[p+5],source.vertices[p+6],source.vertices[p+7]);}
+        }
+        return target.finish();
+    }
     private static final PanelApertureEmitter.Sink<Context,Material,Void> APERTURE=(context,material,ignored,reverse,a,b,c,d)->{if(context.projection==null)EMITTER.quad(context,material,reverse,a,b,c,d);else DiagonalPortholeProjection.quad(EMITTER,context,material,context.projection,reverse,a,b,c,d);};
     static List<BakedQuad> aperture(Direction facing,double near,NativePanelSlice opening,
             Material wall,Material metal,Material outer,int mode,NativePanelLayout group,

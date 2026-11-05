@@ -1503,3 +1503,12 @@ task testDiagonalArmFilter(type: JavaExec) {
 }
 
 check.dependsOn testDiagonalArmFilter
+
+task exportJoinedDiagonalPortholeReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.JoinedDiagonalPortholeReferenceExport'
+    maxHeapSize = '1G'
+    systemProperty 'vandorlabs.joinedDiagonalPortholeReference', file(project.findProperty('joinedDiagonalPortholeReference') ?: 'build/test-artifacts/joined-diagonal-porthole-forge.jsonl').absolutePath
+}
