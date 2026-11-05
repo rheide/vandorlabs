@@ -10,7 +10,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 
 | Family | Integration on master | Historical native status | Scope |
 | --- | --- | --- | --- |
-| Programmable cube and matter block | pending | partial | non-vehicle first |
+| Programmable cube and matter block | partial (plain matter only) | partial | non-vehicle first |
 | Slabs and stairs | pending | partial | non-vehicle first |
 | Walls, portholes and diagonals | pending | partial | non-vehicle first |
 | Programmable viewscreens | pending | partial | non-vehicle first |
@@ -28,11 +28,11 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Navigation tables | pending | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | pending | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
-| Cockpits and peripherals | pending | unimplemented | vehicle deferred |
-| Modular landing gear and wheels | pending | unimplemented | vehicle deferred |
+| Cockpits and peripherals | pending | unimplemented | standalone first; carried integration deferred |
+| Modular landing gear and wheels | pending | unimplemented | standalone first; vehicle effects deferred |
 | Turntables | pending | unimplemented | non-vehicle first |
 | Industrial table | pending | partial | non-vehicle first |
-| Configuration/copy tools and basic materials | pending | partial | non-vehicle first |
+| Configuration/copy tools and basic materials | partial (materials only) | partial | non-vehicle first |
 | Programmable armor | pending | unimplemented | non-vehicle first |
 | Filesystem and custom material workflows | pending | partial | non-vehicle first |
 | Compatibility integrations | pending | unimplemented | non-vehicle first |
@@ -48,3 +48,5 @@ Current master adds Segmented Doors, Copy Controllers, tracks and expanded stand
 Every integrated family requires shared policy, native persistence and permissions, bounded server-authoritative round trips, subsequent-process reload, and inspected client geometry/dialog/animation output. Ownership transfers additionally require durable recovery and abrupt-restart/partial-save checks. Use focused Forge regressions as changes land; preserve the final exact-artifact release gate. Dual-JDK contracts and modern startup checks remain distinct from runtime and visual acceptance. Compatibility integrations need native equivalents or an explicit unsupported status.
 
 See [the architecture and sequence](multiversion.md) for build isolation and ownership boundaries. Build orchestration is a planned integration capability until the corresponding tool and both targets are present and validated.
+
+The integrated native material slice provides the plain matter block, matter/alloy ingots, three recipes and canonical artwork. Dedicated save/restart and live client placement/mining, emitted-model and item-padding checks cover this slice. These are development-runtime checks; exact packaged-JAR and hardware acceptance remain pending. Programmable cube settings, configuration tools and the full production chain remain unimplemented.

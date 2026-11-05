@@ -2,6 +2,9 @@
 
 ## 2.9 (development)
 
+- Add the experimental NeoForge plain matter block and matter/alloy ingots with canonical recipes, artwork and native persistence/interaction checks. The programmable block editor and production chain remain under development.
+- Share saved material-ID validation while retaining unavailable custom and filesystem artwork identities.
+
 - Share existing layout, porthole geometry, category and glass/light material definitions between the independent Java 8 and Java 21 builds without changing their legacy behavior.
 
 - Begin incremental integration of the historical NeoForge 1.21.1 target while preserving Forge 1.12.2 as the default and behavioral reference. Native feature parity and release readiness remain pending.

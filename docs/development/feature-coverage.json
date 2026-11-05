@@ -26,7 +26,7 @@
       "id": "programmable_cube",
       "label": "Programmable cube and matter block",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_block",
         "programmable_matter_block"
@@ -56,7 +56,15 @@
         "actual menu material/layout edits split neighboring planes and rejoin; rendered Stretch/Fit artwork and repeated Tile images",
         "64 actual legacy/native cube, trigger, slab and stair item cases match materials, content UVs, shading, transforms and rendered padding while retaining saved settings"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Native plain programmable_matter_block, programmable_matter_ingot and industrial_alloy_ingot with canonical artwork, three recipes, tool requirements and loot.",
+        "Disposable dedicated save/restart checks and native client placement/mining, emitted artwork and padded item rendering checks."
+      ],
+      "acceptance_limits": [
+        "Development runtime checks; exact packaged-JAR runtime and hardware shader acceptance remain pending.",
+        "Programmable cube settings, configuration/copy tools and the production chain are not implemented by this material slice."
+      ]
     },
     {
       "id": "slabs_stairs",
@@ -586,7 +594,7 @@
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "vehicle_deferred"
+      "integration_scope": "standalone_first_vehicle_integration_deferred"
     },
     {
       "id": "landing_gear_wheels",
@@ -621,7 +629,7 @@
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "vehicle_deferred"
+      "integration_scope": "standalone_first_vehicle_integration_deferred"
     },
     {
       "id": "turntables",
@@ -680,7 +688,7 @@
       "id": "tools_materials",
       "label": "Configuration/copy tools and basic materials",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "remaining": [
         "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
@@ -703,7 +711,15 @@
         "industrial_alloy_ingot",
         "configurizer"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Native plain programmable_matter_block, programmable_matter_ingot and industrial_alloy_ingot with canonical artwork, three recipes, tool requirements and loot.",
+        "Disposable dedicated save/restart checks and native client placement/mining, emitted artwork and padded item rendering checks."
+      ],
+      "acceptance_limits": [
+        "Development runtime checks; exact packaged-JAR runtime and hardware shader acceptance remain pending.",
+        "Programmable cube settings, configuration/copy tools and the production chain are not implemented by this material slice."
+      ]
     },
     {
       "id": "armor",
