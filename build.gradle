@@ -29,6 +29,11 @@ dependencies {
 }
 
 version = '2.9'
+// Forge reads @Mod.version independently of the expanded mcmod.info metadata.
+def declaredModVersion = file('src/main/java/com/vandorlabs/VandorLabs.java').getText('UTF-8') =~ /public static final String VERSION = "([^"]+)";/
+if (!declaredModVersion.find() || declaredModVersion.group(1) != version.toString()) {
+    throw new GradleException('VandorLabs.VERSION must match the release version ' + version)
+}
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
 

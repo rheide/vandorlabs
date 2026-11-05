@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Align the Forge runtime version with the 2.9 artifact metadata, and reject mismatched version declarations during the root build.
+
 - Reuse current stair collision, exposed surfaces and face mapping across targets, and share slab placement/merge decisions. Preserve exact emitted geometry and configured slab behavior while reducing temporary allocations in dense stair collision construction.
 
 - Share exact stair tread/roll save and configured-item rules, including legacy 16-pixel treads and saved roll 2. Preserve invalid-edit refusal and unchanged Forge geometry, lighting and padded icons. Native slab/stair adapters remain in progress.
