@@ -1,0 +1,33 @@
+package com.vandorlabs.client;
+
+import com.google.gson.*;
+import com.vandorlabs.blocks.BlockProgrammableWall;
+import java.io.*;
+import java.lang.reflect.*;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+
+/** Current actual center-owner source paths and donor clipping, without a world/client startup. */
+public final class PanelBarReferenceExport {
+    private static Field vertices;
+    private static TextureAtlasSprite sprite(String name,int width,int height,int atlasWidth,int atlasHeight,int x){TextureAtlasSprite s=new TextureAtlasSprite(name){};s.setIconWidth(width);s.setIconHeight(height);s.initSprite(atlasWidth,atlasHeight,x,0,false);return s;}
+    private static float[] join(StaticSurfaceMesh... meshes)throws Exception{int size=0;for(StaticSurfaceMesh mesh:meshes)size+=((float[])vertices.get(mesh)).length;float[] result=new float[size];int offset=0;for(StaticSurfaceMesh mesh:meshes){float[] value=(float[])vertices.get(mesh);System.arraycopy(value,0,result,offset,value.length);offset+=value.length;}return result;}
+    private static TextureAtlasSprite[] frames()throws Exception{Field field=FrameEdgeTextures.class.getDeclaredField("EDGES");field.setAccessible(true);@SuppressWarnings("unchecked") java.util.Map<String,Object> map=(java.util.Map<String,Object>)field.get(null);Class<?> type=Class.forName("com.vandorlabs.client.FrameEdgeTextures$Edge");Constructor<?> constructor=type.getDeclaredConstructor(String.class,String.class,int.class,double.class);constructor.setAccessible(true);Object array=java.lang.reflect.Array.newInstance(type,4);TextureAtlasSprite[] result=new TextureAtlasSprite[4];for(int edge=0;edge<4;edge++){TextureAtlasSprite s=(TextureAtlasSprite)constructor.newInstance("bar_rail"+(edge==0?"":"_edge_"+edge),"bar_rail_source",edge,1D);s.setIconWidth(64);s.setIconHeight(64);s.initSprite(256,64,edge*64,0,false);result[edge]=s;java.lang.reflect.Array.set(array,edge,s);}map.put("bar_rail",array);return result;}
+    public static void main(String[] ignored)throws Exception{
+        net.minecraft.init.Bootstrap.register();vertices=StaticSurfaceMesh.class.getDeclaredField("vertices");vertices.setAccessible(true);Constructor<BlockProgrammableWall.FlatCorner> constructor=BlockProgrammableWall.FlatCorner.class.getDeclaredConstructor(Double.class,Double.class,Boolean.class,Boolean.class,boolean.class,boolean.class);constructor.setAccessible(true);
+        TextureAtlasSprite wall=sprite("bar_wall",16,16,48,16,0),plain=sprite("bar_interior",16,16,48,16,16),outer=sprite("bar_exterior",16,16,48,16,32);TextureAtlasSprite[] rails=frames();Gson gson=new Gson();int count=0;
+        File output=new File(System.getProperty("vandorlabs.panelBarReference","build/test-artifacts/panel-bar-forge.jsonl"));output.getAbsoluteFile().getParentFile().mkdirs();try(PrintWriter writer=new PrintWriter(output,"UTF-8")){
+            for(int panelDepth=0;panelDepth<3;panelDepth++)for(double barNear:new double[]{0,6,12})for(boolean left:new boolean[]{false,true})for(boolean frame:new boolean[]{false,true})for(int kind=0;kind<2;kind++)for(int shape=0;shape<(kind==0?1:4);shape++)for(int group=0;group<(kind==0?1:2);group++){
+                double near=com.vandorlabs.render.PanelDepthPolicy.start(panelDepth);BlockProgrammableWall.FlatCorner corner=constructor.newInstance(barNear,barNear,false,true,left,!left);TextureAtlasSprite metal=frame?rails[0]:plain;int columns=group==0?1:2,rows=group==0?1:3,column=left?columns-1:0,row=rows/2;PortholeHex.Slice opening=new PortholeHex(columns,rows,shape).slice(column,row),unit=new PortholeHex(1,1,shape).slice(0,0);
+                PanelApertureReferenceExport.initialize(wall,metal);StaticSurfaceMesh root;if(kind==0){StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();TEAnimatedScreenSelector.renderFlatWall(capture,wall,metal,near,corner);root=capture.finish();}else root=PanelApertureReferenceExport.body(opening,column>0,column<columns-1,row>0,row<rows-1,4,outer);
+                StaticSurfaceMesh.Capture capture=StaticSurfaceMesh.capture();TEAnimatedScreenSelector.drawFlatBar(capture,wall,metal,outer,kind==0?null:unit);StaticSurfaceMesh donor=capture.finish();double depth=kind==0?0:near-6,stemLeft=kind==0?0:corner.left(),width=kind==0?1:(corner.right()-corner.left())/16;
+                StaticSurfaceMesh stem=FlatPanelBarRenderer.part(root,0,0,barNear,depth,stemLeft,width),cap=root.panelTransform(0,depth,stemLeft,width).panelEnd(left?barNear:barNear+4,near,metal,left),bar=FlatPanelBarRenderer.part(donor,3,5,barNear,barNear-6,0,1);float[] opaque=join(stem,cap,bar);
+                for(int paneProfile=0;paneProfile<(kind==0?1:10);paneProfile++){
+                    int mode=paneProfile==0?0:(paneProfile-1)%3,aspectIndex=paneProfile==0?1:(paneProfile-1)/3;double aspect=aspectIndex==0?.5:aspectIndex==1?1:2;float[] pane=new float[0];
+                    if(kind!=0){int w=aspect==2?32:16,h=aspect==.5?32:16;TextureAtlasSprite glass=sprite("bar_glass",w,h,96,32,0);capture=StaticSurfaceMesh.capture();TEAnimatedScreenSelector.drawPortholeGlassGeometry(capture,opening,null);StaticSurfaceMesh rawRoot=capture.finish();capture=StaticSurfaceMesh.capture();TEAnimatedScreenSelector.drawPortholeGlassGeometry(capture,unit,null);StaticSurfaceMesh rawBar=capture.finish();GlassSurfaceGroups.Layout layout=paneProfile==0?new GlassSurfaceGroups.Layout(0,0,1,1):new GlassSurfaceGroups.Layout(column,row,columns,rows);double bx=paneProfile==0?0:2D/16,by=paneProfile==0?0:4D/16;StaticSurfaceMesh rootPane=GlassSurfaceMapping.map(rawRoot,glass,layout,true,bx,by,mode);StaticSurfaceMesh donorPane=GlassSurfaceMapping.map(rawBar,glass,layout,true,bx,by,mode);pane=join(FlatPanelBarRenderer.part(rootPane,0,0,barNear,near-6,corner.left(),(corner.right()-corner.left())/16),FlatPanelBarRenderer.part(donorPane,3,5,barNear,barNear-6,0,1));}
+                    JsonObject record=new JsonObject();record.addProperty("depth",panelDepth);record.addProperty("barNear",barNear);record.addProperty("left",left);record.addProperty("frame",frame);record.addProperty("porthole",kind!=0);record.addProperty("shape",shape);record.addProperty("columns",columns);record.addProperty("rows",rows);record.addProperty("column",column);record.addProperty("row",row);record.addProperty("paneProfile",paneProfile);record.addProperty("mode",mode);record.addProperty("aspect",aspect);record.add("body",gson.toJsonTree(opaque));record.add("pane",gson.toJsonTree(pane));writer.println(gson.toJson(record));count++;
+                }
+            }
+        }
+        System.out.println("Panel T owner actual Forge reference PASS records="+count+" center-owned main/interior/exterior, transformed arms and independent pane donor");
+    }
+}

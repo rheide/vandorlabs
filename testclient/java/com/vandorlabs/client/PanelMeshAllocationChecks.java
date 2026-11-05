@@ -22,7 +22,9 @@ public final class PanelMeshAllocationChecks {
     private static void run(int profile){
         if(profile>=4&&profile<6){StaticSurfaceMesh mapped=mesh.textureLayout(wall,layout,false,0,0,profile==4?1:2);consumed=mapped;sampled^=mapped.vertexCount();return;}
         buffer.begin(7,BlockSurfaceFormat.get());
-        if(profile==7)TEAnimatedScreenSelector.drawFlatBar(buffer,wall,rail,rail,aperture);
+        if(profile==8)mesh.panelTransform(3,6,0,1).box(6,-1,-1,10,17,17,false).draw(buffer,0,0);
+        else if(profile==9)mesh.panelTransform(2,6,0,1).panelEnd(6,6,metal,true).draw(buffer,0,0);
+        else if(profile==7)TEAnimatedScreenSelector.drawFlatBar(buffer,wall,rail,rail,aperture);
         else if(profile==0)TEAnimatedScreenSelector.renderFlatWall(buffer,wall,metal,6,null);
         else if(profile==1)TEAnimatedScreenSelector.renderFlatWall(buffer,wall,metal,6,flat);
         else TEAnimatedScreenSelector.renderDiagonalWall(buffer,wall,profile==6?rail:metal,profile==3,corner,16,profile==2?3:0,0,16,profile==3?8:Double.NaN,2,10,false,false,profile==3?CLIP:null);
@@ -37,10 +39,10 @@ public final class PanelMeshAllocationChecks {
         Constructor<BlockProgrammableWall.Corner> constructor=BlockProgrammableWall.Corner.class.getDeclaredConstructor(Boolean.class,Boolean.class,boolean.class,boolean.class);constructor.setAccessible(true);corner=constructor.newInstance(false,true,false,true);
         Constructor<BlockProgrammableWall.FlatCorner> flatConstructor=BlockProgrammableWall.FlatCorner.class.getDeclaredConstructor(Double.class,Double.class,Boolean.class,Boolean.class,boolean.class,boolean.class);flatConstructor.setAccessible(true);flat=flatConstructor.newInstance(0D,12D,false,true,false,false);
         StaticSurfaceMesh.Capture source=StaticSurfaceMesh.capture();WorldSurface.quad(source,wall,false,new double[]{0,0,0,0,16},new double[]{48,0,0,16,16},new double[]{48,16,0,16,0},new double[]{0,16,0,0,0});mesh=source.finish();layout=new GlassSurfaceGroups.Layout(1,1,2,3,false,false);aperture=new PortholeHex(3,2,3).slice(0,0);
-        com.sun.management.ThreadMXBean bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();bean.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().getId();String[] names={"flat-plain","flat-corner","diagonal-filled","diagonal-half-clipped","uv-tile","uv-fit","diagonal-authored-frame","aperture-authored-frame"};
-        boolean frameOnly=Boolean.getBoolean("vandorlabs.panelFrameOnly"),apertureOnly=Boolean.getBoolean("vandorlabs.panelApertureOnly");int warm=frameOnly?50000:WARM,samples=frameOnly?10000:SAMPLES,batches=frameOnly?7:1;
+        com.sun.management.ThreadMXBean bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();bean.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().getId();String[] names={"flat-plain","flat-corner","diagonal-filled","diagonal-half-clipped","uv-tile","uv-fit","diagonal-authored-frame","aperture-authored-frame","bar-transform-clip","bar-transform-cap"};
+        boolean frameOnly=Boolean.getBoolean("vandorlabs.panelFrameOnly"),apertureOnly=Boolean.getBoolean("vandorlabs.panelApertureOnly"),barOnly=Boolean.getBoolean("vandorlabs.panelBarOnly");int warm=frameOnly||barOnly?50000:WARM,samples=frameOnly||barOnly?10000:SAMPLES,batches=frameOnly?7:barOnly?3:1;
         for(int profile=0;profile<names.length;profile++){
-            if(frameOnly&&profile!=6||apertureOnly&&profile!=7)continue;
+            if(frameOnly&&profile!=6||apertureOnly&&profile!=7||barOnly&&profile<8)continue;
             for(int batch=0;batch<batches;batch++){
             for(int i=0;i<warm;i++)run(profile);long before=bean.getThreadAllocatedBytes(thread),cpu=bean.getCurrentThreadCpuTime(),start=System.nanoTime();for(int i=0;i<samples;i++)run(profile);long nanos=System.nanoTime()-start,cpuNanos=bean.getCurrentThreadCpuTime()-cpu,bytes=bean.getThreadAllocatedBytes(thread)-before;System.out.println("Panel warmed allocation profile="+names[profile]+" bytesPerCall="+(bytes/(double)samples)+" nsPerCall="+(nanos/(double)samples)+" cpuNsPerCall="+(cpuNanos/(double)samples)+" batch="+batch+" warm="+warm+" samples="+samples+" buffer="+(profile<4||profile>=6?"BufferBuilder":"StaticSurfaceMesh.Capture"));
             }
