@@ -17,7 +17,8 @@ import net.neoforged.neoforge.client.model.data.*;
 
 /** Shared wall save/editor host. Discovery publishes immutable geometry on the owning thread. */
 public class NativeWallEntity extends ProgrammableShapeEntity {
-    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback){
+    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback,boolean chunkBody){
+        public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback){this(base,walls,frames,glass,geometry,aperture,playback,true);}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture){this(base,walls,frames,glass,geometry,aperture,PanelPlayback.DEFAULT);}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry){this(base,walls,frames,glass,geometry,NativePortholeLayout.unit(walls==null||walls.portholeShape<0||walls.portholeShape>3?0:walls.portholeShape));}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,NativeWallGeometry geometry){this(base,walls,frames,PanelGlassSettings.fresh(),geometry);}
@@ -35,9 +36,10 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private NativeFluidVolume.Side partition;
     private long geometryGeneration,topologyRevision,modelRevision;
     private volatile WallAppearance wallAppearance;
+    private volatile AABB renderBounds;
     public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean porthole){
         super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.porthole=porthole;walls=new WallSettings(false,false,0,0,porthole,0);
-        geometry=initialGeometry(state);partition=geometry::side;publishWallAppearance();
+        geometry=initialGeometry(state);partition=geometry::side;renderBounds=geometry.selectionBounds().move(pos);publishWallAppearance();
     }
     private static FrameSettings defaultFrames(){return new FrameSettings(-1,-1,-2,0,-1,-1,false,false,false,false);}
     private static NativeWallGeometry initialGeometry(BlockState state){
@@ -64,7 +66,9 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public final WallAppearance wallAppearance(){return wallAppearance;}
     public long modelDataRevision(){return modelRevision;}
     public final long topologyRevision(){return topologyRevision;}
-    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture,playback);}
+    public final AABB renderBounds(){return renderBounds;}
+    private boolean chunkBody(){var state=getBlockState();return !(state.getBlock() instanceof NativeDiagonalWallBlock)||settings().layout==0&&com.vandorlabs.render.DiagonalChunkPolicy.contained(worldPosition.getX(),worldPosition.getY(),worldPosition.getZ(),state.getValue(NativeDiagonalWallBlock.FACING).get3DDataValue(),state.getValue(NativeDiagonalWallBlock.INVERTED),walls.halfHeight,walls.fullWidth);}
+    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture,playback,chunkBody());}
     @Override protected void appearancePublished(){publishWallAppearance();}
     public static boolean validFrame(int choice){if(choice==-1)return true;if(!ModernFinishCatalog.validChoice(choice))return false;String category=ModernFinishCatalog.option(choice).category();return category.equals("Frame")||category.startsWith("Frame/");}
     public static boolean validSurface(int choice){return validFrame(choice)||ModernFinishCatalog.validChoice(choice)&&ModernFinishCatalog.option(choice).general();}
@@ -103,7 +107,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public boolean publishGeometry(NativeWallGeometry next,long revision){
         if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Wall geometry requires owning server thread");
         Objects.requireNonNull(next);if(next.equals(geometry))return false;
-        geometry=next;partition=next::side;topologyRevision=revision;geometryGeneration++;publishWallAppearance();NativeFluidWorld.queue(this);return true;
+        geometry=next;partition=next::side;renderBounds=next.selectionBounds().move(worldPosition);topologyRevision=revision;geometryGeneration++;publishWallAppearance();NativeFluidWorld.queue(this);return true;
     }
     @Override public void refreshFluidGeometry(){NativeWallTopology.refresh(this);super.refreshFluidGeometry();}
     @Override protected long fluidGeometryKey(){return geometryGeneration;}
