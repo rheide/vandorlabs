@@ -23,6 +23,16 @@ public final class ControlLatchDataChecks {
         @Override public int latchedLevel(int channel){return channel==3?6:9;}
         @Override public boolean isChannelLatch(){return true;}
     }
+    private static com.google.gson.JsonObject reference(NBTTagCompound input,TileEntityRedstoneChannel tile){
+        com.google.gson.JsonObject entry=new com.google.gson.JsonObject();
+        entry.addProperty("input",input.toString());entry.addProperty("configuration",tile.configuration().toString());
+        entry.addProperty("output",tile.getOutputLevel());entry.addProperty("localOn",tile.isLocalOn());
+        com.google.gson.Gson gson=new com.google.gson.Gson();
+        entry.add("channels",gson.toJsonTree(tile.getRedstoneChannels().toArray()));entry.add("latched",gson.toJsonTree(tile.latchedChannels().toArray()));
+        int[] probes={0,3,7,9,11},levels=new int[probes.length];for(int i=0;i<levels.length;i++)levels[i]=tile.latchedLevel(probes[i]);
+        entry.add("probeChannels",gson.toJsonTree(probes));entry.add("probeLevels",gson.toJsonTree(levels));
+        return entry;
+    }
     private static volatile NBTTagCompound sink;
     @SuppressWarnings("deprecation") private static long threadId(){return Thread.currentThread().getId();}
     private static void allocation()throws Exception{
@@ -32,12 +42,13 @@ public final class ControlLatchDataChecks {
         for(int round=0;round<5;round++){long before=(Long)allocated.invoke(bean,thread);for(int i=0;i<count;i++)sink=tile.writeToNBT(new NBTTagCompound());bytes[round]=(Long)allocated.invoke(bean,thread)-before;}Arrays.sort(bytes);System.out.println("Control latch actual write allocation PASS channels=32 rounds=5 writes="+count+" median-bytes/write="+bytes[2]/(double)count);
     }
     public static void main(String[] args)throws Exception{
-        net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityRedstoneChannel.class,new ResourceLocation("vandorlabs","control_latch_fixture"));net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntitySignalControl.class,new ResourceLocation("vandorlabs","control_latch_signal_fixture"));net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(OverrideTile.class,new ResourceLocation("vandorlabs","control_latch_override_fixture"));if(args.length>0&&args[0].equals("allocation")){allocation();return;}MessageDigest digest=MessageDigest.getInstance("SHA-256");int cases=0;
+        net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityRedstoneChannel.class,new ResourceLocation("vandorlabs","control_latch_fixture"));net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntitySignalControl.class,new ResourceLocation("vandorlabs","control_latch_signal_fixture"));net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(OverrideTile.class,new ResourceLocation("vandorlabs","control_latch_override_fixture"));if(args.length>0&&args[0].equals("allocation")){allocation();return;}MessageDigest digest=MessageDigest.getInstance("SHA-256");int cases=0;String export=System.getProperty("vandorlabs.controlLatchExport","");com.google.gson.JsonArray references=export.isEmpty()?null:new com.google.gson.JsonArray();
         OverrideTile override=new OverrideTile();override.readFromNBT(tag(1,true,true,0,0));require(override.getOutputLevel()==6&&override.localSignalLevel(3)==6&&override.localSignalLevel(7)==9,"output/local preserve virtual latchedLevel dispatch");require(Arrays.equals(override.writeToNBT(new NBTTagCompound()).getIntArray("LatchedLevels"),new int[]{6,9,9}),"writer preserves virtual latchedLevel dispatch");
         for(boolean signal:new boolean[]{false,true})for(int bank=0;bank<5;bank++)for(boolean local:new boolean[]{false,true})for(boolean initialized:new boolean[]{false,true})for(int latch=0;latch<8;latch++)for(int level=0;level<8;level++){
-            NBTTagCompound input=tag(bank,local,initialized,latch,level);NBTTagCompound original=input.copy();TileEntityRedstoneChannel tile=signal?new TileEntitySignalControl():new TileEntityRedstoneChannel();tile.readFromNBT(input);String expected=output(tile);require(input.equals(original),"read mutated source NBT");tile.readFromNBT(tag(1,!local,true,4,5));tile.readFromNBT(input);require(output(tile).equals(expected),"previous tile bank leaked across read");digest.update((expected+'\n').getBytes(StandardCharsets.UTF_8));cases++;
+            NBTTagCompound input=tag(bank,local,initialized,latch,level);NBTTagCompound original=input.copy();TileEntityRedstoneChannel tile=signal?new TileEntitySignalControl():new TileEntityRedstoneChannel();tile.readFromNBT(input);String expected=output(tile);if(references!=null&&!signal)references.add(reference(input,tile));require(input.equals(original),"read mutated source NBT");tile.readFromNBT(tag(1,!local,true,4,5));tile.readFromNBT(input);require(output(tile).equals(expected),"previous tile bank leaked across read");digest.update((expected+'\n').getBytes(StandardCharsets.UTF_8));cases++;
         }
         StringBuilder hash=new StringBuilder();for(byte value:digest.digest())hash.append(String.format("%02x",value&255));require(hash.toString().equals(GOLDEN),"pre-extraction NBT/getter changed: "+hash);
+        if(references!=null){java.nio.file.Path path=java.nio.file.Paths.get(export);if(path.getParent()!=null)java.nio.file.Files.createDirectories(path.getParent());try(java.io.Writer writer=java.nio.file.Files.newBufferedWriter(path,StandardCharsets.UTF_8)){com.google.gson.JsonObject root=new com.google.gson.JsonObject();root.addProperty("schema",1);root.addProperty("legacyGolden",GOLDEN);root.add("cases",references);new com.google.gson.Gson().toJson(root,writer);}System.out.println("Control latch Forge reference export PASS cases="+references.size());}
         System.out.println("Control latch actual NBT PASS cases="+cases+" golden="+hash+" typed malformed defaults partial prefix clamps exact writes getters reused tile signal subclass");
     }
 }
