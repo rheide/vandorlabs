@@ -24,6 +24,7 @@ MAX_EVIDENCE_FILES = 256
 MAX_LOG_BYTES = 4 * 1024 * 1024
 EVIDENCE_GRACE_SECONDS = 24 * 60 * 60
 MAX_COMPACT_RUNS = 20
+PROCESS_SETTLE_SECONDS = 2.0
 MARKER = '.vandor-test-run.json'
 FINISHED = '.vandor-test-finished.json'
 LEASES = '.vandor-test-leases'
@@ -33,6 +34,17 @@ OWNER = 'vandorlabs-test-artifacts-v1'
 
 def _keep():
     return os.environ.get(KEEP_ENV, '').lower() in ('1', 'true', 'yes')
+
+
+def _link(path):
+    if path.is_symlink() or getattr(path, 'is_junction', lambda: False)():
+        return True
+    if os.name == 'nt':
+        try:
+            return bool(getattr(path.lstat(), 'st_file_attributes', 0) & 0x400)
+        except FileNotFoundError:
+            return False
+    return False
 
 
 def _write(path, value):
@@ -46,7 +58,7 @@ def _write(path, value):
 
 
 def _read(path):
-    if path.is_symlink() or not path.is_file():
+    if _link(path) or not path.is_file():
         raise ValueError('Expected owned regular metadata file: ' + str(path))
     return json.loads(path.read_text(encoding='utf-8'))
 
@@ -63,7 +75,7 @@ def _relative(value):
 
 def _disposable(value):
     name = _relative(value)
-    if Path(name).parts[0] in (MARKER, FINISHED, LEASES, LOCK, EVIDENCE_DIR, 'retention.json'):
+    if Path(name).parts[0].casefold() in {p.casefold() for p in (MARKER, FINISHED, LEASES, LOCK, EVIDENCE_DIR, 'retention.json')}:
         raise ValueError('Retention control paths cannot be disposable')
     return name
 
@@ -77,7 +89,7 @@ def _owned_source(metadata, value):
 
 def _root(path):
     path = Path(path).absolute()
-    if path.is_symlink():
+    if _link(path):
         raise ValueError('A run directory cannot be a symlink')
     return path.resolve(strict=True)
 
@@ -105,7 +117,7 @@ def _target(root, value):
     target = root
     for component in Path(_relative(value)).parts:
         target = target / component
-        if target.is_symlink():
+        if _link(target):
             raise ValueError('Refusing a disposable path through a symlink: ' + str(target))
     return target
 
@@ -117,10 +129,10 @@ def _size(path):
         return path.stat().st_size
     total = 0
     for directory, dirs, files in os.walk(str(path), followlinks=False):
-        dirs[:] = [d for d in dirs if not (Path(directory) / d).is_symlink()]
+        dirs[:] = [d for d in dirs if not _link(Path(directory) / d)]
         for name in files:
             file = Path(directory) / name
-            if not file.is_symlink():
+            if not _link(file):
                 total += file.stat().st_size
     return total
 
@@ -334,8 +346,14 @@ class ArtifactRun:
         """Presence of caller-confirmed live handles/groups blocks deletion unconditionally."""
         self._validate()
         self.stop_tracking()
-        if active_processes or self.lease.get('tracking_failed') or not _quiet(self.lease):
+        if active_processes or self.lease.get('tracking_failed'):
             return {'status': 'active', 'removed_bytes': 0}
+        deadline = time.monotonic() + PROCESS_SETTLE_SECONDS
+        while not _quiet(self.lease):
+            if time.monotonic() >= deadline:
+                return {'status': 'active', 'removed_bytes': 0}
+            time.sleep(.05)
+            self._refresh()
         self.lease.update(closed=True, success=bool(success))
         self._save()
         root = self.run_dir
@@ -379,14 +397,14 @@ def _evidence(root, metadata):
         if not target.is_dir():
             continue
         for directory, dirs, files in os.walk(str(target), followlinks=False):
-            dirs[:] = [d for d in dirs if d not in skip and not (Path(directory) / d).is_symlink()]
+            dirs[:] = [d for d in dirs if d not in skip and not _link(Path(directory) / d)]
             for filename in files:
                 path = Path(directory) / filename
                 parts = set(path.relative_to(target).parts[:-1])
-                if path.is_symlink():
+                if _link(path):
                     continue
-                if (path.suffix.lower() in ('.log', '.txt') and ('logs' in parts or 'crash-reports' in parts)) or (
-                    path.suffix.lower() in ('.png', '.jpg', '.jpeg') and 'screenshots' in parts) or filename in (
+                diagnostic_directory = bool(parts & {'logs', 'crash-reports', 'screenshots', 'captures', 'reports', 'assertions', 'test-results'})
+                if diagnostic_directory or path.suffix.lower() in ('.log', '.png', '.jpg', '.jpeg') or filename in (
                     'level.dat', 'level.dat_old', 'server.properties', 'options.txt') or (
                     path.suffix.lower() in ('.json', '.txt') and any(x in filename.lower() for x in ('report', 'manifest', 'assert', 'artifact'))):
                     candidates.append(path)
@@ -426,10 +444,13 @@ def _hash(path):
 
 
 def _prune(target, preserve):
-    if not target.exists() and not target.is_symlink():
+    if not target.exists() and not _link(target):
         return
-    if target.is_symlink():
-        target.unlink()
+    if _link(target):
+        if os.name == 'nt' and target.is_dir():
+            target.rmdir()
+        else:
+            target.unlink()
     elif target.is_file():
         if target not in preserve:
             target.unlink()
@@ -472,7 +493,7 @@ def sweep(parent):
     """Prune only marked, explicitly finished runs. Never infer completion from a dead PID."""
     finished = []
     for root in Path(parent).iterdir():
-        if root.is_symlink() or not root.is_dir() or not (root / FINISHED).is_file():
+        if _link(root) or not root.is_dir() or not (root / FINISHED).is_file():
             continue
         try:
             root = _root(root)

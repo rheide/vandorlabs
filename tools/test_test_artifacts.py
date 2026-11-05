@@ -150,7 +150,7 @@ class RetentionChecks(unittest.TestCase):
         self.assertTrue(sentinel.exists())
 
     def test_unsafe_registration_and_existing_user_directory_are_rejected(self):
-        for name in ('../user', '/user', '.', 'a/../user', 'C:\\world', '\\\\host\\share', retention.MARKER, retention.LEASES):
+        for name in ('../user', '/user', '.', 'a/../user', 'C:\\world', '\\\\host\\share', retention.MARKER, retention.LEASES, retention.MARKER.upper()):
             root = self.parent / ('case' + str(len(list(self.parent.iterdir()))))
             root.mkdir()
             with self.assertRaises(ValueError):
@@ -194,6 +194,18 @@ class RetentionChecks(unittest.TestCase):
                 retention.sweep(self.parent)
             self.assertEqual((game / 'logs/latest.log').read_bytes(), original[-16:])
 
+    def test_rotated_logs_and_arbitrary_report_screenshot_paths_remain_usable(self):
+        root, owner = self.run_dir()
+        game = self.payload(root)
+        for relative in ('logs/before.log.gz', 'reports/state.json', 'final-view.png', 'stdout.log'):
+            path = game / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b'complete consumer evidence')
+        owner.finish(True)
+        self.assertFalse((game / 'world.bin').exists())
+        for relative in ('logs/before.log.gz', 'reports/state.json', 'final-view.png', 'stdout.log'):
+            self.assertEqual((game / relative).read_bytes(), b'complete consumer evidence')
+
     def test_lease_directory_symlink_is_rejected_before_any_outside_write(self):
         root, owner = self.run_dir()
         self.payload(root)
@@ -208,6 +220,12 @@ class RetentionChecks(unittest.TestCase):
             owner.finish(True)
         self.assertEqual((outside / (owner.token + '.json')).read_bytes(), before)
         self.assertTrue((root / 'game/world.bin').exists())
+
+    def test_windows_reparse_directory_is_a_link_even_without_symlink_flag(self):
+        from types import SimpleNamespace
+        path = self.parent / 'junction'
+        with patch.object(retention.os, 'name', 'nt'), patch.object(Path, 'is_symlink', return_value=False), patch.object(Path, 'is_junction', return_value=False, create=True), patch.object(Path, 'lstat', return_value=SimpleNamespace(st_file_attributes=0x400)):
+            self.assertTrue(retention._link(path))
 
     def test_windows_process_snapshot_uses_pointer_width_handles_and_fails_closed(self):
         import ctypes
