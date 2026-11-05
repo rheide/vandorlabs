@@ -23,6 +23,11 @@ public final class FrameSettings {
                 tag.getBoolean("FrameTile"),tag.getBoolean("DisplayFit"),tag.getBoolean("DisplaySplit"),tag.getBoolean("FrameBare"));
     }
     private static int splitChoice(boolean typed,int value,IntPredicate material){return typed&&(value==-1||material.test(value))?value:-1;}
+    /** Legacy pane initialization is a private draft, not an edit until the pane publishes a choice. */
+    public FrameSettings editor(boolean usesMainFront,boolean deviceHousing,int defaultScreen){
+        return new FrameSettings(usesMainFront?-1:front,interior,exteriorChoice(),deviceHousing?1:artworkVersion,
+                splitTop<0?defaultScreen:splitTop,splitBottom<0?defaultScreen:splitBottom,tile,displayFit,split,bare);
+    }
     public int exteriorChoice(){return exterior==-2?interior:exterior;}
     public void write(Tag tag){write(tag,front,interior,exterior,artworkVersion,splitTop,splitBottom,tile,displayFit,split,bare);}
     public static void write(Tag tag,int front,int interior,int exterior,int artworkVersion,int splitTop,int splitBottom,
