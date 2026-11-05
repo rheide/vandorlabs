@@ -209,3 +209,12 @@ tasks.register('generateShapeResources', Exec) {
     outputs.dir('build/generated/shape-resources')
 }
 tasks.named('processResources') { dependsOn 'generateShapeResources' }
+
+tasks.register('testNativeHousingQuads', JavaExec) {
+    group = 'verification'
+    description = 'Compare CPU native shape records with an actual frozen Forge texture reference'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeHousingQuadChecks'
+    if (project.hasProperty('shapeTextureReference')) systemProperty 'vandorlabs.shapeTextureReference', file(project.property('shapeTextureReference')).absolutePath
+}

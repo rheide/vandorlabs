@@ -115,17 +115,7 @@ public final class NativeMountedControlModel extends BakedModelWrapper<BakedMode
     private volatile ItemTransforms padded;
     @Override public ItemTransforms getTransforms(){
         ItemTransforms base=originalModel.getTransforms();if(itemMount.height==0&&itemMount.tilt==0)return base;ItemTransforms cached=padded;if(cached!=null)return cached;
-        ItemTransform gui=base.gui;double minX=Double.POSITIVE_INFINITY,minY=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX;
-        for(Direction face:FACES)for(BakedQuad q:getQuads(null,face,RandomSource.create(0),ModelData.EMPTY,null)){
-            int[] raw=q.getVertices();int stride=raw.length/4;for(int i=0;i<4;i++){
-                double x=(Float.intBitsToFloat(raw[i*stride])-.5)*gui.scale.x(),y=(Float.intBitsToFloat(raw[i*stride+1])-.5)*gui.scale.y(),z=(Float.intBitsToFloat(raw[i*stride+2])-.5)*gui.scale.z();
-                double rz=Math.toRadians(gui.rotation.z()),rx=Math.toRadians(gui.rotation.x()),ry=Math.toRadians(gui.rotation.y());double xx=x*Math.cos(rz)-y*Math.sin(rz);y=x*Math.sin(rz)+y*Math.cos(rz);x=xx;double xxY=x*Math.cos(ry)+z*Math.sin(ry);z=z*Math.cos(ry)-x*Math.sin(ry);x=xxY;y=y*Math.cos(rx)-z*Math.sin(rx);
-                minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
-            }
-        }
-        if(!Double.isFinite(minX))return base;float scale=(float)Math.min(.75/Math.max(maxX-minX,maxY-minY),.85);
-        ItemTransform guiFit=new ItemTransform(gui.rotation,new org.joml.Vector3f((float)(-(minX+maxX)*scale/2),(float)(-(minY+maxY)*scale/2),gui.translation.z()),new org.joml.Vector3f(gui.scale).mul(scale));
-        padded=new ItemTransforms(base.thirdPersonLeftHand,base.thirdPersonRightHand,base.firstPersonLeftHand,base.firstPersonRightHand,base.head,guiFit,base.ground,base.fixed,base.moddedTransforms);return padded;
+        padded=NativeItemPadding.fit(this,base);return padded;
     }
     @Override public BakedModel applyTransform(net.minecraft.world.item.ItemDisplayContext context,com.mojang.blaze3d.vertex.PoseStack pose,boolean left){getTransforms().getTransform(context).apply(left,pose);return this;}
     private final List<BakedModel> passes=List.of(this);

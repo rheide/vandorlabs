@@ -23,7 +23,7 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
-    private record MaterialSnapshot(TextureAtlasSprite sprite,float usedU,float usedV) {}
+    record MaterialSnapshot(TextureAtlasSprite sprite,float usedU,float usedV) {}
     private final java.util.Map<Integer,MaterialSnapshot> sprites;
     private final TextureAtlasSprite margin;
     private final boolean joining;
@@ -54,7 +54,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         if(joining&&state!=null&&state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
         return data;
     }
-    private static int renderIndex(java.util.Map<Integer,MaterialSnapshot> materials,int choice){int stored=ModernFinishCatalog.storedChoice(choice);return materials.containsKey(stored)?stored:0;}
+    static int renderIndex(java.util.Map<Integer,MaterialSnapshot> materials,int choice){int stored=ModernFinishCatalog.storedChoice(choice);return materials.containsKey(stored)?stored:0;}
     @Override public TextureAtlasSprite getParticleIcon(){return getParticleIcon(ModelData.EMPTY);}
     @Override public TextureAtlasSprite getParticleIcon(ModelData data){var settings=data.get(ProgrammableBlockEntity.SETTINGS);return sprites.get(renderIndex(sprites,settings==null?defaults.mainTexture:settings.mainTexture)).sprite();}
     @Override public net.neoforged.neoforge.common.util.TriState useAmbientOcclusion(BlockState state,ModelData data,RenderType layer){return net.neoforged.neoforge.common.util.TriState.FALSE;}
