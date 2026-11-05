@@ -644,6 +644,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.glassDialogChecksOnly")){try{if(GlassDialogChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Glass dialog focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.mountedControlDialogChecksOnly")){try{if(MountedControlDialogChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Mounted control dialog focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.controlLatchLevelsChecksOnly")){try{if(ControlLatchRuntimeChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Control latch levels focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.controlMountSettingsChecksOnly")){if(++holdTicks>=40)try{
