@@ -10,6 +10,7 @@ import com.vandorlabs.blocks.BlockProgrammableWall;
 import com.vandorlabs.blocks.BlockProgrammableBlock;
 import com.vandorlabs.blocks.BlockProgrammableSlab;
 import com.vandorlabs.tiles.ScreenHousingTextures;
+import com.vandorlabs.ui.SlabStairDialog;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
@@ -114,7 +115,10 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             int count=faceTabs?(slab?8:7):2;
             int span=faceTabs?xSize-24:controlsX-listX-19;
             int tabWidth=span/count;
-            for(int i=0;i<count;i++) {
+            if(slab)for(com.vandorlabs.ui.DialogControl c:SlabStairDialog.tabs(listX,guiTop,span,faceTabs,faceTarget)){
+                GuiButton tab=new DialogTabButton(c.id,c.x,c.y,c.width,c.height,c.label);tab.enabled=c.enabled;buttonList.add(tab);
+            }
+            else for(int i=0;i<count;i++) {
                 boolean side=slab && i==1;
                 int face=i-((slab || porthole)?2:1);
                 boolean glass=porthole && i==1;
@@ -137,8 +141,9 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             }
         }
         if(faceTarget==-2) {
-            GuiButton reset=new GuiButton(128,controlsX,y,controlsWidth,20,"Use default side texture");
-            reset.enabled=tile.getSideTexture()>=0;buttonList.add(reset);y+=24;
+            com.vandorlabs.ui.DialogControl c=SlabStairDialog.resetSides(controlsX,y,controlsWidth,tile.getSideTexture());
+            GuiButton reset=new GuiButton(c.id,c.x,c.y,c.width,c.height,c.label);
+            reset.enabled=c.enabled;buttonList.add(reset);y+=24;
         }
         if (!glassSurface() && (slab || fullBlock || tile.getBlockType() instanceof BlockProgrammableWall)) { buttonList.add(new GuiButton(103,controlsX,y,controlsWidth,20,slabSidesLabel())); y+=24; }
         if (porthole) {
@@ -172,11 +177,12 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
         }
         if(glassSurface()&&GlassPlaybackPane.available(tile.getGlassMaterial()))GlassPlaybackPane.init(layout,tile.glassPlayback,buttonList,y-guiTop);
         if(tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableStairs){
-            int step=Math.min(3,Integer.numberOfTrailingZeros(tile.stairTread()));
+            int step=SlabStairDialog.treadIndex(tile.stairTread());
             buttonList.add(new net.minecraftforge.fml.client.config.GuiSlider(130,controlsX,y,controlsWidth,20,"Step size: "," px",0,3,step,false,true,slider->{
-                tile.setStairGeometry(1<<slider.getValueInt(),tile.stairRoll());slider.displayString="Step size: "+tile.stairTread()+" px";sendStairs();
-            }));buttonList.get(buttonList.size()-1).displayString="Step size: "+tile.stairTread()+" px";y+=24;
-            buttonList.add(new GuiButton(131,controlsX,y,controlsWidth,20,"Orientation: "+(tile.stairRoll()==0?"Normal":"Sideways")));
+                tile.setStairGeometry(SlabStairDialog.treadForIndex(slider.getValueInt()),tile.stairRoll());slider.displayString=SlabStairDialog.treadLabel(tile.stairTread());sendStairs();
+            }));buttonList.get(buttonList.size()-1).displayString=SlabStairDialog.treadLabel(tile.stairTread());y+=24;
+            com.vandorlabs.ui.DialogControl c=SlabStairDialog.orientation(controlsX,y,controlsWidth,tile.stairRoll());
+            buttonList.add(new GuiButton(c.id,c.x,c.y,c.width,c.height,c.label));
         }
         buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
 
@@ -284,7 +290,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
 
 
-        if(button.id==131){tile.setStairGeometry(tile.stairTread(),tile.stairRoll()==0?1:0);sendStairs();initGui();return;}
+        if(button.id==131){tile.setStairGeometry(tile.stairTread(),SlabStairDialog.toggleRoll(tile.stairRoll()));sendStairs();initGui();return;}
         if(button.id==129){faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}
         if(glassSurface() && (button.id==115 || button.id==116)){
             int mode=button.id==115?GuiOptionCycle.next(tile.getGlassTextureLayout(),3):tile.getGlassTextureLayout();tile.setGlassLayout(mode!=1,button.id==116?!tile.isGlassTextureJoin():tile.isGlassTextureJoin());tile.setGlassTextureLayout(mode);sendPortholeSettings();initGui();return;
