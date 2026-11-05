@@ -29,12 +29,24 @@ final class PortholeGeometryCache {
         return hex;
     }
 
+    /** Descriptor-only cold path; never requests an assembly-sized outline. */
+    static PortholeHex.Slice slice(int columns, int rows, int shape, int border,
+            int column, int row) {
+        return slice(columns, rows, shape, border, column, row, null, true);
+    }
+
     static PortholeHex.Slice slice(int columns, int rows, int shape, int border,
             int column, int row, PortholeHex outline) {
+        return slice(columns, rows, shape, border, column, row, outline, false);
+    }
+
+    private static PortholeHex.Slice slice(int columns, int rows, int shape, int border,
+            int column, int row, PortholeHex outline, boolean local) {
         SliceKey key = new SliceKey(columns, rows, shape, border, column, row);
         PortholeHex.Slice result = SLICES.get(key);
         if (result != null) return result;
-        result = outline.slice(column, row);
+        result = local ? com.vandorlabs.surface.WindowOutline.localSlice(
+                columns, rows, shape, border, column, row) : outline.slice(column, row);
         int weight = weight(result);
         if (weight <= MAX_COORDINATES) {
             SLICES.put(key, result);

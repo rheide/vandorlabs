@@ -6,6 +6,7 @@ import java.util.List;
 public final class PortholeGeometryTest {
     private PortholeGeometryTest() { }
     public static void main(String[] args) {
+        verify(true,true);
         verify(false);
         verify(true);
         for (int i = 1; i <= 1500; i++) {
@@ -20,7 +21,8 @@ public final class PortholeGeometryTest {
                 && PortholeGeometryCache.retainedCoordinates() == 0, "cache clear leaked geometry");
         verify(true);
     }
-    private static void verify(boolean cached) {
+    private static void verify(boolean cached) { verify(cached,false); }
+    private static void verify(boolean cached,boolean local) {
         long hash = 1;
         int slices = 0;
         for (int shape = 0; shape < 4; shape++) {
@@ -30,8 +32,9 @@ public final class PortholeGeometryTest {
                             ? PortholeGeometryCache.outline(size[0], size[1], shape, border)
                             : new PortholeHex(size[0], size[1], shape, border);
                     for (int y = 0; y < size[1]; y++) for (int x = 0; x < size[0]; x++) {
-                        PortholeHex.Slice slice = cached
-                                ? PortholeGeometryCache.slice(size[0], size[1], shape, border, x, y, hex)
+                        PortholeHex.Slice slice = local
+                                ? PortholeGeometryCache.slice(size[0], size[1], shape, border, x, y)
+                                : cached ? PortholeGeometryCache.slice(size[0], size[1], shape, border, x, y, hex)
                                 : hex.slice(x,y);
                         hash = hash(hash, slice.polygon);
                         hash = hash(hash, slice.frameQuads);

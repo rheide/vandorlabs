@@ -179,7 +179,7 @@ public class TEAnimatedScreenSelector
     static final class PortholeGroup {
         final int minAxis, minY, columns, rows;
         final EnumFacing right, up;
-        final PortholeHex hex;
+        private PortholeHex hex;
         final int shape, extraBorder;
 
         PortholeGroup(int minAxis, int minY, int columns, int rows,
@@ -192,7 +192,11 @@ public class TEAnimatedScreenSelector
             this.right = right;
             this.shape = shape;
             this.extraBorder = extraBorder;
-            this.hex = PortholeGeometryCache.outline(columns, rows, shape, extraBorder);
+        }
+
+        PortholeHex outline() {
+            if(hex==null)hex=PortholeGeometryCache.outline(columns,rows,shape,extraBorder);
+            return hex;
         }
 
         PortholeHex.Slice slice(BlockPos pos) { return slice(pos,right,up); }
@@ -201,8 +205,10 @@ public class TEAnimatedScreenSelector
             if(localRight!=right)column=columns-1-column;
             int row = axis(pos, up) - minY;
             if (localUp != up) row = rows - 1 - row;
+            if(shape==PortholeHex.ROUND&&rows>64)
+                return PortholeGeometryCache.slice(columns,rows,shape,extraBorder,column,row);
             return PortholeGeometryCache.slice(columns, rows, shape, extraBorder,
-                    column, row, hex);
+                    column, row, outline());
         }
     }
 

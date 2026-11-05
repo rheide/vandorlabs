@@ -825,7 +825,7 @@ final class ScreenRuntimeChecks {
             tile.setPortholeShape(shape);
             TEAnimatedScreenSelector.PortholeGroup group =
                     TEAnimatedScreenSelector.portholeGroup(tile, state);
-            for (double[] vertex : group.hex.vertices)
+            for (double[] vertex : group.outline().vertices)
                 require(vertex[0] >= 3 && vertex[0] <= group.columns * 16 - 3
                                 && vertex[1] >= 5 && vertex[1] <= group.rows * 16 - 5,
                         "porthole block opening extends into its border");
@@ -955,7 +955,7 @@ final class ScreenRuntimeChecks {
             group = TEAnimatedScreenSelector.portholeGroup(first, north);
             require(group.columns == 2 && group.rows == 2
                             && (shape == PortholeHex.ROUND
-                            || group.hex.vertices.length == new int[] {6, 8, 4}[shape])
+                            || group.outline().vertices.length == new int[] {6, 8, 4}[shape])
                             && group.slice(pos).edgeOpening(0, 16) != null
                             && group.slice(pos).edgeOpening(1, 16) != null,
                     "joined porthole shape is incomplete: " + shape);
