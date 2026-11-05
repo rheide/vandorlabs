@@ -55,22 +55,9 @@ public final class DiagonalPanelGeometry {
         EnumFacing af=as.getValue(BlockProgrammableWall.FACING),bf=bs.getValue(BlockProgrammableWall.FACING);
         if(af.getAxis()!=bf.getAxis())return false;
         boolean ai=as.getValue(BlockProgrammableWall.INVERTED),bi=bs.getValue(BlockProgrammableWall.INVERTED);
-        double t=upper?1:0,span=com.vandorlabs.render.DiagonalWallGeometry.span(mode);
         double normal=PanelPlane.axis(b.subtract(a),af.getOpposite());
-        double ac=(ai?1-t:t)*span;
-        double bc;
-        if(mode==2) {
-            ac+=ai?.5:0;
-            double bt=t-normal;
-            if(bf!=af)bt=1-bt;
-            bc=b.getY()-a.getY()+(bi?.5:0)+(bi?1-bt:bt)*span;
-        } else {
-            double bt=a.getY()+t-b.getY();
-            bc=(bi?1-bt:bt)*span;
-            if(bf!=af)bc=1-bc;
-            bc+=normal;
-        }
-        return Math.abs(ac-bc)<1e-8;
+        return com.vandorlabs.render.DiagonalPanelContact.endsMeet(mode,ai,bi,bf!=af,
+                b.getY()-a.getY(),normal,upper);
     }
 
     public static boolean samePlane(BlockPos a, IBlockState as, BlockPos b,
@@ -80,20 +67,7 @@ public final class DiagonalPanelGeometry {
         if (bf != af && bf != af.getOpposite()) return false;
         boolean ai = as.getValue(BlockProgrammableWall.INVERTED);
         boolean bi = bs.getValue(BlockProgrammableWall.INVERTED);
-        double span = com.vandorlabs.render.DiagonalWallGeometry.span(mode);
-        double slopeA = ai ? -span : span, slopeB = bi ? -span : span;
-        double baseA = ai ? span : 0, baseB = bi ? span : 0;
-        if (mode == 2) {
-            baseA += ai ? .5 : 0;
-            baseB += bi ? .5 : 0;
-            if (bf != af) { baseB += slopeB; slopeB = -slopeB; }
-            baseB += b.getY() - a.getY()
-                    - slopeB * PanelPlane.axis(b.subtract(a), af.getOpposite());
-        } else {
-            if (bf != af) { baseB = 1 - baseB; slopeB = -slopeB; }
-            baseB += PanelPlane.axis(b.subtract(a), af.getOpposite())
-                    - slopeB * (b.getY() - a.getY());
-        }
-        return Math.abs(slopeA - slopeB) < 1e-8 && Math.abs(baseA - baseB) < 1e-8;
+        return com.vandorlabs.render.DiagonalPanelContact.samePlane(mode,ai,bi,bf!=af,
+                b.getY()-a.getY(),PanelPlane.axis(b.subtract(a),af.getOpposite()));
     }
 }
