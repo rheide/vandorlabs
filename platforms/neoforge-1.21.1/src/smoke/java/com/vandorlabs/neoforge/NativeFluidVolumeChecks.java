@@ -17,6 +17,9 @@ public final class NativeFluidVolumeChecks {
         double[][] first={{0,0,0},{0,1,0},{0,1,0},{0,1,1},{0,1,0},{1,1,0}};
         for(int n=0;n<6;n++){var face=empty.faces().get(n);var v=face.vertices().getFirst();require(face.axis()==axes[n]&&face.side()==0&&v.x==first[n][0]&&v.y==first[n][1]&&v.z==first[n][2],"face order/winding origin "+n);}
         try{empty.faces().getFirst().vertices().clear();throw new AssertionError("mutable face vertices");}catch(UnsupportedOperationException expected){}
+        var split=NativeFluidVolume.build(List.of(),(x,y,z)->x<.5?0:1,new double[]{.5},new double[0],new double[0]);
+        require(split.sideAt(0,0,0)==0&&split.sideAt(Math.nextDown(.5),.5,.5)==0&&split.sideAt(.5,.5,.5)==1&&split.sideAt(1,.5,.5)==-1,"half-open side ownership");
+        require(slab.sideAt(.5,.5,.5)==0&&slab.sideAt(.5,Math.nextDown(.5),.5)==-1,"solid gap partition");
         int cases=0,points=0;
         for(int seed=0;seed<64;seed++){
             List<AABB> boxes=new ArrayList<>();Random random=new Random(seed);

@@ -41,6 +41,8 @@ public final class NativeFluidVolume {
     public List<AABB> solids(){return solid;}
     public List<Cell> cells(){return cells;}
     public boolean hasSide(int side){for(Cell c:cells)if(c.side==side)return true;return false;}
+    /** Half-open ownership matches current Forge partition boundaries. */
+    public int sideAt(double x,double y,double z){for(Cell cell:cells){AABB b=cell.box;if(x>=b.minX&&x<b.maxX&&y>=b.minY&&y<b.maxY&&z>=b.minZ&&z<b.maxZ)return cell.side;}return -1;}
     public boolean facesMaterialized(){return faces!=null;}
     public List<Face> faces(){List<Face> value=faces;if(value==null)synchronized(this){value=faces;if(value==null)faces=value=List.copyOf(volumeFaces(cells,cuts));}return value;}
     private static List<Face> volumeFaces(List<Cell> cells,double[][] cuts){
