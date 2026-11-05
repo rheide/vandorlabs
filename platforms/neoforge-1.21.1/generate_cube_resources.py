@@ -77,6 +77,8 @@ def main():
         atlas.append(dict(type='minecraft:single',resource='vandorlabs:'+texture))
     from generate_mounted_control_resources import generate as generate_controls
     atlas.extend(generate_controls(ROOT,OUT))
+    from generate_shape_gameplay_resources import generate as generate_shapes
+    generate_shapes(ROOT,OUT)
     from generate_wireless_resources import generate as generate_wireless
     atlas.extend(generate_wireless(ROOT,OUT))
     write(ASSETS/'data/housing_finishes.json',catalog)

@@ -21,11 +21,11 @@ public final class CubeConfiguration {
             return true;
         }
         if(!level.isClientSide&&player instanceof ServerPlayer serverPlayer)
-            serverPlayer.openMenu(new net.minecraft.world.SimpleMenuProvider((id,inventory,ignored)->new ProgrammableMenu(id,inventory,pos),net.minecraft.network.chat.Component.literal("Programmable Block")),buffer->buffer.writeBlockPos(pos));
+            serverPlayer.openMenu(new net.minecraft.world.SimpleMenuProvider((id,inventory,ignored)->new ProgrammableMenu(id,inventory,pos),level.getBlockState(pos).getBlock().getName()),buffer->buffer.writeBlockPos(pos));
         return true;
     }
     @SubscribeEvent public static void rightClick(PlayerInteractEvent.RightClickBlock event){
-        if(event.getHand()!=InteractionHand.MAIN_HAND||(!event.getEntity().isShiftKeyDown()&&!event.getEntity().getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get()))||!event.getLevel().hasChunkAt(event.getPos())||!(event.getLevel().getBlockState(event.getPos()).is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get())||event.getLevel().getBlockState(event.getPos()).is(VandorLabsBootstrap.TRIGGER_BLOCK.get())))return;
+        if(event.getHand()!=InteractionHand.MAIN_HAND||(!event.getEntity().isShiftKeyDown()&&!event.getEntity().getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get()))||!event.getLevel().hasChunkAt(event.getPos())||!(event.getLevel().getBlockState(event.getPos()).is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get())||event.getLevel().getBlockState(event.getPos()).is(VandorLabsBootstrap.TRIGGER_BLOCK.get())||event.getLevel().getBlockState(event.getPos()).getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableSlab||event.getLevel().getBlockState(event.getPos()).getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableStairs))return;
         if(open(event.getEntity(),event.getLevel(),event.getPos())){event.setCanceled(true);event.setCancellationResult(InteractionResult.sidedSuccess(event.getLevel().isClientSide));}
     }
     private CubeConfiguration(){}

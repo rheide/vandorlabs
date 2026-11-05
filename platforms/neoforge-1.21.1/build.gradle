@@ -95,6 +95,7 @@ tasks.register('generateCubeResources', Exec) {
     inputs.file('../../generated-resources/assets/vandorlabs/lang/en_us.lang')
     outputs.dir('build/generated/cube-resources')
 }
+tasks.named('generateCubeResources') { inputs.file('generate_shape_gameplay_resources.py'); inputs.files('../../src/main/resources/assets/vandorlabs/recipes/programmable_slab.json','../../src/main/resources/assets/vandorlabs/recipes/programmable_stairs.json') }
 tasks.named('processResources') { dependsOn 'generateCubeResources' }
 neoForge.runs.configureEach {
     if(project.hasProperty('cubePhase'))systemProperty 'vandorlabs.cubePhase',project.property('cubePhase')

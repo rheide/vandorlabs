@@ -39,8 +39,12 @@ public final class VandorLabsBootstrap {
     public static final DeferredHolder<Block,ProgrammableBlock> PROGRAMMABLE_BLOCK=BLOCKS.register("programmable_block",
         ()->new ProgrammableBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).requiresCorrectToolForDrops()));
     public static final DeferredHolder<Item,BlockItem> PROGRAMMABLE_ITEM=ITEMS.register("programmable_block",()->new BlockItem(PROGRAMMABLE_BLOCK.get(),new Item.Properties()));
+    public static final DeferredHolder<Block,com.vandorlabs.neoforge.shape.NativeProgrammableSlab> PROGRAMMABLE_SLAB=BLOCKS.register("programmable_slab",()->new com.vandorlabs.neoforge.shape.NativeProgrammableSlab(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).requiresCorrectToolForDrops().dynamicShape()));
+    public static final DeferredHolder<Block,com.vandorlabs.neoforge.shape.NativeProgrammableStairs> PROGRAMMABLE_STAIRS=BLOCKS.register("programmable_stairs",()->new com.vandorlabs.neoforge.shape.NativeProgrammableStairs(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).requiresCorrectToolForDrops().dynamicShape()));
+    public static final DeferredHolder<Item,BlockItem> PROGRAMMABLE_SLAB_ITEM=ITEMS.register("programmable_slab",()->new com.vandorlabs.neoforge.shape.NativeProgrammableSlabItem(PROGRAMMABLE_SLAB.get(),new Item.Properties()));
+    public static final DeferredHolder<Item,BlockItem> PROGRAMMABLE_STAIRS_ITEM=ITEMS.register("programmable_stairs",()->new BlockItem(PROGRAMMABLE_STAIRS.get(),new Item.Properties()));
     public static final DeferredHolder<net.minecraft.world.level.block.entity.BlockEntityType<?>,net.minecraft.world.level.block.entity.BlockEntityType<ProgrammableBlockEntity>> PROGRAMMABLE_ENTITY=ENTITIES.register("programmable_viewscreen",
-        ()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(ProgrammableBlockEntity::new,PROGRAMMABLE_BLOCK.get()).build(null));
+        ()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(VandorLabsBootstrap::programmableEntity,PROGRAMMABLE_BLOCK.get(),PROGRAMMABLE_SLAB.get(),PROGRAMMABLE_STAIRS.get()).build(null));
     public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<ProgrammableMenu>> PROGRAMMABLE_MENU=MENUS.register("programmable_block",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new ProgrammableMenu(id,inventory,buffer.readBlockPos())));
     public static final DeferredHolder<Block,NativeTriggerBlock> TRIGGER_BLOCK=BLOCKS.register("programmable_trigger_block",
         ()->new NativeTriggerBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).requiresCorrectToolForDrops()));
@@ -88,6 +92,11 @@ public final class VandorLabsBootstrap {
                 for(int tier=0;tier<4;tier++)output.accept(com.vandorlabs.neoforge.redstone.NativeTransmitterItem.variant(REDSTONE_TRANSMITTER.get(),tier));
                 output.accept(REDSTONE_TRANSMITTER_BLOCK_ITEM.get());output.accept(REDSTONE_RECEIVER_BLOCK_ITEM.get());output.accept(THRUSTER_LEVER_ITEM.get());output.accept(WALL_SLIDER_ITEM.get());output.accept(INDUSTRIAL_POWER_LEVER_ITEM.get());output.accept(SMALL_POWER_LEVER_ITEM.get());output.accept(PUSH_BUTTON_ITEM.get());output.accept(ROCKER_SWITCH_ITEM.get());output.accept(PROGRAMMABLE_ITEM.get());output.accept(TRIGGER_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
             }).build());
+    }
+    private static ProgrammableBlockEntity programmableEntity(net.minecraft.core.BlockPos pos,net.minecraft.world.level.block.state.BlockState state){
+        if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableSlab)return new com.vandorlabs.neoforge.shape.ProgrammableShapeEntity(PROGRAMMABLE_ENTITY.get(),pos,state,false);
+        if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableStairs)return new com.vandorlabs.neoforge.shape.ProgrammableShapeEntity(PROGRAMMABLE_ENTITY.get(),pos,state,true);
+        return new ProgrammableBlockEntity(pos,state);
     }
     public VandorLabsBootstrap(IEventBus bus) {
         FilesystemMaterials.initialize();com.vandorlabs.neoforge.redstone.TransmitterCopyRegistration.register(bus);
