@@ -114,3 +114,6 @@ tasks.register('testLegacyVanillaMaterialAliases', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.LegacyVanillaMaterialAliasChecks'
 }
 tasks.named('check') { dependsOn 'testLegacyVanillaMaterialAliases' }
+neoForge.runs.configureEach {
+    if(project.hasProperty('materialSpriteAssessment'))systemProperty 'vandorlabs.materialSpriteAssessment',project.property('materialSpriteAssessment')
+}
