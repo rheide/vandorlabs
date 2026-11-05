@@ -39,7 +39,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private volatile AABB renderBounds;
     public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean porthole){
         super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.porthole=porthole;walls=new WallSettings(false,false,0,0,porthole,0);
-        geometry=initialGeometry(state);aperture=NativePortholeLayout.unit(0,geometry.fullDepth()?1:0);partition=geometry::side;renderBounds=geometry.selectionBounds().move(pos);publishWallAppearance();
+        geometry=initialGeometry(state);aperture=NativePortholeLayout.unit(0,geometry.fullDepth()?1:0);partition=geometry::side;renderBounds=geometry.renderBounds().move(pos);publishWallAppearance();
     }
     private static FrameSettings defaultFrames(){return new FrameSettings(-1,-1,-2,0,-1,-1,false,false,false,false);}
     private static NativeWallGeometry initialGeometry(BlockState state){
@@ -126,8 +126,8 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public boolean publishGeometry(NativeWallGeometry next,long revision){
         if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Wall geometry requires owning server thread");
         Objects.requireNonNull(next);if(next.equals(geometry))return false;
-        boolean physical=!geometry.sameFluidGeometry(next),boundsChanged=!geometry.selectionBounds().equals(next.selectionBounds());
-        geometry=next;partition=next::side;if(boundsChanged)renderBounds=next.selectionBounds().move(worldPosition);topologyRevision=revision;if(physical)geometryGeneration++;publishWallAppearance();NativeFluidWorld.queue(this);return true;
+        boolean physical=!geometry.sameFluidGeometry(next),boundsChanged=!geometry.selectionBounds().equals(next.selectionBounds())||!geometry.bounds().equals(next.bounds());
+        geometry=next;partition=next::side;if(boundsChanged)renderBounds=next.renderBounds().move(worldPosition);topologyRevision=revision;if(physical)geometryGeneration++;publishWallAppearance();NativeFluidWorld.queue(this);return true;
     }
     @Override public void refreshFluidGeometry(){NativeWallTopology.refresh(this);super.refreshFluidGeometry();}
     @Override protected long fluidGeometryKey(){return geometryGeneration;}

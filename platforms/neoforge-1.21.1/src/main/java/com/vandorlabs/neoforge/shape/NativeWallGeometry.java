@@ -19,6 +19,7 @@ public interface NativeWallGeometry {
     int side(double x,double y,double z);
     NativeFluidRegions fluidRegions(boolean porthole);
     default AABB selectionBounds(){return bounds();}
+    default AABB renderBounds(){return bounds().minmax(selectionBounds());}
     default boolean diagonal(){return false;}
     default boolean fullDepth(){return false;}
     default Direction[] placementFaces(){return new Direction[]{facing(),facing().getOpposite()};}
