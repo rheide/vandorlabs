@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share power-lever size defaults, saved-data handling and the Size option across targets. Preserve hidden legacy variants, configured-item selection and existing Forge layout; native power-lever integration remains in progress.
+
 - Add native Push Buttons and Rocker Switches with authored mounted geometry, configured items, ranged inline transmission and shared latch banks. Preserve twenty-tick button pulses and publish physical redstone after linked banks settle. Reuse mount rows and one native inline transmission editor, with consistent reverse cycling and separate Done/Escape mount drafts.
 
 - Reuse mounted-control option labels and row layouts across targets, preserving existing Forge dimensions, option IDs and forward/reverse cycling.

@@ -124,6 +124,8 @@ lighting and render-thread publication.
 
 ## Mounted control adapters
 
+`PowerLeverSize` preserves the distinct existing rules for saved tiles, live edits and item previews. Missing or mistyped saved values retain the registry variant default; typed saved integers clamp to the supported range, while invalid live choices are rejected and invalid item choices retain the original model. The shared Size row uses operation 12 alongside the existing mount rows. Native buttons and rockers already use the common mounted-control host; other profiles can reuse its channel, transmission and menu behavior.
+
 Keep the existing eleven control registry IDs, including hidden legacy variants. Port power levers and four-step controls through the same channel membership, latch, mount transform and permission adapters used by buttons and rockers. Their differences belong in small profiles rather than independent implementations.
 
 | Profile | Authored states and saved settings | Dialog transaction |
