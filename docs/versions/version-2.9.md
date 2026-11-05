@@ -20,4 +20,6 @@ Native Industrial and Small Power Levers now use the same mounted-control dialog
 
 Native four-step levers and sliders share that dialog and renderer. Throttles retain their three selectable styles; the Redstone page sets the two middle detents. Type, mount and limit edits commit together on Done, while inline transmission remains immediate.
 
+Native world transmitters and receivers add six-face analog/digital ports, strongest-input reception and separate On/Off output levels. Their dedicated editor shares the transmission controls, and ordinary dropped items retain the existing plain-item behavior.
+
 Other native families, optional material providers, copy tools, carried assemblies, hardware shader acceptance and matter-production machines remain incomplete. Dedicated-server checks, emitted-model checks and ordinary client interaction checks are separate acceptance requirements; this remains a development build.

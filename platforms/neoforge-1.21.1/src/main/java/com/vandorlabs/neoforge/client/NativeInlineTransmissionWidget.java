@@ -14,7 +14,7 @@ public final class NativeInlineTransmissionWidget {
     @FunctionalInterface public interface Sender {void send(ChannelList channels,int range,boolean local);}
     private final Sender sender;
     private final EditBox channels;
-    private final RangeSlider range;
+    private final NativeIntegerSlider range;
     private final Button localButton;
     private final List<AbstractWidget> controls;
     private ChannelList observed;
@@ -26,7 +26,7 @@ public final class NativeInlineTransmissionWidget {
             @Override public void setFocused(boolean focused){boolean lost=isFocused()&&!focused;super.setFocused(focused);if(lost)flush();}
         };
         this.channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH);this.channels.setFilter(value->value.matches("[0-9, ]*"));this.channels.setValue(channels.isEmpty()?"":channels.toString());this.channels.setResponder(value->{dirty=true;validate();});
-        this.range=new RangeSlider(x,y,width);this.localButton=Button.builder(Component.empty(),ignored->{this.local=!this.local;dirty=true;labelLocal();flush();}).bounds(x,y+22,width,20).build();labelLocal();
+        this.range=new NativeIntegerSlider(x,y,width,20,0,6,index,selected->Component.literal("Range: "+TransmissionSettings.RANGES[selected]+" blocks"),selected->{index=selected;flush();});this.localButton=Button.builder(Component.empty(),ignored->{this.local=!this.local;dirty=true;labelLocal();flush();}).bounds(x,y+22,width,20).build();labelLocal();
         controls=List.of(this.range,this.localButton,this.channels);layout(x,y,width);
     }
     private static int index(int range){for(int i=0;i<TransmissionSettings.RANGES.length;i++)if(TransmissionSettings.RANGES[i]==range)return i;return 2;}
@@ -57,10 +57,4 @@ public final class NativeInlineTransmissionWidget {
         if(key==257||key==335||key==256){flush();channels.setFocused(false);return key!=256;}return false;
     }
     public void renderLabels(GuiGraphics graphics,Font font){graphics.drawString(font,"Transmit channels",x,y+49,0xDAE8F0,false);}
-    private final class RangeSlider extends AbstractSliderButton {
-        RangeSlider(int x,int y,int width){super(x,y,width,20,Component.empty(),index/6.0);updateMessage();}
-        @Override protected void updateMessage(){setMessage(Component.literal("Range: "+TransmissionSettings.RANGES[index]+" blocks"));}
-        @Override protected void applyValue(){index=Math.max(0,Math.min(6,(int)Math.round(value*6)));value=index/6.0;updateMessage();flush();}
-        @Override public boolean keyPressed(int key,int scan,int modifiers){return false;}
-    }
 }

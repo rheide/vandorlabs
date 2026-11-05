@@ -1,0 +1,73 @@
+package com.vandorlabs.copychecks;
+
+import com.vandorlabs.neoforge.*;
+import com.vandorlabs.neoforge.client.*;
+import com.vandorlabs.redstone.*;
+import java.util.*;
+import net.minecraft.client.*;
+import net.minecraft.core.*;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.RedstoneLampBlock;
+import net.minecraft.world.phys.*;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.*;
+
+public final class WirelessGuiClientChecks {
+    private static int ticks,stage,at,portTarget,portCycles,rangeTarget,frames;
+    private static String captureName;private static volatile boolean captured;private static boolean txRequested,rxRequested,worldRequested;
+    private static void require(boolean value,String detail){WirelessGuiServerChecks.require(value,"stage="+stage+" "+detail);}
+    private static void next(){stage++;at=ticks;}
+    private static NativeWirelessRedstoneBlockEntity tx(Minecraft mc){return (NativeWirelessRedstoneBlockEntity)mc.level.getBlockEntity(WirelessGuiServerChecks.TX);}
+    private static NativeWirelessRedstoneBlockEntity rx(Minecraft mc){return (NativeWirelessRedstoneBlockEntity)mc.level.getBlockEntity(WirelessGuiServerChecks.RX);}
+    private static NativeWirelessScreen ui(Minecraft mc){require(mc.screen instanceof NativeWirelessScreen,"dedicated endpoint screen expected, actual="+mc.screen);return (NativeWirelessScreen)mc.screen;}
+    private static void click(NativeWirelessScreen s,double x,double y,int button){s.mouseClicked(x,y,button);s.mouseReleased(x,y,button);}
+    private static void option(NativeWirelessScreen s,int id,int button){var b=s.option(id);require(b!=null,"missing endpoint option "+id);click(s,b.getX()+3,b.getY()+3,button);}
+    private static void tab(NativeWirelessScreen s,int page){click(s,s.panelLeft()+(page==0?20:136),s.panelTop()+38,0);}
+    private static void slider(NativeWirelessScreen s,net.minecraft.client.gui.components.AbstractSliderButton control,int selected,int maximum,int button,double offset){double x=control.getX()+4+(control.getWidth()-8)*selected/(double)maximum+offset,y=control.getY()+10;s.mouseClicked(x,y,button);s.mouseDragged(x,y,button,1,0);s.mouseReleased(x,y,button);}
+    private static void range(NativeWirelessScreen s,int value,int button){slider(s,s.inlineWidget().rangeControl(),value,6,button,0);}
+    private static void text(NativeWirelessScreen s,String value){var field=s.receiveField()!=null?s.receiveField():s.inlineWidget().channelField();click(s,field.getX()+3,field.getY()+5,0);field.setValue(value);}
+    private static void open(Minecraft mc,boolean receiver){var p=receiver?WirelessGuiServerChecks.RX:WirelessGuiServerChecks.TX;require(mc.gameMode.useItemOn(mc.player,InteractionHand.MAIN_HAND,new BlockHitResult(new Vec3(p.getX()+.5,p.getY()+.5,p.getZ()+.01),Direction.NORTH,p,false)).consumesAction(),"real endpoint interaction refused");}
+    private static void scale(Minecraft mc,int value){mc.options.guiScale().set(value);mc.resizeDisplay();var s=ui(mc);require(s.panelLeft()>=0&&s.panelTop()>=0&&s.panelLeft()+s.panelWidth()<=s.width&&s.panelTop()+s.panelHeight()<=s.height,"actual GUI-scale endpoint bounds");}
+    private static boolean channels(NativeWirelessRedstoneBlockEntity tile,boolean transmitter,int... values){return (transmitter?tile.transmissionChannels():tile.getRedstoneChannels()).equals(ChannelList.of(values));}
+    @SubscribeEvent public static void tick(ClientTickEvent.Post event){
+        if(!WirelessGuiServerChecks.enabled())return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen s){s.onClose();return;}if(mc.player==null||mc.level==null||mc.gameMode==null)return;
+        require(++ticks<3200,"timeout screen="+mc.screen+" mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" pos="+mc.player.position());
+        if(stage==0){if(ticks<80||mc.gameMode.getPlayerMode()!=GameType.SURVIVAL||mc.player.getInventory().selected!=0||!mc.player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())||mc.player.distanceToSqr(WirelessGuiServerChecks.X,WirelessGuiServerChecks.Y,WirelessGuiServerChecks.Z)>.01||!(mc.level.getBlockEntity(WirelessGuiServerChecks.RX) instanceof NativeWirelessRedstoneBlockEntity)||rx(mc).getOutputLevel()!=15)return;var room=new BlockPos(1000,80,997);require(mc.level.isEmptyBlock(room)&&mc.level.isEmptyBlock(room.above())&&mc.player.isAlive(),"observed actor room");sliderProbe(mc);System.out.println("[vandorlabs][wireless-gui] actor room client PASS observed Survival slot0 Configurizer exact pose and air");open(mc,false);next();return;}if(ticks<at+10)return;
+        if(stage==1){var s=ui(mc);require(s.page()==0&&s.panelWidth()==280&&s.panelHeight()==218&&s.option(2).getMessage().getString().equals("Input port: up"),"current transmitter panel/port");option(s,2,1);next();}
+        else if(stage==2){if(tx(mc).port()!=Direction.DOWN)return;option(ui(mc),2,1);next();}
+        else if(stage==3){if(tx(mc).port()!=Direction.EAST)return;portTarget=0;portCycles=0;option(ui(mc),2,0);next();}
+        else if(stage==4){if(tx(mc).port().get3DDataValue()!=portTarget)return;if(++portCycles<8){portTarget=(portTarget+1)%6;option(ui(mc),2,0);at=ticks;return;}require(tx(mc).port()==Direction.UP,"six-port cycle returns UP");tab(ui(mc),1);next();}
+        else if(stage==5){var s=ui(mc);require(s.inlineWidget()!=null&&s.receiveField()==null&&s.onControl()==null&&s.offControl()==null,"Tx has only shared inline controls plus Analog");text(s,"72, 73");next();}
+        else if(stage==6){require(channels(tx(mc),true,71),"Tx typing must remain draft");var s=ui(mc);slider(s,s.inlineWidget().rangeControl(),2,6,0,.1);next();}
+        else if(stage==7){if(!channels(tx(mc),true,72,73))return;require(tx(mc).transmissionRange()==16,"same-index drag changed range");text(ui(mc),"74");ui(mc).keyPressed(257,0,0);require(mc.screen instanceof NativeWirelessScreen,"inline Enter closed endpoint menu");next();}
+        else if(stage==8){if(!channels(tx(mc),true,74))return;rangeTarget=0;range(ui(mc),0,0);next();}
+        else if(stage==9){if(tx(mc).transmissionRange()!=TransmissionSettings.RANGES[rangeTarget])return;if(++rangeTarget<7){range(ui(mc),rangeTarget,0);at=ticks;return;}range(ui(mc),0,1);next();}
+        else if(stage==10){var s=ui(mc);require(tx(mc).transmissionRange()==256&&s.inlineWidget().rangeIndex()==6,"range right click changed selection");text(s,"75,,76");range(s,4,0);var local=s.inlineWidget().localControl();click(s,local.getX()+3,local.getY()+3,1);option(s,1,1);next();}
+        else if(stage==11){if(tx(mc).analog())return;require(channels(tx(mc),true,74)&&tx(mc).transmissionRange()==256&&!tx(mc).localRedstone(),"invalid Tx draft leaked inline mutation");text(ui(mc),"75, 76");ui(mc).keyPressed(257,0,0);next();}
+        else if(stage==12){if(!channels(tx(mc),true,75,76)||tx(mc).transmissionRange()!=64||!tx(mc).localRedstone())return;if(!txRequested){scale(mc,3);captured=false;captureName="wireless-transmitter-dialog-native.png";txRequested=true;}if(!captured)return;ui(mc).keyPressed(256,0,0);next();}
+        else if(stage==13){if(mc.screen!=null)return;require(channels(tx(mc),true,75,76)&&!tx(mc).analog(),"Tx close overwrote cached inline channels");shift(mc,true);open(mc,true);next();}
+        else if(stage==14){shift(mc,false);var s=ui(mc);require(s.inlineWidget()==null&&s.receiveField()!=null&&s.option(2).getMessage().getString().equals("Output port: down"),"Rx must not expose inline Tx controls");tab(s,1);require(!s.onControl().active&&s.offControl().active,"Analog On disabled / Off enabled");slider(s,s.onControl(),0,15,0,0);slider(s,s.offControl(),2,15,0,0);next();}
+        else if(stage==15){if(rx(mc).offLevel()!=2)return;require(rx(mc).onLevel()==15&&rx(mc).analog(),"disabled On slider mutated state");text(ui(mc),"75, 76");next();}
+        else if(stage==16){if(!channels(rx(mc),false,75,76)||rx(mc).getOutputLevel()!=15)return;option(ui(mc),1,1);require(ui(mc).onControl().active,"Digital enables On slider");slider(ui(mc),ui(mc).onControl(),9,15,0,0);next();}
+        else if(stage==17){if(rx(mc).analog()||rx(mc).onLevel()!=9||rx(mc).getOutputLevel()!=9)return;text(ui(mc),"75,,76");option(ui(mc),1,0);slider(ui(mc),ui(mc).offControl(),4,15,0,0);tab(ui(mc),0);option(ui(mc),2,0);next();}
+        else if(stage==18){require(!rx(mc).analog()&&rx(mc).offLevel()==2&&rx(mc).port()==Direction.DOWN,"invalid Rx text leaked pending Analog/Off/port");tab(ui(mc),1);scale(mc,2);require(ui(mc).receiveField().getValue().equals("75,,76")&&!ui(mc).onControl().active&&ui(mc).offControl().getIntValue()==4,"resize/tab lost pending invalid receiver state");text(ui(mc),"75, 76");next();}
+        else if(stage==19){if(!rx(mc).analog()||rx(mc).offLevel()!=4||rx(mc).port()!=Direction.UP||rx(mc).getOutputLevel()!=15)return;text(ui(mc),"");next();}
+        else if(stage==20){if(!rx(mc).getRedstoneChannels().isEmpty()||rx(mc).getOutputLevel()!=4)return;tab(ui(mc),0);option(ui(mc),2,1);option(ui(mc),2,1);next();}
+        else if(stage==21){if(rx(mc).port()!=Direction.EAST||!mc.level.getBlockState(WirelessGuiServerChecks.LAMP).getValue(RedstoneLampBlock.LIT))return;tab(ui(mc),1);text(ui(mc),"75,,76");option(ui(mc),1,1);slider(ui(mc),ui(mc).offControl(),7,15,0,0);var s=ui(mc);click(s,s.panelLeft()+20,s.panelTop()+s.panelHeight()-22,0);next();}
+        else if(stage==22){if(mc.screen!=null)return;require(rx(mc).analog()&&rx(mc).offLevel()==4&&rx(mc).getRedstoneChannels().isEmpty(),"invalid Done must close without saving pending host settings");mc.player.getInventory().selected=1;mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(1));next();}
+        else if(stage==23){if(mc.player.getInventory().selected!=1||!mc.player.getMainHandItem().isEmpty())return;open(mc,true);next();}
+        else if(stage==24){var s=ui(mc);require(s.page()==0,"ordinary empty-hand endpoint used a different menu");tab(s,1);require(s.receiveField().getValue().isEmpty()&&!s.onControl().active&&s.offControl().getIntValue()==4,"invalid closed draft persisted");text(s,"75, 76");option(s,1,0);next();}
+        else if(stage==25){if(rx(mc).analog()||!channels(rx(mc),false,75,76)||rx(mc).getOutputLevel()!=9)return;if(!rxRequested){captured=false;captureName="wireless-receiver-dialog-native.png";rxRequested=true;}if(!captured)return;var s=ui(mc);click(s,s.panelLeft()+20,s.panelTop()+s.panelHeight()-22,0);next();}
+        else if(stage==26){if(mc.screen!=null||mc.gameMode.getPlayerMode()!=GameType.CREATIVE||mc.player.distanceToSqr(WirelessGuiServerChecks.VIEW_X,WirelessGuiServerChecks.Y,WirelessGuiServerChecks.VIEW_Z)>.1||mc.player.getInventory().selected!=8||!mc.player.getMainHandItem().isEmpty())return;for(int i=0;i<4;i++)if(!mc.player.getInventory().getItem(i).is((i%2==0?VandorLabsBootstrap.REDSTONE_TRANSMITTER_BLOCK_ITEM:VandorLabsBootstrap.REDSTONE_RECEIVER_BLOCK_ITEM).get()))return;require(mc.player.getInventory().getItem(2).has(DataComponents.CUSTOM_DATA)&&mc.player.getInventory().getItem(3).has(DataComponents.CUSTOM_DATA),"configured canonical hotbar payload missing");if(++frames<50)return;if(!worldRequested){mc.options.guiScale().set(2);mc.resizeDisplay();mc.options.hideGui=false;mc.player.setYRot(0);mc.player.setXRot(15);captured=false;captureName="wireless-world-native.png";worldRequested=true;}if(!captured)return;System.out.println("[vandorlabs][wireless-gui] client PASS Tx inline and six ports, Rx immediate receive/Analog/levels/disabled control, invalid drafts, exact player packets, scales and world/hotbar capture");mc.stop();stage=27;}
+    }
+    private static void shift(Minecraft mc,boolean value){mc.options.keyShift.setDown(value);mc.player.setShiftKeyDown(value);mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket(mc.player,value?net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY:net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));}
+    private static void sliderProbe(Minecraft mc){
+        List<Integer> values=new ArrayList<>();var slider=new NativeIntegerSlider(10,10,160,20,0,15,7,v->Component.literal("Value: "+v),values::add);double x=14+152*7/15.0+.1;slider.mouseClicked(x,20,0);slider.mouseDragged(x,20,0,1,0);slider.mouseDragged(-100,20,0,-200,0);slider.mouseDragged(400,20,0,500,0);slider.mouseReleased(400,20,0);require(values.equals(List.of(7,7,0,15))&&slider.getIntValue()==15&&slider.getMessage().getString().equals("Value: 15")&&slider.getX()==10&&slider.getY()==10&&slider.getWidth()==160&&slider.getHeight()==20,"integer boundary/repeated-value callback contract: "+values);require(!slider.mouseClicked(20,20,1)&&!slider.keyPressed(262,0,0)&&values.size()==4,"slider right/keyboard input changed contract");require(new NativeIntegerSlider(0,0,100,20,0,15,-4,v->Component.empty(),v->{}).getIntValue()==0&&new NativeIntegerSlider(0,0,100,20,0,15,20,v->Component.empty(),v->{}).getIntValue()==15,"initial slider boundaries");
+        List<String> sends=new ArrayList<>();var inline=new NativeInlineTransmissionWidget(mc.font,10,10,256,ChannelList.of(1),16,true,(channels,range,local)->sends.add(channels+"/"+range+"/"+local));inline.channelField().setValue("7");var range=inline.rangeControl();double thumb=range.getX()+4+(range.getWidth()-8)*2/6.0+.1;range.mouseClicked(thumb,range.getY()+10,0);range.mouseDragged(thumb,range.getY()+10,0,1,0);range.mouseReleased(thumb,range.getY()+10,0);require(sends.equals(List.of("7/16/true"))&&inline.rangeIndex()==2,"same-value range drag must flush pending channels once: "+sends);
+        System.out.println("[vandorlabs][wireless-gui] integer-slider PASS boundaries repeated callback exact labels right/keyboard rejection and same-range pending channel flush");
+    }
+    @SubscribeEvent public static void render(RenderFrameEvent.Post event){if(!WirelessGuiServerChecks.enabled()||captureName==null)return;String name=captureName;captureName=null;var mc=Minecraft.getInstance();Screenshot.grab(mc.gameDirectory,name,mc.getMainRenderTarget(),message->{captured=true;});}
+}

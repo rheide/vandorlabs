@@ -431,7 +431,7 @@
         "Native four-step throttles and Wall Sliders reuse the mounted host, dialog and renderer. Shared scalar persistence and limit/type rows retain four detents, partial banks, canonical configured items and hidden throttle variants; focused persistence and actual emitted model/reload comparisons pass."
       ],
       "acceptance_limits": [
-        "Trigger uses development-classpath validation; binary controls and power levers additionally have exact packaged-JAR GUI/world validation through ModDev. Standalone installer and hardware shader acceptance remain separate.",
+        "Trigger uses development-classpath validation; mounted control families additionally have exact packaged-JAR GUI/world validation through ModDev. Standalone installer and hardware shader acceptance remain separate.",
         "Control-family parity remains incomplete; copy tools and other control families are not covered by the binary-control increment."
       ]
     },
@@ -441,12 +441,11 @@
       "forge_1_12_2": "reference",
       "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
-        "redstone_receiver",
-        "redstone_transmitter"
+        "redstone_receiver_block",
+        "redstone_transmitter_block"
       ],
       "remaining": [
-        "Native world transmitter/receiver blocks and additional inline host families.",
-        "Other channel source families and carried-assembly interaction."
+        "Other channel source families, copy-tool workflows and carried-assembly interaction."
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -464,14 +463,22 @@
       ],
       "integration_scope": "non_vehicle_first",
       "modern_registered_item_ids": [
-        "redstone_transmitter"
+        "redstone_transmitter",
+        "redstone_receiver_block",
+        "redstone_transmitter_block"
       ],
       "implemented": [
         "Four native handheld tier variants share one item ID, canonical crafting patterns and bounded persisted integer tier/channel fields.",
         "Stationary dimension-local sources use the shared source/recipient indices and preserve source coordinates across restarts and origin chunk unload.",
         "Dedicated three-process ON/reload/OFF and exact-stack menu authorization checks pass.",
         "Actual client held-item editor changes channels through its production payload; ordinary main/offhand uses toggle the Trigger and take priority over chest activation.",
-        "Native transmitter-copy crafting retains the original center-source rule and exact source remainder through cropped inputs and RecipeCache lookups; actual packaged-JAR table pickup/shift-crafting checks pass."
+        "Native transmitter-copy crafting retains the original center-source rule and exact source remainder through cropped inputs and RecipeCache lookups; actual packaged-JAR table pickup/shift-crafting checks pass.",
+        "Native world endpoints preserve six-face analog/digital behavior, strongest-input receiver aggregation, separate On/Off levels, role-specific Local defaults and plain pick/drop items. Dedicated restart, current Forge tag, loaded/closed-world, physical removal observer and mixed mounted-control bank checks pass. Canonical native models, arrows and padded items pass reload checks.",
+        "Dedicated immediate endpoint dialogs share the inline transmission widget and integer slider. Exact packaged-JAR ModDev checks cover real ordinary/tool access, ports, ranges, receiver levels, invalid drafts and the binary-control slider regression."
+      ],
+      "modern_registered_block_ids": [
+        "redstone_receiver_block",
+        "redstone_transmitter_block"
       ]
     },
     {

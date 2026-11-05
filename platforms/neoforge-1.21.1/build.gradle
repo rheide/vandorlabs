@@ -72,6 +72,9 @@ tasks.register('generateCubeResources', Exec) {
     commandLine pythonExecutable, 'generate_cube_resources.py'
     inputs.file('generate_cube_resources.py')
     inputs.file('generate_mounted_control_resources.py')
+    inputs.file('generate_wireless_resources.py')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models') { include 'block/redstone_transmitter.json', 'block/redstone_receiver.json', 'item/redstone_transmitter_block.json', 'item/redstone_receiver_block.json' })
+    inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/redstone_transmitter_block.json', '../../src/main/resources/assets/vandorlabs/blockstates/redstone_receiver_block.json')
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models') { include 'block/push_button/**', 'block/rocker_switch/**', 'item/push_button.json', 'item/rocker_switch.json' })
     inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/push_button.json', '../../src/main/resources/assets/vandorlabs/blockstates/rocker_switch.json')
     inputs.files('../../src/main/resources/assets/vandorlabs/recipes/push_button.json', '../../src/main/resources/assets/vandorlabs/recipes/rocker_switch.json')
@@ -140,6 +143,7 @@ tasks.register('generateTransmitterResources', Exec) {
 tasks.named('processResources') { dependsOn 'generateTransmitterResources' }
 neoForge.runs.configureEach {
     if(project.hasProperty('signalLegacyReference'))systemProperty 'vandorlabs.signalLegacyReference',project.property('signalLegacyReference')
+    if(project.hasProperty('wirelessLegacyReference'))systemProperty 'vandorlabs.wirelessLegacyReference',project.property('wirelessLegacyReference')
     if(project.hasProperty('binaryLegacyReference'))systemProperty 'vandorlabs.binaryLegacyReference',project.property('binaryLegacyReference')
     if(project.hasProperty('transmitterPhase'))systemProperty 'vandorlabs.transmitterPhase',project.property('transmitterPhase')
 }

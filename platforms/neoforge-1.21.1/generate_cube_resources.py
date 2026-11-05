@@ -77,6 +77,8 @@ def main():
         atlas.append(dict(type='minecraft:single',resource='vandorlabs:'+texture))
     from generate_mounted_control_resources import generate as generate_controls
     atlas.extend(generate_controls(ROOT,OUT))
+    from generate_wireless_resources import generate as generate_wireless
+    atlas.extend(generate_wireless(ROOT,OUT))
     write(ASSETS/'data/housing_finishes.json',catalog)
     write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())))
     variants={f'facing={face}':dict(model='vandorlabs:block/programmable_block',y=angle) for face,angle in [('north',0),('east',90),('south',180),('west',270),('up',90),('down',90)]}

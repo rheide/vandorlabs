@@ -21,7 +21,8 @@ public final class NativeRedstoneChannels {
     private static <M> Set<M> identities(){return Collections.newSetFromMap(new IdentityHashMap<>());}
     private static void thread(ServerLevel level){if(!level.getServer().isSameThread())throw new IllegalStateException("Channel access requires server thread");}
     private static ServerLevel level(NativeChannelMember member){var reference=member.channelBlockEntity().getLevel();if(reference instanceof ServerLevel level){thread(level);return CLOSED.contains(level)?null:level;}return null;}
-    static boolean open(ServerLevel level){thread(level);return !CLOSED.contains(level);}
+    /** Adapter lifetime guard: asserts the owning server thread before checking unload state. */
+    public static boolean open(ServerLevel level){thread(level);return !CLOSED.contains(level);}
     private static Network network(ServerLevel level){thread(level);if(CLOSED.contains(level))throw new IllegalStateException("Channel world is unloaded");return NETWORKS.computeIfAbsent(level,Network::new);}
     public static void queueRegistration(NativeChannelMember member){ServerLevel level=level(member);if(level!=null){thread(level);PENDING.computeIfAbsent(level,unused->identities()).add(member);}}
     public static void channelsChanged(NativeChannelMember member){ServerLevel level=level(member);if(level!=null){thread(level);if(member.isChannelMemberActive()){var n=network(level);n.mutate(()->n.register(member));}}}
@@ -31,6 +32,9 @@ public final class NativeRedstoneChannels {
     /** Coalesce receiver delivery. An unloaded world rejects the batch without running its action.
      * Derived physical jobs use NativeSignalUpdateBatch after all synchronous banks settle. */
     public static void batch(ServerLevel level,Runnable action){network(level).mutate(action);}
+    /** Publish receiver values for a block change already installed in the world, before vanilla
+     * neighbor callbacks. Future edits and queued derived physical jobs stay in their outer batch. */
+    public static void settlePublishedWorldChange(ServerLevel level){thread(level);if(CLOSED.contains(level))return;Network n=NETWORKS.get(level);if(n!=null)n.settle();}
     public static void unregister(NativeChannelMember member){ServerLevel level=level(member);if(level==null)return;thread(level);Set<NativeChannelMember> pending=PENDING.get(level);if(pending!=null){pending.remove(member);if(pending.isEmpty())PENDING.remove(level);}Network n=NETWORKS.get(level);if(n!=null)n.mutate(()->n.remove(member));}
     public static int level(ServerLevel level,BlockPos pos,int channel){thread(level);Network n=NETWORKS.get(level);return n==null?0:n.at(pos,channel);}
     public static long[] diagnostics(ServerLevel level){thread(level);Network n=NETWORKS.get(level);return n==null?new long[5]:new long[]{n.stats.receiverBuckets,n.stats.receiverCandidates,n.stats.sourceBuckets,n.stats.sourceCandidates,n.stats.deliveries};}
@@ -113,13 +117,13 @@ public final class NativeRedstoneChannels {
             for(var entry:data.entries())if(stats.manual.add(entry)){sources.computeIfAbsent(entry.channel,unused->new ChannelSourceIndex<>(stats)).put(entry,entry);affect(entry.channel,entry);}
         }
         void settle(){
-            settling=true;try{int rounds=0;while(!affected.isEmpty()||!pendingClears.isEmpty()){
+            boolean previousSettling=settling;settling=true;try{int rounds=0;while(!affected.isEmpty()||!pendingClears.isEmpty()){
                 // Diagnostic guard for nonconverging adapter callbacks, not a world-feedback solver.
                 if(++rounds>10000)throw new IllegalStateException("Channel callbacks did not settle");
                 Set<NativeChannelMember> notify=identities();notify.addAll(affected);affected.clear();Set<NativeChannelMember> clear=identities();clear.addAll(pendingClears);pendingClears.clear();
                 for(var member:clear)if(!subscriptions.containsKey(member)&&member.isChannelMemberActive()){stats.deliveries++;member.setChannelLevel(0);}
                 for(var member:notify)if(subscriptions.containsKey(member)&&member.isChannelMemberActive())deliver(member);
-            }}finally{settling=false;}
+            }}finally{settling=previousSettling;}
         }
         void deliver(NativeChannelMember member){
             ChannelList channels=member.getRedstoneChannels();int[] bank=delivered.get(member);boolean changed=bank==null||bank.length!=channels.size();if(changed){bank=new int[channels.size()];delivered.put(member,bank);}int maximum=0;

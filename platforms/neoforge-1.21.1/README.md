@@ -52,7 +52,7 @@ Run `python3 platforms/neoforge-1.21.1/test_sampled_materials.py --client --xvfb
 
 ## Trigger and handheld transmitter checks
 
-The native Trigger reuses shared saved-state and dialog rules, and the same material picker as the cube. Handheld transmitter sources remain stationary and dimension-local. Mounted buttons, rockers and power levers also support inline transmitter settings. World transmitter/receiver blocks and other control families remain pending.
+The native Trigger reuses shared saved-state and dialog rules, and the same material picker as the cube. Handheld transmitter sources remain stationary and dimension-local. Mounted buttons, rockers and power levers also support inline transmitter settings. World transmitter/receiver blocks are covered below; other control families remain pending.
 
 Run `python3 platforms/neoforge-1.21.1/test_trigger.py` for server persistence and actual receiver/origin chunk unload, `test_transmitter.py` for tier recipes and three-process ON/reload/OFF persistence, and `test_trigger_client.py --xvfb` for actual dialog and handheld packets on Linux. Omit `--xvfb` for a normal client window. `test_trigger_models.py` covers emitted Trigger geometry, OFF item previews, particles and reloads; its optional Forge reference compares the existing cube geometry too.
 
@@ -69,3 +69,9 @@ Push Buttons, Rocker Switches and both power-lever families share the mounted di
 Run `test_power_levers.py` for dedicated persistence and channel behavior, `test_power_models.py` for emitted geometry/reload comparisons, and `test_binary_dialog.py --power-levers --jar <standard.jar> --xvfb` for real-player dialog and world acceptance. Run the same dialog runner without `--power-levers` for buttons and rockers. Runners are under this directory and use disposable fixtures. Exact-JAR client checks use ModDev and a separate fixture mod; they do not establish standalone installer, hardware shader or full release acceptance.
 
 Four-step Thruster Levers and Wall Sliders extend the same mounted host. Thrusters select their normal, Airliner or Fighter style on General; their low/high intermediate limits are on Redstone. Done commits the family draft atomically, while inline transmission edits remain immediate. Run `test_signal_controls.py` for dedicated persistence and numeric banks, and add `--signal-controls` to the exact-JAR dialog runner for real-player edits.
+
+## World wireless endpoints
+
+Directional transmitters sample their selected adjacent input; receivers use the strongest selected channel signal. Analog mode retains numeric levels, while digital mode uses the configured threshold/output behavior. Receiver On/Off levels and port direction are immediate edits. Transmitters use the same inline channel/range/Local editor as mounted controls. Ordinary picks and drops are plain endpoint items, matching Forge.
+
+`test_wireless.py --legacy-reference <reference.json>` covers dedicated runtime/restart, current Forge saved inputs, closed/unloaded-world guards, removal observers and mixed mounted banks. `test_wireless_models.py --xvfb` covers canonical faces, arrows and padded items across reload. Native binary payloads bound channel count to 64 before allocation; the old receiver text-payload character limit remains specific to Forge1.12.2. Full release and hardware acceptance remain separate.
