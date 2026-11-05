@@ -352,6 +352,7 @@ if [ "$MODE" = focus ]; then
         exit 0
     fi
     if [ "$TARGET" = trigger-state ]; then
+        grep -q "noncube-picker-input PASS" "$RUN_OUT/client.log"
         grep -q "channel-gui PASS GuiProgrammableTrigger" "$RUN_OUT/client.log"
         grep -q "trigger-state-live PASS" "$RUN_OUT/client.log"
         python3 - "$RUN_OUT" <<'PYIMAGE'

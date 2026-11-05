@@ -199,13 +199,7 @@ public class GuiProgrammableInput extends GuiContainer {
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
             int thumbHeight, int maximum, int dragOffset) {
-        int travel = trackHeight - thumbHeight;
-        if (maximum <= 0 || travel <= 0) {
-            return 0;
-        }
-        int thumbTop = Math.max(0, Math.min(travel,
-                mouseY - trackTop - dragOffset));
-        return Math.round((float) thumbTop * maximum / travel);
+        return com.vandorlabs.ui.DialogInput.scrollForDrag(mouseY,trackTop,trackHeight,thumbHeight,maximum,dragOffset);
     }
 
     @Override

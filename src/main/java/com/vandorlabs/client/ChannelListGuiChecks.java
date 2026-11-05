@@ -73,7 +73,7 @@ final class ChannelListGuiChecks {
                 if(index==1)for(int i=0;i<3;i++)((GuiProgrammableLight)mc.currentScreen).actionPerformed(new net.minecraft.client.gui.GuiButton(102,0,0,"Signal brightness"));
                 if(index==2){
                     if(TRIGGER_ONLY){
-                        triggerClick(mc,111,0);triggerClick(mc,103,0);triggerClick(mc,103,1);
+                        checkTriggerPickerInput(mc);triggerClick(mc,111,0);triggerClick(mc,103,0);triggerClick(mc,103,1);
                         triggerClick(mc,101,0);triggerClick(mc,102,0);
                         triggerClick(mc,102,1);
                         Field exact=GuiProgrammableTrigger.class.getDeclaredField("exact");exact.setAccessible(true);require(exact.getInt(mc.currentScreen)==-1,"Trigger right-click previous value");
@@ -281,6 +281,24 @@ final class ChannelListGuiChecks {
             for(net.minecraft.client.gui.GuiButton button:buttons)if(button.enabled&&"Redstone".equals(button.displayString)){if(gui instanceof GuiAnimatedScreenSelector)((GuiAnimatedScreenSelector)gui).actionPerformed(button);else if(gui instanceof GuiProgrammableInput)((GuiProgrammableInput)gui).actionPerformed(button);else if(gui instanceof GuiProgrammableHalfConsole)((GuiProgrammableHalfConsole)gui).actionPerformed(button);else ((GuiSpaceDoor)gui).actionPerformed(button);break;}
         }
         Field field=mc.currentScreen.getClass().getDeclaredField(index==7?"channel":"channelField");field.setAccessible(true);return (GuiTextField)field.get(mc.currentScreen);
+    }
+    private static void checkTriggerPickerInput(Minecraft mc)throws Exception{
+        GuiProgrammableTrigger gui=(GuiProgrammableTrigger)mc.currentScreen;
+        Field lists=GuiProgrammableTrigger.class.getDeclaredField("lists");lists.setAccessible(true);
+        HousingTextureList picker=((HousingTextureList[])lists.get(gui))[0];require(picker!=null,"Trigger OFF picker initialized");
+        Field scroll=HousingTextureList.class.getDeclaredField("scroll"),rows=HousingTextureList.class.getDeclaredField("rows"),count=HousingTextureList.class.getDeclaredField("count"),x=HousingTextureList.class.getDeclaredField("x"),y=HousingTextureList.class.getDeclaredField("y"),width=HousingTextureList.class.getDeclaredField("width");
+        for(Field field:new Field[]{scroll,rows,count,x,y,width})field.setAccessible(true);
+        int left=x.getInt(picker),top=y.getInt(picker),span=width.getInt(picker),height=count.getInt(picker)*HousingTextureList.ROW_HEIGHT;
+        int maximum=((java.util.List<?>)rows.get(picker)).size()-count.getInt(picker),selected=picker.selected();require(maximum>1,"Trigger picker scroll fixture");scroll.setInt(picker,0);
+        require(picker.wheel(left+2,top+2,-120)&&scroll.getInt(picker)==1,"noncube wheel advances one row");
+        require(!picker.wheel(left+2,top+2,0)&&scroll.getInt(picker)==1,"zero wheel event changed scroll");
+        require(!picker.wheel(left-1,top+2,-120)&&scroll.getInt(picker)==1,"outside wheel event changed scroll");
+        gui.mouseClicked(left+span+2,top+1,0);gui.mouseClickMove(left+span+2,top+height+100,0,10);gui.mouseReleased(left+span+2,top+height+100,0);
+        require(scroll.getInt(picker)==maximum,"noncube scrollbar cannot reach last row");
+        require(!picker.drag(top-100)&&scroll.getInt(picker)==maximum,"release did not stop scrollbar drag");
+        gui.mouseClicked(left+span+2,top+1,0);gui.mouseClickMove(left+span+2,top-100,0,10);gui.mouseReleased(left+span+2,top-100,0);
+        require(scroll.getInt(picker)==0&&picker.selected()==selected,"noncube drag changed selection or missed first row");
+        System.out.println("[vandorlabs][reprolab] noncube-picker-input PASS wheel zero outside track-grab drag endpoints release selection-retained");
     }
     private static void triggerClick(Minecraft mc,int id,int mouse)throws java.io.IOException{
         java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,mc.currentScreen,"buttonList","field_146292_n");

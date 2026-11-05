@@ -197,7 +197,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             button.enabled=c.enabled;buttonList.add(button);
         }
         listX=layout.listX;listY=com.vandorlabs.ui.ProgrammableBlockDialog.listY(layout,state);rows=com.vandorlabs.ui.ProgrammableBlockDialog.listRows(layout,state);
-        textureList=new HousingTextureList(listX,listY,layout.listWidth,selected).visibleRows(rows).custom(this::choose).cubeInput();
+        textureList=new HousingTextureList(listX,listY,layout.listWidth,selected).visibleRows(rows).custom(this::choose);
     }
     private boolean cubeAction(GuiButton button){
         int id=button.id;
@@ -236,11 +236,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     static int scrollForDrag(int mouseY, int trackTop, int trackHeight,
             int thumbHeight, int maximum, int dragOffset) {
-        int travel = trackHeight - thumbHeight;
-        if (maximum <= 0 || travel <= 0) return 0;
-        int thumbTop = Math.max(0, Math.min(travel,
-                mouseY - trackTop - dragOffset));
-        return Math.round((float) thumbTop * maximum / travel);
+        return com.vandorlabs.ui.DialogInput.scrollForDrag(mouseY,trackTop,trackHeight,thumbHeight,maximum,dragOffset);
     }
 
     void choose(int choice) {

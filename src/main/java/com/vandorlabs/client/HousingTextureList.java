@@ -38,8 +38,7 @@ final class HousingTextureList {
     private int selected,scroll,dragOffset,custom=-1,missing=-1;
     private java.util.function.IntConsumer customConsumer;
     HousingTextureList custom(java.util.function.IntConsumer consumer){customConsumer=consumer;setSelected(selected());return this;}
-    private boolean dragging,picked,sharedCubeInput;
-    HousingTextureList cubeInput(){sharedCubeInput=true;return this;}
+    private boolean dragging,picked;
     boolean picked(){return picked;}
     HousingTextureList(int x,int y,int width,int selected){this(x,y,width,selected,8);}
     HousingTextureList(int x,int y,int width,int selected,int count) {this(x,y,width,selected,count,null);}
@@ -273,9 +272,9 @@ final class HousingTextureList {
     private InventorySamplePicker inventoryPicker;
     void customInventory(){inventoryPicker=new InventorySamplePicker(x,y,width,height(),stack->com.vandorlabs.tiles.CustomBlockMaterials.choice(stack)>=0,stack->{int value=com.vandorlabs.tiles.CustomBlockMaterials.choice(stack);setSelected(value);inventoryPicker=null;customConsumer.accept(value);},()->inventoryPicker=null);}
     private int height(){return ROW_HEIGHT*count;}
-    private int maxScroll(){return sharedCubeInput?com.vandorlabs.ui.DialogInput.maxScroll(rows.size(),count):Math.max(0,rows.size()-count);}
-    private int thumbHeight(){return sharedCubeInput?com.vandorlabs.ui.DialogInput.thumbHeight(height(),count,rows.size()):Math.max(8,height()*count/Math.max(count,rows.size()));}
-    private int thumbY(){return sharedCubeInput?com.vandorlabs.ui.DialogInput.thumbY(y,height(),thumbHeight(),scroll,maxScroll()):y+(height()-thumbHeight())*scroll/Math.max(1,maxScroll());}
+    private int maxScroll(){return com.vandorlabs.ui.DialogInput.maxScroll(rows.size(),count);}
+    private int thumbHeight(){return com.vandorlabs.ui.DialogInput.thumbHeight(height(),count,rows.size());}
+    private int thumbY(){return com.vandorlabs.ui.DialogInput.thumbY(y,height(),thumbHeight(),scroll,maxScroll());}
     boolean click(int mouseX,int mouseY,int button) {
         picked=false;if(searchClick(mouseX,mouseY,button))return true;if(inventoryPicker!=null)return inventoryPicker.click(mouseX,mouseY,button);
         if(button!=0 || mouseY<y || mouseY>=y+height())return false;
@@ -296,13 +295,13 @@ final class HousingTextureList {
     }
     boolean drag(int mouseY) {
         if(inventoryPicker!=null)return false;if(!dragging)return false;
-        scroll=sharedCubeInput?com.vandorlabs.ui.DialogInput.scrollForDrag(mouseY,y,height(),thumbHeight(),maxScroll(),dragOffset):GuiProgrammableWall.scrollForDrag(mouseY,y,height(),thumbHeight(),maxScroll(),dragOffset);return true;
+        scroll=com.vandorlabs.ui.DialogInput.scrollForDrag(mouseY,y,height(),thumbHeight(),maxScroll(),dragOffset);return true;
     }
     void release(){dragging=false;}
     boolean wheel(int mouseX,int mouseY,int delta) {
         if(inventoryPicker!=null)return inventoryPicker.wheel(mouseX,mouseY,delta);
         if(delta==0 || mouseX<x || mouseX>=x+width+7 || mouseY<y || mouseY>=y+height())return false;
-        scroll=sharedCubeInput?com.vandorlabs.ui.DialogInput.wheel(scroll,maxScroll(),delta):Math.max(0,Math.min(maxScroll(),scroll+(delta>0?-1:1)));return true;
+        scroll=com.vandorlabs.ui.DialogInput.wheel(scroll,maxScroll(),delta);return true;
     }
     static String name(int choice) {
         if(com.vandorlabs.tiles.CustomBlockMaterials.isCustom(choice))return CustomBlockTextures.label(choice);

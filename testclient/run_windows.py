@@ -315,6 +315,7 @@ def main():
             validate_completion(client_log,'joined-fit-vanilla-appearance PASS cases=15')
             validate_completion(client_log,'joined-block-textures PASS 72')
         if args.focus == 'trigger-state':
+            validate_completion(client_log,'noncube-picker-input PASS')
             if 'channel-gui PASS GuiProgrammableTrigger' not in client_log:
                 raise SystemExit('Missing Trigger GUI round trip')
             for name in ('channels_2','trigger_state_world'):

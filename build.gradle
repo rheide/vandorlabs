@@ -1087,3 +1087,15 @@ task testFilesystemTextureFailure(type: JavaExec) {
     args 'failure'
 }
 testFilesystemTextures.dependsOn testFilesystemTextureFailure
+
+task testDialogInput(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.ui.DialogInputTest'
+}
+
+task testDialogInputAdapters(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DialogInputAdapterChecks'
+}
