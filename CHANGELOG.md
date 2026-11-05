@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.9 (development)
+
+- Begin incremental integration of the historical NeoForge 1.21.1 target while preserving Forge 1.12.2 as the default and behavioral reference. Native feature parity and release readiness remain pending.
+- Track current-master families and historical native implementations separately. Prioritize non-vehicle parity, including standalone mechanisms, Copy Controllers and shared turntable infrastructure; defer vehicle-specific integration.
+
 ## 2.8
 
 - Preserve original articulated joint poses when vehicle loading fails after joint decoding, keeping unavailable vehicles recoverable on the next save. Reuse per-vehicle collision-query arrays instead of allocating them for every candidate pose.

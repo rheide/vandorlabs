@@ -28,7 +28,7 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 }
 
-version = '2.8'
+version = '2.9'
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
 
@@ -77,6 +77,8 @@ task compileNonRenderingChecks(type: JavaCompile) {
     destinationDir = file("$buildDir/non-rendering-checks/classes")
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
+    // Runtime dependency service files are not processors for these assertion fixtures.
+    options.compilerArgs += ['-proc:none']
 }
 
 task testNonRendering(type: JavaExec) {
@@ -334,17 +336,31 @@ task compilePortableTests(type: JavaCompile) {
                 include '**/*.java'
                 exclude '**/SignalUpdateBatchTest.java'
             })
-    source files('src/main/java/com/vandorlabs/client/PortholeHex.java',
-            'src/main/java/com/vandorlabs/navigation/NavigationLayout.java',
-            'src/main/java/com/vandorlabs/client/PortholeRectangles.java',
-            'src/main/java/com/vandorlabs/surface/JoinedRectangles.java',
-            'src/main/java/com/vandorlabs/client/PortholeGeometryCache.java')
     classpath = files()
     destinationDir = file("$buildDir/portable-tests")
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
     options.compilerArgs += ['-Xlint:all', '-Werror']
 }
+
+task checkPortableBoundary(type: Exec) {
+    group = 'verification'
+    description = 'Compile shared behavior without Minecraft or loader dependencies'
+    commandLine pythonExecutable, 'tools/check_portable_boundary.py'
+}
+
+task testPortableParity(type: Exec) {
+    group = 'verification'
+    description = 'Compare shared contracts under Java 8 and Java 21'
+    commandLine pythonExecutable, 'tools/test_portable.py'
+}
+
+task testPortableContracts(type: Exec) {
+    group = 'verification'
+    description = 'Verify shared contracts with Java 8'
+    commandLine pythonExecutable, 'tools/test_portable.py', '--jdk', '8'
+}
+check.dependsOn testPortableContracts
 
 task testSegmentedDoorGeometry(type: JavaExec) {
     dependsOn compilePortableTests

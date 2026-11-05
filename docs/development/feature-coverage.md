@@ -1,0 +1,50 @@
+# Target feature coverage
+
+Forge 1.12.2 remains the default and behavioral reference. NeoForge 1.21.1 integration is incremental; no modern family is complete or release-ready on `master`.
+
+The [machine-readable inventory](feature-coverage.json) preserves historical implementation descriptions from `feature/neoforge-1.21.1` at `aa1477a3c08ab109b4bdfbada5a52ab82aeb9088`. Historical partial adapters and recorded checks belong to that branch. They do not establish integrated support or current-checkout acceptance, and no tests are claimed rerun by this inventory update.
+
+Complete non-vehicle parity first, including standalone arms, ramps, Segmented Doors, Copy Controllers and turntables. Shared surfaces, snapshots and recovery remain in scope even where vehicle code also consumes them. Vehicle entities, driving, articulation and vehicle-specific carried/cockpit/gear integration are deferred. Seating, glass and navigation retain their standalone scope; their vehicle-specific acceptance follows later.
+
+The source inventory includes 58 active generated-catalog registrations and explicit manual families. Programmable-only textures, retired entries and internal model templates are excluded from that count. Registry IDs may occur in multiple behavioral families: standalone arms and vehicle landing gear share parts. Counts are source inventory, not a runtime registry dump.
+
+| Family | Integration on master | Historical native status | Scope |
+| --- | --- | --- | --- |
+| Programmable cube and matter block | pending | partial | non-vehicle first |
+| Slabs and stairs | pending | partial | non-vehicle first |
+| Walls, portholes and diagonals | pending | partial | non-vehicle first |
+| Programmable viewscreens | pending | partial | non-vehicle first |
+| Console, input and diagonal screen variants | pending | partial | non-vehicle first |
+| Glass, canopy and cockpit glass | pending | unimplemented | non-vehicle first |
+| Programmable and large doors (Segmented Doors tracked separately) | pending | unimplemented | non-vehicle first |
+| Trapdoors and diagonal trapdoors | pending | unimplemented | non-vehicle first |
+| Programmable lights and propulsion | pending | unimplemented | non-vehicle first |
+| Chairs and seats | pending | unimplemented | non-vehicle first |
+| Triggers, buttons, rockers, levers and throttles | pending | partial | non-vehicle first |
+| Wireless transmitter and receiver | pending | partial | non-vehicle first |
+| Token slots and design tokens | pending | unimplemented | non-vehicle first |
+| Programmable storage | pending | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | pending | unimplemented | non-vehicle first |
+| Navigation tables | pending | unimplemented | non-vehicle first |
+| Ramp controllers and moving endpoints | pending | unimplemented | non-vehicle first |
+| Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
+| Cockpits and peripherals | pending | unimplemented | vehicle deferred |
+| Modular landing gear and wheels | pending | unimplemented | vehicle deferred |
+| Turntables | pending | unimplemented | non-vehicle first |
+| Industrial table | pending | partial | non-vehicle first |
+| Configuration/copy tools and basic materials | pending | partial | non-vehicle first |
+| Programmable armor | pending | unimplemented | non-vehicle first |
+| Filesystem and custom material workflows | pending | partial | non-vehicle first |
+| Compatibility integrations | pending | unimplemented | non-vehicle first |
+| Segmented Doors | pending | unimplemented | non-vehicle first |
+| Copy Controllers and shared surfaces | pending | unimplemented | non-vehicle first |
+| Standalone Extenders and rotating arms | pending | unimplemented | non-vehicle first |
+| Track assemblies | pending | unimplemented | non-vehicle first |
+
+Historical partial work includes programmable cubes, slabs/stairs, flat walls/portholes, screens, mounted controls, wireless endpoints, Industrial Tables and filesystem materials. The JSON retains their branch-specific descriptions and remaining gaps under explicitly historical fields. Registration, compilation and shared fixtures alone do not establish parity.
+
+Current master adds Segmented Doors, Copy Controllers, tracks and expanded standalone arm behavior beyond the historical inventory. These require native implementations and acceptance against current Forge behavior. Turntables and Copy Controllers must share surface topology handling without stale drawing roots or continuous rescanning. Standalone arms require joined and independent assemblies, all mounting faces, materialized endpoint edits, client ownership, reversal and recovery coverage. Preserve current registry IDs, saved defaults and failed-load snapshots.
+
+Every integrated family requires shared policy, native persistence and permissions, bounded server-authoritative round trips, subsequent-process reload, and inspected client geometry/dialog/animation output. Ownership transfers additionally require durable recovery and abrupt-restart/partial-save checks. Use focused Forge regressions as changes land; preserve the final exact-artifact release gate. Dual-JDK contracts and modern startup checks remain distinct from runtime and visual acceptance. Compatibility integrations need native equivalents or an explicit unsupported status.
+
+See [the architecture and sequence](multiversion.md) for build isolation and ownership boundaries. Build orchestration is a planned integration capability until the corresponding tool and both targets are present and validated.

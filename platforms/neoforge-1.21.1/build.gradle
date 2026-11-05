@@ -1,0 +1,39 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+group = 'com.vandorlabs'
+version = (file('../../build.gradle').text =~ /(?m)^version\s*=\s*'([^']+)'/)[0][1]
+base { archivesName = 'vandorlabs-neoforge-1.21.1' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+sourceSets.main.java.srcDir('../../src/portable/java')
+neoForge {
+    version = '21.1.264'
+    runs {
+        client { client(); gameDirectory = file('run/bootstrap-client') }
+        server { server(); programArgument '--nogui'; gameDirectory = file(project.findProperty('modernServerRunDirectory') ?: 'run/bootstrap-server') }
+    }
+    mods { vandorlabs { sourceSet(sourceSets.main) } }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.named('processResources') {
+    inputs.property('modVersion', project.version)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(modVersion: project.version) }
+}
+def pythonExecutable = project.findProperty('pythonExecutable') ?: (
+    System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+tasks.register('testPortableContracts', Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, '../../tools/test_portable.py', '--jdk', '21', '--report', file('build/reports/portable-java21.json').absolutePath
+}
+tasks.named('check') { dependsOn 'testPortableContracts' }
+// SecureJarHandler requires the modular ASM release used by this runtime.
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'org.ow2.asm') details.useVersion('9.8')
+    }
+}
+tasks.named('jar') {
+    from('../../LICENSE') { into 'META-INF' }
+    from('../../THIRD_PARTY_NOTICES.md') { into 'META-INF' }
+}

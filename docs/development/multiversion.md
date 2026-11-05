@@ -1,0 +1,119 @@
+# Forge 1.12.2 and NeoForge 1.21.1 architecture
+
+## Target and baseline
+
+Forge 1.12.2 remains the default development and behavioral reference. Both versions belong in this repository on `master`; use short-lived feature branches that change shared behavior and both adapters together. Do not maintain permanent Minecraft-version branches that require repeated feature cherry-picks. Release tags identify the mod version and target; publish target-qualified artifacts only after their validation gates pass.
+
+Integration is incremental. The historical `feature/neoforge-1.21.1` branch contains native adapters and shared extractions that are not yet integrated feature parity on `master`. The coverage inventory separates that historical work from current integration status; historical test descriptions are not fresh verification of this checkout.
+
+Complete non-vehicle parity first. This includes building and programmable families, controls, storage and machines, configuration/copy tools, Segmented Doors, standalone moving arms and ramps, and turntables with their shared surface, snapshot and recovery infrastructure. Vehicle entities, driving, articulation, carried controls and vehicle-specific cockpit/gear integration follow later. Shared infrastructure must remain available to in-scope standalone mechanisms. Preserve existing Forge 1.12.2 behavior throughout.
+
+## Repository and builds
+
+Retain the root Gradle 4.9/ForgeGradle 3 build and `src/main/java` as the Forge adapter to preserve existing tooling. Expand `src/portable/java` as the single Java 8-compatible behavior implementation, compiled by both targets. Add `platforms/neoforge-1.21.1` with an independently pinned modern Gradle wrapper, NeoForge dependency and Java 21 toolchain. Do not load the modern plugin into the legacy Gradle process. A root orchestration script selects the JDK for each process, runs both builds, fails on either failure and collects only standard mod jars into root `build/libs/` with distinct names. Default legacy commands continue to work.
+
+Keep canonical catalogs, texture packs and generators in their existing locations. Generate target resource layouts rather than copy source artwork or hand-maintain a second catalog. Modern language JSON, recipes, loot tables, block states and metadata need target-specific transformation. Do not include legacy loader metadata or incompatible legacy model definitions blindly. Keep generated output and runtime worlds isolated per target.
+
+## Ownership boundaries
+
+| Shared implementation | Platform adapter |
+| --- | --- |
+| Settings, defaults, operation IDs, bounds and validation | Registry and lifecycle hooks |
+| Dialog layout, option order, labels, cycling, scrolling and hit regions | Screen widgets, font measurement, drawing and input events |
+| Geometry, collision intent, animation timelines and mesh descriptions | AABB/VoxelShape conversion, tessellation, buffers and render passes |
+| Channel/latch state machines and consumer policy | Loaded world lookup, server scheduling and notifications |
+| Primitive saved schemas and migration decisions | NBT, item components and registry-aware codecs |
+| Commands and authorization policy | Payload codecs, menus, player identity and transport |
+| Assembly traversal and transactional movement policy | Block/entity access, chunk lifecycle, collision and mounting |
+
+Use small domain-specific interfaces at real world/render/storage boundaries; do not emulate the entire Minecraft API. Shared code must have no Minecraft, Forge, NeoForge or LWJGL dependencies. Preserve package names where practical during extraction. Guard this boundary with compilation under Java 8 and Java 21 and a forbidden-dependency check.
+
+## Behavioral parity
+
+The same feature must execute the same shared policy on both targets. Extract existing behavior before adding its modern adapter. Preserve registry IDs, saved defaults, dialog operation indices, left/right cycling, wheel/drag scrolling, six/three cockpit rows, hit mapping, per-channel levels and pause-aware animation. Platform drawing backends may differ; labels, layout, controls and interaction results must match. Compare fixtures at identical logical GUI dimensions, including narrow windows and GUI scales.
+
+Preserve server-thread execution, loaded-chunk limits, container/permission checks and bounded decode allocation. Modern payload transport is an adapter, not a reason to change permissions. Keep deferred loading, inert failed snapshots, original snapshot preservation, and parent-world carried-control authority. Keep collision and saved motion authoritative on the server. Do not promise binary packet compatibility between different Minecraft versions or automatic conversion of complete vanilla/modpack worlds; semantic mod data compatibility is the scope.
+
+## Implementation sequence
+
+1. Establish independently buildable targets, core dependency checks, one build command and a machine-readable feature coverage inventory. Retain the legacy release gate unchanged.
+2. Extract genuinely portable classes and dialog layout/input policy, wiring legacy callers to the extracted implementation. Add shared contract fixtures that run under both JDKs.
+3. Implement modern catalog registration and resource transformation, then real programmable block/screen/door vertical slices: persistence, server-authoritative settings, rendering, UI and interaction. A registered placeholder block does not count as a ported feature.
+4. Integrate the historical shared extractions and native adapters in reviewable family increments. Complete non-vehicle building, material, screen, control, security, storage, machine, navigation, armor and compatibility workflows before vehicle support. Include newer master families explicitly rather than treating the historical inventory as complete.
+5. Complete standalone moving arms, ramps, Segmented Doors, Copy Controllers and turntables, including shared surfaces and transactional snapshot/recovery infrastructure. Keep vehicle entities, driving, articulation and vehicle-specific carried/cockpit/gear integration deferred. Validate each integrated family before expanding scope.
+6. Run full Forge verification against the exact standard jar, modern dedicated-server startup and focused live parity checks for every migrated family. Inspect dialogs and rendered geometry; compilation and registration counts alone cannot establish parity. Keep unsupported integrations and outstanding families visible; do not label the NeoForge build complete until coverage and runtime evidence support that claim.
+
+Implement independent builds, shared behavior, and dialog extraction separately; integrate and test each feature family before expanding coverage. Run conversion tests against disposable worlds.
+
+## Validation and release policy
+
+Run shared fixtures on Java 8 and 21, the existing Forge dedicated-server linkage check, non-rendering matrices and relevant live client checks. Preserve `verifyRelease` before handing off a release jar. For NeoForge, use disposable worlds, startup and save/reload checks, GUI click/scroll tests, client/server round trips and geometry comparison. Require explicit per-family parity status; scaffolding is not full support. External integrations need native modern equivalents or documented unsupported status and must not silently alter core behavior.
+
+## Historical adapter design
+
+The adapter patterns below describe implementation on the historical branch. They are integration references, not a statement that these native families or their associated shared extractions are already available on `master`.
+
+## Adding a programmable family
+
+Reuse the existing housing adapter when a family shares programmable cube storage and material rendering. `ProgrammableBlockEntity` exposes a protected constructor accepting the native block-entity type, position and state. Subclasses retain its settings codec, migrations, configured item components and model-data keys. `ProgrammableBlock` supplies facing, placement inheritance, rotation, mirroring and configured picking. Override only the family's entity factory, codec, interaction and world callbacks that differ.
+
+Keep persistent configuration separate from its visual projection. `settings()` represents saved housing settings; the protected `modelSettings()` hook supplies an immutable rendering snapshot. A signal-driven family may select a different visible finish without replacing the saved off finish. Sample world inputs on the server and synchronize primitive signal state; constructing model data must not read neighbouring blocks from a rendering worker.
+
+The programmable trigger demonstrates why family boundaries matter. Its default texture layout is zero, while the plain programmable cube defaults to one. Trigger world rendering uses its selected signal finish uniformly on every face. Face override settings remain in saved data and configured items, but do not affect trigger rendering. Trigger items show the uniform off finish, including when an exact-zero trigger would show its on finish in the world. Preserve these distinctions in the common renderer's family adapter. Joined-face discovery accepts only the plain programmable block registration; extending the housing entity class does not make a new family eligible for joining.
+
+Extract actual legacy behavior before implementing its native adapter. `TriggerState` owns the stable trigger fields, typed missing-field defaults and exact-level/band selection; the legacy tile delegates to it. Shared dialog contracts likewise drive legacy and native option labels, IDs, cycling and layout. Preserve the original submission behavior: trigger edits send immediately, whereas mounted binary-control drafts submit on confirmation.
+
+Keep `onLoad()` local and queue membership through the platform's deferred loader. Recheck installed identity before registration, and unregister on removal and chunk unload. Server payloads must validate the exact entity and menu session, loaded position, reach and applicable player permissions. Preserve each family's authorization policy, including held-item Adventure permissions; binary-control editing and trigger editing have different configurizer requirements. Bound decoded lengths before allocation.
+
+Run portable contracts under both Java 8 and Java 21, then validate the affected legacy paths and dedicated-server linkage. Native acceptance requires save/reload across separate processes and focused world, dialog, item and interaction checks against immutable compiled outputs. Include negative controls for rendering or interaction claims; compilation alone cannot establish family parity.
+
+## Programmable glass settings
+
+`ProgrammableGlassSettings` owns glass-specific saved defaults, typed tag reads,
+legacy metadata-size migration and the stored panel orientation. It retains a
+missing texture-layout field separately from its effective Stretch/Tile value.
+The legacy tile delegates persistence to this contract while keeping world
+notifications, fluid lifecycle and placement repair in its Forge adapter.
+
+`GlassDialog` defines the shared labels, option IDs, bounds and forward/reverse
+transitions. The editor submits all options immediately, keeps custom-material
+layout while stock glass is selected, and preserves the established detail-zero
+submission without changing the tile merely by opening its editor. Native glass
+must use these same contracts; extracting them does not establish native support.
+
+## Flat panel geometry
+
+Flat walls and portholes share `FlatWallTopology`, `FlatWallMesh` and
+`FlatPanelMesh`. `PanelMeshTransform` preserves the legacy float boundaries for
+rotated/clipped T junctions and end caps; `PanelTextureMapping` and `PolygonClip`
+retain material-relative UVs. Neutral `PortholeSlice` and `PanelRectangles` types
+allow authoritative geometry to avoid client renderer class descriptors.
+
+`WallGroupPolicy` keeps aperture grouping separate from housing artwork groups.
+Apertures require matching family, facing, depth, shape and enabled joining;
+housing artwork requires matching family, facing, depth, material and layout.
+Both use bounded loaded members and the same inclusive-cap rectangle fallback.
+Each target remains responsible for loaded-world access, atlas translation,
+lighting and render-thread publication.
+
+## Platform references
+
+- [NeoForge 1.21.1 setup and Java 21](https://docs.neoforged.net/docs/1.21.1/gettingstarted/)
+- [NeoForge 1.21.1 screens](https://docs.neoforged.net/docs/1.21.1/gui/screens/)
+- [NeoForge 1.21.1 payload networking](https://docs.neoforged.net/docs/1.21.1/networking/)
+
+## Mounted control adapters
+
+Keep the existing eleven control registry IDs, including hidden legacy variants. Port power levers and four-step controls through the same channel membership, latch, mount transform and permission adapters used by buttons and rockers. Their differences belong in small profiles rather than independent implementations.
+
+| Profile | Authored states and saved settings | Dialog transaction |
+| --- | --- | --- |
+| Industrial/Compact and Small/Large power levers | Horizontal facing, wall/floor placement, powered state; selected size and shared mount settings | Draft channels, size and mount; commit on Done/Enter, discard on Escape |
+| Thruster Lever, Airliner Throttle and Fighter Throttle | Six mount faces, rotation, four detents; limits, selectable type and shared mount settings | Draft channels, limits, type and mount; commit on Done/Enter, discard on Escape |
+| Wall Slider | Six mount faces, rotation, four detents; limits and shared mount settings; fixed type | Draft channels, limits and mount; commit on Done/Enter, discard on Escape |
+
+Extract settings migration, profile labels, option IDs, cycling and layout into the Java 8 shared sources, and make the Forge implementation delegate to them before wiring the native UI. Preserve typed-key distinctions, old mount migration, canonical configured-item IDs and the current channel-bank behavior. Native storage and payloads translate this shared state; they must retain exact menu/tile identity, held-item Adventure permission, reach and loaded-chunk checks.
+
+Generate native resources by following the canonical blockstate and item-model dependency graph. Preserve all authored elements, UVs, rotations, item transforms and texture resolutions. Only model/texture path layout and native recipe result keys change. Hidden variants keep their registry IDs and models without acquiring recipes or creative entries that the reference version does not expose.
+
+Acceptance requires identical shared contracts under both JDKs, unchanged focused Forge dialog pixels and behavior, native detent/latch/configured-item save/reload checks, actual mounted models and padded item renders, and actual menu interactions at both GUI scales. Test invalid settings, reverse cycling, cancelled drafts, type/size changes and partial channel overlap. Moving-assembly and shader requirements remain separately visible in feature coverage.

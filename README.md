@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-Development: **2.8** — [dense builds and segmented doors](docs/versions/version-2.8.md).
+Development: **2.9** — [incremental multiversion integration](docs/versions/version-2.9.md).
 
 Latest release: **2.7** — [displays, programmable glass, redstone and mechanisms](docs/versions/version-2.7.md).
 
@@ -255,7 +255,7 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-2.8.jar`.
+`build/libs/vandorlabs-2.9.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 
