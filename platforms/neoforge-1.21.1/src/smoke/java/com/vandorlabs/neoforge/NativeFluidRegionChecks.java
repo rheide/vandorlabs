@@ -1,0 +1,16 @@
+package com.vandorlabs.neoforge;
+import com.google.gson.*;
+import com.vandorlabs.neoforge.fluid.*;
+import java.nio.file.*;
+import net.minecraft.core.Direction;
+/** Consume the frozen actual current Forge analytic surface adapter, not a native-generated oracle. */
+public final class NativeFluidRegionChecks {
+ private static void require(boolean ok,String why){if(!ok)throw new AssertionError("Native fluid regions: "+why);}
+ private static void number(double expected,double actual,String key){require(Double.doubleToRawLongBits(expected)==Double.doubleToRawLongBits(actual),key+" expected="+expected+" actual="+actual);}
+ public static void main(String[] args)throws Exception{
+  Path path=Path.of(System.getProperty("vandorlabs.flatFluidReference"));JsonObject root;try(var reader=Files.newBufferedReader(path)){root=JsonParser.parseReader(reader).getAsJsonObject();}require(root.get("format").getAsInt()==1&&root.get("golden").getAsString().equals("810a437312993934de0db60a98cdeea3cb6a749e69968808b95a348076186843"),"independent reference header");int cases=0,faces=0;var physics=NativeFluidVolume.build(java.util.List.of(new net.minecraft.world.phys.AABB(0,0,0,1,1,1)),NativeFluidVolume.SINGLE_SIDE);
+  for(JsonElement item:root.getAsJsonArray("cases")){var row=item.getAsJsonObject();Direction facing=Direction.byName(row.get("facing").getAsString());int depth=row.get("depth").getAsInt();boolean inset=row.get("inset").getAsBoolean();String key=facing+"/"+depth+"/"+inset;var descriptor=NativeFluidRegions.flat(facing,depth,inset);require(descriptor==NativeFluidRegions.flat(facing,depth,inset),"finite immutable descriptor reuse");var actual=new java.util.ArrayList<NativeFluidSurface.Surface>();for(int side=0;side<2;side++)actual.addAll(NativeFluidSurface.surfaces(physics,descriptor,side,null,null));require(!physics.facesMaterialized(),"analytic renderer forced Cartesian face graph");var expected=row.getAsJsonArray("faces");require(actual.size()==expected.size(),key+" face count");
+   for(int i=0;i<actual.size();i++){var a=actual.get(i);var e=expected.get(i).getAsJsonObject();require(a.side==e.get("side").getAsInt()&&a.axis==e.get("axis").getAsInt()&&a.boundary==e.get("boundary").getAsInt(),key+" face metadata "+i);var n=e.getAsJsonArray("normal");number(n.get(0).getAsDouble(),a.nx,key+" normalX "+i);number(n.get(1).getAsDouble(),a.ny,key+" normalY "+i);number(n.get(2).getAsDouble(),a.nz,key+" normalZ "+i);var points=e.getAsJsonArray("vertices");require(points.size()==a.vertices.size(),key+" vertex count "+i);for(int j=0;j<points.size();j++){var p=points.get(j).getAsJsonArray();var v=a.vertices.get(j);number(p.get(0).getAsDouble(),v.x,key+" x "+i+"/"+j);number(p.get(1).getAsDouble(),v.y,key+" y "+i+"/"+j);number(p.get(2).getAsDouble(),v.z,key+" z "+i+"/"+j);}faces++;}cases++;
+  }require(cases==24&&faces==240,"incomplete oracle");try{NativeFluidRegions.flat(Direction.NORTH,0,false).regions().getFirst().planes().clear();throw new AssertionError("mutable analytic planes");}catch(UnsupportedOperationException expected){}System.out.println("Native analytic fluid regions PASS actual Forge raw bits cases="+cases+" faces="+faces+" four facings/three depths/flat and porthole inset");
+ }
+}

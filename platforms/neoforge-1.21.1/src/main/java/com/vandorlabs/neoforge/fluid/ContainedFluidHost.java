@@ -8,6 +8,12 @@ public interface ContainedFluidHost {
     default int intrinsicContainedLight(){return 0;}
     default boolean openingFluidVolume(){return false;}
     default net.minecraft.core.Direction[] fluidPlacementFaces(){return new net.minecraft.core.Direction[0];}
+    /** Optional continuous render planes; physical contacts still use the volume snapshot. */
+    default NativeFluidRegions fluidSurfaceRegions(){return null;}
+    /** Placement availability is distinct from explicit bucket availability. */
+    default boolean acceptsPlacementFluid(int side){
+        return openingFluidVolume()||fluidVolumeSnapshot().hasSide(side);
+    }
     NativeFluidRenderSnapshot fluidRenderSnapshot();
     void publishFluidRenderSnapshot(NativeFluidRenderSnapshot snapshot);
     BlockEntity fluidOwner();

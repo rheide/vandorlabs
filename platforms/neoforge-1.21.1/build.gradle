@@ -250,6 +250,12 @@ tasks.register('testNativeBucketContext', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('wallFrameReference')) systemProperty 'vandorlabs.wallFrameReference', file(project.property('wallFrameReference')).absolutePath
 }
+tasks.register('testNativeFluidRegions', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeFluidRegionChecks'
+    systemProperty 'vandorlabs.flatFluidReference', file(project.findProperty('flatFluidReference') ?: '../../build/test-artifacts/flat-fluid-forge-reference.json').absolutePath
+}
 
 tasks.register('testNativeFluidLight', JavaExec) {
     dependsOn tasks.named('compileSmokeJava')

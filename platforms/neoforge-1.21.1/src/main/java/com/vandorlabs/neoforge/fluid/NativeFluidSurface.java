@@ -7,28 +7,46 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** Current non-panel half-space boundaries and liquid corner heights; no world sampling. */
+/** Current panel and compact-volume half-space boundaries and liquid corner heights; no world sampling. */
 public final class NativeFluidSurface {
     private NativeFluidSurface(){}
     public interface Height {double at(double x,double z);}
     public static final class Neighbor {
-        public final NativeFluidVolume volume;private final boolean[] matching;public final boolean hidden;
-        public Neighbor(NativeFluidVolume volume,boolean first,boolean second,boolean hidden){this.volume=volume;matching=new boolean[]{first,second};this.hidden=hidden;}
+        public final NativeFluidVolume volume;public final NativeFluidRegions regions;private final boolean[] matching;public final boolean hidden;
+        public Neighbor(NativeFluidVolume volume,boolean first,boolean second,boolean hidden){this(volume,null,first,second,hidden);}
+        public Neighbor(NativeFluidVolume volume,NativeFluidRegions regions,boolean first,boolean second,boolean hidden){this.volume=volume;this.regions=regions;matching=new boolean[]{first,second};this.hidden=hidden;}
         public boolean matches(int side){return matching[side];}
     }
     public static final class Vertex {
-        public final double x,y,z;public Vertex(double x,double y,double z){this.x=x;this.y=y;this.z=z;}
+        public final double x,y,z;public Vertex(double x,double y,double z){this.x=x==0?0:x;this.y=y==0?0:y;this.z=z==0?0:z;}
     }
     public static final class Surface {
         public final List<Vertex> vertices;public final double nx,ny,nz;public final int side,axis,boundary;
-        Surface(List<double[]> polygon,int side,int axis,int boundary){List<Vertex> points=new ArrayList<Vertex>();for(double[] p:polygon)points.add(new Vertex(p[0],p[1],p[2]));vertices=Collections.unmodifiableList(points);double[] normal=normal(polygon);double length=Math.sqrt(normal[0]*normal[0]+normal[1]*normal[1]+normal[2]*normal[2]);nx=normal[0]/length;ny=normal[1]/length;nz=normal[2]/length;this.side=side;this.axis=axis;this.boundary=boundary;}
+        Surface(List<double[]> polygon,int side,int axis,int boundary){
+            List<Vertex> points=new ArrayList<>();
+            for(double[] p:polygon)points.add(new Vertex(p[0],p[1],p[2]));
+            vertices=Collections.unmodifiableList(points);
+            double[] normal=normal(polygon);
+            // Forge Vec3d length/shading used a float square root.
+            double length=(double)(float)Math.sqrt(normal[0]*normal[0]+normal[1]*normal[1]+normal[2]*normal[2]);
+            nx=length<1e-4?0:normal[0]/length;
+            ny=length<1e-4?0:normal[1]/length;
+            nz=length<1e-4?0:normal[2]/length;
+            this.side=side;this.axis=axis;this.boundary=boundary;
+        }
     }
-    public static List<Surface> surfaces(NativeFluidVolume volume,int side,Neighbor[] neighbors,Height height){
-        List<Surface> result=new ArrayList<Surface>();for(NativeFluidVolume.Face face:volume.faces())if(face.side()==side){List<double[]> polygon=new ArrayList<double[]>();for(Vec3 p:face.vertices())polygon.add(new double[]{p.x,p.y,p.z});int boundary=boundary(polygon);Neighbor neighbor=boundary<0||neighbors==null?null:neighbors[boundary];if(neighbor!=null&&neighbor.hidden)continue;
-            List<List<double[]>> pieces=new ArrayList<List<double[]>>();pieces.add(polygon);
-            if(neighbor!=null&&neighbor.volume!=null)for(NativeFluidVolume.Cell cell:neighbor.volume.cells())if(neighbor.matches(cell.side())){List<List<double[]>> remaining=new ArrayList<List<double[]>>();for(List<double[]> piece:pieces)subtractBox(piece,cell.box(),offset(boundary,0),offset(boundary,1),offset(boundary,2),remaining);pieces=remaining;}
-            for(List<double[]> piece:pieces)if(area(piece)>1e-10){if(height!=null)for(double[] point:piece)if(point[1]>.998){double top=height.at(point[0],point[2]);if(top<.998)point[1]=top;}if(area(piece)>1e-10)result.add(new Surface(piece,side,face.axis(),boundary));}
-        }return Collections.unmodifiableList(result);
+    public static List<Surface> surfaces(NativeFluidVolume volume,int side,Neighbor[] neighbors,Height height){return surfaces(volume,null,side,neighbors,height);}
+    public static List<Surface> surfaces(NativeFluidVolume volume,NativeFluidRegions regions,int side,Neighbor[] neighbors,Height height){
+        List<Surface> result=new ArrayList<>();
+        if(regions!=null){for(Surface face:regions.surfaces())if(face.side==side){List<double[]> polygon=new ArrayList<>();for(Vertex p:face.vertices)polygon.add(new double[]{p.x,p.y,p.z});append(result,polygon,side,face.axis,face.boundary,neighbors,height);}}
+        else for(NativeFluidVolume.Face face:volume.faces())if(face.side()==side){List<double[]> polygon=new ArrayList<>();for(Vec3 p:face.vertices())polygon.add(new double[]{p.x,p.y,p.z});append(result,polygon,side,face.axis(),boundary(polygon),neighbors,height);}
+        return Collections.unmodifiableList(result);
+    }
+    private static void append(List<Surface> result,List<double[]> polygon,int side,int axis,int boundary,Neighbor[] neighbors,Height height){
+        Neighbor neighbor=boundary<0||neighbors==null?null:neighbors[boundary];if(neighbor!=null&&neighbor.hidden)return;List<List<double[]>> pieces=new ArrayList<>();pieces.add(polygon);
+        if(neighbor!=null&&neighbor.regions!=null){for(var region:neighbor.regions.regions())if(neighbor.matches(region.side())){List<List<double[]>> remaining=new ArrayList<>();for(var piece:pieces)NativeFluidRegions.subtract(piece,region,offset(boundary,0),offset(boundary,1),offset(boundary,2),remaining);pieces=remaining;}}
+        else if(neighbor!=null&&neighbor.volume!=null)for(var cell:neighbor.volume.cells())if(neighbor.matches(cell.side())){List<List<double[]>> remaining=new ArrayList<>();for(var piece:pieces)subtractBox(piece,cell.box(),offset(boundary,0),offset(boundary,1),offset(boundary,2),remaining);pieces=remaining;}
+        for(var piece:pieces)if(area(piece)>1e-10){if(height!=null)for(double[] point:piece)if(point[1]>.998){double top=height.at(point[0],point[2]);if(top<.998)point[1]=top;}if(area(piece)>1e-10)result.add(new Surface(piece,side,axis,boundary));}
     }
     private static int offset(int face,int axis){return face==0&&axis==1||face==2&&axis==2||face==4&&axis==0?-1:face==1&&axis==1||face==3&&axis==2||face==5&&axis==0?1:0;}
     public static List<double[]> planes(AABB box){List<double[]> result=new ArrayList<double[]>();result.add(new double[]{-1,0,0,-box.minX});result.add(new double[]{1,0,0,box.maxX});result.add(new double[]{0,-1,0,-box.minY});result.add(new double[]{0,1,0,box.maxY});result.add(new double[]{0,0,-1,-box.minZ});result.add(new double[]{0,0,1,box.maxZ});return result;}
