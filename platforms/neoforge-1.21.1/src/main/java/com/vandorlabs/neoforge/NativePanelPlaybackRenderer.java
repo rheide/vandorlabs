@@ -44,13 +44,18 @@ public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<Pr
     @SubscribeEvent public static void completed(ModelEvent.BakingCompleted event){publish(event.getModelBakery());}
     private static synchronized void publish(Object bakery){var prepared=PENDING.getIfPresent(bakery);PENDING.invalidate(bakery);if(prepared!=null&&(active==null||prepared.generation>active.generation))active=prepared;}
     @SubscribeEvent public static void register(EntityRenderersEvent.RegisterRenderers event){if(net.minecraft.core.registries.BuiltInRegistries.BLOCK.containsKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","programmable_porthole_wall")))event.registerBlockEntityRenderer(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),ignored->new NativePanelPlaybackRenderer());}
+    private static final class BodyLayer {static final RenderType VALUE=renderType(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true);}
+    @Override public net.minecraft.world.phys.AABB getRenderBoundingBox(ProgrammableBlockEntity tile){return tile instanceof NativeWallEntity wall?wall.renderBounds():new net.minecraft.world.phys.AABB(tile.getBlockPos());}
     @Override public boolean shouldRender(ProgrammableBlockEntity tile,Vec3 camera){
-        if(!(tile instanceof NativeWallEntity wall)||!wall.isPorthole())return false;
-        var current=active;if(current==null||!(wall.wallAppearance().geometry() instanceof com.vandorlabs.neoforge.shape.NativeFlatWallGeometry.Geometry))return false;var pos=tile.getBlockPos();double x=camera.x-(pos.getX()+.5D),y=camera.y-(pos.getY()+.5D),z=camera.z-(pos.getZ()+.5D),range=getViewDistance();return x*x+y*y+z*z<range*range;
+        if(!(tile instanceof NativeWallEntity wall))return false;var snapshot=wall.wallAppearance();boolean body=snapshot.geometry().diagonal()&&!snapshot.chunkBody();if(!body&&!wall.isPorthole())return false;
+        var current=active;if(current==null||!body&&!(snapshot.geometry() instanceof com.vandorlabs.neoforge.shape.NativeFlatWallGeometry.Geometry))return false;var pos=tile.getBlockPos();double x=camera.x-(pos.getX()+.5D),y=camera.y-(pos.getY()+.5D),z=camera.z-(pos.getZ()+.5D),range=getViewDistance();return x*x+y*y+z*z<range*range;
     }
     @Override public void render(ProgrammableBlockEntity tile,float partialTick,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
-        if(!(tile instanceof NativeWallEntity wall)||!wall.isPorthole())return;var current=active;if(current==null)return;
-        var appearance=wall.wallAppearance();var pane=current.bake.paneProjection(appearance);if(pane==null||pane.quads().isEmpty())return;
+        if(!(tile instanceof NativeWallEntity wall))return;var current=active;if(current==null)return;
+        var appearance=wall.wallAppearance();
+        if(appearance.geometry().diagonal()&&!appearance.chunkBody())emit(current.bake.bodyProjection(appearance),current.bake.surfaces.get(0),null,PanelPlayback.DEFAULT,0,poses.last(),buffers.getBuffer(BodyLayer.VALUE),light,overlay);
+        if(!wall.isPorthole())return;
+        var pane=current.bake.paneProjection(appearance);if(pane==null||pane.quads().isEmpty())return;
         var playback=appearance.playback();var target=buffers.getBuffer(pane.renderType(playback.mode()));
         emit(pane.quads(),pane.source(),pane.material(),playback,NativeMaterialPlayback.tick(),poses.last(),target,light,overlay);
     }
