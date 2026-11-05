@@ -94,7 +94,7 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             int interior=appearance.frames().interior<0?fallback:index(appearance.frames().interior),exterior=appearance.frames().exteriorChoice()<0?fallback:index(appearance.frames().exteriorChoice()),mode=appearance.base().housing().layout;
             var aperture=appearance.aperture();ApertureKey key=new ApertureKey(geometry,aperture,main,interior,exterior,mode);var found=quads.getIfPresent(key);if(found!=null)return found;
             var owner=NativeFlatBarOwner.from(geometry);var wall=new NativePanelQuads.Material(surfaces.get(main));
-            found=owner==null?NativePanelQuads.aperture(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),wall,material(interior),material(exterior),mode,geometry.layout(),aperture.hideLeft(),aperture.hideRight(),aperture.hideLower(),aperture.hideUpper()):NativePanelQuads.barBody(owner,geometry,aperture,wall,material(interior),material(exterior));quads.put(key,found);return found;
+            found=owner==null&&geometry.join()!=null?NativePanelQuads.bentBody(geometry,aperture,wall,material(interior),material(exterior),mode):owner==null?NativePanelQuads.aperture(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),wall,material(interior),material(exterior),mode,geometry.layout(),aperture.hideLeft(),aperture.hideRight(),aperture.hideLower(),aperture.hideUpper()):NativePanelQuads.barBody(owner,geometry,aperture,wall,material(interior),material(exterior));quads.put(key,found);return found;
         }
         List<BakedQuad> pane(NativeWallEntity.WallAppearance appearance,NativeFlatWallGeometry.Geometry geometry,boolean standalone){
             var glass=appearance.glass();var display=playback(glass.material);int visual=glass.material<0?-1:standalone?ModernFinishCatalog.storedChoice(glass.material):index(glass.material);
@@ -103,7 +103,7 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             var aperture=appearance.aperture();var layout=glass.material<0?com.vandorlabs.neoforge.shape.NativePanelLayout.UNIT:aperture.pane();
             float opacity=com.vandorlabs.render.GlassRenderPolicy.opacity(glass.material,glass.tint);
             var owner=NativeFlatBarOwner.from(geometry);int mode=glass.material<0?0:glass.textureLayout();double bx=glass.material<0?0:(2+aperture.extraBorder())/16D,by=glass.material<0?0:(4+aperture.extraBorder())/16D,aspect=standalone&&display!=null?display.aspect():0;
-            found=owner==null?NativePanelQuads.pane(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),material,mode,layout,bx,by,opacity,aspect):NativePanelQuads.barPane(owner,aperture,material,mode,layout,bx,by,opacity,aspect);quads.put(key,found);return found;
+            found=owner==null&&geometry.join()!=null?NativePanelQuads.bentPane(geometry,aperture,material,mode,layout,bx,by,opacity,aspect):owner==null?NativePanelQuads.pane(geometry.facing(),PanelDepthPolicy.start(geometry.depth()),NativePanelSlice.get(aperture),material,mode,layout,bx,by,opacity,aspect):NativePanelQuads.barPane(owner,aperture,material,mode,layout,bx,by,opacity,aspect);quads.put(key,found);return found;
         }
         List<BakedQuad> body(NativeWallGeometry geometry,int main,int interior,int mode){return body(geometry,main,interior,interior,mode);}
         List<BakedQuad> body(NativeWallGeometry geometry,int main,int interior,int exterior,int mode){
