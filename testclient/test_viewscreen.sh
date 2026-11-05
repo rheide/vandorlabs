@@ -17,13 +17,18 @@ unset VANDOR_LABS_CHANNEL_SOURCE_INDEX_CHECKS_ONLY VANDOR_LABS_MATERIAL_SPRITE_C
 
 unset VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY
 
+unset VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY
+
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
     --full) MODE=full; PREFIX= ;;
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = control-latch-levels ]; then
+        if [ "$TARGET" = mounted-control-dialog ]; then
+            PREFIX=mounted_control_dialog_
+            export VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY=true
+        elif [ "$TARGET" = control-latch-levels ]; then
             PREFIX=control_latch_
             export VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY=true
         elif [ "$TARGET" = control-mount-settings ]; then
@@ -346,6 +351,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = mounted-control-dialog ]; then
+        grep -q "mounted-control-dialog legacy PASS" "$RUN_OUT/client.log"
+        echo "Mounted control dialog passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = control-latch-levels ]; then
         grep -q "control-latch-levels-live PASS" "$RUN_OUT/client.log"
         echo "Control latch levels passed: $RUN_OUT"
