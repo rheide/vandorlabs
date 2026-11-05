@@ -53,6 +53,12 @@ During the active non-vehicle port, validate each family with focused checks, sh
 
 Run shared fixtures on Java 8 and 21, the existing Forge dedicated-server linkage check, non-rendering matrices and relevant live client checks. Preserve `verifyRelease` before handing off a release jar. For NeoForge, use disposable worlds, startup and save/reload checks, GUI click/scroll tests, client/server round trips and geometry comparison. Require explicit per-family parity status; scaffolding is not full support. External integrations need native modern equivalents or documented unsupported status and must not silently alter core behavior.
 
+## Integrated channel lookup
+
+`ChannelSourceIndex` owns the current identity-based source banks and spatial lookup. Forge keeps its original immutable position snapshots and delegates through scalar accessors. Every channel in a network shares one query-buffer pool; reentrant queries borrow separate buffers and clear references on completion. The extraction preserves query order, activity checks, diagnostic counts and allocation behavior. Registration, recipient discovery, delivery, latch state and deferred lifecycle remain in the platform network.
+
+Native controls must use these current range semantics. The historical global channel implementation is not a substitute for spatial lookup or per-recipient levels. Keep loaded-world and exact tile identity checks in the platform adapter, and validate source removal and receiver replacement through the focused channel fixture.
+
 ## Historical adapter design
 
 The adapter patterns below describe implementation on the historical branch. They are integration references, not a statement that these native families or their associated shared extractions are already available on `master`.
@@ -63,7 +69,7 @@ Reuse the existing housing adapter when a family shares programmable cube storag
 
 Keep persistent configuration separate from its visual projection. `settings()` represents saved housing settings; the protected `modelSettings()` hook supplies an immutable rendering snapshot. A signal-driven family may select a different visible finish without replacing the saved off finish. Sample world inputs on the server and synchronize primitive signal state; constructing model data must not read neighbouring blocks from a rendering worker.
 
-The programmable trigger demonstrates why family boundaries matter. Its default texture layout is zero, while the plain programmable cube defaults to one. Trigger world rendering uses its selected signal finish uniformly on every face. Face override settings remain in saved data and configured items, but do not affect trigger rendering. Trigger items show the uniform off finish, including when an exact-zero trigger would show its on finish in the world. Preserve these distinctions in the common renderer's family adapter. Joined-face discovery accepts only the plain programmable block registration; extending the housing entity class does not make a new family eligible for joining.
+The programmable trigger demonstrates why family boundaries matter. Its default texture layout is zero, while the plain programmable cube defaults to one. Current Trigger rendering applies the selected signal finish to all faces unless Front Only is enabled, in which case the other faces use the saved sides finish; the historical native adapter predates this option. Inherited face overrides remain in saved data and configured items but do not affect Trigger rendering. Trigger items show the uniform off finish, including when an exact-zero trigger would show its on finish in the world. Preserve these current distinctions in the renderer's family adapter. Joined-face discovery accepts only the plain programmable block registration; extending the housing entity class does not make a new family eligible for joining.
 
 Extract actual legacy behavior before implementing its native adapter. `TriggerState` owns the stable trigger fields, typed missing-field defaults and exact-level/band selection; the legacy tile delegates to it. Shared dialog contracts likewise drive legacy and native option labels, IDs, cycling and layout. Preserve the original submission behavior: trigger edits send immediately, whereas mounted binary-control drafts submit on confirmation.
 
