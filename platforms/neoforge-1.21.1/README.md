@@ -18,6 +18,14 @@ The development smoke source set is excluded from the production JAR. Its opt-in
 Run `python3 platforms/neoforge-1.21.1/test_matter.py` from the repository root for the two-process native save/restart checks. Add `--client` for a real client; on a Linux host without a visible display add `--xvfb` (requires Xvfb and Pillow). The runner allocates disposable worlds and logs under `build/test-artifacts/`, checks each PASS marker and process exit, and retains the screenshot for inspection. It also checks all three native rendered item icons for visible slot padding and checks server observation of client placement/mining. Software rendering establishes this focused visual/interaction behavior, not hardware performance.
 
 
+## Focused test artifact retention
+
+Native Python launchers finalize generated game runtimes after the entire check completes, including all save/restart and client phases. Successful runtime payloads are removed. Top-level logs, reports and exact-JAR hashes remain; compact runtime logs, crash reports and screenshots are preserved under each run's `evidence/` directory.
+
+Failed runs retain at most two runtime payloads, limited to 256 MiB per run and 512 MiB in total. Older or oversized payloads are removed after bounded diagnostics are saved. Active processes and unfinished runs block cleanup. Set `VANDOR_LABS_TEST_KEEP_ARTIFACTS=1` before launching a check to retain its runtime explicitly; that choice also protects it from later automatic pruning.
+
+New native launchers use `artifact_directory` inside a `@retain_artifacts` main function. Keep all restart phases inside that lifetime and use the common process launcher so child processes are tracked. Per-phase `run()` calls never finalize artifacts.
+
 ## Native programmable cube checks
 
 `generate_cube_resources.py` builds the native catalog and resources from the shared original finish list, current texture/menu metadata, canonical language and recipe files, and existing artwork. It preserves saved choice indices and current alias/detail redirects. No second artwork catalog is maintained.
