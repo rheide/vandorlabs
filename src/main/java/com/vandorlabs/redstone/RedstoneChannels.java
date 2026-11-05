@@ -113,7 +113,7 @@ public final class RedstoneChannels {
         n.manual(player.getPosition(),channels,range,on?15:0);
     }
     private static final class Network {
-        private static final class Counters extends ChannelSourceIndex.QueryContext<RedstoneChannelMember>{long receiverBuckets,receiverCandidates,deliveries;@Override protected boolean active(RedstoneChannelMember member){return member.isChannelMemberActive();}}
+        private static final class Counters extends ChannelSourceIndex.QueryContext<RedstoneChannelMember> implements ChannelRecipientIndex.Counters {long receiverBuckets,receiverCandidates,deliveries;public void bucketVisited(){receiverBuckets++;}public void candidateVisited(){receiverCandidates++;}@Override protected boolean active(RedstoneChannelMember member){return member.isChannelMemberActive();}}
         private final Counters stats=new Counters();
         private final World world;
         private final Map<ManualRedstoneData.Entry,RedstoneChannelMember> manualSources=new IdentityHashMap<>();
@@ -154,13 +154,13 @@ public final class RedstoneChannels {
         void register(RedstoneChannelMember member){
             ChannelList next=union(member.getRedstoneChannels(),member.transmittedChannels()),previous=subscriptions.get(member);if(next.equals(previous))return;
             Set<Integer> changed=previous==null?channels(next):channels(union(previous,next));
-            if(previous!=null)for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.positions.isEmpty())recipients.remove(c);}}
+            if(previous!=null)for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.isEmpty())recipients.remove(c);}}
             if(next.isEmpty()){subscriptions.remove(member);delivered.remove(member);pendingClears.add(member);}else {pendingClears.remove(member);subscriptions.put(member,next);for(int c:channels(next)){members.computeIfAbsent(c,k->identitySet()).add(member);recipients.computeIfAbsent(c,k->new Recipients(stats)).put(member,member.channelPosition());}affected.add(member);}
             // An unchannelled control owns its saved local latch; an empty bank is not an Off command.
             if(isLatch(member)&&!member.getRedstoneChannels().isEmpty()&&member.transmissionRange()>=0){RedstoneChannelLatch latch=(RedstoneChannelLatch)member;Map<Integer,Integer> levels=new java.util.HashMap<>();ChannelList list=member.getRedstoneChannels();for(int i=0;i<list.size();i++){int channel=list.get(i),value=latch.latchedLevel(channel);Set<RedstoneChannelMember> set=members.get(channel);boolean found=false;int maximum=0;if(set!=null)for(RedstoneChannelMember other:set)if(other!=member&&isLatch(other)&&other.isChannelMemberActive()&&other.transmittedChannels().contains(channel)&&inside(other.channelPosition(),member.channelPosition(),other.transmissionRange())){found=true;maximum=Math.max(maximum,((RedstoneChannelLatch)other).latchedLevel(channel));}levels.put(channel,found?maximum:value);}latch.applyLinkedLevels(levels);}
             refresh(member);settle(changed);
         }
-        void unregister(RedstoneChannelMember member){pendingClears.remove(member);ChannelList previous=subscriptions.remove(member);ChannelList old=outputs.remove(member);if(old!=null)for(int c:channels(old)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}delivered.remove(member);if(previous==null)return;for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.positions.isEmpty())recipients.remove(c);}}settle(channels(previous));}
+        void unregister(RedstoneChannelMember member){pendingClears.remove(member);ChannelList previous=subscriptions.remove(member);ChannelList old=outputs.remove(member);if(old!=null)for(int c:channels(old)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}delivered.remove(member);if(previous==null)return;for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.isEmpty())recipients.remove(c);}}settle(channels(previous));}
         private void refresh(RedstoneChannelMember member){
             ChannelList previous=outputs.remove(member);if(previous!=null)for(int c:channels(previous)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}
             ChannelList list=member.transmittedChannels();if(member.transmissionRange()<0||!member.isChannelMemberActive())return;
@@ -187,13 +187,12 @@ public final class RedstoneChannels {
         }
         private void affect(int channel,Source source){if(source==null)return;Recipients grid=recipients.get(channel);if(grid!=null)affected.addAll(grid.find(source.pos,source.range));}
         /** Each subscriber is indexed in three grids; finite events visit 27 receiver buckets. */
-        private static final class Recipients {
-            final Counters stats;Recipients(Counters stats){this.stats=stats;}
-            final Map<RedstoneChannelMember,net.minecraft.util.math.BlockPos> positions=new IdentityHashMap<>();
-            final Map<Long,Set<RedstoneChannelMember>>[] grids=new Map[]{new java.util.HashMap<>(),new java.util.HashMap<>(),new java.util.HashMap<>()};
-            void put(RedstoneChannelMember member,net.minecraft.util.math.BlockPos pos){remove(member);positions.put(member,pos.toImmutable());for(int t=0;t<3;t++)grids[t].computeIfAbsent(Index.key(pos,Index.size(t)),k->identitySet()).add(member);}
-            void remove(RedstoneChannelMember member){net.minecraft.util.math.BlockPos pos=positions.remove(member);if(pos==null)return;for(int t=0;t<3;t++){long key=Index.key(pos,Index.size(t));Set<RedstoneChannelMember> set=grids[t].get(key);if(set!=null){set.remove(member);if(set.isEmpty())grids[t].remove(key);}}}
-            Set<RedstoneChannelMember> find(net.minecraft.util.math.BlockPos pos,int range){Set<RedstoneChannelMember> result=identitySet();if(range==0){result.addAll(positions.keySet());return result;}if(range<0)return result;int t=Index.tier(range),size=Index.size(t),x=Math.floorDiv(pos.getX(),size),y=Math.floorDiv(pos.getY(),size),z=Math.floorDiv(pos.getZ(),size);for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++){stats.receiverBuckets++;Set<RedstoneChannelMember> set=grids[t].get(Index.packed(x+dx,y+dy,z+dz));if(set!=null)for(RedstoneChannelMember member:set){stats.receiverCandidates++;if(inside(pos,positions.get(member),range))result.add(member);}}return result;}
+        private static final class Recipients extends ChannelRecipientIndex<RedstoneChannelMember,net.minecraft.util.math.BlockPos> {
+            Recipients(Network.Counters stats){super(stats);}
+            @Override protected net.minecraft.util.math.BlockPos snapshot(net.minecraft.util.math.BlockPos pos){return pos.toImmutable();}
+            @Override protected int x(net.minecraft.util.math.BlockPos pos){return pos.getX();}
+            @Override protected int y(net.minecraft.util.math.BlockPos pos){return pos.getY();}
+            @Override protected int z(net.minecraft.util.math.BlockPos pos){return pos.getZ();}
         }
         private int at(net.minecraft.util.math.BlockPos pos,int channel){Index index=indexes.get(channel);return index==null?0:index.at(pos);}
         private int level(int channel){return powerSources.getOrDefault(channel,0);}

@@ -43,9 +43,16 @@ final class RedstoneRangeRuntimeChecks {
                 require(RedstoneChannels.level(world,origin.east(range+1),channel)==0,"outside source range="+range);
                 require(RedstoneChannels.level(world,origin.add(range,1,0),channel)==0,"spherical source range="+range);
             }
-            source.close();denseSources(world,origin,channel+3,cleanup);
+            source.close();Member bounded=new Member(world,origin,channel);cleanup.add(bounded);RedstoneChannels.register(bounded);
+            receiverBounds(world,origin,channel,bounded,cleanup);bounded.close();denseSources(world,origin,channel+3,cleanup);
             System.out.println("[vandorlabs][reprolab] channel-source-index-range PASS checks="+checks);
         }finally{for(Member member:cleanup)member.close();}
+    }
+    private static void receiverBounds(WorldServer world,BlockPos origin,int channel,Member source,List<Member> cleanup){
+            configure(source,module(0,ChannelList.of(channel)));source.output=0;RedstoneChannels.inputChanged(source);
+            for(int i=0;i<2048;i++){Member far=new Member(world,origin.add(10000+i*32,0,10000),channel);cleanup.add(far);RedstoneChannels.register(far);}
+            long[] start=RedstoneChannels.diagnostics(world);long tick=System.nanoTime();for(int i=0;i<100;i++){source.output=i%2==0?15:0;RedstoneChannels.inputChanged(source);}long elapsed=System.nanoTime()-tick;long[] end=RedstoneChannels.diagnostics(world);long candidates=end[1]-start[1],deliveries=end[4]-start[4];require(candidates<2000&&deliveries<=200,"finite activation ignores 2048 far same-channel receivers");
+            System.out.println("[vandorlabs][reprolab] redstone-range-performance receivers=2049 activations=100 receiverBuckets="+(end[0]-start[0])+" receiverCandidates="+candidates+" callbacks="+deliveries+" totalNanos="+elapsed+" legacyBroadcastCallbacks=204900");
     }
     private static void denseSources(WorldServer world,BlockPos origin,int denseChannel,List<Member> cleanup){
             for(int i=0;i<1024;i++){Member analog=new Member(world,origin.add(i%5,0,(i/5)%5),denseChannel){public ChannelList getRedstoneChannels(){return ChannelList.EMPTY;}};analog.output=8;cleanup.add(analog);configure(analog,module(0,ChannelList.of(denseChannel)));}
@@ -116,10 +123,7 @@ final class RedstoneRangeRuntimeChecks {
                 modeSource.tile.setPos(origin);RedstoneChannels.positionChanged(modeSource);controlled.setPosition(origin.getX(),origin.getY(),origin.getZ());controlled.rotationYaw=90;
                 require(carriedSeat.pollMode(world)==2&&carriedSeat.poll(world)==1,"rotated craft reentry produces physical channel edges");
             }finally{modeSource.close();controlled.signals.close();controlled.setDead();}
-            configure(source,module(0,ChannelList.of(channel)));source.output=0;RedstoneChannels.inputChanged(source);
-            for(int i=0;i<2048;i++){Member far=new Member(world,origin.add(10000+i*32,0,10000),channel);cleanup.add(far);RedstoneChannels.register(far);}
-            long[] start=RedstoneChannels.diagnostics(world);long tick=System.nanoTime();for(int i=0;i<100;i++){source.output=i%2==0?15:0;RedstoneChannels.inputChanged(source);}long elapsed=System.nanoTime()-tick;long[] end=RedstoneChannels.diagnostics(world);long candidates=end[1]-start[1],deliveries=end[4]-start[4];require(candidates<2000&&deliveries<=200,"finite activation ignores 2048 far same-channel receivers");
-            System.out.println("[vandorlabs][reprolab] redstone-range-performance receivers=2049 activations=100 receiverBuckets="+(end[0]-start[0])+" receiverCandidates="+candidates+" callbacks="+deliveries+" totalNanos="+elapsed+" legacyBroadcastCallbacks=204900");
+            receiverBounds(world,origin,channel,source,cleanup);
             net.minecraft.block.Block lever=net.minecraft.block.Block.getBlockFromName("vandorlabs:industrial_power_lever");
             com.vandorlabs.tiles.TileEntityRedstoneChannel configured=new com.vandorlabs.tiles.TileEntityRedstoneChannel();configured.setPos(BlockPos.ORIGIN);
             TransmitterSlots.configure(configured,ChannelList.of(channel),64,true);
