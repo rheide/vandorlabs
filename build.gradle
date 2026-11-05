@@ -1398,3 +1398,9 @@ task testPanelApertureAdapters(type: JavaExec) {
     main = 'com.vandorlabs.client.PanelApertureEmitterChecks'
 }
 check.dependsOn testPanelApertureAdapters
+
+task testGlassPlaybackLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPlaybackLegacyChecks'
+}
