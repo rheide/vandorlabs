@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share wireless transmitter/receiver scalar save defaults and analog/digital level rules across targets. Preserve the existing Forge six-face sampling, strongest-input receiver behavior and separate On/Off settings; native endpoint blocks remain in progress.
+
 - Share four-step throttle and slider output math and saved defaults, preserving existing Forge detent selection, partial channel banks and limit handling. Native four-step control adapters remain in progress.
 
 - Add native Industrial and Small Power Levers, retaining Compact and Large saved variants and canonical configured-item drops. Reuse the mounted-control dialog, latch host, activation path and renderer; share size defaults and the Size option with Forge. Preserve authored geometry and bounded shape caching.

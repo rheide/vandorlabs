@@ -59,6 +59,8 @@ Run shared fixtures on Java 8 and 21, the existing Forge dedicated-server linkag
 
 Native controls must use these current range semantics. The historical global channel implementation is not a substitute for spatial lookup or per-recipient levels. Keep loaded-world and exact tile identity checks in the platform adapter, and validate source removal and receiver replacement through the focused channel fixture.
 
+`WirelessRedstoneData` shares endpoint scalar defaults and analog/digital level rules. Wireless receivers consume the strongest received signal and retain separate configured On/Off levels; they are not latch peers. Transmitters retain loaded-only facing-neighbor sampling and default Local to false. World access, scheduling, physical notifications and menu authorization remain platform responsibilities.
+
 `ControlLatchData` now owns the current mounted-control bank save rules and output calculation. Explicit zero levels override the legacy latched-channel fallback, partial arrays retain that fallback, and physical output uses the minimum level across the configured bank. Forge keeps its existing map, virtual level lookup, transitions and world notifications. Frozen actual-NBT fixtures and ordinary survival interactions cover overlapping rocker/slider banks and momentary controls.
 
 The native channel host supports ranged tile outputs, per-channel latch peers, independent pulses and deferred registration. It removes members on unload, batches synchronous bank delivery and prevents late shutdown callbacks from recreating world networks. Installed adapter fixtures establish these host contracts; individual control families still need their own world, item, dialog and rendering acceptance.
