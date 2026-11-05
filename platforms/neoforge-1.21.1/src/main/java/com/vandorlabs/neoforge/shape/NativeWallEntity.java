@@ -38,7 +38,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
             if(property.getName().equals("facing")&&value instanceof Direction direction&&direction.getAxis()!=Direction.Axis.Y)facing=direction;
             if(property.getName().equals("depth")&&value instanceof Integer number&&number>=0&&number<=2)depth=number;
         }
-        return NativeFlatWallGeometry.build(facing,depth,null);
+        return NativeFlatWallGeometry.straight(facing,depth);
     }
     public final boolean isPorthole(){return porthole;}
     public final WallSettings wallSettings(){return walls;}
@@ -68,6 +68,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         Objects.requireNonNull(next);if(next.equals(geometry))return false;
         geometry=next;partition=next::side;topologyRevision=revision;geometryGeneration++;publishWallAppearance();NativeFluidWorld.queue(this);return true;
     }
+    @Override public void refreshFluidGeometry(){NativeWallTopology.refresh(this);super.refreshFluidGeometry();}
     @Override protected long fluidGeometryKey(){return geometryGeneration;}
     @Override protected List<AABB> fluidSolidBoxes(BlockState state,long key){return geometry.boxes();}
     @Override protected NativeFluidVolume.Side fluidSidePartition(){return partition;}

@@ -22,6 +22,12 @@ public final class NativeFlatWallGeometry {
     private static final java.util.concurrent.ConcurrentMap<List<AABB>,VoxelShape> SHAPES=new java.util.concurrent.ConcurrentHashMap<>();
     private static final LinkedHashMap<List<AABB>,Integer> COSTS=new LinkedHashMap<>();
     private static int retainedBytes;
+    private static final Geometry[] STRAIGHT=new Geometry[18];
+    static {for(Direction facing:new Direction[]{Direction.NORTH,Direction.SOUTH,Direction.EAST,Direction.WEST})for(int depth=0;depth<3;depth++)STRAIGHT[facing.get3DDataValue()*3+depth]=build(facing,depth,null);}
+    public static Geometry straight(Direction facing,int depth){
+        if(facing.getAxis()==Direction.Axis.Y||depth<0||depth>2)throw new IllegalArgumentException("Invalid flat wall pose");
+        return STRAIGHT[facing.get3DDataValue()*3+depth];
+    }
     public static Geometry build(Direction facing,int depth,PanelCornerGeometry.FlatCorner corner){
         if(facing.getAxis()==Direction.Axis.Y||depth<0||depth>2)throw new IllegalArgumentException("Invalid flat wall pose");
         double near=PanelDepthPolicy.start(depth);List<AABB> boxes=new ArrayList<>(3);
