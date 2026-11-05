@@ -44,7 +44,7 @@ public final class NativeStairGeometry {
         synchronized(CACHE_LOCK){cached=CACHE.get(key);if(cached!=null)return cached;
         List<AABB> boxes=List.copyOf(StairGeometry.boxes(facing.get3DDataValue(),upper,shape,settings,POINTS,BOXES));
         AABB bounds=boxes.getFirst();for(AABB box:boxes)bounds=bounds.minmax(box);
-        int solid=0;for(Direction side:Direction.values())if(StairGeometry.solidFace(facing.get3DDataValue(),upper,shape,settings,side.get3DDataValue(),POINTS,BOXES))solid|=1<<side.get3DDataValue();
+        int solid=0;for(Direction side:Direction.values())if(StairGeometry.solidFace(boxes,side.get3DDataValue(),BOXES))solid|=1<<side.get3DDataValue();
         VoxelShape union=NativeVoxelShapes.union(boxes,CACHE_BUDGET-CACHE_OVERHEAD);int cost=NativeVoxelShapes.retainedCost(union,boxes.size());
         Geometry value=new Geometry(boxes,bounds,union,solid,cost);
         while(cacheBytes+cost>CACHE_BUDGET){Geometry removed=CACHE.getAndSet(nextVictim,null);nextVictim=(nextVictim+1)%CACHE.length();if(removed!=null){cacheBytes-=removed.retainedCost;cacheSize--;}}
