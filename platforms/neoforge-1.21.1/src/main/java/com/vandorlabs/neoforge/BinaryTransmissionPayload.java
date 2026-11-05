@@ -17,6 +17,6 @@ public record BinaryTransmissionPayload(BlockPos pos,int windowId,ChannelList ch
         public void encode(RegistryFriendlyByteBuf b,BinaryTransmissionPayload p){b.writeBlockPos(p.pos);b.writeInt(p.windowId);b.writeShort(p.range);b.writeBoolean(p.local);b.writeByte(p.channels.size());for(int i=0;i<p.channels.size();i++)b.writeInt(p.channels.get(i));}
     };
     @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
-    static boolean apply(ServerPlayer player,BinaryTransmissionPayload p){if(!player.getServer().isSameThread()||p.pos==null||!TransmissionSettings.validConfiguration(p.channels,p.range)||!(player.containerMenu instanceof BinaryControlMenu menu)||menu.containerId!=p.windowId||!menu.tile.getBlockPos().equals(p.pos)||!menu.stillValid(player))return false;return menu.tile.configureTransmission(p.channels,p.range,p.local);}
+    static boolean apply(ServerPlayer player,BinaryTransmissionPayload p){if(p.pos==null||!TransmissionSettings.validConfiguration(p.channels,p.range))return false;var tile=BinaryControlMenu.editing(player,p.pos,p.windowId);return tile!=null&&tile.configureTransmission(p.channels,p.range,p.local);}
     public static void register(RegisterPayloadHandlersEvent event){event.registrar("1").playToServer(TYPE,CODEC,(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer player)apply(player,p);}));}
 }

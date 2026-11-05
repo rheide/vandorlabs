@@ -14,16 +14,16 @@ import net.neoforged.neoforge.client.model.data.*;
 
 /** Current mounted rocker/button state; runtime latch data is never copied into ordinary items. */
 public final class NativeBinaryControlBlockEntity extends BlockEntity implements NativeChannelLatch,ControlLatchData.LevelLookup {
-    public record Visual(ControlMountSettings mount,int rotation){}
+    public record Visual(ControlMountSettings mount,int rotation,int size){public Visual(ControlMountSettings mount,int rotation){this(mount,rotation,0);}}
     public static final ModelProperty<Visual> VISUAL=new ModelProperty<>();
     private ChannelList channels=ChannelList.EMPTY,latched=ChannelList.EMPTY,transmission=ChannelList.EMPTY;
     private final Map<Integer,Integer> levels=new HashMap<>();
     private boolean localOn,initialized,local=true,registrationPending=true;
-    private int rotation,range=16;
+    private int rotation,range=16,powerLeverSize=PowerLeverSize.UNSPECIFIED;
     private ControlMountSettings mount=ControlMountSettings.of(0,0,0);
     private volatile Visual visual=new Visual(mount,0);
     private CompoundTag retained=new CompoundTag();
-    public NativeBinaryControlBlockEntity(BlockPos pos,BlockState state){super(VandorLabsBootstrap.BINARY_CONTROL_ENTITY.get(),pos,state);}
+    public NativeBinaryControlBlockEntity(BlockPos pos,BlockState state){super(VandorLabsBootstrap.BINARY_CONTROL_ENTITY.get(),pos,state);visual=new Visual(mount,rotation,visualSize());}
     @Override public boolean isChannelMemberActive(){return getBlockState().getBlock() instanceof NativeMountedControl&&NativeChannelLatch.super.isChannelMemberActive();}
     @Override public BlockEntity channelBlockEntity(){return this;}
     @Override public ChannelList getRedstoneChannels(){return channels;}
@@ -33,6 +33,12 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     public boolean localRedstone(){return local;}
     public ControlMountSettings mountSettings(){return mount;}
     public int mountRotation(){return rotation;}
+    private int visualSize(){return supportsPowerLeverSize()?getPowerLeverSize():0;}
+    public boolean supportsPowerLeverSize(){return getBlockState().getBlock() instanceof NativeMountedControl control&&control.defaultPowerLeverSize()>=0;}
+    public boolean isTwinPowerLever(){return getBlockState().getBlock() instanceof NativeMountedControl control&&control.isTwinPowerLever();}
+    public int getPowerLeverSize(){if(PowerLeverSize.hasSavedValue(powerLeverSize))return powerLeverSize;return getBlockState().getBlock() instanceof NativeMountedControl control&&control.defaultPowerLeverSize()>=0?control.defaultPowerLeverSize():0;}
+    public boolean setPowerLeverSize(int size){if(!supportsPowerLeverSize()||!PowerLeverSize.valid(size))return false;if(powerLeverSize!=size){powerLeverSize=size;changed();}return true;}
+    public boolean configurePowerLever(ControlMountSettings next,int size){if(next==null||!supportsPowerLeverSize()||!PowerLeverSize.valid(size)||!ControlMountSettings.valid(next.height,next.tilt,next.direction))return false;mount=next;powerLeverSize=size;changed();return true;}
     public boolean isLocalOn(){return localOn;}
     @Override public boolean latchOn(){return localOn;}
     @Override public ChannelList latchedChannels(){return latched;}
@@ -42,7 +48,7 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     @Override public boolean isChannelLatch(){return getBlockState().getBlock() instanceof NativeMountedControl block&&!block.isMomentary();}
     @Override public void setChannelLevel(int ignored){} // Received aggregate never becomes an independent local source.
     private void changed(){
-        setChanged();visual=new Visual(mount,rotation);requestModelDataUpdate();
+        setChanged();visual=new Visual(mount,rotation,visualSize());requestModelDataUpdate();
         if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);
     }
     private boolean linkedState(){
@@ -91,12 +97,14 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
         return true;
     }
     /** Only configured item fields; no initialized/on/latched/range/Local runtime state. */
-    public CompoundTag configuration(){var result=new CompoundTag();result.putInt("Channel",channels.first());result.putIntArray("RedstoneChannels",channels.toArray());ControlMountSettings.write(new ModernHousingTags(result),mount.height,mount.tilt,mount.direction);return result;}
+    public CompoundTag configuration(){var result=new CompoundTag();result.putInt("Channel",channels.first());result.putIntArray("RedstoneChannels",channels.toArray());ControlMountSettings.write(new ModernHousingTags(result),mount.height,mount.tilt,mount.direction);if(supportsPowerLeverSize())result.putInt(PowerLeverSize.KEY,getPowerLeverSize());return result;}
     public void place(CompoundTag settings,int ownRotation){
         CompoundTag forge=retained.getCompound("ForgeData"),all=forge.getCompound(TransmissionSettings.SETTINGS),main=all.getCompound("main");
         main.remove("Channels");main.remove("Range");main.remove("Local");if(main.isEmpty())all.remove("main");else all.put("main",main);if(all.isEmpty())forge.remove(TransmissionSettings.SETTINGS);else forge.put(TransmissionSettings.SETTINGS,all);if(forge.isEmpty())retained.remove("ForgeData");else retained.put("ForgeData",forge);
         channels=readChannels(settings,"RedstoneChannels",ChannelList.of(Math.max(0,settings.getInt("Channel"))));transmission=channels;range=16;local=true;
-        levels.clear();latched=ChannelList.EMPTY;localOn=false;initialized=true;rotation=Math.floorMod(ownRotation,4);mount=ControlMountSettings.read(new ModernHousingTags(settings),0,0,0);registrationPending=false;
+        levels.clear();latched=ChannelList.EMPTY;localOn=false;initialized=true;powerLeverSize=PowerLeverSize.UNSPECIFIED;
+        if(supportsPowerLeverSize()&&settings.contains(PowerLeverSize.KEY,Tag.TAG_INT)&&PowerLeverSize.valid(settings.getInt(PowerLeverSize.KEY)))powerLeverSize=settings.getInt(PowerLeverSize.KEY);
+        rotation=Math.floorMod(ownRotation,4);mount=ControlMountSettings.read(new ModernHousingTags(settings),0,0,0);registrationPending=false;
         changed();if(level!=null&&!level.isClientSide)NativeRedstoneChannels.channelsChanged(this);
     }
     @Override public void beforeChannelRegistration(){
@@ -114,18 +122,18 @@ public final class NativeBinaryControlBlockEntity extends BlockEntity implements
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.loadAdditional(tag,registries);retained=tag.copy();for(String key:List.of("id","x","y","z","components","NeoForgeData","neoforge:attachments"))retained.remove(key);
         var primitive=new ModernHousingTags(tag);var data=RedstoneData.Source.read(primitive);channels=readChannels(tag,"RedstoneChannels",ChannelList.of(data.channel));localOn=data.localOn;initialized=data.initialized;rotation=data.mountRotation;
-        mount=ControlMountSettings.read(primitive,mount.height,mount.tilt,mount.direction);latched=ControlLatchData.read(primitive,channels,localOn,levels);
+        mount=ControlMountSettings.read(primitive,mount.height,mount.tilt,mount.direction);powerLeverSize=PowerLeverSize.readSaved(tag.contains(PowerLeverSize.KEY,Tag.TAG_INT),tag.getInt(PowerLeverSize.KEY));latched=ControlLatchData.read(primitive,channels,localOn,levels);
         CompoundTag configured=tag.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main");
         transmission=TransmissionSettings.readChannels(configured.contains("Channels",Tag.TAG_INT_ARRAY),configured.getIntArray("Channels"),channels);range=TransmissionSettings.readRange(configured.contains("Range",Tag.TAG_INT),configured.getInt("Range"),true);local=TransmissionSettings.readLocal(configured.contains("Local",Tag.TAG_BYTE),configured.getBoolean("Local"),true);
-        registrationPending=true;visual=new Visual(mount,rotation);requestModelDataUpdate();
+        registrationPending=true;visual=new Visual(mount,rotation,visualSize());requestModelDataUpdate();
         if(level!=null){if(level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);else NativeRedstoneChannels.queueRegistration(this);}
     }
-    @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.merge(retained);var primitive=new ModernHousingTags(tag);new RedstoneData.Source(channels.first(),localOn,initialized,rotation).write(primitive);tag.putIntArray("RedstoneChannels",channels.toArray());ControlMountSettings.write(primitive,mount.height,mount.tilt,mount.direction);ControlLatchData.write(primitive,channels,latched,this);}
+    @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.merge(retained);var primitive=new ModernHousingTags(tag);new RedstoneData.Source(channels.first(),localOn,initialized,rotation).write(primitive);tag.putIntArray("RedstoneChannels",channels.toArray());ControlMountSettings.write(primitive,mount.height,mount.tilt,mount.direction);ControlLatchData.write(primitive,channels,latched,this);if(PowerLeverSize.hasSavedValue(powerLeverSize))tag.putInt(PowerLeverSize.KEY,powerLeverSize);else tag.remove(PowerLeverSize.KEY);}
     @Override protected void collectImplicitComponents(net.minecraft.core.component.DataComponentMap.Builder components){super.collectImplicitComponents(components);CompoundTag wrapper=new CompoundTag();wrapper.put("RedstoneChannelSettings",configuration());components.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(wrapper));}
     @Override protected void applyImplicitComponents(DataComponentInput input){
         super.applyImplicitComponents(input);var data=input.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);if(data==null)return;
         CompoundTag wrapper=data.copyTag();if(!wrapper.contains("RedstoneChannelSettings",Tag.TAG_COMPOUND))return;
-        CompoundTag settings=wrapper.getCompound("RedstoneChannelSettings");channels=readChannels(settings,"RedstoneChannels",ChannelList.of(Math.max(0,settings.getInt("Channel"))));transmission=channels;mount=ControlMountSettings.read(new ModernHousingTags(settings),0,0,0);visual=new Visual(mount,rotation);
+        CompoundTag settings=wrapper.getCompound("RedstoneChannelSettings");channels=readChannels(settings,"RedstoneChannels",ChannelList.of(Math.max(0,settings.getInt("Channel"))));transmission=channels;if(supportsPowerLeverSize()&&settings.contains(PowerLeverSize.KEY,Tag.TAG_INT)&&PowerLeverSize.valid(settings.getInt(PowerLeverSize.KEY)))powerLeverSize=settings.getInt(PowerLeverSize.KEY);mount=ControlMountSettings.read(new ModernHousingTags(settings),0,0,0);visual=new Visual(mount,rotation,visualSize());
     }
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){return saveWithoutMetadata(registries);}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}

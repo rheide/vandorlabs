@@ -30,7 +30,7 @@ final class BinaryControlReference {
         }
         try(Writer writer=new OutputStreamWriter(new FileOutputStream(output),StandardCharsets.UTF_8)){new Gson().toJson(root,writer);}catch(IOException e){throw new IllegalStateException("Cannot export binary reference",e);}System.out.println("[vandorlabs][reprolab] binary-control-reference PASS world="+world.entrySet().size()+" items="+items.entrySet().size());
     }
-    private static JsonArray quads(IBakedModel model,IBlockState state){JsonArray result=new JsonArray();for(EnumFacing face:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(BakedQuad q:model.getQuads(state,face,0)){
+    static JsonArray quads(IBakedModel model,IBlockState state){JsonArray result=new JsonArray();for(EnumFacing face:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(BakedQuad q:model.getQuads(state,face,0)){
         JsonObject row=new JsonObject();row.addProperty("sprite",q.getSprite().getIconName());row.addProperty("face",q.getFace().getName());row.addProperty("shade",q.shouldApplyDiffuseLighting());JsonArray points=new JsonArray();int[] raw=q.getVertexData();int stride=raw.length/4;for(int i=0;i<4;i++){JsonArray p=new JsonArray();for(int axis=0;axis<3;axis++)p.add(Float.intBitsToFloat(raw[i*stride+axis]));p.add((Float.intBitsToFloat(raw[i*stride+4])-q.getSprite().getMinU())/(q.getSprite().getMaxU()-q.getSprite().getMinU()));p.add((Float.intBitsToFloat(raw[i*stride+5])-q.getSprite().getMinV())/(q.getSprite().getMaxV()-q.getSprite().getMinV()));points.add(p);}row.add("points",points);result.add(row);
     }return result;}
     private BinaryControlReference(){}

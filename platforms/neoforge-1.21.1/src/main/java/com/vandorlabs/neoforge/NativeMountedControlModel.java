@@ -1,6 +1,8 @@
 package com.vandorlabs.neoforge;
 
 import com.vandorlabs.persistence.ControlMountSettings;
+import com.vandorlabs.persistence.PowerLeverSize;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.resources.model.BakedModel;
@@ -20,62 +22,80 @@ import java.util.*;
 /** Model-owned mounted meshes; section workers consume only immutable visual model data. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeMountedControlModel extends BakedModelWrapper<BakedModel> {
-    private record Key(BlockState state,int height,int tilt,int direction,int rotation){}
-    private final NativeMountedSwitchBlock block;
+    private record Key(BlockState state,int height,int tilt,int direction,int rotation,int size){}
+    private record Sources(List<Block> blocks,List<BakedModel> items){}
+    private final Block block;
     private final ControlMountSettings itemMount;
+    private final int itemSize;
+    private final BlockState listedState;
     private final Map<BlockState,BakedModel> poses;
+    private final Sources sources;
     private final com.google.common.cache.Cache<Key,List<BakedQuad>> meshes=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(1024*1024)
         .weigher((Key key,List<BakedQuad> quads)->160+quads.stream().mapToInt(q->96+q.getVertices().length*4).sum()).build();
-    private NativeMountedControlModel(BakedModel base,NativeMountedSwitchBlock block,ControlMountSettings itemMount,Map<BlockState,BakedModel> poses){super(base);this.block=block;this.itemMount=itemMount;this.poses=poses;}
+    private NativeMountedControlModel(BakedModel base,Block block,ControlMountSettings itemMount,int itemSize,Map<BlockState,BakedModel> poses,Sources sources,BlockState listedState){super(base);this.block=block;this.itemMount=itemMount;this.itemSize=itemSize;this.poses=poses;this.sources=sources;this.listedState=listedState;}
+    private static int defaultSize(Block block){return block instanceof NativePowerLeverBlock lever?lever.defaultSize():0;}
     @SubscribeEvent public static void bake(ModelEvent.ModifyBakingResult event){
-        Map<BlockState,BakedModel> resolved=new HashMap<>();
-        for(var block:List.of(VandorLabsBootstrap.PUSH_BUTTON.get(),VandorLabsBootstrap.ROCKER_SWITCH.get()))for(var state:block.getStateDefinition().getPossibleStates()){
-            var model=event.getModels().get(net.minecraft.client.renderer.block.BlockModelShaper.stateToModelLocation(state));if(model==null)throw new IllegalStateException("Missing binary pose "+state);resolved.put(state,model);
+        List<Block> blocks=List.of(VandorLabsBootstrap.PUSH_BUTTON.get(),VandorLabsBootstrap.ROCKER_SWITCH.get(),VandorLabsBootstrap.COMPACT_POWER_LEVER.get(),VandorLabsBootstrap.INDUSTRIAL_POWER_LEVER.get(),VandorLabsBootstrap.SMALL_POWER_LEVER.get(),VandorLabsBootstrap.LARGE_POWER_LEVER.get());
+        Map<BlockState,BakedModel> resolved=new HashMap<>();Map<net.minecraft.client.resources.model.ModelResourceLocation,BlockState> states=new HashMap<>();Map<ResourceLocation,Block> supported=new HashMap<>();Map<Block,BakedModel> itemModels=new HashMap<>();
+        for(Block block:blocks){var name=net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block);supported.put(name,block);var item=event.getModels().get(new net.minecraft.client.resources.model.ModelResourceLocation(name,"inventory"));if(item==null)throw new IllegalStateException("Missing mounted item "+name);itemModels.put(block,NativeAuthoredControlBake.correct(item,null,NativeMountedControlGeometry.authoredItem(name.getPath())));
+            for(var state:block.getStateDefinition().getPossibleStates()){var location=net.minecraft.client.renderer.block.BlockModelShaper.stateToModelLocation(state);var model=event.getModels().get(location);if(model==null)throw new IllegalStateException("Missing mounted pose "+state);resolved.put(state,NativeAuthoredControlBake.correct(model,state,NativeMountedControlGeometry.authored(state,state.hasProperty(NativeMountedSwitchBlock.ROTATION)?state.getValue(NativeMountedSwitchBlock.ROTATION):0,defaultSize(block))));states.put(location,state);}
         }
-        Map<BlockState,BakedModel> poses=Map.copyOf(resolved);
-        event.getModels().replaceAll((id,model)->{
-            NativeMountedSwitchBlock block=id.id().equals(ResourceLocation.parse("vandorlabs:push_button"))?VandorLabsBootstrap.PUSH_BUTTON.get():id.id().equals(ResourceLocation.parse("vandorlabs:rocker_switch"))?VandorLabsBootstrap.ROCKER_SWITCH.get():null;
-            return block==null?model:new NativeMountedControlModel(model,block,ControlMountSettings.of(0,0,0),poses);
-        });
+        Map<BlockState,BakedModel> poses=Map.copyOf(resolved);Map<Block,Sources> sources=new HashMap<>();
+        for(Block block:blocks){Block small=block,large=block;if(block instanceof NativePowerLeverBlock lever){small=lever.isTwin()?VandorLabsBootstrap.SMALL_POWER_LEVER.get():VandorLabsBootstrap.COMPACT_POWER_LEVER.get();large=lever.isTwin()?VandorLabsBootstrap.LARGE_POWER_LEVER.get():VandorLabsBootstrap.INDUSTRIAL_POWER_LEVER.get();}sources.put(block,new Sources(List.of(small,large),List.of(itemModels.get(small),itemModels.get(large))));}
+        event.getModels().replaceAll((id,model)->{Block block=supported.get(id.id());return block==null?model:new NativeMountedControlModel(states.containsKey(id)?poses.get(states.get(id)):itemModels.get(block),block,ControlMountSettings.of(0,0,0),defaultSize(block),poses,sources.get(block),states.get(id));});
+    }
+    private BlockState sourcePose(BlockState state,int size,int rotation){
+        if(block instanceof NativePowerLeverBlock)return sources.blocks.get(size).defaultBlockState().setValue(NativePowerLeverBlock.FACING,state.getValue(NativePowerLeverBlock.FACING)).setValue(NativePowerLeverBlock.FLOOR,state.getValue(NativePowerLeverBlock.FLOOR)).setValue(NativePowerLeverBlock.POWERED,state.getValue(NativePowerLeverBlock.POWERED));
+        return state.setValue(NativeMountedSwitchBlock.ROTATION,NativeMountedControlGeometry.rotation(state,rotation));
+    }
+    private BlockState itemPose(){
+        if(block instanceof NativePowerLeverBlock lever)return block.defaultBlockState().setValue(NativePowerLeverBlock.FLOOR,lever.isTwin()).setValue(NativePowerLeverBlock.FACING,Direction.NORTH);
+        return block.defaultBlockState().setValue(NativeMountedSwitchBlock.FACING,Direction.UP);
+    }
+    @Override public net.minecraft.client.renderer.texture.TextureAtlasSprite getParticleIcon(){return getParticleIcon(ModelData.EMPTY);}
+    @Override public net.minecraft.client.renderer.texture.TextureAtlasSprite getParticleIcon(ModelData data){
+        if(listedState==null)return originalModel.getParticleIcon(data);var visual=data.get(NativeBinaryControlBlockEntity.VISUAL);int size=visual==null?defaultSize(block):visual.size();int rotation=visual==null?0:visual.rotation();return poses.get(sourcePose(listedState,size,rotation)).getParticleIcon(data);
     }
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random){return getQuads(state,side,random,ModelData.EMPTY,null);}
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data){return data;}
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){
         var visual=data.get(NativeBinaryControlBlockEntity.VISUAL);ControlMountSettings mount=visual==null?itemMount:visual.mount();
-        BlockState pose=state==null?block.defaultBlockState().setValue(NativeMountedSwitchBlock.FACING,Direction.UP):state;
-        int rotation=visual==null?pose.getValue(NativeMountedSwitchBlock.ROTATION):visual.rotation();
-        pose=pose.setValue(NativeMountedSwitchBlock.ROTATION,NativeMountedControlGeometry.rotation(pose,rotation));
-        BakedModel sourceModel=state==null?originalModel:poses.get(pose);
-        if(mount.height==0&&mount.tilt==0)return sourceModel.getQuads(state==null?null:pose,side,random,data,layer);
+        boolean power=block instanceof NativePowerLeverBlock;int size=visual==null?itemSize:visual.size();
+        BlockState pose=state==null?itemPose():state;int rotation=power?NativeMountedControlGeometry.powerRotation(pose):NativeMountedControlGeometry.rotation(pose,visual==null?pose.getValue(NativeMountedSwitchBlock.ROTATION):visual.rotation());
+        BlockState sourcePose=sourcePose(pose,size,rotation);if(!power)pose=sourcePose;BakedModel sourceModel=state==null?originalModel:poses.get(sourcePose);
+        if(mount.height==0&&mount.tilt==0)return sourceModel.getQuads(state==null?null:sourcePose,side,random,data,layer);
         if(side!=null)return List.of();
-        Key key=new Key(pose,mount.height,mount.tilt,mount.direction,NativeMountedControlGeometry.rotation(pose,rotation));
-        List<BakedQuad> cached=meshes.getIfPresent(key);if(cached!=null)return cached;
-        var transform=NativeMountedControlGeometry.transform(pose,mount,rotation);List<BakedQuad> result=new ArrayList<>();
-        for(Direction source:faces())for(BakedQuad quad:sourceModel.getQuads(state==null?null:pose,source,random,data,layer)){
+        Key key=new Key(pose,mount.height,mount.tilt,mount.direction,rotation,size);
+        boolean cacheable=NativeAuthoredControlBake.isStatic(sourceModel);List<BakedQuad> cached=cacheable?meshes.getIfPresent(key):null;if(cached!=null)return cached;
+        var transform=power?NativeMountedControlGeometry.powerTransform(pose,mount,size):NativeMountedControlGeometry.transform(pose,mount,rotation);List<BakedQuad> result=new ArrayList<>();
+        for(Direction source:faces())for(BakedQuad quad:sourceModel.getQuads(state==null?null:sourcePose,source,random,data,layer)){
             int[] raw=quad.getVertices();int stride=raw.length/4;Vec3[] points=new Vec3[4];boolean bottom=true;
             for(int i=0;i<4;i++){int at=i*stride;double x=Float.intBitsToFloat(raw[at]),y=Float.intBitsToFloat(raw[at+1]),z=Float.intBitsToFloat(raw[at+2]);bottom&=Math.abs(transform.depth(x,y,z))<1e-6;points[i]=transform.transform(x,y,z);}
             if(bottom){Vec3[] projected=new Vec3[4];for(int i=0;i<4;i++)projected[i]=transform.project(points[i].x,points[i].y,points[i].z);add(result,quad,projected);for(int i=0;i<4;i++){int next=(i+1)%4;add(result,quad,new Vec3[]{points[i],points[next],projected[next],projected[i]});}}
             else add(result,quad,points);
         }
-        cached=List.copyOf(result);meshes.put(key,cached);return cached;
+        cached=List.copyOf(result);if(cacheable)meshes.put(key,cached);return cached;
     }
-    private static final com.mojang.serialization.MapDecoder<ControlMountSettings> MOUNT=new com.mojang.serialization.MapDecoder.Implementation<>(){
+    private record ItemVisual(ControlMountSettings mount,int size,boolean typedSize,boolean valid){}
+    private static final ItemVisual EMPTY_ITEM=new ItemVisual(ControlMountSettings.of(0,0,0),0,false,false);
+    private static final com.mojang.serialization.MapDecoder<ItemVisual> ITEM=new com.mojang.serialization.MapDecoder.Implementation<>(){
         @Override public <T> java.util.stream.Stream<T> keys(com.mojang.serialization.DynamicOps<T> ops){return java.util.stream.Stream.of("RedstoneChannelSettings").map(ops::createString);}
-        @Override public <T> com.mojang.serialization.DataResult<ControlMountSettings> decode(com.mojang.serialization.DynamicOps<T> ops,com.mojang.serialization.MapLike<T> input){
-            T nested=input.get("RedstoneChannelSettings");if(nested==null)return com.mojang.serialization.DataResult.success(ControlMountSettings.of(0,0,0));var map=ops.getMap(nested).result();if(map.isEmpty())return com.mojang.serialization.DataResult.success(ControlMountSettings.of(0,0,0));input=map.get();
-            int h=integer(input.get(ControlMountSettings.HEIGHT)),t=ControlMountSettings.migratedTilt(integer(input.get(ControlMountSettings.TILT)),input.get(ControlMountSettings.VERSION)!=null),d=integer(input.get(ControlMountSettings.DIRECTION));
-            return com.mojang.serialization.DataResult.success(ControlMountSettings.valid(h,t,d)?ControlMountSettings.of(h,t,d):ControlMountSettings.of(0,0,0));
+        @Override public <T> com.mojang.serialization.DataResult<ItemVisual> decode(com.mojang.serialization.DynamicOps<T> ops,com.mojang.serialization.MapLike<T> input){
+            T nested=input.get("RedstoneChannelSettings");if(nested==null)return com.mojang.serialization.DataResult.success(EMPTY_ITEM);var map=ops.getMap(nested).result();if(map.isEmpty())return com.mojang.serialization.DataResult.success(EMPTY_ITEM);input=map.get();
+            int h=integer(input.get(ControlMountSettings.HEIGHT)),t=ControlMountSettings.migratedTilt(integer(input.get(ControlMountSettings.TILT)),input.get(ControlMountSettings.VERSION)!=null),d=integer(input.get(ControlMountSettings.DIRECTION));Object size=input.get(PowerLeverSize.KEY);boolean valid=ControlMountSettings.valid(h,t,d);
+            return com.mojang.serialization.DataResult.success(new ItemVisual(valid?ControlMountSettings.of(h,t,d):EMPTY_ITEM.mount,size instanceof net.minecraft.nbt.IntTag tag?tag.getAsInt():0,size instanceof net.minecraft.nbt.IntTag,valid));
         }
         private int integer(Object value){return value instanceof net.minecraft.nbt.NumericTag number?number.getAsInt():0;}
     };
-    private final com.google.common.cache.Cache<net.minecraft.world.item.component.CustomData,ControlMountSettings> projected=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(128).build();
+    private final com.google.common.cache.Cache<net.minecraft.world.item.component.CustomData,ItemVisual> projected=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(128).build();
     private final com.google.common.cache.Cache<Integer,BakedModel> items=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(16).build();
     private final ItemOverrides overrides=new ItemOverrides(){
         @Override public BakedModel resolve(BakedModel original,net.minecraft.world.item.ItemStack stack,net.minecraft.client.multiplayer.ClientLevel world,net.minecraft.world.entity.LivingEntity entity,int seed){
             var custom=stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);if(custom==null)return NativeMountedControlModel.this;
-            ControlMountSettings mount=projected.getIfPresent(custom);if(mount==null){mount=custom.read(MOUNT).result().orElse(ControlMountSettings.of(0,0,0));projected.put(custom,mount);}
-            if(mount.height==0&&mount.tilt==0)return NativeMountedControlModel.this;
-            int key=mount.height+4*(mount.tilt+4*mount.direction);BakedModel model=items.getIfPresent(key);if(model==null){BakedModel base=originalModel.getOverrides().resolve(originalModel,stack,world,entity,seed);model=new NativeMountedControlModel(base==null?originalModel:base,block,mount,poses);items.put(key,model);}return model;
+            ItemVisual visual=projected.getIfPresent(custom);if(visual==null){visual=custom.read(ITEM).result().orElse(EMPTY_ITEM);projected.put(custom,visual);}if(!visual.valid)return NativeMountedControlModel.this;
+            ControlMountSettings mount=visual.mount;int size=PowerLeverSize.itemChoice(visual.typedSize,visual.size,defaultSize(block));if(!PowerLeverSize.valid(size))return NativeMountedControlModel.this;
+            if(mount.height==0&&mount.tilt==0&&size==itemSize)return NativeMountedControlModel.this;
+            int key=mount.height+4*(mount.tilt+4*mount.direction)+64*size;BakedModel model=items.getIfPresent(key);if(model==null){BakedModel base=sources.items.get(size);model=new NativeMountedControlModel(base,block,mount,size,poses,sources,null);items.put(key,model);}return model;
         }
     };
     @Override public ItemOverrides getOverrides(){return overrides;}
@@ -100,7 +120,7 @@ public final class NativeMountedControlModel extends BakedModelWrapper<BakedMode
     private static final Direction[] FACES={null,Direction.UP,Direction.DOWN,Direction.NORTH,Direction.SOUTH,Direction.EAST,Direction.WEST};
     private static Direction[] faces(){return FACES;}
     private static void add(List<BakedQuad> result,BakedQuad source,Vec3[] points){
-        Vec3 normal=Vec3.ZERO;for(int i=1;i<3&&normal.lengthSqr()<1e-14;i++)normal=points[i].subtract(points[0]).cross(points[i+1].subtract(points[0]));if(normal.lengthSqr()<1e-14)return;normal=normal.normalize();
+        Vec3 normal=Vec3.ZERO;for(int i=1;i<3&&normal.lengthSqr()<1e-14;i++)normal=points[i].subtract(points[0]).cross(points[i+1].subtract(points[0]));if(normal.lengthSqr()<1e-14)return;double length=(float)Math.sqrt(normal.lengthSqr());normal=length<1e-4?Vec3.ZERO:new Vec3(normal.x/length,normal.y/length,normal.z/length);
         int[] raw=source.getVertices().clone();int stride=raw.length/4;int packed=((int)Math.round(normal.x*127)&255)|(((int)Math.round(normal.y*127)&255)<<8)|(((int)Math.round(normal.z*127)&255)<<16);
         for(int i=0;i<4;i++){int at=i*stride;raw[at]=Float.floatToRawIntBits((float)points[i].x);raw[at+1]=Float.floatToRawIntBits((float)points[i].y);raw[at+2]=Float.floatToRawIntBits((float)points[i].z);raw[at+7]=packed;}
         result.add(new BakedQuad(raw,source.getTintIndex(),Direction.getNearest((float)normal.x,(float)normal.y,(float)normal.z),source.getSprite(),source.isShade(),source.hasAmbientOcclusion()));

@@ -16,4 +16,6 @@ The native Trigger adds Off/On or signal-band artwork, exact-level matching and 
 
 Native Push Buttons and Rocker Switches retain configurable mounts, saved channel banks and inline transmission ranges. Both use the same General/Redstone dialog: mount edits commit on Done, while valid transmission edits apply immediately. Their authored shapes, configured items and physical redstone behavior are covered by focused native checks.
 
+Native Industrial and Small Power Levers now use the same mounted-control dialog and channel banks. The Size option retains Compact and Large legacy variants, and configured items preserve their mount and size. Focused save/restart, emitted-model and exact-JAR client checks cover both families.
+
 Other native families, optional material providers, copy tools, carried assemblies, hardware shader acceptance and matter-production machines remain incomplete. Dedicated-server checks, emitted-model checks and ordinary client interaction checks are separate acceptance requirements; this remains a development build.

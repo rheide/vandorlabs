@@ -20,7 +20,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Trapdoors and diagonal trapdoors | pending | unimplemented | non-vehicle first |
 | Programmable lights and propulsion | pending | unimplemented | non-vehicle first |
 | Chairs and seats | pending | unimplemented | non-vehicle first |
-| Triggers, buttons, rockers, levers and throttles | partial (Trigger, buttons and rockers) | partial | non-vehicle first |
+| Triggers, buttons, rockers, levers and throttles | partial (Trigger, buttons, rockers and power levers) | partial | non-vehicle first |
 | Wireless transmitter and receiver | partial (handheld transmitter) | partial | non-vehicle first |
 | Token slots and design tokens | pending | unimplemented | non-vehicle first |
 | Programmable storage | pending | unimplemented | non-vehicle first |
@@ -62,3 +62,5 @@ The current control increment adds the native Trigger and four handheld transmit
 Native Push Buttons and Rocker Switches now share mount geometry, saved channel-bank policy and dialog rows with Forge. Their inline transmission editor is reusable across native dialogs. Focused checks cover actual Forge NBT inputs, partial latch banks, independent twenty-tick pulses, configured pick/drop/placement, tool requirements, loaded support checks and subsequent-process persistence. Physical neighbor callbacks observe settled banks, and actual world collision and selection use the configured mount.
 
 Binary-control emitted geometry and item transforms match the actual Forge renderer across all mount choices and resource reloads. A separate fixture mod validates the exact standard native JAR through ModDev, including ordinary survival shift-click, Configurizer access, immediate inline edits, Done/Escape drafts, GUI scales 2/3 and installed-world rendering. This is software-rendered acceptance, not a standalone installer test or the full release gate. Copy-tool workflows, other control families and carried integration remain incomplete.
+
+Native power levers reuse the binary-control host, dialog, activation and renderer. Both sizes retain canonical items and hidden legacy registry IDs. Focused checks cover 4,436 runtime cases and subsequent-process persistence, 8,192 world and 3,584 item model cases before and after reload, and exact-JAR real-player size/mount edits with unchanged tile identity and partial banks. The same frozen JAR passes the binary-control dialog regression. Authored float compatibility preserves Forge face shading; exact voxel unions use a bounded retained-byte cache. Throttles and sliders remain in progress. These are focused ModDev/software results, not the full release gate.

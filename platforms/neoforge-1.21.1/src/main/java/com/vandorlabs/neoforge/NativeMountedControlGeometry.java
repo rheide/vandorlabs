@@ -13,18 +13,22 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/** Authored binary-control components, parsed without client classes or world access. */
+/** Authored mounted-control components, parsed without client classes or world access. */
 public final class NativeMountedControlGeometry {
     private static final Map<String,Pose> POSES=new HashMap<>();
-    // Include coordinate grids, occupancy bits, potential six cached face shapes, and source boxes.
+    private static final int SHAPE_BUDGET=8*1024*1024;
+    // SliceShape/SubShape reference the parent occupancy and coordinate lists. Reserve the full
+    // bounded face/edge/corner view closure (6+24+48 wrappers), not seven copies of the3D grid.
+    private static final int FACE_VIEWS=80*160;
+    // Coordinate storage, one occupancy bitset, component boxes, and cached view wrappers.
     private static final com.google.common.cache.Cache<String,Geometry> SHAPES=com.google.common.cache.CacheBuilder.newBuilder()
-        .maximumWeight(8*1024*1024).weigher((String key,Geometry value)->retainedCost(value)).build();
+        .maximumWeight(SHAPE_BUDGET).weigher((String key,Geometry value)->retainedCost(value)).build();
     static int retainedCost(BlockState state,ControlMountSettings mount,int rotation){return retainedCost(geometry(state,mount,rotation));}
     static long cacheCost(){SHAPES.cleanUp();return SHAPES.asMap().values().stream().mapToLong(NativeMountedControlGeometry::retainedCost).sum();}
     static long cachedShapes(){return SHAPES.size();}
     private static int retainedCost(Geometry value){
         long x=value.shape.getCoords(Direction.Axis.X).size(),y=value.shape.getCoords(Direction.Axis.Y).size(),z=value.shape.getCoords(Direction.Axis.Z).size();
-        return (int)Math.min(Integer.MAX_VALUE,512+value.boxes.size()*112L+7*(128+16*(x+y+z)+(x*y*z+7)/8));
+        return (int)Math.min(Integer.MAX_VALUE,512+FACE_VIEWS+value.boxes.size()*112L+128+16*(x+y+z)+(x*y*z+7)/8);
     }
     public record Pose(List<List<Vec3>> components,List<AABB> supports,AABB support){}
     private record Geometry(List<AABB> boxes,AABB bounds,VoxelShape shape){}
@@ -43,17 +47,51 @@ public final class NativeMountedControlGeometry {
     public static List<AABB> boxes(BlockState state,ControlMountSettings mount,int rotation){return geometry(state,mount,rotation).boxes;}
     public static AABB bounds(BlockState state,ControlMountSettings mount,int rotation){return geometry(state,mount,rotation).bounds;}
     public static VoxelShape shape(BlockState state,ControlMountSettings mount,int rotation){return geometry(state,mount,rotation).shape;}
-    private static Geometry geometry(BlockState state,ControlMountSettings mount,int rotation){
-        String key=key(state,rotation)+"/"+(mount.height+4*(mount.tilt+4*mount.direction));
+    private static int checkedSize(int size){if(!com.vandorlabs.persistence.PowerLeverSize.valid(size))throw new IllegalArgumentException("Invalid lever size "+size);return size;}
+    private static String powerKey(BlockState state,int size){
+        if(!com.vandorlabs.persistence.PowerLeverSize.valid(size))throw new IllegalArgumentException("Invalid lever size "+size);
+        NativePowerLeverBlock block=(NativePowerLeverBlock)state.getBlock();String family=block.isTwin()?(size==0?"small_power_lever":"large_power_lever"):(size==0?"compact_power_lever":"industrial_power_lever");
+        return family+"/facing="+state.getValue(NativePowerLeverBlock.FACING).getSerializedName()+",floor="+state.getValue(NativePowerLeverBlock.FLOOR)+",powered="+state.getValue(NativePowerLeverBlock.POWERED);
+    }
+    public static Direction powerFace(BlockState state){return state.getValue(NativePowerLeverBlock.FLOOR)?Direction.UP:state.getValue(NativePowerLeverBlock.FACING);}
+    public static int powerRotation(BlockState state){return state.getValue(NativePowerLeverBlock.FLOOR)?state.getValue(NativePowerLeverBlock.FACING).get2DDataValue():0;}
+    public static Pose powerPose(BlockState state,int size){String key=powerKey(state,size);synchronized(POSES){return POSES.computeIfAbsent(key,k->load(k,powerFace(state)));}}
+    public static ControlMountTransform<Vec3,AABB> powerTransform(BlockState state,ControlMountSettings mount,int size){
+        AABB b=powerPose(state,size).support;return new ControlMountTransform<>(powerFace(state).get3DDataValue(),powerRotation(state),mount.height,mount.tilt,mount.direction,b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ,NativeMountedControlGeometry::point,AABB::new);
+    }
+    public static List<AABB> powerBoxes(BlockState state,ControlMountSettings mount,int size){return geometry(state,mount,0,checkedSize(size)).boxes;}
+    public static AABB powerBounds(BlockState state,ControlMountSettings mount,int size){return geometry(state,mount,0,checkedSize(size)).bounds;}
+    public static VoxelShape powerShape(BlockState state,ControlMountSettings mount,int size){return geometry(state,mount,0,checkedSize(size)).shape;}
+    static int powerRetainedCost(BlockState state,ControlMountSettings mount,int size){return retainedCost(geometry(state,mount,0,checkedSize(size)));}
+    private static Geometry geometry(BlockState state,ControlMountSettings mount,int rotation){return geometry(state,mount,rotation,-1);}
+    private static Geometry geometry(BlockState state,ControlMountSettings mount,int rotation,int size){
+        String key=(size<0?key(state,rotation):powerKey(state,size))+"/"+(mount.height+4*(mount.tilt+4*mount.direction));
         Geometry cached=SHAPES.getIfPresent(key);if(cached!=null)return cached;
         {
-            Pose pose=pose(state,rotation);ControlMountTransform<Vec3,AABB> transform=transform(state,mount,rotation);List<AABB> boxes=new ArrayList<>();
+            Pose pose=size<0?pose(state,rotation):powerPose(state,size);ControlMountTransform<Vec3,AABB> transform=size<0?transform(state,mount,rotation):powerTransform(state,mount,size);List<AABB> boxes=new ArrayList<>();
             for(List<Vec3> component:pose.components){List<Vec3> points=new ArrayList<>(8);for(Vec3 p:component)points.add(transform.transform(p.x,p.y,p.z));boxes.add(hull(points));}
             if(mount.height+4*mount.tilt>0)for(AABB b:pose.supports)boxes.addAll(transform.wedgeBoxes(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ));
-            AABB bounds=boxes.getFirst();VoxelShape shape=Shapes.empty();for(AABB b:boxes){bounds=bounds.minmax(b);shape=Shapes.or(shape,Shapes.create(b));}
+            AABB bounds=boxes.getFirst();for(AABB b:boxes)bounds=bounds.minmax(b);VoxelShape shape=union(boxes);
             Geometry result=new Geometry(List.copyOf(boxes),bounds,shape);SHAPES.put(key,result);return result;
         }
     }
+    /** Build the exact component union once, without repeatedly decomposing intermediate unions. */
+    private static VoxelShape union(List<AABB> boxes){
+        List<AABB> active=new ArrayList<>();for(AABB b:boxes)if(b.maxX-b.minX>=1e-7&&b.maxY-b.minY>=1e-7&&b.maxZ-b.minZ>=1e-7)active.add(b);if(active.isEmpty())return Shapes.empty();
+        double[][] axes=new double[3][];for(int axis=0;axis<3;axis++){double[] values=new double[active.size()*2];int n=0;for(AABB b:active){double min=axis==0?b.minX:axis==1?b.minY:b.minZ,max=axis==0?b.maxX:axis==1?b.maxY:b.maxZ;values[n++]=min==0?0:min;values[n++]=max==0?0:max;}Arrays.sort(values);int unique=0;for(double value:values)if(unique==0||value!=values[unique-1])values[unique++]=value;axes[axis]=Arrays.copyOf(values,unique);}
+        int nx=axes[0].length-1,ny=axes[1].length-1,nz=axes[2].length-1;long cells=(long)nx*ny*nz,estimated=512+FACE_VIEWS+boxes.size()*112L+128+16L*(axes[0].length+axes[1].length+axes[2].length)+((long)axes[0].length*axes[1].length*axes[2].length+7)/8;if(cells>Integer.MAX_VALUE||estimated>SHAPE_BUDGET)throw new IllegalStateException("Authored control voxel grid exceeds checked retained-size budget");
+        var bits=new net.minecraft.world.phys.shapes.BitSetDiscreteVoxelShape(nx,ny,nz);
+        for(AABB b:active){int x0=index(axes[0],b.minX),x1=index(axes[0],b.maxX),y0=index(axes[1],b.minY),y1=index(axes[1],b.maxY),z0=index(axes[2],b.minZ),z1=index(axes[2],b.maxZ);for(int x=x0;x<x1;x++)for(int y=y0;y<y1;y++)for(int z=z0;z<z1;z++)bits.fill(x,y,z);}
+        return new ExactUnion(bits,axes[0],axes[1],axes[2]);
+    }
+    private static int index(double[] axis,double value){int index=Arrays.binarySearch(axis,value==0?0:value);if(index<0)throw new IllegalStateException("Missing control voxel coordinate");return index;}
+    private static final class ExactUnion extends net.minecraft.world.phys.shapes.ArrayVoxelShape {
+        ExactUnion(net.minecraft.world.phys.shapes.DiscreteVoxelShape shape,double[] x,double[] y,double[] z){super(shape,x,y,z);}
+    }
+    record Authored(JsonArray elements,int x,int y){}
+    /** Bake-only owned parse result; never published to section workers or retained in common caches. */
+    static Authored authored(BlockState state,int rotation,int size){String[] parts=(state.getBlock() instanceof NativePowerLeverBlock?powerKey(state,size):key(state,rotation)).split("/",2);var variant=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants").getAsJsonObject(parts[1]);return new Authored(elements(variant.get("model").getAsString(),0),variant.has("x")?variant.get("x").getAsInt():0,variant.has("y")?variant.get("y").getAsInt():0);}
+    static Authored authoredItem(String id){return new Authored(elements("vandorlabs:item/"+id,0),0,0);}
     private static Pose load(String key,Direction face){
         String[] parts=key.split("/",2);JsonObject variant=json("/assets/vandorlabs/blockstates/"+parts[0]+".json").getAsJsonObject("variants").getAsJsonObject(parts[1]);
         if(variant==null)throw new IllegalStateException("Missing mounted pose "+key);
@@ -78,7 +116,7 @@ public final class NativeMountedControlGeometry {
     private static Vec3 point(double x,double y,double z){return new Vec3(x==0?0:x,y==0?0:y,z==0?0:z);}
     private static Vec3 vector(JsonArray a){return point(a.get(0).getAsDouble()/16,a.get(1).getAsDouble()/16,a.get(2).getAsDouble()/16);}
     private static Vec3 rotate(Vec3 point,Vec3 origin,int axis,double degrees){double[] p={point.x-origin.x,point.y-origin.y,point.z-origin.z};int a=(axis+1)%3,b=(axis+2)%3;double t=Math.toRadians(degrees),u=p[a],v=p[b];p[a]=u*Math.cos(t)-v*Math.sin(t);p[b]=u*Math.sin(t)+v*Math.cos(t);return point(p[0]+origin.x,p[1]+origin.y,p[2]+origin.z);}
-    private static JsonArray elements(String model,int depth){if(depth>16)throw new IllegalStateException("Cyclic control parent "+model);String[] name=model.split(":",2);JsonObject root=json("/assets/"+name[0]+"/models/"+(name[1].startsWith("block/")?"":"block/")+name[1]+".json");return root.has("elements")?root.getAsJsonArray("elements"):elements(root.get("parent").getAsString(),depth+1);}
+    private static JsonArray elements(String model,int depth){if(depth>16)throw new IllegalStateException("Cyclic control parent "+model);String[] name=model.split(":",2);JsonObject root=json("/assets/"+name[0]+"/models/"+(name[1].startsWith("block/")||name[1].startsWith("item/")?"":"block/")+name[1]+".json");return root.has("elements")?root.getAsJsonArray("elements"):elements(root.get("parent").getAsString(),depth+1);}
     private static JsonObject json(String path){try(InputStream stream=NativeMountedControlGeometry.class.getResourceAsStream(path)){if(stream==null)throw new IllegalStateException("Missing control resource "+path);return JsonParser.parseReader(new InputStreamReader(stream,StandardCharsets.UTF_8)).getAsJsonObject();}catch(IOException e){throw new IllegalStateException(path,e);}}
     private NativeMountedControlGeometry(){}
 }

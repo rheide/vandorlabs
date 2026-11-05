@@ -26,7 +26,7 @@ public final class BinaryControlScene {
         System.out.println("[vandorlabs][binary-scene] server PASS six real mounted controls with authored collision/selection");
     }
     public static void finish(ServerPlayer player){
-        player.closeContainer();player.setGameMode(GameType.CREATIVE);player.getAbilities().mayfly=true;player.getAbilities().flying=true;player.onUpdateAbilities();player.teleportTo(X,Y,Z);player.connection.teleport(X,Y,Z,0,-12);player.getInventory().selected=2;player.getInventory().setItem(2,ItemStack.EMPTY);
+        player.closeContainer();player.setGameMode(GameType.CREATIVE);player.getAbilities().mayfly=true;player.getAbilities().flying=true;player.onUpdateAbilities();player.teleportTo(X,Y,Z);player.connection.teleport(X,Y,Z,0,-12);player.getInventory().selected=2;player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket(2));player.getInventory().setItem(2,ItemStack.EMPTY);
         for(int i=3;i<9;i++){var stack=new ItemStack(i%2==0?VandorLabsBootstrap.PUSH_BUTTON_ITEM.get():VandorLabsBootstrap.ROCKER_SWITCH_ITEM.get());var tag=new CompoundTag();ControlMountSettings.write(new ModernHousingTags(tag),(i-3)%4,(i-3)%4,(i-3)%4);var wrapper=new CompoundTag();wrapper.put("RedstoneChannelSettings",tag);stack.set(DataComponents.CUSTOM_DATA,CustomData.of(wrapper));player.getInventory().setItem(i,stack);}player.inventoryMenu.broadcastChanges();player.containerMenu.broadcastChanges();
     }
     private static void require(boolean pass,String message){if(!pass)throw new IllegalStateException("Binary scene: "+message);}

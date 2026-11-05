@@ -17,6 +17,6 @@ public record BinaryControlPayload(BlockPos pos,int windowId,ControlMountSetting
         public void encode(RegistryFriendlyByteBuf b,BinaryControlPayload p){b.writeBlockPos(p.pos);b.writeInt(p.windowId);b.writeByte(p.mount.height);b.writeByte(p.mount.tilt);b.writeByte(p.mount.direction);}
     };
     @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
-    static boolean apply(ServerPlayer player,BinaryControlPayload p){if(!player.getServer().isSameThread()||p.pos==null||p.mount==null||!ControlMountSettings.valid(p.mount.height,p.mount.tilt,p.mount.direction)||!(player.containerMenu instanceof BinaryControlMenu menu)||menu.containerId!=p.windowId||!menu.tile.getBlockPos().equals(p.pos)||!menu.stillValid(player))return false;return menu.tile.configureMount(p.mount);}
+    static boolean apply(ServerPlayer player,BinaryControlPayload p){if(p.pos==null||p.mount==null||!ControlMountSettings.valid(p.mount.height,p.mount.tilt,p.mount.direction))return false;var tile=BinaryControlMenu.editing(player,p.pos,p.windowId);return tile!=null&&tile.configureMount(p.mount);}
     public static void register(RegisterPayloadHandlersEvent event){event.registrar("1").playToServer(TYPE,CODEC,(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer player)apply(player,p);}));}
 }

@@ -2,7 +2,7 @@
 
 This independent Java 21 target provides the plain Programmable Matter Block, Programmable Matter Ingot and Industrial Alloy Ingot, with a creative tab, native models, loot, stone-or-better pickaxe harvesting, and the canonical block packing/unpacking and alloy recipes. The matter infuser and other acquisition systems are not implemented; matter ingots currently require creative mode or commands.
 
-The plain Programmable Block now uses the current shared saved housing and dialog contracts. Its built-in materials, six face overrides, Stretch/Tile/Fit layouts, configuration-preserving item drops/picks and bounded joined images are supported. Creative shift-click and a main-hand Configurizer open the same dedicated dialog; survival and held-item Adventure permissions are enforced by the server. The Configurizer currently configures this cube only.
+The plain Programmable Block now uses the current shared saved housing and dialog contracts. Its built-in materials, six face overrides, Stretch/Tile/Fit layouts, configuration-preserving item drops/picks and bounded joined images are supported. Creative shift-click and a main-hand Configurizer open the same dedicated dialog; survival and held-item Adventure permissions are enforced by the server. Trigger and mounted controls also route the Configurizer through their dedicated dialogs.
 
 This remains a partial port, not a legacy world migration tool. Optional component-renderer sampling, copy tools, carried assemblies, other programmable families and the production chain remain deferred. Installed filesystem PNGs are supported on the native programmable cube. Saved external material IDs are retained and unavailable artwork renders with a visible fallback; the native cube also supports non-consuming inventory block samples with retained legacy vanilla aliases. Do not open existing Vandor Labs worlds with this target.
 
@@ -52,7 +52,7 @@ Run `python3 platforms/neoforge-1.21.1/test_sampled_materials.py --client --xvfb
 
 ## Trigger and handheld transmitter checks
 
-The native Trigger reuses shared saved-state and dialog rules, and the same material picker as the cube. Handheld transmitter sources remain stationary and dimension-local. Other control families, world transmitter/receiver blocks and inline transmitter settings are still pending.
+The native Trigger reuses shared saved-state and dialog rules, and the same material picker as the cube. Handheld transmitter sources remain stationary and dimension-local. Mounted buttons, rockers and power levers also support inline transmitter settings. World transmitter/receiver blocks and other control families remain pending.
 
 Run `python3 platforms/neoforge-1.21.1/test_trigger.py` for server persistence and actual receiver/origin chunk unload, `test_transmitter.py` for tier recipes and three-process ON/reload/OFF persistence, and `test_trigger_client.py --xvfb` for actual dialog and handheld packets on Linux. Omit `--xvfb` for a normal client window. `test_trigger_models.py` covers emitted Trigger geometry, OFF item previews, particles and reloads; its optional Forge reference compares the existing cube geometry too.
 
@@ -61,3 +61,9 @@ These focused runners use disposable development-classpath instances. They do no
 `test_transmitter_copy.py --jar build/libs/vandorlabs-neoforge-1.21.1-2.9.jar --client --xvfb` tests a previously built standard JAR in disposable dedicated/client instances with a separate fixture mod and empty source-mod folders. It verifies class provenance and the JAR hash, table pickup/shift crafting and cached invalid/valid input transitions. The runtime is launched through ModDev; this is exact-mod-JAR evidence, not standalone-installer or hardware acceptance.
 
 The native copy recipe retains one primitive original-grid context field because vanilla trims empty grid borders before recipe matching. Measured warmed cropped-input construction increases from 488 to 496 bytes per input with this field. Only two-transmitter cache queries bypass the vanilla cache to retain position-sensitive matching; other recipes keep their normal cache path.
+
+## Mounted controls
+
+Push Buttons, Rocker Switches and both power-lever families share the mounted dialog, inline transmission editor, latch host and renderer. General edits commit on Done; valid inline transmission edits apply immediately. Power levers retain the hidden Compact and Large saved variants through their Size option and canonical configured items.
+
+Run `test_power_levers.py` for dedicated persistence and channel behavior, `test_power_models.py` for emitted geometry/reload comparisons, and `test_binary_dialog.py --power-levers --jar <standard.jar> --xvfb` for real-player dialog and world acceptance. Run the same dialog runner without `--power-levers` for buttons and rockers. Runners are under this directory and use disposable fixtures. Exact-JAR client checks use ModDev and a separate fixture mod; they do not establish standalone installer, hardware shader or full release acceptance.

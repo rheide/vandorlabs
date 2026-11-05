@@ -4,7 +4,7 @@
 
 - Share four-step throttle and slider output math and saved defaults, preserving existing Forge detent selection, partial channel banks and limit handling. Native four-step control adapters remain in progress.
 
-- Share power-lever size defaults, saved-data handling and the Size option across targets. Preserve hidden legacy variants, configured-item selection and existing Forge layout; native power-lever integration remains in progress.
+- Add native Industrial and Small Power Levers, retaining Compact and Large saved variants and canonical configured-item drops. Reuse the mounted-control dialog, latch host, activation path and renderer; share size defaults and the Size option with Forge. Preserve authored geometry and bounded shape caching.
 
 - Add native Push Buttons and Rocker Switches with authored mounted geometry, configured items, ranged inline transmission and shared latch banks. Preserve twenty-tick button pulses and publish physical redstone after linked banks settle. Reuse mount rows and one native inline transmission editor, with consistent reverse cycling and separate Done/Escape mount drafts.
 

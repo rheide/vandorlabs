@@ -71,10 +71,13 @@ tasks.register('generateCubeResources', Exec) {
     workingDir projectDir
     commandLine pythonExecutable, 'generate_cube_resources.py'
     inputs.file('generate_cube_resources.py')
-    inputs.file('generate_binary_resources.py')
+    inputs.file('generate_mounted_control_resources.py')
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models') { include 'block/push_button/**', 'block/rocker_switch/**', 'item/push_button.json', 'item/rocker_switch.json' })
     inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/push_button.json', '../../src/main/resources/assets/vandorlabs/blockstates/rocker_switch.json')
     inputs.files('../../src/main/resources/assets/vandorlabs/recipes/push_button.json', '../../src/main/resources/assets/vandorlabs/recipes/rocker_switch.json')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models') { include 'block/*power_lever*.json', 'block/twin_power_levers/**', 'item/*power_lever.json' })
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/blockstates') { include '*power_lever.json' })
+    inputs.files('../../src/main/resources/assets/vandorlabs/recipes/industrial_power_lever.json', '../../src/main/resources/assets/vandorlabs/recipes/small_power_lever.json')
     inputs.file('../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java')
     inputs.dir('../../texture-packs')
     inputs.file('../../src/main/resources/assets/vandorlabs/data/texture_menu.json')

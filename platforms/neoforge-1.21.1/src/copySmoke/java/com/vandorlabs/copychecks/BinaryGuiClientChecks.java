@@ -16,7 +16,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.*;
 
 public final class BinaryGuiClientChecks {
-    private static int ticks,stage,at,rangeTarget;private static boolean capture,captured,restoredScale;private static AABB originalShape;
+    private static int ticks,stage,at,rangeTarget;private static boolean capture,restoredScale;private static volatile boolean captured;private static AABB originalShape;
     private static void next(){stage++;at=ticks;}
     private static void require(boolean value,String message){BinaryGuiServerChecks.require(value,"stage="+stage+" "+message);}
     private static NativeBinaryControlBlockEntity tile(Minecraft mc){return (NativeBinaryControlBlockEntity)mc.level.getBlockEntity(BinaryGuiServerChecks.POS);}
@@ -37,7 +37,7 @@ public final class BinaryGuiClientChecks {
         require(++ticks<2600,"timeout mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" pos="+mc.player.position());
         if(stage==0){if(ticks<80||mc.gameMode.getPlayerMode()!=GameType.SURVIVAL||mc.player.getInventory().selected!=0||!mc.player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())||!(mc.level.getBlockEntity(BinaryGuiServerChecks.POS) instanceof NativeBinaryControlBlockEntity))return;widgetProbe(mc);originalShape=mc.level.getBlockState(BinaryGuiServerChecks.POS).getShape(mc.level,BinaryGuiServerChecks.POS).bounds();open(mc,BinaryGuiServerChecks.POS);next();return;}
         if(ticks<at+10)return;
-        if(stage==1){var screen=ui(mc);require(screen.panelWidth()==280&&screen.panelHeight()==232,"current exact fixed panel");option(screen,9,1);option(screen,10,0);option(screen,11,1);require(screen.mountDraft().height==3&&screen.mountDraft().tilt==1&&screen.mountDraft().direction==3&&mount(tile(mc),0,0,0),"mount options draft and previous cycling");screen.keyPressed(256,0,0);next();}
+        if(stage==1){var screen=ui(mc);require(screen.panelWidth()==280&&screen.panelHeight()==232,"current exact fixed panel");require(screen.mountButton(12)==null,"power-only Size row leaked into binary dialog");option(screen,9,1);option(screen,10,0);option(screen,11,1);require(screen.mountDraft().height==3&&screen.mountDraft().tilt==1&&screen.mountDraft().direction==3&&mount(tile(mc),0,0,0),"mount options draft and previous cycling");screen.keyPressed(256,0,0);next();}
         else if(stage==2){if(mc.screen!=null)return;require(mount(tile(mc),0,0,0),"Escape sent mountdraft");open(mc,BinaryGuiServerChecks.POS);next();}
         else if(stage==3){var screen=ui(mc);option(screen,9,0);option(screen,10,0);option(screen,11,0);click(screen,screen.panelLeft()+120,screen.panelTop()+212,0);next();}
         else if(stage==4){if(mc.screen!=null||!mount(tile(mc),1,1,1))return;var pos=BinaryGuiServerChecks.POS;var state=mc.level.getBlockState(pos);var shape=state.getShape(mc.level,pos);require(!shape.bounds().equals(originalShape)&&state.getCollisionShape(mc.level,pos).bounds().equals(shape.bounds()),"actual world mount-dependent pick/collision shape remained cached");AABB bounds=shape.bounds();Vec3 start=new Vec3(pos.getX()+(bounds.minX+bounds.maxX)/2,pos.getY()+(bounds.minY+bounds.maxY)/2,pos.getZ()+bounds.minZ-1),end=new Vec3(start.x,start.y,pos.getZ()+bounds.maxZ+1);require(shape.clip(start,end,pos)!=null,"actual mounted selection ray missed");open(mc,BinaryGuiServerChecks.POS);next();}

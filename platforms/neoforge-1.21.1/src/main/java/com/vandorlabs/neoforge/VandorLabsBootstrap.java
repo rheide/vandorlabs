@@ -54,18 +54,27 @@ public final class VandorLabsBootstrap {
     public static final DeferredHolder<Block,NativeMountedSwitchBlock> ROCKER_SWITCH=BLOCKS.register("rocker_switch",()->new NativeMountedSwitchBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).noOcclusion().dynamicShape().requiresCorrectToolForDrops().lightLevel(state->state.getValue(NativeMountedSwitchBlock.ON)?5:0),false));
     public static final DeferredHolder<Item,BlockItem> PUSH_BUTTON_ITEM=ITEMS.register("push_button",()->new BlockItem(PUSH_BUTTON.get(),new Item.Properties()));
     public static final DeferredHolder<Item,BlockItem> ROCKER_SWITCH_ITEM=ITEMS.register("rocker_switch",()->new BlockItem(ROCKER_SWITCH.get(),new Item.Properties()));
-    public static final DeferredHolder<net.minecraft.world.level.block.entity.BlockEntityType<?>,net.minecraft.world.level.block.entity.BlockEntityType<NativeBinaryControlBlockEntity>> BINARY_CONTROL_ENTITY=ENTITIES.register("redstone_channel",()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(NativeBinaryControlBlockEntity::new,PUSH_BUTTON.get(),ROCKER_SWITCH.get()).build(null));
+    public static final DeferredHolder<Block,NativePowerLeverBlock> INDUSTRIAL_POWER_LEVER=BLOCKS.register("industrial_power_lever",()->powerLever(false,1));
+    public static final DeferredHolder<Block,NativePowerLeverBlock> COMPACT_POWER_LEVER=BLOCKS.register("compact_power_lever",()->powerLever(false,0));
+    public static final DeferredHolder<Block,NativePowerLeverBlock> SMALL_POWER_LEVER=BLOCKS.register("small_power_lever",()->powerLever(true,0));
+    public static final DeferredHolder<Block,NativePowerLeverBlock> LARGE_POWER_LEVER=BLOCKS.register("large_power_lever",()->powerLever(true,1));
+    public static final DeferredHolder<Item,BlockItem> INDUSTRIAL_POWER_LEVER_ITEM=ITEMS.register("industrial_power_lever",()->new BlockItem(INDUSTRIAL_POWER_LEVER.get(),new Item.Properties()));
+    public static final DeferredHolder<Item,BlockItem> COMPACT_POWER_LEVER_ITEM=ITEMS.register("compact_power_lever",()->new BlockItem(COMPACT_POWER_LEVER.get(),new Item.Properties()));
+    public static final DeferredHolder<Item,BlockItem> SMALL_POWER_LEVER_ITEM=ITEMS.register("small_power_lever",()->new BlockItem(SMALL_POWER_LEVER.get(),new Item.Properties()));
+    public static final DeferredHolder<Item,BlockItem> LARGE_POWER_LEVER_ITEM=ITEMS.register("large_power_lever",()->new BlockItem(LARGE_POWER_LEVER.get(),new Item.Properties()));
+    private static NativePowerLeverBlock powerLever(boolean twin,int size){return new NativePowerLeverBlock(BlockBehaviour.Properties.of().mapColor(MapColor.NONE).strength(.5f,.5f).sound(SoundType.METAL).noOcclusion().dynamicShape().pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY),twin,size);}
+    public static final DeferredHolder<net.minecraft.world.level.block.entity.BlockEntityType<?>,net.minecraft.world.level.block.entity.BlockEntityType<NativeBinaryControlBlockEntity>> BINARY_CONTROL_ENTITY=ENTITIES.register("redstone_channel",()->net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(NativeBinaryControlBlockEntity::new,PUSH_BUTTON.get(),ROCKER_SWITCH.get(),INDUSTRIAL_POWER_LEVER.get(),COMPACT_POWER_LEVER.get(),SMALL_POWER_LEVER.get(),LARGE_POWER_LEVER.get()).build(null));
     public static final DeferredHolder<net.minecraft.world.inventory.MenuType<?>,net.minecraft.world.inventory.MenuType<BinaryControlMenu>> BINARY_CONTROL_MENU=MENUS.register("binary_control",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new BinaryControlMenu(id,inventory,buffer.readBlockPos())));
     static {
         TABS.register("vandorlabs", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.vandorlabs"))
             .icon(() -> MATTER_BLOCK_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 for(int tier=0;tier<4;tier++)output.accept(com.vandorlabs.neoforge.redstone.NativeTransmitterItem.variant(REDSTONE_TRANSMITTER.get(),tier));
-                output.accept(PUSH_BUTTON_ITEM.get());output.accept(ROCKER_SWITCH_ITEM.get());output.accept(PROGRAMMABLE_ITEM.get());output.accept(TRIGGER_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
+                output.accept(INDUSTRIAL_POWER_LEVER_ITEM.get());output.accept(SMALL_POWER_LEVER_ITEM.get());output.accept(PUSH_BUTTON_ITEM.get());output.accept(ROCKER_SWITCH_ITEM.get());output.accept(PROGRAMMABLE_ITEM.get());output.accept(TRIGGER_ITEM.get());output.accept(CONFIGURIZER.get());output.accept(MATTER_INGOT.get()); output.accept(MATTER_BLOCK_ITEM.get()); output.accept(ALLOY_INGOT.get());
             }).build());
     }
     public VandorLabsBootstrap(IEventBus bus) {
         FilesystemMaterials.initialize();com.vandorlabs.neoforge.redstone.TransmitterCopyRegistration.register(bus);
-        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(BinaryControlPayload::register);bus.addListener(BinaryTransmissionPayload::register);bus.addListener(FinishPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
+        BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(PowerLeverPayload::register);bus.addListener(BinaryControlPayload::register);bus.addListener(BinaryTransmissionPayload::register);bus.addListener(FinishPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
     }
 }

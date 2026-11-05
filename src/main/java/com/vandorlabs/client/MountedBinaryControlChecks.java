@@ -44,7 +44,7 @@ final class MountedBinaryControlChecks {
                 }}icons++;
             }
         }
-        BinaryControlReference.export(mc);
+        BinaryControlReference.export(mc);PowerLeverReference.export(mc);
         digest.finish("binary-control-mounts","3e24bc74d7b37835afce7021a0cb111b3b6bb69493bf2ea03ddb24be9d20607e");
         System.out.println("[vandorlabs][reprolab] binary-control-mounts PASS poses="+poses+" icons="+icons+" (native cuboids, upright filled bases, size variants and GUI transforms)");
     }

@@ -19,15 +19,16 @@ import net.neoforged.neoforge.network.PacketDistributor;
 /** Fixed current mounted-control dialog; mount drafts commit on Done, inline settings flush separately. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeBinaryControlScreen extends AbstractContainerScreen<BinaryControlMenu> {
-    private int page,heightValue,tilt,direction;
+    private int page,heightValue,tilt,direction,size;
     private NativeInlineTransmissionWidget transmission;
     private final Map<Integer,Button> mountButtons=new HashMap<>();
     @SubscribeEvent public static void register(RegisterMenuScreensEvent event){event.register(VandorLabsBootstrap.BINARY_CONTROL_MENU.get(),NativeBinaryControlScreen::new);}
     public NativeBinaryControlScreen(BinaryControlMenu menu,Inventory inventory,Component title){
         super(menu,inventory,menu.tile.getBlockState().getBlock().getName());imageWidth=MountedControlDialog.PANEL_WIDTH;imageHeight=MountedControlDialog.PANEL_HEIGHT;
-        var mount=menu.tile.mountSettings();heightValue=mount.height;tilt=mount.tilt;direction=mount.direction;
+        var mount=menu.tile.mountSettings();heightValue=mount.height;tilt=mount.tilt;direction=mount.direction;size=menu.tile.getPowerLeverSize();
     }
     public int page(){return page;}
+    public int sizeDraft(){return size;}
     public ControlMountSettings mountDraft(){return ControlMountSettings.of(heightValue,tilt,direction);}
     public NativeInlineTransmissionWidget inlineWidget(){return transmission;}
     public Button mountButton(int id){return mountButtons.get(id);}
@@ -38,15 +39,17 @@ public final class NativeBinaryControlScreen extends AbstractContainerScreen<Bin
         else {transmission.flush();transmission.layout(leftPos+12,topPos+62,256);}rebuild();
     }
     private void rebuild(){setFocused(null);clearWidgets();mountButtons.clear();
-        if(page==0)for(var control:MountedControlDialog.controls(leftPos,topPos,heightValue,tilt,direction)){Button button=Button.builder(Component.literal(control.label),ignored->cycle(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();mountButtons.put(control.id,button);addRenderableWidget(button);}
+        if(page==0){if(menu.tile.supportsPowerLeverSize())addOption(MountedControlDialog.sizeControl(leftPos,topPos,menu.tile.isTwinPowerLever(),size));for(var control:MountedControlDialog.controls(leftPos,topPos,heightValue,tilt,direction))addOption(control);}
         else for(var control:transmission.controls())addRenderableWidget(control);
         addRenderableWidget(Button.builder(Component.translatable("gui.done"),ignored->done()).bounds(leftPos+114,topPos+206,154,20).build());
     }
+    private void addOption(com.vandorlabs.ui.DialogControl control){Button button=Button.builder(Component.literal(control.label),ignored->cycle(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();mountButtons.put(control.id,button);addRenderableWidget(button);}
     private void cycle(int id,int step){
+        if(id==MountedControlDialog.SIZE)size=DialogInput.cycle(size,2,step);
         if(id==MountedControlDialog.HEIGHT)heightValue=DialogInput.cycle(heightValue,4,step);if(id==MountedControlDialog.TILT)tilt=DialogInput.cycle(tilt,4,step);if(id==MountedControlDialog.DIRECTION)direction=DialogInput.cycle(direction,4,step);
-        mountButtons.get(id).setMessage(Component.literal(id==9?MountedControlDialog.heightLabel(heightValue):id==10?MountedControlDialog.tiltLabel(tilt):MountedControlDialog.directionLabel(direction)));
+        mountButtons.get(id).setMessage(Component.literal(id==MountedControlDialog.SIZE?MountedControlDialog.sizeLabel(menu.tile.isTwinPowerLever(),size):id==9?MountedControlDialog.heightLabel(heightValue):id==10?MountedControlDialog.tiltLabel(tilt):MountedControlDialog.directionLabel(direction)));
     }
-    private void done(){transmission.flush();PacketDistributor.sendToServer(new BinaryControlPayload(menu.tile.getBlockPos(),menu.containerId,mountDraft()));onClose();}
+    private void done(){transmission.flush();if(menu.tile.supportsPowerLeverSize())PacketDistributor.sendToServer(new PowerLeverPayload(menu.tile.getBlockPos(),menu.containerId,mountDraft(),size));else PacketDistributor.sendToServer(new BinaryControlPayload(menu.tile.getBlockPos(),menu.containerId,mountDraft()));onClose();}
     @Override public void onClose(){if(transmission!=null)transmission.flush();super.onClose();}
     @Override public void removed(){if(transmission!=null)transmission.flush();super.removed();}
     @Override public boolean mouseClicked(double x,double y,int button){

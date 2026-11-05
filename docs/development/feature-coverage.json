@@ -410,7 +410,11 @@
       "modern_registered_block_ids": [
         "programmable_trigger_block",
         "push_button",
-        "rocker_switch"
+        "rocker_switch",
+        "compact_power_lever",
+        "industrial_power_lever",
+        "small_power_lever",
+        "large_power_lever"
       ],
       "implemented": [
         "Native Trigger uses shared saved state and dialog policy, with loaded local analog power and positional channel delivery.",
@@ -418,10 +422,11 @@
         "Dedicated two-process persistence, actual chunk unload/reload, emitted-model reload matrices and ordinary client dialog/handheld interaction checks pass.",
         "Native push buttons and rockers reuse shared mount geometry, saved banks and dialog rows, with ranged inline transmission, partial latch banks and independent twenty-tick pulses.",
         "Actual Forge bank inputs, subsequent-process persistence, physical neighbor consistency, configured drops, tool requirements and dynamic mounted collision pass focused checks.",
-        "Authored geometry and padded items match actual Forge output before and after reload; exact packaged-JAR GUI and installed-world interaction pass through ModDev, including GUI scales 2 and 3."
+        "Authored geometry and padded items match actual Forge output before and after reload; exact packaged-JAR GUI and installed-world interaction pass through ModDev, including GUI scales 2 and 3.",
+        "Native power lever families reuse the mounted host, actions, dialog and renderer, preserving hidden variants, size defaults, canonical configured items and partial banks. Focused persistence, actual Forge emitted geometry and exact-JAR UI/world checks pass; binary UI also passes on that frozen JAR."
       ],
       "acceptance_limits": [
-        "The Trigger uses development-classpath validation; binary controls additionally have exact packaged-JAR GUI/world validation through ModDev. Standalone installer and hardware shader acceptance remain separate.",
+        "Trigger uses development-classpath validation; binary controls and power levers additionally have exact packaged-JAR GUI/world validation through ModDev. Standalone installer and hardware shader acceptance remain separate.",
         "Control-family parity remains incomplete; copy tools and other control families are not covered by the binary-control increment."
       ]
     },
