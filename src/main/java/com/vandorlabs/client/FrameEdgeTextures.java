@@ -31,29 +31,7 @@ final class FrameEdgeTextures {
         com.vandorlabs.render.FrameEdgeMapping.map(((Edge)selected).edge,points);
         return selected;
     }
-    static BufferedImage crop(BufferedImage image,int edge){
-        int w=image.getWidth(),h=image.getHeight();boolean vertical=edge==LEFT||edge==RIGHT;
-        int along=vertical?h:w,depth=vertical?w:h;
-        // Keep the complete authored edge, including its end details. The former
-        // largest-rectangle search silently cropped away directional decorations.
-        int band=Math.max(1,ScreenFrameBorders.extent(image,edge==TOP?2:edge==BOTTOM?3:edge==LEFT?0:1,w,h));
-        int start=band;
-        for(int at=along/4;at<along-along/4;at++)for(int d=0;d<band;d++)
-            if((pixel(image,edge,at,d)>>>24)>=128)start=Math.min(start,d);
-        start=Math.min(start,band-1);
-        BufferedImage out=new BufferedImage(64,64,BufferedImage.TYPE_INT_ARGB);
-        for(int x=0;x<64;x++){
-            int at=Math.min(along-1,x*along/64),fallback=0;
-            for(int d=0;d<depth/3;d++)if((pixel(image,edge,at,d)>>>24)>=240){fallback=pixel(image,edge,at,d);break;}
-            if(fallback==0){for(int a=0;a<along&&fallback==0;a++)for(int d=0;d<depth/3;d++)if((pixel(image,edge,a,d)>>>24)>=240){fallback=pixel(image,edge,a,d);break;}}
-            if(fallback==0)throw new IllegalArgumentException("Frame artwork contains no opaque material");
-            for(int y=0;y<64;y++){int color=pixel(image,edge,at,Math.min(band-1,start+y*(band-start)/64));if((color>>>24)>=240)fallback=color;out.setRGB(x,y,fallback|0xff000000);}
-        }
-        return out;
-    }
-    private static int pixel(BufferedImage image,int edge,int along,int depth){
-        int w=image.getWidth(),h=image.getHeight();return edge==TOP?image.getRGB(along,depth):edge==BOTTOM?image.getRGB(along,h-1-depth):edge==LEFT?image.getRGB(depth,along):image.getRGB(w-1-depth,along);
-    }
+    static BufferedImage crop(BufferedImage image,int edge){return com.vandorlabs.render.FrameEdgePixels.crop(image,edge);}
     private static final class Edge extends TextureAtlasSprite {
         private final ResourceLocation source;private final int edge;private final double aspect;
         Edge(String name,String source,int edge,double aspect){super(name);this.source=new ResourceLocation("vandorlabs","textures/blocks/"+source+".png");this.edge=edge;this.aspect=aspect;}

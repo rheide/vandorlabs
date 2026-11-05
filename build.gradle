@@ -1359,3 +1359,11 @@ task testPanelTextureMappingAdapters(type: JavaExec) {
     main = 'com.vandorlabs.client.PanelTextureMappingChecks'
 }
 check.dependsOn testPanelTextureMappingAdapters
+
+task testFrameEdgePixels(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FrameEdgePixelChecks'
+    workingDir = projectDir
+    if (project.hasProperty('frameEdgeExpected')) systemProperty 'vandorlabs.frameEdgeExpected', project.property('frameEdgeExpected')
+}

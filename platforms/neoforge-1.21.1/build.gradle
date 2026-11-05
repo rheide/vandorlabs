@@ -71,6 +71,7 @@ tasks.register('generateCubeResources', Exec) {
     workingDir projectDir
     commandLine pythonExecutable, 'generate_cube_resources.py'
     inputs.file('generate_cube_resources.py')
+    inputs.file('frame_edge_pixels.py')
     inputs.file('generate_mounted_control_resources.py')
     inputs.file('generate_wireless_resources.py')
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models') { include 'block/redstone_transmitter.json', 'block/redstone_receiver.json', 'item/redstone_transmitter_block.json', 'item/redstone_receiver_block.json' })

@@ -81,14 +81,22 @@ def main():
                 rail_id='vandorlabs:frame-rails/'+rail
                 output=ASSETS/('textures/frame-rails/'+rail+'.png')
                 if not output.exists():
-                    output.parent.mkdir(parents=True,exist_ok=True)
-                    with Image.open(source_texture(rail)) as image:
-                        image=image.convert('RGBA')
-                        if max(image.size)>128:image=image.convert('RGBa').resize((128,128),Image.Resampling.LANCZOS).convert('RGBA')
-                        image.save(output,optimize=True)
-                atlas.append(dict(type='minecraft:single',resource=rail_id))
+                    from frame_edge_pixels import crop
+                    with Image.open(source_texture(original['source'])) as full:
+                        full=full.convert('RGBA');aspect=max(1,original.get('frameAspect',1))
+                        if aspect>1:full=full.crop((0,0,full.width,max(1,int(full.height/aspect+.5))))
+                        for edge in range(4):
+                            edge_id=rail_id+('' if edge==0 else '_edge_'+str(edge))
+                            edge_path=ASSETS/('textures/'+edge_id.split(':',1)[1]+'.png')
+                            edge_path.parent.mkdir(parents=True,exist_ok=True)
+                            crop(full,edge).save(edge_path,optimize=True)
+                for edge in range(4):atlas.append(dict(type='minecraft:single',resource=rail_id+('' if edge==0 else '_edge_'+str(edge))))
             catalog[-1]['frame']=dict(rail=rail_id,aspect=max(1,original.get('frameAspect',1)),border=original.get('frameBorder',True),light=max(0,min(5,original.get('frameLight',0))))
         atlas.append(dict(type='minecraft:single',resource='vandorlabs:'+texture))
+    metal=ASSETS/'textures/frame-default/metal_side.png'
+    metal.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(source_texture('programmable_glass/metal_side'),metal)
+    atlas.append(dict(type='minecraft:single',resource='vandorlabs:frame-default/metal_side'))
     from generate_mounted_control_resources import generate as generate_controls
     atlas.extend(generate_controls(ROOT,OUT))
     from generate_shape_gameplay_resources import generate as generate_shapes
