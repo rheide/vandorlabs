@@ -59,7 +59,7 @@ public final class VandorLabsBootstrap {
             }).build());
     }
     public VandorLabsBootstrap(IEventBus bus) {
-        FilesystemMaterials.initialize();
+        FilesystemMaterials.initialize();com.vandorlabs.neoforge.redstone.TransmitterCopyRegistration.register(bus);
         BLOCKS.register(bus); ITEMS.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(FinishPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
     }
 }
