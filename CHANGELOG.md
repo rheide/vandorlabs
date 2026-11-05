@@ -2,10 +2,12 @@
 
 ## 2.9 (development)
 
+- Share the current glass editor state, four tabs, option rows and reverse cycling. Preserve immediate preview, frame-face and playback panes, hidden legacy control IDs and live framing callbacks.
+
 - Bound native mounted-control transformed meshes once per resource generation, sharing a 16 MiB cache across world states and configured items. Preserve source-model identity, dynamic-model bypass and immutable old reload snapshots.
 
 - Add native Thruster Levers, Airliner and Fighter Throttles, and Wall Sliders through the shared mounted-control host, dialog and renderer. Preserve four detents, saved limits, selectable throttle types, partial channel banks and canonical configured items. Share output math, save defaults and dialog rows with Forge.
-- Share the current programmable-glass save contract while retaining frame appearance, playback, fluids, legacy size migration and typed saved defaults. Verify unchanged Forge save output and focused live glass appearance; native glass and its current dialog remain pending.
+- Share the current programmable-glass save contract while retaining frame appearance, playback, fluids, legacy size migration and typed saved defaults. Verify unchanged Forge save output and focused live glass appearance; native glass remains pending.
 
 - Share wireless transmitter/receiver scalar save defaults and analog/digital level rules across targets. Preserve the existing Forge six-face sampling, strongest-input receiver behavior and separate On/Off settings; native endpoint blocks remain in progress.
 

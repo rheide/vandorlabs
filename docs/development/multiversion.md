@@ -95,10 +95,7 @@ missing texture-layout field separately from its effective Stretch/Tile value.
 The legacy tile delegates persistence to this contract while keeping world
 notifications, fluid lifecycle and placement repair in its Forge adapter.
 
-The historical branch's `GlassDialog` defines shared labels, option IDs, bounds and forward/reverse
-transitions. The editor submits all options immediately, keeps custom-material
-layout while stock glass is selected, and preserves the established detail-zero
-submission without changing the tile merely by opening its editor. That historical dialog predates the current frame tabs and playback controls; refresh it against the current Forge editor before integration.
+`GlassDialog` now describes the current Glass/Front/Interior/Exterior tabs, immediate scalar editor state, option rows and reverse cycling. Forge delegates these descriptors while retaining its existing `FrameAppearancePane`, `GlassPlaybackPane`, picker, packets and immediate tile preview. The frame callback reads current tile framing rather than a stale editor snapshot. The hidden legacy Framed control retains its ID, and opening the editor alone does not change detail size. Actual before/after GUI checks cover all four pages and current tints. Native glass still requires its family adapter and acceptance.
 
 ## Flat panel geometry (historical branch design)
 
