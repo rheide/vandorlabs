@@ -1380,3 +1380,12 @@ task testPanelGlassLegacy(type: JavaExec) {
     main = 'com.vandorlabs.client.PanelGlassLegacyChecks'
     if (project.hasProperty('panelGlassExport')) systemProperty 'vandorlabs.panelGlassExport', file(project.property('panelGlassExport')).absolutePath
 }
+task measurePanelMeshAllocations(type: JavaExec) {
+    group = 'verification'
+    description = 'Manual warmed allocation probe for current panel emission and UV adapters'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PanelMeshAllocationChecks'
+    systemProperty 'vandorlabs.panelFrameOnly', project.hasProperty('panelFrameOnly')
+    maxHeapSize = '1G'
+}
