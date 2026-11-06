@@ -22,3 +22,9 @@ tasks.register('testNativeLightGeometry', JavaExec) {
 neoForge.runs.configureEach {
     if(project.hasProperty('lightPlacementReference')) systemProperty 'vandorlabs.lightPlacementReference',file(project.property('lightPlacementReference')).absolutePath
 }
+tasks.register('testNativeLightProjection', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.light.LightProjectionChecks'
+    args rootProject.file('../../build/test-artifacts/light-projection-forge.jsonl').absolutePath
+}
