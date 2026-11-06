@@ -41,6 +41,13 @@ def generate():
             textures[target] = dict(id=target, original=name, size=image.width, rgbaSha256=hashlib.sha256(image.tobytes()).hexdigest())
         return target
     for kind in ('access_card', 'data_chip'):
+        # Server geometry consumes the same authored variants as the original mounted pad.
+        states = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/blockstates' / (kind + '_slot.json')).read_text())
+        for variant in states['variants'].values():
+            variant['model'] = variant['model'].replace('vandorlabs:token_slots/', 'vandorlabs:block/token_slots/')
+        destination = ASSETS / 'blockstates' / (kind + '_slot.json')
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(states, separators=(',', ':')) + '\n')
         for source in sorted((ROOT / 'src/main/resources/assets/vandorlabs/models/block/token_slots').glob(kind + '_slot_*.json')):
             value = json.loads(source.read_text())
             value['textures'] = {key: texture(item) for key, item in value['textures'].items()}

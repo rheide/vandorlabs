@@ -50,8 +50,10 @@ public final class NativeMountedControlGeometry {
     public record Pose(List<List<Vec3>> components,List<AABB> supports,AABB support){}
     private record Geometry(List<AABB> boxes,AABB bounds,VoxelShape shape){}
     public static int rotation(BlockState state,int rotation){return state.getValue(NativeMountedSwitchBlock.FACING).getAxis()==Direction.Axis.Y?rotation&3:0;}
+    /** Authored mounted families sharing the six-face switch state properties. */
+    public interface Profile { String mountedFamily(); }
     private static String key(BlockState state,int rotation){
-        String family=((NativeMountedSwitchBlock)state.getBlock()).isMomentary()?"push_button":"rocker_switch";
+        String family=state.getBlock() instanceof Profile profile?profile.mountedFamily():((NativeMountedSwitchBlock)state.getBlock()).isMomentary()?"push_button":"rocker_switch";
         return family+"/facing="+state.getValue(NativeMountedSwitchBlock.FACING).getSerializedName()+",on="+state.getValue(NativeMountedSwitchBlock.ON)+",rotation="+rotation(state,rotation);
     }
     public static Pose pose(BlockState state,int rotation){
