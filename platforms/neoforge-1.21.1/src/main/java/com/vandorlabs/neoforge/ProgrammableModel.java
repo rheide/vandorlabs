@@ -45,7 +45,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
         var segmentedBake=NativeSegmentedRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake);
-        var segmentedTerrain=new NativeSegmentedTerrainModel.Bake(event.getModels(),segmentedBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
+        var segmentedTerrain=new NativeSegmentedTerrainModel.Bake(event.getModelBakery(),event.getModels(),segmentedBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
         event.getModels().replaceAll((id,model) -> {
             if(NativeDoorClientBindings.segmented(id.id()))return id.getVariant().equals("inventory")?model:com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(NativeSegmentedTerrainModel.wrap(model,segmentedTerrain),event.getTextureGetter());
             if(NativeDoorClientBindings.ordinary(id.id())||NativeDoorClientBindings.large(id.id())){
