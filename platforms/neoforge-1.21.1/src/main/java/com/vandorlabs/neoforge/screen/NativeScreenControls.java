@@ -3,11 +3,11 @@ import com.vandorlabs.redstone.ChannelList;
 import net.minecraft.nbt.*;
 import java.util.*;
 /** Immutable standalone control rows; configuration copies exclude active output ownership. */
-public record NativeScreenControls(boolean enabled,String title,List<Row> rows) {
+public record NativeScreenControls(boolean enabled,String title,List<Row> rows) implements com.vandorlabs.screen.ScreenControlOverlay.Contents {
  public static final int STANDALONE_ROWS=8,HALF_ROWS=4,MAX_LABEL=24,MAX_TITLE=32,SLIDER_LABEL=11;
  public static final String DEFAULT_TITLE="REDSTONE CONTROL";
  public NativeScreenControls{Objects.requireNonNull(title);rows=List.copyOf(rows);if(rows.size()>STANDALONE_ROWS)throw new IllegalArgumentException("Too many standalone rows");}
- public record Row(String label,ChannelList channels,boolean slider,boolean pulse,int min,int max,int level,Map<Integer,Integer> levels,ChannelList latched,boolean active,long pulseUntil){
+ public record Row(String label,ChannelList channels,boolean slider,boolean pulse,int min,int max,int level,Map<Integer,Integer> levels,ChannelList latched,boolean active,long pulseUntil) implements com.vandorlabs.screen.ScreenControlOverlay.Row {
   public Row{Objects.requireNonNull(label);Objects.requireNonNull(channels);Objects.requireNonNull(latched);levels=Map.copyOf(levels);}
   /** Pulse visibility follows its own deadline; the saved active field is ALL-bank feedback. */
   public boolean active(long now){return pulse?pulseUntil>0&&now<pulseUntil:active;}

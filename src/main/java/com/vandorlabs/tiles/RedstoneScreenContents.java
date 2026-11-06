@@ -6,7 +6,7 @@ import net.minecraft.tileentity.TileEntity;
 import java.util.*;
 
 /** Event-driven row controls. Each row is an independent member of its channel bank. */
-public final class RedstoneScreenContents {
+public final class RedstoneScreenContents implements com.vandorlabs.screen.ScreenControlOverlay.Contents {
     private final TileEntityAnimatedScreenSelector owner;
     private final int slot;
     private boolean enabled;
@@ -158,7 +158,7 @@ public final class RedstoneScreenContents {
         }
         rows=next;view=Collections.unmodifiableList(rows);if(owner.getWorld()!=null)limitRows();
     }
-    public final class Row implements RedstoneChannelLatch {
+    public final class Row implements RedstoneChannelLatch,com.vandorlabs.screen.ScreenControlOverlay.Row {
         public final String label;
         public ChannelList channels;
         private ChannelList latched=ChannelList.EMPTY;
@@ -187,6 +187,8 @@ public final class RedstoneScreenContents {
         public void applyLinkedLevels(Map<Integer,Integer> value){levels.clear();levels.putAll(value);RedstoneChannelLatch.super.applyLinkedLevels(value);}
 
         Row(String label,ChannelList channels){this.label=label;this.channels=channels;}
+        public String label(){return label;}public boolean slider(){return slider;}public boolean pulse(){return pulse;}
+        public boolean active(long now){return pulse?pulseUntil>0&&owner.getWorld()!=null&&now<pulseUntil:active;}
         public boolean active(){return pulse?pulseUntil>0&&owner.getWorld()!=null&&owner.getWorld().getTotalWorldTime()<pulseUntil:active;}
         public String transmitterSlot(){return "main";}
         public ChannelList transmittedChannels(){return channels;}

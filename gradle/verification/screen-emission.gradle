@@ -20,6 +20,7 @@ task screenRoleOracleJar(type: Jar) {
     classifier = 'screen-role-oracle'
     from(compileNonRenderingChecks.destinationDir) {
         include 'com/vandorlabs/client/ScreenRoleGLOracle*.class'
+        include 'com/vandorlabs/client/ScreenRowsGLOracle*.class'
     }
 }
 reobf { screenRoleOracleJar {} }
@@ -44,4 +45,10 @@ task exportScreenMediaReference(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.ScreenMediaLegacyChecks'
     args file('build/test-artifacts/screen-media-forge.json').absolutePath
+}
+task testScreenControlOverlay(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ScreenControlOverlayChecks'
+    maxHeapSize = '512M'
 }
