@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+ systemProperty 'screenGeometryReference',file(project.findProperty('screenGeometryReference') ?: '../../build/test-artifacts/screen-geometry-reference.json').absolutePath
+}
