@@ -15,6 +15,9 @@ public final class NativeMaterialPicker {
     private final Minecraft minecraft=Minecraft.getInstance();
     private final net.minecraft.client.gui.Font font=minecraft.font;
     private final IntConsumer chosen;
+    private IntConsumer inventoryChosen;
+    /** Optional Source dialog policy for the inventory sampler; ordinary list choices keep their callback. */
+    public NativeMaterialPicker inventoryChosen(IntConsumer callback){inventoryChosen=Objects.requireNonNull(callback);return this;}
     private int x,y,width,allocatedRows,selected;
     private final Map<net.minecraft.client.renderer.texture.TextureAtlasSprite,CroppedSprite> crops=new IdentityHashMap<>();
     private EditBox search;
@@ -33,7 +36,7 @@ public final class NativeMaterialPicker {
     private NativeInventorySamplePicker inventoryPicker;
     public NativeInventorySamplePicker inventoryPicker(){return inventoryPicker;}
     public NativeMaterialPicker(int selected,IntPredicate include,IntConsumer chosen){
-        this.selected=selected;this.chosen=chosen;
+        this.selected=selected;this.chosen=chosen;this.inventoryChosen=chosen;
         for(var choice:ModernFinishCatalog.allChoices()){
             int index=choice.choice();var entry=choice.entry();
             if(entry.visible()&&include.test(index)){groups.computeIfAbsent(entry.category(),key->new ArrayList<>()).add(index);options.add(index);}
@@ -84,7 +87,7 @@ public final class NativeMaterialPicker {
     private int thumbHeight(){return DialogInput.thumbHeight(height(),visible(),rows.size());}
     private int thumbTop(){return DialogInput.thumbY(top(),height(),thumbHeight(),scroll,maximum());}
     private int row(int row){int id=rows.get(scroll+row);if(TextureListLayout.pinCategory(row,visible(),search.getValue().trim().isEmpty())&&option(id))return TextureListLayout.categoryRow(categories.indexOf(category(id)));return id;}
-    private void customInventory(){inventoryPicker=new NativeInventorySamplePicker(x,y,width+7,height()+22,stack->{int value=NativeBlockMaterials.sample(stack);inventoryPicker=null;choose(value);},()->{inventoryPicker=null;search.visible=true;search.active=true;});search.visible=false;search.active=false;}
+    private void customInventory(){inventoryPicker=new NativeInventorySamplePicker(x,y,width+7,height()+22,stack->{int value=NativeBlockMaterials.sample(stack);selected=value;closeInventory();inventoryChosen.accept(value);},()->{inventoryPicker=null;search.visible=true;search.active=true;});search.visible=false;search.active=false;}
     public boolean click(double x,double y,int button){
         if(inventoryPicker!=null)return inventoryPicker.click((int)x,(int)y,button);
         if(button==0&&y>=top()&&y<top()+height()){
