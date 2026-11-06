@@ -22,6 +22,13 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
  double from;long started,sequence;UUID identity=UUID.randomUUID(),motionIdentity;
  public record Publication(NativeSegmentedVisual visual,NativeSegmentedVisual.Motion motion){}
  private volatile Publication publication;
+ private volatile NativeSegmentedTerrainSnapshot.ClientProjection clientTerrain=NativeSegmentedTerrainSnapshot.ClientProjection.EMPTY;
+ private static volatile java.util.function.Consumer<NativeSegmentedDoorEntity> clientObserver=ignored->{};
+ public static void clientObserver(java.util.function.Consumer<NativeSegmentedDoorEntity> observer){clientObserver=Objects.requireNonNull(observer);}
+ public final NativeSegmentedTerrainSnapshot.ClientProjection clientTerrain(){return clientTerrain;}
+ public final void clientTerrain(NativeSegmentedTerrainSnapshot.ClientProjection next){if(level!=null&&!level.isClientSide)throw new IllegalStateException("Segmented terrain flags are client-only");clientTerrain=Objects.requireNonNull(next);}
+ private void notifyClientPublication(){if(level!=null&&level.isClientSide)clientObserver.accept(this);}
+
  final NativeSegmentedFluids fluidState=new NativeSegmentedFluids(this);
  public NativeSegmentedDoorEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);publishLocal();}
  public final NativeSegmentedDoorSettings settings(){return settings;}public final int topOffset(){return topOffset;}public final int height(){return height;}public final int column(){return column;}public final int columnsCount(){return columns;}public final int ticksPerSection(){return ticksPerSection;}public final int texture(){return texture;}public final int duration(){return duration;}public final long sequence(){return sequence;}public final long started(){return started;}public final double initialPose(){return from;}public final boolean targetOpen(){return targetOpen;}public final boolean formed(){return formed;}public final boolean configured(){return configured;}public final boolean localRedstone(){return localRedstone;}public final boolean signalOpens(){return signalOpens;}public final boolean inert(){return inert;}public final Publication publication(){return publication;}
@@ -41,7 +48,7 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
  @Override public void refreshFluidGeometry(){fluidState.refresh();}
  @Override public int containedFluidSide(double x,double y,double z){return fluidState.side(x,y,z);}
  @Override public void containedFluidsChanged(){fluidState.changed();}
- @Override public net.neoforged.neoforge.client.model.data.ModelData getModelData(){return net.neoforged.neoforge.client.model.data.ModelData.builder().with(NativeFluidRenderSnapshot.DATA,fluidState.render()).build();}
+ @Override public net.neoforged.neoforge.client.model.data.ModelData getModelData(){return net.neoforged.neoforge.client.model.data.ModelData.builder().with(NativeFluidRenderSnapshot.DATA,fluidState.render()).with(NativeSegmentedTerrainSnapshot.DATA,clientTerrain.terrain()).build();}
  public Direction facing(){return getBlockState().hasProperty(NativeSegmentedDoorBlock.FACING)?getBlockState().getValue(NativeSegmentedDoorBlock.FACING):Direction.NORTH;}
  public static NativeSegmentedDoorEntity at(Level level,BlockPos pos){if(level==null||!level.hasChunkAt(pos))return null;var raw=level.getBlockEntity(pos);return raw instanceof NativeSegmentedDoorEntity tile&&!tile.isRemoved()&&!tile.inert?tile:null;}
  boolean installed(){if(level instanceof net.minecraft.server.level.ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Segmented world access requires server thread");return !inert&&level!=null&&!isRemoved()&&level.hasChunkAt(worldPosition)&&level.getBlockEntity(worldPosition)==this;}
@@ -69,9 +76,9 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
   for(var t:all){t.fluidState.localChanged();t.refreshFluidGeometry();if(rootsOnly)t.fluidState.motionChanged();}
   for(var t:all)t.setChanged();for(var t:all)if(!rootsOnly||t.topOffset==0)t.publicationChanged();
  }
- protected void publicationChanged(){if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);}
+ protected void publicationChanged(){notifyClientPublication();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);}
  private Publication project(List<NativeSegmentedDoorSettings> rows,List<SegmentedWindowLayout> windows){return new Publication(new NativeSegmentedVisual(columns,height,column,facing(),texture,settings,rows,windows,!inert&&formed&&level!=null,false,false,false),new NativeSegmentedVisual.Motion(identity,motionIdentity,sequence,targetOpen,pose(0),ticksPerSection,started,duration));}
- void publishLocal(){List<NativeSegmentedDoorSettings> rows=new ArrayList<>();List<SegmentedWindowLayout> windows=new ArrayList<>();for(int row=0;row<height;row++){rows.add(settings);windows.add(SegmentedWindowLayout.SINGLE);}publication=project(rows,windows);fluidState.localChanged();}
+ void publishLocal(){List<NativeSegmentedDoorSettings> rows=new ArrayList<>();List<SegmentedWindowLayout> windows=new ArrayList<>();for(int row=0;row<height;row++){rows.add(settings);windows.add(SegmentedWindowLayout.SINGLE);}publication=project(rows,windows);fluidState.localChanged();notifyClientPublication();}
 
  @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return channels;}@Override public void setChannelLevel(int level){boolean next=level>0;if(channelSignal!=next){channelSignal=next;powerPending=true;root().powerPending=true;}}
  @Override public boolean isChannelMemberActive(){return !inert&&NativeChannelMember.super.isChannelMemberActive();}
