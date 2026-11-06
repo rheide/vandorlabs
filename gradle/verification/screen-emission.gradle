@@ -37,3 +37,11 @@ task testScreenRenderGeometry(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.ScreenRenderGeometryChecks'
 }
+
+task exportScreenMediaReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ScreenMediaLegacyChecks'
+    args file('build/test-artifacts/screen-media-forge.json').absolutePath
+}
