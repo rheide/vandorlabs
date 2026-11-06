@@ -25,7 +25,7 @@ public record PortholeGlassPayload(BlockPos pos,int windowId,PanelGlassSettings 
     public boolean valid(){return pos!=null&&windowId>=0&&NativeWallEntity.validPanelGlass(glass)&&playback!=null&&shape>=0&&shape<4;}
     @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
     public static boolean apply(ServerPlayer player,PortholeGlassPayload packet){
-        if(!player.getServer().isSameThread()||!packet.valid()||!(player.containerMenu instanceof ProgrammableMenu menu)||menu.containerId!=packet.windowId||!menu.stillValid(player)||!menu.tile.getBlockPos().equals(packet.pos)||!(menu.tile instanceof NativeWallEntity wall)||!wall.isPorthole())return false;
+        if(!player.getServer().isSameThread()||!packet.valid()||!(player.containerMenu instanceof ProgrammableMenu menu)||menu.containerId!=packet.windowId||!menu.stillValid(player)||!menu.tile.getBlockPos().equals(packet.pos)||!(menu.tile instanceof NativeWallEntity wall)||!wall.isPorthole()&&!wall.isGlass())return false;
         return wall.configurePanelGlass(packet.glass,packet.playback,packet.joined,packet.shape);
     }
     public static void register(RegisterPayloadHandlersEvent event){event.registrar("1").playToServer(TYPE,CODEC,(packet,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer player)apply(player,packet);}));}

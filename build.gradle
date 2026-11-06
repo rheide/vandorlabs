@@ -1547,3 +1547,8 @@ task testDiagonalGlassFrameAdapters(type: JavaExec) {
     maxHeapSize = '1G'
 }
 check.dependsOn testDiagonalGlassFrameAdapters
+task testDiagonalGlassDialogLegacy(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalGlassDialogLegacyChecks'
+}
