@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenSettings', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenSettingsChecks'
+ systemProperty 'screenInputs',file('../../generated-resources/assets/vandorlabs/data/input_surfaces.json').absolutePath
+}

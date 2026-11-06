@@ -21,7 +21,8 @@ public final class DisplayActivationData {
  }
  /** The explicit visible mode preserves the legacy public mutable mode field. */
  public DisplayActivationData inheritUnset(int visibleMode,int texture,int playback,int speed){
-  int[] t=textures.clone(),p=this.playback.clone(),s=speeds.clone();boolean changed=mode!=visibleMode;
+  boolean changed=mode!=visibleMode;for(int i=0;i<4&&!changed;i++)changed=(visibleMode==2||i==0||i==3)&&textures[i]<0&&this.playback[i]<0&&speeds[i]<0;if(!changed)return this;
+  int[] t=textures.clone(),p=this.playback.clone(),s=speeds.clone();
   for(int i=0;i<4;i++)if((visibleMode==2||i==0||i==3)&&t[i]<0&&p[i]<0&&s[i]<0){t[i]=texture;p[i]=playback;s[i]=speed;changed=true;}
   return changed?new DisplayActivationData(visibleMode,t,p,s):this;
  }
