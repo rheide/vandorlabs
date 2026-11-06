@@ -34,7 +34,7 @@ header model geometry is forwarded rather than overwritten with builtin elements
 
 The root model hook obtains the shared bake from `NativeSegmentedRenderer.prepare`
 before replacing world models, constructs `NativeSegmentedTerrainModel.Bake` with
-the model map and active resource manager, then wraps each world Segmented model
+the model bakery, model map, shared renderer bake and active resource manager, then wraps each world Segmented model
 inside the existing fluid wrapper. Inventory models are left on their existing path.
 The old later call to `NativeSegmentedRenderer.prepare` must be removed to avoid
 creating a second resource-generation cache.
@@ -49,6 +49,15 @@ completion callback. The mixins are client-only; common/server mixin lists remai
 unchanged. CPU negatives and actual client mixin application are separate from
 world upload and rendering acceptance.
 
-The terrain model and acknowledgement primitives are an incremental foundation.
-The coordinator, asynchronous suppression/resume and real-world performance checks
-must pass before claiming the complete terrain handoff is accepted.
+`NativeSegmentedChunks` stages every cell before refreshing model data and binds
+each affected section to the current upload publication. Forced asynchronous
+submissions are limited to eight per tick. Closed BER panels remain visible until
+all sections acknowledge; opening resumes the cosmetic clock only after terrain
+removal. Awaiting columns do not capture or sample motion. Settled columns skip
+row lighting and body emission. Resource generations activate only after a wrapped
+bakery completes, with older completions rejected; the compatibility constructor
+without a bakery does not activate the coordinator.
+
+The coordinator is an incremental candidate. Actual world upload, asynchronous
+suppression/resume and before/after rendering costs must pass before claiming the
+complete terrain handoff is accepted.
