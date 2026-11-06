@@ -29,5 +29,6 @@ public final class NativeScreenRenderer {
   public long meshBuilds(){return builds;}
   public void clear(){com.mojang.blaze3d.systems.RenderSystem.assertOnRenderThread();worlds.clear();}
  }
- public static void renderAt(Bake bake,NativeScreenEntity.Visual visual,ScreenFamily.State state,NativeScreenRenderProjection projection,Object world,BlockPos owner,PoseStack poses,MultiBufferSource buffers,int ownerLight,int overlay){if(visual.inert())return;bake.draw(visual,state,projection,world,owner).emit(poses,buffers,ownerLight,overlay);}
+ public static void renderAt(Bake bake,NativeScreenEntity.Visual visual,ScreenFamily.State state,NativeScreenRenderProjection projection,Object world,BlockPos owner,PoseStack poses,MultiBufferSource buffers,int ownerLight,int overlay){if(visual.inert())return;bake.draw(visual,state,projection,world,owner).emit(poses,buffers,ownerLight,overlay,visual,state,0,NativeScreenSurfaceConsumer.MISSING);}
+ public static void renderAt(Bake bake,NativeScreenEntity.Visual visual,ScreenFamily.State state,NativeScreenRenderProjection projection,Object world,BlockPos owner,PoseStack poses,MultiBufferSource buffers,int ownerLight,int overlay,long controlTime,NativeScreenSurfaceConsumer consumer){if(visual.inert())return;Objects.requireNonNull(consumer);bake.draw(visual,state,projection,world,owner).emit(poses,buffers,ownerLight,overlay,visual,state,controlTime,consumer);}
 }
