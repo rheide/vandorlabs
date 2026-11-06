@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.item.context.BlockPlaceContext;
 /** Unregistered stationary housing; global artwork/input binding remains separate. */
-public abstract class NativeSegmentedDoorBlock extends BaseEntityBlock {
+public abstract class NativeSegmentedDoorBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
  public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
  public static final BooleanProperty TOP=BooleanProperty.create("top"),BOTTOM=BooleanProperty.create("bottom");
  protected NativeSegmentedDoorBlock(Properties properties){super(properties);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(TOP,true).setValue(BOTTOM,true));}
@@ -46,6 +46,11 @@ public abstract class NativeSegmentedDoorBlock extends BaseEntityBlock {
  @Override protected boolean canSurvive(BlockState state,LevelReader level,BlockPos pos){return !(level instanceof Level actual)||canAdd(actual,pos);}
  @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
  @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){return level.isClientSide?null:(world,pos,block,tile)->{if(tile instanceof NativeSegmentedDoorEntity door)door.tickServer();};}
- @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block neighbor,BlockPos from,boolean moving){var tile=NativeSegmentedDoorEntity.at(level,pos);if(tile!=null)tile.scheduleRefresh();}
- @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){super.onRemove(state,level,pos,next,moving);if(!state.is(next.getBlock()))for(BlockPos p:new BlockPos[]{pos.above(),pos.below(),pos.relative(state.getValue(FACING).getClockWise()),pos.relative(state.getValue(FACING).getCounterClockWise())}){var tile=NativeSegmentedDoorEntity.at(level,p);if(tile!=null)tile.scheduleRefresh();}}
+ @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block neighbor,BlockPos from,boolean moving){com.vandorlabs.neoforge.fluid.NativeFluidWorld.queueAt(level,pos);var tile=NativeSegmentedDoorEntity.at(level,pos);if(tile!=null)tile.scheduleRefresh();}
+ @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){if(!state.is(next.getBlock())){var owner=NativeSegmentedTargets.loaded(level,pos);if(owner!=null)owner.stopFluids();}super.onRemove(state,level,pos,next,moving);if(!state.is(next.getBlock()))for(BlockPos p:new BlockPos[]{pos.above(),pos.below(),pos.relative(state.getValue(FACING).getClockWise()),pos.relative(state.getValue(FACING).getCounterClockWise())}){var tile=NativeSegmentedDoorEntity.at(level,p);if(tile!=null)tile.scheduleRefresh();}}
+ @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.light(level,pos);}
+ @Override public boolean canPlaceLiquid(net.minecraft.world.entity.player.Player player,BlockGetter level,BlockPos pos,BlockState state,net.minecraft.world.level.material.Fluid fluid){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.canPlaceLiquid(level,pos,fluid);}
+ @Override public boolean placeLiquid(LevelAccessor level,BlockPos pos,BlockState state,net.minecraft.world.level.material.FluidState fluid){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.placeLiquid(level,pos,fluid);}
+ @Override public net.minecraft.world.item.ItemStack pickupBlock(net.minecraft.world.entity.player.Player player,LevelAccessor level,BlockPos pos,BlockState state){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.pickupBlock(level,pos);}
 }
+
