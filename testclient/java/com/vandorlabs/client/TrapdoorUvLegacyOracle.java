@@ -32,6 +32,13 @@ public final class TrapdoorUvLegacyOracle {
     for(int rawLayout:new int[]{-1,0,1,2})for(boolean rawTile:new boolean[]{false,true})for(boolean door:new boolean[]{false,true})for(double aspect:new double[]{.5,1,2}){
      NBTTagCompound saved=tag(origin,mode,diagonal,face,inverted,flags,assembly?members:Collections.emptyList());saved.setInteger("TrapdoorTextureLayout",rawLayout);saved.setBoolean("TrapdoorTileTexture",rawTile);saved.setInteger("housingTexture",door?doorChoice:ScreenHousingTextures.DEFAULT_TRAPDOOR);tile.readFromNBT(saved);
      double[][] closed=new double[8][3],uv=new double[8][3];boolean tiled=TEProgrammableTrapdoor.materialCoordinates(tile,state,group,closed,uv,aspect);
+     if(args.length>1){
+      boolean tall=diagonal&&mode!=2,widthX=face.getAxis()==(diagonal?EnumFacing.Axis.Z:EnumFacing.Axis.X);int ou=widthX?origin.getX():origin.getZ(),ov=tall?origin.getY():widthX?origin.getZ():origin.getX();double minU=Double.POSITIVE_INFINITY,minV=minU,maxU=Double.NEGATIVE_INFINITY,maxV=maxU;
+      for(TileEntityProgrammableTrapdoor leaf:group){double u=widthX?leaf.getPos().getX():leaf.getPos().getZ(),v=tall?leaf.getPos().getY():widthX?leaf.getPos().getZ():leaf.getPos().getX();minU=Math.min(minU,u);minV=Math.min(minV,v);maxU=Math.max(maxU,u+1);maxV=Math.max(maxV,v+1);}
+      if(tile.isCover()){BlockPos at=origin.offset(face);double offset=tile.coverOffset();minU=(widthX?at.getX():at.getZ())+offset*(widthX?face.getFrontOffsetX():face.getFrontOffsetZ());maxU=minU+1;minV=(widthX?at.getZ():at.getX())+offset*(widthX?face.getFrontOffsetZ():face.getFrontOffsetX());maxV=minV+1;}
+      double[][] mapped=new double[8][3];boolean actual=TrapdoorArtworkCoordinates.write(closed,mapped,widthX,tall,diagonal,mode,ou,ov,minU-ou,minV-ov,maxU-ou,maxV-ov,tile.getTextureLayout(),rawTile,door,aspect);
+      if(actual!=tiled)throw new AssertionError("tiled profile "+profiles);for(int i=0;i<8;i++)for(int axis=0;axis<3;axis++)if(Double.doubleToLongBits(mapped[i][axis])!=Double.doubleToLongBits(uv[i][axis]))throw new AssertionError("UV scalar profile "+profiles+" corner "+i+" axis "+axis);
+     }
      JsonObject record=new JsonObject();record.addProperty("diagonal",diagonal);record.addProperty("mode",mode);record.addProperty("face",face.getHorizontalIndex());record.addProperty("flags",flags);record.addProperty("rawLayout",rawLayout);record.addProperty("layout",tile.getTextureLayout());record.addProperty("rawTile",rawTile);record.addProperty("door",door);record.addProperty("aspect",aspect);record.addProperty("tiled",tiled);record.add("closed",corners(closed));record.add("uv",corners(uv));out.println(gson.toJson(record));profiles++;
     }
    }
