@@ -2,5 +2,8 @@ neoForge.runs.configureEach {
     if(project.hasProperty('chipJournalReference')) systemProperty 'vandorlabs.chipJournalReference',file(project.property('chipJournalReference')).absolutePath
 }
 neoForge.runs.configureEach {
-    if(project.hasProperty('embeddedChipReference')) systemProperty 'vandorlabs.embeddedChipReference',file(project.property('embeddedChipReference')).absolutePath
+    if(project.hasProperty('embeddedChipReference')) {
+        systemProperty 'vandorlabs.embeddedChipReference',file(project.property('embeddedChipReference')).absolutePath
+        systemProperty 'vandorlabs.journalOverlayReference',file('../../testclient/fixtures/screen-journal-overlay-reference.json.gz').absolutePath
+    }
 }
