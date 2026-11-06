@@ -31,3 +31,10 @@ tasks.register('testNativeScreenRenderPlanActivation', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.screen.ScreenRenderPlanChecks'
     args file('../../testclient/fixtures/screen-role-gl-activation-reference.json').absolutePath,file('../../testclient/fixtures/screen-role-light-activation-reference.json.gz').absolutePath,'true'
 }
+
+tasks.register('testNativeScreenMesh', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeScreenMeshChecks'
+    args file('../../testclient/fixtures/screen-role-geometry-reference.json.gz').absolutePath,file('../../testclient/fixtures/screen-role-gl-reference.json').absolutePath
+}
