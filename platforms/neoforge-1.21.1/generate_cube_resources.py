@@ -119,6 +119,8 @@ def main():
     generate_shapes(ROOT,OUT)
     from generate_wireless_resources import generate as generate_wireless
     atlas.extend(generate_wireless(ROOT,OUT))
+    from generate_credential_resources import generate as generate_credentials
+    atlas.extend(generate_credentials(ROOT,OUT))
     write(ASSETS/'data/housing_finishes.json',catalog)
     write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())+[dict(type='vandorlabs:frame_edges'),dict(type='vandorlabs:door_sprites')]))
     variants={f'facing={face}':dict(model='vandorlabs:block/programmable_block',y=angle) for face,angle in [('north',0),('east',90),('south',180),('west',270),('up',90),('down',90)]}
