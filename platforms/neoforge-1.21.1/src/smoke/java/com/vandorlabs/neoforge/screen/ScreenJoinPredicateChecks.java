@@ -1,0 +1,11 @@
+package com.vandorlabs.neoforge.screen;
+import com.google.gson.*;
+import com.vandorlabs.screen.*;
+import com.vandorlabs.persistence.FrameSettings;
+import com.vandorlabs.neoforge.ModernHousingTags;
+import net.minecraft.nbt.*;
+/** Compare both private Source predicates and actual two-member discovery outcomes. */
+public final class ScreenJoinPredicateChecks {
+ public static void main(String[] args)throws Exception{JsonObject reference;try(var reader=java.nio.file.Files.newBufferedReader(java.nio.file.Path.of(System.getProperty("screenJoinPredicatesReference")))){reference=JsonParser.parseReader(reader).getAsJsonObject();}int cases=0;for(var entry:reference.getAsJsonArray("cases")){var row=entry.getAsJsonObject();var family=ScreenFamily.fromId(row.get("id").getAsString());var a=signature(family,row.get("first").getAsString());var b=signature(family,row.get("second").getAsString());if(a.editMatches(b)!=row.get("editMatch").getAsBoolean()||a.powerMatches(b)!=row.get("powerMatch").getAsBoolean()||(a.editEligible(family)&&a.editMatches(b)?2:1)!=row.get("editMembers").getAsInt()||(a.powerEligible(family)&&a.powerMatches(b)?2:1)!=row.get("powerMembers").getAsInt())throw new AssertionError("Source join signature differs "+row.get("id")+" variant="+row.get("variant"));cases++;}if(cases!=2240||!reference.get("sha256").getAsString().equals("6080adf0572b34806a10b4a6f0456c76b39a366e7cbb7879e908862ad58762da"))throw new AssertionError("Source join predicate coverage");System.out.println("Native Screen join predicates PASS actual Source matching/discovery="+cases+" no received-channel feedback");}
+ private static ScreenJoinSignature signature(ScreenFamily family,String saved)throws Exception{var catalog=NativeScreenCatalog.INSTANCE;var tag=TagParser.parseTag(saved);var settings=NativeScreenSettings.read(tag,catalog);var frames=FrameSettings.read(new ModernHousingTags(tag),catalog::validFrame,catalog::validFrameSurface,catalog::validMaterial);return NativeScreenJoining.signature(family,settings,frames,java.util.List.of(NativeScreenControls.read(tag.getCompound("RedstonePrimary"),family.standaloneControlRows(0)),NativeScreenControls.read(tag.getCompound("RedstoneSecondary"),family.standaloneControlRows(1))),catalog);}
+}

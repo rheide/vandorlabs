@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenJoinPredicates', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenJoinPredicateChecks'
+ systemProperty 'screenJoinPredicatesReference',file(project.findProperty('screenJoinPredicatesReference') ?: '../../build/test-artifacts/screen-join-predicates-reference.json').absolutePath
+}
