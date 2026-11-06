@@ -1,0 +1,6 @@
+tasks.register('testNativeTrapdoorLinks', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.trapdoor.TrapdoorLinksChecks'
+    args rootProject.file('../../build/test-artifacts/trapdoor-lifecycle-forge.json').absolutePath
+}
