@@ -5,3 +5,11 @@ task exportLargeDoorReference(type: JavaExec) {
     maxHeapSize = '512M'
     systemProperty 'vandorlabs.largeDoorReference', file(project.findProperty('largeDoorReference') ?: 'build/test-artifacts/large-door-forge.json').absolutePath
 }
+
+task exportLargeDoorGeometryReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LargeDoorGeometryLegacyChecks'
+    maxHeapSize = '1G'
+    systemProperty 'vandorlabs.largeDoorGeometryReference', file('build/test-artifacts/large-door-geometry-forge.jsonl').absolutePath
+}
