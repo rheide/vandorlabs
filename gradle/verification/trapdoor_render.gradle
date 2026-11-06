@@ -5,3 +5,11 @@ task exportTrapdoorGeometryReference(type: JavaExec) {
     main = 'com.vandorlabs.client.TrapdoorGeometryLegacyOracle'
     args file(project.findProperty('trapdoorGeometryReference') ?: 'build/test-artifacts/trapdoor-geometry-forge.jsonl').absolutePath
 }
+
+task exportTrapdoorRenderReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorRenderLegacyOracle'
+    args file(project.findProperty('trapdoorRenderReference') ?: 'build/test-artifacts/trapdoor-render-forge.jsonl').absolutePath
+}
