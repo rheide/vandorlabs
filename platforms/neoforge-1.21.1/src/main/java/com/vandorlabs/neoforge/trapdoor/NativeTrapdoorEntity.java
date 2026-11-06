@@ -26,6 +26,7 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
     @Override public boolean openingFluidVolume(){return true;}@Override public boolean fluidActionsAllowed(){return !inert;}
     @Override public Direction[] fluidPlacementFaces(){return fluidState.placementFaces();}
     @Override public BlockEntity fluidOwner(){return this;}@Override public NativeFluidSlots containedFluids(){return fluidState.slots();}
+    @Override public NativeFluidRegions fluidSurfaceRegions(){return fluidState.surfaceRegions();}
     @Override public NativeFluidSlots.Snapshot effectiveFluidSnapshot(){return fluidState.effective();}@Override public NativeFluidVolume fluidVolumeSnapshot(){return fluidState.volume();}
     @Override public long fluidGeometryRevision(){return fluidState.revision();}@Override public long modelDataRevision(){return fluidState.revision();}
     @Override public NativeFluidRenderSnapshot fluidRenderSnapshot(){return fluidState.render();}@Override public void publishFluidRenderSnapshot(NativeFluidRenderSnapshot snapshot){fluidState.render(snapshot);}
