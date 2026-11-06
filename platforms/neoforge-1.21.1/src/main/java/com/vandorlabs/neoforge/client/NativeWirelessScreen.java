@@ -52,6 +52,8 @@ public final class NativeWirelessScreen extends AbstractContainerScreen<Wireless
         if(button==1)for(var entry:options.entrySet())if(entry.getValue().isMouseOver(x,y)){entry.getValue().playDownSound(minecraft.getSoundManager());act(entry.getKey(),-1);return true;}
         if(page==1&&transmission!=null&&transmission.mouseClicked(x,y,button))return true;return super.mouseClicked(x,y,button);
     }
+    @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){return NativeIntegerSlider.dragFocused(getFocused(),x,y,button,dx,dy)||super.mouseDragged(x,y,button,dx,dy);}
+    @Override public boolean mouseReleased(double x,double y,int button){NativeIntegerSlider.releaseFocused(getFocused(),x,y,button);return super.mouseReleased(x,y,button);}
     @Override public boolean keyPressed(int key,int scan,int modifiers){if(page==1&&transmission!=null&&transmission.specialKey(key))return true;if(key==257||key==335)return true;return super.keyPressed(key,scan,modifiers);}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
     @Override protected void renderBg(GuiGraphics graphics,float partial,int x,int y){graphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0xFF101012);graphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+24,0xFF202028);graphics.drawString(font,title,leftPos+12,topPos+8,0xFFFFFFFF,false);

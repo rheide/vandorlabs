@@ -21,7 +21,7 @@ public final class BinaryControlScene {
             int i=face.get3DDataValue();BlockPos support=SUPPORTS[i],pos=support.relative(face);level.setBlock(support,Blocks.IRON_BLOCK.defaultBlockState(),3);var block=i%2==0?VandorLabsBootstrap.PUSH_BUTTON.get():VandorLabsBootstrap.ROCKER_SWITCH.get();var state=block.defaultBlockState().setValue(NativeMountedSwitchBlock.FACING,face).setValue(NativeMountedSwitchBlock.ROTATION,0);level.setBlock(pos,state,3);
             var tile=(NativeBinaryControlBlockEntity)level.getBlockEntity(pos);var mount=ControlMountSettings.of(i%4,i%3,i%4);tile.configureMount(mount);
             var actual=state.getCollisionShape(level,pos);var expected=NativeMountedControlGeometry.shape(state,mount,0);require(!net.minecraft.world.phys.shapes.Shapes.joinIsNotEmpty(actual,expected,net.minecraft.world.phys.shapes.BooleanOp.NOT_SAME),"actual collision differs "+face);
-            var pick=state.getShape(level,pos);require(!net.minecraft.world.phys.shapes.Shapes.joinIsNotEmpty(pick,expected,net.minecraft.world.phys.shapes.BooleanOp.NOT_SAME),"actual selection differs "+face);
+            var pick=state.getShape(level,pos);var outline=NativeMountedControlGeometry.outline(state,mount,0);require(!net.minecraft.world.phys.shapes.Shapes.joinIsNotEmpty(pick,outline,net.minecraft.world.phys.shapes.BooleanOp.NOT_SAME),"actual selection differs "+face);
         }
         System.out.println("[vandorlabs][binary-scene] server PASS six real mounted controls with authored collision/selection");
     }
