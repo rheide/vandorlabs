@@ -71,5 +71,6 @@ tasks.register('testNativePropulsionParticles', JavaExec) {
     dependsOn tasks.named('smokeClasses')
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionParticleChecks'
-    args file('../../build/test-artifacts/propulsion-particle-forge.jsonl').absolutePath
+    args file('../../build/test-artifacts/propulsion-particle-forge.jsonl').absolutePath,
+         file('../../build/test-artifacts/propulsion-particle-collision-forge.jsonl').absolutePath
 }
