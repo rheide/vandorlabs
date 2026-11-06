@@ -115,7 +115,16 @@ def main():
     for entry in catalog:
         if 'design' in entry and entry.get('detail', 0) == 0:
             previews[entry['id']] = texture('vandorlabs:blocks/' + entry['source'])
-    write(ASSETS / 'data/door_artwork.json', dict(models=additional, textures=list(textures.values()), previews=previews))
+    def elements(name):
+        location = name.split(':', 1)[1]
+        value = models.get(location)
+        if value is None:
+            return []
+        if 'elements' in value:
+            return value['elements']
+        return elements(value['parent']) if value.get('parent', '').startswith('vandorlabs:') else []
+    faces = {name: sum(len(element.get('faces', {})) for element in elements(name)) for name in additional}
+    write(ASSETS / 'data/door_artwork.json', dict(models=additional, textures=list(textures.values()), previews=previews, faces=faces))
     print('Authored door resources:', len(additional), 'additional models,', len(models), 'closure models,',
           len(templates), 'shared geometry templates,', len(textures), 'standard square-padded sprites; full content UV descriptors retained')
 

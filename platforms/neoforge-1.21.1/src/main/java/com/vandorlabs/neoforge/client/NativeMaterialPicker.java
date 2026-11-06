@@ -27,6 +27,8 @@ public final class NativeMaterialPicker {
     private int scroll,dragOffset;
     private boolean dragging;
     private boolean sampling=true;
+    private java.util.function.IntFunction<ModernFinishCatalog.Entry> presentation=ModernFinishCatalog::option;
+    public NativeMaterialPicker presentation(java.util.function.IntFunction<ModernFinishCatalog.Entry> lookup){presentation=Objects.requireNonNull(lookup);if(search!=null)rebuildRows();return this;}
     public static final int CUSTOM_ROW=Integer.MIN_VALUE;
     private NativeInventorySamplePicker inventoryPicker;
     public NativeInventorySamplePicker inventoryPicker(){return inventoryPicker;}
@@ -52,7 +54,7 @@ public final class NativeMaterialPicker {
     /** Glass finish lists intentionally omit the inventory sampler in the current editor. */
     public NativeMaterialPicker sampling(boolean enabled){sampling=enabled;if(!enabled)closeInventory();if(search!=null)rebuildRows();return this;}
     private boolean option(int id){return id>=0||special.containsKey(id);}
-    private ModernFinishCatalog.Entry entry(int id){var value=special.get(id);return value==null?ModernFinishCatalog.option(id):value;}
+    private ModernFinishCatalog.Entry entry(int id){var value=id<0?special.get(id):null;return value==null?presentation.apply(id):value;}
     private String label(int id){return entry(id).label();}
     private String category(int id){return entry(id).category();}
     public int selected(){return selected;}

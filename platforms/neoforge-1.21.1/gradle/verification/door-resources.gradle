@@ -28,3 +28,9 @@ tasks.register('testDoorResourceProjection', Exec) {
     workingDir projectDir
     commandLine doorResourcePython, 'test_door_resources.py'
 }
+tasks.register('testDoorAssetCatalog', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.door.DoorAssetCatalogChecks'
+}
