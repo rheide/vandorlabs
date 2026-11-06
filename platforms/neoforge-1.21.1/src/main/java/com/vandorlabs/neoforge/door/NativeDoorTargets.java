@@ -31,7 +31,7 @@ public final class NativeDoorTargets {
     private static boolean finite(Vec3 v){return v!=null&&Double.isFinite(v.x)&&Double.isFinite(v.y)&&Double.isFinite(v.z);}
     /** Geometry only: callers must separately compare non-door occluders and validate player permissions. */
     public static Target trace(Level level,Vec3 start,Vec3 end){
-        if(!NativeFluidWorld.open(level)||!finite(start)||!finite(end)||start.distanceToSqr(end)>64*64)return null;
+        if(!NativeFluidWorld.open(level)||!finite(start)||!finite(end)||start.distanceToSqr(end)>64*64||!INDEX.hasMembers(level))return null;
         var finder=FINDER.get();if(finder.active)finder=new Finder();finder.active=true;finder.level=level;finder.start=start;finder.end=end;finder.distance=Double.POSITIVE_INFINITY;
         try{INDEX.visit(level,new AABB(start,end).inflate(5),null,finder);return finder.best;}
         finally{finder.clear();}

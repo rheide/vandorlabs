@@ -19,6 +19,10 @@ public final class NativeShapeHighlight {
         if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableStairs)box=FULL;
         else if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeFlatWallBlock)box=com.vandorlabs.neoforge.shape.NativeFlatWallBlock.geometry(state,level,pos).bounds();
         else if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeDiagonalWallBlock)box=com.vandorlabs.neoforge.shape.NativeDiagonalWallBlock.geometry(state,level,pos).selectionBounds();
+        else if(state.getBlock() instanceof com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock door){
+            var resolved=door.resolved(level,pos,state);var root=com.vandorlabs.neoforge.door.NativeDoorLifecycle.root(level,pos);var facing=resolved.getValue(com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock.FACING);boolean open=resolved.getValue(com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock.OPEN),left=resolved.getValue(com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock.HINGE)==net.minecraft.world.level.block.state.properties.DoorHingeSide.LEFT,paired=resolved.getValue(com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock.PAIRED);
+            box=root==null?com.vandorlabs.neoforge.door.NativeDoorGeometry.orphanOutline(door.slidingModel(),facing,open,left,paired):com.vandorlabs.neoforge.door.NativeDoorGeometry.outline(root.settings(),facing,open,left,paired);
+        }
         else return;
         event.setCanceled(true);
         var camera=event.getCamera().getPosition();

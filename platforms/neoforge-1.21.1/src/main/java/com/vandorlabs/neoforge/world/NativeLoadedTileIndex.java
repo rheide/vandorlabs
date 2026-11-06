@@ -62,6 +62,7 @@ public final class NativeLoadedTileIndex<T extends BlockEntity> {
     }
     /** Convenience collector; render/interaction hot paths should use visit with an owned reusable visitor. */
     public synchronized List<T> query(Level level,AABB bounds){if(!NativeFluidWorld.open(level)||!finite(bounds)||!worlds.containsKey(level))return List.of();var result=new ArrayList<T>();visit(level,bounds,null,result::add);return result.isEmpty()?List.of():result;}
+    public synchronized boolean hasMembers(Level level){return NativeFluidWorld.open(level)&&worlds.containsKey(level);}
     public synchronized int size(){return members.size();}
     private synchronized void forget(Level level){var entries=worlds.remove(level);if(entries==null)return;for(var bucket:entries.buckets.values())for(T tile:bucket.tiles){var member=members.get(tile);if(member!=null&&member.level==level)members.remove(tile);}allSnapshot=null;}
     @EventBusSubscriber(modid="vandorlabs")
