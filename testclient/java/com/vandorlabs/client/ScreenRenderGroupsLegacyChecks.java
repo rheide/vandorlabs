@@ -1,0 +1,22 @@
+package com.vandorlabs.client;
+import com.google.gson.*;
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.nbt.*;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+/** Actual released independent artwork/frame predicates and loaded two-cell rectangles. */
+public final class ScreenRenderGroupsLegacyChecks {
+ public static void main(String[] args)throws Exception{
+  net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,new ResourceLocation("minecraft:screen_render_groups_reference"));
+  java.lang.reflect.Method base=ScreenJoinPredicatesLegacyChecks.class.getDeclaredMethod("base",BlockAnimatedScreenSelector.class),mutate=ScreenJoinPredicatesLegacyChecks.class.getDeclaredMethod("mutate",NBTTagCompound.class,int.class),matching=ScreenSurfaceGroups.class.getDeclaredMethod("matching",TileEntityAnimatedScreenSelector.class,TileEntityAnimatedScreenSelector.class,boolean.class);base.setAccessible(true);mutate.setAccessible(true);matching.setAccessible(true);JsonArray output=new JsonArray();
+  for(String id:ScreenFamilyLegacyChecks.IDS){BlockAnimatedScreenSelector block=null;for(Block candidate:ModBlocks.BLOCKS)if(candidate.getRegistryName().getResourcePath().equals(id))block=(BlockAnimatedScreenSelector)candidate;for(IBlockState state:block.getBlockState().getValidStates())for(int variant=0;variant<36;variant++){
+   NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);NBTTagCompound first=(NBTTagCompound)base.invoke(null,block),second=first.copy();if(variant<32)mutate.invoke(null,second,variant);else if(variant==32)second.setBoolean("FrameBare",true);else if(variant==33)second.setInteger("FrameFront",ScreenHousingTextures.screenIndex("frames/frames-door-window/lights-cyan-1"));else if(variant==34)second.setBoolean("FrameTile",true);else second.setBoolean("DisplayFit",false);
+   TileEntityAnimatedScreenSelector a=tile(block,first,world,new BlockPos(0,80,0),state);BlockPos other=a.getPos().add(DisplayJoinGeometry.basis(a,state).steps[0]);TileEntityAnimatedScreenSelector b=tile(block,second,world,other,state);JsonObject row=new JsonObject();row.addProperty("id",id);row.addProperty("meta",block.getMetaFromState(state));row.addProperty("variant",variant);row.addProperty("first",a.writeToNBT(new NBTTagCompound()).toString());row.addProperty("second",b.writeToNBT(new NBTTagCompound()).toString());row.addProperty("artworkMatch",(Boolean)matching.invoke(null,a,b,false));row.addProperty("frameMatch",(Boolean)matching.invoke(null,a,b,true));row.add("artwork",layout(ScreenSurfaceGroups.layout(a)));row.add("frame",layout(ScreenSurfaceGroups.frameLayout(a)));row.addProperty("wide",ScreenSurfaceGroups.wideDisplay(a));output.add(row);ScreenSurfaceGroups.unload(world);
+  }}String serialized=output.toString();java.security.MessageDigest hash=java.security.MessageDigest.getInstance("SHA-256");StringBuilder digest=new StringBuilder();for(byte value:hash.digest(serialized.getBytes("UTF-8")))digest.append(String.format("%02x",value&255));if(!digest.toString().equals("0c627d7541a5c2991e0c0730b29f5ac01c35302e3252e954714f4c93f770d5dc"))throw new AssertionError("Released Screen render grouping changed "+digest);JsonObject root=new JsonObject();root.addProperty("sha256",digest.toString());root.add("cases",output);java.nio.file.Path path=java.nio.file.Paths.get("build/test-artifacts/screen-render-groups-reference.json");java.nio.file.Files.createDirectories(path.getParent());java.nio.file.Files.write(path,root.toString().getBytes("UTF-8"));System.out.println("Actual Screen render groups reference PASS cases="+output.size()+" sha256="+digest);
+ }
+ private static TileEntityAnimatedScreenSelector tile(BlockAnimatedScreenSelector block,NBTTagCompound tag,NonRenderingChecks.MemoryWorld world,BlockPos pos,IBlockState state){TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)block.createNewTileEntity(null,0);world.states.put(pos,state);world.tiles.put(pos,tile);tile.readFromNBT(tag);tile.setWorld(world);tile.setPos(pos);return tile;}
+ private static JsonArray layout(GlassSurfaceGroups.Layout layout){JsonArray out=new JsonArray();out.add(layout.column);out.add(layout.row);out.add(layout.columns);out.add(layout.rows);return out;}
+}
