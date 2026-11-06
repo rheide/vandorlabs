@@ -27,3 +27,10 @@ task exportSegmentedFastReference(type: JavaExec) {
     main = 'com.vandorlabs.client.SegmentedPanelLegacyChecks'
     args file(project.findProperty('segmentedFastReference') ?: 'build/test-artifacts/segmented-fast-forge.jsonl').absolutePath, 'fast'
 }
+task exportSegmentedClockReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedClockLegacyChecks'
+    args file(project.findProperty('segmentedClockReference') ?: 'build/test-artifacts/segmented-clock-forge.jsonl').absolutePath
+}
