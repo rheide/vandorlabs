@@ -1,0 +1,13 @@
+def propulsionResourcePython = project.findProperty('pythonExecutable') ?: (
+    System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/propulsion-resources')
+tasks.register('generatePropulsionResources', Exec) {
+    workingDir projectDir
+    commandLine propulsionResourcePython, 'generate_propulsion_resources.py'
+    inputs.file('generate_propulsion_resources.py')
+    inputs.file('../../generated-resources/assets/vandorlabs/data/blocks.json')
+    inputs.files(fileTree('../../generated-resources/assets/vandorlabs') { include 'blockstates/*thruster*.json','blockstates/*drive*.json','blockstates/*vent*.json','blockstates/*engine*.json','blockstates/antigravity_plate.json','blockstates/repulsor_array.json'; include 'models/block/*thruster*','models/block/*drive*','models/block/*vent*','models/block/*engine*','models/block/antigravity_plate*','models/block/repulsor_array*'; include 'models/item/*thruster*','models/item/*drive*','models/item/*vent*','models/item/*engine*','models/item/antigravity_plate*','models/item/repulsor_array*' })
+    inputs.files(fileTree('../../texture-packs/default/assets/vandorlabs/textures/blocks') { include 'thrusters/**','hover/**' })
+    outputs.dir('build/generated/propulsion-resources')
+}
+tasks.named('processResources') { dependsOn 'generatePropulsionResources' }
