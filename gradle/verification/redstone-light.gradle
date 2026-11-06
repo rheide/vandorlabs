@@ -5,3 +5,11 @@ task exportRedstoneLightReference(type: JavaExec) {
     main = 'com.vandorlabs.client.RedstoneLightLegacyOracle'
     args file('build/test-artifacts/redstone-light-forge.jsonl').absolutePath
 }
+
+task exportPropulsionPlacementReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PropulsionPlacementLegacyOracle'
+    args file('build/test-artifacts/propulsion-placement-forge.jsonl').absolutePath
+}
