@@ -32,7 +32,7 @@ def main():
    if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Screen pick logout missing: '+str(server_log))
    time.sleep(.1)
   for marker in ['setup','logout']:check_log(server_log,'[vandorlabs][screen-pick-client] '+marker+' PASS')
-  for step in range(28):check_log(server_log,'[vandorlabs][screen-pick-client] pick PASS step='+str(step))
+  for step in range(49):check_log(server_log,'[vandorlabs][screen-pick-client] pick PASS step='+str(step))
  finally:stop(server)
  deadline=time.monotonic()+30
  while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
