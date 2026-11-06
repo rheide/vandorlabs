@@ -18,13 +18,14 @@ public final class NativeSegmentedFluids {
     private static final NativeFluidVolume EMPTY=NativeFluidVolume.build(java.util.List.of(new net.minecraft.world.phys.AABB(0,0,0,1,1,1)),NativeFluidVolume.SINGLE_SIDE);
     private record Geometry(Direction face,int direction,int position,int height,int row,int column,int width,boolean closed,NativeSegmentedFluidGeometry.Snapshot snapshot,long revision){}
     private final NativeSegmentedDoorEntity owner;
-    private final NativeFluidSlots slots=new NativeFluidSlots();
+    private final NativeSavedFluidSlots savedSlots=new NativeSavedFluidSlots();
+    private final NativeFluidSlots slots=savedSlots.storage();
     private volatile Geometry geometry;
     private volatile NativeFluidSlots.Snapshot effective=slots.snapshot();
     private volatile NativeFluidRenderSnapshot render=NativeFluidRenderSnapshot.EMPTY;
     private NativeFluidSlots.Snapshot overlayBase;private int overlay=-1;private long effectiveRevision;
     private Object published;private volatile long modelRevision;
-    private Tag originalEnvelope;private NativeFluidSlots.Snapshot loadedSlots=slots.snapshot();private long loadedRevision;private int outlets;private boolean updating;private long next=Long.MAX_VALUE;
+    private int outlets;private boolean updating;private long next=Long.MAX_VALUE;
     NativeSegmentedFluids(NativeSegmentedDoorEntity owner){this.owner=owner;}
     public NativeFluidSlots slots(){return slots;}public NativeFluidSlots.Snapshot effective(){return effective;}
     public NativeFluidVolume volume(){var state=geometry;return state==null?EMPTY:state.snapshot().volume();}
@@ -32,17 +33,9 @@ public final class NativeSegmentedFluids {
     public long revision(){var state=geometry;return state==null?0:state.revision();}public long modelRevision(){return modelRevision;}
     public NativeFluidRenderSnapshot render(){return render;}public void render(NativeFluidRenderSnapshot snapshot){render=snapshot;}
     public int outlets(){return outlets;}long deadline(){return next;}
-    void read(CompoundTag tag,HolderLookup.Provider registries){originalEnvelope=tag.contains(NativeFluidSlots.KEY)?tag.get(NativeFluidSlots.KEY).copy():null;CompoundTag decoded=tag;
-        if(originalEnvelope!=null){CompoundTag data=originalEnvelope instanceof CompoundTag compound?compound.copy():new CompoundTag();boolean envelopeMalformed=!(originalEnvelope instanceof CompoundTag),changed=envelopeMalformed;for(int side=0;side<2;side++)if(envelopeMalformed||data.contains("Side"+side)&&!data.contains("Side"+side,Tag.TAG_COMPOUND)){var marker=new CompoundTag();marker.putBoolean("Unresolved",true);data.put("Side"+side,marker);changed=true;}if(changed){decoded=tag.copy();decoded.put(NativeFluidSlots.KEY,data);}}
-        slots.read(decoded,registries);loadedSlots=slots.snapshot();loadedRevision=slots.revision();outlets=tag.getInt(OUTLETS)&15;overlayBase=null;next=Long.MAX_VALUE;if(slots.any()||outlets!=0)schedule(1);}
-    void write(CompoundTag tag){
-        // Preserve an untouched envelope, including unknown siblings or an unresolved future representation.
-        if(slots.revision()==loadedRevision){if(originalEnvelope==null)tag.remove(NativeFluidSlots.KEY);else tag.put(NativeFluidSlots.KEY,originalEnvelope.copy());}
-        // After edits, emit a complete migrated envelope, including empty: the old Waterlogged alias must stay suppressed.
-        else{var encoded=new CompoundTag();slots.write(encoded);var data=originalEnvelope instanceof CompoundTag compound?compound.copy():new CompoundTag();boolean migratedAlias=originalEnvelope==null&&loadedSlots.any();for(int side=0;side<2;side++)if(migratedAlias||slots.snapshot().side(side)!=loadedSlots.side(side)){String key="Side"+side;data.remove(key);var current=encoded.getCompound(NativeFluidSlots.KEY);if(current.contains(key))data.put(key,current.get(key).copy());}tag.put(NativeFluidSlots.KEY,data);}
-        if(outlets!=0)tag.putInt(OUTLETS,outlets);else if(!tag.contains(OUTLETS)||tag.contains(OUTLETS,Tag.TAG_ANY_NUMERIC))tag.remove(OUTLETS);
-    }
-    void writePublic(CompoundTag tag,HolderLookup.Provider registries){var data=new CompoundTag();for(int side=0;side<2;side++){var slot=slots.snapshot().side(side);var fluid=slot.fluid();if(!fluid.isEmpty())data.put("Side"+side,FluidStack.CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE),fluid).getOrThrow());else if(slot.occupied()){var marker=new CompoundTag();marker.putBoolean("Unresolved",true);data.put("Side"+side,marker);}}if(!data.isEmpty())tag.put(NativeFluidSlots.KEY,data);}
+    void read(CompoundTag tag,HolderLookup.Provider registries){savedSlots.read(tag,registries);outlets=tag.getInt(OUTLETS)&15;overlayBase=null;next=Long.MAX_VALUE;if(slots.any()||outlets!=0)schedule(1);}
+    void write(CompoundTag tag){savedSlots.write(tag);if(outlets!=0)tag.putInt(OUTLETS,outlets);else if(!tag.contains(OUTLETS)||tag.contains(OUTLETS,Tag.TAG_ANY_NUMERIC))tag.remove(OUTLETS);}
+    void writePublic(CompoundTag tag,HolderLookup.Provider registries){savedSlots.writePublic(tag,registries);}
     /** Local-only lifecycle publication: no owner lookup, neighbour access or immediate gameplay. */
     void localChanged(){var publication=owner.publication();if(publication!=published){published=publication;modelRevision++;}NativeFluidWorld.queue(owner);}
     void loaded(){if(next==Long.MIN_VALUE)next=Long.MAX_VALUE;localChanged();if(slots.any()||outlets!=0)schedule(1);}
