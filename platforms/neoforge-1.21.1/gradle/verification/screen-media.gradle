@@ -52,3 +52,10 @@ neoForge.runs.configureEach {
         systemProperty 'screenRenderGroupsReference',file('../../testclient/fixtures/screen-render-groups-reference.json.gz').absolutePath
     }
 }
+
+tasks.register('testNativeScreenRenderQueries', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.screen.ScreenRenderQueryChecks'
+    args file('../../testclient/fixtures/screen-role-gl-reference.json').absolutePath,file('../../testclient/fixtures/screen-role-gl-activation-reference.json').absolutePath
+}

@@ -15,7 +15,7 @@ public final class NativeScreenRenderGroups {
  private static final long BUDGET=4L*1024*1024,BASE_BYTES=1024;
  private record Group(NativeScreenClientPower.Lease lease){boolean touch(){return lease==null||lease.touch();}}
  private record Entry(WeakReference<NativeScreenEntity> owner,NativeScreenRenderProjection.Rectangle rectangle,Group group){}
- private record Published(WeakReference<NativeScreenEntity> owner,NativeScreenRenderProjection projection,Group artwork,Group frame){}
+ private record Published(WeakReference<NativeScreenEntity> owner,NativeScreenRenderProjection projection,Group artwork,Group frame,int mask){}
  private static final class Cache {
   long epoch,seen=-1,bytes;
   Set<Group> groups=Collections.newSetFromMap(new IdentityHashMap<>());
@@ -38,9 +38,10 @@ public final class NativeScreenRenderGroups {
  public static NativeScreenRenderProjection.Rectangle artwork(NativeScreenEntity tile){thread();return rectangle(tile,Kind.ARTWORK);}
  public static NativeScreenRenderProjection.Rectangle frame(NativeScreenEntity tile){thread();return rectangle(tile,Kind.FRAME);}
  /** Convenience for callers which explicitly need both independent layouts. */
- public static NativeScreenRenderProjection projection(NativeScreenEntity tile){
-  thread();var level=tile.getLevel();if(level==null||!level.isClientSide||!installed(level,tile))return NativeScreenRenderProjection.SINGLE;var cache=cache(level);var previous=cache.projections.get(tile.getBlockPos());if(previous!=null&&previous.owner.get()==tile&&previous.artwork.touch()&&previous.frame.touch())return previous.projection;
-  var artwork=rectangle(tile,Kind.ARTWORK);var frame=rectangle(tile,Kind.FRAME);cache.ready();var projection=new NativeScreenRenderProjection(artwork,frame);if(cache.bytes+192>BUDGET-BASE_BYTES){cache.clear();return projection(tile);}cache.reserve(192);var artEntry=cache.maps.get(Kind.ARTWORK).get(tile.getBlockPos());var frameEntry=cache.maps.get(Kind.FRAME).get(tile.getBlockPos());var artGroup=artEntry==null?new Group(null):artEntry.group;var frameGroup=frameEntry==null?new Group(null):frameEntry.group;var old=cache.projections.put(tile.getBlockPos(),new Published(new WeakReference<>(tile),projection,artGroup,frameGroup));if(old==null)cache.bytes+=192;return projection;
+ public static NativeScreenRenderProjection projection(NativeScreenEntity tile){return projection(tile,true,true);}
+ public static NativeScreenRenderProjection projection(NativeScreenEntity tile,boolean needArtwork,boolean needFrame){
+  thread();int mask=(needArtwork?1:0)|(needFrame?2:0);if(mask==0)return NativeScreenRenderProjection.SINGLE;var level=tile.getLevel();if(level==null||!level.isClientSide||!installed(level,tile))return NativeScreenRenderProjection.SINGLE;var cache=cache(level);var previous=cache.projections.get(tile.getBlockPos());if(previous!=null&&previous.owner.get()==tile&&previous.mask==mask&&previous.artwork.touch()&&previous.frame.touch())return previous.projection;
+  var artwork=needArtwork?rectangle(tile,Kind.ARTWORK):NativeScreenRenderProjection.Rectangle.SINGLE;var frame=needFrame?rectangle(tile,Kind.FRAME):NativeScreenRenderProjection.Rectangle.SINGLE;cache.ready();var projection=new NativeScreenRenderProjection(artwork,frame);if(cache.bytes+192>BUDGET-BASE_BYTES){cache.clear();return projection(tile,needArtwork,needFrame);}cache.reserve(192);var artEntry=needArtwork?cache.maps.get(Kind.ARTWORK).get(tile.getBlockPos()):null;var frameEntry=needFrame?cache.maps.get(Kind.FRAME).get(tile.getBlockPos()):null;var artGroup=artEntry==null?new Group(null):artEntry.group;var frameGroup=frameEntry==null?new Group(null):frameEntry.group;var old=cache.projections.put(tile.getBlockPos(),new Published(new WeakReference<>(tile),projection,artGroup,frameGroup,mask));if(old==null)cache.bytes+=192;return projection;
  }
  /** Released editor aspect uses authored membership, never power-dependent render membership. */
  public static boolean wideDisplay(NativeScreenEntity tile){thread();if(tile.family()!=ScreenFamily.SCREEN&&tile.family()!=ScreenFamily.INPUT)return false;var rectangle=rectangle(tile,Kind.EDIT);return rectangle.columns()>rectangle.rows();}
