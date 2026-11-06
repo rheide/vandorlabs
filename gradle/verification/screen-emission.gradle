@@ -13,3 +13,13 @@ task testScreenSharedEmission(type: JavaExec) {
     main = 'com.vandorlabs.client.ScreenEmissionLegacyOracle'
     args file('build/test-artifacts/screen-emission-shared.jsonl').absolutePath, 'shared'
 }
+
+// Separate test companion; never packaged into the standard mod.
+task screenRoleOracleJar(type: Jar) {
+    dependsOn compileNonRenderingChecks
+    classifier = 'screen-role-oracle'
+    from(compileNonRenderingChecks.destinationDir) {
+        include 'com/vandorlabs/client/ScreenRoleGLOracle*.class'
+    }
+}
+reobf { screenRoleOracleJar {} }
