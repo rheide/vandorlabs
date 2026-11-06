@@ -17,7 +17,7 @@ public final class NativeDoorMeshChecks {
    int[] vertex={-1},calls={0};VertexConsumer consumer=(VertexConsumer)Proxy.newProxyInstance(VertexConsumer.class.getClassLoader(),new Class[]{VertexConsumer.class},(proxy,method,values)->{
     switch(method.getName()){
      case "addVertex":int i=++vertex[0];for(int axis=0;axis<3;axis++)if(Float.floatToIntBits((Float)values[axis])!=expected[i*8+axis])throw new AssertionError("Native mesh position");break;
-     case "setColor":if((Integer)values[0]!=source[3])throw new AssertionError("Source ABGR color");break;
+     case "setColor":var bytes=java.nio.ByteBuffer.allocate(4).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(source[3]);if(values.length!=4)throw new AssertionError("Explicit RGBA channels required");for(int c=0;c<4;c++)if((Integer)values[c]!=(bytes.get(c)&255))throw new AssertionError("Source ABGR byte channel "+c);break;
      case "setUv":if((Float)values[0]!=.25F||(Float)values[1]!=.75F)throw new AssertionError("Source UV payload");break;
      case "setLight":if((Integer)values[0]!=0xc00050)throw new AssertionError("Native light convention");break;
      case "setOverlay":if((Integer)values[0]!=123)throw new AssertionError("Overlay");break;

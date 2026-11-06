@@ -14,8 +14,9 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 /** Inactive Door body/pane backend. Bake owns static meshes; live motion never rebuilds them. */
 public final class NativeDoorMesh {
     private static final int BUDGET=16*1024*1024,MAX_MESH=1024*1024;
-    private final int[] source;private final boolean[] shade;private final boolean panel;
-    private NativeDoorMesh(int[] source,boolean[] shade,boolean panel){this.source=source;this.shade=shade;this.panel=panel;}
+    private final int[] source;private final boolean[] shade;private final boolean panel,lit,unlit;
+    private NativeDoorMesh(int[] source,boolean[] shade,boolean panel){this.source=source;this.shade=shade;this.panel=panel;boolean lit=false,unlit=false;for(boolean value:shade){lit|=value;unlit|=!value;}this.lit=lit;this.unlit=unlit;}
+    public boolean hasDiffuse(boolean value){return value?lit:unlit;}
     public int vertices(){return source.length/8;}
     public int retainedBytes(){return 96+source.length*4+shade.length;}
     /** Drop this generation-local byte-bounded cache on resource reload. */
@@ -30,11 +31,13 @@ public final class NativeDoorMesh {
         public long retainedBytes(){meshes.cleanUp();return meshes.asMap().values().stream().mapToLong(mesh->mesh.retainedBytes()+64).sum();}
         public void clear(){meshes.invalidateAll();}
     }
-    public static NativeDoorMesh prepareQuads(List<BakedQuad> quads,boolean panel){
+    public static NativeDoorMesh prepareQuads(List<BakedQuad> quads,boolean panel){return prepareQuads(quads,panel,true);}
+    public static NativeDoorMesh prepareMappedQuads(List<BakedQuad> quads,boolean panel){return prepareQuads(quads,panel,false);}
+    private static NativeDoorMesh prepareQuads(List<BakedQuad> quads,boolean panel,boolean content){
         if((long)quads.size()*128>MAX_MESH)throw new IllegalArgumentException("Door single-model byte budget");
         int[] source=new int[quads.size()*32];boolean[] shade=new boolean[quads.size()];int at=0,q=0;
         for(var quad:quads){int[] data=quad.getVertices();if(data.length!=32)throw new IllegalArgumentException("Native Door vertex format");System.arraycopy(data,0,source,at,32);shade[q++]=quad.isShade();
-            if(quad.getSprite().contents() instanceof NativeDoorSpriteSource.Contents content){float u0=quad.getSprite().getU0(),v0=quad.getSprite().getV0();for(int v=0;v<4;v++){int i=at+v*8;source[i+4]=Float.floatToRawIntBits(u0+(Float.intBitsToFloat(source[i+4])-u0)*content.usedU());source[i+5]=Float.floatToRawIntBits(v0+(Float.intBitsToFloat(source[i+5])-v0)*content.usedV());}}at+=32;
+            if(content&&quad.getSprite().contents() instanceof NativeDoorSpriteSource.Contents descriptor){float u0=quad.getSprite().getU0(),v0=quad.getSprite().getV0();for(int v=0;v<4;v++){int i=at+v*8;source[i+4]=Float.floatToRawIntBits(u0+(Float.intBitsToFloat(source[i+4])-u0)*descriptor.usedU());source[i+5]=Float.floatToRawIntBits(v0+(Float.intBitsToFloat(source[i+5])-v0)*descriptor.usedV());}}at+=32;
         }return new NativeDoorMesh(source,shade,panel);
     }
     /** Numeric control pad uses the same exact six-face source as TESlidingDoor. */
@@ -60,7 +63,7 @@ public final class NativeDoorMesh {
             int at=q*32+v*8,n=source[at+7];double nx=(byte)n/127D,ny=(byte)(n>>>8)/127D,nz=(byte)(n>>>16)/127D,rx=cos*nx+sin*nz,rz=-sin*nx+cos*nz;
             double wx=face==Direction.NORTH?-rx:face==Direction.EAST?rz:face==Direction.WEST?-rz:rx,wz=face==Direction.NORTH?-rz:face==Direction.EAST?-rx:face==Direction.WEST?rx:rz;
             pose.pose().transformPosition(Float.intBitsToFloat(s.transformed[at]),Float.intBitsToFloat(s.transformed[at+1]),Float.intBitsToFloat(s.transformed[at+2]),s.position);pose.transformNormal((float)wx,(float)ny,(float)wz,s.normal);
-            int color=source[at+3],alpha=Math.max(0,Math.min(255,(int)((color>>>24)*opacity)));target.addVertex(s.position.x,s.position.y,s.position.z).setColor((color&0xFFFFFF)|(alpha<<24)).setUv(Float.intBitsToFloat(source[at+4]),Float.intBitsToFloat(source[at+5])).setOverlay(overlay).setLight(light).setNormal(s.normal.x,s.normal.y,s.normal.z);
+            int color=source[at+3],alpha=Math.max(0,Math.min(255,(int)((color>>>24)*opacity)));target.addVertex(s.position.x,s.position.y,s.position.z).setColor(color&255,(color>>>8)&255,(color>>>16)&255,alpha).setUv(Float.intBitsToFloat(source[at+4]),Float.intBitsToFloat(source[at+5])).setOverlay(overlay).setLight(light).setNormal(s.normal.x,s.normal.y,s.normal.z);
         }}
     }
 }
