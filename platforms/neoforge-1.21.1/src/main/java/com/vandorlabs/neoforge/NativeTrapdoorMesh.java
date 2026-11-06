@@ -40,12 +40,14 @@ public final class NativeTrapdoorMesh {
         finally{emission.matrix=null;emission.target=null;emission.edge=null;}
     }
     private static final class Emission {
+        final org.joml.Vector3f position=new org.joml.Vector3f(),normal=new org.joml.Vector3f();
         PoseStack.Pose matrix;VertexConsumer target;int light,overlay;SegmentedPanelMesh.Texture upper,lower,edge;
         final TrapdoorSurfaceLayout.Sink artwork=(x,y,z,u,v,half,nx,ny,nz)->vertex(half?lower:upper,x,y,z,u,v,nx,ny,nz);
         final TrapdoorSurfaceLayout.Sink edges=(x,y,z,u,v,half,nx,ny,nz)->vertex(edge,x,y,z,u,v,nx,ny,nz);
         void vertex(SegmentedPanelMesh.Texture sprite,double x,double y,double z,double u,double v,float nx,float ny,float nz){
-            target.addVertex(matrix,(float)x,(float)y,(float)z).setColor(255,255,255,255).setUv(sprite.u(u*16),sprite.v(v*16))
-                    .setOverlay(overlay).setLight(light).setNormal(matrix,nx,ny,nz);
+            matrix.pose().transformPosition((float)x,(float)y,(float)z,position);matrix.transformNormal(nx,ny,nz,normal);
+            target.addVertex(position.x,position.y,position.z).setColor(255,255,255,255).setUv(sprite.u(u*16),sprite.v(v*16))
+                    .setOverlay(overlay).setLight(light).setNormal(normal.x,normal.y,normal.z);
         }
     }
 }

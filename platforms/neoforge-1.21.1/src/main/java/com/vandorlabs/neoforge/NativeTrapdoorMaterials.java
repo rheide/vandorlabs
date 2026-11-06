@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 /** Generation-owned full artwork and frame pixels, shared by every Trapdoor pose. */
-public final class NativeTrapdoorMaterials {
+public final class NativeTrapdoorMaterials implements NativeTrapdoorRenderer.Materials {
     public record Surface(SegmentedPanelMesh.Texture upper,SegmentedPanelMesh.Texture lower,double aspect,
                           boolean doorArtwork,boolean customDoor,NativeTrapdoorFrameBorders.Borders borders,double frameAspect){}
     private final NativeFlatWallModel.Bake materials;
