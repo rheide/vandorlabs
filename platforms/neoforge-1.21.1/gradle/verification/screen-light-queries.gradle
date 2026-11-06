@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenLightQueries', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenLightQueryChecks'
+ systemProperty 'screenLightQueriesReference',file(project.findProperty('screenLightQueriesReference') ?: '../../build/test-artifacts/screen-light-queries-reference.json').absolutePath
+}
