@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenEditorCommands', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenEditorCommandChecks'
+ systemProperty 'screenEditorCommandsReference',file(project.findProperty('screenEditorCommandsReference') ?: '../../build/test-artifacts/screen-editor-commands-reference.json').absolutePath
+}
