@@ -1,0 +1,18 @@
+def lightResourcePython = project.findProperty('pythonExecutable') ?: (
+    System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/light-resources')
+tasks.register('generateLightResources', Exec) {
+    dependsOn 'generateCubeResources'
+    workingDir projectDir
+    commandLine lightResourcePython, 'generate_light_resources.py'
+    inputs.file('generate_light_resources.py')
+    inputs.file('../../src/portable/java/com/vandorlabs/tiles/ProgrammableLightTextures.java')
+    inputs.file('build/generated/cube-resources/assets/vandorlabs/data/housing_finishes.json')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/item/configured') { include 'programmable_light_*.json' })
+    ['programmable_light', 'programmable_light_frame', 'programmable_light_slab'].each { name ->
+        inputs.file('../../src/main/resources/assets/vandorlabs/models/item/' + name + '.json')
+        inputs.file('../../src/main/resources/assets/vandorlabs/recipes/' + name + '.json')
+    }
+    outputs.dir('build/generated/light-resources')
+}
+tasks.named('processResources') { dependsOn 'generateLightResources' }
