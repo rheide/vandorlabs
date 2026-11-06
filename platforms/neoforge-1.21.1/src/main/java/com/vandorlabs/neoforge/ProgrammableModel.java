@@ -44,8 +44,10 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
+        var segmentedBake=NativeSegmentedRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake);
+        var segmentedTerrain=new NativeSegmentedTerrainModel.Bake(event.getModels(),segmentedBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
         event.getModels().replaceAll((id,model) -> {
-            if(NativeDoorClientBindings.segmented(id.id()))return id.getVariant().equals("inventory")?model:com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());
+            if(NativeDoorClientBindings.segmented(id.id()))return id.getVariant().equals("inventory")?model:com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(NativeSegmentedTerrainModel.wrap(model,segmentedTerrain),event.getTextureGetter());
             if(NativeDoorClientBindings.ordinary(id.id())||NativeDoorClientBindings.large(id.id())){
                 if(id.getVariant().equals("inventory"))return NativeDoorItemModel.wrap(model,NativeDoorClientBindings.large(id.id()),name->event.getModels().get(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.parse(name))));
                 return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());
@@ -63,7 +65,6 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         });
         NativePanelPlaybackRenderer.prepare(event.getModelBakery(),wallBake);
         NativeDoorRenderer.prepare(event.getModelBakery(),event.getModels(),event.getTextureGetter(),wallBake);
-        NativeSegmentedRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake);
     }
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
         if(joining&&state!=null&&state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
