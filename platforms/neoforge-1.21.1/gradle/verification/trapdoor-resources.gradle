@@ -1,0 +1,16 @@
+def trapdoorResourcePython = project.findProperty('pythonExecutable') ?: (
+    System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/trapdoor-resources')
+tasks.register('generateTrapdoorResources', Exec) {
+    dependsOn 'generateCubeResources'
+    workingDir projectDir
+    commandLine trapdoorResourcePython, 'generate_trapdoor_resources.py'
+    inputs.file('generate_trapdoor_resources.py')
+    inputs.file('build/generated/cube-resources/assets/vandorlabs/data/housing_finishes.json')
+    ['programmable_trapdoor', 'programmable_diagonal_trapdoor'].each { name ->
+        inputs.file('../../src/main/resources/assets/vandorlabs/models/item/' + name + '.json')
+        inputs.file('../../src/main/resources/assets/vandorlabs/recipes/' + name + '.json')
+    }
+    outputs.dir('build/generated/trapdoor-resources')
+}
+tasks.named('processResources') { dependsOn 'generateTrapdoorResources' }
