@@ -32,7 +32,8 @@ public final class NativeTokenReader {
         public int kind(){return chip?1:0;}
     }
     /** Relative cosmetic sample; authority remains in the saved absolute reader timeline. */
-    public record Motion(long sequence,int age,boolean returning,int rejectedFor){
+    public record Motion(long sequence,int age,boolean returning,int rejectedFor,long rejectionDeadline){
+        public Motion(long sequence,int age,boolean returning,int rejectedFor){this(sequence,age,returning,rejectedFor,0);}
         public Motion{if(age<0||age>20||rejectedFor<0||rejectedFor>12)throw new IllegalArgumentException("Reader motion");}
     }
     private final Host host;
@@ -60,7 +61,7 @@ public final class NativeTokenReader {
     public int logoDesign(){int mask=effectiveAllowed();if((mask&1)!=0)return 0;if((mask&(1<<logo))!=0)return logo;for(int i=0;i<7;i++)if((mask&(1<<i))!=0)return i;return 0;}
     public int outputLevel(long now){return CredentialCatalog.output(behavior,behavior<2&&matches(),behavior==2&&host.toggleState(toggled),now,pulseUntil);}
     public Visual visual(long now){int company=NativeCredentialItems.company(token);return new Visual(chip(),CredentialCatalog.validCompany(company)?company:0,effectiveAllowed()==0?-1:logoDesign(),accepts(token),outputLevel(now),occupied());}
-    public Motion motion(long now){return new Motion(insertionSequence,(int)Math.max(0,Math.min(20,now-insertStarted)),returning(),(int)Math.max(0,Math.min(12,rejectedUntil-now)));}
+    public Motion motion(long now){return new Motion(insertionSequence,(int)Math.max(0,Math.min(20,now-insertStarted)),returning(),(int)Math.max(0,Math.min(12,rejectedUntil-now)),rejectedUntil);}
     public static ItemStack icon(Visual visual){return !visual.icon?ItemStack.EMPTY:visual.chip?NativeCredentialItems.dataChip(visual.company):NativeCredentialItems.accessCard(visual.company);}
     /** Local-only load: no owner lookup, chunk read, callback, registration or timeline advance. */
     public void read(CompoundTag input,HolderLookup.Provider registries){
