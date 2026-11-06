@@ -1,0 +1,7 @@
+task exportTrapdoorGeometryReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorGeometryLegacyOracle'
+    args file(project.findProperty('trapdoorGeometryReference') ?: 'build/test-artifacts/trapdoor-geometry-forge.jsonl').absolutePath
+}
