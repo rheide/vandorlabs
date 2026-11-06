@@ -74,3 +74,11 @@ tasks.register('testNativePropulsionParticles', JavaExec) {
     args file('../../build/test-artifacts/propulsion-particle-forge.jsonl').absolutePath,
          file('../../build/test-artifacts/propulsion-particle-collision-forge.jsonl').absolutePath
 }
+
+tasks.register('testNativePropulsionBillboard', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionBillboardChecks'
+    args file('../../build/test-artifacts/propulsion-particle-billboard-forge.jsonl').absolutePath
+}
