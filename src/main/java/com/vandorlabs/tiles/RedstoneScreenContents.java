@@ -14,7 +14,7 @@ public final class RedstoneScreenContents {
     public TileEntityAnimatedScreenSelector tile(){return owner;}
     public int slot(){return slot;}
     public boolean enabled(){return enabled;}
-    public void setEnabled(boolean value){if(enabled==value)return;enabled=value;if(value)refreshRows();else unregisterRows();changed();}
+    public void setEnabled(boolean value){if(enabled==value)return;enabled=value;if(value){refreshRows();if(hasPulses())com.vandorlabs.redstone.ScreenPulseActivity.activate(this);}else unregisterRows();changed();}
     public net.minecraft.block.Block getBlockType(){return owner.getBlockType();}
     public net.minecraft.util.math.BlockPos getPos(){return owner.getPos();}
     public int getHousingTexture(){return owner.getHousingTexture();}

@@ -61,10 +61,15 @@ final class PulseScreenRuntimeChecks {
                 c.expirePulses(world.getTotalWorldTime()+20);require(RedstoneChannels.level(world,A)==0&&RedstoneChannels.level(world,B)==15,"expiry retains independent row source");
                 saved.getTagList("Rows",10).getCompoundTagAt(0).setLong("PulseUntil",world.getTotalWorldTime()-1);c.onChunkUnload();c.readFromNBT(saved);c.finishLoading();require(RedstoneChannels.level(world,A)==0,"expired loaded pulse stays off");
                 NBTTagList invalid=rows();invalid.getCompoundTagAt(0).setBoolean("Slider",true);require(!c.applyRowConfiguration("Invalid",invalid),"conflicting row types rejected");
+                long originalTime=world.getTotalWorldTime();c.pulseRow(0);long deadline=c.rows().get(0).pulseUntil();c.setEnabled(false);
+                com.vandorlabs.redstone.ScreenPulseActivity.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));
+                world.setTotalWorldTime(originalTime+5);c.setEnabled(true);require(c.rows().get(0).pulseUntil()==deadline&&RedstoneChannels.level(world,A)==15,"restored artwork keeps remaining pulse deadline");
+                world.setTotalWorldTime(deadline);com.vandorlabs.redstone.ScreenPulseActivity.tick(new net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent(net.minecraftforge.fml.relauncher.Side.SERVER,net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END,world));
+                require(RedstoneChannels.level(world,A)==0&&RedstoneChannels.level(world,B)==15,"restored pulse expires without clearing independent toggle");world.setTotalWorldTime(originalTime);
                 c.setEnabled(false);
             }
         }
-        world.setBlockToAir(POS);System.out.println("[vandorlabs][reprolab] pulse-screen-world PASS all-screen-input-console-slots bank-aggregation twenty-tick NBT config-only unload reload stale-expiry validation");
+        world.setBlockToAir(POS);System.out.println("[vandorlabs][reprolab] pulse-screen-world PASS all-screen-input-console-slots bank-aggregation twenty-tick NBT config-only unload reload stale-expiry hide-restore-absolute-deadline validation");
     }
     private static void capturedChecks(WorldServer world,EntityPlayerMP player){
         BlockPos local=new BlockPos(0,1,0),seat=new BlockPos(3,0,0);TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(local);configure(tile.redstoneScreen(0));

@@ -27,6 +27,7 @@ lines = [line for line in lines if not line.startswith(('soundCategory_master:',
 p.write_text('\n'.join(lines + ['soundCategory_master:0.0', 'pauseOnLostFocus:false']) + '\n')
 PY
 CAPTURE_JVM=("-Dvandorlabs.largeBenchmarkFamilies=${VANDOR_LABS_BENCH_FAMILIES:-false}" "-Dvandorlabs.largeBenchmarkTerrain=${VANDOR_LABS_BENCH_TERRAIN:-false}" "-Dvandorlabs.largeBenchmarkMovingSamples=${VANDOR_LABS_BENCH_MOVING_SAMPLES:-${VANDOR_LABS_BENCH_SAMPLES:-60}}" "-Dvandorlabs.largeBenchmarkCompare=${VANDOR_LABS_BENCH_COMPARE:-false}" "-Dvandorlabs.largeBenchmarkSamples=${VANDOR_LABS_BENCH_SAMPLES:-60}" "-Dvandorlabs.largeBenchmarkWarmFrames=${VANDOR_LABS_BENCH_WARM_FRAMES:-50}" "-Dvandorlabs.largeVehicleBenchmark=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.vehicleDiagnostics=${VANDOR_LABS_LARGE_VEHICLE_BENCHMARK:-false}" "-Dvandorlabs.reactorGlassChecksOnly=${VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.pulseScreenChecksOnly=${VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.shapeDialogChecksOnly=${VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.glassDialogChecksOnly=${VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.mountedControlDialogChecksOnly=${VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY:-false}")
