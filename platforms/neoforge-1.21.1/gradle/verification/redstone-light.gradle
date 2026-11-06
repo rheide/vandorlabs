@@ -29,3 +29,11 @@ tasks.register('testNativePropulsionMaterial', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionMaterialChecks'
     args file('../../build/test-artifacts/propulsion-material-forge.jsonl').absolutePath
 }
+
+tasks.register('testNativePropulsionControls', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionControlChecks'
+    args file('../../build/test-artifacts/propulsion-control-forge.jsonl').absolutePath
+}

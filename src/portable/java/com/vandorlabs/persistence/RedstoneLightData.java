@@ -17,6 +17,8 @@ public final class RedstoneLightData {
     }
     /** Local block state is authoritative only for old snapshots lacking a completed initial capture. */
     public RedstoneLightData capture(boolean blockPowered){return initialized?this:new RedstoneLightData(channel,channelSignal,channelLevel,blockPowered,particleLevel,true,inverted,analog,particleThreshold,join,sideTexture);}
+    public RedstoneLightData manual(int mode){int normalized=Math.max(0,Math.min(2,mode));return new RedstoneLightData(channel,channelSignal,channelLevel,normalized>0,normalized==2?Math.max(1,particleLevel):0,true,inverted,analog,particleThreshold,join,sideTexture);}
+    public RedstoneLightData channelLevel(int value){return value==channelLevel?this:new RedstoneLightData(channel,value>0,value,manualOn,particleLevel,initialized,inverted,analog,particleThreshold,join,sideTexture);}
     public int activation(int physical){return RedstoneLightPolicy.activation(channelLevel,physical,inverted);}
     public int brightness(int physical){return RedstoneLightPolicy.brightness(analog,activation(physical));}
     public boolean powered(int physical){return RedstoneLightPolicy.powered(analog,activation(physical),channel,physical>0,channelSignal,inverted,manualOn);}
