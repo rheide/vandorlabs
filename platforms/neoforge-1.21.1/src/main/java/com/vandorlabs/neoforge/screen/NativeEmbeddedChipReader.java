@@ -1,0 +1,29 @@
+package com.vandorlabs.neoforge.screen;
+
+import com.vandorlabs.neoforge.credentials.NativeCredentialItems;
+import com.vandorlabs.neoforge.credentials.NativeTokenReader;
+import java.util.Set;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.*;
+
+/** Embedded Screen readers reuse credential ownership while forcing the released passive chip policy. */
+public final class NativeEmbeddedChipReader {
+    private static final Set<String> KEYS=Set.of("AnyToken","AllowedTokens","ChipSlot","TokenLogo","TokenBehavior","TokenPulseUntil","TokenInsertStarted","TokenRejectedUntil","TokenInsertionSequence","TokenToggleApplied","TokenToggled","TokenReturnToMost","TokenReturnToLeast","TokenReturnTo","InsertedToken");
+    private final NativeTokenReader reader;
+    private com.vandorlabs.programmer.JournalText journal;
+    public NativeEmbeddedChipReader(NativeTokenReader.Host host){reader=new NativeTokenReader(host,true);}
+    /** Validate before touching live state; the owning Screen retains its complete snapshot on refusal. */
+    public void read(CompoundTag raw,HolderLookup.Provider registries){
+        for(String key:raw.getAllKeys())if(!KEYS.contains(key))throw new IllegalArgumentException("Unsupported embedded chip reader field: "+key);
+        var token=raw.contains("InsertedToken",Tag.TAG_COMPOUND)?NativeCredentialItems.readStack(raw.getCompound("InsertedToken"),registries):net.minecraft.world.item.ItemStack.EMPTY;
+        if(raw.contains("InsertedToken")&&token.isEmpty())throw new IllegalArgumentException("Unresolved embedded chip ownership");
+        var nextJournal=NativeChipJournal.view(token);
+        var tag=raw.copy();tag.putBoolean("ChipSlot",true);tag.putBoolean("AnyToken",true);tag.putInt("AllowedTokens",127);tag.putInt("TokenBehavior",0);tag.remove("TokenReturnToMost");tag.remove("TokenReturnToLeast");tag.remove("TokenReturnTo");reader.read(tag,registries);journal=nextJournal;
+    }
+    public CompoundTag write(HolderLookup.Provider registries){return reader.write(registries);}
+    public boolean occupied(){return reader.occupied();}
+    public net.minecraft.world.item.ItemStack tokenCopy(){return reader.tokenCopy();}
+    public NativeTokenReader.Visual visual(long now){return reader.visual(now);}
+    public NativeTokenReader.Motion motion(long now){return reader.motion(now);}
+    public com.vandorlabs.programmer.JournalText journal(){return journal;}
+}
