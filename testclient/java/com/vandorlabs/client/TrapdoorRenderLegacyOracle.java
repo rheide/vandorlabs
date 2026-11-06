@@ -26,7 +26,11 @@ public final class TrapdoorRenderLegacyOracle {
     int first=shape==1||shape==2?2:0,v=first==0?2:1;double[][] uv=new double[8][3];
     for(int i=0;i<8;i++){uv[i][0]=((i&1)==0?0:1)*(layout==0?1:layout==1?2.5:.125)+(layout==1?-.25:0);uv[i][v]=((i&(1<<v))==0?0:1)*(layout==0?1:layout==1?1.75:.5)+(layout==2?.5:0);uv[i][first==0?1:2]=(i&(first==0?2:4))==0?0:1;if(inverted){uv[i][0]=1-uv[i][0];uv[i][v]=1-uv[i][v];}}
     BufferBuilder b=new BufferBuilder(65536);b.begin(7,BlockSurfaceFormat.get());
-    if(variant<3)TrapdoorSurfaceMesh.draw(b,upper,lower,corners,uv,0xD00070,first,first+2,layout==1,variant>0,variant==2);
+    if(args.length>1&&args[1].equals("shared")){
+     TrapdoorSurfaceLayout.Sink art=(x,y,z,u,w,half,nx,ny,nz)->vertex(b,half?lower:upper,x,y,z,u,w,nx,ny,nz);
+     if(variant<3)TrapdoorSurfaceLayout.build(uv,first,first+2,layout==1,variant>0,variant==2).emit(corners,art);
+     else TrapdoorFrameLayout.build(uv,first,layout==1,first==0?3/16D:2/16D,variant==3?0:5,borders,com.vandorlabs.tiles.FrameAppearance.aspect(choice)).emit(corners,new double[8][3],art,(x,y,z,u,w,half,nx,ny,nz)->vertex(b,lower,x,y,z,u,w,nx,ny,nz));
+    } else if(variant<3)TrapdoorSurfaceMesh.draw(b,upper,lower,corners,uv,0xD00070,first,first+2,layout==1,variant>0,variant==2);
     else TrapdoorFrameMesh.draw(b,upper,lower,corners,uv,new double[8][3],0xD00070,choice,first,layout==1,first==0?3/16D:2/16D,variant==3?0:5);
     b.finishDrawing();JsonObject record=new JsonObject();record.addProperty("shape",shape);record.addProperty("turn",turn);record.addProperty("inverted",inverted);record.addProperty("sliding",sliding);record.addProperty("pose",pose);record.addProperty("layout",layout);record.addProperty("variant",variant);JsonArray data=new JsonArray();for(int i=0;i<b.getVertexCount()*BlockSurfaceFormat.get().getNextOffset();i+=4)data.add(b.getByteBuffer().getInt(i));record.add("vertices",data);out.println(gson.toJson(record));profiles++;vertices+=b.getVertexCount();
    }
@@ -34,5 +38,6 @@ public final class TrapdoorRenderLegacyOracle {
   SegmentedReferenceGolden.check(target,"e83a807e9f890939ed2d9b326dc1b79176529426a2ae78b91a4cab4c1209143c");
   System.out.println("Trapdoor actual released mesh PASS profiles="+profiles+" vertices="+vertices+" surface/custom split/mirror/asymmetric frames/join masks");
  }
+ private static void vertex(BufferBuilder b,TextureAtlasSprite sprite,double x,double y,double z,double u,double v,float nx,float ny,float nz){b.pos(x,y,z).color(255,255,255,255).tex(sprite.getInterpolatedU(u*16),sprite.getInterpolatedV(v*16)).lightmap(0xD0,0x70).normal(nx,ny,nz).endVertex();}
  private static TextureAtlasSprite sprite(String name,int x,int y){TextureAtlasSprite s=new TextureAtlasSprite("oracle/"+name){};s.setIconWidth(16);s.setIconHeight(32);s.initSprite(256,256,x,y,false);return s;}
 }
