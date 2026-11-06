@@ -3,7 +3,7 @@
 import argparse
 import os
 from pathlib import Path
-from test_cube import ROOT,command,run,jdk_home
+from test_cube import ROOT,command,run,jdk_home,check_log
 from native_test_artifacts import artifact_directory,retain_artifacts
 
 @retain_artifacts
@@ -14,6 +14,7 @@ def main():
  launch=command('runClient','-PreaderRenderCheck','-PmodernClientRunDirectory='+str(game));env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_SCREEN_RENDER_CHECK='true')
  if a.xvfb:launch=['xvfb-run','-a','-s','-screen 0 1280x720x24']+launch;env['LIBGL_ALWAYS_SOFTWARE']='1'
  run(launch,out/'client.log','[vandorlabs][screen-render] title PASS',env)
+ check_log(out/'client.log','[vandorlabs][screen-surface-consumer] PASS')
  if not all((game/'screenshots'/name).is_file() for name in ('screen-render-disabled.png','screen-render-positive.png')):raise AssertionError('Missing actual Screen role capture')
  print('Focused native Screen render PASS: '+str(out),flush=True)
 
