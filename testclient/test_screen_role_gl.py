@@ -28,7 +28,7 @@ def stop(process):
   process.wait(timeout=10)
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--xvfb',action='store_true');p.add_argument('--rows',action='store_true');p.add_argument('--skip-build',action='store_true');p.add_argument('--capture-only',action='store_true');p.add_argument('--valid-activation',action='store_true');p.add_argument('--runtime',type=Path);a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--xvfb',action='store_true');p.add_argument('--rows',action='store_true');p.add_argument('--journal',action='store_true');p.add_argument('--skip-build',action='store_true');p.add_argument('--capture-only',action='store_true');p.add_argument('--valid-activation',action='store_true');p.add_argument('--runtime',type=Path);a=p.parse_args()
  if a.xvfb and os.name=='nt':p.error('--xvfb requires Linux')
  runtime=a.runtime or ROOT/'testclient/runtime'
  if not (runtime/'cp.txt').is_file():
@@ -41,7 +41,7 @@ def main():
   if not a.skip_build:
    with (out/'build.log').open('w') as log:subprocess.run([str(wrapper),'jar','reobfScreenRoleOracleJar','--no-daemon'],cwd=ROOT,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
   version=re.search(r"(?m)^version\s*=\s*['\"]([^'\"]+)",(ROOT/'build.gradle').read_text()).group(1)
-  production=ROOT/'build/libs'/('vandorlabs-'+version+'.jar');fixture=next((ROOT/'build/libs').glob('*-screen-role-oracle.jar'))
+  production=ROOT/'build/libs'/('vandorlabs-'+version+'.jar');fixture=ROOT/'build/libs'/('vandorlabs-'+version+'-screen-role-oracle.jar')
   digest=hashlib.sha256(production.read_bytes()).hexdigest();(out/'artifact.sha256').write_text(digest+'  '+production.name+'\n');(out/'fixture.sha256').write_text(hashlib.sha256(fixture.read_bytes()).hexdigest()+'  '+fixture.name+'\n')
   resources=hashlib.sha256()
   with zipfile.ZipFile(production) as jar:
@@ -54,6 +54,7 @@ def main():
    if found:cp.append(str(found[0]))
   # A warmed final singleton getter can inline the original Tessellator and silently bypass capture.
   oracle_flags=['-XX:CompileCommand='+policy+',net/minecraft/client/renderer/Tessellator.'+method for policy in ['exclude','dontinline'] for method in ['getInstance','func_178181_a']]
+  if a.journal:oracle_flags.append('-Dvandorlabs.screenJournalOracle=true')
   if a.rows:oracle_flags.append('-Dvandorlabs.screenRowsOracle=true')
   if a.valid_activation:oracle_flags.append('-Dvandorlabs.screenOracleValidActivation=true')
   command=[str(java),'-Xmx2G',*oracle_flags,'-Djava.library.path='+str(runtime/'natives'),'-cp',os.pathsep.join(cp),'net.minecraft.launchwrapper.Launch','--tweakClass','net.minecraftforge.fml.common.launcher.FMLTweaker','--gameDir',str(game),'--assetsDir',str(runtime/'assets'),'--assetIndex','1.12','--username','SCREENORACLE','--accessToken','0','--version','1.12.2-Forge14.23.5.2864','--fml.forgeVersion','14.23.5.2864','--fml.mcVersion','1.12.2','--fml.forgeGroup','net.minecraftforge','--width','1024','--height','720']
@@ -62,8 +63,16 @@ def main():
    process=subprocess.Popen(command,cwd=runtime,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=os.name!='nt');lease.track_process(process)
    try:result=process.wait(timeout=240)
    finally:stop(process)
-  marker='[vandorlabs][screen-rows-source] PASS' if a.rows else '[vandorlabs][screen-role-gl] PASS'
+  marker='[vandorlabs][screen-journal-source] PASS' if a.journal else '[vandorlabs][screen-rows-source] PASS' if a.rows else '[vandorlabs][screen-role-gl] PASS'
   if result or 'CompilerOracle: unrecognized line' in (out/'client.log').read_text(errors='replace') or marker not in (out/'client.log').read_text(errors='replace'):raise RuntimeError('Source Screen role GL capture failed: '+str(out/'client.log'))
+  if a.journal:
+   captured=game/'screen-journal-gl.jsonl'
+   if not captured.is_file() or captured.stat().st_size>8*1024*1024:raise RuntimeError('Missing or oversized Source journal capture')
+   rows=[json.loads(line) for line in captured.read_text().splitlines()]
+   if len(rows)!=144 or len({row['variant'] for row in rows})!=12:raise RuntimeError('Source journal coverage mismatch')
+   shutil.copy2(captured,out/'screen-journal-gl.jsonl');(out/'reference.sha256').write_text(hashlib.sha256(captured.read_bytes()).hexdigest()+'\n')
+   if hashlib.sha256(production.read_bytes()).hexdigest()!=digest:raise RuntimeError('Source standard JAR changed during journal capture')
+   success=True;print('Actual Source Screen journal commands PASS: '+str(out),flush=True);return
   if a.rows:
    captured=game/'screen-rows-gl.jsonl'
    if not captured.is_file() or captured.stat().st_size>32*1024*1024:raise RuntimeError('Missing or oversized Source row capture')

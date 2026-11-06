@@ -21,6 +21,7 @@ task screenRoleOracleJar(type: Jar) {
     from(compileNonRenderingChecks.destinationDir) {
         include 'com/vandorlabs/client/ScreenRoleGLOracle*.class'
         include 'com/vandorlabs/client/ScreenRowsGLOracle*.class'
+        include 'com/vandorlabs/client/ScreenJournalGLOracle*.class'
     }
 }
 reobf { screenRoleOracleJar {} }
@@ -51,4 +52,12 @@ task testScreenControlOverlay(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.ScreenControlOverlayChecks'
     maxHeapSize = '512M'
+}
+
+task testJournalOverlay(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.JournalOverlayChecks'
+    maxHeapSize = '512M'
+    args file('testclient/fixtures/screen-journal-overlay-reference.json.gz').absolutePath
 }

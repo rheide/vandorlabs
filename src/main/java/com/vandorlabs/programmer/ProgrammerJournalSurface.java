@@ -5,8 +5,8 @@ import net.minecraft.util.math.*;
 
 /** Authored screen plane and square-pixel controls, independent of rendering APIs. */
 public final class ProgrammerJournalSurface {
-    public static final int WIDTH=320,HEIGHT=136,BUTTON_TOP=116,BUTTON_BOTTOM=132;
-    public static final int PREVIOUS_LEFT=6,PREVIOUS_RIGHT=76,NEXT_LEFT=244,NEXT_RIGHT=314;
+    public static final int WIDTH=JournalOverlay.WIDTH,HEIGHT=JournalOverlay.MIN_HEIGHT,BUTTON_TOP=116,BUTTON_BOTTOM=132;
+    public static final int PREVIOUS_LEFT=JournalOverlay.PREVIOUS_LEFT,PREVIOUS_RIGHT=JournalOverlay.PREVIOUS_RIGHT,NEXT_LEFT=JournalOverlay.NEXT_LEFT,NEXT_RIGHT=JournalOverlay.NEXT_RIGHT;
     private static final Vec3d[] NATIVE=ProgrammerGeometry.screen();
     public static final Vec3d ORIGIN=NATIVE[1],ACROSS=NATIVE[0].subtract(NATIVE[1]),DOWN=NATIVE[2].subtract(NATIVE[1]);
     public static final Vec3d NORMAL=DOWN.crossProduct(ACROSS).normalize();
