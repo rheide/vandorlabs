@@ -1,0 +1,6 @@
+task exportScreenRenderGroupsReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.ScreenRenderGroupsLegacyChecks'
+ maxHeapSize = '2g'
+}
