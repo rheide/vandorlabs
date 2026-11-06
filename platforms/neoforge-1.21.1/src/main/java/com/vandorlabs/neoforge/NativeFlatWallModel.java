@@ -67,7 +67,8 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             interiors=Map.copyOf(mapped);originalMetal=new NativePanelQuads.Material(new ProgrammableModel.MaterialSnapshot(textures.apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse("vandorlabs:frame-default/metal_side"))),1,1));
         }
         BakedModel wrap(BakedModel original,boolean item){return wrap(original,item,false);}
-        BakedModel wrap(BakedModel original,boolean item,boolean porthole){return new NativeFlatWallModel(original,this,item,porthole,null);}
+        BakedModel wrap(BakedModel original,boolean item,boolean porthole){return wrap(original,item,porthole?NativePanelKind.PORTHOLE:NativePanelKind.WALL);}
+        BakedModel wrap(BakedModel original,boolean item,NativePanelKind kind){return new NativeFlatWallModel(original,this,item,kind,null);}
         com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material playback(int material){int index=ModernFinishCatalog.storedChoice(material);return material<0||index>=playback.length?null:playback[index];}
         static final class PaneProjection {
             private final List<BakedQuad> quads;private final com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material material;private final ProgrammableModel.MaterialSnapshot source;private final boolean opaque;
@@ -174,15 +175,15 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             }
         }
     }
-    private final Bake bake;private final boolean item,porthole;private final ItemChoice choice;
-    private NativeFlatWallModel(BakedModel original,Bake bake,boolean item,boolean porthole,ItemChoice choice){super(original);this.bake=bake;this.item=item;this.porthole=porthole;this.choice=choice;}
+    private final Bake bake;private final boolean item;private final NativePanelKind kind;private final ItemChoice choice;
+    private NativeFlatWallModel(BakedModel original,Bake bake,boolean item,NativePanelKind kind,ItemChoice choice){super(original);this.bake=bake;this.item=item;this.kind=kind;this.choice=choice;}
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data){return data;}
     @Override public TextureAtlasSprite getParticleIcon(){return getParticleIcon(ModelData.EMPTY);}
-    @Override public TextureAtlasSprite getParticleIcon(ModelData data){var appearance=data.get(NativeWallEntity.WALL_APPEARANCE);int main=item?(choice==null?0:choice.main):appearance==null?0:appearance.base().housing().mainTexture;return bake.surfaces.get(bake.index(main)).sprite();}
+    @Override public TextureAtlasSprite getParticleIcon(ModelData data){var appearance=data.get(NativeWallEntity.WALL_APPEARANCE);if(kind==NativePanelKind.GLASS){if(!item&&appearance!=null)return bake.glassMaterial(appearance,false).surface().sprite();if(!item||choice==null||!choice.custom)return originalModel.getParticleIcon(data);}int main=item?(choice==null?0:choice.main):appearance==null?0:appearance.base().housing().mainTexture;return bake.surfaces.get(bake.index(main)).sprite();}
     @Override public boolean useAmbientOcclusion(){return false;}
     @Override public net.neoforged.neoforge.common.util.TriState useAmbientOcclusion(BlockState state,ModelData data,RenderType layer){return net.neoforged.neoforge.common.util.TriState.FALSE;}
     @Override public ChunkRenderTypeSet getRenderTypes(BlockState state,RandomSource random,ModelData data){return Layers.VALUE;}
-    @Override public List<RenderType> getRenderTypes(net.minecraft.world.item.ItemStack stack,boolean fabulous){return item&&porthole?Layers.ITEM:super.getRenderTypes(stack,fabulous);}
+    @Override public List<RenderType> getRenderTypes(net.minecraft.world.item.ItemStack stack,boolean fabulous){return item&&kind!=NativePanelKind.WALL?Layers.ITEM:super.getRenderTypes(stack,fabulous);}
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random){return getQuads(state,side,random,ModelData.EMPTY,null);}
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){
         if(item)return itemQuads(state,side,random,data,layer);if(side!=null)return List.of();var appearance=data.get(NativeWallEntity.WALL_APPEARANCE);
@@ -190,11 +191,11 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             if(block.isGlass())return List.of();
             NativeWallGeometry geometry=appearance!=null&&appearance.geometry() instanceof NativeDiagonalWallGeometry.Geometry?appearance.geometry():NativeDiagonalWallGeometry.build(NativeDiagonalWallTopology.initial(state,0));
             if(appearance!=null&&!appearance.chunkBody())return List.of();
-            if(porthole){var snapshot=appearance==null?Defaults.diagonal(geometry):appearance;return bake.aperture(snapshot,geometry);}
+            if(kind==NativePanelKind.PORTHOLE){var snapshot=appearance==null?Defaults.diagonal(geometry):appearance;return bake.aperture(snapshot,geometry);}
             return bake.body(geometry,appearance==null?0:appearance.base().housing().mainTexture,appearance==null?-1:appearance.frames().interior,appearance==null?-1:appearance.frames().exteriorChoice(),appearance==null?0:appearance.base().housing().layout);
         }
         Direction facing=state.getValue(NativeFlatWallBlock.FACING);int depth=state.getValue(NativeFlatWallBlock.DEPTH);boolean full=state.getBlock() instanceof NativeFlatWallBlock block&&block.isFullDepth();Object published=appearance==null?null:appearance.geometry();NativeFlatWallGeometry.Geometry geometry=published instanceof NativeFlatWallGeometry.Geometry value?value:null;if(geometry==null||geometry.facing()!=facing||geometry.depth()!=depth||geometry.fullDepth()!=full)geometry=full?NativeFlatWallGeometry.full(facing,depth):NativeFlatWallGeometry.straight(facing,depth);
-        if(porthole)return bake.aperture(appearance==null?Defaults.VALUES[(full?18:0)+facing.get3DDataValue()*3+depth]:appearance,geometry);
+        if(kind==NativePanelKind.PORTHOLE)return bake.aperture(appearance==null?Defaults.VALUES[(full?18:0)+facing.get3DDataValue()*3+depth]:appearance,geometry);
         return bake.body(geometry,appearance==null?0:appearance.base().housing().mainTexture,appearance==null?-1:appearance.frames().interior,appearance==null?-1:appearance.frames().exteriorChoice(),appearance==null?0:appearance.base().housing().layout);
     }
     List<BakedQuad> worldQuads(NativeWallGeometry geometry,int main,int interior,int mode){return bake.body(geometry,main,interior,mode);}
@@ -211,7 +212,7 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
         @Override public <T> com.mojang.serialization.DataResult<ItemChoice> decode(com.mojang.serialization.DynamicOps<T> ops,com.mojang.serialization.MapLike<T> input){if(input.get("BlockEntityTag")!=null){var nested=ops.getMap(input.get("BlockEntityTag")).result();if(nested.isPresent())input=nested.get();}Object value=input.get("housingTexture");int raw=value instanceof NumericTag tag?tag.getAsInt():0;boolean custom=raw>=MaterialChoicePolicy.CUSTOM_BASE;return com.mojang.serialization.DataResult.success(new ItemChoice(custom||value instanceof IntTag?raw:0,custom));}
     };
     private final com.google.common.cache.Cache<net.minecraft.world.item.component.CustomData,BakedModel> items=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(128).build();
-    BakedModel resolveItem(net.minecraft.world.item.component.CustomData data){var found=items.getIfPresent(data);if(found==null){found=new NativeFlatWallModel(originalModel,bake,true,porthole,data.read(ITEM).getOrThrow());items.put(data,found);}return found;}
+    BakedModel resolveItem(net.minecraft.world.item.component.CustomData data){var found=items.getIfPresent(data);if(found==null){found=new NativeFlatWallModel(originalModel,bake,true,kind,data.read(ITEM).getOrThrow());items.put(data,found);}return found;}
     private final ItemOverrides overrides=new ItemOverrides(){@Override public BakedModel resolve(BakedModel original,net.minecraft.world.item.ItemStack stack,net.minecraft.client.multiplayer.ClientLevel world,net.minecraft.world.entity.LivingEntity entity,int seed){var custom=stack.get(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA);if(custom==null)custom=stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);return custom==null?NativeFlatWallModel.this:resolveItem(custom);}};
     @Override public ItemOverrides getOverrides(){return item?overrides:originalModel.getOverrides();}
     @Override public BakedModel applyTransform(net.minecraft.world.item.ItemDisplayContext context,com.mojang.blaze3d.vertex.PoseStack pose,boolean left){getTransforms().getTransform(context).apply(left,pose);return this;}

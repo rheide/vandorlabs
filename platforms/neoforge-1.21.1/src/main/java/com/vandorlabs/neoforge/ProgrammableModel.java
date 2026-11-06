@@ -47,6 +47,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         event.getModels().replaceAll((id,model) -> {
             if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_wall"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_block"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_diagonal_porthole")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory"),true),event.getTextureGetter());
             if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_wall"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_diagonal_wall")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory")),event.getTextureGetter());
+            if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_diagonal_glass")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory"),com.vandorlabs.neoforge.shape.NativePanelKind.GLASS),event.getTextureGetter());
             boolean cube=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_block"));
             boolean trigger=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_trigger_block"));
             boolean slab=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_slab")),stairs=id.id().equals(ResourceLocation.parse("vandorlabs:programmable_stairs"));

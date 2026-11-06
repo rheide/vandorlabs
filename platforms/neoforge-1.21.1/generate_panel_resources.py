@@ -45,12 +45,12 @@ def diagonal_porthole_projection():
 def main():
     if OUT.exists():
         shutil.rmtree(OUT)
-    for name in ['programmable_wall','programmable_porthole_wall','programmable_diagonal_wall','programmable_porthole_block','programmable_diagonal_porthole']:
+    for name in ['programmable_wall','programmable_porthole_wall','programmable_diagonal_wall','programmable_porthole_block','programmable_diagonal_porthole','programmable_diagonal_glass']:
         for relative in ['blockstates/'+name+'.json','models/block/'+name+'.json','models/item/'+name+'.json']:
             if name=='programmable_diagonal_porthole' and relative.startswith('models/block/'):
                 continue # Canonical blockstate reuses the existing diagonal wall placeholder model.
             value = metal(converted(json.loads((SOURCE / relative).read_text())))
-            if name in ('programmable_diagonal_wall','programmable_diagonal_porthole') and relative.startswith('blockstates/'):
+            if name in ('programmable_diagonal_wall','programmable_diagonal_porthole','programmable_diagonal_glass') and relative.startswith('blockstates/'):
                 # Legacy diagonal metadata always reads depth0; the other source variants are identical.
                 variants={}
                 for key,variant in value['variants'].items():
@@ -65,6 +65,8 @@ def main():
                     value['textures'].pop('glass', None)
                 else:
                     value['textures']['glass']='vandorlabs:glass-palette/clear'
+            if name=='programmable_diagonal_glass' and 'textures' in value:
+                value['textures']={key:'vandorlabs:frame-default/double_frame_metal' if key=='frame' else 'vandorlabs:glass-palette/clear' for key in value['textures']}
             target = OUT / 'assets/vandorlabs' / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(json.dumps(value, indent=2) + '\n')
@@ -73,7 +75,7 @@ def main():
         target=OUT/('data/vandorlabs/recipe/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(recipe)+'\n')
         loot={'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]}
         target=OUT/('data/vandorlabs/loot_table/blocks/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(loot)+'\n')
-    print('Native panel assets: 88 canonical variants, current item geometry; existing housing/metal atlas reused')
+    print('Native panel assets: 96 canonical variants, current item geometry; existing housing/metal atlas reused')
 
 
 if __name__ == '__main__':

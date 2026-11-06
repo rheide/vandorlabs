@@ -31,7 +31,7 @@ public final class NativePortholePane {
     public int selectedTexture(){return glassPage(page)?glass.material<0?PortholeDialog.shadeChoice(glass.shade):glass.material:page==DiagonalGlassDialog.FRONT?draft.front:page==PortholeDialog.INTERIOR?draft.interior:page==PortholeDialog.EXTERIOR?draft.exterior:base.housing().mainTexture;}
     public NativeMaterialPicker picker(){
         return pickers.computeIfAbsent(page,id->{
-            if(framePage(id))return new NativeMaterialPicker(selectedTexture(),id==DiagonalGlassDialog.FRONT?choice->NativeWallEntity.validFrame(choice)&&NativeWallDialog.surfaceOption(choice):NativeWallDialog::surfaceOption,this::choose).originalArtwork("vandorlabs:frame-default/metal_side").sampling(false);
+            if(framePage(id))return new NativeMaterialPicker(selectedTexture(),id==DiagonalGlassDialog.FRONT?choice->NativeWallEntity.validFrame(choice)&&NativeWallDialog.surfaceOption(choice):NativeWallDialog::surfaceOption,this::choose).originalArtwork(id==DiagonalGlassDialog.FRONT?"vandorlabs:frame-default/double_frame_metal":"vandorlabs:frame-default/metal_side").sampling(false);
             if(glassPage(id)){var picker=new NativeMaterialPicker(selectedTexture(),choice->{var entry=ModernFinishCatalog.option(choice);return entry.general()||entry.displaySelectable();},this::choose).sampling(false);for(int shade=0;shade<com.vandorlabs.tiles.GlassTextures.IDS.length;shade++)picker.specialMaterial(PortholeDialog.shadeChoice(shade),com.vandorlabs.tiles.GlassTextures.LABELS[shade],"Glass","vandorlabs:glass-palette/"+com.vandorlabs.tiles.GlassTextures.IDS[shade]);return picker;}
             return new NativeMaterialPicker(selectedTexture(),choice->ModernFinishCatalog.option(choice).general(),this::choose);
         });
