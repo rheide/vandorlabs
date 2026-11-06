@@ -54,6 +54,11 @@ public class NativeScreenEntity extends BlockEntity implements NativeChannelMemb
   var before=old.scalar();var after=next.scalar();boolean geometry=!before.selectedScreen.equals(after.selectedScreen)||!before.inputPanel.equals(after.inputPanel)||!before.secondaryInputPanel.equals(after.secondaryInputPanel)||before.smallInput!=after.smallInput||before.framed!=after.framed||old.housing()!=next.housing();
   editingDisplay=true;try{NativeRedstoneChannels.batch(server,()->{snapshot=new Snapshot(next,snapshot.frames,snapshot.glass,snapshot.controls,snapshot.present,snapshot.transmission);changed(geometry);if(!old.channels().equals(next.channels()))NativeRedstoneChannels.channelsChanged(this);});}finally{editingDisplay=false;}return true;
  }
+ boolean activationEditAllowed(){return !inert&&!editing()&&level instanceof ServerLevel server&&server.getServer().isSameThread()&&NativeRedstoneChannels.open(server)&&isChannelMemberActive();}
+ NativeScreenSettings planActivation(NativeScreenActivationEdit edit){return edit.apply(family,snapshot.settings,joinSignature(),catalog);}
+ void guardActivationGroup(boolean guard){editingDisplay=guard;}
+ void installActivation(NativeScreenSettings settings){snapshot=new Snapshot(settings,snapshot.frames,snapshot.glass,snapshot.controls,snapshot.present,snapshot.transmission);publishLocal();}
+ void publishActivation(){changed(false);}
  boolean editing(){return editingDisplay||controlService!=null&&controlService.editing();}
  NativeScreenControlService controlService(){return controlService;}
  void installControlData(int slot,NativeScreenControls data,boolean notify){snapshot=new Snapshot(snapshot.settings,snapshot.frames,snapshot.glass,slot==0?List.of(data,snapshot.controls.get(1)):List.of(snapshot.controls.get(0),data),snapshot.present|1<<slot,snapshot.transmission);if(notify)changed(false);else{publishLocal();setChanged();}}
