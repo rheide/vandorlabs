@@ -27,6 +27,18 @@ def decode(base, encoded):
     return strip,count
 
 
+def decode_animation(root,name,base):
+    """Released decoder order: straight-alpha layered PNG first, then legacy compact RGB deltas."""
+    layered=_source(root,name,'_animated.png')
+    if layered is not None:
+        with Image.open(layered) as image:
+            if image.width!=base.width or image.height%base.height or not 2<=image.height//base.height<=64 or image.width>128 or base.height>128:
+                raise ValueError('Layered playback dimensions: '+str(layered))
+            return image.convert('RGBA'),image.height//base.height
+    packed=_source(root,name,'_animated.anim')
+    return None if packed is None else decode(base,packed)
+
+
 class PlaybackResources:
     def __init__(self,root,assets):
         self.root=root;self.assets=assets;self.done={}
@@ -49,7 +61,7 @@ class PlaybackResources:
         input_source=source.startswith('console_inputs/');name=source[15:] if input_source else source
         if name.endswith('_static'):name=name[:-7]
         animated=self.inputs.get(name,1)>1 if input_source else name in self.displays
-        encoded=_source(self.root,('console_inputs/' if input_source else '')+name,'_animated.anim') if animated else None
-        if encoded is not None:
-            strip,count=decode(base,encoded);strip.save(self.assets/(prefix+'_animated.png'),optimize=True);animation='vandorlabs:'+prefix+'_animated.png'
+        decoded=decode_animation(self.root,('console_inputs/' if input_source else '')+name,base) if animated else None
+        if decoded is not None:
+            strip,count=decoded;strip.save(self.assets/(prefix+'_animated.png'),optimize=True);animation='vandorlabs:'+prefix+'_animated.png'
         result=dict(staticTexture=texture,offTexture=self.off,animationTexture=animation,frameCount=count,aspect=base.width/base.height);self.done[key]=result;return result
