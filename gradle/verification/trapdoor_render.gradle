@@ -13,3 +13,12 @@ task exportTrapdoorRenderReference(type: JavaExec) {
     main = 'com.vandorlabs.client.TrapdoorRenderLegacyOracle'
     args file(project.findProperty('trapdoorRenderReference') ?: 'build/test-artifacts/trapdoor-render-forge.jsonl').absolutePath
 }
+
+
+task testTrapdoorSharedRender(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorRenderLegacyOracle'
+    args file('build/test-artifacts/trapdoor-render-shared.jsonl').absolutePath, 'shared'
+}
