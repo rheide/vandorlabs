@@ -53,6 +53,19 @@ public final class NativeLightItemModelChecks {
         }
         System.out.println("[vandorlabs][trapdoor-render] Light inventory atlas PASS templates="+variants+" vertexFields="+checks+" materialKinds=3 padded GUI transforms/component identity/reload");
     }
+    /** Resolve actual canonical ItemRenderer models through the production bake hook. */
+    public static void canonical(){
+        var mc=Minecraft.getInstance();var atlas=mc.getTextureAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS);int variants=0;
+        for(int family=0;family<3;family++)for(int style=0;style<6;style++)for(boolean lit:new boolean[]{false,true}){
+            var item=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("vandorlabs",FAMILIES[family]));need(item instanceof com.vandorlabs.neoforge.light.NativeLightItem,"canonical item "+family);
+            var stack=new ItemStack(item);var tag=new CompoundTag();tag.putInt("LightTexture",style);tag.putBoolean("LightOn",lit);tag.putInt("LightLevel",15);var root=new CompoundTag();root.put("BlockEntityTag",tag);stack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));
+            var selected=mc.getItemRenderer().getModel(stack,mc.level,mc.player,0);
+            String entryId="light_"+ProgrammableLightTextures.IDS[style]+(lit?"":"_off");var expected=atlas.apply(ResourceLocation.parse(ModernFinishCatalog.ENTRIES.stream().filter(entry->entry.id().equals(entryId)).findFirst().orElseThrow().texture()));int lamps=0;
+            for(int side=-1;side<6;side++)for(var quad:selected.getQuads(null,side<0?null:Direction.values()[side],RandomSource.create(42),ModelData.EMPTY,null))if(quad.getSprite()==expected)lamps++;
+            need(lamps>0,"production selector lamp "+family+"/"+style+"/"+lit);padded(selected);variants++;
+        }
+        System.out.println("[vandorlabs][light-editor-client] canonical inventory PASS actual ItemRenderer variants="+variants);
+    }
     private static void dynamicSource(BakedModel source,java.util.function.Function<String,net.minecraft.client.renderer.texture.TextureAtlasSprite> atlas){
         boolean[] visible={false};
         var dynamic=new net.neoforged.neoforge.client.model.BakedModelWrapper<BakedModel>(source){
