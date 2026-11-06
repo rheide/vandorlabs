@@ -42,6 +42,15 @@ public final class NativeFluidRegions {
     public List<Region> regions() { return regions; }
     public List<NativeFluidSurface.Surface> surfaces() { return surfaces; }
 
+    /** Actual opening render path: closed separating half-spaces, independent of physical collision slices. */
+    public static NativeFluidRegions opening(double nx,double ny,double nz,double near,double far,boolean open,int present,boolean joined,double firstHeight,double secondHeight){
+        if((present&~3)!=0||!Double.isFinite(nx)||!Double.isFinite(ny)||!Double.isFinite(nz)||!Double.isFinite(near)||!Double.isFinite(far)||!Double.isFinite(firstHeight)||!Double.isFinite(secondHeight)||(nx==0&&ny==0&&nz==0)||firstHeight<=0||firstHeight>1||secondHeight<=0||secondHeight>1)throw new IllegalArgumentException("Opening fluid regions");if(present==0)return EMPTY;joined=joined&&open&&present==3;List<Region> regions=new ArrayList<>(2);List<NativeFluidSurface.Surface> surfaces=new ArrayList<>();double[] normal={nx,ny,nz};
+        for(int side=0;side<(joined?1:2);side++){if((present&(1<<side))==0)continue;double height=side==0?firstHeight:secondHeight;List<Plane> planes=new ArrayList<>(List.of(new Plane(-1,0,0,0),new Plane(1,0,0,1),new Plane(0,-1,0,0),new Plane(0,1,0,height),new Plane(0,0,-1,0),new Plane(0,0,1,1)));double sign=side==0?1:-1,limit=side==0?near:far;if(open)limit=(near+far)/2;else limit+=side==0?-.001:.001;Plane divider=new Plane(sign*nx,sign*ny,sign*nz,sign*limit);if(!joined)planes.add(divider);regions.add(new Region(side,planes));
+            for(Direction face:Direction.values()){List<double[]> polygon=cube(face);for(double[] point:polygon)point[1]*=height;for(Plane plane:planes)polygon=DiagonalMeshClip.plane(polygon,plane.x,plane.y,plane.z,plane.distance);if(NativeFluidSurface.area(polygon)>1e-10)surfaces.add(new NativeFluidSurface.Surface(polygon,side,axis(face),face.get3DDataValue()));}
+            if(!joined){int axis=Math.abs(nx)>Math.abs(ny)?(Math.abs(nx)>Math.abs(nz)?0:2):(Math.abs(ny)>Math.abs(nz)?1:2),a=(axis+1)%3,b=(axis+2)%3;List<double[]> polygon=new ArrayList<>();for(double[] pair:new double[][]{{0,0},{1,0},{1,1},{0,1}}){double[] point=new double[3];point[a]=pair[0];point[b]=pair[1];point[axis]=(limit-normal[a]*point[a]-normal[b]*point[b])/normal[axis];polygon.add(point);}for(int i=0;i<6;i++){var plane=planes.get(i);polygon=DiagonalMeshClip.plane(polygon,plane.x,plane.y,plane.z,plane.distance);}if(NativeFluidSurface.area(polygon)>1e-10){var n=NativeFluidSurface.normal(polygon);if(n[0]*divider.x+n[1]*divider.y+n[2]*divider.z<0)Collections.reverse(polygon);surfaces.add(new NativeFluidSurface.Surface(polygon,side,axis,-1));}}
+        }return new NativeFluidRegions(regions,surfaces);
+    }
+
     /** Current flat wall joins retain the same analytic separating leaf. */
     public static NativeFluidRegions flat(Direction facing, int depth, boolean inset) {
         if (facing.getAxis() == Direction.Axis.Y || depth < 0 || depth > 2)

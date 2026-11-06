@@ -6,3 +6,12 @@ task exportTrapdoorFluidReference(type: JavaExec) {
     maxHeapSize = '1G'
     args file(project.findProperty('trapdoorFluidReference') ?: 'build/test-artifacts/trapdoor-fluid').absolutePath
 }
+
+task exportTrapdoorFluidSurfaceReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorFluidSurfaceLegacyChecks'
+    maxHeapSize = '1G'
+    args file(project.findProperty('trapdoorFluidSurfaceReference') ?: 'build/test-artifacts/trapdoor-fluid-surface-forge.jsonl').absolutePath
+}
