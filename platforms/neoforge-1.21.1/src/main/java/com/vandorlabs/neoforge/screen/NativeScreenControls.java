@@ -9,6 +9,10 @@ public record NativeScreenControls(boolean enabled,String title,List<Row> rows) 
  public NativeScreenControls{Objects.requireNonNull(title);rows=List.copyOf(rows);if(rows.size()>STANDALONE_ROWS)throw new IllegalArgumentException("Too many standalone rows");}
  public record Row(String label,ChannelList channels,boolean slider,boolean pulse,int min,int max,int level,Map<Integer,Integer> levels,ChannelList latched,boolean active,long pulseUntil){
   public Row{Objects.requireNonNull(label);Objects.requireNonNull(channels);Objects.requireNonNull(latched);levels=Map.copyOf(levels);}
+  /** Pulse visibility follows its own deadline; the saved active field is ALL-bank feedback. */
+  public boolean active(long now){return pulse?pulseUntil>0&&now<pulseUntil:active;}
+  public int selectedSegment(){return com.vandorlabs.persistence.SignalControlData.stepForLevel(level,min,max);}
+  public int segmentValue(int index){return com.vandorlabs.persistence.SignalControlData.levelForStep(index,min,max);}
   public int latchedLevel(int channel){return levels.getOrDefault(channel,latched.contains(channel)?15:0);}
   private void choices(CompoundTag tag){tag.putString("Label",label);tag.putIntArray("RedstoneChannels",channels.toArray());tag.putBoolean("Slider",slider);tag.putBoolean("Pulse",pulse);tag.putInt("Min",min);tag.putInt("Max",max);}
   private void saved(CompoundTag tag){choices(tag);int[] values=new int[channels.size()];for(int i=0;i<values.length;i++)values[i]=latchedLevel(channels.get(i));tag.putIntArray("Levels",values);tag.putInt("Level",level);tag.putLong("PulseUntil",pulseUntil);tag.putIntArray("LatchedChannels",latched.toArray());tag.putBoolean("Active",active);}
