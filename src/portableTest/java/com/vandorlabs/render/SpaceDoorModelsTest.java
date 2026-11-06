@@ -1,0 +1,21 @@
+package com.vandorlabs.render;
+
+import java.security.MessageDigest;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+
+/** Freeze actual public legacy model names, detail aliases and numeric metadata. */
+public final class SpaceDoorModelsTest {
+    public static void main(String[] args)throws Exception{
+        MessageDigest digest=MessageDigest.getInstance("SHA-256");int cases=0;
+        for(String design:SpaceDoorModels.DESIGNS)digest.update(design.getBytes(StandardCharsets.UTF_8));for(String detail:SpaceDoorModels.DETAILS)digest.update(detail.getBytes(StandardCharsets.UTF_8));
+        for(int design=0;design<30;design++)for(boolean sliding:new boolean[]{false,true})for(boolean framed:new boolean[]{false,true}){
+            digest.update(SpaceDoorModels.modelId(design,sliding,framed).getBytes(StandardCharsets.UTF_8));
+            for(int detail=0;detail<3;detail++)for(boolean paired:new boolean[]{false,true})for(boolean right:new boolean[]{false,true})for(int part=0;part<3;part++){
+                digest.update(ByteBuffer.allocate(8).putInt(SpaceDoorModels.metadata(design,detail,framed,paired,right,part)).putInt(SpaceDoorModels.metadata(design,detail,framed,paired,right,part,sliding)).array());cases++;
+            }
+        }
+        StringBuilder text=new StringBuilder();for(byte b:digest.digest())text.append(String.format("%02x",b&255));String expected=System.getProperty("vandorlabs.spaceDoorModelGolden","d0c444677616b1f36f991ca69b994ef2324e4b3deb78e5ea617f1025a7ed1302");if(!expected.isEmpty()&&!expected.equals(text.toString()))throw new AssertionError("Current model/metadata projection changed "+text);
+        System.out.println("Space Door actual model reference PASS cases="+cases+" SHA256="+text);
+    }
+}

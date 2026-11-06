@@ -11,7 +11,7 @@ public record NativeDoorSettings(SpaceDoorData door,int faceTexture,int rawLayou
     public static final String ORDINARY_ID="programmable_door",LARGE_ID="large_programmable_door",
             LEGACY_ROTATING_ID="space_rotating_door",LEGACY_SLIDING_ID="space_sliding_door";
     public static NativeDoorSettings fresh(boolean large,boolean slidingModel){
-        var door=new SpaceDoorData(large?23:2,1,true,0,slidingModel,slidingModel,true,0,true);
+        var door=new SpaceDoorData(large?com.vandorlabs.render.SpaceDoorModels.DEFAULT_LARGE_DESIGN:com.vandorlabs.render.SpaceDoorModels.DEFAULT_DESIGN,1,true,0,slidingModel,slidingModel,true,0,true);
         return new NativeDoorSettings(door,-1,-1,false,slidingModel?0:1,1,0,127,new FrameSettings(-1,-1,-2,0,-1,-1,false,false,false,false),NativeDoorGlass.DEFAULT);
     }
     public int textureLayout(){return rawLayout<0?(tileTexture?1:0):rawLayout;}

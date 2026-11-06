@@ -16,7 +16,7 @@ public final class SpaceDoorModelReferenceChecks {
                 digest.update(ByteBuffer.allocate(8).putInt(TileEntitySpaceDoor.metadata(design,detail,framed,paired,right,part)).putInt(TileEntitySpaceDoor.metadata(design,detail,framed,paired,right,part,sliding)).array());cases++;
             }
         }
-        StringBuilder text=new StringBuilder();for(byte b:digest.digest())text.append(String.format("%02x",b&255));String expected=System.getProperty("vandorlabs.spaceDoorModelGolden","");if(!expected.isEmpty()&&!expected.equals(text.toString()))throw new AssertionError("Current model/metadata projection changed "+text);
+        StringBuilder text=new StringBuilder();for(byte b:digest.digest())text.append(String.format("%02x",b&255));String expected=System.getProperty("vandorlabs.spaceDoorModelGolden","d0c444677616b1f36f991ca69b994ef2324e4b3deb78e5ea617f1025a7ed1302");if(!expected.isEmpty()&&!expected.equals(text.toString()))throw new AssertionError("Current model/metadata projection changed "+text);
         System.out.println("Space Door actual model reference PASS cases="+cases+" SHA256="+text);
     }
 }
