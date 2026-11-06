@@ -45,3 +45,19 @@ task exportPropulsionShapeReference(type: JavaExec) {
     main = 'com.vandorlabs.client.PropulsionShapeLegacyOracle'
     args file('build/test-artifacts/propulsion-shape-forge.jsonl').absolutePath
 }
+
+task preparePropulsionArtworkReference(type: Exec) {
+    workingDir file('platforms/neoforge-1.21.1')
+    executable project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+    args 'generate_propulsion_resources.py'
+}
+
+task exportPropulsionArtworkReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    dependsOn preparePropulsionArtworkReference
+    main = 'com.vandorlabs.client.PropulsionArtworkLegacyOracle'
+    args file('platforms/neoforge-1.21.1/build/generated/propulsion-resources/assets/vandorlabs/data/propulsion_artwork.json').absolutePath,
+         file('build/test-artifacts/propulsion-artwork-forge.jsonl').absolutePath
+}
