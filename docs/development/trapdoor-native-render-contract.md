@@ -34,3 +34,31 @@ face exactly. Its dense hover probe performs 4,096 cached snapshot lookups and
 49,152 outline-edge emissions without allocation or mesh tessellation. The
 initial wrapper-key/recency-queue cache allocated 196,608 bytes for that probe;
 the byte-bounded endpoint-pair cache removes those hit-path allocations.
+
+The renderer foundation separates immutable clipped affine layouts from live corner poses.
+`TrapdoorSurfaceLayout` owns clipped triangles and custom Door half selection;
+`TrapdoorFrameLayout` owns frame strips and preserves the released two-stage affine
+operation order. Both emit through primitive sinks with caller-owned scratch arrays.
+`TrapdoorArtworkCoordinates` preserves the independent saved layout and tile flags,
+Door artwork mapping, group extents and world-coordinate rounding.
+`NativeTrapdoorMesh` streams through the active vertex consumer, applying atlas UVs,
+explicit white RGBA, light and overlay without retaining frame state. It is inactive
+until the host renderer bridge is supplied. The generic thin leaf edges and material
+selection remain orchestration responsibilities; no translucent pane is invented.
+
+Focused evidence includes 4,800 released surface/frame profiles and 588,800 vertices
+with byte-identical shared output, plus 36,864 artwork-coordinate profiles with exact
+double-bit agreement. A warmed 4,096-draw surface probe emits 393,216 identical vertices:
+the released cache-hit path allocates 98,304 bytes and the extracted path allocates zero.
+This is an emission allocation measurement, not a frame-rate claim.
+
+The small native title check covers regular, sliding, mirrored tile and all diagonal
+modes, asymmetric frame apertures and omitted joined rails across resource reload.
+Its frame/full-leaf negative control tests the open center. It uses explicit asymmetric
+border fractions to isolate strip behavior; active resource-pack border discovery and
+world-host acceptance are separate requirements.
+
+`NativeTrapdoorVisualClock` samples one pause-aware frame clock and retains nine-tick
+reversible `DoorAnimation` state by world/position, bounded to 1,024 positions per world.
+Repeated observations and tile replacement preserve the sampled pose; world unload
+clears the retained state. Authoritative collision uses the host's endpoint state.
