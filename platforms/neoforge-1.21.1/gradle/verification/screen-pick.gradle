@@ -1,0 +1,5 @@
+tasks.register('testNativeScreenPickWire', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenPickWireChecks'
+}
