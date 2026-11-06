@@ -39,6 +39,7 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
  @Override public Direction[] fluidPlacementFaces(){return new Direction[]{facing().getOpposite(),facing()};}
  @Override public BlockEntity fluidOwner(){return this;}
  @Override public NativeFluidSlots containedFluids(){return fluidState.slots();}
+ @Override public NativeFluidRegions fluidSurfaceRegions(){return fluidState.surfaceRegions();}
  @Override public NativeFluidSlots.Snapshot effectiveFluidSnapshot(){return fluidState.effective();}
  @Override public NativeFluidVolume fluidVolumeSnapshot(){return fluidState.volume();}
  @Override public long fluidGeometryRevision(){return fluidState.revision();}

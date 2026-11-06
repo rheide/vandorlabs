@@ -17,6 +17,8 @@ public final class NativeSegmentedFluids {
     private static final NativeFluidSlots.Snapshot DRY=new NativeFluidSlots().snapshot();
     private static final NativeFluidVolume EMPTY=NativeFluidVolume.build(java.util.List.of(new net.minecraft.world.phys.AABB(0,0,0,1,1,1)),NativeFluidVolume.SINGLE_SIDE);
     private record Geometry(Direction face,int direction,int position,int height,int row,int column,int width,boolean closed,NativeSegmentedFluidGeometry.Snapshot snapshot,long revision){}
+    private final NativeOpeningFluidRegions surfaceRegions=new NativeOpeningFluidRegions();
+    public NativeFluidRegions surfaceRegions(){return surfaceRegions.snapshot();}
     private final NativeSegmentedDoorEntity owner;
     private final NativeSavedFluidSlots savedSlots=new NativeSavedFluidSlots();
     private final NativeFluidSlots slots=savedSlots.storage();
@@ -44,10 +46,11 @@ public final class NativeSegmentedFluids {
     private void schedule(int ticks){var level=owner.getLevel();if(level!=null&&!level.isClientSide)next=Math.min(next,level.getGameTime()+Math.max(1,ticks));else if(level==null)next=Long.MIN_VALUE;}
     void tick(){var level=owner.getLevel();if(level!=null&&!level.isClientSide&&!owner.inert()&&level.getGameTime()>=next)update(false);}
     void refresh(){
-        var level=owner.getLevel();if(level==null)return;if(owner.inert()){geometry=null;effective=DRY;return;}
+        var level=owner.getLevel();if(level==null)return;if(owner.inert()){surfaceRegions.clear();geometry=null;effective=DRY;return;}
         var root=owner.root();boolean closed=!root.targetOpen()&&root.pose(0)<=0;var face=owner.facing();var settings=owner.settings();var before=geometry;
         if(before==null||before.face()!=face||before.direction()!=settings.direction||before.position()!=settings.position||before.height()!=owner.height()||before.row()!=owner.topOffset()||before.column()!=owner.column()||before.width()!=owner.columnsCount()||before.closed()!=closed){var built=NativeSegmentedFluidGeometry.build(face,settings.direction,settings.position,owner.height(),owner.topOffset(),owner.column(),owner.columnsCount(),closed,owner.getBlockPos());geometry=new Geometry(face,settings.direction,settings.position,owner.height(),owner.topOffset(),owner.column(),owner.columnsCount(),closed,built,before==null?1:before.revision()+1);}
         var stored=slots.snapshot();int water=NativeDoorOpeningFluids.sources(level,owner.getBlockPos(),face,!closed,stored);if(overlayBase==null||overlayBase.revision!=stored.revision||overlay!=water){overlayBase=stored;overlay=water;effective=stored.withOpeningWater(water,++effectiveRevision);}
+        var plane=geometry.snapshot().plane();surfaceRegions.prepare(plane.x(),0D,plane.z(),plane.near(),plane.far(),!closed,effective,1,1);
     }
     /** Placement derives only physical fluids; the item never supplies slots or runtime masks. No packet is emitted here. */
     void capturePlacement(BlockState previous){
