@@ -1,0 +1,11 @@
+package com.vandorlabs.neoforge.light;
+import com.vandorlabs.redstone.ChannelList;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.core.BlockPos;
+/** Bounded native dialog body. Runtime state is absent and decoded before any world access. */
+public record NativeLightSettingsEdit(BlockPos pos,int window,NativeLightEdit choices,ChannelList channels) {
+ public static final int HEADER_BYTES=30,MAX_BYTES=HEADER_BYTES+4*ChannelList.MAX_CHANNELS;
+ public NativeLightSettingsEdit {if(pos==null||window<0||choices==null||!choices.valid()||channels==null)throw new IllegalArgumentException("Invalid Light settings edit");pos=pos.immutable();}
+ public void encode(ByteBuf b){b.writeLong(pos.asLong());b.writeInt(window);b.writeInt(choices.faceTexture());b.writeInt(choices.offFaceTexture());b.writeInt(choices.housing());b.writeByte(choices.level());b.writeByte((choices.join()?1:0)|(choices.small()?2:0)|(choices.signalBrightness()?4:0));b.writeByte(choices.trigger());b.writeByte(choices.layout());b.writeByte(choices.offset());b.writeByte(channels.size());for(int i=0;i<channels.size();i++)b.writeInt(channels.get(i));}
+ public static NativeLightSettingsEdit decode(ByteBuf b){int length=b.readableBytes();if(length<HEADER_BYTES||length>MAX_BYTES)throw new IllegalArgumentException("Invalid Light settings length");var pos=BlockPos.of(b.readLong());int window=b.readInt(),face=b.readInt(),off=b.readInt(),housing=b.readInt(),level=b.readUnsignedByte(),flags=b.readUnsignedByte(),trigger=b.readUnsignedByte(),layout=b.readUnsignedByte(),offset=b.readByte(),count=b.readUnsignedByte();if(window<0||(flags&~7)!=0||count>ChannelList.MAX_CHANNELS||b.readableBytes()!=count*4)throw new IllegalArgumentException("Invalid Light settings fields");var edit=new NativeLightEdit(face,off,level,(flags&1)!=0,housing,trigger,(flags&2)!=0,layout,(flags&4)!=0,offset);if(!edit.valid())throw new IllegalArgumentException("Invalid Light choices");for(int i=0;i<count;i++)if(b.getInt(b.readerIndex()+i*4)<0)throw new IllegalArgumentException("Negative Light channel");int[] values=new int[count];for(int i=0;i<count;i++)values[i]=b.readInt();return new NativeLightSettingsEdit(pos,window,edit,ChannelList.of(values));}
+}
