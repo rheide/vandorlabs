@@ -34,7 +34,7 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 /** Actual placed lifecycle and server-player entry paths. Fixture geometry is isolated from authored-geometry acceptance. */
 @EventBusSubscriber(modid="vandorlabs")
 public final class DoorLifecycleChecks {
-    private static Block observer;private static BlockPos publicationRoot;private static boolean publicationFault;private static FixtureDoor block;private static NativeDoorItem item;private static BlockEntityType<NativeProgrammableDoorEntity> type;private static MenuType<NativeDoorMenu> menus;
+    private static Block observer;private static BlockPos publicationRoot;private static boolean publicationFault;private static FixtureDoor block,toolBlock;private static NativeDoorItem item,toolItem;private static BlockEntityType<NativeProgrammableDoorEntity> type;private static MenuType<NativeDoorMenu> menus;
     private static BlockPos missingFactory,vanishingFactory;
     private static int vanishingFactoryCalls;
     static void vanishingFactory(BlockPos pos){vanishingFactory=pos;vanishingFactoryCalls=0;}
@@ -57,7 +57,9 @@ public final class DoorLifecycleChecks {
         void reset(){dirty=models=0;}
     }
     private static final class FixtureDoor extends NativeProgrammableDoorBlock {
-        FixtureDoor(){super(Properties.of().noOcclusion().dynamicShape(),()->type,()->menus,()->item,true);}
+        FixtureDoor(){this(false);}
+        private static Properties properties(boolean tool){var p=Properties.of().noOcclusion().dynamicShape();return tool?p.requiresCorrectToolForDrops():p;}
+        FixtureDoor(boolean tool){super(properties(tool),()->type,()->menus,()->tool?toolItem:item,true);}
         @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return pos.equals(missingFactory)||pos.equals(vanishingFactory)&&++vanishingFactoryCalls>1?null:new Counting(pos,state);}
         @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}
         // The fixture checks inventory/structure/menu behavior, not the separately owned authored shapes.
@@ -72,7 +74,7 @@ public final class DoorLifecycleChecks {
     }
     @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
     public static final class Registration {
-        @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled())return;var id=ResourceLocation.fromNamespaceAndPath("vandorlabs","ordinary_door_lifecycle_fixture");event.register(Registries.BLOCK,h->{block=new FixtureDoor();h.register(id,block);observer=new Block(BlockBehaviour.Properties.of()){@Override protected void neighborChanged(BlockState state,net.minecraft.world.level.Level level,BlockPos pos,Block changed,BlockPos from,boolean moving){if(publicationFault&&pos.equals(publicationRoot.north())&&from.equals(publicationRoot))throw new IllegalStateException("fixture observer after complete staged publication");}};h.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","door_publication_observer_fixture"),observer);});event.register(Registries.ITEM,h->{item=new NativeDoorItem(block,new Item.Properties());h.register(id,item);});event.register(Registries.BLOCK_ENTITY_TYPE,h->{type=BlockEntityType.Builder.<NativeProgrammableDoorEntity>of((pos,state)->new Counting(pos,state),block).build(null);h.register(id,type);});event.register(Registries.MENU,h->{menus=net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((window,inventory,b)->new NativeDoorMenu(menus,window,inventory,b.readBlockPos()));h.register(id,menus);});}
+        @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled())return;var id=ResourceLocation.fromNamespaceAndPath("vandorlabs","ordinary_door_lifecycle_fixture");event.register(Registries.BLOCK,h->{block=new FixtureDoor();h.register(id,block);toolBlock=new FixtureDoor(true);h.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","door_tool_recovery_fixture"),toolBlock);observer=new Block(BlockBehaviour.Properties.of()){@Override protected void neighborChanged(BlockState state,net.minecraft.world.level.Level level,BlockPos pos,Block changed,BlockPos from,boolean moving){if(publicationFault&&pos.equals(publicationRoot.north())&&from.equals(publicationRoot))throw new IllegalStateException("fixture observer after complete staged publication");}};h.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","door_publication_observer_fixture"),observer);});event.register(Registries.ITEM,h->{item=new NativeDoorItem(block,new Item.Properties());h.register(id,item);toolItem=new NativeDoorItem(toolBlock,new Item.Properties());h.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","door_tool_recovery_fixture"),toolItem);});event.register(Registries.BLOCK_ENTITY_TYPE,h->{type=BlockEntityType.Builder.<NativeProgrammableDoorEntity>of((pos,state)->new Counting(pos,state),block,toolBlock).build(null);h.register(id,type);});event.register(Registries.MENU,h->{menus=net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((window,inventory,b)->new NativeDoorMenu(menus,window,inventory,b.readBlockPos()));h.register(id,menus);});}
     }
     @SubscribeEvent public static void join(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){if(enabled()&&trackedDrop!=null&&!event.isCanceled()&&event.getEntity() instanceof ItemEntity entity&&entity.getItem().is(item)&&entity.position().distanceToSqr(Vec3.atCenterOf(trackedDrop))<4)dropCount+=entity.getItem().getCount();}
     private static NativeProgrammableDoorEntity host(ServerLevel level,BlockPos pos){return (NativeProgrammableDoorEntity)level.getBlockEntity(pos);}
@@ -104,6 +106,7 @@ public final class DoorLifecycleChecks {
         DoorTargetChecks.run(level,first);
         DoorDropChecks.run(level,first);
         DoorRecoveryChecks.run(level,first);
+        DoorRecoveryChecks.wrongTool(level,first,toolBlock,toolItem);
         DoorCredentialHostChecks.run(level,first,actor,menus);
         DoorFluidHostChecks.run(level,first);
         DoorGushChecks.run(level,first);

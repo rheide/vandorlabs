@@ -89,7 +89,7 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         var root=NativeDoorLifecycle.root(level,pos);if(root!=null)root.localInputChanged();
     }
     @Override public BlockState playerWillDestroy(Level level,BlockPos pos,BlockState state,Player player){
-        if(!level.isClientSide){var lower=NativeDoorLifecycle.lower(state,pos);if(NativeDoorLifecycle.loaded(level,lower)&&level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity owner){var drop=owner.attachOpaqueCredentialRecovery(new ItemStack(canonicalItem.get()));if(level.getBlockEntity(pos) instanceof NativeProgrammableDoorEntity clicked)clicked.prepareRemovalDrop(player.isCreative()?ItemStack.EMPTY:drop);owner.prepareCreativeRecoveryDrop(player.isCreative()&&!owner.opaqueCredentialRecovery().isEmpty()?drop:ItemStack.EMPTY);}}
+        if(!level.isClientSide){var lower=NativeDoorLifecycle.lower(state,pos);if(NativeDoorLifecycle.loaded(level,lower)&&level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity owner){var drop=owner.attachOpaqueCredentialRecovery(new ItemStack(canonicalItem.get()));if(level.getBlockEntity(pos) instanceof NativeProgrammableDoorEntity clicked)clicked.prepareRemovalDrop(player.isCreative()?ItemStack.EMPTY:drop);owner.prepareCreativeRecoveryDrop((player.isCreative()||!state.canHarvestBlock(level,pos,player))&&!owner.opaqueCredentialRecovery().isEmpty()?drop:ItemStack.EMPTY);}}
         return super.playerWillDestroy(level,pos,state,player);
     }
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){
