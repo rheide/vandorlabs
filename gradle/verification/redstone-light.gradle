@@ -61,3 +61,10 @@ task exportPropulsionArtworkReference(type: JavaExec) {
     args file('platforms/neoforge-1.21.1/build/generated/propulsion-resources/assets/vandorlabs/data/propulsion_artwork.json').absolutePath,
          file('build/test-artifacts/propulsion-artwork-forge.jsonl').absolutePath
 }
+
+task testPropulsionRenderSourceCost(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PropulsionRenderCostLegacyChecks'
+}
