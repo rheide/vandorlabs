@@ -121,6 +121,8 @@ def main():
     atlas.extend(generate_wireless(ROOT,OUT))
     from generate_credential_resources import generate as generate_credentials
     atlas.extend(generate_credentials(ROOT,OUT))
+    # Source-sized Screen item artwork is supplied by generateScreenItemResources.
+    atlas.append(dict(type='minecraft:single',resource='vandorlabs:housing/native_screen_door_side'))
     write(ASSETS/'data/housing_finishes.json',catalog)
     write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())+[dict(type='vandorlabs:frame_edges'),dict(type='vandorlabs:door_sprites'),dict(type='vandorlabs:reader_sprites'),dict(type='vandorlabs:segmented_sprites')]))
     variants={f'facing={face}':dict(model='vandorlabs:block/programmable_block',y=angle) for face,angle in [('north',0),('east',90),('south',180),('west',270),('up',90),('down',90)]}

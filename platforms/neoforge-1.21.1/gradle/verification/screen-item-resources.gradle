@@ -1,0 +1,17 @@
+def screenItemPython = project.findProperty('pythonExecutable') ?: (
+    System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/screen-item-resources')
+tasks.register('generateScreenItemResources', Exec) {
+    dependsOn 'generateCubeResources'
+    workingDir projectDir
+    commandLine screenItemPython, 'generate_screen_item_resources.py'
+    inputs.file('generate_screen_item_resources.py')
+    inputs.file('build/generated/cube-resources/assets/vandorlabs/data/housing_finishes.json')
+    ['programmable_viewscreen','programmable_console','programmable_half_console','programmable_half_input','programmable_input','programmable_diagonal_screen','programmable_diagonal_half_screen'].each { name ->
+        inputs.file('../../src/main/resources/assets/vandorlabs/models/item/' + name + '.json')
+        inputs.file('../../src/main/resources/assets/vandorlabs/recipes/' + name + '.json')
+    }
+    inputs.file('../../texture-packs/default/assets/vandorlabs/textures/blocks/programmable_glass/door_side.png')
+    outputs.dir('build/generated/screen-item-resources')
+}
+tasks.named('processResources') { dependsOn 'generateScreenItemResources' }
