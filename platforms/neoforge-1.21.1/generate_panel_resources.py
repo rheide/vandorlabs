@@ -72,6 +72,9 @@ def main():
             target.write_text(json.dumps(value, indent=2) + '\n')
         recipe=json.loads((SOURCE/('recipes/'+name+'.json')).read_text())
         recipe['result']['id']=recipe['result'].pop('item')
+        # Keep the canonical ingredient while its native glass family is still pending.
+        if name == 'programmable_diagonal_glass':
+            recipe['neoforge:conditions']=[{'type':'neoforge:item_exists','item':'vandorlabs:programmable_glass'}]
         target=OUT/('data/vandorlabs/recipe/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(recipe)+'\n')
         loot={'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]}
         target=OUT/('data/vandorlabs/loot_table/blocks/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(loot)+'\n')
