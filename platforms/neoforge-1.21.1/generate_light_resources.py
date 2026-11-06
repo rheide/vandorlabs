@@ -27,12 +27,23 @@ def main():
         raise ValueError('Empty source Light artwork IDs')
     entries = json.loads((PLATFORM / 'build/generated/cube-resources/assets/vandorlabs/data/housing_finishes.json').read_text())
     catalog = {entry['id']: entry['texture'] for entry in entries}
+    menu = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/data/texture_menu.json').read_text())
+    extras = json.loads((ROOT / 'generated-resources/assets/vandorlabs/data/unified_textures.json').read_text())
+    raw = {entry['id']: entry for entry in extras}
+    flags = []
+    for entry in entries:
+        metadata = menu.get(entry['id'], raw.get(entry['id'], {}))
+        light = metadata.get('lightOnly', False) or metadata.get('category') == 'Lights'
+        selectable = entry['visible'] and (entry['general'] or light)
+        off = light and (metadata.get('off', False) or entry['id'].endswith('_off'))
+        flags.append((1 if selectable and not off else 0) | (2 if selectable else 0))
     textures = {'vandorlabs:blocks/dark_wall_panel': catalog['dark_wall_panel']}
     for style in styles:
         for on in (False, True):
             textures['vandorlabs:blocks/' + style + ('_on' if on else '_off')] = catalog['light_' + style + ('' if on else '_off')]
     if OUT.exists():
         shutil.rmtree(OUT)
+    write('assets/vandorlabs/data/light_material_policy.json', {'flags': flags})
     write('assets/vandorlabs/models/block/native_light_empty.json', {
         'ambientocclusion': False, 'textures': {'particle': catalog['light_' + styles[0]]}, 'elements': [],
     })

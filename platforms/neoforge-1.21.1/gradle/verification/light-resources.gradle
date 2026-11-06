@@ -6,6 +6,8 @@ tasks.register('generateLightResources', Exec) {
     workingDir projectDir
     commandLine lightResourcePython, 'generate_light_resources.py'
     inputs.file('generate_light_resources.py')
+    inputs.file('../../src/main/resources/assets/vandorlabs/data/texture_menu.json')
+    inputs.file('../../generated-resources/assets/vandorlabs/data/unified_textures.json')
     inputs.file('../../src/portable/java/com/vandorlabs/tiles/ProgrammableLightTextures.java')
     inputs.file('build/generated/cube-resources/assets/vandorlabs/data/housing_finishes.json')
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/item/configured') { include 'programmable_light_*.json' })
