@@ -11,6 +11,7 @@ public final class NativeEmbeddedChipReader {
     private static final Set<String> KEYS=Set.of("AnyToken","AllowedTokens","ChipSlot","TokenLogo","TokenBehavior","TokenPulseUntil","TokenInsertStarted","TokenRejectedUntil","TokenInsertionSequence","TokenToggleApplied","TokenToggled","TokenReturnToMost","TokenReturnToLeast","TokenReturnTo","InsertedToken");
     private final NativeTokenReader reader;
     private com.vandorlabs.programmer.JournalText journal;
+    private CompoundTag journalData;
     private static final NativeTokenReader.Host STORAGE=new NativeTokenReader.Host(){
         public net.minecraft.world.level.block.entity.BlockEntity owner(){throw new IllegalStateException("Detached chip storage has no gameplay owner");}
         public boolean usable(net.minecraft.server.level.ServerPlayer player){return false;}
@@ -25,8 +26,8 @@ public final class NativeEmbeddedChipReader {
         var token=raw.contains("InsertedToken",Tag.TAG_COMPOUND)?NativeCredentialItems.readStack(raw.getCompound("InsertedToken"),registries):net.minecraft.world.item.ItemStack.EMPTY;
         if(raw.contains("InsertedToken")&&token.isEmpty())throw new IllegalArgumentException("Unresolved embedded chip ownership");
         if(!token.isEmpty())NativeCredentialItems.writeStack(token.copyWithCount(1),registries);
-        var nextJournal=NativeChipJournal.view(token);
-        var tag=raw.copy();tag.putBoolean("ChipSlot",true);tag.putBoolean("AnyToken",true);tag.putInt("AllowedTokens",127);tag.putInt("TokenBehavior",0);tag.remove("TokenReturnToMost");tag.remove("TokenReturnToLeast");tag.remove("TokenReturnTo");reader.read(tag,registries);journal=nextJournal;
+        var nextText=NativeChipJournal.textData(token);var nextJournal=NativeChipJournal.viewText(nextText);
+        var tag=raw.copy();tag.putBoolean("ChipSlot",true);tag.putBoolean("AnyToken",true);tag.putInt("AllowedTokens",127);tag.putInt("TokenBehavior",0);tag.remove("TokenReturnToMost");tag.remove("TokenReturnToLeast");tag.remove("TokenReturnTo");reader.read(tag,registries);journal=nextJournal;journalData=nextText;
     }
     public CompoundTag write(HolderLookup.Provider registries){return reader.write(registries);}
     public boolean occupied(){return reader.occupied();}
@@ -34,4 +35,5 @@ public final class NativeEmbeddedChipReader {
     public NativeTokenReader.Visual visual(long now){return reader.visual(now);}
     public NativeTokenReader.Motion motion(long now){return reader.motion(now);}
     public com.vandorlabs.programmer.JournalText journal(){return journal;}
+    public CompoundTag journalData(){return journalData==null?null:journalData.copy();}
 }
