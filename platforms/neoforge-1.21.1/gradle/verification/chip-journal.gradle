@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+    if(project.hasProperty('chipJournalReference')) systemProperty 'vandorlabs.chipJournalReference',file(project.property('chipJournalReference')).absolutePath
+}

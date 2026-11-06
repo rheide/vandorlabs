@@ -5,7 +5,7 @@ import net.minecraft.item.ItemStack;
 
 /** Bounded plain-text views shared by physical display rendering and navigation. */
 public final class ProgrammerJournalView {
-    public static final int COLUMNS=50,LINES=10;
+    public static final int COLUMNS=JournalText.COLUMNS,LINES=JournalText.LINES;
     public static final class Page {
         public final int entry;
         public final List<String> lines;
@@ -14,15 +14,10 @@ public final class ProgrammerJournalView {
     public final String title,source,key;
     public final List<Page> pages;
     private ProgrammerJournalView(String title,String source,String[] entries){
-        this.title=title;this.source=source;StringBuilder signature=new StringBuilder(source).append('\0').append(title);List<Page> result=new ArrayList<>();int count=1;
-        for(int i=0;i<entries.length;i++){signature.append('\0').append(entries[i]);if(!entries[i].isEmpty())count=i+1;}
-        for(int entry=0;entry<count;entry++){
-            List<String> lines=new ArrayList<>();String[] paragraphs=entries[entry].split("\\n",-1);
-            for(String paragraph:paragraphs){String text=paragraph.replace("\r","").replace('\t',' ');if(text.isEmpty())lines.add("");for(int from=0;from<text.length();from+=COLUMNS)lines.add(text.substring(from,Math.min(from+COLUMNS,text.length())));}
-            for(int first=0;first<lines.size();first+=LINES)result.add(new Page(entry,lines.subList(first,Math.min(first+LINES,lines.size()))));
-        }
-        key=signature.toString();pages=Collections.unmodifiableList(result);
+        JournalText text=JournalText.layout(title,source,entries);this.title=text.title;this.source=text.source;this.key=text.key;
+        List<Page> result=new ArrayList<Page>();for(JournalText.Page page:text.pages)result.add(new Page(page.entry,page.lines));pages=Collections.unmodifiableList(result);
     }
+
     public static ProgrammerJournalView from(ItemStack chip){
         if(!ChipJournal.journal(chip))return null;String[] entries=new String[ChipJournal.MAX_PAGES];for(int i=0;i<entries.length;i++)entries[i]=ChipJournal.page(chip,i);return new ProgrammerJournalView(ChipJournal.title(chip),"Chip",entries);
     }
