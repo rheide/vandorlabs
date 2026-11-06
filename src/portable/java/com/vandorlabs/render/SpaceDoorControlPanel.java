@@ -10,6 +10,32 @@ public final class SpaceDoorControlPanel {
     public static boolean containsScaled(double localZ,double localY,boolean sliding,boolean farEdge,double scale) {
         return contains(localZ*16,(localY-verticalOffset(scale))*16/scale,sliding,farEdge);
     }
+    /** Exact configured hit regions, including security-reader height and mirrored rear pad. */
+    public static boolean containsConfigured(boolean sliding,boolean farEdge,int panelMode,int securityMode,double offset,double localZ,double localY,double size){
+        double y=(localY-verticalOffset(size))*16/size;
+        double lo=securityMode>0?15.8:Y0,hi=securityMode>0?20.2:Y1;
+        if(y<lo||y>hi)return false;
+        double start=z0(sliding,farEdge),end=start+3;
+        if(securityMode>0){double extra=1.5*(size-1);start-=extra;end+=extra;}
+        double z=(localZ-offset)*16;
+        if(z>=start&&z<=end)return true;
+        z=(1-localZ-offset)*16;return panelMode==2&&z>=start&&z<=end;
+    }
+    public static <B> B bounds(SpaceDoorBounds.Factory<B> boxes,int facing,Side side,double offset,boolean sliding,boolean farEdge){
+        double x0=x0(side)/16,x1=x1(side)/16;
+        double z0=z0(sliding,farEdge)/16,
+                z1=z1(sliding,farEdge)/16;
+        double y0=Y0/16,y1=Y1/16;
+        switch (facing) {
+            case 2: return boxes.create(1-x1,y0,1-z1-offset,1-x0,y1,1-z0-offset);
+            case 5: return boxes.create(z0+offset,y0,1-x1,z1+offset,y1,1-x0);
+            case 4: return boxes.create(1-z1-offset,y0,x0,1-z0-offset,y1,x1);
+            default: return boxes.create(x0,y0,z0+offset,x1,y1,z1+offset);
+        }
+    }
+    public static <B> B mirror(SpaceDoorBounds.Factory<B> boxes,double minX,double minY,double minZ,double maxX,double maxY,double maxZ,int facing){
+        return facing==4||facing==5?boxes.create(1-maxX,minY,minZ,1-minX,maxY,maxZ):boxes.create(minX,minY,1-maxZ,maxX,maxY,1-minZ);
+    }
     private SpaceDoorControlPanel() { }
     public static Side side(boolean hingeOnVisualLeft,boolean sliding,boolean paired,
             boolean neighborLeft,boolean neighborRight) {

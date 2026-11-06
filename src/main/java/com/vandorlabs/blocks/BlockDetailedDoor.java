@@ -11,20 +11,22 @@ import net.minecraft.world.IBlockAccess;
  * detailed Blockbench import. */
 public class BlockDetailedDoor extends BlockVandorDoor {
 
+    protected static final com.vandorlabs.render.SpaceDoorBounds.Factory<AxisAlignedBB> SPACE_BOXES=AxisAlignedBB::new;
+
     // Sliding leaves stay on the pack's centre track. Rotating leaves are
     // generated against the facing edge, like the legacy/glass hinged doors.
     private static final AxisAlignedBB CLOSED_NS =
-            new AxisAlignedBB(0.0D, 0.0D, 0.35D, 1.0D, 1.0D, 0.70D);
+            com.vandorlabs.render.SpaceDoorBounds.closed(SPACE_BOXES,2,true);
     private static final AxisAlignedBB CLOSED_EW =
-            new AxisAlignedBB(0.30D, 0.0D, 0.0D, 0.65D, 1.0D, 1.0D);
+            com.vandorlabs.render.SpaceDoorBounds.closed(SPACE_BOXES,5,true);
     private static final AxisAlignedBB CLOSED_N =
-            new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 0.35D);
+            com.vandorlabs.render.SpaceDoorBounds.closed(SPACE_BOXES,2,false);
     private static final AxisAlignedBB CLOSED_S =
-            new AxisAlignedBB(0.0D, 0.0D, 0.65D, 1.0D, 1.0D, 1.0D);
+            com.vandorlabs.render.SpaceDoorBounds.closed(SPACE_BOXES,3,false);
     private static final AxisAlignedBB CLOSED_W =
-            new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.35D, 1.0D, 1.0D);
+            com.vandorlabs.render.SpaceDoorBounds.closed(SPACE_BOXES,4,false);
     private static final AxisAlignedBB CLOSED_E =
-            new AxisAlignedBB(0.65D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
+            com.vandorlabs.render.SpaceDoorBounds.closed(SPACE_BOXES,5,false);
     private static final AxisAlignedBB OPEN_W =
             new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.25D, 1.0D, 1.0D);
     private static final AxisAlignedBB OPEN_E =

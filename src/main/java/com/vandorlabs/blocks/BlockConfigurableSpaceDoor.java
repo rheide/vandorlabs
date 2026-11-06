@@ -91,14 +91,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         return tile!=null && panelContains(tile,localZ,y+(upper?1:0),1);
     }
     public static boolean panelContains(TileEntitySpaceDoor tile,double localZ,double localY,double size){
-        double y=(localY-SpaceDoorControlPanel.verticalOffset(size))*16/size;
-        double lo=tile.securityMode()>0?15.8:SpaceDoorControlPanel.Y0,hi=tile.securityMode()>0?20.2:SpaceDoorControlPanel.Y1;
-        if(y<lo||y>hi)return false;
-        double start=SpaceDoorControlPanel.z0(tile.isSliding(),tile.getPlacementDepth()==2),end=start+3;
-        if(tile.securityMode()>0){double extra=1.5*(size-1);start-=extra;end+=extra;}
-        double z=(localZ-tile.positionOffset())*16;
-        if(z>=start&&z<=end)return true;
-        z=(1-localZ-tile.positionOffset())*16;return tile.panelMode()==2&&z>=start&&z<=end;
+        return SpaceDoorControlPanel.containsConfigured(tile.isSliding(),tile.getPlacementDepth()==2,tile.panelMode(),tile.securityMode(),tile.positionOffset(),localZ,localY,size);
     }
     @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntitySpaceDoor)((TileEntitySpaceDoor)raw).tickReaders();DoorWaterGush.opened(world,pos);}
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
@@ -155,20 +148,11 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         }
         return door;
     }
-    public static AxisAlignedBB mirrorPanel(AxisAlignedBB box,EnumFacing face){return face.getAxis()==EnumFacing.Axis.X?new AxisAlignedBB(1-box.maxX,box.minY,box.minZ,1-box.minX,box.maxY,box.maxZ):new AxisAlignedBB(box.minX,box.minY,1-box.maxZ,box.maxX,box.maxY,1-box.minZ);}
+    public static AxisAlignedBB mirrorPanel(AxisAlignedBB box,EnumFacing face){return SpaceDoorControlPanel.mirror(SPACE_BOXES,box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ,face.getIndex());}
 
     private static AxisAlignedBB controlPanelBounds(EnumFacing facing,
             SpaceDoorControlPanel.Side side,double offset,boolean sliding,boolean farEdge) {
-        double x0=SpaceDoorControlPanel.x0(side)/16,x1=SpaceDoorControlPanel.x1(side)/16;
-        double z0=SpaceDoorControlPanel.z0(sliding,farEdge)/16,
-                z1=SpaceDoorControlPanel.z1(sliding,farEdge)/16;
-        double y0=SpaceDoorControlPanel.Y0/16,y1=SpaceDoorControlPanel.Y1/16;
-        switch (facing) {
-            case NORTH: return new AxisAlignedBB(1-x1,y0,1-z1-offset,1-x0,y1,1-z0-offset);
-            case EAST: return new AxisAlignedBB(z0+offset,y0,1-x1,z1+offset,y1,1-x0);
-            case WEST: return new AxisAlignedBB(1-z1-offset,y0,x0,1-z0-offset,y1,x1);
-            default: return new AxisAlignedBB(x0,y0,z0+offset,x1,y1,z1+offset);
-        }
+        return SpaceDoorControlPanel.bounds(SPACE_BOXES,facing.getIndex(),side,offset,sliding,farEdge);
     }
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase placer,ItemStack stack) {
         super.onBlockPlacedBy(world,pos,state,placer,stack);
@@ -231,16 +215,7 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
         return positionedBounds(box,facing,tile.positionOffset(),!tile.isSliding() && actual.getValue(OPEN));
     }
     private static AxisAlignedBB positionedBounds(AxisAlignedBB box,EnumFacing facing,double offset,boolean rotatedOpen) {
-        AxisAlignedBB moved=box.offset(facing.getFrontOffsetX()*offset,0,
-                facing.getFrontOffsetZ()*offset);
-        if(rotatedOpen)return moved;
-        // The older selection boxes are wider than the door art. Keep the
-        // shifted box inside its block when the visible outer face is flush.
-        if (facing.getAxis()==EnumFacing.Axis.X)
-            return new AxisAlignedBB(Math.max(0,moved.minX),moved.minY,moved.minZ,
-                    Math.min(1,moved.maxX),moved.maxY,moved.maxZ);
-        return new AxisAlignedBB(moved.minX,moved.minY,Math.max(0,moved.minZ),
-                moved.maxX,moved.maxY,Math.min(1,moved.maxZ));
+        return com.vandorlabs.render.SpaceDoorBounds.positioned(SPACE_BOXES,box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ,facing.getIndex(),offset,rotatedOpen);
     }
 
     @Override public Boolean isAABBInsideMaterial(World world,BlockPos pos,net.minecraft.util.math.AxisAlignedBB box,net.minecraft.block.material.Material material){return WaterloggedParts.intersects(world,pos,box,material);}

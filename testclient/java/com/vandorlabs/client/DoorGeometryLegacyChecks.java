@@ -1,0 +1,55 @@
+package com.vandorlabs.client;
+
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.TileEntitySpaceDoor;
+import java.lang.reflect.*;
+import java.security.MessageDigest;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.*;
+
+/** Actual ordinary door resolved-half bounds/pad baseline before shared numeric extraction. */
+public final class DoorGeometryLegacyChecks {
+    private static volatile Object blackhole;
+    private static final String GOLDEN="286965d57ef79ad39986e6595ec14e45b2dc1741ccfd8aebe04951d70044af5e",PANEL_GOLDEN="f0d9abad7c676bd517f2431b05510035b1b91873810e2e3b6910a50b898c58fb";private static MessageDigest digest;private static int boxes,hits;
+    private static void put(long value){for(int shift=56;shift>=0;shift-=8)digest.update((byte)(value>>>shift));}
+    private static void box(AxisAlignedBB b){boxes++;put(b==null?0:1);if(b!=null)for(double v:new double[]{b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ})put(Double.doubleToRawLongBits(v));}
+    private static com.google.gson.JsonElement values(AxisAlignedBB b){if(b==null)return com.google.gson.JsonNull.INSTANCE;com.google.gson.JsonArray a=new com.google.gson.JsonArray();for(double v:new double[]{b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ})a.add(v);return a;}
+    private static com.google.gson.JsonObject record(EnumFacing face,boolean sliding,boolean framed,boolean hinges,int depth){com.google.gson.JsonObject r=new com.google.gson.JsonObject();r.addProperty("face",face.getIndex());r.addProperty("sliding",sliding);r.addProperty("framed",framed);r.addProperty("hinges",hinges);r.addProperty("depth",depth);return r;}
+    private static void install(NonRenderingChecks.MemoryWorld world,BlockConfigurableSpaceDoor block,BlockPos pos,EnumFacing face,boolean open,boolean left){
+        IBlockState base=block.getDefaultState().withProperty(BlockVandorDoor.FACING,face).withProperty(BlockVandorDoor.OPEN,open);world.setBlockState(pos,base.withProperty(BlockVandorDoor.HALF,BlockDoor.EnumDoorHalf.LOWER),2);world.setBlockState(pos.up(),base.withProperty(BlockVandorDoor.FACING,EnumFacing.NORTH).withProperty(BlockVandorDoor.HALF,BlockDoor.EnumDoorHalf.UPPER).withProperty(BlockVandorDoor.HINGE,left?BlockDoor.EnumHingePosition.LEFT:BlockDoor.EnumHingePosition.RIGHT),2);
+    }
+    private static NBTTagCompound tag(boolean sliding,boolean framed,boolean hinges,int depth,int panel,int security){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("SpaceDoorSchema",2);tag.setBoolean("SpaceDoorSliding",sliding);tag.setBoolean("SpaceFramed",framed);tag.setBoolean("SpaceDoorHinges",hinges);tag.setInteger("SpaceDoorPlacementDepth",depth);tag.setBoolean("SpaceDoorPanel",panel!=0);tag.setInteger("DoorPanelMode",panel);tag.setInteger("DoorSecurityMode",security);return tag;}
+    public static void main(String[] args)throws Exception{
+        net.minecraft.init.Bootstrap.register();digest=MessageDigest.getInstance("SHA-256");BlockDetailedDoor pair=new BlockDetailedDoor("geometry_paired_model",BlockVandorDoor.DoorMotion.HINGED,false,true,false,1,15,11.24F,90,-90,-15,15);Field field=TileEntitySpaceDoor.class.getDeclaredField("RESOLVED_MODELS");field.setAccessible(true);AtomicReferenceArray<BlockSpaceDoor> cache=(AtomicReferenceArray<BlockSpaceDoor>)field.get(null);BlockSpaceDoor[] previous=new BlockSpaceDoor[4];for(int key=0;key<4;key++){previous[key]=cache.get(key);cache.set(key,new BlockSpaceDoor(TileEntitySpaceDoor.modelId(2,(key&2)!=0,(key&1)!=0),(key&2)!=0,(key&1)!=0,pair));}
+        String reference=System.getProperty("vandorlabs.doorBoundsReference");java.io.PrintWriter writer=null;if(reference!=null){java.io.File file=new java.io.File(reference);file.getAbsoluteFile().getParentFile().mkdirs();writer=new java.io.PrintWriter(file,"UTF-8");}com.google.gson.Gson gson=new com.google.gson.GsonBuilder().serializeNulls().create();
+        BlockConfigurableSpaceDoor block=new BlockConfigurableSpaceDoor("door_geometry_fixture",true,pair);int states=0;
+        try{
+            for(EnumFacing face:EnumFacing.HORIZONTALS)for(boolean open:new boolean[]{false,true})for(boolean sliding:new boolean[]{false,true})for(boolean framed:new boolean[]{false,true})for(boolean hinges:new boolean[]{false,true})for(boolean left:new boolean[]{false,true})for(boolean paired:new boolean[]{false,true})for(int depth=0;depth<3;depth++){
+                NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);install(world,block,BlockPos.ORIGIN,face,open,left);if(paired)install(world,block,BlockPos.ORIGIN.offset(left?face.rotateY():face.rotateYCCW()),face,open,!left);TileEntitySpaceDoor tile=(TileEntitySpaceDoor)world.getTileEntity(BlockPos.ORIGIN);tile.readFromNBT(tag(sliding,framed,hinges,depth,1,0));
+                for(boolean upper:new boolean[]{false,true}){BlockPos pos=upper?BlockPos.ORIGIN.up():BlockPos.ORIGIN;IBlockState state=world.getBlockState(pos),actual=block.getActualState(state,world,pos);if(actual.getValue(BlockVandorDoor.FACING)!=face||actual.getValue(BlockConnectingDetailedDoor.PAIRED)!=paired)throw new AssertionError("Unresolved actual half/pair");AxisAlignedBB outline=block.getBoundingBox(state,world,pos),collision=block.getCollisionBoundingBox(state,world,pos);box(outline);box(collision);if(writer!=null){com.google.gson.JsonObject r=record(face,sliding,framed,hinges,depth);r.addProperty("type","leaf");r.addProperty("open",open);r.addProperty("left",left);r.addProperty("paired",paired);r.addProperty("upper",upper);r.add("outline",values(outline));r.add("collision",values(collision));writer.println(gson.toJson(r));}states++;}
+            }
+            TileEntitySpaceDoor tile=new TileEntitySpaceDoor();for(boolean sliding:new boolean[]{false,true})for(boolean framed:new boolean[]{false,true})for(boolean hinges:new boolean[]{false,true})for(int depth=0;depth<3;depth++)for(int panel=0;panel<3;panel++)for(int security=0;security<5;security++)for(double size:new double[]{1,1.5}){
+                tile.readFromNBT(tag(sliding,framed,hinges,depth,panel,security));for(double y:new double[]{0,.9875,1,1.03125,1.125,1.21875,1.2625,2})for(double z:new double[]{-1,0,.03125,.25,.375,.5,.625,.75,.96875,1,2}){put(BlockConfigurableSpaceDoor.panelContains(tile,z,y,size)?1:0);hits++;}
+            }
+            if(Boolean.getBoolean("vandorlabs.doorGeometryProfile")){
+                com.sun.management.ThreadMXBean bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();bean.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().getId();
+                for(boolean sliding:new boolean[]{false,true})for(boolean open:new boolean[]{false,true}){
+                    NonRenderingChecks.MemoryWorld measured=new NonRenderingChecks.MemoryWorld(false);install(measured,block,BlockPos.ORIGIN,EnumFacing.WEST,open,true);((TileEntitySpaceDoor)measured.getTileEntity(BlockPos.ORIGIN)).readFromNBT(tag(sliding,true,true,2,1,0));IBlockState state=measured.getBlockState(BlockPos.ORIGIN);
+                    for(int i=0;i<10000;i++)blackhole=block.getBoundingBox(state,measured,BlockPos.ORIGIN);
+                    for(int batch=0;batch<5;batch++){long bytes=bean.getThreadAllocatedBytes(thread),time=System.nanoTime();for(int i=0;i<5000;i++)blackhole=block.getBoundingBox(state,measured,BlockPos.ORIGIN);long elapsed=System.nanoTime()-time,allocated=bean.getThreadAllocatedBytes(thread)-bytes;System.out.println("Door geometry profile sliding="+sliding+" open="+open+" batch="+batch+" B/query="+(allocated/5000D)+" ns/query="+(elapsed/5000D));}
+                }
+            }
+        }finally{for(int key=0;key<4;key++)cache.set(key,previous[key]);}
+        MessageDigest original=digest;digest=MessageDigest.getInstance("SHA-256");int priorBoxes=boxes;Method pad=BlockConfigurableSpaceDoor.class.getDeclaredMethod("controlPanelBounds",EnumFacing.class,com.vandorlabs.render.SpaceDoorControlPanel.Side.class,double.class,boolean.class,boolean.class);pad.setAccessible(true);TileEntitySpaceDoor padTile=new TileEntitySpaceDoor();
+        for(EnumFacing face:EnumFacing.HORIZONTALS)for(boolean sliding:new boolean[]{false,true})for(boolean framed:new boolean[]{false,true})for(boolean hinges:new boolean[]{false,true})for(int depth=0;depth<3;depth++)for(com.vandorlabs.render.SpaceDoorControlPanel.Side side:new com.vandorlabs.render.SpaceDoorControlPanel.Side[]{com.vandorlabs.render.SpaceDoorControlPanel.Side.LEFT,com.vandorlabs.render.SpaceDoorControlPanel.Side.RIGHT}){
+            padTile.readFromNBT(tag(sliding,framed,hinges,depth,1,0));AxisAlignedBB base=(AxisAlignedBB)pad.invoke(null,face,side,padTile.positionOffset(),sliding,depth==2);for(boolean security:new boolean[]{false,true})for(boolean upper:new boolean[]{false,true}){AxisAlignedBB b=security?base.grow(0,.7/16,0):base;for(boolean mirror:new boolean[]{false,true}){AxisAlignedBB result=(mirror?BlockConfigurableSpaceDoor.mirrorPanel(b,face):b).offset(0,upper?-1:0,0);box(result);if(writer!=null){com.google.gson.JsonObject r=record(face,sliding,framed,hinges,depth);r.addProperty("type","panel");r.addProperty("side",side.name());r.addProperty("security",security);r.addProperty("upper",upper);r.addProperty("mirror",mirror);r.add("bounds",values(result));writer.println(gson.toJson(r));}}}
+        }
+        StringBuilder panelHash=new StringBuilder();for(byte b:digest.digest())panelHash.append(String.format("%02x",b&255));if(!PANEL_GOLDEN.isEmpty()&&!PANEL_GOLDEN.equals(panelHash.toString()))throw new AssertionError("Door panel bounds changed "+panelHash);System.out.println("Door panel bounds actual PASS boxes="+(boxes-priorBoxes)+" SHA256="+panelHash);digest=original;boxes=priorBoxes;
+        if(writer!=null)writer.close();
+        StringBuilder hash=new StringBuilder();for(byte b:digest.digest())hash.append(String.format("%02x",b&255));if(!GOLDEN.isEmpty()&&!GOLDEN.equals(hash.toString()))throw new AssertionError("Door geometry changed "+hash);System.out.println("Door geometry actual PASS states="+states+" boxes="+boxes+" panelHits="+hits+" SHA256="+hash);
+    }
+}
