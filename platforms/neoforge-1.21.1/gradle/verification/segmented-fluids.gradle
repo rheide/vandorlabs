@@ -1,0 +1,11 @@
+neoForge.runs.configureEach {
+    if (project.hasProperty('segmentedFluidReference')) systemProperty 'vandorlabs.segmentedFluidReference', file(project.property('segmentedFluidReference')).absolutePath
+}
+tasks.register('testNativeSegmentedFluidGeometry', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.segmented.SegmentedFluidGeometryChecks'
+    maxHeapSize = '1G'
+    args rootProject.file('../../build/test-artifacts/segmented-fluid-volume-forge.jsonl').absolutePath,
+         rootProject.file('../../build/test-artifacts/segmented-fluid-opening-forge.jsonl').absolutePath
+}

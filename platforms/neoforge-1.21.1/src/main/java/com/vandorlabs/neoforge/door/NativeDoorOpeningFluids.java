@@ -18,7 +18,7 @@ public final class NativeDoorOpeningFluids {
     }
     private static int kind(NativeFluidSlots.Snapshot stored,int side){var fluid=stored.side(side).fluid();return fluid.isEmpty()?0:fluid.is(Fluids.WATER)?1:2;}
     /** Called on the owning thread after the exact loaded host identity is checked. */
-    static int sources(Level level,BlockPos pos,Direction facing,boolean open,NativeFluidSlots.Snapshot stored){
+    public static int sources(Level level,BlockPos pos,Direction facing,boolean open,NativeFluidSlots.Snapshot stored){
         int ambient=0;for(int side=0;side<2;side++){Direction face=side==0?facing.getOpposite():facing;BlockPos next=pos.relative(face);if(NativeFluidWorld.loaded(level,next)&&level.getFluidState(next).is(net.minecraft.tags.FluidTags.WATER))ambient|=1<<side;}
         return sources(open,kind(stored,0),kind(stored,1),ambient);
     }

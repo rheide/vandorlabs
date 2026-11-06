@@ -14,6 +14,8 @@ public interface ContainedFluidHost {
     default boolean acceptsPlacementFluid(int side){
         return openingFluidVolume()||fluidVolumeSnapshot().hasSide(side);
     }
+    /** Failed retained snapshots may remain installed without allowing bucket or sponge mutation. */
+    default boolean fluidActionsAllowed(){return true;}
     NativeFluidRenderSnapshot fluidRenderSnapshot();
     void publishFluidRenderSnapshot(NativeFluidRenderSnapshot snapshot);
     BlockEntity fluidOwner();
