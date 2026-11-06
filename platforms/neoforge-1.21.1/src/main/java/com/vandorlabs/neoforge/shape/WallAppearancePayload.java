@@ -19,17 +19,16 @@ public record WallAppearancePayload(BlockPos pos,int windowId,ProgrammableShapeE
             // Borrow the fixed-size view; its lifetime belongs to the enclosing network buffer.
             var header=ShapeAppearancePayload.CODEC.decode(new RegistryFriendlyByteBuf(buffer.readSlice(48),buffer.registryAccess()));
             int full=buffer.readUnsignedByte(),half=buffer.readUnsignedByte(),fill=buffer.readUnsignedByte(),join=buffer.readUnsignedByte(),portholes=buffer.readUnsignedByte(),shape=buffer.readUnsignedByte();
-            int front=buffer.readInt(),interior=buffer.readInt(),exterior=buffer.readInt(),version=buffer.readUnsignedByte(),splitTop=buffer.readInt(),splitBottom=buffer.readInt();
-            int tile=buffer.readUnsignedByte(),fit=buffer.readUnsignedByte(),split=buffer.readUnsignedByte(),bare=buffer.readUnsignedByte();
-            if(full>1||half>1||portholes>1||tile>1||fit>1||split>1||bare>1)throw new IllegalArgumentException("Invalid wall flag");
-            var walls=new WallSettings(full!=0,half!=0,fill,join,portholes!=0,shape);var frames=new FrameSettings(front,interior,exterior,version,splitTop,splitBottom,tile!=0,fit!=0,split!=0,bare!=0);
+            var frames=com.vandorlabs.neoforge.NativeFrameWire.read(buffer);
+            if(full>1||half>1||portholes>1)throw new IllegalArgumentException("Invalid wall flag");
+            var walls=new WallSettings(full!=0,half!=0,fill,join,portholes!=0,shape);
             if(!NativeWallEntity.valid(walls)||!NativeWallEntity.valid(frames))throw new IllegalArgumentException("Invalid wall/frame settings");
             return new WallAppearancePayload(header.pos(),header.windowId(),header.appearance(),walls,frames);
         }
         public void encode(RegistryFriendlyByteBuf buffer,WallAppearancePayload value){
             ShapeAppearancePayload.CODEC.encode(buffer,new ShapeAppearancePayload(value.pos,value.windowId,value.base));var w=value.walls;var f=value.frames;
             buffer.writeBoolean(w.fullWidth);buffer.writeBoolean(w.halfHeight);buffer.writeByte(w.fill);buffer.writeByte(w.join);buffer.writeBoolean(w.joinPortholes);buffer.writeByte(w.portholeShape);
-            buffer.writeInt(f.front);buffer.writeInt(f.interior);buffer.writeInt(f.exterior);buffer.writeByte(f.artworkVersion);buffer.writeInt(f.splitTop);buffer.writeInt(f.splitBottom);buffer.writeBoolean(f.tile);buffer.writeBoolean(f.displayFit);buffer.writeBoolean(f.split);buffer.writeBoolean(f.bare);
+            com.vandorlabs.neoforge.NativeFrameWire.write(buffer,f);
         }
     };
     @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
