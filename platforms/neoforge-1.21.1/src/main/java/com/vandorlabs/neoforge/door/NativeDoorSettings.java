@@ -19,7 +19,7 @@ public record NativeDoorSettings(SpaceDoorData door,int faceTexture,int rawLayou
     public static int singleCompany(int mask){mask&=127;return (mask&1)!=0?127:Integer.lowestOneBit(mask);}
     public static int readerCompany(CompoundTag reader){return singleCompany(!reader.contains("AnyToken")||reader.getBoolean("AnyToken")?127:reader.contains("AllowedTokens")?reader.getInt("AllowedTokens"):127);}
     public static int securityBehavior(int mode){return mode==1?3:mode==3?1:mode==4?2:0;}
-    public static boolean frame(int value){return value==-1||ModernFinishCatalog.validChoice(value)&&ModernFinishCatalog.option(value).category().equals("Frame");}
+    public static boolean frame(int value){return value==-1||ModernFinishCatalog.validChoice(value)&&ModernFinishCatalog.option(value).frame()!=null;}
     public static boolean surface(int value){return frame(value)||ModernFinishCatalog.validChoice(value)&&ModernFinishCatalog.option(value).general();}
     public static NativeDoorSettings read(CompoundTag tag){
         var access=new ModernHousingTags(tag);var data=SpaceDoorData.read(access);
