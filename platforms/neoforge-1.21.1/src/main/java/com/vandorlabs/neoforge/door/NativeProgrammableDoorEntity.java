@@ -101,6 +101,8 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     @Override public long fluidGeometryRevision(){return fluidGeometry.revision();}
     @Override public NativeFluidRenderSnapshot fluidRenderSnapshot(){return fluidRender;}
     @Override public void publishFluidRenderSnapshot(NativeFluidRenderSnapshot snapshot){fluidRender=java.util.Objects.requireNonNull(snapshot);}
+    private static int frameLight(int choice){if(choice<0)return 0;var frame=com.vandorlabs.neoforge.ModernFinishCatalog.option(choice).frame();return frame==null?0:Math.max(0,Math.min(5,frame.light()));}
+    @Override public int intrinsicContainedLight(){var profile=settings;if(!profile.door().framed)return 0;var frame=profile.frames();return Math.max(frame.bare?0:frameLight(frame.front),Math.max(frameLight(frame.interior),frameLight(frame.exteriorChoice())));}
     @Override public boolean openingFluidVolume(){return fluidGeometry.key()!=null;}
     @Override public int containedFluidSide(double x,double y,double z){var plane=fluidGeometry.plane();return plane==null?0:plane.side(x,y,z);}
     @Override public Direction[] fluidPlacementFaces(){var key=fluidGeometry.key();return key==null?new Direction[0]:new Direction[]{key.face(),key.face().getOpposite()};}
