@@ -15,3 +15,11 @@ task exportTrapdoorFluidSurfaceReference(type: JavaExec) {
     maxHeapSize = '1G'
     args file(project.findProperty('trapdoorFluidSurfaceReference') ?: 'build/test-artifacts/trapdoor-fluid-surface-forge.jsonl').absolutePath
 }
+task exportDoorFluidSurfaceReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorFluidSurfaceLegacyChecks'
+    maxHeapSize = '1G'
+    args file('build/test-artifacts/door-fluid-surface-forge.jsonl').absolutePath
+}
