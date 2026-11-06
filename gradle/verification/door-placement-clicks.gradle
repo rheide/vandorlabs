@@ -1,0 +1,7 @@
+task exportDoorPlacementClickReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorPlacementClickLegacyChecks'
+    maxHeapSize = '1G'
+    args file('build/test-artifacts/door-placement-clicks-forge.json').absolutePath
+}
