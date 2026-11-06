@@ -7,7 +7,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.BlockPlaceContext;
-/** Inactive Large item: clicked bottom center, three supports, all nine edit checks. */
+/** Large item: clicked bottom center, three supports, all nine edit checks. */
 public final class NativeLargeDoorItem extends BlockItem {
  public NativeLargeDoorItem(NativeLargeDoorBlock block,Properties properties){super(block,properties);}
  @Override public InteractionResult place(BlockPlaceContext context){

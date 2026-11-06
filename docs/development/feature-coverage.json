@@ -268,7 +268,6 @@
         "programmable_door"
       ],
       "remaining": [
-        "Large registry activation and end-to-end placed-world acceptance, including inherited per-part outlet supply",
         "Broader ordinary/Large external-material, copy-tool and fluid/contact workflows",
         "Hardware/shader-pack acceptance and standalone native release validation"
       ],
@@ -276,12 +275,12 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "implemented": [
-        "Canonical ordinary programmable_door registered with retained rotating/sliding aliases; only canonical item appears in the creative tab",
+        "Canonical ordinary and Large programmable Doors registered; rotating/sliding aliases remain loadable while creative enumeration exposes canonical items",
         "Shared authored geometry, item selection and controls; bounded renderer and item caches, original full-height company artwork, source-matched motion and padded native icons",
         "Dedicated authenticated Door/Frame/Redstone/Security/Glass editor; physical paired readers, channel banks, configured picks and known/opaque ownership recovery",
         "Actual registered survival placement, mining tools, engine overhang collisions, recipes, timers and separate-process pending-token return",
         "Real client placement, configuration, reader insertion/ejection, configured picking/mining and upper-only rendering, including a vertical section boundary",
-        "Inactive Large structure, control, geometry, renderer, fluid and global routing adapters with separate source/runtime comparisons"
+        "Active Large nine-part structure, authenticated controls, global overhang collisions/targeting, shared renderer and inherited per-part outlet ownership; complete released layouts survive dedicated process restart"
       ]
     },
     {
@@ -294,15 +293,16 @@
         "programmable_trapdoor"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native adapter and shared geometry",
-        "assembly/channel behavior",
-        "configuration/custom materials",
-        "live parity"
+        "Native block/entity lifecycle and shared render adapters",
+        "Assembly, channel, cover and diagonal interaction behavior",
+        "Configuration/custom materials, fluid integration and live native parity"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Shared typed save defaults and immutable native configured-item choices, matched against 1108 actual regular/diagonal source cases; adapters remain unregistered"
+      ]
     },
     {
       "id": "lighting_propulsion",
@@ -878,8 +878,14 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Panel geometry, windows, settings, pause-aware animation, collision and saved timeline parity",
-        "Native adapter integration and focused runtime/render acceptance"
+        "Public registration and placed-world menu, renderer and item integration",
+        "Collision, moved-leaf targeting, contained fluids and outlet supply",
+        "Real client configuration/interaction and canonical saved-world acceptance; hardware/shader and standalone release checks"
+      ],
+      "implemented": [
+        "Unregistered native topology and authoritative controller with per-row settings, source-emitted timeline/save comparisons and dedicated process restart",
+        "Shared panel/window/border kernels, native bounded column renderer and sequenced pause-aware animation; software-rendered reload and pane ordering checks",
+        "Immutable settings/window contracts and bounded edit codec retaining operation indices and old fourteen-byte settings"
       ]
     },
     {

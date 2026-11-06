@@ -7,7 +7,7 @@ import net.neoforged.neoforge.client.model.data.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-/** Inactive Large roles and immutable geometry/fluid/model projections; production registration is deferred. */
+/** Large roles and immutable geometry/fluid/model projections; production registration is deferred. */
 public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
     private boolean assigned;private int column,row;
     public record LargeVisual(Visual shared,BlockPos anchor,int column,int row,NativeLargeDoorGeometry.Snapshot geometry){}
