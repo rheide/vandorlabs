@@ -1,0 +1,19 @@
+def screenMediaPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/screen-media-resources')
+tasks.register('generateScreenMediaResources', Exec) {
+    dependsOn tasks.named('generateCubeResources'),tasks.named('generateScreenCatalog')
+    workingDir projectDir
+    commandLine screenMediaPython,'generate_screen_media_resources.py'
+    inputs.files('generate_screen_media_resources.py','material_playback_resources.py')
+    inputs.files('build/generated/cube-resources/assets/vandorlabs/data/housing_finishes.json','build/generated/screen-resources/assets/vandorlabs/data/screen_catalog.json','../../generated-resources/assets/vandorlabs/data/unified_textures.json')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/textures/blocks/console_inputs'),fileTree('../../texture-packs/default/assets/vandorlabs/textures/blocks/console_inputs'),fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/console_inputs'))
+    outputs.dir('build/generated/screen-media-resources')
+}
+tasks.named('processResources') { dependsOn tasks.named('generateScreenMediaResources') }
+
+tasks.register('testNativeScreenMedia', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava'),tasks.named('generateScreenMediaResources')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.screen.ScreenMediaChecks'
+    args file('../..').absolutePath,file('build/generated/cube-resources/assets/vandorlabs').absolutePath,file('build/generated/screen-media-resources/assets/vandorlabs').absolutePath
+}
