@@ -12,6 +12,33 @@ public abstract class NativeSegmentedDoorBlock extends BaseEntityBlock {
  public static final BooleanProperty TOP=BooleanProperty.create("top"),BOTTOM=BooleanProperty.create("bottom");
  protected NativeSegmentedDoorBlock(Properties properties){super(properties);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(TOP,true).setValue(BOTTOM,true));}
  protected abstract BlockEntityType<?> entityType();
+ protected net.minecraft.world.inventory.MenuType<NativeSegmentedMenu> menuType(){return null;}
+ @Override protected com.mojang.serialization.MapCodec<? extends BaseEntityBlock> codec(){return com.mojang.serialization.MapCodec.unit(this);}
+ public final boolean openConfiguration(net.minecraft.world.entity.player.Player player,Level level,BlockPos pos){var menu=menuType();return menu!=null&&NativeSegmentedConfiguration.open(player,level,pos,menu);}
+ private net.minecraft.world.InteractionResult interact(Level level,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.InteractionHand hand){
+  if(hand!=net.minecraft.world.InteractionHand.MAIN_HAND||player.getItemInHand(hand).getItem() instanceof net.minecraft.world.item.BlockItem)return net.minecraft.world.InteractionResult.PASS;
+  if(player.isShiftKeyDown()||player.getItemInHand(hand).is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return openConfiguration(player,level,pos)?net.minecraft.world.InteractionResult.sidedSuccess(level.isClientSide):net.minecraft.world.InteractionResult.FAIL;
+  var tile=NativeSegmentedTargets.loaded(level,pos);if(tile==null)return net.minecraft.world.InteractionResult.FAIL;
+  if(!level.isClientSide&&level.mayInteract(player,pos))try{tile.toggle(player);}catch(IllegalArgumentException denied){player.displayClientMessage(net.minecraft.network.chat.Component.literal(denied.getMessage()),true);}
+  return net.minecraft.world.InteractionResult.sidedSuccess(level.isClientSide);
+ }
+ @Override protected net.minecraft.world.InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.phys.BlockHitResult hit){return interact(level,pos,player,net.minecraft.world.InteractionHand.MAIN_HAND);}
+ @Override protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,BlockState state,Level level,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.InteractionHand hand,net.minecraft.world.phys.BlockHitResult hit){
+  if(hand!=net.minecraft.world.InteractionHand.MAIN_HAND||stack.getItem() instanceof net.minecraft.world.item.BlockItem)return net.minecraft.world.ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+  return switch(interact(level,pos,player,hand)){case SUCCESS,CONSUME,CONSUME_PARTIAL->net.minecraft.world.ItemInteractionResult.SUCCESS;case FAIL->net.minecraft.world.ItemInteractionResult.FAIL;default->net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;};
+ }
+ @Override protected int getLightBlock(BlockState state,BlockGetter world,BlockPos pos){return 0;}
+ @Override protected boolean propagatesSkylightDown(BlockState state,BlockGetter world,BlockPos pos){return true;}
+ @Override protected float getShadeBrightness(BlockState state,BlockGetter world,BlockPos pos){return 1;}
+ @Override protected net.minecraft.world.phys.shapes.VoxelShape getOcclusionShape(BlockState state,BlockGetter world,BlockPos pos){return net.minecraft.world.phys.shapes.Shapes.empty();}
+ @Override protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state,BlockGetter world,BlockPos pos,net.minecraft.world.phys.shapes.CollisionContext context){
+  if(world instanceof Level level){var tile=NativeSegmentedTargets.loaded(level,pos);if(tile!=null){var snapshot=NativeSegmentedTargets.geometry(tile,NativeSegmentedTargets.pose(tile.root()));if(snapshot!=null){var shape=net.minecraft.world.phys.shapes.Shapes.create(snapshot.bounds().move(-pos.getX(),-pos.getY(),-pos.getZ()));return snapshot.header()==null?shape:net.minecraft.world.phys.shapes.Shapes.or(shape,net.minecraft.world.phys.shapes.Shapes.create(snapshot.header().move(-pos.getX(),-pos.getY(),-pos.getZ())));}}}
+  return net.minecraft.world.phys.shapes.Shapes.create(NativeSegmentedGeometry.closedPanel(state.getValue(FACING),0));
+ }
+ @Override protected net.minecraft.world.phys.shapes.VoxelShape getCollisionShape(BlockState state,BlockGetter world,BlockPos pos,net.minecraft.world.phys.shapes.CollisionContext context){
+  var shape=net.minecraft.world.phys.shapes.Shapes.empty();if(world instanceof Level level){var tile=NativeSegmentedTargets.loaded(level,pos);if(tile!=null){var root=tile.root();if(!root.targetOpen()&&root.pose(0)<=0)shape=net.minecraft.world.phys.shapes.Shapes.create(NativeSegmentedGeometry.closedPanel(tile.facing(),tile.settings().position));var header=NativeSegmentedGeometry.header(tile.facing(),tile.settings().direction,tile.settings().position,tile.height(),tile.topOffset(),tile.column(),tile.columnsCount());return header==null?shape:net.minecraft.world.phys.shapes.Shapes.or(shape,net.minecraft.world.phys.shapes.Shapes.create(header));}}
+  return net.minecraft.world.phys.shapes.Shapes.create(NativeSegmentedGeometry.closedPanel(state.getValue(FACING),0));
+ }
  @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> b){b.add(FACING,TOP,BOTTOM);}
  @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeSegmentedDoorEntity(entityType(),pos,state);}
  @Override public BlockState getStateForPlacement(BlockPlaceContext context){var level=context.getLevel();var pos=context.getClickedPos();for(var p:new BlockPos[]{pos.above(),pos.below()})if(level.hasChunkAt(p)&&level.getBlockState(p).is(this))return defaultBlockState().setValue(FACING,level.getBlockState(p).getValue(FACING));return defaultBlockState().setValue(FACING,context.getHorizontalDirection().getOpposite());}
