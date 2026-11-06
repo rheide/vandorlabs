@@ -16,7 +16,7 @@ public final class LoadedTileIndex<T extends TileEntity> {
         final Map<T,Long> keys=new IdentityHashMap<>();
     }
     public LoadedTileIndex(Class<T> type){this.type=type;synchronized(ALL){ALL.add(this);}}
-    private static long key(int x,int y,int z){return ((long)x&0x3ffffffL)<<38|((long)y&0xfffL)<<26|((long)z&0x3ffffffL);}
+    private static long key(int x,int y,int z){return SpatialBuckets.key(x,y,z);}
     public synchronized void add(T tile){
         World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld)return;
         Entries<T> entries=worlds.computeIfAbsent(world,w->new Entries<>());remove(entries,tile);
@@ -34,14 +34,14 @@ public final class LoadedTileIndex<T extends TileEntity> {
         List<T> out=null;
         // Long selection rays retain the exact same search without enumerating an
         // unbounded number of empty buckets. The loaded index is always finite.
-        if((long)(x1-x0+1)*(y1-y0+1)*(z1-z0+1)>32768){for(T tile:entries.keys.keySet())if(valid(world,tile,bounds,filter)){if(out==null)out=new ArrayList<>();out.add(tile);}}
+        if(SpatialBuckets.excessive(x0,y0,z0,x1,y1,z1)){for(T tile:entries.keys.keySet())if(valid(world,tile,bounds,filter)){if(out==null)out=new ArrayList<>();out.add(tile);}}
         else for(int x=x0;x<=x1;x++)for(int y=y0;y<=y1;y++)for(int z=z0;z<=z1;z++){
             Set<T> bucket=entries.buckets.get(key(x,y,z));if(bucket==null)continue;
             for(T tile:bucket)if(valid(world,tile,bounds,filter)){if(out==null)out=new ArrayList<>();out.add(tile);}
         }
         return out==null?Collections.emptyList():out;
     }
-    private static boolean inside(TileEntity tile,AxisAlignedBB b){BlockPos p=tile.getPos();return p.getX()+1>b.minX&&p.getX()<b.maxX&&p.getY()+1>b.minY&&p.getY()<b.maxY&&p.getZ()+1>b.minZ&&p.getZ()<b.maxZ;}
+    private static boolean inside(TileEntity tile,AxisAlignedBB b){BlockPos p=tile.getPos();return SpatialBuckets.intersectsTile(p.getX(),p.getY(),p.getZ(),b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);}
     private static <T extends TileEntity> boolean valid(World world,T tile,AxisAlignedBB b,java.util.function.Predicate<T> filter){return !tile.isInvalid()&&inside(tile,b)&&(filter==null||filter.test(tile))&&world.isBlockLoaded(tile.getPos())&&world.getTileEntity(tile.getPos())==tile;}
     private synchronized void unload(World world){worlds.remove(world);}
     @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid="vandorlabs")
