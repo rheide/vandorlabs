@@ -1,0 +1,13 @@
+package com.vandorlabs.neoforge.propulsion;
+import com.google.gson.*;
+import com.vandorlabs.propulsion.PropulsionParticle;
+import java.nio.file.*;
+import java.util.Random;
+/** Actual Source comparison: all bits exact except bounded Java 8/21 trig ulps in plasma velocity. */
+public final class PropulsionParticleChecks {
+ private static int checks,profiles,trigDifferences;private static double maxTrigDifference;
+ private static void need(boolean ok,String message){checks++;if(!ok)throw new AssertionError("Plume profile="+profiles+" "+message);}
+ private static void compare(double value,long bits,int style,int frame,boolean velocityTrig,String field){if(Double.doubleToLongBits(value)==bits){checks++;return;}double error=Math.abs(value-Double.longBitsToDouble(bits));need(style==2&&frame>0&&velocityTrig&&error<=1e-15,field+" frame="+frame+" error="+error);trigDifferences++;maxTrigDifference=Math.max(maxTrigDifference,error);}
+ private static void snapshot(PropulsionParticle.State s,JsonArray row,int frame){int i=0;for(double value:new double[]{s.x,s.y,s.z,s.previousX,s.previousY,s.previousZ,s.vx,s.vy,s.vz})compare(value,row.get(i++).getAsLong(),s.style,frame,i-1==6||i-1==7,"double field="+(i-1));for(float value:new float[]{s.red,s.green,s.blue,s.scale,s.phase})need(Float.floatToIntBits(value)==row.get(i++).getAsInt(),"float field="+(i-1)+" frame="+frame);for(int value:new int[]{s.age,s.lifetime,s.sprite%16,s.sprite/16})need(value==row.get(i++).getAsInt(),"integer frame="+frame);need(s.expired==row.get(i++).getAsBoolean(),"expiry frame="+frame);need(s.onGround==row.get(i++).getAsBoolean(),"ground frame="+frame);need(PropulsionParticle.FULL_BRIGHT==row.get(i++).getAsInt(),"full bright");for(double value:new double[]{s.minX,s.minY,s.minZ,s.maxX,s.maxY,s.maxZ})compare(value,row.get(i++).getAsLong(),s.style,frame,false,"bounds field="+(i-1));}
+ public static void main(String[] args)throws Exception{try(var lines=Files.lines(Path.of(args[0]))){for(String line:(Iterable<String>)lines::iterator){var row=JsonParser.parseString(line).getAsJsonObject();var s=new PropulsionParticle.State(8.5,90.5,8.5,row.get("face").getAsInt(),row.get("color").getAsInt(),row.get("style").getAsInt(),Float.intBitsToFloat(row.get("speed").getAsInt()),Float.intBitsToFloat(row.get("spread").getAsInt()),new Random(row.get("seed").getAsLong()));var frames=row.getAsJsonArray("frames");for(int n=0;n<frames.size();n++){if(n>0)s.tickAir();snapshot(s,frames.get(n).getAsJsonArray(),n);}profiles++;}}need(profiles==1440,"complete Source corpus");System.out.println("Native plume air policy PASS actualSourceProfiles="+profiles+" checkedFields="+checks+" JDKtrigDifferences="+trigDifferences+" maxAbsoluteTrigDifference="+maxTrigDifference);}
+}
