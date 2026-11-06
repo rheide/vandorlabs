@@ -1,0 +1,9 @@
+def screenCatalogPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/screen-resources')
+tasks.register('generateScreenCatalog', Exec) {
+ workingDir projectDir
+ commandLine screenCatalogPython,'generate_screen_resources.py'
+ inputs.files('generate_screen_resources.py','../../generated-resources/assets/vandorlabs/data/blocks.json','../../generated-resources/assets/vandorlabs/data/input_surfaces.json','../../generated-resources/assets/vandorlabs/data/unified_textures.json','../../generated-resources/assets/vandorlabs/lang/en_us.lang','../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java','../../src/portable/java/com/vandorlabs/screen/ScreenFamily.java','../../src/main/java/com/vandorlabs/blocks/ModBlocks.java')
+ outputs.dir('build/generated/screen-resources')
+}
+tasks.named('processResources') { dependsOn tasks.named('generateScreenCatalog') }

@@ -1,3 +1,0 @@
-neoForge.runs.configureEach {
- if(project.hasProperty('screenArtworkReference')) systemProperty 'vandorlabs.screenArtworkReference',file(project.property('screenArtworkReference')).absolutePath
-}
