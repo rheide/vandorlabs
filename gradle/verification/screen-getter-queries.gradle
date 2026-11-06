@@ -1,0 +1,5 @@
+task testScreenGetterQueriesReference(type: JavaExec) {
+ dependsOn "testScreenLightQueriesReference"
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.ScreenGetterQueriesLegacyChecks'
+}
