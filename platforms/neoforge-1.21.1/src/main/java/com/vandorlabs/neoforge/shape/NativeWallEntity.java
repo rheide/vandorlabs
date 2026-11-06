@@ -17,7 +17,8 @@ import net.neoforged.neoforge.client.model.data.*;
 
 /** Shared wall save/editor host. Discovery publishes immutable geometry on the owning thread. */
 public class NativeWallEntity extends ProgrammableShapeEntity {
-    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback,boolean chunkBody){
+    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback,boolean chunkBody,NativePanelKind kind){
+        public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback,boolean chunkBody){this(base,walls,frames,glass,geometry,aperture,playback,chunkBody,NativePanelKind.WALL);}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback){this(base,walls,frames,glass,geometry,aperture,playback,true);}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture){this(base,walls,frames,glass,geometry,aperture,PanelPlayback.DEFAULT);}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry){this(base,walls,frames,glass,geometry,NativePortholeLayout.unit(walls==null||walls.portholeShape<0||walls.portholeShape>3?0:walls.portholeShape));}
@@ -27,7 +28,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     NativeWallLayouts.Group textureGroup;
     NativeWallLayouts.Group apertureGroup;
     private NativePortholeLayout aperture=NativePortholeLayout.unit(0);
-    private final boolean porthole;
+    private final NativePanelKind kind;
     private WallSettings walls;
     private FrameSettings frames=defaultFrames();
     private PanelGlassSettings glass=PanelGlassSettings.fresh();
@@ -37,8 +38,9 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private long geometryGeneration,topologyRevision,modelRevision;
     private volatile WallAppearance wallAppearance;
     private volatile AABB renderBounds;
-    public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean porthole){
-        super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.porthole=porthole;walls=new WallSettings(false,false,0,0,porthole,0);
+    public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean porthole){this(type,pos,state,porthole?NativePanelKind.PORTHOLE:NativePanelKind.WALL);}
+    public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,NativePanelKind kind){
+        super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.kind=Objects.requireNonNull(kind);walls=new WallSettings(false,false,0,0,isPorthole(),0);
         geometry=initialGeometry(state);aperture=NativePortholeLayout.unit(0,geometry.fullDepth()?1:0);partition=geometry::side;renderBounds=geometry.renderBounds().move(pos);publishWallAppearance();
     }
     private static FrameSettings defaultFrames(){return new FrameSettings(-1,-1,-2,0,-1,-1,false,false,false,false);}
@@ -52,7 +54,9 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         }
         return state.getBlock() instanceof NativeFlatWallBlock block&&block.isFullDepth()?NativeFlatWallGeometry.full(facing,depth):NativeFlatWallGeometry.straight(facing,depth);
     }
-    public final boolean isPorthole(){return porthole;}
+    public final NativePanelKind panelKind(){return kind;}
+    public final boolean isPorthole(){return kind==NativePanelKind.PORTHOLE;}
+    public final boolean isGlass(){return kind==NativePanelKind.GLASS;}
     public final WallSettings wallSettings(){return walls;}
     public final FrameSettings frameSettings(){return frames;}
     public final PanelGlassSettings panelGlassSettings(){return glass;}
@@ -68,7 +72,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public final long topologyRevision(){return topologyRevision;}
     public final AABB renderBounds(){return renderBounds;}
     private boolean chunkBody(){var state=getBlockState();return !(state.getBlock() instanceof NativeDiagonalWallBlock)||settings().layout==0&&com.vandorlabs.render.DiagonalChunkPolicy.contained(worldPosition.getX(),worldPosition.getY(),worldPosition.getZ(),state.getValue(NativeDiagonalWallBlock.FACING).get3DDataValue(),state.getValue(NativeDiagonalWallBlock.INVERTED),walls.halfHeight,walls.fullWidth);}
-    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture,playback,chunkBody());}
+    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture,playback,chunkBody(),kind);}
     @Override protected void appearancePublished(){publishWallAppearance();}
     public static boolean validFrame(int choice){if(choice==-1)return true;if(!ModernFinishCatalog.validChoice(choice))return false;String category=ModernFinishCatalog.option(choice).category();return category.equals("Frame")||category.startsWith("Frame/");}
     public static boolean validSurface(int choice){return validFrame(choice)||ModernFinishCatalog.validChoice(choice)&&ModernFinishCatalog.option(choice).general();}
@@ -133,12 +137,12 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     @Override protected long fluidGeometryKey(){return geometryGeneration;}
     @Override protected List<AABB> fluidSolidBoxes(BlockState state,long key){return geometry.fluidBoxes();}
     @Override protected NativeFluidVolume.Side fluidSidePartition(){return partition;}
-    @Override public NativeFluidRegions fluidSurfaceRegions(){return geometry.fluidRegions(porthole);}
+    @Override public NativeFluidRegions fluidSurfaceRegions(){return geometry.fluidRegions(isPorthole());}
     @Override public boolean acceptsPlacementFluid(int side){return side>=0&&side<2;}
     @Override public Direction[] fluidPlacementFaces(){return geometry.placementFaces();}
     @Override public int containedFluidSide(double x,double y,double z){return geometry.side(x,y,z);}
     private static int frameLight(int choice){if(choice<0)return 0;var frame=ModernFinishCatalog.option(choice).frame();return frame==null?0:Math.max(0,Math.min(5,frame.light()));}
-    @Override public int intrinsicContainedLight(){return Math.max(porthole||frames.bare?0:frameLight(frames.front),Math.max(frameLight(frames.interior),frameLight(frames.exteriorChoice())));}
+    @Override public int intrinsicContainedLight(){return Math.max(isPorthole()||frames.bare?0:frameLight(frames.front),Math.max(frameLight(frames.interior),frameLight(frames.exteriorChoice())));}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         NativeWallLayouts.invalidate(this);
         playback=PanelPlayback.read(tag);

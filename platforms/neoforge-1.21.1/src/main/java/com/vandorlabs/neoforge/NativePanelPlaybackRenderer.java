@@ -48,7 +48,7 @@ public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<Pr
     @Override public net.minecraft.world.phys.AABB getRenderBoundingBox(ProgrammableBlockEntity tile){return tile instanceof NativeWallEntity wall?wall.renderBounds():new net.minecraft.world.phys.AABB(tile.getBlockPos());}
     @Override public boolean shouldRender(ProgrammableBlockEntity tile,Vec3 camera){
         if(!(tile instanceof NativeWallEntity wall))return false;var snapshot=wall.wallAppearance();boolean body=snapshot.geometry().diagonal()&&!snapshot.chunkBody();if(!body&&!wall.isPorthole())return false;
-        var current=active;if(current==null||!body&&!(snapshot.geometry() instanceof com.vandorlabs.neoforge.shape.NativeFlatWallGeometry.Geometry))return false;var pos=tile.getBlockPos();double x=camera.x-(pos.getX()+.5D),y=camera.y-(pos.getY()+.5D),z=camera.z-(pos.getZ()+.5D),range=getViewDistance();return x*x+y*y+z*z<range*range;
+        var current=active;if(current==null)return false;var pos=tile.getBlockPos();double x=camera.x-(pos.getX()+.5D),y=camera.y-(pos.getY()+.5D),z=camera.z-(pos.getZ()+.5D),range=getViewDistance();return x*x+y*y+z*z<range*range;
     }
     @Override public void render(ProgrammableBlockEntity tile,float partialTick,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
         if(!(tile instanceof NativeWallEntity wall))return;var current=active;if(current==null)return;
