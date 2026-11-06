@@ -117,8 +117,8 @@
         "programmable_wall"
       ],
       "remaining": [
-        "Complete full-depth and diagonal portholes, diagonal glass, glass contacts and broader native client acceptance",
-        "native diagonal wall, porthole and glass adapters and filled/contact matrices",
+        "Diagonal glass, glass contacts and broader native client acceptance",
+        "Native diagonal glass integration and filled/contact matrices",
         "actual disabled-join and wall-specific ordinary/unload/reload GPU matrices",
         "external-material reload and custom block-material sampling",
         "wall-specific bucket/body/eye/fluid interactions and glass-neighbor contacts",
@@ -148,7 +148,10 @@
         "Shared aperture emission, bounded round slices, exact glass palette and pause-aware playback provider; porthole activation remains pending",
         "Thin porthole and plain diagonal walls registered with shared configuration, configured items and contained-fluid adapters",
         "Current diagonal collision, local topology and emitted materials compared with actual Forge output; chunk-edge body fallback shares the panel bake",
-        "Center-owned T body/pane projection, independent exterior materials and cap closure use shared float transform kernels"
+        "Center-owned T body/pane projection, independent exterior materials and cap closure use shared float transform kernels",
+        "Registered full-depth programmable_porthole_block and programmable_diagonal_porthole with canonical recipes, configured drops and shared housing/pane editors.",
+        "Full-depth dedicated placement and separate-process reload pass 823 plus 12 assertions; diagonal portholes pass 5,124 plus 13 assertions over 104 actual Forge-referenced installed geometry cases.",
+        "Diagonal aperture, solid crossings and connector arms use the existing panel bake and bounded fallback cache; actual Forge comparison covers 1,728 scenes and 13,824 native body/pane poses."
       ]
     },
     {
