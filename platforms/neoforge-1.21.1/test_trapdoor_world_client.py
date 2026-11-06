@@ -48,7 +48,12 @@ def main():
     if positive.size!=negative.size:raise AssertionError('Renderer capture sizes differ')
     diff=ImageChops.difference(positive,negative);mask=diff.point(lambda value:255 if value>12 else 0);pixels=sum(any(channel>0 for channel in pixel) for pixel in mask.getdata())
     if pixels<200:raise AssertionError('Actual canonical BER leaf capture is empty vs disabled renderer: '+str(pixels)+' pixels')
-    diff.save(output/'canonical-trapdoor-difference.png');(output/'renderer-report.txt').write_text('Changed pixels vs disabled renderer: '+str(pixels)+'\n')
+    diff.save(output/'canonical-trapdoor-difference.png')
+    reloaded=Image.open(client/'screenshots/canonical-trapdoor-reloaded.png').convert('RGB')
+    delta=ImageChops.difference(positive,reloaded).point(lambda value:255 if value>12 else 0)
+    reload_pixels=sum(any(channel>0 for channel in pixel) for pixel in delta.getdata())
+    if reload_pixels>100:raise AssertionError('Actual resource reload changed stationary leaf capture: '+str(reload_pixels)+' pixels')
+    (output/'renderer-report.txt').write_text('Changed pixels vs disabled renderer: '+str(pixels)+'\nChanged pixels after resource reload: '+str(reload_pixels)+'\n')
     print('Canonical leaf renderer mask PASS pixels='+str(pixels),flush=True)
     print('Native canonical Trapdoor world client focused checks PASS (development classpath/software rendering): '+str(output),flush=True)
 
