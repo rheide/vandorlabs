@@ -1,0 +1,30 @@
+def doorResourcePython = project.findProperty('pythonExecutable') ?: (
+    System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/door-resources')
+tasks.register('generateDoorResources', Exec) {
+    workingDir projectDir
+    commandLine doorResourcePython, 'generate_door_resources.py'
+    inputs.file('generate_door_resources.py')
+    inputs.file('../../generated-resources/assets/vandorlabs/data/unified_textures.json')
+    ['../../generated-resources/assets/vandorlabs/models', '../../src/main/resources/assets/vandorlabs/models'].each { directory ->
+        inputs.files(fileTree(directory) {
+            include 'item/detailed_doors/low/**', 'block/detailed_doors/low/**', 'item/space_*.json', 'block/space_*.json'
+            include 'item/programmable_door.json', 'item/large_programmable_door.json'
+        })
+    }
+    ['../../texture-packs/additional', '../../texture-packs/default', '../../src/main/resources'].each { directory ->
+        inputs.files(fileTree(directory) {
+            include '**/textures/blocks/space_doors/**', '**/textures/blocks/cargo_doors/**', '**/textures/blocks/glass_doors/**'
+            include '**/textures/blocks/programmable_glass/door_side.png', '**/textures/blocks/programmable_glass/metal_side.png'
+            include '**/textures/blocks/dark_wall_panel.png', '**/textures/blocks/light_alloy_hull.png', '**/textures/blocks/control_buttons.png'
+        })
+    }
+    outputs.dir('build/generated/door-resources')
+}
+tasks.named('processResources') { dependsOn 'generateDoorResources' }
+tasks.register('testDoorResourceProjection', Exec) {
+    group = 'verification'
+    dependsOn 'generateDoorResources'
+    workingDir projectDir
+    commandLine doorResourcePython, 'test_door_resources.py'
+}

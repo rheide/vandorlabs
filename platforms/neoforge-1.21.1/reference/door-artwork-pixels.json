@@ -1,0 +1,252 @@
+{
+  "vandorlabs:blocks/cargo_doors/low/armored_biparting": {
+    "height": 256,
+    "rgbaSha256": "d0a0ba9bf4c8ca93923b4726f9e49eb2a5d12477b9f0a9e3c9cc8a67b57b37c4",
+    "width": 256
+  },
+  "vandorlabs:blocks/cargo_doors/low/cross_braced_bay": {
+    "height": 256,
+    "rgbaSha256": "ef1d9d230c326fc5c4420b8b594be809777423b64e0dff9b79dda7049b282120",
+    "width": 256
+  },
+  "vandorlabs:blocks/cargo_doors/low/observation_leaf": {
+    "height": 256,
+    "rgbaSha256": "2b60e45548766e612ff777199ad1471abb41ec62de79939c0cdab748fe8ea6f6",
+    "width": 128
+  },
+  "vandorlabs:blocks/cargo_doors/low/offset_cargo": {
+    "height": 256,
+    "rgbaSha256": "53063cc1bab3bf01c75588bb27e58f8fb76c5b98f8b08ac762bbcd7758163026",
+    "width": 256
+  },
+  "vandorlabs:blocks/cargo_doors/low/plain_cargo": {
+    "height": 256,
+    "rgbaSha256": "f6505acd3dd506b9889b21648e0bd757a91129f54f76c0f1393d3cb34fb33689",
+    "width": 128
+  },
+  "vandorlabs:blocks/cargo_doors/low/reinforced_leaf": {
+    "height": 256,
+    "rgbaSha256": "930f8059c1ae86e9a9a3d24203edd5fc4255cda77952b52508c520b4046459a0",
+    "width": 128
+  },
+  "vandorlabs:blocks/cargo_doors/low/service_freight": {
+    "height": 256,
+    "rgbaSha256": "af060f44bd1711815a87c45d516e3b914a60e446f3e4967a2adc395660d54399",
+    "width": 256
+  },
+  "vandorlabs:blocks/cargo_doors/low/slotted_bay": {
+    "height": 256,
+    "rgbaSha256": "69a6d6e5999adf26cc5a3d85356a207d298d350e26b1bc136be86729c2d5a098",
+    "width": 256
+  },
+  "vandorlabs:blocks/cargo_doors/low/split_view_bay": {
+    "height": 256,
+    "rgbaSha256": "0f8595f85c805e9f6a5b45150cbe335f0e9a848ccbdc9c0f61e5578ed6488f7c",
+    "width": 256
+  },
+  "vandorlabs:blocks/cargo_doors/low/stepped_freight": {
+    "height": 256,
+    "rgbaSha256": "b8ec844b0dd2d0ff1a758ab2910f63236b2b5cf6a12329fc72d7ea26075c467f",
+    "width": 128
+  },
+  "vandorlabs:blocks/cargo_doors/low/twin_observation": {
+    "height": 256,
+    "rgbaSha256": "b496d141264ac0365cc067dc1122cacc1160df20a66dfc4f51ad6ba27bef4f57",
+    "width": 256
+  },
+  "vandorlabs:blocks/cargo_doors/low/warehouse_shutter": {
+    "height": 256,
+    "rgbaSha256": "5e64086d89a7134daa8f2b1c8ed63fc75ca9884a843467be7b1ed19e2f5b9c38",
+    "width": 256
+  },
+  "vandorlabs:blocks/cargo_doors/medium/cross_braced_bay": {
+    "height": 256,
+    "rgbaSha256": "ef1d9d230c326fc5c4420b8b594be809777423b64e0dff9b79dda7049b282120",
+    "width": 256
+  },
+  "vandorlabs:blocks/control_buttons": {
+    "height": 16,
+    "rgbaSha256": "3afa2776ba317a7eb503d2e2eb7ab7935df171b17d94eb0e177d56636c21854d",
+    "width": 16
+  },
+  "vandorlabs:blocks/dark_wall_panel": {
+    "height": 64,
+    "rgbaSha256": "310ca835457b996184fcc052b29558c0330f06e59ba3108f39af0a89c5c30322",
+    "width": 64
+  },
+  "vandorlabs:blocks/glass_doors/low/slim_glass": {
+    "height": 256,
+    "rgbaSha256": "5b46bc6aa8c5127e03462a32278c99be4e238de172c9d58c4233d148436114dc",
+    "width": 128
+  },
+  "vandorlabs:blocks/light_alloy_hull": {
+    "height": 16,
+    "rgbaSha256": "bcdc07cb310d9b0bc3a37acd689271938fc047391e393ed6f0e3620f3c5dfef9",
+    "width": 16
+  },
+  "vandorlabs:blocks/programmable_glass/door_side": {
+    "height": 64,
+    "rgbaSha256": "d3499699bd923098f4d4519971b4a0ed9fa29350857effdf4a8f1e8c008fbe75",
+    "width": 64
+  },
+  "vandorlabs:blocks/programmable_glass/metal_side": {
+    "height": 64,
+    "rgbaSha256": "7f1b5a7e92faae98296b592e8134189e66655e43ec201eabd39839973dbca07a",
+    "width": 64
+  },
+  "vandorlabs:blocks/space_doors/low/airlock": {
+    "height": 256,
+    "rgbaSha256": "e407186752e6e385d5d891f413c4926135ecb48ac316c3744c6509f1be821f14",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/door_cargo": {
+    "height": 256,
+    "rgbaSha256": "23b6b862a6dfab6557ca4de9a79edb75f5534990032df52ab380d0da9250a209",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/door_laboratory": {
+    "height": 256,
+    "rgbaSha256": "97d300078edb3dd32a4b09ca1ea7ef9e6fa0bb8f71ebc701ad2675f66ce9bf92",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/door_laboratory_glass": {
+    "height": 256,
+    "rgbaSha256": "05a5911a9a2c85db91e9bba66dc020915dbd034f0813bcfd33ed61e79ac7d7a7",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/door_laboratory_metal": {
+    "height": 256,
+    "rgbaSha256": "3364942d36e4db441bf5e6d8a56e73267795fb890d050d90bbfb6f9470c59a49",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/door_ventilation": {
+    "height": 256,
+    "rgbaSha256": "29919fa71485fbcdd86a5c68f0c1be31bbc07d4372901d7970b3e5ad0cc692c9",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/door_viewport": {
+    "height": 256,
+    "rgbaSha256": "e86412f8fb830edef50a051d5b0f8fc1977b943c94fe74648fb561519806d441",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/door_viewport_glass": {
+    "height": 256,
+    "rgbaSha256": "a3021230c72a359b802df2d9ce0d03e58382f4e975033eae3153f820a44a5f90",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/door_viewport_metal": {
+    "height": 256,
+    "rgbaSha256": "af1ceec42ab6b83ae814d8b64b4b0c1bbceb10cdefc7649df8d203f1b46d59f1",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/double_frame_metal": {
+    "height": 128,
+    "rgbaSha256": "9dc1c3b9900f666df15bda93d6fd9aa6db2abd0779eb47fe133457a606a5cc45",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/glass_tile": {
+    "height": 128,
+    "rgbaSha256": "b1abe9e0853d7791a17968ed291228f6b2135b44844b805221b5483139463302",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/hinge": {
+    "height": 64,
+    "rgbaSha256": "fb3bfe870ab3f512af32775b9947b74ee29b8d6c6ad696b8d83d1334eba08eda",
+    "width": 64
+  },
+  "vandorlabs:blocks/space_doors/low/lift_blast_shield": {
+    "height": 256,
+    "rgbaSha256": "bd87f3e159cd9d15088b364b149a27c3cbde3c56b244d4203429431ac0a789be",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/lift_cargo_lift": {
+    "height": 256,
+    "rgbaSha256": "50f19a94a4d1d6a5f1c7dee640adf2bcc798ed0120c03787ba374b3fc4eeeb9a",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/lift_glazed_hangar": {
+    "height": 256,
+    "rgbaSha256": "a9a171247e0efc590be71c0f830f71256273c210b8c5bf12d80c6c6778ff151c",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/lift_glazed_hangar_glass": {
+    "height": 256,
+    "rgbaSha256": "501ec7de039a23b6cb9606a064d58ab20f304754d586d4ddff51d39bb6e664c8",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/lift_glazed_hangar_metal": {
+    "height": 256,
+    "rgbaSha256": "79035657977bfb99235b3daaee68a919a689a14ecb74b00f3dba4399935209f3",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/lift_modular_shutter": {
+    "height": 256,
+    "rgbaSha256": "f78ab3a07075a59df190dde614dc0c191a784e9afa0cd72b0ba36362426bbae9",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/lift_quarantine_seal": {
+    "height": 256,
+    "rgbaSha256": "4a56da64ba023de43575fd7e54fa10761ec8ef0ca0193f9b45c60485ca5f3dd3",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/lift_reactor_barrier": {
+    "height": 256,
+    "rgbaSha256": "f9237224ec00af58e6d6a68100b97c4ced23853a77a84525e7c10398b7de3d8b",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/observation": {
+    "height": 256,
+    "rgbaSha256": "fa3dc46785333416b40d8731e90a50d871bf1798190f447f5b875eb6baa9c655",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/observation_glass": {
+    "height": 256,
+    "rgbaSha256": "d7d6198ec6ff0340521c62ceb79156be92f564fdf1ecf2cbd44e6ec346fd92b6",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/observation_metal": {
+    "height": 256,
+    "rgbaSha256": "cc38ed513779c2688dcdf44be01874ef150eb187b4d65ea787b44529dacf6f14",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/reactor": {
+    "height": 256,
+    "rgbaSha256": "61cd65ca6b85d1c25fabb00e6b945783f3046eb75e15b1d4c0093b7d388cc6a4",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/security": {
+    "height": 256,
+    "rgbaSha256": "24bd6851d3c2cda45fcdca7a52d497a9a39af92743a39eed36989bd95cf74848",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/low/standard": {
+    "height": 256,
+    "rgbaSha256": "8cae3b27cf2b43a3850ed336cab4dd67bcd5828cff5a55f911438af7e492b4d3",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/medium/double_frame_metal": {
+    "height": 128,
+    "rgbaSha256": "9dc1c3b9900f666df15bda93d6fd9aa6db2abd0779eb47fe133457a606a5cc45",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/medium/glass_tile": {
+    "height": 128,
+    "rgbaSha256": "b1abe9e0853d7791a17968ed291228f6b2135b44844b805221b5483139463302",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/medium/hinge": {
+    "height": 64,
+    "rgbaSha256": "fb3bfe870ab3f512af32775b9947b74ee29b8d6c6ad696b8d83d1334eba08eda",
+    "width": 64
+  },
+  "vandorlabs:blocks/space_doors/medium/observation_glass": {
+    "height": 256,
+    "rgbaSha256": "d7d6198ec6ff0340521c62ceb79156be92f564fdf1ecf2cbd44e6ec346fd92b6",
+    "width": 128
+  },
+  "vandorlabs:blocks/space_doors/medium/standard": {
+    "height": 256,
+    "rgbaSha256": "8cae3b27cf2b43a3850ed336cab4dd67bcd5828cff5a55f911438af7e492b4d3",
+    "width": 128
+  }
+}
