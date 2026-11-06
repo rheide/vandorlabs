@@ -68,3 +68,11 @@ task testPropulsionRenderSourceCost(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.PropulsionRenderCostLegacyChecks'
 }
+
+task exportPropulsionEditorReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PropulsionEditorLegacyOracle'
+    args file('build/test-artifacts/propulsion-editor-forge.jsonl').absolutePath
+}
