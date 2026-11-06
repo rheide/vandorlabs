@@ -19,3 +19,6 @@ tasks.register('testNativeLightGeometry', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.light.LightGeometryChecks'
     args rootProject.file('../../build/test-artifacts/light-geometry-forge.jsonl').absolutePath
 }
+neoForge.runs.configureEach {
+    if(project.hasProperty('lightPlacementReference')) systemProperty 'vandorlabs.lightPlacementReference',file(project.property('lightPlacementReference')).absolutePath
+}
