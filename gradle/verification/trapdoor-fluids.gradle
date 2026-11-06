@@ -1,0 +1,8 @@
+task exportTrapdoorFluidReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorFluidLegacyChecks'
+    maxHeapSize = '1G'
+    args file(project.findProperty('trapdoorFluidReference') ?: 'build/test-artifacts/trapdoor-fluid').absolutePath
+}

@@ -1,0 +1,8 @@
+tasks.register('testNativeTrapdoorFluidGeometry', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.trapdoor.TrapdoorFluidGeometryChecks'
+    maxHeapSize = '1G'
+    args rootProject.file('../../build/test-artifacts/trapdoor-fluid-volume-forge.jsonl').absolutePath,
+         rootProject.file('../../build/test-artifacts/trapdoor-fluid-opening-forge.jsonl').absolutePath
+}
