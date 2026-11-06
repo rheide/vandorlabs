@@ -136,7 +136,7 @@ public final class NativeFluidWorld {
     }
     @SubscribeEvent(priority=EventPriority.LOWEST) public static void bucket(PlayerInteractEvent.RightClickBlock event){
         var player=event.getEntity();Level level=player.level();BlockPos pos=event.getPos();if(!loaded(level,pos)||!(level.getBlockEntity(pos) instanceof ContainedFluidHost host))return;
-        host.refreshFluidGeometry();if(!installed(host))return;ItemStack held=player.getItemInHand(event.getHand()),single=held.copyWithCount(1);var optional=FluidUtil.getFluidHandler(single);if(optional.isEmpty())return;var container=optional.get();Direction face=event.getHitVec().getDirection();
+        host.refreshFluidGeometry();if(!installed(host))return;ItemStack held=player.getItemInHand(event.getHand()),single=held.copyWithCount(1);var optional=FluidUtil.getFluidHandler(single);if(optional.isEmpty())return;if(!host.fluidActionsAllowed()){event.setCanceled(true);event.setCancellationResult(InteractionResult.FAIL);return;}var container=optional.get();Direction face=event.getHitVec().getDirection();
         if(!player.isAlive()||player.isSpectator()||!level.mayInteract(player,pos)||!player.mayUseItemAt(pos,face,held))return;
         Vec3 hit=event.getHitVec().getLocation().subtract(pos.getX(),pos.getY(),pos.getZ()).add(face.getStepX()*.001,face.getStepY()*.001,face.getStepZ()*.001);int side=host.containedFluidSide(hit.x,hit.y,hit.z);if(side<0||side>1)return;
         FluidStack incoming=container.drain(1000,IFluidHandler.FluidAction.SIMULATE),stored=host.containedFluids().get(side);boolean fill=!incoming.isEmpty();event.setCanceled(true);event.setCancellationResult(InteractionResult.FAIL);
