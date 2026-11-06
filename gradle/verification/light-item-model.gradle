@@ -1,0 +1,6 @@
+task exportLightItemModelReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightItemModelLegacyChecks'
+    args file('build/test-artifacts/light-item-model-forge.json').absolutePath
+}

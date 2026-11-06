@@ -22,6 +22,7 @@ public final class NativeTrapdoorItemChecks {
     private static void need(boolean value,String reason){if(!value)throw new AssertionError("Trapdoor item: "+reason);}
     @SubscribeEvent public static void additional(ModelEvent.RegisterAdditional event){if("true".equals(System.getenv("VANDOR_TRAPDOOR_RENDER_CHECK")))for(String name:IDS)event.register(id(name));}
     public static void run(){
+        NativeLightItemModelChecks.run();
         var mc=Minecraft.getInstance();var atlas=mc.getTextureAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS);
         int door=0;for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++)if(ModernFinishCatalog.ENTRIES.get(i).door()!=null){door=i;break;}
         int oak=NativeMaterialRegistry.snapshot().samples().get(net.minecraft.world.level.block.Blocks.OAK_DOOR);

@@ -1,0 +1,6 @@
+tasks.register('testNativeLightItemStyle', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.light.LightItemStyleChecks'
+    args rootProject.file('../../build/test-artifacts/light-item-model-forge.json').absolutePath
+}

@@ -61,16 +61,8 @@ public final class NativeTrapdoorItemModel extends BakedModelWrapper<BakedModel>
             for(int side=0;side<FACES.length;side++){
                 var result=new ArrayList<BakedQuad>();
                 for(var quad:originalModel.getQuads(null,FACES[side],RandomSource.create(42),ModelData.EMPTY,null)){
-                    var data=quad.getVertices().clone();int stride=data.length/4;var old=quad.getSprite();
-                    for(int i=0;i<4;i++){
-                        int at=i*stride;
-                        float u=(Float.intBitsToFloat(data[at+4])-old.getU0())/(old.getU1()-old.getU0());
-                        float v=(Float.intBitsToFloat(data[at+5])-old.getV0())/(old.getV1()-old.getV0());
-                        data[at+4]=Float.floatToRawIntBits(sprite.getU(u*surface.u()));
-                        data[at+5]=Float.floatToRawIntBits(sprite.getV(v*surface.v()));
-                    }
-                    result.add(new BakedQuad(data,quad.getTintIndex(),quad.getDirection(),sprite,quad.isShade(),quad.hasAmbientOcclusion()));
-                    cost+=96L+data.length*4L;
+                    var changed=NativeItemQuads.retexture(quad,sprite,surface.u(),surface.v());
+                    result.add(changed);cost+=96L+changed.getVertices().length*4L;
                 }
                 faces[side]=List.copyOf(result);
             }
