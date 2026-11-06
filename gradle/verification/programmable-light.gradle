@@ -26,3 +26,9 @@ task exportLightGeometryReference(type: JavaExec) {
     main = 'com.vandorlabs.client.LightGeometryLegacyChecks'
     args file('build/test-artifacts/light-geometry-forge.jsonl').absolutePath
 }
+task exportLightPlacementReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightPlacementLegacyChecks'
+    args file('build/test-artifacts/light-placement-forge.jsonl').absolutePath
+}
