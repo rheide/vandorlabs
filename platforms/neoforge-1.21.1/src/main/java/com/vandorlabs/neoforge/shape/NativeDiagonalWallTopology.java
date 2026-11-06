@@ -28,7 +28,7 @@ public final class NativeDiagonalWallTopology {
         public boolean loaded(BlockPos pos){return NativeFluidWorld.loaded(level,pos);}
         public BlockState state(BlockPos pos){return level.getBlockState(pos);}
         public WallSettings settings(BlockPos pos){return levelSettings(level,pos);}
-        public boolean transparent(BlockPos pos,BlockState state){return level.getBlockEntity(pos) instanceof NativeWallEntity host&&host.isGlass();}
+        public boolean transparent(BlockPos pos,BlockState state){return state.getBlock() instanceof NativeDiagonalWallBlock block&&block.isGlass();}
         public boolean fullBlock(BlockPos pos,BlockState state){return state.isCollisionShapeFullBlock(level,pos);}
     }
     static Access access(Level level){return new LevelAccess(level);}
