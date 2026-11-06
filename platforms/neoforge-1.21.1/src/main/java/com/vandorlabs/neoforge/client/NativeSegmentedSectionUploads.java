@@ -23,6 +23,8 @@ public final class NativeSegmentedSectionUploads {
     }
     private static final ConcurrentHashMap<Section,Publication> TRACKED=new ConcurrentHashMap<>();
     private static volatile long world;
+    // Reflective smoke fault injection; never set by gameplay, packets, resources or configuration.
+    private static volatile boolean holdAcknowledgements;
     /** Called on world replacement and reload before publishing fresh section generations. */
     public static void clear(){world++;TRACKED.clear();}
     public static Publication publication(Section section){return TRACKED.get(section);}
@@ -40,7 +42,7 @@ public final class NativeSegmentedSectionUploads {
             task.vandorlabs$terrainUploaded(section.vandorlabs$terrainCompiled());
     }
     public static boolean acknowledged(Section section,Publication publication,Object before){
-        if(!current(section,publication)||section.vandorlabs$terrainDirty())return false;
+        if(holdAcknowledgements||!current(section,publication)||section.vandorlabs$terrainDirty())return false;
         var current=section.vandorlabs$terrainCompiled();
         return current!=before&&section.vandorlabs$terrainTask() instanceof Task task
                 &&task.vandorlabs$terrainPublication()==publication&&task.vandorlabs$terrainUploaded()==current;

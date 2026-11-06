@@ -58,6 +58,17 @@ row lighting and body emission. Resource generations activate only after a wrapp
 bakery completes, with older completions rejected; the compatibility constructor
 without a bakery does not activate the coordinator.
 
-The coordinator is an incremental candidate. Actual world upload, asynchronous
-suppression/resume and before/after rendering costs must pass before claiming the
-complete terrain handoff is accepted.
+The focused world fixture uses public hosts across horizontal and vertical section
+boundaries. It checks successful task uploads, delayed acknowledgement eligibility,
+closed fallback, terrain removal before opening, reversal, reload and section
+replacement. The delay holds only receipt eligibility after actual uploads; it does
+not claim to simulate a GPU driver stall. The private hold flag is unset in gameplay
+and is accessed reflectively by smoke code only.
+
+The same fixture loads 128 physical columns of 32 sections. Its former BER draw-state
+control emits 66,560 endpoint vertices and samples 4,096 row lights per pass; settled
+terrain emits neither through the BER. Allocation counters sample the actual adapter
+after warm-up. GPU comparisons separately require a settled image to remain unchanged
+when the BER is disabled, and to differ when both body paths are disabled while the
+header remains. These focused software/structural checks do not establish hardware
+frame rates, shader-pack compatibility or a full release gate.
