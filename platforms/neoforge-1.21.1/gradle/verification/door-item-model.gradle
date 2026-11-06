@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+    if (project.hasProperty('doorItemReference')) systemProperty 'vandorlabs.doorItemReference', file(project.property('doorItemReference')).absolutePath
+}
