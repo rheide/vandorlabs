@@ -1,0 +1,12 @@
+package com.vandorlabs.neoforge;
+import com.google.gson.*;
+import com.vandorlabs.segmented.SegmentedPanelMesh;
+import java.nio.file.*;
+public final class NativeSegmentedPanelChecks {
+ public static void main(String[] args)throws Exception{
+  var rows=Files.readAllLines(Path.of(args[0]));var header=JsonParser.parseString(rows.getFirst()).getAsJsonObject();float u0=header.get("u0").getAsFloat(),u1=header.get("u1").getAsFloat(),v0=header.get("v0").getAsFloat(),v1=header.get("v1").getAsFloat();var image=new SegmentedPanelMesh.Texture(){public float u(double pixel){return u0+(u1-u0)*(float)pixel/16F;}public float v(double pixel){return v0+(v1-v0)*(float)pixel/16F;}};var surface=new SegmentedPanelMesh.Surface(image,image,1,false);int profiles=0,vertices=0;
+  for(String line:rows.subList(1,rows.size())){var row=JsonParser.parseString(line).getAsJsonObject();int size=row.get("size").getAsInt(),column=row.get("column").getAsInt(),r=row.get("row").getAsInt(),layout=row.get("layout").getAsInt();var builder=new NativeSegmentedMesh.Builder();SegmentedPanelMesh.build(row.get("window").getAsBoolean(),row.get("shape").getAsInt(),layout,column,r,size,size,column,r,size,size,layout,com.vandorlabs.render.GlassRenderPolicy.opaque(row.get("tint").getAsInt()),row.get("pass").getAsInt(),surface,surface,image,builder);float[] source=builder.records();var expected=row.getAsJsonArray("vertices");if(source.length!=expected.size())throw new AssertionError("Panel topology profile="+profiles+" actual="+source.length+" expected="+expected.size());for(int v=0;v<source.length/8;v++){for(int a=0;a<3;a++)need(Float.floatToRawIntBits(source[v*8+a])==expected.get(v*8+a).getAsInt(),"position",profiles);for(int a=0;a<2;a++)need(Float.floatToRawIntBits(source[v*8+3+a])==expected.get(v*8+4+a).getAsInt(),"UV",profiles);int normal=0;for(int a=0;a<3;a++)normal|=(((byte)(source[v*8+5+a]*127))&255)<<(a*8);need(normal==(expected.get(v*8+7).getAsInt()&0xffffff),"normal",profiles);}need(builder.finish().vertices()==source.length/8,"native mesh count",profiles);profiles++;vertices+=source.length/8;}
+  need(profiles==900,"complete actual source matrix",profiles);System.out.println("[vandorlabs][segmented-panels] CPU PASS actualForge profiles="+profiles+" vertices="+vertices+" exact raw panel/window TileFit UV/frontback/reveal records");
+ }
+ private static void need(boolean value,String message,int profile){if(!value)throw new AssertionError(message+" profile="+profile);}
+}

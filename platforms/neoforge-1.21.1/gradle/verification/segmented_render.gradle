@@ -1,0 +1,22 @@
+tasks.register('testNativeSegmentedMesh', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedMeshChecks'
+    args file('../../build/test-artifacts/segmented-mesh-forge.jsonl').absolutePath
+}
+tasks.register('testNativeSegmentedPanels', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedPanelChecks'
+    args file('../../build/test-artifacts/segmented-panels-forge.jsonl').absolutePath
+}
+tasks.register('testNativeSegmentedHeaders', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedHeaderChecks'
+    args file('../../build/test-artifacts/segmented-headers-forge.jsonl').absolutePath,
+         file('../../build/test-artifacts/segmented-panels-forge.jsonl').absolutePath
+}

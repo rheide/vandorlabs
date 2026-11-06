@@ -125,13 +125,13 @@ final class StaticSurfaceMesh {
         }
     }
     /** Rigid Segmented Door panel transform; cached atlas vertices stay unchanged. */
+    private static final ThreadLocal<double[]> SECTION_VERTEX=ThreadLocal.withInitial(()->new double[6]);
     void drawSection(BufferBuilder buffer,double x,double y,double z,double[] pose,int rotation,int light,int alpha){
-        boolean vertical=pose[5]!=0,normals=buffer.getVertexFormat().hasNormal();double sin=pose[3],cos=pose[4];
-        for(int i=0;i<vertices.length;i+=8){double px=vertices[i]/16D,py=vertices[i+1]/16D-.5,pz=vertices[i+2]/16D,nx=vertices[i+5],ny=vertices[i+6],nz=vertices[i+7],rx,ry,rz,rnx,rny,rnz;
-            if(vertical){rx=px;ry=pose[1]+cos*py-sin*pz;rz=pose[2]+sin*py+cos*pz;rnx=nx;rny=cos*ny-sin*nz;rnz=sin*ny+cos*nz;}
-            else{rx=pose[0]+cos*(px-.5)-sin*pz;ry=pose[1]+py;rz=pose[2]+sin*(px-.5)+cos*pz;rnx=cos*nx-sin*nz;rny=ny;rnz=sin*nx+cos*nz;}
-            double wx=rotation==1?rz:rotation==2?1-rx:rotation==3?1-rz:rx,wz=rotation==1?1-rx:rotation==2?1-rz:rotation==3?rx:rz,wnx=rotation==1?rnz:rotation==2?-rnx:rotation==3?-rnz:rnx,wnz=rotation==1?-rnx:rotation==2?-rnz:rotation==3?rnx:rnz;
-            buffer.pos(x+wx,y+ry,z+wz).color(255,255,255,alpha).tex(vertices[i+3],vertices[i+4]).lightmap(light>>>16,light&65535);if(normals)buffer.normal((float)wnx,(float)rny,(float)wnz);buffer.endVertex();
+        boolean normals=buffer.getVertexFormat().hasNormal();double[] out=SECTION_VERTEX.get();
+        for(int i=0;i<vertices.length;i+=8){
+            com.vandorlabs.segmented.SegmentedPanelTransform.vertex(vertices,i,pose,rotation,x,y,z,out);
+            buffer.pos(out[0],out[1],out[2]).color(255,255,255,alpha).tex(vertices[i+3],vertices[i+4]).lightmap(light>>>16,light&65535);
+            if(normals)buffer.normal((float)out[3],(float)out[4],(float)out[5]);buffer.endVertex();
         }
     }
     void draw(BufferBuilder buffer,int lightmapA,int lightmapB) {

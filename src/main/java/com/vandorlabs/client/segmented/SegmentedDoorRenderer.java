@@ -133,27 +133,16 @@ public final class SegmentedDoorRenderer extends TileEntitySpecialRenderer<Segme
         if(capture)((Capture)b).row=0;header(tile,x,y,z,b);
     }
     /** Fixed border follows the leading edge, outside the panel's coplanar caps. */
+    private static final class HeaderAdapter implements com.vandorlabs.segmented.SegmentedPanelMesh.Texture,com.vandorlabs.segmented.SegmentedPanelMesh.Sink {
+        TextureAtlasSprite edge;BufferBuilder buffer;int light;boolean normals;
+        public float u(double pixel){return edge.getInterpolatedU(pixel);}public float v(double pixel){return edge.getInterpolatedV(pixel);}
+        public void vertex(double x,double y,double z,float u,float v,float nx,float ny,float nz){buffer.pos(x,y,z).color(255,255,255,255).tex(u,v).lightmap(light>>>16,light&65535);if(normals)buffer.normal(nx,ny,nz);buffer.endVertex();}
+    }
+    private static final ThreadLocal<HeaderAdapter> HEADER=ThreadLocal.withInitial(HeaderAdapter::new);
     private void header(SegmentedDoorTile tile,double x,double y,double z,BufferBuilder b){
         int direction=tile.settings.direction;if(direction==0&&tile.settings.position==0)return;if(direction==2&&tile.column!=0||direction==3&&tile.column!=tile.columns-1)return;
-        double minX=0,maxX=1,minY=.877,maxY=1.002;
-        if(direction==1){minY=1-tile.height-.002;maxY=minY+.125;}
-        if(direction>=2){minX=direction==2?-.002:.877;maxX=minX+.125;minY=1-tile.height;maxY=1;}
-        double lo=.375+tile.settings.depthOffset(),hi=.625+tile.settings.depthOffset();
-        net.minecraft.client.renderer.texture.TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
-        int rotation=((int)(180-tile.facing().getHorizontalAngle())/90)&3;boolean normals=b.getVertexFormat().hasNormal();int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
-        for(int face=0;face<6;face++){
-            int ua=face<4?0:2,va=face<2?2:1;double[] low={minX,minY,lo},high={maxX,maxY,hi};
-            for(int u=(int)Math.floor(low[ua]);u<(int)Math.ceil(high[ua]);u++)for(int v=(int)Math.floor(low[va]);v<(int)Math.ceil(high[va]);v++){
-                double u0=Math.max(u,low[ua]),u1=Math.min(u+1,high[ua]),v0=Math.max(v,low[va]),v1=Math.min(v+1,high[va]);
-                for(int corner=0;corner<4;corner++){
-                    double[] source=FACES[face][corner],point={source[0]==0?minX:maxX,source[1]<0?minY:maxY,source[2]<0?lo:hi};
-                    double cu=(ua==0?source[0]>0:source[2]>0)?u1:u0,cv=(va==1?source[1]>0:source[2]>0)?v1:v0;point[ua]=cu;point[va]=cv;
-                    double px=point[0],py=point[1],pz=point[2],rx=rotation==1?pz:rotation==2?1-px:rotation==3?1-pz:px,rz=rotation==1?1-px:rotation==2?1-pz:rotation==3?px:pz;
-                    double nx=NORMALS[face][0],nz=NORMALS[face][2];b.pos(x+rx,y+py,z+rz).color(255,255,255,255).tex(edge.getInterpolatedU((cu-u)*16),edge.getInterpolatedV((va==1?1-(cv-v):cv-v)*16)).lightmap(light>>>16,light&65535);
-                    if(normals)b.normal((float)(rotation==1?nz:rotation==2?-nx:rotation==3?-nz:nx),NORMALS[face][1],(float)(rotation==1?-nx:rotation==2?-nz:rotation==3?nx:nz));b.endVertex();
-                }
-            }
-        }
+        HeaderAdapter adapter=HEADER.get();adapter.edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");adapter.buffer=b;adapter.light=tile.getWorld().getCombinedLight(tile.getPos(),0);adapter.normals=b.getVertexFormat().hasNormal();
+        try{com.vandorlabs.segmented.SegmentedHeaderMesh.emit(direction,tile.settings.position,tile.height,tile.column,tile.columns,((int)(180-tile.facing().getHorizontalAngle())/90)&3,x,y,z,adapter,adapter);}finally{adapter.buffer=null;adapter.edge=null;}
     }
     @Override public void render(SegmentedDoorTile tile,double x,double y,double z,float partial,int destroy,float alpha){
         if(!tile.ready())return;int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();if(pass==1)com.vandorlabs.client.WaterloggedRenderer.render(tile,x,y,z);if(!tile.isRoot())return;
