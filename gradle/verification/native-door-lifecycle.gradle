@@ -1,0 +1,6 @@
+task exportDoorLifecycleReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorLifecycleLegacyChecks'
+    if (project.hasProperty('doorLifecycleExport')) systemProperty 'vandorlabs.doorLifecycleExport', file(project.property('doorLifecycleExport')).absolutePath
+}
