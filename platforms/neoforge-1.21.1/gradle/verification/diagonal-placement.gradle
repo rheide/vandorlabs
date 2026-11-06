@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+    if(project.hasProperty('diagonalPlacementReference')) systemProperty 'vandorlabs.diagonalPlacementReference',file(project.property('diagonalPlacementReference')).absolutePath
+}

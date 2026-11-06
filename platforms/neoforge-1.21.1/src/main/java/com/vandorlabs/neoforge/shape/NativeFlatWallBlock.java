@@ -36,7 +36,7 @@ public final class NativeFlatWallBlock extends NativePanelBlock {
         BlockPos support=context.getClickedPos().relative(context.getClickedFace().getOpposite());var clicked=context.getLevel().getBlockState(support);
         Direction facing=clicked.is(this)?clicked.getValue(FACING):context.getHorizontalDirection().getOpposite();
         if(fullDepth)return defaultBlockState().setValue(FACING,facing);
-        Vec3 hit=context.getClickLocation().subtract(context.getClickedPos().getX(),context.getClickedPos().getY(),context.getClickedPos().getZ());
+        Vec3 hit=com.vandorlabs.neoforge.placement.NativePlacementHit.hit(context);
         return defaultBlockState().setValue(FACING,facing).setValue(DEPTH,PanelDepthPolicy.fromHit(facing.get3DDataValue(),(float)hit.x,(float)hit.z));
     }
     public static NativeFlatWallGeometry.Geometry geometry(BlockState state,BlockGetter level,BlockPos pos){

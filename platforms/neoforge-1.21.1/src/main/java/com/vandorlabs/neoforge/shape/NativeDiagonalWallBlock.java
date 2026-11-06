@@ -50,7 +50,7 @@ public final class NativeDiagonalWallBlock extends NativePanelBlock {
             }
             if(context.getClickedFace().getAxis()==Direction.Axis.Y)return defaultBlockState().setValue(FACING,old).setValue(INVERTED,previous.getValue(INVERTED));
         }
-        Direction facing=context.getHorizontalDirection().getOpposite();Vec3 hit=context.getClickLocation().subtract(pos.getX(),pos.getY(),pos.getZ());
+        Direction facing=context.getHorizontalDirection().getOpposite();Vec3 hit=com.vandorlabs.neoforge.placement.NativePlacementHit.hit(context);
         boolean inverted=context.getClickedFace()==Direction.DOWN||context.getClickedFace().getAxis().isHorizontal()&&hit.y>.5;
         if(mode!=2){float normal=(float)(facing.getAxis()==Direction.Axis.X?hit.x:hit.z);if(normal<1F/3F)facing=facing.getAxis()==Direction.Axis.X?Direction.WEST:Direction.NORTH;else if(normal>2F/3F)facing=facing.getAxis()==Direction.Axis.X?Direction.EAST:Direction.SOUTH;}
         return defaultBlockState().setValue(FACING,facing).setValue(INVERTED,inverted);
