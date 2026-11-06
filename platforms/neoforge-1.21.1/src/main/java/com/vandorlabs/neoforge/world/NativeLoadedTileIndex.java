@@ -62,6 +62,13 @@ public final class NativeLoadedTileIndex<T extends BlockEntity> {
     }
     /** Convenience collector; render/interaction hot paths should use visit with an owned reusable visitor. */
     public synchronized List<T> query(Level level,AABB bounds){if(!NativeFluidWorld.open(level)||!finite(bounds)||!worlds.containsKey(level))return List.of();var result=new ArrayList<T>();visit(level,bounds,null,result::add);return result.isEmpty()?List.of():result;}
+    /** World-free spatial preflight: no expanded box, tile reads, chunks or visitor are needed. */
+    public synchronized boolean hasNearbyBuckets(Level level,AABB bounds,double padding){
+        if(!NativeFluidWorld.open(level)||!finite(bounds)||!Double.isFinite(padding)||padding<0)return false;var entries=worlds.get(level);if(entries==null)return false;
+        int x0=coordinate(bounds.minX-padding),x1=coordinate(bounds.maxX+padding),y0=coordinate(bounds.minY-padding),y1=coordinate(bounds.maxY+padding),z0=coordinate(bounds.minZ-padding),z1=coordinate(bounds.maxZ+padding);
+        if(SpatialBuckets.excessive(x0,y0,z0,x1,y1,z1))return !entries.buckets.isEmpty();
+        for(long x=x0;x<=x1;x++)for(long y=y0;y<=y1;y++)for(long z=z0;z<=z1;z++)if(entries.buckets.containsKey(SpatialBuckets.key((int)x,(int)y,(int)z)))return true;return false;
+    }
     public synchronized boolean hasMembers(Level level){return NativeFluidWorld.open(level)&&worlds.containsKey(level);}
     public synchronized int size(){return members.size();}
     private synchronized void forget(Level level){var entries=worlds.remove(level);if(entries==null)return;for(var bucket:entries.buckets.values())for(T tile:bucket.tiles){var member=members.get(tile);if(member!=null&&member.level==level)members.remove(tile);}allSnapshot=null;}

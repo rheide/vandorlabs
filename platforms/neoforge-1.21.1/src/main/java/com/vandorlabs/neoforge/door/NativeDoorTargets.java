@@ -38,7 +38,7 @@ public final class NativeDoorTargets {
     }
     /** Replaces ordinary-door voxel rays while retaining nearer non-door blocks and unloaded-cell barriers. */
     public static Target pick(Level level,Entity viewer,Vec3 start,Vec3 end){
-        var target=trace(level,start,end);if(target==null)return null;
+        var target=trace(level,start,end);var large=NativeLargeDoorTargets.trace(level,start,end);if(large!=null&&(target==null||start.distanceToSqr(large.hit().getLocation())<start.distanceToSqr(target.hit().getLocation())))target=new Target(large.root(),large.hit());if(target==null)return null;
         // Preflight the DDA itself before Level.clip can request any chunk. Door shapes check their own neighbours.
         var visibleEnd=target.hit().getLocation();
         boolean unavailable=BlockGetter.traverseBlocks(start,visibleEnd,level,(world,pos)->world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4)==null?Boolean.TRUE:null,world->Boolean.FALSE);
@@ -46,6 +46,7 @@ public final class NativeDoorTargets {
         var barrier=level.clip(new ClipContext(start,visibleEnd,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,viewer){
             @Override public VoxelShape getBlockShape(BlockState state,BlockGetter world,BlockPos pos){
                 if(state.getBlock() instanceof NativeProgrammableDoorBlock){var root=NativeDoorLifecycle.root(level,pos);if(root!=null&&!root.large())return Shapes.empty();}
+                if(state.getBlock() instanceof NativeLargeDoorBlock&&NativeLargeDoorLifecycle.root(level,pos)!=null)return Shapes.empty();
                 return super.getBlockShape(state,world,pos);
             }
         });

@@ -23,6 +23,7 @@ public record DoorUsePayload(BlockPos root,InteractionHand hand) implements Cust
         double reach=player.blockInteractionRange();if(!Double.isFinite(reach)||reach<=0||reach>64)return false;
         var start=player.getEyePosition();var target=NativeDoorTargets.pick(level,player,start,start.add(player.getViewVector(1).scale(reach)));
         if(target==null||!target.root().equals(value.root)||!level.mayInteract(player,target.hit().getBlockPos())||!player.mayUseItemAt(target.hit().getBlockPos(),target.hit().getDirection(),player.getItemInHand(value.hand)))return false;
+        var large=NativeLargeDoorLifecycle.root(level,target.root());if(large!=null&&large.getBlockState().getBlock() instanceof NativeLargeDoorBlock block)return block.useTarget(player,value.hand,target.hit()).consumesAction();
         var host=NativeDoorLifecycle.root(level,target.root());return host!=null&&host.getBlockState().getBlock() instanceof NativeProgrammableDoorBlock block&&block.useTarget(player,value.hand,target.hit()).consumesAction();
     }
     public static void register(RegisterPayloadHandlersEvent event){event.registrar("1").playToServer(TYPE,CODEC,(packet,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer player)apply(player,packet);}));}
