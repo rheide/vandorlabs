@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 
 /** Uses the same display plane and pixel layout as the row renderer. */
 public final class RedstoneScreenInteractions {
-    public static final int ROW_TOP=24,ROW_HEIGHT=12,ROW_LEFT=6,ROW_RIGHT=122,BUTTON_LEFT=98,BUTTON_RIGHT=120;
+    public static final int ROW_TOP=com.vandorlabs.screen.ScreenControlLayout.FULL_ROW_TOP,ROW_HEIGHT=com.vandorlabs.screen.ScreenControlLayout.ROW_HEIGHT,ROW_LEFT=com.vandorlabs.screen.ScreenControlLayout.ROW_LEFT,ROW_RIGHT=com.vandorlabs.screen.ScreenControlLayout.ROW_RIGHT,BUTTON_LEFT=com.vandorlabs.screen.ScreenControlLayout.BUTTON_LEFT,BUTTON_RIGHT=com.vandorlabs.screen.ScreenControlLayout.BUTTON_RIGHT;
     private RedstoneScreenInteractions(){}
     public static boolean activate(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand){
         if(hand!=EnumHand.MAIN_HAND)return false;
@@ -61,8 +61,8 @@ public final class RedstoneScreenInteractions {
             || block instanceof BlockDiagonalHalfConsole || block instanceof BlockProgrammableHalfConsole
             || block instanceof BlockProgrammableConsole && slot==1;
     }
-    public static int displayHeight(net.minecraft.block.Block block,int slot){return half(block,slot)?64:128;}
-    public static int rowTop(net.minecraft.block.Block block,int slot){return half(block,slot)?8:ROW_TOP;}
+    public static int displayHeight(net.minecraft.block.Block block,int slot){return half(block,slot)?com.vandorlabs.screen.ScreenControlLayout.HALF_HEIGHT:com.vandorlabs.screen.ScreenControlLayout.FULL_HEIGHT;}
+    public static int rowTop(net.minecraft.block.Block block,int slot){return half(block,slot)?com.vandorlabs.screen.ScreenControlLayout.HALF_ROW_TOP:ROW_TOP;}
     public static ScreenSurface.Quad surface(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot){
         net.minecraft.block.Block block=state.getBlock();
         if(block instanceof BlockProgrammableInput){
