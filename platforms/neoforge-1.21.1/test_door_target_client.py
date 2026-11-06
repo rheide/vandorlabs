@@ -17,7 +17,7 @@ def main():
     parser.add_argument('--xvfb',action='store_true')
     args=parser.parse_args()
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
-    env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
+    env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_DOOR_RESOURCE_CHECK="true")
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
     output=Path(artifact_directory(prefix='door-target-client-',dir=base))
     with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]

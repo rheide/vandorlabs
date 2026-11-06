@@ -22,6 +22,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public final class NativeOrdinaryDoorBlock extends NativeProgrammableDoorBlock {
     public NativeOrdinaryDoorBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammableDoorEntity>> entities,Supplier<MenuType<NativeDoorMenu>> menus,Supplier<Item> canonicalItem,boolean slidingModel){super(properties,entities,menus,canonicalItem,slidingModel);}
     @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}
+    @Override protected net.minecraft.world.level.block.RenderShape getRenderShape(BlockState state){return net.minecraft.world.level.block.RenderShape.MODEL;}
     private static boolean left(BlockState state){return state.getValue(HINGE)==DoorHingeSide.LEFT;}
     @Override protected VoxelShape orphanShape(BlockState state,boolean collision){return NativeDoorGeometry.orphanShape(slidingModel(),state.getValue(FACING),state.getValue(OPEN),left(state),state.getValue(PAIRED),collision);}
     @Override protected VoxelShape doorShape(NativeDoorSettings settings,BlockState state,boolean collision){return NativeDoorGeometry.shape(settings,state.getValue(FACING),state.getValue(OPEN),left(state),state.getValue(PAIRED),collision);}
