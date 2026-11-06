@@ -45,6 +45,10 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
         event.getModels().replaceAll((id,model) -> {
+            if(NativeDoorClientBindings.ordinary(id.id())){
+                if(id.getVariant().equals("inventory"))return NativeDoorItemModel.wrap(model,false,name->event.getModels().get(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.parse(name))));
+                return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());
+            }
             if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_wall"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_block"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_diagonal_porthole")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory"),true),event.getTextureGetter());
             if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_wall"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_diagonal_wall")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory")),event.getTextureGetter());
             if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_diagonal_glass")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory"),com.vandorlabs.neoforge.shape.NativePanelKind.GLASS),event.getTextureGetter());
@@ -57,6 +61,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
             return new ProgrammableModel(model,sprites,margin,cube);
         });
         NativePanelPlaybackRenderer.prepare(event.getModelBakery(),wallBake);
+        NativeDoorRenderer.prepare(event.getModelBakery(),event.getModels(),event.getTextureGetter(),wallBake);
     }
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
         if(joining&&state!=null&&state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
