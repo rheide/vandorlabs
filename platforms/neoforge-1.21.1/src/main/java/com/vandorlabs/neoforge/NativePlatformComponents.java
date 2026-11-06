@@ -7,7 +7,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 public final class NativePlatformComponents {
  private NativePlatformComponents(){}
  /** Reject unknown or malformed maps before authoritative settings or platform state are installed. */
- public static void requireSupported(CompoundTag original,HolderLookup.Provider registries){if(original.contains("components")&&DataComponentMap.CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE),original.get("components")).result().isEmpty())throw new IllegalArgumentException("Unsupported block entity components");}
+ public static void requireSupported(CompoundTag original,HolderLookup.Provider registries){requireAttachments(original);if(original.contains("components")&&DataComponentMap.CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE),original.get("components")).result().isEmpty())throw new IllegalArgumentException("Unsupported block entity components");}
+ /** Platform deserialization silently skips these envelopes; retaining them inert preserves their original owner. */
+ private static void requireAttachments(CompoundTag original){if(!original.contains("neoforge:attachments"))return;if(!(original.get("neoforge:attachments") instanceof CompoundTag attachments))throw new IllegalArgumentException("Unsupported block entity attachment envelope");for(String key:attachments.getAllKeys()){var id=net.minecraft.resources.ResourceLocation.tryParse(key);var type=id==null?null:net.neoforged.neoforge.registries.NeoForgeRegistries.ATTACHMENT_TYPES.get(id);if(type==null||((com.vandorlabs.neoforge.mixin.NativeAttachmentTypeAccess)(Object)type).vandorlabs$serializer()==null)throw new IllegalArgumentException("Unsupported block entity attachment type");}}
  /** The final vanilla save must not append stale live components over a retained inert envelope. */
  public static void clearForInertSave(BlockEntity tile){tile.setComponents(DataComponentMap.EMPTY);}
  /** Call only after successful platform installation; subsequent saves serialize current live state. */
