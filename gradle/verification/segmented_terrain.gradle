@@ -5,3 +5,11 @@ task exportSegmentedTerrainReference(type: JavaExec) {
     main = 'com.vandorlabs.client.SegmentedTerrainLegacyChecks'
     args file('build/test-artifacts/segmented-terrain-forge.jsonl').absolutePath
 }
+
+task exportSegmentedTerrainEligibilityReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedTerrainEligibilityLegacyChecks'
+    args file('build/test-artifacts/segmented-terrain-eligibility-forge.jsonl').absolutePath
+}
