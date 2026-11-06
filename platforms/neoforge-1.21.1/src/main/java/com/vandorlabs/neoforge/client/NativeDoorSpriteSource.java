@@ -22,7 +22,7 @@ public final class NativeDoorSpriteSource implements SpriteSource {
     public static final MapCodec<NativeDoorSpriteSource> CODEC=MapCodec.unit(NativeDoorSpriteSource::new);
     public static final SpriteSourceType TYPE=new SpriteSourceType(CODEC);
     @SubscribeEvent public static void register(RegisterSpriteSourceTypesEvent event){event.register(ResourceLocation.fromNamespaceAndPath("vandorlabs","door_sprites"),TYPE);}
-    private static boolean active(){return "true".equals(System.getenv("VANDOR_DOOR_RESOURCE_CHECK"))||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs","programmable_door"));}
+    private static boolean active(){return "true".equals(System.getenv("VANDOR_DOOR_RESOURCE_CHECK"))||"true".equals(System.getenv("VANDOR_DOOR_ITEM_CHECKS"))||"true".equals(System.getenv("VANDOR_DOOR_RENDER_CHECK"))||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs","programmable_door"));}
     @Override public SpriteSourceType type(){return TYPE;}
     @Override public void run(ResourceManager manager,Output output){
         if(!active())return;
