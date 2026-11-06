@@ -1,0 +1,6 @@
+task exportDiagonalGlassRegistrationReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DiagonalGlassRegistrationLegacyChecks'
+    systemProperty 'vandorlabs.diagonalGlassRegistrationReference', file(project.findProperty('diagonalGlassRegistrationReference') ?: 'build/test-artifacts/diagonal-glass-registration-forge.json').absolutePath
+}

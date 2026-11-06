@@ -1,0 +1,4 @@
+neoForge.runs.configureEach {
+    if (project.hasProperty('diagonalGlassRegistrationReference')) systemProperty 'vandorlabs.diagonalGlassRegistrationReference', file(project.property('diagonalGlassRegistrationReference')).absolutePath
+    if (project.hasProperty('diagonalGlassGeometryReference')) systemProperty 'vandorlabs.diagonalGlassGeometryReference', file(project.property('diagonalGlassGeometryReference')).absolutePath
+}
