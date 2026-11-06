@@ -61,8 +61,8 @@ public record SegmentedUsePayload(BlockPos pos,Vec3 point,UUID identity,long seq
         }
         var face=Direction.from3DDataValue(hit.face);if(!player.mayUseItemAt(intent.pos,face,player.getMainHandItem())||NativeSegmentedTargets.loaded(level,intent.pos)!=tile||tile.root()!=root||root.sequence()!=intent.sequence)return false;
         boolean before=root.targetOpen();var menu=player.containerMenu;
-        var result=player.gameMode.useItemOn(player,level,player.getMainHandItem(),InteractionHand.MAIN_HAND,new BlockHitResult(visibleEnd,face,intent.pos,false));
-        player.inventoryMenu.broadcastChanges();return result.consumesAction()||before!=root.targetOpen()||menu!=player.containerMenu;
+        var result=com.vandorlabs.neoforge.world.NativeBlockUse.apply(player,InteractionHand.MAIN_HAND,new BlockHitResult(visibleEnd,face,intent.pos,false));
+        return result.consumesAction()||before!=root.targetOpen()||menu!=player.containerMenu;
     }
     public static void register(RegisterPayloadHandlersEvent event){event.registrar("1").playToServer(TYPE,CODEC,(payload,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer player)apply(player,payload);}));}
 }
