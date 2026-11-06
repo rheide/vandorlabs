@@ -73,6 +73,11 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         if(root.settings().securityMode()>0)return credentialInteraction(root,player,hand,hit,panelHit);
         if(!level.isClientSide)NativeDoorLifecycle.toggle(level,pos);return InteractionResult.sidedSuccess(level.isClientSide);
     }
+    /** Called only after the moved-target transport has recomputed the authoritative ray and permissions. */
+    public final InteractionResult useTarget(Player player,InteractionHand hand,BlockHitResult hit){
+        var level=player.level();var pos=hit.getBlockPos();if(!NativeDoorLifecycle.loaded(level,pos)||!level.getBlockState(pos).is(this))return InteractionResult.FAIL;
+        return interact(level.getBlockState(pos),level,pos,player,hand,hit);
+    }
     @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return interact(state,level,pos,player,InteractionHand.MAIN_HAND,hit);}
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){return switch(interact(state,level,pos,player,hand,hit)){case SUCCESS,CONSUME,CONSUME_PARTIAL->ItemInteractionResult.SUCCESS;case FAIL->ItemInteractionResult.FAIL;default->ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;};}
     @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block changed,BlockPos from,boolean moving){

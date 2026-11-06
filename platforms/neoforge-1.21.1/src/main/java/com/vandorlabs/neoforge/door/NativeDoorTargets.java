@@ -6,6 +6,13 @@ import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.DoorHingeSide;
 import net.minecraft.world.phys.AABB;
@@ -28,6 +35,20 @@ public final class NativeDoorTargets {
         var finder=FINDER.get();if(finder.active)finder=new Finder();finder.active=true;finder.level=level;finder.start=start;finder.end=end;finder.distance=Double.POSITIVE_INFINITY;
         try{INDEX.visit(level,new AABB(start,end).inflate(5),null,finder);return finder.best;}
         finally{finder.clear();}
+    }
+    /** Replaces ordinary-door voxel rays while retaining nearer non-door blocks and unloaded-cell barriers. */
+    public static Target pick(Level level,Entity viewer,Vec3 start,Vec3 end){
+        var target=trace(level,start,end);if(target==null)return null;
+        // Preflight the DDA itself before Level.clip can request any chunk. Door shapes check their own neighbours.
+        boolean unavailable=BlockGetter.traverseBlocks(start,end,level,(world,pos)->world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4)==null?Boolean.TRUE:null,world->Boolean.FALSE);
+        if(unavailable)return null;
+        var barrier=level.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,viewer){
+            @Override public VoxelShape getBlockShape(BlockState state,BlockGetter world,BlockPos pos){
+                if(state.getBlock() instanceof NativeProgrammableDoorBlock){var root=NativeDoorLifecycle.root(level,pos);if(root!=null&&!root.large())return Shapes.empty();}
+                return super.getBlockShape(state,world,pos);
+            }
+        });
+        return barrier.getType()==HitResult.Type.MISS||start.distanceToSqr(barrier.getLocation())>=start.distanceToSqr(target.hit().getLocation())?target:null;
     }
     private static final class Finder implements Consumer<NativeProgrammableDoorEntity>{
         boolean active;Level level;Vec3 start,end;double distance;Target best;
