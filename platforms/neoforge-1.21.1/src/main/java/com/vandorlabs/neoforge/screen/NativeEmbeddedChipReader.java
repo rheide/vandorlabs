@@ -10,6 +10,7 @@ import net.minecraft.nbt.*;
 public final class NativeEmbeddedChipReader {
     private static final Set<String> KEYS=Set.of("AnyToken","AllowedTokens","ChipSlot","TokenLogo","TokenBehavior","TokenPulseUntil","TokenInsertStarted","TokenRejectedUntil","TokenInsertionSequence","TokenToggleApplied","TokenToggled","TokenReturnToMost","TokenReturnToLeast","TokenReturnTo","InsertedToken");
     private final NativeTokenReader reader;
+    private final NativeTokenReader.Host host;
     private com.vandorlabs.programmer.JournalText journal;
     private CompoundTag journalData;
     private static final NativeTokenReader.Host STORAGE=new NativeTokenReader.Host(){
@@ -18,7 +19,30 @@ public final class NativeEmbeddedChipReader {
         public void changed(){throw new IllegalStateException("Detached chip storage cannot publish gameplay");}
         public void schedule(int ticks){throw new IllegalStateException("Detached chip storage cannot schedule gameplay");}
     };
-    public NativeEmbeddedChipReader(NativeTokenReader.Host host){reader=new NativeTokenReader(host,true);}
+    public NativeEmbeddedChipReader(NativeTokenReader.Host host){
+        this.host=java.util.Objects.requireNonNull(host);
+        reader=new NativeTokenReader(new NativeTokenReader.Host(){
+            public net.minecraft.world.level.block.entity.BlockEntity owner(){return host.owner();}
+            public boolean usable(net.minecraft.server.level.ServerPlayer player){return host.usable(player);}
+            public void changed(){prepareJournal(reader.tokenCopy());host.changed();}
+            public void schedule(int ticks){host.schedule(ticks);}
+            public boolean chip(boolean saved){return true;}
+        },true);
+    }
+    private void prepareJournal(net.minecraft.world.item.ItemStack token){journalData=NativeChipJournal.textData(token);journal=NativeChipJournal.viewText(journalData);}
+    /** Caller selected an authorized tray hit. Screen trays never search inventory or accept a second chip. */
+    public boolean interact(net.minecraft.server.level.ServerPlayer player,net.minecraft.world.InteractionHand hand){
+        var owner=host.owner();if(!(owner.getLevel() instanceof net.minecraft.server.level.ServerLevel level))return false;
+        if(!level.getServer().isSameThread())throw new IllegalStateException("Embedded chip action requires owning server thread");
+        if(!com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(level)||owner.isRemoved()||!level.hasChunkAt(owner.getBlockPos())||level.getBlockEntity(owner.getBlockPos())!=owner||player.serverLevel()!=level||!host.usable(player))return false;
+        var held=player.getItemInHand(hand);
+        if(held.isEmpty()&&!reader.occupied())return true;
+        if(!held.isEmpty()){
+            if(reader.occupied()||!reader.accepts(held))return false;
+            NativeCredentialItems.writeStack(NativeCredentialItems.ownedCopy(held).copyWithCount(1),level.registryAccess());
+        }
+        return reader.interact(player,hand,false);
+    }
     public static NativeEmbeddedChipReader storage(CompoundTag raw,HolderLookup.Provider registries){var result=new NativeEmbeddedChipReader(STORAGE);result.read(raw,registries);return result;}
     /** Validate before touching live state; the owning Screen retains its complete snapshot on refusal. */
     public void read(CompoundTag raw,HolderLookup.Provider registries){

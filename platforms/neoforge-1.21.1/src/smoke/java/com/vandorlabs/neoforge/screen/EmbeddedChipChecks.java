@@ -25,6 +25,7 @@ public final class EmbeddedChipChecks {
             var stable=reader.write(registries);for(int failure=0;failure<3;failure++){var bad=raw.copy();if(failure==0)bad.putString("FutureReaderOwner","opaque");else if(failure==1){var item=new CompoundTag();item.putString("id","future:unknown_chip");item.putByte("Count",(byte)1);bad.put("InsertedToken",item);}else bad.putInt("InsertedToken",42);boolean refused=false;try{reader.read(bad,registries);}catch(IllegalArgumentException expectedFailure){refused=true;}need(refused&&reader.write(registries).equals(stable),"failed preparation leaves existing reader intact");}
         }
         ScreenChipViewChecks.run(registries);
+        EmbeddedChipInventoryChecks.run(event.getServer().overworld());
         System.out.println("[vandorlabs][embedded-chip] dedicated PASS cases="+rows.size()+" checks="+checks+" released passive policy/one owner/local-only/opaque preparation failures");event.getServer().halt(false);
     }
 }
