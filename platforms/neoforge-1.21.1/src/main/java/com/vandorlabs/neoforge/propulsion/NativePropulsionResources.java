@@ -9,6 +9,6 @@ import net.neoforged.neoforge.client.event.ModelEvent;
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativePropulsionResources {
  private NativePropulsionResources(){}
- public static boolean active(){return "true".equals(System.getenv("VANDOR_PROPULSION_RENDER_CHECK"))||net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(ResourceLocation.parse("vandorlabs:rocket_thruster")) instanceof NativePropulsionBlock;}
+ public static boolean active(){return "true".equals(System.getenv("VANDOR_PROPULSION_PARTICLE_CHECK"))||"true".equals(System.getenv("VANDOR_PROPULSION_WORLD_CHECK"))||"true".equals(System.getenv("VANDOR_PROPULSION_RENDER_CHECK"))||net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(ResourceLocation.parse("vandorlabs:rocket_thruster")) instanceof NativePropulsionBlock;}
  @SubscribeEvent public static void additional(ModelEvent.RegisterAdditional event){if(active())for(String id:NativePropulsionAssets.models())event.register(ModelResourceLocation.standalone(ResourceLocation.parse(id)));}
 }
