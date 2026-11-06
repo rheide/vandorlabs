@@ -6,7 +6,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/** Inactive fixed glazing transport; original door artwork retains its -2 sentinel. */
+/** Fixed glazing transport; original Door artwork retains its -2 sentinel. */
 public record DoorGlassPayload(BlockPos pos,int window,NativeDoorGlass glass) implements CustomPacketPayload {
     public static final Type<DoorGlassPayload> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath("vandorlabs","door_glass"));
     public static final StreamCodec<RegistryFriendlyByteBuf,DoorGlassPayload> CODEC=new StreamCodec<>(){

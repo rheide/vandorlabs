@@ -11,7 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.neoforged.neoforge.client.model.data.ModelData;
 
-/** Inactive Door body/pane backend. Bake owns static meshes; live motion never rebuilds them. */
+/** Door body/pane backend. Bake owns static meshes; live motion never rebuilds them. */
 public final class NativeDoorMesh {
     private static final int BUDGET=16*1024*1024,MAX_MESH=1024*1024;
     private final int[] source;private final boolean[] shade;private final boolean panel,lit,unlit;

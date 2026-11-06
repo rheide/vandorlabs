@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-/** Inactive ordinary/Large Door editor; activation requires complete placed-door and credential adapters. */
+/** Shared ordinary/Large Door editor with authenticated independent settings transactions. */
 public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMenu> {
     private final NativeCredentialFilter credentials;
     private final Map<Integer,NativeMaterialPicker> pickers=new HashMap<>();

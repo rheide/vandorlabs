@@ -2,7 +2,7 @@
 
 ## 2.9 (development)
 
-- Prepare ordinary and Large Door adapters with shared authored geometry, ray, pad, fluid and reader policies. Focused native checks cover linked placement, restart, credential ownership, recovery items, moved-leaf interaction and the dedicated editor. Doors remain outside the native catalog until rendering and final family integration are complete.
+- Enable the native ordinary programmable Door with shared authored geometry, reversible motion, full company artwork, padded configured icons and the dedicated Door/Frame/Redstone/Security/Glass editor. Preserve paired controls, channel banks and credential ownership through restart and mining. Large Door activation remains in progress.
 - Keep the native diagonal-glass recipe conditional on its original programmable-glass ingredient becoming available.
 
 - Extend the experimental 1.21.1 build with programmable plain walls, thin porthole walls and diagonal walls. Reuse the housing editor, configured items, frame materials, contained fluids and bounded panel renderer; preserve diagonal sizes, slopes, fills and joins. Portholes support the glass palette and per-block Off/static/animated artwork. Other building variants and full native acceptance remain in progress.

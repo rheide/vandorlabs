@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/** Inactive fixed editor transport; activation belongs to the functional door lifecycle. */
+/** Fixed frame-editor transport applied through the authenticated Door menu. */
 public record DoorFramePayload(BlockPos pos,int window,FrameSettings frames) implements CustomPacketPayload {
     public static final Type<DoorFramePayload> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath("vandorlabs","door_frame"));
     public static boolean valid(FrameSettings f){return f!=null&&NativeDoorSettings.frame(f.front)&&NativeDoorSettings.surface(f.interior)&&NativeDoorSettings.surface(f.exterior)&&(f.artworkVersion==0||f.artworkVersion==1)&&(f.splitTop==-1||ModernFinishCatalog.validChoice(f.splitTop))&&(f.splitBottom==-1||ModernFinishCatalog.validChoice(f.splitBottom));}

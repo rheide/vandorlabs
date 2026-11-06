@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/** Inactive 30+4N-byte door editor transport (N<=64). Register only with the actual functional door/menu lifecycle. */
+/** Bounded 30+4N-byte Door editor transport (N<=64), applied through the current authenticated menu. */
 public record DoorSettingsPayload(BlockPos pos,int window,NativeDoorEdit edit,ChannelList channels) implements CustomPacketPayload {
     public static final Type<DoorSettingsPayload> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath("vandorlabs","door_settings"));
     private static boolean flag(int value){if(value>1)throw new IllegalArgumentException("Invalid door boolean");return value!=0;}

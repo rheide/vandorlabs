@@ -11,7 +11,7 @@ import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
-/** Ordinary Door registrations. Intentionally not installed until complete renderer/client acceptance. */
+/** Canonical ordinary Door and retained-alias registrations. */
 public final class NativeDoorRegistrations {
     public static final DeferredHolder<Block,NativeOrdinaryDoorBlock> ORDINARY=VandorLabsBootstrap.BLOCKS.register(NativeDoorSettings.ORDINARY_ID,()->block(true));
     public static final DeferredHolder<Block,NativeOrdinaryDoorBlock> LEGACY_ROTATING=VandorLabsBootstrap.BLOCKS.register(NativeDoorSettings.LEGACY_ROTATING_ID,()->block(false));

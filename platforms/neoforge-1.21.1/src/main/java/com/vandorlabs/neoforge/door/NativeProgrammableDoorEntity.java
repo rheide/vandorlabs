@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.data.*;
 
-/** Inactive native door storage/session host. Registration awaits actual linked-part, motion and reader lifecycle. */
+/** Shared native Door storage, session and authenticated control host. */
 public class NativeProgrammableDoorEntity extends BlockEntity implements com.vandorlabs.neoforge.redstone.NativeChannelMember, ContainedFluidHost {
     public record Visual(NativeDoorSettings settings,BlockState state,com.vandorlabs.render.SpaceDoorControlPanel.Side side,boolean large,boolean recovery,NativeDoorCredentialService.Projection readers){
         public Visual(NativeDoorSettings settings,BlockState state,com.vandorlabs.render.SpaceDoorControlPanel.Side side,boolean large,boolean recovery){this(settings,state,side,large,recovery,NativeDoorCredentialService.EMPTY);}

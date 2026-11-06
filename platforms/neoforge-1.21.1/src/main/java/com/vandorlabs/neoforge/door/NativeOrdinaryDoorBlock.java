@@ -18,7 +18,7 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-/** Concrete ordinary Door behavior. Registration still awaits its functional renderer and live client acceptance. */
+/** Registered ordinary Door behavior shared by the canonical block and retained aliases. */
 public final class NativeOrdinaryDoorBlock extends NativeProgrammableDoorBlock {
     public NativeOrdinaryDoorBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammableDoorEntity>> entities,Supplier<MenuType<NativeDoorMenu>> menus,Supplier<Item> canonicalItem,boolean slidingModel){super(properties,entities,menus,canonicalItem,slidingModel);}
     @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}

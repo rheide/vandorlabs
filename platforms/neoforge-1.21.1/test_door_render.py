@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Title-only authored reader frames/contents rendering; no world or server."""
+"""Title-only ordinary Door body, materials, motion and control rendering; no world or server."""
 import argparse
 import os
 from pathlib import Path

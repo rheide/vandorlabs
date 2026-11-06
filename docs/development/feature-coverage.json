@@ -262,21 +262,27 @@
       "id": "doors",
       "label": "Programmable and large doors (Segmented Doors tracked separately)",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "large_programmable_door",
         "programmable_door"
       ],
       "remaining": [
-        "Production registration and full native Door renderer/world acceptance",
-        "Configured item rendering and resource-reload acceptance",
-        "Large Door owned-part projection, channels, fluids and moved interaction/collision integration",
-        "Complete ordinary and Large dialog, animation and saved-data parity acceptance"
+        "Large registry activation and end-to-end placed-world acceptance, including inherited per-part outlet supply",
+        "Broader ordinary/Large external-material, copy-tool and fluid/contact workflows",
+        "Hardware/shader-pack acceptance and standalone native release validation"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
-      "master_preparation": "Inactive ordinary/Large adapters: linked placement and recovery, authored assets and exact geometry, contained-fluid ownership, paired credential services, real-client moved ordinary Door targeting"
+      "implemented": [
+        "Canonical ordinary programmable_door registered with retained rotating/sliding aliases; only canonical item appears in the creative tab",
+        "Shared authored geometry, item selection and controls; bounded renderer and item caches, original full-height company artwork, source-matched motion and padded native icons",
+        "Dedicated authenticated Door/Frame/Redstone/Security/Glass editor; physical paired readers, channel banks, configured picks and known/opaque ownership recovery",
+        "Actual registered survival placement, mining tools, engine overhang collisions, recipes, timers and separate-process pending-token return",
+        "Real client placement, configuration, reader insertion/ejection, configured picking/mining and upper-only rendering, including a vertical section boundary",
+        "Inactive Large structure, control, geometry, renderer, fluid and global routing adapters with separate source/runtime comparisons"
+      ]
     },
     {
       "id": "trapdoors",
