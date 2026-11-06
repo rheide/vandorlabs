@@ -1,0 +1,8 @@
+// Actual released drawSection records, before native/shared transform extraction.
+task exportSegmentedMeshReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedMeshLegacyChecks'
+    args file(project.findProperty('segmentedMeshReference') ?: 'build/test-artifacts/segmented-mesh-forge.jsonl').absolutePath
+}
