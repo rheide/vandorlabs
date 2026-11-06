@@ -12,3 +12,11 @@ tasks.register('testNativeSegmentedTerrainEligibility', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.client.SegmentedTerrainEligibilityChecks'
     args file('../../build/test-artifacts/segmented-terrain-eligibility-forge.jsonl').absolutePath
 }
+
+tasks.register('testNativeSegmentedTerrainModel', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedTerrainModelChecks'
+    args file('../../build/test-artifacts/segmented-terrain-loader-forge.jsonl').absolutePath
+}

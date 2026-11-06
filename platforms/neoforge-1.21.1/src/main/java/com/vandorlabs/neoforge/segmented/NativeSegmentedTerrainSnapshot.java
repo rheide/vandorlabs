@@ -24,6 +24,10 @@ public record NativeSegmentedTerrainSnapshot(Direction facing,int texture,boolea
         boolean top=row==0&&visual.settings().direction==0&&visual.settings().position==0;
         return new NativeSegmentedTerrainSnapshot(visual.facing(),texture,top,body,top,row==visual.height()-1,revision);
     }
+    public static NativeSegmentedTerrainSnapshot unstaged(Direction facing,int texture,int row,int height,NativeSegmentedDoorSettings settings){
+        boolean top=row==0&&settings.direction==0&&settings.position==0;
+        return new NativeSegmentedTerrainSnapshot(facing,texture,top,false,top,row==height-1,0);
+    }
     /** Ephemeral client drawing state; none of these fields enters update tags or persistence. */
     public record ClientProjection(NativeSegmentedTerrainSnapshot terrain,boolean awaitingChunk,
                                    boolean suppressed,boolean headerTerrain,long revision){
