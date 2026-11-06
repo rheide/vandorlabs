@@ -34,6 +34,7 @@ public final class TrapdoorTargetChecks {
             boolean initialOpen=true;var geometry=tile.geometry();var bounds=geometry.bounds();if(bounds.minX>=0&&bounds.minY>=0&&bounds.minZ>=0&&bounds.maxX<=1&&bounds.maxY<=1&&bounds.maxZ<=1){tile.requestOpen(false);initialOpen=false;geometry=tile.geometry();}var query=outside(geometry.bounds().move(owner),owner);need(query.getSize()>0,"outside-cell query");
             var first=NativeTrapdoorTargets.blockCollisions(level,query,empty).iterator();need(first.hasNext(),"source broad offset collision outside owner");VoxelShape shape=first.next();
             need(Shapes.joinIsNotEmpty(shape,Shapes.create(query),BooleanOp.AND),"outside collision intersects physical query");
+            boolean engine=false;for(var collision:level.getBlockCollisions(null,query))if(Shapes.joinIsNotEmpty(collision,Shapes.create(query),BooleanOp.AND))engine=true;need(engine,"engine collision includes moved outside-cell leaf");
             var warmed=NativeTrapdoorTargets.blockCollisions(level,query,empty).iterator();need(warmed.hasNext()&&warmed.next()==shape,"warm publication reuses exact voxel shape");
             Vec3 center=geometry.bounds().move(owner).getCenter();boolean traced=false;double[] expected=new double[4];
             for(var axis:Direction.Axis.values()){

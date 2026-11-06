@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.mixin;
 
 import com.vandorlabs.neoforge.door.NativeLargeDoorTargets;
+import com.vandorlabs.neoforge.trapdoor.NativeTrapdoorTargets;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
@@ -15,6 +16,6 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 public interface LargeDoorCollisionMixin {
     @ModifyReturnValue(method="getBlockCollisions",at=@At("RETURN"),require=1)
     private Iterable<VoxelShape> vandorlabs$largePanels(Iterable<VoxelShape> vanilla,Entity entity,AABB query){
-        return (Object)this instanceof Level level?NativeLargeDoorTargets.blockCollisions(level,query,vanilla):vanilla;
+        return (Object)this instanceof Level level?NativeTrapdoorTargets.blockCollisions(level,query,NativeLargeDoorTargets.blockCollisions(level,query,vanilla)):vanilla;
     }
 }
