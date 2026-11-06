@@ -1,0 +1,7 @@
+task exportSegmentedEditReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedEditLegacyChecks'
+    args file('build/test-artifacts/segmented-edit-forge.json').absolutePath
+}
