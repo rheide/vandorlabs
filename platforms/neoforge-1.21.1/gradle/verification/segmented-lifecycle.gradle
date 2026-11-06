@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+ if(project.hasProperty('segmentedLifecycleReference'))systemProperty 'vandorlabs.segmentedLifecycleReference',file(project.property('segmentedLifecycleReference')).absolutePath
+}
