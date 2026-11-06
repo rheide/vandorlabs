@@ -8,7 +8,7 @@ import net.minecraft.util.NonNullList;
 
 /** Handheld design cards and chips. Metadata is stable across creative variants and saved stacks. */
 public final class ItemDesignToken extends Item {
-    public static final String[] DESIGNS={"unbranded","pinnacle","ashiro","paladyne","vektor","seyr","vandor"};
+    public static final String[] DESIGNS=com.vandorlabs.credentials.CredentialCatalog.DESIGNS;
     private final String kind;
     public ItemDesignToken(String kind){
         this.kind=kind;

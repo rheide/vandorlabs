@@ -34,7 +34,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     protected boolean installed(){return world!=null&&world.getTileEntity(pos)==(screen!=null?screen:door==null?this:door);}
     protected int returnPulseTicks(){return door==null?20:100;}
     public int logoDesign(){if((effectiveAllowed()&1)!=0)return 0;if((effectiveAllowed()&(1<<logoDesign))!=0)return logoDesign;for(int i=0;i<7;i++)if((effectiveAllowed()&(1<<i))!=0)return i;return 0;}
-    public static int singleCompany(int mask){return TileEntitySpaceDoor.singleCompany(mask);}
+    public static int singleCompany(int mask){return com.vandorlabs.credentials.CredentialCatalog.singleCompany(mask);}
     public int effectiveAllowed(){return any?127:singleCompany(allowed);}
     public void cycleLogo(){int mask=effectiveAllowed();if((mask&1)!=0)return;for(int i=1;i<=7;i++){int candidate=(logoDesign()+i)%7;if((mask&(1<<candidate))!=0){logoDesign=candidate;changed(false);return;}}}
     public static String behaviorName(int mode){return new String[]{"Stay Inserted","Stay Inserted: Pulse","Return After Open: Toggle","Return After Open: Pulse"}[Math.max(0,Math.min(3,mode))];}
