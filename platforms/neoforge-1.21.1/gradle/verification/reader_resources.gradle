@@ -1,0 +1,18 @@
+def readerPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+tasks.register('generateReaderResources', Exec) {
+    inputs.file('generate_reader_resources.py')
+    inputs.file('generate_credential_resources.py')
+    inputs.file('../../src/portable/java/com/vandorlabs/credentials/CredentialCatalog.java')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/block/token_slots') { include '*.json' })
+    inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/access_reader') { include '**/*.png' })
+    inputs.file('../../texture-packs/default/assets/vandorlabs/textures/blocks/programmable_glass/door_side.png')
+    outputs.dir('build/generated/reader-resources')
+    commandLine readerPython, 'generate_reader_resources.py'
+}
+sourceSets.main.resources.srcDir('build/generated/reader-resources')
+tasks.named('processResources') { dependsOn 'generateReaderResources' }
+tasks.register('testNativeReaderResources', Exec) {
+    group = 'verification'
+    dependsOn 'generateReaderResources'
+    commandLine readerPython, 'test_reader_resources.py'
+}
