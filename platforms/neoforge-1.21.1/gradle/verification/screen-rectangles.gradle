@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenRectangles', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenRectangleChecks'
+ systemProperty 'screenRectanglesReference',file(project.findProperty('screenRectanglesReference') ?: '../../build/test-artifacts/screen-rectangles-reference.json').absolutePath
+}
