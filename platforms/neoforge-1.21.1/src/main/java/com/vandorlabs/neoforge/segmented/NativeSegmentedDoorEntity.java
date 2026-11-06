@@ -48,7 +48,11 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
  @Override public void refreshFluidGeometry(){fluidState.refresh();}
  @Override public int containedFluidSide(double x,double y,double z){return fluidState.side(x,y,z);}
  @Override public void containedFluidsChanged(){fluidState.changed();}
- @Override public net.neoforged.neoforge.client.model.data.ModelData getModelData(){return net.neoforged.neoforge.client.model.data.ModelData.builder().with(NativeFluidRenderSnapshot.DATA,fluidState.render()).with(NativeSegmentedTerrainSnapshot.DATA,clientTerrain.terrain()).build();}
+ @Override public net.neoforged.neoforge.client.model.data.ModelData getModelData(){
+  var terrain=clientTerrain.terrain();
+  if(terrain==NativeSegmentedTerrainSnapshot.EMPTY)terrain=NativeSegmentedTerrainSnapshot.unstaged(facing(),texture,topOffset,height,settings);
+  return net.neoforged.neoforge.client.model.data.ModelData.builder().with(NativeFluidRenderSnapshot.DATA,fluidState.render()).with(NativeSegmentedTerrainSnapshot.DATA,terrain).build();
+ }
  public Direction facing(){return getBlockState().hasProperty(NativeSegmentedDoorBlock.FACING)?getBlockState().getValue(NativeSegmentedDoorBlock.FACING):Direction.NORTH;}
  public static NativeSegmentedDoorEntity at(Level level,BlockPos pos){if(level==null||!level.hasChunkAt(pos))return null;var raw=level.getBlockEntity(pos);return raw instanceof NativeSegmentedDoorEntity tile&&!tile.isRemoved()&&!tile.inert?tile:null;}
  boolean installed(){if(level instanceof net.minecraft.server.level.ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Segmented world access requires server thread");return !inert&&level!=null&&!isRemoved()&&level.hasChunkAt(worldPosition)&&level.getBlockEntity(worldPosition)==this;}

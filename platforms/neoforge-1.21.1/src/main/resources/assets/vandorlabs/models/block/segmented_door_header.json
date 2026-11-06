@@ -1,0 +1,41 @@
+{
+  "textures": {
+    "panel": "vandorlabs:segmented-artwork/panel",
+    "edge": "vandorlabs:frame-default/metal_side",
+    "particle": "vandorlabs:segmented-artwork/panel"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        14.032,
+        6
+      ],
+      "to": [
+        16,
+        16.032,
+        10
+      ],
+      "faces": {
+        "up": {
+          "texture": "#edge"
+        },
+        "down": {
+          "texture": "#edge"
+        },
+        "north": {
+          "texture": "#edge"
+        },
+        "south": {
+          "texture": "#edge"
+        },
+        "east": {
+          "texture": "#edge"
+        },
+        "west": {
+          "texture": "#edge"
+        }
+      }
+    }
+  ]
+}
