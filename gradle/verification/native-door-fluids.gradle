@@ -13,3 +13,17 @@ task exportDoorOpeningReference(type: JavaExec) {
     maxHeapSize = '512M'
     systemProperty 'vandorlabs.doorOpeningReference', file(project.findProperty('doorOpeningReference') ?: 'build/test-artifacts/door-opening-forge.jsonl').absolutePath
 }
+
+task exportDoorGushReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorGushLegacyChecks'
+    maxHeapSize = '512M'
+    systemProperty 'vandorlabs.doorGushReference', file('build/test-artifacts/door-gush-forge.jsonl').absolutePath
+}
+
+task testDoorWaterOutlets(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.fluid.DoorWaterOutletsTest'
+}

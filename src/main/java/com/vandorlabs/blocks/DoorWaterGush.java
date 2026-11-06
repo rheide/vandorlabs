@@ -1,6 +1,7 @@
 package com.vandorlabs.blocks;
 
 import com.vandorlabs.tiles.TileEntitySpaceDoor;
+import com.vandorlabs.fluid.DoorWaterOutlets;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
@@ -28,12 +29,12 @@ public final class DoorWaterGush {
         com.vandorlabs.segmented.SegmentedDoorTile owner=(com.vandorlabs.segmented.SegmentedDoorTile)world.getTileEntity(pos);
         int previous=owner.waterOutlets,retained=0;boolean supplying=false;
         if(!stop&&OpeningFluids.open(world,pos)){
-            ContainedFluids data=owner.fluids;FluidStack a=data.get(0),b=data.get(1);int wet=a!=null&&a.getFluid()==FluidRegistry.WATER?0:b!=null&&b.getFluid()==FluidRegistry.WATER?1:-1;
+            ContainedFluids data=owner.fluids;FluidStack a=data.get(0),b=data.get(1);int wet=DoorWaterOutlets.wetSide(a!=null&&a.getFluid()==FluidRegistry.WATER,b!=null&&b.getFluid()==FluidRegistry.WATER,a!=null,b!=null);
             if(wet>=0&&data.get(1-wet)==null){supplying=true;double[] plane=OpeningFluids.plane(world,pos);double sign=wet==0?1:-1;
                 for(EnumFacing face:EnumFacing.HORIZONTALS)if(sign*(plane[0]*face.getFrontOffsetX()+plane[2]*face.getFrontOffsetZ())>.5){int bit=1<<face.getHorizontalIndex();BlockPos out=pos.offset(face);
                     if(!world.isBlockLoaded(out)){retained|=previous&bit;continue;}IBlockState target=world.getBlockState(out);
-                    if(target.getMaterial()==net.minecraft.block.material.Material.WATER){if(target.getValue(BlockLiquid.LEVEL)==0){retained|=previous&bit;continue;}}
-                    else if(target.getMaterial().isLiquid()||!target.getBlock().isReplaceable(world,out))continue;
+                    boolean water=target.getMaterial()==net.minecraft.block.material.Material.WATER;int action=DoorWaterOutlets.supply((previous&bit)!=0,true,water,water&&target.getValue(BlockLiquid.LEVEL)==0,target.getMaterial().isLiquid(),!water&&!target.getMaterial().isLiquid()&&target.getBlock().isReplaceable(world,out));
+                    if(action!=DoorWaterOutlets.PUBLISH){if(action==DoorWaterOutlets.RETAIN)retained|=bit;continue;}
                     retained|=bit;world.setBlockState(out,Blocks.FLOWING_WATER.getDefaultState(),3);world.scheduleUpdate(out,Blocks.FLOWING_WATER,Blocks.FLOWING_WATER.tickRate(world));
                 }
             }
@@ -52,7 +53,7 @@ public final class DoorWaterGush {
             BlockPos pos=lower.up(half);IBlockState state=world.getBlockState(pos);
             if(!(state.getBlock() instanceof BlockConfigurableSpaceDoor))continue;
             ContainedFluids data=WaterloggedParts.data(world.getTileEntity(pos));if(data==null)continue;
-            FluidStack first=data.get(0),second=data.get(1);int wet=first!=null&&first.getFluid()==FluidRegistry.WATER?0:second!=null&&second.getFluid()==FluidRegistry.WATER?1:-1;
+            FluidStack first=data.get(0),second=data.get(1);int wet=DoorWaterOutlets.wetSide(first!=null&&first.getFluid()==FluidRegistry.WATER,second!=null&&second.getFluid()==FluidRegistry.WATER,first!=null,second!=null);
             if(wet<0||data.get(1-wet)!=null)continue;
             supplying=true;
             double[] plane=OpeningFluids.plane(world,pos);double sign=wet==0?1:-1;
@@ -60,9 +61,8 @@ public final class DoorWaterGush {
                 int bit=1<<(half*4+face.getHorizontalIndex());BlockPos out=pos.offset(face);
                 if(!world.isBlockLoaded(out)){retained|=previous&bit;continue;}
                 IBlockState target=world.getBlockState(out);
-                if(target.getMaterial()==net.minecraft.block.material.Material.WATER){
-                    if(target.getValue(BlockLiquid.LEVEL)==0){retained|=previous&bit;continue;}
-                }else if(target.getMaterial().isLiquid()||!target.getBlock().isReplaceable(world,out))continue;
+                boolean water=target.getMaterial()==net.minecraft.block.material.Material.WATER;int action=DoorWaterOutlets.supply((previous&bit)!=0,true,water,water&&target.getValue(BlockLiquid.LEVEL)==0,target.getMaterial().isLiquid(),!water&&!target.getMaterial().isLiquid()&&target.getBlock().isReplaceable(world,out));
+                if(action!=DoorWaterOutlets.PUBLISH){if(action==DoorWaterOutlets.RETAIN)retained|=bit;continue;}
                 retained|=bit;
                 world.setBlockState(out,Blocks.FLOWING_WATER.getDefaultState(),3);
                 world.scheduleUpdate(out,Blocks.FLOWING_WATER,Blocks.FLOWING_WATER.tickRate(world));

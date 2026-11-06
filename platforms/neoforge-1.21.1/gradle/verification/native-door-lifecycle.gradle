@@ -1,3 +1,4 @@
 neoForge.runs.configureEach {
+    systemProperty 'vandorlabs.doorGushReference', file(project.findProperty('doorGushReference') ?: '../../build/test-artifacts/door-gush-forge.jsonl').absolutePath
     if (project.hasProperty('doorLifecycleReference')) systemProperty 'vandorlabs.doorLifecycleReference', file(project.property('doorLifecycleReference')).absolutePath
 }
