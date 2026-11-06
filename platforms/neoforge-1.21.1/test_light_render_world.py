@@ -14,15 +14,17 @@ from native_test_artifacts import artifact_directory, retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb',action='store_true')
+    parser.add_argument('--canonical',action='store_true',help='Reuse canonical IDs and production renderer/bake hooks; requires activation candidate')
     args=parser.parse_args()
+    canonical_args=['-PlightCanonical=true'] if args.canonical else []
     phase='light-render-world-client'
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
-    output=Path(artifact_directory(prefix='light-render-world-',dir=base))
+    output=Path(artifact_directory(prefix='light-render-world-'+('canonical-' if args.canonical else 'private-'),dir=base))
     with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
     saved=output/'server';fixture_world(saved,port);server_log=output/'server.log'
-    server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+phase),server_log,env)
+    server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+phase,*canonical_args),server_log,env)
     try:
         deadline=time.monotonic()+120
         while 'Done (' not in server_log.read_text(errors='replace'):
@@ -30,9 +32,10 @@ def main():
             time.sleep(.5)
         client=output/'client';client.mkdir()
         (client/'options.txt').write_text('guiScale:2\ntutorialStep:none\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nentityShadows:false\nonboardAccessibility:false\n')
-        client_command=command('runClient','-PtransmitterPhase='+phase,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client))
+        client_command=command('runClient','-PtransmitterPhase='+phase,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client),*canonical_args)
         if args.xvfb:client_command=['xvfb-run','-a','-s','-screen 0 1280x720x24']+client_command;env=dict(env,LIBGL_ALWAYS_SOFTWARE='1')
         run(client_command,output/'client.log','[vandorlabs][light-render-world] client PASS',env)
+        if args.canonical:check_log(output/'client.log','[vandorlabs][light-editor-client] canonical inventory PASS actual ItemRenderer variants=36')
         deadline=time.monotonic()+30
         while '[vandorlabs][light-render-world] logout PASS' not in server_log.read_text(errors='replace'):
             if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Authoritative logout missing: '+str(server_log))
