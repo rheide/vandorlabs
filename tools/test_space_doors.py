@@ -20,7 +20,9 @@ assert len(doors)==60
 # Keep saved design indices, GUI choices, native sprites and generated art aligned.
 from import_space_doors import FAMILIES, GLASS_FAMILIES, texture_name
 tile=(ROOT/'src/main/java/com/vandorlabs/tiles/TileEntitySpaceDoor.java').read_text()
-designs=re.findall(r'"([a-z_]+)"',re.search(r'DESIGNS=\{(.*?)\};',tile,re.S).group(1))
+models=(ROOT/'src/portable/java/com/vandorlabs/render/SpaceDoorModels.java').read_text()
+assert 'DESIGNS=com.vandorlabs.render.SpaceDoorModels.DESIGNS' in tile, 'legacy doors must retain the shared design catalog'
+designs=re.findall(r'"([a-z_]+)"',re.search(r'DESIGNS=\{(.*?)\};',models,re.S).group(1))
 assert tuple(designs[:15])==FAMILIES and designs[15:17]==["white_glass","dark_glass"]
 gui=(ROOT/'src/main/java/com/vandorlabs/client/GuiSpaceDoor.java').read_text()
 assert 'index<TileEntitySpaceDoor.DESIGNS.length' in gui, 'door dialog must use the shared design catalog'
