@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+    if (project.hasProperty('segmentedChannelReference')) systemProperty 'vandorlabs.segmentedChannelReference', file(project.property('segmentedChannelReference')).absolutePath
+}

@@ -1,0 +1,6 @@
+task exportSegmentedChannelReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedChannelLegacyChecks'
+    systemProperty 'vandorlabs.segmentedChannelReference', file('build/test-artifacts/segmented-channels-forge.json').absolutePath
+}
