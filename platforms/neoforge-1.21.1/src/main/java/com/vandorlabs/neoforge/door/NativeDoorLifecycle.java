@@ -49,7 +49,7 @@ public final class NativeDoorLifecycle {
     }
     private static boolean beside(Level level,BlockPos pos,Direction facing){return loaded(level,pos)&&level.getBlockState(pos).getBlock() instanceof NativeProgrammableDoorBlock block&&complete(level,pos,block)&&level.getBlockState(pos).getValue(NativeProgrammableDoorBlock.FACING)==facing;}
     public static int localPower(Level level,BlockPos root){return Math.max(power(level,root),power(level,root.above()));}
-    static int power(Level level,BlockPos pos){int result=0;for(Direction side:Direction.values()){BlockPos next=pos.relative(side);if(!loaded(level,next))continue;BlockState state=level.getBlockState(next);if(state.shouldCheckWeakPower(level,next,side)){for(Direction strong:Direction.values()){BlockPos source=next.relative(strong);if(loaded(level,source))result=Math.max(result,level.getBlockState(source).getDirectSignal(level,source,strong));}}else result=Math.max(result,state.getSignal(level,next,side));if(result>=15)return 15;}return Math.min(15,result);}
+    static int power(Level level,BlockPos pos){return com.vandorlabs.neoforge.redstone.NativeLoadedRedstonePower.level(level,pos);}
     public static void updatePower(NativeProgrammableDoorEntity host){
         Level level=host.getLevel();if(level==null||level.isClientSide||root(level,host.getBlockPos())!=host)return;
         boolean powered=host.channelSignal()||localPower(level,host.getBlockPos())>0;var settings=host.settings();
