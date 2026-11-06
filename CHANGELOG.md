@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Enable regular and diagonal Trapdoors in the experimental native build with dedicated editing, configured items, source-matched assemblies, moved-leaf interactions and contained-fluid rendering.
+
 - Share Programmable Light save and signal policy between versions while preserving Forge defaults, lazy input sampling and existing lighting.
 
 - Preserve clicked-face coordinates when placing native walls, portholes and ordinary/Large Doors, keeping depth, anchoring and hinge choice consistent with Forge.

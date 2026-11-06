@@ -7,10 +7,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.InputEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-/** Ordinary-door rays replace voxel picking after vanilla's pick and immediately before an input action. */
+/** Moved-leaf rays replace voxel picking after vanilla publishes its result and before an input action. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class NativeDoorSelection {
     private NativeDoorSelection(){}
@@ -23,7 +22,6 @@ public final class NativeDoorSelection {
         if(mc.hitResult instanceof EntityHitResult entity&&start.distanceToSqr(entity.getLocation())<start.distanceToSqr(target.hit().getLocation()))return null;
         mc.hitResult=target.hit();mc.crosshairPickEntity=null;return target;
     }
-    @SubscribeEvent public static void render(RenderLevelStageEvent event){if(event.getStage()==RenderLevelStageEvent.Stage.AFTER_ENTITIES)update(event.getPartialTick().getGameTimeDeltaPartialTick(true));}
     @SubscribeEvent public static void input(InputEvent.InteractionKeyMappingTriggered event){
         var target=update(1);if(target==null||!event.isUseItem())return;
         var mc=Minecraft.getInstance();var part=com.vandorlabs.neoforge.segmented.NativeSegmentedTargets.loaded(mc.level,target.hit().getBlockPos());

@@ -303,25 +303,26 @@
       "id": "trapdoors",
       "label": "Trapdoors and diagonal trapdoors",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_diagonal_trapdoor",
         "programmable_trapdoor"
       ],
       "remaining": [
-        "Source-matched placement, pair/square/assembly discovery and configured items",
-        "Contained-fluid lifecycle and rendering integration, including legacy aliases and borrowed water",
-        "Canonical resources/registration, renderer binding and real client family acceptance"
+        "Broader external-material/copy workflows and complete native saved-world upgrade acceptance",
+        "Hardware/shader rendering and final native release validation"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "implemented": [
-        "Unregistered native host with source-matched old link repair, staged group configuration, physical/channel power, inert failed snapshots and saved-world restart",
-        "Shared exact regular/diagonal geometry, artwork and frame kernels; bounded native renderer and clean single-box selection",
-        "Dedicated prepared General/Redstone editor uses shared picker, reverse cycling and option rules; actual native widgets and server authorization pass focused checks",
-        "Loaded outside-cell engine collisions and exact combined target routing; bounded nine-byte intent uses normal server item interaction and rejects stale, blocked and distant requests",
-        "Source-frozen endpoint fluid volumes and opening precedence; native fluid host integration remains in progress"
+        "Canonical regular/diagonal blocks, items and released entity IDs; actual recipes, configured picks, wood-pickaxe harvest and separate-process saved owners",
+        "Source-matched click bands, diagonal plane/hinge inheritance, pair/square/assembly formation and removal order; staged item ownership and retained rollback recovery",
+        "Shared exact geometry/artwork/frame kernels, bounded renderer and clean single-box selection; real public-family client rendering and disabled-renderer negative controls",
+        "Dedicated General/Redstone editor with shared picker/options, reverse cycling, actual channel typing and authorized server settings payload",
+        "Loaded outside-cell collisions and exact moved-leaf targeting; bounded use intent follows normal server item interaction and refuses stale, blocked or distant requests",
+        "Stationary contained-fluid ownership, analytic opening surfaces and wet chunk rendering; legacy/opaque data, bucket handling and process restart",
+        "Defensive platform load isolation, inert original snapshots and nonloading serialization during chunk unload"
       ]
     },
     {
@@ -370,7 +371,11 @@
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Shared Forge/native Light save and signal policy retains typed defaults, item projections and lazy input sampling; focused Forge lighting and frozen source comparisons pass",
+        "Unregistered full/frame/slab host with exact bounded geometry, loaded-only grouping, immutable public visuals and auxiliary light; placed-world authority and separate-process restart checked"
+      ]
     },
     {
       "id": "seating",
