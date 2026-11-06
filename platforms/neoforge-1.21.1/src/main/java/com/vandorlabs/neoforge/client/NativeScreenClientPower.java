@@ -15,8 +15,8 @@ public final class NativeScreenClientPower {
  private static final int MAX_WATCHED=256;private static final Map<ClientLevel,Epoch> LEVELS=new WeakHashMap<>();
  private static final class Watch{int mask;long seen;Watch(int mask,long seen){this.mask=mask;this.seen=seen;}}
  private static final class Epoch{volatile long revision;long tick,observedTime=Long.MIN_VALUE;final Map<NativeScreenEntity,Watch> watched=new WeakHashMap<>();}
- static{NativeScreenPowerViews.bindClient(NativeScreenClientPower::invalidate);}
- @net.neoforged.fml.common.EventBusSubscriber(modid="vandorlabs",value=net.neoforged.api.distmarker.Dist.CLIENT,bus=net.neoforged.fml.common.EventBusSubscriber.Bus.MOD)public static final class Binding{@net.neoforged.bus.api.SubscribeEvent public static void setup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event){NativeScreenPowerViews.bindClient(NativeScreenClientPower::invalidate);}}
+ static{NativeScreenPowerViews.bindClient(NativeScreenClientPower::invalidate);NativeScreenPowerViews.bindPreparation(NativeScreenClientPower::prepare);}
+ @net.neoforged.fml.common.EventBusSubscriber(modid="vandorlabs",value=net.neoforged.api.distmarker.Dist.CLIENT,bus=net.neoforged.fml.common.EventBusSubscriber.Bus.MOD)public static final class Binding{@net.neoforged.bus.api.SubscribeEvent public static void setup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event){NativeScreenPowerViews.bindClient(NativeScreenClientPower::invalidate);NativeScreenPowerViews.bindPreparation(NativeScreenClientPower::prepare);}}
  private static Epoch epoch(ClientLevel level){synchronized(LEVELS){return LEVELS.computeIfAbsent(level,ignored->new Epoch());}}
  private static void advance(Epoch state,ClientLevel level){long now=level.getGameTime();if(state.observedTime!=now){state.observedTime=now;state.tick++;}}
  private static void invalidate(NativeScreenEntity tile){if(!(tile.getLevel() instanceof ClientLevel level))return;var state=epoch(level);synchronized(state){state.revision++;}var view=tile.preparedPowerView();if(view!=null)view.invalidate();}
