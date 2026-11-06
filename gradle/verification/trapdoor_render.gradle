@@ -39,3 +39,11 @@ task testTrapdoorSharedArtwork(type: JavaExec) {
     main = 'com.vandorlabs.client.TrapdoorUvLegacyOracle'
     args file('build/test-artifacts/trapdoor-uv-shared.jsonl').absolutePath, 'shared'
 }
+
+task exportTrapdoorEdgeReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorEdgeLegacyOracle'
+    args file('build/test-artifacts/trapdoor-edges-forge.jsonl').absolutePath
+}
