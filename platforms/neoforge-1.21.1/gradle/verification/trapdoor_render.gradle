@@ -13,3 +13,10 @@ tasks.register('testNativeTrapdoorMesh', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.NativeTrapdoorMeshChecks'
     args file('../../build/test-artifacts/trapdoor-render-forge.jsonl').absolutePath
 }
+
+tasks.register('testNativeTrapdoorClock', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeTrapdoorClockChecks'
+}
