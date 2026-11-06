@@ -1,0 +1,6 @@
+task exportSegmentedCanonicalReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.SegmentedCanonicalLegacyChecks'
+ systemProperty 'vandorlabs.segmentedCanonicalReference',file(project.findProperty('segmentedCanonicalReference') ?: 'build/test-artifacts/segmented-canonical-forge.jsonl').absolutePath
+}
