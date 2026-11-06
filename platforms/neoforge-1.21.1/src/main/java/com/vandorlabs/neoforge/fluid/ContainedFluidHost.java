@@ -18,6 +18,8 @@ public interface ContainedFluidHost {
     void publishFluidRenderSnapshot(NativeFluidRenderSnapshot snapshot);
     BlockEntity fluidOwner();
     NativeFluidSlots containedFluids();
+    /** Derived fluid presence for rendering/contact; ownership, buckets and saving always use containedFluids. */
+    default NativeFluidSlots.Snapshot effectiveFluidSnapshot(){return containedFluids().snapshot();}
     NativeFluidVolume fluidVolumeSnapshot();
     long fluidGeometryRevision();
     /** Cosmetic snapshot publication is independent of physical/fluid neighbor changes. */

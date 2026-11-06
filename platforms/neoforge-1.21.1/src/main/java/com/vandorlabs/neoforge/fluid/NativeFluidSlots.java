@@ -73,6 +73,17 @@ public final class NativeFluidSlots {
         public final long revision;private final Slot first,second;
         private Snapshot(long revision,Slot first,Slot second){this.revision=revision;this.first=first;this.second=second;}
         public Slot side(int side){if(side<0||side>1)throw new IllegalArgumentException("Contained fluid side "+side);return side==0?first:second;}
+        /** Derived opening presence only: code 1 borrows the opposite stack; code 2 supplies ambient water.
+         * Raw ownership is unchanged; this snapshot must never be installed as saved storage. */
+        public Snapshot withOpeningWater(int sources,long derivedRevision){
+            if((sources&~15)!=0||(sources&3)==3||(sources>>2&3)==3)throw new IllegalArgumentException("Opening water sources");
+            return new Snapshot(derivedRevision,openingSide(first,second,sources&3),openingSide(second,first,sources>>2&3));
+        }
+        private static Slot openingSide(Slot own,Slot opposite,int source){
+            if(source==0||!own.fluid.isEmpty())return own;
+            if(source==1){if(!opposite.fluid.is(Fluids.WATER))throw new IllegalArgumentException("Opposite water source");return new Slot(own.raw,opposite.fluid);}
+            return new Slot(own.raw,new FluidStack(Fluids.WATER,1000));
+        }
         public boolean any(){return first.occupied()||second.occupied();}
         public void write(CompoundTag root){var data=new CompoundTag();if(first.raw!=null)data.put("Side0",first.raw.copy());if(second.raw!=null)data.put("Side1",second.raw.copy());root.put(KEY,data);}
     }

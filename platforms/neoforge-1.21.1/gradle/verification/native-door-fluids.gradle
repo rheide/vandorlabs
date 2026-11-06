@@ -5,3 +5,10 @@ tasks.register('testNativeDoorFluidGeometry', JavaExec) {
     maxHeapSize = '1G'
     args project.findProperty('doorFluidReference') ?: '../../build/test-artifacts/door-fluid-forge.jsonl'
 }
+
+tasks.register('testNativeDoorOpeningFluids', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.door.DoorOpeningFluidChecks'
+    systemProperty 'vandorlabs.doorOpeningReference', rootProject.file('../../build/test-artifacts/door-opening-forge.jsonl').absolutePath
+}

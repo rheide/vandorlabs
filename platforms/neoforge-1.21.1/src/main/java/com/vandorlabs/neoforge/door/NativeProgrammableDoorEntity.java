@@ -22,6 +22,9 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     private record FluidKey(boolean sliding,boolean framed,boolean hinges,int depth,Direction face,boolean open,boolean left,boolean paired){}
     private record FluidGeometry(FluidKey key,NativeDoorFluidGeometry.Plane plane,NativeFluidVolume volume,long revision){}
     private volatile FluidGeometry fluidGeometry=new FluidGeometry(null,null,NO_FLUID_VOLUME,0);
+    private NativeFluidSlots.Snapshot effectiveBase;
+    private volatile NativeFluidSlots.Snapshot effectiveFluids=fluids.snapshot();
+    private int effectiveWater=-1;private long effectiveRevision;
     private volatile NativeFluidRenderSnapshot fluidRender=NativeFluidRenderSnapshot.EMPTY;
     private boolean visualDirty=true;
     private BlockState lastRawState;
@@ -97,6 +100,7 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     /** Per-part slots are intentionally independent, including the upper part of a linked door. */
     @Override public BlockEntity fluidOwner(){return this;}
     @Override public NativeFluidSlots containedFluids(){return fluids;}
+    @Override public NativeFluidSlots.Snapshot effectiveFluidSnapshot(){return effectiveFluids;}
     @Override public NativeFluidVolume fluidVolumeSnapshot(){return fluidGeometry.volume();}
     @Override public long fluidGeometryRevision(){return fluidGeometry.revision();}
     @Override public NativeFluidRenderSnapshot fluidRenderSnapshot(){return fluidRender;}
@@ -110,13 +114,15 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     /** Rebuild only on the owning thread, then publish one complete world-free geometry record. */
     @Override public void refreshFluidGeometry(){
         var old=fluidGeometry;var root=level==null?null:NativeDoorLifecycle.root(level,worldPosition);
-        if(root==null||root.large()){if(old.key()!=null)fluidGeometry=new FluidGeometry(null,null,NO_FLUID_VOLUME,old.revision()+1);return;}
+        if(root==null||root.large()){if(old.key()!=null)fluidGeometry=new FluidGeometry(null,null,NO_FLUID_VOLUME,old.revision()+1);publishEffectiveFluids(0);return;}
         var state=NativeDoorLifecycle.resolved(level,worldPosition,getBlockState());var profile=root.settings();var door=profile.door();
         var key=new FluidKey(door.sliding,door.framed,door.hinges,profile.depth(),state.getValue(NativeProgrammableDoorBlock.FACING),state.getValue(NativeProgrammableDoorBlock.OPEN),state.getValue(NativeProgrammableDoorBlock.HINGE)==net.minecraft.world.level.block.state.properties.DoorHingeSide.LEFT,state.getValue(NativeProgrammableDoorBlock.PAIRED));
+        int water=NativeDoorOpeningFluids.sources(level,worldPosition,key.face(),root.getBlockState().getValue(NativeProgrammableDoorBlock.OPEN),fluids.snapshot());publishEffectiveFluids(water);
         if(key.equals(old.key()))return;
         var built=NativeDoorFluidGeometry.build(profile,key.face(),key.open(),key.left(),key.paired(),worldPosition.getX(),worldPosition.getY(),worldPosition.getZ());
         fluidGeometry=new FluidGeometry(key,built.plane(),built.volume(),old.revision()+1);
     }
+    private void publishEffectiveFluids(int water){var stored=fluids.snapshot();if(effectiveBase!=null&&stored.revision==effectiveBase.revision&&water==effectiveWater)return;effectiveBase=stored;effectiveWater=water;effectiveFluids=stored.withOpeningWater(water,++effectiveRevision);}
     private void queueFluidParts(){NativeFluidWorld.queue(this);if(level!=null){BlockPos lower=NativeDoorLifecycle.lower(getBlockState(),worldPosition);NativeFluidWorld.queueAt(level,lower);NativeFluidWorld.queueAt(level,lower.above());}}
 
 }
