@@ -44,7 +44,7 @@ public final class NativeTokenReader {
     private int allowed=127,behavior,logo;
     private long pulseUntil,insertStarted,insertionSequence,rejectedUntil,nextReturnAttempt;
     private UUID returnTo;
-    private boolean acting;
+    private boolean acting,publishing,publicationPending;
     public NativeTokenReader(Host host,boolean chip){this.host=Objects.requireNonNull(host);this.chip=chip;}
     public boolean chip(){return host.chip(chip);}
     public boolean any(){return any;}
@@ -59,7 +59,7 @@ public final class NativeTokenReader {
     public boolean authorized(ItemStack stack){return NativeCredentialItems.authorized(stack,chip(),effectiveAllowed());}
     public boolean matches(){return authorized(token);}
     public int logoDesign(){int mask=effectiveAllowed();if((mask&1)!=0)return 0;if((mask&(1<<logo))!=0)return logo;for(int i=0;i<7;i++)if((mask&(1<<i))!=0)return i;return 0;}
-    public int outputLevel(long now){return CredentialCatalog.output(behavior,behavior<2&&matches(),behavior==2&&host.toggleState(toggled),now,pulseUntil);}
+    public int outputLevel(long now){if(opaqueToken!=null)return 0;return CredentialCatalog.output(behavior,behavior<2&&matches(),behavior==2&&host.toggleState(toggled),now,pulseUntil);}
     public Visual visual(long now){int company=NativeCredentialItems.company(token);return new Visual(chip(),CredentialCatalog.validCompany(company)?company:0,effectiveAllowed()==0?-1:logoDesign(),accepts(token),outputLevel(now),occupied());}
     public Motion motion(long now){return new Motion(insertionSequence,(int)Math.max(0,Math.min(20,now-insertStarted)),returning(),(int)Math.max(0,Math.min(12,rejectedUntil-now)),rejectedUntil);}
     public static ItemStack icon(Visual visual){return !visual.icon?ItemStack.EMPTY:visual.chip?NativeCredentialItems.dataChip(visual.company):NativeCredentialItems.accessCard(visual.company);}
@@ -85,7 +85,7 @@ public final class NativeTokenReader {
         int nextAllowed=CredentialCatalog.singleCompany(requestedAny?127:requestedAllowed),nextBehavior=CredentialCatalog.behavior(requestedBehavior);boolean nextAny=nextAllowed==127,changed=any!=nextAny||allowed!=nextAllowed||behavior!=nextBehavior;
         if(changed){pulseUntil=0;toggled=false;}any=nextAny;allowed=nextAllowed;behavior=nextBehavior;return changed;
     }
-    public void configure(boolean any,int allowed,int behavior){configureLocal(any,allowed,behavior);publish(false);}
+    public void configure(boolean any,int allowed,int behavior){if(configureLocal(any,allowed,behavior))publish(false);}
     private ServerLevel installed(){
         BlockEntity owner=host.owner();var level=owner.getLevel();if(!(level instanceof ServerLevel server))return null;
         if(!server.getServer().isSameThread())throw new IllegalStateException("Credential action requires owning server thread");
@@ -95,7 +95,9 @@ public final class NativeTokenReader {
     private void schedule(int ticks){if(installed()!=null)host.schedule(Math.max(1,ticks));}
     private void publish(boolean inserted){
         var level=installed();if(level==null)return;if(inserted){insertStarted=level.getGameTime();insertionSequence++;if(matches()&&behavior==1){pulseUntil=level.getGameTime()+host.returnPulseTicks();schedule(host.returnPulseTicks());}}
-        if(token.isEmpty()&&behavior==1)pulseUntil=0;boolean previous=acting;acting=true;try{host.changed();}finally{acting=previous;}
+        if(token.isEmpty()&&behavior==1)pulseUntil=0;
+        if(publishing){publicationPending=true;schedule(1);return;}
+        boolean previous=acting;acting=true;publishing=true;try{host.changed();}finally{publishing=false;acting=previous;}
     }
     private static void sync(ServerPlayer player){player.getInventory().setChanged();player.inventoryMenu.broadcastChanges();}
     private ItemStack inventoryCredential(ServerPlayer player){for(var stack:player.getInventory().items)if(authorized(stack))return stack;var off=player.getOffhandItem();return authorized(off)?off:null;}
@@ -118,11 +120,11 @@ public final class NativeTokenReader {
         var level=installed();if(level==null||(behavior!=2&&behavior!=3)||occupied()||!host.usable(player)||!authorized(held))return false;
         token=NativeCredentialItems.ownedCopy(held).copyWithCount(1);held.shrink(1);returnTo=player.getUUID();insertStarted=level.getGameTime();insertionSequence++;toggleApplied=false;publish(false);sound(SoundEvents.IRON_TRAPDOOR_OPEN,1.4F);schedule(8);return true;
     }
-    public void reject(){var level=installed();if(level!=null){rejectedUntil=level.getGameTime()+12;publish(false);}}
-    public void cycleLogo(){int mask=effectiveAllowed();if((mask&1)!=0)return;for(int i=1;i<=7;i++){int candidate=(logoDesign()+i)%7;if((mask&(1<<candidate))!=0){logo=candidate;publish(false);return;}}}
+    public void reject(){var level=installed();if(level!=null){long next=level.getGameTime()+12;if(rejectedUntil!=next){rejectedUntil=next;publish(false);}}}
+    public void cycleLogo(){int mask=effectiveAllowed();if((mask&1)!=0)return;for(int i=1;i<=7;i++){int candidate=(logoDesign()+i)%7;if((mask&(1<<candidate))!=0){if(logo!=candidate){logo=candidate;publish(false);}return;}}}
     public ItemStack remove(){return returning()?ItemStack.EMPTY:takeForDrop();}
     /** Unknown raw contents are never cleared when no real droppable stack exists. */
-    public ItemStack takeForDrop(){if(installed()==null||opaqueToken!=null)return ItemStack.EMPTY;var result=token;token=ItemStack.EMPTY;returnTo=null;publish(false);return result;}
+    public ItemStack takeForDrop(){if(installed()==null||opaqueToken!=null||token.isEmpty())return ItemStack.EMPTY;var result=token;token=ItemStack.EMPTY;returnTo=null;publish(false);return result;}
     private static boolean hasRoom(ServerPlayer player,ItemStack token){
         for(var slot:player.getInventory().items)if(slot.isEmpty()||ItemStack.isSameItemSameComponents(slot,token)&&slot.getCount()<Math.min(slot.getMaxStackSize(),player.getInventory().getMaxStackSize()))return true;
         for(var slot:player.getInventory().offhand)if(!slot.isEmpty()&&ItemStack.isSameItemSameComponents(slot,token)&&slot.getCount()<Math.min(slot.getMaxStackSize(),player.getInventory().getMaxStackSize()))return true;return false;
@@ -142,7 +144,7 @@ public final class NativeTokenReader {
         }
         if(dirty)publish(false);return dirty;
     }
-    public void scheduledTick(){var level=installed();if(level==null)return;long now=level.getGameTime();expire(now);if(installed()==null)return;
+    public void scheduledTick(){var level=installed();if(level==null)return;long now=level.getGameTime();if(publicationPending){publicationPending=false;publish(false);}expire(now);if(installed()==null)return;
         if(returning())schedule(now>=insertStarted+20?20:(int)Math.max(1,(toggleApplied?insertStarted+20:insertStarted+8)-now));else if((behavior==1||behavior==3)&&pulseUntil>now)schedule((int)Math.min(20,pulseUntil-now));
     }
     /** Invoke from the owner's existing deferred lifecycle, never directly from BlockEntity.onLoad. */
