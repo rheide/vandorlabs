@@ -10,6 +10,7 @@ import net.minecraft.world.entity.player.Player;
 /** Released editor transaction order, distinct from plain-click mode cycling. */
 public final class NativePropulsionConfiguration {
  private NativePropulsionConfiguration(){}
+ public static boolean open(Player player,net.minecraft.world.level.Level world,net.minecraft.core.BlockPos pos,net.minecraft.world.inventory.MenuType<NativePropulsionMenu> type){if(type==null||!NativePropulsionService.loaded(world,pos)||!(world.getBlockEntity(pos) instanceof NativePropulsionEntity owner)||!owner.available()||!com.vandorlabs.neoforge.NativeConfigurationAccess.canEdit(player,owner))return false;if(world.isClientSide)return true;if(!(player instanceof net.minecraft.server.level.ServerPlayer server))return false;server.openMenu(new net.minecraft.world.SimpleMenuProvider((id,inventory,actor)->new NativePropulsionMenu(type,id,owner),owner.getBlockState().getBlock().getName()),pos);return true;}
  public record Draft(ChannelList channels,boolean updateParticles,int particleLevel,boolean updateJoin,boolean join,boolean updateSide,int sideTexture,boolean updateShape,int shape,boolean inverted,boolean analog,int threshold){
   public Draft{if(channels==null||particleLevel<0||particleLevel>3||sideTexture<0||shape<0||shape>2||threshold<0||threshold>15)throw new IllegalArgumentException("Invalid engine edit");}
  }
