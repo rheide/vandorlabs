@@ -12,26 +12,26 @@ import net.minecraft.world.level.Level;
 public final class NativeScreenRenderGroups {
  private NativeScreenRenderGroups(){}
  private enum Kind {ARTWORK,FRAME,EDIT}
- private static final long BUDGET=4L*1024*1024;
+ private static final long BUDGET=4L*1024*1024,BASE_BYTES=1024;
  private record Group(NativeScreenClientPower.Lease lease){boolean touch(){return lease==null||lease.touch();}}
  private record Entry(WeakReference<NativeScreenEntity> owner,NativeScreenRenderProjection.Rectangle rectangle,Group group){}
  private record Published(WeakReference<NativeScreenEntity> owner,NativeScreenRenderProjection projection,Group artwork,Group frame){}
  private static final class Cache {
   long epoch,seen=-1,bytes;
-  final Set<Group> groups=Collections.newSetFromMap(new IdentityHashMap<>());
+  Set<Group> groups=Collections.newSetFromMap(new IdentityHashMap<>());
   final EnumMap<Kind,Map<BlockPos,Entry>> maps=new EnumMap<>(Kind.class);
-  final Map<BlockPos,Published> projections=new HashMap<>();
+  Map<BlockPos,Published> projections=new HashMap<>();
   Cache(){for(var kind:Kind.values())maps.put(kind,new HashMap<>());}
   void ready(){if(epoch!=seen){clear();seen=epoch;}}
-  void clear(){for(var group:groups)if(group.lease!=null)group.lease.close();groups.clear();for(var map:maps.values())map.clear();projections.clear();bytes=0;}
-  void reserve(long next){if(next>BUDGET)throw new IllegalStateException("Screen render group exceeds byte budget");if(bytes+next>BUDGET)clear();}
+  void clear(){for(var group:groups)if(group.lease!=null)group.lease.close();groups=Collections.newSetFromMap(new IdentityHashMap<>());for(var kind:Kind.values())maps.put(kind,new HashMap<>());projections=new HashMap<>();bytes=0;}
+  void reserve(long next){if(next>BUDGET-BASE_BYTES)throw new IllegalStateException("Screen render group exceeds byte budget");if(bytes+next>BUDGET-BASE_BYTES)clear();}
  }
  private static final Map<Level,Cache> CACHES=new WeakHashMap<>();
  private static boolean bound;
  /** Explicit opt-in: production client bindings remain the caller's responsibility. */
  public static void bind(){thread();if(bound)return;NativeScreenPowerViews.bindRender(tile->{var cache=CACHES.get(tile.getLevel());if(cache!=null)cache.epoch++;});bound=true;}
  public static void clear(){thread();for(var cache:CACHES.values())cache.clear();CACHES.clear();}
- public static long retainedBytes(){thread();long bytes=0;for(var cache:CACHES.values())bytes+=cache.bytes;return bytes;}
+ public static long retainedBytes(){thread();long bytes=0;for(var cache:CACHES.values())bytes+=BASE_BYTES+cache.bytes;return bytes;}
  private static void thread(){if(!Minecraft.getInstance().isSameThread())throw new IllegalStateException("Screen render grouping requires the client thread");}
  private static Cache cache(Level level){Cache cache=CACHES.get(level);if(cache==null){if(CACHES.size()>=2)clear();cache=new Cache();CACHES.put(level,cache);}cache.ready();return cache;}
  /** Query only the branches actually reached by the released renderer. */
@@ -40,7 +40,7 @@ public final class NativeScreenRenderGroups {
  /** Convenience for callers which explicitly need both independent layouts. */
  public static NativeScreenRenderProjection projection(NativeScreenEntity tile){
   thread();var level=tile.getLevel();if(level==null||!level.isClientSide||!installed(level,tile))return NativeScreenRenderProjection.SINGLE;var cache=cache(level);var previous=cache.projections.get(tile.getBlockPos());if(previous!=null&&previous.owner.get()==tile&&previous.artwork.touch()&&previous.frame.touch())return previous.projection;
-  var artwork=rectangle(tile,Kind.ARTWORK);var frame=rectangle(tile,Kind.FRAME);cache.ready();var projection=new NativeScreenRenderProjection(artwork,frame);if(cache.bytes+192>BUDGET){cache.clear();return projection(tile);}cache.reserve(192);var artEntry=cache.maps.get(Kind.ARTWORK).get(tile.getBlockPos());var frameEntry=cache.maps.get(Kind.FRAME).get(tile.getBlockPos());var artGroup=artEntry==null?new Group(null):artEntry.group;var frameGroup=frameEntry==null?new Group(null):frameEntry.group;var old=cache.projections.put(tile.getBlockPos(),new Published(new WeakReference<>(tile),projection,artGroup,frameGroup));if(old==null)cache.bytes+=192;return projection;
+  var artwork=rectangle(tile,Kind.ARTWORK);var frame=rectangle(tile,Kind.FRAME);cache.ready();var projection=new NativeScreenRenderProjection(artwork,frame);if(cache.bytes+192>BUDGET-BASE_BYTES){cache.clear();return projection(tile);}cache.reserve(192);var artEntry=cache.maps.get(Kind.ARTWORK).get(tile.getBlockPos());var frameEntry=cache.maps.get(Kind.FRAME).get(tile.getBlockPos());var artGroup=artEntry==null?new Group(null):artEntry.group;var frameGroup=frameEntry==null?new Group(null):frameEntry.group;var old=cache.projections.put(tile.getBlockPos(),new Published(new WeakReference<>(tile),projection,artGroup,frameGroup));if(old==null)cache.bytes+=192;return projection;
  }
  /** Released editor aspect uses authored membership, never power-dependent render membership. */
  public static boolean wideDisplay(NativeScreenEntity tile){thread();if(tile.family()!=ScreenFamily.SCREEN&&tile.family()!=ScreenFamily.INPUT)return false;var rectangle=rectangle(tile,Kind.EDIT);return rectangle.columns()>rectangle.rows();}
@@ -55,7 +55,7 @@ public final class NativeScreenRenderGroups {
   };
   var result=ScreenRectangleGroups.discover(origin,basis,access,eligible);cache.ready();map=cache.maps.get(kind);
   List<NativeScreenClientPower.Query> requested=new ArrayList<>(queries.size());for(var query:queries.entrySet())requested.add(new NativeScreenClientPower.Query(query.getKey(),query.getValue()));
-  long estimated=256L+result.discovered.size()*192L+queries.size()*64L;cache.reserve(estimated);NativeScreenClientPower.Lease lease=null;if(!requested.isEmpty()){lease=NativeScreenClientPower.lease(requested);if(lease==null){cache.clear();lease=NativeScreenClientPower.lease(requested);}if(lease==null)throw new IllegalStateException("Screen prepared-power lease capacity exhausted");}var group=new Group(lease);cache.groups.add(group);cache.bytes+=128+(lease==null?0:lease.retainedBytes());
+  long estimated=256L+result.discovered.size()*192L+queries.size()*64L;cache.reserve(estimated);NativeScreenClientPower.Lease lease=null;if(!requested.isEmpty()){lease=NativeScreenClientPower.lease(requested);if(lease==null){cache.clear();lease=NativeScreenClientPower.lease(requested);}if(lease==null)throw new IllegalStateException("Screen prepared-power lease capacity exhausted");}map=cache.maps.get(kind);var group=new Group(lease);cache.groups.add(group);cache.bytes+=128+(lease==null?0:lease.retainedBytes());
   for(var members:result.rectangles){int minX=Integer.MAX_VALUE,minY=minX,maxX=Integer.MIN_VALUE,maxY=maxX;for(var tile:members){long cell=basis.cell(tile.getBlockPos().getX(),tile.getBlockPos().getY(),tile.getBlockPos().getZ());int x=(int)(cell>>32),y=(int)cell;minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);}for(var tile:members){long cell=basis.cell(tile.getBlockPos().getX(),tile.getBlockPos().getY(),tile.getBlockPos().getZ());var rectangle=new NativeScreenRenderProjection.Rectangle((int)(cell>>32)-minX,(int)cell-minY,maxX-minX+1,maxY-minY+1);var old=map.put(tile.getBlockPos(),new Entry(new WeakReference<>(tile),rectangle,group));if(old==null)cache.bytes+=192;}}
   return map.get(origin.getBlockPos()).rectangle;
  }
