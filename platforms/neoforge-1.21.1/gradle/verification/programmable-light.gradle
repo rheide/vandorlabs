@@ -39,3 +39,7 @@ tasks.register('testNativeLightSettings', JavaExec) {
 neoForge.runs.configureEach {
     if(project.hasProperty('lightEditReference')) systemProperty 'vandorlabs.lightEditReference',file(project.property('lightEditReference')).absolutePath
 }
+
+neoForge.runs.configureEach {
+    if(project.hasProperty('lightCanonical')) systemProperty 'vandorlabs.lightCanonical',project.property('lightCanonical').toString()
+}

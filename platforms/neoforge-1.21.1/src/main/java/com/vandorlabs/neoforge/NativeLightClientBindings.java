@@ -9,6 +9,10 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import com.vandorlabs.neoforge.client.NativeLightScreen;
+import com.vandorlabs.neoforge.light.NativeLightMenu;
+import com.vandorlabs.neoforge.light.NativeLightRegistrations;
 
 /** Authored inventory templates are loaded only for installed canonical Light blocks. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
@@ -22,6 +26,9 @@ public final class NativeLightClientBindings {
             if(!BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs",name)))continue;
             for(String style:ProgrammableLightTextures.IDS)for(String suffix:new String[]{"_on","_off"})event.register(ModelResourceLocation.standalone(ResourceLocation.parse("vandorlabs:item/configured/"+name+"_"+style+suffix)));
         }
+    }
+    @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){
+        if(BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs",NativeLightRegistrations.ID)))event.<NativeLightMenu,NativeLightScreen>register(NativeLightRegistrations.MENU.get(),NativeLightScreen::new);
     }
     private NativeLightClientBindings(){}
 }
