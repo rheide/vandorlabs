@@ -25,7 +25,7 @@ public final class NativeDoorSpriteSource implements SpriteSource {
     private static boolean active(){return "true".equals(System.getenv("VANDOR_DOOR_RESOURCE_CHECK"))||"true".equals(System.getenv("VANDOR_DOOR_ITEM_CHECKS"))||("true".equals(System.getenv("VANDOR_DOOR_RENDER_CHECK"))||"true".equals(System.getenv("VANDOR_LARGE_DOOR_RENDER_CHECK")))||(BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs","programmable_door"))||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs","large_programmable_door")));}
     @Override public SpriteSourceType type(){return TYPE;}
     @Override public void run(ResourceManager manager,Output output){
-        if(!active())return;
+        if(!active()&&!"true".equals(System.getenv("VANDOR_SEGMENTED_RENDER_CHECK"))&&!BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs","segmented_door")))return;
         for(var descriptor:NativeDoorAssets.textures()){
             var id=ResourceLocation.parse(descriptor.id());var path=ResourceLocation.fromNamespaceAndPath(id.getNamespace(),"textures/"+id.getPath()+".png");var resource=manager.getResource(path).orElseThrow(()->new IllegalStateException("Missing authored door artwork "+path));
             output.add(id,loader->loader.loadSprite(id,resource,(name,size,image,metadata)->new Contents(name,size,image,metadata,descriptor)));

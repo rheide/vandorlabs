@@ -20,3 +20,35 @@ tasks.register('testNativeSegmentedHeaders', JavaExec) {
     args file('../../build/test-artifacts/segmented-headers-forge.jsonl').absolutePath,
          file('../../build/test-artifacts/segmented-panels-forge.jsonl').absolutePath
 }
+def segmentedPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+tasks.register('generateSegmentedResources', Exec) {
+    workingDir projectDir
+    commandLine segmentedPython, 'generate_segmented_resources.py'
+    inputs.file('generate_segmented_resources.py')
+    inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/segmented/segmented_panel.png')
+    outputs.dir('build/generated/segmented-resources')
+}
+sourceSets.main.resources.srcDir('build/generated/segmented-resources')
+tasks.named('processResources') { dependsOn 'generateSegmentedResources' }
+tasks.register('testNativeSegmentedFast', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedFastChecks'
+    args file('../../build/test-artifacts/segmented-fast-forge.jsonl').absolutePath,
+         file('../../build/test-artifacts/segmented-panels-forge.jsonl').absolutePath
+}
+tasks.register('testNativeSegmentedClock', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedClockChecks'
+    args file('../../build/test-artifacts/segmented-clock-forge.jsonl').absolutePath
+}
+tasks.register('testNativeSegmentedDoorArtwork', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedPanelChecks'
+    args file('../../build/test-artifacts/segmented-door-artwork-forge.jsonl').absolutePath
+}

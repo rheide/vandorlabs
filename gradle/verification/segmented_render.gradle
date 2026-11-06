@@ -34,3 +34,17 @@ task exportSegmentedClockReference(type: JavaExec) {
     main = 'com.vandorlabs.client.SegmentedClockLegacyChecks'
     args file(project.findProperty('segmentedClockReference') ?: 'build/test-artifacts/segmented-clock-forge.jsonl').absolutePath
 }
+task measureSegmentedLegacyMeshCost(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedPanelLegacyChecks'
+    args file('build/test-artifacts/segmented-cost-forge.json').absolutePath, 'cost'
+}
+task exportSegmentedDoorArtworkReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedPanelLegacyChecks'
+    args file('build/test-artifacts/segmented-door-artwork-forge.jsonl').absolutePath, 'door'
+}

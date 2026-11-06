@@ -14,7 +14,9 @@ public final class SegmentedPanelMesh {
   public Surface(Texture lower,Texture upper,double aspect,boolean door){this.lower=lower;this.upper=upper;this.aspect=aspect;this.door=door;}
  }
  public static void build(boolean window,int shape,int layout,int column,int row,int width,int height,int wc,int wr,int ww,int wh,int glassLayout,boolean opaqueGlass,int pass,Surface body,Surface pane,Texture edge,Sink out){
-  WindowOutline.Slice slice=window?WindowOutline.localSlice(ww,wh,shape,0,wc,wr):null;
+  build(window,shape,layout,column,row,width,height,wc,wr,ww,wh,glassLayout,opaqueGlass,pass,body,pane,edge,out,window?WindowOutline.localSlice(ww,wh,shape,0,wc,wr):null);
+ }
+ public static void build(boolean window,int shape,int layout,int column,int row,int width,int height,int wc,int wr,int ww,int wh,int glassLayout,boolean opaqueGlass,int pass,Surface body,Surface pane,Texture edge,Sink out,WindowOutline.Slice slice){
   if(pass==0){List<double[]> panels=window?slice.frameQuads:Collections.singletonList(new double[]{0,0,16,0,16,16,0,16});for(double[] q:panels){front(out,q,SegmentedDoorGeometry.HALF_THICKNESS*16,1,layout,column,row,width,height,body);front(out,q,-SegmentedDoorGeometry.HALF_THICKNESS*16,-1,layout,column,row,width,height,body);}edges(out,slice,edge);}
   if(window&&(pass==1&&!opaqueGlass||pass==0&&opaqueGlass))for(double[] q:slice.glassQuads)front(out,q,0,1,glassLayout,wc,wh-1-wr,ww,wh,pane);
  }
