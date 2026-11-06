@@ -19,14 +19,17 @@ import net.minecraft.world.phys.shapes.*;
 /** Diagonal body adapter; appearance and topology share the ordinary panel host. */
 public final class NativeDiagonalWallBlock extends NativePanelBlock {
     public static final BooleanProperty INVERTED=BlockStateProperties.INVERTED;
-    private final boolean porthole;
+    private final NativePanelKind kind;
     private final MapCodec<NativeDiagonalWallBlock> codec;
-    public NativeDiagonalWallBlock(Properties properties,boolean porthole){super(properties);this.porthole=porthole;codec=simpleCodec(p->new NativeDiagonalWallBlock(p,porthole));registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(INVERTED,false));}
-    public boolean isPorthole(){return porthole;}
+    public NativeDiagonalWallBlock(Properties properties,boolean porthole){this(properties,porthole?NativePanelKind.PORTHOLE:NativePanelKind.WALL);}
+    public NativeDiagonalWallBlock(Properties properties,NativePanelKind kind){super(properties);this.kind=java.util.Objects.requireNonNull(kind);codec=simpleCodec(p->new NativeDiagonalWallBlock(p,kind));registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(INVERTED,false));}
+    public NativePanelKind panelKind(){return kind;}
+    public boolean isPorthole(){return kind==NativePanelKind.PORTHOLE;}
+    public boolean isGlass(){return kind==NativePanelKind.GLASS;}
     @Override protected MapCodec<? extends HorizontalDirectionalBlock> codec(){return codec;}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,INVERTED);}
-    @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeWallEntity(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state,porthole);}
-    private boolean continuation(BlockState other){return other.is(this)||!porthole&&other.getBlock() instanceof NativeDiagonalWallBlock block&&!block.porthole;}
+    @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeWallEntity(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state,kind);}
+    private boolean continuation(BlockState other){return other.is(this)||kind==NativePanelKind.WALL&&other.getBlock() instanceof NativeDiagonalWallBlock block&&block.kind==NativePanelKind.WALL;}
     static boolean configured(ItemStack stack){
         if(stack.has(DataComponents.BLOCK_ENTITY_DATA))return true;
         var custom=stack.get(DataComponents.CUSTOM_DATA);return custom!=null&&custom.copyTag().contains("BlockEntityTag",10);
