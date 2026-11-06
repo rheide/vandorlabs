@@ -45,9 +45,11 @@ public final class NativeMaterialPicker {
     /** The legacy frame sentinel is an actual material row, separate from encoded category rows. */
     public NativeMaterialPicker originalArtwork(String texture){return specialMaterial(-1,"Original artwork","Frame",texture);}
     /** UI-only negative choices retain insertion/search order and never become category rows. */
-    public NativeMaterialPicker specialMaterial(int id,String label,String category,String texture){
+    public NativeMaterialPicker specialMaterial(int id,String label,String category,String texture){return specialMaterial(id,label,category,texture,1,1);}
+    public NativeMaterialPicker specialMaterial(int id,String label,String category,String texture,float usedU,float usedV){
+        if(!Float.isFinite(usedU)||!Float.isFinite(usedV)||usedU<=0||usedV<=0||usedU>1||usedV>1)throw new IllegalArgumentException("Special material content bounds");
         if(id>=0||id<=-200000)throw new IllegalArgumentException("Special material ID overlaps category domain");
-        if(!special.containsKey(id)){special.put(id,new ModernFinishCatalog.Entry("picker_"+id,label,category,true,false,-1,texture,1,1));options.add(special.size()-1,id);groups.computeIfAbsent(category,key->new ArrayList<>()).add(id);}
+        if(!special.containsKey(id)){special.put(id,new ModernFinishCatalog.Entry("picker_"+id,label,category,true,false,-1,texture,usedU,usedV));options.add(special.size()-1,id);groups.computeIfAbsent(category,key->new ArrayList<>()).add(id);}
         categories=List.copyOf(TextureListLayout.categories(groups.keySet()));
         for(var group:groups.values())group.sort((a,b)->TextureListLayout.compareOptions(label(a),a,label(b),b));reveal();return this;
     }
