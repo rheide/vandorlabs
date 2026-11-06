@@ -1,0 +1,29 @@
+package com.vandorlabs.client;
+import com.vandorlabs.segmented.*;
+import com.vandorlabs.redstone.ChannelList;
+import com.google.gson.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.entity.player.EntityPlayer;
+/** Actual authoritative source; native lifecycle replays these snapshots. */
+public final class SegmentedLifecycleLegacyChecks {
+ private static final BlockPos BASE=new BlockPos(0,80,0);private static final Gson JSON=new Gson();
+ public static void main(String[] args)throws Exception{
+  net.minecraft.init.Bootstrap.register();com.vandorlabs.VandorLabs.proxy=new com.vandorlabs.CommonProxy();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(SegmentedDoorTile.class,new net.minecraft.util.ResourceLocation("minecraft:segmented_lifecycle_reference"));
+  java.nio.file.Path out=java.nio.file.Paths.get(System.getProperty("vandorlabs.segmentedLifecycleReference","build/test-artifacts/segmented-lifecycle-forge.jsonl"));java.nio.file.Files.createDirectories(out.toAbsolutePath().getParent());int cases=0;
+  try(java.io.PrintWriter writer=new java.io.PrintWriter(java.nio.file.Files.newBufferedWriter(out))){
+   for(int width:new int[]{1,3})for(int height:new int[]{1,3})for(int direction=0;direction<4;direction++){
+    NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);SegmentedDoorBlock block=new SegmentedDoorBlock();
+    EntityPlayer actor=new EntityPlayer(world,new com.mojang.authlib.GameProfile(java.util.UUID.fromString("d0f86af4-031b-457c-8de4-4b382273e430"),"Oracle")){public boolean isSpectator(){return false;}public boolean isCreative(){return false;}public boolean canPlayerEdit(BlockPos pos,net.minecraft.util.EnumFacing side,net.minecraft.item.ItemStack stack){return true;}};
+    for(int x=0;x<width;x++)for(int row=0;row<height;row++){BlockPos p=BASE.add(x,-row,0);SegmentedDoorTile tile=new SegmentedDoorTile();tile.setWorld(world);tile.setPos(p);world.tiles.put(p,tile);world.states.put(p,block.getDefaultState());}
+    for(int x=0;x<width;x++)((SegmentedDoorTile)world.tiles.get(BASE.east(x))).refreshColumn();
+    emit(writer,"formed",width,height,direction,world);cases++;
+    SegmentedDoorTile root=(SegmentedDoorTile)world.tiles.get(BASE);SegmentedDoorSettings cfg=new SegmentedDoorSettings(direction,false,1,0,true,2,true,SegmentedDoorSettings.DEFAULT.glass,1);
+    root.configureAll(actor,ChannelList.EMPTY,7,false,false,-1,cfg);root.operate(actor,true);emit(writer,"opening",width,height,direction,world);cases++;
+    world.time=5;root.operate(actor,false);emit(writer,"reverse",width,height,direction,world);cases++;
+    SegmentedDoorTile part=(SegmentedDoorTile)world.tiles.get(BASE.add(width-1,1-height,0));part.configurePart(actor,ChannelList.EMPTY,9,false,true,-1,new SegmentedDoorSettings(direction,true,2,0,false,3,false,SegmentedDoorSettings.DEFAULT.glass,2));emit(writer,"part",width,height,direction,world);cases++;
+    root.settings=root.settings.activation(2);boolean denied=false;try{root.toggle(actor);}catch(IllegalArgumentException expected){denied=true;}if(!denied)throw new AssertionError("source redstone ownership");
+   }
+  }java.security.MessageDigest digest=java.security.MessageDigest.getInstance("SHA-256");for(String line:java.nio.file.Files.readAllLines(out,java.nio.charset.StandardCharsets.UTF_8))digest.update((line+"\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));StringBuilder hash=new StringBuilder();for(byte b:digest.digest())hash.append(String.format("%02x",b&255));if(!hash.toString().equals("b0bb0352acf2ad5949ac90f45653541ad1645c91e2c2843e8bdba8a0afe64059"))throw new AssertionError("Actual lifecycle changed "+hash);System.out.println("Actual Segmented lifecycle reference PASS cases="+cases+" output="+out);
+ }
+ private static void emit(java.io.PrintWriter out,String stage,int width,int height,int direction,NonRenderingChecks.MemoryWorld world){JsonObject line=new JsonObject();line.addProperty("stage",stage);line.addProperty("width",width);line.addProperty("height",height);line.addProperty("direction",direction);JsonArray tiles=new JsonArray();for(int x=0;x<width;x++)for(int row=0;row<height;row++){SegmentedDoorTile t=(SegmentedDoorTile)world.tiles.get(BASE.add(x,-row,0));JsonArray a=new JsonArray();for(int v:new int[]{t.topOffset,t.height,t.column,t.columns,t.ticksPerSection,t.texture,t.duration,(int)t.sequence,t.settings.direction,t.settings.layout,t.settings.activation,t.settings.shape,t.settings.position})a.add(v);for(boolean b:new boolean[]{t.formed,t.configured,t.targetOpen,t.localRedstone,t.signalOpens,t.settings.straight,t.settings.window,t.settings.join})a.add(b);a.add(t.from);a.add(t.started);a.add(t.pose(0));tiles.add(a);}line.add("tiles",tiles);out.println(JSON.toJson(line));}
+}
