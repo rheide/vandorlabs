@@ -4,7 +4,7 @@
 
 - Enable regular and diagonal Trapdoors in the experimental native build with dedicated editing, configured items, source-matched assemblies, moved-leaf interactions and contained-fluid rendering.
 
-- Share Programmable Light save and signal policy between versions while preserving Forge defaults, lazy input sampling and existing lighting.
+- Share Programmable Light save, signal policy and cached housing meshes between versions while preserving Forge defaults, lazy input sampling, artwork and existing lighting.
 
 - Preserve clicked-face coordinates when placing native walls, portholes and ordinary/Large Doors, keeping depth, anchoring and hinge choice consistent with Forge.
 
@@ -16,7 +16,7 @@
 - Preserve native Segmented Door legacy water through opposite-side edits and complete drainage, preventing lost or recreated water after reload.
 
 - Enable the native ordinary and Large programmable Doors with shared authored geometry, reversible motion, full company artwork, padded configured icons and the dedicated Door/Frame/Redstone/Security/Glass editor. Preserve paired controls, channel banks and credential ownership through restart and mining. Large Doors preserve nine-part placement, old-schema follower defaults, per-part water outlet ownership and credential recovery when mining any part.
-- Share Segmented Door panel, window and border kernels, typed trapdoor defaults and bounded Segmented Door settings transport. Share regular/diagonal trapdoor dialog choices, wording and reverse cycling across versions. Enable native Segmented Doors with per-section editing, moved-panel use, configured picking and stationary fluid ownership. Trapdoor foundations remain unregistered.
+- Share Segmented Door panel, window and border kernels, typed trapdoor defaults and bounded Segmented Door settings transport. Share regular/diagonal trapdoor dialog choices, wording and reverse cycling across versions. Enable native Segmented Doors with per-section editing, moved-panel use, configured picking and stationary fluid ownership.
 - Keep the native diagonal-glass recipe conditional on its original programmable-glass ingredient becoming available.
 
 - Extend the experimental 1.21.1 build with programmable plain walls, thin porthole walls and diagonal walls. Reuse the housing editor, configured items, frame materials, contained fluids and bounded panel renderer; preserve diagonal sizes, slopes, fills and joins. Portholes support the glass palette and per-block Off/static/animated artwork. Other building variants and full native acceptance remain in progress.

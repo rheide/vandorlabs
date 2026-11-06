@@ -96,6 +96,7 @@ public class TEAnimatedScreenSelector
     static void unloadGroups(World world) {
         ScreenSurfaceGroups.unload(world);
         VehicleShapeRenderer.clear();
+        LightHousingMeshes.clear();
         if(lightCacheWorld==world) {
             LIGHT_GROUPS.clear();lightCacheWorld=null;
             lightCacheTick=Long.MIN_VALUE;lightCacheRevision=Long.MIN_VALUE;
@@ -1371,8 +1372,7 @@ public class TEAnimatedScreenSelector
 
     private static void renderLightHousing(TextureAtlasSprite sprite,int visible,
             double x0,double y0,double z0,double x1,double y1,double z1,int layout) {
-        ScreenHousingMesh mesh=ScreenHousingMesh.box(x0,y0,z0,x1,y1,z1).textureLayout(layout,UnifiedTextureSprites.aspect(sprite));
-        drawWallMesh(sprite,mesh.boxFaces(visible & ~(1<<EnumFacing.NORTH.getIndex())));
+        LightHousingMeshes.render(sprite,visible,x0,y0,z0,x1,y1,z1,layout);
     }
 
     private static void renderProgrammableLightFace(TextureAtlasSprite face,
@@ -1455,6 +1455,7 @@ public class TEAnimatedScreenSelector
     /** TextureManager caches per ResourceLocation; drop entries on pack reload. */
     public static synchronized void clearCache() {
         VehicleShapeRenderer.clear();
+        LightHousingMeshes.clear();
         for(AnimData data:ANIM_CACHE.values())Minecraft.getMinecraft().getTextureManager().deleteTexture(data.texture);
         ANIM_CACHE.clear();
     }
