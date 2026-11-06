@@ -42,6 +42,11 @@ public class NativeScreenEntity extends BlockEntity implements NativeChannelMemb
  @Override public void beforeChannelRegistration(){controlService.finishLoading();localInputChanged();}
  public final void localInputChanged(){serverThread();if(inert||!(level instanceof ServerLevel)||!isChannelMemberActive())return;int next=NativeLoadedRedstonePower.level(level,worldPosition);if(next!=physicalPower){physicalPower=next;changed(false);}}
  void reconcileControlOutput(){if(level instanceof ServerLevel&&isChannelMemberActive()&&localOutput()!=notifiedOutput)changed(false);}
+ boolean applySurface(NativeScreenSurfaceEdit edit){
+  serverThread();if(editing()||edit==null||inert||!(level instanceof ServerLevel server)||!NativeRedstoneChannels.open(server)||!isChannelMemberActive())return false;
+  var next=edit.apply(family,snapshot.settings,catalog);if(next==null)return false;if(next.settings()==snapshot.settings&&controls(edit.slot()).enabled()==next.rowsEnabled())return true;
+  editingDisplay=true;try{NativeRedstoneChannels.batch(server,()->{geometryRevision++;snapshot=new Snapshot(next.settings(),snapshot.frames,snapshot.glass,snapshot.controls,snapshot.present,snapshot.transmission);controlService.setEnabled(edit.slot(),next.rowsEnabled());changed(false);});}finally{editingDisplay=false;}return true;
+ }
  boolean applyDisplay(NativeScreenDisplayEdit edit){
   serverThread();if(editing()||edit==null||inert||!(level instanceof ServerLevel server)||!NativeRedstoneChannels.open(server)||!isChannelMemberActive())return false;
   NativeScreenSettings old=snapshot.settings,next=edit.apply(family,old,catalog);if(next==null)return false;if(next==old)return true;
