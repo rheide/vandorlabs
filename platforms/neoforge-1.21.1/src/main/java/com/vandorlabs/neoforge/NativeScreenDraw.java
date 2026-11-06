@@ -1,0 +1,44 @@
+package com.vandorlabs.neoforge;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.vandorlabs.neoforge.client.NativeMaterialPlayback;
+import com.vandorlabs.neoforge.screen.*;
+import com.vandorlabs.render.*;
+import com.vandorlabs.screen.*;
+import com.vandorlabs.segmented.SegmentedPanelMesh;
+import java.util.*;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+
+/** Bake-owned immutable role draw list. All discovery, image inspection and packing precede emission. */
+final class NativeScreenDraw {
+ private static final SegmentedPanelMesh.Texture DIRECT=new SegmentedPanelMesh.Texture(){public float u(double unit){return (float)unit;}public float v(double unit){return (float)unit;}};
+ private record Part(NativeScreenMesh mesh,RenderType layer,NativeScreenRenderPlan.Light light,NativeMaterialPlayback.Material playback,int mode,int speed,boolean frame,boolean glowing){}
+ private final Part[] parts;private final long retained;
+ private NativeScreenDraw(List<Part> parts){this.parts=parts.toArray(Part[]::new);long bytes=96L+parts.size()*64L;for(var part:parts)bytes+=part.mesh.retainedBytes();retained=bytes;}
+ long retainedBytes(){return retained;}
+ void emit(PoseStack pose,MultiBufferSource buffers,int ownerLight,int overlay){int current=ownerLight;for(var part:parts){int selected=switch(part.light){case KEEP->current;case OWNER->ownerLight;case FULL->0xF000F0;};if(!part.frame)current=selected;if(part.glowing)selected=(selected&0xffff0000)|240;double top=0,span=1;if(part.playback!=null){int frame=part.playback.frame(part.mode,part.speed,NativeMaterialPlayback.tick());top=part.playback.top(part.mode,frame);span=part.playback.bottom(part.mode,frame)-top;}part.mesh.emit(pose.last(),buffers.getBuffer(part.layer),selected,overlay,top,span);}}
+ static NativeScreenDraw build(NativeScreenMaterials materials,NativeScreenRenderPlan plan,NativeScreenRenderProjection projection){
+  var visual=plan.visual;var family=visual.family();var settings=visual.settings();var frames=visual.frames();double[] transform=new double[16];ScreenRenderPose.write(family,plan.state,settings.ceilingMounted(),settings.ceilingPosition(),transform);boolean half=family==ScreenFamily.HALF_DIAGONAL;List<Part> parts=new ArrayList<>();var wall=materials.atlas(settings.housing().mainTexture);
+  for(var body:plan.geometry.bodies){var mesh=body.applyLayout?body.mesh.textureLayout(settings.surfaceLayout(),wall.aspect()):body.mesh;if(mesh.quads.length>0)parts.add(new Part(NativeScreenMesh.build(7,transform,half,wall.pixels(),sink->ScreenMeshEmission.housing(mesh.quads,body.ceiling,sink)),NativeScreenLayers.body(),NativeScreenRenderPlan.Light.OWNER,null,0,0,false,false));if(mesh.triangles.length>0)parts.add(new Part(NativeScreenMesh.build(4,transform,half,wall.pixels(),sink->ScreenMeshEmission.housing(mesh.triangles,body.ceiling,sink)),NativeScreenLayers.body(),NativeScreenRenderPlan.Light.OWNER,null,0,0,false,false));}
+  for(var surface:plan.surfaces){var geometry=surface.geometry();boolean framed=geometry.frame&&frames.front>=0&&!frames.bare;var rectangle=frames.tile?NativeScreenRenderProjection.Rectangle.SINGLE:projection.frame();NativeScreenMaterials.Frame frame=framed?materials.frame(frames.front):null;double l=0,r=0,t=0,b=0;if(framed){var border=frame.borders();l=rectangle.column()==0?border.left():0;r=rectangle.column()==rectangle.columns()-1?border.right():0;t=rectangle.row()==rectangle.rows()-1?border.top():0;b=rectangle.row()==0?border.bottom():0;}var content=framed?ScreenSurface.inset(geometry.quad,l,r,t,b):geometry.quad;
+   if(framed&&surface.frameBefore())frame(parts,materials,plan,surface,transform,half,frame,l,r,t,b);
+   for(var fragment:surface.fragments()){
+    var binding=fragment.binding();if(binding==NativeScreenRenderPlan.Binding.NONE)continue;if(binding==NativeScreenRenderPlan.Binding.ROWS||binding==NativeScreenRenderPlan.Binding.CHIP)throw new IllegalStateException("Screen "+binding+" emitter is not installed");
+    var artwork=frames.displayFit?projection.artwork():NativeScreenRenderProjection.Rectangle.SINGLE;boolean split=fragment.half()!=0;if(split&&artwork.columns()!=artwork.rows())artwork=NativeScreenRenderProjection.Rectangle.SINGLE;int n=artwork.rows();boolean middle=(n&1)!=0&&artwork.row()==n/2;int which=fragment.half()-1;boolean upper=artwork.row()>=n/2;if(split&&!middle&&((which==0)!=upper))continue;var quad=split&&middle?ScreenSurface.half(content,which==0):content;
+    double crop=fragment.crop(),u0=crop,u1=1-crop,v0=crop,v1=1-crop;
+    if(split){double left=family==ScreenFamily.INPUT?(double)artwork.column()/n:(double)(n-artwork.column())/n,right=family==ScreenFamily.INPUT?(double)(artwork.column()+1)/n:(double)(n-artwork.column()-1)/n;double localTop=middle&&which==1?.5:0,localBottom=middle&&which==0?.5:1;double top=(n-artwork.row()-1+localTop)*2/n-which,bottom=(n-artwork.row()-1+localBottom)*2/n-which;double du=u1-u0,dv=v1-v0;double startU=u0,startV=v0;u0=startU+right*du;u1=startU+left*du;v0=startV+top*dv;v1=startV+bottom*dv;}
+    else if(frames.displayFit&&geometry.split){double du=(u1-u0)/artwork.columns(),dv=(v1-v0)/artwork.rows();if(family==ScreenFamily.INPUT){u1=u0+(artwork.column()+1)*du;u0+=artwork.column()*du;}else{u1=u0+(artwork.columns()-artwork.column())*du;u0+=(artwork.columns()-artwork.column()-1)*du;}v1=v0+(artwork.rows()-artwork.row())*dv;v0+=(artwork.rows()-artwork.row()-1)*dv;}
+    if(!split&&geometry.reverseU){double swap=u0;u0=u1;u1=swap;}
+    NativeMaterialPlayback.Material playback=null;SegmentedPanelMesh.Texture texture;net.minecraft.resources.ResourceLocation resource;
+    if(binding==NativeScreenRenderPlan.Binding.ATLAS){var atlas=materials.atlas(fragment.material());texture=new SegmentedPanelMesh.Texture(){public float u(double unit){return atlas.pixels().u(unit*16);}public float v(double unit){return atlas.pixels().v(unit*16);}};resource=TextureAtlas.LOCATION_BLOCKS;}
+    else {playback=binding==NativeScreenRenderPlan.Binding.INPUT?materials.input(fragment.input()):binding==NativeScreenRenderPlan.Binding.OFF?materials.display(NativeScreenCatalog.INSTANCE.screenArtwork("engineering_screen")):materials.display(fragment.material());texture=DIRECT;resource=playback.texture(fragment.mode());}
+    boolean bias=family!=ScreenFamily.SCREEN&&!(family==ScreenFamily.CONSOLE&&geometry.slot==0);final double left=u0,right=u1,top=v0,bottom=v1;var packed=NativeScreenMesh.build(7,transform,half,texture,sink->ScreenMeshEmission.surface(quad,left,right,top,bottom,geometry.ceiling,sink));parts.add(new Part(packed,NativeScreenLayers.type(resource,false,bias),fragment.light(),playback,fragment.mode(),fragment.speed(),false,false));
+   }
+   if(framed&&!surface.frameBefore())frame(parts,materials,plan,surface,transform,half,frame,l,r,t,b);
+  }
+  return new NativeScreenDraw(parts);
+ }
+ private static double cut(int index,double a,double b){return index==0?0:index==1?a:index==2?1-b:1;}
+ private static void frame(List<Part> parts,NativeScreenMaterials materials,NativeScreenRenderPlan plan,NativeScreenRenderPlan.Surface surface,double[] transform,boolean half,NativeScreenMaterials.Frame frame,double l,double r,double t,double b){var geometry=surface.geometry();var border=frame.borders();var mesh=NativeScreenMesh.build(7,transform,half,frame.pixels(),sink->{for(int row=0;row<3;row++)for(int col=0;col<3;col++)if(row!=1||col!=1){double x0=cut(col,l,r),x1=cut(col+1,l,r),y0=cut(row,t,b),y1=cut(row+1,t,b);if(x1>x0&&y1>y0)ScreenMeshEmission.frameRegion(geometry.quad,geometry.frameInput,geometry.ceiling,frame.aspect(),x0,y0,x1,y1,cut(col,border.left(),border.right()),cut(row,border.top(),border.bottom()),cut(col+1,border.left(),border.right()),cut(row+1,border.top(),border.bottom()),sink);}});var settings=plan.visual.frames();boolean glow=materials.glowing(settings.front)||materials.glowing(settings.interior)||materials.glowing(settings.exteriorChoice());parts.add(new Part(mesh,NativeScreenLayers.type(TextureAtlas.LOCATION_BLOCKS,true,true),NativeScreenRenderPlan.Light.KEEP,null,0,0,true,glow));}
+}
