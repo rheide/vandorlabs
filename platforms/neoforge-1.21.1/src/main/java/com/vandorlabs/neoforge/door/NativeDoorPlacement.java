@@ -27,14 +27,14 @@ final class NativeDoorPlacement {
         if(clickedDepth!=0&&panel==2)panel=1;
         return new NativeDoorSettings(new SpaceDoorData(data.design,data.detail,data.framed,data.direction,clickedDepth==0,data.sliding,data.hinges,data.trigger,data.panel),face,layout,tile,clickedDepth,panel,mode,allowed,frames,glass);
     }
-    static boolean install(BlockPlaceContext context,NativeProgrammableDoorBlock block,BlockState state,CompoundTag configured,int depth){
+    static boolean install(BlockPlaceContext context,NativeProgrammableDoorBlock block,BlockState state,CompoundTag configured,int depth,Runnable transferOwnership){
         Level level=context.getLevel();BlockPos root=context.getClickedPos();BlockState[] old={level.getBlockState(root),level.getBlockState(root.above())};NativeProgrammableDoorEntity[] installed=new NativeProgrammableDoorEntity[2];Scope previous=ACTIVE.get();ACTIVE.set(new Scope(level,root));boolean success=false;Throwable original=null;NativeDoorSettings prepared=null;ChannelList preparedChannels=ChannelList.EMPTY;
         try{
             var prior=NativeDoorSettings.fresh(false,block.slidingModel());BlockPos mate=NativeDoorLifecycle.mateForPlacement(level,root,block,state);var neighbor=mate!=null&&level.getBlockEntity(mate) instanceof NativeProgrammableDoorEntity host?host.placementSettings():null;
             var settings=choices(prior,configured,neighbor,depth);prepared=settings;ChannelList channels=ChannelList.EMPTY;if(configured!=null){ChannelList fallback=ChannelList.of(Math.max(0,configured.getInt("SpaceDoorChannel")));try{channels=configured.contains("RedstoneChannels",Tag.TAG_INT_ARRAY)?ChannelList.of(configured.getIntArray("RedstoneChannels")):fallback;}catch(IllegalArgumentException malformed){channels=fallback;}}
             preparedChannels=channels;for(int i=0;i<2;i++){BlockPos pos=i==0?root:root.above();BlockState next=state.setValue(NativeProgrammableDoorBlock.HALF,i==0?DoubleBlockHalf.LOWER:DoubleBlockHalf.UPPER);if(!block.stagePart(level,pos,next)||level.getBlockState(pos)!=next||!(level.getBlockEntity(pos) instanceof NativeProgrammableDoorEntity host))return false;installed[i]=host;if(i==0)host.installPlacement(settings,channels);}
             if(level.getBlockEntity(root)!=installed[0]||level.getBlockEntity(root.above())!=installed[1])return false;
-            success=true;
+            transferOwnership.run();success=true;
         }catch(RuntimeException|Error failure){original=failure;throw failure;}finally{
             Throwable rollback=null;
             try{

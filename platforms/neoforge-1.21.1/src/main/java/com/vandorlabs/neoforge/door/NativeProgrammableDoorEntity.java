@@ -51,8 +51,8 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     final void retainPlacementRecovery(){placementRecovery=true;publishLocalVisual();setChanged();requestModelDataUpdate();}
     public final boolean placementRecovery(){return placementRecovery;}
     public static boolean validFrames(com.vandorlabs.persistence.FrameSettings f){return f!=null&&NativeDoorSettings.frame(f.front)&&NativeDoorSettings.surface(f.interior)&&NativeDoorSettings.surface(f.exterior)&&(f.artworkVersion==0||f.artworkVersion==1)&&(f.splitTop==-1||com.vandorlabs.neoforge.ModernFinishCatalog.validChoice(f.splitTop))&&(f.splitBottom==-1||com.vandorlabs.neoforge.ModernFinishCatalog.validChoice(f.splitBottom));}
-    final boolean stageFrames(com.vandorlabs.persistence.FrameSettings frames){var old=settings;var next=new NativeDoorSettings(old.door(),old.faceTexture(),old.rawLayout(),old.tileTexture(),old.depth(),old.rawPanelMode(),old.securityMode(),old.securityAllowed(),frames,old.glass());if(old.same(next))return false;settings=next;return true;}
-    final boolean stageGlass(NativeDoorGlass glass){if(settings.glass().same(glass))return false;var old=settings;settings=new NativeDoorSettings(old.door(),old.faceTexture(),old.rawLayout(),old.tileTexture(),old.depth(),old.rawPanelMode(),old.securityMode(),old.securityAllowed(),old.frames(),glass);return true;}
+    final boolean stageFrames(com.vandorlabs.persistence.FrameSettings frames){var old=settings;var next=new NativeDoorSettings(old.door(),old.faceTexture(),old.rawLayout(),old.tileTexture(),old.depth(),old.rawPanelMode(),old.securityMode(),old.securityAllowed(),frames,old.glass());if(old.same(next))return false;settings=next;refreshVisual(false);return true;}
+    final boolean stageGlass(NativeDoorGlass glass){if(settings.glass().same(glass))return false;var old=settings;settings=new NativeDoorSettings(old.door(),old.faceTexture(),old.rawLayout(),old.tileTexture(),old.depth(),old.rawPanelMode(),old.securityMode(),old.securityAllowed(),old.frames(),glass);refreshVisual(false);return true;}
     final boolean accepts(NativeDoorEdit edit){return edit!=null&&edit.accepts(large);}
     final boolean stage(NativeDoorEdit edit,ChannelList next){
         NativeDoorSettings updated=edit.apply(settings);boolean changed=!settings.same(updated)||!channels.equals(next);
@@ -64,11 +64,11 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
             if(NativeDoorSettings.readerCompany(reader)!=updated.securityAllowed()||previousBehavior!=behavior){reader.putLong("TokenPulseUntil",0);reader.putBoolean("TokenToggled",false);}
             reader.putBoolean("AnyToken",any);reader.putInt("AllowedTokens",updated.securityAllowed());reader.putInt("TokenBehavior",behavior);
         }
-        return true;
+        refreshVisual(false);return true;
     }
-    final void publish(){publishLocalVisual();refreshVisual(false);setChanged();requestModelDataUpdate();if(level!=null&&!level.isClientSide){level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);if(membershipDirty&&isChannelMemberActive())com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.channelsChanged(this);membershipDirty=false;localInputChanged();}}
+    final void publish(){refreshVisual(false);setChanged();requestModelDataUpdate();if(level!=null&&!level.isClientSide){level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);if(membershipDirty&&isChannelMemberActive())com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.channelsChanged(this);membershipDirty=false;localInputChanged();}}
     @Override public BlockEntity channelBlockEntity(){return this;}
-    @Override public boolean isChannelMemberActive(){return !placementRecovery&&com.vandorlabs.neoforge.redstone.NativeChannelMember.super.isChannelMemberActive()&&getBlockState().getBlock() instanceof NativeProgrammableDoorBlock block&&getBlockState().getValue(NativeProgrammableDoorBlock.HALF)==net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER&&NativeDoorLifecycle.complete(level,worldPosition,block);}
+    @Override public boolean isChannelMemberActive(){return !placementRecovery&&(!(level instanceof net.minecraft.server.level.ServerLevel server)||com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(server))&&com.vandorlabs.neoforge.redstone.NativeChannelMember.super.isChannelMemberActive()&&getBlockState().getBlock() instanceof NativeProgrammableDoorBlock block&&getBlockState().getValue(NativeProgrammableDoorBlock.HALF)==net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER&&NativeDoorLifecycle.complete(level,worldPosition,block);}
     @Override public int localSignalLevel(int channel){return isChannelMemberActive()?NativeDoorLifecycle.localPower(level,worldPosition):0;}
     @Override public void setChannelLevel(int value){boolean next=value>0;if(channelSignal==next)return;channelSignal=next;NativeDoorLifecycle.updatePower(this);}
     public final void localInputChanged(){localDirty=true;if(level!=null&&!level.isClientSide)tickDoor();}
@@ -76,7 +76,7 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     public final void markVisualDirty(){visualDirty=true;}
     public final void refreshVisual(){refreshVisual(true);}
     private void refreshVisual(boolean notify){
-        visualDirty=false;lastRawState=getBlockState();if(level==null||NativeDoorLifecycle.root(level,worldPosition)!=this){publishLocalVisual();return;}
+        visualDirty=false;lastRawState=getBlockState();if(level==null||NativeDoorLifecycle.root(level,worldPosition)!=this){if(visual.settings()!=settings||visual.state()!=getBlockState()||visual.recovery()!=placementRecovery)publishLocalVisual();return;}
         var block=(NativeProgrammableDoorBlock)getBlockState().getBlock();var state=block.resolved(level,worldPosition,getBlockState());var side=NativeDoorLifecycle.panelSide(this,state);var old=visual;
         visualDirty=false;if(old.settings()==settings&&old.state()==state&&old.side()==side)return;visual=new Visual(settings,state,side,large,placementRecovery);if(notify)requestModelDataUpdate();
         if(notify&&level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);

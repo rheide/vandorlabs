@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.function.Supplier;
 import net.minecraft.core.*;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
@@ -31,24 +32,29 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
     private final Supplier<MenuType<NativeDoorMenu>> menus;
     private final Supplier<Item> canonicalItem;
     private final boolean slidingModel;
-    private final NativeDoorSettings defaults;
     protected NativeProgrammableDoorBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammableDoorEntity>> entities,Supplier<MenuType<NativeDoorMenu>> menus,Supplier<Item> canonicalItem,boolean slidingModel){
-        super(properties);this.entities=entities;this.menus=menus;this.canonicalItem=canonicalItem;this.slidingModel=slidingModel;defaults=NativeDoorSettings.fresh(false,slidingModel);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(HALF,DoubleBlockHalf.LOWER).setValue(HINGE,DoorHingeSide.LEFT).setValue(OPEN,false).setValue(POWERED,false).setValue(PAIRED,false));
+        super(properties.noOcclusion().dynamicShape().isRedstoneConductor((state,level,pos)->false).isSuffocating((state,level,pos)->false).isViewBlocking((state,level,pos)->false));this.entities=entities;this.menus=menus;this.canonicalItem=canonicalItem;this.slidingModel=slidingModel;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(HALF,DoubleBlockHalf.LOWER).setValue(HINGE,DoorHingeSide.LEFT).setValue(OPEN,false).setValue(POWERED,false).setValue(PAIRED,false));
     }
     public final boolean slidingModel(){return slidingModel;}
     protected boolean stagePart(Level level,BlockPos pos,BlockState state){return level.setBlock(pos,state,Block.UPDATE_KNOWN_SHAPE);}
     protected boolean restorePart(Level level,BlockPos pos,BlockState previous){return level.setBlock(pos,previous,Block.UPDATE_KNOWN_SHAPE);}
+    protected abstract VoxelShape orphanShape(BlockState resolved,boolean collision);
     protected abstract VoxelShape doorShape(NativeDoorSettings settings,BlockState resolved,boolean collision);
-    protected abstract boolean controlPanelHit(NativeDoorSettings settings,BlockState resolved,BlockHitResult hit,BlockPos lower);
+    protected abstract boolean controlPanelHit(NativeDoorSettings settings,BlockState resolved,com.vandorlabs.render.SpaceDoorControlPanel.Side side,BlockHitResult hit,BlockPos lower);
     protected abstract boolean securityOpen(NativeProgrammableDoorEntity host);
-    protected abstract InteractionResult credentialInteraction(NativeProgrammableDoorEntity host,Player player,InteractionHand hand,BlockHitResult hit);
+    protected abstract InteractionResult credentialInteraction(NativeProgrammableDoorEntity host,Player player,InteractionHand hand,BlockHitResult hit,boolean panelHit);
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,HALF,OPEN,HINGE,POWERED,PAIRED);}
+    /** Current Forge doors explicitly use lightOpacity0; lighting/AO workers never need tile-dependent shapes. */
+    @Override protected int getLightBlock(BlockState state,BlockGetter level,BlockPos pos){return 0;}
+    @Override protected boolean propagatesSkylightDown(BlockState state,BlockGetter level,BlockPos pos){return true;}
+    @Override protected float getShadeBrightness(BlockState state,BlockGetter level,BlockPos pos){return 1;}
+    @Override protected VoxelShape getOcclusionShape(BlockState state,BlockGetter level,BlockPos pos){return Shapes.empty();}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeProgrammableDoorEntity(entities.get(),pos,state,false,slidingModel);}
     @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){return createTickerHelper(type,entities.get(),(world,pos,current,host)->host.tickDoor());}
-    private NativeDoorSettings settings(BlockGetter world,BlockPos pos,BlockState state){return world.getBlockEntity(NativeDoorLifecycle.lower(state,pos)) instanceof NativeProgrammableDoorEntity host?host.settings():defaults;}
+    private NativeDoorSettings settings(BlockGetter world,BlockPos pos,BlockState state){return (!(world instanceof ServerLevel server)||com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(server))&&world.getBlockEntity(NativeDoorLifecycle.lower(state,pos)) instanceof NativeProgrammableDoorEntity host?host.settings():null;}
     public final BlockState resolved(LevelReader level,BlockPos pos,BlockState state){BlockState actual=NativeDoorLifecycle.resolved(level,pos,state);return actual.setValue(PAIRED,level instanceof Level world&&NativeDoorLifecycle.mate(world,NativeDoorLifecycle.lower(state,pos),this)!=null);}
-    @Override protected VoxelShape getShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return doorShape(settings(level,pos,state),level instanceof LevelReader reader?resolved(reader,pos,state):state,false);}
-    @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return doorShape(settings(level,pos,state),level instanceof LevelReader reader?resolved(reader,pos,state):state,true);}
+    @Override protected VoxelShape getShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){var data=settings(level,pos,state);var resolved=level instanceof LevelReader reader?resolved(reader,pos,state):state;return data==null?orphanShape(resolved,false):doorShape(data,resolved,false);}
+    @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){var data=settings(level,pos,state);var resolved=level instanceof LevelReader reader?resolved(reader,pos,state):state;return data==null?orphanShape(resolved,true):doorShape(data,resolved,true);}
     @Override public BlockState getStateForPlacement(BlockPlaceContext context){var pos=context.getClickedPos();var facing=context.getHorizontalDirection().getOpposite();var hit=context.getClickLocation().subtract(pos.getX(),pos.getY(),pos.getZ());return defaultBlockState().setValue(FACING,facing).setValue(HINGE,NativeDoorLifecycle.placementHinge(context.getLevel(),pos,this,facing,hit.x,hit.z));}
     @Override protected boolean canSurvive(BlockState state,LevelReader level,BlockPos pos){return state.getValue(HALF)==DoubleBlockHalf.UPPER?NativeDoorLifecycle.complete(level,pos.below(),this):NativeDoorLifecycle.supported(level,pos);}
     @Override public boolean configurationLinksLoaded(NativeProgrammableDoorEntity root){
@@ -61,10 +67,10 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         if(player instanceof ServerPlayer server)server.openMenu(new SimpleMenuProvider((id,inventory,ignored)->new NativeDoorMenu(menus.get(),id,root),getName()),b->b.writeBlockPos(root.getBlockPos()));return true;
     }
     private InteractionResult interact(BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
-        var root=NativeDoorLifecycle.root(level,pos);if(root==null)return InteractionResult.FAIL;var actual=resolved(level,pos,state);boolean tool=NativeConfigurationAccess.canConfigure(player)&&!player.isCreative();
-        if(hand==InteractionHand.MAIN_HAND&&(tool||player.isCreative()&&(player.isShiftKeyDown()||controlPanelHit(root.settings(),actual,hit,root.getBlockPos()))))return openConfiguration(player,level,pos)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.FAIL;
+        var root=NativeDoorLifecycle.root(level,pos);if(root==null)return InteractionResult.FAIL;var actual=resolved(level,pos,state);boolean tool=NativeConfigurationAccess.canConfigure(player)&&!player.isCreative();boolean panelHit=controlPanelHit(root.settings(),actual,NativeDoorLifecycle.panelSide(root,actual),hit,root.getBlockPos());
+        if(hand==InteractionHand.MAIN_HAND&&(tool||player.isCreative()&&(player.isShiftKeyDown()||panelHit)))return openConfiguration(player,level,pos)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.FAIL;
         if(player.isShiftKeyDown())return InteractionResult.FAIL;
-        if(root.settings().securityMode()>0)return credentialInteraction(root,player,hand,hit);
+        if(root.settings().securityMode()>0)return credentialInteraction(root,player,hand,hit,panelHit);
         if(!level.isClientSide)NativeDoorLifecycle.toggle(level,pos);return InteractionResult.sidedSuccess(level.isClientSide);
     }
     @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return interact(state,level,pos,player,InteractionHand.MAIN_HAND,hit);}

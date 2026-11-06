@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.state.properties.*;
 public final class NativeDoorLifecycle {
     private NativeDoorLifecycle(){}
     public static BlockPos lower(BlockState state,BlockPos pos){return state.getValue(NativeProgrammableDoorBlock.HALF)==DoubleBlockHalf.UPPER?pos.below():pos;}
-    public static boolean loaded(LevelReader level,BlockPos pos){return level.hasChunkAt(pos);}
+    public static boolean loaded(LevelReader level,BlockPos pos){return (!(level instanceof net.minecraft.server.level.ServerLevel server)||com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(server))&&level.hasChunkAt(pos);}
     public static boolean complete(LevelReader level,BlockPos root,NativeProgrammableDoorBlock block){
         if(!loaded(level,root)||!loaded(level,root.above()))return false;
         var lower=level.getBlockState(root);var upper=level.getBlockState(root.above());return lower.is(block)&&upper.is(block)&&lower.getValue(NativeProgrammableDoorBlock.HALF)==DoubleBlockHalf.LOWER&&upper.getValue(NativeProgrammableDoorBlock.HALF)==DoubleBlockHalf.UPPER;
@@ -24,7 +24,7 @@ public final class NativeDoorLifecycle {
     }
     public static BlockState resolved(LevelReader level,BlockPos pos,BlockState state){
         BlockPos root=lower(state,pos);if(!(state.getBlock() instanceof NativeProgrammableDoorBlock block)||!complete(level,root,block))return state;
-        BlockState bottom=level.getBlockState(root),top=level.getBlockState(root.above());return state.setValue(NativeProgrammableDoorBlock.FACING,bottom.getValue(NativeProgrammableDoorBlock.FACING)).setValue(NativeProgrammableDoorBlock.HINGE,top.getValue(NativeProgrammableDoorBlock.HINGE)).setValue(NativeProgrammableDoorBlock.POWERED,top.getValue(NativeProgrammableDoorBlock.POWERED)).setValue(NativeProgrammableDoorBlock.OPEN,bottom.getValue(NativeProgrammableDoorBlock.OPEN));
+        BlockState bottom=level.getBlockState(root),top=level.getBlockState(root.above());return state.setValue(NativeProgrammableDoorBlock.FACING,bottom.getValue(NativeProgrammableDoorBlock.FACING)).setValue(NativeProgrammableDoorBlock.HINGE,top.getValue(NativeProgrammableDoorBlock.HINGE)).setValue(NativeProgrammableDoorBlock.POWERED,top.getValue(NativeProgrammableDoorBlock.POWERED));
     }
     public static BlockPos mate(Level level,BlockPos root,NativeProgrammableDoorBlock block){
         if(!complete(level,root,block))return null;var state=resolved(level,root,level.getBlockState(root));Direction facing=state.getValue(NativeProgrammableDoorBlock.FACING);DoorHingeSide hinge=state.getValue(NativeProgrammableDoorBlock.HINGE);
@@ -55,7 +55,7 @@ public final class NativeDoorLifecycle {
         boolean powered=host.channelSignal()||localPower(level,host.getBlockPos())>0;var settings=host.settings();
         // Credential modes are supplied by the actual reader service, never by the raw stored toggle alone.
         boolean open=settings.securityMode()>0?((NativeProgrammableDoorBlock)host.getBlockState().getBlock()).securityOpen(host):settings.door().trigger==SpaceDoorData.TRIGGER_DISABLED?host.getBlockState().getValue(NativeProgrammableDoorBlock.OPEN):SpaceDoorData.openForSignal(settings.door().trigger,powered);
-        set(level,host.getBlockPos(),powered,open,true);
+        var actual=resolved(level,host.getBlockPos(),host.getBlockState());if(actual.getValue(NativeProgrammableDoorBlock.POWERED)!=powered||host.getBlockState().getValue(NativeProgrammableDoorBlock.OPEN)!=open)set(level,host.getBlockPos(),powered,open,true);
     }
     static void set(Level level,BlockPos root,boolean powered,boolean open,boolean updatePower){
         if(!(level.getBlockState(root).getBlock() instanceof NativeProgrammableDoorBlock block)||!complete(level,root,block))return;boolean changed=false;
