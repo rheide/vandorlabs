@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenPickerPolicy', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenPickerPolicyChecks'
+ systemProperty 'screenPickerReference',file(project.findProperty('screenPickerReference') ?: '../../build/test-artifacts/screen-picker-reference.json').absolutePath
+}
