@@ -33,9 +33,9 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
     private NativeTrapdoorLifecycle.Loaded access(){return new NativeTrapdoorLifecycle.Loaded(){public boolean loaded(BlockPos at){return NativeTrapdoorEntity.loaded(level,at);}public NativeTrapdoorLifecycle.Leaf leaf(BlockPos at){return NativeTrapdoorEntity.at(level,at);}};}
     public List<NativeTrapdoorEntity> group(){if(!installed())return List.of(this);return NativeTrapdoorLifecycle.group(this,access()).stream().map(tile->(NativeTrapdoorEntity)tile).toList();}
     public void scheduleRefresh(){refreshPending=powerPending=true;}
-    @Override public void onLoad(){super.onLoad();scheduleRefresh();if(level!=null&&!level.isClientSide)NativeRedstoneChannels.queueRegistration(this);}
-    @Override public void setRemoved(){NativeRedstoneChannels.unregister(this);super.setRemoved();}
-    @Override public void onChunkUnloaded(){NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
+    @Override public void onLoad(){super.onLoad();NativeTrapdoorTargets.add(this);scheduleRefresh();if(level!=null&&!level.isClientSide)NativeRedstoneChannels.queueRegistration(this);}
+    @Override public void setRemoved(){NativeTrapdoorTargets.remove(this);NativeRedstoneChannels.unregister(this);super.setRemoved();}
+    @Override public void onChunkUnloaded(){NativeTrapdoorTargets.remove(this);NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
     @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return settings.channels();}
     @Override public boolean isChannelMemberActive(){return installed();}
     @Override public int localSignalLevel(int channel){return installed()?localPower():0;}
@@ -65,6 +65,7 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
         // Install every immutable projection before block-state observers, dirty listeners or packets see a member.
         Map<NativeTrapdoorEntity,Publication> projections=new LinkedHashMap<>();for(var tile:all)if(!tile.inert)try{projections.put(tile,tile.prepareProjection(tile.resolveVisual(tile.group())));}catch(RuntimeException invalid){tile.inert=true;tile.failure=invalid.toString();tile.publication=null;}
         projections.forEach((tile,projection)->tile.publication=projection);
+        for(var tile:all)NativeTrapdoorTargets.add(tile);
         Map<NativeTrapdoorEntity,BlockState> beforeStates=new LinkedHashMap<>();
         for(var tile:all){if(tile.inert)continue;var before=tile.getBlockState();var after=before.setValue(NativeTrapdoorBlock.OPEN,tile.pendingOpen).setValue(NativeTrapdoorBlock.FACING,tile.facing()).setValue(NativeTrapdoorBlock.HALF,(tile.diagonal()?tile.projectionInverted:tile.geometryPosition()==2)?net.minecraft.world.level.block.state.properties.Half.TOP:net.minecraft.world.level.block.state.properties.Half.BOTTOM);beforeStates.put(tile,before);if(tile.level!=null&&!before.equals(after))tile.level.setBlock(tile.worldPosition,after,net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE);}
         for(var entry:beforeStates.entrySet()){var tile=entry.getKey();var before=entry.getValue();var after=tile.getBlockState();tile.setChanged();if(tile.level!=null){tile.level.sendBlockUpdated(tile.worldPosition,before,after,2);if(!before.equals(after))for(Direction direction:Direction.values()){var neighbor=tile.worldPosition.relative(direction);if(loaded(tile.level,neighbor))tile.level.neighborShapeChanged(direction.getOpposite(),after,neighbor,tile.worldPosition,net.minecraft.world.level.block.Block.UPDATE_CLIENTS|net.minecraft.world.level.block.Block.UPDATE_KNOWN_SHAPE,512);}if(before.getValue(NativeTrapdoorBlock.OPEN)!=after.getValue(NativeTrapdoorBlock.OPEN))tile.level.levelEvent(null,tile.pendingOpen?1037:1036,tile.worldPosition,0);}}
@@ -80,7 +81,7 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
     }
     private static int mergedCoordinates(net.minecraft.world.phys.shapes.VoxelShape a,net.minecraft.world.phys.shapes.VoxelShape b,Direction.Axis axis){var first=a.getCoords(axis);var second=b.getCoords(axis);int i=0,j=0,count=0;double last=Double.NaN;while(i<first.size()||j<second.size()){double value=i<first.size()&&(j>=second.size()||first.getDouble(i)<second.getDouble(j)+1e-7)?first.getDouble(i++):second.getDouble(j++);if(count==0||!(last>=value-1e-7)){last=value;count++;}}return count;}
     private Publication prepareProjection(NativeTrapdoorVisual visual){var before=publication;var geometry=before!=null&&before.visual().pose().equals(visual.pose())&&before.visual().open()==visual.open()?before.geometry():NativeTrapdoorGeometry.snapshot(visual.pose(),visual.open());return new Publication(visual,geometry,before!=null&&before.geometry()==geometry?before.collision():collision(geometry));}
-    private void installProjection(NativeTrapdoorVisual visual){publication=prepareProjection(visual);}
+    private void installProjection(NativeTrapdoorVisual visual){publication=prepareProjection(visual);NativeTrapdoorTargets.add(this);}
     private void publishSingle(){try{installProjection(resolveVisual(List.of(this),false));}catch(RuntimeException invalid){inert=true;failure=invalid.toString();publication=null;}}
     private Direction outside(List<NativeTrapdoorEntity> all){var reference=all.stream().min(Comparator.comparing(NativeTrapdoorEntity::getBlockPos)).orElse(this);boolean bent=false;for(var tile:all)if(tile.worldPosition.getY()>reference.worldPosition.getY()&&(tile.inverted()^(tile.facing()==reference.facing().getOpposite()))!=reference.inverted())bent=true;return reference.inverted()^bent?reference.facing().getOpposite():reference.facing();}
     private NativeTrapdoorVisual resolveVisual(List<NativeTrapdoorEntity> all){return resolveVisual(all,true);}
