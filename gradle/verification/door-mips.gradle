@@ -1,0 +1,7 @@
+task testDoorTranslucentMips(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorTranslucentMipChecks'
+    if (project.hasProperty('doorMipGolden')) systemProperty 'vandorlabs.doorMipGolden', project.property('doorMipGolden')
+}
