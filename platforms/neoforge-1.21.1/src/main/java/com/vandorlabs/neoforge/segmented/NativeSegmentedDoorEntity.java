@@ -61,8 +61,8 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
  public double pose(double partial){double time=level==null?0:level.getGameTime();double t=Math.max(0,Math.min(1,(time-started+partial)/Math.max(1,duration)));return from+((targetOpen?1:0)-from)*t;}
  public void scheduleRefresh(){refreshPending=true;powerPending=true;}
  @Override public void onLoad(){super.onLoad();publishLocal();NativeSegmentedTargets.add(this);fluidState.loaded();scheduleRefresh();if(level!=null&&!level.isClientSide)NativeRedstoneChannels.queueRegistration(this);}
- @Override public void setRemoved(){NativeSegmentedTargets.remove(this);NativeFluidWorld.removed(this);NativeRedstoneChannels.unregister(this);super.setRemoved();}
- @Override public void onChunkUnloaded(){NativeSegmentedTargets.remove(this);NativeFluidWorld.unloaded(this);NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
+ @Override public void setRemoved(){NativeSegmentedTargets.remove(this);NativeFluidWorld.removed(this);NativeRedstoneChannels.unregister(this);super.setRemoved();notifyClientPublication();}
+ @Override public void onChunkUnloaded(){NativeSegmentedTargets.remove(this);NativeFluidWorld.unloaded(this);NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();notifyClientPublication();}
  public void tickServer(){if(!installed()||level.isClientSide)return;if(refreshPending){refreshPending=false;refreshColumn();}if(powerPending){powerPending=false;NativeSegmentedDoorLifecycle.refreshPower(this);}if(topOffset==0&&from!=(targetOpen?1:0)&&level.getGameTime()-started>=duration){var all=NativeSegmentedDoorLifecycle.columnMembers(this);for(var t:all)t.from=targetOpen?1:0;publishMotion(all);}fluidState.tick();}
  public void refreshColumn(){NativeSegmentedDoorLifecycle.refreshColumn(this);}
  public List<NativeSegmentedDoorEntity> roots(){return NativeSegmentedDoorLifecycle.roots(this);}

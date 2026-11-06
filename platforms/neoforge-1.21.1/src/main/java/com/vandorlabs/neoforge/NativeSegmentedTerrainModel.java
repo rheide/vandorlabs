@@ -27,8 +27,14 @@ public final class NativeSegmentedTerrainModel extends BakedModelWrapper<BakedMo
     @SubscribeEvent public static void additional(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event){
         if(net.minecraft.core.registries.BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse("vandorlabs:segmented_door"))||"true".equals(System.getenv("VANDOR_SEGMENTED_TERRAIN_CHECK")))event.register(ModelResourceLocation.standalone(HEADER));
     }
+    private static final java.util.concurrent.atomic.AtomicLong GENERATIONS=new java.util.concurrent.atomic.AtomicLong();
+    private static final com.google.common.cache.Cache<Object,Bake> PENDING=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(2).build();
+    private static volatile Bake active;
+    public static long activeGeneration(){var value=active;return value==null?0:value.generation;}
+    @SubscribeEvent public static synchronized void completed(net.neoforged.neoforge.client.event.ModelEvent.BakingCompleted event){var next=PENDING.getIfPresent(event.getModelBakery());PENDING.invalidate(event.getModelBakery());if(next!=null&&next.wrapped&&(active==null||next.generation>active.generation))active=next;}
     private record Key(Direction facing,int texture,boolean header,boolean body,boolean top,boolean bottom){}
     public static final class Bake {
+        private final long generation=GENERATIONS.incrementAndGet();private volatile boolean wrapped;
         private final NativeSegmentedRenderer.Bake shared;
         private final BakedModel header;
         private final boolean canonical;
@@ -36,12 +42,13 @@ public final class NativeSegmentedTerrainModel extends BakedModelWrapper<BakedMo
         private final SegmentedPanelMesh.Texture headerTexture,edge;
         private final com.google.common.cache.Cache<Key,List<BakedQuad>> quads=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(16*1024*1024)
                 .weigher((Key key,List<BakedQuad> value)->1024+value.stream().mapToInt(q->96+q.getVertices().length*4).sum()).build();
-        public Bake(Map<ModelResourceLocation,BakedModel> models,NativeSegmentedRenderer.Bake shared,ResourceManager resources){
+        public Bake(Map<ModelResourceLocation,BakedModel> models,NativeSegmentedRenderer.Bake shared,ResourceManager resources){this(null,models,shared,resources);}
+        public Bake(Object bakery,Map<ModelResourceLocation,BakedModel> models,NativeSegmentedRenderer.Bake shared,ResourceManager resources){
             this.shared=Objects.requireNonNull(shared);header=Objects.requireNonNull(models.get(ModelResourceLocation.standalone(HEADER)),"Missing authored Segmented header");
             canonical=NativeDoorArtwork.isStatic(header)&&NativeDoorArtwork.canonicalGeometry(HEADER.toString(),resources);
             var originals=header.getQuads(null,null,RandomSource.create(0),ModelData.EMPTY,null);
             headerSprite=originals.isEmpty()?shared.edgeSprite():originals.getFirst().getSprite();
-            headerTexture=texture(headerSprite);edge=shared.edge();
+            headerTexture=texture(headerSprite);edge=shared.edge();if(bakery!=null)PENDING.put(bakery,this);
         }
         private List<BakedQuad> quads(NativeSegmentedTerrainSnapshot snapshot){
             var key=new Key(snapshot.facing(),snapshot.texture(),canonical&&snapshot.header(),snapshot.body(),snapshot.top(),snapshot.bottom());
@@ -69,7 +76,7 @@ public final class NativeSegmentedTerrainModel extends BakedModelWrapper<BakedMo
     private static Direction inverse(Direction direction,int r){return rotate(direction,(4-r)&3);}
     private final Bake bake;
     private NativeSegmentedTerrainModel(BakedModel parent,Bake bake){super(parent);this.bake=Objects.requireNonNull(bake);}
-    public static BakedModel wrap(BakedModel parent,Bake bake){return new NativeSegmentedTerrainModel(parent,bake);}
+    public static BakedModel wrap(BakedModel parent,Bake bake){bake.wrapped=true;return new NativeSegmentedTerrainModel(parent,bake);}
     private static final class Layers {static final RenderType SOLID=RenderType.solid();static final ChunkRenderTypeSet TYPES=ChunkRenderTypeSet.of(SOLID);}
     private static NativeSegmentedTerrainSnapshot snapshot(BlockState state,ModelData data){var snapshot=data.get(NativeSegmentedTerrainSnapshot.DATA);if(snapshot!=null)return snapshot;var facing=state!=null&&state.hasProperty(com.vandorlabs.neoforge.segmented.NativeSegmentedDoorBlock.FACING)?state.getValue(com.vandorlabs.neoforge.segmented.NativeSegmentedDoorBlock.FACING):Direction.NORTH;return new NativeSegmentedTerrainSnapshot(facing,-1,true,false,true,true,0);}
     @Override public ChunkRenderTypeSet getRenderTypes(BlockState state,RandomSource random,ModelData data){var value=snapshot(state,data);var base=super.getRenderTypes(state,random,data);return value.header()||value.body()?ChunkRenderTypeSet.union(base,Layers.TYPES):base;}
