@@ -6,12 +6,15 @@ import java.util.Arrays;
 /** Released role-specific pixel-to-owner transform; physical block bounds use a separate policy. */
 public final class ScreenRenderPose {
     private ScreenRenderPose(){}
+    static void requireState(ScreenFamily family,ScreenFamily.State state){
+        if(family==null||state==null||family.horizontal&&state.facing<2||state.keyboard&&!family.keyboard
+                ||state.upper&&!(family.keyboard||family==ScreenFamily.HALF_DIAGONAL)
+                ||state.inverted&&family!=ScreenFamily.DIAGONAL)throw new IllegalArgumentException("Invalid Screen render state");
+    }
     /** Writes a column-major affine matrix into caller-owned storage, without allocation. */
     public static void write(ScreenFamily family,ScreenFamily.State state,boolean ceilingMounted,int ceilingPosition,double[] out){
-        if(family==null||state==null||out==null||out.length<16||ceilingPosition < -1||ceilingPosition>2
-                ||family.horizontal&&state.facing<2||state.keyboard&&!family.keyboard
-                ||state.upper&&!(family.keyboard||family==ScreenFamily.HALF_DIAGONAL)
-                ||state.inverted&&family!=ScreenFamily.DIAGONAL)throw new IllegalArgumentException("Invalid Screen render pose");
+        requireState(family,state);
+        if(out==null||out.length<16||ceilingPosition < -1||ceilingPosition>2)throw new IllegalArgumentException("Invalid Screen render pose");
         Arrays.fill(out,0,16,0);out[15]=1;
         boolean vertical=family==ScreenFamily.SCREEN||family==ScreenFamily.CONSOLE||family==ScreenFamily.DIAGONAL;
         int facing=state.facing;

@@ -1,11 +1,34 @@
 #!/usr/bin/env python3
 """Compact an actual released-GL capture into pose and render-request contracts."""
 import json
+import gzip
 import math
 from pathlib import Path
 import struct
 
 GETTERS=['SIGNAL','STATE','EFFECTIVE_MODE','SURFACE_0','SURFACE_1','MODE_0','MODE_1','SPEED_0','SPEED_1','OVERRIDES','SPLIT','PRIMARY_ARTWORK','ANIMATION_SPEED']
+
+def geometry(directory):
+ directory=Path(directory);cases=[]
+ for line in (directory/'screen-role-gl.jsonl').read_text().splitlines():
+  row=json.loads(line)
+  if row['mode']!=1 or row['frame']:continue
+  draws=[]
+  for draw in row['draws']:
+   if not draw['vertexCount']:continue
+   if draw['stride']!=32:raise AssertionError('Unexpected released vertex layout')
+   raw=draw['vertices'];points=[]
+   for at in range(0,len(raw),8):points.extend([raw[at],raw[at+1],raw[at+2],raw[at+7]])
+   draws.append(dict(mode=draw['mode'],points=points))
+  cases.append(dict(id=row['id'],meta=row['meta'],variant=row['variant'],draws=draws))
+ if len(cases)!=210:raise AssertionError('Released geometry coverage changed')
+ return dict(schema=1,captureSha256=(directory/'reference.sha256').read_text().strip(),cases=cases)
+
+def write_geometry(directory,target):
+ payload=json.dumps(geometry(directory),separators=(',',':')).encode()
+ if len(payload)>1024*1024:raise AssertionError('Released geometry exceeds byte bound')
+ with open(target,'wb') as raw:
+  with gzip.GzipFile(filename='',mode='wb',fileobj=raw,mtime=0) as compressed:compressed.write(payload)
 
 def compact(directory):
  directory=Path(directory);rows=[json.loads(line) for line in (directory/'screen-role-gl.jsonl').read_text().splitlines()];poses={};requests={}
@@ -34,4 +57,5 @@ def verify(actual,reference,exact=False):
 
 if __name__=='__main__':
  import argparse
- parser=argparse.ArgumentParser();parser.add_argument('capture',type=Path);parser.add_argument('output',type=Path);args=parser.parse_args();args.output.write_text(json.dumps(compact(args.capture),separators=(',',':'))+'\n')
+ parser=argparse.ArgumentParser();parser.add_argument('capture',type=Path);parser.add_argument('output',type=Path);parser.add_argument('--geometry',type=Path);args=parser.parse_args();args.output.write_text(json.dumps(compact(args.capture),separators=(',',':'))+'\n')
+ if args.geometry:write_geometry(args.capture,args.geometry)
