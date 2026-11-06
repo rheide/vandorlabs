@@ -23,7 +23,7 @@ import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.*;
 
 /** Actual two-part lifecycle; concrete production blocks must supply authored geometry and credential services. */
-public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implements NativeDoorLinks {
+public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implements NativeDoorLinks, SimpleWaterloggedBlock {
     public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
     public static final EnumProperty<DoubleBlockHalf> HALF=BlockStateProperties.DOUBLE_BLOCK_HALF;
     public static final EnumProperty<DoorHingeSide> HINGE=BlockStateProperties.DOOR_HINGE;
@@ -76,6 +76,7 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
     @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return interact(state,level,pos,player,InteractionHand.MAIN_HAND,hit);}
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){return switch(interact(state,level,pos,player,hand,hit)){case SUCCESS,CONSUME,CONSUME_PARTIAL->ItemInteractionResult.SUCCESS;case FAIL->ItemInteractionResult.FAIL;default->ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;};}
     @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block changed,BlockPos from,boolean moving){
+        com.vandorlabs.neoforge.fluid.NativeFluidWorld.queueAt(level,pos);
         if(level.isClientSide){var root=NativeDoorLifecycle.root(level,pos);if(root!=null)root.markVisualDirty();return;}BlockPos lower=NativeDoorLifecycle.lower(state,pos);
         if(state.getValue(HALF)==DoubleBlockHalf.UPPER&&level.hasChunkAt(lower)&&(!level.getBlockState(lower).is(this)||level.getBlockState(lower).getValue(HALF)!=DoubleBlockHalf.LOWER)){level.removeBlock(pos,false);return;}
         if(state.getValue(HALF)==DoubleBlockHalf.LOWER&&level.hasChunkAt(pos.below())&&!NativeDoorLifecycle.supported(level,pos)){level.destroyBlock(pos,true);return;}
@@ -84,4 +85,8 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){if(!state.is(next.getBlock())&&!NativeDoorPlacement.mutating(level,pos)){BlockPos other=state.getValue(HALF)==DoubleBlockHalf.LOWER?pos.above():pos.below();if(level.hasChunkAt(other)&&level.getBlockState(other).is(this))level.removeBlock(other,moving);}super.onRemove(state,level,pos,next,moving);}
     @Override protected List<ItemStack> getDrops(BlockState state,LootParams.Builder context){return state.getValue(HALF)==DoubleBlockHalf.UPPER?List.of():List.of(new ItemStack(canonicalItem.get()));}
     @Override public ItemStack getCloneItemStack(BlockState state,HitResult hit,LevelReader level,BlockPos pos,Player player){ItemStack stack=new ItemStack(canonicalItem.get());BlockPos lower=NativeDoorLifecycle.lower(state,pos);if(level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity root){var custom=new net.minecraft.nbt.CompoundTag();custom.put("SpaceDoorSettings",root.itemSettings());stack.set(DataComponents.CUSTOM_DATA,CustomData.of(custom));}return stack;}
+    @Override public boolean canPlaceLiquid(Player player,BlockGetter level,BlockPos pos,BlockState state,net.minecraft.world.level.material.Fluid fluid){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.canPlaceLiquid(level,pos,fluid);}
+    @Override public boolean placeLiquid(LevelAccessor level,BlockPos pos,BlockState state,net.minecraft.world.level.material.FluidState fluid){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.placeLiquid(level,pos,fluid);}
+    @Override public ItemStack pickupBlock(Player player,LevelAccessor level,BlockPos pos,BlockState state){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.pickupBlock(level,pos);}
+
 }

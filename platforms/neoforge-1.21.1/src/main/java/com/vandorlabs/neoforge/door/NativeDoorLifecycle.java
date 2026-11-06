@@ -59,7 +59,7 @@ public final class NativeDoorLifecycle {
     }
     static void set(Level level,BlockPos root,boolean powered,boolean open,boolean updatePower){
         if(!(level.getBlockState(root).getBlock() instanceof NativeProgrammableDoorBlock block)||!complete(level,root,block))return;boolean changed=false;
-        for(BlockPos pos:new BlockPos[]{root,root.above()}){var old=level.getBlockState(pos);var next=old.setValue(NativeProgrammableDoorBlock.OPEN,open);if(updatePower)next=next.setValue(NativeProgrammableDoorBlock.POWERED,powered);if(next!=old){changed|=old.getValue(NativeProgrammableDoorBlock.OPEN)!=open;level.setBlock(pos,next,Block.UPDATE_CLIENTS);}}
+        for(BlockPos pos:new BlockPos[]{root,root.above()}){var old=level.getBlockState(pos);var next=old.setValue(NativeProgrammableDoorBlock.OPEN,open);if(updatePower)next=next.setValue(NativeProgrammableDoorBlock.POWERED,powered);if(next!=old){changed|=old.getValue(NativeProgrammableDoorBlock.OPEN)!=open;level.setBlock(pos,next,Block.UPDATE_CLIENTS);com.vandorlabs.neoforge.fluid.NativeFluidWorld.queueAt(level,pos);}}
         var host=root(level,root);if(host!=null)host.refreshVisual();
         if(changed)level.playSound(null,root,open?SoundEvents.IRON_DOOR_OPEN:SoundEvents.IRON_DOOR_CLOSE,SoundSource.BLOCKS,1,1);
     }
