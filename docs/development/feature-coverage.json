@@ -166,10 +166,10 @@
         "programmable_viewscreen"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "custom block material definitions and sampling",
-        "vehicle overlays and carried-assembly integration",
-        "full facing/mount and shader render acceptance"
+        "Native host lifecycle, source publication, row actions and persistence; canonical block/item registration",
+        "Dedicated screen editor, shared surface renderer, per-role placement/hit mapping and configured items",
+        "External-material and resource reload acceptance; full mount/facing and native release checks",
+        "Vehicle/cockpit and carried-specific integration remains deferred"
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -185,7 +185,12 @@
         "filesystem high-ID surface/housing selection through actual widgets and server round trips",
         "same-open-picker missing-file and dimension reload, native direct-resource pixels and emitted housing/surface UVs"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Unregistered native settings/factory/control-row foundations reuse shared activation, artwork migration, channel lists and scalar screen policy",
+        "Actual-source comparisons cover fresh versus loaded defaults, all seven canonical role domains, saved control ownership and guarded legacy transmitter migration",
+        "Shared activation/artwork extractions preserve the Forge player path through focused display-activation client acceptance"
+      ]
     },
     {
       "id": "console_input_variants",
@@ -202,10 +207,10 @@
         "programmable_diagonal_half_screen"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "external-material reload acceptance on each mounted surface",
-        "custom block materials and vehicle/carried integration",
-        "full mount/facing and shader render acceptance"
+        "Native host lifecycle, source publication, row actions and persistence; canonical block/item registration",
+        "Dedicated screen editor, shared surface renderer, per-role placement/hit mapping and configured items",
+        "External-material and resource reload acceptance; full mount/facing and native release checks",
+        "Vehicle/cockpit and carried-specific integration remains deferred"
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -223,7 +228,12 @@
         "native selector and four/eight-row editor controls at GUI scales 2 and 3",
         "real native overlay ray interaction and inspected artwork/control captures"
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Unregistered native settings/factory/control-row foundations reuse shared activation, artwork migration, channel lists and scalar screen policy",
+        "Actual-source comparisons cover fresh versus loaded defaults, all seven canonical role domains, saved control ownership and guarded legacy transmitter migration",
+        "Shared activation/artwork extractions preserve the Forge player path through focused display-activation client acceptance"
+      ]
     },
     {
       "id": "glass_canopies",
@@ -293,15 +303,19 @@
         "programmable_trapdoor"
       ],
       "remaining": [
-        "Native block/entity lifecycle and shared render adapters",
-        "Assembly, channel, cover and diagonal interaction behavior",
-        "Configuration/custom materials, fluid integration and live native parity"
+        "Source-matched placement, pair/square/assembly discovery and configured items",
+        "Contained-fluid lifecycle and rendering integration, including legacy aliases and borrowed water",
+        "Canonical resources/registration, renderer binding and real client family acceptance"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "implemented": [
-        "Shared typed save defaults and immutable native configured-item choices, matched against 1108 actual regular/diagonal source cases; adapters remain unregistered"
+        "Unregistered native host with source-matched old link repair, staged group configuration, physical/channel power, inert failed snapshots and saved-world restart",
+        "Shared exact regular/diagonal geometry, artwork and frame kernels; bounded native renderer and clean single-box selection",
+        "Dedicated prepared General/Redstone editor uses shared picker, reverse cycling and option rules; actual native widgets and server authorization pass focused checks",
+        "Loaded outside-cell engine collisions and exact combined target routing; bounded nine-byte intent uses normal server item interaction and rejects stale, blocked and distant requests",
+        "Source-frozen endpoint fluid volumes and opening precedence; native fluid host integration remains in progress"
       ]
     },
     {
