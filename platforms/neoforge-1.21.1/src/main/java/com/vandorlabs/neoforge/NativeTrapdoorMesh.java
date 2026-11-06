@@ -32,6 +32,13 @@ public final class NativeTrapdoorMesh {
         try{if(surface!=null)surface.emit(corners,emission.artwork);else frame.emit(corners,frameScratch,emission.artwork,emission.edges);}
         finally{emission.matrix=null;emission.target=null;emission.upper=null;emission.lower=null;emission.edge=null;}
     }
+    public static void emitEdges(double[][] corners,boolean diagonal,boolean tall,SegmentedPanelMesh.Texture edge,
+                                 PoseStack.Pose matrix,VertexConsumer target,int light,int overlay){
+        Emission emission=EMISSION.get();if(emission.target!=null)throw new IllegalStateException("Reentrant Trapdoor edges");
+        emission.matrix=matrix;emission.target=target;emission.light=light;emission.overlay=overlay;emission.edge=edge;
+        try{com.vandorlabs.render.TrapdoorRigidEdges.emit(corners,diagonal,tall,emission.edges);}
+        finally{emission.matrix=null;emission.target=null;emission.edge=null;}
+    }
     private static final class Emission {
         PoseStack.Pose matrix;VertexConsumer target;int light,overlay;SegmentedPanelMesh.Texture upper,lower,edge;
         final TrapdoorSurfaceLayout.Sink artwork=(x,y,z,u,v,half,nx,ny,nz)->vertex(half?lower:upper,x,y,z,u,v,nx,ny,nz);
