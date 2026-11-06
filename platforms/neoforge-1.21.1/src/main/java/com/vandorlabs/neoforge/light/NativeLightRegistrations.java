@@ -22,7 +22,7 @@ public final class NativeLightRegistrations {
     public static final DeferredHolder<BlockEntityType<?>,BlockEntityType<NativeLightEntity>> ENTITY=VandorLabsBootstrap.ENTITIES.register(ID,()->BlockEntityType.Builder.<NativeLightEntity>of((pos,state)->new NativeLightEntity(NativeLightRegistrations.ENTITY.get(),pos,state,NativeScreenCatalog.INSTANCE),BLOCK.get(),FRAME.get(),SLAB.get()).build(null));
     public static final DeferredHolder<MenuType<?>,MenuType<NativeLightMenu>> MENU=VandorLabsBootstrap.MENUS.register(ID,()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new NativeLightMenu(NativeLightRegistrations.MENU.get(),id,inventory,buffer.readBlockPos())));
     private static NativeLightBlock block(NativeLightBlock.Kind kind){
-        var properties=BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,10).sound(SoundType.METAL).requiresCorrectToolForDrops().isRedstoneConductor((s,w,p)->false);
+        var properties=BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).requiresCorrectToolForDrops().isRedstoneConductor((s,w,p)->false);
         return kind==NativeLightBlock.Kind.SLAB?new RegisteredSlab(properties):new Registered(kind,properties);
     }
     private static class Registered extends NativeLightBlock {
@@ -34,7 +34,6 @@ public final class NativeLightRegistrations {
         RegisteredSlab(Properties properties){super(Kind.SLAB,properties);}
         @Override protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<Block,net.minecraft.world.level.block.state.BlockState> builder){super.createBlockStateDefinition(builder);builder.add(HALF);}
     }
-    /** Called before the deferred registries attach to the mod bus. */
-    public static void initialize(){}
+    public static void register(net.neoforged.bus.api.IEventBus bus){bus.addListener(LightSettingsPayload::register);}
     private NativeLightRegistrations(){}
 }

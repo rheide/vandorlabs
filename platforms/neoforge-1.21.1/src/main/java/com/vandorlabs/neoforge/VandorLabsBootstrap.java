@@ -118,7 +118,7 @@ public final class VandorLabsBootstrap {
         com.vandorlabs.neoforge.door.NativeLargeDoorRegistrations.register();
         com.vandorlabs.neoforge.segmented.NativeSegmentedRegistrations.register(bus);
         com.vandorlabs.neoforge.trapdoor.NativeTrapdoorRegistrations.register(bus);
-        com.vandorlabs.neoforge.light.NativeLightRegistrations.initialize();
+        com.vandorlabs.neoforge.light.NativeLightRegistrations.register(bus);
         BLOCKS.register(bus); ITEMS.register(bus);com.vandorlabs.neoforge.credentials.NativeCredentialItems.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(WirelessPayload::register);bus.addListener(WirelessTransmissionPayload::register);bus.addListener(SignalControlPayload::register);bus.addListener(PowerLeverPayload::register);bus.addListener(BinaryControlPayload::register);bus.addListener(BinaryTransmissionPayload::register);bus.addListener(FinishPayload::register);bus.addListener(com.vandorlabs.neoforge.shape.ShapeAppearancePayload::register);bus.addListener(com.vandorlabs.neoforge.shape.WallAppearancePayload::register);bus.addListener(com.vandorlabs.neoforge.shape.PortholeGlassPayload::register);bus.addListener(com.vandorlabs.neoforge.shape.DiagonalGeometryPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
     }
 }
