@@ -22,13 +22,16 @@ public final class NativeDiagonalWallTopology {
         BlockState state(BlockPos pos);
         WallSettings settings(BlockPos pos);
         boolean fullBlock(BlockPos pos,BlockState state);
+        default boolean transparent(BlockPos pos,BlockState state){return false;}
     }
     private record LevelAccess(Level level) implements Access {
         public boolean loaded(BlockPos pos){return NativeFluidWorld.loaded(level,pos);}
         public BlockState state(BlockPos pos){return level.getBlockState(pos);}
         public WallSettings settings(BlockPos pos){return levelSettings(level,pos);}
+        public boolean transparent(BlockPos pos,BlockState state){return level.getBlockEntity(pos) instanceof NativeWallEntity host&&host.isGlass();}
         public boolean fullBlock(BlockPos pos,BlockState state){return state.isCollisionShapeFullBlock(level,pos);}
     }
+    static Access access(Level level){return new LevelAccess(level);}
     private static WallSettings settings(Access level,BlockPos pos){return level.settings(pos);}
     private static int mode(Access level,BlockPos pos){var value=settings(level,pos);return WallSettings.geometry(value.halfHeight,value.fullWidth);}
     static NativeDiagonalWallGeometry.Pose capture(Access level,BlockPos pos,BlockState state,NativePanelLayout layout){
@@ -80,13 +83,14 @@ public final class NativeDiagonalWallTopology {
         else if(other.getBlock()!=state.getBlock()&&!(plainDiagonal(state)&&plainDiagonal(other)))return false;
         return diagonal(other)&&other.getValue(NativePanelBlock.FACING)==state.getValue(NativePanelBlock.FACING)&&other.getValue(NativeDiagonalWallBlock.INVERTED)==state.getValue(NativeDiagonalWallBlock.INVERTED)&&mode(level,next)==mode;
     }
-    private static boolean coveredEnd(Access level,BlockPos pos,BlockState state,int mode,boolean upper){
+    static boolean coveredEnd(Access level,BlockPos pos,BlockState state,int mode,boolean upper){
         Direction facing=state.getValue(NativePanelBlock.FACING),row=mode==2?facing.getOpposite():Direction.UP,normal=mode==2?Direction.UP:facing.getOpposite();
         for(int offset=-1;offset<=1;offset++){
             BlockPos next=pos.relative(row,upper?1:-1).relative(normal,offset);if(!enabled(level,next))continue;BlockState other=level.state(next);
             if(mode==1&&(!cornerEnabled(level,pos)||!cornerEnabled(level,next)))continue;
             boolean compatible=other.getBlock()==state.getBlock()||plainDiagonal(state)&&plainDiagonal(other)||mode==1&&cornerParticipant(level,pos,state)&&cornerParticipant(level,next,other);
             if(!compatible||mode(level,next)!=mode||settings(level,pos).fill!=settings(level,next).fill)continue;
+            if(!level.transparent(pos,state)&&level.transparent(next,other))continue;
             Direction nf=other.getValue(NativePanelBlock.FACING);if(nf.getAxis()!=facing.getAxis())continue;
             if(DiagonalPanelContact.endsMeet(mode,state.getValue(NativeDiagonalWallBlock.INVERTED),other.getValue(NativeDiagonalWallBlock.INVERTED),nf!=facing,next.getY()-pos.getY(),axis(next.subtract(pos),facing.getOpposite()),upper))return true;
         }return false;

@@ -11,7 +11,7 @@ import net.minecraft.core.Direction;
 final class NativePanelGroups {
     static final int LIMIT = 4096;
     enum Mode {
-        MATERIAL, APERTURE;
+        MATERIAL, APERTURE, GLASS;
         boolean sameSettings(int mainA, int layoutA, boolean joinA, int shapeA,
                              int mainB, int layoutB, boolean joinB, int shapeB) {
             return this == MATERIAL ? mainA == mainB && layoutA == layoutB

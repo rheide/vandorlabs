@@ -11,6 +11,7 @@ from native_test_artifacts import artifact_directory, retain_artifacts
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--legacy-reference', type=Path, required=True)
+    parser.add_argument('--glass-contract', action='store_true', help='Run only the small registered-state glass projection contracts')
     args = parser.parse_args()
     reference = args.legacy_reference.resolve()
     if not reference.is_file():
@@ -22,7 +23,8 @@ def main():
     (output / 'reference.sha256').write_text(digest + '  ' + reference.name + '\n', encoding='utf-8')
     saved = output / 'saved-world'
     world(saved, 0)
-    for phase in ('diagonal-porthole-write', 'diagonal-porthole-read'):
+    phases = ('diagonal-glass-contract',) if args.glass_contract else ('diagonal-porthole-write', 'diagonal-porthole-read')
+    for phase in phases:
         run(command('runServer', '-PmodernServerRunDirectory=' + str(saved),
                     '-PtransmitterPhase=' + phase, '-PdiagonalPortholeReference=' + str(reference)),
             output / (phase + '.log'), '[vandorlabs][' + phase + '] dedicated PASS',

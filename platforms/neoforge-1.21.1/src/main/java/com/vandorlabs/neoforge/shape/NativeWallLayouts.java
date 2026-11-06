@@ -15,7 +15,7 @@ public final class NativeWallLayouts {
         Group(NativePanelGroups.Mode mode,Map<Long,NativePanelLayout> layouts,boolean capped){this.mode=mode;this.layouts=layouts;this.capped=capped;}
     }
     /** Local invalidation is safe during NBT loading and chunk unload; all world work stays deferred. */
-    public static void invalidate(NativeWallEntity host){if(host.textureGroup!=null)host.textureGroup.valid=false;if(host.apertureGroup!=null)host.apertureGroup.valid=false;}
+    public static void invalidate(NativeWallEntity host){if(host.textureGroup!=null)host.textureGroup.valid=false;if(host.apertureGroup!=null)host.apertureGroup.valid=false;if(host.glassGroup!=null)host.glassGroup.valid=false;}
     public static void invalidateAt(Level level,BlockPos pos){if(NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity host)invalidate(host);}
     private static Group group(NativeWallEntity host,NativePanelGroups.Mode mode){return mode==NativePanelGroups.Mode.MATERIAL?host.textureGroup:host.apertureGroup;}
     private static void group(NativeWallEntity host,NativePanelGroups.Mode mode,Group group){if(mode==NativePanelGroups.Mode.MATERIAL)host.textureGroup=group;else host.apertureGroup=group;}

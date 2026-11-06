@@ -17,7 +17,8 @@ import net.neoforged.neoforge.client.model.data.*;
 
 /** Shared wall save/editor host. Discovery publishes immutable geometry on the owning thread. */
 public class NativeWallEntity extends ProgrammableShapeEntity {
-    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback,boolean chunkBody,NativePanelKind kind){
+    public record WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback,boolean chunkBody,NativePanelKind kind,NativeDiagonalGlassLayout diagonalGlass){
+        public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback,boolean chunkBody,NativePanelKind kind){this(base,walls,frames,glass,geometry,aperture,playback,chunkBody,kind,NativeDiagonalGlassLayout.unit(geometry instanceof NativeDiagonalWallGeometry.Geometry g?g.pose().mode():0));}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback,boolean chunkBody){this(base,walls,frames,glass,geometry,aperture,playback,chunkBody,NativePanelKind.WALL);}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture,PanelPlayback playback){this(base,walls,frames,glass,geometry,aperture,playback,true);}
         public WallAppearance(Appearance base,WallSettings walls,FrameSettings frames,PanelGlassSettings glass,NativeWallGeometry geometry,NativePortholeLayout aperture){this(base,walls,frames,glass,geometry,aperture,PanelPlayback.DEFAULT);}
@@ -27,6 +28,8 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public static final ModelProperty<WallAppearance> WALL_APPEARANCE=new ModelProperty<>();
     NativeWallLayouts.Group textureGroup;
     NativeWallLayouts.Group apertureGroup;
+    NativeWallLayouts.Group glassGroup;
+    private NativeDiagonalGlassLayout diagonalGlass=NativeDiagonalGlassLayout.unit(0);
     private NativePortholeLayout aperture=NativePortholeLayout.unit(0);
     private final NativePanelKind kind;
     private WallSettings walls;
@@ -61,6 +64,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public final FrameSettings frameSettings(){return frames;}
     public final PanelGlassSettings panelGlassSettings(){return glass;}
     public final PanelPlayback panelPlayback(){return playback;}
+    boolean publishDiagonalGlassLayout(NativeDiagonalGlassLayout next){Objects.requireNonNull(next);if(diagonalGlass.equals(next))return false;diagonalGlass=next;publishWallAppearance();return true;}
     public final NativePortholeLayout apertureLayout(){return aperture;}
     /** Deferred topology calls this before the owning pass publishes model data. */
     boolean publishApertureLayout(NativePortholeLayout next){
@@ -72,7 +76,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public final long topologyRevision(){return topologyRevision;}
     public final AABB renderBounds(){return renderBounds;}
     private boolean chunkBody(){var state=getBlockState();return !(state.getBlock() instanceof NativeDiagonalWallBlock)||settings().layout==0&&com.vandorlabs.render.DiagonalChunkPolicy.contained(worldPosition.getX(),worldPosition.getY(),worldPosition.getZ(),state.getValue(NativeDiagonalWallBlock.FACING).get3DDataValue(),state.getValue(NativeDiagonalWallBlock.INVERTED),walls.halfHeight,walls.fullWidth);}
-    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture,playback,chunkBody(),kind);}
+    private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture,playback,chunkBody(),kind,diagonalGlass);}
     @Override protected void appearancePublished(){publishWallAppearance();}
     public static boolean validFrame(int choice){if(choice==-1)return true;if(!ModernFinishCatalog.validChoice(choice))return false;String category=ModernFinishCatalog.option(choice).category();return category.equals("Frame")||category.startsWith("Frame/");}
     public static boolean validSurface(int choice){return validFrame(choice)||ModernFinishCatalog.validChoice(choice)&&ModernFinishCatalog.option(choice).general();}
