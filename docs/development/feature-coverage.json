@@ -870,7 +870,7 @@
       "id": "segmented_doors",
       "label": "Segmented Doors",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "historical_neoforge_1_21_1": "unimplemented",
       "legacy_block_ids": [
         "segmented_door"
@@ -878,14 +878,15 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Public registration and placed-world menu, renderer and item integration",
-        "Collision, moved-leaf targeting, contained fluids and outlet supply",
-        "Real client configuration/interaction and canonical saved-world acceptance; hardware/shader and standalone release checks"
+        "Closed terrain-render eligibility, asynchronous upload handoff and performance parity",
+        "Broader external-material/copy-tool workflows; hardware/shader and standalone native release validation"
       ],
       "implemented": [
-        "Unregistered native topology and authoritative controller with per-row settings, source-emitted timeline/save comparisons and dedicated process restart",
-        "Shared panel/window/border kernels, native bounded column renderer and sequenced pause-aware animation; software-rendered reload and pane ordering checks",
-        "Immutable settings/window contracts and bounded edit codec retaining operation indices and old fourteen-byte settings"
+        "Canonical Segmented Door registration, survival multi-section placement, plain harvest and configured picks; old released layouts survive separate-process restart",
+        "Shared panel/window/border kernels, bounded column renderer, pause-aware animation and global moved-panel targeting with authenticated sequenced interactions",
+        "Dedicated per-section Door/Glass/Redstone editor with shared material picker, reverse cycling, safe public settings projection and bounded operation codec",
+        "Stationary contained-fluid ownership, source-matched four-bit outlets and loaded-neighbor notifications; real leading-client empty-hand and bucket interactions",
+        "Real client acceptance covers eight direction/angle profiles, survival sneak and Configurizer menus, invalid drafts, stale identities/sequences, nearer walls, section-boundary culling, resource reload and mining"
       ]
     },
     {

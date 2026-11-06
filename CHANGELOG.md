@@ -3,7 +3,7 @@
 ## 2.9 (development)
 
 - Enable the native ordinary and Large programmable Doors with shared authored geometry, reversible motion, full company artwork, padded configured icons and the dedicated Door/Frame/Redstone/Security/Glass editor. Preserve paired controls, channel banks and credential ownership through restart and mining. Large Doors preserve nine-part placement, old-schema follower defaults, per-part water outlet ownership and credential recovery when mining any part.
-- Share Segmented Door panel, window and border kernels, typed trapdoor defaults and bounded Segmented Door settings transport. Share regular/diagonal trapdoor dialog choices, wording and reverse cycling across versions. Native Segmented Door and trapdoor foundations remain unregistered.
+- Share Segmented Door panel, window and border kernels, typed trapdoor defaults and bounded Segmented Door settings transport. Share regular/diagonal trapdoor dialog choices, wording and reverse cycling across versions. Enable native Segmented Doors with per-section editing, moved-panel use, configured picking and stationary fluid ownership. Trapdoor foundations remain unregistered.
 - Keep the native diagonal-glass recipe conditional on its original programmable-glass ingredient becoming available.
 
 - Extend the experimental 1.21.1 build with programmable plain walls, thin porthole walls and diagonal walls. Reuse the housing editor, configured items, frame materials, contained fluids and bounded panel renderer; preserve diagonal sizes, slopes, fills and joins. Portholes support the glass palette and per-block Off/static/animated artwork. Other building variants and full native acceptance remain in progress.
