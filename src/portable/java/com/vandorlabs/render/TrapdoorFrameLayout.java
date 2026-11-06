@@ -5,7 +5,7 @@ public final class TrapdoorFrameLayout {
  private static final class Strip {final double[][] corners=new double[8][3],uv=new double[8][3],edgeUv=new double[8][3];TrapdoorSurfaceLayout surface;}
  private final int first;private final List<Strip> strips;
  private TrapdoorFrameLayout(int first,List<Strip> strips){this.first=first;this.strips=strips;}
- public long retainedBytes(){long bytes=64;for(Strip strip:strips)bytes+=1024+strip.surface.retainedBytes();return bytes;}
+ public long retainedBytes(){long bytes=64;for(Strip strip:strips)bytes+=1536+strip.surface.retainedBytes();return bytes;}
  public static TrapdoorFrameLayout build(double[][] uv,int first,boolean tiled,double edgeDepth,int joins,double[] borders,double aspect){
  if((first!=0&&first!=2)||joins< -1||joins>15||borders.length!=4||!Double.isFinite(aspect)||aspect<=0)throw new IllegalArgumentException("frame descriptor");
  for(double border:borders)if(!Double.isFinite(border)||border<0||border>1)throw new IllegalArgumentException("frame border");
