@@ -268,15 +268,15 @@
         "programmable_door"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native moving geometry",
-        "shared saved timeline/channel policy",
-        "collision/ray targets and reversal",
-        "all authored door models and live parity"
+        "Production registration and full native Door renderer/world acceptance",
+        "Configured item rendering and resource-reload acceptance",
+        "Large Door owned-part projection, channels, fluids and moved interaction/collision integration",
+        "Complete ordinary and Large dialog, animation and saved-data parity acceptance"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "master_preparation": "Inactive ordinary/Large adapters: linked placement and recovery, authored assets and exact geometry, contained-fluid ownership, paired credential services, real-client moved ordinary Door targeting"
     },
     {
       "id": "trapdoors",

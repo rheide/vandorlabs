@@ -2,6 +2,9 @@
 
 ## 2.9 (development)
 
+- Prepare ordinary and Large Door adapters with shared authored geometry, ray, pad, fluid and reader policies. Focused native checks cover linked placement, restart, credential ownership, recovery items, moved-leaf interaction and the dedicated editor. Doors remain outside the native catalog until rendering and final family integration are complete.
+- Keep the native diagonal-glass recipe conditional on its original programmable-glass ingredient becoming available.
+
 - Extend the experimental 1.21.1 build with programmable plain walls, thin porthole walls and diagonal walls. Reuse the housing editor, configured items, frame materials, contained fluids and bounded panel renderer; preserve diagonal sizes, slopes, fills and joins. Portholes support the glass palette and per-block Off/static/animated artwork. Other building variants and full native acceptance remain in progress.
 - Reuse physical fluid volumes when only joined panel artwork coordinates change. Preserve center-owned T-junction materials, stem caps and porthole pane deformation through shared rendering kernels.
 
