@@ -1,3 +1,11 @@
 neoForge.runs.configureEach {
     if (project.hasProperty('largeDoorReference')) systemProperty 'vandorlabs.largeDoorReference', file(project.property('largeDoorReference')).absolutePath
 }
+
+tasks.register('testNativeLargeDoorGeometry', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.door.LargeDoorGeometryChecks'
+    maxHeapSize = '1G'
+    args rootProject.file('../../build/test-artifacts/large-door-geometry-forge.jsonl').absolutePath
+}

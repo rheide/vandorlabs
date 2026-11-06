@@ -1,0 +1,25 @@
+package com.vandorlabs.neoforge.door;
+import com.google.gson.*;
+import com.vandorlabs.persistence.SpaceDoorData;
+import java.nio.file.*;
+import java.security.MessageDigest;
+import net.minecraft.core.*;
+import net.minecraft.world.phys.AABB;
+/** Exact source replay independent of registered blocks or production activation. */
+public final class LargeDoorGeometryChecks {
+ private static MessageDigest hash;private static long cells,faces;private static int checks,rays;
+ private static void need(boolean value,String message){checks++;if(!value)throw new AssertionError(message);}
+ private static void bits(long value){for(int i=56;i>=0;i-=8)hash.update((byte)(value>>>i));}private static void n(double value){bits(Double.doubleToRawLongBits(value));}private static void box(AABB b){n(b.minX);n(b.minY);n(b.minZ);n(b.maxX);n(b.maxY);n(b.maxZ);}private static String hex(byte[] bytes){StringBuilder s=new StringBuilder();for(byte b:bytes)s.append(String.format("%02x",b&255));return s.toString();}
+ private static String geometry(NativeDoorSettings settings,NativeLargeDoorGeometry.Snapshot snapshot)throws Exception{
+  hash=MessageDigest.getInstance("SHA-256");bits(snapshot.boxes().size());for(var b:snapshot.boxes())box(b);for(int col=0;col<3;col++)for(int row=0;row<3;row++){var p=snapshot.part(col,row);box(p.outline());bits(p.collision().size());for(var b:p.collision())box(b);need(p==snapshot.part(col,row),"part shape snapshot reuses identity");}BlockPos root=snapshot.root();
+  for(int axis=0;axis<3;axis++)for(double a:new double[]{-1,.5,1.125,1.5,2.5,4})for(double b:new double[]{-.1,.5,1.5,2.5,3.1}){double sx=axis==0?-5:a,sy=axis==1?-5:axis==0?a:b,sz=axis==2?-5:b,ex=axis==0?7:sx,ey=axis==1?7:sy,ez=axis==2?7:sz;var hit=NativeLargeDoorGeometry.trace(snapshot,root.getX()+sx,root.getY()+sy,root.getZ()+sz,root.getX()+ex,root.getY()+ey,root.getZ()+ez);bits(hit==null?0:1);if(hit!=null){n(hit.x);n(hit.y);n(hit.z);bits(hit.face);}rays++;}
+  for(double z:new double[]{-.1,.1,.25,.5,.75,.9,1.1})for(double y:new double[]{.75,.95,1.05,1.125,1.2,1.3,1.5})bits(NativeLargeDoorGeometry.panelContains(settings,z,y)?1:0);need(snapshot.retainedBytes()<=4*1024*1024,"per-root geometry snapshot byte bound");return hex(hash.digest());
+ }
+ private static String fluid(NativeDoorSettings settings,NativeLargeDoorGeometry.Snapshot snapshot)throws Exception{
+  hash=MessageDigest.getInstance("SHA-256");for(int col=0;col<3;col++)for(int row=0;row<3;row++){var value=NativeLargeDoorFluidGeometry.build(settings,snapshot,col,row);var p=value.plane();n(p.x());n(0);n(p.z());n(p.near());n(p.far());var volume=value.volume();need(!volume.facesMaterialized(),"contacts retain lazy faces");bits(volume.solids().size());for(var b:volume.solids())box(b);bits(volume.cells().size());for(var c:volume.cells()){bits(c.side());box(c.box());cells++;}bits(volume.faces().size());for(var f:volume.faces()){bits(f.side());bits(f.axis());for(var v:f.vertices()){n(v.x);n(v.y);n(v.z);}faces++;}}
+  return hex(hash.digest());
+ }
+ public static void main(String[] args)throws Exception{int cases=0,fluidCases=0;NativeLargeDoorGeometry.clear();try(var lines=Files.lines(Path.of(args[0]))){for(String line:(Iterable<String>)lines::iterator){var r=JsonParser.parseString(line).getAsJsonObject();boolean sliding=r.get("sliding").getAsBoolean(),frame=r.get("framed").getAsBoolean(),hinges=r.get("hinges").getAsBoolean();int depth=r.get("depth").getAsInt(),panel=r.get("panel").getAsInt(),security=r.get("security").getAsBoolean()?1:0;var defaults=NativeDoorSettings.fresh(true,false);var settings=new NativeDoorSettings(new SpaceDoorData(23,1,frame,r.get("direction").getAsInt(),depth==0,sliding,hinges,0,panel!=0),-1,0,false,depth,panel,security,127,defaults.frames(),defaults.glass());var snapshot=NativeLargeDoorGeometry.build(settings,Direction.from3DDataValue(r.get("face").getAsInt()),r.get("open").getAsBoolean(),new BlockPos(r.get("x").getAsInt(),r.get("y").getAsInt(),r.get("z").getAsInt()));String actual=geometry(settings,snapshot);need(actual.equals(r.get("geometry").getAsString()),"actual Large box/ray/bounds mismatch case="+cases+" profile="+r+" actual="+actual);if(r.has("fluid")){actual=fluid(settings,snapshot);need(actual.equals(r.get("fluid").getAsString()),"actual Large fluid mismatch case="+cases+" profile="+r+" actual="+actual);fluidCases++;}need(NativeLargeDoorGeometry.retainedBytes()<=4*1024*1024,"global raw geometry retained byte budget");cases++;}}
+  need(cases==5760&&rays==518400&&fluidCases==1920&&cells==209080&&faces==1180736,"complete actual source coverage");System.out.println("Native Large Door geometry PASS cases="+cases+" checks="+checks+" rays="+rays+" fluidProfiles="+fluidCases+" cells="+cells+" faces="+faces+" cacheBytes="+NativeLargeDoorGeometry.retainedBytes()+" entries="+NativeLargeDoorGeometry.entries()+" exact boxes/partition/rays/pad scale1.5/world rounding; lazy compact fluids");
+ }
+}
