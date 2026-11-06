@@ -35,6 +35,8 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class DoorLifecycleChecks {
     private static Block observer;private static BlockPos publicationRoot;private static boolean publicationFault;private static FixtureDoor block;private static NativeDoorItem item;private static BlockEntityType<NativeProgrammableDoorEntity> type;private static MenuType<NativeDoorMenu> menus;
+    private static boolean credentialPanel;
+    static void credentialPanel(boolean value){credentialPanel=value;}
     private static int checks,fault,dropCount;private static BlockPos trackedDrop;private static BlockPos faultRoot;private static final BlockPos BASE=new BlockPos(3300,110,3300),SAVED=BASE.east(10);
     private static String phase(){return System.getProperty("vandorlabs.transmitterPhase","");}
     private static boolean enabled(){return phase().startsWith("door-lifecycle-");}
@@ -54,7 +56,7 @@ public final class DoorLifecycleChecks {
         // The fixture checks inventory/structure/menu behavior, not the separately owned authored shapes.
         @Override protected VoxelShape orphanShape(BlockState state,boolean collision){return Block.box(0,0,5,16,16,11);}
         @Override protected VoxelShape doorShape(NativeDoorSettings settings,BlockState state,boolean collision){return collision&&state.getValue(OPEN)&&settings.door().sliding?Shapes.empty():Block.box(0,0,5,16,16,11);}
-        @Override protected boolean controlPanelHit(NativeDoorSettings settings,BlockState state,com.vandorlabs.render.SpaceDoorControlPanel.Side side,BlockHitResult hit,BlockPos lower){return false;}
+        @Override protected boolean controlPanelHit(NativeDoorSettings settings,BlockState state,com.vandorlabs.render.SpaceDoorControlPanel.Side side,BlockHitResult hit,BlockPos lower){return credentialPanel;}
         @Override protected boolean securityOpen(NativeProgrammableDoorEntity host){return host.securityOpen();}
         @Override protected InteractionResult credentialInteraction(NativeProgrammableDoorEntity host,Player player,InteractionHand hand,BlockHitResult hit,boolean panelHit){return player instanceof net.minecraft.server.level.ServerPlayer server&&host.interactCredential(0,server,hand)?InteractionResult.CONSUME:InteractionResult.FAIL;}
         @Override protected boolean stagePart(net.minecraft.world.level.Level level,BlockPos pos,BlockState state){if(fault!=0&&pos.equals(faultRoot.above())){if(fault==2||fault==3)super.stagePart(level,pos,state);if(fault==3)throw new IllegalStateException("fixture stage after actual upper publication");return false;}return super.stagePart(level,pos,state);}
