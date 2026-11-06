@@ -1,0 +1,7 @@
+tasks.register('testNativeSegmentedGeometry', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.segmented.SegmentedGeometryChecks'
+    args file('../../build/test-artifacts/segmented-geometry-forge.jsonl').absolutePath
+}
