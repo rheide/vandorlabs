@@ -43,6 +43,10 @@ def main():
     deadline=time.monotonic()+30
     while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
     check_log(saved/'logs/latest.log','All dimensions are saved')
+    check_images(output,client)
+
+
+def check_images(output,client):
     from PIL import Image,ImageChops
     negative=Image.open(client/'screenshots/wet-trapdoor-disabled.png').convert('RGB')
     reports=[]
@@ -52,6 +56,12 @@ def main():
         diff=ImageChops.difference(positive,negative)
         pixels=sum(any(channel>12 for channel in pixel) for pixel in diff.getdata())
         if pixels<100:raise AssertionError('Wet chunk fluid capture empty vs disabled-fluid negative: '+name+' pixels='+str(pixels))
+        width,height=diff.size
+        for family,box in [('stair',(.2,.35,.42,.7)),('trapdoor',(.43,.35,.57,.7)),('slab',(.6,.35,.8,.7))]:
+            crop=diff.crop((int(box[0]*width),int(box[1]*height),int(box[2]*width),int(box[3]*height)))
+            changed=sum(any(channel>12 for channel in pixel) for pixel in crop.getdata())
+            if changed<100:raise AssertionError('Missing '+family+' wet pixels '+name+': '+str(changed))
+            reports.append(name+' '+family+' changed pixels: '+str(changed))
         diff.save(output/('wet-trapdoor-'+name+'-difference.png'))
         reports.append(name+' changed pixels versus disabled fluid: '+str(pixels))
         print('Wet Trapdoor actual chunk '+name+' mask PASS pixels='+str(pixels),flush=True)

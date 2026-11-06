@@ -24,6 +24,10 @@ public final class NativeFluidVolume {
     private final List<Cell> cells;
     private final double[][] cuts;
     private volatile List<Face> faces;
+    private volatile IllegalStateException faceFailure;
+    private static final long MAX_FACE_WORK=32L*1024*1024,MAX_FACE_SCRATCH=4L*1024*1024,MAX_FACE_RETAINED=8L*1024*1024;
+    private static final int FACE_BYTES=384; // Conservative for wide references and 16-byte object alignment.
+    private static final Direction[] DIRECTIONS=Direction.values();
     private NativeFluidVolume(List<AABB> solid,List<Cell> cells,double[][] cuts){this.solid=solid;this.cells=List.copyOf(cells);this.cuts=cuts;}
     /** Boxes must already be clipped into local unit coordinates. Optional cuts split two-sided openings. */
     public static NativeFluidVolume build(List<AABB> localSolid,Side side,double[]... extraCuts){
@@ -44,21 +48,34 @@ public final class NativeFluidVolume {
     /** Half-open ownership matches current Forge partition boundaries. */
     public int sideAt(double x,double y,double z){for(Cell cell:cells){AABB b=cell.box;if(x>=b.minX&&x<b.maxX&&y>=b.minY&&y<b.maxY&&z>=b.minZ&&z<b.maxZ)return cell.side;}return -1;}
     public boolean facesMaterialized(){return faces!=null;}
-    public List<Face> faces(){List<Face> value=faces;if(value==null)synchronized(this){value=faces;if(value==null)faces=value=List.copyOf(volumeFaces(cells,cuts));}return value;}
+    /** Complete immutable faces in legacy order. Excessive direct graphs fail explicitly and retain no partial list. */
+    public List<Face> faces(){List<Face> value=faces;if(value==null)synchronized(this){value=faces;if(value==null){if(faceFailure!=null)throw faceFailure;try{faces=value=List.copyOf(volumeFaces(cells,cuts));}catch(IllegalStateException failure){faceFailure=failure;throw failure;}}}return value;}
     private static List<Face> volumeFaces(List<Cell> cells,double[][] cuts){
-        int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;List<Face> faces=new ArrayList<>();
-        byte[][][] owners=new byte[nx][ny][nz];
-        for(byte[][] plane:owners)for(byte[] row:plane)Arrays.fill(row,(byte)-1);
-        for(Cell cell:cells){int x0=Arrays.binarySearch(cuts[0],cell.box.minX),x1=Arrays.binarySearch(cuts[0],cell.box.maxX),y0=Arrays.binarySearch(cuts[1],cell.box.minY),y1=Arrays.binarySearch(cuts[1],cell.box.maxY),z0=Arrays.binarySearch(cuts[2],cell.box.minZ),z1=Arrays.binarySearch(cuts[2],cell.box.maxZ);
-            for(int x=x0;x<x1;x++)for(int y=y0;y<y1;y++)Arrays.fill(owners[x][y],z0,z1,(byte)cell.side);
-        }
-        for(int x=0;x<nx;x++)for(int y=0;y<ny;y++)for(int z=0;z<nz;z++)if(owners[x][y][z]>=0){
-            int side=owners[x][y][z];double a=cuts[0][x],b=cuts[0][x+1],c=cuts[1][y],d=cuts[1][y+1],e=cuts[2][z],f=cuts[2][z+1];
-            for(Direction face:Direction.values()){int xx=x+face.getStepX(),yy=y+face.getStepY(),zz=z+face.getStepZ();if(xx>=0&&xx<nx&&yy>=0&&yy<ny&&zz>=0&&zz<nz&&owners[xx][yy][zz]==side)continue;
+        if(cells.isEmpty())return List.of();
+        int nx=cuts[0].length-1,ny=cuts[1].length-1,nz=cuts[2].length-1;
+        long plane=(long)ny*nz,rangesBytes=(long)cells.size()*7*Integer.BYTES;
+        if(rangesBytes>MAX_FACE_SCRATCH-256||plane>(MAX_FACE_SCRATCH-256-rangesBytes)/3)throw new IllegalStateException("Fluid face sweep exceeds checked work/scratch budget: plane="+plane+" runs="+cells.size());
+        // Include cleared/filled planes, range visits, output traversal and six neighbor checks.
+        if(nx>(MAX_FACE_WORK-2*plane)/(9*plane+cells.size()))throw new IllegalStateException("Fluid face sweep exceeds checked work/scratch budget: x="+nx+" plane="+plane+" runs="+cells.size());
+        // Compact physical runs remain authoritative. Only three adjacent x planes are expanded.
+        int[] ranges=new int[cells.size()*7];int index=0;
+        for(Cell cell:cells){ranges[index++]=Arrays.binarySearch(cuts[0],cell.box.minX);ranges[index++]=Arrays.binarySearch(cuts[0],cell.box.maxX);ranges[index++]=Arrays.binarySearch(cuts[1],cell.box.minY);ranges[index++]=Arrays.binarySearch(cuts[1],cell.box.maxY);ranges[index++]=Arrays.binarySearch(cuts[2],cell.box.minZ);ranges[index++]=Arrays.binarySearch(cuts[2],cell.box.maxZ);ranges[index++]=cell.side;}
+        byte[] previous=new byte[(int)plane],current=new byte[(int)plane],next=new byte[(int)plane];Arrays.fill(previous,(byte)-1);fillPlane(current,0,ranges,nz);fillPlane(next,1<nx?1:-1,ranges,nz);List<Face> faces=new ArrayList<>();
+        for(int x=0;x<nx;x++){
+          for(int y=0;y<ny;y++)for(int z=0;z<nz;z++)if(current[y*nz+z]>=0){
+            int side=current[y*nz+z];double a=cuts[0][x],b=cuts[0][x+1],c=cuts[1][y],d=cuts[1][y+1],e=cuts[2][z],f=cuts[2][z+1];
+            for(Direction face:DIRECTIONS){int yy=y+face.getStepY(),zz=z+face.getStepZ();if(yy>=0&&yy<ny&&zz>=0&&zz<nz){byte[] owners=face.getStepX()<0?previous:face.getStepX()>0?next:current;if(owners[yy*nz+zz]==side)continue;}
+                if(256L+(long)(faces.size()+1)*FACE_BYTES>MAX_FACE_RETAINED)throw new IllegalStateException("Fluid face list exceeds checked retained budget: faces="+faces.size());
                 Vec3[] vertices;switch(face){case DOWN:vertices=new Vec3[]{new Vec3(a,c,e),new Vec3(b,c,e),new Vec3(b,c,f),new Vec3(a,c,f)};break;case UP:vertices=new Vec3[]{new Vec3(a,d,e),new Vec3(a,d,f),new Vec3(b,d,f),new Vec3(b,d,e)};break;case WEST:vertices=new Vec3[]{new Vec3(a,d,e),new Vec3(a,c,e),new Vec3(a,c,f),new Vec3(a,d,f)};break;case EAST:vertices=new Vec3[]{new Vec3(b,d,e),new Vec3(b,d,f),new Vec3(b,c,f),new Vec3(b,c,e)};break;case NORTH:vertices=new Vec3[]{new Vec3(a,d,e),new Vec3(b,d,e),new Vec3(b,c,e),new Vec3(a,c,e)};break;default:vertices=new Vec3[]{new Vec3(a,d,f),new Vec3(a,c,f),new Vec3(b,c,f),new Vec3(b,d,f)};}
                 faces.add(new Face(Arrays.asList(vertices),side,face.getAxis()==Direction.Axis.X?0:face.getAxis()==Direction.Axis.Y?1:2));
             }
+          }
+          byte[] recycled=previous;previous=current;current=next;next=recycled;fillPlane(next,x+2<nx?x+2:-1,ranges,nz);
         }
         return faces;
+    }
+    private static void fillPlane(byte[] owners,int x,int[] ranges,int nz){
+        Arrays.fill(owners,(byte)-1);if(x<0)return;
+        for(int index=0;index<ranges.length;index+=7)if(x>=ranges[index]&&x<ranges[index+1])for(int y=ranges[index+2];y<ranges[index+3];y++)Arrays.fill(owners,y*nz+ranges[index+4],y*nz+ranges[index+5],(byte)ranges[index+6]);
     }
 }
