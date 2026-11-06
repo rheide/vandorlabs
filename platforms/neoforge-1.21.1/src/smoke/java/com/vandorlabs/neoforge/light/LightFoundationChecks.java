@@ -1,0 +1,20 @@
+package com.vandorlabs.neoforge.light;
+
+import com.google.gson.*;
+import com.vandorlabs.light.ProgrammableLightPolicy;
+import com.vandorlabs.persistence.LightData;
+import com.vandorlabs.neoforge.*;
+import java.nio.file.*;
+import net.minecraft.nbt.*;
+
+/** Replays actual Light-owned save fields and evaluator outputs; no registry or host activation. */
+public final class LightFoundationChecks {
+    private static int checks;
+    private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError(why);}
+    public static void main(String[] args)throws Exception{
+        int settings=0,policies=0;try(var lines=Files.lines(Path.of(args[0]))){for(String line:(Iterable<String>)lines::iterator){var row=JsonParser.parseString(line).getAsJsonObject();var input=TagParser.parseTag(row.get("input").getAsString());var expected=TagParser.parseTag(row.get("save").getAsString());var settingsValue=row.get("fresh").getAsBoolean()?NativeLightSettings.fresh():NativeLightSettings.read(input,com.vandorlabs.redstone.ChannelList.of(expected.getInt("RedstoneChannel")),ModernFinishCatalog::storedChoice);var decoded=settingsValue.light();var actual=new CompoundTag();settingsValue.write(actual);for(String key:actual.getAllKeys())need(actual.get(key).equals(expected.get(key)),"actual typed Light field="+key+" row="+settings+" input="+input+" expected="+expected.get(key)+" actual="+actual.get(key));int direct=expected.getInt("ChannelLevel");int level=ProgrammableLightPolicy.level(decoded.signalBrightness,decoded.configuredLevel,decoded.join,direct,decoded.joinedLevel,decoded.offset);boolean on=ProgrammableLightPolicy.on(decoded.signalBrightness,level,decoded.trigger,decoded.manualOn,decoded.join,expected.getBoolean("ChannelSignal"),decoded.joinedPower);need(level==row.get("level").getAsInt()&&on==row.get("on").getAsBoolean()&&ProgrammableLightPolicy.emitted(on,level)==row.get("emitted").getAsInt(),"actual inherited channel projection/Light evaluation row="+settings);if(decoded.faceTexture>=0)need(decoded.faceTexture==row.get("face").getAsInt(),"actual explicit face choice row="+settings);settings++;}}
+        try(var lines=Files.lines(Path.of(args[1]))){for(String line:(Iterable<String>)lines::iterator){var row=JsonParser.parseString(line).getAsJsonObject();boolean numeric=row.get("numeric").getAsBoolean(),join=row.get("join").getAsBoolean();int direct=row.get("direct").getAsInt(),joined=row.get("joined").getAsInt();int level=ProgrammableLightPolicy.level(numeric,row.get("configured").getAsInt(),join,direct,joined,row.get("offset").getAsInt());boolean on=ProgrammableLightPolicy.on(numeric,level,row.get("trigger").getAsInt(),row.get("manualOn").getAsBoolean(),join,direct>0,joined>0);need(level==row.get("level").getAsInt()&&on==row.get("on").getAsBoolean()&&ProgrammableLightPolicy.emitted(on,level)==row.get("emitted").getAsInt(),"actual Light policy row="+policies+" "+row);policies++;}}
+        var future=new CompoundTag();future.putString("FutureLightEnvelope","private:future");var opaque=new CompoundTag();opaque.putLong("OwnedRuntime",Long.MAX_VALUE);future.put("ContainedFluids",opaque);var saved=new NativeLightSettings.Saved(future,com.vandorlabs.redstone.ChannelList.EMPTY,ModernFinishCatalog::storedChoice);future.remove("ContainedFluids");var unchanged=saved.unchanged();need(unchanged.getCompound("ContainedFluids").equals(opaque),"saved Light envelope owns its private original");unchanged.remove("ContainedFluids");var edited=saved.edited(NativeLightSettings.fresh());need(edited.getCompound("ContainedFluids").equals(opaque)&&edited.getString("FutureLightEnvelope").equals("private:future"),"Light-only edits preserve unrelated future and owned runtime fields");
+        need(settings==771&&policies==66816,"Light source coverage");System.out.println("Native inactive Light foundation PASS settings="+settings+" policy="+policies+" checks="+checks+" actual typed save/trigger/manual/numeric/joined/emitted rules; grouping/item adapter separate");
+    }
+}
