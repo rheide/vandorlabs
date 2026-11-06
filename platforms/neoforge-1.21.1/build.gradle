@@ -412,3 +412,5 @@ tasks.register('testNativeDiagonalGlassMeshes', JavaExec) {
     maxHeapSize = '1G'
     args project.findProperty('diagonalGlassMeshReference') ?: '../../build/test-artifacts/diagonal-glass-mesh-forge.jsonl'
 }
+
+fileTree('gradle/verification').matching { include '*.gradle' }.files.sort().each { apply from: it }

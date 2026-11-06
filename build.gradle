@@ -1552,3 +1552,6 @@ task testDiagonalGlassDialogLegacy(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.DiagonalGlassDialogLegacyChecks'
 }
+
+// Isolated feature checks can be integrated without competing append edits in this build file.
+fileTree('gradle/verification').matching { include '*.gradle' }.files.sort().each { apply from: it }
