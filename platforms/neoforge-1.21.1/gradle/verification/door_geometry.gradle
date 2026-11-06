@@ -1,0 +1,7 @@
+tasks.register('testNativeDoorBounds', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.door.NativeDoorBoundsChecks'
+    args project.findProperty('doorBoundsReference') ?: '../../build/test-artifacts/door-bounds-forge.jsonl'
+}
