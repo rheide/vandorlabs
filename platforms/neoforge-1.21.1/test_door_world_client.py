@@ -15,14 +15,16 @@ from native_test_artifacts import artifact_directory, retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb',action='store_true')
+    parser.add_argument('--section-boundary',action='store_true',help='Place lower at y95 and upper at y96')
     args=parser.parse_args()
+    phase='door-world-client'+('-boundary' if args.section_boundary else '')
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_DOOR_RESOURCE_CHECK="true")
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
     output=Path(artifact_directory(prefix='door-world-client-',dir=base))
     with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
     saved=output/'server';fixture_world(saved,port);server_log=output/'server.log'
-    server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=door-world-client'),server_log,env)
+    server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+phase),server_log,env)
     try:
         deadline=time.monotonic()+120
         while 'Done (' not in server_log.read_text(errors='replace'):
@@ -30,7 +32,7 @@ def main():
             time.sleep(.5)
         client=output/'client';client.mkdir()
         (client/'options.txt').write_text('guiScale:2\ntutorialStep:none\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nentityShadows:false\nonboardAccessibility:false\n')
-        client_command=command('runClient','-PtransmitterPhase=door-world-client','-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client))
+        client_command=command('runClient','-PtransmitterPhase='+phase,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client))
         if args.xvfb:client_command=['xvfb-run','-a','-s','-screen 0 1280x720x24']+client_command;env=dict(env,LIBGL_ALWAYS_SOFTWARE='1')
         run(client_command,output/'client.log','[vandorlabs][door-world-client] client PASS',env)
         deadline=time.monotonic()+30
