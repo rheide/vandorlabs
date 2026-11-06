@@ -14,7 +14,8 @@ public enum ScreenFamily {
  public int activationSlot(){return this==HALF_CONSOLE?1:0;}
  public boolean supportsSlot(int slot){return slot==0||slot==1&&secondary;}
  public boolean half(int slot){return halfPrimary||this==CONSOLE&&slot==1;}
- public int maxRows(int slot){return half(slot)?4:8;}
+ /** Standalone controls only; cockpit surfaces independently use six/three rows. */
+ public int standaloneControlRows(int slot){return half(slot)?4:8;}
  public int stateCount(){return keyboard?16:this==DIAGONAL?8:this==HALF_DIAGONAL?12:6;}
  public State decode(int metadata){int facing=horizontal?HORIZONTAL_FACES[metadata&3]:this==HALF_DIAGONAL?(metadata&7)<6?metadata&7:2:(metadata&7)%6;return new State(facing,keyboard&&(metadata&4)!=0,(keyboard||this==HALF_DIAGONAL)&&(metadata&8)!=0,this==DIAGONAL&&(metadata&4)!=0);}
  public int encode(State state){int facing=horizontal?state.facing==3?0:state.facing==4?1:state.facing==2?2:3:state.facing;return facing|(keyboard&&state.keyboard?4:0)|((keyboard||this==HALF_DIAGONAL)&&state.upper?8:0)|(this==DIAGONAL&&state.inverted?4:0);}
