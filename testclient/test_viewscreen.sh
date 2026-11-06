@@ -2,6 +2,7 @@
 # Build the mod, boot a software-rendered Forge client, and verify pixels/state.
 set -euo pipefail
 unset VANDOR_LABS_COUPLER_ARTICULATION_CHECKS_ONLY VANDOR_LABS_RAMP_AXIS_CHECKS_ONLY VANDOR_LABS_FURNITURE_CHECKS_ONLY VANDOR_LABS_RFTOOLS_BUILDER_CHECKS_ONLY VANDOR_LABS_GLASS_DISPLAY_ORDER_ONLY VANDOR_LABS_DISPLAY_EXPANSION_CHECKS_ONLY VANDOR_LABS_CLASSIC_CONTROLS_CHECKS_ONLY VANDOR_LABS_DISPLAY_MATERIAL_CHECKS_ONLY VANDOR_LABS_SCREEN_CATALOG_CHECKS_ONLY VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
+unset VANDOR_LABS_LIGHT_CHECKS_ONLY VANDOR_LABS_LIGHT_PICKER_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
@@ -165,6 +166,9 @@ case "${1:-}" in
         elif [ "$TARGET" = shader-startup ]; then
             PREFIX=shader_startup_
             export VANDOR_LABS_SHADER_STARTUP_CHECKS_ONLY=true
+        elif [ "$TARGET" = programmable-lights ]; then
+            PREFIX=light_
+            export VANDOR_LABS_LIGHT_CHECKS_ONLY=true
         elif [ "$TARGET" = screen-modes ]; then
             PREFIX=shot_screen_status_to_redstone_
             export VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY=true
@@ -664,6 +668,11 @@ PYIMAGE
         grep -q "glass-native-scene PASS" "$RUN_OUT/client.log"
         if grep -Eiq "error: invalid program|error compiling|failed creating shader|shader.*compile.*failed" "$RUN_OUT/client.log"; then echo "FAIL: shader program compilation failed; see $RUN_OUT/client.log"; exit 1; fi
         echo "Shader startup checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = programmable-lights ]; then
+        grep -q "light-hidden-faces PASS" "$RUN_OUT/client.log"
+        echo "Programmable Light focused client checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = screen-modes ]; then

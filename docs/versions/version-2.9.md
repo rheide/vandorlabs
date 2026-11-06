@@ -38,3 +38,5 @@ Ordinary and Large Doors are enabled in the experimental native build. Shared ge
 Screen pulse expiry now survives switching control artwork away and back: restoring the screen keeps the original twenty-tick deadline. Shared activation and legacy artwork migration retain the existing Forge dialogs and saved controls while the native screen family remains in preparation.
 
 Native flat and diagonal wall/porthole placement now preserves original clicked-face coordinates. Focused source comparisons and actual Survival uses cover depth, anchoring and replaceable target cells.
+
+Programmable Lights now share save decoding and brightness/activation policy across versions. Forge behavior and saved defaults remain unchanged; the native Light host and player-facing integration are still under development.

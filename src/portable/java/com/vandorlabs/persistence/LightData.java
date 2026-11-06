@@ -23,6 +23,10 @@ public final class LightData {
     @Override public int hashCode(){int value=texture;value=31*value+faceTexture;value=31*value+offFaceTexture;value=31*value+configuredLevel;value=31*value+offset;value=31*value+joinedLevel;value=31*value+trigger;return 31*value+(signalBrightness?1:0)+(manualOn?2:0)+(join?4:0)+(joinedPower?8:0);}
     private static int clamp(int value,int low,int high){return Math.max(low,Math.min(high,value));}
     public void write(PrimitiveData tag){
+        writeFields(tag,texture,faceTexture,offFaceTexture,configuredLevel,signalBrightness,offset,joinedLevel,manualOn,join,trigger,joinedPower);
+    }
+    /** Preserve legacy live values while saving; normalization belongs to the read/edit boundary. */
+    public static void writeFields(PrimitiveData tag,int texture,int faceTexture,int offFaceTexture,int configuredLevel,boolean signalBrightness,int offset,int joinedLevel,boolean manualOn,boolean join,int trigger,boolean joinedPower){
         tag.putInt("LightTexture",texture);tag.putInt("LightFaceTexture",faceTexture);tag.putInt("LightOffFaceTexture",offFaceTexture);tag.putInt("LightLevel",configuredLevel);tag.putBoolean("SignalBrightness",signalBrightness);tag.putInt("LightOffset",offset);tag.putInt("JoinedSignalLevel",joinedLevel);tag.putBoolean("LightOn",manualOn);tag.putBoolean("LightJoin",join);tag.putInt("LightTrigger",trigger);tag.putBoolean("LightGroupPowered",joinedPower);
     }
 }

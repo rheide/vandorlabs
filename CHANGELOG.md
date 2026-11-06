@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share Programmable Light save and signal policy between versions while preserving Forge defaults, lazy input sampling and existing lighting.
+
 - Preserve clicked-face coordinates when placing native flat and diagonal walls and portholes, keeping their depth and anchoring consistent with Forge.
 
 - Bake settled native Segmented Door bodies into chunk meshes after confirmed uploads, retaining visible animated fallbacks during rebuilds and removal.

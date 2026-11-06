@@ -14,3 +14,8 @@ task exportLightJoiningReference(type: JavaExec) {
     maxHeapSize = '1G'
     args file('build/test-artifacts/light-joining-forge.jsonl').absolutePath
 }
+task testLightInputSampling(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightSamplingChecks'
+}

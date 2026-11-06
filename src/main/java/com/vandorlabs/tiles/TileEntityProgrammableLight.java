@@ -2,6 +2,9 @@ package com.vandorlabs.tiles;
 
 import net.minecraft.block.state.IBlockState;
 import com.vandorlabs.persistence.SpaceDoorData;
+import com.vandorlabs.persistence.LightData;
+import com.vandorlabs.persistence.NbtPrimitiveData;
+import com.vandorlabs.light.ProgrammableLightPolicy;
 import com.vandorlabs.blocks.ProgrammableLightConnections;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.EnumSkyBlock;
@@ -48,16 +51,21 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     private int trigger = SpaceDoorData.TRIGGER_DISABLED;
 
     public int getTrigger() { return trigger; }
-    public boolean isManual() { return trigger == SpaceDoorData.TRIGGER_DISABLED; }
+    public boolean isManual() { return ProgrammableLightPolicy.manualToggleAllowed(trigger); }
     private static long joinRevision;
 
     public static long getJoinRevision() { return joinRevision; }
 
     public int getTexture() { return texture; }
-    public int getLightLevel() { return signalBrightness?Math.max(0,Math.min(15,(join?joinedLevel:getSignalLevel())+lightOffset)):lightLevel; }
+    public int getLightLevel() {
+        int direct=signalBrightness&&!join?getSignalLevel():0;
+        return ProgrammableLightPolicy.level(signalBrightness,lightLevel,join,direct,joinedLevel,lightOffset);
+    }
     public boolean isOn() {
-        if(signalBrightness)return getLightLevel()>0;
-        return isManual() ? on : SpaceDoorData.openForSignal(trigger, join ? joinedTriggerPower : isTriggerPowered());
+        // Keep the original lazy input sampling: manual and joined lights need no direct-world query.
+        int level=signalBrightness?getLightLevel():0;
+        boolean direct=!signalBrightness&&!isManual()&&!join&&isTriggerPowered();
+        return ProgrammableLightPolicy.on(signalBrightness,level,trigger,on,join,direct,joinedTriggerPower);
     }
     public boolean isManualOn() { return on; }
     public boolean isJoin() { return join; }
@@ -171,33 +179,18 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);
-        tag.setInteger("LightTexture", texture);
-        tag.setInteger("LightFaceTexture",faceTexture);
-        tag.setInteger("LightOffFaceTexture",offFaceTexture);
-        tag.setInteger("LightLevel", lightLevel);
-        tag.setBoolean("SignalBrightness",signalBrightness);tag.setInteger("LightOffset",lightOffset);tag.setInteger("JoinedSignalLevel",joinedLevel);
-        tag.setBoolean("LightOn", on);
-        tag.setBoolean("LightJoin", join);
-        tag.setInteger("LightTrigger", trigger);
-        tag.setBoolean("LightGroupPowered", joinedTriggerPower);
+        LightData.writeFields(new NbtPrimitiveData(tag),texture,faceTexture,offFaceTexture,lightLevel,
+                signalBrightness,lightOffset,joinedLevel,on,join,trigger,joinedTriggerPower);
         return tag;
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
-        signalBrightness=tag.getBoolean("SignalBrightness");lightOffset=Math.max(-15,Math.min(15,tag.getInteger("LightOffset")));joinedLevel=Math.max(0,Math.min(15,tag.getInteger("JoinedSignalLevel")));
-        offFaceTexture=tag.hasKey("LightOffFaceTexture",3) && tag.getInteger("LightOffFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("LightOffFaceTexture")):-1;
-        faceTexture=tag.hasKey("LightFaceTexture",3) && tag.getInteger("LightFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("LightFaceTexture")):-1;
-        texture = ProgrammableLightTextures.clamp(tag.getInteger("LightTexture"));
-        lightLevel = tag.hasKey("LightLevel", 3)
-                ? Math.max(0, Math.min(15, tag.getInteger("LightLevel"))) : 15;
-        on = !tag.hasKey("LightOn") || tag.getBoolean("LightOn");
-        join = tag.getBoolean("LightJoin");
-        joinedTriggerPower = tag.getBoolean("LightGroupPowered");
-        trigger = tag.hasKey("LightTrigger", 3) ? tag.getInteger("LightTrigger")
-                : getRedstoneChannel() > 0 ? SpaceDoorData.TRIGGER_REDSTONE_ON
-                : SpaceDoorData.TRIGGER_DISABLED;
-        if (!SpaceDoorData.validTrigger(trigger)) trigger = SpaceDoorData.TRIGGER_DISABLED;
+        LightData data=LightData.read(new NbtPrimitiveData(tag),getRedstoneChannel(),ScreenHousingTextures::clamp);
+        signalBrightness=data.signalBrightness;lightOffset=data.offset;joinedLevel=data.joinedLevel;
+        offFaceTexture=data.offFaceTexture;faceTexture=data.faceTexture;texture=data.texture;
+        lightLevel=data.configuredLevel;on=data.manualOn;join=data.join;
+        joinedTriggerPower=data.joinedPower;trigger=data.trigger;
         joinRevision++;
         if (world != null && pos != null) {
             if (world.isRemote) world.checkLightFor(EnumSkyBlock.BLOCK, pos);
