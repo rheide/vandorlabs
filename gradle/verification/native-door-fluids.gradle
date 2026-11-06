@@ -5,3 +5,11 @@ task exportDoorFluidReference(type: JavaExec) {
     maxHeapSize = '1G'
     systemProperty 'vandorlabs.doorFluidReference', file(project.findProperty('doorFluidReference') ?: 'build/test-artifacts/door-fluid-forge.jsonl').absolutePath
 }
+
+task exportDoorOpeningReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorOpeningFluidLegacyChecks'
+    maxHeapSize = '512M'
+    systemProperty 'vandorlabs.doorOpeningReference', file(project.findProperty('doorOpeningReference') ?: 'build/test-artifacts/door-opening-forge.jsonl').absolutePath
+}
