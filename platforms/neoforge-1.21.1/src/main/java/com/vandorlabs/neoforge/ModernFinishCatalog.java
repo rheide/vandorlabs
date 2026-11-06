@@ -14,7 +14,9 @@ public final class ModernFinishCatalog {
     public record Playback(String staticTexture,String offTexture,String animationTexture,int frameCount,double aspect){
         public Playback(String stationary,String off,String animation,int count){this(stationary,off,animation,count,1);}
     }
-    public record Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable,Frame frame,Playback playback){
+    public record DoorArtwork(int design,int detail){}
+    public record Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable,Frame frame,Playback playback,DoorArtwork door){
+        public Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable,Frame frame,Playback playback){this(id,label,category,visible,general,canonical,texture,u,v,displaySelectable,frame,playback,null);}
         public Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable,Frame frame){this(id,label,category,visible,general,canonical,texture,u,v,displaySelectable,frame,null);}
         public Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v,boolean displaySelectable){this(id,label,category,visible,general,canonical,texture,u,v,displaySelectable,null);}
         public Entry(String id,String label,String category,boolean visible,boolean general,int canonical,String texture,float u,float v){this(id,label,category,visible,general,canonical,texture,u,v,false);}

@@ -76,6 +76,8 @@ def main():
         bare_index=next((i for i,item in enumerate(entries) if item['source']==bare),0)
         display_selectable=category.startswith('Displays') and (bare==source or bare_index==0 or bare_index==index)
         catalog.append(dict(id=original['id'],label=label,category=category,visible=not original.get('hidden',False),general=general,displaySelectable=display_selectable,canonical=canonical,texture='vandorlabs:'+texture,u=u,v=v))
+        if 'design' in original:
+            catalog[-1]['door']=dict(design=original['design'],detail=original.get('detail',0))
         timeline=playback.entry(original,entries[canonical])
         if timeline is not None:catalog[-1]['playback']=timeline
         # Preserve authored frame semantics independently of the main selectable artwork.
