@@ -16,8 +16,8 @@ public final class NativeScreenGroups {
   for(var tile:targets)if(!installed(level,tile)||!tile.activationEditAllowed()||tile.screenSettings()!=before.get(tile))return false;
   if(!editMembers(origin).equals(targets))return false;
   for(var tile:targets)plans.put(tile,tile.planActivation(edit));
-  for(var tile:targets)tile.guardActivationGroup(true);
-  try{for(var tile:targets)tile.installActivation(plans.get(tile));for(var tile:targets)if(installed(level,tile))tile.publishActivation();}finally{for(var tile:targets)tile.guardActivationGroup(false);}
+  for(var tile:targets){NativeScreenPowerService.queueTopology(tile);tile.guardActivationGroup(true);}
+  try{for(var tile:targets)tile.installActivation(plans.get(tile));NativeScreenPowerService.refresh(origin);for(var tile:targets)if(installed(level,tile))tile.publishActivation();}finally{for(var tile:targets)tile.guardActivationGroup(false);}
   return true;
  }
  private static List<NativeScreenEntity> members(NativeScreenEntity origin,boolean power){var result=discover(origin,power);return result==null?List.of(origin):result.members(origin);}
