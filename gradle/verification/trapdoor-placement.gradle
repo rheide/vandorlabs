@@ -1,0 +1,7 @@
+task exportTrapdoorPlacementReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorPlacementLegacyOracle'
+    args file(project.findProperty('trapdoorPlacementReference') ?: 'build/test-artifacts/trapdoor-placement-forge.json').absolutePath
+}
