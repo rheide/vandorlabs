@@ -19,7 +19,7 @@ unset VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY
 
 unset VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONLY VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY
 
-unset VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY
+unset VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 case "${1:-}" in
@@ -165,6 +165,9 @@ case "${1:-}" in
         elif [ "$TARGET" = shader-startup ]; then
             PREFIX=shader_startup_
             export VANDOR_LABS_SHADER_STARTUP_CHECKS_ONLY=true
+        elif [ "$TARGET" = screen-modes ]; then
+            PREFIX=shot_screen_status_to_redstone_
+            export VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY=true
         elif [ "$TARGET" = pulse-screens ]; then
             PREFIX=shot_pulse_screen_
             export VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY=true
@@ -661,6 +664,12 @@ PYIMAGE
         grep -q "glass-native-scene PASS" "$RUN_OUT/client.log"
         if grep -Eiq "error: invalid program|error compiling|failed creating shader|shader.*compile.*failed" "$RUN_OUT/client.log"; then echo "FAIL: shader program compilation failed; see $RUN_OUT/client.log"; exit 1; fi
         echo "Shader startup checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = screen-modes ]; then
+        grep -q "screen-mode-world PASS" "$RUN_OUT/client.log"
+        grep -q "screen-mode-client PASS" "$RUN_OUT/client.log"
+        echo "Screen mode live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = pulse-screens ]; then

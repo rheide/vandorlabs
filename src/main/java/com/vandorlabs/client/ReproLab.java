@@ -815,6 +815,11 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("Hover controls live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.screenModeChecksOnly")) {
+            try {if(!vehicleStatusStarted){ScreenModeTransitionRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(ScreenModeTransitionRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Screen mode live checks",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.pulseScreenChecksOnly")) {
             try {if(!vehicleStatusStarted){PulseScreenRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(PulseScreenRuntimeChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Pulse screen live checks",failure);}
