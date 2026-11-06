@@ -1,0 +1,10 @@
+tasks.register('testNativeReaderClock', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeReaderClockChecks'
+}
+
+neoForge.runs.configureEach {
+    if (project.hasProperty('readerRenderCheck')) programArguments.addAll '--width', '1280', '--height', '720'
+}
