@@ -27,7 +27,7 @@ def stop(process):
   process.wait(timeout=10)
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--xvfb',action='store_true');p.add_argument('--skip-build',action='store_true');p.add_argument('--capture-only',action='store_true');p.add_argument('--runtime',type=Path);a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--xvfb',action='store_true');p.add_argument('--skip-build',action='store_true');p.add_argument('--capture-only',action='store_true');p.add_argument('--valid-activation',action='store_true');p.add_argument('--runtime',type=Path);a=p.parse_args()
  if a.xvfb and os.name=='nt':p.error('--xvfb requires Linux')
  runtime=a.runtime or ROOT/'testclient/runtime'
  if not (runtime/'cp.txt').is_file():
@@ -52,6 +52,7 @@ def main():
    if found:cp.append(str(found[0]))
   # A warmed final singleton getter can inline the original Tessellator and silently bypass capture.
   oracle_flags=['-XX:CompileCommand='+policy+',net/minecraft/client/renderer/Tessellator.'+method for policy in ['exclude','dontinline'] for method in ['getInstance','func_178181_a']]
+  if a.valid_activation:oracle_flags.append('-Dvandorlabs.screenOracleValidActivation=true')
   command=[str(java),'-Xmx2G',*oracle_flags,'-Djava.library.path='+str(runtime/'natives'),'-cp',os.pathsep.join(cp),'net.minecraft.launchwrapper.Launch','--tweakClass','net.minecraftforge.fml.common.launcher.FMLTweaker','--gameDir',str(game),'--assetsDir',str(runtime/'assets'),'--assetIndex','1.12','--username','SCREENORACLE','--accessToken','0','--version','1.12.2-Forge14.23.5.2864','--fml.forgeVersion','14.23.5.2864','--fml.mcVersion','1.12.2','--fml.forgeGroup','net.minecraftforge','--width','1024','--height','720']
   if a.xvfb:command=['xvfb-run','-a','-s','-screen 0 1024x720x24']+command;env['LIBGL_ALWAYS_SOFTWARE']='1'
   with (out/'client.log').open('w') as log:
@@ -66,7 +67,7 @@ def main():
   (out/'reference.sha256').write_text(hashlib.sha256(captured.read_bytes()).hexdigest()+'\n')
   from prepare_screen_role_reference import compact,verify
   contract=compact(out)
-  if not a.capture_only:verify(contract,ROOT/'testclient/fixtures/screen-role-gl-reference.json',exact=a.xvfb)
+  if not a.capture_only:verify(contract,ROOT/('testclient/fixtures/screen-role-gl-activation-reference.json' if a.valid_activation else 'testclient/fixtures/screen-role-gl-reference.json'),exact=a.xvfb)
   (out/'screen-role-contract.json').write_text(json.dumps(contract,separators=(',',':'))+'\n')
   if hashlib.sha256(production.read_bytes()).hexdigest()!=digest:raise RuntimeError('Source standard JAR changed during capture')
   success=True;print('Actual Source Screen role GL capture PASS: '+str(out),flush=True)

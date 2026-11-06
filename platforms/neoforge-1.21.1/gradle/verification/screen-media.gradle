@@ -17,3 +17,17 @@ tasks.register('testNativeScreenMedia', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.screen.ScreenMediaChecks'
     args file('../..').absolutePath,file('build/generated/cube-resources/assets/vandorlabs').absolutePath,file('build/generated/screen-media-resources/assets/vandorlabs').absolutePath
 }
+
+tasks.register('testNativeScreenRenderPlan', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava'),tasks.named('generateScreenMediaResources')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.screen.ScreenRenderPlanChecks'
+    args file('../../testclient/fixtures/screen-role-gl-reference.json').absolutePath,file('../../testclient/fixtures/screen-role-light-reference.json.gz').absolutePath
+}
+
+tasks.register('testNativeScreenRenderPlanActivation', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava'),tasks.named('generateScreenMediaResources')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.screen.ScreenRenderPlanChecks'
+    args file('../../testclient/fixtures/screen-role-gl-activation-reference.json').absolutePath,file('../../testclient/fixtures/screen-role-light-activation-reference.json.gz').absolutePath,'true'
+}
