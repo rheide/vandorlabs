@@ -40,3 +40,28 @@ tasks.register('testNativePropulsionControls', JavaExec) {
 neoForge.runs.configureEach {
     if(project.hasProperty('propulsionShapeReference'))systemProperty 'vandorlabs.propulsionShapeReference',file(project.property('propulsionShapeReference')).absolutePath
 }
+
+
+
+tasks.register('testNativePropulsionObj', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionObjChecks'
+    args file('../../build/test-artifacts/propulsion-artwork-forge.jsonl').absolutePath
+}
+
+tasks.register('testNativePropulsionBox', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionBoxChecks'
+    args file('../../build/test-artifacts/propulsion-artwork-forge.jsonl').absolutePath
+}
+
+tasks.register('testNativePropulsionVertexPayload', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionVertexPayloadChecks'
+}
