@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenPlacement', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenPlacementChecks'
+ systemProperty 'screenPlacementReference',file(project.findProperty('screenPlacementReference') ?: '../../build/test-artifacts/screen-placement-reference.json').absolutePath
+}
