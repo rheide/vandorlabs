@@ -26,6 +26,11 @@ public final class NativeDoorAssets {
     public static Texture texture(String id){return TEXTURES.get(id);}
     public static int faces(String id){return DATA.faces.getOrDefault(id,-1);}
     /** Door previews retain complete1:2 artwork instead of the cube catalog's lower face crop. */
+    /** Catalog category paths include company submenus while artwork-detail filtering stays unchanged. */
+    public static boolean selectable(ModernFinishCatalog.Entry entry,boolean large,int detail){
+        String category=entry.category();boolean door=category.equals("Doors")||category.startsWith("Doors/")||large&&(category.equals("Double Doors")||category.startsWith("Double Doors/"));
+        return entry.general()||door&&(entry.door()==null||entry.door().detail()==detail);
+    }
     public static ModernFinishCatalog.Entry preview(int choice){
         if(choice>=0&&choice<PREVIEWS.length){var entry=PREVIEWS[choice];if(entry!=null)return entry;}return ModernFinishCatalog.option(choice);
     }
