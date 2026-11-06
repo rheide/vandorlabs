@@ -95,12 +95,20 @@ def main():
                             edge_path.parent.mkdir(parents=True,exist_ok=True)
                             crop(full,edge).save(edge_path,optimize=True)
                 for edge in range(4):atlas.append(dict(type='minecraft:single',resource=rail_id+('' if edge==0 else '_edge_'+str(edge))))
-            catalog[-1]['frame']=dict(rail=rail_id,aspect=max(1,original.get('frameAspect',1)),border=original.get('frameBorder',True),light=max(0,min(5,original.get('frameLight',0))))
+            catalog[-1]['frame']=dict(rail=rail_id,aspect=max(1,original.get('frameAspect',1)),border=original.get('frameBorder',True),light=max(0,min(5,original.get('frameLight',0))),authoredRail='/frames/' in ('/'+(rail if rail and original.get('frameBorder',True) else original['source'])))
         atlas.append(dict(type='minecraft:single',resource='vandorlabs:'+texture))
     metal=ASSETS/'textures/frame-default/metal_side.png'
     metal.parent.mkdir(parents=True,exist_ok=True)
     shutil.copy2(source_texture('programmable_glass/metal_side'),metal)
     atlas.append(dict(type='minecraft:single',resource='vandorlabs:frame-default/metal_side'))
+    # Original diagonal-glass rails use this artwork, independently of the metal side caps.
+    rail=ASSETS/'textures/frame-default/double_frame_metal.png'
+    with Image.open(source_texture('space_doors/medium/double_frame_metal')) as source:
+        image=source.convert('RGBA')
+        if max(image.size)>128:
+            image=image.convert('RGBa').resize((128,128),Image.Resampling.LANCZOS).convert('RGBA')
+        image.save(rail,optimize=True)
+    atlas.append(dict(type='minecraft:single',resource='vandorlabs:frame-default/double_frame_metal'))
     from glass_palette_resources import generate_glass_palette
     atlas.extend(generate_glass_palette(ROOT,OUT))
     from generate_mounted_control_resources import generate as generate_controls

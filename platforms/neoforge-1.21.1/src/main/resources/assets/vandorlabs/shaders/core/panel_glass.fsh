@@ -2,6 +2,7 @@
 #moj_import <fog.glsl>
 uniform sampler2D Sampler0;
 uniform vec4 ColorModulator;
+uniform float AlphaCutoff;
 uniform float FogStart;
 uniform float FogEnd;
 uniform vec4 FogColor;
@@ -12,6 +13,6 @@ out vec4 fragColor;
 void main() {
     vec4 pane = texture(Sampler0, texCoord0) * vertexColor * ColorModulator;
     // Matches the existing panel renderer's GL alpha-test boundary.
-    if (pane.a <= 0.003) discard;
+    if (pane.a <= AlphaCutoff) discard;
     fragColor = linear_fog(pane, vertexDistance, FogStart, FogEnd, FogColor);
 }

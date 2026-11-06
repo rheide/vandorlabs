@@ -8,7 +8,9 @@ import java.util.List;
 
 /** Generated current canonical catalog; external namespaces remain saved but render with a fallback. */
 public final class ModernFinishCatalog {
-    public record Frame(String rail,double aspect,boolean border,int light){}
+    public record Frame(String rail,double aspect,boolean border,int light,boolean authoredRail){
+        public Frame(String rail,double aspect,boolean border,int light){this(rail,aspect,border,light,rail!=null&&rail.contains("/frames/"));}
+    }
     public record Playback(String staticTexture,String offTexture,String animationTexture,int frameCount,double aspect){
         public Playback(String stationary,String off,String animation,int count){this(stationary,off,animation,count,1);}
     }
