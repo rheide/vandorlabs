@@ -64,6 +64,96 @@
     "rgbaSha256": "ef1d9d230c326fc5c4420b8b594be809777423b64e0dff9b79dda7049b282120",
     "width": 256
   },
+  "vandorlabs:blocks/company_doors/ashiro_mai/light": {
+    "height": 256,
+    "rgbaSha256": "43f4140487bd2e0f5952ea346434f542d01315a206e107f89613e46a5c90dfa8",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/ashiro_mai/security": {
+    "height": 256,
+    "rgbaSha256": "1a14bf339cee5cd72cb4bf28d6890b2a985dba7551dc4be6286515c9d6b3ac7d",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/ashiro_mai/standard": {
+    "height": 256,
+    "rgbaSha256": "657416b2637b0c6cbceb8684736cb1639f98b9a7a89bc1577430db038f61f95b",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/paladyne/light": {
+    "height": 256,
+    "rgbaSha256": "bf38e57c9f6c40cd45e85e42f602d7fa00a35bc016414ec28ce532a5f873d396",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/paladyne/security": {
+    "height": 256,
+    "rgbaSha256": "b9eb2cd4112c356f7de15ff4a8dbd30378c361be2c77e433c0040fa380a03521",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/paladyne/standard": {
+    "height": 256,
+    "rgbaSha256": "4bc20c31f054952a9fc0bc70a0914db07708b6d6b380268b2bcfda6caeb9391f",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/pinnacle/light": {
+    "height": 256,
+    "rgbaSha256": "c4bddfdb07ded443df6410b92d806fdd60753bfc8c971c01b4296dfc184631fa",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/pinnacle/security": {
+    "height": 256,
+    "rgbaSha256": "afbe89eb6baf0cfadbc1c5d6504e80ce463d7cfc39f94dedc0ddfba809f28a1b",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/pinnacle/standard": {
+    "height": 256,
+    "rgbaSha256": "25c8e78477ab5f1a5e00eeb9061406a2e34c0842a785335b4265f2e26b0f8fb3",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/seyr/light": {
+    "height": 256,
+    "rgbaSha256": "5fc5afa91bdfdf0579c6d95f3c52eda82309c31f52a8affa31f29662e49aa626",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/seyr/security": {
+    "height": 256,
+    "rgbaSha256": "df94a24bb4afcf9b7db4d9b4564449339ffff048f68fb1c66056ea5ebd266c38",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/seyr/standard": {
+    "height": 256,
+    "rgbaSha256": "055e3a757c7339147bd9bc716e44d23495b25b18d28056acbc2c05097401b0ef",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/vandor/light": {
+    "height": 256,
+    "rgbaSha256": "bf7e8b375f3230eb3b8079a1f2c6b9a4083603e26556f3d0a19fae4c9b43f861",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/vandor/security": {
+    "height": 256,
+    "rgbaSha256": "0762603f0f17e3ec158161a68b43ed1cc5366a21b4edac7c61ffe9a4a110978a",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/vandor/standard": {
+    "height": 256,
+    "rgbaSha256": "a6e1e542bc4096adda179fc434ecc869c20f2c3bfdffcc5fd7a0867480433d4c",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/vektor/light": {
+    "height": 256,
+    "rgbaSha256": "019aad77aac7ae0a0f5a057c9387361464fd7939b88646590c02a4b653b91139",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/vektor/security": {
+    "height": 256,
+    "rgbaSha256": "e6a11112e93e6126091f15b74b57dc889811346bed9bd0160936b6e945817901",
+    "width": 128
+  },
+  "vandorlabs:blocks/company_doors/vektor/standard": {
+    "height": 256,
+    "rgbaSha256": "70a5044644baa15a6afbad65ab3370eb59750d7a0eecc85fed46503c77fe8ac7",
+    "width": 128
+  },
   "vandorlabs:blocks/control_buttons": {
     "height": 16,
     "rgbaSha256": "3afa2776ba317a7eb503d2e2eb7ab7935df171b17d94eb0e177d56636c21854d",

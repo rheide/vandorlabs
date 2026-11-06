@@ -59,9 +59,9 @@ def main():
             padded = Image.new('RGBA', (size, size))
             padded.paste(image, (0, 0))
             if width < size:
-                padded.paste(image.crop((width - 1, 0, width, height)).resize((size - width, height)), (width, 0))
+                padded.paste(image.crop((width - 1, 0, width, height)).resize((size - width, height), Image.Resampling.NEAREST), (width, 0))
             if height < size:
-                padded.paste(padded.crop((0, height - 1, size, height)).resize((size, size - height)), (0, height))
+                padded.paste(padded.crop((0, height - 1, size, height)).resize((size, size - height), Image.Resampling.NEAREST), (0, height))
             destination = ASSETS / 'textures' / (target + '.png')
             destination.parent.mkdir(parents=True, exist_ok=True)
             padded.save(destination, optimize=True)
@@ -113,7 +113,7 @@ def main():
     texture('vandorlabs:blocks/control_buttons')
     previews = {}
     for entry in catalog:
-        if 'design' in entry and entry.get('detail', 0) == 0:
+        if ('design' in entry and entry.get('detail', 0) == 0) or entry.get('source', '').startswith('company_doors/'):
             previews[entry['id']] = texture('vandorlabs:blocks/' + entry['source'])
     def elements(name):
         location = name.split(':', 1)[1]
@@ -124,6 +124,13 @@ def main():
             return value['elements']
         return elements(value['parent']) if value.get('parent', '').startswith('vandorlabs:') else []
     faces = {name: sum(len(element.get('faces', {})) for element in elements(name)) for name in additional}
+    artwork = {}
+    for entry in catalog:
+        source = entry.get('source', '')
+        artwork[entry['id']] = dict(mirrored=source.startswith('company_doors/'),
+                                  reversed=source.startswith(('company_doors/pinnacle/', 'company_doors/ashiro_mai/', 'company_doors/paladyne/', 'company_doors/vektor/')),
+                                  light=source.startswith('company_doors/') and source.endswith('/light'))
+    write(ASSETS / 'data/door_material_policy.json', artwork)
     write(ASSETS / 'data/door_artwork.json', dict(models=additional, textures=list(textures.values()), previews=previews, faces=faces))
     print('Authored door resources:', len(additional), 'additional models,', len(models), 'closure models,',
           len(templates), 'shared geometry templates,', len(textures), 'standard square-padded sprites; full content UV descriptors retained')
