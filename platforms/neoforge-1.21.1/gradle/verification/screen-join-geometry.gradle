@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenJoinGeometry', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenJoinGeometryChecks'
+ systemProperty 'screenJoinGeometryReference',file(project.findProperty('screenJoinGeometryReference') ?: '../../build/test-artifacts/screen-join-geometry-reference.json').absolutePath
+}
