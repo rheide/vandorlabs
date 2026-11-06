@@ -6,3 +6,11 @@ task exportProgrammableLightReference(type: JavaExec) {
     maxHeapSize = '1G'
     args file('build/test-artifacts/programmable-light').absolutePath
 }
+task exportLightJoiningReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightJoiningLegacyChecks'
+    maxHeapSize = '1G'
+    args file('build/test-artifacts/light-joining-forge.jsonl').absolutePath
+}
