@@ -13,7 +13,7 @@ public final class DoorAssetCatalogChecks {
             var before=ModernFinishCatalog.option(i);var after=NativeDoorAssets.preview(i);if(after!=NativeDoorAssets.preview(i))throw new AssertionError("Uncached immutable preview "+i);
             if(after!=before){changed++;if(!after.texture().startsWith("vandorlabs:door-artwork/")||after.u()<=0||after.u()>1||after.v()<=0||after.v()>1||after.door()!=before.door()||after.canonical()!=before.canonical())throw new AssertionError("Preview changed identity/settings "+i);}
         }
-        if(changed!=30||NativeDoorAssets.models().size()!=1924||NativeDoorAssets.models()!=NativeDoorAssets.models())throw new AssertionError("Incomplete immutable door catalog "+changed);
+        if(changed!=48||NativeDoorAssets.models().size()!=1924||NativeDoorAssets.models()!=NativeDoorAssets.models())throw new AssertionError("Incomplete immutable door catalog "+changed);
         var bean=(com.sun.management.ThreadMXBean)ManagementFactory.getThreadMXBean();if(!bean.isThreadAllocatedMemoryEnabled())bean.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().threadId();
         for(int i=0;i<200000;i++)sink=NativeDoorAssets.preview(i%ModernFinishCatalog.ENTRIES.size());long start=bean.getThreadAllocatedBytes(thread);for(int i=0;i<100000;i++)sink=NativeDoorAssets.preview(i%ModernFinishCatalog.ENTRIES.size());long bytes=bean.getThreadAllocatedBytes(thread)-start;if(bytes>1024)throw new AssertionError("Per-frame preview descriptors allocated "+bytes);
         System.out.println("[vandorlabs][door-catalog] CPU PASS fullArtworkPreviews="+changed+" models=1924 cachedBytesPerLookup="+(bytes/100000D)+" stable material identities; no client/world");
