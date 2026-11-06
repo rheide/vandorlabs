@@ -165,7 +165,7 @@ for role in ("bioengineer","scientist","hazmat","repairman","pilot","civilian_st
 
 for page in range((len(material_choices())+9)//10):
     SHOTS["gallery_catalog_material_"+str(page)] = f"building/current-materials-{page+1:02d}.png"
-door_names = re.search(r'DESIGNS=\{(.*?)\};', (ROOT / "src/main/java/com/vandorlabs/tiles/TileEntitySpaceDoor.java").read_text(), re.S).group(1)
+door_names = re.search(r'DESIGNS=\{(.*?)\};', (ROOT / "src/portable/java/com/vandorlabs/render/SpaceDoorModels.java").read_text(), re.S).group(1)
 for index,name in enumerate(re.findall(r'"([^"]+)"',door_names)):
     SHOTS["gallery_catalog_door_"+str(index)] = "doors/design-"+("reactor-service" if name=="reactor" else name.replace("_","-"))+".png"
 
