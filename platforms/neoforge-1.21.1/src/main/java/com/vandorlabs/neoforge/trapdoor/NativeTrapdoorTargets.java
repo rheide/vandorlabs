@@ -33,8 +33,9 @@ public final class NativeTrapdoorTargets {
     private static final class Finder implements Consumer<NativeTrapdoorEntity> {
         boolean active;Vec3 start,end;double distance;Target best;final double[] hit=new double[4];
         public void accept(NativeTrapdoorEntity tile){
-            var c=tile.settings().choices();if(tile.inert()||!tile.diagonal()&&!c.sliding&&!c.cover&&!c.overSurface)return;
-            var geometry=tile.geometry();if(geometry==null||!geometry.offsetTrace(tile.getBlockPos(),start,end,hit))return;
+            var c=tile.settings().choices();if(tile.inert())return;
+            boolean offset=tile.diagonal()||c.sliding||c.cover||c.overSurface;
+            var geometry=tile.geometry();if(geometry==null||!geometry.trace(offset,tile.getBlockPos().getX(),tile.getBlockPos().getY(),tile.getBlockPos().getZ(),start.x,start.y,start.z,end.x,end.y,end.z,hit))return;
             double dx=hit[0]-start.x,dy=hit[1]-start.y,dz=hit[2]-start.z,d=dx*dx+dy*dy+dz*dz;
             if(d<distance){distance=d;best=new Target(tile.getBlockPos(),new BlockHitResult(new Vec3(hit[0],hit[1],hit[2]),Direction.from3DDataValue((int)hit[3]),tile.getBlockPos(),false));}
         }

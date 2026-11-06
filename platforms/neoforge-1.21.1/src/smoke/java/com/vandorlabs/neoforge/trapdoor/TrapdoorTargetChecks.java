@@ -23,6 +23,8 @@ public final class TrapdoorTargetChecks {
         throw new AssertionError("Fixture must overhang its owner cell: "+b);
     }
     public static void run(ServerLevel level,NativeTrapdoorBlock regular,NativeTrapdoorBlock diagonal){
+        // Each runtime has a fresh normal world; keep mountain terrain out of positive ray fixtures.
+        for(BlockPos at:BlockPos.betweenClosed(new BlockPos(3188,75,3188),new BlockPos(3204,85,3204)))level.setBlock(at,Blocks.AIR.defaultBlockState(),18);
         var actor=new net.neoforged.neoforge.common.util.FakePlayer(level,new com.mojang.authlib.GameProfile(UUID.fromString("a5a9d46e-7f72-4fa4-a7d8-a080a0504ef1"),"TrapdoorTargets"));
         Iterable<VoxelShape> empty=List.of();var far=new AABB(-100,200,-100,-99,201,-99);need(NativeTrapdoorTargets.blockCollisions(level,far,empty)==empty,"unaffected collision iterable identity");
         for(int family=0;family<2;family++)for(var facing:new Direction[]{Direction.NORTH,Direction.EAST,Direction.SOUTH,Direction.WEST})for(int motion=0;motion<3;motion++){
@@ -36,18 +38,19 @@ public final class TrapdoorTargetChecks {
             need(Shapes.joinIsNotEmpty(shape,Shapes.create(query),BooleanOp.AND),"outside collision intersects physical query");
             boolean engine=false;for(var collision:level.getBlockCollisions(null,query))if(Shapes.joinIsNotEmpty(collision,Shapes.create(query),BooleanOp.AND))engine=true;need(engine,"engine collision includes moved outside-cell leaf");
             var warmed=NativeTrapdoorTargets.blockCollisions(level,query,empty).iterator();need(warmed.hasNext()&&warmed.next()==shape,"warm publication reuses exact voxel shape");
-            Vec3 center=geometry.bounds().move(owner).getCenter();boolean traced=false;double[] expected=new double[4];
+            Vec3 center=geometry.bounds().move(owner).getCenter();boolean traced=false;Vec3 useStart=null;double[] expected=new double[4];
             for(var axis:Direction.Axis.values()){
                 double dx=axis==Direction.Axis.X?4:0,dy=axis==Direction.Axis.Y?4:0,dz=axis==Direction.Axis.Z?4:0;
                 Vec3 start=center.add(-dx,-dy,-dz),end=center.add(dx,dy,dz);
                 if(!geometry.offsetTrace(owner,start,end,expected))continue;
                 var actual=NativeTrapdoorTargets.trace(level,start,end);need(actual!=null&&actual.owner().equals(owner),"loaded moved-leaf target ownership");
-                need(actual.hit().getLocation().x==expected[0]&&actual.hit().getLocation().y==expected[1]&&actual.hit().getLocation().z==expected[2]&&actual.hit().getDirection().get3DDataValue()==(int)expected[3],"source-matched exact ray hit and facing");traced=true;
+                need(actual.hit().getLocation().x==expected[0]&&actual.hit().getLocation().y==expected[1]&&actual.hit().getLocation().z==expected[2]&&actual.hit().getDirection().get3DDataValue()==(int)expected[3],"source-matched exact ray hit and facing");traced=true;if(useStart==null)useStart=start;
             }
-            need(traced,"endpoint crossed by fixture ray");
+            need(traced,"endpoint crossed by fixture ray");TrapdoorUseChecks.run(tile,actor,useStart,center);
             var pending=NativeTrapdoorTargets.blockCollisions(level,query,empty).iterator();need(pending.hasNext(),"lazy pending collision before state change");tile.requestOpen(!initialOpen);need(!pending.hasNext(),"lazy old publication retires after motion state replacement");
             tile.requestOpen(initialOpen);var removed=NativeTrapdoorTargets.blockCollisions(level,query,empty).iterator();need(removed.hasNext(),"lazy pending collision before removal");level.removeBlock(owner,false);need(!removed.hasNext(),"removed owner cannot publish cached collision");
         }
+        TrapdoorUseChecks.report();
         need(NativeTrapdoorTargets.trace(level,new Vec3(Double.NaN,0,0),Vec3.ZERO)==null,"nonfinite ray refused");need(NativeTrapdoorTargets.trace(level,Vec3.ZERO,new Vec3(65,0,0))==null,"oversized ray refused");
         need(NativeTrapdoorTargets.retainedBytes()<=4*1024*1024,"world-free collision cache byte bound");
         System.out.println("[vandorlabs][trapdoor-targets] PASS checks="+checks+" 24 rotating/sliding/cover endpoints/outside-cell rays/lazy replacement/removal warm shape identity byte bound");

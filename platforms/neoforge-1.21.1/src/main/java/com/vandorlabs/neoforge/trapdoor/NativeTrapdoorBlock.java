@@ -16,6 +16,23 @@ public abstract class NativeTrapdoorBlock extends BaseEntityBlock {
     private final boolean diagonal;
     protected NativeTrapdoorBlock(Properties properties,boolean diagonal){super(properties);this.diagonal=diagonal;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(OPEN,false).setValue(HALF,Half.BOTTOM));}
     public final boolean diagonal(){return diagonal;}protected abstract BlockEntityType<?> entityType();
+    protected net.minecraft.world.inventory.MenuType<NativeTrapdoorMenu> menuType(){return null;}
+    public final boolean openConfiguration(net.minecraft.world.entity.player.Player player,Level level,BlockPos pos){var type=menuType();return type!=null&&NativeTrapdoorConfiguration.open(player,level,pos,type);}
+    /** Placement integration may complete a diagonal assembly before the ordinary toggle. */
+    protected void prepareInteraction(NativeTrapdoorEntity tile,net.minecraft.world.entity.player.Player player,net.minecraft.world.item.ItemStack held){}
+    private net.minecraft.world.InteractionResult interact(Level level,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.InteractionHand hand,Direction face){
+        if(hand!=net.minecraft.world.InteractionHand.MAIN_HAND)return net.minecraft.world.InteractionResult.PASS;
+        var held=player.getItemInHand(hand);
+        if(player.isCreative()&&player.isShiftKeyDown()||held.is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return openConfiguration(player,level,pos)?net.minecraft.world.InteractionResult.sidedSuccess(level.isClientSide):net.minecraft.world.InteractionResult.FAIL;
+        var tile=NativeTrapdoorEntity.at(level,pos);if(tile==null)return net.minecraft.world.InteractionResult.FAIL;
+        if(!level.isClientSide&&tile.canUse(player,face)){prepareInteraction(tile,player,held);tile.requestOpen(player,!tile.open(),face);}
+        return net.minecraft.world.InteractionResult.sidedSuccess(level.isClientSide);
+    }
+    @Override protected net.minecraft.world.InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.phys.BlockHitResult hit){return interact(level,pos,player,net.minecraft.world.InteractionHand.MAIN_HAND,hit.getDirection());}
+    @Override protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,BlockState state,Level level,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.InteractionHand hand,net.minecraft.world.phys.BlockHitResult hit){
+        if(hand!=net.minecraft.world.InteractionHand.MAIN_HAND)return net.minecraft.world.ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+        return switch(interact(level,pos,player,hand,hit.getDirection())){case SUCCESS,CONSUME,CONSUME_PARTIAL->net.minecraft.world.ItemInteractionResult.SUCCESS;case FAIL->net.minecraft.world.ItemInteractionResult.FAIL;default->net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;};
+    }
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,OPEN,HALF);}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeTrapdoorEntity(entityType(),pos,state);}
     @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.INVISIBLE;}
