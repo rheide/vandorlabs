@@ -38,3 +38,15 @@ task exportLightProjectionReference(type: JavaExec) {
     main = 'com.vandorlabs.client.LightProjectionLegacyChecks'
     args file('build/test-artifacts/light-projection-forge.jsonl').absolutePath
 }
+task exportLightPickerReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightPickerLegacyChecks'
+    args file('build/test-artifacts/light-picker-forge.json').absolutePath
+}
+task exportLightEditReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightEditLegacyChecks'
+    args file('build/test-artifacts/light-edit-forge.json').absolutePath
+}
