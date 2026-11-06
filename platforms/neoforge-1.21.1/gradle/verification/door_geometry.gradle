@@ -21,3 +21,7 @@ tasks.register('testNativeDoorMesh', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.NativeDoorMeshChecks'
 }
+
+neoForge.runs.configureEach {
+    if (project.hasProperty('doorArtworkReference')) systemProperty 'vandorlabs.doorArtworkReference', file(project.property('doorArtworkReference')).absolutePath
+}

@@ -30,3 +30,19 @@ task testDoorControlPadMesh(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.DoorPadLegacyChecks'
 }
+
+task testDoorRenderPose(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorPoseLegacyChecks'
+}
+
+task exportDoorArtworkReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorArtworkLegacyChecks'
+    args file('platforms/neoforge-1.21.1/build/generated/door-resources/assets/vandorlabs/data/door_artwork.json').absolutePath,
+         file(project.findProperty('doorArtworkReference') ?: 'build/test-artifacts/door-artwork-forge.jsonl').absolutePath
+}
