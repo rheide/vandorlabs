@@ -38,3 +38,10 @@ tasks.register('testNativeScreenMesh', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.NativeScreenMeshChecks'
     args file('../../testclient/fixtures/screen-role-geometry-reference.json.gz').absolutePath,file('../../testclient/fixtures/screen-role-gl-reference.json').absolutePath
 }
+
+tasks.register('testNativeScreenRenderGroups', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.screen.ScreenRenderGroupChecks'
+    args file('../../testclient/fixtures/screen-render-groups-reference.json.gz').absolutePath
+}
