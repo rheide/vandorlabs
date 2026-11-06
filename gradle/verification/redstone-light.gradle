@@ -76,3 +76,11 @@ task exportPropulsionEditorReference(type: JavaExec) {
     main = 'com.vandorlabs.client.PropulsionEditorLegacyOracle'
     args file('build/test-artifacts/propulsion-editor-forge.jsonl').absolutePath
 }
+
+task exportPropulsionParticleReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PropulsionParticleLegacyOracle'
+    args file('build/test-artifacts/propulsion-particle-forge.jsonl').absolutePath
+}
