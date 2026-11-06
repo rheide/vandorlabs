@@ -11,7 +11,7 @@ public abstract class SegmentedRebuildTaskMixin implements NativeSegmentedSectio
  @Shadow(remap=false) @Final private SectionRenderDispatcher.RenderSection this$1;
  @Unique private NativeSegmentedSectionUploads.Publication vandorlabs$publication;
  @Unique private volatile Object vandorlabs$uploaded;
- public void vandorlabs$terrainPublication(NativeSegmentedSectionUploads.Publication publication){vandorlabs$publication=publication;}
+ public void vandorlabs$terrainPublication(NativeSegmentedSectionUploads.Publication publication){vandorlabs$publication=publication;vandorlabs$uploaded=null;}
  public NativeSegmentedSectionUploads.Publication vandorlabs$terrainPublication(){return vandorlabs$publication;}
  public Object vandorlabs$terrainUploaded(){return vandorlabs$uploaded;}
  public void vandorlabs$terrainUploaded(Object compiled){vandorlabs$uploaded=compiled;}
