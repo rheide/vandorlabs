@@ -117,7 +117,7 @@ final class PulseScreenRuntimeChecks {
         if(stage==5&&frame>3){mc.getIntegratedServer().addScheduledTask(()->{extendedDeadline=contents(mc).rows().get(0).pulseUntil();require(extendedDeadline>firstDeadline,"repeat click extends server deadline");}).get();next();return false;}
         if(stage==6){long now=time(mc);if(now<firstDeadline)return false;if(now<extendedDeadline)mc.getIntegratedServer().addScheduledTask(()->require(RedstoneChannels.level(world(mc),A)==15,"pulse survives original deadline after repeat")).get();next();return false;}
         if(stage==7){long now=time(mc);if(now<=extendedDeadline+1)return false;mc.getIntegratedServer().addScheduledTask(()->{require(RedstoneChannels.level(world(mc),A)==0&&RedstoneChannels.level(world(mc),B)==15,"active-only world tick expires pulse without clobbering Toggle");require(!contents(mc).rows().get(0).active(),"pulse returns to idle");}).get();javax.imageio.ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_pulse_screen_off.png"));System.out.println("[vandorlabs][reprolab] pulse-screen-client PASS actual-mouse reverse-cycle GUI-packet block-click repeat-extends twenty-tick-expiry independent-source screenshots");next();return false;}
-        if(stage==8){ScreenModeTransitionRuntimeChecks.begin(mc);next();return false;}
+        if(stage==8){if(Boolean.getBoolean("vandorlabs.pulseScreenChecksOnly"))return true;ScreenModeTransitionRuntimeChecks.begin(mc);next();return false;}
         return stage>7;
     }
     private PulseScreenRuntimeChecks(){}
