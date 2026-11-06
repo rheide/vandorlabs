@@ -41,12 +41,17 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         }
         com.vandorlabs.neoforge.client.NativeBlockMaterials.bake(event.getModels(),resolved.get(0).sprite()).forEach((choice,material)->resolved.put(choice,new MaterialSnapshot(material.lower(),1,1)));
         java.util.Map<Integer,MaterialSnapshot> sprites=java.util.Map.copyOf(resolved);
+        java.util.Map<String,TextureAtlasSprite> trapdoorItemSprites=new java.util.HashMap<>();
+        for(var choice:ModernFinishCatalog.choicesForBake())trapdoorItemSprites.put(choice.entry().texture(),sprites.get(choice.choice()).sprite());
+        var trapdoorItemAtlas=java.util.Map.copyOf(trapdoorItemSprites);
+        TextureAtlasSprite itemFallback=sprites.get(0).sprite();
         TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
         var segmentedBake=NativeSegmentedRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake);
         var segmentedTerrain=new NativeSegmentedTerrainModel.Bake(event.getModelBakery(),event.getModels(),segmentedBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
         event.getModels().replaceAll((id,model) -> {
+            if(NativeTrapdoorClientBindings.trapdoor(id.id()))return id.getVariant().equals("inventory")?new NativeTrapdoorItemModel(model,com.vandorlabs.neoforge.trapdoor.NativeTrapdoorItem::housingTexture,name->trapdoorItemAtlas.getOrDefault(name,itemFallback)):com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());
             if(NativeDoorClientBindings.segmented(id.id()))return id.getVariant().equals("inventory")?model:com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(NativeSegmentedTerrainModel.wrap(model,segmentedTerrain),event.getTextureGetter());
             if(NativeDoorClientBindings.ordinary(id.id())||NativeDoorClientBindings.large(id.id())){
                 if(id.getVariant().equals("inventory"))return NativeDoorItemModel.wrap(model,NativeDoorClientBindings.large(id.id()),name->event.getModels().get(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.parse(name))));
