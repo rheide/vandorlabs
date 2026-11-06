@@ -13,7 +13,7 @@ public final class RedstoneActivationButton extends GuiButton {
     public static RedstoneActivationButton from(GuiButton placement,int mode){return from(placement,"Activation",mode);}
     public static RedstoneActivationButton from(GuiButton placement,String action,int mode){RedstoneActivationButton button=new RedstoneActivationButton(placement.id,placement.x,placement.y,placement.width,action,mode);button.height=placement.height;button.enabled=placement.enabled;button.visible=placement.visible;return button;}
     public static int mode(boolean enabled,boolean inverted){return !enabled?MANUAL:inverted?OFF:ON;}
-    public static String state(int mode){return mode==ON?"Redstone ON":mode==OFF?"Redstone OFF":mode==SIGNAL?"Signal level":"Manual";}
+    public static String state(int mode){return com.vandorlabs.ui.RedstoneActivation.label(mode);}
     @Override public void drawButton(Minecraft mc,int mouseX,int mouseY,float partial){
         if(!visible)return;
         hovered=mouseX>=x&&mouseY>=y&&mouseX<x+width&&mouseY<y+height;
