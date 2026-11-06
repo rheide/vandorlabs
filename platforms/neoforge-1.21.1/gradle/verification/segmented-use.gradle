@@ -1,0 +1,7 @@
+tasks.register('testNativeSegmentedUse', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.segmented.SegmentedUseChecks'
+    args file('../../build/test-artifacts/segmented-use-forge.json').absolutePath
+}
